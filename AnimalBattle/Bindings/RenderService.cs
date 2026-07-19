@@ -3,6 +3,45 @@ using System.Runtime.InteropServices;
 
 namespace AnimalBattle.Bindings;
 
+public enum BorderShape
+{
+    Null,
+    Rectangle,
+    DoubleRectangle,
+    Pill,
+    Underline,
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct Point<T> where T : struct
+{
+    public T X;
+    public T Y;
+
+    public Point(T x, T y)
+    {
+        X = x;
+        Y = y;
+    }
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct Rect<T> where T : struct
+{
+    public T X1;
+    public T Y1;
+    public T X2;
+    public T Y2;
+
+    public Rect(T x1, T y1, T x2, T y2)
+    {
+        X1 = x1;
+        Y1 = y1;
+        X2 = x2;
+        Y2 = y2;
+    }
+}
+
 public unsafe partial class RenderService
 {
     private const string DllName = "AnimalBattleCore.dll";
@@ -10,15 +49,19 @@ public unsafe partial class RenderService
 
     [LibraryImport(DllName, EntryPoint = "Render_DrawString", StringMarshalling = StringMarshalling.Utf16)]
     [SuppressGCTransition]
-    private static partial void NativeDrawString(IntPtr service, int x, int y, string text, uint color);
+    private static partial void NativeDrawString(IntPtr service, Point<int> p, string text, uint color);
 
-    [LibraryImport(DllName, EntryPoint = "Render_DrawBoxAA")]
+    [LibraryImport(DllName, EntryPoint = "Render_DrawBox")]
     [SuppressGCTransition]
-    private static partial void NativeDrawBoxAA(IntPtr service, float x1, float y1, float x2, float y2, uint color, [MarshalAs(UnmanagedType.U1)] bool fillFlag);
+    private static partial void NativeDrawBox(IntPtr service, Rect<int> r, uint color, [MarshalAs(UnmanagedType.U1)] bool fillFlag);
+
+    [LibraryImport(DllName, EntryPoint = "Render_DrawStringWithBorder", StringMarshalling = StringMarshalling.Utf16)]
+    [SuppressGCTransition]
+    private static partial void NativeDrawStringWithBorder(IntPtr service, Rect<int> r, string text, BorderShape shape, uint textColor, uint borderColor);
 
     [LibraryImport(DllName, EntryPoint = "Render_DrawGraph")]
     [SuppressGCTransition]
-    private static partial void NativeDrawGraph(IntPtr service, int x, int y, int handle, [MarshalAs(UnmanagedType.U1)] bool transFlag);
+    private static partial void NativeDrawGraph(IntPtr service, Point<int> p, int handle, [MarshalAs(UnmanagedType.U1)] bool transFlag);
 
     public RenderService(IntPtr nativePtr)
     {
@@ -29,18 +72,23 @@ public unsafe partial class RenderService
         }
     }
 
-    public void DrawString(int x, int y, string text, uint color)
+    public void DrawString(Point<int> p, string text, uint color)
     {
-        NativeDrawString(_nativePtr, x, y, text, color);
+        NativeDrawString(_nativePtr, p, text, color);
     }
 
-    public void DrawBoxAA(float x1, float y1, float x2, float y2, uint color, bool fillFlag)
+    public void DrawBox(Rect<int> r, uint color, bool fillFlag)
     {
-        NativeDrawBoxAA(_nativePtr, x1, y1, x2, y2, color, fillFlag);
+        NativeDrawBox(_nativePtr, r, color, fillFlag);
     }
 
-    public void DrawGraph(int x, int y, int handle, bool transFlag)
+    public void DrawStringWithBorder(Rect<int> r, string text, BorderShape shape = BorderShape.Null, uint textColor = 0xFFFFFF, uint borderColor = 0xFFFFFF)
     {
-        NativeDrawGraph(_nativePtr, x, y, handle, transFlag);
+        NativeDrawStringWithBorder(_nativePtr, r, text, shape, textColor, borderColor);
+    }
+
+    public void DrawGraph(Point<int> p, int handle, bool transFlag)
+    {
+        NativeDrawGraph(_nativePtr, p, handle, transFlag);
     }
 }

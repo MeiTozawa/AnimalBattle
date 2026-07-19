@@ -53,12 +53,12 @@ class Program
             NativeEngine.BeginFrame();
 
             // Render a blue box
-            const float boxX1 = 100f;
-            const float boxY1 = 100f;
-            const float boxX2 = 600f;
-            const float boxY2 = 400f;
-            render.DrawBoxAA(boxX1, boxY1, boxX2, boxY2, 0xFF0000AA, true); // Blue box
-
+            const int boxX1 = 100;
+            const int boxY1 = 100;
+            const int boxX2 = 600;
+            const int boxY2 = 400;
+            render.DrawBox(new Rect<int>(boxX1, boxY1, boxX2, boxY2), 0xFF0000AA, true); // Blue box
+ 
             // Cursor Hover Test: Change cursor to hand pointer if hovering over the blue box
             if (mouseX >= boxX1 && mouseX <= boxX2 && mouseY >= boxY1 && mouseY <= boxY2)
             {
@@ -68,12 +68,19 @@ class Program
             {
                 NativeEngine.SetCursorArrow();
             }
-
+ 
             // Draw text
-            render.DrawString(120, 150, "Hello from dotnet 10!", 0xFFFFFFFF); // White text
-            render.DrawString(120, 200, $"Mouse Pos: ({mouseX}, {mouseY})", 0xFFFF00FF); // Purple text
-            render.DrawString(120, 250, "Hover over the blue box to change cursor!", 0xFF00FF00); // Green text
-            render.DrawString(120, 300, "Press ESC to exit.", 0xFF808080); // Gray text
+            render.DrawString(new Point<int>(120, 150), "Hello from dotnet 10!", 0xFFFFFFFF); // White text
+            render.DrawString(new Point<int>(120, 200), $"Mouse Pos: ({mouseX}, {mouseY})", 0xFFFF00FF); // Purple text
+            render.DrawString(new Point<int>(120, 250), "Hover over the blue box to change cursor!", 0xFF00FF00); // Green text
+            render.DrawString(new Point<int>(120, 300), "Press ESC to exit.", 0xFF808080); // Gray text
+
+            // Draw different border shapes
+            render.DrawStringWithBorder(new Rect<int>(650, 100, 950, 160), "Rectangle", BorderShape.Rectangle, 0xFFFFFFFF, 0xFFFF00FF);
+            render.DrawStringWithBorder(new Rect<int>(650, 180, 950, 240), "DoubleRect", BorderShape.DoubleRectangle, 0xFFFFFFFF, 0xFF00FFFF);
+            render.DrawStringWithBorder(new Rect<int>(650, 260, 950, 320), "Pill", BorderShape.Pill, 0xFFFFFFFF, 0xFFFFFF00);
+            render.DrawStringWithBorder(new Rect<int>(650, 340, 950, 400), "Underline", BorderShape.Underline, 0xFFFFFFFF, 0xFF00FF00);
+            render.DrawStringWithBorder(new Rect<int>(650, 420, 950, 480), "Null Border", BorderShape.Null, 0xFFFFFFFF, 0xFFFFFFFF);
 
             // Finish frame & Swap buffers
             NativeEngine.EndFrame(deltaTime);

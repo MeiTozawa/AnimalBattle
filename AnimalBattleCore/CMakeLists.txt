@@ -1,9 +1,9 @@
 file(GLOB_RECURSE ANIMALBATTLE_SOURCES CONFIGURE_DEPENDS
-        "program/*.cpp"
+        "src/*.cpp"
         "AnimalBattleCore.cpp"
 )
 file(GLOB_RECURSE ANIMALBATTLE_MODULES CONFIGURE_DEPENDS
-        "program/*.ixx"
+        "src/*.ixx"
 )
 
 add_library(AnimalBattleCore SHARED
@@ -25,7 +25,7 @@ target_sources(AnimalBattleCore
 
 target_include_directories(AnimalBattleCore PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/program
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${DXLIB_DIR}
 )
 

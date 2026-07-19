@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <memory>
 #include <DxLib.h>
-#include "program/RenderUtils.h"
+#include "src/RenderUtils.h"
 import RenderService;
 
 namespace ab {
@@ -85,16 +85,20 @@ extern "C" {
 
     // --- RenderService Direct P/Invoke Wrapper APIs ---
 
-    __declspec(dllexport) void Render_DrawString(ab::IRenderService* service, int x, int y, const wchar_t* text, uint32_t color) {
-        if (service) service->DrawString(x, y, text, color);
+    __declspec(dllexport) void Render_DrawString(ab::IRenderService* service, ab::Point<int> p, const wchar_t* text, uint32_t color) {
+        if (service) service->DrawString(p, text, color);
     }
 
-    __declspec(dllexport) void Render_DrawBoxAA(ab::IRenderService* service, float x1, float y1, float x2, float y2, uint32_t color, bool fillFlag) {
-        if (service) service->DrawBoxAA(x1, y1, x2, y2, color, fillFlag);
+    __declspec(dllexport) void Render_DrawBox(ab::IRenderService* service, ab::Rect<int> r, uint32_t color, bool fillFlag) {
+        if (service) service->DrawBox(r, color, fillFlag);
     }
 
-    __declspec(dllexport) void Render_DrawGraph(ab::IRenderService* service, int x, int y, int handle, bool transFlag) {
-        if (service) service->DrawGraph(x, y, handle, transFlag);
+    __declspec(dllexport) void Render_DrawStringWithBorder(ab::IRenderService* service, ab::Rect<int> r, const wchar_t* text, ab::BorderShape shape, uint32_t textColor, uint32_t borderColor) {
+        if (service) service->DrawStringWithBorder(r, text, shape, textColor, borderColor);
+    }
+
+    __declspec(dllexport) void Render_DrawGraph(ab::IRenderService* service, ab::Point<int> p, int handle, bool transFlag) {
+        if (service) service->DrawGraph(p, handle, transFlag);
     }
 
     // --- OSService / Cursor Control ---
