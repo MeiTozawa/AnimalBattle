@@ -1,0 +1,38 @@
+# AnimalBattle Physics Engine Settings
+# You can tweak these values in real-time to adjust the feel of the game.
+
+gravity = 1500.0
+terminalVelocity = 1000.0
+fastFallVelocity = 1500.0
+walkAcceleration = 800.0
+runAcceleration = 1400.0
+maxWalkSpeed = 300.0
+maxRunSpeed = 600.0
+airAcceleration = 800.0
+maxAirSpeed = 450.0
+groundFriction = 1200.0
+airDrag = 200.0
+knockbackDecay = 400.0
+jumpForce = 650.0
+doubleJumpForce = 550.0
+
+# Gameplay limits and control parameters
+maxDeltaTime = 0.1
+dropThroughDuration = 0.25
+dropThroughPushOffset = 3.0
+hitstunAirControlScale = 0.2
+runThreshold = 0.7
+fastFallStartMultiplier = 0.6
+landingTolerance = 0.05
+
+# Smash Bros Knockback Scaling Formula Constants
+kbWeightOffset = 100.0
+kbDamageScale1 = 10.0
+kbDamageScale2 = 20.0
+kbScaleMultiplier = 1.4
+kbBaseMultiplier = 18.0
+hitstunMultiplier = 0.00667
+minHitstun = 0.1
+
+# Respawn
+respawnY = 150.0

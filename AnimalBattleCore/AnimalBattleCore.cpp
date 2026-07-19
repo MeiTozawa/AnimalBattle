@@ -4,6 +4,7 @@
 #include <DxLib.h>
 #include "src/RenderUtils.h"
 import RenderService;
+import PhysicsEngine;
 
 namespace ab {
     bool g_IsExitRequested = false;
@@ -135,5 +136,110 @@ extern "C" {
 
     __declspec(dllexport) int Engine_GetMouseInput() {
         return GetMouseInput();
+    }
+
+    // --- Physics Engine APIs ---
+
+    struct NativePhysicsObject {
+        int id;
+        float x;
+        float y;
+        float vx;
+        float vy;
+        float kbx;
+        float kby;
+        float width;
+        float height;
+        float weight;
+        float damagePercent;
+        float hitstunTimer;
+        float dropThroughTimer;
+        int collisionFlags;
+    };
+
+    __declspec(dllexport) ab::PhysicsEngine* Physics_Create() {
+        return new ab::PhysicsEngine();
+    }
+
+    __declspec(dllexport) void Physics_Destroy(ab::PhysicsEngine* engine) {
+        delete engine;
+    }
+
+    __declspec(dllexport) float Physics_GetConfigValue(ab::PhysicsEngine* engine, const char* key) {
+        if (engine && key) {
+            return engine->GetConfigValue(key);
+        }
+        return 0.0f;
+    }
+
+    __declspec(dllexport) int Physics_AddObject(ab::PhysicsEngine* engine, float x, float y, float width, float height, float weight) {
+        if (engine) return engine->AddObject(x, y, width, height, weight);
+        return -1;
+    }
+
+    __declspec(dllexport) bool Physics_RemoveObject(ab::PhysicsEngine* engine, int id) {
+        if (engine) return engine->RemoveObject(id);
+        return false;
+    }
+
+    __declspec(dllexport) bool Physics_GetObjectState(ab::PhysicsEngine* engine, int id, NativePhysicsObject* outState) {
+        if (!engine || !outState) return false;
+        auto* obj = engine->GetObject(id);
+        if (!obj) return false;
+
+        outState->id = obj->id;
+        outState->x = obj->x;
+        outState->y = obj->y;
+        outState->vx = obj->vx;
+        outState->vy = obj->vy;
+        outState->kbx = obj->kbx;
+        outState->kby = obj->kby;
+        outState->width = obj->width;
+        outState->height = obj->height;
+        outState->weight = obj->weight;
+        outState->damagePercent = obj->damagePercent;
+        outState->hitstunTimer = obj->hitstunTimer;
+        outState->dropThroughTimer = obj->dropThroughTimer;
+        outState->collisionFlags = obj->collisionFlags;
+        return true;
+    }
+
+    __declspec(dllexport) bool Physics_SetObjectState(ab::PhysicsEngine* engine, int id, const NativePhysicsObject* inState) {
+        if (!engine || !inState) return false;
+        auto* obj = engine->GetObject(id);
+        if (!obj) return false;
+
+        obj->x = inState->x;
+        obj->y = inState->y;
+        obj->vx = inState->vx;
+        obj->vy = inState->vy;
+        obj->kbx = inState->kbx;
+        obj->kby = inState->kby;
+        obj->width = inState->width;
+        obj->height = inState->height;
+        obj->weight = inState->weight;
+        obj->damagePercent = inState->damagePercent;
+        obj->hitstunTimer = inState->hitstunTimer;
+        obj->dropThroughTimer = inState->dropThroughTimer;
+        obj->collisionFlags = inState->collisionFlags;
+        return true;
+    }
+
+    __declspec(dllexport) int Physics_AddPlatform(ab::PhysicsEngine* engine, float x1, float y1, float x2, float y2, int type) {
+        if (!engine) return -1;
+        return engine->AddPlatform(x1, y1, x2, y2, static_cast<ab::PlatformType>(type));
+    }
+
+    __declspec(dllexport) bool Physics_RemovePlatform(ab::PhysicsEngine* engine, int id) {
+        if (engine) return engine->RemovePlatform(id);
+        return false;
+    }
+
+    __declspec(dllexport) void Physics_ApplyKnockback(ab::PhysicsEngine* engine, int id, float damage, float angleRad, float baseKb, float scaling) {
+        if (engine) engine->ApplyKnockback(id, damage, angleRad, baseKb, scaling);
+    }
+
+    __declspec(dllexport) void Physics_Step(ab::PhysicsEngine* engine, float dt) {
+        if (engine) engine->Step(dt);
     }
 }
