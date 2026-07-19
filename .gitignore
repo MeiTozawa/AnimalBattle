@@ -1,0 +1,88 @@
+﻿# IDE cache/options directory
+.vs/
+.idea/
+.vscode/
+.editorconfig
+
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+Log.txt
+build_tests.bat
+build.bat
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual C++ cache files
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+*.obj
+*.ifc
+*.ddi
+*.modmap
+
+# Profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Ignore specific files
+imgui.ini
+
+#CMake files
+/build/
+/out/
+/cmake-build-debug/
+/cmake-build-release/
+/cmake-build-test/
+CMakeUserPresets.json
+build_tests.bat
+MagicCat/resource/save0.json
+MagicCat/resource/save1.json
+MagicCat/resource/save2.json
+MagicCat/resource/save3.json
+MagicCat/resource/sound_settings.json
+
+#AI agent files
+docs/
+.kiro/
+.worktrees/
+.private-journal/
+.claude/
+.superpowers/
+.agents/
