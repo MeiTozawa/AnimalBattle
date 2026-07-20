@@ -63,6 +63,14 @@ public unsafe partial class RenderService
     [SuppressGCTransition]
     private static partial void NativeDrawGraph(IntPtr service, Point<int> p, int handle, [MarshalAs(UnmanagedType.U1)] bool transFlag);
 
+    [LibraryImport(DllName, EntryPoint = "Render_SetCameraEnabled")]
+    [SuppressGCTransition]
+    private static partial void NativeSetCameraEnabled(IntPtr service, [MarshalAs(UnmanagedType.U1)] bool enabled);
+
+    [LibraryImport(DllName, EntryPoint = "Render_SetCameraState")]
+    [SuppressGCTransition]
+    private static partial void NativeSetCameraState(IntPtr service, float x, float y, float scale);
+
     public RenderService(IntPtr nativePtr)
     {
         _nativePtr = nativePtr;
@@ -70,6 +78,16 @@ public unsafe partial class RenderService
         {
             throw new ArgumentNullException(nameof(nativePtr), "Native service pointer cannot be null.");
         }
+    }
+
+    public void SetCameraEnabled(bool enabled)
+    {
+        NativeSetCameraEnabled(_nativePtr, enabled);
+    }
+
+    public void SetCameraState(float x, float y, float scale)
+    {
+        NativeSetCameraState(_nativePtr, x, y, scale);
     }
 
     public void DrawString(Point<int> p, string text, uint color)

@@ -98,7 +98,13 @@ namespace ab {
 
         /// @brief アプリケーションを終了する（dxe::ExitApplication() に委譲）
         virtual void ExitApplication() = 0;
+
+        /// @brief カメラ変換の有効/無効を切り替える
+        virtual void SetCameraEnabled(bool enabled) = 0;
+
+        /// @brief カメラの位置とスケールを設定する
+        virtual void SetCameraState(float x, float y, float scale) = 0;
     };
 
-    export std::unique_ptr<IRenderService> CreateRenderService();
+    export std::unique_ptr<IRenderService> CreateRenderService(int width, int height);
 } // namespace ab

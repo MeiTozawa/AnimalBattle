@@ -5,6 +5,7 @@
 #include "src/RenderUtils.h"
 import RenderService;
 import PhysicsEngine;
+import Camera;
 
 namespace ab {
     bool g_IsExitRequested = false;
@@ -40,7 +41,7 @@ extern "C" {
         g_hdc = GetDC(g_hWnd);
 
         // Instantiate rendering service
-        g_RenderService = ab::CreateRenderService();
+        g_RenderService = ab::CreateRenderService(width, height);
         ab::g_IsExitRequested = false;
 
         return 0;
@@ -100,6 +101,49 @@ extern "C" {
 
     __declspec(dllexport) void Render_DrawGraph(ab::IRenderService* service, ab::Point<int> p, int handle, bool transFlag) {
         if (service) service->DrawGraph(p, handle, transFlag);
+    }
+
+    __declspec(dllexport) void Render_SetCameraEnabled(ab::IRenderService* service, bool enabled) {
+        if (service) service->SetCameraEnabled(enabled);
+    }
+
+    __declspec(dllexport) void Render_SetCameraState(ab::IRenderService* service, float x, float y, float scale) {
+        if (service) service->SetCameraState(x, y, scale);
+    }
+
+    // --- Camera APIs ---
+
+    __declspec(dllexport) ab::Camera* Camera_Create() {
+        return new ab::Camera();
+    }
+
+    __declspec(dllexport) void Camera_Destroy(ab::Camera* camera) {
+        delete camera;
+    }
+
+    __declspec(dllexport) void Camera_Reset(ab::Camera* camera, float x, float y, float scale) {
+        if (camera) camera->Reset(x, y, scale);
+    }
+
+    __declspec(dllexport) void Camera_Update(ab::Camera* camera, float dt, const ab::Point<float>* targets, int targetCount, float viewportWidth, float viewportHeight) {
+        if (camera) camera->Update(dt, targets, targetCount, viewportWidth, viewportHeight);
+    }
+
+    __declspec(dllexport) void Camera_GetState(ab::Camera* camera, float* outX, float* outY, float* outScale) {
+        if (camera && outX && outY && outScale) {
+            *outX = camera->GetX();
+            *outY = camera->GetY();
+            *outScale = camera->GetScale();
+        }
+    }
+
+    __declspec(dllexport) void Camera_SetConfig(ab::Camera* camera, float minScale, float maxScale, float lerpSpeed, float paddingX, float paddingY) {
+        if (camera) {
+            camera->SetMinScale(minScale);
+            camera->SetMaxScale(maxScale);
+            camera->SetLerpSpeed(lerpSpeed);
+            camera->SetPadding(paddingX, paddingY);
+        }
     }
 
     // --- OSService / Cursor Control ---
