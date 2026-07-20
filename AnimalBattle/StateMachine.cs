@@ -27,27 +27,28 @@ public class CharacterStateMachine
     public void Update(
         ref NativeEngine.NativePhysicsObject playerObj,
         InputManager input,
+        int playerIndex,
         float deltaTime)
     {
         // Load config values dynamically from physics.toml directly in C# (real-time tuning)
-        float gravity = PhysicsConfig.Get("gravity");
-        float terminalVelocity = PhysicsConfig.Get("terminalVelocity");
-        float fastFallVelocity = PhysicsConfig.Get("fastFallVelocity");
-        float walkAcceleration = PhysicsConfig.Get("walkAcceleration");
-        float runAcceleration = PhysicsConfig.Get("runAcceleration");
-        float maxWalkSpeed = PhysicsConfig.Get("maxWalkSpeed");
-        float maxRunSpeed = PhysicsConfig.Get("maxRunSpeed");
-        float airAcceleration = PhysicsConfig.Get("airAcceleration");
-        float maxAirSpeed = PhysicsConfig.Get("maxAirSpeed");
-        float groundFriction = PhysicsConfig.Get("groundFriction");
-        float airDrag = PhysicsConfig.Get("airDrag");
-        float jumpForce = PhysicsConfig.Get("jumpForce");
-        float doubleJumpForce = PhysicsConfig.Get("doubleJumpForce");
-        float runThreshold = PhysicsConfig.Get("runThreshold");
-        float fastFallStartMultiplier = PhysicsConfig.Get("fastFallStartMultiplier");
-        float dropThroughDuration = PhysicsConfig.Get("dropThroughDuration");
-        float hitstunAirControlScale = PhysicsConfig.Get("hitstunAirControlScale");
-        float landingTolerance = PhysicsConfig.Get("landingTolerance");
+        float gravity = PhysicsConfig.Get("gravity", 1500.0f);
+        float terminalVelocity = PhysicsConfig.Get("terminalVelocity", 1000.0f);
+        float fastFallVelocity = PhysicsConfig.Get("fastFallVelocity", 1500.0f);
+        float walkAcceleration = PhysicsConfig.Get("walkAcceleration", 800.0f);
+        float runAcceleration = PhysicsConfig.Get("runAcceleration", 1400.0f);
+        float maxWalkSpeed = PhysicsConfig.Get("maxWalkSpeed", 300.0f);
+        float maxRunSpeed = PhysicsConfig.Get("maxRunSpeed", 600.0f);
+        float airAcceleration = PhysicsConfig.Get("airAcceleration", 800.0f);
+        float maxAirSpeed = PhysicsConfig.Get("maxAirSpeed", 450.0f);
+        float groundFriction = PhysicsConfig.Get("groundFriction", 1200.0f);
+        float airDrag = PhysicsConfig.Get("airDrag", 200.0f);
+        float jumpForce = PhysicsConfig.Get("jumpForce", 650.0f);
+        float doubleJumpForce = PhysicsConfig.Get("doubleJumpForce", 550.0f);
+        float runThreshold = PhysicsConfig.Get("runThreshold", 0.7f);
+        float fastFallStartMultiplier = PhysicsConfig.Get("fastFallStartMultiplier", 0.6f);
+        float dropThroughDuration = PhysicsConfig.Get("dropThroughDuration", 0.25f);
+        float hitstunAirControlScale = PhysicsConfig.Get("hitstunAirControlScale", 0.2f);
+        float landingTolerance = PhysicsConfig.Get("landingTolerance", 0.05f);
 
         // Lock in hitstun if hitstun timer is active
         if (playerObj.HitstunTimer > 0.0f)
@@ -60,10 +61,10 @@ public class CharacterStateMachine
         }
 
         // Get inputs
-        float moveX = input.GetHorizontalAxis();
-        float moveY = input.GetVerticalAxis();
-        bool jump = input.IsJumpPressed();
-        bool down = input.IsDownPressed();
+        float moveX = input.GetHorizontalAxis(playerIndex);
+        float moveY = input.GetVerticalAxis(playerIndex);
+        bool jump = input.IsJumpPressed(playerIndex);
+        bool down = input.IsDownPressed(playerIndex);
 
         // Run character state machine
         switch (State)
@@ -103,21 +104,9 @@ public class CharacterStateMachine
                 // Platform drop-down
                 else if (down)
                 {
-                    bool onSemiSolid = false;
-                    if (Math.Abs(playerObj.Y - 380.0f) < landingTolerance)
-                    {
-                        if ((playerObj.X + playerObj.Width / 2.0f > 350.0f && playerObj.X - playerObj.Width / 2.0f < 550.0f) ||
-                            (playerObj.X + playerObj.Width / 2.0f > 730.0f && playerObj.X - playerObj.Width / 2.0f < 930.0f))
-                        {
-                            onSemiSolid = true;
-                        }
-                    }
-                    if (onSemiSolid)
-                    {
-                        playerObj.DropThroughTimer = dropThroughDuration;
-                        playerObj.Y += 3.0f; // immediately push player past platform edge
-                        State = CharacterState.Airborne;
-                    }
+                    playerObj.DropThroughTimer = dropThroughDuration;
+                    playerObj.Y += 3.0f; // immediately push player past platform edge
+                    State = CharacterState.Airborne;
                 }
                 break;
 

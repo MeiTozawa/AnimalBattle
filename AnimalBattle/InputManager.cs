@@ -12,6 +12,7 @@ public class InputManager
     public const int KEY_INPUT_S = 0x1F;
     public const int KEY_INPUT_D = 0x20;
     public const int KEY_INPUT_F = 0x21;
+    public const int KEY_INPUT_G = 0x22;
     public const int KEY_INPUT_R = 0x13;
     public const int KEY_INPUT_SPACE = 0x39;
     public const int KEY_INPUT_UP = 0xC8;
@@ -19,12 +20,18 @@ public class InputManager
     public const int KEY_INPUT_LEFT = 0xCB;
     public const int KEY_INPUT_RIGHT = 0xCD;
 
+    public const int KEY_INPUT_1 = 0x02;
+    public const int KEY_INPUT_2 = 0x03;
+    public const int KEY_INPUT_3 = 0x04;
+    public const int KEY_INPUT_4 = 0x05;
+
     private readonly int[] _trackedKeys =
     [
         KEY_INPUT_ESCAPE,
         KEY_INPUT_W, KEY_INPUT_A, KEY_INPUT_S, KEY_INPUT_D,
-        KEY_INPUT_F, KEY_INPUT_R, KEY_INPUT_SPACE,
-        KEY_INPUT_UP, KEY_INPUT_DOWN, KEY_INPUT_LEFT, KEY_INPUT_RIGHT
+        KEY_INPUT_F, KEY_INPUT_G, KEY_INPUT_R, KEY_INPUT_SPACE,
+        KEY_INPUT_UP, KEY_INPUT_DOWN, KEY_INPUT_LEFT, KEY_INPUT_RIGHT,
+        KEY_INPUT_1, KEY_INPUT_2, KEY_INPUT_3, KEY_INPUT_4
     ];
 
     private readonly Dictionary<int, bool> _currentStates = [];
@@ -69,42 +76,60 @@ public class InputManager
 
     // --- Action Helpers ---
 
-    public float GetHorizontalAxis()
+    public float GetHorizontalAxis(int playerIndex = 1)
     {
         float axis = 0.0f;
-        if (IsKeyDown(KEY_INPUT_A) || IsKeyDown(KEY_INPUT_LEFT))
+        if (playerIndex == 1)
         {
-            axis -= 1.0f;
+            if (IsKeyDown(KEY_INPUT_A)) axis -= 1.0f;
+            if (IsKeyDown(KEY_INPUT_D)) axis += 1.0f;
         }
-        if (IsKeyDown(KEY_INPUT_D) || IsKeyDown(KEY_INPUT_RIGHT))
+        else if (playerIndex == 2)
         {
-            axis += 1.0f;
+            if (IsKeyDown(KEY_INPUT_LEFT)) axis -= 1.0f;
+            if (IsKeyDown(KEY_INPUT_RIGHT)) axis += 1.0f;
         }
         return axis;
     }
 
-    public float GetVerticalAxis()
+    public float GetVerticalAxis(int playerIndex = 1)
     {
         float axis = 0.0f;
-        if (IsKeyDown(KEY_INPUT_W) || IsKeyDown(KEY_INPUT_UP))
+        if (playerIndex == 1)
         {
-            axis -= 1.0f;
+            if (IsKeyDown(KEY_INPUT_W)) axis -= 1.0f;
+            if (IsKeyDown(KEY_INPUT_S)) axis += 1.0f;
         }
-        if (IsKeyDown(KEY_INPUT_S) || IsKeyDown(KEY_INPUT_DOWN))
+        else if (playerIndex == 2)
         {
-            axis += 1.0f;
+            if (IsKeyDown(KEY_INPUT_UP)) axis -= 1.0f;
+            if (IsKeyDown(KEY_INPUT_DOWN)) axis += 1.0f;
         }
         return axis;
     }
 
-    public bool IsJumpPressed()
+    public bool IsJumpPressed(int playerIndex = 1)
     {
-        return IsKeyPressed(KEY_INPUT_SPACE) || IsKeyPressed(KEY_INPUT_W) || IsKeyPressed(KEY_INPUT_UP);
+        if (playerIndex == 1)
+        {
+            return IsKeyPressed(KEY_INPUT_SPACE) || IsKeyPressed(KEY_INPUT_W);
+        }
+        else
+        {
+            return IsKeyPressed(KEY_INPUT_UP);
+        }
     }
 
-    public bool IsDownPressed()
+    public bool IsDownPressed(int playerIndex = 1)
     {
-        return IsKeyPressed(KEY_INPUT_S) || IsKeyPressed(KEY_INPUT_DOWN);
+        if (playerIndex == 1)
+        {
+            return IsKeyPressed(KEY_INPUT_S);
+        }
+        else
+        {
+            return IsKeyPressed(KEY_INPUT_DOWN);
+        }
     }
 
     public bool IsResetPressed()
@@ -112,8 +137,17 @@ public class InputManager
         return IsKeyPressed(KEY_INPUT_R);
     }
 
-    public bool IsKnockbackTestPressed()
+    public bool IsKnockbackTestPressed(int playerIndex = 1)
     {
-        return IsKeyPressed(KEY_INPUT_F);
+        return playerIndex == 1 ? IsKeyPressed(KEY_INPUT_F) : IsKeyPressed(KEY_INPUT_G);
+    }
+
+    public int GetRequestedMapSwitchIndex()
+    {
+        if (IsKeyPressed(KEY_INPUT_1)) return 0;
+        if (IsKeyPressed(KEY_INPUT_2)) return 1;
+        if (IsKeyPressed(KEY_INPUT_3)) return 2;
+        if (IsKeyPressed(KEY_INPUT_4)) return 3;
+        return -1;
     }
 }
