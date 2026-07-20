@@ -27,28 +27,27 @@ public class CharacterStateMachine
     public void Update(
         ref NativeEngine.NativePhysicsObject playerObj,
         InputManager input,
-        IntPtr physics,
         float deltaTime)
     {
-        // Load config values dynamically from physics.toml via C++ query (real-time tuning)
-        float gravity = NativeEngine.PhysicsGetConfigValue(physics, "gravity");
-        float terminalVelocity = NativeEngine.PhysicsGetConfigValue(physics, "terminalVelocity");
-        float fastFallVelocity = NativeEngine.PhysicsGetConfigValue(physics, "fastFallVelocity");
-        float walkAcceleration = NativeEngine.PhysicsGetConfigValue(physics, "walkAcceleration");
-        float runAcceleration = NativeEngine.PhysicsGetConfigValue(physics, "runAcceleration");
-        float maxWalkSpeed = NativeEngine.PhysicsGetConfigValue(physics, "maxWalkSpeed");
-        float maxRunSpeed = NativeEngine.PhysicsGetConfigValue(physics, "maxRunSpeed");
-        float airAcceleration = NativeEngine.PhysicsGetConfigValue(physics, "airAcceleration");
-        float maxAirSpeed = NativeEngine.PhysicsGetConfigValue(physics, "maxAirSpeed");
-        float groundFriction = NativeEngine.PhysicsGetConfigValue(physics, "groundFriction");
-        float airDrag = NativeEngine.PhysicsGetConfigValue(physics, "airDrag");
-        float jumpForce = NativeEngine.PhysicsGetConfigValue(physics, "jumpForce");
-        float doubleJumpForce = NativeEngine.PhysicsGetConfigValue(physics, "doubleJumpForce");
-        float runThreshold = NativeEngine.PhysicsGetConfigValue(physics, "runThreshold");
-        float fastFallStartMultiplier = NativeEngine.PhysicsGetConfigValue(physics, "fastFallStartMultiplier");
-        float dropThroughDuration = NativeEngine.PhysicsGetConfigValue(physics, "dropThroughDuration");
-        float hitstunAirControlScale = NativeEngine.PhysicsGetConfigValue(physics, "hitstunAirControlScale");
-        float landingTolerance = NativeEngine.PhysicsGetConfigValue(physics, "landingTolerance");
+        // Load config values dynamically from physics.toml directly in C# (real-time tuning)
+        float gravity = PhysicsConfig.Get("gravity");
+        float terminalVelocity = PhysicsConfig.Get("terminalVelocity");
+        float fastFallVelocity = PhysicsConfig.Get("fastFallVelocity");
+        float walkAcceleration = PhysicsConfig.Get("walkAcceleration");
+        float runAcceleration = PhysicsConfig.Get("runAcceleration");
+        float maxWalkSpeed = PhysicsConfig.Get("maxWalkSpeed");
+        float maxRunSpeed = PhysicsConfig.Get("maxRunSpeed");
+        float airAcceleration = PhysicsConfig.Get("airAcceleration");
+        float maxAirSpeed = PhysicsConfig.Get("maxAirSpeed");
+        float groundFriction = PhysicsConfig.Get("groundFriction");
+        float airDrag = PhysicsConfig.Get("airDrag");
+        float jumpForce = PhysicsConfig.Get("jumpForce");
+        float doubleJumpForce = PhysicsConfig.Get("doubleJumpForce");
+        float runThreshold = PhysicsConfig.Get("runThreshold");
+        float fastFallStartMultiplier = PhysicsConfig.Get("fastFallStartMultiplier");
+        float dropThroughDuration = PhysicsConfig.Get("dropThroughDuration");
+        float hitstunAirControlScale = PhysicsConfig.Get("hitstunAirControlScale");
+        float landingTolerance = PhysicsConfig.Get("landingTolerance");
 
         // Lock in hitstun if hitstun timer is active
         if (playerObj.HitstunTimer > 0.0f)

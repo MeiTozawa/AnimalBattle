@@ -42,9 +42,6 @@ public static partial class NativeEngine
     [LibraryImport(DllName, EntryPoint = "Physics_Destroy")]
     public static partial void PhysicsDestroy(IntPtr engine);
 
-    [LibraryImport(DllName, EntryPoint = "Physics_GetConfigValue", StringMarshalling = StringMarshalling.Utf8)]
-    public static partial float PhysicsGetConfigValue(IntPtr engine, string key);
-
     [LibraryImport(DllName, EntryPoint = "Physics_AddObject")]
     public static partial int PhysicsAddObject(IntPtr engine, float x, float y, float width, float height, float weight);
 

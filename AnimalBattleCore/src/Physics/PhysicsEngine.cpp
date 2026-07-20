@@ -99,39 +99,6 @@ namespace ab {
         }
     }
 
-    float PhysicsEngine::GetConfigValue(const std::string& key) const {
-        if (key == "gravity") return config.gravity;
-        if (key == "terminalVelocity") return config.terminalVelocity;
-        if (key == "fastFallVelocity") return config.fastFallVelocity;
-        if (key == "walkAcceleration") return config.walkAcceleration;
-        if (key == "runAcceleration") return config.runAcceleration;
-        if (key == "maxWalkSpeed") return config.maxWalkSpeed;
-        if (key == "maxRunSpeed") return config.maxRunSpeed;
-        if (key == "airAcceleration") return config.airAcceleration;
-        if (key == "maxAirSpeed") return config.maxAirSpeed;
-        if (key == "groundFriction") return config.groundFriction;
-        if (key == "airDrag") return config.airDrag;
-        if (key == "knockbackDecay") return config.knockbackDecay;
-        if (key == "jumpForce") return config.jumpForce;
-        if (key == "doubleJumpForce") return config.doubleJumpForce;
-        if (key == "maxDeltaTime") return config.maxDeltaTime;
-        if (key == "dropThroughDuration") return config.dropThroughDuration;
-        if (key == "dropThroughPushOffset") return config.dropThroughPushOffset;
-        if (key == "hitstunAirControlScale") return config.hitstunAirControlScale;
-        if (key == "runThreshold") return config.runThreshold;
-        if (key == "fastFallStartMultiplier") return config.fastFallStartMultiplier;
-        if (key == "landingTolerance") return config.landingTolerance;
-        if (key == "kbWeightOffset") return config.kbWeightOffset;
-        if (key == "kbDamageScale1") return config.kbDamageScale1;
-        if (key == "kbDamageScale2") return config.kbDamageScale2;
-        if (key == "kbScaleMultiplier") return config.kbScaleMultiplier;
-        if (key == "kbBaseMultiplier") return config.kbBaseMultiplier;
-        if (key == "hitstunMultiplier") return config.hitstunMultiplier;
-        if (key == "minHitstun") return config.minHitstun;
-        if (key == "respawnY") return config.respawnY;
-        return 0.0f;
-    }
-
     void PhysicsEngine::Step(float dt) {
         LoadConfig("Config/physics.toml");
 

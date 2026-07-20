@@ -78,7 +78,7 @@ class Program
             }
 
             // Real-time config queries for respawn and knockback parameters
-            float respawnY = NativeEngine.PhysicsGetConfigValue(physics, "respawnY");
+            float respawnY = PhysicsConfig.Get("respawnY", 300.0f);
 
             // Reset player position & state
             if (input.IsResetPressed())
@@ -101,7 +101,7 @@ class Program
             }
 
             // Update the Character State Machine (inputs, physics values, state transition logic)
-            stateMachine.Update(ref playerObj, input, physics, deltaTime);
+            stateMachine.Update(ref playerObj, input, deltaTime);
 
             // Write modified velocities and coordinates back to C++
             unsafe

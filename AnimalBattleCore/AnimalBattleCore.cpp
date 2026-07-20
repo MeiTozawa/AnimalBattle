@@ -165,13 +165,6 @@ extern "C" {
         delete engine;
     }
 
-    __declspec(dllexport) float Physics_GetConfigValue(ab::PhysicsEngine* engine, const char* key) {
-        if (engine && key) {
-            return engine->GetConfigValue(key);
-        }
-        return 0.0f;
-    }
-
     __declspec(dllexport) int Physics_AddObject(ab::PhysicsEngine* engine, float x, float y, float width, float height, float weight) {
         if (engine) return engine->AddObject(x, y, width, height, weight);
         return -1;

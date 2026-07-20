@@ -207,7 +207,6 @@ namespace ab {
         }
 
         void LoadConfig(const std::string& filename);
-        float GetConfigValue(const std::string& key) const;
         void Step(float dt);
     };
 
