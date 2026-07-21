@@ -1,10 +1,6 @@
 #ifndef ANIMALBATTLE_CORE_SRC_APP_BUILD_SETTING_H_
 #define ANIMALBATTLE_CORE_SRC_APP_BUILD_SETTING_H_
 
-// ウィンドウの幅
-constexpr int WINDOW_WIDTH = 1920;
-constexpr int WINDOW_HEIGHT = 1080;
-
 // 固定フレームレート
 constexpr int FIX_FPS = 60;
 

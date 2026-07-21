@@ -4,7 +4,7 @@ namespace AnimalBattle;
 
 /// <summary>
 /// キャラクターの移動、物理演算、および操作感の調整用パラメータを保持する設定クラス。
-/// 本クラスの値を変更することで、キャラクターの挙動を調整できます。
+/// 本クラスの値を変更することで、各キャラクターごとの挙動を独立して調整・設定できます。
 /// </summary>
 public class CharacterConfig
 {
@@ -112,29 +112,4 @@ public class CharacterConfig
     /// キャラクターの体重（ふっとびにくさ）を取得または設定します。
     /// </summary>
     public float Weight { get; set; } = 100.0f;
-
-    /// <summary>
-    /// 外部設定ファイル (physics.toml) からパラメータを同期・更新します。
-    /// </summary>
-    public void SyncFromConfig()
-    {
-        Gravity = PhysicsConfig.Get("gravity", Gravity);
-        TerminalVelocity = PhysicsConfig.Get("terminalVelocity", TerminalVelocity);
-        FastFallVelocity = PhysicsConfig.Get("fastFallVelocity", FastFallVelocity);
-        WalkAcceleration = PhysicsConfig.Get("walkAcceleration", WalkAcceleration);
-        RunAcceleration = PhysicsConfig.Get("runAcceleration", RunAcceleration);
-        MaxWalkSpeed = PhysicsConfig.Get("maxWalkSpeed", MaxWalkSpeed);
-        MaxRunSpeed = PhysicsConfig.Get("maxRunSpeed", MaxRunSpeed);
-        AirAcceleration = PhysicsConfig.Get("airAcceleration", AirAcceleration);
-        MaxAirSpeed = PhysicsConfig.Get("maxAirSpeed", MaxAirSpeed);
-        GroundFriction = PhysicsConfig.Get("groundFriction", GroundFriction);
-        AirDrag = PhysicsConfig.Get("airDrag", AirDrag);
-        JumpForce = PhysicsConfig.Get("jumpForce", JumpForce);
-        DoubleJumpForce = PhysicsConfig.Get("doubleJumpForce", DoubleJumpForce);
-        RunThreshold = PhysicsConfig.Get("runThreshold", RunThreshold);
-        FastFallStartMultiplier = PhysicsConfig.Get("fastFallStartMultiplier", FastFallStartMultiplier);
-        DropThroughDuration = PhysicsConfig.Get("dropThroughDuration", DropThroughDuration);
-        HitstunAirControlScale = PhysicsConfig.Get("hitstunAirControlScale", HitstunAirControlScale);
-        LandingTolerance = PhysicsConfig.Get("landingTolerance", LandingTolerance);
-    }
 }

@@ -55,6 +55,5 @@ public class Character
         Name = name;
         MainColor = mainColor;
         OutlineColor = outlineColor;
-        Config.SyncFromConfig();
     }
 }

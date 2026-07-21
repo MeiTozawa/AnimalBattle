@@ -12,8 +12,8 @@ namespace ab {
 
     class DxLibRenderService : public IRenderService {
     private:
-        int viewport_width_ = 1280;
-        int viewport_height_ = 720;
+        int viewport_width_ = 0;
+        int viewport_height_ = 0;
         bool camera_enabled_ = false;
         float camera_x_ = 640.0f;
         float camera_y_ = 360.0f;

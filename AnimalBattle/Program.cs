@@ -94,9 +94,6 @@ internal class Program
                 continue;
             }
 
-            // 外部 physics.toml 設定変更の同期
-            player1.Config.SyncFromConfig();
-            player2.Config.SyncFromConfig();
 
             // C++ からプレイヤー状態を取得
             NativeEngine.NativePhysicsObject p1Obj = default;

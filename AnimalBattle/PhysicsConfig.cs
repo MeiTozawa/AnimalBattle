@@ -29,25 +29,10 @@ public static class PhysicsConfig
     private static string? FindConfigPath()
     {
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        string cwd = Directory.GetCurrentDirectory();
 
-        string[] candidates =
-        [
-            Path.Combine(cwd, "Config", "physics.toml"),
-            Path.Combine(cwd, "..", "Config", "physics.toml"),
-            Path.Combine(cwd, "..", "..", "Config", "physics.toml"),
-            Path.Combine(baseDir, "Config", "physics.toml"),
-            Path.Combine(baseDir, "..", "Config", "physics.toml"),
-            Path.Combine(baseDir, "..", "..", "Config", "physics.toml"),
-            Path.Combine(baseDir, "..", "..", "..", "Config", "physics.toml"),
-            Path.Combine(baseDir, "..", "..", "..", "..", "Config", "physics.toml")
-        ];
-
-        foreach (string candidate in candidates)
-        {
             try
             {
-                string fullPath = Path.GetFullPath(candidate);
+                string fullPath = Path.GetFullPath(Path.Combine(baseDir, "..", "Config", "physics.toml"));
                 if (File.Exists(fullPath))
                 {
                     return fullPath;
@@ -57,7 +42,7 @@ public static class PhysicsConfig
             {
                 // 無効なパスフォーマット例外を無視
             }
-        }
+        
 
         return null;
     }
