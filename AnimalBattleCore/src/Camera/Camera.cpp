@@ -7,7 +7,11 @@ module;
 module Camera;
 
 namespace ab {
-    Camera::Camera() = default;
+    Camera::Camera(float x, float y, float scale, float min_scale, float max_scale, float lerp_speed, float padding_x, float padding_y)
+        : current_x_(x), current_y_(y), current_scale_(scale),
+          target_x_(x), target_y_(y), target_scale_(scale),
+          min_scale_(min_scale), max_scale_(max_scale),
+          lerp_speed_(lerp_speed), padding_x_(padding_x), padding_y_(padding_y) {}
 
     void Camera::Reset(float target_x, float target_y, float scale) {
         current_x_ = target_x;

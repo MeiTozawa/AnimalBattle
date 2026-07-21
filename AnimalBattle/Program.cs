@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using AnimalBattle.Bindings;
+using AnimalBattle.Cameras;
 using AnimalBattle.Characters;
 using AnimalBattle.Stages;
 
@@ -32,8 +33,16 @@ internal class Program
 
         // Native C++ カメラモジュールの初期化
         Console.WriteLine("ネイティブカメラモジュールを初期化中...");
-        IntPtr camera = NativeEngine.CameraCreate();
-        NativeEngine.CameraSetConfig(camera, minScale: 0.45f, maxScale: 1.0f, lerpSpeed: 4.5f, paddingX: 280.0f, paddingY: 180.0f);
+        var cameraConfig = CameraConfig.LoadFromFile("camera.toml");
+        IntPtr camera = NativeEngine.CameraCreate(
+            x: cameraConfig.InitialX,
+            y: cameraConfig.InitialY,
+            scale: cameraConfig.InitialScale,
+            minScale: cameraConfig.MinScale,
+            maxScale: cameraConfig.MaxScale,
+            lerpSpeed: cameraConfig.LerpSpeed,
+            paddingX: cameraConfig.PaddingX,
+            paddingY: cameraConfig.PaddingY);
 
         // ステージマネージャーの初期化および初期マップ (Map 1) のロード
         Console.WriteLine("ステージマネージャーを初期化中 & マップ 1 を読み込み中...");

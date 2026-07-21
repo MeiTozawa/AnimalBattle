@@ -1,0 +1,13 @@
+# AnimalBattle Camera Configuration Settings
+
+# Camera Initial Viewport Parameters
+initialX = 640.0
+initialY = 360.0
+initialScale = 1.0
+
+# Camera Constraints & Speed Parameters
+minScale = 0.45
+maxScale = 1.0
+lerpSpeed = 4.5
+paddingX = 280.0
+paddingY = 180.0

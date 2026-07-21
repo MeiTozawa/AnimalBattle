@@ -6,11 +6,27 @@ namespace AnimalBattle.Bindings;
 public static partial class NativeEngine
 {
     /// <summary>
-    /// Native C++ カメラモジュールのインスタンスを生成します。
+    /// 指定された初期設定パラメータに基づき、Native C++ カメラモジュールのインスタンスを生成します。
     /// </summary>
-    /// <return>Camera インスタンスポインタ</return>
+    /// <param name="x">初期中心 X 座標</param>
+    /// <param name="y">初期中心 Y 座標</param>
+    /// <param name="scale">初期ズーム倍率</param>
+    /// <param name="minScale">最小ズームスケール</param>
+    /// <param name="maxScale">最大ズームスケール</param>
+    /// <param name="lerpSpeed">補間追従速度</param>
+    /// <param name="paddingX">横方向余白パディング</param>
+    /// <param name="paddingY">縦方向余白パディング</param>
+    /// <returns>Camera インスタンスポインタ</returns>
     [LibraryImport(_dllName, EntryPoint = "Camera_Create")]
-    public static partial IntPtr CameraCreate();
+    public static partial IntPtr CameraCreate(
+        float x,
+        float y,
+        float scale,
+        float minScale,
+        float maxScale,
+        float lerpSpeed,
+        float paddingX,
+        float paddingY);
 
     /// <summary>
     /// Native C++ カメラモジュールを破棄します。

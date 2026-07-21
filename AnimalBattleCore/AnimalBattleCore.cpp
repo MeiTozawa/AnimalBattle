@@ -119,9 +119,12 @@ extern "C" {
 
     // --- Camera APIs ---
 
-    __declspec(dllexport) ab::Camera* Camera_Create() noexcept {
+    __declspec(dllexport) ab::Camera* Camera_Create(
+        float x, float y, float scale,
+        float min_scale, float max_scale,
+        float lerp_speed, float padding_x, float padding_y) noexcept {
         try {
-            return new ab::Camera();
+            return new ab::Camera(x, y, scale, min_scale, max_scale, lerp_speed, padding_x, padding_y);
         } catch (...) {
             return nullptr;
         }
