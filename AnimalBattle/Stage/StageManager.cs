@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using AnimalBattle.Bindings;
 
-namespace AnimalBattle;
+namespace AnimalBattle.Stages;
 
 /// <summary>
 /// ステージ（マップ）の切り替え・物理エンジン登録および管理を行うマネージャークラス。

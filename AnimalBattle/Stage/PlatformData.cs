@@ -1,7 +1,7 @@
 using System;
 using AnimalBattle.Bindings;
 
-namespace AnimalBattle;
+namespace AnimalBattle.Stages;
 
 /// <summary>
 /// ステージ上の足場（プラットフォーム）の情報を保持するデータ構造体クラス。

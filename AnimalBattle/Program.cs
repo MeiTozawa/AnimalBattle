@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 using AnimalBattle.Bindings;
+using AnimalBattle.Characters;
+using AnimalBattle.Stages;
 
 namespace AnimalBattle;
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using AnimalBattle.Bindings;
 
-namespace AnimalBattle;
+namespace AnimalBattle.Characters;
 
 /// <summary>
 /// キー入力の状態判定・トラッキングおよびアクション入力を取得するマネージャークラス。

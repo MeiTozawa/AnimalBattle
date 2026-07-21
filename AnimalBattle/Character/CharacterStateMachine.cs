@@ -1,7 +1,7 @@
 using System;
 using AnimalBattle.Bindings;
 
-namespace AnimalBattle;
+namespace AnimalBattle.Characters;
 
 /// <summary>
 /// キャラクターの状態遷移および物理パラメータ更新を制御するステートマシン。

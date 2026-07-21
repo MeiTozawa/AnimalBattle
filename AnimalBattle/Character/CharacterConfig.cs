@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using Tomlyn;
 
-namespace AnimalBattle;
+namespace AnimalBattle.Characters;
 
 /// <summary>
 /// キャラクターの移動、物理演算、および操作感の調整用パラメータを保持する設定クラス。
-/// 本クラスの値を変更することで、各キャラクターごとの挙動を独立して調整・設定できます。
+/// TOML 設定ファイルからの動的読み込みに対応します。
 /// </summary>
 public class CharacterConfig
 {
@@ -112,4 +115,88 @@ public class CharacterConfig
     /// キャラクターの体重（ふっとびにくさ）を取得または設定します。
     /// </summary>
     public float Weight { get; set; } = 100.0f;
+
+    /// <summary>
+    /// 辞書データから設定プロパティを読み込み、数値を反映します。
+    /// </summary>
+    /// <param name="values">設定項目キーと数値のマップ</param>
+    public void LoadFromDictionary(IDictionary<string, float> values)
+    {
+        var properties = typeof(CharacterConfig).GetProperties();
+        foreach (var prop in properties)
+        {
+            if (prop.PropertyType != typeof(float) || !prop.CanWrite)
+            {
+                continue;
+            }
+
+            string name = prop.Name;
+            string camelCase = char.ToLowerInvariant(name[0]) + name[1..];
+
+            if (values.TryGetValue(camelCase, out float val) ||
+                values.TryGetValue(name, out val) ||
+                values.TryGetValue(name.ToLowerInvariant(), out val))
+            {
+                prop.SetValue(this, val);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 指定された TOML ファイルから設定を読み込んだ <see cref="CharacterConfig"/> インスタンスを生成します。
+    /// </summary>
+    /// <param name="path">TOML ファイルパスまたはファイル名</param>
+    /// <return>読み込まれた <see cref="CharacterConfig"/> インスタンス</return>
+    public static CharacterConfig LoadFromFile(string path = "character.toml")
+    {
+        var config = new CharacterConfig();
+        string? fullPath = FindConfigPath(path);
+        if (fullPath != null && File.Exists(fullPath))
+        {
+            try
+            {
+                string tomlText = File.ReadAllText(fullPath);
+                var dict = TomlSerializer.Deserialize<Dictionary<string, float>>(tomlText);
+                if (dict != null)
+                {
+                    config.LoadFromDictionary(dict);
+                }
+                Console.WriteLine($"[C# 設定] TOML ファイルから CharacterConfig を読み込みました: {fullPath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[C# 設定] CharacterConfig TOML 読み込みエラー ({fullPath}): {ex.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"[C# 設定] 警告: TOML 設定ファイルが見つかりません ({path})。デフォルト値を使用します。");
+        }
+
+        return config;
+    }
+
+    private static string? FindConfigPath(string fileName)
+    {
+        try
+        {
+            if (File.Exists(fileName))
+            {
+                return Path.GetFullPath(fileName);
+            }
+
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string fullPath = Path.GetFullPath(Path.Combine(baseDir, "..", "Config", fileName));
+            if (File.Exists(fullPath))
+            {
+                return fullPath;
+            }
+        }
+        catch
+        {
+            // 例外無視
+        }
+
+        return null;
+    }
 }

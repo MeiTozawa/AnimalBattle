@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using AnimalBattle.Bindings;
 
-namespace AnimalBattle;
+namespace AnimalBattle.Stages;
 
 /// <summary>
 /// マップ（ステージ）全体の構成情報を保持するデータ構造クラス。

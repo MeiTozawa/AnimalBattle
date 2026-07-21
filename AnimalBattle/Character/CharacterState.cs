@@ -1,6 +1,6 @@
 using System;
 
-namespace AnimalBattle;
+namespace AnimalBattle.Characters;
 
 /// <summary>
 /// キャラクターのアクション状態を表す列挙型。
