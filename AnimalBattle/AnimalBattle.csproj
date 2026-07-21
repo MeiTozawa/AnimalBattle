@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PublishAot>true</PublishAot>
+    <NoWarn>$(NoWarn);SYSLIB1104</NoWarn>
   </PropertyGroup>
 
   <!-- Automatically copy the built native C++ DLL to the output directory -->

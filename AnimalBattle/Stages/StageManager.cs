@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AnimalBattle.Bindings;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Stages;
 
@@ -133,11 +134,17 @@ public class StageManager
     /// </summary>
     /// <param name="physics">Native C++ 物理エンジンのポインタ</param>
     /// <param name="mapIndex">読み込むマップのインデックス</param>
-    public void LoadMap(IntPtr physics, int mapIndex)
+    /// <returns>成功時はカレント <see cref="MapData"/> を含む <see cref="Result{T}"/>、失敗時は <see cref="SimpleError"/></returns>
+    public Result<MapData> LoadMap(IntPtr physics, int mapIndex)
     {
+        if (physics == IntPtr.Zero)
+        {
+            return SimpleError.NotValid("物理エンジンのインスタンスポインタが無効 (null) です。");
+        }
+
         if (mapIndex < 0 || mapIndex >= _maps.Count)
         {
-            return;
+            return SimpleError.NotFound($"指定されたマップインデックス {mapIndex} は範囲外です (有効範囲: 0 ～ {_maps.Count - 1})。");
         }
 
         // 1. 既存の物理エンジン上の足場を削除
@@ -163,5 +170,6 @@ public class StageManager
         }
 
         Console.WriteLine($"[ステージマネージャー] マップ {newMap.Id} に切り替えました: {newMap.Name}");
+        return newMap;
     }
 }

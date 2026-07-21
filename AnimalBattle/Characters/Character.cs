@@ -48,5 +48,5 @@ public class Character(int playerIndex, string name, uint mainColor, uint outlin
     /// <summary>
     /// キャラクターの物理・移動設定パラメータを取得または設定します。
     /// </summary>
-    public CharacterConfig Config { get; set; } = CharacterConfig.LoadFromFile(configPath);
+    public CharacterConfig Config { get; set; } = CharacterConfig.LoadFromFile(configPath) is var res && res.IsOk ? res.Value! : new CharacterConfig();
 }

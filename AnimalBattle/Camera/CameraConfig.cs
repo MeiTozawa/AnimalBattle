@@ -1,7 +1,7 @@
 using System;
 using AnimalBattle.Core;
 
-namespace AnimalBattle.Cameras;
+namespace AnimalBattle.Camera;
 
 /// <summary>
 /// カメラの初期ビューポートおよび制御パラメータを保持する設定クラス。
@@ -53,8 +53,8 @@ public class CameraConfig : ConfigBase<CameraConfig>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="CameraConfig"/> インスタンスを生成します。
     /// </summary>
     /// <param name="path">TOML ファイルパスまたはファイル名</param>
-    /// <returns>読み込まれた <see cref="CameraConfig"/> インスタンス</returns>
-    public static new CameraConfig LoadFromFile(string path = "camera.toml")
+    /// <returns>成功時は <see cref="CameraConfig"/> を含む <see cref="Result{T, E}"/>、失敗時は <see cref="SimpleError"/></returns>
+    public new static Result<CameraConfig> LoadFromFile(string path = "camera.toml")
     {
         return ConfigBase<CameraConfig>.LoadFromFile(path);
     }

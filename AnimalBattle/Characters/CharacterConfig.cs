@@ -118,8 +118,8 @@ public class CharacterConfig : ConfigBase<CharacterConfig>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="CharacterConfig"/> インスタンスを生成します。
     /// </summary>
     /// <param name="path">TOML ファイルパスまたはファイル名</param>
-    /// <returns>読み込まれた <see cref="CharacterConfig"/> インスタンス</returns>
-    public static new CharacterConfig LoadFromFile(string path = "character.toml")
+    /// <returns>成功時は <see cref="CharacterConfig"/> を含む <see cref="Result{T}"/>、失敗時は <see cref="SimpleError"/></returns>
+    public new static Result<CharacterConfig> LoadFromFile(string path = "character.toml")
     {
         return ConfigBase<CharacterConfig>.LoadFromFile(path);
     }

@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 using AnimalBattle.Bindings;
-using AnimalBattle.Cameras;
+using AnimalBattle.Camera;
 using AnimalBattle.Characters;
 using AnimalBattle.Stages;
 
@@ -33,7 +33,13 @@ internal class Program
 
         // Native C++ カメラモジュールの初期化
         Console.WriteLine("ネイティブカメラモジュールを初期化中...");
-        var cameraConfig = CameraConfig.LoadFromFile("camera.toml");
+        var cameraConfigResult = CameraConfig.LoadFromFile("camera.toml");
+        if (!cameraConfigResult.IsOk)
+        {
+            Console.WriteLine($"[C# 設定] 警告 [{cameraConfigResult.Error?.Type}]: {cameraConfigResult.Error?.Description} デフォルト値を使用します。");
+        }
+        var cameraConfig = cameraConfigResult.IsOk ? cameraConfigResult.Value! : new CameraConfig();
+
         IntPtr camera = NativeEngine.CameraCreate(
             x: cameraConfig.InitialX,
             y: cameraConfig.InitialY,
@@ -58,7 +64,12 @@ internal class Program
         // ステージマネージャーの初期化および初期マップ (Map 1) のロード
         Console.WriteLine("ステージマネージャーを初期化中 & マップ 1 を読み込み中...");
         var stageManager = new StageManager();
-        stageManager.LoadMap(physics, 0);
+        var loadMapResult = stageManager.LoadMap(physics, 0);
+        if (!loadMapResult.IsOk)
+        {
+            Console.WriteLine($"[マップ読み込みエラー [{loadMapResult.Error?.Type}]] {loadMapResult.Error?.Description}");
+            return;
+        }
 
         MapData currentMap = stageManager.CurrentMap;
         NativeEngine.CameraReset(camera, 640.0f, 360.0f, 1.0f);
@@ -101,7 +112,12 @@ internal class Program
             int switchMapIndex = input.GetRequestedMapSwitchIndex();
             if (switchMapIndex != -1 && switchMapIndex != stageManager.CurrentMapIndex)
             {
-                stageManager.LoadMap(physics, switchMapIndex);
+                var switchResult = stageManager.LoadMap(physics, switchMapIndex);
+                if (!switchResult.IsOk)
+                {
+                    Console.WriteLine($"[マップ切り替えエラー [{switchResult.Error?.Type}]] {switchResult.Error?.Description}");
+                    continue;
+                }
                 currentMap = stageManager.CurrentMap;
 
                 // 新ステージへプレイヤーを再生成

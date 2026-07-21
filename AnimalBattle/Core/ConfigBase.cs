@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
@@ -11,7 +12,7 @@ namespace AnimalBattle.Core;
 /// TOML 設定ファイルからの動的読み込み、自動リロード（reloadOnChange）、およびプロパティ設定をサポートする抽象基底クラス。
 /// </summary>
 /// <typeparam name="T">派生する設定クラスの型</typeparam>
-public abstract class ConfigBase<T> where T : ConfigBase<T>, new()
+public abstract class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T> where T : ConfigBase<T>, new()
 {
     private IDisposable? _changeTokenSubscription;
 
@@ -24,54 +25,52 @@ public abstract class ConfigBase<T> where T : ConfigBase<T>, new()
     /// 指定された TOML ファイルから設定を読み込み、自動リロード（reloadOnChange: true）を有効にしたインスタンスを生成します。
     /// </summary>
     /// <param name="defaultFileName">TOML ファイル名</param>
-    /// <returns>読み込まれた設定クラスのインスタンス</returns>
-    public static T LoadFromFile(string defaultFileName)
+    /// <returns>成功時は設定クラスインスタンスを含む <see cref="Result{T}"/>、失敗時は <see cref="SimpleError"/></returns>
+    [UnconditionalSuppressMessage("Microsoft.Configuration.Binder", "SYSLIB1104", Justification = "Generic binder fallback is intentional in abstract base config class.")]
+    public static Result<T> LoadFromFile(string defaultFileName)
     {
-        var config = new T();
         string? fullPath = FindConfigPath(defaultFileName);
-        if (fullPath != null && File.Exists(fullPath))
+        if (fullPath == null || !File.Exists(fullPath))
         {
-            try
-            {
-                string directory = Path.GetDirectoryName(fullPath) ?? AppDomain.CurrentDomain.BaseDirectory;
-                string fileName = Path.GetFileName(fullPath);
+            return SimpleError.NotFound($"TOML 設定ファイルが見つかりません ({defaultFileName})。");
+        }
 
-                var builder = new ConfigurationBuilder()
-                    .SetBasePath(directory)
-                    .AddTomlFile(fileName, optional: true, reloadOnChange: true);
+        try
+        {
+            var config = new T();
+            string directory = Path.GetDirectoryName(fullPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+            string fileName = Path.GetFileName(fullPath);
 
-                IConfigurationRoot configRoot = builder.Build();
-                configRoot.Bind(config);
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(directory)
+                .AddTomlFile(fileName, optional: true, reloadOnChange: true);
 
-                config._changeTokenSubscription = ChangeToken.OnChange(
-                    () => configRoot.GetReloadToken(),
-                    () =>
+            IConfigurationRoot configRoot = builder.Build();
+            configRoot.Bind(config);
+
+            config._changeTokenSubscription = ChangeToken.OnChange(
+                configRoot.GetReloadToken,
+                () =>
+                {
+                    try
                     {
-                        try
-                        {
-                            configRoot.Bind(config);
-                            Console.WriteLine($"[C# 設定] {typeof(T).Name} がファイル変更に伴い自動リロードされました (reloadOnChange: true): {fullPath}");
-                            config.OnConfigReloaded?.Invoke();
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"[C# 設定] {typeof(T).Name} のリロード中にエラーが発生しました: {ex.Message}");
-                        }
-                    });
+                        configRoot.Bind(config);
+                        Console.WriteLine($"[C# 設定] {typeof(T).Name} がファイル変更に伴い自動リロードされました (reloadOnChange: true): {fullPath}");
+                        config.OnConfigReloaded?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[C# 設定] {typeof(T).Name} のリロード中にエラーが発生しました: {ex.Message}");
+                    }
+                });
 
-                Console.WriteLine($"[C# 設定] TOML ファイルから {typeof(T).Name} を読み込みました (reloadOnChange: true): {fullPath}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[C# 設定] {typeof(T).Name} TOML 読み込みエラー ({fullPath}): {ex.Message}");
-            }
+            Console.WriteLine($"[C# 設定] TOML ファイルから {typeof(T).Name} を読み込みました (reloadOnChange: true): {fullPath}");
+            return config;
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine($"[C# 設定] 警告: TOML 設定ファイルが見つかりません ({defaultFileName})。デフォルト値を使用します。");
+            return SimpleError.Exception(ex);
         }
-
-        return config;
     }
 
     /// <summary>
@@ -80,7 +79,7 @@ public abstract class ConfigBase<T> where T : ConfigBase<T>, new()
     /// <param name="values">設定項目キーと数値のマップ</param>
     public virtual void LoadFromDictionary(IDictionary<string, float> values)
     {
-        var properties = GetType().GetProperties();
+        var properties = typeof(T).GetProperties();
         foreach (var prop in properties)
         {
             if (prop.PropertyType != typeof(float) || !prop.CanWrite)
