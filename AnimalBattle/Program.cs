@@ -44,6 +44,17 @@ internal class Program
             paddingX: cameraConfig.PaddingX,
             paddingY: cameraConfig.PaddingY);
 
+        cameraConfig.OnConfigReloaded += () =>
+        {
+            NativeEngine.CameraSetConfig(
+                camera,
+                cameraConfig.MinScale,
+                cameraConfig.MaxScale,
+                cameraConfig.LerpSpeed,
+                cameraConfig.PaddingX,
+                cameraConfig.PaddingY);
+        };
+
         // ステージマネージャーの初期化および初期マップ (Map 1) のロード
         Console.WriteLine("ステージマネージャーを初期化中 & マップ 1 を読み込み中...");
         var stageManager = new StageManager();

@@ -1,18 +1,27 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Tomlyn;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Primitives;
+using Tomlyn.Extensions.Configuration;
 
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// TOML 設定ファイルからの動的読み込みおよびプロパティ設定をサポートする抽象基底クラス。
+/// TOML 設定ファイルからの動的読み込み、自動リロード（reloadOnChange）、およびプロパティ設定をサポートする抽象基底クラス。
 /// </summary>
 /// <typeparam name="T">派生する設定クラスの型</typeparam>
 public abstract class ConfigBase<T> where T : ConfigBase<T>, new()
 {
+    private IDisposable? _changeTokenSubscription;
+
     /// <summary>
-    /// 指定された TOML ファイルから設定を読み込んだインスタンスを生成します。
+    /// 設定ファイル変更にともない自動リロードが発生した際に発火するイベント。
+    /// </summary>
+    public event Action? OnConfigReloaded;
+
+    /// <summary>
+    /// 指定された TOML ファイルから設定を読み込み、自動リロード（reloadOnChange: true）を有効にしたインスタンスを生成します。
     /// </summary>
     /// <param name="defaultFileName">TOML ファイル名</param>
     /// <returns>読み込まれた設定クラスのインスタンス</returns>
@@ -24,13 +33,33 @@ public abstract class ConfigBase<T> where T : ConfigBase<T>, new()
         {
             try
             {
-                string tomlText = File.ReadAllText(fullPath);
-                var dict = TomlSerializer.Deserialize<Dictionary<string, float>>(tomlText);
-                if (dict != null)
-                {
-                    config.LoadFromDictionary(dict);
-                }
-                Console.WriteLine($"[C# 設定] TOML ファイルから {typeof(T).Name} を読み込みました: {fullPath}");
+                string directory = Path.GetDirectoryName(fullPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+                string fileName = Path.GetFileName(fullPath);
+
+                var builder = new ConfigurationBuilder()
+                    .SetBasePath(directory)
+                    .AddTomlFile(fileName, optional: true, reloadOnChange: true);
+
+                IConfigurationRoot configRoot = builder.Build();
+                configRoot.Bind(config);
+
+                config._changeTokenSubscription = ChangeToken.OnChange(
+                    () => configRoot.GetReloadToken(),
+                    () =>
+                    {
+                        try
+                        {
+                            configRoot.Bind(config);
+                            Console.WriteLine($"[C# 設定] {typeof(T).Name} がファイル変更に伴い自動リロードされました (reloadOnChange: true): {fullPath}");
+                            config.OnConfigReloaded?.Invoke();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[C# 設定] {typeof(T).Name} のリロード中にエラーが発生しました: {ex.Message}");
+                        }
+                    });
+
+                Console.WriteLine($"[C# 設定] TOML ファイルから {typeof(T).Name} を読み込みました (reloadOnChange: true): {fullPath}");
             }
             catch (Exception ex)
             {
