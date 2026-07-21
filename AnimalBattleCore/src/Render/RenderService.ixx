@@ -8,14 +8,12 @@ export module RenderService;
 
 namespace ab {
     /// @brief SetDrawBlendMode に渡すブレンドモード（DxLib の DX_BLENDMODE_* に対応）
-    export enum class BlendMode
-    {
-        NoBlend, ///< ブレンドなし（DX_BLENDMODE_NOBLEND）
-        Alpha, ///< アルファブレンド（DX_BLENDMODE_ALPHA）
+    export enum class BlendMode {
+        NoBlend,  ///< ブレンドなし（DX_BLENDMODE_NOBLEND）
+        Alpha,    ///< アルファブレンド（DX_BLENDMODE_ALPHA）
     };
 
-    export enum class BorderShape
-    {
+    export enum class BorderShape {
         Null,
         Rectangle,
         DoubleRectangle,
@@ -24,45 +22,43 @@ namespace ab {
     };
 
     /// @brief 各種描画処理（矩形、文字列、スプライト、ブレンドモードなど）を提供するレンダリングサービスインターフェース
-    export class IRenderService
-    {
+    export class IRenderService {
     public:
         virtual ~IRenderService() = default;
 
         /// @brief 現在設定されているフォントサイズを取得する
         /// @return フォントサイズ
-        virtual int GetFontSize() = 0;
+        virtual int GetFontSize() const = 0;
 
         /// @brief 指定した文字列を描画した際のピクセル幅を取得する
         /// @param text 文字列
         /// @return 文字列の描画幅（ピクセル）
-        virtual int GetDrawStringWidth(const wchar_t* text) = 0;
+        virtual int GetDrawStringWidth(const wchar_t* text) const = 0;
 
         /// @brief 指定した座標（Point）に文字列を描画する
         virtual void DrawString(Point<int> p, const wchar_t* text, uint32_t color) = 0;
         
         /// @brief 矩形（Rect）を描画する（int）
-        virtual void DrawBox(Rect<int> r, uint32_t color, bool fillFlag) = 0;
+        virtual void DrawBox(Rect<int> r, uint32_t color, bool fill_flag) = 0;
 
         /// @brief 中空の矩形（枠線）を太さを指定して描画する
         virtual void DrawHollowBox(Rect<int> r, int thickness, uint32_t color) = 0;
 
         /// @brief 角丸矩形の枠線を描画する
-        virtual void DrawRoundRectFrame(Rect<int> r, int cornerRadius, int thickness, uint32_t color) = 0;
+        virtual void DrawRoundRectFrame(Rect<int> r, int corner_radius, int thickness, uint32_t color) = 0;
 
         /// @brief ボーダーと文字を描画する
         virtual void DrawStringWithBorder(Rect<int> r, const wchar_t* text, BorderShape shape = BorderShape::Null,
-                                uint32_t textColor = COLOR_WHITE, uint32_t borderColor = COLOR_WHITE) = 0;
-
+                                          uint32_t text_color = COLOR_WHITE, uint32_t border_color = COLOR_WHITE) = 0;
 
         /// @brief 画像ハンドルを指定してグラフィックを描画する（Point）
-        virtual void DrawGraph(Point<int> p, int handle, bool transFlag) = 0;
+        virtual void DrawGraph(Point<int> p, int handle, bool trans_flag) = 0;
 
         /// @brief 画像ハンドルを指定してグラフィックを回転・拡大縮小描画する（Point）
-        virtual void DrawRotaGraphF(Point<float> p, double extRate, double angle, int graphHandle, bool transFlag) = 0;
+        virtual void DrawRotaGraphF(Point<float> p, double ext_rate, double angle, int graph_handle, bool trans_flag) = 0;
 
         /// @brief 切り出し領域を指定してグラフィックを回転・拡大縮小・左右反転描画する
-        virtual void DrawRectRotaGraph(Point<int> p, Rect<int> src, double extRate, double angle, int graphHandle, bool transFlag, bool turnFlag) = 0;
+        virtual void DrawRectRotaGraph(Point<int> p, Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) = 0;
 
         /// @brief 描画時のブレンドモードとブレンドパラメータを設定する
         /// @param mode ブレンドモード
@@ -79,8 +75,8 @@ namespace ab {
         virtual void SetFontTypeNormal() = 0;
 
         /// @brief 描画に使用するフォントを変更する
-        /// @param fontName フォント名
-        virtual void ChangeFont(const wchar_t* fontName) = 0;
+        /// @param font_name フォント名
+        virtual void ChangeFont(const wchar_t* font_name) = 0;
 
         /// @brief 描画に使用するフォントのサイズを設定する
         /// @param size フォントサイズ
@@ -96,7 +92,7 @@ namespace ab {
         /// @param b 青成分（0〜255）
         virtual void SetBackgroundColor(int r, int g, int b) = 0;
 
-        /// @brief アプリケーションを終了する（dxe::ExitApplication() に委譲）
+        /// @brief アプリケーションを終了する
         virtual void ExitApplication() = 0;
 
         /// @brief カメラ変換の有効/無効を切り替える
@@ -107,4 +103,4 @@ namespace ab {
     };
 
     export std::unique_ptr<IRenderService> CreateRenderService(int width, int height);
-} // namespace ab
+}  // namespace ab

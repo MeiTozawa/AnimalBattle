@@ -6,82 +6,71 @@ module;
 #include <RenderUtils.h>
 
 module RenderService;
-namespace ab {
-    extern bool g_IsExitRequested;
 
-    class DxLibRenderService : public IRenderService
-    {
+namespace ab {
+    extern bool g_is_exit_requested;
+
+    class DxLibRenderService : public IRenderService {
     private:
-        int m_viewportWidth = 1280;
-        int m_viewportHeight = 720;
-        bool m_cameraEnabled = false;
-        float m_cameraX = 640.0f;
-        float m_cameraY = 360.0f;
-        float m_cameraScale = 1.0f;
+        int viewport_width_ = 1280;
+        int viewport_height_ = 720;
+        bool camera_enabled_ = false;
+        float camera_x_ = 640.0f;
+        float camera_y_ = 360.0f;
+        float camera_scale_ = 1.0f;
 
     public:
         DxLibRenderService(int width, int height)
-            : m_viewportWidth(width), m_viewportHeight(height)
-        {
+            : viewport_width_(width), viewport_height_(height) {
         }
 
-        void SetCameraEnabled(bool enabled) override
-        {
-            m_cameraEnabled = enabled;
+        void SetCameraEnabled(bool enabled) override {
+            camera_enabled_ = enabled;
         }
 
-        void SetCameraState(float x, float y, float scale) override
-        {
-            m_cameraX = x;
-            m_cameraY = y;
-            m_cameraScale = scale;
+        void SetCameraState(float x, float y, float scale) override {
+            camera_x_ = x;
+            camera_y_ = y;
+            camera_scale_ = scale;
         }
 
-        int GetFontSize() override
-        {
+        int GetFontSize() const override {
             return ::GetFontSize();
         }
 
-        int GetDrawStringWidth(const wchar_t* text) override
-        {
+        int GetDrawStringWidth(const wchar_t* text) const override {
             return ::GetDrawStringWidth(text, -1);
         }
 
-        void DrawString(Point<int> p, const wchar_t* text, uint32_t color) override
-        {
+        void DrawString(Point<int> p, const wchar_t* text, uint32_t color) override {
             Point<int> p_draw = p;
-            if (m_cameraEnabled)
-            {
-                p_draw.x = static_cast<int>((p.x - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                p_draw.y = static_cast<int>((p.y - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
+            if (camera_enabled_) {
+                p_draw.x = static_cast<int>((p.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                p_draw.y = static_cast<int>((p.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
             }
             ::DrawString(p_draw.x, p_draw.y, text, color);
         }
 
-        void DrawBox(Rect<int> r, uint32_t color, bool fillFlag) override
-        {
+        void DrawBox(Rect<int> r, uint32_t color, bool fill_flag) override {
             Rect<int> r_draw = r;
-            if (m_cameraEnabled)
-            {
-                r_draw.x1 = static_cast<int>((r.x1 - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                r_draw.y1 = static_cast<int>((r.y1 - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
-                r_draw.x2 = static_cast<int>((r.x2 - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                r_draw.y2 = static_cast<int>((r.y2 - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
+            if (camera_enabled_) {
+                r_draw.x1 = static_cast<int>((r.x1 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                r_draw.y1 = static_cast<int>((r.y1 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                r_draw.x2 = static_cast<int>((r.x2 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                r_draw.y2 = static_cast<int>((r.y2 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
             }
-            ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x2, r_draw.y2, color, fillFlag ? TRUE : FALSE);
+            ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x2, r_draw.y2, color, fill_flag ? TRUE : FALSE);
         }
 
-        void DrawHollowBox(Rect<int> r, int thickness, uint32_t color) override
-        {
+        void DrawHollowBox(Rect<int> r, int thickness, uint32_t color) override {
             Rect<int> r_draw = r;
             int thickness_draw = thickness;
-            if (m_cameraEnabled)
-            {
-                r_draw.x1 = static_cast<int>((r.x1 - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                r_draw.y1 = static_cast<int>((r.y1 - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
-                r_draw.x2 = static_cast<int>((r.x2 - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                r_draw.y2 = static_cast<int>((r.y2 - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
-                thickness_draw = static_cast<int>(thickness * m_cameraScale);
+            if (camera_enabled_) {
+                r_draw.x1 = static_cast<int>((r.x1 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                r_draw.y1 = static_cast<int>((r.y1 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                r_draw.x2 = static_cast<int>((r.x2 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                r_draw.y2 = static_cast<int>((r.y2 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                thickness_draw = static_cast<int>(thickness * camera_scale_);
                 if (thickness_draw < 1 && thickness > 0) thickness_draw = 1;
             }
             ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x2, r_draw.y1 + thickness_draw, color, TRUE);
@@ -90,20 +79,18 @@ namespace ab {
             ::DrawBox(r_draw.x2 - thickness_draw, r_draw.y1, r_draw.x2, r_draw.y2, color, TRUE);
         }
 
-        void DrawRoundRectFrame(Rect<int> r, int cornerRadius, int thickness, uint32_t color) override
-        {
+        void DrawRoundRectFrame(Rect<int> r, int corner_radius, int thickness, uint32_t color) override {
             Rect<int> r_draw = r;
             int thickness_draw = thickness;
-            int radius_draw = cornerRadius;
-            if (m_cameraEnabled)
-            {
-                r_draw.x1 = static_cast<int>((r.x1 - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                r_draw.y1 = static_cast<int>((r.y1 - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
-                r_draw.x2 = static_cast<int>((r.x2 - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                r_draw.y2 = static_cast<int>((r.y2 - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
-                thickness_draw = static_cast<int>(thickness * m_cameraScale);
+            int radius_draw = corner_radius;
+            if (camera_enabled_) {
+                r_draw.x1 = static_cast<int>((r.x1 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                r_draw.y1 = static_cast<int>((r.y1 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                r_draw.x2 = static_cast<int>((r.x2 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                r_draw.y2 = static_cast<int>((r.y2 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                thickness_draw = static_cast<int>(thickness * camera_scale_);
                 if (thickness_draw < 1 && thickness > 0) thickness_draw = 1;
-                radius_draw = static_cast<int>(cornerRadius * m_cameraScale);
+                radius_draw = static_cast<int>(corner_radius * camera_scale_);
             }
             for (int i = 0; i < thickness_draw; ++i)
                 ::DrawRoundRect(r_draw.x1 + i, r_draw.y1 + i, r_draw.x2 - i, r_draw.y2 - i,
@@ -111,40 +98,37 @@ namespace ab {
         }
 
         void DrawStringWithBorder(Rect<int> r, const wchar_t* text,
-                                  BorderShape shape, uint32_t textColor, uint32_t borderColor) override
-        {
+                                  BorderShape shape, uint32_t text_color, uint32_t border_color) override {
             Rect<int> r_draw = r;
             int thickness_draw = 2;
-            if (m_cameraEnabled)
-            {
-                r_draw.x1 = static_cast<int>((r.x1 - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                r_draw.y1 = static_cast<int>((r.y1 - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
-                r_draw.x2 = static_cast<int>((r.x2 - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                r_draw.y2 = static_cast<int>((r.y2 - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
-                thickness_draw = static_cast<int>(2 * m_cameraScale);
+            if (camera_enabled_) {
+                r_draw.x1 = static_cast<int>((r.x1 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                r_draw.y1 = static_cast<int>((r.y1 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                r_draw.x2 = static_cast<int>((r.x2 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                r_draw.y2 = static_cast<int>((r.y2 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                thickness_draw = static_cast<int>(2 * camera_scale_);
                 if (thickness_draw < 1) thickness_draw = 1;
             }
 
-            switch (shape)
-            {
+            switch (shape) {
             case BorderShape::Rectangle:
-                ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x2, r_draw.y1 + thickness_draw, borderColor, TRUE);
-                ::DrawBox(r_draw.x1, r_draw.y2 - thickness_draw, r_draw.x2, r_draw.y2, borderColor, TRUE);
-                ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x1 + thickness_draw, r_draw.y2, borderColor, TRUE);
-                ::DrawBox(r_draw.x2 - thickness_draw, r_draw.y1, r_draw.x2, r_draw.y2, borderColor, TRUE);
+                ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x2, r_draw.y1 + thickness_draw, border_color, TRUE);
+                ::DrawBox(r_draw.x1, r_draw.y2 - thickness_draw, r_draw.x2, r_draw.y2, border_color, TRUE);
+                ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x1 + thickness_draw, r_draw.y2, border_color, TRUE);
+                ::DrawBox(r_draw.x2 - thickness_draw, r_draw.y1, r_draw.x2, r_draw.y2, border_color, TRUE);
                 break;
             case BorderShape::DoubleRectangle:
                 {
-                    ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x2, r_draw.y1 + thickness_draw, borderColor, TRUE);
-                    ::DrawBox(r_draw.x1, r_draw.y2 - thickness_draw, r_draw.x2, r_draw.y2, borderColor, TRUE);
-                    ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x1 + thickness_draw, r_draw.y2, borderColor, TRUE);
-                    ::DrawBox(r_draw.x2 - thickness_draw, r_draw.y1, r_draw.x2, r_draw.y2, borderColor, TRUE);
+                    ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x2, r_draw.y1 + thickness_draw, border_color, TRUE);
+                    ::DrawBox(r_draw.x1, r_draw.y2 - thickness_draw, r_draw.x2, r_draw.y2, border_color, TRUE);
+                    ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x1 + thickness_draw, r_draw.y2, border_color, TRUE);
+                    ::DrawBox(r_draw.x2 - thickness_draw, r_draw.y1, r_draw.x2, r_draw.y2, border_color, TRUE);
 
                     Rect<int> r_inner = r_draw.Expand(-2 * thickness_draw);
-                    ::DrawBox(r_inner.x1, r_inner.y1, r_inner.x2, r_inner.y1 + thickness_draw, borderColor, TRUE);
-                    ::DrawBox(r_inner.x1, r_inner.y2 - thickness_draw, r_inner.x2, r_inner.y2, borderColor, TRUE);
-                    ::DrawBox(r_inner.x1, r_inner.y1, r_inner.x1 + thickness_draw, r_inner.y2, borderColor, TRUE);
-                    ::DrawBox(r_inner.x2 - thickness_draw, r_inner.y1, r_inner.x2, r_inner.y2, borderColor, TRUE);
+                    ::DrawBox(r_inner.x1, r_inner.y1, r_inner.x2, r_inner.y1 + thickness_draw, border_color, TRUE);
+                    ::DrawBox(r_inner.x1, r_inner.y2 - thickness_draw, r_inner.x2, r_inner.y2, border_color, TRUE);
+                    ::DrawBox(r_inner.x1, r_inner.y1, r_inner.x1 + thickness_draw, r_inner.y2, border_color, TRUE);
+                    ::DrawBox(r_inner.x2 - thickness_draw, r_inner.y1, r_inner.x2, r_inner.y2, border_color, TRUE);
                 }
                 break;
             case BorderShape::Pill:
@@ -152,122 +136,107 @@ namespace ab {
                     int radius = (r_draw.y2 - r_draw.y1) / 2;
                     for (int i = 0; i < thickness_draw; ++i)
                         ::DrawRoundRect(r_draw.x1 + i, r_draw.y1 + i, r_draw.x2 - i, r_draw.y2 - i,
-                                        radius, radius, borderColor, FALSE);
+                                        radius, radius, border_color, FALSE);
                 }
                 break;
             case BorderShape::Underline:
-                ::DrawBox(r_draw.x1, r_draw.y2 - thickness_draw, r_draw.x2, r_draw.y2, borderColor, TRUE);
+                ::DrawBox(r_draw.x1, r_draw.y2 - thickness_draw, r_draw.x2, r_draw.y2, border_color, TRUE);
                 break;
             case BorderShape::Null:
             default:
                 break;
             }
 
-            const int drawX = (r_draw.x1 + r_draw.x2) / 2 - GetDrawStringWidth(text) / 2;
-            const int drawY = (r_draw.y1 + r_draw.y2) / 2 - GetFontSize() / 2;
-            ::DrawString(drawX, drawY, text, textColor);
+            const int draw_x = (r_draw.x1 + r_draw.x2) / 2 - GetDrawStringWidth(text) / 2;
+            const int draw_y = (r_draw.y1 + r_draw.y2) / 2 - GetFontSize() / 2;
+            ::DrawString(draw_x, draw_y, text, text_color);
         }
 
-        void DrawGraph(Point<int> p, int handle, bool transFlag) override
-        {
-            if (m_cameraEnabled)
-            {
-                int w = 0, h = 0;
+        void DrawGraph(Point<int> p, int handle, bool trans_flag) override {
+            if (camera_enabled_) {
+                int w = 0;
+                int h = 0;
                 ::GetGraphSize(handle, &w, &h);
-                int x1 = static_cast<int>((p.x - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                int y1 = static_cast<int>((p.y - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
-                int x2 = x1 + static_cast<int>(w * m_cameraScale);
-                int y2 = y1 + static_cast<int>(h * m_cameraScale);
-                ::DrawExtendGraph(x1, y1, x2, y2, handle, transFlag ? TRUE : FALSE);
-            }
-            else
-            {
-                ::DrawGraph(p.x, p.y, handle, transFlag ? TRUE : FALSE);
+                int x1 = static_cast<int>((p.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                int y1 = static_cast<int>((p.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                int x2 = x1 + static_cast<int>(w * camera_scale_);
+                int y2 = y1 + static_cast<int>(h * camera_scale_);
+                ::DrawExtendGraph(x1, y1, x2, y2, handle, trans_flag ? TRUE : FALSE);
+            } else {
+                ::DrawGraph(p.x, p.y, handle, trans_flag ? TRUE : FALSE);
             }
         }
 
-        void DrawRotaGraphF(Point<float> p, double extRate, double angle,
-                            int graphHandle, bool transFlag) override
-        {
+        void DrawRotaGraphF(Point<float> p, double ext_rate, double angle,
+                            int graph_handle, bool trans_flag) override {
             Point<float> p_draw = p;
-            double scale_draw = extRate;
-            if (m_cameraEnabled)
-            {
-                p_draw.x = static_cast<float>((p.x - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                p_draw.y = static_cast<float>((p.y - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
-                scale_draw = extRate * m_cameraScale;
+            double scale_draw = ext_rate;
+            if (camera_enabled_) {
+                p_draw.x = static_cast<float>((p.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                p_draw.y = static_cast<float>((p.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                scale_draw = ext_rate * camera_scale_;
             }
-            ::DrawRotaGraphF(p_draw.x, p_draw.y, scale_draw, angle, graphHandle, transFlag ? TRUE : FALSE);
+            ::DrawRotaGraphF(p_draw.x, p_draw.y, scale_draw, angle, graph_handle, trans_flag ? TRUE : FALSE);
         }
 
-        void DrawRectRotaGraph(Point<int> p, Rect<int> src, double extRate, double angle,
-                               int graphHandle, bool transFlag, bool turnFlag) override
-        {
+        void DrawRectRotaGraph(Point<int> p, Rect<int> src, double ext_rate, double angle,
+                               int graph_handle, bool trans_flag, bool turn_flag) override {
             Point<int> p_draw = p;
-            double scale_draw = extRate;
-            if (m_cameraEnabled)
-            {
-                p_draw.x = static_cast<int>((p.x - m_cameraX) * m_cameraScale + m_viewportWidth / 2.0f);
-                p_draw.y = static_cast<int>((p.y - m_cameraY) * m_cameraScale + m_viewportHeight / 2.0f);
-                scale_draw = extRate * m_cameraScale;
+            double scale_draw = ext_rate;
+            if (camera_enabled_) {
+                p_draw.x = static_cast<int>((p.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                p_draw.y = static_cast<int>((p.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                scale_draw = ext_rate * camera_scale_;
             }
-            int srcWidth = src.x2 - src.x1;
-            int srcHeight = src.y2 - src.y1;
-            ::DrawRectRotaGraph(p_draw.x, p_draw.y, src.x1, src.y1, srcWidth, srcHeight, scale_draw, angle,
-                                graphHandle, transFlag ? TRUE : FALSE, turnFlag ? TRUE : FALSE);
+            int src_width = src.x2 - src.x1;
+            int src_height = src.y2 - src.y1;
+            ::DrawRectRotaGraph(p_draw.x, p_draw.y, src.x1, src.y1, src_width, src_height, scale_draw, angle,
+                                graph_handle, trans_flag ? TRUE : FALSE, turn_flag ? TRUE : FALSE);
         }
 
-        void SetDrawBlendMode(BlendMode mode, int pal) override
-        {
-            int dxMode = DX_BLENDMODE_NOBLEND;
-            switch (mode)
-            {
-            case BlendMode::Alpha: dxMode = DX_BLENDMODE_ALPHA;
+        void SetDrawBlendMode(BlendMode mode, int pal) override {
+            int dx_mode = DX_BLENDMODE_NOBLEND;
+            switch (mode) {
+            case BlendMode::Alpha:
+                dx_mode = DX_BLENDMODE_ALPHA;
                 break;
-            case BlendMode::NoBlend: dxMode = DX_BLENDMODE_NOBLEND;
+            case BlendMode::NoBlend:
+                dx_mode = DX_BLENDMODE_NOBLEND;
                 break;
             }
-            ::SetDrawBlendMode(dxMode, pal);
+            ::SetDrawBlendMode(dx_mode, pal);
         }
 
-        void SetDrawBright(int r, int g, int b) override
-        {
+        void SetDrawBright(int r, int g, int b) override {
             ::SetDrawBright(r, g, b);
         }
 
-        void SetFontTypeNormal() override
-        {
+        void SetFontTypeNormal() override {
             ::ChangeFontType(DX_FONTTYPE_NORMAL);
         }
 
-        void ChangeFont(const wchar_t* fontName) override
-        {
-            ::ChangeFont(fontName);
+        void ChangeFont(const wchar_t* font_name) override {
+            ::ChangeFont(font_name);
         }
 
-        void SetFontSize(int size) override
-        {
+        void SetFontSize(int size) override {
             ::SetFontSize(size);
         }
 
-        void SetFontThickness(int thickness) override
-        {
+        void SetFontThickness(int thickness) override {
             ::SetFontThickness(thickness);
         }
 
-        void SetBackgroundColor(int r, int g, int b) override
-        {
+        void SetBackgroundColor(int r, int g, int b) override {
             ::SetBackgroundColor(r, g, b);
         }
 
-        void ExitApplication() override
-        {
-            g_IsExitRequested = true;
+        void ExitApplication() override {
+            g_is_exit_requested = true;
         }
     };
 
-    std::unique_ptr<IRenderService> CreateRenderService(int width, int height)
-    {
-        return std::unique_ptr<IRenderService>(new DxLibRenderService(width, height));
+    std::unique_ptr<IRenderService> CreateRenderService(int width, int height) {
+        return std::make_unique<DxLibRenderService>(width, height);
     }
-} // namespace ab
+}  // namespace ab

@@ -11,31 +11,31 @@ namespace ab {
     public:
         Camera();
 
-        void Reset(float targetX, float targetY, float scale);
-        void Update(float dt, const Vec2<float>* targets, int targetCount, float viewportWidth, float viewportHeight);
+        void Reset(float target_x, float target_y, float scale);
+        void Update(float dt, const Vec2<float>* targets, int target_count, float viewport_width, float viewport_height);
 
-        float GetX() const { return m_currentX; }
-        float GetY() const { return m_currentY; }
-        float GetScale() const { return m_currentScale; }
+        float GetX() const { return current_x_; }
+        float GetY() const { return current_y_; }
+        float GetScale() const { return current_scale_; }
 
-        void SetMinScale(float scale) { m_minScale = scale; }
-        void SetMaxScale(float scale) { m_maxScale = scale; }
-        void SetLerpSpeed(float speed) { m_lerpSpeed = speed; }
-        void SetPadding(float padX, float padY) { m_paddingX = padX; m_paddingY = padY; }
+        void SetMinScale(float scale) { min_scale_ = scale; }
+        void SetMaxScale(float scale) { max_scale_ = scale; }
+        void SetLerpSpeed(float speed) { lerp_speed_ = speed; }
+        void SetPadding(float pad_x, float pad_y) { padding_x_ = pad_x; padding_y_ = pad_y; }
 
     private:
-        float m_currentX = 640.0f;
-        float m_currentY = 360.0f;
-        float m_currentScale = 1.0f;
+        float current_x_ = 640.0f;
+        float current_y_ = 360.0f;
+        float current_scale_ = 1.0f;
 
-        float m_targetX = 640.0f;
-        float m_targetY = 360.0f;
-        float m_targetScale = 1.0f;
+        float target_x_ = 640.0f;
+        float target_y_ = 360.0f;
+        float target_scale_ = 1.0f;
 
-        float m_minScale = 0.45f;
-        float m_maxScale = 1.0f;
-        float m_lerpSpeed = 4.0f;
-        float m_paddingX = 250.0f;
-        float m_paddingY = 180.0f;
+        float min_scale_ = 0.45f;
+        float max_scale_ = 1.0f;
+        float lerp_speed_ = 4.0f;
+        float padding_x_ = 250.0f;
+        float padding_y_ = 180.0f;
     };
-}
+}  // namespace ab

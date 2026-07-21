@@ -7,61 +7,61 @@ module;
 module Camera;
 
 namespace ab {
-    Camera::Camera() {}
+    Camera::Camera() = default;
 
-    void Camera::Reset(float targetX, float targetY, float scale) {
-        m_currentX = targetX;
-        m_currentY = targetY;
-        m_currentScale = scale;
-        m_targetX = targetX;
-        m_targetY = targetY;
-        m_targetScale = scale;
+    void Camera::Reset(float target_x, float target_y, float scale) {
+        current_x_ = target_x;
+        current_y_ = target_y;
+        current_scale_ = scale;
+        target_x_ = target_x;
+        target_y_ = target_y;
+        target_scale_ = scale;
     }
 
-    void Camera::Update(float dt, const Vec2<float>* targets, int targetCount, float viewportWidth, float viewportHeight) {
-        if (targetCount <= 0) {
+    void Camera::Update(float dt, const Vec2<float>* targets, int target_count, float viewport_width, float viewport_height) {
+        if (target_count <= 0) {
             return;
         }
 
-        if (targetCount == 1) {
-            m_targetX = targets[0].x;
-            m_targetY = targets[0].y;
-            m_targetScale = m_maxScale;
+        if (target_count == 1) {
+            target_x_ = targets[0].x;
+            target_y_ = targets[0].y;
+            target_scale_ = max_scale_;
         } else {
-            float minX = targets[0].x;
-            float maxX = targets[0].x;
-            float minY = targets[0].y;
-            float maxY = targets[0].y;
+            float min_x = targets[0].x;
+            float max_x = targets[0].x;
+            float min_y = targets[0].y;
+            float max_y = targets[0].y;
 
-            for (int i = 1; i < targetCount; ++i) {
-                if (targets[i].x < minX) minX = targets[i].x;
-                if (targets[i].x > maxX) maxX = targets[i].x;
-                if (targets[i].y < minY) minY = targets[i].y;
-                if (targets[i].y > maxY) maxY = targets[i].y;
+            for (int i = 1; i < target_count; ++i) {
+                if (targets[i].x < min_x) min_x = targets[i].x;
+                if (targets[i].x > max_x) max_x = targets[i].x;
+                if (targets[i].y < min_y) min_y = targets[i].y;
+                if (targets[i].y > max_y) max_y = targets[i].y;
             }
 
-            m_targetX = (minX + maxX) / 2.0f;
-            m_targetY = (minY + maxY) / 2.0f;
+            target_x_ = (min_x + max_x) / 2.0f;
+            target_y_ = (min_y + max_y) / 2.0f;
 
-            float distX = maxX - minX;
-            float distY = maxY - minY;
+            float dist_x = max_x - min_x;
+            float dist_y = max_y - min_y;
 
-            float neededWidth = std::max(distX + 2.0f * m_paddingX, 400.0f);
-            float neededHeight = std::max(distY + 2.0f * m_paddingY, 300.0f);
+            float needed_width = std::max(dist_x + 2.0f * padding_x_, 400.0f);
+            float needed_height = std::max(dist_y + 2.0f * padding_y_, 300.0f);
 
-            float scaleX = viewportWidth / neededWidth;
-            float scaleY = viewportHeight / neededHeight;
+            float scale_x = viewport_width / needed_width;
+            float scale_y = viewport_height / needed_height;
 
-            m_targetScale = std::min(scaleX, scaleY);
-            m_targetScale = std::clamp(m_targetScale, m_minScale, m_maxScale);
+            target_scale_ = std::min(scale_x, scale_y);
+            target_scale_ = std::clamp(target_scale_, min_scale_, max_scale_);
         }
 
         // Frame-rate independent exponential interpolation
-        float t = 1.0f - std::exp(-m_lerpSpeed * dt);
+        float t = 1.0f - std::exp(-lerp_speed_ * dt);
         t = std::clamp(t, 0.0f, 1.0f);
 
-        m_currentX += (m_targetX - m_currentX) * t;
-        m_currentY += (m_targetY - m_currentY) * t;
-        m_currentScale += (m_targetScale - m_currentScale) * t;
+        current_x_ += (target_x_ - current_x_) * t;
+        current_y_ += (target_y_ - current_y_) * t;
+        current_scale_ += (target_scale_ - current_scale_) * t;
     }
-}
+}  // namespace ab

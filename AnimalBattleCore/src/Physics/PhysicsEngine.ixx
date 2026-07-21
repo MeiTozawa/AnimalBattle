@@ -4,8 +4,6 @@ module;
 #include <memory>
 #include <cmath>
 #include <algorithm>
-#include <string>
-#include <fstream>
 
 export module PhysicsEngine;
 
@@ -16,62 +14,49 @@ namespace ab {
         SemiSolid = 1
     };
 
-    export constexpr int COLLISION_NONE = 0;
-    export constexpr int COLLISION_FLOOR = 1 << 0;
-    export constexpr int COLLISION_CEILING = 1 << 1;
-    export constexpr int COLLISION_WALL_LEFT = 1 << 2;
-    export constexpr int COLLISION_WALL_RIGHT = 1 << 3;
-
-    export struct PhysicsConfig {
-        float gravity = 1500.0f;          // pixels/sec^2
-        float terminalVelocity = 1000.0f; // max fall speed
-        float fastFallVelocity = 1500.0f; // max fast fall speed
-        float walkAcceleration = 800.0f;
-        float runAcceleration = 1400.0f;
-        float maxWalkSpeed = 300.0f;
-        float maxRunSpeed = 600.0f;
-        float airAcceleration = 800.0f;
-        float maxAirSpeed = 450.0f;
-        float groundFriction = 1200.0f;   // deceleration when no input
-        float airDrag = 200.0f;           // air friction/drag
-        float knockbackDecay = 400.0f;    // knockback velocity decay per second
-        float jumpForce = 650.0f;
-        float doubleJumpForce = 550.0f;
-
-        // Configuration variables to eliminate magic numbers
-        float maxDeltaTime = 0.1f;
-        float dropThroughDuration = 0.25f;
-        float dropThroughPushOffset = 3.0f;
-        float hitstunAirControlScale = 0.2f;
-        float runThreshold = 0.7f;
-        float fastFallStartMultiplier = 0.6f;
-        float landingTolerance = 0.05f;
-
-        // Knockback formula coefficients
-        float kbWeightOffset = 100.0f;
-        float kbDamageScale1 = 10.0f;
-        float kbDamageScale2 = 20.0f;
-        float kbScaleMultiplier = 1.4f;
-        float kbBaseMultiplier = 18.0f;
-        float hitstunMultiplier = 0.00667f;
-        float minHitstun = 0.1f;
-
-        // Respawn height
-        float respawnY = 150.0f;
+    export enum class CollisionFlags : int {
+        kNone = 0,
+        kFloor = 1 << 0,
+        kCeiling = 1 << 1,
+        kWallLeft = 1 << 2,
+        kWallRight = 1 << 3,
+        kOnSemisolid = 1 << 4
     };
 
+    export constexpr CollisionFlags operator|(CollisionFlags a, CollisionFlags b) noexcept {
+        return static_cast<CollisionFlags>(static_cast<int>(a) | static_cast<int>(b));
+    }
+
+    export constexpr CollisionFlags operator&(CollisionFlags a, CollisionFlags b) noexcept {
+        return static_cast<CollisionFlags>(static_cast<int>(a) & static_cast<int>(b));
+    }
+
+    export constexpr CollisionFlags& operator|=(CollisionFlags& a, CollisionFlags b) noexcept {
+        a = a | b;
+        return a;
+    }
+
+    export constexpr CollisionFlags& operator&=(CollisionFlags& a, CollisionFlags b) noexcept {
+        a = a & b;
+        return a;
+    }
+
+    export constexpr CollisionFlags operator~(CollisionFlags a) noexcept {
+        return static_cast<CollisionFlags>(~static_cast<int>(a));
+    }
+
     export struct PhysicsObject {
-        int id;
+        int id = 0;
         
-        // Position & Velocities
+        // Position
         float x = 0.0f;
         float y = 0.0f;
         
-        // Controlled velocity (joystick/movement)
+        // Controlled velocity
         float vx = 0.0f;
         float vy = 0.0f;
         
-        // Knockback velocity (launches)
+        // Knockback velocity
         float kbx = 0.0f;
         float kby = 0.0f;
         
@@ -80,19 +65,20 @@ namespace ab {
         float height = 70.0f;
         
         // Character attributes
-        float weight = 100.0f; // weight affects knockback
-        float damagePercent = 0.0f;
-        float hitstunTimer = 0.0f; // seconds
-        float dropThroughTimer = 0.0f; // Drop-through timer to temporarily ignore semi-solid platform collision
-        int collisionFlags = 0; 
+        float weight = 100.0f;
+        float damage_percent = 0.0f;
+        float hitstun_timer = 0.0f;
+        float drop_through_timer = 0.0f;
+        CollisionFlags collision_flags = CollisionFlags::kNone; 
         
-        // AABB box helper
         struct AABB {
-            float minX, minY, maxX, maxY;
+            float min_x = 0.0f;
+            float min_y = 0.0f;
+            float max_x = 0.0f;
+            float max_y = 0.0f;
         };
         
         AABB GetAABB() const {
-            // Anchor is bottom-center
             return AABB{
                 x - width / 2.0f,
                 y - height,
@@ -103,48 +89,42 @@ namespace ab {
     };
 
     export struct Platform {
-        int id;
-        float x1, y1, x2, y2; // AABB bounding box
-        PlatformType type;
+        int id = 0;
+        float x1 = 0.0f;
+        float y1 = 0.0f;
+        float x2 = 0.0f;
+        float y2 = 0.0f;
+        PlatformType type = PlatformType::Solid;
     };
 
     export class PhysicsEngine {
-    private:
-        PhysicsConfig config;
-        std::vector<PhysicsObject> objects;
-        std::vector<Platform> platforms;
-        int nextObjectId = 1;
-        int nextPlatformId = 1;
-
     public:
         PhysicsEngine() = default;
         ~PhysicsEngine() = default;
 
-
-
         int AddObject(float x, float y, float width, float height, float weight) {
             PhysicsObject obj;
-            obj.id = nextObjectId++;
+            obj.id = next_object_id_++;
             obj.x = x;
             obj.y = y;
             obj.width = width;
             obj.height = height;
             obj.weight = weight;
-            objects.push_back(obj);
+            objects_.push_back(obj);
             return obj.id;
         }
 
         bool RemoveObject(int id) {
-            auto it = std::remove_if(objects.begin(), objects.end(), [id](const auto& obj) { return obj.id == id; });
-            if (it != objects.end()) {
-                objects.erase(it, objects.end());
+            auto it = std::remove_if(objects_.begin(), objects_.end(), [id](const auto& obj) { return obj.id == id; });
+            if (it != objects_.end()) {
+                objects_.erase(it, objects_.end());
                 return true;
             }
             return false;
         }
 
         PhysicsObject* GetObject(int id) {
-            for (auto& obj : objects) {
+            for (auto& obj : objects_) {
                 if (obj.id == id) return &obj;
             }
             return nullptr;
@@ -152,62 +132,76 @@ namespace ab {
 
         int AddPlatform(float x1, float y1, float x2, float y2, PlatformType type) {
             Platform plat;
-            plat.id = nextPlatformId++;
+            plat.id = next_platform_id_++;
             plat.x1 = x1;
             plat.y1 = y1;
             plat.x2 = x2;
             plat.y2 = y2;
             plat.type = type;
-            platforms.push_back(plat);
+            platforms_.push_back(plat);
             return plat.id;
         }
 
         bool RemovePlatform(int id) {
-            auto it = std::remove_if(platforms.begin(), platforms.end(), [id](const auto& plat) { return plat.id == id; });
-            if (it != platforms.end()) {
-                platforms.erase(it, platforms.end());
+            auto it = std::remove_if(platforms_.begin(), platforms_.end(), [id](const auto& plat) { return plat.id == id; });
+            if (it != platforms_.end()) {
+                platforms_.erase(it, platforms_.end());
                 return true;
             }
             return false;
         }
 
-        const std::vector<PhysicsObject>& GetObjects() const { return objects; }
-        const std::vector<Platform>& GetPlatforms() const { return platforms; }
+        const std::vector<PhysicsObject>& GetObjects() const { return objects_; }
+        const std::vector<Platform>& GetPlatforms() const { return platforms_; }
 
         void Clear() {
-            objects.clear();
-            platforms.clear();
-            nextObjectId = 1;
-            nextPlatformId = 1;
+            objects_.clear();
+            platforms_.clear();
+            next_object_id_ = 1;
+            next_platform_id_ = 1;
         }
 
-        // Apply knockback to an object
-        void ApplyKnockback(int objectId, float damage, float angleRad, float baseKb, float scaling) {
-            auto* obj = GetObject(objectId);
+        void ApplyKnockback(int object_id, float damage, float angle_rad, float base_kb, float scaling) {
+            auto* obj = GetObject(object_id);
             if (!obj) return;
 
-            obj->damagePercent += damage;
+            obj->damage_percent += damage;
 
-            float percent = obj->damagePercent;
-            float weightTerm = config.kbWeightOffset / (obj->weight + config.kbWeightOffset);
+            constexpr float kKbWeightOffset = 100.0f;
+            constexpr float kKbDamageScale1 = 10.0f;
+            constexpr float kKbDamageScale2 = 20.0f;
+            constexpr float kKbScaleMultiplier = 1.4f;
+            constexpr float kKbBaseMultiplier = 18.0f;
+            constexpr float kHitstunMultiplier = 0.00667f;
+            constexpr float kMinHitstun = 0.1f;
+
+            float percent = obj->damage_percent;
+            float weight_term = kKbWeightOffset / (obj->weight + kKbWeightOffset);
             
-            float kbMagnitude = (((percent / config.kbDamageScale1 + (percent * damage) / config.kbDamageScale2) * weightTerm * config.kbScaleMultiplier) + config.kbBaseMultiplier) * scaling + baseKb;
+            float kb_magnitude = (((percent / kKbDamageScale1 + (percent * damage) / kKbDamageScale2) * weight_term * kKbScaleMultiplier) + kKbBaseMultiplier) * scaling + base_kb;
 
-            // In typical 2D, angles are measured: cos(angleRad) is X, -sin(angleRad) is Y
-            float kbvx = kbMagnitude * std::cos(angleRad);
-            float kbvy = -kbMagnitude * std::sin(angleRad);
+            float kbvx = kb_magnitude * std::cos(angle_rad);
+            float kbvy = -kb_magnitude * std::sin(angle_rad);
 
             obj->kbx = kbvx;
             obj->kby = kbvy;
 
-            // Hitstun seconds
-            obj->hitstunTimer = kbMagnitude * config.hitstunMultiplier;
-            if (obj->hitstunTimer < config.minHitstun) obj->hitstunTimer = config.minHitstun;
-
+            obj->hitstun_timer = std::max(kb_magnitude * kHitstunMultiplier, kMinHitstun);
         }
 
-        void LoadConfig(const std::string& filename);
+        void SetKnockbackDecay(float decay) { knockback_decay_ = decay; }
+        void SetMaxDeltaTime(float max_dt) { max_delta_time_ = max_dt; }
+
         void Step(float dt);
+
+    private:
+        float knockback_decay_ = 400.0f;
+        float max_delta_time_ = 0.1f;
+
+        std::vector<PhysicsObject> objects_;
+        std::vector<Platform> platforms_;
+        int next_object_id_ = 1;
+        int next_platform_id_ = 1;
     };
 
-}
+}  // namespace ab

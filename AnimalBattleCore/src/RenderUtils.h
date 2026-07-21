@@ -1,7 +1,9 @@
-#pragma once
+#ifndef ANIMALBATTLE_CORE_SRC_RENDER_UTILS_H_
+#define ANIMALBATTLE_CORE_SRC_RENDER_UTILS_H_
+
 #include <cstdint>
 #include <concepts>
-#include <app_build_setting.h>
+#include "app_build_setting.h"
 
 namespace ab {
     
@@ -23,13 +25,14 @@ namespace ab {
     
     constexpr uint32_t COLOR_BG = COLOR_WHITE;
 
-    constexpr int FONT_SIZE = 48;  
+    constexpr int FONT_SIZE = 48;
 
     template <typename T>
     requires std::integral<T> || std::floating_point<T>
     struct Vec2
     {
-        T x, y;
+        T x;
+        T y;
         
         constexpr bool In(const Rect<T>& r) const;
     };
@@ -41,16 +44,19 @@ namespace ab {
     requires std::integral<T> || std::floating_point<T>
     struct Rect
     {
-        T x1, y1, x2, y2;
+        T x1;
+        T y1;
+        T x2;
+        T y2;
         
         constexpr Rect<T> operator+(const Point<T>& p) const
         {
             return Rect<T>{x1 + p.x, y1 + p.y, x2 + p.x, y2 + p.y};
         }
         
-        constexpr Rect<T> Expand(T t) const
+        constexpr Rect<T> Expand(T amount) const
         {
-            return Rect<T>{x1 - t, y1 - t, x2 + t, y2 + t};
+            return Rect<T>{x1 - amount, y1 - amount, x2 + amount, y2 + amount};
         }
     };
 
@@ -67,4 +73,6 @@ namespace ab {
         return x >= r.x1 && x <= r.x2 && y >= r.y1 && y <= r.y2;
     }
 
-}
+}  // namespace ab
+
+#endif  // ANIMALBATTLE_CORE_SRC_RENDER_UTILS_H_
