@@ -3,20 +3,30 @@ using AnimalBattle.Bindings;
 
 namespace AnimalBattle;
 
-public enum CharacterState
-{
-    Grounded,
-    Airborne,
-    FastFalling,
-    Hitstun
-}
-
+/// <summary>
+/// キャラクターの状態遷移および物理パラメータ更新を制御するステートマシン。
+/// </summary>
 public class CharacterStateMachine
 {
+    /// <summary>
+    /// 現在のキャラクター状態を取得します。
+    /// </summary>
     public CharacterState State { get; private set; } = CharacterState.Airborne;
+
+    /// <summary>
+    /// 残りの空中ジャンプ可能回数を取得します。
+    /// </summary>
     public int DoubleJumpsLeft { get; private set; } = 1;
+
+    /// <summary>
+    /// 最大空中ジャンプ回数を取得します。
+    /// </summary>
     public int MaxDoubleJumps { get; private set; } = 1;
 
+    /// <summary>
+    /// ステートマシンを初期状態にリセットします。
+    /// </summary>
+    /// <param name="maxDoubleJumps">最大空中ジャンプ可能回数</param>
     public void Reset(int maxDoubleJumps = 1)
     {
         State = CharacterState.Airborne;
@@ -24,33 +34,41 @@ public class CharacterStateMachine
         DoubleJumpsLeft = maxDoubleJumps;
     }
 
+    /// <summary>
+    /// 入力および設定パラメータに基づき、キャラクターの状態と物理オブジェクトパラメータを更新します。
+    /// </summary>
+    /// <param name="playerObj">Native C++ 物理オブジェクトの参照</param>
+    /// <param name="input">入力マネージャー</param>
+    /// <param name="playerIndex">プレイヤーインデックス (1 または 2)</param>
+    /// <param name="config">キャラクターパラメータ設定</param>
+    /// <param name="deltaTime">フレーム経過時間（秒）</param>
     public void Update(
         ref NativeEngine.NativePhysicsObject playerObj,
         InputManager input,
         int playerIndex,
+        CharacterConfig config,
         float deltaTime)
     {
-        // Load config values dynamically from physics.toml directly in C# (real-time tuning)
-        float gravity = PhysicsConfig.Get("gravity", 1500.0f);
-        float terminalVelocity = PhysicsConfig.Get("terminalVelocity", 1000.0f);
-        float fastFallVelocity = PhysicsConfig.Get("fastFallVelocity", 1500.0f);
-        float walkAcceleration = PhysicsConfig.Get("walkAcceleration", 800.0f);
-        float runAcceleration = PhysicsConfig.Get("runAcceleration", 1400.0f);
-        float maxWalkSpeed = PhysicsConfig.Get("maxWalkSpeed", 300.0f);
-        float maxRunSpeed = PhysicsConfig.Get("maxRunSpeed", 600.0f);
-        float airAcceleration = PhysicsConfig.Get("airAcceleration", 800.0f);
-        float maxAirSpeed = PhysicsConfig.Get("maxAirSpeed", 450.0f);
-        float groundFriction = PhysicsConfig.Get("groundFriction", 1200.0f);
-        float airDrag = PhysicsConfig.Get("airDrag", 200.0f);
-        float jumpForce = PhysicsConfig.Get("jumpForce", 650.0f);
-        float doubleJumpForce = PhysicsConfig.Get("doubleJumpForce", 550.0f);
-        float runThreshold = PhysicsConfig.Get("runThreshold", 0.7f);
-        float fastFallStartMultiplier = PhysicsConfig.Get("fastFallStartMultiplier", 0.6f);
-        float dropThroughDuration = PhysicsConfig.Get("dropThroughDuration", 0.25f);
-        float hitstunAirControlScale = PhysicsConfig.Get("hitstunAirControlScale", 0.2f);
-        float landingTolerance = PhysicsConfig.Get("landingTolerance", 0.05f);
+        float gravity = config.Gravity;
+        float terminalVelocity = config.TerminalVelocity;
+        float fastFallVelocity = config.FastFallVelocity;
+        float walkAcceleration = config.WalkAcceleration;
+        float runAcceleration = config.RunAcceleration;
+        float maxWalkSpeed = config.MaxWalkSpeed;
+        float maxRunSpeed = config.MaxRunSpeed;
+        float airAcceleration = config.AirAcceleration;
+        float maxAirSpeed = config.MaxAirSpeed;
+        float groundFriction = config.GroundFriction;
+        float airDrag = config.AirDrag;
+        float jumpForce = config.JumpForce;
+        float doubleJumpForce = config.DoubleJumpForce;
+        float runThreshold = config.RunThreshold;
+        float fastFallStartMultiplier = config.FastFallStartMultiplier;
+        float dropThroughDuration = config.DropThroughDuration;
+        float hitstunAirControlScale = config.HitstunAirControlScale;
+        float landingTolerance = config.LandingTolerance;
 
-        // Lock in hitstun if hitstun timer is active
+        // ヒットスタンタイマーが有効な場合はヒットスタン状態に固定
         if (playerObj.HitstunTimer > 0.0f)
         {
             State = CharacterState.Hitstun;
@@ -60,19 +78,19 @@ public class CharacterStateMachine
             State = CharacterState.Airborne;
         }
 
-        // Get inputs
+        // 入力値の取得
         float moveX = input.GetHorizontalAxis(playerIndex);
         float moveY = input.GetVerticalAxis(playerIndex);
         bool jump = input.IsJumpPressed(playerIndex);
         bool down = input.IsDownPressed(playerIndex);
 
-        // Run character state machine
+        // ステートマシン処理
         switch (State)
         {
             case CharacterState.Grounded:
                 playerObj.Vy = 0.0f;
 
-                // Ground movement
+                // 地上移動
                 if (Math.Abs(moveX) > landingTolerance)
                 {
                     float targetSpeed = Math.Abs(moveX) > runThreshold ? maxRunSpeed : maxWalkSpeed;
@@ -82,40 +100,49 @@ public class CharacterStateMachine
                 }
                 else
                 {
-                    // Ground friction deceleration
+                    // 地上摩擦減速
                     if (playerObj.Vx > 0.0f)
                     {
                         playerObj.Vx -= groundFriction * deltaTime;
-                        if (playerObj.Vx < 0.0f) playerObj.Vx = 0.0f;
+                        if (playerObj.Vx < 0.0f)
+                        {
+                            playerObj.Vx = 0.0f;
+                        }
                     }
                     else if (playerObj.Vx < 0.0f)
                     {
                         playerObj.Vx += groundFriction * deltaTime;
-                        if (playerObj.Vx > 0.0f) playerObj.Vx = 0.0f;
+                        if (playerObj.Vx > 0.0f)
+                        {
+                            playerObj.Vx = 0.0f;
+                        }
                     }
                 }
 
-                // Ground jump
+                // 地上ジャンプ
                 if (jump)
                 {
                     playerObj.Vy = -jumpForce;
                     State = CharacterState.Airborne;
                 }
-                // Platform drop-down
-                else if (down)
+                // すり抜け床の下降り操作（半実体足場のみ許可）
+                else if (down && (playerObj.CollisionFlags & NativeEngine.CollisionOnSemiSolid) != 0)
                 {
                     playerObj.DropThroughTimer = dropThroughDuration;
-                    playerObj.Y += 3.0f; // immediately push player past platform edge
+                    playerObj.Y += 3.0f; // すり抜け開始のため即座に足場下へ移動
                     State = CharacterState.Airborne;
                 }
                 break;
 
             case CharacterState.Airborne:
-                // Gravity
+                // 重力適用
                 playerObj.Vy += gravity * deltaTime;
-                if (playerObj.Vy > terminalVelocity) playerObj.Vy = terminalVelocity;
+                if (playerObj.Vy > terminalVelocity)
+                {
+                    playerObj.Vy = terminalVelocity;
+                }
 
-                // Air movement/drift
+                // 空中移動・ドリフト
                 if (Math.Abs(moveX) > landingTolerance)
                 {
                     playerObj.Vx += moveX * airAcceleration * deltaTime;
@@ -123,26 +150,32 @@ public class CharacterStateMachine
                 }
                 else
                 {
-                    // Air resistance deceleration
+                    // 空中抵抗減速
                     if (playerObj.Vx > 0.0f)
                     {
                         playerObj.Vx -= airDrag * deltaTime;
-                        if (playerObj.Vx < 0.0f) playerObj.Vx = 0.0f;
+                        if (playerObj.Vx < 0.0f)
+                        {
+                            playerObj.Vx = 0.0f;
+                        }
                     }
                     else if (playerObj.Vx < 0.0f)
                     {
                         playerObj.Vx += airDrag * deltaTime;
-                        if (playerObj.Vx > 0.0f) playerObj.Vx = 0.0f;
+                        if (playerObj.Vx > 0.0f)
+                        {
+                            playerObj.Vx = 0.0f;
+                        }
                     }
                 }
 
-                // Double jump
+                // 空中ジャンプ（2段ジャンプ）
                 if (jump && DoubleJumpsLeft > 0)
                 {
                     playerObj.Vy = -doubleJumpForce;
                     DoubleJumpsLeft--;
                 }
-                // Trigger fast falling
+                // 急降下開始判定
                 else if (moveY > runThreshold && playerObj.Vy > 0.0f)
                 {
                     playerObj.Vy = Math.Max(playerObj.Vy, fastFallVelocity * fastFallStartMultiplier);
@@ -151,11 +184,14 @@ public class CharacterStateMachine
                 break;
 
             case CharacterState.FastFalling:
-                // Gravity
+                // 急降下重力適用
                 playerObj.Vy += gravity * deltaTime;
-                if (playerObj.Vy > fastFallVelocity) playerObj.Vy = fastFallVelocity;
+                if (playerObj.Vy > fastFallVelocity)
+                {
+                    playerObj.Vy = fastFallVelocity;
+                }
 
-                // Air movement (same as airborne)
+                // 空中移動
                 if (Math.Abs(moveX) > landingTolerance)
                 {
                     playerObj.Vx += moveX * airAcceleration * deltaTime;
@@ -166,16 +202,22 @@ public class CharacterStateMachine
                     if (playerObj.Vx > 0.0f)
                     {
                         playerObj.Vx -= airDrag * deltaTime;
-                        if (playerObj.Vx < 0.0f) playerObj.Vx = 0.0f;
+                        if (playerObj.Vx < 0.0f)
+                        {
+                            playerObj.Vx = 0.0f;
+                        }
                     }
                     else if (playerObj.Vx < 0.0f)
                     {
                         playerObj.Vx += airDrag * deltaTime;
-                        if (playerObj.Vx > 0.0f) playerObj.Vx = 0.0f;
+                        if (playerObj.Vx > 0.0f)
+                        {
+                            playerObj.Vx = 0.0f;
+                        }
                     }
                 }
 
-                // Double jump (cancels fast fall)
+                // 空中ジャンプ（急降下キャンセル）
                 if (jump && DoubleJumpsLeft > 0)
                 {
                     playerObj.Vy = -doubleJumpForce;
@@ -185,11 +227,14 @@ public class CharacterStateMachine
                 break;
 
             case CharacterState.Hitstun:
-                // Gravity
+                // 重力適用
                 playerObj.Vy += gravity * deltaTime;
-                if (playerObj.Vy > terminalVelocity) playerObj.Vy = terminalVelocity;
+                if (playerObj.Vy > terminalVelocity)
+                {
+                    playerObj.Vy = terminalVelocity;
+                }
 
-                // DI horizontal drift
+                // DI（ベクトル変更）空中制御
                 if (Math.Abs(moveX) > landingTolerance)
                 {
                     playerObj.Vx += moveX * airAcceleration * hitstunAirControlScale * deltaTime;
@@ -199,10 +244,13 @@ public class CharacterStateMachine
         }
     }
 
+    /// <summary>
+    /// C++ 物理エンジンからの衝突フラグを受信し、ステートマシンの状態を更新します。
+    /// </summary>
+    /// <param name="playerObj">Native C++ 物理オブジェクトの参照</param>
     public void HandleCollisions(ref NativeEngine.NativePhysicsObject playerObj)
     {
-        // Read collision flags to update character state machine
-        if ((playerObj.CollisionFlags & NativeEngine.COLLISION_FLOOR) != 0)
+        if ((playerObj.CollisionFlags & NativeEngine.CollisionFloor) != 0)
         {
             State = CharacterState.Grounded;
             DoubleJumpsLeft = MaxDoubleJumps;
@@ -211,17 +259,17 @@ public class CharacterStateMachine
         }
         else if (State == CharacterState.Grounded)
         {
-            // Slipped or walked off the edge
+            // 足場から落下
             State = CharacterState.Airborne;
             DoubleJumpsLeft = MaxDoubleJumps;
         }
 
-        if ((playerObj.CollisionFlags & NativeEngine.COLLISION_CEILING) != 0)
+        if ((playerObj.CollisionFlags & NativeEngine.CollisionCeiling) != 0)
         {
             playerObj.Vy = 0.0f;
             playerObj.Kby = 0.0f;
         }
-        if ((playerObj.CollisionFlags & (NativeEngine.COLLISION_WALL_LEFT | NativeEngine.COLLISION_WALL_RIGHT)) != 0)
+        if ((playerObj.CollisionFlags & (NativeEngine.CollisionWallLeft | NativeEngine.CollisionWallRight)) != 0)
         {
             playerObj.Vx = 0.0f;
             playerObj.Kbx = 0.0f;

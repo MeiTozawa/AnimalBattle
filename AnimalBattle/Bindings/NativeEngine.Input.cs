@@ -5,23 +5,43 @@ namespace AnimalBattle.Bindings;
 
 public static partial class NativeEngine
 {
-    [LibraryImport(DllName, EntryPoint = "Engine_SetCursorPointer")]
+    /// <summary>
+    /// マウスカーソルを手の形（ポインター）に変更します。
+    /// </summary>
+    [LibraryImport(_dllName, EntryPoint = "Engine_SetCursorPointer")]
     [SuppressGCTransition]
     public static partial void SetCursorPointer();
 
-    [LibraryImport(DllName, EntryPoint = "Engine_SetCursorArrow")]
+    /// <summary>
+    /// マウスカーソルを標準の矢印に変更します。
+    /// </summary>
+    [LibraryImport(_dllName, EntryPoint = "Engine_SetCursorArrow")]
     [SuppressGCTransition]
     public static partial void SetCursorArrow();
 
-    [LibraryImport(DllName, EntryPoint = "Engine_CheckHitKey")]
+    /// <summary>
+    /// 指定されたキーの押下状態を取得します。
+    /// </summary>
+    /// <param name="keyCode">キーコード</param>
+    /// <return>押されている場合は 1、押されていない場合は 0</return>
+    [LibraryImport(_dllName, EntryPoint = "Engine_CheckHitKey")]
     [SuppressGCTransition]
     public static partial int CheckHitKey(int keyCode);
 
-    [LibraryImport(DllName, EntryPoint = "Engine_GetMousePoint")]
+    /// <summary>
+    /// 現在のマウスカーソル座標を取得します。
+    /// </summary>
+    /// <param name="x">出力先 X 座標ポインタ</param>
+    /// <param name="y">出力先 Y 座標ポインタ</param>
+    [LibraryImport(_dllName, EntryPoint = "Engine_GetMousePoint")]
     [SuppressGCTransition]
     public static unsafe partial void GetMousePoint(int* x, int* y);
 
-    [LibraryImport(DllName, EntryPoint = "Engine_GetMouseInput")]
+    /// <summary>
+    /// マウスボタンの押下状態を取得します。
+    /// </summary>
+    /// <return>マウス入力フラグ</return>
+    [LibraryImport(_dllName, EntryPoint = "Engine_GetMouseInput")]
     [SuppressGCTransition]
     public static partial int GetMouseInput();
 }

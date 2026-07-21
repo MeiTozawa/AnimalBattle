@@ -5,12 +5,21 @@ using Tomlyn;
 
 namespace AnimalBattle;
 
+/// <summary>
+/// 外部設定ファイル (Config/physics.toml) から物理パラメータを動的に読み込み・リロードする静的クラス。
+/// </summary>
 public static class PhysicsConfig
 {
     private static readonly Dictionary<string, float> _values = [];
     private static DateTime _lastWriteTime = DateTime.MinValue;
     private static string? _resolvedPath = null;
 
+    /// <summary>
+    /// 指定されたキーの物理設定値を取得します。設定ファイルが存在しない場合はデフォルト値を返します。
+    /// </summary>
+    /// <param name="key">設定パラメータ名</param>
+    /// <param name="defaultValue">デフォルト値</param>
+    /// <return>パラメータ値</return>
     public static float Get(string key, float defaultValue = 0.0f)
     {
         TryReload();
@@ -46,7 +55,7 @@ public static class PhysicsConfig
             }
             catch
             {
-                // Ignore invalid path format exceptions
+                // 無効なパスフォーマット例外を無視
             }
         }
 
@@ -62,10 +71,16 @@ public static class PhysicsConfig
                 _resolvedPath = FindConfigPath();
             }
 
-            if (_resolvedPath == null || !File.Exists(_resolvedPath)) return;
+            if (_resolvedPath == null || !File.Exists(_resolvedPath))
+            {
+                return;
+            }
 
             DateTime currentWriteTime = File.GetLastWriteTimeUtc(_resolvedPath);
-            if (currentWriteTime == _lastWriteTime) return;
+            if (currentWriteTime == _lastWriteTime)
+            {
+                return;
+            }
 
             _lastWriteTime = currentWriteTime;
             _values.Clear();
@@ -81,11 +96,11 @@ public static class PhysicsConfig
                 }
             }
 
-            Console.WriteLine($"[C# Config] Reloaded {_resolvedPath} via TomlSerializer (Timestamp: {_lastWriteTime})");
+            Console.WriteLine($"[C# 設定] {_resolvedPath} を再読み込みしました (タイムスタンプ: {_lastWriteTime})");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[C# Config] Error reading config: {ex.Message}");
+            Console.WriteLine($"[C# 設定] 設定ファイル読み込みエラー: {ex.Message}");
         }
     }
 }
