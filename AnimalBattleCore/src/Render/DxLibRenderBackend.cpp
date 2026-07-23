@@ -5,9 +5,9 @@ module;
 
 module DxLibRenderBackend;
 
-namespace ab {
-    extern bool g_is_exit_requested;
+extern "C" bool g_is_exit_requested;
 
+namespace ab {
     int DxLibRenderBackend::GetFontSize() const {
         return ::GetFontSize();
     }

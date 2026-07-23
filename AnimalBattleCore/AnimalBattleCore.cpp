@@ -1,7 +1,18 @@
-#include <Windows.h>
 #include <cstdint>
 #include <memory>
+#include <vector>
+#include <string>
+#include <variant>
+#include <concepts>
+#include <utility>
+#include <algorithm>
+#include <Windows.h>
 #include <DxLib.h>
+
+#ifdef GetObject
+#undef GetObject
+#endif
+
 import RenderService;
 import DxLibRenderBackend;
 import PhysicsEngine;
@@ -9,7 +20,7 @@ import Camera;
 
 using RenderService = ab::RenderService<ab::DxLibRenderBackend>;
 
-namespace ab {
+extern "C" {
     bool g_is_exit_requested = false;
 }
 
@@ -45,7 +56,7 @@ extern "C" {
 
             // Instantiate rendering service directly
             g_render_service = std::make_unique<RenderService>(width, height);
-            ab::g_is_exit_requested = false;
+            g_is_exit_requested = false;
 
             return 0;
         } catch (...) {
@@ -72,7 +83,7 @@ extern "C" {
     }
 
     __declspec(dllexport) bool Engine_IsExitRequested() noexcept {
-        return ab::g_is_exit_requested;
+        return g_is_exit_requested;
     }
 
     __declspec(dllexport) void Engine_Shutdown() noexcept {
