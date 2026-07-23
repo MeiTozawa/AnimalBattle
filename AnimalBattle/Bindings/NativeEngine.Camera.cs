@@ -50,7 +50,7 @@ public static partial class NativeEngine
     /// 追従対象ターゲット群に基づき、カメラの位置とズーム倍率を更新します。
     /// </summary>
     /// <param name="camera">Camera インスタンスポインタ</param>
-    /// <param name="dt">フレーム経過時間（秒）</param>
+    /// <param name="deltaTime">フレーム経過時間（秒）</param>
     /// <param name="targets">ターゲット座標配列へのポインタ</param>
     /// <param name="targetCount">ターゲット数</param>
     /// <param name="viewportWidth">ビューポートの幅</param>
@@ -59,7 +59,7 @@ public static partial class NativeEngine
     [SuppressGCTransition]
     public static unsafe partial void CameraUpdate(
         IntPtr camera,
-        float dt,
+        float deltaTime,
         Point<float>* targets,
         int targetCount,
         float viewportWidth,

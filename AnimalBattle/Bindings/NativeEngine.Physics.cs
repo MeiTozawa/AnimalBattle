@@ -67,10 +67,10 @@ public static partial class NativeEngine
         public float Vx;
         /// <summary>操作移動速度 Vy</summary>
         public float Vy;
-        /// <summary>ふっとび速度 Kbx</summary>
-        public float Kbx;
-        /// <summary>ふっとび速度 Kby</summary>
-        public float Kby;
+        /// <summary>ふっとび速度 KnockbackX</summary>
+        public float KnockbackX;
+        /// <summary>ふっとび速度 KnockbackY</summary>
+        public float KnockbackY;
         /// <summary>当たり判定の幅</summary>
         public float Width;
         /// <summary>当たり判定の高さ</summary>
@@ -178,18 +178,18 @@ public static partial class NativeEngine
     /// <param name="id">対象オブジェクトID</param>
     /// <param name="damage">加算ダメージ量 (%)</param>
     /// <param name="angleRad">吹っ飛び角度（ラジアン）</param>
-    /// <param name="baseKb">基本吹っ飛び力</param>
+    /// <param name="baseKnockback">基本吹っ飛び力</param>
     /// <param name="scaling">吹っ飛びスケーリング倍率</param>
     [LibraryImport(_dllName, EntryPoint = "Physics_ApplyKnockback")]
     [SuppressGCTransition]
-    public static partial void PhysicsApplyKnockback(IntPtr engine, int id, float damage, float angleRad, float baseKb, float scaling);
+    public static partial void PhysicsApplyKnockback(IntPtr engine, int id, float damage, float angleRad, float baseKnockback, float scaling);
 
     /// <summary>
     /// 物理エンジンの時間を 1 ステップ進めます。
     /// </summary>
     /// <param name="engine">PhysicsEngine インスタンスポインタ</param>
-    /// <param name="dt">ステップ時間（秒）</param>
+    /// <param name="deltaTime">ステップ時間（秒）</param>
     [LibraryImport(_dllName, EntryPoint = "Physics_Step")]
     [SuppressGCTransition]
-    public static partial void PhysicsStep(IntPtr engine, float dt);
+    public static partial void PhysicsStep(IntPtr engine, float deltaTime);
 }

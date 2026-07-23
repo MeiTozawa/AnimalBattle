@@ -255,7 +255,7 @@ public class CharacterStateMachine
             State = CharacterState.Grounded;
             DoubleJumpsLeft = MaxDoubleJumps;
             playerObj.Vy = 0.0f;
-            playerObj.Kby = 0.0f;
+            playerObj.KnockbackY = 0.0f;
         }
         else if (State == CharacterState.Grounded)
         {
@@ -267,12 +267,12 @@ public class CharacterStateMachine
         if ((playerObj.CollisionFlags & NativeEngine.CollisionCeiling) != 0)
         {
             playerObj.Vy = 0.0f;
-            playerObj.Kby = 0.0f;
+            playerObj.KnockbackY = 0.0f;
         }
         if ((playerObj.CollisionFlags & (NativeEngine.CollisionWallLeft | NativeEngine.CollisionWallRight)) != 0)
         {
             playerObj.Vx = 0.0f;
-            playerObj.Kbx = 0.0f;
+            playerObj.KnockbackX = 0.0f;
         }
     }
 }
