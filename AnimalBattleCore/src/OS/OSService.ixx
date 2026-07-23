@@ -1,22 +1,39 @@
 module;
 
-#include <memory>
+#include <utility>
 
 export module OSService;
 
+import OSBackendConcept;
+import WindowsOSBackend;
+
 namespace ab {
-    /// @brief OS レベルの操作（カーソル変更など）を提供するサービスインターフェース
-    export class IOSService
-    {
+    /// @brief バックエンドを合成して OS レベル操作を提供する静的多態テンプレートクラス
+    /// @tparam Backend OS 操作バックエンド型（デフォルトは WindowsOSBackend）
+    export template <OSBackendConcept Backend = WindowsOSBackend>
+    class OSService {
     public:
-        virtual ~IOSService() = default;
+        /// @brief デフォルトコンストラクタ
+        OSService() = default;
 
-        /// @brief マウスカーソルをクリック可能を示す手のポインタに変更する（Win32: IDC_HAND）
-        virtual void SetCursorPointer() = 0;
+        /// @brief バックエンドを明示指定して生成するコンストラクタ
+        /// @param backend 使用するバックエンドインスタンス
+        explicit OSService(Backend backend) : backend_(std::move(backend)) {}
 
-        /// @brief マウスカーソルをデフォルトの矢印に戻す（Win32: IDC_ARROW）
-        virtual void SetCursorArrow() = 0;
+        /// @brief マウスカーソルをクリック可能を示す手のポインタに変更する
+        void SetCursorPointer() {
+            backend_.SetCursorPointer();
+        }
+
+        /// @brief マウスカーソルをデフォルトの矢印に戻す
+        void SetCursorArrow() {
+            backend_.SetCursorArrow();
+        }
+
+    private:
+        Backend backend_{};
     };
 
-    export std::unique_ptr<IOSService> CreateWindowService();
+    /// @brief WindowsOSBackend を使用するデフォルトの OS サービス型エイリアス
+    export using DefaultOSService = OSService<WindowsOSBackend>;
 } // namespace ab
