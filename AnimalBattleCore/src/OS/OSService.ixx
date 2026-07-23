@@ -5,12 +5,11 @@ module;
 export module OSService;
 
 import OSBackendConcept;
-import WindowsOSBackend;
 
 namespace ab {
-    /// @brief バックエンドを合成して OS レベル操作を提供する静的多態テンプレートクラス
-    /// @tparam Backend OS 操作バックエンド型（デフォルトは WindowsOSBackend）
-    export template <OSBackendConcept Backend = WindowsOSBackend>
+    /// @brief バックエンドを合成して OS レベル操作を提供する静的多態 OSService テンプレートクラス
+    /// @tparam Backend OS 操作バックエンド型
+    export template <OSBackendConcept Backend>
     class OSService {
     public:
         /// @brief デフォルトコンストラクタ
@@ -33,7 +32,4 @@ namespace ab {
     private:
         Backend backend_{};
     };
-
-    /// @brief WindowsOSBackend を使用するデフォルトの OS サービス型エイリアス
-    export using DefaultOSService = OSService<WindowsOSBackend>;
 } // namespace ab

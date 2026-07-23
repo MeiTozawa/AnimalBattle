@@ -2,7 +2,6 @@ module;
 
 #include <algorithm>
 #include <cmath>
-#include <RenderUtils.h>
 
 module Camera;
 
@@ -22,46 +21,43 @@ namespace ab {
         target_scale_ = scale;
     }
 
-    void Camera::Update(float dt, const Vec2<float>* targets, int target_count, float viewport_width, float viewport_height) {
-        if (target_count <= 0) {
-            return;
+    void Camera::Update(float delta_time, const Vec2<float>* targets, int target_count, float viewport_width, float viewport_height) {
+        if (targets == nullptr || target_count <= 0) return;
+
+        // 1. Calculate Target Center (Average of all targets)
+        float sum_x = 0.0f;
+        float sum_y = 0.0f;
+        for (int i = 0; i < target_count; ++i) {
+            sum_x += targets[i].x;
+            sum_y += targets[i].y;
+        }
+        target_x_ = sum_x / static_cast<float>(target_count);
+        target_y_ = sum_y / static_cast<float>(target_count);
+
+        // 2. Calculate Required Scale based on Target Bounding Box
+        float min_x = targets[0].x;
+        float max_x = targets[0].x;
+        float min_y = targets[0].y;
+        float max_y = targets[0].y;
+        for (int i = 1; i < target_count; ++i) {
+            min_x = std::min(min_x, targets[i].x);
+            max_x = std::max(max_x, targets[i].x);
+            min_y = std::min(min_y, targets[i].y);
+            max_y = std::max(max_y, targets[i].y);
         }
 
-        if (target_count == 1) {
-            target_x_ = targets[0].x;
-            target_y_ = targets[0].y;
-            target_scale_ = max_scale_;
-        } else {
-            float min_x = targets[0].x;
-            float max_x = targets[0].x;
-            float min_y = targets[0].y;
-            float max_y = targets[0].y;
+        float bbox_width = (max_x - min_x) + padding_x_ * 2.0f;
+        float bbox_height = (max_y - min_y) + padding_y_ * 2.0f;
 
-            for (int i = 1; i < target_count; ++i) {
-                if (targets[i].x < min_x) min_x = targets[i].x;
-                if (targets[i].x > max_x) max_x = targets[i].x;
-                if (targets[i].y < min_y) min_y = targets[i].y;
-                if (targets[i].y > max_y) max_y = targets[i].y;
-            }
+        float scale_x = viewport_width / (bbox_width > 1.0f ? bbox_width : 1.0f);
+        float scale_y = viewport_height / (bbox_height > 1.0f ? bbox_height : 1.0f);
 
-            target_x_ = (min_x + max_x) / 2.0f;
-            target_y_ = (min_y + max_y) / 2.0f;
+        float desired_scale = std::min(scale_x, scale_y);
+        desired_scale = std::clamp(desired_scale, min_scale_, max_scale_);
+        target_scale_ = desired_scale;
 
-            float dist_x = max_x - min_x;
-            float dist_y = max_y - min_y;
-
-            float needed_width = std::max(dist_x + 2.0f * padding_x_, 400.0f);
-            float needed_height = std::max(dist_y + 2.0f * padding_y_, 300.0f);
-
-            float scale_x = viewport_width / needed_width;
-            float scale_y = viewport_height / needed_height;
-
-            target_scale_ = std::min(scale_x, scale_y);
-            target_scale_ = std::clamp(target_scale_, min_scale_, max_scale_);
-        }
-
-        // Frame-rate independent exponential interpolation
-        float t = 1.0f - std::exp(-lerp_speed_ * dt);
+        // 3. Smooth Exponential Interpolation (Framerate-independent)
+        float t = 1.0f - std::exp(-lerp_speed_ * delta_time);
         t = std::clamp(t, 0.0f, 1.0f);
 
         current_x_ += (target_x_ - current_x_) * t;

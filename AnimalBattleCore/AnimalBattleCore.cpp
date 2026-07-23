@@ -2,16 +2,18 @@
 #include <cstdint>
 #include <memory>
 #include <DxLib.h>
-#include "src/RenderUtils.h"
 import RenderService;
+import DxLibRenderBackend;
 import PhysicsEngine;
 import Camera;
+
+using RenderService = ab::RenderService<ab::DxLibRenderBackend>;
 
 namespace ab {
     bool g_is_exit_requested = false;
 }
 
-static std::unique_ptr<ab::IRenderService> g_render_service = nullptr;
+static std::unique_ptr<RenderService> g_render_service = nullptr;
 static HWND g_hwnd = nullptr;
 static HDC g_hdc = nullptr;
 
@@ -41,8 +43,8 @@ extern "C" {
             g_hwnd = GetMainWindowHandle();
             g_hdc = GetDC(g_hwnd);
 
-            // Instantiate rendering service
-            g_render_service = ab::CreateRenderService(width, height);
+            // Instantiate rendering service directly
+            g_render_service = std::make_unique<RenderService>(width, height);
             ab::g_is_exit_requested = false;
 
             return 0;
@@ -77,7 +79,7 @@ extern "C" {
         } catch (...) {}
     }
 
-    __declspec(dllexport) ab::IRenderService* Engine_GetRenderService() noexcept {
+    __declspec(dllexport) RenderService* Engine_GetRenderService() noexcept {
         return g_render_service.get();
     }
 
@@ -93,27 +95,27 @@ extern "C" {
 
     // --- RenderService Direct P/Invoke Wrapper APIs ---
 
-    __declspec(dllexport) void Render_DrawString(ab::IRenderService* service, ab::Point<int> p, const wchar_t* text, uint32_t color) noexcept {
+    __declspec(dllexport) void Render_DrawString(RenderService* service, ab::Point<int> p, const wchar_t* text, uint32_t color) noexcept {
         if (service) service->DrawString(p, text, color);
     }
 
-    __declspec(dllexport) void Render_DrawBox(ab::IRenderService* service, ab::Rect<int> r, uint32_t color, bool fill_flag) noexcept {
+    __declspec(dllexport) void Render_DrawBox(RenderService* service, ab::Rect<int> r, uint32_t color, bool fill_flag) noexcept {
         if (service) service->DrawBox(r, color, fill_flag);
     }
 
-    __declspec(dllexport) void Render_DrawStringWithBorder(ab::IRenderService* service, ab::Rect<int> r, const wchar_t* text, ab::BorderShape shape, uint32_t text_color, uint32_t border_color) noexcept {
+    __declspec(dllexport) void Render_DrawStringWithBorder(RenderService* service, ab::Rect<int> r, const wchar_t* text, ab::BorderShape shape, uint32_t text_color, uint32_t border_color) noexcept {
         if (service) service->DrawStringWithBorder(r, text, shape, text_color, border_color);
     }
 
-    __declspec(dllexport) void Render_DrawGraph(ab::IRenderService* service, ab::Point<int> p, int handle, bool trans_flag) noexcept {
+    __declspec(dllexport) void Render_DrawGraph(RenderService* service, ab::Point<int> p, int handle, bool trans_flag) noexcept {
         if (service) service->DrawGraph(p, handle, trans_flag);
     }
 
-    __declspec(dllexport) void Render_SetCameraEnabled(ab::IRenderService* service, bool enabled) noexcept {
+    __declspec(dllexport) void Render_SetCameraEnabled(RenderService* service, bool enabled) noexcept {
         if (service) service->SetCameraEnabled(enabled);
     }
 
-    __declspec(dllexport) void Render_SetCameraState(ab::IRenderService* service, float x, float y, float scale) noexcept {
+    __declspec(dllexport) void Render_SetCameraState(RenderService* service, float x, float y, float scale) noexcept {
         if (service) service->SetCameraState(x, y, scale);
     }
 
@@ -138,8 +140,8 @@ extern "C" {
         if (camera) camera->Reset(x, y, scale);
     }
 
-    __declspec(dllexport) void Camera_Update(ab::Camera* camera, float dt, const ab::Point<float>* targets, int target_count, float viewport_width, float viewport_height) noexcept {
-        if (camera) camera->Update(dt, targets, target_count, viewport_width, viewport_height);
+    __declspec(dllexport) void Camera_Update(ab::Camera* camera, float delta_time, const ab::Point<float>* targets, int target_count, float viewport_width, float viewport_height) noexcept {
+        if (camera) camera->Update(delta_time, targets, target_count, viewport_width, viewport_height);
     }
 
     __declspec(dllexport) void Camera_GetState(ab::Camera* camera, float* out_x, float* out_y, float* out_scale) noexcept {
@@ -203,8 +205,8 @@ extern "C" {
         float y;
         float vx;
         float vy;
-        float kbx;
-        float kby;
+        float knockback_x;
+        float knockback_y;
         float width;
         float height;
         float weight;
@@ -246,8 +248,8 @@ extern "C" {
         out_state->y = obj->y;
         out_state->vx = obj->vx;
         out_state->vy = obj->vy;
-        out_state->kbx = obj->kbx;
-        out_state->kby = obj->kby;
+        out_state->knockback_x = obj->knockback_x;
+        out_state->knockback_y = obj->knockback_y;
         out_state->width = obj->width;
         out_state->height = obj->height;
         out_state->weight = obj->weight;
@@ -267,8 +269,8 @@ extern "C" {
         obj->y = in_state->y;
         obj->vx = in_state->vx;
         obj->vy = in_state->vy;
-        obj->kbx = in_state->kbx;
-        obj->kby = in_state->kby;
+        obj->knockback_x = in_state->knockback_x;
+        obj->knockback_y = in_state->knockback_y;
         obj->width = in_state->width;
         obj->height = in_state->height;
         obj->weight = in_state->weight;
@@ -289,11 +291,11 @@ extern "C" {
         return false;
     }
 
-    __declspec(dllexport) void Physics_ApplyKnockback(ab::PhysicsEngine* engine, int id, float damage, float angle_rad, float base_kb, float scaling) noexcept {
-        if (engine) engine->ApplyKnockback(id, damage, angle_rad, base_kb, scaling);
+    __declspec(dllexport) void Physics_ApplyKnockback(ab::PhysicsEngine* engine, int id, float damage, float angle_rad, float base_knockback, float scaling) noexcept {
+        if (engine) engine->ApplyKnockback(id, damage, angle_rad, base_knockback, scaling);
     }
 
-    __declspec(dllexport) void Physics_Step(ab::PhysicsEngine* engine, float dt) noexcept {
-        if (engine) engine->Step(dt);
+    __declspec(dllexport) void Physics_Step(ab::PhysicsEngine* engine, float delta_time) noexcept {
+        if (engine) engine->Step(delta_time);
     }
 }

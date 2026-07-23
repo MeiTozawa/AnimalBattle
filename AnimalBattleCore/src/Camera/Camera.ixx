@@ -2,9 +2,10 @@ module;
 
 #include <cstdint>
 #include <memory>
-#include <RenderUtils.h>
 
 export module Camera;
+
+import RenderService;
 
 namespace ab {
     export class Camera {
@@ -12,7 +13,7 @@ namespace ab {
         Camera(float x, float y, float scale, float min_scale, float max_scale, float lerp_speed, float padding_x, float padding_y);
 
         void Reset(float target_x, float target_y, float scale);
-        void Update(float dt, const Vec2<float>* targets, int target_count, float viewport_width, float viewport_height);
+        void Update(float delta_time, const Vec2<float>* targets, int target_count, float viewport_width, float viewport_height);
 
         float GetX() const { return current_x_; }
         float GetY() const { return current_y_; }
