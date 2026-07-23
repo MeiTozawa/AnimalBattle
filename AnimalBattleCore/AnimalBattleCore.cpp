@@ -58,10 +58,16 @@ extern "C" {
     }
 
     __declspec(dllexport) void Engine_BeginFrame() noexcept {
+        if (g_render_service) {
+            g_render_service->ClearCommands();
+        }
         ClearDrawScreen();
     }
 
     __declspec(dllexport) void Engine_EndFrame(float delta_time) noexcept {
+        if (g_render_service) {
+            g_render_service->FlushCommands();
+        }
         ScreenFlip();
     }
 
@@ -94,6 +100,14 @@ extern "C" {
     }
 
     // --- RenderService Direct P/Invoke Wrapper APIs ---
+
+    __declspec(dllexport) void Render_ExecuteCommand(RenderService* service, const ab::RenderCommand* cmd) noexcept {
+        if (service && cmd) service->ExecuteCommand(*cmd);
+    }
+
+    __declspec(dllexport) void Render_FlushCommands(RenderService* service) noexcept {
+        if (service) service->FlushCommands();
+    }
 
     __declspec(dllexport) void Render_DrawString(RenderService* service, ab::Point<int> p, const wchar_t* text, uint32_t color) noexcept {
         if (service) service->DrawString(p, text, color);
