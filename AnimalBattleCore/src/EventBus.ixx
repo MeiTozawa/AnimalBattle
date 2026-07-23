@@ -12,10 +12,9 @@ module;
 export module EventBus;
 
 namespace ab {
-    /// @brief ゲーム内イベントクラスの基底インターフェース
-    export struct IEvent {
-        virtual ~IEvent() = default;
-    };
+    /// @brief イベントクラスに要求される C++20 Concept 制約
+    export template <typename T>
+    concept EventConcept = std::is_object_v<T>;
 
     export using EventHandle = uint64_t;
 
@@ -23,10 +22,10 @@ namespace ab {
     export class EventBus {
     public:
         /// @brief 特定のイベントに対するコールバックを登録する
-        /// @tparam TEvent 購読対象のイベントクラス
+        /// @tparam TEvent 購読対象のイベント構造体/クラス
         /// @param callback イベント発生時に呼び出される関数
-        /// @return 登録の解除に使用するEventHandle
-        template <std::derived_from<IEvent> TEvent>
+        /// @return 登録の解除に使用する EventHandle
+        template <EventConcept TEvent>
         static EventHandle Subscribe(std::function<void(const TEvent&)> callback) {
             std::unique_lock lock(GetMutex());
             EventHandle handle = GetNextHandle()++;
@@ -41,8 +40,8 @@ namespace ab {
 
             new_vec_ptr->push_back({
                 handle,
-                [callback](const IEvent& e) {
-                    callback(static_cast<const TEvent&>(e));
+                [callback](const void* event_ptr) {
+                    callback(*static_cast<const TEvent*>(event_ptr));
                 }
             });
 
@@ -53,7 +52,7 @@ namespace ab {
         }
 
         /// @brief 指定したハンドルを用いてイベント購読を解除する
-        /// @param handle 解除対象のEventHandle
+        /// @param handle 解除対象の EventHandle
         static void Unsubscribe(EventHandle handle) {
             std::unique_lock lock(GetMutex());
             auto& map = GetHandleToTypeMap();
@@ -76,9 +75,9 @@ namespace ab {
         }
 
         /// @brief 指定したイベントを発行し、購読しているすべてのコールバックを実行する
-        /// @tparam TEvent 発行するイベントクラス
+        /// @tparam TEvent 発行するイベント構造体/クラス
         /// @param event 発行するイベントインスタンス
-        template <std::derived_from<IEvent> TEvent>
+        template <EventConcept TEvent>
         static void Publish(const TEvent& event) {
             std::shared_ptr<std::vector<CallbackWrapper>> callbacks;
             {
@@ -90,8 +89,9 @@ namespace ab {
                 }
             }
             if (callbacks) {
+                const void* event_ptr = static_cast<const void*>(&event);
                 for (const auto& wrapper : *callbacks) {
-                    wrapper.callback(event);
+                    wrapper.callback(event_ptr);
                 }
             }
         }
@@ -105,7 +105,7 @@ namespace ab {
     private:
         struct CallbackWrapper {
             EventHandle handle;
-            std::function<void(const IEvent&)> callback;
+            std::function<void(const void*)> callback;
         };
 
         static std::unordered_map<std::type_index, std::shared_ptr<std::vector<CallbackWrapper>>>& GetListeners() {

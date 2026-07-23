@@ -5,11 +5,11 @@ maxDeltaTime = 0.1
 knockbackDecay = 400.0
 
 # Smash Bros Knockback Formula Constants
-kbWeightOffset = 100.0
-kbDamageScale1 = 10.0
-kbDamageScale2 = 20.0
-kbScaleMultiplier = 1.4
-kbBaseMultiplier = 18.0
+knockbackWeightOffset = 100.0
+knockbackDamageScale1 = 10.0
+knockbackDamageScale2 = 20.0
+knockbackScaleMultiplier = 1.4
+knockbackBaseMultiplier = 18.0
 hitstunMultiplier = 0.00667
 minHitstun = 0.1
 

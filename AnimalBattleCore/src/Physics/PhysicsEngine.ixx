@@ -4,8 +4,12 @@ module;
 #include <memory>
 #include <cmath>
 #include <algorithm>
+#include <variant>
+#include <concepts>
 
 export module PhysicsEngine;
+
+import PlatformConcept;
 
 namespace ab {
 
@@ -36,7 +40,7 @@ namespace ab {
         return a;
     }
 
-    export constexpr CollisionFlags& operator&=(CollisionFlags& a, CollisionFlags b) noexcept {
+    export constexpr CollisionFlags& operator&=(CollisionFlags& a, CollisionFlags& b) noexcept {
         a = a & b;
         return a;
     }
@@ -57,8 +61,8 @@ namespace ab {
         float vy = 0.0f;
         
         // Knockback velocity
-        float kbx = 0.0f;
-        float kby = 0.0f;
+        float knockback_x = 0.0f;
+        float knockback_y = 0.0f;
         
         // Bounding box size (width & height, anchored at bottom-center of player)
         float width = 40.0f;
@@ -88,14 +92,28 @@ namespace ab {
         }
     };
 
-    export struct Platform {
+    // --- Platform Variants and Concept ---
+
+    export struct SolidPlatform {
         int id = 0;
         float x1 = 0.0f;
         float y1 = 0.0f;
         float x2 = 0.0f;
         float y2 = 0.0f;
-        PlatformType type = PlatformType::Solid;
     };
+
+    export struct SemiSolidPlatform {
+        int id = 0;
+        float x1 = 0.0f;
+        float y1 = 0.0f;
+        float x2 = 0.0f;
+        float y2 = 0.0f;
+    };
+
+    export using PlatformVariant = std::variant<SolidPlatform, SemiSolidPlatform>;
+
+    static_assert(PlatformConcept<SolidPlatform>, "SolidPlatform must satisfy PlatformConcept");
+    static_assert(PlatformConcept<SemiSolidPlatform>, "SemiSolidPlatform must satisfy PlatformConcept");
 
     export class PhysicsEngine {
     public:
@@ -131,19 +149,19 @@ namespace ab {
         }
 
         int AddPlatform(float x1, float y1, float x2, float y2, PlatformType type) {
-            Platform plat;
-            plat.id = next_platform_id_++;
-            plat.x1 = x1;
-            plat.y1 = y1;
-            plat.x2 = x2;
-            plat.y2 = y2;
-            plat.type = type;
-            platforms_.push_back(plat);
-            return plat.id;
+            int id = next_platform_id_++;
+            if (type == PlatformType::Solid) {
+                platforms_.push_back(SolidPlatform{id, x1, y1, x2, y2});
+            } else {
+                platforms_.push_back(SemiSolidPlatform{id, x1, y1, x2, y2});
+            }
+            return id;
         }
 
         bool RemovePlatform(int id) {
-            auto it = std::remove_if(platforms_.begin(), platforms_.end(), [id](const auto& plat) { return plat.id == id; });
+            auto it = std::remove_if(platforms_.begin(), platforms_.end(), [id](const auto& plat) {
+                return std::visit([id](const auto& p) { return p.id == id; }, plat);
+            });
             if (it != platforms_.end()) {
                 platforms_.erase(it, platforms_.end());
                 return true;
@@ -152,7 +170,7 @@ namespace ab {
         }
 
         const std::vector<PhysicsObject>& GetObjects() const { return objects_; }
-        const std::vector<Platform>& GetPlatforms() const { return platforms_; }
+        const std::vector<PlatformVariant>& GetPlatforms() const { return platforms_; }
 
         void Clear() {
             objects_.clear();
@@ -161,45 +179,45 @@ namespace ab {
             next_platform_id_ = 1;
         }
 
-        void ApplyKnockback(int object_id, float damage, float angle_rad, float base_kb, float scaling) {
+        void ApplyKnockback(int object_id, float damage, float angle_rad, float base_knockback, float scaling) {
             auto* obj = GetObject(object_id);
             if (!obj) return;
 
             obj->damage_percent += damage;
 
-            constexpr float kKbWeightOffset = 100.0f;
-            constexpr float kKbDamageScale1 = 10.0f;
-            constexpr float kKbDamageScale2 = 20.0f;
-            constexpr float kKbScaleMultiplier = 1.4f;
-            constexpr float kKbBaseMultiplier = 18.0f;
-            constexpr float kHitstunMultiplier = 0.00667f;
-            constexpr float kMinHitstun = 0.1f;
+            constexpr float KNOCKBACK_WEIGHT_OFFSET = 100.0f;
+            constexpr float KNOCKBACK_DAMAGE_SCALE_1 = 10.0f;
+            constexpr float KNOCKBACK_DAMAGE_SCALE_2 = 20.0f;
+            constexpr float KNOCKBACK_SCALE_MULTIPLIER = 1.4f;
+            constexpr float KNOCKBACK_BASE_MULTIPLIER = 18.0f;
+            constexpr float HITSTUN_MULTIPLIER = 0.00667f;
+            constexpr float MIN_HITSTUN = 0.1f;
 
             float percent = obj->damage_percent;
-            float weight_term = kKbWeightOffset / (obj->weight + kKbWeightOffset);
+            float weight_term = KNOCKBACK_WEIGHT_OFFSET / (obj->weight + KNOCKBACK_WEIGHT_OFFSET);
             
-            float kb_magnitude = (((percent / kKbDamageScale1 + (percent * damage) / kKbDamageScale2) * weight_term * kKbScaleMultiplier) + kKbBaseMultiplier) * scaling + base_kb;
+            float knockback_magnitude = (((percent / KNOCKBACK_DAMAGE_SCALE_1 + (percent * damage) / KNOCKBACK_DAMAGE_SCALE_2) * weight_term * KNOCKBACK_SCALE_MULTIPLIER) + KNOCKBACK_BASE_MULTIPLIER) * scaling + base_knockback;
 
-            float kbvx = kb_magnitude * std::cos(angle_rad);
-            float kbvy = -kb_magnitude * std::sin(angle_rad);
+            float knockback_vx = knockback_magnitude * std::cos(angle_rad);
+            float knockback_vy = -knockback_magnitude * std::sin(angle_rad);
 
-            obj->kbx = kbvx;
-            obj->kby = kbvy;
+            obj->knockback_x = knockback_vx;
+            obj->knockback_y = knockback_vy;
 
-            obj->hitstun_timer = std::max(kb_magnitude * kHitstunMultiplier, kMinHitstun);
+            obj->hitstun_timer = std::max(knockback_magnitude * HITSTUN_MULTIPLIER, MIN_HITSTUN);
         }
 
         void SetKnockbackDecay(float decay) { knockback_decay_ = decay; }
         void SetMaxDeltaTime(float max_dt) { max_delta_time_ = max_dt; }
 
-        void Step(float dt);
+        void Step(float delta_time);
 
     private:
         float knockback_decay_ = 400.0f;
         float max_delta_time_ = 0.1f;
 
         std::vector<PhysicsObject> objects_;
-        std::vector<Platform> platforms_;
+        std::vector<PlatformVariant> platforms_;
         int next_object_id_ = 1;
         int next_platform_id_ = 1;
     };
