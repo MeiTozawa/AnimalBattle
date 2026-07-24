@@ -7,7 +7,7 @@ namespace AnimalBattle.Characters;
 /// キャラクターの移動、物理演算、および操作感の調整用パラメータを保持する設定クラス。
 /// TOML 設定ファイルからの動的読み込みに対応します。
 /// </summary>
-public class CharacterConfig : ConfigBase<CharacterConfig>
+public class CharacterConfig
 {
     /// <summary>
     /// 地上での歩行加速度を取得または設定します。
@@ -115,11 +115,11 @@ public class CharacterConfig : ConfigBase<CharacterConfig>
     public float Weight { get; set; } = 100.0f;
 
     /// <summary>
-    /// 指定された TOML ファイルから設定を読み込んだ <see cref="CharacterConfig"/> インスタンスを生成します。
+    /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{CharacterConfig}"/> インスタンスを生成します。
     /// </summary>
     /// <param name="path">TOML ファイルパスまたはファイル名</param>
-    /// <returns>成功時は <see cref="CharacterConfig"/> を含む <see cref="Result{T}"/>、失敗時は <see cref="SimpleError"/></returns>
-    public new static Result<CharacterConfig> LoadFromFile(string path = "character.toml")
+    /// <returns>成功時は <see cref="ConfigBase{CharacterConfig}"/> を含む <see cref="Result{T}"/>、失敗時は <see cref="SimpleError"/></returns>
+    public static Result<ConfigBase<CharacterConfig>> LoadFromFile(string path = "character.toml")
     {
         return ConfigBase<CharacterConfig>.LoadFromFile(path);
     }

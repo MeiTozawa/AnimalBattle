@@ -1,8 +1,5 @@
 module;
 
-#include <cstdint>
-#include <memory>
-
 export module Camera;
 
 import RenderService;

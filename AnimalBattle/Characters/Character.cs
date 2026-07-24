@@ -1,4 +1,5 @@
 using System;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Characters;
 
@@ -46,7 +47,12 @@ public class Character(int playerIndex, string name, uint mainColor, uint outlin
     public CharacterStateMachine StateMachine { get; } = new();
 
     /// <summary>
-    /// キャラクターの物理・移動設定パラメータを取得または設定します。
+    /// キャラクターの設定コンテナを取得または設定します。
     /// </summary>
-    public CharacterConfig Config { get; set; } = CharacterConfig.LoadFromFile(configPath) is var res && res.IsOk ? res.Value! : new CharacterConfig();
+    public ConfigBase<CharacterConfig> ConfigHolder { get; set; } = CharacterConfig.LoadFromFile(configPath) is var res && res.IsOk ? res.Value! : new ConfigBase<CharacterConfig>();
+
+    /// <summary>
+    /// キャラクターの物理・移動設定パラメータを取得します。
+    /// </summary>
+    public CharacterConfig Config => ConfigHolder.Config;
 }

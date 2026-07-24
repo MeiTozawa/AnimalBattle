@@ -5,7 +5,6 @@ module;
 #include <variant>
 #include <vector>
 #include <mutex>
-#include <type_traits>
 
 export module RenderService;
 

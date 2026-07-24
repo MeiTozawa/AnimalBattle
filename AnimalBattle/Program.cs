@@ -3,6 +3,7 @@ using System.Diagnostics;
 using AnimalBattle.Bindings;
 using AnimalBattle.Camera;
 using AnimalBattle.Characters;
+using AnimalBattle.Core;
 using AnimalBattle.Stages;
 
 namespace AnimalBattle;
@@ -38,7 +39,8 @@ internal class Program
         {
             Console.WriteLine($"[C# 設定] 警告 [{cameraConfigResult.Error?.Type}]: {cameraConfigResult.Error?.Description} デフォルト値を使用します。");
         }
-        var cameraConfig = cameraConfigResult.IsOk ? cameraConfigResult.Value! : new CameraConfig();
+        var cameraConfigHolder = cameraConfigResult.IsOk ? cameraConfigResult.Value! : new ConfigBase<CameraConfig>();
+        var cameraConfig = cameraConfigHolder.Config;
 
         IntPtr camera = NativeEngine.CameraCreate(
             x: cameraConfig.InitialX,
@@ -50,7 +52,7 @@ internal class Program
             paddingX: cameraConfig.PaddingX,
             paddingY: cameraConfig.PaddingY);
 
-        cameraConfig.OnConfigReloaded += () =>
+        cameraConfigHolder.OnConfigReloaded += () =>
         {
             NativeEngine.CameraSetConfig(
                 camera,
