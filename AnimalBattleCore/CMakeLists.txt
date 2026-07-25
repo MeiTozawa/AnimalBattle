@@ -41,7 +41,11 @@ target_link_directories(AnimalBattleCore PUBLIC
     ${DXLIB_DIR}
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if (MSVC)
+    target_link_libraries(AnimalBattleCore PUBLIC
+        DxLibW
+    )
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_options(AnimalBattleCore PRIVATE -static-libgcc -static-libstdc++)
     target_link_libraries(AnimalBattleCore PUBLIC
         DxLibW
