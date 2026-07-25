@@ -11,6 +11,7 @@ import RenderService;
 import DxLibRenderBackend;
 import PhysicsEngine;
 import Camera;
+import AnimationPlayer;
 
 using RenderService = ab::RenderService<ab::DxLibRenderBackend>;
 
@@ -317,4 +318,74 @@ extern "C" {
     __declspec(dllexport) void Physics_Step(ab::PhysicsEngine* engine, float delta_time) noexcept {
         if (engine) engine->Step(delta_time);
     }
+
+    __declspec(dllexport) void Render_DrawRectRotaGraph(RenderService* service, ab::Point<int> p, ab::Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) noexcept {
+        if (service) service->DrawRectRotaGraph(p, src, ext_rate, angle, graph_handle, trans_flag, turn_flag);
+    }
+
+    // --- AnimationPlayer APIs ---
+
+    __declspec(dllexport) ab::AnimationPlayer* AnimationPlayer_Create() noexcept {
+        try {
+            return new ab::AnimationPlayer();
+        } catch (...) {
+            return nullptr;
+        }
+    }
+
+    __declspec(dllexport) void AnimationPlayer_Destroy(ab::AnimationPlayer* player) noexcept {
+        delete player;
+    }
+
+    __declspec(dllexport) void AnimationPlayer_AddGridClip(
+        ab::AnimationPlayer* player, const wchar_t* name, int row,
+        int frame_width, int frame_height, int frame_count,
+        float frame_duration, bool is_looping) noexcept {
+        if (player && name) {
+            player->AddGridClip(name, row, frame_width, frame_height, frame_count, frame_duration, is_looping);
+        }
+    }
+
+    __declspec(dllexport) bool AnimationPlayer_Play(ab::AnimationPlayer* player, const wchar_t* name, bool restart_if_same) noexcept {
+        if (player && name) {
+            return player->Play(name, restart_if_same);
+        }
+        return false;
+    }
+
+    __declspec(dllexport) void AnimationPlayer_Pause(ab::AnimationPlayer* player) noexcept {
+        if (player) player->Pause();
+    }
+
+    __declspec(dllexport) void AnimationPlayer_Resume(ab::AnimationPlayer* player) noexcept {
+        if (player) player->Resume();
+    }
+
+    __declspec(dllexport) void AnimationPlayer_Stop(ab::AnimationPlayer* player) noexcept {
+        if (player) player->Stop();
+    }
+
+    __declspec(dllexport) void AnimationPlayer_Update(ab::AnimationPlayer* player, float delta_time) noexcept {
+        if (player) player->Update(delta_time);
+    }
+
+    __declspec(dllexport) void AnimationPlayer_Draw(
+        ab::AnimationPlayer* player, RenderService* service,
+        int pos_x, int pos_y, int graph_handle,
+        bool flip_x, float scale, double angle) noexcept {
+        if (player && service) {
+            player->Draw(service, ab::Point<int>{pos_x, pos_y}, graph_handle, flip_x, scale, angle);
+        }
+    }
+
+    __declspec(dllexport) bool AnimationPlayer_IsFinished(ab::AnimationPlayer* player) noexcept {
+        if (player) return player->IsFinished();
+        return false;
+    }
+
+    __declspec(dllexport) int AnimationPlayer_GetCurrentFrameIndex(ab::AnimationPlayer* player) noexcept {
+        if (player) return player->GetCurrentFrameIndex();
+        return 0;
+    }
 }
+
