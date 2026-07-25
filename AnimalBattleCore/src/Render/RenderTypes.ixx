@@ -2,6 +2,8 @@ module;
 
 #include <cstdint>
 #include <concepts>
+#include <utility>
+#include <stdexcept>
 #include <variant>
 
 export module RenderTypes;

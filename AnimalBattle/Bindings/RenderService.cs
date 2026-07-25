@@ -90,6 +90,26 @@ public unsafe partial class RenderService
         NativeDrawGraph(_nativePtr, p, handle, transFlag);
     }
 
+    /// <summary>
+    /// Native C++ レンダリングサービスの生ポインタを取得します。
+    /// </summary>
+    public IntPtr NativePtr => _nativePtr;
+
+    /// <summary>
+    /// 切り出し矩形領域を指定して回転・拡大率付きで画像を描画します。
+    /// </summary>
+    /// <param name="p">描画座標</param>
+    /// <param name="src">画像の切り出し領域</param>
+    /// <param name="extRate">拡大倍率</param>
+    /// <param name="angle">回転角度 (ラジアン)</param>
+    /// <param name="graphHandle">画像ハンドル</param>
+    /// <param name="transFlag">透過処理を行う場合は true</param>
+    /// <param name="turnFlag">左右反転する場合は true</param>
+    public void DrawRectRotaGraph(Point<int> p, Rect<int> src, double extRate, double angle, int graphHandle, bool transFlag, bool turnFlag)
+    {
+        NativeDrawRectRotaGraph(_nativePtr, p, src, extRate, angle, graphHandle, transFlag, turnFlag);
+    }
+
     [LibraryImport(_dllName, EntryPoint = "Render_DrawString", StringMarshalling = StringMarshalling.Utf16)]
     [SuppressGCTransition]
     private static partial void NativeDrawString(IntPtr service, Point<int> p, string text, uint color);
@@ -105,6 +125,10 @@ public unsafe partial class RenderService
     [LibraryImport(_dllName, EntryPoint = "Render_DrawGraph")]
     [SuppressGCTransition]
     private static partial void NativeDrawGraph(IntPtr service, Point<int> p, int handle, [MarshalAs(UnmanagedType.U1)] bool transFlag);
+
+    [LibraryImport(_dllName, EntryPoint = "Render_DrawRectRotaGraph")]
+    [SuppressGCTransition]
+    private static partial void NativeDrawRectRotaGraph(IntPtr service, Point<int> p, Rect<int> src, double extRate, double angle, int graphHandle, [MarshalAs(UnmanagedType.U1)] bool transFlag, [MarshalAs(UnmanagedType.U1)] bool turnFlag);
 
     [LibraryImport(_dllName, EntryPoint = "Render_SetCameraEnabled")]
     [SuppressGCTransition]
