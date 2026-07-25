@@ -17,6 +17,7 @@
 Log.txt
 build_tests.bat
 build.bat
+.clangd
 
 # Build results
 [Dd]ebug/

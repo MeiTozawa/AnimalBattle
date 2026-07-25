@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using AnimalBattle.Animations;
 using AnimalBattle.Bindings;
 using AnimalBattle.Camera;
 using AnimalBattle.Characters;
@@ -79,6 +80,25 @@ internal class Program
         // プレイヤーキャラクターの初期化
         var player1 = new Character(1, "Player 1", 0xFF3498DB, 0xFF1F618D);
         var player2 = new Character(2, "Player 2", 0xFF9B59B6, 0xFF5B2C6F);
+
+        // 子猫スプライトシートのロードと C++ AnimationPlayer の初期化
+        Console.WriteLine("子猫スプライトアニメーションを初期化中...");
+        int catSpriteHandle = NativeEngine.LoadGraph(@"resource\Cat Sprite Sheet.png");
+        using var catAnimationPlayer = new AnimationPlayer();
+        if (catSpriteHandle != -1)
+        {
+            catAnimationPlayer.AddGridClip("Idle", row: 0, frameWidth: 32, frameHeight: 32, frameCount: 4, frameDuration: 0.15f, isLooping: true);
+            catAnimationPlayer.AddGridClip("Walk", row: 1, frameWidth: 32, frameHeight: 32, frameCount: 4, frameDuration: 0.12f, isLooping: true);
+            catAnimationPlayer.AddGridClip("Run", row: 2, frameWidth: 32, frameHeight: 32, frameCount: 4, frameDuration: 0.10f, isLooping: true);
+            catAnimationPlayer.AddGridClip("Rest", row: 3, frameWidth: 32, frameHeight: 32, frameCount: 4, frameDuration: 0.20f, isLooping: true);
+            catAnimationPlayer.AddGridClip("Jump", row: 4, frameWidth: 32, frameHeight: 32, frameCount: 8, frameDuration: 0.10f, isLooping: true);
+            catAnimationPlayer.AddGridClip("Attack", row: 5, frameWidth: 32, frameHeight: 32, frameCount: 8, frameDuration: 0.08f, isLooping: true);
+            catAnimationPlayer.AddGridClip("Hurt", row: 6, frameWidth: 32, frameHeight: 32, frameCount: 4, frameDuration: 0.12f, isLooping: false);
+            catAnimationPlayer.AddGridClip("Die", row: 7, frameWidth: 32, frameHeight: 32, frameCount: 6, frameDuration: 0.15f, isLooping: false);
+            catAnimationPlayer.AddGridClip("Meow", row: 8, frameWidth: 32, frameHeight: 32, frameCount: 7, frameDuration: 0.12f, isLooping: false);
+            catAnimationPlayer.AddGridClip("Spin", row: 9, frameWidth: 32, frameHeight: 32, frameCount: 8, frameDuration: 0.08f, isLooping: true);
+            catAnimationPlayer.Play("Idle");
+        }
 
         // 現在のマップのスポーン地点に 2 名のプレイヤーを生成
         player1.PhysicsObjectId = NativeEngine.PhysicsAddObject(physics, currentMap.P1Spawn.X, currentMap.P1Spawn.Y, player1.Config.Width, player1.Config.Height, player1.Config.Weight);
@@ -211,6 +231,31 @@ internal class Program
                 Console.WriteLine($"[撃墜!] {player2.Name} が {currentMap.Name} で撃墜されました！");
             }
 
+            // 子猫アニメーションの状態更新 (プレイヤー1の動態に連動)
+            if (catSpriteHandle != -1)
+            {
+                string catAnim = "Idle";
+                if (player1.StateMachine.State == CharacterState.Hitstun)
+                {
+                    catAnim = "Hurt";
+                }
+                else if (player1.StateMachine.State == CharacterState.Airborne || player1.StateMachine.State == CharacterState.FastFalling)
+                {
+                    catAnim = "Jump";
+                }
+                else if (Math.Abs(p1Obj.Vx) > 50.0f)
+                {
+                    catAnim = "Run";
+                }
+                else if (Math.Abs(p1Obj.Vx) > 5.0f)
+                {
+                    catAnim = "Walk";
+                }
+
+                catAnimationPlayer.Play(catAnim);
+                catAnimationPlayer.Update(deltaTime);
+            }
+
             // カメラ追従ターゲットの更新
             Point<float>[] targets =
             [
@@ -269,6 +314,14 @@ internal class Program
 
             render.DrawBox(new Rect<int>(p1X1, p1Y1, p1X2, p1Y2), p1Color, true);
             render.DrawBox(new Rect<int>(p1X1, p1Y1, p1X2, p1Y2), player1.OutlineColor, false);
+
+            // Player 1 の頭上に C++ AnimationPlayer による子猫スプライトを描画
+            if (catSpriteHandle != -1)
+            {
+                bool flipX = p1Obj.Vx < -0.1f;
+                var catPos = new Point<int>((int)p1Obj.X, (int)(p1Obj.Y - p1Obj.Height / 2.0f - 24.0f));
+                catAnimationPlayer.Draw(render, catPos, catSpriteHandle, flipX: flipX, scale: 2.0f);
+            }
 
             // Player 2 描画 (パープル)
             int p2X1 = (int)(p2Obj.X - p2Obj.Width / 2.0f);
