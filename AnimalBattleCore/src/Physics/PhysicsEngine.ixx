@@ -160,7 +160,15 @@ namespace ab {
 
         bool RemovePlatform(int id) {
             auto it = std::remove_if(platforms_.begin(), platforms_.end(), [id](const auto& plat) {
+#if defined(__GNUC__) && !defined(__clang__)
+                // GCC 16.1 MinGW の Module std::visit バグ回避用（std::get_if）
+                if (auto* s = std::get_if<SolidPlatform>(&plat)) return s->id == id;
+                if (auto* ss = std::get_if<SemiSolidPlatform>(&plat)) return ss->id == id;
+                return false;
+#else
+                // MSVC などの完全対応コンパイラ用（エレガントな std::visit）
                 return std::visit([id](const auto& p) { return p.id == id; }, plat);
+#endif
             });
             if (it != platforms_.end()) {
                 platforms_.erase(it, platforms_.end());
