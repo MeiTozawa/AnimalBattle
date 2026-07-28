@@ -1,6 +1,4 @@
-using System;
-
-namespace AnimalBattle.Bindings;
+namespace AnimalBattle.Core;
 
 /// <summary>
 /// テキスト枠線の形状タイプを表す列挙型。
@@ -23,12 +21,7 @@ public enum BorderShape
     DoubleRectangle,
 
     /// <summary>
-    /// カプセル（ピル）型枠線。
+    /// 丸み帯びた矩形枠線。
     /// </summary>
-    Pill,
-
-    /// <summary>
-    /// 下線。
-    /// </summary>
-    Underline,
+    RoundedRectangle
 }

@@ -1,27 +1,23 @@
-using System;
-using System.Runtime.InteropServices;
-
-namespace AnimalBattle.Bindings;
+namespace AnimalBattle.Core;
 
 /// <summary>
-/// 2次元座標を表す汎用構造体。
+/// 2次元座標（X, Y）を表す汎用構造体。
 /// </summary>
-/// <typeparam name="T">座標値の数値型</typeparam>
-[StructLayout(LayoutKind.Sequential)]
+/// <typeparam name="T">座標成分の数値型（int, float, double など）</typeparam>
 public struct Point<T> where T : struct
 {
     /// <summary>
     /// X 座標を取得または設定します。
     /// </summary>
-    public T X;
+    public T X { get; set; }
 
     /// <summary>
     /// Y 座標を取得または設定します。
     /// </summary>
-    public T Y;
+    public T Y { get; set; }
 
     /// <summary>
-    /// 指定された座標値で新しい <see cref="Point{T}"/> 構造体を初期化します。
+    /// X 座標および Y 座標を指定して <see cref="Point{T}"/> の新しいインスタンスを初期化します。
     /// </summary>
     /// <param name="x">X 座標</param>
     /// <param name="y">Y 座標</param>

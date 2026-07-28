@@ -1,5 +1,5 @@
 using System;
-using AnimalBattle.Bindings;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Characters;
 

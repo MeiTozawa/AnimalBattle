@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 using Tomlyn.Extensions.Configuration;
@@ -17,14 +14,14 @@ namespace AnimalBattle.Core;
 /// 指定された設定オブジェクトインスタンスで <see cref="ConfigBase{T}"/> の新しいインスタンスを初期化します。
 /// </remarks>
 /// <param name="config">設定オブジェクトインスタンス</param>
-public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(T config) where T : class, new()
+public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(T config) : IDisposable where T : class, new()
 {
-    private IDisposable _changeTokenSubscription = null!;
+    private IDisposable? _changeTokenSubscription;
 
     /// <summary>
     /// 管理対象の設定オブジェクトインスタンスを取得します。
     /// </summary>
-    public T Config { get; } = config ?? throw new ArgumentNullException(nameof(config));
+    public T Config { get; } = config;
 
     /// <summary>
     /// 設定ファイル変更にともない自動リロードが発生した際に発火するイベント。
@@ -49,17 +46,18 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
         string? fullPath = FindConfigPath(defaultFileName);
         if (fullPath == null || !File.Exists(fullPath))
         {
+            Console.WriteLine($"[C# 設定警告] TOML 設定ファイルが見つかりませんでした: {defaultFileName}");
             return SimpleError.NotFound($"TOML 設定ファイルが見つかりません ({defaultFileName})。");
         }
-
+ 
         try
         {
             var configInstance = new T();
             var container = new ConfigBase<T>(configInstance);
-
+ 
             string directory = Path.GetDirectoryName(fullPath) ?? AppDomain.CurrentDomain.BaseDirectory;
             string fileName = Path.GetFileName(fullPath);
-
+ 
             var builder = new ConfigurationBuilder()
                 .SetBasePath(directory)
                 .AddTomlFile(
@@ -69,10 +67,10 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
                     reloadOnChange: true
 #endif
                 );
-
+ 
             IConfigurationRoot configRoot = builder.Build();
             configRoot.Bind(container.Config);
-
+ 
             container._changeTokenSubscription = ChangeToken.OnChange(
                 configRoot.GetReloadToken,
                 () =>
@@ -88,7 +86,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
                         Console.WriteLine($"[C# 設定] {typeof(T).Name} のリロード中にエラーが発生しました: {ex.Message}");
                     }
                 });
-
+ 
             Console.WriteLine($"[C# 設定] TOML ファイルから {typeof(T).Name} を読み込みました (reloadOnChange: true): {fullPath}");
             return container;
         }
@@ -97,7 +95,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
             return SimpleError.Exception(ex);
         }
     }
-
+ 
     /// <summary>
     /// 辞書データから設定プロパティを読み込み、数値を反映します。
     /// </summary>
@@ -111,10 +109,10 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
             {
                 continue;
             }
-
+ 
             string name = prop.Name;
             string camelCase = char.ToLowerInvariant(name[0]) + name[1..];
-
+ 
             if (values.TryGetValue(camelCase, out float val) ||
                 values.TryGetValue(name, out val) ||
                 values.TryGetValue(name.ToLowerInvariant(), out val))
@@ -123,26 +121,47 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
             }
         }
     }
-
+ 
     /// <summary>
     /// 設定ファイルの検索パスを取得します。
+    /// カレントディレクトリ、出力ディレクトリ、およびプロジェクトルートの Config フォルダを優先的に探索します。
     /// </summary>
     /// <param name="fileName">対象ファイル名</param>
     /// <returns>絶対パス。見つからない場合は null</returns>
-    protected static string? FindConfigPath(string fileName)
+    private static string? FindConfigPath(string fileName)
     {
         try
         {
+            // 1. ファイル名がそのまま存在するか（絶対パス指定または直下相対パス）
             if (File.Exists(fileName))
             {
                 return Path.GetFullPath(fileName);
             }
 
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string fullPath = Path.GetFullPath(Path.Combine(baseDir, "..", "Config", fileName));
-            if (File.Exists(fullPath))
+            // 2. カレントディレクトリ直下の Config フォルダを判定
+            string cwdConfigPath = Path.Combine(Directory.GetCurrentDirectory(), "Config", fileName);
+            if (File.Exists(cwdConfigPath))
             {
-                return fullPath;
+                return Path.GetFullPath(cwdConfigPath);
+            }
+
+            // 3. カレントディレクトリの1つ上の Config フォルダを判定
+            string cwdParentConfigPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "Config", fileName);
+            if (File.Exists(cwdParentConfigPath))
+            {
+                return Path.GetFullPath(cwdParentConfigPath);
+            }
+
+            // 4. BaseDirectory から親ディレクトリを探索して Config/{fileName} を取得
+            DirectoryInfo? dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+            while (dir != null)
+            {
+                string candidate = Path.Combine(dir.FullName, "Config", fileName);
+                if (File.Exists(candidate))
+                {
+                    return Path.GetFullPath(candidate);
+                }
+                dir = dir.Parent;
             }
         }
         catch
@@ -151,5 +170,12 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
         }
 
         return null;
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        _changeTokenSubscription?.Dispose();
+        _changeTokenSubscription = null;
     }
 }
