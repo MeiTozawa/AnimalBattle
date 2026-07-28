@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using AnimalBattle.Bindings;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Stages;
@@ -52,13 +51,13 @@ public class StageManager
             Platforms =
             [
                 // メイン実体床
-                new PlatformData { X1 = 260.0f, Y1 = 500.0f, X2 = 1020.0f, Y2 = 560.0f, Type = NativeEngine.PlatformType.Solid, FillColor = 0xFF1E5128, OutlineColor = 0xFF4E9F3D },
+                new PlatformData { X1 = 260.0f, Y1 = 500.0f, X2 = 1020.0f, Y2 = 560.0f, Type = PlatformType.Solid, FillColor = 0xFF1E5128, OutlineColor = 0xFF4E9F3D },
                 // 左下すり抜け床
-                new PlatformData { X1 = 340.0f, Y1 = 380.0f, X2 = 520.0f, Y2 = 390.0f, Type = NativeEngine.PlatformType.SemiSolid, FillColor = 0xFF00ADB5, OutlineColor = 0xFFEEEEEE },
+                new PlatformData { X1 = 340.0f, Y1 = 380.0f, X2 = 520.0f, Y2 = 390.0f, Type = PlatformType.SemiSolid, FillColor = 0xFF00ADB5, OutlineColor = 0xFFEEEEEE },
                 // 右下すり抜け床
-                new PlatformData { X1 = 760.0f, Y1 = 380.0f, X2 = 940.0f, Y2 = 390.0f, Type = NativeEngine.PlatformType.SemiSolid, FillColor = 0xFF00ADB5, OutlineColor = 0xFFEEEEEE },
+                new PlatformData { X1 = 760.0f, Y1 = 380.0f, X2 = 940.0f, Y2 = 390.0f, Type = PlatformType.SemiSolid, FillColor = 0xFF00ADB5, OutlineColor = 0xFFEEEEEE },
                 // 中央上すり抜け床
-                new PlatformData { X1 = 550.0f, Y1 = 260.0f, X2 = 730.0f, Y2 = 270.0f, Type = NativeEngine.PlatformType.SemiSolid, FillColor = 0xFFFFC72C, OutlineColor = 0xFFF8F3D4 }
+                new PlatformData { X1 = 550.0f, Y1 = 260.0f, X2 = 730.0f, Y2 = 270.0f, Type = PlatformType.SemiSolid, FillColor = 0xFFFFC72C, OutlineColor = 0xFFF8F3D4 }
             ]
         });
 
@@ -76,7 +75,7 @@ public class StageManager
             Platforms =
             [
                 // 大型平坦床
-                new PlatformData { X1 = 150.0f, Y1 = 520.0f, X2 = 1130.0f, Y2 = 580.0f, Type = NativeEngine.PlatformType.Solid, FillColor = 0xFF3A1078, OutlineColor = 0xFFF72585 }
+                new PlatformData { X1 = 150.0f, Y1 = 520.0f, X2 = 1130.0f, Y2 = 580.0f, Type = PlatformType.Solid, FillColor = 0xFF3A1078, OutlineColor = 0xFFF72585 }
             ]
         });
 
@@ -94,11 +93,11 @@ public class StageManager
             Platforms =
             [
                 // 左浮島
-                new PlatformData { X1 = 180.0f, Y1 = 500.0f, X2 = 560.0f, Y2 = 560.0f, Type = NativeEngine.PlatformType.Solid, FillColor = 0xFFD35400, OutlineColor = 0xFFE67E22 },
+                new PlatformData { X1 = 180.0f, Y1 = 500.0f, X2 = 560.0f, Y2 = 560.0f, Type = PlatformType.Solid, FillColor = 0xFFD35400, OutlineColor = 0xFFE67E22 },
                 // 右浮島
-                new PlatformData { X1 = 720.0f, Y1 = 500.0f, X2 = 1100.0f, Y2 = 560.0f, Type = NativeEngine.PlatformType.Solid, FillColor = 0xFFD35400, OutlineColor = 0xFFE67E22 },
+                new PlatformData { X1 = 720.0f, Y1 = 500.0f, X2 = 1100.0f, Y2 = 560.0f, Type = PlatformType.Solid, FillColor = 0xFFD35400, OutlineColor = 0xFFE67E22 },
                 // 中央高所空中ブリッジ (すり抜け)
-                new PlatformData { X1 = 520.0f, Y1 = 340.0f, X2 = 760.0f, Y2 = 350.0f, Type = NativeEngine.PlatformType.SemiSolid, FillColor = 0xFF2ECC71, OutlineColor = 0xFF27AE60 }
+                new PlatformData { X1 = 520.0f, Y1 = 340.0f, X2 = 760.0f, Y2 = 350.0f, Type = PlatformType.SemiSolid, FillColor = 0xFF2ECC71, OutlineColor = 0xFF27AE60 }
             ]
         });
 
@@ -116,15 +115,15 @@ public class StageManager
             Platforms =
             [
                 // メインサイバー床
-                new PlatformData { X1 = 280.0f, Y1 = 520.0f, X2 = 1000.0f, Y2 = 570.0f, Type = NativeEngine.PlatformType.Solid, FillColor = 0xFF0F4C81, OutlineColor = 0xFF00F5FF },
+                new PlatformData { X1 = 280.0f, Y1 = 520.0f, X2 = 1000.0f, Y2 = 570.0f, Type = PlatformType.Solid, FillColor = 0xFF0F4C81, OutlineColor = 0xFF00F5FF },
                 // 左下サイド床
-                new PlatformData { X1 = 200.0f, Y1 = 420.0f, X2 = 380.0f, Y2 = 430.0f, Type = NativeEngine.PlatformType.SemiSolid, FillColor = 0xFFE056FD, OutlineColor = 0xFF7D5FFF },
+                new PlatformData { X1 = 200.0f, Y1 = 420.0f, X2 = 380.0f, Y2 = 430.0f, Type = PlatformType.SemiSolid, FillColor = 0xFFE056FD, OutlineColor = 0xFF7D5FFF },
                 // 右下サイド床
-                new PlatformData { X1 = 900.0f, Y1 = 420.0f, X2 = 1080.0f, Y2 = 430.0f, Type = NativeEngine.PlatformType.SemiSolid, FillColor = 0xFFE056FD, OutlineColor = 0xFF7D5FFF },
+                new PlatformData { X1 = 900.0f, Y1 = 420.0f, X2 = 1080.0f, Y2 = 430.0f, Type = PlatformType.SemiSolid, FillColor = 0xFFE056FD, OutlineColor = 0xFF7D5FFF },
                 // 中央中段床
-                new PlatformData { X1 = 480.0f, Y1 = 380.0f, X2 = 800.0f, Y2 = 390.0f, Type = NativeEngine.PlatformType.SemiSolid, FillColor = 0xFFFEE715, OutlineColor = 0xFFFFDD59 },
+                new PlatformData { X1 = 480.0f, Y1 = 380.0f, X2 = 800.0f, Y2 = 390.0f, Type = PlatformType.SemiSolid, FillColor = 0xFFFEE715, OutlineColor = 0xFFFFDD59 },
                 // 中央最上段床
-                new PlatformData { X1 = 580.0f, Y1 = 240.0f, X2 = 700.0f, Y2 = 250.0f, Type = NativeEngine.PlatformType.SemiSolid, FillColor = 0xFFFF3838, OutlineColor = 0xFFFF4D4D }
+                new PlatformData { X1 = 580.0f, Y1 = 240.0f, X2 = 700.0f, Y2 = 250.0f, Type = PlatformType.SemiSolid, FillColor = 0xFFFF3838, OutlineColor = 0xFFFF4D4D }
             ]
         });
     }
@@ -132,41 +131,32 @@ public class StageManager
     /// <summary>
     /// 指定されたインデックスのマップを読み込み、Native C++ 物理エンジンに登録します。
     /// </summary>
-    /// <param name="physics">Native C++ 物理エンジンのポインタ</param>
+    /// <param name="physics">物理エンジンインスタンス</param>
     /// <param name="mapIndex">読み込むマップのインデックス</param>
     /// <returns>成功時はカレント <see cref="MapData"/> を含む <see cref="Result{T}"/>、失敗時は <see cref="SimpleError"/></returns>
-    public Result<MapData> LoadMap(IntPtr physics, int mapIndex)
+    public Result<MapData> LoadMap(PhysicsEngine physics, int mapIndex)
     {
-        if (physics == IntPtr.Zero)
-        {
-            return SimpleError.NotValid("物理エンジンのインスタンスポインタが無効 (null) です。");
-        }
-
         if (mapIndex < 0 || mapIndex >= _maps.Count)
         {
             return SimpleError.NotFound($"指定されたマップインデックス {mapIndex} は範囲外です (有効範囲: 0 ～ {_maps.Count - 1})。");
         }
 
-        // 1. 既存の物理エンジン上の足場を削除
         MapData oldMap = CurrentMap;
         foreach (var plat in oldMap.Platforms)
         {
             if (plat.RuntimeId != -1)
             {
-                NativeEngine.PhysicsRemovePlatform(physics, plat.RuntimeId);
+                physics.RemovePlatform(plat.RuntimeId);
                 plat.RuntimeId = -1;
             }
         }
 
-        // 2. カレントマップの更新
         _currentMapIndex = mapIndex;
         MapData newMap = CurrentMap;
 
-        // 3. 新しい足場を Native C++ 物理エンジンへ登録
         foreach (var plat in newMap.Platforms)
         {
-            plat.RuntimeId = NativeEngine.PhysicsAddPlatform(
-                physics, plat.X1, plat.Y1, plat.X2, plat.Y2, (int)plat.Type);
+            plat.RuntimeId = physics.AddPlatform(plat.X1, plat.Y1, plat.X2, plat.Y2, plat.Type);
         }
 
         Console.WriteLine($"[ステージマネージャー] マップ {newMap.Id} に切り替えました: {newMap.Name}");

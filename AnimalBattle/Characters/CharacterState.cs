@@ -25,5 +25,10 @@ public enum CharacterState
     /// <summary>
     /// ヒットスタン（ふっとび硬直）状態。
     /// </summary>
-    Hitstun
+    Hitstun,
+
+    /// <summary>
+    /// 攻撃アクション実行中状態。
+    /// </summary>
+    Attacking
 }

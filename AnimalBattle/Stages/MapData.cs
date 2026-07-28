@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using AnimalBattle.Bindings;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Stages;
 

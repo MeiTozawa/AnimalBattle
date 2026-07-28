@@ -1,5 +1,5 @@
 using System;
-using AnimalBattle.Bindings;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Stages;
 
@@ -31,7 +31,7 @@ public class PlatformData
     /// <summary>
     /// 足場の属性（実体足場、すり抜け足場）を取得または設定します。
     /// </summary>
-    public NativeEngine.PlatformType Type { get; set; }
+    public PlatformType Type { get; set; }
 
     /// <summary>
     /// 足場の塗りつぶしカラー (ARGB) を取得または設定します。

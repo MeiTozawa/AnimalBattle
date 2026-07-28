@@ -4,30 +4,20 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Characters;
 
 /// <summary>
-/// キャラクターの移動、物理演算、および操作感の調整用パラメータを保持する設定クラス。
+/// キャラクターの移動、物理演算、Hitbox / Hurtbox 判定パラメータを保持する設定クラス。
 /// TOML 設定ファイルからの動的読み込みに対応します。
 /// </summary>
 public class CharacterConfig
 {
     /// <summary>
-    /// 地上での歩行加速度を取得または設定します。
+    /// 地上での移動加速度を取得または設定します。
     /// </summary>
-    public float WalkAcceleration { get; set; } = 1200.0f;
+    public float GroundAcceleration { get; set; } = 4800.0f;
 
     /// <summary>
-    /// 地上での走行（ダッシュ）加速度を取得または設定します。
+    /// 地上での最高移動速度を取得または設定します。
     /// </summary>
-    public float RunAcceleration { get; set; } = 2200.0f;
-
-    /// <summary>
-    /// 最高歩行速度を取得または設定します。
-    /// </summary>
-    public float MaxWalkSpeed { get; set; } = 350.0f;
-
-    /// <summary>
-    /// 最高走行速度を取得または設定します。
-    /// </summary>
-    public float MaxRunSpeed { get; set; } = 650.0f;
+    public float MaxGroundSpeed { get; set; } = 200.0f;
 
     /// <summary>
     /// 地上での摩擦減速度（キー離し時の停止力）を取得または設定します。
@@ -43,6 +33,11 @@ public class CharacterConfig
     /// 空中ジャンプ（2段ジャンプ）初速を取得または設定します。
     /// </summary>
     public float DoubleJumpForce { get; set; } = 620.0f;
+
+    /// <summary>
+    /// 最大空中ジャンプ可能回数を取得または設定します。
+    /// </summary>
+    public int MaxDoubleJumps { get; set; } = 1;
 
     /// <summary>
     /// 重力加速度を取得または設定します。
@@ -75,9 +70,9 @@ public class CharacterConfig
     public float AirDrag { get; set; } = 300.0f;
 
     /// <summary>
-    /// 走行モードへ移行する入力軸のしきい値を取得または設定します。
+    /// 急降下操作に移行する垂直入力軸のしきい値を取得または設定します。
     /// </summary>
-    public float RunThreshold { get; set; } = 0.7f;
+    public float FastFallThreshold { get; set; } = 0.7f;
 
     /// <summary>
     /// 急降下開始時の初速倍率を取得または設定します。
@@ -113,6 +108,65 @@ public class CharacterConfig
     /// キャラクターの体重（ふっとびにくさ）を取得または設定します。
     /// </summary>
     public float Weight { get; set; } = 100.0f;
+
+    // --- Hurtbox (喰らい/受撃判定ボックス) 設定 ---
+
+    /// <summary>
+    /// Hurtbox の X 軸相対オフセットを取得または設定します。
+    /// </summary>
+    public float HurtboxOffsetX { get; set; } = -20.0f;
+
+    /// <summary>
+    /// Hurtbox の Y 軸相対オフセットを取得または設定します。
+    /// </summary>
+    public float HurtboxOffsetY { get; set; } = 0.0f;
+
+    /// <summary>
+    /// Hurtbox の幅（ピクセル）を取得または設定します。
+    /// </summary>
+    public float HurtboxWidth { get; set; } = 40.0f;
+
+    /// <summary>
+    /// Hurtbox の高さ（ピクセル）を取得または設定します。
+    /// </summary>
+    public float HurtboxHeight { get; set; } = 60.0f;
+
+    // --- Hitbox (攻撃判定ボックス) 設定 ---
+
+    /// <summary>
+    /// Hitbox の X 軸相対オフセットを取得または設定します。
+    /// </summary>
+    public float HitboxOffsetX { get; set; } = 10.0f;
+
+    /// <summary>
+    /// Hitbox の Y 軸相対オフセットを取得または設定します。
+    /// </summary>
+    public float HitboxOffsetY { get; set; } = -10.0f;
+
+    /// <summary>
+    /// Hitbox の幅（ピクセル）を取得または設定します。
+    /// </summary>
+    public float HitboxWidth { get; set; } = 45.0f;
+
+    /// <summary>
+    /// Hitbox の高さ（ピクセル）を取得または設定します。
+    /// </summary>
+    public float HitboxHeight { get; set; } = 40.0f;
+
+    /// <summary>
+    /// Hitbox の与ダメージ量を取得または設定します。
+    /// </summary>
+    public float HitboxDamage { get; set; } = 12.0f;
+
+    /// <summary>
+    /// Hitbox の吹っ飛び力（ノックバックフォース）を取得または設定します。
+    /// </summary>
+    public float HitboxKnockbackForce { get; set; } = 450.0f;
+
+    /// <summary>
+    /// Hitbox の吹っ飛び方向（ラジアン）を取得または設定します。
+    /// </summary>
+    public float HitboxKnockbackAngle { get; set; } = (float)(Math.PI / 4.0);
 
     /// <summary>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{CharacterConfig}"/> インスタンスを生成します。
