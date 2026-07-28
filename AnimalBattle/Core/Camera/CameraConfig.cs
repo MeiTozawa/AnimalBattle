@@ -1,7 +1,7 @@
 using System;
 using AnimalBattle.Core;
 
-namespace AnimalBattle.Camera;
+namespace AnimalBattle.Core;
 
 /// <summary>
 /// カメラの初期ビューポートおよび制御パラメータを保持する設定クラス。
