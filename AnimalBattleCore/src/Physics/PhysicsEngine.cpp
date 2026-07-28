@@ -20,7 +20,6 @@ namespace ab {
         if (delta_time > max_delta_time_) delta_time = max_delta_time_;
 
         for (auto& obj : objects_) {
-            // --- 1. Timers Update ---
             if (obj.drop_through_timer > 0.0f) {
                 obj.drop_through_timer -= delta_time;
             }
@@ -28,7 +27,6 @@ namespace ab {
                 obj.hitstun_timer -= delta_time;
             }
 
-            // --- 2. Decay Knockback Velocity ---
             float knockback_speed = std::hypot(obj.knockback_x, obj.knockback_y);
             if (knockback_speed > 0.0f) {
                 float decay = knockback_decay_ * delta_time;
@@ -41,14 +39,12 @@ namespace ab {
                 }
             }
 
-            // --- 3. Integrate Movement & Resolve Collisions ---
             float prev_y = obj.y;
             obj.collision_flags = CollisionFlags::kNone;
 
             float total_vx = obj.vx + obj.knockback_x;
             float total_vy = obj.vy + obj.knockback_y;
 
-            // X-axis Movement and Collision Resolution (Solid Platforms)
             obj.x += total_vx * delta_time;
             auto aabb_x = obj.GetAABB();
             for (const auto& plat_var : platforms_) {
@@ -97,16 +93,21 @@ namespace ab {
             auto aabb_y = obj.GetAABB();
             
             bool hit_grounded = false;
+            constexpr float FLOOR_SNAP_MARGIN = 0.5f;
+
             // Solid platform collision
             for (const auto& plat_var : platforms_) {
 #if defined(__GNUC__) && !defined(__clang__)
                 if (auto* plat = std::get_if<SolidPlatform>(&plat_var)) {
-                    if (CheckOverlap(aabb_y, *plat)) {
+                    bool is_x_overlapping = (aabb_y.max_x > plat->x1 && aabb_y.min_x < plat->x2);
+                    bool is_touching_floor = is_x_overlapping && (std::abs(aabb_y.max_y - plat->y1) <= FLOOR_SNAP_MARGIN) && (total_vy >= 0.0f);
+
+                    if (CheckOverlap(aabb_y, *plat) || is_touching_floor) {
                         float top_overlap = aabb_y.max_y - plat->y1;
                         float bottom_overlap = plat->y2 - aabb_y.min_y;
-                        if (top_overlap < bottom_overlap) {
+                        if (top_overlap < bottom_overlap || is_touching_floor) {
                             // Floor landing
-                            obj.y -= top_overlap;
+                            obj.y = plat->y1;
                             obj.vy = 0.0f;
                             obj.knockback_y = 0.0f;
                             obj.collision_flags |= CollisionFlags::kFloor;
@@ -125,12 +126,15 @@ namespace ab {
                 std::visit([&](const auto& plat) {
                     using T = std::decay_t<decltype(plat)>;
                     if constexpr (std::is_same_v<T, SolidPlatform>) {
-                        if (CheckOverlap(aabb_y, plat)) {
+                        bool is_x_overlapping = (aabb_y.max_x > plat.x1 && aabb_y.min_x < plat.x2);
+                        bool is_touching_floor = is_x_overlapping && (std::abs(aabb_y.max_y - plat.y1) <= FLOOR_SNAP_MARGIN) && (total_vy >= 0.0f);
+
+                        if (CheckOverlap(aabb_y, plat) || is_touching_floor) {
                             float top_overlap = aabb_y.max_y - plat.y1;
                             float bottom_overlap = plat.y2 - aabb_y.min_y;
-                            if (top_overlap < bottom_overlap) {
+                            if (top_overlap < bottom_overlap || is_touching_floor) {
                                 // Floor landing
-                                obj.y -= top_overlap;
+                                obj.y = plat.y1;
                                 obj.vy = 0.0f;
                                 obj.knockback_y = 0.0f;
                                 obj.collision_flags |= CollisionFlags::kFloor;

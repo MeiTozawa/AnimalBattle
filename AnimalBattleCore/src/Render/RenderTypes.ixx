@@ -2,8 +2,6 @@ module;
 
 #include <cstdint>
 #include <concepts>
-#include <utility>
-#include <stdexcept>
 #include <variant>
 
 export module RenderTypes;
@@ -41,6 +39,18 @@ namespace ab {
 
         constexpr Rect<T> Expand(T amount) const {
             return Rect<T>{x1 - amount, y1 - amount, x2 + amount, y2 + amount};
+        }
+
+        constexpr bool Intersects(const Rect<T>& other) const {
+            return x1 < other.x2 && x2 > other.x1 && y1 < other.y2 && y2 > other.y1;
+        }
+
+        constexpr bool Contains(T x, T y) const {
+            return x >= x1 && x <= x2 && y >= y1 && y <= y2;
+        }
+
+        constexpr bool Contains(const Point<T>& p) const {
+            return p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2;
         }
     };
 
