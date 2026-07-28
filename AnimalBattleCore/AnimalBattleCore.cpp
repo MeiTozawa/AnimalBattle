@@ -340,9 +340,9 @@ extern "C" {
     __declspec(dllexport) void AnimationPlayer_AddGridClip(
         ab::AnimationPlayer* player, const wchar_t* name, int row,
         int frame_width, int frame_height, int frame_count,
-        float frame_duration, bool is_looping) noexcept {
+        float fps, bool is_looping) noexcept {
         if (player && name) {
-            player->AddGridClip(name, row, frame_width, frame_height, frame_count, frame_duration, is_looping);
+            player->AddGridClip(name, row, frame_width, frame_height, frame_count, fps, is_looping);
         }
     }
 

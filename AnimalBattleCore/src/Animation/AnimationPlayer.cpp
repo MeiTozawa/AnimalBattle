@@ -13,10 +13,10 @@ namespace ab {
     }
 
     void AnimationPlayer::AddGridClip(const std::wstring& name, int row, int frame_width, int frame_height,
-                                      int frame_count, float frame_duration, bool is_looping) {
+                                      int frame_count, float fps, bool is_looping) {
         AnimationClip clip;
         clip.name = name;
-        clip.frame_duration = frame_duration;
+        clip.fps = fps;
         clip.is_looping = is_looping;
         clip.frames.reserve(frame_count);
 
@@ -72,7 +72,7 @@ namespace ab {
         }
 
         frame_timer_ += delta_time;
-        float duration = current_clip_->frame_duration;
+        float duration = (current_clip_->fps > 0.0f) ? (1.0f / current_clip_->fps) : 0.1f;
         if (duration <= 0.0001f) {
             duration = 0.1f;
         }

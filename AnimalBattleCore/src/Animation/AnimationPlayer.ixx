@@ -1,6 +1,5 @@
 module;
 
-#include <cstdint>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -21,7 +20,7 @@ namespace ab {
     export struct AnimationClip {
         std::wstring name;                   ///< アニメーションクリップ識別名
         std::vector<AnimationFrame> frames;   ///< アニメーションフレーム配列
-        float frame_duration = 0.1f;         ///< 1コマの表示維持時間（秒）
+        float fps = 10.0f;                    ///< 再生フレームレート（Frames Per Second）
         bool is_looping = true;               ///< ループ再生を行うフラグ
     };
 
@@ -48,10 +47,10 @@ namespace ab {
         /// @param frame_width 1 コマの幅 (ピクセル)
         /// @param frame_height 1 コマの高さ (ピクセル)
         /// @param frame_count コマ数
-        /// @param frame_duration 1 コマの表示維持時間 (秒)
+        /// @param fps 再生フレームレート (Frames Per Second)
         /// @param is_looping ループ再生フラグ
         void AddGridClip(const std::wstring& name, int row, int frame_width, int frame_height,
-                         int frame_count, float frame_duration, bool is_looping);
+                         int frame_count, float fps, bool is_looping);
 
         /// @brief 指定された名前のアニメーションを開始します
         /// @param name アニメーション名
