@@ -193,18 +193,10 @@ namespace ab {
 
             obj->damage_percent += damage;
 
-            constexpr float KNOCKBACK_WEIGHT_OFFSET = 100.0f;
-            constexpr float KNOCKBACK_DAMAGE_SCALE_1 = 10.0f;
-            constexpr float KNOCKBACK_DAMAGE_SCALE_2 = 20.0f;
-            constexpr float KNOCKBACK_SCALE_MULTIPLIER = 1.4f;
-            constexpr float KNOCKBACK_BASE_MULTIPLIER = 18.0f;
-            constexpr float HITSTUN_MULTIPLIER = 0.00667f;
-            constexpr float MIN_HITSTUN = 0.1f;
-
             float percent = obj->damage_percent;
-            float weight_term = KNOCKBACK_WEIGHT_OFFSET / (obj->weight + KNOCKBACK_WEIGHT_OFFSET);
+            float weight_term = knockback_weight_offset_ / (obj->weight + knockback_weight_offset_);
             
-            float knockback_magnitude = (((percent / KNOCKBACK_DAMAGE_SCALE_1 + (percent * damage) / KNOCKBACK_DAMAGE_SCALE_2) * weight_term * KNOCKBACK_SCALE_MULTIPLIER) + KNOCKBACK_BASE_MULTIPLIER) * scaling + base_knockback;
+            float knockback_magnitude = (((percent / knockback_damage_scale_1_ + (percent * damage) / knockback_damage_scale_2_) * weight_term * knockback_scale_multiplier_) + knockback_base_multiplier_) * scaling + base_knockback;
 
             float knockback_vx = knockback_magnitude * std::cos(angle_rad);
             float knockback_vy = -knockback_magnitude * std::sin(angle_rad);
@@ -212,17 +204,39 @@ namespace ab {
             obj->knockback_x = knockback_vx;
             obj->knockback_y = knockback_vy;
 
-            obj->hitstun_timer = std::max(knockback_magnitude * HITSTUN_MULTIPLIER, MIN_HITSTUN);
+            float raw_hitstun = hitstun_base_seconds_ + knockback_magnitude * hitstun_knockback_scale_;
+            obj->hitstun_timer = std::clamp(raw_hitstun, hitstun_base_seconds_, hitstun_max_seconds_);
         }
 
         void SetKnockbackDecay(float decay) { knockback_decay_ = decay; }
         void SetMaxDeltaTime(float max_dt) { max_delta_time_ = max_dt; }
+        void SetKnockbackParams(float weight_offset, float damage_scale_1, float damage_scale_2,
+                                float scale_multiplier, float base_multiplier) {
+            knockback_weight_offset_ = weight_offset;
+            knockback_damage_scale_1_ = damage_scale_1;
+            knockback_damage_scale_2_ = damage_scale_2;
+            knockback_scale_multiplier_ = scale_multiplier;
+            knockback_base_multiplier_ = base_multiplier;
+        }
+        void SetHitstunParams(float base_seconds, float knockback_scale, float max_seconds) {
+            hitstun_base_seconds_ = base_seconds;
+            hitstun_knockback_scale_ = knockback_scale;
+            hitstun_max_seconds_ = max_seconds;
+        }
 
         void Step(float delta_time);
 
     private:
         float knockback_decay_ = 400.0f;
         float max_delta_time_ = 0.1f;
+        float knockback_weight_offset_ = 100.0f;
+        float knockback_damage_scale_1_ = 10.0f;
+        float knockback_damage_scale_2_ = 20.0f;
+        float knockback_scale_multiplier_ = 1.4f;
+        float knockback_base_multiplier_ = 18.0f;
+        float hitstun_base_seconds_ = 0.25f;
+        float hitstun_knockback_scale_ = 0.0005f;
+        float hitstun_max_seconds_ = 1.2f;
 
         std::vector<PhysicsObject> objects_;
         std::vector<PlatformVariant> platforms_;

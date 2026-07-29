@@ -319,6 +319,14 @@ extern "C" {
         if (engine) engine->Step(delta_time);
     }
 
+    __declspec(dllexport) void Physics_SetKnockbackParams(ab::PhysicsEngine* engine, float weight_offset, float damage_scale_1, float damage_scale_2, float scale_multiplier, float base_multiplier) noexcept {
+        if (engine) engine->SetKnockbackParams(weight_offset, damage_scale_1, damage_scale_2, scale_multiplier, base_multiplier);
+    }
+
+    __declspec(dllexport) void Physics_SetHitstunParams(ab::PhysicsEngine* engine, float base_seconds, float knockback_scale, float max_seconds) noexcept {
+        if (engine) engine->SetHitstunParams(base_seconds, knockback_scale, max_seconds);
+    }
+
     __declspec(dllexport) void Render_DrawRectRotaGraph(RenderService* service, ab::Point<int> p, ab::Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) noexcept {
         if (service) service->DrawRectRotaGraph(p, src, ext_rate, angle, graph_handle, trans_flag, turn_flag);
     }
@@ -339,10 +347,11 @@ extern "C" {
 
     __declspec(dllexport) void AnimationPlayer_AddGridClip(
         ab::AnimationPlayer* player, const wchar_t* name, int row,
-        int frame_width, int frame_height, int frame_count,
+        int start_frame, int end_frame,
+        int frame_width, int frame_height,
         float fps, bool is_looping) noexcept {
         if (player && name) {
-            player->AddGridClip(name, row, frame_width, frame_height, frame_count, fps, is_looping);
+            player->AddGridClip(name, row, start_frame, end_frame, frame_width, frame_height, fps, is_looping);
         }
     }
 

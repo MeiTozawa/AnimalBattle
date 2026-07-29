@@ -10,8 +10,11 @@ knockbackDamageScale1 = 10.0
 knockbackDamageScale2 = 20.0
 knockbackScaleMultiplier = 1.4
 knockbackBaseMultiplier = 18.0
-hitstunMultiplier = 0.00667
-minHitstun = 0.1
+
+# Hitstun (Hit Stun Duration) Parameters (in Seconds)
+hitstunBaseSeconds = 0.25
+hitstunKnockbackScale = 0.0005
+hitstunMaxSeconds = 1.2
 
 # Platform & Stage Physics Parameters
 dropThroughPushOffset = 3.0
