@@ -1,64 +1,88 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using AnimalBattle.Characters;
 using AnimalBattle.Core;
+using AnimalBattle.Inputs;
 using AnimalBattle.Stages;
 
 namespace AnimalBattle.Battle;
 
 /// <summary>
-/// 対戦バトルにおけるプレイヤーの生成、物理状態同期、入力伝達、ヒット判定、および撃墜判定を管理するクラス。
+/// 対戦バトルにおける動的プレイヤー群 (1～4人) の生成、物理状態同期、入力伝達、ヒット判定、および撃墜判定を管理するクラス。
 /// </summary>
 public class BattleManager
 {
-    private readonly Character _player1 = new(1, "Player 1", 0xFF3498DB, 0xFF2980B9);
-    private readonly Character _player2 = new(2, "Player 2", 0xFF9B59B6, 0xFF8E44AD);
+    private readonly List<Character> _players = [];
+    private static readonly (uint Color, uint Border)[] _playerColors =
+    [
+        (0xFF3498DB, 0xFF2980B9), // P1: Blue
+        (0xFF9B59B6, 0xFF8E44AD), // P2: Purple
+        (0xFFE74C3C, 0xFFC0392B), // P3: Red
+        (0xFF2ECC71, 0xFF27AE60)  // P4: Green
+    ];
 
     /// <summary>
-    /// Player 1 のキャラクターインスタンスを取得します。
+    /// 現在参戦中のプレイヤーリストを取得します。
     /// </summary>
-    public Character Player1 => _player1;
+    public ReadOnlyCollection<Character> Players => _players.AsReadOnly();
 
     /// <summary>
-    /// Player 2 のキャラクターインスタンスを取得します。
+    /// Player 1 のキャラクターインスタンスを取得します。（存在しない場合は null）
     /// </summary>
-    public Character Player2 => _player2;
+    public Character? Player1 => _players.Count > 0 ? _players[0] : null;
 
     /// <summary>
-    /// 指定された初期マップのスポーン位置に基づき、プレイヤーの物理オブジェクト登録と状態リセットを行います。
+    /// Player 2 のキャラクターインスタンスを取得します。（存在しない場合は null）
+    /// </summary>
+    public Character? Player2 => _players.Count > 1 ? _players[1] : null;
+
+    /// <summary>
+    /// 指定された人数 (1～4人) および初期マップに基づき、プレイヤーの物理オブジェクト登録と状態初期化を行います。
     /// </summary>
     /// <param name="physics">物理エンジンインスタンス</param>
     /// <param name="initialMap">初期マップデータ</param>
-    public void Initialize(PhysicsEngine physics, MapData initialMap)
+    /// <param name="playerCount">参戦人数 (1～4)</param>
+    public void Initialize(PhysicsEngine physics, MapData initialMap, int playerCount = 2)
     {
-        _player1.PhysicsObjectId = physics.AddObject(
-            initialMap.P1Spawn.X, initialMap.P1Spawn.Y, _player1.Config.Width, _player1.Config.Height, _player1.Config.Weight);
-        _player2.PhysicsObjectId = physics.AddObject(
-            initialMap.P2Spawn.X, initialMap.P2Spawn.Y, _player2.Config.Width, _player2.Config.Height, _player2.Config.Weight);
+        playerCount = Math.Clamp(playerCount, 1, 4);
+        _players.Clear();
 
-        _player1.StateMachine.Reset();
-        _player2.StateMachine.Reset();
+        for (int i = 1; i <= playerCount; i++)
+        {
+            var (color, border) = _playerColors[(i - 1) % _playerColors.Length];
+            var character = new Character(i, $"Player {i}", color, border);
+            Point<float> spawn = initialMap.GetSpawnPosition(i);
+
+            character.PhysicsObjectId = physics.AddObject(
+                spawn.X, spawn.Y, character.Config.Width, character.Config.Height, character.Config.Weight);
+            character.StateMachine.Reset();
+
+            _players.Add(character);
+        }
     }
 
     /// <summary>
-    /// マップ切り替え時に既存のプレイヤー物理オブジェクトを削除し、新しいマップのスポーン位置に再生成します。
+    /// マップ切り替え時に既存の全プレイヤーの物理オブジェクトを再作成し、新しいマップのスポーン位置に配置します。
     /// </summary>
     /// <param name="physics">物理エンジンインスタンス</param>
     /// <param name="newMap">切り替え後の新しいマップデータ</param>
     public void RecreatePlayers(PhysicsEngine physics, MapData newMap)
     {
-        physics.RemoveObject(_player1.PhysicsObjectId);
-        physics.RemoveObject(_player2.PhysicsObjectId);
+        for (int i = 0; i < _players.Count; i++)
+        {
+            var player = _players[i];
+            physics.RemoveObject(player.PhysicsObjectId);
 
-        _player1.PhysicsObjectId = physics.AddObject(
-            newMap.P1Spawn.X, newMap.P1Spawn.Y, _player1.Config.Width, _player1.Config.Height, _player1.Config.Weight);
-        _player2.PhysicsObjectId = physics.AddObject(
-            newMap.P2Spawn.X, newMap.P2Spawn.Y, _player2.Config.Width, _player2.Config.Height, _player2.Config.Weight);
-
-        _player1.StateMachine.Reset();
-        _player2.StateMachine.Reset();
+            Point<float> spawn = newMap.GetSpawnPosition(player.PlayerIndex);
+            player.PhysicsObjectId = physics.AddObject(
+                spawn.X, spawn.Y, player.Config.Width, player.Config.Height, player.Config.Weight);
+            player.StateMachine.Reset();
+        }
     }
 
     /// <summary>
-    /// 各プレイヤーの入力処理、物理ステップ、バーストゾーン判定、向き更新、および Hitbox 衝突判定を行います。
+    /// 全プレイヤーの入力処理、物理ステップ、バーストゾーン判定、向き更新、および多対多 Hitbox 衝突判定を行います。
     /// </summary>
     /// <param name="physics">物理エンジンインスタンス</param>
     /// <param name="input">入力マネージャー</param>
@@ -66,94 +90,101 @@ public class BattleManager
     /// <param name="deltaTime">前フレームからの経過秒数</param>
     public void Update(PhysicsEngine physics, InputManager input, MapData currentMap, float deltaTime)
     {
-        NativePhysicsObject p1Obj = default;
-        NativePhysicsObject p2Obj = default;
-        unsafe
+        int count = _players.Count;
+        if (count == 0) return;
+
+        Span<NativePhysicsObject> pObjs = stackalloc NativePhysicsObject[count];
+
+        // 1. 各プレイヤーの物理状態の取得
+        for (int i = 0; i < count; i++)
         {
-            physics.GetObjectState(_player1.PhysicsObjectId, &p1Obj);
-            physics.GetObjectState(_player2.PhysicsObjectId, &p2Obj);
+            physics.GetObjectState(_players[i].PhysicsObjectId, out pObjs[i]);
         }
 
-        _player1.StateMachine.Update(ref p1Obj, input, _player1.PlayerIndex, _player1.Config, deltaTime);
-        _player2.StateMachine.Update(ref p2Obj, input, _player2.PlayerIndex, _player2.Config, deltaTime);
-
-        unsafe
+        // 2. 入力判定およびステートマシンの更新
+        for (int i = 0; i < count; i++)
         {
-            physics.SetObjectState(_player1.PhysicsObjectId, &p1Obj);
-            physics.SetObjectState(_player2.PhysicsObjectId, &p2Obj);
+            var player = _players[i];
+            player.StateMachine.Update(ref pObjs[i], input, player.PlayerIndex, player.Config, deltaTime);
         }
 
+        // 3. 更新された物理状態を Native エンジンに書き戻し
+        for (int i = 0; i < count; i++)
+        {
+            physics.SetObjectState(_players[i].PhysicsObjectId, in pObjs[i]);
+        }
+
+        // 4. 物理エンジンの 1 ステップ進める
         physics.Step(deltaTime);
 
-        unsafe
+        // 5. 物理ステップ後の最新状態を再取得
+        for (int i = 0; i < count; i++)
         {
-            physics.GetObjectState(_player1.PhysicsObjectId, &p1Obj);
-            physics.GetObjectState(_player2.PhysicsObjectId, &p2Obj);
+            physics.GetObjectState(_players[i].PhysicsObjectId, out pObjs[i]);
         }
 
-        _player1.StateMachine.HandleCollisions(ref p1Obj);
-        _player2.StateMachine.HandleCollisions(ref p2Obj);
-
-        unsafe
+        // 6. 着地判定および足場衝突応答
+        for (int i = 0; i < count; i++)
         {
-            physics.SetObjectState(_player1.PhysicsObjectId, &p1Obj);
-            physics.SetObjectState(_player2.PhysicsObjectId, &p2Obj);
+            _players[i].StateMachine.HandleCollisions(ref pObjs[i]);
         }
 
+        for (int i = 0; i < count; i++)
+        {
+            physics.SetObjectState(_players[i].PhysicsObjectId, in pObjs[i]);
+        }
+
+        // 7. バーストゾーン脱落判定およびリスポーン
         Rect<float> blastZone = currentMap.BlastZone;
-        if (!blastZone.Contains(p1Obj.X, p1Obj.Y))
+        for (int i = 0; i < count; i++)
         {
-            physics.RemoveObject(_player1.PhysicsObjectId);
-            _player1.PhysicsObjectId = physics.AddObject(
-                currentMap.P1Spawn.X, currentMap.P1Spawn.Y, _player1.Config.Width, _player1.Config.Height, _player1.Config.Weight);
-            _player1.StateMachine.Reset();
-            Console.WriteLine($"[撃墜!] {_player1.Name} が {currentMap.Name} で撃墜されました！");
-        }
-        if (!blastZone.Contains(p2Obj.X, p2Obj.Y))
-        {
-            physics.RemoveObject(_player2.PhysicsObjectId);
-            _player2.PhysicsObjectId = physics.AddObject(
-                currentMap.P2Spawn.X, currentMap.P2Spawn.Y, _player2.Config.Width, _player2.Config.Height, _player2.Config.Weight);
-            _player2.StateMachine.Reset();
-            Console.WriteLine($"[撃墜!] {_player2.Name} が {currentMap.Name} で撃墜されました！");
-        }
+            var player = _players[i];
+            if (!blastZone.Contains(pObjs[i].X, pObjs[i].Y))
+            {
+                physics.RemoveObject(player.PhysicsObjectId);
+                Point<float> spawn = currentMap.GetSpawnPosition(player.PlayerIndex);
+                player.PhysicsObjectId = physics.AddObject(
+                    spawn.X, spawn.Y, player.Config.Width, player.Config.Height, player.Config.Weight);
+                player.StateMachine.Reset();
+                Console.WriteLine($"[撃墜!] {player.Name} が {currentMap.Name} で撃墜されました！");
+            }
 
-        if (p1Obj.Vx < -5.0f) _player1.FacingLeft = true;
-        else if (p1Obj.Vx > 5.0f) _player1.FacingLeft = false;
+            // 8. 移動速度に応じた向き (FacingLeft) 更新
+            if (pObjs[i].Vx < -5.0f) player.FacingLeft = true;
+            else if (pObjs[i].Vx > 5.0f) player.FacingLeft = false;
 
-        if (p2Obj.Vx < -5.0f) _player2.FacingLeft = true;
-        else if (p2Obj.Vx > 5.0f) _player2.FacingLeft = false;
-
-        bool p1Attacking = _player1.StateMachine is { State: CharacterState.Attacking, AttackTimer: > 0.10f };
-        if (p1Attacking && !_player1.Hitbox.IsActive)
-        {
-            _player1.Hitbox.ResetHitTargets();
-        }
-        _player1.Hitbox.IsActive = p1Attacking;
-
-        bool p2Attacking = _player2.StateMachine is { State: CharacterState.Attacking, AttackTimer: > 0.10f };
-        if (p2Attacking && !_player2.Hitbox.IsActive)
-        {
-            _player2.Hitbox.ResetHitTargets();
-        }
-        _player2.Hitbox.IsActive = p2Attacking;
-
-        if (_player1.Hitbox.Intersects(_player2.Hurtbox, p1Obj.X, p1Obj.Y, _player1.FacingLeft, p2Obj.X, p2Obj.Y, _player2.FacingLeft))
-        {
-            float angle = _player1.FacingLeft ? (float)(Math.PI - _player1.Hitbox.KnockbackAngle) : _player1.Hitbox.KnockbackAngle;
-            physics.ApplyKnockback(_player2.PhysicsObjectId, _player1.Hitbox.Damage, angle, _player1.Hitbox.KnockbackForce, 1.2f);
-            _player2.StateMachine.Reset();
-            _player1.Hitbox.RegisterHit(_player2.Hurtbox.OwnerIndex);
-            Console.WriteLine($"[Hitbox ヒット!] {_player1.Name} の Hitbox が {_player2.Name} の Hurtbox に命中！");
+            // 9. Hitbox アクティブ状態の設定
+            bool isAttacking = player.StateMachine is { State: CharacterState.Attacking, AttackTimer: > 0.10f };
+            if (isAttacking && !player.Hitbox.IsActive)
+            {
+                player.Hitbox.ResetHitTargets();
+            }
+            player.Hitbox.IsActive = isAttacking;
         }
 
-        if (_player2.Hitbox.Intersects(_player1.Hurtbox, p2Obj.X, p2Obj.Y, _player2.FacingLeft, p1Obj.X, p1Obj.Y, _player1.FacingLeft))
+        // 10. 多対多 (All-vs-All) Hitbox vs Hurtbox 相互当たり判定
+        for (int attackerIdx = 0; attackerIdx < count; attackerIdx++)
         {
-            float angle = _player2.FacingLeft ? (float)(Math.PI - _player2.Hitbox.KnockbackAngle) : _player2.Hitbox.KnockbackAngle;
-            physics.ApplyKnockback(_player1.PhysicsObjectId, _player2.Hitbox.Damage, angle, _player2.Hitbox.KnockbackForce, 1.2f);
-            _player1.StateMachine.Reset();
-            _player2.Hitbox.RegisterHit(_player1.Hurtbox.OwnerIndex);
-            Console.WriteLine($"[Hitbox ヒット!] {_player2.Name} の Hitbox が {_player1.Name} の Hurtbox に命中！");
+            var attacker = _players[attackerIdx];
+            if (!attacker.Hitbox.IsActive) continue;
+
+            for (int defenderIdx = 0; defenderIdx < count; defenderIdx++)
+            {
+                if (attackerIdx == defenderIdx) continue; // 自分自身にはヒットしない
+
+                var defender = _players[defenderIdx];
+                if (attacker.Hitbox.Intersects(
+                    defender.Hurtbox,
+                    pObjs[attackerIdx].X, pObjs[attackerIdx].Y, attacker.FacingLeft,
+                    pObjs[defenderIdx].X, pObjs[defenderIdx].Y, defender.FacingLeft))
+                {
+                    float angle = attacker.FacingLeft ? (float)(Math.PI - attacker.Hitbox.KnockbackAngle) : attacker.Hitbox.KnockbackAngle;
+                    physics.ApplyKnockback(defender.PhysicsObjectId, attacker.Hitbox.Damage, angle, attacker.Hitbox.KnockbackForce, 1.2f);
+                    defender.StateMachine.Reset();
+                    attacker.Hitbox.RegisterHit(defender.Hurtbox.OwnerIndex);
+                    Console.WriteLine($"[Hitbox ヒット!] {attacker.Name} の Hitbox が {defender.Name} の Hurtbox に命中！");
+                }
+            }
         }
     }
 }

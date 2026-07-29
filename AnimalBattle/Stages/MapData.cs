@@ -45,6 +45,31 @@ public class MapData
     public Point<float> P2Spawn { get; set; }
 
     /// <summary>
+    /// Player 3 の初期出現座標を取得または設定します。
+    /// </summary>
+    public Point<float> P3Spawn { get; set; }
+
+    /// <summary>
+    /// Player 4 の初期出現座標を取得または設定します。
+    /// </summary>
+    public Point<float> P4Spawn { get; set; }
+
+    /// <summary>
+    /// 指定されたプレイヤーインデックス (1-indexed) のスポーン座標を取得します。
+    /// </summary>
+    public Point<float> GetSpawnPosition(int playerIndex)
+    {
+        return playerIndex switch
+        {
+            1 => P1Spawn,
+            2 => P2Spawn,
+            3 => (P3Spawn.X == 0 && P3Spawn.Y == 0) ? new Point<float>(P1Spawn.X - 100.0f, P1Spawn.Y - 50.0f) : P3Spawn,
+            4 => (P4Spawn.X == 0 && P4Spawn.Y == 0) ? new Point<float>(P2Spawn.X + 100.0f, P2Spawn.Y - 50.0f) : P4Spawn,
+            _ => P1Spawn
+        };
+    }
+
+    /// <summary>
     /// バーストゾーン（撃墜判定境界）を取得または設定します。
     /// </summary>
     public Rect<float> BlastZone { get; set; }

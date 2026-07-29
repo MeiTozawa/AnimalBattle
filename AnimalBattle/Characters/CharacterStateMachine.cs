@@ -1,5 +1,6 @@
 using System;
 using AnimalBattle.Core;
+using AnimalBattle.Inputs;
 
 namespace AnimalBattle.Characters;
 
@@ -84,9 +85,9 @@ public class CharacterStateMachine
 
         float moveX = input.GetHorizontalAxis(playerIndex);
         float moveY = input.GetVerticalAxis(playerIndex);
-        bool jump = input.IsJumpPressed(playerIndex);
-        bool down = input.IsDownPressed(playerIndex);
-        bool attack = input.IsAttackPressed(playerIndex);
+        bool jump = input.IsPressed(playerIndex, InputAction.Jump);
+        bool down = input.IsHolding(playerIndex, InputAction.MoveDown);
+        bool attack = input.IsPressed(playerIndex, InputAction.Attack);
 
         if (attack && State != CharacterState.Hitstun && State != CharacterState.Attacking)
         {
