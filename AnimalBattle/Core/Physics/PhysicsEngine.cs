@@ -14,7 +14,17 @@ public unsafe partial class PhysicsEngine : IDisposable
     private bool _isDisposed;
 
     /// <summary>
-    /// 新しい Native C++ 物理エンジンインスタンスを生成して初期化します。
+    /// 物理エンジンの設定コンテナ保持オブジェクト。
+    /// </summary>
+    public ConfigBase<PhysicsConfig> ConfigHolder { get; }
+
+    /// <summary>
+    /// 物理エンジンの設定オブジェクト。
+    /// </summary>
+    public PhysicsConfig Config => ConfigHolder.Config;
+
+    /// <summary>
+    /// 新しい Native C++ 物理エンジンインスタンスを生成し、physics.toml から設定をロードして初期化します。
     /// </summary>
     public PhysicsEngine()
     {
@@ -23,6 +33,12 @@ public unsafe partial class PhysicsEngine : IDisposable
         {
             throw new InvalidOperationException("Native 物理エンジンの生成に失敗しました。");
         }
+
+        var configResult = PhysicsConfig.LoadFromFile("physics.toml");
+        ConfigHolder = configResult.IsOk ? configResult.Value! : new ConfigBase<PhysicsConfig>();
+
+        Configure(Config);
+        ConfigHolder.OnConfigReloaded += HandleConfigReloaded;
     }
 
     /// <summary>
@@ -35,6 +51,12 @@ public unsafe partial class PhysicsEngine : IDisposable
             throw new ArgumentNullException(nameof(nativePtr), "Native 物理エンジンポインタを null にすることはできません。");
         }
         _nativePtr = nativePtr;
+
+        var configResult = PhysicsConfig.LoadFromFile("physics.toml");
+        ConfigHolder = configResult.IsOk ? configResult.Value! : new ConfigBase<PhysicsConfig>();
+
+        Configure(Config);
+        ConfigHolder.OnConfigReloaded += HandleConfigReloaded;
     }
 
     /// <summary>
@@ -121,6 +143,28 @@ public unsafe partial class PhysicsEngine : IDisposable
     }
 
     /// <summary>
+    /// 指定された PhysicsConfig の設定値を Native C++ 物理エンジンに反映します。
+    /// </summary>
+    public void Configure(PhysicsConfig config)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        NativePhysicsSetKnockbackParams(
+            _nativePtr,
+            config.KnockbackWeightOffset,
+            config.KnockbackDamageScale1,
+            config.KnockbackDamageScale2,
+            config.KnockbackScaleMultiplier,
+            config.KnockbackBaseMultiplier);
+
+        NativePhysicsSetHitstunParams(
+            _nativePtr,
+            config.HitstunBaseSeconds,
+            config.HitstunKnockbackScale,
+            config.HitstunMaxSeconds);
+    }
+
+    /// <summary>
     /// オブジェクトにダメージおよび吹っ飛び力を適用します。
     /// </summary>
     public void ApplyKnockback(int id, float damage, float angleRad, float baseKnockback, float scaling)
@@ -134,6 +178,12 @@ public unsafe partial class PhysicsEngine : IDisposable
     public void Step(float deltaTime)
     {
         NativePhysicsStep(_nativePtr, deltaTime);
+    }
+
+    private void HandleConfigReloaded()
+    {
+        Console.WriteLine("[PhysicsEngine] physics.toml の自動リロードに伴い C++ 物理エンジンのパラメータを再設定しました。");
+        Configure(Config);
     }
 
     /// <summary>
@@ -152,6 +202,12 @@ public unsafe partial class PhysicsEngine : IDisposable
     {
         if (!_isDisposed)
         {
+            if (disposing)
+            {
+                ConfigHolder.OnConfigReloaded -= HandleConfigReloaded;
+                ConfigHolder.Dispose();
+            }
+
             if (_nativePtr != IntPtr.Zero)
             {
                 NativePhysicsDestroy(_nativePtr);
@@ -197,4 +253,12 @@ public unsafe partial class PhysicsEngine : IDisposable
     [LibraryImport(_dllName, EntryPoint = "Physics_Step")]
     [SuppressGCTransition]
     private static partial void NativePhysicsStep(IntPtr engine, float deltaTime);
+
+    [LibraryImport(_dllName, EntryPoint = "Physics_SetKnockbackParams")]
+    [SuppressGCTransition]
+    private static partial void NativePhysicsSetKnockbackParams(IntPtr engine, float weightOffset, float damageScale1, float damageScale2, float scaleMultiplier, float baseMultiplier);
+
+    [LibraryImport(_dllName, EntryPoint = "Physics_SetHitstunParams")]
+    [SuppressGCTransition]
+    private static partial void NativePhysicsSetHitstunParams(IntPtr engine, float baseSeconds, float knockbackScale, float maxSeconds);
 }
