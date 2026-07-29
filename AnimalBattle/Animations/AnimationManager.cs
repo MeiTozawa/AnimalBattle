@@ -1,37 +1,37 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Animations;
 
 /// <summary>
-/// アニメーション・スプライトアセットのロード、クリップ初期化、更新処理、および描画を統括するマネージャークラス。
+/// <see cref="AnimationRegistry"/> を参照してキャラクターおよびエフェクトのスプライトを
+/// ロード・初期化するマネージャークラス。
+/// アニメーション設定はビルド時に TOML から生成された静的レジストリから取得します。
 /// </summary>
 public sealed class AnimationManager : IDisposable
 {
-    private readonly AnimationPlayer _p1AnimPlayer = new();
-    private readonly AnimationPlayer _p2AnimPlayer = new();
-    private readonly AnimationPlayer _p1EffectPlayer = new();
-    private readonly AnimationPlayer _p2EffectPlayer = new();
+    private readonly List<AnimationPlayer> _characterAnimPlayers = [];
+    private readonly List<AnimationPlayer> _effectAnimPlayers = [];
 
-    private int _catSpriteHandle = -1;
+    // ロード済みスプライトハンドル (キャラクター名 → ハンドル)
+    private readonly Dictionary<string, int> _characterSpriteHandles = [];
+
+    // 各プレイヤーに割り当てられたキャラクター名
+    private readonly List<string> _playerCharacterNames = [];
+
+    // ロード済みアニメーション設定 (キャラクター名 → 設定)
+    private readonly Dictionary<string, AnimationConfig> _characterConfigs = [];
+
     private int _effectSpriteHandle = -1;
+    private AnimationConfig _effectConfig = new();
     private bool _isDisposed;
 
     /// <summary>
-    /// 猫キャラクターのスプライトハンドルを取得します。
+    /// キャラクタースプライトが1体以上ロードされているかを取得します。
     /// </summary>
-    public int CatSpriteHandle => _catSpriteHandle;
-
-    /// <summary>
-    /// 攻撃エフェクトのスプライトハンドルを取得します。
-    /// </summary>
-    public int EffectSpriteHandle => _effectSpriteHandle;
-
-    /// <summary>
-    /// 猫キャラクターのスプライト画像が正常にロードされているかを取得します。
-    /// </summary>
-    public bool HasCatSprite => _catSpriteHandle != -1;
+    public bool HasCatSprite => _characterSpriteHandles.Count > 0;
 
     /// <summary>
     /// 攻撃エフェクトのスプライト画像が正常にロードされているかを取得します。
@@ -47,46 +47,78 @@ public sealed class AnimationManager : IDisposable
     }
 
     /// <summary>
-    /// 画像アセットのロードおよび各プレイヤー・エフェクトの animation クリップ初期化を行います。
+    /// <see cref="AnimationRegistry"/> からアセットをロードし、
+    /// 指定されたプレイヤー人数 (1～4人) 分のアニメーションプレイヤーを初期化します。
     /// </summary>
-    public void Initialize()
+    /// <param name="playerCount">参戦プレイヤー人数</param>
+    public void Initialize(int playerCount = 4)
     {
-        // 子猫スプライトのロード
-        string spritePath = @"resource\Cat Sprite Sheet.png";
-        if (!File.Exists(spritePath))
+        playerCount = Math.Clamp(playerCount, 1, 4);
+        string resourceRoot = FindResourceRoot();
+
+        // AnimationRegistry からキャラクターをロード
+        foreach (var (name, spritePath) in AnimationRegistry.CharacterSprites)
         {
-            string altPath = Path.Combine("..", "resource", "Cat Sprite Sheet.png");
-            if (File.Exists(altPath))
+            string fullPath = Path.Combine(resourceRoot, spritePath);
+            if (!File.Exists(fullPath))
             {
-                spritePath = Path.GetFullPath(altPath);
+                Console.WriteLine($"[AnimationManager] スプライトが見つかりませんでした: {fullPath}");
+                continue;
             }
-        }
-        _catSpriteHandle = AssetManager.LoadGraph(spritePath);
-        Console.WriteLine($"[子猫スプライトロード] パス: '{spritePath}' (存在: {File.Exists(spritePath)}) -> ハンドル: {_catSpriteHandle}");
 
-        // 攻撃エフェクトスプライトのロード
-        string effectPath = @"resource\sword & shield effect sprites.png";
-        if (!File.Exists(effectPath))
+            _characterSpriteHandles[name] = AssetManager.LoadGraph(fullPath);
+            _characterConfigs[name] = AnimationRegistry.CharacterConfigs[name];
+            Console.WriteLine($"[AnimationManager] キャラクタースプライトをロードしました: {name}");
+        }
+
+        // AnimationRegistry からエフェクトをロード (最初のエントリを使用)
+        foreach (var (name, spritePath) in AnimationRegistry.EffectSprites)
         {
-            string altPath = Path.Combine("..", "resource", "sword & shield effect sprites.png");
-            if (File.Exists(altPath))
+            string fullPath = Path.Combine(resourceRoot, spritePath);
+            if (!File.Exists(fullPath))
             {
-                effectPath = Path.GetFullPath(altPath);
+                Console.WriteLine($"[AnimationManager] エフェクトスプライトが見つかりませんでした: {fullPath}");
+                break;
             }
-        }
-        _effectSpriteHandle = AssetManager.LoadGraph(effectPath);
-        Console.WriteLine($"[攻撃エフェクトスプライト] パス: '{effectPath}' (存在: {File.Exists(effectPath)}) -> ハンドル: {_effectSpriteHandle}");
 
-        if (HasCatSprite)
-        {
-            SetupCatClips(_p1AnimPlayer);
-            SetupCatClips(_p2AnimPlayer);
+            _effectSpriteHandle = AssetManager.LoadGraph(fullPath);
+            _effectConfig = AnimationRegistry.EffectConfigs[name];
+            Console.WriteLine($"[AnimationManager] エフェクトスプライトをロードしました: {name}");
+            break;
         }
 
-        if (HasEffectSprite)
+        EnsurePlayerCount(playerCount);
+    }
+
+    /// <summary>
+    /// プレイヤー数に応じて AnimationPlayer のリストサイズを拡張・確保します。
+    /// </summary>
+    public void EnsurePlayerCount(int playerCount)
+    {
+        playerCount = Math.Clamp(playerCount, 1, 4);
+        while (_characterAnimPlayers.Count < playerCount)
         {
-            SetupEffectClips(_p1EffectPlayer);
-            SetupEffectClips(_p2EffectPlayer);
+            int playerIndex = _characterAnimPlayers.Count;
+
+            // キャラクター名を順番に割り当て（複数キャラがいれば順番に、1体だけなら全員同じ）
+            string characterName = AssignCharacterName(playerIndex);
+            _playerCharacterNames.Add(characterName);
+
+            var charPlayer = new AnimationPlayer();
+            if (HasCatSprite && _characterConfigs.TryGetValue(characterName, out var config))
+            {
+                SetupClips(charPlayer, config.Clips, config.CellWidth, config.CellHeight);
+            }
+
+            _characterAnimPlayers.Add(charPlayer);
+
+            var effectPlayer = new AnimationPlayer();
+            if (HasEffectSprite)
+            {
+                SetupClips(effectPlayer, _effectConfig.Clips, _effectConfig.CellWidth, _effectConfig.CellHeight);
+            }
+
+            _effectAnimPlayers.Add(effectPlayer);
         }
     }
 
@@ -96,19 +128,16 @@ public sealed class AnimationManager : IDisposable
     /// <param name="deltaTime">前フレームからの経過秒数</param>
     public void Update(float deltaTime)
     {
-        _p1AnimPlayer.Update(deltaTime);
-        _p2AnimPlayer.Update(deltaTime);
-        _p1EffectPlayer.Update(deltaTime);
-        _p2EffectPlayer.Update(deltaTime);
+        for (int i = 0; i < _characterAnimPlayers.Count; i++)
+        {
+            _characterAnimPlayers[i].Update(deltaTime);
+            _effectAnimPlayers[i].Update(deltaTime);
+        }
     }
 
     /// <summary>
     /// 指定されたプレイヤーキャラクターのアニメーション再生を開始します。
     /// </summary>
-    /// <param name="playerIndex">プレイヤーインデックス (1 または 2)</param>
-    /// <param name="animName">再生するアニメーション名</param>
-    /// <param name="restartIfSame">同一アニメーション再生中にも最初から再開するか</param>
-    /// <returns>再生開始に成功した場合は true</returns>
     public bool PlayCharacterAnimation(int playerIndex, string animName, bool restartIfSame = false)
     {
         AnimationPlayer player = GetCharacterAnimPlayer(playerIndex);
@@ -118,10 +147,6 @@ public sealed class AnimationManager : IDisposable
     /// <summary>
     /// 指定されたプレイヤーのエフェクトアニメーション再生を開始します。
     /// </summary>
-    /// <param name="playerIndex">プレイヤーインデックス (1 または 2)</param>
-    /// <param name="effectName">再生するエフェクト名</param>
-    /// <param name="restartIfSame">同一エフェクト再生中にも最初から再開するか</param>
-    /// <returns>再生開始に成功した場合は true</returns>
     public bool PlayEffectAnimation(int playerIndex, string effectName, bool restartIfSame = false)
     {
         AnimationPlayer player = GetEffectAnimPlayer(playerIndex);
@@ -131,37 +156,25 @@ public sealed class AnimationManager : IDisposable
     /// <summary>
     /// 指定されたプレイヤーキャラクターのスプライトを描画します。
     /// </summary>
-    /// <param name="render">レンダリングサービス</param>
-    /// <param name="playerIndex">プレイヤーインデックス (1 または 2)</param>
-    /// <param name="position">描画中心位置</param>
-    /// <param name="facingLeft">左向きの場合は true</param>
-    /// <param name="scale">表示倍率</param>
     public void DrawCharacter(RenderService render, int playerIndex, Point<int> position, bool facingLeft, float scale = 2.5f)
     {
-        if (!HasCatSprite)
-        {
-            return;
-        }
+        if (!HasCatSprite) return;
+        int zeroIndex = playerIndex - 1;
+        if (zeroIndex < 0 || zeroIndex >= _playerCharacterNames.Count) return;
+
+        string characterName = _playerCharacterNames[zeroIndex];
+        if (!_characterSpriteHandles.TryGetValue(characterName, out int handle)) return;
 
         AnimationPlayer player = GetCharacterAnimPlayer(playerIndex);
-        player.Draw(render, position, _catSpriteHandle, flipX: facingLeft, scale: scale);
+        player.Draw(render, position, handle, flipX: facingLeft, scale: scale);
     }
 
     /// <summary>
     /// 指定されたプレイヤーの攻撃エフェクトスプライトを描画します。
     /// </summary>
-    /// <param name="render">レンダリングサービス</param>
-    /// <param name="playerIndex">プレイヤーインデックス (1 または 2)</param>
-    /// <param name="position">描画中心位置</param>
-    /// <param name="facingLeft">左向きの場合は true</param>
-    /// <param name="scale">表示倍率</param>
     public void DrawEffect(RenderService render, int playerIndex, Point<int> position, bool facingLeft, float scale = 2.0f)
     {
-        if (!HasEffectSprite)
-        {
-            return;
-        }
-
+        if (!HasEffectSprite) return;
         AnimationPlayer player = GetEffectAnimPlayer(playerIndex);
         player.Draw(render, position, _effectSpriteHandle, flipX: facingLeft, scale: scale);
     }
@@ -173,60 +186,95 @@ public sealed class AnimationManager : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private void SetupCatClips(AnimationPlayer player)
-    {
-        player.AddGridClip("Idle", row: 0, frameWidth: 32, frameHeight: 32, frameCount: 4, fps: 6.0f, isLooping: true);
-        player.AddGridClip("Walk", row: 1, frameWidth: 32, frameHeight: 32, frameCount: 4, fps: 8.0f, isLooping: true);
-        player.AddGridClip("Run", row: 2, frameWidth: 32, frameHeight: 32, frameCount: 4, fps: 10.0f, isLooping: true);
-        player.AddGridClip("Rest", row: 3, frameWidth: 32, frameHeight: 32, frameCount: 4, fps: 5.0f, isLooping: true);
-        player.AddGridClip("Jump", row: 4, frameWidth: 32, frameHeight: 32, frameCount: 8, fps: 10.0f, isLooping: true);
-        player.AddGridClip("Attack", row: 5, frameWidth: 32, frameHeight: 32, frameCount: 8, fps: 20.0f, isLooping: false);
-        player.AddGridClip("Hurt", row: 6, frameWidth: 32, frameHeight: 32, frameCount: 4, fps: 8.0f, isLooping: false);
-        player.AddGridClip("Die", row: 7, frameWidth: 32, frameHeight: 32, frameCount: 6, fps: 6.0f, isLooping: false);
-        player.AddGridClip("Meow", row: 8, frameWidth: 32, frameHeight: 32, frameCount: 7, fps: 8.0f, isLooping: false);
-        player.AddGridClip("Spin", row: 9, frameWidth: 32, frameHeight: 32, frameCount: 8, fps: 12.0f, isLooping: true);
-        player.Play("Idle");
-    }
-
-    private void SetupEffectClips(AnimationPlayer player)
-    {
-        player.AddGridClip("Slash", row: 0, frameWidth: 32, frameHeight: 32, frameCount: 5, fps: 20.0f, isLooping: false);
-        player.AddGridClip("Hit", row: 1, frameWidth: 32, frameHeight: 32, frameCount: 4, fps: 16.0f, isLooping: false);
-    }
-
-    private AnimationPlayer GetCharacterAnimPlayer(int playerIndex)
-    {
-        return playerIndex switch
-        {
-            1 => _p1AnimPlayer,
-            2 => _p2AnimPlayer,
-            _ => throw new ArgumentOutOfRangeException(nameof(playerIndex), $"無効なプレイヤーインデックス: {playerIndex}")
-        };
-    }
-
-    private AnimationPlayer GetEffectAnimPlayer(int playerIndex)
-    {
-        return playerIndex switch
-        {
-            1 => _p1EffectPlayer,
-            2 => _p2EffectPlayer,
-            _ => throw new ArgumentOutOfRangeException(nameof(playerIndex), $"無効なプレイヤーインデックス: {playerIndex}")
-        };
-    }
-
     private void Dispose(bool disposing)
     {
         if (!_isDisposed)
         {
-            if (disposing)
+            foreach (var p in _characterAnimPlayers) p.Dispose();
+            foreach (var p in _effectAnimPlayers) p.Dispose();
+            _characterAnimPlayers.Clear();
+            _effectAnimPlayers.Clear();
+
+            foreach (var handle in _characterSpriteHandles.Values)
             {
-                _p1AnimPlayer.Dispose();
-                _p2AnimPlayer.Dispose();
-                _p1EffectPlayer.Dispose();
-                _p2EffectPlayer.Dispose();
+                AssetManager.DeleteGraph(handle);
+            }
+
+            _characterSpriteHandles.Clear();
+
+            if (_effectSpriteHandle != -1)
+            {
+                AssetManager.DeleteGraph(_effectSpriteHandle);
+                _effectSpriteHandle = -1;
             }
 
             _isDisposed = true;
         }
+    }
+
+    private AnimationPlayer GetCharacterAnimPlayer(int playerIndex)
+    {
+        EnsurePlayerCount(playerIndex);
+        return _characterAnimPlayers[playerIndex - 1];
+    }
+
+    private AnimationPlayer GetEffectAnimPlayer(int playerIndex)
+    {
+        EnsurePlayerCount(playerIndex);
+        return _effectAnimPlayers[playerIndex - 1];
+    }
+
+    /// <summary>
+    /// resource/ フォルダのルートパスを解決します。
+    /// </summary>
+    private static string FindResourceRoot()
+    {
+        string candidate = Path.Combine(Directory.GetCurrentDirectory(), "resource");
+        if (Directory.Exists(candidate)) return candidate;
+
+        string parent = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "resource"));
+        if (Directory.Exists(parent)) return parent;
+
+        DirectoryInfo? dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+        while (dir != null)
+        {
+            string path = Path.Combine(dir.FullName, "resource");
+            if (Directory.Exists(path)) return path;
+            dir = dir.Parent;
+        }
+
+        Console.WriteLine("[AnimationManager] resource/ フォルダが見つかりませんでした。");
+        return Path.Combine(Directory.GetCurrentDirectory(), "resource");
+    }
+
+    /// <summary>
+    /// AnimationClipConfig リストをもとに AnimationPlayer にクリップを登録します。
+    /// </summary>
+    private static void SetupClips(AnimationPlayer player, List<AnimationClipConfig> clips, int defaultCellWidth, int defaultCellHeight)
+    {
+        foreach (var clip in clips)
+        {
+            int cw = clip.CellWidth > 0 ? clip.CellWidth : defaultCellWidth;
+            int ch = clip.CellHeight > 0 ? clip.CellHeight : defaultCellHeight;
+            player.AddGridClip(clip.Name, clip.Row, cw, ch, clip.FrameCount, clip.Fps, clip.IsLooping);
+        }
+
+        // デフォルト再生クリップは最初のクリップ
+        if (clips.Count > 0)
+        {
+            player.Play(clips[0].Name);
+        }
+    }
+
+    /// <summary>
+    /// プレイヤーインデックスに対してキャラクター名を割り当てます。
+    /// キャラクターが複数いる場合は順番に割り当て、1体のみの場合は全員同じにします。
+    /// </summary>
+    private string AssignCharacterName(int zeroBasedIndex)
+    {
+        if (_characterSpriteHandles.Count == 0) return string.Empty;
+
+        var names = new List<string>(_characterSpriteHandles.Keys);
+        return names[zeroBasedIndex % names.Count];
     }
 }

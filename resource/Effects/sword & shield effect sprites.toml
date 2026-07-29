@@ -1,0 +1,20 @@
+# Sword & Shield Effect Sprites アニメーション設定
+# resource/Effects/sword & shield effect sprites.toml
+
+display_name = "Sword & Shield Effects"
+cell_width   = 48
+cell_height  = 48
+
+[[clips]]
+name        = "Slash"
+row         = 0
+frame_count = 4
+fps         = 16.0
+looping     = false
+
+[[clips]]
+name        = "Hit"
+row         = 1
+frame_count = 3
+fps         = 18.0
+looping     = false

@@ -1,0 +1,48 @@
+# Cat Sprite Sheet アニメーション設定
+# resource/Characters/Cat Sprite Sheet.toml
+
+display_name = "Cat"
+cell_width   = 32
+cell_height  = 32
+
+[[clips]]
+name        = "Idle"
+row         = 0
+frame_count = 4
+fps         = 6.0
+looping     = true
+
+[[clips]]
+name        = "Run"
+row         = 1
+frame_count = 8
+fps         = 12.0
+looping     = true
+
+[[clips]]
+name        = "Jump"
+row         = 2
+frame_count = 4
+fps         = 8.0
+looping     = false
+
+[[clips]]
+name        = "Fall"
+row         = 3
+frame_count = 2
+fps         = 6.0
+looping     = true
+
+[[clips]]
+name        = "Attack"
+row         = 4
+frame_count = 5
+fps         = 14.0
+looping     = false
+
+[[clips]]
+name        = "Hurt"
+row         = 5
+frame_count = 2
+fps         = 10.0
+looping     = true
