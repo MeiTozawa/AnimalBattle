@@ -205,16 +205,14 @@ namespace ab {
                 [this](const SetFontSizeCmd& c) { backend_.SetFontSize(c.size); },
                 [this](const SetFontThicknessCmd& c) { backend_.SetFontThickness(c.thickness); },
                 [this](const SetBackgroundColorCmd& c) { backend_.SetBackgroundColor(c.r, c.g, c.b); },
-                [this](const ExitApplicationCmd&) { backend_.ExitApplication(); }
+                [this](const ExitApplicationCmd&) { backend_.ExitApplication(); },
+                [this](const SetCameraEnabledCmd& c) { camera_enabled_ = c.enabled; },
+                [this](const SetCameraStateCmd& c) { camera_x_ = c.x; camera_y_ = c.y; camera_scale_ = c.scale; }
             }, cmd);
         }
 
-        void SetCameraEnabled(bool enabled) { camera_enabled_ = enabled; }
-        void SetCameraState(float x, float y, float scale) {
-            camera_x_ = x;
-            camera_y_ = y;
-            camera_scale_ = scale;
-        }
+        void SetCameraEnabled(bool enabled) { PushCommand(SetCameraEnabledCmd{enabled}); }
+        void SetCameraState(float x, float y, float scale) { PushCommand(SetCameraStateCmd{x, y, scale}); }
 
         int GetFontSize() const { return backend_.GetFontSize(); }
         int GetDrawStringWidth(const wchar_t* text) const { return backend_.GetDrawStringWidth(text); }

@@ -181,6 +181,16 @@ namespace ab {
 
     export struct ExitApplicationCmd {};
 
+    export struct SetCameraEnabledCmd {
+        bool enabled;
+    };
+
+    export struct SetCameraStateCmd {
+        float x;
+        float y;
+        float scale;
+    };
+
     /// @brief すべての描画コマンドを包含する std::variant
     export using RenderCommand = std::variant<
         DrawStringCmd,
@@ -198,7 +208,9 @@ namespace ab {
         SetFontSizeCmd,
         SetFontThicknessCmd,
         SetBackgroundColorCmd,
-        ExitApplicationCmd
+        ExitApplicationCmd,
+        SetCameraEnabledCmd,
+        SetCameraStateCmd
     >;
 
     /// @brief std::visit 用ラムダオーバーロードヘルパー構造体

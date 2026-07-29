@@ -387,5 +387,15 @@ extern "C" {
         if (player) return player->GetCurrentFrameIndex();
         return 0;
     }
+
+    // --- Joypad / Gamepad APIs ---
+
+    __declspec(dllexport) int Engine_GetJoypadInputState(int input_type) noexcept {
+        return GetJoypadInputState(input_type);
+    }
+
+    __declspec(dllexport) int Engine_GetJoypadNum() noexcept {
+        return GetJoypadNum();
+    }
 }
 

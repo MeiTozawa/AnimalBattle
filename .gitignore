@@ -72,12 +72,8 @@ imgui.ini
 /cmake-build-release/
 /cmake-build-test/
 CMakeUserPresets.json
-build_tests.bat
-MagicCat/resource/save0.json
-MagicCat/resource/save1.json
-MagicCat/resource/save2.json
-MagicCat/resource/save3.json
-MagicCat/resource/sound_settings.json
+build.bat
+scripts/generate_animation_registry.py
 
 #AI agent files
 docs/
