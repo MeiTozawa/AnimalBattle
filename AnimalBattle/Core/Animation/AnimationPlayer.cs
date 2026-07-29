@@ -45,11 +45,11 @@ public sealed partial class AnimationPlayer : IDisposable
     public int CurrentFrameIndex => NativeAnimationPlayerGetCurrentFrameIndex(_nativePtr);
 
     /// <summary>
-    /// スプライトシートの格子状領域からアニメーションクリップを登録します。
+    /// スプライトシートの格子状領域から指定フレーム範囲のアニメーションクリップを登録します。
     /// </summary>
-    public void AddGridClip(string name, int row, int frameWidth, int frameHeight, int frameCount, float fps = 10.0f, bool isLooping = true)
+    public void AddGridClip(string name, int row, int startFrame, int endFrame, int frameWidth, int frameHeight, float fps = 10.0f, bool isLooping = true)
     {
-        NativeAnimationPlayerAddGridClip(_nativePtr, name, row, frameWidth, frameHeight, frameCount, fps, isLooping);
+        NativeAnimationPlayerAddGridClip(_nativePtr, name, row, startFrame, endFrame, frameWidth, frameHeight, fps, isLooping);
     }
 
     /// <summary>
@@ -131,9 +131,10 @@ public sealed partial class AnimationPlayer : IDisposable
         IntPtr player,
         string name,
         int row,
+        int startFrame,
+        int endFrame,
         int frameWidth,
         int frameHeight,
-        int frameCount,
         float fps,
         [MarshalAs(UnmanagedType.U1)] bool isLooping);
 

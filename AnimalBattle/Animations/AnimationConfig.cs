@@ -44,8 +44,14 @@ public sealed class AnimationClipConfig
     /// <summary>このクリップ専用のセル高さ (0 の場合は AnimationConfig.CellHeight を使用)</summary>
     public int CellHeight { get; set; }
 
+    /// <summary>開始コマインデックス (0始まり)</summary>
+    public int StartFrame { get; set; }
+
+    /// <summary>終了コマインデックス (包含)</summary>
+    public int EndFrame { get; set; }
+
     /// <summary>フレーム数</summary>
-    public int FrameCount { get; set; } = 1;
+    public int FrameCount => (EndFrame >= StartFrame) ? (EndFrame - StartFrame + 1) : 1;
 
     /// <summary>再生フレームレート (FPS)</summary>
     public float Fps { get; set; } = 6.0f;

@@ -6,13 +6,13 @@ maxGroundSpeed = 200.0
 groundFriction = 2000.0
 
 # Jump & Air Movement
-jumpForce = 600.0
-doubleJumpForce = 400.0
+jumpForce = 700.0
+doubleJumpForce = 550.0
 gravity = 1600.0
 terminalVelocity = 1100.0
 fastFallVelocity = 1600.0
 airAcceleration = 1200.0
-maxAirSpeed = 100.0
+maxAirSpeed = 150.0
 airDrag = 300.0
 
 # Controls & Tolerances

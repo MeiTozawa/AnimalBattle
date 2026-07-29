@@ -15,17 +15,18 @@ public sealed class AnimationManager : IDisposable
     private readonly List<AnimationPlayer> _characterAnimPlayers = [];
     private readonly List<AnimationPlayer> _effectAnimPlayers = [];
 
-    // ロード済みスプライトハンドル (キャラクター名 → ハンドル)
-    private readonly Dictionary<string, int> _characterSpriteHandles = [];
+    // ロード済みスプライトハンドル (キャラクター種別 → ハンドル)
+    private readonly Dictionary<CharacterType, int> _characterSpriteHandles = [];
 
-    // 各プレイヤーに割り当てられたキャラクター名
-    private readonly List<string> _playerCharacterNames = [];
+    // 各プレイヤーに割り当てられたキャラクター種別
+    private readonly List<CharacterType> _playerCharacterTypes = [];
 
-    // ロード済みアニメーション設定 (キャラクター名 → 設定)
-    private readonly Dictionary<string, AnimationConfig> _characterConfigs = [];
+    // ロード済みアニメーション設定 (キャラクター種別 → 設定)
+    private readonly Dictionary<CharacterType, AnimationConfig> _characterConfigs = [];
 
-    private int _effectSpriteHandle = -1;
-    private AnimationConfig _effectConfig = new();
+    // ロード済みエフェクトスプライトハンドル
+    private readonly Dictionary<EffectType, int> _effectSpriteHandles = [];
+    private readonly Dictionary<EffectType, AnimationConfig> _effectConfigs = [];
     private bool _isDisposed;
 
     /// <summary>
@@ -36,7 +37,7 @@ public sealed class AnimationManager : IDisposable
     /// <summary>
     /// 攻撃エフェクトのスプライト画像が正常にロードされているかを取得します。
     /// </summary>
-    public bool HasEffectSprite => _effectSpriteHandle != -1;
+    public bool HasEffectSprite => _effectSpriteHandles.Count > 0;
 
     /// <summary>
     /// デストラクタ。
@@ -57,7 +58,7 @@ public sealed class AnimationManager : IDisposable
         string resourceRoot = FindResourceRoot();
 
         // AnimationRegistry からキャラクターをロード
-        foreach (var (name, spritePath) in AnimationRegistry.CharacterSprites)
+        foreach (var (charType, spritePath) in AnimationRegistry.CharacterSprites)
         {
             string fullPath = Path.Combine(resourceRoot, spritePath);
             if (!File.Exists(fullPath))
@@ -66,25 +67,24 @@ public sealed class AnimationManager : IDisposable
                 continue;
             }
 
-            _characterSpriteHandles[name] = AssetManager.LoadGraph(fullPath);
-            _characterConfigs[name] = AnimationRegistry.CharacterConfigs[name];
-            Console.WriteLine($"[AnimationManager] キャラクタースプライトをロードしました: {name}");
+            _characterSpriteHandles[charType] = AssetManager.LoadGraph(fullPath);
+            _characterConfigs[charType] = AnimationRegistry.CharacterConfigs[charType];
+            Console.WriteLine($"[AnimationManager] キャラクタースプライトをロードしました: {charType}");
         }
 
-        // AnimationRegistry からエフェクトをロード (最初のエントリを使用)
-        foreach (var (name, spritePath) in AnimationRegistry.EffectSprites)
+        // AnimationRegistry からエフェクトをロード
+        foreach (var (effectType, spritePath) in AnimationRegistry.EffectSprites)
         {
             string fullPath = Path.Combine(resourceRoot, spritePath);
             if (!File.Exists(fullPath))
             {
                 Console.WriteLine($"[AnimationManager] エフェクトスプライトが見つかりませんでした: {fullPath}");
-                break;
+                continue;
             }
 
-            _effectSpriteHandle = AssetManager.LoadGraph(fullPath);
-            _effectConfig = AnimationRegistry.EffectConfigs[name];
-            Console.WriteLine($"[AnimationManager] エフェクトスプライトをロードしました: {name}");
-            break;
+            _effectSpriteHandles[effectType] = AssetManager.LoadGraph(fullPath);
+            _effectConfigs[effectType] = AnimationRegistry.EffectConfigs[effectType];
+            Console.WriteLine($"[AnimationManager] エフェクトスプライトをロードしました: {effectType}");
         }
 
         EnsurePlayerCount(playerCount);
@@ -100,12 +100,12 @@ public sealed class AnimationManager : IDisposable
         {
             int playerIndex = _characterAnimPlayers.Count;
 
-            // キャラクター名を順番に割り当て（複数キャラがいれば順番に、1体だけなら全員同じ）
-            string characterName = AssignCharacterName(playerIndex);
-            _playerCharacterNames.Add(characterName);
+            // キャラクター種別を順番に割り当て（複数キャラがいれば順番に、1体だけなら全員同じ）
+            CharacterType charType = AssignCharacterType(playerIndex);
+            _playerCharacterTypes.Add(charType);
 
             var charPlayer = new AnimationPlayer();
-            if (HasCatSprite && _characterConfigs.TryGetValue(characterName, out var config))
+            if (HasCatSprite && _characterConfigs.TryGetValue(charType, out var config))
             {
                 SetupClips(charPlayer, config.Clips, config.CellWidth, config.CellHeight);
             }
@@ -113,9 +113,10 @@ public sealed class AnimationManager : IDisposable
             _characterAnimPlayers.Add(charPlayer);
 
             var effectPlayer = new AnimationPlayer();
-            if (HasEffectSprite)
+            if (HasEffectSprite && _effectConfigs.Count > 0)
             {
-                SetupClips(effectPlayer, _effectConfig.Clips, _effectConfig.CellWidth, _effectConfig.CellHeight);
+                var effConfig = new List<AnimationConfig>(_effectConfigs.Values)[0];
+                SetupClips(effectPlayer, effConfig.Clips, effConfig.CellWidth, effConfig.CellHeight);
             }
 
             _effectAnimPlayers.Add(effectPlayer);
@@ -136,12 +137,53 @@ public sealed class AnimationManager : IDisposable
     }
 
     /// <summary>
+    /// 指定されたプレイヤーキャラクターに指定のアニメーションクリップが存在するかを取得します。
+    /// </summary>
+    public bool HasCharacterAnimation(int playerIndex, CharacterAnimationType animType)
+    {
+        return HasCharacterAnimation(playerIndex, animType.ToString());
+    }
+
+    /// <summary>
+    /// 指定されたプレイヤーキャラクターに指定のアニメーションクリップが存在するかを取得します。
+    /// </summary>
+    public bool HasCharacterAnimation(int playerIndex, string animName)
+    {
+        int zeroIndex = playerIndex - 1;
+        if (zeroIndex < 0 || zeroIndex >= _playerCharacterTypes.Count) return false;
+
+        CharacterType charType = _playerCharacterTypes[zeroIndex];
+        if (_characterConfigs.TryGetValue(charType, out var config))
+        {
+            return config.Clips.Exists(c => c.Name.Equals(animName, StringComparison.OrdinalIgnoreCase));
+        }
+        return false;
+    }
+
+    /// <summary>
     /// 指定されたプレイヤーキャラクターのアニメーション再生を開始します。
+    /// </summary>
+    public bool PlayCharacterAnimation(int playerIndex, CharacterAnimationType animType, bool restartIfSame = false)
+    {
+        return PlayCharacterAnimation(playerIndex, animType.ToString(), restartIfSame);
+    }
+
+    /// <summary>
+    /// 指定されたプレイヤーキャラクターのアニメーション再生を開始します。
+    /// 存在するアニメーションのみ再生を試みます。
     /// </summary>
     public bool PlayCharacterAnimation(int playerIndex, string animName, bool restartIfSame = false)
     {
         AnimationPlayer player = GetCharacterAnimPlayer(playerIndex);
         return player.Play(animName, restartIfSame);
+    }
+
+    /// <summary>
+    /// 指定されたプレイヤーのエフェクトアニメーション再生を開始します。
+    /// </summary>
+    public bool PlayEffectAnimation(int playerIndex, EffectAnimationType effectType, bool restartIfSame = false)
+    {
+        return PlayEffectAnimation(playerIndex, effectType.ToString(), restartIfSame);
     }
 
     /// <summary>
@@ -160,10 +202,10 @@ public sealed class AnimationManager : IDisposable
     {
         if (!HasCatSprite) return;
         int zeroIndex = playerIndex - 1;
-        if (zeroIndex < 0 || zeroIndex >= _playerCharacterNames.Count) return;
+        if (zeroIndex < 0 || zeroIndex >= _playerCharacterTypes.Count) return;
 
-        string characterName = _playerCharacterNames[zeroIndex];
-        if (!_characterSpriteHandles.TryGetValue(characterName, out int handle)) return;
+        CharacterType charType = _playerCharacterTypes[zeroIndex];
+        if (!_characterSpriteHandles.TryGetValue(charType, out int handle)) return;
 
         AnimationPlayer player = GetCharacterAnimPlayer(playerIndex);
         player.Draw(render, position, handle, flipX: facingLeft, scale: scale);
@@ -176,7 +218,8 @@ public sealed class AnimationManager : IDisposable
     {
         if (!HasEffectSprite) return;
         AnimationPlayer player = GetEffectAnimPlayer(playerIndex);
-        player.Draw(render, position, _effectSpriteHandle, flipX: facingLeft, scale: scale);
+        int handle = new List<int>(_effectSpriteHandles.Values)[0];
+        player.Draw(render, position, handle, flipX: facingLeft, scale: scale);
     }
 
     /// <inheritdoc/>
@@ -199,14 +242,13 @@ public sealed class AnimationManager : IDisposable
             {
                 AssetManager.DeleteGraph(handle);
             }
-
             _characterSpriteHandles.Clear();
 
-            if (_effectSpriteHandle != -1)
+            foreach (var handle in _effectSpriteHandles.Values)
             {
-                AssetManager.DeleteGraph(_effectSpriteHandle);
-                _effectSpriteHandle = -1;
+                AssetManager.DeleteGraph(handle);
             }
+            _effectSpriteHandles.Clear();
 
             _isDisposed = true;
         }
@@ -256,7 +298,7 @@ public sealed class AnimationManager : IDisposable
         {
             int cw = clip.CellWidth > 0 ? clip.CellWidth : defaultCellWidth;
             int ch = clip.CellHeight > 0 ? clip.CellHeight : defaultCellHeight;
-            player.AddGridClip(clip.Name, clip.Row, cw, ch, clip.FrameCount, clip.Fps, clip.IsLooping);
+            player.AddGridClip(clip.Name, clip.Row, clip.StartFrame, clip.EndFrame, cw, ch, clip.Fps, clip.IsLooping);
         }
 
         // デフォルト再生クリップは最初のクリップ
@@ -267,14 +309,14 @@ public sealed class AnimationManager : IDisposable
     }
 
     /// <summary>
-    /// プレイヤーインデックスに対してキャラクター名を割り当てます。
+    /// プレイヤーインデックスに対してキャラクター種別を割り当てます。
     /// キャラクターが複数いる場合は順番に割り当て、1体のみの場合は全員同じにします。
     /// </summary>
-    private string AssignCharacterName(int zeroBasedIndex)
+    private CharacterType AssignCharacterType(int zeroBasedIndex)
     {
-        if (_characterSpriteHandles.Count == 0) return string.Empty;
+        if (_characterSpriteHandles.Count == 0) return default;
 
-        var names = new List<string>(_characterSpriteHandles.Keys);
-        return names[zeroBasedIndex % names.Count];
+        var types = new List<CharacterType>(_characterSpriteHandles.Keys);
+        return types[zeroBasedIndex % types.Count];
     }
 }
