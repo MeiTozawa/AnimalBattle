@@ -8,13 +8,15 @@ cell_height  = 48
 [[clips]]
 name        = "Slash"
 row         = 0
-frame_count = 4
+start_frame = 0
+end_frame   = 3
 fps         = 16.0
 looping     = false
 
 [[clips]]
 name        = "Hit"
 row         = 1
-frame_count = 3
+start_frame = 0
+end_frame   = 2
 fps         = 18.0
 looping     = false

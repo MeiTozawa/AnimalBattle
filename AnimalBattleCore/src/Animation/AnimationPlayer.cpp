@@ -12,15 +12,17 @@ namespace ab {
         clips_[clip.name] = std::move(clip);
     }
 
-    void AnimationPlayer::AddGridClip(const std::wstring& name, int row, int frame_width, int frame_height,
-                                      int frame_count, float fps, bool is_looping) {
+    void AnimationPlayer::AddGridClip(const std::wstring& name, int row, int start_frame, int end_frame,
+                                      int frame_width, int frame_height, float fps, bool is_looping) {
         AnimationClip clip;
         clip.name = name;
         clip.fps = fps;
         clip.is_looping = is_looping;
-        clip.frames.reserve(frame_count);
 
-        for (int i = 0; i < frame_count; ++i) {
+        int count = (end_frame >= start_frame) ? (end_frame - start_frame + 1) : 1;
+        clip.frames.reserve(count);
+
+        for (int i = start_frame; i <= end_frame; ++i) {
             int x1 = i * frame_width;
             int y1 = row * frame_height;
             int x2 = x1 + frame_width;

@@ -41,16 +41,17 @@ namespace ab {
         /// @param clip 登録するアニメーションクリップ
         void AddClip(AnimationClip clip);
 
-        /// @brief スプライトシートの格子状レイアウトからアニメーションクリップを生成して登録します
+        /// @brief スプライトシートの格子状レイアウトから指定コマ範囲のアニメーションクリップを生成して登録します
         /// @param name アニメーション名
         /// @param row スプライトシート上の行インデックス (0 開始)
+        /// @param start_frame 開始コマインデックス (0 開始)
+        /// @param end_frame 終了コマインデックス (包含)
         /// @param frame_width 1 コマの幅 (ピクセル)
         /// @param frame_height 1 コマの高さ (ピクセル)
-        /// @param frame_count コマ数
         /// @param fps 再生フレームレート (Frames Per Second)
         /// @param is_looping ループ再生フラグ
-        void AddGridClip(const std::wstring& name, int row, int frame_width, int frame_height,
-                         int frame_count, float fps, bool is_looping);
+        void AddGridClip(const std::wstring& name, int row, int start_frame, int end_frame,
+                         int frame_width, int frame_height, float fps, bool is_looping);
 
         /// @brief 指定された名前のアニメーションを開始します
         /// @param name アニメーション名
