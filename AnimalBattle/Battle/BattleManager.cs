@@ -51,7 +51,14 @@ public class BattleManager
         for (int i = 1; i <= playerCount; i++)
         {
             var (color, border) = _playerColors[(i - 1) % _playerColors.Length];
-            var character = new Character(i, $"Player {i}", color, border);
+            var character = new Character(
+                playerIndex: i,
+                name: $"Player {i}",
+                mainColor: color,
+                outlineColor: border,
+                teamId: i,
+                playerType: PlayerType.Human,
+                stockCount: 3);
             Point<float> spawn = initialMap.GetSpawnPosition(i);
 
             character.PhysicsObjectId = physics.AddObject(
@@ -141,12 +148,17 @@ public class BattleManager
             var player = _players[i];
             if (!blastZone.Contains(pObjs[i].X, pObjs[i].Y))
             {
+                if (player.StockCount > 0)
+                {
+                    player.StockCount--;
+                }
+
                 physics.RemoveObject(player.PhysicsObjectId);
                 Point<float> spawn = currentMap.GetSpawnPosition(player.PlayerIndex);
                 player.PhysicsObjectId = physics.AddObject(
                     spawn.X, spawn.Y, player.Config.Width, player.Config.Height, player.Config.Weight);
                 player.StateMachine.Reset();
-                Console.WriteLine($"[撃墜!] {player.Name} が {currentMap.Name} で撃墜されました！");
+                Console.WriteLine($"[撃墜!] {player.Name} が {currentMap.Name} で撃墜されました！（残りストック: {player.StockCount}）");
             }
 
             // 8. 移動速度に応じた向き (FacingLeft) 更新

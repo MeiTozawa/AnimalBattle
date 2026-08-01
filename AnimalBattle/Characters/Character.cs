@@ -8,8 +8,10 @@ namespace AnimalBattle.Characters;
 /// </summary>
 public class Character
 {
+    private int _teamId;
+
     /// <summary>
-    /// プレイヤーのインデックス（1 または 2）を取得します。
+    /// プレイヤーのインデックス（1～4）を取得します。
     /// </summary>
     public int PlayerIndex { get; }
 
@@ -27,6 +29,42 @@ public class Character
     /// 枠線描画カラー（ARGB）を取得または設定します。
     /// </summary>
     public uint OutlineColor { get; set; }
+
+    /// <summary>
+    /// キャラクターの所属チーム ID を取得または設定します。
+    /// 設定変更時、内部の Hurtbox および Hitbox の TeamId フィルタも動的に同期更新されます。
+    /// </summary>
+    public int TeamId
+    {
+        get => _teamId;
+        set
+        {
+            _teamId = value;
+            if (Hurtbox != null)
+            {
+                Hurtbox.Filter = new CollisionFilter(Hurtbox.Filter.Category, Hurtbox.Filter.Mask, Hurtbox.Filter.OwnerId, _teamId);
+            }
+            if (Hitbox != null)
+            {
+                Hitbox.Filter = new CollisionFilter(Hitbox.Filter.Category, Hitbox.Filter.Mask, Hitbox.Filter.OwnerId, _teamId);
+            }
+        }
+    }
+
+    /// <summary>
+    /// プレイヤーの操作種別（Human / Cpu）を取得または設定します。
+    /// </summary>
+    public PlayerType PlayerType { get; set; }
+
+    /// <summary>
+    /// キャラクターの残りストック（残機）数を取得または設定します。
+    /// </summary>
+    public int StockCount { get; set; }
+
+    /// <summary>
+    /// キャラクターのスコア（撃墜数）を取得または設定します。
+    /// </summary>
+    public int Score { get; set; }
 
     /// <summary>
     /// Native C++ 物理エンジン上のオブジェクトIDを取得または設定します。
@@ -66,18 +104,35 @@ public class Character
     /// <summary>
     /// 指定された初期値で新しい <see cref="Character"/> インスタンスを生成します。
     /// </summary>
-    /// <param name="playerIndex">プレイヤーインデックス (1 または 2)</param>
+    /// <param name="playerIndex">プレイヤーインデックス (1～4)</param>
     /// <param name="name">キャラクター名</param>
     /// <param name="mainColor">メインカラー (ARGB)</param>
     /// <param name="outlineColor">枠線カラー (ARGB)</param>
+    /// <param name="teamId">チーム ID（負の値の場合は playerIndex と同値に設定されます）</param>
+    /// <param name="playerType">操作種別（Human / Cpu）</param>
+    /// <param name="stockCount">初期ストック（残機）数</param>
+    /// <param name="facingLeft">初期の向き（null の場合は偶数プレイヤーが左向き）</param>
     /// <param name="configPath">読み込む TOML 設定ファイルパス（省略時は "character.toml"）</param>
-    public Character(int playerIndex, string name, uint mainColor, uint outlineColor, string configPath = "character.toml")
+    public Character(
+        int playerIndex,
+        string name,
+        uint mainColor,
+        uint outlineColor,
+        int teamId = -1,
+        PlayerType playerType = PlayerType.Human,
+        int stockCount = 3,
+        bool? facingLeft = null,
+        string configPath = "character.toml")
     {
         PlayerIndex = playerIndex;
         Name = name;
         MainColor = mainColor;
         OutlineColor = outlineColor;
-        FacingLeft = (playerIndex == 2); // P2 はデフォルトで左向き
+        _teamId = teamId >= 0 ? teamId : playerIndex;
+        PlayerType = playerType;
+        StockCount = stockCount;
+        Score = 0;
+        FacingLeft = facingLeft ?? (playerIndex % 2 == 0); // 偶数プレイヤー (P2, P4) はデフォルトで左向き
 
         var configResult = CharacterConfig.LoadFromFile(configPath);
         ConfigHolder = configResult.IsOk ? configResult.Value! : new ConfigBase<CharacterConfig>();
@@ -88,7 +143,8 @@ public class Character
             offsetX: Config.HurtboxOffsetX,
             offsetY: Config.HurtboxOffsetY,
             width: Config.HurtboxWidth,
-            height: Config.HurtboxHeight);
+            height: Config.HurtboxHeight,
+            teamId: _teamId);
 
         Hitbox = new Hitbox(
             ownerIndex: playerIndex,
@@ -98,6 +154,7 @@ public class Character
             height: Config.HitboxHeight,
             damage: Config.HitboxDamage,
             knockbackForce: Config.HitboxKnockbackForce,
-            knockbackAngle: Config.HitboxKnockbackAngle);
+            knockbackAngle: Config.HitboxKnockbackAngle,
+            teamId: _teamId);
     }
 }

@@ -37,8 +37,9 @@ public partial class BattleScene
             int hudY = 620;
 
             InputDevice device = _input.GetActiveDevice(player.PlayerIndex);
-            _render.DrawString(new Point<int>(hudX, hudY), $"{player.Name} [{device}]", player.MainColor);
-            _render.DrawString(new Point<int>(hudX, hudY + 20), $"Damage: {pObj.DamagePercent:F1}%", 0xFFFFEAA7);
+            string typeStr = player.PlayerType == PlayerType.Cpu ? "CPU" : device.ToString();
+            _render.DrawString(new Point<int>(hudX, hudY), $"{player.Name} [{typeStr}] (Team {player.TeamId})", player.MainColor);
+            _render.DrawString(new Point<int>(hudX, hudY + 20), $"Damage: {pObj.DamagePercent:F1}% | Stock: {player.StockCount}", 0xFFFFEAA7);
             _render.DrawString(new Point<int>(hudX, hudY + 40), $"State: {player.StateMachine.State}", 0xFFDFE6E9);
         }
 
