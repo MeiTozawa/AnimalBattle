@@ -9,13 +9,22 @@
     <NoWarn>$(NoWarn);SYSLIB1104</NoWarn>
   </PropertyGroup>
 
-  <!-- Automatically copy the built native C++ DLL to the output directory -->
+  <!-- Automatically copy the built native C++ DLL and Resources to the output directory -->
   <ItemGroup>
     <None Include="..\cmake-build-debug\AnimalBattleCore\AnimalBattleCore.dll" Link="AnimalBattleCore.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="..\Resource\**\*.*">
+      <Link>Resource\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Config\**\*.*">
+      <Link>Config\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Flecs.NET.Release" Version="4.0.3" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.10" />
     <PackageReference Include="Tomlyn" Version="2.10.1" />
     <PackageReference Include="Tomlyn.Extensions.Configuration" Version="2.0.0" />
