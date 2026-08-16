@@ -1,165 +1,156 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Stages;
-
 /// <summary>
-/// ステージ（マップ）の切り替え・物理エンジン登録および管理を行うマネージャークラス。
+/// 4 つの対戦マップデータおよび足場（Platform）の幾何構成を管理するマネージャークラス。
 /// </summary>
 public class StageManager
 {
     private readonly List<MapData> _maps = [];
-    private int _currentMapIndex = 0;
+    private int _currentMapIndex;
 
     /// <summary>
-    /// 現在選択されているマップデータを取得します。
+    /// 登録されている全マップの読み取り専用リストを取得します。
+    /// </summary>
+    public ReadOnlyCollection<MapData> Maps => _maps.AsReadOnly();
+
+    /// <summary>
+    /// 現在選択中のアクティブマップデータを取得します。
     /// </summary>
     public MapData CurrentMap => _maps[_currentMapIndex];
 
     /// <summary>
-    /// 現在選択されているマップのインデックスを取得します。
+    /// 現在選択中のマップインデックス (0～3) を取得します。
     /// </summary>
     public int CurrentMapIndex => _currentMapIndex;
 
     /// <summary>
-    /// 登録されている総マップ数を取得します。
-    /// </summary>
-    public int MapCount => _maps.Count;
-
-    /// <summary>
-    /// マップデータを初期化して <see cref="StageManager"/> の新しいインスタンスを生成します。
+    /// <see cref="StageManager"/> の新しいインスタンスを初期化し、4 つの対戦マップを生成します。
     /// </summary>
     public StageManager()
     {
         InitializeMaps();
+        _currentMapIndex = 0;
     }
 
     private void InitializeMaps()
     {
-        // マップ 1: 戦術城堡 (Battlefield Citadel)
-        _maps.Add(new MapData
-        {
-            Id = 1,
-            Name = "1: Battlefield Citadel (戦術城堡)",
-            Subtitle = "Classic Tournament Layout | 3 Floating Platforms",
-            ThemeColor = 0xFF00ADB5,
-            BgColor = 0xFF121B24,
-            P1Spawn = new Point<float>(450.0f, 300.0f),
-            P2Spawn = new Point<float>(830.0f, 300.0f),
-            BlastZone = new Rect<float>(-250.0f, -400.0f, 1530.0f, 900.0f),
-            Platforms =
-            [
-                // メイン実体床
-                new PlatformData { X1 = 260.0f, Y1 = 500.0f, X2 = 1020.0f, Y2 = 560.0f, Type = PlatformType.Solid, FillColor = 0xFF1E5128, OutlineColor = 0xFF4E9F3D },
-                // 左下すり抜け床
-                new PlatformData { X1 = 340.0f, Y1 = 380.0f, X2 = 520.0f, Y2 = 390.0f, Type = PlatformType.SemiSolid, FillColor = 0xFF00ADB5, OutlineColor = 0xFFEEEEEE },
-                // 右下すり抜け床
-                new PlatformData { X1 = 760.0f, Y1 = 380.0f, X2 = 940.0f, Y2 = 390.0f, Type = PlatformType.SemiSolid, FillColor = 0xFF00ADB5, OutlineColor = 0xFFEEEEEE },
-                // 中央上すり抜け床
-                new PlatformData { X1 = 550.0f, Y1 = 260.0f, X2 = 730.0f, Y2 = 270.0f, Type = PlatformType.SemiSolid, FillColor = 0xFFFFC72C, OutlineColor = 0xFFF8F3D4 }
-            ]
-        });
+        _maps.Clear();
 
-        // マップ 2: 終極決闘場 (Final Destination)
-        _maps.Add(new MapData
-        {
-            Id = 2,
-            Name = "2: Final Destination (終極決闘場)",
-            Subtitle = "Pure 1v1 Neutral Arena | Wide Flat Ground",
-            ThemeColor = 0xFFF72585,
-            BgColor = 0xFF1A0933,
-            P1Spawn = new Point<float>(400.0f, 320.0f),
-            P2Spawn = new Point<float>(880.0f, 320.0f),
-            BlastZone = new Rect<float>(-300.0f, -450.0f, 1580.0f, 950.0f),
-            Platforms =
-            [
-                // 大型平坦床
-                new PlatformData { X1 = 150.0f, Y1 = 520.0f, X2 = 1130.0f, Y2 = 580.0f, Type = PlatformType.Solid, FillColor = 0xFF3A1078, OutlineColor = 0xFFF72585 }
-            ]
-        });
+        MapData map1 = new MapData(
+            id: 1,
+            name: "Battlefield Citadel",
+            subtitle: "競技トーナメント標準レイアウト | 3つの浮遊足場",
+            themeColor: 0xFF00ADB5,
+            bgColor: 0xFF121B24,
+            blastZone: new Rect<float>(-300.0f, -300.0f, 1580.0f, 1020.0f));
 
-        // マップ 3: 雙子浮島 (Twin Floating Islands)
-        _maps.Add(new MapData
-        {
-            Id = 3,
-            Name = "3: Twin Floating Islands (雙子浮島)",
-            Subtitle = "Dual Island Split Stage | Central Death Pit & Sky Bridge",
-            ThemeColor = 0xFFE67E22,
-            BgColor = 0xFF2C1405,
-            P1Spawn = new Point<float>(370.0f, 300.0f),
-            P2Spawn = new Point<float>(910.0f, 300.0f),
-            BlastZone = new Rect<float>(-250.0f, -400.0f, 1530.0f, 880.0f),
-            Platforms =
-            [
-                // 左浮島
-                new PlatformData { X1 = 180.0f, Y1 = 500.0f, X2 = 560.0f, Y2 = 560.0f, Type = PlatformType.Solid, FillColor = 0xFFD35400, OutlineColor = 0xFFE67E22 },
-                // 右浮島
-                new PlatformData { X1 = 720.0f, Y1 = 500.0f, X2 = 1100.0f, Y2 = 560.0f, Type = PlatformType.Solid, FillColor = 0xFFD35400, OutlineColor = 0xFFE67E22 },
-                // 中央高所空中ブリッジ (すり抜け)
-                new PlatformData { X1 = 520.0f, Y1 = 340.0f, X2 = 760.0f, Y2 = 350.0f, Type = PlatformType.SemiSolid, FillColor = 0xFF2ECC71, OutlineColor = 0xFF27AE60 }
-            ]
-        });
+        map1.AddPlatform(new PlatformData(640.0f, 560.0f, 760.0f, 30.0f, PlatformType.Solid, 0xFF1E5128, 0xFF4E9F3D));
+        map1.AddPlatform(new PlatformData(440.0f, 440.0f, 180.0f, 16.0f, PlatformType.SemiSolid, 0xFF194350, 0xFFFF8882));
+        map1.AddPlatform(new PlatformData(840.0f, 440.0f, 180.0f, 16.0f, PlatformType.SemiSolid, 0xFF194350, 0xFFFF8882));
+        map1.AddPlatform(new PlatformData(640.0f, 320.0f, 180.0f, 16.0f, PlatformType.SemiSolid, 0xFF194350, 0xFFFF8882));
 
-        // マップ 4: 賽博數碼競技場 (Cyber Neon Arena)
-        _maps.Add(new MapData
-        {
-            Id = 4,
-            Name = "4: Cyber Neon Arena (賽博數碼競技場)",
-            Subtitle = "High-Tech Cyber Grid | 4 Multi-Tier Floating Platforms",
-            ThemeColor = 0xFF00F5FF,
-            BgColor = 0xFF080E18,
-            P1Spawn = new Point<float>(420.0f, 300.0f),
-            P2Spawn = new Point<float>(860.0f, 300.0f),
-            BlastZone = new Rect<float>(-300.0f, -450.0f, 1580.0f, 920.0f),
-            Platforms =
-            [
-                // メインサイバー床
-                new PlatformData { X1 = 280.0f, Y1 = 520.0f, X2 = 1000.0f, Y2 = 570.0f, Type = PlatformType.Solid, FillColor = 0xFF0F4C81, OutlineColor = 0xFF00F5FF },
-                // 左下サイド床
-                new PlatformData { X1 = 200.0f, Y1 = 420.0f, X2 = 380.0f, Y2 = 430.0f, Type = PlatformType.SemiSolid, FillColor = 0xFFE056FD, OutlineColor = 0xFF7D5FFF },
-                // 右下サイド床
-                new PlatformData { X1 = 900.0f, Y1 = 420.0f, X2 = 1080.0f, Y2 = 430.0f, Type = PlatformType.SemiSolid, FillColor = 0xFFE056FD, OutlineColor = 0xFF7D5FFF },
-                // 中央中段床
-                new PlatformData { X1 = 480.0f, Y1 = 380.0f, X2 = 800.0f, Y2 = 390.0f, Type = PlatformType.SemiSolid, FillColor = 0xFFFEE715, OutlineColor = 0xFFFFDD59 },
-                // 中央最上段床
-                new PlatformData { X1 = 580.0f, Y1 = 240.0f, X2 = 700.0f, Y2 = 250.0f, Type = PlatformType.SemiSolid, FillColor = 0xFFFF3838, OutlineColor = 0xFFFF4D4D }
-            ]
-        });
+        map1.SetSpawnPositions(
+            new Point<float>(380.0f, 320.0f),
+            new Point<float>(540.0f, 450.0f),
+            new Point<float>(740.0f, 450.0f),
+            new Point<float>(900.0f, 320.0f));
+        _maps.Add(map1);
+
+        MapData map2 = new MapData(
+            id: 2,
+            name: "Final Sanctuary",
+            subtitle: "ギミックなしの真剣勝負 | 1つの巨大な主足場",
+            themeColor: 0xFFE94560,
+            bgColor: 0xFF1A1A2E,
+            blastZone: new Rect<float>(-350.0f, -350.0f, 1630.0f, 1050.0f));
+
+        map2.AddPlatform(new PlatformData(640.0f, 550.0f, 840.0f, 36.0f, PlatformType.Solid, 0xFF0F3460, 0xFFE94560));
+
+        map2.SetSpawnPositions(
+            new Point<float>(360.0f, 420.0f),
+            new Point<float>(520.0f, 420.0f),
+            new Point<float>(760.0f, 420.0f),
+            new Point<float>(920.0f, 420.0f));
+        _maps.Add(map2);
+
+        MapData map3 = new MapData(
+            id: 3,
+            name: "Twin Towers",
+            subtitle: "中央クレバスと2連の独立タワー | 垂直立体機動",
+            themeColor: 0xFFF39C12,
+            bgColor: 0xFF2C3E50,
+            blastZone: new Rect<float>(-300.0f, -300.0f, 1580.0f, 1020.0f));
+
+        map3.AddPlatform(new PlatformData(420.0f, 540.0f, 320.0f, 28.0f, PlatformType.Solid, 0xFF34495E, 0xFFF1C40F));
+        map3.AddPlatform(new PlatformData(860.0f, 540.0f, 320.0f, 28.0f, PlatformType.Solid, 0xFF34495E, 0xFFF1C40F));
+        map3.AddPlatform(new PlatformData(420.0f, 400.0f, 160.0f, 16.0f, PlatformType.SemiSolid, 0xFF2C3E50, 0xFFE67E22));
+        map3.AddPlatform(new PlatformData(860.0f, 400.0f, 160.0f, 16.0f, PlatformType.SemiSolid, 0xFF2C3E50, 0xFFE67E22));
+        map3.AddPlatform(new PlatformData(640.0f, 280.0f, 200.0f, 16.0f, PlatformType.SemiSolid, 0xFF2C3E50, 0xFFE74C3C));
+
+        map3.SetSpawnPositions(
+            new Point<float>(360.0f, 320.0f),
+            new Point<float>(480.0f, 450.0f),
+            new Point<float>(800.0f, 450.0f),
+            new Point<float>(920.0f, 320.0f));
+        _maps.Add(map3);
+
+        MapData map4 = new MapData(
+            id: 4,
+            name: "Floating Islands",
+            subtitle: "落下リスクの高い3連浮遊島 | 高度な復帰戦",
+            themeColor: 0xFF9B59B6,
+            bgColor: 0xFF1B263B,
+            blastZone: new Rect<float>(-300.0f, -300.0f, 1580.0f, 1020.0f));
+
+        map4.AddPlatform(new PlatformData(640.0f, 560.0f, 360.0f, 26.0f, PlatformType.Solid, 0xFF415A77, 0xFF8E44AD));
+        map4.AddPlatform(new PlatformData(300.0f, 480.0f, 220.0f, 22.0f, PlatformType.SemiSolid, 0xFF415A77, 0xFF3498DB));
+        map4.AddPlatform(new PlatformData(980.0f, 480.0f, 220.0f, 22.0f, PlatformType.SemiSolid, 0xFF415A77, 0xFF3498DB));
+        map4.AddPlatform(new PlatformData(640.0f, 360.0f, 180.0f, 16.0f, PlatformType.SemiSolid, 0xFF415A77, 0xFF1ABC9C));
+
+        map4.SetSpawnPositions(
+            new Point<float>(300.0f, 380.0f),
+            new Point<float>(560.0f, 450.0f),
+            new Point<float>(720.0f, 450.0f),
+            new Point<float>(980.0f, 380.0f));
+        _maps.Add(map4);
     }
 
     /// <summary>
-    /// 指定されたインデックスのマップを読み込み、Native C++ 物理エンジンに登録します。
+    /// 指定されたマップインデックス (0～3) にアクティブマップを切り替え、物理エンジンへ足場を再登録します。
     /// </summary>
     /// <param name="physics">物理エンジンインスタンス</param>
-    /// <param name="mapIndex">読み込むマップのインデックス</param>
-    /// <returns>成功時はカレント <see cref="MapData"/> を含む <see cref="Result{T}"/>、失敗時は <see cref="SimpleError"/></returns>
-    public Result<MapData> LoadMap(PhysicsEngine physics, int mapIndex)
+    /// <param name="index">マップインデックス (0～3)</param>
+    public void SwitchMap(PhysicsEngine physics, int index)
     {
-        if (mapIndex < 0 || mapIndex >= _maps.Count)
+        if (index < 0 || index >= _maps.Count)
         {
-            return SimpleError.NotFound($"指定されたマップインデックス {mapIndex} は範囲外です (有効範囲: 0 ～ {_maps.Count - 1})。");
+            return;
         }
 
-        MapData oldMap = CurrentMap;
-        foreach (var plat in oldMap.Platforms)
+        MapData oldMap = _maps[_currentMapIndex];
+        foreach (PlatformData plat in oldMap.Platforms)
         {
-            if (plat.RuntimeId != -1)
+            if (plat.PhysicsPlatformId != -1)
             {
-                physics.RemovePlatform(plat.RuntimeId);
-                plat.RuntimeId = -1;
+                physics.RemovePlatform(plat.PhysicsPlatformId);
+                plat.PhysicsPlatformId = -1;
             }
         }
 
-        _currentMapIndex = mapIndex;
-        MapData newMap = CurrentMap;
-
-        foreach (var plat in newMap.Platforms)
+        _currentMapIndex = index;
+        MapData newMap = _maps[_currentMapIndex];
+        foreach (PlatformData plat in newMap.Platforms)
         {
-            plat.RuntimeId = physics.AddPlatform(plat.X1, plat.Y1, plat.X2, plat.Y2, plat.Type);
+            plat.PhysicsPlatformId = physics.AddPlatform(
+                plat.BoundingBox.Left,
+                plat.BoundingBox.Top,
+                plat.BoundingBox.Right,
+                plat.BoundingBox.Bottom,
+                (int)plat.Type);
         }
-
-        Console.WriteLine($"[ステージマネージャー] マップ {newMap.Id} に切り替えました: {newMap.Name}");
-        return newMap;
     }
 }

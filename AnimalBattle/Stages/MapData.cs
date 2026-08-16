@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Stages;
-
 /// <summary>
 /// マップ（ステージ）全体の構成情報を保持するデータ構造クラス。
 /// </summary>
@@ -17,12 +15,12 @@ public class MapData
     /// <summary>
     /// マップ名を取得または設定します。
     /// </summary>
-    public string Name { get; set; } = "";
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// マップのサブタイトル・説明テキストを取得または設定します。
     /// </summary>
-    public string Subtitle { get; set; } = "";
+    public string Subtitle { get; set; } = string.Empty;
 
     /// <summary>
     /// マップテーマカラー (ARGB) を取得または設定します。
@@ -55,8 +53,70 @@ public class MapData
     public Point<float> P4Spawn { get; set; }
 
     /// <summary>
+    /// バーストゾーン（撃墜判定境界）を取得または設定します。
+    /// </summary>
+    public Rect<float> BlastZone { get; set; }
+
+    /// <summary>
+    /// マップに配置されている足場のリストを取得または設定します。
+    /// </summary>
+    public List<PlatformData> Platforms { get; set; } = [];
+
+    /// <summary>
+    /// デフォルト設定で <see cref="MapData"/> の新しいインスタンスを初期化します。
+    /// </summary>
+    public MapData()
+    {
+    }
+
+    /// <summary>
+    /// 主要パラメータを指定して <see cref="MapData"/> の新しいインスタンスを初期化します。
+    /// </summary>
+    /// <param name="id">マップ ID</param>
+    /// <param name="name">マップ名</param>
+    /// <param name="subtitle">サブタイトル</param>
+    /// <param name="themeColor">テーマカラー</param>
+    /// <param name="bgColor">背景カラー</param>
+    /// <param name="blastZone">撃墜境界</param>
+    public MapData(int id, string name, string subtitle, uint themeColor, uint bgColor, Rect<float> blastZone)
+    {
+        Id = id;
+        Name = name;
+        Subtitle = subtitle;
+        ThemeColor = themeColor;
+        BgColor = bgColor;
+        BlastZone = blastZone;
+    }
+
+    /// <summary>
+    /// プラットフォームを追加します。
+    /// </summary>
+    /// <param name="platform">追加する足場データ</param>
+    public void AddPlatform(PlatformData platform)
+    {
+        Platforms.Add(platform);
+    }
+
+    /// <summary>
+    /// 各プレイヤーの初期出現座標を一括設定します。
+    /// </summary>
+    /// <param name="p1">P1 スポーン座標</param>
+    /// <param name="p2">P2 スポーン座標</param>
+    /// <param name="p3">P3 スポーン座標</param>
+    /// <param name="p4">P4 スポーン座標</param>
+    public void SetSpawnPositions(Point<float> p1, Point<float> p2, Point<float> p3, Point<float> p4)
+    {
+        P1Spawn = p1;
+        P2Spawn = p2;
+        P3Spawn = p3;
+        P4Spawn = p4;
+    }
+
+    /// <summary>
     /// 指定されたプレイヤーインデックス (1-indexed) のスポーン座標を取得します。
     /// </summary>
+    /// <param name="playerIndex">プレイヤー番号 (1～4)</param>
+    /// <returns>スポーン座標</returns>
     public Point<float> GetSpawnPosition(int playerIndex)
     {
         return playerIndex switch
@@ -68,14 +128,4 @@ public class MapData
             _ => P1Spawn
         };
     }
-
-    /// <summary>
-    /// バーストゾーン（撃墜判定境界）を取得または設定します。
-    /// </summary>
-    public Rect<float> BlastZone { get; set; }
-
-    /// <summary>
-    /// マップに配置されている足場のリストを取得または設定します。
-    /// </summary>
-    public List<PlatformData> Platforms { get; set; } = [];
 }
