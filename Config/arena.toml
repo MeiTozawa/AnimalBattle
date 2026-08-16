@@ -1,0 +1,25 @@
+# Arena and Platforms Configuration
+
+[Floor]
+X = 640.0
+Y = 680.0
+Width = 1240.0
+Height = 40.0
+
+[PlatformLeft]
+X = 280.0
+Y = 480.0
+Width = 240.0
+Height = 22.0
+
+[PlatformRight]
+X = 1000.0
+Y = 480.0
+Width = 240.0
+Height = 22.0
+
+[PlatformCenter]
+X = 640.0
+Y = 360.0
+Width = 200.0
+Height = 20.0

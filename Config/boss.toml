@@ -1,0 +1,27 @@
+# Boss Configuration
+MaxHp = 90.0
+BaseX = 640.0
+BaseY = 180.0
+ScaleX = 2.8
+ScaleY = 2.8
+HitboxWidth = 120.0
+HitboxHeight = 100.0
+HitFlashDuration = 0.08
+
+# Phase 1 Hover Motion
+Phase1HoverSpeedX = 1.5
+Phase1HoverAmpX = 80.0
+Phase1HoverSpeedY = 2.0
+Phase1HoverAmpY = 25.0
+
+# Phase 2 Hover Motion
+Phase2HoverSpeedX = 1.2
+Phase2HoverAmpX = 260.0
+Phase2HoverSpeedY = 2.4
+Phase2HoverAmpY = 40.0
+
+# Phase 3 Hover Motion
+Phase3HoverSpeedX = 2.2
+Phase3HoverAmpX = 320.0
+Phase3HoverSpeedY = 3.6
+Phase3HoverAmpY = 50.0

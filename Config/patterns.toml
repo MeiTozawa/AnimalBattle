@@ -1,0 +1,55 @@
+# Bullet Patterns Configuration
+
+[Phase1]
+# Aimed 3-way shot
+AimedInterval = 0.90
+AimedSpeed = 6.2
+AimedSpreadAngle = 0.16
+AimedRadius = 8.0
+AimedFillColor = 4294914867
+AimedOutlineColor = 4294936712
+
+# Ring 16-way shot
+RingInterval = 2.20
+RingBulletCount = 16
+RingSpeed = 3.8
+RingAngleStep = 0.25
+RingRadius = 9.0
+RingFillColor = 4278248959
+RingOutlineColor = 4286644223
+
+[Phase2]
+# Double Spiral shot
+SpiralInterval = 0.075
+SpiralSpeed = 4.8
+SpiralAngleStep = 0.22
+SpiralRadius = 7.5
+SpiralFillColor1 = 4289877459
+SpiralOutlineColor1 = 4292915455
+SpiralFillColor2 = 4294956800
+SpiralOutlineColor2 = 4294963829
+
+# Rain bullet shot
+RainInterval = 0.32
+RainSpeed = 5.2
+RainRadius = 7.0
+RainMinX = 60.0
+RainMaxX = 1220.0
+RainFillColor = 4278257270
+RainOutlineColor = 4290377418
+
+[Phase3]
+# Cross chaos wave shot
+CrossInterval = 0.10
+CrossSpeed = 5.2
+CrossAngleStep = 0.18
+CrossRadius = 8.5
+CrossFillColor = 4294907716
+CrossOutlineColor = 4294937216
+
+# Fast sniper shot
+SniperInterval = 0.40
+SniperSpeed = 8.5
+SniperRadius = 6.5
+SniperFillColor = 4294922834
+SniperOutlineColor = 4294967295
