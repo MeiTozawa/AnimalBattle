@@ -14,14 +14,6 @@
     <None Include="..\cmake-build-debug\AnimalBattleCore\AnimalBattleCore.dll" Link="AnimalBattleCore.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Content Include="..\Resource\**\*.*">
-      <Link>Resource\%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Config\**\*.*">
-      <Link>Config\%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Flecs.NET.Release" Version="4.0.3" />

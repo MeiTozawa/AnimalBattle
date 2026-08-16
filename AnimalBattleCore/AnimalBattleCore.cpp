@@ -122,11 +122,57 @@ extern "C" {
 
     __declspec(dllexport) int Input_GetJoypadState(int pad_index) noexcept {
         try {
-            // pad_index: 1 -> DX_INPUT_PAD1 (0x0001), 2 -> DX_INPUT_PAD2 (0x0002), etc.
             int dx_pad_id = (pad_index >= 1 && pad_index <= 4) ? pad_index : 1;
             return ::GetJoypadInputState(dx_pad_id);
         } catch (...) {
             return 0;
+        }
+    }
+
+    __declspec(dllexport) void Engine_SetCursorPointer() noexcept {
+        try {
+            ::SetMouseDispFlag(TRUE);
+        } catch (...) {
+        }
+    }
+
+    __declspec(dllexport) void Engine_SetCursorArrow() noexcept {
+        try {
+            ::SetMouseDispFlag(TRUE);
+        } catch (...) {
+        }
+    }
+
+    __declspec(dllexport) int Engine_CheckHitKey(int key_code) noexcept {
+        try {
+            return ::CheckHitKey(key_code);
+        } catch (...) {
+            return 0;
+        }
+    }
+
+    __declspec(dllexport) int Engine_GetJoypadInputState(int input_type) noexcept {
+        try {
+            return ::GetJoypadInputState(input_type);
+        } catch (...) {
+            return 0;
+        }
+    }
+
+    __declspec(dllexport) int Engine_GetJoypadNum() noexcept {
+        try {
+            return ::GetJoypadNum();
+        } catch (...) {
+            return 0;
+        }
+    }
+
+    __declspec(dllexport) void Engine_GetMousePoint(int* x, int* y) noexcept {
+        try {
+            if (x != nullptr && y != nullptr) {
+                ::GetMousePoint(x, y);
+            }
+        } catch (...) {
         }
     }
 

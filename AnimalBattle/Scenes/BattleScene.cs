@@ -2,24 +2,20 @@ using System;
 using Flecs.NET.Core;
 using AnimalBattle.Animations;
 using AnimalBattle.Components;
+using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Plugins;
-using AnimalBattle.Stages;
-using AnimalBattle.Systems;
 
 namespace AnimalBattle.Scenes;
+
 /// <summary>
-/// Flecs.NET ワールドおよび純粋 ECS パイプラインを統括するバトルシーンクラス。
+/// Flecs.NET ワールドおよび Boss 戦パイプラインを統括するバトルシーンクラス。
+/// TOML 設定ファイル（player.toml, boss.toml, arena.toml）から初期パラメータをロードします。
 /// </summary>
 public partial class BattleScene : IDisposable
 {
     private readonly World _ecsWorld;
     private bool _isDisposed;
-    private bool _previousKey1;
-    private bool _previousKey2;
-    private bool _previousKey3;
-    private bool _previousKey4;
-    private bool _previousKeyM;
 
     /// <summary>
     /// <see cref="BattleScene"/> の新しいインスタンスを初期化します。
@@ -30,10 +26,11 @@ public partial class BattleScene : IDisposable
     }
 
     /// <summary>
-    /// Flecs.NET システムおよびエンティティの初期化を行います。
+    /// 各種 TOML 設定ファイル、システムおよびエンティティ（プレイヤー、Boss、プラットフォーム）の初期化を行います。
     /// </summary>
     public void Initialize()
     {
+        ConfigManager.Initialize();
         AnimationManager.Initialize();
         int catHandle = AnimationManager.GetCharacterSpriteHandle();
 
@@ -41,79 +38,64 @@ public partial class BattleScene : IDisposable
             .AddPluginGroup(new DefaultPlugins());
         app.FinishSetup();
 
-        SpawnPlayer(1, 380.0f, 320.0f, false, catHandle);
-        SpawnPlayer(2, 540.0f, 450.0f, false, catHandle);
-        SpawnPlayer(3, 740.0f, 450.0f, true, catHandle);
-        SpawnPlayer(4, 900.0f, 320.0f, true, catHandle);
+        PlayerConfig playerCfg = ConfigManager.Player;
+        BossConfig bossCfg = ConfigManager.Boss;
 
-        LoadStage(StageRegistry.CurrentStageIndex);
+        // 1. プレイヤーの生成
+        _ecsWorld.Entity("Player1")
+            .Set(new Transform(playerCfg.SpawnX, playerCfg.SpawnY, scaleX: playerCfg.ScaleX, scaleY: playerCfg.ScaleY))
+            .Set(new Velocity())
+            .Set(new CollisionBox(playerCfg.HitboxWidth, playerCfg.HitboxHeight))
+            .Set(new PlayerState(maxJumps: playerCfg.MaxJumps))
+            .Set(new Sprite(catHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
+            .Set(new Animation("Idle", isPlaying: true))
+            .Add<PlayerTag>();
+
+        // 2. Boss の生成
+        _ecsWorld.Entity("Boss")
+            .Set(new Transform(bossCfg.BaseX, bossCfg.BaseY, scaleX: bossCfg.ScaleX, scaleY: bossCfg.ScaleY))
+            .Set(new Velocity())
+            .Set(new CollisionBox(bossCfg.HitboxWidth, bossCfg.HitboxHeight))
+            .Set(new BossStats(maxHp: bossCfg.MaxHp, baseX: bossCfg.BaseX, baseY: bossCfg.BaseY))
+            .Set(new Sprite(catHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
+            .Add<BossTag>();
+
+        // 3. アリーナ足場
+        SetupArena();
+
+        Console.WriteLine("[初期化完了] Boss バトルシーンが正常に初期化されました！");
     }
 
     /// <summary>
-    /// 指定されたインデックス (0～3) のマップ足場をロード・切り替えます。
+    /// arena.toml に基づいて戦闘用の固定アリーナプラットフォームを生成します。
     /// </summary>
-    /// <param name="stageIndex">切り替え先ステージインデックス</param>
-    public void LoadStage(int stageIndex)
+    private void SetupArena()
     {
-        StageRegistry.SetStageIndex(stageIndex);
-        StageInfo stage = StageRegistry.CurrentStage;
+        ArenaConfig arenaCfg = ConfigManager.Arena;
 
-        _ecsWorld.QueryBuilder<Transform, CollisionBox>()
-                 .With<PlatformTag>()
-                 .Build()
-                 .Each((Entity e, ref Transform _, ref CollisionBox _) =>
-                 {
-                     e.Destruct();
-                 });
+        // メイン底面フロア
+        _ecsWorld.Entity("Platform_Floor")
+            .Set(new Transform(arenaCfg.Floor.X, arenaCfg.Floor.Y))
+            .Set(new CollisionBox(arenaCfg.Floor.Width, arenaCfg.Floor.Height))
+            .Add<PlatformTag>();
 
-        for (int p = 0; p < stage.Platforms.Count; p++)
-        {
-            PlatformConfig plat = stage.Platforms[p];
-            _ecsWorld.Entity($"Platform_{stage.Id}_{p}")
-                     .Set(new Transform(plat.X, plat.Y))
-                     .Set(new CollisionBox(plat.Width, plat.Height))
-                     .Add<PlatformTag>();
-        }
+        // 左側浮遊足場
+        _ecsWorld.Entity("Platform_Left")
+            .Set(new Transform(arenaCfg.PlatformLeft.X, arenaCfg.PlatformLeft.Y))
+            .Set(new CollisionBox(arenaCfg.PlatformLeft.Width, arenaCfg.PlatformLeft.Height))
+            .Add<PlatformTag>();
 
-        _ecsWorld.QueryBuilder<PlayerId, Transform, Velocity, CollisionBox, Animation, Sprite, CharacterStats>()
-                 .With<PlayerTag>()
-                 .Build()
-                 .Each((ref PlayerId pid, ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Animation anim, ref Sprite sprite, ref CharacterStats stats) =>
-                 {
-                     int idx = pid.Id - 1;
-                     if (idx >= 0 && idx < stage.Spawns.Length)
-                     {
-                         trans.X = stage.Spawns[idx].X;
-                         trans.Y = stage.Spawns[idx].Y;
-                     }
+        // 右側浮遊足場
+        _ecsWorld.Entity("Platform_Right")
+            .Set(new Transform(arenaCfg.PlatformRight.X, arenaCfg.PlatformRight.Y))
+            .Set(new CollisionBox(arenaCfg.PlatformRight.Width, arenaCfg.PlatformRight.Height))
+            .Add<PlatformTag>();
 
-                     stats.DamagePercent = 0.0f;
-                     stats.HitstunTimer = 0.0f;
-                     stats.AttackCooldown = 0.0f;
-                     vel.KnockbackX = 0.0f;
-                     vel.KnockbackY = 0.0f;
-                     vel.Vx = 0.0f;
-                     vel.Vy = 0.0f;
-                     col.IsGrounded = false;
-                     anim.CurrentClip = "Idle";
-                     anim.Timer = 0.0f;
-                 });
-
-        Console.WriteLine($"[マップ読込完了] マップ {stage.Id}: {stage.Name} に切り替えました（プレイヤーおよびステータスを初期化）");
-    }
-
-    private void SpawnPlayer(int id, float x, float y, bool flipX, int catHandle)
-    {
-        _ecsWorld.Entity($"Player{id}")
-            .Set(new PlayerId(id))
-            .Set(new Transform(x, y, scaleX: 2.2f, scaleY: 2.2f))
-            .Set(new Velocity())
-            .Set(new CollisionBox(40.0f, 65.0f))
-            .Set(new Input())
-            .Set(new Sprite(catHandle, flipX: flipX, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
-            .Set(new Animation("Idle", isPlaying: true))
-            .Set(new CharacterStats(100.0f))
-            .Add<PlayerTag>();
+        // 中央高台足場
+        _ecsWorld.Entity("Platform_Center")
+            .Set(new Transform(arenaCfg.PlatformCenter.X, arenaCfg.PlatformCenter.Y))
+            .Set(new CollisionBox(arenaCfg.PlatformCenter.Width, arenaCfg.PlatformCenter.Height))
+            .Add<PlatformTag>();
     }
 
     /// <summary>
@@ -123,39 +105,6 @@ public partial class BattleScene : IDisposable
     /// <returns>正常続行時は true</returns>
     public bool Update(float deltaTime)
     {
-        bool isKey1Pressed = GameEngine.IsKeyHit(0x02);
-        bool isKey2Pressed = GameEngine.IsKeyHit(0x03);
-        bool isKey3Pressed = GameEngine.IsKeyHit(0x04);
-        bool isKey4Pressed = GameEngine.IsKeyHit(0x05);
-        bool isKeyMPressed = GameEngine.IsKeyHit(0x32);
-
-        if (isKey1Pressed && !_previousKey1)
-        {
-            LoadStage(0);
-        }
-        if (isKey2Pressed && !_previousKey2)
-        {
-            LoadStage(1);
-        }
-        if (isKey3Pressed && !_previousKey3)
-        {
-            LoadStage(2);
-        }
-        if (isKey4Pressed && !_previousKey4)
-        {
-            LoadStage(3);
-        }
-        if (isKeyMPressed && !_previousKeyM)
-        {
-            LoadStage((StageRegistry.CurrentStageIndex + 1) % 4);
-        }
-
-        _previousKey1 = isKey1Pressed;
-        _previousKey2 = isKey2Pressed;
-        _previousKey3 = isKey3Pressed;
-        _previousKey4 = isKey4Pressed;
-        _previousKeyM = isKeyMPressed;
-
         _ecsWorld.Progress(deltaTime);
         return true;
     }

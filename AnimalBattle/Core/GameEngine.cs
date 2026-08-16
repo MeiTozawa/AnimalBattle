@@ -126,6 +126,19 @@ public static class GameEngine
     }
 
     /// <summary>
+    /// 円を画面上に描画します。
+    /// </summary>
+    /// <param name="x">中心 X 座標</param>
+    /// <param name="y">中心 Y 座標</param>
+    /// <param name="radius">半径 (px)</param>
+    /// <param name="color">描画カラー (ARGB)</param>
+    /// <param name="fill">塗りつぶすかどうか</param>
+    public static void DrawCircle(int x, int y, int radius, uint color, bool fill)
+    {
+        NativeBindings.Draw_Circle(x, y, radius, color, fill);
+    }
+
+    /// <summary>
     /// 矩形（ボックス）を画面上に描画します。
     /// </summary>
     /// <param name="x1">左上 X 座標</param>

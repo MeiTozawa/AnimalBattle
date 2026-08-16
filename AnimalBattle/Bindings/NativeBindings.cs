@@ -106,6 +106,10 @@ internal static unsafe partial class NativeBindings
 
     #region Drawing
 
+    [LibraryImport(_dllName, EntryPoint = "Draw_Circle")]
+    [SuppressGCTransition]
+    public static partial void Draw_Circle(int x, int y, int radius, uint color, [MarshalAs(UnmanagedType.U1)] bool fill);
+
     [LibraryImport(_dllName, EntryPoint = "Draw_Box")]
     [SuppressGCTransition]
     public static partial void Draw_Box(int x1, int y1, int x2, int y2, uint color, [MarshalAs(UnmanagedType.U1)] bool fill);

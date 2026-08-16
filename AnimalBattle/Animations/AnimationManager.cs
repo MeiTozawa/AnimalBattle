@@ -163,22 +163,30 @@ public sealed class AnimationManager : IDisposable
 
     private static string ResolveAssetPath(string relPath)
     {
-        string[] candidates =
-        [
-            Path.Combine(AppContext.BaseDirectory, relPath),
-            Path.Combine(AppContext.BaseDirectory, "Resource", relPath),
-            Path.Combine(Directory.GetCurrentDirectory(), relPath),
-            Path.Combine(Directory.GetCurrentDirectory(), "Resource", relPath),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Resource", relPath),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Resource", relPath),
-        ];
-
-        foreach (string p in candidates)
+        try
         {
-            if (File.Exists(p))
+            DirectoryInfo? dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+            while (dir != null)
             {
-                return Path.GetFullPath(p);
+                if (File.Exists(Path.Combine(dir.FullName, "AnimalBattle.sln")))
+                {
+                    string directCandidate = Path.Combine(dir.FullName, "Resource", relPath);
+                    if (File.Exists(directCandidate))
+                    {
+                        return Path.GetFullPath(directCandidate);
+                    }
+
+                    string altCandidate = Path.Combine(dir.FullName, relPath);
+                    if (File.Exists(altCandidate))
+                    {
+                        return Path.GetFullPath(altCandidate);
+                    }
+                }
+                dir = dir.Parent;
             }
+        }
+        catch
+        {
         }
 
         return relPath;
