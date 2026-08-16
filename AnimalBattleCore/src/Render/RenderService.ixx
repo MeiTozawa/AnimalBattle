@@ -36,6 +36,8 @@ namespace ab {
         explicit RenderService(int width, int height, Backend backend)
             : viewport_width_(width), viewport_height_(height), backend_(std::move(backend)) {}
 
+        Backend& GetBackend() { return backend_; }
+
         /// @brief スレッドセーフに描画コマンドを書き込みバッファに積む (C# 逻辑スレッドから非同期呼び出し可能)
         void PushCommand(RenderCommand cmd) {
             std::lock_guard<std::mutex> lock(queue_mutex_);
@@ -72,7 +74,7 @@ namespace ab {
                         p_draw.x = static_cast<int>((c.p.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
                         p_draw.y = static_cast<int>((c.p.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
                     }
-                    backend_.DrawString(p_draw, c.text, c.color);
+                    backend_.DrawString(p_draw, c.text.c_str(), c.color);
                 },
                 [this](const DrawBoxCmd& c) {
                     Rect<int> r_draw = c.r;
@@ -166,9 +168,9 @@ namespace ab {
                         break;
                     }
 
-                    const int draw_x = (r_draw.x1 + r_draw.x2) / 2 - backend_.GetDrawStringWidth(c.text) / 2;
+                    const int draw_x = (r_draw.x1 + r_draw.x2) / 2 - backend_.GetDrawStringWidth(c.text.c_str()) / 2;
                     const int draw_y = (r_draw.y1 + r_draw.y2) / 2 - backend_.GetFontSize() / 2;
-                    backend_.DrawString(Point<int>{draw_x, draw_y}, c.text, c.text_color);
+                    backend_.DrawString(Point<int>{draw_x, draw_y}, c.text.c_str(), c.text_color);
                 },
                 [this](const DrawGraphCmd& c) {
                     Point<int> p_draw = c.p;

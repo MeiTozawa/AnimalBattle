@@ -13,8 +13,8 @@ namespace ab {
     export template <typename T>
     concept RenderCommandConcept = std::is_object_v<T>;
 
-    /// @brief レンジリングバックエンドが満たすべき C++20 Concept
-    /// 原子描画プリミティブ、状態変更、情報取得メソッド群の型安全性と const 正当性を厳密に検証
+    /// @brief レンダーバックエンド / レンダラーが満たすべき C++20 Concept
+    /// オブジェクト指向の仮想継承 (IRenderer) を使用せず、静的多態 (Concepts / Templates) で描画能力を検証
     export template <typename T>
     concept RenderBackendConcept = requires(
         T b,
@@ -24,7 +24,6 @@ namespace ab {
         const wchar_t* text,
         uint32_t color,
         bool flag,
-        int corner_radius,
         int handle,
         double ext_rate,
         double angle,
@@ -37,13 +36,12 @@ namespace ab {
         { const_b.GetFontSize() } -> std::same_as<int>;
         { const_b.GetDrawStringWidth(text) } -> std::same_as<int>;
 
-        // 原子描画プリミティブ（const）
-        { const_b.DrawString(p_int, text, color) } -> std::same_as<void>;
-        { const_b.DrawBox(r_int, color, flag) } -> std::same_as<void>;
-        { const_b.DrawRoundRect(r_int, corner_radius, corner_radius, color, flag) } -> std::same_as<void>;
-        { const_b.DrawGraph(p_int, handle, flag) } -> std::same_as<void>;
-        { const_b.DrawRotaGraph(p_int, ext_rate, angle, handle, flag) } -> std::same_as<void>;
-        { const_b.DrawRectRotaGraph(p_int, r_int, ext_rate, angle, handle, flag, flag) } -> std::same_as<void>;
+        // 描画プリミティブ
+        { b.DrawString(p_int, text, color) } -> std::same_as<void>;
+        { b.DrawBox(r_int, color, flag) } -> std::same_as<void>;
+        { b.DrawGraph(p_int, handle, flag) } -> std::same_as<void>;
+        { b.DrawRotaGraph(p_int, ext_rate, angle, handle, flag) } -> std::same_as<void>;
+        { b.DrawRectRotaGraph(p_int, r_int, ext_rate, angle, handle, flag, flag) } -> std::same_as<void>;
 
         // 状態変更
         { b.SetDrawBlendMode(blend_mode, pal) } -> std::same_as<void>;

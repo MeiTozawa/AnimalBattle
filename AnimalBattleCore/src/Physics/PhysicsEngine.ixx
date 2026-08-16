@@ -208,6 +208,10 @@ namespace ab {
             obj->hitstun_timer = std::clamp(raw_hitstun, hitstun_base_seconds_, hitstun_max_seconds_);
         }
 
+        void SetGravity(float gx, float gy) noexcept { gravity_x_ = gx; gravity_y_ = gy; }
+        float GetGravityX() const noexcept { return gravity_x_; }
+        float GetGravityY() const noexcept { return gravity_y_; }
+
         void SetKnockbackDecay(float decay) { knockback_decay_ = decay; }
         void SetMaxDeltaTime(float max_dt) { max_delta_time_ = max_dt; }
         void SetKnockbackParams(float weight_offset, float damage_scale_1, float damage_scale_2,
@@ -227,6 +231,8 @@ namespace ab {
         void Step(float delta_time);
 
     private:
+        float gravity_x_ = 0.0f;
+        float gravity_y_ = 980.0f;
         float knockback_decay_ = 400.0f;
         float max_delta_time_ = 0.1f;
         float knockback_weight_offset_ = 100.0f;

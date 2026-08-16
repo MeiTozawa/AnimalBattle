@@ -2,6 +2,7 @@ module;
 
 #include <cstdint>
 #include <concepts>
+#include <string>
 #include <variant>
 
 export module RenderTypes;
@@ -15,7 +16,7 @@ namespace ab {
 
     export template <typename T>
     requires std::integral<T> || std::floating_point<T>
-    struct Vec2 {
+    struct Point {
         T x;
         T y;
 
@@ -23,7 +24,11 @@ namespace ab {
     };
 
     export template <typename T>
-    using Point = Vec2<T>;
+    requires std::integral<T> || std::floating_point<T>
+    struct Vec2 {
+        T x;
+        T y;
+    };
 
     export template <typename T>
     requires std::integral<T> || std::floating_point<T>
@@ -56,7 +61,7 @@ namespace ab {
 
     template <typename T>
     requires std::integral<T> || std::floating_point<T>
-    constexpr bool Vec2<T>::In(const Rect<T>& r) const {
+    constexpr bool Point<T>::In(const Rect<T>& r) const {
         return x >= r.x1 && x <= r.x2 && y >= r.y1 && y <= r.y2;
     }
 
@@ -93,7 +98,7 @@ namespace ab {
 
     export struct DrawStringCmd {
         Point<int> p;
-        const wchar_t* text;
+        std::wstring text;
         uint32_t color;
     };
 
@@ -118,7 +123,7 @@ namespace ab {
 
     export struct DrawStringWithBorderCmd {
         Rect<int> r;
-        const wchar_t* text;
+        std::wstring text;
         BorderShape shape;
         uint32_t text_color;
         uint32_t border_color;
