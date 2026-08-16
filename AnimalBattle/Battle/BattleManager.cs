@@ -7,20 +7,20 @@ using AnimalBattle.Inputs;
 using AnimalBattle.Stages;
 
 namespace AnimalBattle.Battle;
-
 /// <summary>
 /// 対戦バトルにおける動的プレイヤー群 (1～4人) の生成、物理状態同期、入力伝達、ヒット判定、および撃墜判定を管理するクラス。
 /// </summary>
 public class BattleManager
 {
-    private readonly List<Character> _players = [];
     private static readonly (uint Color, uint Border)[] _playerColors =
     [
-        (0xFF3498DB, 0xFF2980B9), // P1: Blue
-        (0xFF9B59B6, 0xFF8E44AD), // P2: Purple
-        (0xFFE74C3C, 0xFFC0392B), // P3: Red
-        (0xFF2ECC71, 0xFF27AE60)  // P4: Green
+        (0xFF3498DB, 0xFF2980B9), // P1: 青
+        (0xFF9B59B6, 0xFF8E44AD), // P2: 紫
+        (0xFFE74C3C, 0xFFC0392B), // P3: 赤
+        (0xFF2ECC71, 0xFF27AE60)  // P4: 緑
     ];
+
+    private readonly List<Character> _players = [];
 
     /// <summary>
     /// 現在参戦中のプレイヤーリストを取得します。
@@ -50,8 +50,8 @@ public class BattleManager
 
         for (int i = 1; i <= playerCount; i++)
         {
-            var (color, border) = _playerColors[(i - 1) % _playerColors.Length];
-            var character = new Character(
+            (uint color, uint border) = _playerColors[(i - 1) % _playerColors.Length];
+            Character character = new Character(
                 playerIndex: i,
                 name: $"Player {i}",
                 mainColor: color,
@@ -78,7 +78,7 @@ public class BattleManager
     {
         for (int i = 0; i < _players.Count; i++)
         {
-            var player = _players[i];
+            Character player = _players[i];
             physics.RemoveObject(player.PhysicsObjectId);
 
             Point<float> spawn = newMap.GetSpawnPosition(player.PlayerIndex);
@@ -98,54 +98,54 @@ public class BattleManager
     public void Update(PhysicsEngine physics, InputManager input, MapData currentMap, float deltaTime)
     {
         int count = _players.Count;
-        if (count == 0) return;
+        if (count == 0)
+        {
+            return;
+        }
 
         Span<NativePhysicsObject> pObjs = stackalloc NativePhysicsObject[count];
 
-        // 1. 各プレイヤーの物理状態の取得
+        UpdatePlayerInputsAndStates(physics, input, deltaTime, pObjs);
+        StepPhysicsSimulation(physics, pObjs);
+        ProcessBlastZoneCheck(physics, currentMap, pObjs);
+        ProcessHitboxCollisions(physics, pObjs);
+    }
+
+    private void UpdatePlayerInputsAndStates(PhysicsEngine physics, InputManager input, float deltaTime, Span<NativePhysicsObject> pObjs)
+    {
+        int count = _players.Count;
         for (int i = 0; i < count; i++)
         {
             physics.GetObjectState(_players[i].PhysicsObjectId, out pObjs[i]);
-        }
-
-        // 2. 入力判定およびステートマシンの更新
-        for (int i = 0; i < count; i++)
-        {
-            var player = _players[i];
+            Character player = _players[i];
             player.StateMachine.Update(ref pObjs[i], input, player.PlayerIndex, player.Config, deltaTime);
+            physics.SetObjectState(player.PhysicsObjectId, in pObjs[i]);
         }
+    }
 
-        // 3. 更新された物理状態を Native エンジンに書き戻し
-        for (int i = 0; i < count; i++)
-        {
-            physics.SetObjectState(_players[i].PhysicsObjectId, in pObjs[i]);
-        }
+    private void StepPhysicsSimulation(PhysicsEngine physics, Span<NativePhysicsObject> pObjs)
+    {
+        int count = _players.Count;
+        physics.Step(0.016f); // 物理シミュレーションステップ実行
 
-        // 4. 物理エンジンの 1 ステップ進める
-        physics.Step(deltaTime);
-
-        // 5. 物理ステップ後の最新状態を再取得
         for (int i = 0; i < count; i++)
         {
             physics.GetObjectState(_players[i].PhysicsObjectId, out pObjs[i]);
-        }
-
-        // 6. 着地判定および足場衝突応答
-        for (int i = 0; i < count; i++)
-        {
             _players[i].StateMachine.HandleCollisions(ref pObjs[i]);
-        }
-
-        for (int i = 0; i < count; i++)
-        {
             physics.SetObjectState(_players[i].PhysicsObjectId, in pObjs[i]);
         }
+    }
 
-        // 7. バーストゾーン脱落判定およびリスポーン
+    private void ProcessBlastZoneCheck(PhysicsEngine physics, MapData currentMap, Span<NativePhysicsObject> pObjs)
+    {
+        int count = _players.Count;
         Rect<float> blastZone = currentMap.BlastZone;
+
         for (int i = 0; i < count; i++)
         {
-            var player = _players[i];
+            Character player = _players[i];
+
+
             if (!blastZone.Contains(pObjs[i].X, pObjs[i].Y))
             {
                 if (player.StockCount > 0)
@@ -161,11 +161,17 @@ public class BattleManager
                 Console.WriteLine($"[撃墜!] {player.Name} が {currentMap.Name} で撃墜されました！（残りストック: {player.StockCount}）");
             }
 
-            // 8. 移動速度に応じた向き (FacingLeft) 更新
-            if (pObjs[i].Vx < -5.0f) player.FacingLeft = true;
-            else if (pObjs[i].Vx > 5.0f) player.FacingLeft = false;
 
-            // 9. Hitbox アクティブ状態の設定
+            if (pObjs[i].Vx < -5.0f)
+            {
+                player.FacingLeft = true;
+            }
+            else if (pObjs[i].Vx > 5.0f)
+            {
+                player.FacingLeft = false;
+            }
+
+
             bool isAttacking = player.StateMachine is { State: CharacterState.Attacking, AttackTimer: > 0.10f };
             if (isAttacking && !player.Hitbox.IsActive)
             {
@@ -173,18 +179,27 @@ public class BattleManager
             }
             player.Hitbox.IsActive = isAttacking;
         }
+    }
 
-        // 10. 多対多 (All-vs-All) Hitbox vs Hurtbox 相互当たり判定
+    private void ProcessHitboxCollisions(PhysicsEngine physics, Span<NativePhysicsObject> pObjs)
+    {
+        int count = _players.Count;
         for (int attackerIdx = 0; attackerIdx < count; attackerIdx++)
         {
-            var attacker = _players[attackerIdx];
-            if (!attacker.Hitbox.IsActive) continue;
+            Character attacker = _players[attackerIdx];
+            if (!attacker.Hitbox.IsActive)
+            {
+                continue;
+            }
 
             for (int defenderIdx = 0; defenderIdx < count; defenderIdx++)
             {
-                if (attackerIdx == defenderIdx) continue; // 自分自身にはヒットしない
+                if (attackerIdx == defenderIdx)
+                {
+                    continue;
+                }
 
-                var defender = _players[defenderIdx];
+                Character defender = _players[defenderIdx];
                 if (attacker.Hitbox.Intersects(
                     defender.Hurtbox,
                     pObjs[attackerIdx].X, pObjs[attackerIdx].Y, attacker.FacingLeft,
