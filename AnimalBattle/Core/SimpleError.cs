@@ -1,7 +1,6 @@
 using System;
 
 namespace AnimalBattle.Core;
-
 /// <summary>
 /// 失敗時のエラー情報（説明およびエラー種別）を保持するレコード構造体。
 /// </summary>
@@ -38,25 +37,4 @@ public readonly record struct SimpleError(string Description, ErrorType Type)
     {
         return new SimpleError(ex.Message, ErrorType.SystemException);
     }
-}
-
-/// <summary>
-/// エラーの種別を定義する列挙型。
-/// </summary>
-public enum ErrorType
-{
-    /// <summary>
-    /// システム例外が発生したことを示します。
-    /// </summary>
-    SystemException,
-
-    /// <summary>
-    /// 入力パラメータや状態が無効であることを示します。
-    /// </summary>
-    NotValid,
-
-    /// <summary>
-    /// 指定されたリソースやファイルが見つからないことを示します。
-    /// </summary>
-    NotFound
 }

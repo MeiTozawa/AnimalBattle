@@ -36,7 +36,7 @@ public readonly record struct Result<T>
     public bool IsOk { get; }
 
     /// <summary>
-    /// 成功状態の <see cref="Result{T, E}"/> インスタンスを生成します。
+    /// 成功状態の <see cref="Result{T}"/> インスタンスを生成します。
     /// </summary>
     /// <param name="value">成功時の値</param>
     /// <returns>成功の Result インスタンス</returns>
@@ -46,7 +46,7 @@ public readonly record struct Result<T>
     }
 
     /// <summary>
-    /// 失敗状態の <see cref="Result{T, E}"/> インスタンスを生成します。
+    /// 失敗状態の <see cref="Result{T}"/> インスタンスを生成します。
     /// </summary>
     /// <param name="error">失敗時のエラー情報</param>
     /// <returns>失敗の Result インスタンス</returns>
@@ -54,7 +54,7 @@ public readonly record struct Result<T>
     {
         return new Result<T>(error);
     }
-    
+
     public static implicit operator Result<T>(T value) => new(value);
 
     public static implicit operator Result<T>(SimpleError error) => new(error);

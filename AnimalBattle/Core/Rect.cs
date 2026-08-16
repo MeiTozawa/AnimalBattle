@@ -1,5 +1,6 @@
-namespace AnimalBattle.Core;
+using System;
 
+namespace AnimalBattle.Core;
 /// <summary>
 /// 2次元の矩形領域（左、上、右、下 / X1, Y1, X2, Y2）を表す汎用構造体。
 /// </summary>
@@ -60,6 +61,44 @@ public struct Rect<T> where T : struct
     {
         readonly get => Bottom;
         set => Bottom = value;
+    }
+
+    /// <summary>
+    /// 矩形の幅 (Right - Left) を取得します。
+    /// </summary>
+    public readonly T Width
+    {
+        get
+        {
+            if (typeof(T) == typeof(int))
+            {
+                return (T)(object)(Convert.ToInt32(Right) - Convert.ToInt32(Left));
+            }
+            if (typeof(T) == typeof(float))
+            {
+                return (T)(object)(Convert.ToSingle(Right) - Convert.ToSingle(Left));
+            }
+            return Right;
+        }
+    }
+
+    /// <summary>
+    /// 矩形の高さ (Bottom - Top) を取得します。
+    /// </summary>
+    public readonly T Height
+    {
+        get
+        {
+            if (typeof(T) == typeof(int))
+            {
+                return (T)(object)(Convert.ToInt32(Bottom) - Convert.ToInt32(Top));
+            }
+            if (typeof(T) == typeof(float))
+            {
+                return (T)(object)(Convert.ToSingle(Bottom) - Convert.ToSingle(Top));
+            }
+            return Bottom;
+        }
     }
 
     /// <summary>
