@@ -2,7 +2,6 @@ using System;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Characters;
-
 /// <summary>
 /// キャラクターの移動、物理演算、Hitbox / Hurtbox 判定パラメータを保持する設定クラス。
 /// TOML 設定ファイルからの動的読み込みに対応します。
@@ -109,8 +108,6 @@ public class CharacterConfig
     /// </summary>
     public float Weight { get; set; } = 100.0f;
 
-    // --- Hurtbox (喰らい/受撃判定ボックス) 設定 ---
-
     /// <summary>
     /// Hurtbox の X 軸相対オフセットを取得または設定します。
     /// </summary>
@@ -130,8 +127,6 @@ public class CharacterConfig
     /// Hurtbox の高さ（ピクセル）を取得または設定します。
     /// </summary>
     public float HurtboxHeight { get; set; } = 60.0f;
-
-    // --- Hitbox (攻撃判定ボックス) 設定 ---
 
     /// <summary>
     /// Hitbox の X 軸相対オフセットを取得または設定します。

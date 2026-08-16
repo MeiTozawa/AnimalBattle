@@ -2,13 +2,13 @@ using System;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Characters;
-
 /// <summary>
-/// プレイヤーキャラクターの基本情報およびコンポーネント（物理、Hitbox、Hurtbox、ステートマシン）を保持するコンポジションクラス。
+/// プレイヤーキャラクターの基本情報およびコンポーネント（物理、Hitbox、Hurtbox、ステートマシン）を保持するクラス。
 /// </summary>
 public class Character
 {
     private int _teamId;
+    private bool _facingLeft;
 
     /// <summary>
     /// プレイヤーのインデックス（1～4）を取得します。
@@ -84,7 +84,11 @@ public class Character
     /// <summary>
     /// キャラクターが左を向いているかどうかの向き状態を取得または設定します。
     /// </summary>
-    public bool FacingLeft { get; set; }
+    public bool FacingLeft
+    {
+        get => _facingLeft;
+        set => _facingLeft = value;
+    }
 
     /// <summary>
     /// キャラクターの状態遷移マシンを取得します。
@@ -132,12 +136,13 @@ public class Character
         PlayerType = playerType;
         StockCount = stockCount;
         Score = 0;
-        FacingLeft = facingLeft ?? (playerIndex % 2 == 0); // 偶数プレイヤー (P2, P4) はデフォルトで左向き
 
-        var configResult = CharacterConfig.LoadFromFile(configPath);
+        _facingLeft = facingLeft ?? (playerIndex % 2 == 0);
+
+        Result<ConfigBase<CharacterConfig>> configResult = CharacterConfig.LoadFromFile(configPath);
         ConfigHolder = configResult.IsOk ? configResult.Value! : new ConfigBase<CharacterConfig>();
 
-        // コンポジション：TOML設定パラメータに基づく Hurtbox と Hitbox の動的生成
+
         Hurtbox = new Hurtbox(
             ownerIndex: playerIndex,
             offsetX: Config.HurtboxOffsetX,
