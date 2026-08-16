@@ -1,37 +1,29 @@
-using System.Runtime.InteropServices;
+using System;
+using AnimalBattle.Bindings;
 
 namespace AnimalBattle.Core;
-
 /// <summary>
-/// 画像テクスチャ等のアセットの読み込みおよび解放操作を提供する静的クラス。
+/// スプライト画像リソースのロードおよびメモリ解放を管理するマネージャークラス。
 /// </summary>
-public static partial class AssetManager
+public static class AssetManager
 {
-    private const string _dllName = "AnimalBattleCore.dll";
-
     /// <summary>
-    /// 画像ファイルを読み込み、グラフィックハンドルを取得します。
+    /// 画像ファイルを指定してスプライトグラフィックハンドルをロードします。
     /// </summary>
-    /// <param name="path">画像ファイルパス</param>
+    /// <param name="filePath">画像ファイルパス</param>
     /// <returns>グラフィックハンドル（失敗時は -1）</returns>
-    public static int LoadGraph(string path)
+    public static int LoadGraph(string filePath)
     {
-        return NativeLoadGraph(path);
+        return NativeBindings.Engine_LoadGraph(filePath);
     }
 
     /// <summary>
-    /// 読み込まれたグラフィックハンドルを解放します。
+    /// ロード済みのグラフィックハンドルを解放・削除します。
     /// </summary>
-    /// <param name="handle">グラフィックハンドル</param>
-    /// <returns>成功時は 0</returns>
+    /// <param name="handle">画像ハンドル</param>
+    /// <returns>成功時 0、失敗時 -1</returns>
     public static int DeleteGraph(int handle)
     {
-        return NativeDeleteGraph(handle);
+        return NativeBindings.Engine_DeleteGraph(handle);
     }
-
-    [LibraryImport(_dllName, EntryPoint = "Engine_LoadGraph", StringMarshalling = StringMarshalling.Utf16)]
-    private static partial int NativeLoadGraph(string path);
-
-    [LibraryImport(_dllName, EntryPoint = "Engine_DeleteGraph")]
-    private static partial int NativeDeleteGraph(int handle);
 }

@@ -1,182 +1,89 @@
 using System;
-using System.Runtime.InteropServices;
+using AnimalBattle.Bindings;
 
 namespace AnimalBattle.Core;
-
 /// <summary>
-/// Native C++ 側の <c>AnimationPlayer</c> インスタンスを安全に保持・操作する C# ラッパークラス。
-/// スプライトシートアニメーションの再生制御とパラメータ伝達を担当します。
+/// Native C++ アニメーションプレイヤー (AnimalBattleCore.dll) を P/Invoke 経由で操作し、
+/// クリップ管理、フレームタイマー進行、および UV 切り出し矩形計算を提供するクラス。
 /// </summary>
-public sealed partial class AnimationPlayer : IDisposable
+public class AnimationPlayer : IDisposable
 {
-    private const string _dllName = "AnimalBattleCore.dll";
-
-    private IntPtr _nativePtr;
+    private IntPtr _nativePlayer;
     private bool _isDisposed;
 
     /// <summary>
-    /// 新しい <see cref="AnimationPlayer"/> インスタンスを生成します。
+    /// <see cref="AnimationPlayer"/> の新しいインスタンスを初期化し、Native プレイヤーオブジェクトを生成します。
     /// </summary>
     public AnimationPlayer()
     {
-        _nativePtr = NativeAnimationPlayerCreate();
-        if (_nativePtr == IntPtr.Zero)
-        {
-            throw new InvalidOperationException("Native C++ AnimationPlayer のインスタンス生成に失敗しました。");
-        }
+        _nativePlayer = NativeBindings.AnimationPlayer_Create();
     }
 
     /// <summary>
-    /// デストラクタ。アンマネージリソースを破棄します。
+    /// アニメーションクリップを登録します。
     /// </summary>
-    ~AnimationPlayer()
+    /// <param name="name">クリップ名</param>
+    /// <param name="startFrame">開始コマインデックス</param>
+    /// <param name="endFrame">終了コマインデックス</param>
+    /// <param name="frameWidth">1コマの幅 (px)</param>
+    /// <param name="frameHeight">1コマの高さ (px)</param>
+    /// <param name="fps">再生フレームレート (FPS)</param>
+    /// <param name="isLooping">ループ再生するかどうか</param>
+    public void AddClip(string name, int startFrame, int endFrame, int frameWidth, int frameHeight, float fps = 6.0f, bool isLooping = true)
     {
-        Dispose(false);
+        NativeBindings.AnimationPlayer_AddClip(_nativePlayer, name, startFrame, endFrame, frameWidth, frameHeight, fps, isLooping);
     }
 
     /// <summary>
-    /// 非ループアニメーションが再生完了したかを取得します。
+    /// 指定されたクリップ名の再生を開始します。
     /// </summary>
-    public bool IsFinished => NativeAnimationPlayerIsFinished(_nativePtr);
-
-    /// <summary>
-    /// 現在表示中のコマインデックス (0 開始) を取得します。
-    /// </summary>
-    public int CurrentFrameIndex => NativeAnimationPlayerGetCurrentFrameIndex(_nativePtr);
-
-    /// <summary>
-    /// スプライトシートの格子状領域から指定フレーム範囲のアニメーションクリップを登録します。
-    /// </summary>
-    public void AddGridClip(string name, int row, int startFrame, int endFrame, int frameWidth, int frameHeight, float fps = 10.0f, bool isLooping = true)
+    /// <param name="name">再生するクリップ名</param>
+    public void Play(string name)
     {
-        NativeAnimationPlayerAddGridClip(_nativePtr, name, row, startFrame, endFrame, frameWidth, frameHeight, fps, isLooping);
+        NativeBindings.AnimationPlayer_Play(_nativePlayer, name);
     }
 
     /// <summary>
-    /// 指定された名前のアニメーション再生を開始します。
-    /// </summary>
-    public bool Play(string name, bool restartIfSame = false)
-    {
-        return NativeAnimationPlayerPlay(_nativePtr, name, restartIfSame);
-    }
-
-    /// <summary>
-    /// アニメーション再生を一時停止します。
-    /// </summary>
-    public void Pause()
-    {
-        NativeAnimationPlayerPause(_nativePtr);
-    }
-
-    /// <summary>
-    /// 一時停止中のアニメーション再生を再開します。
-    /// </summary>
-    public void Resume()
-    {
-        NativeAnimationPlayerResume(_nativePtr);
-    }
-
-    /// <summary>
-    /// アニメーション再生を停止し、最初のフレームにリセットします。
+    /// アニメーションの再生を停止します。
     /// </summary>
     public void Stop()
     {
-        NativeAnimationPlayerStop(_nativePtr);
+        NativeBindings.AnimationPlayer_Stop(_nativePlayer);
     }
 
     /// <summary>
-    /// 時間の経過に応じて C++ ネイティブアニメーションの状態を更新します。
+    /// アニメーションの進行時間をデルタタイム分進めます。
     /// </summary>
+    /// <param name="deltaTime">前フレームからの経過秒数</param>
     public void Update(float deltaTime)
     {
-        NativeAnimationPlayerUpdate(_nativePtr, deltaTime);
+        NativeBindings.AnimationPlayer_Update(_nativePlayer, deltaTime);
     }
 
     /// <summary>
-    /// 現在のアニメーションコマを指定された位置・パラメータで描画します。
+    /// 現在再生中のスプライトシート切り出し領域 (UV SrcRect) を取得します。
     /// </summary>
-    public void Draw(RenderService renderService, Point<int> position, int graphHandle, bool flipX = false, float scale = 1.0f, double angle = 0.0)
+    /// <returns>切り出し矩形</returns>
+    public Rect<int> GetCurrentSrcRect()
     {
-        NativeAnimationPlayerDraw(_nativePtr, renderService.NativePtr, position.X, position.Y, graphHandle, flipX, scale, angle);
+        NativeBindings.AnimationPlayer_GetCurrentSrcRect(_nativePlayer, out int l, out int t, out int r, out int b);
+        return new Rect<int>(l, t, r, b);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// ネイティブアニメーションプレイヤーリソースを解放します。
+    /// </summary>
     public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    private void Dispose(bool disposing)
     {
         if (!_isDisposed)
         {
-            if (_nativePtr != IntPtr.Zero)
+            if (_nativePlayer != IntPtr.Zero)
             {
-                NativeAnimationPlayerDestroy(_nativePtr);
-                _nativePtr = IntPtr.Zero;
+                NativeBindings.AnimationPlayer_Destroy(_nativePlayer);
+                _nativePlayer = IntPtr.Zero;
             }
             _isDisposed = true;
+            GC.SuppressFinalize(this);
         }
     }
-
-    [LibraryImport(_dllName, EntryPoint = "AnimationPlayer_Create")]
-    private static partial IntPtr NativeAnimationPlayerCreate();
-
-    [LibraryImport(_dllName, EntryPoint = "AnimationPlayer_Destroy")]
-    private static partial void NativeAnimationPlayerDestroy(IntPtr player);
-
-    [LibraryImport(_dllName, EntryPoint = "AnimationPlayer_AddGridClip", StringMarshalling = StringMarshalling.Utf16)]
-    private static partial void NativeAnimationPlayerAddGridClip(
-        IntPtr player,
-        string name,
-        int row,
-        int startFrame,
-        int endFrame,
-        int frameWidth,
-        int frameHeight,
-        float fps,
-        [MarshalAs(UnmanagedType.U1)] bool isLooping);
-
-    [LibraryImport(_dllName, EntryPoint = "AnimationPlayer_Play", StringMarshalling = StringMarshalling.Utf16)]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    private static partial bool NativeAnimationPlayerPlay(IntPtr player, string name, [MarshalAs(UnmanagedType.U1)] bool restartIfSame);
-
-    [LibraryImport(_dllName, EntryPoint = "AnimationPlayer_Pause")]
-    [SuppressGCTransition]
-    private static partial void NativeAnimationPlayerPause(IntPtr player);
-
-    [LibraryImport(_dllName, EntryPoint = "AnimationPlayer_Resume")]
-    [SuppressGCTransition]
-    private static partial void NativeAnimationPlayerResume(IntPtr player);
-
-    [LibraryImport(_dllName, EntryPoint = "AnimationPlayer_Stop")]
-    [SuppressGCTransition]
-    private static partial void NativeAnimationPlayerStop(IntPtr player);
-
-    [LibraryImport(_dllName, EntryPoint = "AnimationPlayer_Update")]
-    [SuppressGCTransition]
-    private static partial void NativeAnimationPlayerUpdate(IntPtr player, float deltaTime);
-
-    [LibraryImport(_dllName, EntryPoint = "AnimationPlayer_Draw")]
-    [SuppressGCTransition]
-    private static partial void NativeAnimationPlayerDraw(
-        IntPtr player,
-        IntPtr service,
-        int posX,
-        int posY,
-        int graphHandle,
-        [MarshalAs(UnmanagedType.U1)] bool flipX,
-        float scale,
-        double angle);
-
-    [LibraryImport(_dllName, EntryPoint = "AnimationPlayer_IsFinished")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    private static partial bool NativeAnimationPlayerIsFinished(IntPtr player);
-
-    [LibraryImport(_dllName, EntryPoint = "AnimationPlayer_GetCurrentFrameIndex")]
-    [SuppressGCTransition]
-    private static partial int NativeAnimationPlayerGetCurrentFrameIndex(IntPtr player);
 }

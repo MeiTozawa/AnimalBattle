@@ -1,8 +1,6 @@
 using System;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Core;
-
 /// <summary>
 /// カメラの初期ビューポートおよび制御パラメータを保持する設定クラス。
 /// TOML 設定ファイルからの動的読み込みに対応します。

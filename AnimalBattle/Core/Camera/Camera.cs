@@ -1,191 +1,135 @@
-using System.Runtime.InteropServices;
+using System;
+using AnimalBattle.Bindings;
 
 namespace AnimalBattle.Core;
-
 /// <summary>
-/// Native C++ カメラモジュール (Camera) のライフサイクル、P/Invoke バインディング、および制御操作をカプセル化する C# クラス。
+/// Native C++ カメラノード (AnimalBattleCore.dll) を P/Invoke 経由で操作し、
+/// マルチプレイヤーのスムーズなターゲット追従およびズーム計算を管理するクラス。
 /// </summary>
-public unsafe partial class Camera : IDisposable
+public unsafe class Camera : IDisposable
 {
-    private const string _dllName = "AnimalBattleCore.dll";
-    private readonly IntPtr _nativePtr;
+    private IntPtr _nativeCamera;
     private bool _isDisposed;
 
+    /// <summary>カメラ中心 X 座標</summary>
+    public float X { get; set; }
+
+    /// <summary>カメラ中心 Y 座標</summary>
+    public float Y { get; set; }
+
+    /// <summary>カメラのズーム拡大率</summary>
+    public float Scale { get; set; } = 1.0f;
+
     /// <summary>
-    /// 指定された初期パラメータに基づき、新しい Native C++ カメラインスタンスを生成して初期化します。
+    /// カメラの初期設定コンテナを取得または設定します。
     /// </summary>
-    public Camera(
-        float x,
-        float y,
-        float scale,
-        float minScale,
-        float maxScale,
-        float lerpSpeed,
-        float paddingX,
-        float paddingY)
+    public ConfigBase<CameraConfig> ConfigHolder { get; set; }
+
+    /// <summary>
+    /// カメラパラメータ設定を取得します。
+    /// </summary>
+    public CameraConfig Config => ConfigHolder.Config;
+
+    /// <summary>
+    /// 指定された TOML ファイルパスからカメラ設定を読み込み、<see cref="Camera"/> の新しいインスタンスを初期化します。
+    /// </summary>
+    /// <param name="configPath">読み込む TOML ファイルパス</param>
+    public Camera(string configPath = "camera.toml")
     {
-        _nativePtr = NativeCameraCreate(x, y, scale, minScale, maxScale, lerpSpeed, paddingX, paddingY);
-        if (_nativePtr == IntPtr.Zero)
-        {
-            throw new InvalidOperationException("Native カメラの生成に失敗しました。");
-        }
+        Result<ConfigBase<CameraConfig>> configResult = CameraConfig.LoadFromFile(configPath);
+        ConfigHolder = configResult.IsOk ? configResult.Value! : new ConfigBase<CameraConfig>();
+
+        _nativeCamera = NativeBindings.Camera_Create(
+            640.0f, 360.0f, 1.0f,
+            Config.MinScale, Config.MaxScale, Config.LerpSpeed, Config.PaddingX, Config.PaddingY);
+
+        ConfigHolder.OnConfigReloaded += ApplyConfigToNative;
     }
 
     /// <summary>
-    /// <see cref="CameraConfig"/> 設定オブジェクトに基づき、新しい Native C++ カメラインスタンスを生成して初期化します。
+    /// デフォルト設定オブジェクトインスタンスで <see cref="Camera"/> を初期化します。
     /// </summary>
+    /// <param name="config">カメラ設定オブジェクト</param>
     public Camera(CameraConfig config)
     {
-        _nativePtr = NativeCameraCreate(
-            config.InitialX,
-            config.InitialY,
-            config.InitialScale,
-            config.MinScale,
-            config.MaxScale,
-            config.LerpSpeed,
-            config.PaddingX,
-            config.PaddingY);
+        ConfigHolder = new ConfigBase<CameraConfig>(config);
 
-        if (_nativePtr == IntPtr.Zero)
+        _nativeCamera = NativeBindings.Camera_Create(
+            640.0f, 360.0f, 1.0f,
+            Config.MinScale, Config.MaxScale, Config.LerpSpeed, Config.PaddingX, Config.PaddingY);
+
+        ConfigHolder.OnConfigReloaded += ApplyConfigToNative;
+    }
+
+    /// <summary>
+    /// カメラ設定パラメータを Native C++ カメラノードへ同期・反映します。
+    /// </summary>
+    public void ApplyConfigToNative()
+    {
+        if (_nativeCamera == IntPtr.Zero)
         {
-            throw new InvalidOperationException("Native カメラの生成に失敗しました。");
+            return;
         }
+
+        NativeBindings.Camera_SetConfig(
+            _nativeCamera,
+            Config.MinScale,
+            Config.MaxScale,
+            Config.LerpSpeed,
+            Config.PaddingX,
+            Config.PaddingY);
     }
 
     /// <summary>
-    /// 既存の Native C++ カメラポインタを指定して初期化します。
+    /// カメラの中心座標および拡大率を即座にリセットします。
     /// </summary>
-    public Camera(IntPtr nativePtr)
+    /// <param name="x">リセット中心 X 座標</param>
+    /// <param name="y">リセット中心 Y 座標</param>
+    /// <param name="scale">リセット拡大率</param>
+    public void Reset(float x = 640.0f, float y = 360.0f, float scale = 1.0f)
     {
-        _nativePtr = nativePtr;
+        NativeBindings.Camera_Reset(_nativeCamera, x, y, scale);
+        X = x;
+        Y = y;
+        Scale = scale;
     }
 
     /// <summary>
-    /// デストラクタ
+    /// 複数のターゲットプレイヤー座標を追従するようにカメラ位置とズーム倍率を更新します。
     /// </summary>
-    ~Camera()
+    /// <param name="deltaTime">前フレームからの経過秒数</param>
+    /// <param name="targets">追従対象の座標配列</param>
+    /// <param name="viewportWidth">ビューポート幅</param>
+    /// <param name="viewportHeight">ビューポート高さ</param>
+    public void Update(float deltaTime, ReadOnlySpan<Point<float>> targets, float viewportWidth = 1280.0f, float viewportHeight = 720.0f)
     {
-        Dispose(false);
-    }
-
-    /// <summary>
-    /// 内部で保持している Native C++ カメラポインタを取得します。
-    /// </summary>
-    public IntPtr NativePtr => _nativePtr;
-
-    /// <summary>
-    /// カメラの位置およびズーム倍率を即座にリセット・強制設定します。
-    /// </summary>
-    public void Reset(float x, float y, float scale)
-    {
-        NativeCameraReset(_nativePtr, x, y, scale);
-    }
-
-    /// <summary>
-    /// 追従対象ターゲット群に基づき、カメラの位置とズーム倍率を更新します。
-    /// </summary>
-    public void Update(float deltaTime, ReadOnlySpan<Point<float>> targets, float viewportWidth, float viewportHeight)
-    {
-        fixed (Point<float>* pTargets = targets)
+        fixed (Point<float>* ptr = targets)
         {
-            NativeCameraUpdate(_nativePtr, deltaTime, pTargets, targets.Length, viewportWidth, viewportHeight);
+            NativeBindings.Camera_Update(_nativeCamera, deltaTime, ptr, targets.Length, viewportWidth, viewportHeight);
         }
+
+        float outX, outY, outScale;
+        NativeBindings.Camera_GetState(_nativeCamera, &outX, &outY, &outScale);
+        X = outX;
+        Y = outY;
+        Scale = outScale;
     }
 
     /// <summary>
-    /// 現在のカメラの表示位置 (X, Y) およびズームスケールを取得します。
-    /// </summary>
-    public (float X, float Y, float Scale) GetState()
-    {
-        float x = 0.0f;
-        float y = 0.0f;
-        float scale = 1.0f;
-        NativeCameraGetState(_nativePtr, &x, &y, &scale);
-        return (x, y, scale);
-    }
-
-    /// <summary>
-    /// 現在のカメラの表示位置 (X, Y) およびズームスケールを出力パラメータとして取得します。
-    /// </summary>
-    public void GetState(out float x, out float y, out float scale)
-    {
-        fixed (float* px = &x, py = &y, ps = &scale)
-        {
-            NativeCameraGetState(_nativePtr, px, py, ps);
-        }
-    }
-
-    /// <summary>
-    /// カメラの制御設定パラメータ（最小/最大スケール、補間速度、パディング）を設定します。
-    /// </summary>
-    public void SetConfig(float minScale, float maxScale, float lerpSpeed, float paddingX, float paddingY)
-    {
-        NativeCameraSetConfig(_nativePtr, minScale, maxScale, lerpSpeed, paddingX, paddingY);
-    }
-
-    /// <summary>
-    /// アンマネージドリソースを解放します。
+    /// ネイティブカメラリソースおよび設定コンテナを解放します。
     /// </summary>
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// リソース解放の保護仮想メソッド。
-    /// </summary>
-    protected virtual void Dispose(bool disposing)
-    {
         if (!_isDisposed)
         {
-            if (_nativePtr != IntPtr.Zero)
+            if (_nativeCamera != IntPtr.Zero)
             {
-                NativeCameraDestroy(_nativePtr);
+                NativeBindings.Camera_Destroy(_nativeCamera);
+                _nativeCamera = IntPtr.Zero;
             }
+            ConfigHolder.Dispose();
             _isDisposed = true;
+            GC.SuppressFinalize(this);
         }
     }
-
-    [LibraryImport(_dllName, EntryPoint = "Camera_Create")]
-    private static partial IntPtr NativeCameraCreate(
-        float x,
-        float y,
-        float scale,
-        float minScale,
-        float maxScale,
-        float lerpSpeed,
-        float paddingX,
-        float paddingY);
-
-    [LibraryImport(_dllName, EntryPoint = "Camera_Destroy")]
-    private static partial void NativeCameraDestroy(IntPtr camera);
-
-    [LibraryImport(_dllName, EntryPoint = "Camera_Reset")]
-    [SuppressGCTransition]
-    private static partial void NativeCameraReset(IntPtr camera, float x, float y, float scale);
-
-    [LibraryImport(_dllName, EntryPoint = "Camera_Update")]
-    [SuppressGCTransition]
-    private static partial void NativeCameraUpdate(
-        IntPtr camera,
-        float deltaTime,
-        Point<float>* targets,
-        int targetCount,
-        float viewportWidth,
-        float viewportHeight);
-
-    [LibraryImport(_dllName, EntryPoint = "Camera_GetState")]
-    [SuppressGCTransition]
-    private static partial void NativeCameraGetState(IntPtr camera, float* outX, float* outY, float* outScale);
-
-    [LibraryImport(_dllName, EntryPoint = "Camera_SetConfig")]
-    [SuppressGCTransition]
-    private static partial void NativeCameraSetConfig(
-        IntPtr camera,
-        float minScale,
-        float maxScale,
-        float lerpSpeed,
-        float paddingX,
-        float paddingY);
 }

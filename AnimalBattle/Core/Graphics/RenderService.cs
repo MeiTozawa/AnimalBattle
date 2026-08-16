@@ -1,112 +1,108 @@
 using System;
-using System.Runtime.InteropServices;
+using AnimalBattle.Bindings;
 
 namespace AnimalBattle.Core;
-
 /// <summary>
-/// Native C++ <c>RenderService</c> の P/Invoke バインディングおよび高レベル C# 描画 API を提供するラッパークラス。
+/// Native C++ 描画サービス (DxLib バックエンド) との高速インターフェースを提供するサービスラッパークラス。
 /// </summary>
-public partial class RenderService
+public class RenderService
 {
-    private const string _dllName = "AnimalBattleCore.dll";
-
     private readonly IntPtr _nativePtr;
 
     /// <summary>
-    /// 指定されたネイティブ C++ <c>IRenderService</c> インスタンスポインタを用いて <see cref="RenderService"/> の新しいインスタンスを初期化します。
+    /// Native 側の RenderService インスタンスポインタを指定して初期化します。
     /// </summary>
-    /// <param name="nativePtr">ネイティブポインタ</param>
+    /// <param name="nativePtr">Native C++ ポインタ</param>
     public RenderService(IntPtr nativePtr)
     {
         _nativePtr = nativePtr;
     }
 
     /// <summary>
-    /// 保持しているネイティブ C++ <c>IRenderService</c> ポインタを取得します。
+    /// カメラ座標系への追従変換を有効または無効にします。
     /// </summary>
-    public IntPtr NativePtr => _nativePtr;
-
-    /// <summary>
-    /// カメラ座標系の適用・無効化を切り替えます。
-    /// </summary>
+    /// <param name="enabled">カメラ追従を有効にするかどうか</param>
     public void SetCameraEnabled(bool enabled)
     {
-        NativeSetCameraEnabled(_nativePtr, enabled);
+        NativeBindings.Render_SetCameraEnabled(_nativePtr, enabled);
     }
 
     /// <summary>
-    /// カメラパラメータ（位置 X, Y、ズーム率）をレンダリングサービスに送信・同期します。
+    /// カメラの中心座標および拡大率を更新します。
     /// </summary>
-    public void SetCameraState(float x, float y, float zoom)
+    /// <param name="x">カメラ中心 X 座標</param>
+    /// <param name="y">カメラ中心 Y 座標</param>
+    /// <param name="scale">拡大率</param>
+    public void SetCameraState(float x, float y, float scale)
     {
-        NativeSetCameraState(_nativePtr, x, y, zoom);
+        NativeBindings.Render_SetCameraState(_nativePtr, x, y, scale);
     }
 
     /// <summary>
-    /// 指定されたパラメータで矩形を描画します。
+    /// 矩形（ボックス）を描画します。
     /// </summary>
-    public void DrawBox(Rect<int> rect, uint color, bool isFilled)
+    /// <param name="rect">描画矩形</param>
+    /// <param name="color">描画カラー (ARGB)</param>
+    /// <param name="fillFlag">塗りつぶすかどうか</param>
+    public void DrawBox(Rect<int> rect, uint color, bool fillFlag)
     {
-        NativeDrawBox(_nativePtr, rect, color, isFilled);
+        NativeBindings.Render_DrawBox(_nativePtr, rect, color, fillFlag);
     }
 
     /// <summary>
-    /// 指定されたパラメータで文字列を描画します。
+    /// 指定座標に文字列を描画します。
     /// </summary>
-    public void DrawString(Point<int> position, string text, uint color)
+    /// <param name="point">描画座標</param>
+    /// <param name="text">描画文字列</param>
+    /// <param name="color">描画カラー (ARGB)</param>
+    public void DrawString(Point<int> point, string text, uint color)
     {
-        NativeDrawString(_nativePtr, position, text, color);
+        NativeBindings.Render_DrawString(_nativePtr, point, text, color);
     }
 
     /// <summary>
-    /// 指定されたパラメータで枠線付き文字列を描画します。
+    /// 外枠ボーダー付きで文字列を描画します。
     /// </summary>
+    /// <param name="rect">描画領域矩形</param>
+    /// <param name="text">描画文字列</param>
+    /// <param name="shape">外枠形状 (Rectangle / RoundRect)</param>
+    /// <param name="textColor">文字カラー (ARGB)</param>
+    /// <param name="borderColor">ボーダーカラー (ARGB)</param>
     public void DrawStringWithBorder(Rect<int> rect, string text, BorderShape shape, uint textColor, uint borderColor)
     {
-        NativeDrawStringWithBorder(_nativePtr, rect, text, shape, textColor, borderColor);
+        NativeBindings.Render_DrawStringWithBorder(_nativePtr, rect, text, shape, textColor, borderColor);
     }
 
     /// <summary>
-    /// 指定された位置に画像スプライトを描画します。
+    /// 画像グラフィックを画面上に描画します。
     /// </summary>
-    public void DrawGraph(Point<int> position, int handle, bool transFlag = true)
+    /// <param name="point">描画座標</param>
+    /// <param name="handle">画像ハンドル</param>
+    /// <param name="transFlag">透過を有効にするかどうか</param>
+    public void DrawGraph(Point<int> point, int handle, bool transFlag)
     {
-        NativeDrawGraph(_nativePtr, position, handle, transFlag);
+        NativeBindings.Render_DrawGraph(_nativePtr, point, handle, transFlag);
     }
 
     /// <summary>
-    /// 指定された切り出し領域、拡大率、回転角度で画像スプライトを描画します。
+    /// スプライトシートから指定矩形を切り出し、回転・拡縮・左右反転を行って描画します。
     /// </summary>
-    public void DrawRectRotaGraph(Point<int> position, Rect<int> srcRect, double extRate, double angle, int graphHandle, bool transFlag = true, bool turnFlag = false)
+    /// <param name="point">描画中心座標</param>
+    /// <param name="src">切り出し領域</param>
+    /// <param name="extRate">拡大率</param>
+    /// <param name="angle">回転角度 (ラジアン)</param>
+    /// <param name="graphHandle">画像ハンドル</param>
+    /// <param name="transFlag">透過を有効にするかどうか</param>
+    /// <param name="turnFlag">左右反転描画を行うかどうか</param>
+    public void DrawRectRotaGraph(
+        Point<int> point,
+        Rect<int> src,
+        double extRate,
+        double angle,
+        int graphHandle,
+        bool transFlag,
+        bool turnFlag)
     {
-        NativeDrawRectRotaGraph(_nativePtr, position, srcRect, extRate, angle, graphHandle, transFlag, turnFlag);
+        NativeBindings.Render_DrawRectRotaGraph(_nativePtr, point, src, extRate, angle, graphHandle, transFlag, turnFlag);
     }
-
-    [LibraryImport(_dllName, EntryPoint = "Render_SetCameraEnabled")]
-    [SuppressGCTransition]
-    private static partial void NativeSetCameraEnabled(IntPtr service, [MarshalAs(UnmanagedType.U1)] bool enabled);
-
-    [LibraryImport(_dllName, EntryPoint = "Render_SetCameraState")]
-    [SuppressGCTransition]
-    private static partial void NativeSetCameraState(IntPtr service, float x, float y, float scale);
-
-    [LibraryImport(_dllName, EntryPoint = "Render_DrawBox")]
-    [SuppressGCTransition]
-    private static partial void NativeDrawBox(IntPtr service, Rect<int> r, uint color, [MarshalAs(UnmanagedType.U1)] bool fillFlag);
-
-    [LibraryImport(_dllName, EntryPoint = "Render_DrawString", StringMarshalling = StringMarshalling.Utf16)]
-    [SuppressGCTransition]
-    private static partial void NativeDrawString(IntPtr service, Point<int> p, string text, uint color);
-
-    [LibraryImport(_dllName, EntryPoint = "Render_DrawStringWithBorder", StringMarshalling = StringMarshalling.Utf16)]
-    [SuppressGCTransition]
-    private static partial void NativeDrawStringWithBorder(IntPtr service, Rect<int> r, string text, BorderShape shape, uint textColor, uint borderColor);
-
-    [LibraryImport(_dllName, EntryPoint = "Render_DrawGraph")]
-    [SuppressGCTransition]
-    private static partial void NativeDrawGraph(IntPtr service, Point<int> p, int handle, [MarshalAs(UnmanagedType.U1)] bool transFlag);
-
-    [LibraryImport(_dllName, EntryPoint = "Render_DrawRectRotaGraph")]
-    [SuppressGCTransition]
-    private static partial void NativeDrawRectRotaGraph(IntPtr service, Point<int> p, Rect<int> src, double extRate, double angle, int graphHandle, [MarshalAs(UnmanagedType.U1)] bool transFlag, [MarshalAs(UnmanagedType.U1)] bool turnFlag);
 }

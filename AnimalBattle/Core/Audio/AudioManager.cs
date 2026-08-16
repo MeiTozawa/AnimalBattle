@@ -1,55 +1,46 @@
-using System.Runtime.InteropServices;
+using System;
+using AnimalBattle.Bindings;
 
 namespace AnimalBattle.Core;
-
 /// <summary>
-/// 音声・SE・BGM の再生および制御操作を提供する静的クラス。
+/// 効果音および BGM のメモリ再生・音量変更を管理するマネージャークラス。
 /// </summary>
-public static partial class AudioManager
+public static class AudioManager
 {
-    private const string _dllName = "AnimalBattleCore.dll";
+    public const int DxPlayTypeNormal = 0;
+    public const int DxPlayTypeBack = 1;
+    public const int DxPlayTypeLoop = 2;
 
     /// <summary>
     /// メモリ上のサウンドハンドルを再生します。
     /// </summary>
     /// <param name="handle">サウンドハンドル</param>
-    /// <param name="playType">再生タイプ</param>
-    /// <param name="topPositionFlag">最初から再生する場合は true</param>
-    /// <returns>成功時は 0</returns>
-    public static int PlaySound(int handle, int playType, bool topPositionFlag = true)
+    /// <param name="playType">再生タイプ (DxPlayTypeNormal, DxPlayTypeBack, DxPlayTypeLoop)</param>
+    /// <param name="topPositionFlag">先頭から再生するかどうか</param>
+    /// <returns>成功時 0、失敗時 -1</returns>
+    public static int PlaySoundMem(int handle, int playType = DxPlayTypeBack, bool topPositionFlag = true)
     {
-        return NativePlaySoundMem(handle, playType, topPositionFlag);
+        return NativeBindings.Engine_PlaySoundMem(handle, playType, topPositionFlag);
     }
 
     /// <summary>
-    /// メモリ上のサウンド再生を停止します。
+    /// 再生中のサウンドを停止します。
     /// </summary>
     /// <param name="handle">サウンドハンドル</param>
-    public static void StopSound(int handle)
+    public static void StopSoundMem(int handle)
     {
-        NativeStopSoundMem(handle);
+        NativeBindings.Engine_StopSoundMem(handle);
     }
 
     /// <summary>
-    /// サウンドの音量を変更します。
+    /// サウンドハンドルの再生音量を変更します。
     /// </summary>
-    /// <param name="volumePercent">音量パーセンテージ (0-100)</param>
+    /// <param name="volumePercent">音量パーセンテージ (0～100)</param>
     /// <param name="handle">サウンドハンドル</param>
-    /// <returns>成功時は 0</returns>
-    public static int ChangeVolume(int volumePercent, int handle)
+    /// <returns>成功時 0、失敗時 -1</returns>
+    public static int ChangeVolumeSoundMem(int volumePercent, int handle)
     {
-        return NativeChangeVolumeSoundMem(volumePercent, handle);
+        int clamped = Math.Clamp(volumePercent, 0, 100);
+        return NativeBindings.Engine_ChangeVolumeSoundMem(clamped, handle);
     }
-
-    [LibraryImport(_dllName, EntryPoint = "Engine_PlaySoundMem")]
-    [SuppressGCTransition]
-    private static partial int NativePlaySoundMem(int handle, int playType, [MarshalAs(UnmanagedType.U1)] bool topPositionFlag);
-
-    [LibraryImport(_dllName, EntryPoint = "Engine_StopSoundMem")]
-    [SuppressGCTransition]
-    private static partial void NativeStopSoundMem(int handle);
-
-    [LibraryImport(_dllName, EntryPoint = "Engine_ChangeVolumeSoundMem")]
-    [SuppressGCTransition]
-    private static partial int NativeChangeVolumeSoundMem(int volumePercent, int handle);
 }

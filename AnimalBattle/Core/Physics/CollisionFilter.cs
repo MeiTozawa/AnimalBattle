@@ -2,7 +2,6 @@ using System;
 using System.Runtime.InteropServices;
 
 namespace AnimalBattle.Core;
-
 /// <summary>
 /// Hitbox / Hurtbox の衝突対象フィルタリング条件を定義する構造体。
 /// </summary>
@@ -58,19 +57,16 @@ public struct CollisionFilter
     /// <returns>衝突対象として有効な場合は true</returns>
     public readonly bool ShouldCollide(in CollisionFilter other)
     {
-        // 同一所有者のヒットボックス同士の判定をスキップ
         if (OwnerId >= 0 && OwnerId == other.OwnerId)
         {
             return false;
         }
 
-        // 同一チームへの誤ヒット防止 (TeamId が設定されている場合)
         if (TeamId >= 0 && TeamId == other.TeamId)
         {
             return false;
         }
 
-        // ビットマスクによる相互衝突判定チェック
         bool selfMatchesOtherMask = (Category & other.Mask) != CollisionCategory.None;
         bool otherMatchesSelfMask = (other.Category & Mask) != CollisionCategory.None;
 

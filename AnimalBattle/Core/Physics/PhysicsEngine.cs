@@ -1,264 +1,191 @@
 using System;
-using System.Runtime.InteropServices;
+using AnimalBattle.Bindings;
 
 namespace AnimalBattle.Core;
-
 /// <summary>
-/// Native C++ 物理エンジン (PhysicsEngine) のライフサイクル、P/Invoke バインディング、および制御操作をカプセル化する C# クラス。
+/// Native C++ 物理エンジン (AnimalBattleCore.dll) を P/Invoke 経由で操作し、
+/// 重力、運動積分、地形衝突判定、およびノックバック計算を管理するクラス。
 /// </summary>
-public unsafe partial class PhysicsEngine : IDisposable
+public unsafe class PhysicsEngine : IDisposable
 {
-    private const string _dllName = "AnimalBattleCore.dll";
-
-    private readonly IntPtr _nativePtr;
+    private IntPtr _nativeEngine;
     private bool _isDisposed;
 
     /// <summary>
-    /// 物理エンジンの設定コンテナ保持オブジェクト。
+    /// 物理エンジンの設定コンテナを取得または設定します。
     /// </summary>
-    public ConfigBase<PhysicsConfig> ConfigHolder { get; }
+    public ConfigBase<PhysicsConfig> ConfigHolder { get; set; }
 
     /// <summary>
-    /// 物理エンジンの設定オブジェクト。
+    /// 物理パラメータ設定を取得します。
     /// </summary>
     public PhysicsConfig Config => ConfigHolder.Config;
 
     /// <summary>
-    /// 新しい Native C++ 物理エンジンインスタンスを生成し、physics.toml から設定をロードして初期化します。
+    /// 指定された TOML ファイルパスから物理パラメータを読み込み、<see cref="PhysicsEngine"/> の新しいインスタンスを初期化します。
     /// </summary>
-    public PhysicsEngine()
+    /// <param name="configPath">読み込む TOML ファイルパス</param>
+    public PhysicsEngine(string configPath = "physics.toml")
     {
-        _nativePtr = NativePhysicsCreate();
-        if (_nativePtr == IntPtr.Zero)
+        _nativeEngine = NativeBindings.Physics_Create();
+        Result<ConfigBase<PhysicsConfig>> configResult = PhysicsConfig.LoadFromFile(configPath);
+        ConfigHolder = configResult.IsOk ? configResult.Value! : new ConfigBase<PhysicsConfig>();
+        ConfigHolder.OnConfigReloaded += ApplyConfigToNative;
+
+        ApplyConfigToNative();
+    }
+
+    /// <summary>
+    /// デフォルト設定オブジェクトインスタンスで <see cref="PhysicsEngine"/> を初期化します。
+    /// </summary>
+    /// <param name="config">物理設定オブジェクト</param>
+    public PhysicsEngine(PhysicsConfig config)
+    {
+        _nativeEngine = NativeBindings.Physics_Create();
+        ConfigHolder = new ConfigBase<PhysicsConfig>(config);
+        ConfigHolder.OnConfigReloaded += ApplyConfigToNative;
+
+        ApplyConfigToNative();
+    }
+
+    /// <summary>
+    /// 物理設定パラメータを Native C++ 物理エンジンへ同期・反映します。
+    /// </summary>
+    public void ApplyConfigToNative()
+    {
+        if (_nativeEngine == IntPtr.Zero)
         {
-            throw new InvalidOperationException("Native 物理エンジンの生成に失敗しました。");
+            return;
         }
 
-        var configResult = PhysicsConfig.LoadFromFile("physics.toml");
-        ConfigHolder = configResult.IsOk ? configResult.Value! : new ConfigBase<PhysicsConfig>();
+        NativeBindings.Physics_SetKnockbackParams(
+            _nativeEngine,
+            Config.KnockbackWeightOffset,
+            Config.KnockbackDamageScale1,
+            Config.KnockbackDamageScale2,
+            Config.KnockbackScaleMultiplier,
+            Config.KnockbackBaseMultiplier);
 
-        Configure(Config);
-        ConfigHolder.OnConfigReloaded += HandleConfigReloaded;
+        NativeBindings.Physics_SetHitstunParams(
+            _nativeEngine,
+            Config.HitstunBaseSeconds,
+            Config.HitstunKnockbackScale,
+            Config.HitstunMaxSeconds);
     }
 
     /// <summary>
-    /// 既存の Native C++ 物理エンジンポインタを指定して初期化します。
+    /// 動的物理オブジェクト（プレイヤー等）をエンジンに登録します。
     /// </summary>
-    public PhysicsEngine(IntPtr nativePtr)
-    {
-        if (nativePtr == IntPtr.Zero)
-        {
-            throw new ArgumentNullException(nameof(nativePtr), "Native 物理エンジンポインタを null にすることはできません。");
-        }
-        _nativePtr = nativePtr;
-
-        var configResult = PhysicsConfig.LoadFromFile("physics.toml");
-        ConfigHolder = configResult.IsOk ? configResult.Value! : new ConfigBase<PhysicsConfig>();
-
-        Configure(Config);
-        ConfigHolder.OnConfigReloaded += HandleConfigReloaded;
-    }
-
-    /// <summary>
-    /// デストラクタ
-    /// </summary>
-    ~PhysicsEngine()
-    {
-        Dispose(false);
-    }
-
-    /// <summary>
-    /// 内部で保持している Native C++ 物理エンジンポインタを取得します。
-    /// </summary>
-    public IntPtr NativePtr => _nativePtr;
-
-    /// <summary>
-    /// 物理エンジンにキャラクターオブジェクトを追加します。
-    /// </summary>
+    /// <param name="x">初期 X 座標</param>
+    /// <param name="y">初期 Y 座標</param>
+    /// <param name="width">バウンディング幅</param>
+    /// <param name="height">バウンディング高さ</param>
+    /// <param name="weight">オブジェクトの体重</param>
+    /// <returns>割り当てられたオブジェクト ID</returns>
     public int AddObject(float x, float y, float width, float height, float weight)
     {
-        return NativePhysicsAddObject(_nativePtr, x, y, width, height, weight);
+        return NativeBindings.Physics_AddObject(_nativeEngine, x, y, width, height, weight);
     }
 
     /// <summary>
-    /// 物理エンジンから指定されたオブジェクトを削除します。
+    /// 指定 ID の動的物理オブジェクトを削除・登録解除します。
     /// </summary>
+    /// <param name="id">オブジェクト ID</param>
+    /// <returns>削除に成功した場合は true</returns>
     public bool RemoveObject(int id)
     {
-        return NativePhysicsRemoveObject(_nativePtr, id);
+        return NativeBindings.Physics_RemoveObject(_nativeEngine, id);
     }
 
     /// <summary>
-    /// 指定されたオブジェクトの最新物理状態を取得します。
+    /// 指定 ID の物理オブジェクトの状態（座標、速度、接地状態等）を高速に取得します。
     /// </summary>
+    /// <param name="id">オブジェクト ID</param>
+    /// <param name="outState">取得先構造体</param>
+    /// <returns>取得に成功した場合は true</returns>
     public bool GetObjectState(int id, out NativePhysicsObject outState)
     {
         fixed (NativePhysicsObject* ptr = &outState)
         {
-            return NativePhysicsGetObjectState(_nativePtr, id, ptr);
+            return NativeBindings.Physics_GetObjectState(_nativeEngine, id, ptr);
         }
     }
 
     /// <summary>
-    /// 指定されたオブジェクトの最新物理状態をポインタ経由で取得します。
+    /// 指定 ID の物理オブジェクトの状態を高速に更新・上書きします。
     /// </summary>
-    public bool GetObjectState(int id, NativePhysicsObject* outState)
-    {
-        return NativePhysicsGetObjectState(_nativePtr, id, outState);
-    }
-
-    /// <summary>
-    /// 指定されたオブジェクトの物理状態を更新します。
-    /// </summary>
+    /// <param name="id">オブジェクト ID</param>
+    /// <param name="inState">設定する状態構造体</param>
+    /// <returns>更新に成功した場合は true</returns>
     public bool SetObjectState(int id, in NativePhysicsObject inState)
     {
         fixed (NativePhysicsObject* ptr = &inState)
         {
-            return NativePhysicsSetObjectState(_nativePtr, id, ptr);
+            return NativeBindings.Physics_SetObjectState(_nativeEngine, id, ptr);
         }
     }
 
     /// <summary>
-    /// 指定されたオブジェクトの物理状態をポインタ経由で更新します。
+    /// 静的足場（プラットフォーム）をエンジンに登録します。
     /// </summary>
-    public bool SetObjectState(int id, NativePhysicsObject* inState)
+    /// <param name="x1">左端 X 座標</param>
+    /// <param name="y1">上端 Y 座標</param>
+    /// <param name="x2">右端 X 座標</param>
+    /// <param name="y2">下端 Y 座標</param>
+    /// <param name="type">足場種別 (Solid / SemiSolid)</param>
+    /// <returns>割り当てられたプラットフォーム ID</returns>
+    public int AddPlatform(float x1, float y1, float x2, float y2, int type)
     {
-        return NativePhysicsSetObjectState(_nativePtr, id, inState);
+        return NativeBindings.Physics_AddPlatform(_nativeEngine, x1, y1, x2, y2, type);
     }
 
     /// <summary>
-    /// 物理エンジンに足場（プラットフォーム）を追加します。
+    /// 指定 ID のプラットフォームを削除・登録解除します。
     /// </summary>
-    public int AddPlatform(float x1, float y1, float x2, float y2, PlatformType type)
-    {
-        return NativePhysicsAddPlatform(_nativePtr, x1, y1, x2, y2, (int)type);
-    }
-
-    /// <summary>
-    /// 物理エンジンから指定された足場を削除します。
-    /// </summary>
+    /// <param name="id">プラットフォーム ID</param>
+    /// <returns>削除に成功した場合は true</returns>
     public bool RemovePlatform(int id)
     {
-        return NativePhysicsRemovePlatform(_nativePtr, id);
+        return NativeBindings.Physics_RemovePlatform(_nativeEngine, id);
     }
 
     /// <summary>
-    /// 指定された PhysicsConfig の設定値を Native C++ 物理エンジンに反映します。
+    /// 対象オブジェクトにノックバック衝撃力を適用します。
     /// </summary>
-    public void Configure(PhysicsConfig config)
-    {
-        ArgumentNullException.ThrowIfNull(config);
-
-        NativePhysicsSetKnockbackParams(
-            _nativePtr,
-            config.KnockbackWeightOffset,
-            config.KnockbackDamageScale1,
-            config.KnockbackDamageScale2,
-            config.KnockbackScaleMultiplier,
-            config.KnockbackBaseMultiplier);
-
-        NativePhysicsSetHitstunParams(
-            _nativePtr,
-            config.HitstunBaseSeconds,
-            config.HitstunKnockbackScale,
-            config.HitstunMaxSeconds);
-    }
-
-    /// <summary>
-    /// オブジェクトにダメージおよび吹っ飛び力を適用します。
-    /// </summary>
+    /// <param name="id">オブジェクト ID</param>
+    /// <param name="damage">付与ダメージ</param>
+    /// <param name="angleRad">ノックバック射出角度 (ラジアン)</param>
+    /// <param name="baseKnockback">基本ノックバック値</param>
+    /// <param name="scaling">スケーリング係数</param>
     public void ApplyKnockback(int id, float damage, float angleRad, float baseKnockback, float scaling)
     {
-        NativePhysicsApplyKnockback(_nativePtr, id, damage, angleRad, baseKnockback, scaling);
+        NativeBindings.Physics_ApplyKnockback(_nativeEngine, id, damage, angleRad, baseKnockback, scaling);
     }
 
     /// <summary>
-    /// 物理エンジンの時間を 1 ステップ進めます。
+    /// 物理シミュレーションをデルタタイム分ステップ進行させます。
     /// </summary>
+    /// <param name="deltaTime">前フレームからの経過秒数</param>
     public void Step(float deltaTime)
     {
-        NativePhysicsStep(_nativePtr, deltaTime);
-    }
-
-    private void HandleConfigReloaded()
-    {
-        Console.WriteLine("[PhysicsEngine] physics.toml の自動リロードに伴い C++ 物理エンジンのパラメータを再設定しました。");
-        Configure(Config);
+        NativeBindings.Physics_Step(_nativeEngine, deltaTime);
     }
 
     /// <summary>
-    /// アンマネージドリソースを解放します。
+    /// ネイティブ物理エンジンリソースおよび設定コンテナを解放します。
     /// </summary>
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// リソース解放の保護仮想メソッド。
-    /// </summary>
-    protected virtual void Dispose(bool disposing)
-    {
         if (!_isDisposed)
         {
-            if (disposing)
+            if (_nativeEngine != IntPtr.Zero)
             {
-                ConfigHolder.OnConfigReloaded -= HandleConfigReloaded;
-                ConfigHolder.Dispose();
+                NativeBindings.Physics_Destroy(_nativeEngine);
+                _nativeEngine = IntPtr.Zero;
             }
-
-            if (_nativePtr != IntPtr.Zero)
-            {
-                NativePhysicsDestroy(_nativePtr);
-            }
+            ConfigHolder.Dispose();
             _isDisposed = true;
+            GC.SuppressFinalize(this);
         }
     }
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_Create")]
-    private static partial IntPtr NativePhysicsCreate();
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_Destroy")]
-    private static partial void NativePhysicsDestroy(IntPtr engine);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_AddObject")]
-    private static partial int NativePhysicsAddObject(IntPtr engine, float x, float y, float width, float height, float weight);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_RemoveObject")]
-    [return: MarshalAs(UnmanagedType.U1)]
-    private static partial bool NativePhysicsRemoveObject(IntPtr engine, int id);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_GetObjectState")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    private static partial bool NativePhysicsGetObjectState(IntPtr engine, int id, NativePhysicsObject* outState);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_SetObjectState")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    private static partial bool NativePhysicsSetObjectState(IntPtr engine, int id, NativePhysicsObject* inState);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_AddPlatform")]
-    private static partial int NativePhysicsAddPlatform(IntPtr engine, float x1, float y1, float x2, float y2, int type);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_RemovePlatform")]
-    [return: MarshalAs(UnmanagedType.U1)]
-    private static partial bool NativePhysicsRemovePlatform(IntPtr engine, int id);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_ApplyKnockback")]
-    [SuppressGCTransition]
-    private static partial void NativePhysicsApplyKnockback(IntPtr engine, int id, float damage, float angleRad, float baseKnockback, float scaling);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_Step")]
-    [SuppressGCTransition]
-    private static partial void NativePhysicsStep(IntPtr engine, float deltaTime);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_SetKnockbackParams")]
-    [SuppressGCTransition]
-    private static partial void NativePhysicsSetKnockbackParams(IntPtr engine, float weightOffset, float damageScale1, float damageScale2, float scaleMultiplier, float baseMultiplier);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_SetHitstunParams")]
-    [SuppressGCTransition]
-    private static partial void NativePhysicsSetHitstunParams(IntPtr engine, float baseSeconds, float knockbackScale, float maxSeconds);
 }
