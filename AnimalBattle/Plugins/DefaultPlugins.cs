@@ -1,7 +1,7 @@
 namespace AnimalBattle.Plugins;
 
 /// <summary>
-/// Bevy の <c>DefaultPlugins</c> に相当し、コア領域の標準プラグイン群（Require, Physics, Render, Camera, Character）を一括登録するプラグイングループクラス。
+/// コア領域の標準プラグイン群（Require, Effect, Bullet）を一括登録するプラグイングループクラス。
 /// </summary>
 public class DefaultPlugins : IPluginGroup
 {
@@ -12,11 +12,7 @@ public class DefaultPlugins : IPluginGroup
     public void Build(App app)
     {
         app.AddPlugin(new RequirePlugin())
-           .AddPlugin(new PhysicsPlugin())
-           .AddPlugin(new RenderPlugin())
-           .AddPlugin(new CameraPlugin())
-           .AddPlugin(new CharacterPlugin())
            .AddPlugin(new EffectPlugin())
-           .AddPlugin(new CombatPlugin());
+           .AddPlugin(new BulletPlugin());
     }
 }

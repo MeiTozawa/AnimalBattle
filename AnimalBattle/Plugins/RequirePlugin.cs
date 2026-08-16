@@ -35,7 +35,10 @@ public class RequirePlugin : IPlugin
     {
         try
         {
-            MethodInfo? method = typeof(World).GetMethod("Component", Type.EmptyTypes);
+            MethodInfo? method = Array.Find(
+                typeof(World).GetMethods(),
+                m => m.Name == "Component" && m.IsGenericMethodDefinition && m.GetGenericArguments().Length == 1 && m.GetParameters().Length == 0);
+
             if (method != null)
             {
                 MethodInfo generic = method.MakeGenericMethod(targetType);
