@@ -135,30 +135,13 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     {
         try
         {
-            if (File.Exists(fileName))
-            {
-                return Path.GetFullPath(fileName);
-            }
-
-            string cwdConfigPath = Path.Combine(Directory.GetCurrentDirectory(), "Config", fileName);
-            if (File.Exists(cwdConfigPath))
-            {
-                return Path.GetFullPath(cwdConfigPath);
-            }
-
-            string cwdParentConfigPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "Config", fileName);
-            if (File.Exists(cwdParentConfigPath))
-            {
-                return Path.GetFullPath(cwdParentConfigPath);
-            }
-
-            DirectoryInfo? dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+            DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
             while (dir != null)
             {
-                string candidate = Path.Combine(dir.FullName, "Config", fileName);
-                if (File.Exists(candidate))
+                if (File.Exists(Path.Combine(dir.FullName, "AnimalBattle.sln")))
                 {
-                    return Path.GetFullPath(candidate);
+                    string path = Path.Combine(dir.FullName, "Config", fileName);
+                    return File.Exists(path) ? Path.GetFullPath(path) : null;
                 }
                 dir = dir.Parent;
             }
@@ -170,10 +153,17 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
         return null;
     }
 
+    private bool _isDisposed;
+
     /// <inheritdoc/>
     public void Dispose()
     {
-        _changeTokenSubscription?.Dispose();
-        _changeTokenSubscription = null;
+        if (!_isDisposed)
+        {
+            _changeTokenSubscription?.Dispose();
+            _changeTokenSubscription = null;
+            _isDisposed = true;
+            GC.SuppressFinalize(this);
+        }
     }
 }
