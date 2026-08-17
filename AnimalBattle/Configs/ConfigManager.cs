@@ -4,7 +4,7 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// 各種 TOML 設定ファイル（player.toml, boss.toml, patterns.toml, arena.toml）を統括管理し、
+/// 各種 TOML 設定ファイル（player.toml, boss.toml, patterns.toml, arena.toml, render.toml）を統括管理し、
 /// 自動リロードおよびプロパティ参照を提供する静的設定マネージャークラス。
 /// </summary>
 public static class ConfigManager
@@ -13,6 +13,7 @@ public static class ConfigManager
     private static ConfigBase<BossConfig> _bossConfigContainer = new(new BossConfig());
     private static ConfigBase<PatternConfig> _patternConfigContainer = new(new PatternConfig());
     private static ConfigBase<ArenaConfig> _arenaConfigContainer = new(new ArenaConfig());
+    private static ConfigBase<RenderConfig> _renderConfigContainer = new(new RenderConfig());
 
     /// <summary>プレイヤー設定オブジェクトを取得します。</summary>
     public static PlayerConfig Player => _playerConfigContainer.Config;
@@ -25,6 +26,9 @@ public static class ConfigManager
 
     /// <summary>アリーナ足場設定オブジェクトを取得します。</summary>
     public static ArenaConfig Arena => _arenaConfigContainer.Config;
+
+    /// <summary>描画および UI 設定オブジェクトを取得します。</summary>
+    public static RenderConfig Render => _renderConfigContainer.Config;
 
     /// <summary>
     /// 全 TOML 設定ファイルをロードし、自動リロード監視を開始します。
@@ -55,7 +59,13 @@ public static class ConfigManager
             _arenaConfigContainer = arenaRes.Value;
         }
 
-        Console.WriteLine("[C# 設定初期化] 各種 TOML 設定ファイル（player, boss, patterns, arena）の読み込みが完了しました！");
+        Result<ConfigBase<RenderConfig>> renderRes = RenderConfig.LoadFromFile("render.toml");
+        if (renderRes.IsOk && renderRes.Value != null)
+        {
+            _renderConfigContainer = renderRes.Value;
+        }
+
+        Console.WriteLine("[C# 設定初期化] 各種 TOML 設定ファイル（player, boss, patterns, arena, render）の読み込みが完了しました！");
     }
 
     /// <summary>
@@ -67,5 +77,6 @@ public static class ConfigManager
         _bossConfigContainer.Dispose();
         _patternConfigContainer.Dispose();
         _arenaConfigContainer.Dispose();
+        _renderConfigContainer.Dispose();
     }
 }

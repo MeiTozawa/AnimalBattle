@@ -26,16 +26,16 @@ public sealed class PlatformData
 public sealed class ArenaConfig
 {
     /// <summary>底面メインフロア</summary>
-    public PlatformData Floor { get; set; } = new() { X = 640.0f, Y = 680.0f, Width = 1240.0f, Height = 40.0f };
+    public PlatformData Floor { get; set; } = new() { X = 640.0f, Y = 600.0f, Width = 1240.0f, Height = 36.0f };
 
     /// <summary>左側浮遊足場</summary>
-    public PlatformData PlatformLeft { get; set; } = new() { X = 280.0f, Y = 480.0f, Width = 240.0f, Height = 22.0f };
+    public PlatformData PlatformLeft { get; set; } = new() { X = 280.0f, Y = 440.0f, Width = 240.0f, Height = 22.0f };
 
     /// <summary>右側浮遊足場</summary>
-    public PlatformData PlatformRight { get; set; } = new() { X = 1000.0f, Y = 480.0f, Width = 240.0f, Height = 22.0f };
+    public PlatformData PlatformRight { get; set; } = new() { X = 1000.0f, Y = 440.0f, Width = 240.0f, Height = 22.0f };
 
     /// <summary>中央高台足場</summary>
-    public PlatformData PlatformCenter { get; set; } = new() { X = 640.0f, Y = 360.0f, Width = 200.0f, Height = 20.0f };
+    public PlatformData PlatformCenter { get; set; } = new() { X = 640.0f, Y = 300.0f, Width = 200.0f, Height = 20.0f };
 
     /// <summary>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{ArenaConfig}"/> インスタンスを生成します。

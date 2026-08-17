@@ -1,7 +1,7 @@
 # Player Configuration
 MoveSpeed = 4.8
-FirstJumpVelocity = -9.2
-SecondJumpVelocity = -8.2
+FirstJumpVelocity = -11.2
+SecondJumpVelocity = -9.2
 Gravity = 0.45
 MaxFallSpeed = 10.0
 MaxJumps = 2
@@ -11,7 +11,7 @@ HitboxHeight = 48.0
 ScaleX = 2.0
 ScaleY = 2.0
 SpawnX = 320.0
-SpawnY = 560.0
+SpawnY = 500.0
 ShootCooldown = 0.16
 BulletSpeed = 16.0
 BulletSpawnOffset = 24.0

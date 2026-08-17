@@ -1,25 +1,26 @@
 # Arena and Platforms Configuration
+# 战场与各平台坐标配置
 
 [Floor]
 X = 640.0
-Y = 680.0
+Y = 600.0
 Width = 1240.0
-Height = 40.0
+Height = 36.0
 
 [PlatformLeft]
 X = 280.0
-Y = 480.0
+Y = 440.0
 Width = 240.0
 Height = 22.0
 
 [PlatformRight]
 X = 1000.0
-Y = 480.0
+Y = 440.0
 Width = 240.0
 Height = 22.0
 
 [PlatformCenter]
 X = 640.0
-Y = 360.0
+Y = 300.0
 Width = 200.0
 Height = 20.0

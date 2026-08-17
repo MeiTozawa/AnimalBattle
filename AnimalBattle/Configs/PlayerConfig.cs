@@ -44,7 +44,7 @@ public sealed class PlayerConfig
     public float SpawnX { get; set; } = 320.0f;
 
     /// <summary>初期出現およびリスポーン Y 座標</summary>
-    public float SpawnY { get; set; } = 560.0f;
+    public float SpawnY { get; set; } = 500.0f;
 
     /// <summary>手銃射撃のクールダウン間隔（秒）</summary>
     public float ShootCooldown { get; set; } = 0.16f;

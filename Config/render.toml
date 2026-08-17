@@ -1,0 +1,137 @@
+
+[Platform]
+FillColor = 0xFF141926           
+BorderColor = 0xFF00E5FF         
+TopHighlightColor = 0xFF80FFFF  
+TopHighlightOffset = 2          
+TopHighlightThickness = 2       
+
+[BossEffects]
+Phase1AuraColor = 0xFF00E5FF     
+Phase2AuraColor = 0xFFBA55D3     
+Phase3AuraColor = 0xFFFF1744     
+AuraBaseRadius = 75.0            
+AuraPulseAmp = 8.0               
+AuraPulseSpeed = 4.0             
+
+TelegraphStartRadius = 140.0     
+TelegraphEndRadiusDelta = 60.0   
+TelegraphRingColor = 0xFFFF3333  
+TelegraphInnerRingColor = 0xFFFFFFFF 
+TelegraphCoreRadius = 35.0       
+TelegraphCoreColor = 0x55FF2222 
+
+ShieldBaseRadius = 85.0          
+ShieldPulseAmp = 6.0             
+ShieldPulseSpeed = 12.0          
+ShieldOuterColor = 0xFFFFD700    
+ShieldInnerColor = 0xFFFFF275    
+ShieldFillColor = 0x44FFFF88    
+
+RecoveringAuraRadius = 65.0      
+RecoveringAuraColor = 0x3300E5FF 
+
+HitFlashRadius = 45.0            
+HitFlashColor = 0x88FFFFFF       
+
+BossSpriteScale = 2.8            
+BossHoverAngleAmp = 0.08         
+BossHoverAngleSpeed = 2.0        
+
+[Player]
+HitboxCoreRadius = 3.0           
+HitboxCoreColor = 0xFFFF0033     
+HitboxBorderRadius = 4.0         
+HitboxBorderColor = 0xFFFFFFFF  
+
+[Bullets]
+PlayerBulletOuterRadius = 6.0    
+PlayerBulletOuterColor = 0xFF00FFFF 
+PlayerBulletInnerRadius = 3.0    
+PlayerBulletInnerColor = 0xFFFFFFFF 
+PlayerBulletTrailHalfWidth = 7   
+PlayerBulletTrailHalfHeight = 2  
+PlayerBulletTrailColor = 0xFF80FFFF 
+
+BossBulletCoreRadiusRatio = 0.45 
+BossBulletCoreMinRadius = 2      
+BossBulletCoreColor = 0xFFFFFFFF 
+BossBulletOutlinePadding = 2     
+
+[Hud]
+TitleX = 20                      
+TitleY = 16                      
+TitleColor = 0xFFFFD700          
+TitleText = "=== BULLET BATTLE (TOML FSM) ==="
+
+LineSpacing = 18                 
+MoveHelpText = "[A/D/Left/Right]: Move (Instant Stop)"
+JumpHelpText = "[W/Space/Up]: Jump & Air Double Jump"
+ShootHelpText = "[J/Z]: Shoot Pistol"
+HelpTextColor = 0xFFCCCCCC       
+
+RestartHelpText = "[R]: Instant Restart (1-Frame Reset)"
+RestartHelpColor = 0xFFFF8080    
+
+DoubleJumpY = 116                
+DoubleJumpActiveColor = 0xFF00E5FF   
+DoubleJumpInactiveColor = 0xFF888888 
+
+[BossHpBar]
+BarX1 = 240                      
+BarY1 = 662                      
+BarX2 = 1040                     
+BarY2 = 688                      
+
+BgPadding = 4                    
+BgColor = 0xDD0A0D14             
+BorderColor = 0xFFFFFFFF         
+TopHighlightThickness = 3        
+TopHighlightColor = 0xFFFFFFFF  
+
+HeaderOffsetY = 22               
+TitleColor = 0xFFFFD700          
+HpTextColor = 0xFFFFFFFF         
+StateBadgeOffsetX = 270          
+
+# Boss 各种状态对应的徽章高亮颜色
+StateTelegraphingColor = 0xFFFF5555  
+StateCastingColor = 0xFFFFD700       
+StateRecoveringColor = 0xFF00FF88    
+StatePhaseTransitionColor = 0xFFFF88FF
+StateDefaultColor = 0xFF88CCFF       
+
+[Modals]
+# Game Over 弹窗
+GameOverX1 = 360
+GameOverY1 = 260
+GameOverX2 = 920
+GameOverY2 = 440
+GameOverBgColor = 0xDD2A0505          
+GameOverOuterBorderColor = 0xFFFF3333 
+GameOverInnerBorderColor = 0xFFFF8888 
+GameOverTitleX = 540
+GameOverTitleY = 305
+GameOverTitleColor = 0xFFFF3333
+GameOverTitleText = "=== GAME OVER ==="
+GameOverRetryX = 460
+GameOverRetryY = 360
+GameOverRetryColor = 0xFFFFFFFF
+GameOverRetryText = "Press  [ R ]  for Instant Retry!"
+
+# 胜利通关弹窗
+VictoryX1 = 340
+VictoryY1 = 250
+VictoryX2 = 940
+VictoryY2 = 450
+VictoryBgColor = 0xEE2A2A00            
+VictoryOuterBorderColor = 0xFFFFD700   
+VictoryInnerBorderColor = 0xFFFFF275   
+VictoryTitleX = 440
+VictoryTitleY = 295
+VictoryTitleColor = 0xFFFFD700
+VictoryTitleText = "★ ★ ★ VICTORY! BOSS DEFEATED! ★ ★ ★"
+VictoryRetryX = 460
+VictoryRetryY = 350
+VictoryRetryColor = 0xFFFFFFFF
+VictoryRetryText = "Congratulations! Press [ R ] to Play Again!"
