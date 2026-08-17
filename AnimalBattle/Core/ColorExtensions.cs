@@ -7,7 +7,6 @@ namespace AnimalBattle.Core;
 /// <summary>
 /// <see cref="Color"/>、<see cref="uint"/> (32 ビット ARGB)、および 16 進数・カラー名・数値文字列間の
 /// 明示的型変換を提供する拡張メソッドクラス。
-/// <see cref="int"/> や <see cref="long"/> の暗黙拡張メソッドを排除し、厳格な型安全性を確保します。
 /// </summary>
 public static class ColorExtensions
 {
@@ -33,16 +32,15 @@ public static class ColorExtensions
 
     /// <summary>
     /// 16 進数文字列 ("0xAARRGGBB", "0xRRGGBB", "#AARRGGBB", "#RRGGBB")、10 進数値文字列、または標準色名文字列から
-    /// <see cref="Color"/> へ明示的に変換します。
+    /// <see cref="Color"/> への厳格な解析を行います。
     /// </summary>
     /// <param name="colorString">変換対象のカラー文字列</param>
-    /// <param name="fallback">解析失敗時に返却するデフォルトカラー</param>
-    /// <returns>変換された <see cref="Color"/>。失敗時は <paramref name="fallback"/></returns>
-    public static Color ToColor(this string colorString, Color fallback = default)
+    /// <returns>成功時は <see cref="Color"/>、失敗時は <see cref="SimpleError"/></returns>
+    public static Result<Color> ParseColor(this string? colorString)
     {
         if (string.IsNullOrWhiteSpace(colorString))
         {
-            return fallback;
+            return Result<Color>.Err(SimpleError.NotValid("カラー文字列が null または空白です。"));
         }
 
         string trimmed = colorString.Trim();
@@ -56,10 +54,13 @@ public static class ColorExtensions
                 {
                     argb |= 0xFF000000;
                 }
-                return Color.FromArgb((int)argb);
+                return Result<Color>.Ok(Color.FromArgb((int)argb));
             }
+
+            return Result<Color>.Err(SimpleError.NotValid($"16 進数カラー文字列の解析に失敗しました: '{colorString}'"));
         }
-        else if (trimmed.StartsWith('#'))
+
+        if (trimmed.StartsWith('#'))
         {
             string hex = trimmed[1..];
             if (uint.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint argb))
@@ -68,20 +69,44 @@ public static class ColorExtensions
                 {
                     argb |= 0xFF000000;
                 }
-                return Color.FromArgb((int)argb);
+                return Result<Color>.Ok(Color.FromArgb((int)argb));
             }
+
+            return Result<Color>.Err(SimpleError.NotValid($"'#' プレフィックスカラー文字列の解析に失敗しました: '{colorString}'"));
         }
-        else if (uint.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out uint decArgb))
+
+        if (uint.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out uint decArgb))
         {
-            return Color.FromArgb((int)decArgb);
+            return Result<Color>.Ok(Color.FromArgb((int)decArgb));
         }
-        else
+
+        Color named = Color.FromName(trimmed);
+        if (named.IsKnownColor)
         {
-            Color named = Color.FromName(trimmed);
-            if (named.IsKnownColor)
-            {
-                return named;
-            }
+            return Result<Color>.Ok(named);
+        }
+
+        return Result<Color>.Err(SimpleError.NotFound($"未対応の色名またはカラー値です: '{colorString}'"));
+    }
+
+    /// <summary>
+    /// 16 進数文字列、10 進数値文字列、または標準色名文字列から <see cref="Color"/> へ変換します。
+    /// 解析に失敗した場合は警告を出力し、指定されたデフォルトカラーを返します。
+    /// </summary>
+    /// <param name="colorString">変換対象のカラー文字列</param>
+    /// <param name="fallback">解析失敗時に返却するデフォルトカラー</param>
+    /// <returns>変換された <see cref="Color"/>。失敗時は <paramref name="fallback"/></returns>
+    public static Color ToColor(this string? colorString, Color fallback = default)
+    {
+        Result<Color> result = ParseColor(colorString);
+        if (result.IsOk)
+        {
+            return result.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(colorString))
+        {
+            Console.WriteLine($"[C# 描画警告] カラー文字列の解析に失敗しました ({result.Error?.Description})。デフォルト色 ({fallback}) を使用します。");
         }
 
         return fallback;

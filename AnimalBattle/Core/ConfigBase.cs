@@ -8,6 +8,7 @@ using Microsoft.Extensions.Primitives;
 using Tomlyn.Extensions.Configuration;
 
 namespace AnimalBattle.Core;
+
 /// <summary>
 /// TOML 設定ファイルからの動的読み込み、自動リロード（reloadOnChange）、およびプロパティ設定をサポートする設定コンテナクラス。
 /// 組合せ（コンポジション）パターンにより、設定 POCO オブジェクトのライフサイクルとイベントを管理します。
@@ -159,8 +160,9 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
                 dir = dir.Parent;
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"[C# 設定警告] 設定ファイルパス探索中に例外が発生しました ({fileName}): {ex.Message}");
         }
 
         return null;

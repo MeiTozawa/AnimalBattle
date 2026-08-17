@@ -185,7 +185,7 @@ public sealed class BossConfig
     /// <returns>構築された被弾衝突形状バリアント</returns>
     public CollisionShape GetHurtboxShape()
     {
-        return CollisionShape.Create(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight, HurtboxOffsetX, HurtboxOffsetY);
+        return CollisionShape.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight, HurtboxOffsetX, HurtboxOffsetY);
     }
 
     /// <summary>
@@ -194,7 +194,7 @@ public sealed class BossConfig
     /// <returns>構築された接触攻撃衝突形状バリアント</returns>
     public CollisionShape GetHitboxShape()
     {
-        return CollisionShape.Create(HitboxShape, BodyHitboxRadius, BodyHitboxWidth, BodyHitboxHeight, BodyHitboxOffsetX, BodyHitboxOffsetY);
+        return CollisionShape.CreateWithFallback(HitboxShape, BodyHitboxRadius, BodyHitboxWidth, BodyHitboxHeight, BodyHitboxOffsetX, BodyHitboxOffsetY);
     }
 
     /// <summary>

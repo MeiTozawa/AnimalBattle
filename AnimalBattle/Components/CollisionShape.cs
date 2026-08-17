@@ -47,7 +47,7 @@ public abstract record CollisionShape
     public sealed record Point(float OffsetX = 0.0f, float OffsetY = 0.0f) : CollisionShape(OffsetX, OffsetY);
 
     /// <summary>
-    /// 形状文字列（"Circle", "Box", "Point"）および各種寸法・オフセットから衝突形状インスタンスの安全な生成を試みます。
+    /// 形状文字列（"Circle", "Box", "Point"）および各種寸法・オフセットから衝突形状インスタンスの生成を行います。
     /// 未対応の形状種別や寸法不正時は <see cref="SimpleError"/> を返します。
     /// </summary>
     /// <param name="shapeKind">形状種別文字列（"Circle", "Box", "Point"）</param>
@@ -57,7 +57,7 @@ public abstract record CollisionShape
     /// <param name="offsetX">X 軸局所オフセット</param>
     /// <param name="offsetY">Y 軸局所オフセット</param>
     /// <returns>成功時は <see cref="CollisionShape"/>、失敗時は <see cref="SimpleError"/></returns>
-    public static Result<CollisionShape> TryCreate(
+    public static Result<CollisionShape> Create(
         string? shapeKind,
         float radius = 0.0f,
         float width = 0.0f,
@@ -111,7 +111,7 @@ public abstract record CollisionShape
     /// <param name="offsetX">X 軸局所オフセット</param>
     /// <param name="offsetY">Y 軸局所オフセット</param>
     /// <returns>構築された衝突形状バリアント</returns>
-    public static CollisionShape Create(
+    public static CollisionShape CreateWithFallback(
         string? shapeKind,
         float radius = 0.0f,
         float width = 0.0f,
@@ -119,7 +119,7 @@ public abstract record CollisionShape
         float offsetX = 0.0f,
         float offsetY = 0.0f)
     {
-        Result<CollisionShape> result = TryCreate(shapeKind, radius, width, height, offsetX, offsetY);
+        Result<CollisionShape> result = Create(shapeKind, radius, width, height, offsetX, offsetY);
         if (result.IsOk && result.Value is not null)
         {
             return result.Value;

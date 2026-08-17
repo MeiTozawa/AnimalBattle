@@ -31,8 +31,18 @@ public partial class BattleScene : IDisposable
     /// </summary>
     public void Initialize()
     {
-        ConfigManager.Initialize();
-        AnimationManager.Initialize();
+        Result<bool> cfgRes = ConfigManager.Initialize();
+        if (!cfgRes.IsOk)
+        {
+            Console.WriteLine($"[BattleScene 警告] 設定ファイルの初期化で警告が発生しました: {cfgRes.Error?.Description}");
+        }
+
+        Result<bool> animRes = AnimationManager.Initialize();
+        if (!animRes.IsOk)
+        {
+            Console.WriteLine($"[BattleScene 警告] アニメーションアセットの初期化で警告が発生しました: {animRes.Error?.Description}");
+        }
+
         int catHandle = AnimationManager.GetCharacterSpriteHandle();
 
         App app = new App(_ecsWorld)

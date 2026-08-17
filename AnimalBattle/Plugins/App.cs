@@ -96,7 +96,8 @@ public class App
     /// <returns>チェーン呼び出し用の <see cref="App"/> 自身</returns>
     public App InsertResource<T>(T resource) where T : class
     {
-        _resources[typeof(T)] = resource ?? throw new ArgumentNullException(nameof(resource));
+        ArgumentNullException.ThrowIfNull(resource);
+        _resources[typeof(T)] = resource;
         return this;
     }
 

@@ -5,6 +5,7 @@ using AnimalBattle.Components;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Animations;
+
 /// <summary>
 /// <see cref="AnimationRegistry"/> を参照してキャラクターおよびエフェクトのスプライトを
 /// ロード・初期化し、純粋なスプライト UV 切り出し計算を提供するマネージャークラス。
@@ -32,16 +33,25 @@ public sealed class AnimationManager : IDisposable
     /// <summary>
     /// 静的レジストリからのスプライトシート画像ロードおよび設定初期化を行います。
     /// </summary>
-    public static void Initialize()
+    /// <returns>全アセットが正常にロードされた場合は true、一部でも失敗した場合は <see cref="SimpleError"/></returns>
+    public static Result<bool> Initialize()
     {
         if (_isInitialized)
         {
-            return;
+            return Result<bool>.Ok(true);
         }
 
-        LoadCharacterSprites();
-        LoadEffectSprites();
+        bool allCharLoaded = LoadCharacterSprites();
+        bool allEffLoaded = LoadEffectSprites();
+
         _isInitialized = true;
+
+        if (!allCharLoaded || !allEffLoaded)
+        {
+            return Result<bool>.Err(SimpleError.NotFound("一部のキャラクターまたはエフェクト画像アセットのロードに失敗しました。"));
+        }
+
+        return Result<bool>.Ok(true);
     }
 
     /// <summary>
@@ -129,46 +139,52 @@ public sealed class AnimationManager : IDisposable
         return new Rect<int>(x1, y1, x2, y2);
     }
 
-    private static void LoadCharacterSprites()
+    private static bool LoadCharacterSprites()
     {
+        bool success = true;
         foreach ((CharacterType charType, AnimationConfig config) in AnimationRegistry.CharacterConfigs)
         {
             _characterConfigs[charType] = config;
             string relPath = AnimationRegistry.CharacterSprites[charType];
             string fullPath = ResolveAssetPath(relPath);
 
-            int handle = AssetManager.LoadGraph(fullPath);
-            if (handle >= 0)
+            Result<int> loadResult = AssetManager.LoadGraph(fullPath);
+            if (loadResult.IsOk)
             {
-                _characterSpriteHandles[charType] = handle;
-                Console.WriteLine($"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {handle})");
+                _characterSpriteHandles[charType] = loadResult.Value;
+                Console.WriteLine($"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {loadResult.Value})");
             }
             else
             {
-                Console.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {fullPath}");
+                Console.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {loadResult.Error?.Description}");
+                success = false;
             }
         }
+        return success;
     }
 
-    private static void LoadEffectSprites()
+    private static bool LoadEffectSprites()
     {
+        bool success = true;
         foreach ((EffectType effType, AnimationConfig config) in AnimationRegistry.EffectConfigs)
         {
             _effectConfigs[effType] = config;
             string relPath = AnimationRegistry.EffectSprites[effType];
             string fullPath = ResolveAssetPath(relPath);
 
-            int handle = AssetManager.LoadGraph(fullPath);
-            if (handle >= 0)
+            Result<int> loadResult = AssetManager.LoadGraph(fullPath);
+            if (loadResult.IsOk)
             {
-                _effectSpriteHandles[effType] = handle;
-                Console.WriteLine($"[C# アニメーション] エフェクトスプライトを正常にロードしました ({effType}): {fullPath} (Handle: {handle})");
+                _effectSpriteHandles[effType] = loadResult.Value;
+                Console.WriteLine($"[C# アニメーション] エフェクトスプライトを正常にロードしました ({effType}): {fullPath} (Handle: {loadResult.Value})");
             }
             else
             {
-                Console.WriteLine($"[C# アニメーション警告] エフェクトスプライトのロードに失敗しました ({effType}): {fullPath}");
+                Console.WriteLine($"[C# アニメーション警告] エフェクトスプライトのロードに失敗しました ({effType}): {loadResult.Error?.Description}");
+                success = false;
             }
         }
+        return success;
     }
 
     private static string ResolveAssetPath(string relPath)
@@ -205,8 +221,9 @@ public sealed class AnimationManager : IDisposable
                 dir = dir.Parent;
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"[C# アセット警告] アセットパス探索中に例外が発生しました ({relPath}): {ex.Message}");
         }
 
         return relPath;
