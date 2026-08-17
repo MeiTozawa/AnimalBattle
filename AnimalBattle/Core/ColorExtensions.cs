@@ -5,9 +5,9 @@ using System.Globalization;
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// <see cref="Color"/>、<see cref="uint"/> (32 ビット ARGB)、および 16 進数・カラー名文字列間の
+/// <see cref="Color"/>、<see cref="uint"/> (32 ビット ARGB)、および 16 進数・カラー名・数値文字列間の
 /// 明示的型変換を提供する拡張メソッドクラス。
-/// <see cref="int"/> や <see cref="long"/> による曖昧な暗黙変換を排除し、厳格な型安全性を確保します。
+/// <see cref="int"/> や <see cref="long"/> の暗黙拡張メソッドを排除し、厳格な型安全性を確保します。
 /// </summary>
 public static class ColorExtensions
 {
@@ -32,7 +32,7 @@ public static class ColorExtensions
     }
 
     /// <summary>
-    /// 16 進数文字列 ("0xAARRGGBB", "0xRRGGBB", "#AARRGGBB", "#RRGGBB") または標準色名文字列から
+    /// 16 進数文字列 ("0xAARRGGBB", "0xRRGGBB", "#AARRGGBB", "#RRGGBB")、10 進数値文字列、または標準色名文字列から
     /// <see cref="Color"/> へ明示的に変換します。
     /// </summary>
     /// <param name="colorString">変換対象のカラー文字列</param>
@@ -70,6 +70,10 @@ public static class ColorExtensions
                 }
                 return Color.FromArgb((int)argb);
             }
+        }
+        else if (uint.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out uint decArgb))
+        {
+            return Color.FromArgb((int)decArgb);
         }
         else
         {

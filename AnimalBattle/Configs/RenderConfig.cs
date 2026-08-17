@@ -186,10 +186,10 @@ public sealed class HudRenderConfig
     public string MoveHelpText { get; set; } = "[A/D/Left/Right]: Move (Instant Stop)";
 
     /// <summary>ジャンプ操作案内テキスト</summary>
-    public string JumpHelpText { get; set; } = "[W/Space/Up]: Jump & Air Double Jump";
+    public string JumpHelpText { get; set; } = "[Space/K]: Jump & Air Double Jump";
 
     /// <summary>射撃操作案内テキスト</summary>
-    public string ShootHelpText { get; set; } = "[J/Z]: Shoot Pistol";
+    public string ShootHelpText { get; set; } = "[J/Z] + Direction: 8-Way Aim & Shoot";
 
     /// <summary>通常案内文字色 (<see cref="Color"/>)</summary>
     public Color HelpTextColor { get; set; } = Color.FromArgb(0xFF, 0xCC, 0xCC, 0xCC);

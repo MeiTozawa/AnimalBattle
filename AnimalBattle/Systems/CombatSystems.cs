@@ -10,7 +10,7 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// プレイヤーの移動・二段跳躍・射撃、Boss 分層状態機 (HFSM: Phase -> Hovering -> Telegraphing -> Casting -> Recovering)、
+/// プレイヤーの移動・二段跳躍・8方向射撃、Boss 分層状態機 (HFSM: Phase -> Hovering -> Telegraphing -> Casting -> Recovering)、
 /// 弾物理、当たり判定、および R キー即時リセットを TOML 設定に基づいて駆動する ECS 常駐 Routine (System)。
 /// 全ての物理・アニメーション・タイマー計算は外部から注入されたフレーム経過時間（delta_time）および TOML 設定値に基づきます。
 /// </summary>
@@ -57,12 +57,12 @@ public static class CombatSystems
 
                  bool isLeft = GameEngine.CheckHitKey(0x1E) != 0 || GameEngine.CheckHitKey(0xCB) != 0;
                  bool isRight = GameEngine.CheckHitKey(0x20) != 0 || GameEngine.CheckHitKey(0xCD) != 0;
-                 bool isJump = GameEngine.CheckHitKey(0x11) != 0 || GameEngine.CheckHitKey(0x39) != 0 || GameEngine.CheckHitKey(0xC8) != 0;
+                 bool isJump = GameEngine.CheckHitKey(0x39) != 0 || GameEngine.CheckHitKey(0x25) != 0;
 
                  int pad = GameEngine.GetJoypadInputState(0);
-                 isLeft = isLeft || (pad & 0x0001) != 0;
-                 isRight = isRight || (pad & 0x0002) != 0;
-                 isJump = isJump || (pad & 0x0010) != 0;
+                 isLeft = isLeft || (pad & GameEngine.PadInputLeft) != 0;
+                 isRight = isRight || (pad & GameEngine.PadInputRight) != 0;
+                 isJump = isJump || (pad & GameEngine.PadInputButton1) != 0;
 
                  bool jumpJustPressed = isJump && !_prevJumpKey;
                  _prevJumpKey = isJump;
@@ -196,7 +196,7 @@ public static class CombatSystems
 
                  bool isShoot = GameEngine.CheckHitKey(0x24) != 0 || GameEngine.CheckHitKey(0x2C) != 0;
                  int pad = GameEngine.GetJoypadInputState(0);
-                 isShoot = isShoot || (pad & 0x0020) != 0;
+                 isShoot = isShoot || (pad & GameEngine.PadInputButton2) != 0;
 
                  bool shootJustPressed = isShoot && !_prevShootKey;
                  _prevShootKey = isShoot;
@@ -213,13 +213,61 @@ public static class CombatSystems
 
                  if (shootJustPressed && playerState.ShootCooldown <= 0.0f)
                  {
-                     float bulletDir = sprite.FlipX ? -1.0f : 1.0f;
-                     float spawnX = trans.X + bulletDir * pCfg.BulletSpawnOffset;
-                     float spawnY = trans.Y + pCfg.BulletSpawnOffsetY;
+                     bool isLeft = GameEngine.CheckHitKey(0x1E) != 0 || GameEngine.CheckHitKey(0xCB) != 0 || (pad & GameEngine.PadInputLeft) != 0;
+                     bool isRight = GameEngine.CheckHitKey(0x20) != 0 || GameEngine.CheckHitKey(0xCD) != 0 || (pad & GameEngine.PadInputRight) != 0;
+                     bool isUp = GameEngine.CheckHitKey(0x11) != 0 || GameEngine.CheckHitKey(0xC8) != 0 || (pad & GameEngine.PadInputUp) != 0;
+                     bool isDown = GameEngine.CheckHitKey(0x1F) != 0 || GameEngine.CheckHitKey(0xD0) != 0 || (pad & GameEngine.PadInputDown) != 0;
+
+                     float inputX = 0.0f;
+                     float inputY = 0.0f;
+
+                     if (isLeft)
+                     {
+                         inputX -= 1.0f;
+                     }
+                     if (isRight)
+                     {
+                         inputX += 1.0f;
+                     }
+                     if (isUp)
+                     {
+                         inputY -= 1.0f;
+                     }
+                     if (isDown)
+                     {
+                         inputY += 1.0f;
+                     }
+
+                     float dirX;
+                     float dirY;
+
+                     if (Math.Abs(inputX) > 0.001f || Math.Abs(inputY) > 0.001f)
+                     {
+                         float length = MathF.Sqrt(inputX * inputX + inputY * inputY);
+                         dirX = inputX / length;
+                         dirY = inputY / length;
+
+                         if (inputX < 0.0f)
+                         {
+                             sprite.FlipX = true;
+                         }
+                         else if (inputX > 0.0f)
+                         {
+                             sprite.FlipX = false;
+                         }
+                     }
+                     else
+                     {
+                         dirX = sprite.FlipX ? -1.0f : 1.0f;
+                         dirY = 0.0f;
+                     }
+
+                     float spawnX = trans.X + dirX * pCfg.BulletSpawnOffset;
+                     float spawnY = trans.Y + pCfg.BulletSpawnOffsetY + dirY * pCfg.BulletSpawnOffset;
 
                      world.Entity()
                           .Set(new Transform(spawnX, spawnY))
-                          .Set(new Velocity(bulletDir * pCfg.BulletSpeed, 0.0f))
+                          .Set(new Velocity(dirX * pCfg.BulletSpeed, dirY * pCfg.BulletSpeed))
                           .Set(new CollisionBox(pCfg.BulletWidth, pCfg.BulletHeight))
                           .Add<PlayerBulletTag>();
 

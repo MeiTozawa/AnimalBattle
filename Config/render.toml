@@ -66,8 +66,8 @@ TitleText = "=== BULLET BATTLE (TOML FSM) ==="
 
 LineSpacing = 18                 
 MoveHelpText = "[A/D/Left/Right]: Move (Instant Stop)"
-JumpHelpText = "[W/Space/Up]: Jump & Air Double Jump"
-ShootHelpText = "[J/Z]: Shoot Pistol"
+JumpHelpText = "[Space/K]: Jump & Air Double Jump"
+ShootHelpText = "[J/Z] + Direction: 8-Way Aim & Shoot"
 HelpTextColor = 0xFFCCCCCC       
 
 RestartHelpText = "[R]: Instant Restart (1-Frame Reset)"

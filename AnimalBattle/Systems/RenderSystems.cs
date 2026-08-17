@@ -161,23 +161,27 @@ public static class RenderSystems
                           GameEngine.DrawCircle((int)trans.X, (int)trans.Y, (int)playerRenderCfg.HitboxBorderRadius, playerRenderCfg.HitboxBorderColor, false);
                       });
 
-                 // 4. プレイヤー銃弾描画
-                 world.QueryBuilder<Transform>()
+                 // 4. プレイヤー銃弾描画（8 方向対応グロートレイル）
+                 world.QueryBuilder<Transform, Velocity>()
                       .With<PlayerBulletTag>()
                       .Build()
-                      .Each((ref Transform trans) =>
+                      .Each((ref Transform trans, ref Velocity vel) =>
                       {
                           int px = (int)trans.X;
                           int py = (int)trans.Y;
+
+                          float vLen = MathF.Sqrt(vel.Vx * vel.Vx + vel.Vy * vel.Vy);
+                          if (vLen > 0.001f)
+                          {
+                              float normVx = vel.Vx / vLen;
+                              float normVy = vel.Vy / vLen;
+                              int trailX = (int)(px - normVx * bulletCfg.PlayerBulletTrailHalfWidth);
+                              int trailY = (int)(py - normVy * bulletCfg.PlayerBulletTrailHalfWidth);
+                              GameEngine.DrawCircle(trailX, trailY, (int)(bulletCfg.PlayerBulletOuterRadius * 0.7f), bulletCfg.PlayerBulletTrailColor, true);
+                          }
+
                           GameEngine.DrawCircle(px, py, (int)bulletCfg.PlayerBulletOuterRadius, bulletCfg.PlayerBulletOuterColor, true);
                           GameEngine.DrawCircle(px, py, (int)bulletCfg.PlayerBulletInnerRadius, bulletCfg.PlayerBulletInnerColor, true);
-                          GameEngine.DrawBox(
-                              px - bulletCfg.PlayerBulletTrailHalfWidth,
-                              py - bulletCfg.PlayerBulletTrailHalfHeight,
-                              px + bulletCfg.PlayerBulletTrailHalfWidth,
-                              py + bulletCfg.PlayerBulletTrailHalfHeight,
-                              bulletCfg.PlayerBulletTrailColor,
-                              true);
                       });
 
                  // 5. Boss 弾幕描画
