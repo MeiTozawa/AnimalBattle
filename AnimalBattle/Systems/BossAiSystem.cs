@@ -9,7 +9,8 @@ namespace AnimalBattle.Systems;
 
 /// <summary>
 /// Boss の階層状態機 (HFSM: Phase -> Hovering -> Telegraphing -> Casting -> Recovering)、
-/// 浮遊運動、各技能の弾幕発射サイクルを制御する ECS System。
+/// 8 字・波状・追従を含む立体移動、俯衝突進（Dive Ram）、および各技能の弾幕発射サイクルを制御する ECS System。
+/// 全ての座標・速度・時間・色パラメータは外部 TOML 設定ファイルから読み出され、マジックナンバーを排除しています。
 /// </summary>
 public static class BossAiSystem
 {
@@ -25,11 +26,12 @@ public static class BossAiSystem
              .Each((Iter it, int i, ref Transform trans, ref Health bHealth, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
              {
                  BossConfig bCfg = ConfigManager.Boss;
+                 PlayerConfig pCfg = ConfigManager.Player;
                  PatternConfig patternCfg = ConfigManager.Pattern;
                  float dt = it.DeltaTime();
 
-                 float playerX = 640.0f;
-                 float playerY = 600.0f;
+                 float playerX = pCfg.SpawnX;
+                 float playerY = pCfg.SpawnY;
                  bool isPlayerAlive = false;
 
                  world.QueryBuilder<Transform, Health>()
@@ -75,13 +77,18 @@ public static class BossAiSystem
                  };
 
                  stats.HoverTimer += dt;
-                 float targetBaseX = stats.BaseX + MathF.Sin(stats.HoverTimer * currentPhaseCfg.HoverSpeedX) * currentPhaseCfg.HoverAmpX;
-                 float targetBaseY = stats.BaseY + MathF.Sin(stats.HoverTimer * currentPhaseCfg.HoverSpeedY) * currentPhaseCfg.HoverAmpY;
-                 float lerpFactor = MathF.Min(1.0f, currentPhaseCfg.HoverLerpSpeed * dt);
-                 trans.X += (targetBaseX - trans.X) * lerpFactor;
-                 trans.Y += (targetBaseY - trans.Y) * lerpFactor;
-
                  fsm.StateTimer += dt;
+
+                 bool isDiving = fsm.CurrentSkillName == "DiveRam" && (fsm.CurrentState == BossStateKind.Casting || fsm.CurrentState == BossStateKind.Recovering);
+
+                 if (!isDiving)
+                 {
+                     float targetBaseX = stats.BaseX + MathF.Sin(stats.HoverTimer * currentPhaseCfg.HoverSpeedX) * currentPhaseCfg.HoverAmpX + (playerX - stats.BaseX) * currentPhaseCfg.PlayerPursuitWeight;
+                     float targetBaseY = currentPhaseCfg.HoverBaseY + MathF.Cos(stats.HoverTimer * currentPhaseCfg.HoverSpeedY) * currentPhaseCfg.HoverAmpY;
+                     float lerpFactor = MathF.Min(1.0f, currentPhaseCfg.HoverLerpSpeed * dt);
+                     trans.X += (targetBaseX - trans.X) * lerpFactor;
+                     trans.Y += (targetBaseY - trans.Y) * lerpFactor;
+                 }
 
                  switch (fsm.CurrentState)
                  {
@@ -106,12 +113,28 @@ public static class BossAiSystem
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = windUp;
                              fsm.SubTimer = 0.0f;
+                             fsm.StartX = trans.X;
+                             fsm.StartY = trans.Y;
+                             fsm.TargetX = playerX;
+                             fsm.TargetY = playerY;
+
                              CombatEffectHelper.SpawnTelegraphSpark(world, trans.X, trans.Y, telegraphColor);
                          }
                          break;
 
                      case BossStateKind.Telegraphing:
                          fsm.IsInvulnerable = false;
+                         if (fsm.CurrentSkillName == "DiveRam")
+                         {
+                             fsm.TargetX = playerX;
+                             fsm.TargetY = playerY;
+                             float shakeIntensity = currentPhaseCfg.TelegraphShakeIntensity;
+                             float shakeX = (Random.Shared.NextSingle() - 0.5f) * shakeIntensity;
+                             float shakeY = (Random.Shared.NextSingle() - 0.5f) * shakeIntensity;
+                             trans.X += shakeX;
+                             trans.Y += shakeY;
+                         }
+
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
                              float castDuration = GetSkillCastDuration(fsm.CurrentSkillName, patternCfg);
@@ -120,12 +143,14 @@ public static class BossAiSystem
                              fsm.StateDuration = castDuration;
                              fsm.SubTimer = 0.0f;
                              fsm.AngleOffset = 0.0f;
+                             fsm.StartX = trans.X;
+                             fsm.StartY = trans.Y;
                          }
                          break;
 
                      case BossStateKind.Casting:
                          fsm.IsInvulnerable = false;
-                         ExecuteBossSkill(world, ref fsm, patternCfg, trans.X, trans.Y, playerX, playerY, dt);
+                         ExecuteBossSkill(world, ref fsm, patternCfg, ref trans, playerX, playerY, dt);
 
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
@@ -133,11 +158,42 @@ public static class BossAiSystem
                              fsm.CurrentState = BossStateKind.Recovering;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = recoveryTime;
+
+                             if (fsm.CurrentSkillName == "DiveRam")
+                             {
+                                 DiveRamConfig ramCfg = patternCfg.DiveRam;
+                                 CombatEffectHelper.SpawnShockwave(world, trans.X, trans.Y);
+                                 int bulletCount = Math.Max(1, ramCfg.ImpactBulletCount);
+                                 for (int k = 0; k < bulletCount; k++)
+                                 {
+                                     float angle = (k / (float)bulletCount) * MathF.PI * 2.0f;
+                                     CombatEffectHelper.SpawnBossBullet(
+                                         world,
+                                         trans.X,
+                                         trans.Y,
+                                         MathF.Cos(angle) * ramCfg.ImpactBulletSpeed,
+                                         MathF.Sin(angle) * ramCfg.ImpactBulletSpeed,
+                                         ramCfg.ImpactBulletRadius,
+                                         ramCfg.ImpactFillColor,
+                                         ramCfg.ImpactOutlineColor);
+                                 }
+                             }
                          }
                          break;
 
                      case BossStateKind.Recovering:
                          fsm.IsInvulnerable = false;
+                         if (fsm.CurrentSkillName == "DiveRam")
+                         {
+                             float recProgress = fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration);
+                             if (recProgress > currentPhaseCfg.RecoverDelayRatio)
+                             {
+                                 float returnLerp = MathF.Min(1.0f, currentPhaseCfg.RecoverFlybackSpeed * dt);
+                                 trans.X += (stats.BaseX - trans.X) * returnLerp;
+                                 trans.Y += (currentPhaseCfg.HoverBaseY - trans.Y) * returnLerp;
+                             }
+                         }
+
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
                              fsm.CurrentState = BossStateKind.Hovering;
@@ -162,57 +218,73 @@ public static class BossAiSystem
 
     private static float GetSkillWindUpTime(string skillName, PatternConfig patternCfg) => skillName switch
     {
+        "DiveRam" => patternCfg.DiveRam.WindUpTime,
         "Aimed3Shot" => patternCfg.Aimed3Shot.WindUpTime,
         "RingBurst" => patternCfg.RingBurst.WindUpTime,
         "DoubleSpiral" => patternCfg.DoubleSpiral.WindUpTime,
         "RainDrop" => patternCfg.RainDrop.WindUpTime,
         "CrossChaos" => patternCfg.CrossChaos.WindUpTime,
         "FastSniper" => patternCfg.FastSniper.WindUpTime,
-        _ => 0.5f
+        _ => patternCfg.Aimed3Shot.WindUpTime
     };
 
     private static Color GetSkillTelegraphColor(string skillName, PatternConfig patternCfg) => skillName switch
     {
+        "DiveRam" => patternCfg.DiveRam.TelegraphColor,
         "Aimed3Shot" => patternCfg.Aimed3Shot.TelegraphColor,
         "RingBurst" => patternCfg.RingBurst.TelegraphColor,
         "DoubleSpiral" => patternCfg.DoubleSpiral.TelegraphColor,
         "RainDrop" => patternCfg.RainDrop.TelegraphColor,
         "CrossChaos" => patternCfg.CrossChaos.TelegraphColor,
         "FastSniper" => patternCfg.FastSniper.TelegraphColor,
-        _ => Color.FromArgb(0xFF, 0xFF, 0x88, 0x88)
+        _ => ColorPalette.RedLight
     };
 
     private static float GetSkillCastDuration(string skillName, PatternConfig patternCfg) => skillName switch
     {
+        "DiveRam" => patternCfg.DiveRam.CastDuration,
         "Aimed3Shot" => patternCfg.Aimed3Shot.CastDuration,
         "RingBurst" => patternCfg.RingBurst.CastDuration,
         "DoubleSpiral" => patternCfg.DoubleSpiral.CastDuration,
         "RainDrop" => patternCfg.RainDrop.CastDuration,
         "CrossChaos" => patternCfg.CrossChaos.CastDuration,
         "FastSniper" => patternCfg.FastSniper.CastDuration,
-        _ => 1.0f
+        _ => patternCfg.Aimed3Shot.CastDuration
     };
 
     private static float GetSkillRecoveryTime(string skillName, PatternConfig patternCfg) => skillName switch
     {
+        "DiveRam" => patternCfg.DiveRam.RecoveryTime,
         "Aimed3Shot" => patternCfg.Aimed3Shot.RecoveryTime,
         "RingBurst" => patternCfg.RingBurst.RecoveryTime,
         "DoubleSpiral" => patternCfg.DoubleSpiral.RecoveryTime,
         "RainDrop" => patternCfg.RainDrop.RecoveryTime,
         "CrossChaos" => patternCfg.CrossChaos.RecoveryTime,
         "FastSniper" => patternCfg.FastSniper.RecoveryTime,
-        _ => 0.5f
+        _ => patternCfg.Aimed3Shot.RecoveryTime
     };
 
-    private static void ExecuteBossSkill(World world, ref BossStateMachine fsm, PatternConfig patternCfg, float bx, float by, float px, float py, float dt)
+    private static void ExecuteBossSkill(World world, ref BossStateMachine fsm, PatternConfig patternCfg, ref Transform trans, float px, float py, float dt)
     {
         if (fsm.SubTimer > 0.0f)
         {
             fsm.SubTimer = Math.Max(0.0f, fsm.SubTimer - dt);
         }
 
+        float bx = trans.X;
+        float by = trans.Y;
+
         switch (fsm.CurrentSkillName)
         {
+            case "DiveRam":
+                {
+                    float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
+                    float easeProgress = progress * progress;
+                    trans.X = fsm.StartX + (fsm.TargetX - fsm.StartX) * easeProgress;
+                    trans.Y = fsm.StartY + (fsm.TargetY - fsm.StartY) * easeProgress;
+                }
+                break;
+
             case "Aimed3Shot":
                 if (fsm.SubTimer <= 0.0f)
                 {

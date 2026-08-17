@@ -1,5 +1,20 @@
 # Bullet Patterns & Skill State Lifecycle Configuration
 
+[DiveRam]
+SkillName = "Meteor Dive Ram"
+WindUpTime = 0.55
+TelegraphColor = 0xFFFF1744
+CastDuration = 0.45
+RecoveryTime = 0.65
+DashSpeed = 16.0
+ImpactRadius = 40.0
+ImpactBulletCount = 8
+ImpactBulletSpeed = 3.5
+ImpactBulletRadius = 7.0
+ImpactFillColor = 0xFFFF1744
+ImpactOutlineColor = 0xFFFF8A80
+TrailColor = 0xFFFF5555
+
 [Aimed3Shot]
 SkillName = "Aimed 3-Way Shot"
 WindUpTime = 0.40

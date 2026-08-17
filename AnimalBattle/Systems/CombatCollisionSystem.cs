@@ -7,7 +7,7 @@ using AnimalBattle.Configs;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// プレイヤー銃弾 vs Boss 矩形、および Boss 弾幕 vs プレイヤー判定円の衝突判定、HP 減算、無敵時間、撃破・死亡判定を統括する ECS System。
+/// プレイヤー銃弾 vs Boss 矩形、Boss 弾幕 vs プレイヤー、および Boss 本体接触突進 vs プレイヤーの衝突判定、HP 減算、無敵時間、撃破・死亡判定を統括する ECS System。
 /// </summary>
 public static class CombatCollisionSystem
 {
@@ -91,7 +91,7 @@ public static class CombatCollisionSystem
                      }
                  }
 
-                 // 2. 敵弾 vs プレイヤー中心判定点 (HP 減算 & 無敵時間判定)
+                 // 2. 敵弾 & Boss 本体突進接触 vs プレイヤー判定点 (HP 減算 & 無敵時間判定)
                  float playerX = 0.0f;
                  float playerY = 0.0f;
                  bool isPlayerAlive = false;
@@ -116,6 +116,7 @@ public static class CombatCollisionSystem
                      bool playerHit = false;
                      float pRadius = pCfg.HitboxRadius;
 
+                     // 2.1 弾幕との衝突判定
                      world.QueryBuilder<Transform, Bullet>()
                           .With<BossBulletTag>()
                           .Build()
@@ -136,6 +137,16 @@ public static class CombatCollisionSystem
                                   playerHit = true;
                               }
                           });
+
+                     // 2.2 Boss 本体との接触・突進衝突判定
+                     if (!playerHit && hasBoss)
+                     {
+                         if (playerX >= bossLeft - pRadius && playerX <= bossRight + pRadius &&
+                             playerY >= bossTop - pRadius && playerY <= bossBottom + pRadius)
+                         {
+                             playerHit = true;
+                         }
+                     }
 
                      if (playerHit)
                      {

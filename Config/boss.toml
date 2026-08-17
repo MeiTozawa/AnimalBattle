@@ -1,7 +1,7 @@
 # Boss Base Attributes
-MaxHp = 90.0
+MaxHp = 30.0
 BaseX = 640.0
-BaseY = 180.0
+BaseY = 200.0
 ScaleX = 2.8
 ScaleY = 2.8
 HitboxWidth = 120.0
@@ -11,35 +11,50 @@ HitFlashDuration = 0.08
 # Phase 1 State Machine Configuration
 [Phase1]
 HpThreshold = 1.0
-HoverDuration = 1.0
-HoverSpeedX = 1.5
-HoverAmpX = 80.0
-HoverSpeedY = 2.0
-HoverAmpY = 25.0
-HoverLerpSpeed = 3.0
+HoverDuration = 0.8
+HoverBaseY = 220.0
+HoverSpeedX = 1.6
+HoverAmpX = 240.0
+HoverSpeedY = 1.8
+HoverAmpY = 60.0
+HoverLerpSpeed = 3.5
+PlayerPursuitWeight = 0.12
+TelegraphShakeIntensity = 8.0
+RecoverFlybackSpeed = 4.0
+RecoverDelayRatio = 0.5
 TransitionDuration = 1.0
-Skills = ["Aimed3Shot", "RingBurst"]
+Skills = ["Aimed3Shot", "DiveRam", "RingBurst"]
 
 # Phase 2 State Machine Configuration
 [Phase2]
 HpThreshold = 0.66
-HoverDuration = 0.7
-HoverSpeedX = 1.2
-HoverAmpX = 260.0
+HoverDuration = 0.6
+HoverBaseY = 250.0
+HoverSpeedX = 2.0
+HoverAmpX = 350.0
 HoverSpeedY = 2.4
-HoverAmpY = 40.0
-HoverLerpSpeed = 3.0
+HoverAmpY = 90.0
+HoverLerpSpeed = 4.0
+PlayerPursuitWeight = 0.15
+TelegraphShakeIntensity = 10.0
+RecoverFlybackSpeed = 4.5
+RecoverDelayRatio = 0.45
 TransitionDuration = 1.0
-Skills = ["DoubleSpiral", "RainDrop"]
+Skills = ["DoubleSpiral", "DiveRam", "RainDrop"]
 
 # Phase 3 State Machine Configuration
 [Phase3]
 HpThreshold = 0.33
 HoverDuration = 0.4
-HoverSpeedX = 2.2
-HoverAmpX = 320.0
-HoverSpeedY = 3.6
-HoverAmpY = 50.0
-HoverLerpSpeed = 3.0
+HoverBaseY = 280.0
+HoverSpeedX = 2.6
+HoverAmpX = 420.0
+HoverSpeedY = 3.0
+HoverAmpY = 120.0
+HoverLerpSpeed = 4.5
+PlayerPursuitWeight = 0.20
+TelegraphShakeIntensity = 12.0
+RecoverFlybackSpeed = 5.0
+RecoverDelayRatio = 0.40
 TransitionDuration = 1.0
-Skills = ["CrossChaos", "FastSniper"]
+Skills = ["CrossChaos", "DiveRam", "FastSniper"]

@@ -8,7 +8,7 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// アリーナ足場、Boss (オーラ・無敵シールド・予兆リング・スプライト・被弾フラッシュ)、
+/// アリーナ足場、Boss (オーラ・無敵シールド・予兆リング・スプライト・被弾フラッシュ・突進残影)、
 /// プレイヤー自機 (スプライト・無敵点滅・判定点)、および 8 方向プレイヤー弾・Boss 弾幕を描画する ECS 描画 System。
 /// </summary>
 public static class WorldRenderSystem
@@ -29,7 +29,6 @@ public static class WorldRenderSystem
                  PlayerRenderConfig playerRenderCfg = renderCfg.Player;
                  BulletRenderConfig bulletCfg = renderCfg.Bullets;
 
-                 // 1. アリーナプラットフォーム（足場）描画
                  world.QueryBuilder<Transform, CollisionBox>()
                       .With<PlatformTag>()
                       .Build()
@@ -51,7 +50,6 @@ public static class WorldRenderSystem
                               true);
                       });
 
-                 // 2. Boss 視覚エフェクトおよびスプライト描画
                  world.QueryBuilder<Transform, Health, BossStats, BossStateMachine, Sprite>()
                       .With<BossTag>()
                       .Build()
@@ -74,6 +72,21 @@ public static class WorldRenderSystem
                               GameEngine.DrawCircle(bx, by, ringRadius, bossFx.TelegraphRingColor, false);
                               GameEngine.DrawCircle(bx, by, ringRadius - 2, bossFx.TelegraphInnerRingColor, false);
                               GameEngine.DrawCircle(bx, by, (int)bossFx.TelegraphCoreRadius, bossFx.TelegraphCoreColor, true);
+
+                              if (fsm.CurrentSkillName == "DiveRam")
+                              {
+                                  int tx = (int)fsm.TargetX;
+                                  int ty = (int)fsm.TargetY;
+                                  int lockRadius = (int)(45.0f - progress * 15.0f);
+                                  GameEngine.DrawCircle(tx, ty, lockRadius, ColorPalette.RedBright, false);
+                                  GameEngine.DrawCircle(tx, ty, lockRadius - 2, ColorPalette.Gold, false);
+                              }
+                          }
+                          else if (fsm.CurrentState == BossStateKind.Casting && fsm.CurrentSkillName == "DiveRam")
+                          {
+                              GameEngine.DrawCircle(bx, by, 90, ColorPalette.RedBright, false);
+                              GameEngine.DrawCircle(bx, by, 85, ColorPalette.Gold, false);
+                              GameEngine.DrawCircle(bx, by, 60, ColorPalette.RedTelegraphCore, true);
                           }
                           else if (fsm.CurrentState == BossStateKind.PhaseTransition || fsm.IsInvulnerable)
                           {

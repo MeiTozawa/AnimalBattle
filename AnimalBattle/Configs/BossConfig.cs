@@ -14,20 +14,35 @@ public sealed class PhaseFsmConfig
     /// <summary>攻撃前の巡航遊弋待機時間（秒）</summary>
     public float HoverDuration { get; set; } = 1.0f;
 
+    /// <summary>浮遊基準 Y 座標</summary>
+    public float HoverBaseY { get; set; } = 220.0f;
+
     /// <summary>水平浮遊速度</summary>
     public float HoverSpeedX { get; set; } = 1.5f;
 
     /// <summary>水平浮遊振幅</summary>
-    public float HoverAmpX { get; set; } = 80.0f;
+    public float HoverAmpX { get; set; } = 220.0f;
 
     /// <summary>垂直浮遊速度</summary>
-    public float HoverSpeedY { get; set; } = 2.0f;
+    public float HoverSpeedY { get; set; } = 1.8f;
 
     /// <summary>垂直浮遊振幅</summary>
-    public float HoverAmpY { get; set; } = 25.0f;
+    public float HoverAmpY { get; set; } = 60.0f;
 
     /// <summary>浮動追従の補間速度（Lerp Speed）</summary>
-    public float HoverLerpSpeed { get; set; } = 3.0f;
+    public float HoverLerpSpeed { get; set; } = 3.5f;
+
+    /// <summary>プレイヤー X 座標への接近追従重み（0.0 ~ 1.0）</summary>
+    public float PlayerPursuitWeight { get; set; } = 0.12f;
+
+    /// <summary>突進予兆時の機体振動振幅（ピクセル）</summary>
+    public float TelegraphShakeIntensity { get; set; } = 8.0f;
+
+    /// <summary>突進着地硬直後の高空帰還速度</summary>
+    public float RecoverFlybackSpeed { get; set; } = 4.0f;
+
+    /// <summary>着地硬直から帰還を開始する時間比率（0.0 ~ 1.0）</summary>
+    public float RecoverDelayRatio { get; set; } = 0.5f;
 
     /// <summary>フェーズ突入時の無敵・清屏演出時間（秒）</summary>
     public float TransitionDuration { get; set; } = 1.0f;
@@ -48,7 +63,7 @@ public sealed class BossConfig
     public float BaseX { get; set; } = 640.0f;
 
     /// <summary>Boss の基準出現 Y 座標</summary>
-    public float BaseY { get; set; } = 180.0f;
+    public float BaseY { get; set; } = 200.0f;
 
     /// <summary>Boss 描画スケール X</summary>
     public float ScaleX { get; set; } = 2.8f;
@@ -69,28 +84,38 @@ public sealed class BossConfig
     public PhaseFsmConfig Phase1 { get; set; } = new()
     {
         HpThreshold = 1.0f,
-        HoverDuration = 1.0f,
-        HoverSpeedX = 1.5f,
-        HoverAmpX = 80.0f,
-        HoverSpeedY = 2.0f,
-        HoverAmpY = 25.0f,
-        HoverLerpSpeed = 3.0f,
+        HoverDuration = 0.8f,
+        HoverBaseY = 220.0f,
+        HoverSpeedX = 1.6f,
+        HoverAmpX = 240.0f,
+        HoverSpeedY = 1.8f,
+        HoverAmpY = 60.0f,
+        HoverLerpSpeed = 3.5f,
+        PlayerPursuitWeight = 0.12f,
+        TelegraphShakeIntensity = 8.0f,
+        RecoverFlybackSpeed = 4.0f,
+        RecoverDelayRatio = 0.5f,
         TransitionDuration = 1.0f,
-        Skills = ["Aimed3Shot", "RingBurst"]
+        Skills = ["Aimed3Shot", "DiveRam", "RingBurst"]
     };
 
     /// <summary>Phase 2 状態機設定</summary>
     public PhaseFsmConfig Phase2 { get; set; } = new()
     {
         HpThreshold = 0.66f,
-        HoverDuration = 0.7f,
-        HoverSpeedX = 1.2f,
-        HoverAmpX = 260.0f,
+        HoverDuration = 0.6f,
+        HoverBaseY = 250.0f,
+        HoverSpeedX = 2.0f,
+        HoverAmpX = 350.0f,
         HoverSpeedY = 2.4f,
-        HoverAmpY = 40.0f,
-        HoverLerpSpeed = 3.0f,
+        HoverAmpY = 90.0f,
+        HoverLerpSpeed = 4.0f,
+        PlayerPursuitWeight = 0.15f,
+        TelegraphShakeIntensity = 10.0f,
+        RecoverFlybackSpeed = 4.5f,
+        RecoverDelayRatio = 0.45f,
         TransitionDuration = 1.0f,
-        Skills = ["DoubleSpiral", "RainDrop"]
+        Skills = ["DoubleSpiral", "DiveRam", "RainDrop"]
     };
 
     /// <summary>Phase 3 状態機設定</summary>
@@ -98,13 +123,18 @@ public sealed class BossConfig
     {
         HpThreshold = 0.33f,
         HoverDuration = 0.4f,
-        HoverSpeedX = 2.2f,
-        HoverAmpX = 320.0f,
-        HoverSpeedY = 3.6f,
-        HoverAmpY = 50.0f,
-        HoverLerpSpeed = 3.0f,
+        HoverBaseY = 280.0f,
+        HoverSpeedX = 2.6f,
+        HoverAmpX = 420.0f,
+        HoverSpeedY = 3.0f,
+        HoverAmpY = 120.0f,
+        HoverLerpSpeed = 4.5f,
+        PlayerPursuitWeight = 0.20f,
+        TelegraphShakeIntensity = 12.0f,
+        RecoverFlybackSpeed = 5.0f,
+        RecoverDelayRatio = 0.40f,
         TransitionDuration = 1.0f,
-        Skills = ["CrossChaos", "FastSniper"]
+        Skills = ["CrossChaos", "DiveRam", "FastSniper"]
     };
 
     /// <summary>

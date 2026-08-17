@@ -4,6 +4,51 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Configs;
 
 /// <summary>
+/// 俯衝突進・メテオダイブ技能の設定クラス。
+/// </summary>
+public sealed class DiveRamConfig
+{
+    /// <summary>技能名</summary>
+    public string SkillName { get; set; } = "Meteor Dive Ram";
+
+    /// <summary>前隙（予兆ロックオン）時間（秒）</summary>
+    public float WindUpTime { get; set; } = 0.55f;
+
+    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    public Color TelegraphColor { get; set; } = ColorPalette.RedBright;
+
+    /// <summary>発動（突進突撃）持続時間（秒）</summary>
+    public float CastDuration { get; set; } = 0.45f;
+
+    /// <summary>後隙（着地硬直・反撃好機）時間（秒）</summary>
+    public float RecoveryTime { get; set; } = 0.65f;
+
+    /// <summary>突進速度倍率</summary>
+    public float DashSpeed { get; set; } = 16.0f;
+
+    /// <summary>着地衝撃波半径</summary>
+    public float ImpactRadius { get; set; } = 40.0f;
+
+    /// <summary>着地炸裂弾数</summary>
+    public int ImpactBulletCount { get; set; } = 8;
+
+    /// <summary>着地炸裂弾速度</summary>
+    public float ImpactBulletSpeed { get; set; } = 3.5f;
+
+    /// <summary>着地炸裂弾半径</summary>
+    public float ImpactBulletRadius { get; set; } = 7.0f;
+
+    /// <summary>着地炸裂弾塗りつぶしカラー (<see cref="Color"/>)</summary>
+    public Color ImpactFillColor { get; set; } = ColorPalette.RedBright;
+
+    /// <summary>着地炸裂弾外枠カラー (<see cref="Color"/>)</summary>
+    public Color ImpactOutlineColor { get; set; } = ColorPalette.RedCoral;
+
+    /// <summary>突進残影トレイルカラー (<see cref="Color"/>)</summary>
+    public Color TrailColor { get; set; } = ColorPalette.Red;
+}
+
+/// <summary>
 /// 自機狙い 3 連射技能の設定クラス。
 /// </summary>
 public sealed class Aimed3ShotConfig
@@ -254,6 +299,9 @@ public sealed class FastSniperConfig
 /// </summary>
 public sealed class PatternConfig
 {
+    /// <summary>俯衝突進・メテオダイブ技能設定</summary>
+    public DiveRamConfig DiveRam { get; set; } = new();
+
     /// <summary>自機狙い 3 連射技能設定</summary>
     public Aimed3ShotConfig Aimed3Shot { get; set; } = new();
 

@@ -23,5 +23,6 @@ public class BulletPlugin : IPlugin
         RestartSystem.Register(app.World);
         WorldRenderSystem.Register(app.World);
         HudRenderSystem.Register(app.World);
+        DebugRenderSystem.Register(app.World);
     }
 }
