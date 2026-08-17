@@ -81,7 +81,9 @@ public static class DebugRenderSystem
                           Color hurtColor = hurtbox.Faction switch
                           {
                               Faction.Friendly => dbgCfg.PlayerHurtboxColor,
-                              _ => dbgCfg.BossHitboxColor
+                              Faction.Hostile => dbgCfg.BossHitboxColor,
+                              Faction.Neutral => ColorPalette.Gray,
+                              _ => GetFallbackFactionColor(hurtbox.Faction, dbgCfg.BossHitboxColor)
                           };
 
                           float worldCenterX = trans.X + hurtbox.Shape.OffsetX;
@@ -114,6 +116,10 @@ public static class DebugRenderSystem
                               case CollisionShape.Point:
                                   GameEngine.DrawCircle((int)worldCenterX, (int)worldCenterY, 2, hurtColor, true);
                                   break;
+
+                              default:
+                                  Console.WriteLine($"[DebugRender 警告] 未知の CollisionShape 型です: {hurtbox.Shape?.GetType().Name}");
+                                  break;
                           }
                       });
 
@@ -130,7 +136,9 @@ public static class DebugRenderSystem
                           Color hitColor = hitbox.Faction switch
                           {
                               Faction.Friendly => dbgCfg.PlayerBulletHitboxColor,
-                              _ => dbgCfg.BossBulletHitboxColor
+                              Faction.Hostile => dbgCfg.BossBulletHitboxColor,
+                              Faction.Neutral => ColorPalette.Gray,
+                              _ => GetFallbackFactionColor(hitbox.Faction, dbgCfg.BossBulletHitboxColor)
                           };
 
                           float worldCenterX = trans.X + hitbox.Shape.OffsetX;
@@ -157,8 +165,18 @@ public static class DebugRenderSystem
                               case CollisionShape.Point:
                                   GameEngine.DrawCircle((int)worldCenterX, (int)worldCenterY, 1, hitColor, true);
                                   break;
+
+                              default:
+                                  Console.WriteLine($"[DebugRender 警告] 未知の CollisionShape 型です: {hitbox.Shape?.GetType().Name}");
+                                  break;
                           }
                       });
              });
+    }
+
+    private static Color GetFallbackFactionColor(Faction faction, Color defaultColor)
+    {
+        Console.WriteLine($"[DebugRender 警告] 未知の Faction です: {faction}。デフォルト色を使用します。");
+        return defaultColor;
     }
 }

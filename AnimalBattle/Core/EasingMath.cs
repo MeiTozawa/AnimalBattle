@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 
 namespace AnimalBattle.Core;
+
 /// <summary>
 /// アロケーションフリーでイージング計算を行う静的数学クラス。
 /// </summary>
@@ -15,6 +16,7 @@ public static class EasingMath
     /// <param name="ease">イージング型</param>
     /// <param name="progress">進捗率（0.0f～1.0f）</param>
     /// <returns>イージングが適用された補間値（通常 0.0f～1.0f）</returns>
+    /// <exception cref="ArgumentOutOfRangeException">未定義の <see cref="EaseType"/> が指定された場合にスローされます。</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Evaluate(EaseType ease, float progress)
     {
@@ -32,7 +34,7 @@ public static class EasingMath
             EaseType.OutCubic => 1.0f - MathF.Pow(1.0f - progress, 3.0f),
             EaseType.OutElastic => EvaluateOutElastic(progress),
             EaseType.OutBounce => EvaluateOutBounce(progress),
-            _ => progress
+            _ => throw new ArgumentOutOfRangeException(nameof(ease), ease, $"未定義の EaseType です: {ease}")
         };
     }
 

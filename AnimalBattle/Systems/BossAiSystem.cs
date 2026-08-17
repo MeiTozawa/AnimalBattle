@@ -10,7 +10,7 @@ namespace AnimalBattle.Systems;
 /// <summary>
 /// Boss の階層状態機 (HFSM: Phase -> Hovering -> Telegraphing -> Casting -> Recovering)、
 /// 8 字・波状・追従を含む立体移動、俯衝突進（Dive Ram）、および各技能の弾幕発射サイクルを制御する ECS System。
-/// 全ての座標・速度・時間・色パラメータは外部 TOML 設定ファイルから読み出され、マジックナンバーを排除しています。
+/// 全ての座標・速度・時間・色パラメータは外部 TOML 設定ファイルから読み出され、マジックナンバーや静默兜底を排除しています。
 /// </summary>
 public static class BossAiSystem
 {
@@ -73,7 +73,8 @@ public static class BossAiSystem
                  {
                      1 => bCfg.Phase1,
                      2 => bCfg.Phase2,
-                     _ => bCfg.Phase3
+                     3 => bCfg.Phase3,
+                     _ => GetFallbackPhaseConfig(stats.Phase, bCfg)
                  };
 
                  stats.HoverTimer += dt;
@@ -103,6 +104,7 @@ public static class BossAiSystem
                              }
                              else
                              {
+                                 Console.WriteLine($"[BossAI 警告] Phase {stats.Phase} の技能リストが空です。boss.toml の Skills を確認してください。デフォルト 'Aimed3Shot' を使用します。");
                                  fsm.CurrentSkillName = "Aimed3Shot";
                              }
 
@@ -138,13 +140,20 @@ public static class BossAiSystem
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
                              float castDuration = GetSkillCastDuration(fsm.CurrentSkillName, patternCfg);
+
                              fsm.CurrentState = BossStateKind.Casting;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = castDuration;
                              fsm.SubTimer = 0.0f;
                              fsm.AngleOffset = 0.0f;
-                             fsm.StartX = trans.X;
-                             fsm.StartY = trans.Y;
+
+                             if (fsm.CurrentSkillName == "DiveRam")
+                             {
+                                 fsm.StartX = trans.X;
+                                 fsm.StartY = trans.Y;
+                                 fsm.TargetX = playerX;
+                                 fsm.TargetY = playerY;
+                             }
                          }
                          break;
 
@@ -155,28 +164,14 @@ public static class BossAiSystem
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
                              float recoveryTime = GetSkillRecoveryTime(fsm.CurrentSkillName, patternCfg);
+
                              fsm.CurrentState = BossStateKind.Recovering;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = recoveryTime;
 
                              if (fsm.CurrentSkillName == "DiveRam")
                              {
-                                 DiveRamConfig ramCfg = patternCfg.DiveRam;
                                  CombatEffectHelper.SpawnShockwave(world, trans.X, trans.Y);
-                                 int bulletCount = Math.Max(1, ramCfg.ImpactBulletCount);
-                                 for (int k = 0; k < bulletCount; k++)
-                                 {
-                                     float angle = (k / (float)bulletCount) * MathF.PI * 2.0f;
-                                     CombatEffectHelper.SpawnBossBullet(
-                                         world,
-                                         trans.X,
-                                         trans.Y,
-                                         MathF.Cos(angle) * ramCfg.ImpactBulletSpeed,
-                                         MathF.Sin(angle) * ramCfg.ImpactBulletSpeed,
-                                         ramCfg.ImpactBulletRadius,
-                                         ramCfg.ImpactFillColor,
-                                         ramCfg.ImpactOutlineColor);
-                                 }
                              }
                          }
                          break;
@@ -185,12 +180,11 @@ public static class BossAiSystem
                          fsm.IsInvulnerable = false;
                          if (fsm.CurrentSkillName == "DiveRam")
                          {
-                             float recProgress = fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration);
-                             if (recProgress > currentPhaseCfg.RecoverDelayRatio)
+                             if (fsm.StateTimer >= fsm.StateDuration * currentPhaseCfg.RecoverDelayRatio)
                              {
-                                 float returnLerp = MathF.Min(1.0f, currentPhaseCfg.RecoverFlybackSpeed * dt);
-                                 trans.X += (stats.BaseX - trans.X) * returnLerp;
-                                 trans.Y += (currentPhaseCfg.HoverBaseY - trans.Y) * returnLerp;
+                                 float returnSpeed = currentPhaseCfg.RecoverFlybackSpeed * dt;
+                                 trans.X += (stats.BaseX - trans.X) * MathF.Min(1.0f, returnSpeed);
+                                 trans.Y += (currentPhaseCfg.HoverBaseY - trans.Y) * MathF.Min(1.0f, returnSpeed);
                              }
                          }
 
@@ -204,16 +198,33 @@ public static class BossAiSystem
 
                      case BossStateKind.PhaseTransition:
                          fsm.IsInvulnerable = true;
+                         float floatSpeed = 3.0f * dt;
+                         trans.X += (stats.BaseX - trans.X) * MathF.Min(1.0f, floatSpeed);
+                         trans.Y += (currentPhaseCfg.HoverBaseY - trans.Y) * MathF.Min(1.0f, floatSpeed);
+
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
-                             fsm.IsInvulnerable = false;
                              fsm.CurrentState = BossStateKind.Hovering;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = currentPhaseCfg.HoverDuration;
+                             fsm.IsInvulnerable = false;
                          }
+                         break;
+
+                     default:
+                         Console.WriteLine($"[BossAI エラー] 未知の Boss 状態種別です: {fsm.CurrentState}。Hovering 状態に強制復帰します。");
+                         fsm.CurrentState = BossStateKind.Hovering;
+                         fsm.StateTimer = 0.0f;
+                         fsm.StateDuration = currentPhaseCfg.HoverDuration;
                          break;
                  }
              });
+    }
+
+    private static PhaseFsmConfig GetFallbackPhaseConfig(int phase, BossConfig bCfg)
+    {
+        Console.WriteLine($"[BossAI 警告] 無効な Boss フェーズ番号です: {phase} (有効値: 1, 2, 3)。Phase 1 を安全に使用します。");
+        return bCfg.Phase1;
     }
 
     private static float GetSkillWindUpTime(string skillName, PatternConfig patternCfg) => skillName switch
@@ -225,8 +236,14 @@ public static class BossAiSystem
         "RainDrop" => patternCfg.RainDrop.WindUpTime,
         "CrossChaos" => patternCfg.CrossChaos.WindUpTime,
         "FastSniper" => patternCfg.FastSniper.WindUpTime,
-        _ => patternCfg.Aimed3Shot.WindUpTime
+        _ => LogUnknownSkillWindUp(skillName, patternCfg)
     };
+
+    private static float LogUnknownSkillWindUp(string skillName, PatternConfig patternCfg)
+    {
+        Console.WriteLine($"[BossAI 警告] 未知の技能名です: '{skillName}' (WindUpTime)。デフォルトの Aimed3Shot を使用します。");
+        return patternCfg.Aimed3Shot.WindUpTime;
+    }
 
     private static Color GetSkillTelegraphColor(string skillName, PatternConfig patternCfg) => skillName switch
     {
@@ -237,8 +254,14 @@ public static class BossAiSystem
         "RainDrop" => patternCfg.RainDrop.TelegraphColor,
         "CrossChaos" => patternCfg.CrossChaos.TelegraphColor,
         "FastSniper" => patternCfg.FastSniper.TelegraphColor,
-        _ => ColorPalette.RedLight
+        _ => LogUnknownSkillTelegraphColor(skillName)
     };
+
+    private static Color LogUnknownSkillTelegraphColor(string skillName)
+    {
+        Console.WriteLine($"[BossAI 警告] 未知の技能名です: '{skillName}' (TelegraphColor)。デフォルト色を使用します。");
+        return ColorPalette.RedLight;
+    }
 
     private static float GetSkillCastDuration(string skillName, PatternConfig patternCfg) => skillName switch
     {
@@ -249,8 +272,14 @@ public static class BossAiSystem
         "RainDrop" => patternCfg.RainDrop.CastDuration,
         "CrossChaos" => patternCfg.CrossChaos.CastDuration,
         "FastSniper" => patternCfg.FastSniper.CastDuration,
-        _ => patternCfg.Aimed3Shot.CastDuration
+        _ => LogUnknownSkillCastDuration(skillName, patternCfg)
     };
+
+    private static float LogUnknownSkillCastDuration(string skillName, PatternConfig patternCfg)
+    {
+        Console.WriteLine($"[BossAI 警告] 未知の技能名です: '{skillName}' (CastDuration)。デフォルトの Aimed3Shot を使用します。");
+        return patternCfg.Aimed3Shot.CastDuration;
+    }
 
     private static float GetSkillRecoveryTime(string skillName, PatternConfig patternCfg) => skillName switch
     {
@@ -261,8 +290,14 @@ public static class BossAiSystem
         "RainDrop" => patternCfg.RainDrop.RecoveryTime,
         "CrossChaos" => patternCfg.CrossChaos.RecoveryTime,
         "FastSniper" => patternCfg.FastSniper.RecoveryTime,
-        _ => patternCfg.Aimed3Shot.RecoveryTime
+        _ => LogUnknownSkillRecoveryTime(skillName, patternCfg)
     };
+
+    private static float LogUnknownSkillRecoveryTime(string skillName, PatternConfig patternCfg)
+    {
+        Console.WriteLine($"[BossAI 警告] 未知の技能名です: '{skillName}' (RecoveryTime)。デフォルトの Aimed3Shot を使用します。");
+        return patternCfg.Aimed3Shot.RecoveryTime;
+    }
 
     private static void ExecuteBossSkill(World world, ref BossStateMachine fsm, PatternConfig patternCfg, ref Transform trans, float px, float py, float dt)
     {
@@ -366,6 +401,10 @@ public static class BossAiSystem
                     float aimAngle = MathF.Atan2(py - by, px - bx);
                     CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(aimAngle) * p.BulletSpeed, MathF.Sin(aimAngle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
                 }
+                break;
+
+            default:
+                Console.WriteLine($"[BossAI エラー] 技能 '{fsm.CurrentSkillName}' に対する弾幕実行ロジックが存在しません！boss.toml の Skills 名を確認してください。");
                 break;
         }
     }

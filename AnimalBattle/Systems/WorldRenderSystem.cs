@@ -59,7 +59,8 @@ public static class WorldRenderSystem
                           {
                               1 => bossFx.Phase1AuraColor,
                               2 => bossFx.Phase2AuraColor,
-                              _ => bossFx.Phase3AuraColor
+                              3 => bossFx.Phase3AuraColor,
+                              _ => GetFallbackAuraColor(stats.Phase, bossFx.Phase1AuraColor)
                           };
 
                           int bx = (int)trans.X;
@@ -202,5 +203,11 @@ public static class WorldRenderSystem
                           GameEngine.DrawCircle(bx, by, coreRadius, bulletCfg.BossBulletCoreColor, true);
                       });
              });
+    }
+
+    private static Color GetFallbackAuraColor(int phase, Color defaultColor)
+    {
+        Console.WriteLine($"[WorldRender 警告] 未知の Boss Phase 番号です: {phase} (有効値: 1, 2, 3)");
+        return defaultColor;
     }
 }
