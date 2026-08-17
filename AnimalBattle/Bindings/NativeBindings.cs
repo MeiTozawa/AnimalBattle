@@ -102,7 +102,7 @@ internal static unsafe partial class NativeBindings
     [SuppressGCTransition]
     public static partial void Draw_Box(int x1, int y1, int x2, int y2, uint color, [MarshalAs(UnmanagedType.U1)] bool fill);
 
-    [LibraryImport(_dllName, EntryPoint = "Draw_String", StringMarshalling = StringMarshalling.Utf8)]
+    [LibraryImport(_dllName, EntryPoint = "Draw_String", StringMarshalling = StringMarshalling.Utf16)]
     public static partial void Draw_String(int x, int y, string text, uint color);
 
     [LibraryImport(_dllName, EntryPoint = "Draw_Graph")]

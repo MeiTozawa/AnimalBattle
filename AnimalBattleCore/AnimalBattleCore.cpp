@@ -259,14 +259,12 @@ extern "C" {
         }
     }
 
-    __declspec(dllexport) void Draw_String(int x, int y, const char* text, unsigned int color) noexcept {
+    __declspec(dllexport) void Draw_String(int x, int y, const wchar_t* text, unsigned int color) noexcept {
         try {
             if (g_render_service != nullptr && text != nullptr) {
-                std::string stext(text);
-                std::wstring wtext(stext.begin(), stext.end());
                 g_render_service->DrawString(
                     ab::Point<int>{ x, y },
-                    wtext.c_str(),
+                    text,
                     color);
             }
         } catch (...) {
