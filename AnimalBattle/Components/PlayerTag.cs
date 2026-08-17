@@ -7,9 +7,7 @@ namespace AnimalBattle.Components;
 [Require<Transform>]
 [Require<Velocity>]
 [Require<CollisionBox>]
-[Require<Input>]
 [Require<Sprite>]
-[Require<Camera>]
 [Require<Animation>]
 public struct PlayerTag
 {
