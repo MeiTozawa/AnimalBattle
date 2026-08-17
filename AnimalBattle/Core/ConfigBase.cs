@@ -135,14 +135,27 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     {
         try
         {
+            string directConfig = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", fileName);
+            if (File.Exists(directConfig))
+            {
+                return Path.GetFullPath(directConfig);
+            }
+
+            string cwdConfig = Path.Combine(Environment.CurrentDirectory, "Config", fileName);
+            if (File.Exists(cwdConfig))
+            {
+                return Path.GetFullPath(cwdConfig);
+            }
+
             DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
             while (dir != null)
             {
-                if (File.Exists(Path.Combine(dir.FullName, "AnimalBattle.sln")))
+                string candidate = Path.Combine(dir.FullName, "Config", fileName);
+                if (File.Exists(candidate))
                 {
-                    string path = Path.Combine(dir.FullName, "Config", fileName);
-                    return File.Exists(path) ? Path.GetFullPath(path) : null;
+                    return Path.GetFullPath(candidate);
                 }
+
                 dir = dir.Parent;
             }
         }

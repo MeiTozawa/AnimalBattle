@@ -141,6 +141,11 @@ public sealed class AnimationManager : IDisposable
             if (handle >= 0)
             {
                 _characterSpriteHandles[charType] = handle;
+                Console.WriteLine($"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {handle})");
+            }
+            else
+            {
+                Console.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {fullPath}");
             }
         }
     }
@@ -157,6 +162,11 @@ public sealed class AnimationManager : IDisposable
             if (handle >= 0)
             {
                 _effectSpriteHandles[effType] = handle;
+                Console.WriteLine($"[C# アニメーション] エフェクトスプライトを正常にロードしました ({effType}): {fullPath} (Handle: {handle})");
+            }
+            else
+            {
+                Console.WriteLine($"[C# アニメーション警告] エフェクトスプライトのロードに失敗しました ({effType}): {fullPath}");
             }
         }
     }
@@ -165,23 +175,33 @@ public sealed class AnimationManager : IDisposable
     {
         try
         {
-            DirectoryInfo? dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+            string directResource = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resource", relPath);
+            if (File.Exists(directResource))
+            {
+                return Path.GetFullPath(directResource);
+            }
+
+            string cwdResource = Path.Combine(Environment.CurrentDirectory, "Resource", relPath);
+            if (File.Exists(cwdResource))
+            {
+                return Path.GetFullPath(cwdResource);
+            }
+
+            DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
             while (dir != null)
             {
-                if (File.Exists(Path.Combine(dir.FullName, "AnimalBattle.sln")))
+                string directCandidate = Path.Combine(dir.FullName, "Resource", relPath);
+                if (File.Exists(directCandidate))
                 {
-                    string directCandidate = Path.Combine(dir.FullName, "Resource", relPath);
-                    if (File.Exists(directCandidate))
-                    {
-                        return Path.GetFullPath(directCandidate);
-                    }
-
-                    string altCandidate = Path.Combine(dir.FullName, relPath);
-                    if (File.Exists(altCandidate))
-                    {
-                        return Path.GetFullPath(altCandidate);
-                    }
+                    return Path.GetFullPath(directCandidate);
                 }
+
+                string altCandidate = Path.Combine(dir.FullName, relPath);
+                if (File.Exists(altCandidate))
+                {
+                    return Path.GetFullPath(altCandidate);
+                }
+
                 dir = dir.Parent;
             }
         }
