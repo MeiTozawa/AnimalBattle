@@ -10,7 +10,8 @@ namespace AnimalBattle.Scenes;
 
 /// <summary>
 /// Flecs.NET ワールドおよび Boss 戦パイプラインを統括するバトルシーンクラス。
-/// TOML 設定ファイル（player.toml, boss.toml, arena.toml）から初期パラメータをロードします。
+/// TOML 設定ファイル（player.toml, boss.toml, arena.toml）から初期パラメータをロードし、
+/// プレイヤー、Boss、プラットフォームへ Bevy スタイルの Hitbox / Hurtbox を付与します。
 /// </summary>
 public partial class BattleScene : IDisposable
 {
@@ -41,11 +42,12 @@ public partial class BattleScene : IDisposable
         PlayerConfig playerCfg = ConfigManager.Player;
         BossConfig bossCfg = ConfigManager.Boss;
 
-        // 1. プレイヤーの生成
+        // 1. プレイヤーの生成 (地形 CollisionBox + TOML 設定駆動 Hurtbox)
         _ecsWorld.Entity("Player1")
             .Set(new Transform(playerCfg.SpawnX, playerCfg.SpawnY, scaleX: playerCfg.ScaleX, scaleY: playerCfg.ScaleY))
             .Set(new Velocity())
             .Set(new CollisionBox(playerCfg.HitboxWidth, playerCfg.HitboxHeight))
+            .Set(new Hurtbox(playerCfg.GetHurtboxShape(), Faction.Friendly))
             .Set(new Health(playerCfg.MaxHp))
             .Set(new DoubleJump(playerCfg.MaxJumps))
             .Set(new PlayerState())
@@ -53,11 +55,13 @@ public partial class BattleScene : IDisposable
             .Set(new Animation("Idle", isPlaying: true))
             .Add<PlayerTag>();
 
-        // 2. Boss の生成
+        // 2. Boss の生成 (TOML 設定駆動 被弾 Hurtbox + 肉体接触突進 Hitbox)
         _ecsWorld.Entity("Boss")
             .Set(new Transform(bossCfg.BaseX, bossCfg.BaseY, scaleX: bossCfg.ScaleX, scaleY: bossCfg.ScaleY))
             .Set(new Velocity())
             .Set(new CollisionBox(bossCfg.HitboxWidth, bossCfg.HitboxHeight))
+            .Set(new Hurtbox(bossCfg.GetHurtboxShape(), Faction.Hostile))
+            .Set(new Hitbox(bossCfg.GetHitboxShape(), damage: bossCfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
             .Set(new Health(bossCfg.MaxHp))
             .Set(new BossStats(baseX: bossCfg.BaseX, baseY: bossCfg.BaseY))
             .Set(new BossStateMachine())

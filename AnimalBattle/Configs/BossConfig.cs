@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using AnimalBattle.Components;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Configs;
@@ -53,6 +55,7 @@ public sealed class PhaseFsmConfig
 
 /// <summary>
 /// Config/boss.toml から読み込まれる Boss の基本パラメータおよび各フェーズの FSM 設定クラス。
+/// 形状種別、寸法、および局所オフセット (HurtboxOffsetX/Y, BodyHitboxOffsetX/Y) を完全管理します。
 /// </summary>
 public sealed class BossConfig
 {
@@ -71,11 +74,50 @@ public sealed class BossConfig
     /// <summary>Boss 描画スケール Y</summary>
     public float ScaleY { get; set; } = 2.8f;
 
-    /// <summary>Boss 銃弾被弾当たり判定幅</summary>
-    public float HitboxWidth { get; set; } = 120.0f;
+    /// <summary>Boss 被弾判定 (Hurtbox) の幾何形状種別（"Box" または "Circle"）</summary>
+    public string HurtboxShape { get; set; } = "Box";
 
-    /// <summary>Boss 銃弾被弾当たり判定高さ</summary>
-    public float HitboxHeight { get; set; } = 100.0f;
+    /// <summary>Boss 被弾当たり判定幅（HurtboxShape == "Box" 時に使用）</summary>
+    public float HurtboxWidth { get; set; } = 120.0f;
+
+    /// <summary>Boss 被弾当たり判定高さ（HurtboxShape == "Box" 時に使用）</summary>
+    public float HurtboxHeight { get; set; } = 100.0f;
+
+    /// <summary>Boss 被弾当たり判定円半径（HurtboxShape == "Circle" 時に使用）</summary>
+    public float HurtboxRadius { get; set; } = 0.0f;
+
+    /// <summary>Boss 被弾判定の X 軸局所オフセット</summary>
+    public float HurtboxOffsetX { get; set; } = 0.0f;
+
+    /// <summary>Boss 被弾判定の Y 軸局所オフセット</summary>
+    public float HurtboxOffsetY { get; set; } = 0.0f;
+
+    /// <summary>Boss 銃弾被弾当たり判定幅（後方互換プロパティ）</summary>
+    public float HitboxWidth => HurtboxWidth;
+
+    /// <summary>Boss 銃弾被弾当たり判定高さ（後方互換プロパティ）</summary>
+    public float HitboxHeight => HurtboxHeight;
+
+    /// <summary>Boss 身体接触・突進攻撃判定 (Hitbox) の幾何形状種別（"Box" または "Circle"）</summary>
+    public string HitboxShape { get; set; } = "Box";
+
+    /// <summary>Boss 接触攻撃判定幅（HitboxShape == "Box" 時に使用）</summary>
+    public float BodyHitboxWidth { get; set; } = 120.0f;
+
+    /// <summary>Boss 接触攻撃判定高さ（HitboxShape == "Box" 時に使用）</summary>
+    public float BodyHitboxHeight { get; set; } = 100.0f;
+
+    /// <summary>Boss 接触攻撃判定円半径（HitboxShape == "Circle" 時に使用）</summary>
+    public float BodyHitboxRadius { get; set; } = 0.0f;
+
+    /// <summary>Boss 接触判定の X 軸局所オフセット</summary>
+    public float BodyHitboxOffsetX { get; set; } = 0.0f;
+
+    /// <summary>Boss 接触判定の Y 軸局所オフセット</summary>
+    public float BodyHitboxOffsetY { get; set; } = 0.0f;
+
+    /// <summary>Boss 身体接触・突進命中時の与ダメージ量</summary>
+    public float BodyContactDamage { get; set; } = 1.0f;
 
     /// <summary>被弾時ホワイトフラッシュ持続時間（秒）</summary>
     public float HitFlashDuration { get; set; } = 0.08f;
@@ -136,6 +178,24 @@ public sealed class BossConfig
         TransitionDuration = 1.0f,
         Skills = ["CrossChaos", "DiveRam", "FastSniper"]
     };
+
+    /// <summary>
+    /// 設定に基づいた Boss 被弾判定 (<see cref="CollisionShape"/>) を取得します。
+    /// </summary>
+    /// <returns>構築された被弾衝突形状バリアント</returns>
+    public CollisionShape GetHurtboxShape()
+    {
+        return CollisionShape.Create(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight, HurtboxOffsetX, HurtboxOffsetY);
+    }
+
+    /// <summary>
+    /// 設定に基づいた Boss 接触・突進攻撃判定 (<see cref="CollisionShape"/>) を取得します。
+    /// </summary>
+    /// <returns>構築された接触攻撃衝突形状バリアント</returns>
+    public CollisionShape GetHitboxShape()
+    {
+        return CollisionShape.Create(HitboxShape, BodyHitboxRadius, BodyHitboxWidth, BodyHitboxHeight, BodyHitboxOffsetX, BodyHitboxOffsetY);
+    }
 
     /// <summary>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{BossConfig}"/> インスタンスを生成します。

@@ -16,6 +16,11 @@ public enum ErrorType
     NotValid,
 
     /// <summary>
+    /// 引数の値が許容範囲外であることを示します。
+    /// </summary>
+    ArgumentOutOfRange,
+
+    /// <summary>
     /// 指定されたリソースやファイルが見つからないことを示します。
     /// </summary>
     NotFound

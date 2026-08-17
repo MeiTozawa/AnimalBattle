@@ -68,12 +68,12 @@ LineSpacing = 18
 MoveHelpText = "[A/D/Left/Right]: Move (Instant Stop)"
 JumpHelpText = "[Space/K]: Jump & Air Double Jump"
 ShootHelpText = "[J/Z] + Direction: 8-Way Aim & Shoot"
-HelpTextColor = 0xFFCCCCCC       
-
 RestartHelpText = "[R]: Instant Restart (1-Frame Reset)"
 RestartHelpColor = 0xFFFF8080    
+DebugHelpText = "[F1/H]: Toggle Hitbox/Hurtbox Debug"
+HelpTextColor = 0xFFCCCCCC       
 
-DoubleJumpY = 116                
+DoubleJumpY = 134                
 DoubleJumpActiveColor = 0xFF00E5FF   
 DoubleJumpInactiveColor = 0xFF888888 
 
@@ -135,3 +135,13 @@ VictoryRetryX = 460
 VictoryRetryY = 350
 VictoryRetryColor = 0xFFFFFFFF
 VictoryRetryText = "Congratulations! Press [ R ] to Play Again!"
+
+[Debug]
+Enabled = false
+PlayerTerrainBoxColor = 0xFF00FF88
+PlayerHurtboxColor = 0xFFFF0033
+BossHitboxColor = 0xFFFF1744
+BossBulletHitboxColor = 0xFFFFD700
+PlayerBulletHitboxColor = 0xFF00FFFF
+PlatformHitboxColor = 0xFF88CCFF
+IndicatorColor = 0xFFFFD700

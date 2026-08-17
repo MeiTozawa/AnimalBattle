@@ -7,16 +7,29 @@ SecondJumpVelocity = -9.2
 Gravity = 0.45
 MaxFallSpeed = 10.0
 MaxJumps = 2
-HitboxRadius = 7.0
+
+# Player Terrain Collision (地形足場衝突)
 HitboxWidth = 32.0
 HitboxHeight = 48.0
+
+# Player Hurtbox (プレイヤー被弾判定: "Circle" のため Radius のみ指定)
+HurtboxShape = "Circle"
+HurtboxRadius = 7.0
+HurtboxOffsetY = 4.0   # 下方向に 4 ピクセル微調整し、猫の頭頂部から胸腹部中心へアライン
+
 ScaleX = 2.0
 ScaleY = 2.0
 SpawnX = 320.0
 SpawnY = 500.0
+
+# Shoot & Bullet Configuration
 ShootCooldown = 0.16
 BulletSpeed = 16.0
 BulletSpawnOffset = 24.0
 BulletSpawnOffsetY = -4.0
+
+# Player Bullet Hitbox (プレイヤー銃弾攻撃判定: "Box" のため Width / Height のみ指定)
+BulletHitboxShape = "Box"
 BulletWidth = 12.0
 BulletHeight = 8.0
+BulletDamage = 1.0

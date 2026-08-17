@@ -1,33 +1,6 @@
 namespace AnimalBattle.Components;
 
 /// <summary>
-/// プレイヤーの発射した銃弾エンティティを識別するためのタグ構造体。
-/// </summary>
-public struct PlayerBulletTag
-{
-}
-
-/// <summary>
-/// Boss から発射された敵弾エンティティを識別するためのタグ構造体。
-/// </summary>
-public struct BossBulletTag
-{
-}
-
-/// <summary>
-/// 弾幕 Boss エンティティを識別するためのタグ構造体。
-/// </summary>
-[Require<Transform>]
-[Require<Velocity>]
-[Require<CollisionBox>]
-[Require<Health>]
-[Require<BossStats>]
-[Require<BossStateMachine>]
-public struct BossTag
-{
-}
-
-/// <summary>
 /// バトル全体のゲーム進行状態（ゲームオーバー、勝利判定）を保持するシングルトンコンポーネント。
 /// </summary>
 /// <remarks>

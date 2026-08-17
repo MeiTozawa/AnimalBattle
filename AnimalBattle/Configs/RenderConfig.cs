@@ -200,8 +200,11 @@ public sealed class HudRenderConfig
     /// <summary>リスタート案内文字色 (<see cref="Color"/>)</summary>
     public Color RestartHelpColor { get; set; } = ColorPalette.RedRestart;
 
+    /// <summary>デバッグ表示切替案内テキスト</summary>
+    public string DebugHelpText { get; set; } = "[F1/H]: Toggle Hitbox Debug";
+
     /// <summary>二段ジャンプインジケータ Y 座標</summary>
-    public int DoubleJumpY { get; set; } = 116;
+    public int DoubleJumpY { get; set; } = 134;
 
     /// <summary>二段ジャンプ有効時シンボル色 (<see cref="Color"/>)</summary>
     public Color DoubleJumpActiveColor { get; set; } = ColorPalette.Cyan;
@@ -367,6 +370,36 @@ public sealed class ModalRenderConfig
 }
 
 /// <summary>
+/// Hitbox / Hurtbox / 衝突境界線デバッグ可視化描画の設定クラス。
+/// </summary>
+public sealed class DebugRenderConfig
+{
+    /// <summary>起動時にデバッグ描画を有効にするか</summary>
+    public bool Enabled { get; set; } = false;
+
+    /// <summary>プレイヤー地形衝突ボックス枠色 (<see cref="Color"/>)</summary>
+    public Color PlayerTerrainBoxColor { get; set; } = ColorPalette.Green;
+
+    /// <summary>プレイヤー被弾判定円色 (<see cref="Color"/>)</summary>
+    public Color PlayerHurtboxColor { get; set; } = ColorPalette.RedHitbox;
+
+    /// <summary>Boss 攻撃・被弾衝突ボックス枠色 (<see cref="Color"/>)</summary>
+    public Color BossHitboxColor { get; set; } = ColorPalette.Red;
+
+    /// <summary>Boss 弾幕判定円枠色 (<see cref="Color"/>)</summary>
+    public Color BossBulletHitboxColor { get; set; } = ColorPalette.Gold;
+
+    /// <summary>プレイヤー銃弾判定ボックス枠色 (<see cref="Color"/>)</summary>
+    public Color PlayerBulletHitboxColor { get; set; } = ColorPalette.CyanNeon;
+
+    /// <summary>足場衝突境界枠色 (<see cref="Color"/>)</summary>
+    public Color PlatformHitboxColor { get; set; } = ColorPalette.BlueSky;
+
+    /// <summary>デバッグ状態インジケータ文字色 (<see cref="Color"/>)</summary>
+    public Color IndicatorColor { get; set; } = ColorPalette.Gold;
+}
+
+/// <summary>
 /// Config/render.toml から読み込まれる全体の描画および UI 設定クラス。
 /// </summary>
 public sealed class RenderConfig
@@ -391,6 +424,9 @@ public sealed class RenderConfig
 
     /// <summary>モーダルダイアログ描画設定</summary>
     public ModalRenderConfig Modals { get; set; } = new();
+
+    /// <summary>Hitbox / Hurtbox デバッグ描画設定</summary>
+    public DebugRenderConfig Debug { get; set; } = new();
 
     /// <summary>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{RenderConfig}"/> インスタンスを生成します。

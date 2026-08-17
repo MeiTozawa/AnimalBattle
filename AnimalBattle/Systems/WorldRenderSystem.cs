@@ -161,9 +161,6 @@ public static class WorldRenderSystem
                           {
                               GameEngine.DrawCircle((int)trans.X, (int)trans.Y, 24, ColorPalette.InvincibleShield, false);
                           }
-
-                          GameEngine.DrawCircle((int)trans.X, (int)trans.Y, (int)playerRenderCfg.HitboxCoreRadius, playerRenderCfg.HitboxCoreColor, true);
-                          GameEngine.DrawCircle((int)trans.X, (int)trans.Y, (int)playerRenderCfg.HitboxBorderRadius, playerRenderCfg.HitboxBorderColor, false);
                       });
 
                  // 4. プレイヤー銃弾描画（8 方向対応グロートレイル）

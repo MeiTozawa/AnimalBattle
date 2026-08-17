@@ -8,7 +8,7 @@ namespace AnimalBattle.Systems;
 
 /// <summary>
 /// 戦闘演出（被弾スパーク・ジャンプエフェクト・衝撃波・撃破爆発等）および弾幕生成の補助メソッド群を提供する静的ヘルパークラス。
-/// すべてのデフォルトカラーに <see cref="ColorPalette"/> を使用します。
+/// 生成する敵弾に <see cref="Hitbox"/>（敵性陣営・円形判定）を付与します。
 /// </summary>
 public static class CombatEffectHelper
 {
@@ -29,6 +29,7 @@ public static class CombatEffectHelper
              .Set(new Transform(x, y))
              .Set(new Velocity(vx, vy))
              .Set(new Bullet(radius, fillColor, outlineColor))
+             .Set(new Hitbox(new CollisionShape.Circle(radius), damage: 1.0f, faction: Faction.Hostile, destroyOnHit: true))
              .Add<BossBulletTag>();
     }
 

@@ -8,6 +8,7 @@ namespace AnimalBattle.Systems;
 
 /// <summary>
 /// プレイヤー自機の 8 方向瞄準および手銃射撃を制御する ECS System。
+/// 生成される銃弾エンティティに TOML 設定ファイル駆動の <see cref="Hitbox"/>（味方陣営）を付与します。
 /// </summary>
 public static class PlayerShootSystem
 {
@@ -102,6 +103,7 @@ public static class PlayerShootSystem
                           .Set(new Transform(spawnX, spawnY))
                           .Set(new Velocity(dirX * pCfg.BulletSpeed, dirY * pCfg.BulletSpeed))
                           .Set(new CollisionBox(pCfg.BulletWidth, pCfg.BulletHeight))
+                          .Set(new Hitbox(pCfg.GetBulletHitboxShape(), damage: pCfg.BulletDamage, faction: Faction.Friendly, destroyOnHit: true))
                           .Add<PlayerBulletTag>();
 
                      playerState.ShootCooldown = pCfg.ShootCooldown;

@@ -27,6 +27,7 @@ public static class HudRenderSystem
                  HudRenderConfig hudCfg = renderCfg.Hud;
                  BossHpBarRenderConfig hpCfg = renderCfg.BossHpBar;
                  ModalRenderConfig modalCfg = renderCfg.Modals;
+                 DebugRenderConfig dbgCfg = renderCfg.Debug;
 
                  // 1. 操作説明とタイトル
                  GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY, hudCfg.TitleText, hudCfg.TitleColor);
@@ -34,6 +35,10 @@ public static class HudRenderSystem
                  GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY + hudCfg.LineSpacing * 2, hudCfg.JumpHelpText, hudCfg.HelpTextColor);
                  GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY + hudCfg.LineSpacing * 3, hudCfg.ShootHelpText, hudCfg.HelpTextColor);
                  GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY + hudCfg.LineSpacing * 4, hudCfg.RestartHelpText, hudCfg.RestartHelpColor);
+
+                 string dbgStatus = dbgCfg.Enabled ? " [HITBOX: ON]" : "";
+                 Color dbgColor = dbgCfg.Enabled ? dbgCfg.IndicatorColor : hudCfg.HelpTextColor;
+                 GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY + hudCfg.LineSpacing * 5, $"{hudCfg.DebugHelpText}{dbgStatus}", dbgColor);
 
                  // 2. プレイヤージャンプ残数表示
                  world.QueryBuilder<DoubleJump>()
