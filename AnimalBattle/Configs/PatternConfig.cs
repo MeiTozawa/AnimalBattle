@@ -1,3 +1,4 @@
+using System.Drawing;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Configs;
@@ -13,8 +14,8 @@ public sealed class Aimed3ShotConfig
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; } = 0.40f;
 
-    /// <summary>予兆エフェクトカラー (ARGB)</summary>
-    public uint TelegraphColor { get; set; } = 0xFFFF8888;
+    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x88, 0x88);
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 0.90f;
@@ -37,11 +38,11 @@ public sealed class Aimed3ShotConfig
     /// <summary>弾数</summary>
     public int BulletCount { get; set; } = 3;
 
-    /// <summary>弾の塗りつぶしカラー (ARGB)</summary>
-    public uint FillColor { get; set; } = 0xFFFF3333;
+    /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    public Color FillColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x33, 0x33);
 
-    /// <summary>弾の外枠カラー (ARGB)</summary>
-    public uint OutlineColor { get; set; } = 0xFFFF8888;
+    /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
+    public Color OutlineColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x88, 0x88);
 }
 
 /// <summary>
@@ -55,8 +56,8 @@ public sealed class RingBurstConfig
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; } = 0.55f;
 
-    /// <summary>予兆エフェクトカラー (ARGB)</summary>
-    public uint TelegraphColor { get; set; } = 0xFF80FFFF;
+    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0x80, 0xFF, 0xFF);
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 1.00f;
@@ -79,11 +80,11 @@ public sealed class RingBurstConfig
     /// <summary>弾数</summary>
     public int BulletCount { get; set; } = 16;
 
-    /// <summary>弾の塗りつぶしカラー (ARGB)</summary>
-    public uint FillColor { get; set; } = 0xFF00E5FF;
+    /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    public Color FillColor { get; set; } = Color.FromArgb(0xFF, 0x00, 0xE5, 0xFF);
 
-    /// <summary>弾の外枠カラー (ARGB)</summary>
-    public uint OutlineColor { get; set; } = 0xFF80FFFF;
+    /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
+    public Color OutlineColor { get; set; } = Color.FromArgb(0xFF, 0x80, 0xFF, 0xFF);
 }
 
 /// <summary>
@@ -97,8 +98,8 @@ public sealed class DoubleSpiralConfig
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; } = 0.45f;
 
-    /// <summary>予兆エフェクトカラー (ARGB)</summary>
-    public uint TelegraphColor { get; set; } = 0xFFE0B0FF;
+    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0xE0, 0xB0, 0xFF);
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 1.60f;
@@ -118,17 +119,17 @@ public sealed class DoubleSpiralConfig
     /// <summary>弾の半径</summary>
     public float BulletRadius { get; set; } = 7.5f;
 
-    /// <summary>第 1 弾の塗りつぶしカラー (ARGB)</summary>
-    public uint FillColor1 { get; set; } = 0xFFB255D3;
+    /// <summary>第 1 弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    public Color FillColor1 { get; set; } = Color.FromArgb(0xFF, 0xB2, 0x55, 0xD3);
 
-    /// <summary>第 1 弾の外枠カラー (ARGB)</summary>
-    public uint OutlineColor1 { get; set; } = 0xFFE0B0FF;
+    /// <summary>第 1 弾の外枠カラー (<see cref="Color"/>)</summary>
+    public Color OutlineColor1 { get; set; } = Color.FromArgb(0xFF, 0xE0, 0xB0, 0xFF);
 
-    /// <summary>第 2 弾の塗りつぶしカラー (ARGB)</summary>
-    public uint FillColor2 { get; set; } = 0xFFFFD700;
+    /// <summary>第 2 弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    public Color FillColor2 { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xD7, 0x00);
 
-    /// <summary>第 2 弾の外枠カラー (ARGB)</summary>
-    public uint OutlineColor2 { get; set; } = 0xFFFFF275;
+    /// <summary>第 2 弾の外枠カラー (<see cref="Color"/>)</summary>
+    public Color OutlineColor2 { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xF2, 0x75);
 }
 
 /// <summary>
@@ -142,8 +143,8 @@ public sealed class RainDropConfig
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; } = 0.35f;
 
-    /// <summary>予兆エフェクトカラー (ARGB)</summary>
-    public uint TelegraphColor { get; set; } = 0xFFB9F6CA;
+    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0xB9, 0xF6, 0xCA);
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 1.80f;
@@ -166,11 +167,11 @@ public sealed class RainDropConfig
     /// <summary>弾生成の最大 X 座標</summary>
     public float MaxX { get; set; } = 1220.0f;
 
-    /// <summary>弾の塗りつぶしカラー (ARGB)</summary>
-    public uint FillColor { get; set; } = 0xFF010676;
+    /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    public Color FillColor { get; set; } = Color.FromArgb(0xFF, 0x01, 0x06, 0x76);
 
-    /// <summary>弾の外枠カラー (ARGB)</summary>
-    public uint OutlineColor { get; set; } = 0xFFB9F6CA;
+    /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
+    public Color OutlineColor { get; set; } = Color.FromArgb(0xFF, 0xB9, 0xF6, 0xCA);
 }
 
 /// <summary>
@@ -184,8 +185,8 @@ public sealed class CrossChaosConfig
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; } = 0.35f;
 
-    /// <summary>予兆エフェクトカラー (ARGB)</summary>
-    public uint TelegraphColor { get; set; } = 0xFFFF8A80;
+    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x8A, 0x80);
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 2.00f;
@@ -205,11 +206,11 @@ public sealed class CrossChaosConfig
     /// <summary>弾の半径</summary>
     public float BulletRadius { get; set; } = 8.5f;
 
-    /// <summary>弾の塗りつぶしカラー (ARGB)</summary>
-    public uint FillColor { get; set; } = 0xFFFF1744;
+    /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    public Color FillColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x17, 0x44);
 
-    /// <summary>弾の外枠カラー (ARGB)</summary>
-    public uint OutlineColor { get; set; } = 0xFFFF8A80;
+    /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
+    public Color OutlineColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x8A, 0x80);
 }
 
 /// <summary>
@@ -223,8 +224,8 @@ public sealed class FastSniperConfig
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; } = 0.50f;
 
-    /// <summary>予兆エフェクトカラー (ARGB)</summary>
-    public uint TelegraphColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 0.60f;
@@ -241,11 +242,11 @@ public sealed class FastSniperConfig
     /// <summary>弾の半径</summary>
     public float BulletRadius { get; set; } = 6.5f;
 
-    /// <summary>弾の塗りつぶしカラー (ARGB)</summary>
-    public uint FillColor { get; set; } = 0xFFFF5252;
+    /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    public Color FillColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x52, 0x52);
 
-    /// <summary>弾の外枠カラー (ARGB)</summary>
-    public uint OutlineColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
+    public Color OutlineColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 }
 
 /// <summary>

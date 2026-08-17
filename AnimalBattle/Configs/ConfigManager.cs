@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel;
+using System.Drawing;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Configs;
@@ -35,6 +37,8 @@ public static class ConfigManager
     /// </summary>
     public static void Initialize()
     {
+        TypeDescriptor.AddAttributes(typeof(Color), new TypeConverterAttribute(typeof(FlexibleColorConverter)));
+
         Result<ConfigBase<PlayerConfig>> playerRes = PlayerConfig.LoadFromFile("player.toml");
         if (playerRes.IsOk && playerRes.Value != null)
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
@@ -10,6 +11,7 @@ namespace AnimalBattle.Systems;
 /// アリーナ足場、Boss (エフェクト・スプライト・弾幕)、自機 (点滅・光環・銃弾)、
 /// 画面下部大 HP バー、およびモーダル UI の描画を担当する ECS 描画 Routine (System)。
 /// 体力情報は独立した <see cref="Health"/> コンポーネントから取得し、色や表示テキストは <see cref="RenderConfig"/> から動的取得します。
+/// 全ての描画色に <see cref="Color"/> を採用しています。
 /// </summary>
 public static class RenderSystems
 {
@@ -63,7 +65,7 @@ public static class RenderSystems
                       .Build()
                       .Each((ref Transform trans, ref Health bHealth, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
                       {
-                          uint auraColor = stats.Phase switch
+                          Color auraColor = stats.Phase switch
                           {
                               1 => bossFx.Phase1AuraColor,
                               2 => bossFx.Phase2AuraColor,
@@ -152,7 +154,7 @@ public static class RenderSystems
 
                           if (health.IsInvincible)
                           {
-                              GameEngine.DrawCircle((int)trans.X, (int)trans.Y, 24, 0x8800FFFF, false);
+                              GameEngine.DrawCircle((int)trans.X, (int)trans.Y, 24, Color.FromArgb(0x88, 0x00, 0xFF, 0xFF), false);
                           }
 
                           GameEngine.DrawCircle((int)trans.X, (int)trans.Y, (int)playerRenderCfg.HitboxCoreRadius, playerRenderCfg.HitboxCoreColor, true);
@@ -226,7 +228,7 @@ public static class RenderSystems
                               1 => "[ ●  ○ ]",
                               _ => "[ ○  ○ ]"
                           };
-                          uint jumpColor = doubleJump.RemainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
+                          Color jumpColor = doubleJump.RemainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
                           GameEngine.DrawString(hudCfg.TitleX, hudCfg.DoubleJumpY, $"DOUBLE JUMP: {jumpSymbol}", jumpColor);
                       });
 
@@ -243,12 +245,12 @@ public static class RenderSystems
                               1 => "[ ●  ○  ○ ]",
                               _ => "[ ○  ○  ○ ]"
                           };
-                          uint hpColor = (int)health.Current switch
+                          Color hpColor = (int)health.Current switch
                           {
-                              3 => 0xFF00FF88,
-                              2 => 0xFFFFD700,
-                              1 => 0xFFFF3333,
-                              _ => 0xFF888888
+                              3 => Color.FromArgb(0xFF, 0x00, 0xFF, 0x88),
+                              2 => Color.FromArgb(0xFF, 0xFF, 0xD7, 0x00),
+                              1 => Color.FromArgb(0xFF, 0xFF, 0x33, 0x33),
+                              _ => Color.FromArgb(0xFF, 0x88, 0x88, 0x88)
                           };
                           string invBadge = health.IsInvincible ? $" [INVINCIBLE {health.InvincibleTimer:F1}s]" : "";
                           GameEngine.DrawString(hudCfg.TitleX, hudCfg.DoubleJumpY + 20, $"PLAYER HP:   {hpSymbol} ({(int)health.Current}/{(int)health.Max}){invBadge}", hpColor);
@@ -282,7 +284,7 @@ public static class RenderSystems
                               _ => "[STATE: UNKNOWN]"
                           };
 
-                          uint stateBadgeColor = fsm.CurrentState switch
+                          Color stateBadgeColor = fsm.CurrentState switch
                           {
                               BossStateKind.Telegraphing => hpCfg.StateTelegraphingColor,
                               BossStateKind.Casting => hpCfg.StateCastingColor,
@@ -298,7 +300,7 @@ public static class RenderSystems
                           GameEngine.DrawBox(barX1 - hpCfg.BgPadding, barY1 - hpCfg.BgPadding, barX2 + hpCfg.BgPadding, barY2 + hpCfg.BgPadding, hpCfg.BorderColor, false);
 
                           // 3.3 Boss HP ゲージ塗りつぶし
-                          uint hpFillColor = stats.Phase switch
+                          Color hpFillColor = stats.Phase switch
                           {
                               1 => renderCfg.BossEffects.Phase1AuraColor,
                               2 => renderCfg.BossEffects.Phase2AuraColor,
@@ -320,38 +322,38 @@ public static class RenderSystems
                           GameEngine.DrawBox(p2Split - 1, barY1, p2Split + 1, barY2, hpCfg.BorderColor, true);
                       });
 
-                 // 4. ゲームオーバーおよび勝利モーダル
-                 world.QueryBuilder<Health>()
-                      .With<PlayerTag>()
-                      .Build()
-                      .Each((ref Health health) =>
-                      {
-                          if (!health.IsAlive)
-                          {
-                              GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2, modalCfg.GameOverBgColor, true);
-                              GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2, modalCfg.GameOverOuterBorderColor, false);
-                              GameEngine.DrawBox(modalCfg.GameOverX1 + 4, modalCfg.GameOverY1 + 4, modalCfg.GameOverX2 - 4, modalCfg.GameOverY2 - 4, modalCfg.GameOverInnerBorderColor, false);
+                  // 4. ゲームオーバーおよび勝利モーダル
+                  world.QueryBuilder<Health>()
+                       .With<PlayerTag>()
+                       .Build()
+                       .Each((ref Health health) =>
+                       {
+                           if (!health.IsAlive)
+                           {
+                               GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2, modalCfg.GameOverBgColor, true);
+                               GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2, modalCfg.GameOverOuterBorderColor, false);
+                               GameEngine.DrawBox(modalCfg.GameOverX1 + 4, modalCfg.GameOverY1 + 4, modalCfg.GameOverX2 - 4, modalCfg.GameOverY2 - 4, modalCfg.GameOverInnerBorderColor, false);
 
-                              GameEngine.DrawString(modalCfg.GameOverTitleX, modalCfg.GameOverTitleY, modalCfg.GameOverTitleText, modalCfg.GameOverTitleColor);
-                              GameEngine.DrawString(modalCfg.GameOverRetryX, modalCfg.GameOverRetryY, modalCfg.GameOverRetryText, modalCfg.GameOverRetryColor);
-                          }
-                      });
+                               GameEngine.DrawString(modalCfg.GameOverTitleX, modalCfg.GameOverTitleY, modalCfg.GameOverTitleText, modalCfg.GameOverTitleColor);
+                               GameEngine.DrawString(modalCfg.GameOverRetryX, modalCfg.GameOverRetryY, modalCfg.GameOverRetryText, modalCfg.GameOverRetryColor);
+                           }
+                       });
 
-                 world.QueryBuilder<Health>()
-                      .With<BossTag>()
-                      .Build()
-                      .Each((ref Health health) =>
-                      {
-                          if (!health.IsAlive)
-                          {
-                              GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2, modalCfg.VictoryBgColor, true);
-                              GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2, modalCfg.VictoryOuterBorderColor, false);
-                              GameEngine.DrawBox(modalCfg.VictoryX1 + 4, modalCfg.VictoryY1 + 4, modalCfg.VictoryX2 - 4, modalCfg.VictoryY2 - 4, modalCfg.VictoryInnerBorderColor, false);
+                  world.QueryBuilder<Health>()
+                       .With<BossTag>()
+                       .Build()
+                       .Each((ref Health health) =>
+                       {
+                           if (!health.IsAlive)
+                           {
+                               GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2, modalCfg.VictoryBgColor, true);
+                               GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2, modalCfg.VictoryOuterBorderColor, false);
+                               GameEngine.DrawBox(modalCfg.VictoryX1 + 4, modalCfg.VictoryY1 + 4, modalCfg.VictoryX2 - 4, modalCfg.VictoryY2 - 4, modalCfg.VictoryInnerBorderColor, false);
 
-                              GameEngine.DrawString(modalCfg.VictoryTitleX, modalCfg.VictoryTitleY, modalCfg.VictoryTitleText, modalCfg.VictoryTitleColor);
-                              GameEngine.DrawString(modalCfg.VictoryRetryX, modalCfg.VictoryRetryY, modalCfg.VictoryRetryText, modalCfg.VictoryRetryColor);
-                          }
-                      });
-             });
+                               GameEngine.DrawString(modalCfg.VictoryTitleX, modalCfg.VictoryTitleY, modalCfg.VictoryTitleText, modalCfg.VictoryTitleColor);
+                               GameEngine.DrawString(modalCfg.VictoryRetryX, modalCfg.VictoryRetryY, modalCfg.VictoryRetryText, modalCfg.VictoryRetryColor);
+                           }
+                       });
+              });
     }
 }

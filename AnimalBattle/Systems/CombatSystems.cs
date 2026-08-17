@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using Flecs.NET.Core;
 using AnimalBattle.Animations;
 using AnimalBattle.Components;
@@ -310,7 +311,7 @@ public static class CombatSystems
                              }
 
                              float windUp = GetSkillWindUpTime(fsm.CurrentSkillName, patternCfg);
-                             uint telegraphColor = GetSkillTelegraphColor(fsm.CurrentSkillName, patternCfg);
+                             Color telegraphColor = GetSkillTelegraphColor(fsm.CurrentSkillName, patternCfg);
 
                              fsm.CurrentState = BossStateKind.Telegraphing;
                              fsm.StateTimer = 0.0f;
@@ -381,7 +382,7 @@ public static class CombatSystems
         _ => 0.5f
     };
 
-    private static uint GetSkillTelegraphColor(string skillName, PatternConfig patternCfg) => skillName switch
+    private static Color GetSkillTelegraphColor(string skillName, PatternConfig patternCfg) => skillName switch
     {
         "Aimed3Shot" => patternCfg.Aimed3Shot.TelegraphColor,
         "RingBurst" => patternCfg.RingBurst.TelegraphColor,
@@ -389,7 +390,7 @@ public static class CombatSystems
         "RainDrop" => patternCfg.RainDrop.TelegraphColor,
         "CrossChaos" => patternCfg.CrossChaos.TelegraphColor,
         "FastSniper" => patternCfg.FastSniper.TelegraphColor,
-        _ => 0xFFFF8888
+        _ => Color.FromArgb(0xFF, 0xFF, 0x88, 0x88)
     };
 
     private static float GetSkillCastDuration(string skillName, PatternConfig patternCfg) => skillName switch
@@ -766,7 +767,7 @@ public static class CombatSystems
              });
     }
 
-    private static void SpawnBossBullet(World world, float x, float y, float vx, float vy, float radius, uint fillColor, uint outlineColor)
+    private static void SpawnBossBullet(World world, float x, float y, float vx, float vy, float radius, Color fillColor, Color outlineColor)
     {
         world.Entity()
              .Set(new Transform(x, y))
@@ -796,11 +797,11 @@ public static class CombatSystems
         world.Entity()
              .Set(new Transform(x, y, scaleX: 1.5f, scaleY: 1.5f))
              .Set(FadeEffect.FadeOut(0.12f))
-             .Set(new HitFlashEffect(0.08f, 0xFFFFFF55))
+             .Set(new HitFlashEffect(0.08f, Color.FromArgb(0xFF, 0xFF, 0xFF, 0x55)))
              .Add<EffectTag>();
     }
 
-    private static void SpawnTelegraphSpark(World world, float x, float y, uint color)
+    private static void SpawnTelegraphSpark(World world, float x, float y, Color color)
     {
         world.Entity()
              .Set(new Transform(x, y, scaleX: 2.2f, scaleY: 2.2f))
@@ -818,7 +819,7 @@ public static class CombatSystems
             world.Entity()
                  .Set(new Transform(x, y))
                  .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
-                 .Set(new Bullet(5.0f, 0xFFFF3333, 0xFFFFFFFF))
+                 .Set(new Bullet(5.0f, Color.FromArgb(0xFF, 0xFF, 0x33, 0x33), Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF)))
                  .Set(FadeEffect.FadeOut(0.60f))
                  .Add<EffectTag>();
         }
@@ -841,7 +842,7 @@ public static class CombatSystems
             world.Entity()
                  .Set(new Transform(x, y))
                  .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
-                 .Set(new Bullet(6.0f, 0xFFFFD700, 0xFFFFF275))
+                 .Set(new Bullet(6.0f, Color.FromArgb(0xFF, 0xFF, 0xD7, 0x00), Color.FromArgb(0xFF, 0xFF, 0xF2, 0x75)))
                  .Set(FadeEffect.FadeOut(0.90f))
                  .Add<EffectTag>();
         }

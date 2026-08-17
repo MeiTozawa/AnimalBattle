@@ -1,10 +1,13 @@
 using System;
+using System.Drawing;
 using AnimalBattle.Bindings;
 
 namespace AnimalBattle.Core;
+
 /// <summary>
 /// Native C++ コアライブラリ (AnimalBattleCore.dll / DxLib) のウィンドウ初期化、メインループ、
 /// 描画、キー入力、および終了処理を統括する静的ラッパークラス。
+/// 描画色には <see cref="Color"/> を採用しています。
 /// </summary>
 public static class GameEngine
 {
@@ -131,11 +134,11 @@ public static class GameEngine
     /// <param name="x">中心 X 座標</param>
     /// <param name="y">中心 Y 座標</param>
     /// <param name="radius">半径 (px)</param>
-    /// <param name="color">描画カラー (ARGB)</param>
+    /// <param name="color">描画カラー (<see cref="Color"/>)</param>
     /// <param name="fill">塗りつぶすかどうか</param>
-    public static void DrawCircle(int x, int y, int radius, uint color, bool fill)
+    public static void DrawCircle(int x, int y, int radius, Color color, bool fill)
     {
-        NativeBindings.Draw_Circle(x, y, radius, color, fill);
+        NativeBindings.Draw_Circle(x, y, radius, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -145,11 +148,11 @@ public static class GameEngine
     /// <param name="y1">左上 Y 座標</param>
     /// <param name="x2">右下 X 座標</param>
     /// <param name="y2">右下 Y 座標</param>
-    /// <param name="color">描画カラー (ARGB)</param>
+    /// <param name="color">描画カラー (<see cref="Color"/>)</param>
     /// <param name="fill">塗りつぶすかどうか</param>
-    public static void DrawBox(int x1, int y1, int x2, int y2, uint color, bool fill)
+    public static void DrawBox(int x1, int y1, int x2, int y2, Color color, bool fill)
     {
-        NativeBindings.Draw_Box(x1, y1, x2, y2, color, fill);
+        NativeBindings.Draw_Box(x1, y1, x2, y2, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -158,10 +161,10 @@ public static class GameEngine
     /// <param name="x">X 座標</param>
     /// <param name="y">Y 座標</param>
     /// <param name="text">描画文字列</param>
-    /// <param name="color">描画カラー (ARGB)</param>
-    public static void DrawString(int x, int y, string text, uint color)
+    /// <param name="color">描画カラー (<see cref="Color"/>)</param>
+    public static void DrawString(int x, int y, string text, Color color)
     {
-        NativeBindings.Draw_String(x, y, text, color);
+        NativeBindings.Draw_String(x, y, text, color.ToUint());
     }
 
     /// <summary>

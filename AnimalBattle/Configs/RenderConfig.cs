@@ -1,3 +1,4 @@
+using System.Drawing;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Configs;
@@ -7,14 +8,14 @@ namespace AnimalBattle.Configs;
 /// </summary>
 public sealed class PlatformRenderConfig
 {
-    /// <summary>プラットフォーム内部塗りつぶし色 (ARGB)</summary>
-    public uint FillColor { get; set; } = 0xFF141926;
+    /// <summary>プラットフォーム内部塗りつぶし色 (<see cref="Color"/>)</summary>
+    public Color FillColor { get; set; } = Color.FromArgb(0xFF, 0x14, 0x19, 0x26);
 
-    /// <summary>プラットフォーム外枠線色 (ARGB)</summary>
-    public uint BorderColor { get; set; } = 0xFF00E5FF;
+    /// <summary>プラットフォーム外枠線色 (<see cref="Color"/>)</summary>
+    public Color BorderColor { get; set; } = Color.FromArgb(0xFF, 0x00, 0xE5, 0xFF);
 
-    /// <summary>プラットフォーム上面ハイライト色 (ARGB)</summary>
-    public uint TopHighlightColor { get; set; } = 0xFF80FFFF;
+    /// <summary>プラットフォーム上面ハイライト色 (<see cref="Color"/>)</summary>
+    public Color TopHighlightColor { get; set; } = Color.FromArgb(0xFF, 0x80, 0xFF, 0xFF);
 
     /// <summary>上面ハイライトの内側オフセット量</summary>
     public int TopHighlightOffset { get; set; } = 2;
@@ -28,14 +29,14 @@ public sealed class PlatformRenderConfig
 /// </summary>
 public sealed class BossEffectsRenderConfig
 {
-    /// <summary>Phase 1 オーラカラー (ARGB)</summary>
-    public uint Phase1AuraColor { get; set; } = 0xFF00E5FF;
+    /// <summary>Phase 1 オーラカラー (<see cref="Color"/>)</summary>
+    public Color Phase1AuraColor { get; set; } = Color.FromArgb(0xFF, 0x00, 0xE5, 0xFF);
 
-    /// <summary>Phase 2 オーラカラー (ARGB)</summary>
-    public uint Phase2AuraColor { get; set; } = 0xFFBA55D3;
+    /// <summary>Phase 2 オーラカラー (<see cref="Color"/>)</summary>
+    public Color Phase2AuraColor { get; set; } = Color.FromArgb(0xFF, 0xBA, 0x55, 0xD3);
 
-    /// <summary>Phase 3 オーラカラー (ARGB)</summary>
-    public uint Phase3AuraColor { get; set; } = 0xFFFF1744;
+    /// <summary>Phase 3 オーラカラー (<see cref="Color"/>)</summary>
+    public Color Phase3AuraColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x17, 0x44);
 
     /// <summary>オーラ基本半径</summary>
     public float AuraBaseRadius { get; set; } = 75.0f;
@@ -52,47 +53,47 @@ public sealed class BossEffectsRenderConfig
     /// <summary>前隙予兆リング収縮距離</summary>
     public float TelegraphEndRadiusDelta { get; set; } = 60.0f;
 
-    /// <summary>前隙予兆リング外枠色 (ARGB)</summary>
-    public uint TelegraphRingColor { get; set; } = 0xFFFF3333;
+    /// <summary>前隙予兆リング外枠色 (<see cref="Color"/>)</summary>
+    public Color TelegraphRingColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x33, 0x33);
 
-    /// <summary>前隙予兆リング内枠色 (ARGB)</summary>
-    public uint TelegraphInnerRingColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>前隙予兆リング内枠色 (<see cref="Color"/>)</summary>
+    public Color TelegraphInnerRingColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 
     /// <summary>前隙予兆中心コア半径</summary>
     public float TelegraphCoreRadius { get; set; } = 35.0f;
 
-    /// <summary>前隙予兆中心コア色 (ARGB)</summary>
-    public uint TelegraphCoreColor { get; set; } = 0x55FF2222;
+    /// <summary>前隙予兆中心コア色 (<see cref="Color"/>)</summary>
+    public Color TelegraphCoreColor { get; set; } = Color.FromArgb(0x55, 0xFF, 0x22, 0x22);
 
     /// <summary>無敵シールド基本半径</summary>
     public float ShieldBaseRadius { get; set; } = 85.0f;
 
-    /// <summary>無敵シールド脈動振幅</summary>
+    /// <summary>无敌シールド脈動振幅</summary>
     public float ShieldPulseAmp { get; set; } = 6.0f;
 
     /// <summary>無敵シールド脈動周波数</summary>
     public float ShieldPulseSpeed { get; set; } = 12.0f;
 
-    /// <summary>無敵シールド外枠色 (ARGB)</summary>
-    public uint ShieldOuterColor { get; set; } = 0xFFFFD700;
+    /// <summary>無敵シールド外枠色 (<see cref="Color"/>)</summary>
+    public Color ShieldOuterColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xD7, 0x00);
 
-    /// <summary>無敵シールド内枠色 (ARGB)</summary>
-    public uint ShieldInnerColor { get; set; } = 0xFFFFF275;
+    /// <summary>無敵シールド内枠色 (<see cref="Color"/>)</summary>
+    public Color ShieldInnerColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xF2, 0x75);
 
-    /// <summary>無敵シールド半透明塗りつぶし色 (ARGB)</summary>
-    public uint ShieldFillColor { get; set; } = 0x44FFFF88;
+    /// <summary>無敵シールド半透明塗りつぶし色 (<see cref="Color"/>)</summary>
+    public Color ShieldFillColor { get; set; } = Color.FromArgb(0x44, 0xFF, 0xFF, 0x88);
 
     /// <summary>後隙（隙あり）時の光輪半径</summary>
     public float RecoveringAuraRadius { get; set; } = 65.0f;
 
-    /// <summary>後隙時の光輪色 (ARGB)</summary>
-    public uint RecoveringAuraColor { get; set; } = 0x3300E5FF;
+    /// <summary>後隙時の光輪色 (<see cref="Color"/>)</summary>
+    public Color RecoveringAuraColor { get; set; } = Color.FromArgb(0x33, 0x00, 0xE5, 0xFF);
 
     /// <summary>被弾ホワイトフラッシュ半径</summary>
     public float HitFlashRadius { get; set; } = 45.0f;
 
-    /// <summary>被弾ホワイトフラッシュ色 (ARGB)</summary>
-    public uint HitFlashColor { get; set; } = 0x88FFFFFF;
+    /// <summary>被弾ホワイトフラッシュ色 (<see cref="Color"/>)</summary>
+    public Color HitFlashColor { get; set; } = Color.FromArgb(0x88, 0xFF, 0xFF, 0xFF);
 
     /// <summary>Boss スプライト描画スケール</summary>
     public double BossSpriteScale { get; set; } = 2.8;
@@ -112,14 +113,14 @@ public sealed class PlayerRenderConfig
     /// <summary>当たり判定コア点（内円）半径</summary>
     public float HitboxCoreRadius { get; set; } = 3.0f;
 
-    /// <summary>当たり判定コア点塗りつぶし色 (ARGB)</summary>
-    public uint HitboxCoreColor { get; set; } = 0xFFFF0033;
+    /// <summary>当たり判定コア点塗りつぶし色 (<see cref="Color"/>)</summary>
+    public Color HitboxCoreColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x00, 0x33);
 
     /// <summary>当たり判定枠（外円）半径</summary>
     public float HitboxBorderRadius { get; set; } = 4.0f;
 
-    /// <summary>当たり判定枠色 (ARGB)</summary>
-    public uint HitboxBorderColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>当たり判定枠色 (<see cref="Color"/>)</summary>
+    public Color HitboxBorderColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 }
 
 /// <summary>
@@ -130,14 +131,14 @@ public sealed class BulletRenderConfig
     /// <summary>プレイヤー弾外層グロー半径</summary>
     public float PlayerBulletOuterRadius { get; set; } = 6.0f;
 
-    /// <summary>プレイヤー弾外層グロー色 (ARGB)</summary>
-    public uint PlayerBulletOuterColor { get; set; } = 0xFF00FFFF;
+    /// <summary>プレイヤー弾外層グロー色 (<see cref="Color"/>)</summary>
+    public Color PlayerBulletOuterColor { get; set; } = Color.FromArgb(0xFF, 0x00, 0xFF, 0xFF);
 
     /// <summary>プレイヤー弾内層コア半径</summary>
     public float PlayerBulletInnerRadius { get; set; } = 3.0f;
 
-    /// <summary>プレイヤー弾内層コア色 (ARGB)</summary>
-    public uint PlayerBulletInnerColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>プレイヤー弾内層コア色 (<see cref="Color"/>)</summary>
+    public Color PlayerBulletInnerColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 
     /// <summary>プレイヤー弾ビームトレイル半幅</summary>
     public int PlayerBulletTrailHalfWidth { get; set; } = 7;
@@ -145,8 +146,8 @@ public sealed class BulletRenderConfig
     /// <summary>プレイヤー弾ビームトレイル半高</summary>
     public int PlayerBulletTrailHalfHeight { get; set; } = 2;
 
-    /// <summary>プレイヤー弾ビームトレイル色 (ARGB)</summary>
-    public uint PlayerBulletTrailColor { get; set; } = 0xFF80FFFF;
+    /// <summary>プレイヤー弾ビームトレイル色 (<see cref="Color"/>)</summary>
+    public Color PlayerBulletTrailColor { get; set; } = Color.FromArgb(0xFF, 0x80, 0xFF, 0xFF);
 
     /// <summary>Boss 弾内層ホワイトコア半径比率</summary>
     public float BossBulletCoreRadiusRatio { get; set; } = 0.45f;
@@ -154,8 +155,8 @@ public sealed class BulletRenderConfig
     /// <summary>Boss 弾内層ホワイトコア最小ピクセル半径</summary>
     public int BossBulletCoreMinRadius { get; set; } = 2;
 
-    /// <summary>Boss 弾内層ホワイトコア色 (ARGB)</summary>
-    public uint BossBulletCoreColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>Boss 弾内層ホワイトコア色 (<see cref="Color"/>)</summary>
+    public Color BossBulletCoreColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 
     /// <summary>Boss 弾外枠付加ピクセル半径</summary>
     public int BossBulletOutlinePadding { get; set; } = 2;
@@ -172,8 +173,8 @@ public sealed class HudRenderConfig
     /// <summary>タイトル Y 座標</summary>
     public int TitleY { get; set; } = 16;
 
-    /// <summary>タイトル文字色 (ARGB)</summary>
-    public uint TitleColor { get; set; } = 0xFFFFD700;
+    /// <summary>タイトル文字色 (<see cref="Color"/>)</summary>
+    public Color TitleColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xD7, 0x00);
 
     /// <summary>タイトル文字列</summary>
     public string TitleText { get; set; } = "=== BULLET BATTLE (TOML FSM) ===";
@@ -190,23 +191,23 @@ public sealed class HudRenderConfig
     /// <summary>射撃操作案内テキスト</summary>
     public string ShootHelpText { get; set; } = "[J/Z]: Shoot Pistol";
 
-    /// <summary>通常案内文字色 (ARGB)</summary>
-    public uint HelpTextColor { get; set; } = 0xFFCCCCCC;
+    /// <summary>通常案内文字色 (<see cref="Color"/>)</summary>
+    public Color HelpTextColor { get; set; } = Color.FromArgb(0xFF, 0xCC, 0xCC, 0xCC);
 
     /// <summary>リスタート案内テキスト</summary>
     public string RestartHelpText { get; set; } = "[R]: Instant Restart (1-Frame Reset)";
 
-    /// <summary>リスタート案内文字色 (ARGB)</summary>
-    public uint RestartHelpColor { get; set; } = 0xFFFF8080;
+    /// <summary>リスタート案内文字色 (<see cref="Color"/>)</summary>
+    public Color RestartHelpColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x80, 0x80);
 
     /// <summary>二段ジャンプインジケータ Y 座標</summary>
     public int DoubleJumpY { get; set; } = 116;
 
-    /// <summary>二段ジャンプ有効時シンボル色 (ARGB)</summary>
-    public uint DoubleJumpActiveColor { get; set; } = 0xFF00E5FF;
+    /// <summary>二段ジャンプ有効時シンボル色 (<see cref="Color"/>)</summary>
+    public Color DoubleJumpActiveColor { get; set; } = Color.FromArgb(0xFF, 0x00, 0xE5, 0xFF);
 
-    /// <summary>二段ジャンプ消費時シンボル色 (ARGB)</summary>
-    public uint DoubleJumpInactiveColor { get; set; } = 0xFF888888;
+    /// <summary>二段ジャンプ消費時シンボル色 (<see cref="Color"/>)</summary>
+    public Color DoubleJumpInactiveColor { get; set; } = Color.FromArgb(0xFF, 0x88, 0x88, 0x88);
 }
 
 /// <summary>
@@ -229,44 +230,44 @@ public sealed class BossHpBarRenderConfig
     /// <summary>HP バー背景外枠パディング</summary>
     public int BgPadding { get; set; } = 4;
 
-    /// <summary>HP バー暗色背景色 (ARGB)</summary>
-    public uint BgColor { get; set; } = 0xDD0A0D14;
+    /// <summary>HP バー暗色背景色 (<see cref="Color"/>)</summary>
+    public Color BgColor { get; set; } = Color.FromArgb(0xDD, 0x0A, 0x0D, 0x14);
 
-    /// <summary>HP バー外枠線色 (ARGB)</summary>
-    public uint BorderColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>HP バー外枠線色 (<see cref="Color"/>)</summary>
+    public Color BorderColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 
     /// <summary>HP バー上面ハイライト厚み</summary>
     public int TopHighlightThickness { get; set; } = 3;
 
-    /// <summary>HP バー上面ハイライト色 (ARGB)</summary>
-    public uint TopHighlightColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>HP バー上面ハイライト色 (<see cref="Color"/>)</summary>
+    public Color TopHighlightColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 
     /// <summary>ヘッダー文字の Y 座標オフセット</summary>
     public int HeaderOffsetY { get; set; } = 22;
 
-    /// <summary>Boss タイトル文字色 (ARGB)</summary>
-    public uint TitleColor { get; set; } = 0xFFFFD700;
+    /// <summary>Boss タイトル文字色 (<see cref="Color"/>)</summary>
+    public Color TitleColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xD7, 0x00);
 
-    /// <summary>HP 数値文字色 (ARGB)</summary>
-    public uint HpTextColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>HP 数値文字色 (<see cref="Color"/>)</summary>
+    public Color HpTextColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 
     /// <summary>状態バッジテキストの X 軸オフセット</summary>
     public int StateBadgeOffsetX { get; set; } = 270;
 
-    /// <summary>前隙予兆状態バッジ文字色 (ARGB)</summary>
-    public uint StateTelegraphingColor { get; set; } = 0xFFFF5555;
+    /// <summary>前隙予兆状態バッジ文字色 (<see cref="Color"/>)</summary>
+    public Color StateTelegraphingColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x55, 0x55);
 
-    /// <summary>発動中状態バッジ文字色 (ARGB)</summary>
-    public uint StateCastingColor { get; set; } = 0xFFFFD700;
+    /// <summary>発動中状態バッジ文字色 (<see cref="Color"/>)</summary>
+    public Color StateCastingColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xD7, 0x00);
 
-    /// <summary>隙あり虚弱状態バッジ文字色 (ARGB)</summary>
-    public uint StateRecoveringColor { get; set; } = 0xFF00FF88;
+    /// <summary>隙あり虚弱状態バッジ文字色 (<see cref="Color"/>)</summary>
+    public Color StateRecoveringColor { get; set; } = Color.FromArgb(0xFF, 0x00, 0xFF, 0x88);
 
-    /// <summary>フェーズ遷移演出状態バッジ文字色 (ARGB)</summary>
-    public uint StatePhaseTransitionColor { get; set; } = 0xFFFF88FF;
+    /// <summary>フェーズ遷移演出状態バッジ文字色 (<see cref="Color"/>)</summary>
+    public Color StatePhaseTransitionColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x88, 0xFF);
 
-    /// <summary>通常巡航状態バッジ文字色 (ARGB)</summary>
-    public uint StateDefaultColor { get; set; } = 0xFF88CCFF;
+    /// <summary>通常巡航状態バッジ文字色 (<see cref="Color"/>)</summary>
+    public Color StateDefaultColor { get; set; } = Color.FromArgb(0xFF, 0x88, 0xCC, 0xFF);
 }
 
 /// <summary>
@@ -286,14 +287,14 @@ public sealed class ModalRenderConfig
     /// <summary>Game Over 矩形右下 Y 座標</summary>
     public int GameOverY2 { get; set; } = 440;
 
-    /// <summary>Game Over 背景色 (ARGB)</summary>
-    public uint GameOverBgColor { get; set; } = 0xDD2A0505;
+    /// <summary>Game Over 背景色 (<see cref="Color"/>)</summary>
+    public Color GameOverBgColor { get; set; } = Color.FromArgb(0xDD, 0x2A, 0x05, 0x05);
 
-    /// <summary>Game Over 外枠線色 (ARGB)</summary>
-    public uint GameOverOuterBorderColor { get; set; } = 0xFFFF3333;
+    /// <summary>Game Over 外枠線色 (<see cref="Color"/>)</summary>
+    public Color GameOverOuterBorderColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x33, 0x33);
 
-    /// <summary>Game Over 内枠線色 (ARGB)</summary>
-    public uint GameOverInnerBorderColor { get; set; } = 0xFFFF8888;
+    /// <summary>Game Over 内枠線色 (<see cref="Color"/>)</summary>
+    public Color GameOverInnerBorderColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x88, 0x88);
 
     /// <summary>Game Over タイトル X 座標</summary>
     public int GameOverTitleX { get; set; } = 540;
@@ -301,8 +302,8 @@ public sealed class ModalRenderConfig
     /// <summary>Game Over タイトル Y 座標</summary>
     public int GameOverTitleY { get; set; } = 305;
 
-    /// <summary>Game Over タイトル文字色 (ARGB)</summary>
-    public uint GameOverTitleColor { get; set; } = 0xFFFF3333;
+    /// <summary>Game Over タイトル文字色 (<see cref="Color"/>)</summary>
+    public Color GameOverTitleColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x33, 0x33);
 
     /// <summary>Game Over タイトル文字列</summary>
     public string GameOverTitleText { get; set; } = "=== GAME OVER ===";
@@ -313,8 +314,8 @@ public sealed class ModalRenderConfig
     /// <summary>Game Over リトライテキスト Y 座標</summary>
     public int GameOverRetryY { get; set; } = 360;
 
-    /// <summary>Game Over リトライ文字色 (ARGB)</summary>
-    public uint GameOverRetryColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>Game Over リトライ文字色 (<see cref="Color"/>)</summary>
+    public Color GameOverRetryColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 
     /// <summary>Game Over リトライ案内文字列</summary>
     public string GameOverRetryText { get; set; } = "Press  [ R ]  for Instant Retry!";
@@ -331,14 +332,14 @@ public sealed class ModalRenderConfig
     /// <summary>Victory 矩形右下 Y 座標</summary>
     public int VictoryY2 { get; set; } = 450;
 
-    /// <summary>Victory 背景色 (ARGB)</summary>
-    public uint VictoryBgColor { get; set; } = 0xEE2A2A00;
+    /// <summary>Victory 背景色 (<see cref="Color"/>)</summary>
+    public Color VictoryBgColor { get; set; } = Color.FromArgb(0xEE, 0x2A, 0x2A, 0x00);
 
-    /// <summary>Victory 外枠線色 (ARGB)</summary>
-    public uint VictoryOuterBorderColor { get; set; } = 0xFFFFD700;
+    /// <summary>Victory 外枠線色 (<see cref="Color"/>)</summary>
+    public Color VictoryOuterBorderColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xD7, 0x00);
 
-    /// <summary>Victory 内枠線色 (ARGB)</summary>
-    public uint VictoryInnerBorderColor { get; set; } = 0xFFFFF275;
+    /// <summary>Victory 内枠線色 (<see cref="Color"/>)</summary>
+    public Color VictoryInnerBorderColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xF2, 0x75);
 
     /// <summary>Victory タイトル X 座標</summary>
     public int VictoryTitleX { get; set; } = 440;
@@ -346,8 +347,8 @@ public sealed class ModalRenderConfig
     /// <summary>Victory タイトル Y 座標</summary>
     public int VictoryTitleY { get; set; } = 295;
 
-    /// <summary>Victory タイトル文字色 (ARGB)</summary>
-    public uint VictoryTitleColor { get; set; } = 0xFFFFD700;
+    /// <summary>Victory タイトル文字色 (<see cref="Color"/>)</summary>
+    public Color VictoryTitleColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xD7, 0x00);
 
     /// <summary>Victory タイトル文字列</summary>
     public string VictoryTitleText { get; set; } = "★ ★ ★ VICTORY! BOSS DEFEATED! ★ ★ ★";
@@ -358,8 +359,8 @@ public sealed class ModalRenderConfig
     /// <summary>Victory リトライテキスト Y 座標</summary>
     public int VictoryRetryY { get; set; } = 350;
 
-    /// <summary>Victory リトライ文字色 (ARGB)</summary>
-    public uint VictoryRetryColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>Victory リトライ文字色 (<see cref="Color"/>)</summary>
+    public Color VictoryRetryColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
 
     /// <summary>Victory リトライ案内文字列</summary>
     public string VictoryRetryText { get; set; } = "Congratulations! Press [ R ] to Play Again!";
