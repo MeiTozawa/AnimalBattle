@@ -1,4 +1,4 @@
-# Boss Configuration
+# Boss Base Attributes
 MaxHp = 90.0
 BaseX = 640.0
 BaseY = 180.0
@@ -8,20 +8,35 @@ HitboxWidth = 120.0
 HitboxHeight = 100.0
 HitFlashDuration = 0.08
 
-# Phase 1 Hover Motion
-Phase1HoverSpeedX = 1.5
-Phase1HoverAmpX = 80.0
-Phase1HoverSpeedY = 2.0
-Phase1HoverAmpY = 25.0
+# Phase 1 State Machine Configuration
+[Phase1]
+HpThreshold = 1.0
+HoverDuration = 1.0
+HoverSpeedX = 1.5
+HoverAmpX = 80.0
+HoverSpeedY = 2.0
+HoverAmpY = 25.0
+TransitionDuration = 1.0
+Skills = ["Aimed3Shot", "RingBurst"]
 
-# Phase 2 Hover Motion
-Phase2HoverSpeedX = 1.2
-Phase2HoverAmpX = 260.0
-Phase2HoverSpeedY = 2.4
-Phase2HoverAmpY = 40.0
+# Phase 2 State Machine Configuration
+[Phase2]
+HpThreshold = 0.66
+HoverDuration = 0.7
+HoverSpeedX = 1.2
+HoverAmpX = 260.0
+HoverSpeedY = 2.4
+HoverAmpY = 40.0
+TransitionDuration = 1.0
+Skills = ["DoubleSpiral", "RainDrop"]
 
-# Phase 3 Hover Motion
-Phase3HoverSpeedX = 2.2
-Phase3HoverAmpX = 320.0
-Phase3HoverSpeedY = 3.6
-Phase3HoverAmpY = 50.0
+# Phase 3 State Machine Configuration
+[Phase3]
+HpThreshold = 0.33
+HoverDuration = 0.4
+HoverSpeedX = 2.2
+HoverAmpX = 320.0
+HoverSpeedY = 3.6
+HoverAmpY = 50.0
+TransitionDuration = 1.0
+Skills = ["CrossChaos", "FastSniper"]

@@ -21,6 +21,7 @@ public struct BossBulletTag
 [Require<Velocity>]
 [Require<CollisionBox>]
 [Require<BossStats>]
+[Require<BossStateMachine>]
 public struct BossTag
 {
 }

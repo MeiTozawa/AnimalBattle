@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Flecs.NET.Core;
 using AnimalBattle.Animations;
 using AnimalBattle.Components;
@@ -8,8 +9,8 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// プレイヤーの移動・二段跳躍・射撃、Boss AI（3 フェーズ）、弾物理、当たり判定、および R キー即時リセットを
-/// TOML 設定ファイル（player.toml, boss.toml, patterns.toml, arena.toml）に基づいて駆動する ECS 常駐 Routine (System)。
+/// プレイヤーの移動・二段跳躍・射撃、Boss 分層状態機 (HFSM: Phase -> Hovering -> Telegraphing -> Casting -> Recovering)、
+/// 弾物理、当たり判定、および R キー即時リセットを TOML 設定に基づいて駆動する ECS 常駐 Routine (System)。
 /// </summary>
 public static class CombatSystems
 {
@@ -217,10 +218,10 @@ public static class CombatSystems
 
     private static void RegisterBossAiSystem(World world)
     {
-        world.System<Transform, BossStats, Sprite>("BossAiSystem")
+        world.System<Transform, BossStats, BossStateMachine, Sprite>("BossAiSystem")
              .With<BossTag>()
              .Kind(Ecs.OnUpdate)
-             .Each((ref Transform trans, ref BossStats stats, ref Sprite sprite) =>
+             .Each((ref Transform trans, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
              {
                  BossConfig bCfg = ConfigManager.Boss;
                  PatternConfig patternCfg = ConfigManager.Pattern;
@@ -251,131 +252,236 @@ public static class CombatSystems
                  }
 
                  float hpRatio = stats.CurrentHp / stats.MaxHp;
-                 int previousPhase = stats.Phase;
+                 int targetPhase = hpRatio > bCfg.Phase2.HpThreshold ? 1 : (hpRatio > bCfg.Phase3.HpThreshold ? 2 : 3);
 
-                 if (hpRatio > 0.66f)
+                 if (targetPhase != stats.Phase)
                  {
-                     stats.Phase = 1;
-                 }
-                 else if (hpRatio > 0.33f)
-                 {
-                     stats.Phase = 2;
-                 }
-                 else
-                 {
-                     stats.Phase = 3;
-                 }
+                     stats.Phase = targetPhase;
+                     PhaseFsmConfig newPhaseCfg = stats.Phase == 2 ? bCfg.Phase2 : bCfg.Phase3;
+                     fsm.CurrentState = BossStateKind.PhaseTransition;
+                     fsm.StateTimer = 0.0f;
+                     fsm.StateDuration = newPhaseCfg.TransitionDuration;
+                     fsm.IsInvulnerable = true;
 
-                 if (stats.Phase != previousPhase)
-                 {
                      ClearAllBossBullets(world);
                      SpawnShockwave(world, trans.X, trans.Y);
                  }
 
+                 PhaseFsmConfig currentPhaseCfg = stats.Phase switch
+                 {
+                     1 => bCfg.Phase1,
+                     2 => bCfg.Phase2,
+                     _ => bCfg.Phase3
+                 };
+
                  stats.HoverTimer += 0.016f;
+                 trans.X = bCfg.BaseX + MathF.Sin(stats.HoverTimer * currentPhaseCfg.HoverSpeedX) * currentPhaseCfg.HoverAmpX;
+                 trans.Y = bCfg.BaseY + MathF.Cos(stats.HoverTimer * currentPhaseCfg.HoverSpeedY) * currentPhaseCfg.HoverAmpY;
 
-                 if (stats.Phase == 1)
-                 {
-                     trans.X = stats.BaseX + MathF.Sin(stats.HoverTimer * bCfg.Phase1HoverSpeedX) * bCfg.Phase1HoverAmpX;
-                     trans.Y = stats.BaseY + MathF.Cos(stats.HoverTimer * bCfg.Phase1HoverSpeedY) * bCfg.Phase1HoverAmpY;
-                 }
-                 else if (stats.Phase == 2)
-                 {
-                     trans.X = stats.BaseX + MathF.Sin(stats.HoverTimer * bCfg.Phase2HoverSpeedX) * bCfg.Phase2HoverAmpX;
-                     trans.Y = stats.BaseY + MathF.Cos(stats.HoverTimer * bCfg.Phase2HoverSpeedY) * bCfg.Phase2HoverAmpY;
-                 }
-                 else
-                 {
-                     trans.X = stats.BaseX + MathF.Sin(stats.HoverTimer * bCfg.Phase3HoverSpeedX) * bCfg.Phase3HoverAmpX;
-                     trans.Y = stats.BaseY + MathF.Cos(stats.HoverTimer * bCfg.Phase3HoverSpeedY) * bCfg.Phase3HoverAmpY;
-                 }
+                 fsm.StateTimer += 0.016f;
 
-                 if (!isPlayerAlive)
+                 switch (fsm.CurrentState)
                  {
-                     return;
-                 }
-
-                 stats.AttackTimer1 -= 0.016f;
-                 stats.AttackTimer2 -= 0.016f;
-
-                 // Phase 1: 自機狙い 3 連射 + 16 方向放射弾
-                 if (stats.Phase == 1)
-                 {
-                     Phase1PatternConfig p1 = patternCfg.Phase1;
-                     if (stats.AttackTimer1 <= 0.0f)
-                     {
-                         stats.AttackTimer1 = p1.AimedInterval;
-                         float baseAngle = MathF.Atan2(playerY - trans.Y, playerX - trans.X);
-                         for (int i = -1; i <= 1; i++)
+                     case BossStateKind.PhaseTransition:
+                         fsm.IsInvulnerable = true;
+                         if (fsm.StateTimer >= fsm.StateDuration)
                          {
-                             float angle = baseAngle + i * p1.AimedSpreadAngle;
-                             SpawnBossBullet(world, trans.X, trans.Y, MathF.Cos(angle) * p1.AimedSpeed, MathF.Sin(angle) * p1.AimedSpeed, p1.AimedRadius, p1.AimedFillColor, p1.AimedOutlineColor);
+                             fsm.IsInvulnerable = false;
+                             fsm.CurrentState = BossStateKind.Hovering;
+                             fsm.StateTimer = 0.0f;
+                             fsm.StateDuration = currentPhaseCfg.HoverDuration;
+                             fsm.CurrentSkillIndex = 0;
                          }
-                     }
+                         break;
 
-                     if (stats.AttackTimer2 <= 0.0f)
-                     {
-                         stats.AttackTimer2 = p1.RingInterval;
-                         int bulletCount = Math.Max(4, p1.RingBulletCount);
-                         for (int i = 0; i < bulletCount; i++)
+                     case BossStateKind.Hovering:
+                         if (isPlayerAlive && fsm.StateTimer >= fsm.StateDuration)
                          {
-                             float angle = (i / (float)bulletCount) * MathF.PI * 2.0f + stats.AngleOffset;
-                             SpawnBossBullet(world, trans.X, trans.Y, MathF.Cos(angle) * p1.RingSpeed, MathF.Sin(angle) * p1.RingSpeed, p1.RingRadius, p1.RingFillColor, p1.RingOutlineColor);
+                             List<string> skills = currentPhaseCfg.Skills;
+                             if (skills.Count > 0)
+                             {
+                                 fsm.CurrentSkillName = skills[fsm.CurrentSkillIndex % skills.Count];
+                                 fsm.CurrentSkillIndex++;
+
+                                 float windUp = GetSkillWindUpTime(patternCfg, fsm.CurrentSkillName);
+                                 fsm.CurrentState = BossStateKind.Telegraphing;
+                                 fsm.StateTimer = 0.0f;
+                                 fsm.StateDuration = windUp;
+                             }
                          }
-                         stats.AngleOffset += p1.RingAngleStep;
-                     }
-                 }
-                 // Phase 2: 双螺旋回転弾 + 天降る雨弾
-                 else if (stats.Phase == 2)
-                 {
-                     Phase2PatternConfig p2 = patternCfg.Phase2;
-                     if (stats.AttackTimer1 <= 0.0f)
-                     {
-                         stats.AttackTimer1 = p2.SpiralInterval;
-                         float angle1 = stats.AngleOffset;
-                         float angle2 = stats.AngleOffset + MathF.PI;
+                         break;
 
-                         SpawnBossBullet(world, trans.X, trans.Y, MathF.Cos(angle1) * p2.SpiralSpeed, MathF.Sin(angle1) * p2.SpiralSpeed, p2.SpiralRadius, p2.SpiralFillColor1, p2.SpiralOutlineColor1);
-                         SpawnBossBullet(world, trans.X, trans.Y, MathF.Cos(angle2) * p2.SpiralSpeed, MathF.Sin(angle2) * p2.SpiralSpeed, p2.SpiralRadius, p2.SpiralFillColor2, p2.SpiralOutlineColor2);
+                     case BossStateKind.Telegraphing:
+                         uint telegraphColor = GetSkillTelegraphColor(patternCfg, fsm.CurrentSkillName);
+                         SpawnTelegraphSpark(world, trans.X, trans.Y, telegraphColor);
 
-                         stats.AngleOffset += p2.SpiralAngleStep;
-                     }
-
-                     if (stats.AttackTimer2 <= 0.0f)
-                     {
-                         stats.AttackTimer2 = p2.RainInterval;
-                         Random random = Random.Shared;
-                         int minX = (int)p2.RainMinX;
-                         int maxX = (int)p2.RainMaxX;
-                         float rainX1 = random.Next(minX, maxX);
-                         float rainX2 = random.Next(minX, maxX);
-                         SpawnBossBullet(world, rainX1, 0.0f, 0.0f, p2.RainSpeed, p2.RainRadius, p2.RainFillColor, p2.RainOutlineColor);
-                         SpawnBossBullet(world, rainX2, 0.0f, 0.0f, p2.RainSpeed, p2.RainRadius, p2.RainFillColor, p2.RainOutlineColor);
-                     }
-                 }
-                 // Phase 3: 狂暴終局（全方位交差波 + 高速スナイプ弾）
-                 else
-                 {
-                     Phase3PatternConfig p3 = patternCfg.Phase3;
-                     if (stats.AttackTimer1 <= 0.0f)
-                     {
-                         stats.AttackTimer1 = p3.CrossInterval;
-                         for (int k = 0; k < 4; k++)
+                         if (fsm.StateTimer >= fsm.StateDuration)
                          {
-                             float angle = stats.AngleOffset + k * (MathF.PI / 2.0f);
-                             SpawnBossBullet(world, trans.X, trans.Y, MathF.Cos(angle) * p3.CrossSpeed, MathF.Sin(angle) * p3.CrossSpeed, p3.CrossRadius, p3.CrossFillColor, p3.CrossOutlineColor);
+                             float castDuration = GetSkillCastDuration(patternCfg, fsm.CurrentSkillName);
+                             fsm.CurrentState = BossStateKind.Casting;
+                             fsm.StateTimer = 0.0f;
+                             fsm.StateDuration = castDuration;
+                             fsm.SubTimer = 0.0f;
                          }
-                         stats.AngleOffset += p3.CrossAngleStep;
-                     }
+                         break;
 
-                     if (stats.AttackTimer2 <= 0.0f)
-                     {
-                         stats.AttackTimer2 = p3.SniperInterval;
-                         float aimAngle = MathF.Atan2(playerY - trans.Y, playerX - trans.X);
-                         SpawnBossBullet(world, trans.X, trans.Y, MathF.Cos(aimAngle) * p3.SniperSpeed, MathF.Sin(aimAngle) * p3.SniperSpeed, p3.SniperRadius, p3.SniperFillColor, p3.SniperOutlineColor);
-                     }
+                     case BossStateKind.Casting:
+                         ExecuteSkillPattern(world, trans.X, trans.Y, playerX, playerY, patternCfg, ref fsm);
+
+                         if (fsm.StateTimer >= fsm.StateDuration)
+                         {
+                             float recoveryTime = GetSkillRecoveryTime(patternCfg, fsm.CurrentSkillName);
+                             fsm.CurrentState = BossStateKind.Recovering;
+                             fsm.StateTimer = 0.0f;
+                             fsm.StateDuration = recoveryTime;
+                         }
+                         break;
+
+                     case BossStateKind.Recovering:
+                         if (fsm.StateTimer >= fsm.StateDuration)
+                         {
+                             fsm.CurrentState = BossStateKind.Hovering;
+                             fsm.StateTimer = 0.0f;
+                             fsm.StateDuration = currentPhaseCfg.HoverDuration;
+                         }
+                         break;
                  }
              });
+    }
+
+    private static float GetSkillWindUpTime(PatternConfig config, string skillName) => skillName switch
+    {
+        "Aimed3Shot" => config.Aimed3Shot.WindUpTime,
+        "RingBurst" => config.RingBurst.WindUpTime,
+        "DoubleSpiral" => config.DoubleSpiral.WindUpTime,
+        "RainDrop" => config.RainDrop.WindUpTime,
+        "CrossChaos" => config.CrossChaos.WindUpTime,
+        "FastSniper" => config.FastSniper.WindUpTime,
+        _ => 0.5f
+    };
+
+    private static uint GetSkillTelegraphColor(PatternConfig config, string skillName) => skillName switch
+    {
+        "Aimed3Shot" => config.Aimed3Shot.TelegraphColor,
+        "RingBurst" => config.RingBurst.TelegraphColor,
+        "DoubleSpiral" => config.DoubleSpiral.TelegraphColor,
+        "RainDrop" => config.RainDrop.TelegraphColor,
+        "CrossChaos" => config.CrossChaos.TelegraphColor,
+        "FastSniper" => config.FastSniper.TelegraphColor,
+        _ => 0xFFFFFFFF
+    };
+
+    private static float GetSkillCastDuration(PatternConfig config, string skillName) => skillName switch
+    {
+        "Aimed3Shot" => config.Aimed3Shot.CastDuration,
+        "RingBurst" => config.RingBurst.CastDuration,
+        "DoubleSpiral" => config.DoubleSpiral.CastDuration,
+        "RainDrop" => config.RainDrop.CastDuration,
+        "CrossChaos" => config.CrossChaos.CastDuration,
+        "FastSniper" => config.FastSniper.CastDuration,
+        _ => 1.0f
+    };
+
+    private static float GetSkillRecoveryTime(PatternConfig config, string skillName) => skillName switch
+    {
+        "Aimed3Shot" => config.Aimed3Shot.RecoveryTime,
+        "RingBurst" => config.RingBurst.RecoveryTime,
+        "DoubleSpiral" => config.DoubleSpiral.RecoveryTime,
+        "RainDrop" => config.RainDrop.RecoveryTime,
+        "CrossChaos" => config.CrossChaos.RecoveryTime,
+        "FastSniper" => config.FastSniper.RecoveryTime,
+        _ => 0.5f
+    };
+
+    private static void ExecuteSkillPattern(World world, float bx, float by, float px, float py, PatternConfig patternCfg, ref BossStateMachine fsm)
+    {
+        fsm.SubTimer -= 0.016f;
+
+        switch (fsm.CurrentSkillName)
+        {
+            case "Aimed3Shot":
+                if (fsm.SubTimer <= 0.0f)
+                {
+                    fsm.SubTimer = 0.45f;
+                    Aimed3ShotConfig p = patternCfg.Aimed3Shot;
+                    float baseAngle = MathF.Atan2(py - by, px - bx);
+                    for (int i = -1; i <= 1; i++)
+                    {
+                        float angle = baseAngle + i * p.SpreadAngle;
+                        SpawnBossBullet(world, bx, by, MathF.Cos(angle) * p.BulletSpeed, MathF.Sin(angle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
+                    }
+                }
+                break;
+
+            case "RingBurst":
+                if (fsm.SubTimer <= 0.0f)
+                {
+                    fsm.SubTimer = 0.50f;
+                    RingBurstConfig p = patternCfg.RingBurst;
+                    int count = Math.Max(4, p.BulletCount);
+                    for (int i = 0; i < count; i++)
+                    {
+                        float angle = (i / (float)count) * MathF.PI * 2.0f + fsm.AngleOffset;
+                        SpawnBossBullet(world, bx, by, MathF.Cos(angle) * p.BulletSpeed, MathF.Sin(angle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
+                    }
+                    fsm.AngleOffset += p.AngleStep;
+                }
+                break;
+
+            case "DoubleSpiral":
+                if (fsm.SubTimer <= 0.0f)
+                {
+                    DoubleSpiralConfig p = patternCfg.DoubleSpiral;
+                    fsm.SubTimer = p.Interval;
+                    float angle1 = fsm.AngleOffset;
+                    float angle2 = fsm.AngleOffset + MathF.PI;
+
+                    SpawnBossBullet(world, bx, by, MathF.Cos(angle1) * p.BulletSpeed, MathF.Sin(angle1) * p.BulletSpeed, p.BulletRadius, p.FillColor1, p.OutlineColor1);
+                    SpawnBossBullet(world, bx, by, MathF.Cos(angle2) * p.BulletSpeed, MathF.Sin(angle2) * p.BulletSpeed, p.BulletRadius, p.FillColor2, p.OutlineColor2);
+
+                    fsm.AngleOffset += p.AngleStep;
+                }
+                break;
+
+            case "RainDrop":
+                if (fsm.SubTimer <= 0.0f)
+                {
+                    RainDropConfig p = patternCfg.RainDrop;
+                    fsm.SubTimer = p.Interval;
+                    Random random = Random.Shared;
+                    int minX = (int)p.MinX;
+                    int maxX = (int)p.MaxX;
+                    float rainX1 = random.Next(minX, maxX);
+                    float rainX2 = random.Next(minX, maxX);
+                    SpawnBossBullet(world, rainX1, 0.0f, 0.0f, p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
+                    SpawnBossBullet(world, rainX2, 0.0f, 0.0f, p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
+                }
+                break;
+
+            case "CrossChaos":
+                if (fsm.SubTimer <= 0.0f)
+                {
+                    CrossChaosConfig p = patternCfg.CrossChaos;
+                    fsm.SubTimer = p.Interval;
+                    for (int k = 0; k < 4; k++)
+                    {
+                        float angle = fsm.AngleOffset + k * (MathF.PI / 2.0f);
+                        SpawnBossBullet(world, bx, by, MathF.Cos(angle) * p.BulletSpeed, MathF.Sin(angle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
+                    }
+                    fsm.AngleOffset += p.AngleStep;
+                }
+                break;
+
+            case "FastSniper":
+                if (fsm.SubTimer <= 0.0f)
+                {
+                    FastSniperConfig p = patternCfg.FastSniper;
+                    fsm.SubTimer = 0.30f;
+                    float aimAngle = MathF.Atan2(py - by, px - bx);
+                    SpawnBossBullet(world, bx, by, MathF.Cos(aimAngle) * p.BulletSpeed, MathF.Sin(aimAngle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
+                }
+                break;
+        }
     }
 
     private static void RegisterBulletPhysicsSystems(World world)
@@ -427,11 +533,12 @@ public static class CombatSystems
                  float bossTop = 0.0f;
                  float bossBottom = 0.0f;
                  bool hasBoss = false;
+                 bool isInvulnerable = false;
 
-                 world.QueryBuilder<Transform, BossStats>()
+                 world.QueryBuilder<Transform, BossStats, BossStateMachine>()
                       .With<BossTag>()
                       .Build()
-                      .Each((ref Transform bTrans, ref BossStats bStats) =>
+                      .Each((ref Transform bTrans, ref BossStats bStats, ref BossStateMachine bFsm) =>
                       {
                           if (bStats.CurrentHp > 0.0f)
                           {
@@ -442,6 +549,7 @@ public static class CombatSystems
                               bossTop = bTrans.Y - bCfg.HitboxHeight / 2.0f;
                               bossBottom = bTrans.Y + bCfg.HitboxHeight / 2.0f;
                               hasBoss = true;
+                              isInvulnerable = bFsm.IsInvulnerable;
                           }
                       });
 
@@ -456,7 +564,10 @@ public static class CombatSystems
                               if (bulletTrans.X >= bossLeft && bulletTrans.X <= bossRight &&
                                   bulletTrans.Y >= bossTop && bulletTrans.Y <= bossBottom)
                               {
-                                  damageTaken += 1.0f;
+                                  if (!isInvulnerable)
+                                  {
+                                      damageTaken += 1.0f;
+                                  }
                                   SpawnHitSparkEffect(world, bulletTrans.X, bulletTrans.Y);
                                   bulletEntity.Destruct();
                               }
@@ -588,10 +699,10 @@ public static class CombatSystems
                               sprite.FlipX = false;
                           });
 
-                     world.QueryBuilder<Transform, BossStats>()
+                     world.QueryBuilder<Transform, BossStats, BossStateMachine>()
                           .With<BossTag>()
                           .Build()
-                          .Each((ref Transform trans, ref BossStats stats) =>
+                          .Each((ref Transform trans, ref BossStats stats, ref BossStateMachine fsm) =>
                           {
                               trans.X = bCfg.BaseX;
                               trans.Y = bCfg.BaseY;
@@ -602,6 +713,14 @@ public static class CombatSystems
                               stats.AngleOffset = 0.0f;
                               stats.HitFlashTimer = 0.0f;
                               stats.HoverTimer = 0.0f;
+
+                              fsm.CurrentState = BossStateKind.Hovering;
+                              fsm.StateTimer = 0.0f;
+                              fsm.StateDuration = bCfg.Phase1.HoverDuration;
+                              fsm.CurrentSkillIndex = 0;
+                              fsm.SubTimer = 0.0f;
+                              fsm.AngleOffset = 0.0f;
+                              fsm.IsInvulnerable = false;
                           });
                  }
              });
@@ -641,6 +760,15 @@ public static class CombatSystems
              .Add<EffectTag>();
     }
 
+    private static void SpawnTelegraphSpark(World world, float x, float y, uint color)
+    {
+        world.Entity()
+             .Set(new Transform(x, y, scaleX: 2.2f, scaleY: 2.2f))
+             .Set(FadeEffect.FadeOut(0.08f))
+             .Set(new HitFlashEffect(0.06f, color))
+             .Add<EffectTag>();
+    }
+
     private static void SpawnPlayerDeathParticles(World world, float x, float y)
     {
         for (int i = 0; i < 16; i++)
@@ -659,8 +787,8 @@ public static class CombatSystems
     private static void SpawnShockwave(World world, float x, float y)
     {
         world.Entity()
-             .Set(new Transform(x, y, scaleX: 3.0f, scaleY: 3.0f))
-             .Set(FadeEffect.FadeOut(0.35f))
+             .Set(new Transform(x, y, scaleX: 3.5f, scaleY: 3.5f))
+             .Set(FadeEffect.FadeOut(0.40f))
              .Add<EffectTag>();
     }
 

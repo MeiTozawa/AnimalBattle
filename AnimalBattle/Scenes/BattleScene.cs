@@ -57,6 +57,7 @@ public partial class BattleScene : IDisposable
             .Set(new Velocity())
             .Set(new CollisionBox(bossCfg.HitboxWidth, bossCfg.HitboxHeight))
             .Set(new BossStats(maxHp: bossCfg.MaxHp, baseX: bossCfg.BaseX, baseY: bossCfg.BaseY))
+            .Set(new BossStateMachine())
             .Set(new Sprite(catHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
             .Add<BossTag>();
 

@@ -6,7 +6,7 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// 弾、Boss、プレイヤー、プラットフォーム、および HUD・勝利/敗北バナーを
+/// 弾、Boss（FSM 預警光環・無敵盾）、プレイヤー、プラットフォーム、および HUD・状態機バナーを
 /// Flecs.NET ECS 常駐 Routine (System) として描画登録・管理する静的クラス。
 /// </summary>
 public static class RenderSystems
@@ -27,7 +27,6 @@ public static class RenderSystems
              .Kind(Ecs.OnStore)
              .Run((Iter it) =>
              {
-                 // 1. プラットフォーム（足場）の描画
                  world.QueryBuilder<Transform, CollisionBox>()
                       .With<PlatformTag>()
                       .Build()
@@ -43,11 +42,10 @@ public static class RenderSystems
                           GameEngine.DrawBox(x1 + 2, y1 + 2, x2 - 2, y1 + 4, 0xFF80FFFF, true);
                       });
 
-                 // 2. Boss の描画（発光オーラ・巨大スプライト・被弾フラッシュ）
-                 world.QueryBuilder<Transform, BossStats, Sprite>()
+                 world.QueryBuilder<Transform, BossStats, BossStateMachine, Sprite>()
                       .With<BossTag>()
                       .Build()
-                      .Each((ref Transform trans, ref BossStats stats, ref Sprite sprite) =>
+                      .Each((ref Transform trans, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
                       {
                           uint auraColor = stats.Phase switch
                           {
@@ -59,10 +57,29 @@ public static class RenderSystems
                           int bx = (int)trans.X;
                           int by = (int)trans.Y;
 
+                          if (fsm.CurrentState == BossStateKind.Telegraphing)
+                          {
+                              float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
+                              int ringRadius = (int)(140.0f - progress * 60.0f);
+                              GameEngine.DrawCircle(bx, by, ringRadius, 0xFFFF3333, false);
+                              GameEngine.DrawCircle(bx, by, ringRadius - 2, 0xFFFFFFFF, false);
+                              GameEngine.DrawCircle(bx, by, 35, 0x55FF2222, true);
+                          }
+                          else if (fsm.CurrentState == BossStateKind.PhaseTransition || fsm.IsInvulnerable)
+                          {
+                              int shieldRadius = 85 + (int)(MathF.Sin(fsm.StateTimer * 12.0f) * 6.0f);
+                              GameEngine.DrawCircle(bx, by, shieldRadius, 0xFFFFD700, false);
+                              GameEngine.DrawCircle(bx, by, shieldRadius - 3, 0xFFFFF275, false);
+                              GameEngine.DrawCircle(bx, by, shieldRadius - 8, 0x44FFFF88, true);
+                          }
+                          else if (fsm.CurrentState == BossStateKind.Recovering)
+                          {
+                              GameEngine.DrawCircle(bx, by, 65, 0x3300E5FF, true);
+                          }
+
                           int auraRadius = 75 + (int)(MathF.Sin(stats.HoverTimer * 4.0f) * 8.0f);
                           GameEngine.DrawCircle(bx, by, auraRadius, auraColor, false);
                           GameEngine.DrawCircle(bx, by, auraRadius - 2, auraColor, false);
-                          GameEngine.DrawCircle(bx, by, auraRadius - 5, auraColor, false);
 
                           if (sprite.IsVisible && sprite.GraphHandle >= 0)
                           {
@@ -87,7 +104,6 @@ public static class RenderSystems
                           }
                       });
 
-                 // 3. プレイヤーの描画（生存時のみスプライト＋中心当たり判定赤い点）
                  world.QueryBuilder<Transform, PlayerState, Sprite>()
                       .With<PlayerTag>()
                       .Build()
@@ -115,7 +131,6 @@ public static class RenderSystems
                           GameEngine.DrawCircle((int)trans.X, (int)trans.Y, 4, 0xFFFFFFFF, false);
                       });
 
-                 // 4. プレイヤー銃弾の描画（高速シアンエネルギー弾）
                  world.QueryBuilder<Transform>()
                       .With<PlayerBulletTag>()
                       .Build()
@@ -128,7 +143,6 @@ public static class RenderSystems
                           GameEngine.DrawBox(px - 7, py - 2, px + 7, py + 2, 0xFF80FFFF, true);
                       });
 
-                 // 5. 敵弾の描画（二重発光サークル）
                  world.QueryBuilder<Transform, Bullet>()
                       .With<BossBulletTag>()
                       .Build()
@@ -153,7 +167,7 @@ public static class RenderSystems
              .Run((Iter it) =>
              {
                  // 1. 操作説明とタイトル
-                 GameEngine.DrawString(20, 16, "=== BULLET BATTLE ===", 0xFFFFD700);
+                 GameEngine.DrawString(20, 16, "=== BULLET BATTLE (TOML FSM) ===", 0xFFFFD700);
                  GameEngine.DrawString(20, 36, "[A/D/Left/Right]: Move (Instant Stop)", 0xFFCCCCCC);
                  GameEngine.DrawString(20, 54, "[W/Space/Up]: Jump & Air Double Jump", 0xFFCCCCCC);
                  GameEngine.DrawString(20, 72, "[J/Z]: Shoot Pistol", 0xFFCCCCCC);
@@ -175,11 +189,10 @@ public static class RenderSystems
                           GameEngine.DrawString(20, 116, $"DOUBLE JUMP: {jumpSymbol}", jumpColor);
                       });
 
-                 // 3. 画面上部中央 Boss 体力バー
-                 world.QueryBuilder<BossStats>()
+                 world.QueryBuilder<BossStats, BossStateMachine>()
                       .With<BossTag>()
                       .Build()
-                      .Each((ref BossStats stats) =>
+                      .Each((ref BossStats stats, ref BossStateMachine fsm) =>
                       {
                           const int barX1 = 300;
                           const int barY1 = 18;
@@ -212,9 +225,29 @@ public static class RenderSystems
 
                           string bossTitle = $"BOSS: ANCIENT CAT OVERLORD [PHASE {stats.Phase}/3] HP: {stats.CurrentHp:F0} / {stats.MaxHp:F0}";
                           GameEngine.DrawString(barX1 + 10, barY1 + 5, bossTitle, 0xFFFFFFFF);
+
+                          string stateName = fsm.CurrentState switch
+                          {
+                              BossStateKind.Hovering => "[STATE: HOVERING (IDLE)]",
+                              BossStateKind.Telegraphing => $"[STATE: TELEGRAPHING (WIND-UP: {fsm.CurrentSkillName})]",
+                              BossStateKind.Casting => $"[STATE: CASTING ({fsm.CurrentSkillName})]",
+                              BossStateKind.Recovering => "[STATE: RECOVERING (VULNERABLE)]",
+                              BossStateKind.PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
+                              _ => "[STATE: UNKNOWN]"
+                          };
+
+                          uint stateBadgeColor = fsm.CurrentState switch
+                          {
+                              BossStateKind.Telegraphing => 0xFFFF5555,
+                              BossStateKind.Casting => 0xFFFFD700,
+                              BossStateKind.Recovering => 0xFF00FF88,
+                              BossStateKind.PhaseTransition => 0xFFFF88FF,
+                              _ => 0xFF88CCFF
+                          };
+
+                          GameEngine.DrawString(barX1 + 10, barY2 + 8, $"{stateName} - Time: {fsm.StateTimer:F2}s / {fsm.StateDuration:F2}s", stateBadgeColor);
                       });
 
-                 // 4. ゲームオーバーバナー（死亡時）
                  world.QueryBuilder<PlayerState>()
                       .With<PlayerTag>()
                       .Build()
@@ -231,7 +264,6 @@ public static class RenderSystems
                           }
                       });
 
-                 // 5. 勝利バナー（Boss 撃破時）
                  world.QueryBuilder<BossStats>()
                       .With<BossTag>()
                       .Build()
