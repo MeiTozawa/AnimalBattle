@@ -37,6 +37,24 @@ public sealed class ArenaConfig
     /// <summary>中央高台足場</summary>
     public PlatformData PlatformCenter { get; set; } = new() { X = 640.0f, Y = 300.0f, Width = 200.0f, Height = 20.0f };
 
+    /// <summary>プレイヤー移動可能な最小 X 境界</summary>
+    public float BoundaryMinX { get; set; } = 25.0f;
+
+    /// <summary>プレイヤー移動可能な最大 X 境界</summary>
+    public float BoundaryMaxX { get; set; } = 1255.0f;
+
+    /// <summary>銃弾および弾幕のデスポーン最小 X 座標</summary>
+    public float BulletDespawnMinX { get; set; } = -80.0f;
+
+    /// <summary>銃弾および弾幕のデスポーン最大 X 座標</summary>
+    public float BulletDespawnMaxX { get; set; } = 1360.0f;
+
+    /// <summary>銃弾および弾幕のデスポーン最小 Y 座標</summary>
+    public float BulletDespawnMinY { get; set; } = -80.0f;
+
+    /// <summary>銃弾および弾幕のデスポーン最大 Y 座標</summary>
+    public float BulletDespawnMaxY { get; set; } = 800.0f;
+
     /// <summary>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{ArenaConfig}"/> インスタンスを生成します。
     /// </summary>

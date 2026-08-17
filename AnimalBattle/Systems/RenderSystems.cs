@@ -7,9 +7,9 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// 弾、Boss（FSM 預警光環・無敵盾）、プレイヤー、プラットフォーム、および HUD・状態機バナーを
-/// Flecs.NET ECS 常駐 Routine (System) として描画登録・管理する静的クラス。
-/// 各種描画色は ConfigManager.Render (render.toml) から動的取得されます。
+/// アリーナ足場、Boss (エフェクト・スプライト・弾幕)、自機 (点滅・光環・銃弾)、
+/// 画面下部大 HP バー、およびモーダル UI の描画を担当する ECS 描画 Routine (System)。
+/// 体力情報は独立した <see cref="Health"/> コンポーネントから取得し、色や表示テキストは <see cref="RenderConfig"/> から動的取得します。
 /// </summary>
 public static class RenderSystems
 {
@@ -35,7 +35,7 @@ public static class RenderSystems
                  PlayerRenderConfig playerRenderCfg = renderCfg.Player;
                  BulletRenderConfig bulletCfg = renderCfg.Bullets;
 
-                 // 1. プラットフォーム・足場の描画
+                 // 1. アリーナプラットフォーム（足場）描画
                  world.QueryBuilder<Transform, CollisionBox>()
                       .With<PlatformTag>()
                       .Build()
@@ -58,10 +58,10 @@ public static class RenderSystems
                       });
 
                  // 2. Boss 視覚エフェクトおよびスプライト描画
-                 world.QueryBuilder<Transform, BossStats, BossStateMachine, Sprite>()
+                 world.QueryBuilder<Transform, Health, BossStats, BossStateMachine, Sprite>()
                       .With<BossTag>()
                       .Build()
-                      .Each((ref Transform trans, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
+                      .Each((ref Transform trans, ref Health bHealth, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
                       {
                           uint auraColor = stats.Phase switch
                           {
@@ -97,7 +97,7 @@ public static class RenderSystems
                           GameEngine.DrawCircle(bx, by, auraRadius, auraColor, false);
                           GameEngine.DrawCircle(bx, by, auraRadius - 2, auraColor, false);
 
-                          if (sprite.IsVisible && sprite.GraphHandle >= 0)
+                          if (sprite.IsVisible && sprite.GraphHandle >= 0 && bHealth.IsAlive)
                           {
                               double bossAngle = MathF.Sin(stats.HoverTimer * bossFx.BossHoverAngleSpeed) * bossFx.BossHoverAngleAmp;
                               GameEngine.DrawRectRotaGraph(
@@ -121,28 +121,39 @@ public static class RenderSystems
                       });
 
                  // 3. プレイヤー自機描画
-                 world.QueryBuilder<Transform, PlayerState, Sprite>()
+                 world.QueryBuilder<Transform, Health, PlayerState, Sprite>()
                       .With<PlayerTag>()
                       .Build()
-                      .Each((ref Transform trans, ref PlayerState playerState, ref Sprite sprite) =>
+                      .Each((ref Transform trans, ref Health health, ref PlayerState playerState, ref Sprite sprite) =>
                       {
-                          if (!playerState.IsAlive || !sprite.IsVisible || sprite.GraphHandle < 0)
+                          if (!health.IsAlive || !sprite.IsVisible || sprite.GraphHandle < 0)
                           {
                               return;
                           }
 
-                          GameEngine.DrawRectRotaGraph(
-                              (int)trans.X,
-                              (int)trans.Y,
-                              sprite.SrcRect.X1,
-                              sprite.SrcRect.Y1,
-                              sprite.SrcRect.Width,
-                              sprite.SrcRect.Height,
-                              trans.ScaleX,
-                              trans.Rotation,
-                              sprite.GraphHandle,
-                              true,
-                              sprite.FlipX);
+                          // 無敵時間点滅演出（i-frames flickering）
+                          bool shouldDrawSprite = !health.IsInvincible || ((int)(health.InvincibleTimer * 30.0f) % 2 == 0);
+
+                          if (shouldDrawSprite)
+                          {
+                              GameEngine.DrawRectRotaGraph(
+                                  (int)trans.X,
+                                  (int)trans.Y,
+                                  sprite.SrcRect.X1,
+                                  sprite.SrcRect.Y1,
+                                  sprite.SrcRect.Width,
+                                  sprite.SrcRect.Height,
+                                  trans.ScaleX,
+                                  trans.Rotation,
+                                  sprite.GraphHandle,
+                                  true,
+                                  sprite.FlipX);
+                          }
+
+                          if (health.IsInvincible)
+                          {
+                              GameEngine.DrawCircle((int)trans.X, (int)trans.Y, 24, 0x8800FFFF, false);
+                          }
 
                           GameEngine.DrawCircle((int)trans.X, (int)trans.Y, (int)playerRenderCfg.HitboxCoreRadius, playerRenderCfg.HitboxCoreColor, true);
                           GameEngine.DrawCircle((int)trans.X, (int)trans.Y, (int)playerRenderCfg.HitboxBorderRadius, playerRenderCfg.HitboxBorderColor, false);
@@ -204,26 +215,50 @@ public static class RenderSystems
                  GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY + hudCfg.LineSpacing * 4, hudCfg.RestartHelpText, hudCfg.RestartHelpColor);
 
                  // 2. プレイヤージャンプ残数表示
-                 world.QueryBuilder<PlayerState>()
+                 world.QueryBuilder<DoubleJump>()
                       .With<PlayerTag>()
                       .Build()
-                      .Each((ref PlayerState playerState) =>
+                      .Each((ref DoubleJump doubleJump) =>
                       {
-                          string jumpSymbol = playerState.JumpCount switch
+                          string jumpSymbol = doubleJump.RemainingJumps switch
                           {
                               2 => "[ ●  ● ]",
                               1 => "[ ●  ○ ]",
                               _ => "[ ○  ○ ]"
                           };
-                          uint jumpColor = playerState.JumpCount > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
+                          uint jumpColor = doubleJump.RemainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
                           GameEngine.DrawString(hudCfg.TitleX, hudCfg.DoubleJumpY, $"DOUBLE JUMP: {jumpSymbol}", jumpColor);
                       });
 
+                 // 3. プレイヤー HP 表示
+                 world.QueryBuilder<Health>()
+                      .With<PlayerTag>()
+                      .Build()
+                      .Each((ref Health health) =>
+                      {
+                          string hpSymbol = (int)health.Current switch
+                          {
+                              3 => "[ ●  ●  ● ]",
+                              2 => "[ ●  ●  ○ ]",
+                              1 => "[ ●  ○  ○ ]",
+                              _ => "[ ○  ○  ○ ]"
+                          };
+                          uint hpColor = (int)health.Current switch
+                          {
+                              3 => 0xFF00FF88,
+                              2 => 0xFFFFD700,
+                              1 => 0xFFFF3333,
+                              _ => 0xFF888888
+                          };
+                          string invBadge = health.IsInvincible ? $" [INVINCIBLE {health.InvincibleTimer:F1}s]" : "";
+                          GameEngine.DrawString(hudCfg.TitleX, hudCfg.DoubleJumpY + 20, $"PLAYER HP:   {hpSymbol} ({(int)health.Current}/{(int)health.Max}){invBadge}", hpColor);
+                      });
+
                  // 3. 画面下部 Boss 大 HP バーおよび状態表示
-                 world.QueryBuilder<BossStats, BossStateMachine>()
+                 world.QueryBuilder<Health, BossStats, BossStateMachine>()
                       .With<BossTag>()
                       .Build()
-                      .Each((ref BossStats stats, ref BossStateMachine fsm) =>
+                      .Each((ref Health health, ref BossStats stats, ref BossStateMachine fsm) =>
                       {
                           int barX1 = hpCfg.BarX1;
                           int barY1 = hpCfg.BarY1;
@@ -233,7 +268,7 @@ public static class RenderSystems
 
                           // 3.1 Boss 情報ヘッダー (HP バー上部)
                           string bossTitle = $"BOSS: ANCIENT CAT OVERLORD [PHASE {stats.Phase}/3]";
-                          string hpText = $"HP: {stats.CurrentHp:F0} / {stats.MaxHp:F0}";
+                          string hpText = $"HP: {health.Current:F0} / {health.Max:F0}";
                           GameEngine.DrawString(barX1, barY1 - hpCfg.HeaderOffsetY, bossTitle, hpCfg.TitleColor);
                           GameEngine.DrawString(barX2 - 170, barY1 - hpCfg.HeaderOffsetY, hpText, hpCfg.HpTextColor);
 
@@ -270,7 +305,7 @@ public static class RenderSystems
                               _ => renderCfg.BossEffects.Phase3AuraColor
                           };
 
-                          float hpRatio = Math.Clamp(stats.CurrentHp / stats.MaxHp, 0.0f, 1.0f);
+                          float hpRatio = health.Ratio;
                           int fillWidth = (int)(totalWidth * hpRatio);
                           if (fillWidth > 0)
                           {
@@ -286,12 +321,12 @@ public static class RenderSystems
                       });
 
                  // 4. ゲームオーバーおよび勝利モーダル
-                 world.QueryBuilder<PlayerState>()
+                 world.QueryBuilder<Health>()
                       .With<PlayerTag>()
                       .Build()
-                      .Each((ref PlayerState playerState) =>
+                      .Each((ref Health health) =>
                       {
-                          if (!playerState.IsAlive)
+                          if (!health.IsAlive)
                           {
                               GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2, modalCfg.GameOverBgColor, true);
                               GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2, modalCfg.GameOverOuterBorderColor, false);
@@ -302,12 +337,12 @@ public static class RenderSystems
                           }
                       });
 
-                 world.QueryBuilder<BossStats>()
+                 world.QueryBuilder<Health>()
                       .With<BossTag>()
                       .Build()
-                      .Each((ref BossStats stats) =>
+                      .Each((ref Health health) =>
                       {
-                          if (stats.CurrentHp <= 0.0f)
+                          if (!health.IsAlive)
                           {
                               GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2, modalCfg.VictoryBgColor, true);
                               GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2, modalCfg.VictoryOuterBorderColor, false);

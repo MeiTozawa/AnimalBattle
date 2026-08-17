@@ -11,6 +11,7 @@ namespace AnimalBattle.Systems;
 /// <summary>
 /// プレイヤーの移動・二段跳躍・射撃、Boss 分層状態機 (HFSM: Phase -> Hovering -> Telegraphing -> Casting -> Recovering)、
 /// 弾物理、当たり判定、および R キー即時リセットを TOML 設定に基づいて駆動する ECS 常駐 Routine (System)。
+/// 全ての物理・アニメーション・タイマー計算は外部から注入されたフレーム経過時間（delta_time）および TOML 設定値に基づきます。
 /// </summary>
 public static class CombatSystems
 {
@@ -39,12 +40,19 @@ public static class CombatSystems
                  .With<PlatformTag>()
                  .Build();
 
-        world.System<Transform, Velocity, CollisionBox, PlayerState, Animation, Sprite>("PlayerMovementSystem")
+        world.System<Transform, Velocity, CollisionBox, Health, DoubleJump, PlayerState, Animation, Sprite>("PlayerMovementSystem")
              .With<PlayerTag>()
              .Kind(Ecs.OnUpdate)
-             .Each((ref Transform trans, ref Velocity vel, ref CollisionBox col, ref PlayerState playerState, ref Animation anim, ref Sprite sprite) =>
+             .Each((Iter it, int i, ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Health health, ref DoubleJump doubleJump, ref PlayerState playerState, ref Animation anim, ref Sprite sprite) =>
              {
                  PlayerConfig pCfg = ConfigManager.Player;
+                 ArenaConfig arenaCfg = ConfigManager.Arena;
+                 float dt = it.DeltaTime();
+
+                 if (health.InvincibleTimer > 0.0f)
+                 {
+                     health.InvincibleTimer = Math.Max(0.0f, health.InvincibleTimer - dt);
+                 }
 
                  bool isLeft = GameEngine.CheckHitKey(0x1E) != 0 || GameEngine.CheckHitKey(0xCB) != 0;
                  bool isRight = GameEngine.CheckHitKey(0x20) != 0 || GameEngine.CheckHitKey(0xCD) != 0;
@@ -58,7 +66,7 @@ public static class CombatSystems
                  bool jumpJustPressed = isJump && !_prevJumpKey;
                  _prevJumpKey = isJump;
 
-                 if (!playerState.IsAlive)
+                 if (!health.IsAlive)
                  {
                      vel.Vx = 0.0f;
                      vel.Vy = 0.0f;
@@ -80,19 +88,22 @@ public static class CombatSystems
                      vel.Vx = 0.0f;
                  }
 
+                 float colWidth = col.Width;
+                 float colHeight = col.Height;
+
                  if (jumpJustPressed)
                  {
                      if (col.IsGrounded)
                      {
                          vel.Vy = pCfg.FirstJumpVelocity;
                          col.IsGrounded = false;
-                         playerState.JumpCount = 1;
+                         doubleJump.RemainingJumps = 1;
                      }
-                     else if (playerState.JumpCount > 0)
+                     else if (doubleJump.CanJump)
                      {
                          vel.Vy = pCfg.SecondJumpVelocity;
-                         playerState.JumpCount--;
-                         SpawnJumpRingEffect(world, trans.X, trans.Y + col.Height / 2.0f);
+                         doubleJump.RemainingJumps--;
+                         SpawnJumpRingEffect(world, trans.X, trans.Y + colHeight / 2.0f);
                      }
                  }
 
@@ -105,45 +116,44 @@ public static class CombatSystems
                  float nextX = trans.X + vel.Vx;
                  float nextY = trans.Y + vel.Vy;
 
-                 if (nextX < 25.0f)
+                 if (nextX < arenaCfg.BoundaryMinX)
                  {
-                     nextX = 25.0f;
+                     nextX = arenaCfg.BoundaryMinX;
                  }
-                 else if (nextX > 1255.0f)
+                 else if (nextX > arenaCfg.BoundaryMaxX)
                  {
-                     nextX = 1255.0f;
+                     nextX = arenaCfg.BoundaryMaxX;
                  }
-
-                 float playerBottom = nextY + col.Height / 2.0f;
-                 float playerLeft = nextX - col.Width / 2.0f;
-                 float playerRight = nextX + col.Width / 2.0f;
-                 float colHeight = col.Height;
 
                  bool isGrounded = false;
                  float adjustedPosY = nextY;
                  float adjustedVy = vel.Vy;
 
-                 platformQuery.Each((Entity pe, ref Transform pt, ref CollisionBox pc) =>
-                 {
-                     float platTop = pt.Y - pc.Height / 2.0f;
-                     float platBottom = pt.Y + pc.Height / 2.0f;
-                     float platLeft = pt.X - pc.Width / 2.0f;
-                     float platRight = pt.X + pc.Width / 2.0f;
+                 float pLeft = nextX - colWidth / 2.0f;
+                 float pRight = nextX + colWidth / 2.0f;
+                 float pBottomPrev = trans.Y + colHeight / 2.0f;
+                 float pBottomNext = nextY + colHeight / 2.0f;
 
-                     if (playerRight > platLeft && playerLeft < platRight)
+                 platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
+                 {
+                     float platLeft = platTrans.X - platCol.Width / 2.0f;
+                     float platRight = platTrans.X + platCol.Width / 2.0f;
+                     float platTop = platTrans.Y - platCol.Height / 2.0f;
+
+                     if (pRight > platLeft && pLeft < platRight)
                      {
-                         if (playerBottom >= platTop && playerBottom <= platBottom + 14.0f && adjustedVy >= 0.0f)
+                         if (pBottomPrev <= platTop + 4.0f && pBottomNext >= platTop)
                          {
+                             isGrounded = true;
                              adjustedPosY = platTop - colHeight / 2.0f;
                              adjustedVy = 0.0f;
-                             isGrounded = true;
                          }
                      }
                  });
 
                  if (isGrounded)
                  {
-                     playerState.JumpCount = playerState.MaxJumps;
+                     doubleJump.Reset();
                  }
 
                  trans.X = nextX;
@@ -151,7 +161,7 @@ public static class CombatSystems
                  vel.Vy = adjustedVy;
                  col.IsGrounded = isGrounded;
 
-                 anim.Timer += 0.016f;
+                 anim.Timer += dt;
                  if (!col.IsGrounded)
                  {
                      anim.CurrentClip = "Jump";
@@ -175,12 +185,13 @@ public static class CombatSystems
 
     private static void RegisterPlayerShootSystem(World world)
     {
-        world.System<Transform, PlayerState, Sprite>("PlayerShootSystem")
+        world.System<Transform, Health, PlayerState, Sprite>("PlayerShootSystem")
              .With<PlayerTag>()
              .Kind(Ecs.OnUpdate)
-             .Each((ref Transform trans, ref PlayerState playerState, ref Sprite sprite) =>
+             .Each((Iter it, int i, ref Transform trans, ref Health health, ref PlayerState playerState, ref Sprite sprite) =>
              {
                  PlayerConfig pCfg = ConfigManager.Player;
+                 float dt = it.DeltaTime();
 
                  bool isShoot = GameEngine.CheckHitKey(0x24) != 0 || GameEngine.CheckHitKey(0x2C) != 0;
                  int pad = GameEngine.GetJoypadInputState(0);
@@ -189,26 +200,26 @@ public static class CombatSystems
                  bool shootJustPressed = isShoot && !_prevShootKey;
                  _prevShootKey = isShoot;
 
-                 if (!playerState.IsAlive)
+                 if (!health.IsAlive)
                  {
                      return;
                  }
 
                  if (playerState.ShootCooldown > 0.0f)
                  {
-                     playerState.ShootCooldown -= 0.016f;
+                     playerState.ShootCooldown = Math.Max(0.0f, playerState.ShootCooldown - dt);
                  }
 
                  if (shootJustPressed && playerState.ShootCooldown <= 0.0f)
                  {
                      float bulletDir = sprite.FlipX ? -1.0f : 1.0f;
                      float spawnX = trans.X + bulletDir * pCfg.BulletSpawnOffset;
-                     float spawnY = trans.Y - 4.0f;
+                     float spawnY = trans.Y + pCfg.BulletSpawnOffsetY;
 
                      world.Entity()
                           .Set(new Transform(spawnX, spawnY))
                           .Set(new Velocity(bulletDir * pCfg.BulletSpeed, 0.0f))
-                          .Set(new CollisionBox(12.0f, 8.0f))
+                          .Set(new CollisionBox(pCfg.BulletWidth, pCfg.BulletHeight))
                           .Add<PlayerBulletTag>();
 
                      playerState.ShootCooldown = pCfg.ShootCooldown;
@@ -218,51 +229,50 @@ public static class CombatSystems
 
     private static void RegisterBossAiSystem(World world)
     {
-        world.System<Transform, BossStats, BossStateMachine, Sprite>("BossAiSystem")
+        world.System<Transform, Health, BossStats, BossStateMachine, Sprite>("BossAiSystem")
              .With<BossTag>()
              .Kind(Ecs.OnUpdate)
-             .Each((ref Transform trans, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
+             .Each((Iter it, int i, ref Transform trans, ref Health bHealth, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
              {
                  BossConfig bCfg = ConfigManager.Boss;
                  PatternConfig patternCfg = ConfigManager.Pattern;
+                 float dt = it.DeltaTime();
 
                  float playerX = 640.0f;
                  float playerY = 600.0f;
                  bool isPlayerAlive = false;
 
-                 world.QueryBuilder<Transform, PlayerState>()
+                 world.QueryBuilder<Transform, Health>()
                       .With<PlayerTag>()
                       .Build()
-                      .Each((ref Transform pTrans, ref PlayerState pState) =>
+                      .Each((ref Transform pTrans, ref Health pHealth) =>
                       {
                           playerX = pTrans.X;
                           playerY = pTrans.Y;
-                          isPlayerAlive = pState.IsAlive;
+                          isPlayerAlive = pHealth.IsAlive;
                       });
 
                  if (stats.HitFlashTimer > 0.0f)
                  {
-                     stats.HitFlashTimer -= 0.016f;
+                     stats.HitFlashTimer = Math.Max(0.0f, stats.HitFlashTimer - dt);
                  }
 
-                 if (stats.CurrentHp <= 0.0f)
+                 if (!bHealth.IsAlive)
                  {
-                     stats.CurrentHp = 0.0f;
+                     bHealth.Current = 0.0f;
                      return;
                  }
 
-                 float hpRatio = stats.CurrentHp / stats.MaxHp;
+                 float hpRatio = bHealth.Ratio;
                  int targetPhase = hpRatio > bCfg.Phase2.HpThreshold ? 1 : (hpRatio > bCfg.Phase3.HpThreshold ? 2 : 3);
 
-                 if (targetPhase != stats.Phase)
+                 if (targetPhase > stats.Phase && fsm.CurrentState != BossStateKind.PhaseTransition)
                  {
                      stats.Phase = targetPhase;
-                     PhaseFsmConfig newPhaseCfg = stats.Phase == 2 ? bCfg.Phase2 : bCfg.Phase3;
                      fsm.CurrentState = BossStateKind.PhaseTransition;
                      fsm.StateTimer = 0.0f;
-                     fsm.StateDuration = newPhaseCfg.TransitionDuration;
+                     fsm.StateDuration = bCfg.Phase1.TransitionDuration;
                      fsm.IsInvulnerable = true;
-
                      ClearAllBossBullets(world);
                      SpawnShockwave(world, trans.X, trans.Y);
                  }
@@ -274,63 +284,62 @@ public static class CombatSystems
                      _ => bCfg.Phase3
                  };
 
-                 stats.HoverTimer += 0.016f;
-                 trans.X = bCfg.BaseX + MathF.Sin(stats.HoverTimer * currentPhaseCfg.HoverSpeedX) * currentPhaseCfg.HoverAmpX;
-                 trans.Y = bCfg.BaseY + MathF.Cos(stats.HoverTimer * currentPhaseCfg.HoverSpeedY) * currentPhaseCfg.HoverAmpY;
+                 stats.HoverTimer += dt;
+                 float targetBaseX = stats.BaseX + MathF.Sin(stats.HoverTimer * currentPhaseCfg.HoverSpeedX) * currentPhaseCfg.HoverAmpX;
+                 float targetBaseY = stats.BaseY + MathF.Sin(stats.HoverTimer * currentPhaseCfg.HoverSpeedY) * currentPhaseCfg.HoverAmpY;
+                 float lerpFactor = MathF.Min(1.0f, currentPhaseCfg.HoverLerpSpeed * dt);
+                 trans.X += (targetBaseX - trans.X) * lerpFactor;
+                 trans.Y += (targetBaseY - trans.Y) * lerpFactor;
 
-                 fsm.StateTimer += 0.016f;
+                 fsm.StateTimer += dt;
 
                  switch (fsm.CurrentState)
                  {
-                     case BossStateKind.PhaseTransition:
-                         fsm.IsInvulnerable = true;
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             fsm.IsInvulnerable = false;
-                             fsm.CurrentState = BossStateKind.Hovering;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = currentPhaseCfg.HoverDuration;
-                             fsm.CurrentSkillIndex = 0;
-                         }
-                         break;
-
                      case BossStateKind.Hovering:
-                         if (isPlayerAlive && fsm.StateTimer >= fsm.StateDuration)
+                         fsm.IsInvulnerable = false;
+                         if (fsm.StateTimer >= fsm.StateDuration && isPlayerAlive)
                          {
-                             List<string> skills = currentPhaseCfg.Skills;
-                             if (skills.Count > 0)
+                             if (currentPhaseCfg.Skills.Count > 0)
                              {
-                                 fsm.CurrentSkillName = skills[fsm.CurrentSkillIndex % skills.Count];
-                                 fsm.CurrentSkillIndex++;
-
-                                 float windUp = GetSkillWindUpTime(patternCfg, fsm.CurrentSkillName);
-                                 fsm.CurrentState = BossStateKind.Telegraphing;
-                                 fsm.StateTimer = 0.0f;
-                                 fsm.StateDuration = windUp;
+                                 fsm.CurrentSkillIndex = (fsm.CurrentSkillIndex + 1) % currentPhaseCfg.Skills.Count;
+                                 fsm.CurrentSkillName = currentPhaseCfg.Skills[fsm.CurrentSkillIndex];
                              }
+                             else
+                             {
+                                 fsm.CurrentSkillName = "Aimed3Shot";
+                             }
+
+                             float windUp = GetSkillWindUpTime(fsm.CurrentSkillName, patternCfg);
+                             uint telegraphColor = GetSkillTelegraphColor(fsm.CurrentSkillName, patternCfg);
+
+                             fsm.CurrentState = BossStateKind.Telegraphing;
+                             fsm.StateTimer = 0.0f;
+                             fsm.StateDuration = windUp;
+                             fsm.SubTimer = 0.0f;
+                             SpawnTelegraphSpark(world, trans.X, trans.Y, telegraphColor);
                          }
                          break;
 
                      case BossStateKind.Telegraphing:
-                         uint telegraphColor = GetSkillTelegraphColor(patternCfg, fsm.CurrentSkillName);
-                         SpawnTelegraphSpark(world, trans.X, trans.Y, telegraphColor);
-
+                         fsm.IsInvulnerable = false;
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
-                             float castDuration = GetSkillCastDuration(patternCfg, fsm.CurrentSkillName);
+                             float castDuration = GetSkillCastDuration(fsm.CurrentSkillName, patternCfg);
                              fsm.CurrentState = BossStateKind.Casting;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = castDuration;
                              fsm.SubTimer = 0.0f;
+                             fsm.AngleOffset = 0.0f;
                          }
                          break;
 
                      case BossStateKind.Casting:
-                         ExecuteSkillPattern(world, trans.X, trans.Y, playerX, playerY, patternCfg, ref fsm);
+                         fsm.IsInvulnerable = false;
+                         ExecuteBossSkill(world, ref fsm, patternCfg, trans.X, trans.Y, playerX, playerY, dt);
 
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
-                             float recoveryTime = GetSkillRecoveryTime(patternCfg, fsm.CurrentSkillName);
+                             float recoveryTime = GetSkillRecoveryTime(fsm.CurrentSkillName, patternCfg);
                              fsm.CurrentState = BossStateKind.Recovering;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = recoveryTime;
@@ -338,8 +347,20 @@ public static class CombatSystems
                          break;
 
                      case BossStateKind.Recovering:
+                         fsm.IsInvulnerable = false;
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
+                             fsm.CurrentState = BossStateKind.Hovering;
+                             fsm.StateTimer = 0.0f;
+                             fsm.StateDuration = currentPhaseCfg.HoverDuration;
+                         }
+                         break;
+
+                     case BossStateKind.PhaseTransition:
+                         fsm.IsInvulnerable = true;
+                         if (fsm.StateTimer >= fsm.StateDuration)
+                         {
+                             fsm.IsInvulnerable = false;
                              fsm.CurrentState = BossStateKind.Hovering;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = currentPhaseCfg.HoverDuration;
@@ -349,61 +370,64 @@ public static class CombatSystems
              });
     }
 
-    private static float GetSkillWindUpTime(PatternConfig config, string skillName) => skillName switch
+    private static float GetSkillWindUpTime(string skillName, PatternConfig patternCfg) => skillName switch
     {
-        "Aimed3Shot" => config.Aimed3Shot.WindUpTime,
-        "RingBurst" => config.RingBurst.WindUpTime,
-        "DoubleSpiral" => config.DoubleSpiral.WindUpTime,
-        "RainDrop" => config.RainDrop.WindUpTime,
-        "CrossChaos" => config.CrossChaos.WindUpTime,
-        "FastSniper" => config.FastSniper.WindUpTime,
+        "Aimed3Shot" => patternCfg.Aimed3Shot.WindUpTime,
+        "RingBurst" => patternCfg.RingBurst.WindUpTime,
+        "DoubleSpiral" => patternCfg.DoubleSpiral.WindUpTime,
+        "RainDrop" => patternCfg.RainDrop.WindUpTime,
+        "CrossChaos" => patternCfg.CrossChaos.WindUpTime,
+        "FastSniper" => patternCfg.FastSniper.WindUpTime,
         _ => 0.5f
     };
 
-    private static uint GetSkillTelegraphColor(PatternConfig config, string skillName) => skillName switch
+    private static uint GetSkillTelegraphColor(string skillName, PatternConfig patternCfg) => skillName switch
     {
-        "Aimed3Shot" => config.Aimed3Shot.TelegraphColor,
-        "RingBurst" => config.RingBurst.TelegraphColor,
-        "DoubleSpiral" => config.DoubleSpiral.TelegraphColor,
-        "RainDrop" => config.RainDrop.TelegraphColor,
-        "CrossChaos" => config.CrossChaos.TelegraphColor,
-        "FastSniper" => config.FastSniper.TelegraphColor,
-        _ => 0xFFFFFFFF
+        "Aimed3Shot" => patternCfg.Aimed3Shot.TelegraphColor,
+        "RingBurst" => patternCfg.RingBurst.TelegraphColor,
+        "DoubleSpiral" => patternCfg.DoubleSpiral.TelegraphColor,
+        "RainDrop" => patternCfg.RainDrop.TelegraphColor,
+        "CrossChaos" => patternCfg.CrossChaos.TelegraphColor,
+        "FastSniper" => patternCfg.FastSniper.TelegraphColor,
+        _ => 0xFFFF8888
     };
 
-    private static float GetSkillCastDuration(PatternConfig config, string skillName) => skillName switch
+    private static float GetSkillCastDuration(string skillName, PatternConfig patternCfg) => skillName switch
     {
-        "Aimed3Shot" => config.Aimed3Shot.CastDuration,
-        "RingBurst" => config.RingBurst.CastDuration,
-        "DoubleSpiral" => config.DoubleSpiral.CastDuration,
-        "RainDrop" => config.RainDrop.CastDuration,
-        "CrossChaos" => config.CrossChaos.CastDuration,
-        "FastSniper" => config.FastSniper.CastDuration,
+        "Aimed3Shot" => patternCfg.Aimed3Shot.CastDuration,
+        "RingBurst" => patternCfg.RingBurst.CastDuration,
+        "DoubleSpiral" => patternCfg.DoubleSpiral.CastDuration,
+        "RainDrop" => patternCfg.RainDrop.CastDuration,
+        "CrossChaos" => patternCfg.CrossChaos.CastDuration,
+        "FastSniper" => patternCfg.FastSniper.CastDuration,
         _ => 1.0f
     };
 
-    private static float GetSkillRecoveryTime(PatternConfig config, string skillName) => skillName switch
+    private static float GetSkillRecoveryTime(string skillName, PatternConfig patternCfg) => skillName switch
     {
-        "Aimed3Shot" => config.Aimed3Shot.RecoveryTime,
-        "RingBurst" => config.RingBurst.RecoveryTime,
-        "DoubleSpiral" => config.DoubleSpiral.RecoveryTime,
-        "RainDrop" => config.RainDrop.RecoveryTime,
-        "CrossChaos" => config.CrossChaos.RecoveryTime,
-        "FastSniper" => config.FastSniper.RecoveryTime,
+        "Aimed3Shot" => patternCfg.Aimed3Shot.RecoveryTime,
+        "RingBurst" => patternCfg.RingBurst.RecoveryTime,
+        "DoubleSpiral" => patternCfg.DoubleSpiral.RecoveryTime,
+        "RainDrop" => patternCfg.RainDrop.RecoveryTime,
+        "CrossChaos" => patternCfg.CrossChaos.RecoveryTime,
+        "FastSniper" => patternCfg.FastSniper.RecoveryTime,
         _ => 0.5f
     };
 
-    private static void ExecuteSkillPattern(World world, float bx, float by, float px, float py, PatternConfig patternCfg, ref BossStateMachine fsm)
+    private static void ExecuteBossSkill(World world, ref BossStateMachine fsm, PatternConfig patternCfg, float bx, float by, float px, float py, float dt)
     {
-        fsm.SubTimer -= 0.016f;
+        if (fsm.SubTimer > 0.0f)
+        {
+            fsm.SubTimer = Math.Max(0.0f, fsm.SubTimer - dt);
+        }
 
         switch (fsm.CurrentSkillName)
         {
             case "Aimed3Shot":
                 if (fsm.SubTimer <= 0.0f)
                 {
-                    fsm.SubTimer = 0.45f;
                     Aimed3ShotConfig p = patternCfg.Aimed3Shot;
+                    fsm.SubTimer = p.Interval;
                     float baseAngle = MathF.Atan2(py - by, px - bx);
                     for (int i = -1; i <= 1; i++)
                     {
@@ -416,8 +440,8 @@ public static class CombatSystems
             case "RingBurst":
                 if (fsm.SubTimer <= 0.0f)
                 {
-                    fsm.SubTimer = 0.50f;
                     RingBurstConfig p = patternCfg.RingBurst;
+                    fsm.SubTimer = p.Interval;
                     int count = Math.Max(4, p.BulletCount);
                     for (int i = 0; i < count; i++)
                     {
@@ -476,7 +500,7 @@ public static class CombatSystems
                 if (fsm.SubTimer <= 0.0f)
                 {
                     FastSniperConfig p = patternCfg.FastSniper;
-                    fsm.SubTimer = 0.30f;
+                    fsm.SubTimer = p.Interval;
                     float aimAngle = MathF.Atan2(py - by, px - bx);
                     SpawnBossBullet(world, bx, by, MathF.Cos(aimAngle) * p.BulletSpeed, MathF.Sin(aimAngle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
                 }
@@ -486,30 +510,31 @@ public static class CombatSystems
 
     private static void RegisterBulletPhysicsSystems(World world)
     {
-        world.System<Transform, Velocity, Bullet>("BossBulletPhysicsSystem")
-             .With<BossBulletTag>()
+        world.System<Transform, Velocity>("PlayerBulletMovementSystem")
+             .With<PlayerBulletTag>()
              .Kind(Ecs.OnUpdate)
-             .Each((Entity e, ref Transform trans, ref Velocity vel, ref Bullet bullet) =>
+             .Each((Entity e, ref Transform trans, ref Velocity vel) =>
              {
+                 ArenaConfig arenaCfg = ConfigManager.Arena;
                  trans.X += vel.Vx;
                  trans.Y += vel.Vy;
-                 bullet.Lifetime += 0.016f;
-
-                 if (trans.X < -60.0f || trans.X > 1340.0f || trans.Y < -60.0f || trans.Y > 780.0f)
+                 if (trans.X < arenaCfg.BulletDespawnMinX || trans.X > arenaCfg.BulletDespawnMaxX ||
+                     trans.Y < arenaCfg.BulletDespawnMinY || trans.Y > arenaCfg.BulletDespawnMaxY)
                  {
                      e.Destruct();
                  }
              });
 
-        world.System<Transform, Velocity>("PlayerBulletPhysicsSystem")
-             .With<PlayerBulletTag>()
+        world.System<Transform, Velocity>("BossBulletMovementSystem")
+             .With<BossBulletTag>()
              .Kind(Ecs.OnUpdate)
              .Each((Entity e, ref Transform trans, ref Velocity vel) =>
              {
+                 ArenaConfig arenaCfg = ConfigManager.Arena;
                  trans.X += vel.Vx;
                  trans.Y += vel.Vy;
-
-                 if (trans.X < -30.0f || trans.X > 1310.0f)
+                 if (trans.X < arenaCfg.BulletDespawnMinX || trans.X > arenaCfg.BulletDespawnMaxX ||
+                     trans.Y < arenaCfg.BulletDespawnMinY || trans.Y > arenaCfg.BulletDespawnMaxY)
                  {
                      e.Destruct();
                  }
@@ -535,12 +560,12 @@ public static class CombatSystems
                  bool hasBoss = false;
                  bool isInvulnerable = false;
 
-                 world.QueryBuilder<Transform, BossStats, BossStateMachine>()
+                 world.QueryBuilder<Transform, Health, BossStats, BossStateMachine>()
                       .With<BossTag>()
                       .Build()
-                      .Each((ref Transform bTrans, ref BossStats bStats, ref BossStateMachine bFsm) =>
+                      .Each((ref Transform bTrans, ref Health bHealth, ref BossStats bStats, ref BossStateMachine bFsm) =>
                       {
-                          if (bStats.CurrentHp > 0.0f)
+                          if (bHealth.IsAlive)
                           {
                               bossX = bTrans.X;
                               bossY = bTrans.Y;
@@ -575,16 +600,16 @@ public static class CombatSystems
 
                      if (damageTaken > 0.0f)
                      {
-                         world.QueryBuilder<BossStats>()
+                         world.QueryBuilder<Health, BossStats>()
                               .With<BossTag>()
                               .Build()
-                              .Each((ref BossStats bStats) =>
+                              .Each((ref Health bHealth, ref BossStats bStats) =>
                               {
-                                  bStats.CurrentHp -= damageTaken;
+                                  bHealth.Current -= damageTaken;
                                   bStats.HitFlashTimer = bCfg.HitFlashDuration;
-                                  if (bStats.CurrentHp <= 0.0f)
+                                  if (!bHealth.IsAlive)
                                   {
-                                      bStats.CurrentHp = 0.0f;
+                                      bHealth.Current = 0.0f;
                                       ClearAllBossBullets(world);
                                       SpawnVictoryExplosions(world, bossX, bossY);
                                   }
@@ -592,25 +617,27 @@ public static class CombatSystems
                      }
                  }
 
-                 // 2. 敵弾 vs プレイヤー中心判定点 (1-Hit 即死)
+                 // 2. 敵弾 vs プレイヤー中心判定点 (HP 減算 & 無敵時間判定)
                  float playerX = 0.0f;
                  float playerY = 0.0f;
                  bool isPlayerAlive = false;
+                 bool isPlayerInvincible = false;
 
-                 world.QueryBuilder<Transform, PlayerState>()
+                 world.QueryBuilder<Transform, Health, PlayerState>()
                       .With<PlayerTag>()
                       .Build()
-                      .Each((ref Transform pTrans, ref PlayerState pState) =>
+                      .Each((ref Transform pTrans, ref Health pHealth, ref PlayerState pState) =>
                       {
-                          if (pState.IsAlive)
+                          if (pHealth.IsAlive)
                           {
                               playerX = pTrans.X;
                               playerY = pTrans.Y;
                               isPlayerAlive = true;
+                              isPlayerInvincible = pHealth.IsInvincible;
                           }
                       });
 
-                 if (isPlayerAlive)
+                 if (isPlayerAlive && !isPlayerInvincible)
                  {
                      bool playerHit = false;
                      float pRadius = pCfg.HitboxRadius;
@@ -638,16 +665,25 @@ public static class CombatSystems
 
                      if (playerHit)
                      {
-                         world.QueryBuilder<PlayerState, Sprite>()
+                         world.QueryBuilder<Health, PlayerState, Sprite>()
                               .With<PlayerTag>()
                               .Build()
-                              .Each((ref PlayerState pState, ref Sprite pSprite) =>
+                              .Each((ref Health pHealth, ref PlayerState pState, ref Sprite pSprite) =>
                               {
-                                  pState.IsAlive = false;
-                                  pSprite.IsVisible = false;
-                              });
+                                  if (!pHealth.IsInvincible)
+                                  {
+                                      pHealth.Current -= 1.0f;
+                                      pHealth.InvincibleTimer = pCfg.InvincibleDuration;
+                                      SpawnHitSparkEffect(world, playerX, playerY);
 
-                         SpawnPlayerDeathParticles(world, playerX, playerY);
+                                      if (!pHealth.IsAlive)
+                                      {
+                                          pHealth.Current = 0.0f;
+                                          pSprite.IsVisible = false;
+                                          SpawnPlayerDeathParticles(world, playerX, playerY);
+                                      }
+                                  }
+                              });
                      }
                  }
              });
@@ -680,17 +716,19 @@ public static class CombatSystems
                           .Build()
                           .Each((Entity e) => e.Destruct());
 
-                     world.QueryBuilder<Transform, Velocity, PlayerState, CollisionBox, Animation, Sprite>()
+                     world.QueryBuilder<Transform, Velocity, CollisionBox, Health, DoubleJump, PlayerState, Animation, Sprite>()
                           .With<PlayerTag>()
                           .Build()
-                          .Each((ref Transform trans, ref Velocity vel, ref PlayerState playerState, ref CollisionBox col, ref Animation anim, ref Sprite sprite) =>
+                          .Each((ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Health health, ref DoubleJump doubleJump, ref PlayerState playerState, ref Animation anim, ref Sprite sprite) =>
                           {
                               trans.X = pCfg.SpawnX;
                               trans.Y = pCfg.SpawnY;
                               vel.Vx = 0.0f;
                               vel.Vy = 0.0f;
-                              playerState.IsAlive = true;
-                              playerState.JumpCount = playerState.MaxJumps;
+                              health.Current = pCfg.MaxHp;
+                              health.Max = pCfg.MaxHp;
+                              health.InvincibleTimer = 0.0f;
+                              doubleJump.Reset();
                               playerState.ShootCooldown = 0.0f;
                               col.IsGrounded = true;
                               anim.CurrentClip = "Idle";
@@ -699,14 +737,16 @@ public static class CombatSystems
                               sprite.FlipX = false;
                           });
 
-                     world.QueryBuilder<Transform, BossStats, BossStateMachine>()
+                     world.QueryBuilder<Transform, Health, BossStats, BossStateMachine>()
                           .With<BossTag>()
                           .Build()
-                          .Each((ref Transform trans, ref BossStats stats, ref BossStateMachine fsm) =>
+                          .Each((ref Transform trans, ref Health health, ref BossStats stats, ref BossStateMachine fsm) =>
                           {
                               trans.X = bCfg.BaseX;
                               trans.Y = bCfg.BaseY;
-                              stats.CurrentHp = bCfg.MaxHp;
+                              health.Current = bCfg.MaxHp;
+                              health.Max = bCfg.MaxHp;
+                              health.InvincibleTimer = 0.0f;
                               stats.Phase = 1;
                               stats.AttackTimer1 = 0.5f;
                               stats.AttackTimer2 = 1.0f;
@@ -801,8 +841,8 @@ public static class CombatSystems
             world.Entity()
                  .Set(new Transform(x, y))
                  .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
-                 .Set(new Bullet(6.0f, 0xFFFFD700, 0xFFFFFFFF))
-                 .Set(FadeEffect.FadeOut(1.2f))
+                 .Set(new Bullet(6.0f, 0xFFFFD700, 0xFFFFF275))
+                 .Set(FadeEffect.FadeOut(0.90f))
                  .Add<EffectTag>();
         }
     }

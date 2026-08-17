@@ -5,67 +5,58 @@ using AnimalBattle.Components;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Systems;
+
 /// <summary>
 /// スラッシュ斬撃エフェクト、フェードアウト、ヒットフラッシュ等の視覚演出ライフサイクルを管理する Flecs.NET ECS システム群。
+/// フレーム経過時間（delta_time）に基づいて滑らかに進行します。
 /// </summary>
 public static class EffectSystems
 {
     /// <summary>
-    /// 攻撃演出エフェクトのアニメーションタイマーを進行させ、完了時に自動消滅させます。
+    /// エフェクト演出に関する全 ECS Routine を Flecs.NET ワールドへ登録します。
     /// </summary>
-    public static readonly Action<World> SlashEffectSystem = (world) =>
+    /// <param name="world">登録先の ECS ワールド</param>
+    public static void RegisterSystems(World world)
     {
-        world.QueryBuilder<Animation, Sprite>()
+        world.System<Animation, Sprite>("SlashEffectSystem")
              .With<EffectTag>()
-             .Build()
-             .Each((Entity e, ref Animation anim, ref Sprite sprite) =>
+             .Kind(Ecs.OnUpdate)
+             .Each((Iter it, int i, ref Animation anim, ref Sprite sprite) =>
              {
-                 anim.Timer += 0.016f;
+                 anim.Timer += it.DeltaTime();
                  AnimationConfig? effConfig = AnimationManager.GetEffectConfig(EffectType.SwordShieldEffectSprites);
                  if (effConfig != null)
                  {
                      sprite.SrcRect = AnimationManager.CalculateSrcRect(effConfig, anim.CurrentClip, anim.Timer, out bool isFinished);
                      if (isFinished)
                      {
-                         e.Destruct();
+                         it.Entity(i).Destruct();
                      }
                  }
              });
-    };
 
-    /// <summary>
-    /// フェード演出コンポーネントの透明度アルファ値をイージング補間により更新します。
-    /// </summary>
-    public static readonly Action<World> FadeEffectSystem = (world) =>
-    {
-        world.QueryBuilder<FadeEffect>()
-             .Build()
-             .Each((ref FadeEffect fade) =>
+        world.System<FadeEffect>("FadeEffectSystem")
+             .Kind(Ecs.OnUpdate)
+             .Each((Iter it, int i, ref FadeEffect fade) =>
              {
-                 fade.ElapsedTimer += 0.016f;
+                 fade.ElapsedTimer += it.DeltaTime();
                  float progress = Math.Clamp(fade.ElapsedTimer / Math.Max(0.001f, fade.Duration), 0.0f, 1.0f);
                  float factor = EasingMath.Evaluate(fade.Ease, progress);
                  fade.CurrentAlpha = fade.StartAlpha + (fade.EndAlpha - fade.StartAlpha) * factor;
              });
-    };
 
-    /// <summary>
-    /// 被弾時のヒットフラッシュ演出タイマーを更新し、完了時にフラグを解除します。
-    /// </summary>
-    public static readonly Action<World> HitFlashEffectSystem = (world) =>
-    {
-        world.QueryBuilder<HitFlashEffect>()
-             .Build()
-             .Each((ref HitFlashEffect flash) =>
+        world.System<HitFlashEffect>("HitFlashEffectSystem")
+             .Kind(Ecs.OnUpdate)
+             .Each((Iter it, int i, ref HitFlashEffect flash) =>
              {
                  if (flash.IsFlashing)
                  {
-                     flash.ElapsedTimer += 0.016f;
+                     flash.ElapsedTimer += it.DeltaTime();
                      if (flash.ElapsedTimer >= flash.Duration)
                      {
                          flash.IsFlashing = false;
                      }
                  }
              });
-    };
+    }
 }

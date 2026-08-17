@@ -1,4 +1,6 @@
 # Player Configuration
+MaxHp = 3
+InvincibleDuration = 0.5
 MoveSpeed = 4.8
 FirstJumpVelocity = -11.2
 SecondJumpVelocity = -9.2
@@ -15,3 +17,6 @@ SpawnY = 500.0
 ShootCooldown = 0.16
 BulletSpeed = 16.0
 BulletSpawnOffset = 24.0
+BulletSpawnOffsetY = -4.0
+BulletWidth = 12.0
+BulletHeight = 8.0

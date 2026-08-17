@@ -16,6 +16,7 @@ HoverSpeedX = 1.5
 HoverAmpX = 80.0
 HoverSpeedY = 2.0
 HoverAmpY = 25.0
+HoverLerpSpeed = 3.0
 TransitionDuration = 1.0
 Skills = ["Aimed3Shot", "RingBurst"]
 
@@ -27,6 +28,7 @@ HoverSpeedX = 1.2
 HoverAmpX = 260.0
 HoverSpeedY = 2.4
 HoverAmpY = 40.0
+HoverLerpSpeed = 3.0
 TransitionDuration = 1.0
 Skills = ["DoubleSpiral", "RainDrop"]
 
@@ -38,5 +40,6 @@ HoverSpeedX = 2.2
 HoverAmpX = 320.0
 HoverSpeedY = 3.6
 HoverAmpY = 50.0
+HoverLerpSpeed = 3.0
 TransitionDuration = 1.0
 Skills = ["CrossChaos", "FastSniper"]

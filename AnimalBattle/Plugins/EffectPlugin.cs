@@ -13,8 +13,6 @@ public class EffectPlugin : IPlugin
     /// <param name="app">構築対象の App コンテナ</param>
     public void Build(App app)
     {
-        app.AddSystem(EffectSystems.SlashEffectSystem)
-           .AddSystem(EffectSystems.FadeEffectSystem)
-           .AddSystem(EffectSystems.HitFlashEffectSystem);
+        EffectSystems.RegisterSystems(app.World);
     }
 }

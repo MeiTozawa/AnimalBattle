@@ -1,24 +1,33 @@
-# Arena and Platforms Configuration
-# 战场与各平台坐标配置
+# Combat Arena Platforms Configuration
+BoundaryMinX = 25.0
+BoundaryMaxX = 1255.0
+BulletDespawnMinX = -80.0
+BulletDespawnMaxX = 1360.0
+BulletDespawnMinY = -80.0
+BulletDespawnMaxY = 800.0
 
+# Bottom Main Floor
 [Floor]
 X = 640.0
 Y = 600.0
 Width = 1240.0
 Height = 36.0
 
+# Left Floating Platform
 [PlatformLeft]
 X = 280.0
 Y = 440.0
 Width = 240.0
 Height = 22.0
 
+# Right Floating Platform
 [PlatformRight]
 X = 1000.0
 Y = 440.0
 Width = 240.0
 Height = 22.0
 
+# Center High Platform
 [PlatformCenter]
 X = 640.0
 Y = 300.0
