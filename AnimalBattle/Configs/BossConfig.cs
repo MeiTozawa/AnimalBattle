@@ -75,7 +75,7 @@ public sealed class BossConfig
     public float ScaleY { get; set; } = 2.8f;
 
     /// <summary>Boss 被弾判定 (Hurtbox) の幾何形状種別（"Box" または "Circle"）</summary>
-    public string HurtboxShape { get; set; } = "Box";
+    public string HurtboxShape { get; set; } = "Circle";
 
     /// <summary>Boss 被弾当たり判定幅（HurtboxShape == "Box" 時に使用）</summary>
     public float HurtboxWidth { get; set; } = 120.0f;
@@ -84,7 +84,7 @@ public sealed class BossConfig
     public float HurtboxHeight { get; set; } = 100.0f;
 
     /// <summary>Boss 被弾当たり判定円半径（HurtboxShape == "Circle" 時に使用）</summary>
-    public float HurtboxRadius { get; set; } = 0.0f;
+    public float HurtboxRadius { get; set; } = 55.0f;
 
     /// <summary>Boss 被弾判定の X 軸局所オフセット</summary>
     public float HurtboxOffsetX { get; set; } = 0.0f;
@@ -99,7 +99,7 @@ public sealed class BossConfig
     public float HitboxHeight => HurtboxHeight;
 
     /// <summary>Boss 身体接触・突進攻撃判定 (Hitbox) の幾何形状種別（"Box" または "Circle"）</summary>
-    public string HitboxShape { get; set; } = "Box";
+    public string HitboxShape { get; set; } = "Circle";
 
     /// <summary>Boss 接触攻撃判定幅（HitboxShape == "Box" 時に使用）</summary>
     public float BodyHitboxWidth { get; set; } = 120.0f;
@@ -108,7 +108,7 @@ public sealed class BossConfig
     public float BodyHitboxHeight { get; set; } = 100.0f;
 
     /// <summary>Boss 接触攻撃判定円半径（HitboxShape == "Circle" 時に使用）</summary>
-    public float BodyHitboxRadius { get; set; } = 0.0f;
+    public float BodyHitboxRadius { get; set; } = 55.0f;
 
     /// <summary>Boss 接触判定の X 軸局所オフセット</summary>
     public float BodyHitboxOffsetX { get; set; } = 0.0f;

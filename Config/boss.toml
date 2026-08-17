@@ -6,15 +6,15 @@ ScaleX = 2.8
 ScaleY = 2.8
 HitFlashDuration = 0.08
 
-# Boss Hurtbox (Boss 銃弾被弾判定: "Box" のため Width / Height のみ指定)
-HurtboxShape = "Box"
-HurtboxWidth = 120.0
-HurtboxHeight = 100.0
+# Boss Hurtbox (Boss 銃弾被弾判定: "Circle" のため Radius のみ指定)
+HurtboxShape = "Circle"
+HurtboxRadius = 55.0
+HurtboxOffsetY = 0.0
 
-# Boss Body Contact Hitbox (Boss 肉体接触・突進攻撃判定: "Box" のため Width / Height のみ指定)
-HitboxShape = "Box"
-BodyHitboxWidth = 120.0
-BodyHitboxHeight = 100.0
+# Boss Body Contact Hitbox (Boss 肉体接触・突進攻撃判定: "Circle" のため Radius のみ指定)
+HitboxShape = "Circle"
+BodyHitboxRadius = 55.0
+BodyHitboxOffsetY = 0.0
 BodyContactDamage = 1.0
 
 # Phase 1 State Machine Configuration

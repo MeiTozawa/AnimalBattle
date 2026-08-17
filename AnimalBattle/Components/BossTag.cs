@@ -5,7 +5,6 @@ namespace AnimalBattle.Components;
 /// </summary>
 [Require<Transform>]
 [Require<Velocity>]
-[Require<CollisionBox>]
 [Require<Health>]
 [Require<BossStats>]
 [Require<BossStateMachine>]

@@ -15,7 +15,7 @@ HitboxHeight = 48.0
 # Player Hurtbox (プレイヤー被弾判定: "Circle" のため Radius のみ指定)
 HurtboxShape = "Circle"
 HurtboxRadius = 7.0
-HurtboxOffsetY = 4.0   # 下方向に 4 ピクセル微調整し、猫の頭頂部から胸腹部中心へアライン
+HurtboxOffsetY = 16.0   # 下方向に 16 ピクセル微調整し、猫の躯体（胸腹部中心）へアライン
 
 ScaleX = 2.0
 ScaleY = 2.0

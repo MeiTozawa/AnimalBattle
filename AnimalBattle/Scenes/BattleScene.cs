@@ -69,7 +69,6 @@ public partial class BattleScene : IDisposable
         _ecsWorld.Entity("Boss")
             .Set(new Transform(bossCfg.BaseX, bossCfg.BaseY, scaleX: bossCfg.ScaleX, scaleY: bossCfg.ScaleY))
             .Set(new Velocity())
-            .Set(new CollisionBox(bossCfg.HitboxWidth, bossCfg.HitboxHeight))
             .Set(new Hurtbox(bossCfg.GetHurtboxShape(), Faction.Hostile))
             .Set(new Hitbox(bossCfg.GetHitboxShape(), damage: bossCfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
             .Set(new Health(bossCfg.MaxHp))
