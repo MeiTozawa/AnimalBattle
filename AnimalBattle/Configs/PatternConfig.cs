@@ -15,7 +15,7 @@ public sealed class Aimed3ShotConfig
     public float WindUpTime { get; set; } = 0.40f;
 
     /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
-    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x88, 0x88);
+    public Color TelegraphColor { get; set; } = ColorPalette.RedLight;
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 0.90f;
@@ -39,10 +39,10 @@ public sealed class Aimed3ShotConfig
     public int BulletCount { get; set; } = 3;
 
     /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
-    public Color FillColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x33, 0x33);
+    public Color FillColor { get; set; } = ColorPalette.Red;
 
     /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
-    public Color OutlineColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x88, 0x88);
+    public Color OutlineColor { get; set; } = ColorPalette.RedLight;
 }
 
 /// <summary>
@@ -57,7 +57,7 @@ public sealed class RingBurstConfig
     public float WindUpTime { get; set; } = 0.55f;
 
     /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
-    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0x80, 0xFF, 0xFF);
+    public Color TelegraphColor { get; set; } = ColorPalette.CyanLight;
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 1.00f;
@@ -81,10 +81,10 @@ public sealed class RingBurstConfig
     public int BulletCount { get; set; } = 16;
 
     /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
-    public Color FillColor { get; set; } = Color.FromArgb(0xFF, 0x00, 0xE5, 0xFF);
+    public Color FillColor { get; set; } = ColorPalette.Cyan;
 
     /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
-    public Color OutlineColor { get; set; } = Color.FromArgb(0xFF, 0x80, 0xFF, 0xFF);
+    public Color OutlineColor { get; set; } = ColorPalette.CyanLight;
 }
 
 /// <summary>
@@ -99,7 +99,7 @@ public sealed class DoubleSpiralConfig
     public float WindUpTime { get; set; } = 0.45f;
 
     /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
-    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0xE0, 0xB0, 0xFF);
+    public Color TelegraphColor { get; set; } = ColorPalette.PurpleLight;
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 1.60f;
@@ -120,16 +120,16 @@ public sealed class DoubleSpiralConfig
     public float BulletRadius { get; set; } = 7.5f;
 
     /// <summary>第 1 弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
-    public Color FillColor1 { get; set; } = Color.FromArgb(0xFF, 0xB2, 0x55, 0xD3);
+    public Color FillColor1 { get; set; } = ColorPalette.PurpleSpiral;
 
     /// <summary>第 1 弾の外枠カラー (<see cref="Color"/>)</summary>
-    public Color OutlineColor1 { get; set; } = Color.FromArgb(0xFF, 0xE0, 0xB0, 0xFF);
+    public Color OutlineColor1 { get; set; } = ColorPalette.PurpleLight;
 
     /// <summary>第 2 弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
-    public Color FillColor2 { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xD7, 0x00);
+    public Color FillColor2 { get; set; } = ColorPalette.Gold;
 
     /// <summary>第 2 弾の外枠カラー (<see cref="Color"/>)</summary>
-    public Color OutlineColor2 { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xF2, 0x75);
+    public Color OutlineColor2 { get; set; } = ColorPalette.GoldLight;
 }
 
 /// <summary>
@@ -144,7 +144,7 @@ public sealed class RainDropConfig
     public float WindUpTime { get; set; } = 0.35f;
 
     /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
-    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0xB9, 0xF6, 0xCA);
+    public Color TelegraphColor { get; set; } = ColorPalette.GreenMint;
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 1.80f;
@@ -168,10 +168,10 @@ public sealed class RainDropConfig
     public float MaxX { get; set; } = 1220.0f;
 
     /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
-    public Color FillColor { get; set; } = Color.FromArgb(0xFF, 0x01, 0x06, 0x76);
+    public Color FillColor { get; set; } = ColorPalette.BlueDark;
 
     /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
-    public Color OutlineColor { get; set; } = Color.FromArgb(0xFF, 0xB9, 0xF6, 0xCA);
+    public Color OutlineColor { get; set; } = ColorPalette.GreenMint;
 }
 
 /// <summary>
@@ -186,7 +186,7 @@ public sealed class CrossChaosConfig
     public float WindUpTime { get; set; } = 0.35f;
 
     /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
-    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x8A, 0x80);
+    public Color TelegraphColor { get; set; } = ColorPalette.RedCoral;
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 2.00f;
@@ -207,10 +207,10 @@ public sealed class CrossChaosConfig
     public float BulletRadius { get; set; } = 8.5f;
 
     /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
-    public Color FillColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x17, 0x44);
+    public Color FillColor { get; set; } = ColorPalette.RedBright;
 
     /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
-    public Color OutlineColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x8A, 0x80);
+    public Color OutlineColor { get; set; } = ColorPalette.RedCoral;
 }
 
 /// <summary>
@@ -225,7 +225,7 @@ public sealed class FastSniperConfig
     public float WindUpTime { get; set; } = 0.50f;
 
     /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
-    public Color TelegraphColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
+    public Color TelegraphColor { get; set; } = ColorPalette.White;
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
     public float CastDuration { get; set; } = 0.60f;
@@ -243,10 +243,10 @@ public sealed class FastSniperConfig
     public float BulletRadius { get; set; } = 6.5f;
 
     /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
-    public Color FillColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x52, 0x52);
+    public Color FillColor { get; set; } = ColorPalette.RedLaser;
 
     /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
-    public Color OutlineColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
+    public Color OutlineColor { get; set; } = ColorPalette.White;
 }
 
 /// <summary>

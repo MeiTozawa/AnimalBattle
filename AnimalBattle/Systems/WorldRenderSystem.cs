@@ -146,7 +146,7 @@ public static class WorldRenderSystem
 
                           if (health.IsInvincible)
                           {
-                              GameEngine.DrawCircle((int)trans.X, (int)trans.Y, 24, Color.FromArgb(0x88, 0x00, 0xFF, 0xFF), false);
+                              GameEngine.DrawCircle((int)trans.X, (int)trans.Y, 24, ColorPalette.InvincibleShield, false);
                           }
 
                           GameEngine.DrawCircle((int)trans.X, (int)trans.Y, (int)playerRenderCfg.HitboxCoreRadius, playerRenderCfg.HitboxCoreColor, true);
