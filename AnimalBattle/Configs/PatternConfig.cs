@@ -22,6 +22,9 @@ public sealed class Aimed3ShotConfig
     /// <summary>後隙（リカバリー）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.50f;
 
+    /// <summary>発射間隔（秒）</summary>
+    public float Interval { get; set; } = 0.45f;
+
     /// <summary>弾速</summary>
     public float BulletSpeed { get; set; } = 6.2f;
 
@@ -60,6 +63,9 @@ public sealed class RingBurstConfig
 
     /// <summary>後隙（リカバリー）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.70f;
+
+    /// <summary>発射間隔（秒）</summary>
+    public float Interval { get; set; } = 0.50f;
 
     /// <summary>弾速</summary>
     public float BulletSpeed { get; set; } = 3.8f;
@@ -225,6 +231,9 @@ public sealed class FastSniperConfig
 
     /// <summary>後隙（リカバリー）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.60f;
+
+    /// <summary>発射間隔（秒）</summary>
+    public float Interval { get; set; } = 0.30f;
 
     /// <summary>弾速</summary>
     public float BulletSpeed { get; set; } = 8.5f;

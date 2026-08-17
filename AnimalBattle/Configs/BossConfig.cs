@@ -26,6 +26,9 @@ public sealed class PhaseFsmConfig
     /// <summary>垂直浮遊振幅</summary>
     public float HoverAmpY { get; set; } = 25.0f;
 
+    /// <summary>浮動追従の補間速度（Lerp Speed）</summary>
+    public float HoverLerpSpeed { get; set; } = 3.0f;
+
     /// <summary>フェーズ突入時の無敵・清屏演出時間（秒）</summary>
     public float TransitionDuration { get; set; } = 1.0f;
 
@@ -71,6 +74,7 @@ public sealed class BossConfig
         HoverAmpX = 80.0f,
         HoverSpeedY = 2.0f,
         HoverAmpY = 25.0f,
+        HoverLerpSpeed = 3.0f,
         TransitionDuration = 1.0f,
         Skills = ["Aimed3Shot", "RingBurst"]
     };
@@ -84,11 +88,12 @@ public sealed class BossConfig
         HoverAmpX = 260.0f,
         HoverSpeedY = 2.4f,
         HoverAmpY = 40.0f,
+        HoverLerpSpeed = 3.0f,
         TransitionDuration = 1.0f,
         Skills = ["DoubleSpiral", "RainDrop"]
     };
 
-    /// <summary>Phase 3 状态机设置</summary>
+    /// <summary>Phase 3 状態機設定</summary>
     public PhaseFsmConfig Phase3 { get; set; } = new()
     {
         HpThreshold = 0.33f,
@@ -97,6 +102,7 @@ public sealed class BossConfig
         HoverAmpX = 320.0f,
         HoverSpeedY = 3.6f,
         HoverAmpY = 50.0f,
+        HoverLerpSpeed = 3.0f,
         TransitionDuration = 1.0f,
         Skills = ["CrossChaos", "FastSniper"]
     };

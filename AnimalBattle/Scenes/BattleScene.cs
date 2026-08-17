@@ -46,7 +46,9 @@ public partial class BattleScene : IDisposable
             .Set(new Transform(playerCfg.SpawnX, playerCfg.SpawnY, scaleX: playerCfg.ScaleX, scaleY: playerCfg.ScaleY))
             .Set(new Velocity())
             .Set(new CollisionBox(playerCfg.HitboxWidth, playerCfg.HitboxHeight))
-            .Set(new PlayerState(maxJumps: playerCfg.MaxJumps))
+            .Set(new Health(playerCfg.MaxHp))
+            .Set(new DoubleJump(playerCfg.MaxJumps))
+            .Set(new PlayerState())
             .Set(new Sprite(catHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
             .Set(new Animation("Idle", isPlaying: true))
             .Add<PlayerTag>();
@@ -56,7 +58,8 @@ public partial class BattleScene : IDisposable
             .Set(new Transform(bossCfg.BaseX, bossCfg.BaseY, scaleX: bossCfg.ScaleX, scaleY: bossCfg.ScaleY))
             .Set(new Velocity())
             .Set(new CollisionBox(bossCfg.HitboxWidth, bossCfg.HitboxHeight))
-            .Set(new BossStats(maxHp: bossCfg.MaxHp, baseX: bossCfg.BaseX, baseY: bossCfg.BaseY))
+            .Set(new Health(bossCfg.MaxHp))
+            .Set(new BossStats(baseX: bossCfg.BaseX, baseY: bossCfg.BaseY))
             .Set(new BossStateMachine())
             .Set(new Sprite(catHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
             .Add<BossTag>();

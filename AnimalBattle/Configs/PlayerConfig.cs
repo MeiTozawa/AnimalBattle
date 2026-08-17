@@ -7,14 +7,20 @@ namespace AnimalBattle.Configs;
 /// </summary>
 public sealed class PlayerConfig
 {
-    /// <summary>プレイヤーの左右移動速度（ピクセル/フレーム）</summary>
+    /// <summary>プレイヤーの最大 HP（初期値: 3）</summary>
+    public int MaxHp { get; set; } = 3;
+
+    /// <summary>被弾後の無敵時間（秒、初期値: 0.5s）</summary>
+    public float InvincibleDuration { get; set; } = 0.5f;
+
+    /// <summary>プレイヤーの左右移動速度（ピクセル/秒基準）</summary>
     public float MoveSpeed { get; set; } = 4.8f;
 
     /// <summary>地上初段ジャンプの初速度（上向き負値）</summary>
-    public float FirstJumpVelocity { get; set; } = -9.2f;
+    public float FirstJumpVelocity { get; set; } = -11.2f;
 
     /// <summary>空中二段ジャンプの初速度（上向き負値）</summary>
-    public float SecondJumpVelocity { get; set; } = -8.2f;
+    public float SecondJumpVelocity { get; set; } = -9.2f;
 
     /// <summary>下向き重力加速度</summary>
     public float Gravity { get; set; } = 0.45f;
@@ -54,6 +60,15 @@ public sealed class PlayerConfig
 
     /// <summary>銃弾生成時のプレイヤー中心からの X オフセット</summary>
     public float BulletSpawnOffset { get; set; } = 24.0f;
+
+    /// <summary>銃弾生成時のプレイヤー中心からの Y オフセット</summary>
+    public float BulletSpawnOffsetY { get; set; } = -4.0f;
+
+    /// <summary>銃弾当たり判定幅</summary>
+    public float BulletWidth { get; set; } = 12.0f;
+
+    /// <summary>銃弾当たり判定高さ</summary>
+    public float BulletHeight { get; set; } = 8.0f;
 
     /// <summary>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{PlayerConfig}"/> インスタンスを生成します。
