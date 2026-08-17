@@ -3,7 +3,8 @@ using AnimalBattle.Systems;
 namespace AnimalBattle.Plugins;
 
 /// <summary>
-/// フェード・ヒットフラッシュ等の演出エフェクトシステム群を一括構築するドメインプラグイン。
+/// フェード・ヒットフラッシュ・スラッシュ等の演出エフェクトシステム群を一括構築するドメインプラグイン。
+/// 各種単一責任の Effect System クラスを順次登録します。
 /// </summary>
 public class EffectPlugin : IPlugin
 {
@@ -13,6 +14,8 @@ public class EffectPlugin : IPlugin
     /// <param name="app">構築対象の App コンテナ</param>
     public void Build(App app)
     {
-        EffectSystems.RegisterSystems(app.World);
+        SlashEffectSystem.Register(app.World);
+        FadeEffectSystem.Register(app.World);
+        HitFlashEffectSystem.Register(app.World);
     }
 }
