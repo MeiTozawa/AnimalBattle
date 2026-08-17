@@ -3,153 +3,264 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// フェーズ 1 の自機狙い弾および全方位リング弾幕の設定クラス。
+/// 自機狙い 3 連射技能の設定クラス。
 /// </summary>
-public sealed class Phase1PatternConfig
+public sealed class Aimed3ShotConfig
 {
-    /// <summary>自機狙い 3 連射の発射周期（秒）</summary>
-    public float AimedInterval { get; set; } = 0.90f;
+    /// <summary>技能名</summary>
+    public string SkillName { get; set; } = "Aimed 3-Way Shot";
 
-    /// <summary>自機狙い弾の初速度</summary>
-    public float AimedSpeed { get; set; } = 6.2f;
+    /// <summary>前隙（予兆）時間（秒）</summary>
+    public float WindUpTime { get; set; } = 0.40f;
 
-    /// <summary>自機狙い 3 連射の扇形拡散角（ラジアン）</summary>
-    public float AimedSpreadAngle { get; set; } = 0.16f;
+    /// <summary>予兆エフェクトカラー (ARGB)</summary>
+    public uint TelegraphColor { get; set; } = 0xFFFF8888;
 
-    /// <summary>自機狙い弾の判定半径</summary>
-    public float AimedRadius { get; set; } = 8.0f;
+    /// <summary>発動（キャスト）持続時間（秒）</summary>
+    public float CastDuration { get; set; } = 0.90f;
 
-    /// <summary>自機狙い弾の内部塗りつぶし色</summary>
-    public uint AimedFillColor { get; set; } = 0xFFFF3333;
+    /// <summary>後隙（リカバリー）時間（秒）</summary>
+    public float RecoveryTime { get; set; } = 0.50f;
 
-    /// <summary>自機狙い弾の外周発光色</summary>
-    public uint AimedOutlineColor { get; set; } = 0xFFFF8888;
+    /// <summary>弾速</summary>
+    public float BulletSpeed { get; set; } = 6.2f;
 
-    /// <summary>16 方向全方位リング弾の発射周期（秒）</summary>
-    public float RingInterval { get; set; } = 2.20f;
+    /// <summary>拡散角度（ラジアン）</summary>
+    public float SpreadAngle { get; set; } = 0.16f;
 
-    /// <summary>リング弾の分割弾数</summary>
-    public int RingBulletCount { get; set; } = 16;
+    /// <summary>弾の半径</summary>
+    public float BulletRadius { get; set; } = 8.0f;
 
-    /// <summary>リング弾の初速度</summary>
-    public float RingSpeed { get; set; } = 3.8f;
+    /// <summary>弾数</summary>
+    public int BulletCount { get; set; } = 3;
 
-    /// <summary>リング弾発射ごとの回転角度オフセット加算値</summary>
-    public float RingAngleStep { get; set; } = 0.25f;
+    /// <summary>弾の塗りつぶしカラー (ARGB)</summary>
+    public uint FillColor { get; set; } = 0xFFFF3333;
 
-    /// <summary>リング弾の判定半径</summary>
-    public float RingRadius { get; set; } = 9.0f;
-
-    /// <summary>リング弾の内部塗りつぶし色</summary>
-    public uint RingFillColor { get; set; } = 0xFF00E5FF;
-
-    /// <summary>リング弾の外周発光色</summary>
-    public uint RingOutlineColor { get; set; } = 0xFF80FFFF;
+    /// <summary>弾の外枠カラー (ARGB)</summary>
+    public uint OutlineColor { get; set; } = 0xFFFF8888;
 }
 
 /// <summary>
-/// フェーズ 2 の双螺旋回転弾幕および降雨弾幕の設定クラス。
+/// 16 方向全方位リング弾幕技能の設定クラス。
 /// </summary>
-public sealed class Phase2PatternConfig
+public sealed class RingBurstConfig
 {
-    /// <summary>双螺旋弾の発射周期（秒）</summary>
-    public float SpiralInterval { get; set; } = 0.075f;
+    /// <summary>技能名</summary>
+    public string SkillName { get; set; } = "16-Way Ring Burst";
 
-    /// <summary>双螺旋弾の飛行速度</summary>
-    public float SpiralSpeed { get; set; } = 4.8f;
+    /// <summary>前隙（予兆）時間（秒）</summary>
+    public float WindUpTime { get; set; } = 0.55f;
 
-    /// <summary>双螺旋弾の回転角加速度ステップ</summary>
-    public float SpiralAngleStep { get; set; } = 0.22f;
+    /// <summary>予兆エフェクトカラー (ARGB)</summary>
+    public uint TelegraphColor { get; set; } = 0xFF80FFFF;
 
-    /// <summary>双螺旋弾の判定半径</summary>
-    public float SpiralRadius { get; set; } = 7.5f;
+    /// <summary>発動（キャスト）持続時間（秒）</summary>
+    public float CastDuration { get; set; } = 1.00f;
 
-    /// <summary>螺旋 1 枝目の塗りつぶし色</summary>
-    public uint SpiralFillColor1 { get; set; } = 0xFFBA55D3;
+    /// <summary>後隙（リカバリー）時間（秒）</summary>
+    public float RecoveryTime { get; set; } = 0.70f;
 
-    /// <summary>螺旋 1 枝目の発光枠色</summary>
-    public uint SpiralOutlineColor1 { get; set; } = 0xFFE0B0FF;
+    /// <summary>弾速</summary>
+    public float BulletSpeed { get; set; } = 3.8f;
 
-    /// <summary>螺旋 2 枝目の塗りつぶし色</summary>
-    public uint SpiralFillColor2 { get; set; } = 0xFFFFD700;
+    /// <summary>弾間の角度間隔（ラジアン）</summary>
+    public float AngleStep { get; set; } = 0.25f;
 
-    /// <summary>螺旋 2 枝目の発光枠色</summary>
-    public uint SpiralOutlineColor2 { get; set; } = 0xFFFFF275;
+    /// <summary>弾の半径</summary>
+    public float BulletRadius { get; set; } = 9.0f;
 
-    /// <summary>降雨弾幕の発射周期（秒）</summary>
-    public float RainInterval { get; set; } = 0.32f;
+    /// <summary>弾数</summary>
+    public int BulletCount { get; set; } = 16;
 
-    /// <summary>降雨弾幕の垂直落下速度</summary>
-    public float RainSpeed { get; set; } = 5.2f;
+    /// <summary>弾の塗りつぶしカラー (ARGB)</summary>
+    public uint FillColor { get; set; } = 0xFF00E5FF;
 
-    /// <summary>降雨弾幕の判定半径</summary>
-    public float RainRadius { get; set; } = 7.0f;
-
-    /// <summary>降雨弾の出現最小 X 座標</summary>
-    public float RainMinX { get; set; } = 60.0f;
-
-    /// <summary>降雨弾の出現最大 X 座標</summary>
-    public float RainMaxX { get; set; } = 1220.0f;
-
-    /// <summary>降雨弾の塗りつぶし色</summary>
-    public uint RainFillColor { get; set; } = 0xFF00E676;
-
-    /// <summary>降雨弾の発光枠色</summary>
-    public uint RainOutlineColor { get; set; } = 0xFFB9F6CA;
+    /// <summary>弾の外枠カラー (ARGB)</summary>
+    public uint OutlineColor { get; set; } = 0xFF80FFFF;
 }
 
 /// <summary>
-/// フェーズ 3 の全方位交差波弾幕および高速スナイプ弾幕の設定クラス。
+/// 双螺旋回転弾幕技能の設定クラス。
 /// </summary>
-public sealed class Phase3PatternConfig
+public sealed class DoubleSpiralConfig
 {
-    /// <summary>全方位交差波の発射周期（秒）</summary>
-    public float CrossInterval { get; set; } = 0.10f;
+    /// <summary>技能名</summary>
+    public string SkillName { get; set; } = "Twin Spiral Barrage";
 
-    /// <summary>全方位交差波の飛行速度</summary>
-    public float CrossSpeed { get; set; } = 5.2f;
+    /// <summary>前隙（予兆）時間（秒）</summary>
+    public float WindUpTime { get; set; } = 0.45f;
 
-    /// <summary>交差波の回転角ステップ</summary>
-    public float CrossAngleStep { get; set; } = 0.18f;
+    /// <summary>予兆エフェクトカラー (ARGB)</summary>
+    public uint TelegraphColor { get; set; } = 0xFFE0B0FF;
 
-    /// <summary>交差波弾の判定半径</summary>
-    public float CrossRadius { get; set; } = 8.5f;
+    /// <summary>発動（キャスト）持続時間（秒）</summary>
+    public float CastDuration { get; set; } = 1.60f;
 
-    /// <summary>交差波弾の塗りつぶし色</summary>
-    public uint CrossFillColor { get; set; } = 0xFFFF1744;
+    /// <summary>後隙（リカバリー）時間（秒）</summary>
+    public float RecoveryTime { get; set; } = 0.60f;
 
-    /// <summary>交差波弾の発光枠色</summary>
-    public uint CrossOutlineColor { get; set; } = 0xFFFF8A80;
+    /// <summary>弾速</summary>
+    public float BulletSpeed { get; set; } = 4.8f;
 
-    /// <summary>高速スナイプ弾の発射周期（秒）</summary>
-    public float SniperInterval { get; set; } = 0.40f;
+    /// <summary>発射ごとの角度変化量（ラジアン）</summary>
+    public float AngleStep { get; set; } = 0.22f;
 
-    /// <summary>高速スナイプ弾の超高速初速度</summary>
-    public float SniperSpeed { get; set; } = 8.5f;
+    /// <summary>発射間隔（秒）</summary>
+    public float Interval { get; set; } = 0.075f;
 
-    /// <summary>高速スナイプ弾の判定半径</summary>
-    public float SniperRadius { get; set; } = 6.5f;
+    /// <summary>弾の半径</summary>
+    public float BulletRadius { get; set; } = 7.5f;
 
-    /// <summary>高速スナイプ弾の塗りつぶし色</summary>
-    public uint SniperFillColor { get; set; } = 0xFFFF5252;
+    /// <summary>第 1 弾の塗りつぶしカラー (ARGB)</summary>
+    public uint FillColor1 { get; set; } = 0xFFB255D3;
 
-    /// <summary>高速スナイプ弾の発光枠色</summary>
-    public uint SniperOutlineColor { get; set; } = 0xFFFFFFFF;
+    /// <summary>第 1 弾の外枠カラー (ARGB)</summary>
+    public uint OutlineColor1 { get; set; } = 0xFFE0B0FF;
+
+    /// <summary>第 2 弾の塗りつぶしカラー (ARGB)</summary>
+    public uint FillColor2 { get; set; } = 0xFFFFD700;
+
+    /// <summary>第 2 弾の外枠カラー (ARGB)</summary>
+    public uint OutlineColor2 { get; set; } = 0xFFFFF275;
 }
 
 /// <summary>
-/// Config/patterns.toml から読み込まれる各フェーズの弾幕パターン設定クラス。
+/// 降雨弾幕技能の設定クラス。
+/// </summary>
+public sealed class RainDropConfig
+{
+    /// <summary>技能名</summary>
+    public string SkillName { get; set; } = "Skyfall Rain Barrage";
+
+    /// <summary>前隙（予兆）時間（秒）</summary>
+    public float WindUpTime { get; set; } = 0.35f;
+
+    /// <summary>予兆エフェクトカラー (ARGB)</summary>
+    public uint TelegraphColor { get; set; } = 0xFFB9F6CA;
+
+    /// <summary>発動（キャスト）持続時間（秒）</summary>
+    public float CastDuration { get; set; } = 1.80f;
+
+    /// <summary>後隙（リカバリー）時間（秒）</summary>
+    public float RecoveryTime { get; set; } = 0.80f;
+
+    /// <summary>弾速</summary>
+    public float BulletSpeed { get; set; } = 5.2f;
+
+    /// <summary>発射間隔（秒）</summary>
+    public float Interval { get; set; } = 0.32f;
+
+    /// <summary>弾の半径</summary>
+    public float BulletRadius { get; set; } = 7.0f;
+
+    /// <summary>弾生成の最小 X 座標</summary>
+    public float MinX { get; set; } = 60.0f;
+
+    /// <summary>弾生成の最大 X 座標</summary>
+    public float MaxX { get; set; } = 1220.0f;
+
+    /// <summary>弾の塗りつぶしカラー (ARGB)</summary>
+    public uint FillColor { get; set; } = 0xFF010676;
+
+    /// <summary>弾の外枠カラー (ARGB)</summary>
+    public uint OutlineColor { get; set; } = 0xFFB9F6CA;
+}
+
+/// <summary>
+/// 全方位交差波弾幕技能の設定クラス。
+/// </summary>
+public sealed class CrossChaosConfig
+{
+    /// <summary>技能名</summary>
+    public string SkillName { get; set; } = "Cross Chaos Waves";
+
+    /// <summary>前隙（予兆）時間（秒）</summary>
+    public float WindUpTime { get; set; } = 0.35f;
+
+    /// <summary>予兆エフェクトカラー (ARGB)</summary>
+    public uint TelegraphColor { get; set; } = 0xFFFF8A80;
+
+    /// <summary>発動（キャスト）持続時間（秒）</summary>
+    public float CastDuration { get; set; } = 2.00f;
+
+    /// <summary>後隙（リカバリー）時間（秒）</summary>
+    public float RecoveryTime { get; set; } = 0.50f;
+
+    /// <summary>弾速</summary>
+    public float BulletSpeed { get; set; } = 5.2f;
+
+    /// <summary>発射ごとの角度変化量（ラジアン）</summary>
+    public float AngleStep { get; set; } = 0.18f;
+
+    /// <summary>発射間隔（秒）</summary>
+    public float Interval { get; set; } = 0.10f;
+
+    /// <summary>弾の半径</summary>
+    public float BulletRadius { get; set; } = 8.5f;
+
+    /// <summary>弾の塗りつぶしカラー (ARGB)</summary>
+    public uint FillColor { get; set; } = 0xFFFF1744;
+
+    /// <summary>弾の外枠カラー (ARGB)</summary>
+    public uint OutlineColor { get; set; } = 0xFFFF8A80;
+}
+
+/// <summary>
+/// 高速レーザースナイパー弾幕技能の設定クラス。
+/// </summary>
+public sealed class FastSniperConfig
+{
+    /// <summary>技能名</summary>
+    public string SkillName { get; set; } = "Laser Fast Sniper";
+
+    /// <summary>前隙（予兆）時間（秒）</summary>
+    public float WindUpTime { get; set; } = 0.50f;
+
+    /// <summary>予兆エフェクトカラー (ARGB)</summary>
+    public uint TelegraphColor { get; set; } = 0xFFFFFFFF;
+
+    /// <summary>発動（キャスト）持続時間（秒）</summary>
+    public float CastDuration { get; set; } = 0.60f;
+
+    /// <summary>後隙（リカバリー）時間（秒）</summary>
+    public float RecoveryTime { get; set; } = 0.60f;
+
+    /// <summary>弾速</summary>
+    public float BulletSpeed { get; set; } = 8.5f;
+
+    /// <summary>弾の半径</summary>
+    public float BulletRadius { get; set; } = 6.5f;
+
+    /// <summary>弾の塗りつぶしカラー (ARGB)</summary>
+    public uint FillColor { get; set; } = 0xFFFF5252;
+
+    /// <summary>弾の外枠カラー (ARGB)</summary>
+    public uint OutlineColor { get; set; } = 0xFFFFFFFF;
+}
+
+/// <summary>
+/// Config/patterns.toml から読み込まれる各技能の FSM アクション設定クラス。
 /// </summary>
 public sealed class PatternConfig
 {
-    /// <summary>フェーズ 1 弾幕設定</summary>
-    public Phase1PatternConfig Phase1 { get; set; } = new();
+    /// <summary>自機狙い 3 連射技能設定</summary>
+    public Aimed3ShotConfig Aimed3Shot { get; set; } = new();
 
-    /// <summary>フェーズ 2 弾幕設定</summary>
-    public Phase2PatternConfig Phase2 { get; set; } = new();
+    /// <summary>16 方向全方位リング弾幕技能設定</summary>
+    public RingBurstConfig RingBurst { get; set; } = new();
 
-    /// <summary>フェーズ 3 弾幕設定</summary>
-    public Phase3PatternConfig Phase3 { get; set; } = new();
+    /// <summary>双螺旋回転弾幕技能設定</summary>
+    public DoubleSpiralConfig DoubleSpiral { get; set; } = new();
+
+    /// <summary>降雨弾幕技能設定</summary>
+    public RainDropConfig RainDrop { get; set; } = new();
+
+    /// <summary>全方位交差波弾幕技能設定</summary>
+    public CrossChaosConfig CrossChaos { get; set; } = new();
+
+    /// <summary>高速レーザースナイパー弾幕技能設定</summary>
+    public FastSniperConfig FastSniper { get; set; } = new();
 
     /// <summary>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{PatternConfig}"/> インスタンスを生成します。

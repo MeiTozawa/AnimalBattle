@@ -1,55 +1,81 @@
-# Bullet Patterns Configuration
+# Bullet Patterns & Skill State Lifecycle Configuration
 
-[Phase1]
-# Aimed 3-way shot
-AimedInterval = 0.90
-AimedSpeed = 6.2
-AimedSpreadAngle = 0.16
-AimedRadius = 8.0
-AimedFillColor = 4294914867
-AimedOutlineColor = 4294936712
+[Aimed3Shot]
+SkillName = "Aimed 3-Way Shot"
+WindUpTime = 0.40
+TelegraphColor = 0xFFFF8888
+CastDuration = 0.90
+RecoveryTime = 0.50
+BulletSpeed = 6.2
+SpreadAngle = 0.16
+BulletRadius = 8.0
+BulletCount = 3
+FillColor = 0xFFFF3333
+OutlineColor = 0xFFFF8888
 
-# Ring 16-way shot
-RingInterval = 2.20
-RingBulletCount = 16
-RingSpeed = 3.8
-RingAngleStep = 0.25
-RingRadius = 9.0
-RingFillColor = 4278248959
-RingOutlineColor = 4286644223
+[RingBurst]
+SkillName = "16-Way Ring Burst"
+WindUpTime = 0.55
+TelegraphColor = 0xFF80FFFF
+CastDuration = 1.00
+RecoveryTime = 0.70
+BulletSpeed = 3.8
+AngleStep = 0.25
+BulletRadius = 9.0
+BulletCount = 16
+FillColor = 0xFF00E5FF
+OutlineColor = 0xFF80FFFF
 
-[Phase2]
-# Double Spiral shot
-SpiralInterval = 0.075
-SpiralSpeed = 4.8
-SpiralAngleStep = 0.22
-SpiralRadius = 7.5
-SpiralFillColor1 = 4289877459
-SpiralOutlineColor1 = 4292915455
-SpiralFillColor2 = 4294956800
-SpiralOutlineColor2 = 4294963829
+[DoubleSpiral]
+SkillName = "Twin Spiral Barrage"
+WindUpTime = 0.45
+TelegraphColor = 0xFFE0B0FF
+CastDuration = 1.60
+RecoveryTime = 0.60
+BulletSpeed = 4.8
+AngleStep = 0.22
+Interval = 0.075
+BulletRadius = 7.5
+FillColor1 = 0xFFB255D3
+OutlineColor1 = 0xFFE0B0FF
+FillColor2 = 0xFFFFD700
+OutlineColor2 = 0xFFFFF275
 
-# Rain bullet shot
-RainInterval = 0.32
-RainSpeed = 5.2
-RainRadius = 7.0
-RainMinX = 60.0
-RainMaxX = 1220.0
-RainFillColor = 4278257270
-RainOutlineColor = 4290377418
+[RainDrop]
+SkillName = "Skyfall Rain Barrage"
+WindUpTime = 0.35
+TelegraphColor = 0xFFB9F6CA
+CastDuration = 1.80
+RecoveryTime = 0.80
+BulletSpeed = 5.2
+Interval = 0.32
+BulletRadius = 7.0
+MinX = 60.0
+MaxX = 1220.0
+FillColor = 0xFF010676
+OutlineColor = 0xFFB9F6CA
 
-[Phase3]
-# Cross chaos wave shot
-CrossInterval = 0.10
-CrossSpeed = 5.2
-CrossAngleStep = 0.18
-CrossRadius = 8.5
-CrossFillColor = 4294907716
-CrossOutlineColor = 4294937216
+[CrossChaos]
+SkillName = "Cross Chaos Waves"
+WindUpTime = 0.35
+TelegraphColor = 0xFFFF8A80
+CastDuration = 2.00
+RecoveryTime = 0.50
+BulletSpeed = 5.2
+AngleStep = 0.18
+Interval = 0.10
+BulletRadius = 8.5
+FillColor = 0xFFFF1744
+OutlineColor = 0xFFFF8A80
 
-# Fast sniper shot
-SniperInterval = 0.40
-SniperSpeed = 8.5
-SniperRadius = 6.5
-SniperFillColor = 4294922834
-SniperOutlineColor = 4294967295
+[FastSniper]
+SkillName = "Laser Fast Sniper"
+WindUpTime = 0.50
+TelegraphColor = 0xFFFFFFFF
+CastDuration = 0.60
+RecoveryTime = 0.60
+BulletSpeed = 8.5
+BulletRadius = 6.5
+FillColor = 0xFFFF5252
+OutlineColor = 0xFFFFFFFF
+
