@@ -25,13 +25,6 @@ namespace ab {
 
     export template <typename T>
     requires std::integral<T> || std::floating_point<T>
-    struct Vec2 {
-        T x;
-        T y;
-    };
-
-    export template <typename T>
-    requires std::integral<T> || std::floating_point<T>
     struct Rect {
         T x1;
         T y1;
@@ -64,12 +57,6 @@ namespace ab {
     constexpr bool Point<T>::In(const Rect<T>& r) const {
         return x >= r.x1 && x <= r.x2 && y >= r.y1 && y <= r.y2;
     }
-
-    export struct Sprite {
-        int handle;
-        Vec2<int> size;
-    };
-
     // --- Color Constants ---
     export constexpr uint32_t COLOR_WHITE = 0xFFFFFF;
     export constexpr uint32_t COLOR_BLACK = 0x000000;
