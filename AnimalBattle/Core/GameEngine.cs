@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using AnimalBattle.Bindings;
+using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Core;
 
@@ -135,6 +136,72 @@ public static class GameEngine
     }
 
     /// <summary>
+    /// マウスカーソルの現在の画面座標を取得します。
+    /// </summary>
+    /// <returns>マウス座標 (<see cref="Vec2i"/>)</returns>
+    public static Vec2i GetMousePoint()
+    {
+        Vec2i pos = Vec2i.Zero;
+        unsafe
+        {
+            NativeBindings.Engine_GetMousePoint(&pos);
+        }
+        return pos;
+    }
+
+    /// <summary>
+    /// マウスカーソルの現在の画面座標を取得します。
+    /// </summary>
+    /// <param name="x">X 座標出力先</param>
+    /// <param name="y">Y 座標出力先</param>
+    public static void GetMousePoint(out int x, out int y)
+    {
+        Vec2i pos = GetMousePoint();
+        x = pos.X;
+        y = pos.Y;
+    }
+
+    /// <summary>
+    /// 指定画像ハンドルの幅と高さを取得します。
+    /// </summary>
+    /// <param name="handle">画像ハンドル</param>
+    /// <returns>画像サイズ (<see cref="Vec2i"/>)</returns>
+    public static Vec2i GetGraphSize(int handle)
+    {
+        Vec2i size = Vec2i.Zero;
+        unsafe
+        {
+            NativeBindings.Engine_GetGraphSize(handle, &size);
+        }
+        return size;
+    }
+
+    /// <summary>
+    /// 指定画像ハンドルの幅と高さを取得します。
+    /// </summary>
+    /// <param name="handle">画像ハンドル</param>
+    /// <param name="width">幅出力先</param>
+    /// <param name="height">高さ出力先</param>
+    public static void GetGraphSize(int handle, out int width, out int height)
+    {
+        Vec2i size = GetGraphSize(handle);
+        width = size.X;
+        height = size.Y;
+    }
+
+    /// <summary>
+    /// 円を画面上に描画します。
+    /// </summary>
+    /// <param name="center">中心座標 (<see cref="Vec2i"/>)</param>
+    /// <param name="radius">半径 (px)</param>
+    /// <param name="color">描画カラー (<see cref="Color"/>)</param>
+    /// <param name="fill">塗りつぶすかどうか</param>
+    public static void DrawCircle(Vec2i center, int radius, Color color, bool fill)
+    {
+        NativeBindings.Draw_Circle(center, radius, color.ToUint(), fill);
+    }
+
+    /// <summary>
     /// 円を画面上に描画します。
     /// </summary>
     /// <param name="x">中心 X 座標</param>
@@ -144,7 +211,19 @@ public static class GameEngine
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawCircle(int x, int y, int radius, Color color, bool fill)
     {
-        NativeBindings.Draw_Circle(x, y, radius, color.ToUint(), fill);
+        DrawCircle(new Vec2i(x, y), radius, color, fill);
+    }
+
+    /// <summary>
+    /// 矩形（ボックス）を画面上に描画します。
+    /// </summary>
+    /// <param name="p1">左上座標 (<see cref="Vec2i"/>)</param>
+    /// <param name="p2">右下座標 (<see cref="Vec2i"/>)</param>
+    /// <param name="color">描画カラー (<see cref="Color"/>)</param>
+    /// <param name="fill">塗りつぶすかどうか</param>
+    public static void DrawBox(Vec2i p1, Vec2i p2, Color color, bool fill)
+    {
+        NativeBindings.Draw_Box(p1, p2, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -158,7 +237,44 @@ public static class GameEngine
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawBox(int x1, int y1, int x2, int y2, Color color, bool fill)
     {
-        NativeBindings.Draw_Box(x1, y1, x2, y2, color.ToUint(), fill);
+        DrawBox(new Vec2i(x1, y1), new Vec2i(x2, y2), color, fill);
+    }
+
+    /// <summary>
+    /// 線分を画面上に描画します。
+    /// </summary>
+    /// <param name="p1">始点座標 (<see cref="Vec2i"/>)</param>
+    /// <param name="p2">終点座標 (<see cref="Vec2i"/>)</param>
+    /// <param name="color">描画カラー (<see cref="Color"/>)</param>
+    /// <param name="thickness">線の太さ</param>
+    public static void DrawLine(Vec2i p1, Vec2i p2, Color color, int thickness = 1)
+    {
+        NativeBindings.Draw_Line(p1, p2, color.ToUint(), thickness);
+    }
+
+    /// <summary>
+    /// 線分を画面上に描画します。
+    /// </summary>
+    /// <param name="x1">始点 X 座標</param>
+    /// <param name="y1">始点 Y 座標</param>
+    /// <param name="x2">終点 X 座標</param>
+    /// <param name="y2">終点 Y 座標</param>
+    /// <param name="color">描画カラー (<see cref="Color"/>)</param>
+    /// <param name="thickness">線の太さ</param>
+    public static void DrawLine(int x1, int y1, int x2, int y2, Color color, int thickness = 1)
+    {
+        DrawLine(new Vec2i(x1, y1), new Vec2i(x2, y2), color, thickness);
+    }
+
+    /// <summary>
+    /// 指定座標に文字列を描画します。
+    /// </summary>
+    /// <param name="pos">描画座標 (<see cref="Vec2i"/>)</param>
+    /// <param name="text">描画文字列</param>
+    /// <param name="color">描画カラー (<see cref="Color"/>)</param>
+    public static void DrawString(Vec2i pos, string text, Color color)
+    {
+        NativeBindings.Draw_String(pos, text, color.ToUint());
     }
 
     /// <summary>
@@ -170,7 +286,18 @@ public static class GameEngine
     /// <param name="color">描画カラー (<see cref="Color"/>)</param>
     public static void DrawString(int x, int y, string text, Color color)
     {
-        NativeBindings.Draw_String(x, y, text, color.ToUint());
+        DrawString(new Vec2i(x, y), text, color);
+    }
+
+    /// <summary>
+    /// 指定画像ハンドルを画面上に描画します。
+    /// </summary>
+    /// <param name="pos">描画先座標 (<see cref="Vec2i"/>)</param>
+    /// <param name="handle">画像ハンドル</param>
+    /// <param name="trans">透過を有効にするかどうか</param>
+    public static void DrawGraph(Vec2i pos, int handle, bool trans)
+    {
+        NativeBindings.Draw_Graph(pos, handle, trans);
     }
 
     /// <summary>
@@ -182,7 +309,44 @@ public static class GameEngine
     /// <param name="trans">透過を有効にするかどうか</param>
     public static void DrawGraph(int x, int y, int handle, bool trans)
     {
-        NativeBindings.Draw_Graph(x, y, handle, trans);
+        DrawGraph(new Vec2i(x, y), handle, trans);
+    }
+
+    /// <summary>
+    /// 画像ハンドルを中心に回転・拡大縮小して描画します。
+    /// </summary>
+    /// <param name="center">描画中心座標 (<see cref="Vec2i"/>)</param>
+    /// <param name="scale">拡大率</param>
+    /// <param name="angle">回転角度 (ラジアン)</param>
+    /// <param name="handle">画像ハンドル</param>
+    /// <param name="trans">透過描画を有効にするかどうか</param>
+    public static void DrawRotaGraph(Vec2i center, double scale, double angle, int handle, bool trans)
+    {
+        NativeBindings.Draw_RotaGraph(center, scale, angle, handle, trans);
+    }
+
+    /// <summary>
+    /// スプライトシートから指定矩形を切り出し、回転・拡縮・左右反転を行って描画します。
+    /// </summary>
+    /// <param name="center">描画中心座標 (<see cref="Vec2i"/>)</param>
+    /// <param name="srcPos">切り出し開始座標 (<see cref="Vec2i"/>)</param>
+    /// <param name="srcSize">切り出しサイズ (<see cref="Vec2i"/>)</param>
+    /// <param name="scale">拡大率</param>
+    /// <param name="angle">回転角度 (ラジアン)</param>
+    /// <param name="handle">画像ハンドル</param>
+    /// <param name="trans">透過描画を有効にするかどうか</param>
+    /// <param name="turnX">左右反転描画を行うかどうか</param>
+    public static void DrawRectRotaGraph(
+        Vec2i center,
+        Vec2i srcPos,
+        Vec2i srcSize,
+        double scale,
+        double angle,
+        int handle,
+        bool trans,
+        bool turnX)
+    {
+        NativeBindings.Draw_RectRotaGraph(center, srcPos, srcSize, scale, angle, handle, trans, turnX);
     }
 
     /// <summary>
@@ -212,6 +376,14 @@ public static class GameEngine
         bool trans,
         bool turnX)
     {
-        NativeBindings.Draw_RectRotaGraph(x, y, srcX, srcY, width, height, scale, angle, handle, trans, turnX);
+        DrawRectRotaGraph(
+            new Vec2i(x, y),
+            new Vec2i(srcX, srcY),
+            new Vec2i(width, height),
+            scale,
+            angle,
+            handle,
+            trans,
+            turnX);
     }
 }

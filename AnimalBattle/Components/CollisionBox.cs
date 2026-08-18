@@ -1,8 +1,11 @@
+using System.Runtime.InteropServices;
+
 namespace AnimalBattle.Components;
 
 /// <summary>
 /// 衝突判定用バウンディングボックスおよび状態を表すコンポーネント。
 /// </summary>
+[StructLayout(LayoutKind.Sequential)]
 public struct CollisionBox
 {
     /// <summary>バウンディングボックス幅</summary>

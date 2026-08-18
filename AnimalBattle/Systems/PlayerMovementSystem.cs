@@ -84,10 +84,12 @@ public static class PlayerMovementSystem
                      }
                  }
 
-                 PhysicsService.ApplyGravity(ref vel.Vy, pCfg.Gravity, pCfg.MaxFallSpeed);
+                 float currentVy = vel.Vy;
+                 PhysicsService.ApplyGravity(ref currentVy, pCfg.Gravity, pCfg.MaxFallSpeed, dt);
+                 vel.Vy = currentVy;
 
-                 float nextX = trans.X + vel.Vx;
-                 float nextY = trans.Y + vel.Vy;
+                 float nextX = trans.X + vel.Vx * dt;
+                 float nextY = trans.Y + vel.Vy * dt;
 
                  nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
 

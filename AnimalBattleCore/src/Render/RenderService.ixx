@@ -21,16 +21,18 @@ namespace ab {
         // --- テクスチャ・アセット管理 ---
         virtual int LoadGraph(const wchar_t* file_path) = 0;
         virtual bool DeleteGraph(int handle) = 0;
-        virtual void GetGraphSize(int handle, int* out_width, int* out_height) const = 0;
+        virtual Vec2i GetGraphSize(int handle) const = 0;
+        virtual void GetGraphSize(int handle, Vec2i* out_size) const = 0;
 
         // --- 2D プリミティブ・テキスト描画 ---
         virtual void DrawBox(Rect<int> r, uint32_t color, bool fill_flag) = 0;
-        virtual void DrawCircle(Point<int> p, int radius, uint32_t color, bool fill_flag) = 0;
-        virtual void DrawLine(Point<int> p1, Point<int> p2, uint32_t color, int thickness) = 0;
-        virtual void DrawString(Point<int> p, const wchar_t* text, uint32_t color) = 0;
-        virtual void DrawGraph(Point<int> p, int handle, bool trans_flag) = 0;
-        virtual void DrawRotaGraph(Point<int> p, double ext_rate, double angle, int graph_handle, bool trans_flag) = 0;
-        virtual void DrawRectRotaGraph(Point<int> p, Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) = 0;
+        virtual void DrawBox(Vec2i p1, Vec2i p2, uint32_t color, bool fill_flag) = 0;
+        virtual void DrawCircle(Vec2i center, int radius, uint32_t color, bool fill_flag) = 0;
+        virtual void DrawLine(Vec2i p1, Vec2i p2, uint32_t color, int thickness) = 0;
+        virtual void DrawString(Vec2i pos, const wchar_t* text, uint32_t color) = 0;
+        virtual void DrawGraph(Vec2i pos, int handle, bool trans_flag) = 0;
+        virtual void DrawRotaGraph(Vec2i center, double ext_rate, double angle, int graph_handle, bool trans_flag) = 0;
+        virtual void DrawRectRotaGraph(Vec2i center, Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) = 0;
         virtual void DrawHollowBox(Rect<int> r, int thickness, uint32_t color) = 0;
         virtual void DrawRoundRectFrame(Rect<int> r, int corner_radius, int thickness, uint32_t color) = 0;
         virtual void DrawStringWithBorder(Rect<int> r, const wchar_t* text, BorderShape shape = BorderShape::Null,

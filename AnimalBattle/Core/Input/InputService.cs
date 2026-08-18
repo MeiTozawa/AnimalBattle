@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using AnimalBattle.Bindings;
+using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Core.Input;
 
@@ -94,25 +95,23 @@ public static unsafe class InputService
     /// <summary>
     /// マウスカーソルの現在座標を取得します。
     /// </summary>
-    /// <returns>画面上の座標 (Point)</returns>
-    public static Point GetMousePosition()
+    /// <returns>画面上の座標 (<see cref="Vec2i"/>)</returns>
+    public static Vec2i GetMousePosition()
     {
-        int x = 0;
-        int y = 0;
-        NativeBindings.Input_GetMousePosition(&x, &y);
-        return new Point(x, y);
+        Vec2i pos = Vec2i.Zero;
+        NativeBindings.Input_GetMousePosition(&pos);
+        return pos;
     }
 
     /// <summary>
     /// 前フレームからのマウスカーソルの移動量を取得します。
     /// </summary>
-    /// <returns>移動デルタ (Point)</returns>
-    public static Point GetMouseDelta()
+    /// <returns>移動デルタ (<see cref="Vec2i"/>)</returns>
+    public static Vec2i GetMouseDelta()
     {
-        int dx = 0;
-        int dy = 0;
-        NativeBindings.Input_GetMouseDelta(&dx, &dy);
-        return new Point(dx, dy);
+        Vec2i delta = Vec2i.Zero;
+        NativeBindings.Input_GetMouseDelta(&delta);
+        return delta;
     }
 
     /// <summary>
@@ -127,11 +126,22 @@ public static unsafe class InputService
     /// <summary>
     /// マウスカーソルが指定した矩形領域内にあるかを判定します。
     /// </summary>
+    /// <param name="p1">矩形左上座標 (<see cref="Vec2i"/>)</param>
+    /// <param name="p2">矩形右下座標 (<see cref="Vec2i"/>)</param>
+    /// <returns>領域内にあれば true</returns>
+    public static bool IsMouseOver(Vec2i p1, Vec2i p2)
+    {
+        return NativeBindings.Input_IsMouseOver(p1, p2);
+    }
+
+    /// <summary>
+    /// マウスカーソルが指定した矩形領域内にあるかを判定します。
+    /// </summary>
     /// <param name="bounds">判定対象の矩形領域</param>
     /// <returns>領域内にあれば true</returns>
     public static bool IsMouseOver(Rectangle bounds)
     {
-        return NativeBindings.Input_IsMouseOver(bounds.Left, bounds.Top, bounds.Right, bounds.Bottom);
+        return NativeBindings.Input_IsMouseOver(new Vec2i(bounds.Left, bounds.Top), new Vec2i(bounds.Right, bounds.Bottom));
     }
 
     /// <summary>

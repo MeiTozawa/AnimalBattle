@@ -73,3 +73,28 @@ public readonly record struct Box2D(Vector2D Center, Vector2D Size)
     /// <summary>全高（ピクセル）</summary>
     public float Height => Size.Y;
 }
+
+/// <summary>
+/// 2次元整数ベクトル構造体（Native C++ の Vec2i とメモリレイアウト完全一致: X: 4byte, Y: 4byte）。
+/// </summary>
+[StructLayout(LayoutKind.Sequential)]
+public readonly record struct Vec2i(int X, int Y)
+{
+    /// <summary>ゼロベクトル (0, 0)</summary>
+    public static readonly Vec2i Zero = new(0, 0);
+
+    /// <summary>ベクトル加算</summary>
+    public static Vec2i operator +(Vec2i a, Vec2i b) => new(a.X + b.X, a.Y + b.Y);
+
+    /// <summary>ベクトル減算</summary>
+    public static Vec2i operator -(Vec2i a, Vec2i b) => new(a.X - b.X, a.Y - b.Y);
+
+    /// <summary>スカラー乗算</summary>
+    public static Vec2i operator *(Vec2i a, int scalar) => new(a.X * scalar, a.Y * scalar);
+
+    /// <summary>スカラー除算</summary>
+    public static Vec2i operator /(Vec2i a, int scalar) => new(a.X / scalar, a.Y / scalar);
+
+    /// <summary>Vector2D への変換</summary>
+    public Vector2D ToVector2D() => new(X, Y);
+}
