@@ -19,46 +19,37 @@ public static class BulletPhysicsSystem
         world.System<Transform, Velocity>("PlayerBulletMovementSystem")
              .With<PlayerBulletTag>()
              .Kind(Ecs.OnUpdate)
-             .Run(it =>
+             .Iter((Iter it, Field<Transform> trans, Field<Velocity> vel) =>
              {
-                 ArenaConfig arenaCfg = ConfigManager.Arena;
-                 byte[] despawnBuffer = new byte[256];
-
-                 while (it.Next())
+                 int count = it.Count();
+                 if (count <= 0)
                  {
-                     int count = it.Count();
-                     if (count <= 0)
+                     return;
+                 }
+
+                 ArenaConfig arenaCfg = ConfigManager.Arena;
+                 Span<byte> despawnFlags = stackalloc byte[count];
+
+                 unsafe
+                 {
+                     Transform* pTrans = (Transform*)trans.Data;
+                     Velocity* pVel = (Velocity*)vel.Data;
+
+                     fixed (byte* pFlags = despawnFlags)
                      {
-                         continue;
+                         NativeExtensionBindings.Extension_BatchBulletMovement(
+                             pTrans, pVel, count, it.DeltaTime(),
+                             arenaCfg.BulletDespawnMinX, arenaCfg.BulletDespawnMaxX,
+                             arenaCfg.BulletDespawnMinY, arenaCfg.BulletDespawnMaxY,
+                             pFlags);
                      }
+                 }
 
-                     if (despawnBuffer.Length < count)
+                 for (int i = 0; i < count; ++i)
+                 {
+                     if (despawnFlags[i] != 0)
                      {
-                         despawnBuffer = new byte[count * 2];
-                     }
-
-                     Span<byte> despawnFlags = despawnBuffer.AsSpan(0, count);
-
-                     unsafe
-                     {
-                         fixed (Transform* pTrans = &it.Field<Transform>(1)[0])
-                         fixed (Velocity* pVel = &it.Field<Velocity>(2)[0])
-                         fixed (byte* pFlags = despawnFlags)
-                         {
-                             NativeExtensionBindings.Extension_BatchBulletMovement(
-                                 pTrans, pVel, count, it.DeltaTime(),
-                                 arenaCfg.BulletDespawnMinX, arenaCfg.BulletDespawnMaxX,
-                                 arenaCfg.BulletDespawnMinY, arenaCfg.BulletDespawnMaxY,
-                                 pFlags);
-                         }
-                     }
-
-                     for (int i = 0; i < count; ++i)
-                     {
-                         if (despawnFlags[i] != 0)
-                         {
-                             it.Entity(i).Destruct();
-                         }
+                         it.Entity(i).Destruct();
                      }
                  }
              });
@@ -66,46 +57,37 @@ public static class BulletPhysicsSystem
         world.System<Transform, Velocity>("BossBulletMovementSystem")
              .With<BossBulletTag>()
              .Kind(Ecs.OnUpdate)
-             .Run(it =>
+             .Iter((Iter it, Field<Transform> trans, Field<Velocity> vel) =>
              {
-                 ArenaConfig arenaCfg = ConfigManager.Arena;
-                 byte[] despawnBuffer = new byte[256];
-
-                 while (it.Next())
+                 int count = it.Count();
+                 if (count <= 0)
                  {
-                     int count = it.Count();
-                     if (count <= 0)
+                     return;
+                 }
+
+                 ArenaConfig arenaCfg = ConfigManager.Arena;
+                 Span<byte> despawnFlags = stackalloc byte[count];
+
+                 unsafe
+                 {
+                     Transform* pTrans = (Transform*)trans.Data;
+                     Velocity* pVel = (Velocity*)vel.Data;
+
+                     fixed (byte* pFlags = despawnFlags)
                      {
-                         continue;
+                         NativeExtensionBindings.Extension_BatchBulletMovement(
+                             pTrans, pVel, count, it.DeltaTime(),
+                             arenaCfg.BulletDespawnMinX, arenaCfg.BulletDespawnMaxX,
+                             arenaCfg.BulletDespawnMinY, arenaCfg.BulletDespawnMaxY,
+                             pFlags);
                      }
+                 }
 
-                     if (despawnBuffer.Length < count)
+                 for (int i = 0; i < count; ++i)
+                 {
+                     if (despawnFlags[i] != 0)
                      {
-                         despawnBuffer = new byte[count * 2];
-                     }
-
-                     Span<byte> despawnFlags = despawnBuffer.AsSpan(0, count);
-
-                     unsafe
-                     {
-                         fixed (Transform* pTrans = &it.Field<Transform>(1)[0])
-                         fixed (Velocity* pVel = &it.Field<Velocity>(2)[0])
-                         fixed (byte* pFlags = despawnFlags)
-                         {
-                             NativeExtensionBindings.Extension_BatchBulletMovement(
-                                 pTrans, pVel, count, it.DeltaTime(),
-                                 arenaCfg.BulletDespawnMinX, arenaCfg.BulletDespawnMaxX,
-                                 arenaCfg.BulletDespawnMinY, arenaCfg.BulletDespawnMaxY,
-                                 pFlags);
-                         }
-                     }
-
-                     for (int i = 0; i < count; ++i)
-                     {
-                         if (despawnFlags[i] != 0)
-                         {
-                             it.Entity(i).Destruct();
-                         }
+                         it.Entity(i).Destruct();
                      }
                  }
              });

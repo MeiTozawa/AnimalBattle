@@ -1,5 +1,7 @@
 module;
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <mutex>
 #include <string>

@@ -11,7 +11,7 @@ add_library(AnimalBattleCore SHARED
 )
 
 # Prevent min/max macro issues and winsock conflicts with DxLib/windows.h
-target_compile_definitions(AnimalBattleCore PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+target_compile_definitions(AnimalBattleCore PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN ANIMALBATTLE_CORE_BUILD_DLL)
 
 # Ensure output DLL name is AnimalBattleCore.dll without 'lib' prefix on MinGW
 set_target_properties(AnimalBattleCore PROPERTIES PREFIX "")

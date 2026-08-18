@@ -57,6 +57,8 @@ BossBulletCoreRadiusRatio = 0.45
 BossBulletCoreMinRadius = 2      
 BossBulletCoreColor = 0xFFFFFFFF 
 BossBulletOutlinePadding = 2     
+ViewportCullingMarginX = 50      
+ViewportCullingMarginY = 50     
 
 [Hud]
 TitleX = 20                      

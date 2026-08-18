@@ -1,6 +1,16 @@
 #ifndef ANIMALBATTLE_CORE_ENGINE_CORE_H_
 #define ANIMALBATTLE_CORE_ENGINE_CORE_H_
 
+#ifdef _WIN32
+  #ifdef ANIMALBATTLE_CORE_BUILD_DLL
+    #define ANIMALBATTLE_CORE_API __declspec(dllexport)
+  #else
+    #define ANIMALBATTLE_CORE_API __declspec(dllimport)
+  #endif
+#else
+  #define ANIMALBATTLE_CORE_API
+#endif
+
 namespace ab {
 
 class IRenderService;
@@ -8,31 +18,31 @@ class IInputService;
 class IPhysicsService;
 
 /// @brief アクティブなレンダリングサービスを設定する
-void SetRenderService(IRenderService* service) noexcept;
+ANIMALBATTLE_CORE_API void SetRenderService(IRenderService* service) noexcept;
 
 /// @brief 現在アクティブなレンダリングサービスを取得する
-IRenderService* GetRenderService() noexcept;
+ANIMALBATTLE_CORE_API IRenderService* GetRenderService() noexcept;
 
 /// @brief アクティブな入力サービスを設定する
-void SetInputService(IInputService* service) noexcept;
+ANIMALBATTLE_CORE_API void SetInputService(IInputService* service) noexcept;
 
 /// @brief 現在アクティブな入力サービスを取得する
-IInputService* GetInputService() noexcept;
+ANIMALBATTLE_CORE_API IInputService* GetInputService() noexcept;
 
 /// @brief アクティブな物理サービスを設定する
-void SetPhysicsService(IPhysicsService* service) noexcept;
+ANIMALBATTLE_CORE_API void SetPhysicsService(IPhysicsService* service) noexcept;
 
 /// @brief 現在アクティブな物理サービスを取得する
-IPhysicsService* GetPhysicsService() noexcept;
+ANIMALBATTLE_CORE_API IPhysicsService* GetPhysicsService() noexcept;
 
 /// @brief DxLib バックエンドを初期化してサービスを登録する
-bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept;
+ANIMALBATTLE_CORE_API bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept;
 
 /// @brief DxLib バックエンドをシャットダウンする
-void ShutdownDxLibBackend() noexcept;
+ANIMALBATTLE_CORE_API void ShutdownDxLibBackend() noexcept;
 
 /// @brief DxLib のウィンドウメッセージを処理する
-bool ProcessDxLibMessages() noexcept;
+ANIMALBATTLE_CORE_API bool ProcessDxLibMessages() noexcept;
 
 }  // namespace ab
 

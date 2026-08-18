@@ -215,6 +215,86 @@ public static class GameEngine
     }
 
     /// <summary>
+    /// 複数の円（弾幕・パーティクル等）を SIMD 原生最適化で一括描画します。
+    /// </summary>
+    /// <param name="transforms">Transform 連続配列ポインタ</param>
+    /// <param name="count">描画個数</param>
+    /// <param name="radius">半径 (px)</param>
+    /// <param name="color">描画カラー (<see cref="Color"/>)</param>
+    /// <param name="fill">塗りつぶすかどうか</param>
+    /// <param name="clipMinX">画面外カリング最小 X</param>
+    /// <param name="clipMaxX">画面外カリング最大 X</param>
+    /// <param name="clipMinY">画面外カリング最小 Y</param>
+    /// <param name="clipMaxY">画面外カリング最大 Y</param>
+    public static unsafe void BatchDrawCircles(
+        Transform* transforms, int count, int radius, Color color, bool fill,
+        int clipMinX, int clipMaxX, int clipMinY, int clipMaxY)
+    {
+        NativeExtensionBindings.Extension_BatchDrawCircles(transforms, count, radius, color.ToUint(), fill, clipMinX, clipMaxX, clipMinY, clipMaxY);
+    }
+
+    /// <summary>
+    /// プレイヤー銃弾（発光外層＋内層コア＋ビームトレイル）を SIMD 原生最適化で一括描画します。
+    /// </summary>
+    /// <param name="transforms">Transform 連続配列ポインタ</param>
+    /// <param name="velocities">Velocity 連続配列ポインタ</param>
+    /// <param name="count">描画個数</param>
+    /// <param name="outerRadius">外層グロー半径</param>
+    /// <param name="outerColor">外層グロー色 (<see cref="Color"/>)</param>
+    /// <param name="innerRadius">内層コア半径</param>
+    /// <param name="innerColor">内層コア色 (<see cref="Color"/>)</param>
+    /// <param name="trailOffset">ビームトレイルオフセット</param>
+    /// <param name="trailRadius">ビームトレイル半径</param>
+    /// <param name="trailColor">ビームトレイル色 (<see cref="Color"/>)</param>
+    /// <param name="clipMinX">画面外カリング最小 X</param>
+    /// <param name="clipMaxX">画面外カリング最大 X</param>
+    /// <param name="clipMinY">画面外カリング最小 Y</param>
+    /// <param name="clipMaxY">画面外カリング最大 Y</param>
+    public static unsafe void BatchDrawPlayerBullets(
+        Transform* transforms, Velocity* velocities, int count,
+        int outerRadius, Color outerColor,
+        int innerRadius, Color innerColor,
+        int trailOffset, int trailRadius, Color trailColor,
+        int clipMinX, int clipMaxX, int clipMinY, int clipMaxY)
+    {
+        NativeExtensionBindings.Extension_BatchDrawPlayerBullets(
+            transforms, velocities, count,
+            outerRadius, outerColor.ToUint(),
+            innerRadius, innerColor.ToUint(),
+            trailOffset, trailRadius, trailColor.ToUint(),
+            clipMinX, clipMaxX, clipMinY, clipMaxY);
+    }
+
+    /// <summary>
+    /// Boss 弾幕（多層同心光暈・枠線・コア）を SIMD 原生最適化で一括描画します。
+    /// </summary>
+    /// <param name="transforms">Transform 連続配列ポインタ</param>
+    /// <param name="count">描画個数</param>
+    /// <param name="radius">基本半径</param>
+    /// <param name="fillColor">塗りつぶし色 (<see cref="Color"/>)</param>
+    /// <param name="outlineColor">外枠色 (<see cref="Color"/>)</param>
+    /// <param name="outlinePadding">外枠オフセット幅</param>
+    /// <param name="coreRadiusRatio">ホワイトコア半径比率</param>
+    /// <param name="coreMinRadius">ホワイトコア最小ピクセル半径</param>
+    /// <param name="coreColor">ホワイトコア色 (<see cref="Color"/>)</param>
+    /// <param name="clipMinX">画面外カリング最小 X</param>
+    /// <param name="clipMaxX">画面外カリング最大 X</param>
+    /// <param name="clipMinY">画面外カリング最小 Y</param>
+    /// <param name="clipMaxY">画面外カリング最大 Y</param>
+    public static unsafe void BatchDrawBossBullets(
+        Transform* transforms, int count,
+        int radius, Color fillColor, Color outlineColor,
+        int outlinePadding, float coreRadiusRatio, int coreMinRadius, Color coreColor,
+        int clipMinX, int clipMaxX, int clipMinY, int clipMaxY)
+    {
+        NativeExtensionBindings.Extension_BatchDrawBossBullets(
+            transforms, count,
+            radius, fillColor.ToUint(), outlineColor.ToUint(),
+            outlinePadding, coreRadiusRatio, coreMinRadius, coreColor.ToUint(),
+            clipMinX, clipMaxX, clipMinY, clipMaxY);
+    }
+
+    /// <summary>
     /// 矩形（ボックス）を画面上に描画します。
     /// </summary>
     /// <param name="p1">左上座標 (<see cref="Vec2i"/>)</param>

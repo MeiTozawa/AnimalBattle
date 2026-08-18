@@ -2,9 +2,19 @@ file(GLOB_RECURSE ANIMALBATTLE_EXT_SOURCES CONFIGURE_DEPENDS
     "src/*.cpp"
     "AnimalBattleExtension.cpp"
 )
+file(GLOB_RECURSE ANIMALBATTLE_EXT_MODULES CONFIGURE_DEPENDS
+    "src/*.ixx"
+)
 
 add_library(AnimalBattleExtension SHARED
     ${ANIMALBATTLE_EXT_SOURCES}
+)
+
+# Configure C++ Modules
+target_sources(AnimalBattleExtension
+    PUBLIC
+    FILE_SET cxx_modules TYPE CXX_MODULES FILES
+    ${ANIMALBATTLE_EXT_MODULES}
 )
 
 target_compile_definitions(AnimalBattleExtension PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)

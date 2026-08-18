@@ -160,6 +160,12 @@ public sealed class BulletRenderConfig
 
     /// <summary>Boss 弾外枠付加ピクセル半径</summary>
     public int BossBulletOutlinePadding { get; set; } = 2;
+
+    /// <summary>画面外カリング（描画除外）マージン X (ピクセル)</summary>
+    public int ViewportCullingMarginX { get; set; } = 50;
+
+    /// <summary>画面外カリング（描画除外）マージン Y (ピクセル)</summary>
+    public int ViewportCullingMarginY { get; set; } = 50;
 }
 
 /// <summary>

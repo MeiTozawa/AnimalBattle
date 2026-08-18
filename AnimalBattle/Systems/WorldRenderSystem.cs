@@ -164,43 +164,79 @@ public static class WorldRenderSystem
                           }
                       });
 
-                 // 4. プレイヤー銃弾描画（8 方向対応グロートレイル）
+                 ArenaConfig arenaCfg = ConfigManager.Arena;
+                 int clipMinX = (int)arenaCfg.BulletDespawnMinX - bulletCfg.ViewportCullingMarginX;
+                 int clipMaxX = (int)arenaCfg.BulletDespawnMaxX + bulletCfg.ViewportCullingMarginX;
+                 int clipMinY = (int)arenaCfg.BulletDespawnMinY - bulletCfg.ViewportCullingMarginY;
+                 int clipMaxY = (int)arenaCfg.BulletDespawnMaxY + bulletCfg.ViewportCullingMarginY;
+
+                 // 4. プレイヤー銃弾描画（SIMD 原生批量レンダリング）
                  world.QueryBuilder<Transform, Velocity>()
                       .With<PlayerBulletTag>()
                       .Build()
-                      .Each((ref Transform trans, ref Velocity vel) =>
+                      .Iter((Iter it, Field<Transform> trans, Field<Velocity> vel) =>
                       {
-                          int px = (int)trans.X;
-                          int py = (int)trans.Y;
-
-                          float vLen = MathF.Sqrt(vel.Vx * vel.Vx + vel.Vy * vel.Vy);
-                          if (vLen > 0.001f)
+                          int count = it.Count();
+                          if (count <= 0)
                           {
-                              float normVx = vel.Vx / vLen;
-                              float normVy = vel.Vy / vLen;
-                              int trailX = (int)(px - normVx * bulletCfg.PlayerBulletTrailHalfWidth);
-                              int trailY = (int)(py - normVy * bulletCfg.PlayerBulletTrailHalfWidth);
-                              GameEngine.DrawCircle(trailX, trailY, (int)(bulletCfg.PlayerBulletOuterRadius * 0.7f), bulletCfg.PlayerBulletTrailColor, true);
+                              return;
                           }
 
-                          GameEngine.DrawCircle(px, py, (int)bulletCfg.PlayerBulletOuterRadius, bulletCfg.PlayerBulletOuterColor, true);
-                          GameEngine.DrawCircle(px, py, (int)bulletCfg.PlayerBulletInnerRadius, bulletCfg.PlayerBulletInnerColor, true);
+                          unsafe
+                          {
+                              Transform* pTrans = (Transform*)trans.Data;
+                              Velocity* pVel = (Velocity*)vel.Data;
+
+                              GameEngine.BatchDrawPlayerBullets(
+                                  pTrans,
+                                  pVel,
+                                  count,
+                                  (int)bulletCfg.PlayerBulletOuterRadius,
+                                  bulletCfg.PlayerBulletOuterColor,
+                                  (int)bulletCfg.PlayerBulletInnerRadius,
+                                  bulletCfg.PlayerBulletInnerColor,
+                                  bulletCfg.PlayerBulletTrailHalfWidth,
+                                  bulletCfg.PlayerBulletTrailHalfHeight * 2,
+                                  bulletCfg.PlayerBulletTrailColor,
+                                  clipMinX,
+                                  clipMaxX,
+                                  clipMinY,
+                                  clipMaxY);
+                          }
                       });
 
-                 // 5. Boss 弾幕描画
+                 // 5. Boss 弾幕描画（SIMD 原生批量レンダリング）
                  world.QueryBuilder<Transform, Bullet>()
                       .With<BossBulletTag>()
                       .Build()
-                      .Each((ref Transform trans, ref Bullet bullet) =>
+                      .Iter((Iter it, Field<Transform> trans, Field<Bullet> bullet) =>
                       {
-                          int bx = (int)trans.X;
-                          int by = (int)trans.Y;
-                          int radius = (int)bullet.Radius;
+                          int count = it.Count();
+                          if (count <= 0)
+                          {
+                              return;
+                          }
 
-                          GameEngine.DrawCircle(bx, by, radius + bulletCfg.BossBulletOutlinePadding, bullet.OutlineColor, true);
-                          GameEngine.DrawCircle(bx, by, radius, bullet.FillColor, true);
-                          int coreRadius = Math.Max(bulletCfg.BossBulletCoreMinRadius, (int)(radius * bulletCfg.BossBulletCoreRadiusRatio));
-                          GameEngine.DrawCircle(bx, by, coreRadius, bulletCfg.BossBulletCoreColor, true);
+                          unsafe
+                          {
+                              Transform* pTrans = (Transform*)trans.Data;
+                              Bullet b = bullet[0];
+
+                              GameEngine.BatchDrawBossBullets(
+                                  pTrans,
+                                  count,
+                                  (int)b.Radius,
+                                  b.FillColor,
+                                  b.OutlineColor,
+                                  bulletCfg.BossBulletOutlinePadding,
+                                  bulletCfg.BossBulletCoreRadiusRatio,
+                                  bulletCfg.BossBulletCoreMinRadius,
+                                  bulletCfg.BossBulletCoreColor,
+                                  clipMinX,
+                                  clipMaxX,
+                                  clipMinY,
+                                  clipMaxY);
+                          }
                       });
              });
     }
