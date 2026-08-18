@@ -1,11 +1,11 @@
 # Player Configuration
 MaxHp = 3
 InvincibleDuration = 0.5
-MoveSpeed = 4.8
-FirstJumpVelocity = -11.2
-SecondJumpVelocity = -9.2
-Gravity = 0.45
-MaxFallSpeed = 10.0
+MoveSpeed = 288.0           # 288.0 px/s (4.8 px/frame @ 60fps)
+FirstJumpVelocity = -672.0  # -672.0 px/s (-11.2 px/frame @ 60fps)
+SecondJumpVelocity = -552.0 # -552.0 px/s (-9.2 px/frame @ 60fps)
+Gravity = 1620.0            # 1620.0 px/s² (0.45 px/frame² @ 60fps)
+MaxFallSpeed = 600.0        # 600.0 px/s (10.0 px/frame @ 60fps)
 MaxJumps = 2
 
 # Player Terrain Collision (地形足場衝突)
@@ -24,7 +24,7 @@ SpawnY = 500.0
 
 # Shoot & Bullet Configuration
 ShootCooldown = 0.16
-BulletSpeed = 16.0
+BulletSpeed = 960.0         # 960.0 px/s (16.0 px/frame @ 60fps)
 BulletSpawnOffset = 24.0
 BulletSpawnOffsetY = -4.0
 

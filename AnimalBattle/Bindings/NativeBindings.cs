@@ -116,11 +116,11 @@ internal static unsafe partial class NativeBindings
 
     [LibraryImport(_dllName, EntryPoint = "Input_GetMousePosition")]
     [SuppressGCTransition]
-    public static partial void Input_GetMousePosition(int* outX, int* outY);
+    public static partial void Input_GetMousePosition(Vec2i* outPos);
 
     [LibraryImport(_dllName, EntryPoint = "Input_GetMouseDelta")]
     [SuppressGCTransition]
-    public static partial void Input_GetMouseDelta(int* outDx, int* outDy);
+    public static partial void Input_GetMouseDelta(Vec2i* outDelta);
 
     [LibraryImport(_dllName, EntryPoint = "Input_GetMouseWheelDelta")]
     [SuppressGCTransition]
@@ -129,7 +129,7 @@ internal static unsafe partial class NativeBindings
     [LibraryImport(_dllName, EntryPoint = "Input_IsMouseOver")]
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Input_IsMouseOver(int x1, int y1, int x2, int y2);
+    public static partial bool Input_IsMouseOver(Vec2i p1, Vec2i p2);
 
     #endregion
 
@@ -167,7 +167,7 @@ internal static unsafe partial class NativeBindings
 
     [LibraryImport(_dllName, EntryPoint = "Engine_GetMousePoint")]
     [SuppressGCTransition]
-    public static partial void Engine_GetMousePoint(int* x, int* y);
+    public static partial void Engine_GetMousePoint(Vec2i* outPos);
 
     #endregion
 
@@ -181,28 +181,40 @@ internal static unsafe partial class NativeBindings
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Engine_DeleteGraph(int handle);
 
+    [LibraryImport(_dllName, EntryPoint = "Engine_GetGraphSize")]
+    [SuppressGCTransition]
+    public static partial void Engine_GetGraphSize(int handle, Vec2i* outSize);
+
     #endregion
 
     #region Drawing
 
     [LibraryImport(_dllName, EntryPoint = "Draw_Circle")]
     [SuppressGCTransition]
-    public static partial void Draw_Circle(int x, int y, int radius, uint color, [MarshalAs(UnmanagedType.U1)] bool fill);
+    public static partial void Draw_Circle(Vec2i center, int radius, uint color, [MarshalAs(UnmanagedType.U1)] bool fill);
 
     [LibraryImport(_dllName, EntryPoint = "Draw_Box")]
     [SuppressGCTransition]
-    public static partial void Draw_Box(int x1, int y1, int x2, int y2, uint color, [MarshalAs(UnmanagedType.U1)] bool fill);
+    public static partial void Draw_Box(Vec2i p1, Vec2i p2, uint color, [MarshalAs(UnmanagedType.U1)] bool fill);
+
+    [LibraryImport(_dllName, EntryPoint = "Draw_Line")]
+    [SuppressGCTransition]
+    public static partial void Draw_Line(Vec2i p1, Vec2i p2, uint color, int thickness);
 
     [LibraryImport(_dllName, EntryPoint = "Draw_String", StringMarshalling = StringMarshalling.Utf16)]
-    public static partial void Draw_String(int x, int y, string text, uint color);
+    public static partial void Draw_String(Vec2i pos, string text, uint color);
 
     [LibraryImport(_dllName, EntryPoint = "Draw_Graph")]
     [SuppressGCTransition]
-    public static partial void Draw_Graph(int x, int y, int handle, [MarshalAs(UnmanagedType.U1)] bool trans);
+    public static partial void Draw_Graph(Vec2i pos, int handle, [MarshalAs(UnmanagedType.U1)] bool trans);
+
+    [LibraryImport(_dllName, EntryPoint = "Draw_RotaGraph")]
+    [SuppressGCTransition]
+    public static partial void Draw_RotaGraph(Vec2i center, double scale, double angle, int handle, [MarshalAs(UnmanagedType.U1)] bool trans);
 
     [LibraryImport(_dllName, EntryPoint = "Draw_RectRotaGraph")]
     [SuppressGCTransition]
-    public static partial void Draw_RectRotaGraph(int x, int y, int srcX, int srcY, int width, int height, double scale, double angle, int handle, [MarshalAs(UnmanagedType.U1)] bool trans, [MarshalAs(UnmanagedType.U1)] bool turnX);
+    public static partial void Draw_RectRotaGraph(Vec2i center, Vec2i srcPos, Vec2i srcSize, double scale, double angle, int handle, [MarshalAs(UnmanagedType.U1)] bool trans, [MarshalAs(UnmanagedType.U1)] bool turnX);
 
     #endregion
 

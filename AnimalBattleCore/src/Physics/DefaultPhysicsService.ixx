@@ -158,29 +158,6 @@ public:
     float Lerp(float a, float b, float t) const noexcept override {
         return a + (b - a) * t;
     }
-
-    void BatchBulletMovement(
-        Transform* transforms,
-        const Velocity* velocities,
-        int count,
-        float delta_time,
-        float min_x, float max_x, float min_y, float max_y,
-        uint8_t* out_despawn_flags) const noexcept override {
-        if (transforms == nullptr || velocities == nullptr || count <= 0) {
-            return;
-        }
-
-        #pragma omp simd
-        for (int i = 0; i < count; ++i) {
-            transforms[i].position.x += velocities[i].value.x;
-            transforms[i].position.y += velocities[i].value.y;
-
-            if (out_despawn_flags != nullptr) {
-                out_despawn_flags[i] = (transforms[i].position.x < min_x || transforms[i].position.x > max_x ||
-                                        transforms[i].position.y < min_y || transforms[i].position.y > max_y) ? 1 : 0;
-            }
-        }
-    }
 };
 
 }  // namespace ab

@@ -9,9 +9,12 @@
     <NoWarn>$(NoWarn);SYSLIB1104</NoWarn>
   </PropertyGroup>
 
-  <!-- Automatically copy the built native C++ DLL and Resources to the output directory -->
+  <!-- Automatically copy the built native C++ DLLs and Resources to the output directory -->
   <ItemGroup>
     <None Include="..\cmake-build-debug\AnimalBattleCore\AnimalBattleCore.dll" Link="AnimalBattleCore.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\cmake-build-debug\AnimalBattleExtension\AnimalBattleExtension.dll" Link="AnimalBattleExtension.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

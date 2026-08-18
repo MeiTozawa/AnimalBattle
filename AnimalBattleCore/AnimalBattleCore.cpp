@@ -751,24 +751,4 @@ __declspec(dllexport) float Physics_Lerp(float a, float b, float t) noexcept {
     }
 }
 
-// --- Batch SIMD Physics APIs ---
-
-__declspec(dllexport) void Physics_BatchBulletMovement(
-    ab::Transform* transforms,
-    const ab::Velocity* velocities,
-    int count,
-    float delta_time,
-    float min_x, float max_x, float min_y, float max_y,
-    uint8_t* out_despawn_flags) noexcept {
-    try {
-        auto* physics_service = ab::GetPhysicsService();
-        if (physics_service != nullptr) {
-            physics_service->BatchBulletMovement(
-                transforms, velocities, count, delta_time,
-                min_x, max_x, min_y, max_y, out_despawn_flags);
-        }
-    } catch (...) {
-    }
-}
-
 }

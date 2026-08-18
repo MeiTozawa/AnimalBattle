@@ -20,10 +20,11 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif ()
 
 add_subdirectory(AnimalBattleCore)
+add_subdirectory(AnimalBattleExtension)
 
 # Precompile DxLib.h for faster compilation (MSVC only)
 if (MSVC)
-    target_precompile_headers(AnimalBattleCore PUBLIC
+    target_precompile_headers(AnimalBattleCore PRIVATE
             <DxLib.h>
     )
 endif ()

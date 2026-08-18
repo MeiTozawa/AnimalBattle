@@ -1,5 +1,6 @@
 using System;
 using Flecs.NET.Core;
+using AnimalBattle.Bindings;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
