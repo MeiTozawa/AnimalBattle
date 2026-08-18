@@ -10,6 +10,8 @@
 
 import RenderService;
 import DxLibRenderBackend;
+import InputService;
+import DxLibInputBackend;
 
 extern "C" {
 bool g_is_exit_requested = false;
@@ -18,8 +20,10 @@ bool g_is_exit_requested = false;
 namespace {
 
 using RenderServiceType = ab::RenderService<ab::DxLibRenderBackend>;
+using InputServiceType = ab::InputService<ab::DxLibInputBackend>;
 
 std::unique_ptr<RenderServiceType> g_render_service = nullptr;
+std::unique_ptr<InputServiceType> g_input_service = nullptr;
 HWND g_hwnd = nullptr;
 HDC g_hdc = nullptr;
 
@@ -27,6 +31,10 @@ HDC g_hdc = nullptr;
 
 RenderServiceType* GetGlobalRenderService() noexcept {
     return g_render_service.get();
+}
+
+InputServiceType* GetGlobalInputService() noexcept {
+    return g_input_service.get();
 }
 
 extern "C" {
@@ -37,6 +45,8 @@ extern "C" {
         try {
             g_hwnd = static_cast<HWND>(hwnd);
             g_render_service = std::make_unique<RenderServiceType>(width, height);
+            g_input_service = std::make_unique<InputServiceType>();
+
             if (g_hwnd != nullptr) {
                 ::SetUserWindow(g_hwnd);
             } else {
@@ -66,6 +76,7 @@ extern "C" {
                 g_hdc = nullptr;
             }
 
+            g_input_service.reset();
             g_render_service.reset();
             ::DxLib_End();
         } catch (...) {
@@ -74,6 +85,9 @@ extern "C" {
 
     __declspec(dllexport) bool Engine_ProcessMessages() noexcept {
         try {
+            if (g_input_service != nullptr) {
+                g_input_service->Update();
+            }
             return ::ProcessMessage() == 0;
         } catch (...) {
             return false;
@@ -110,7 +124,177 @@ extern "C" {
         return g_is_exit_requested;
     }
 
-    // --- Input APIs ---
+    // --- InputService High-Level APIs ---
+
+    __declspec(dllexport) void Input_Update() noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                g_input_service->Update();
+            }
+        } catch (...) {
+        }
+    }
+
+    __declspec(dllexport) bool Input_IsPressed(int action) noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                return g_input_service->IsPressed(static_cast<ab::InputAction>(action));
+            }
+            return false;
+        } catch (...) {
+            return false;
+        }
+    }
+
+    __declspec(dllexport) bool Input_IsHolding(int action) noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                return g_input_service->IsHolding(static_cast<ab::InputAction>(action));
+            }
+            return false;
+        } catch (...) {
+            return false;
+        }
+    }
+
+    __declspec(dllexport) bool Input_IsReleased(int action) noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                return g_input_service->IsReleased(static_cast<ab::InputAction>(action));
+            }
+            return false;
+        } catch (...) {
+            return false;
+        }
+    }
+
+    __declspec(dllexport) bool Input_IsButtonPressed(int button) noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                return g_input_service->IsButtonPressed(static_cast<ab::InputButton>(button));
+            }
+            return false;
+        } catch (...) {
+            return false;
+        }
+    }
+
+    __declspec(dllexport) bool Input_IsButtonHolding(int button) noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                return g_input_service->IsButtonHolding(static_cast<ab::InputButton>(button));
+            }
+            return false;
+        } catch (...) {
+            return false;
+        }
+    }
+
+    __declspec(dllexport) bool Input_IsButtonReleased(int button) noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                return g_input_service->IsButtonReleased(static_cast<ab::InputButton>(button));
+            }
+            return false;
+        } catch (...) {
+            return false;
+        }
+    }
+
+    __declspec(dllexport) void Input_PushContext(int context) noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                g_input_service->PushContext(static_cast<ab::InputContext>(context));
+            }
+        } catch (...) {
+        }
+    }
+
+    __declspec(dllexport) void Input_PopContext() noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                g_input_service->PopContext();
+            }
+        } catch (...) {
+        }
+    }
+
+    __declspec(dllexport) void Input_ClearAndSetContext(int context) noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                g_input_service->ClearAndSetContext(static_cast<ab::InputContext>(context));
+            }
+        } catch (...) {
+        }
+    }
+
+    __declspec(dllexport) int Input_GetCurrentContext() noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                return static_cast<int>(g_input_service->GetCurrentContext());
+            }
+            return static_cast<int>(ab::InputContext::InGame);
+        } catch (...) {
+            return 0;
+        }
+    }
+
+    __declspec(dllexport) int Input_GetActiveDevice() noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                return static_cast<int>(g_input_service->GetActiveDevice());
+            }
+            return static_cast<int>(ab::InputDevice::Keyboard);
+        } catch (...) {
+            return 0;
+        }
+    }
+
+    __declspec(dllexport) void Input_GetMousePosition(int* out_x, int* out_y) noexcept {
+        try {
+            if (g_input_service != nullptr && out_x != nullptr && out_y != nullptr) {
+                auto pos = g_input_service->GetMousePosition();
+                *out_x = pos.x;
+                *out_y = pos.y;
+            }
+        } catch (...) {
+        }
+    }
+
+    __declspec(dllexport) void Input_GetMouseDelta(int* out_dx, int* out_dy) noexcept {
+        try {
+            if (g_input_service != nullptr && out_dx != nullptr && out_dy != nullptr) {
+                auto delta = g_input_service->GetMouseDelta();
+                *out_dx = delta.x;
+                *out_dy = delta.y;
+            }
+        } catch (...) {
+        }
+    }
+
+    __declspec(dllexport) int Input_GetMouseWheelDelta() noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                return g_input_service->GetMouseWheelDelta();
+            }
+            return 0;
+        } catch (...) {
+            return 0;
+        }
+    }
+
+    __declspec(dllexport) bool Input_IsMouseOver(int x1, int y1, int x2, int y2) noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                return g_input_service->IsMouseOver(ab::Rect<int>{x1, y1, x2, y2});
+            }
+            return false;
+        } catch (...) {
+            return false;
+        }
+    }
+
+    // --- Raw Input APIs (Legacy & Low-level) ---
 
     __declspec(dllexport) bool Input_IsKeyHit(int key_code) noexcept {
         try {
