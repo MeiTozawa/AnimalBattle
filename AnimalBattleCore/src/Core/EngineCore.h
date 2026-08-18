@@ -5,6 +5,7 @@ namespace ab {
 
 class IRenderService;
 class IInputService;
+class IPhysicsService;
 
 /// @brief アクティブなレンダリングサービスを設定する
 void SetRenderService(IRenderService* service) noexcept;
@@ -17,6 +18,12 @@ void SetInputService(IInputService* service) noexcept;
 
 /// @brief 現在アクティブな入力サービスを取得する
 IInputService* GetInputService() noexcept;
+
+/// @brief アクティブな物理サービスを設定する
+void SetPhysicsService(IPhysicsService* service) noexcept;
+
+/// @brief 現在アクティブな物理サービスを取得する
+IPhysicsService* GetPhysicsService() noexcept;
 
 /// @brief DxLib バックエンドを初期化してサービスを登録する
 bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept;

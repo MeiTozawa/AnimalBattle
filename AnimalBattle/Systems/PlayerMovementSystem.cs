@@ -4,6 +4,7 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Core.Input;
+using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Systems;
 
@@ -83,47 +84,34 @@ public static class PlayerMovementSystem
                      }
                  }
 
-                 vel.Vy += pCfg.Gravity;
-                 if (vel.Vy > pCfg.MaxFallSpeed)
-                 {
-                     vel.Vy = pCfg.MaxFallSpeed;
-                 }
+                 PhysicsService.ApplyGravity(ref vel.Vy, pCfg.Gravity, pCfg.MaxFallSpeed);
 
                  float nextX = trans.X + vel.Vx;
                  float nextY = trans.Y + vel.Vy;
 
-                 if (nextX < arenaCfg.BoundaryMinX)
-                 {
-                     nextX = arenaCfg.BoundaryMinX;
-                 }
-                 else if (nextX > arenaCfg.BoundaryMaxX)
-                 {
-                     nextX = arenaCfg.BoundaryMaxX;
-                 }
+                 nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
 
                  bool isGrounded = false;
                  float adjustedPosY = nextY;
                  float adjustedVy = vel.Vy;
 
-                 float pLeft = nextX - colWidth / 2.0f;
-                 float pRight = nextX + colWidth / 2.0f;
-                 float pBottomPrev = trans.Y + colHeight / 2.0f;
-                 float pBottomNext = nextY + colHeight / 2.0f;
+                 float currentY = trans.Y;
+                 Box2D playerBox = new(nextX, nextY, colWidth, colHeight);
 
                  platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
                  {
-                     float platLeft = platTrans.X - platCol.Width / 2.0f;
-                     float platRight = platTrans.X + platCol.Width / 2.0f;
-                     float platTop = platTrans.Y - platCol.Height / 2.0f;
-
-                     if (pRight > platLeft && pLeft < platRight)
+                     Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
+                     if (PhysicsService.CheckPlatformGround(
+                         currentY,
+                         nextY,
+                         playerBox,
+                         platformBox,
+                         out float groundY,
+                         out float vy))
                      {
-                         if (pBottomPrev <= platTop + 4.0f && pBottomNext >= platTop)
-                         {
-                             isGrounded = true;
-                             adjustedPosY = platTop - colHeight / 2.0f;
-                             adjustedVy = 0.0f;
-                         }
+                         isGrounded = true;
+                         adjustedPosY = groundY;
+                         adjustedVy = vy;
                      }
                  });
 

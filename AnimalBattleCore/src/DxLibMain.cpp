@@ -11,12 +11,14 @@
 
 import DxLibRenderService;
 import DxLibInputService;
+import DefaultPhysicsService;
 
 namespace ab {
 namespace {
 
 std::unique_ptr<DxLibRenderService> g_render_service = nullptr;
 std::unique_ptr<DxLibInputService> g_input_service = nullptr;
+std::unique_ptr<DefaultPhysicsService> g_physics_service = nullptr;
 HWND g_hwnd = nullptr;
 HDC g_hdc = nullptr;
 
@@ -27,6 +29,7 @@ bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept {
         g_hwnd = static_cast<HWND>(hwnd);
         g_render_service = std::make_unique<DxLibRenderService>(width, height);
         g_input_service = std::make_unique<DxLibInputService>();
+        g_physics_service = std::make_unique<DefaultPhysicsService>();
 
         if (g_hwnd != nullptr) {
             ::SetUserWindow(g_hwnd);
@@ -48,6 +51,7 @@ bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept {
         // AnimalBattleCore へ具象サービスポインタを登録
         SetRenderService(g_render_service.get());
         SetInputService(g_input_service.get());
+        SetPhysicsService(g_physics_service.get());
         return true;
     } catch (...) {
         return false;
@@ -58,12 +62,14 @@ void ShutdownDxLibBackend() noexcept {
     try {
         SetRenderService(nullptr);
         SetInputService(nullptr);
+        SetPhysicsService(nullptr);
 
         if (g_hwnd != nullptr && g_hdc != nullptr) {
             ::ReleaseDC(g_hwnd, g_hdc);
             g_hdc = nullptr;
         }
 
+        g_physics_service.reset();
         g_input_service.reset();
         g_render_service.reset();
         ::DxLib_End();

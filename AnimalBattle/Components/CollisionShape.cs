@@ -1,5 +1,6 @@
 using System;
 using AnimalBattle.Core;
+using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Components;
 
@@ -139,87 +140,39 @@ public abstract record CollisionShape
     /// <returns>交差していれば true、それ以外は false</returns>
     public static bool Intersects(in Transform t1, CollisionShape s1, in Transform t2, CollisionShape s2)
     {
-        float c1X = t1.X + s1.OffsetX;
-        float c1Y = t1.Y + s1.OffsetY;
-        float c2X = t2.X + s2.OffsetX;
-        float c2Y = t2.Y + s2.OffsetY;
+        Vector2D p1 = new(t1.X + s1.OffsetX, t1.Y + s1.OffsetY);
+        Vector2D p2 = new(t2.X + s2.OffsetX, t2.Y + s2.OffsetY);
 
         return (s1, s2) switch
         {
             (Circle c1, Circle c2) =>
-                CheckCircleCircle(c1X, c1Y, c1.Radius, c2X, c2Y, c2.Radius),
+                PhysicsService.Intersects(new Circle2D(p1, c1.Radius), new Circle2D(p2, c2.Radius)),
 
             (Box b1, Box b2) =>
-                CheckBoxBox(c1X, c1Y, b1.Width, b1.Height, c2X, c2Y, b2.Width, b2.Height),
+                PhysicsService.Intersects(new Box2D(p1, new Vector2D(b1.Width, b1.Height)), new Box2D(p2, new Vector2D(b2.Width, b2.Height))),
 
             (Circle c, Box b) =>
-                CheckCircleBox(c1X, c1Y, c.Radius, c2X, c2Y, b.Width, b.Height),
+                PhysicsService.Intersects(new Circle2D(p1, c.Radius), new Box2D(p2, new Vector2D(b.Width, b.Height))),
 
             (Box b, Circle c) =>
-                CheckCircleBox(c2X, c2Y, c.Radius, c1X, c1Y, b.Width, b.Height),
+                PhysicsService.Intersects(new Box2D(p1, new Vector2D(b.Width, b.Height)), new Circle2D(p2, c.Radius)),
 
             (Point, Circle c) =>
-                CheckPointCircle(c1X, c1Y, c2X, c2Y, c.Radius),
+                PhysicsService.Intersects(p1, new Circle2D(p2, c.Radius)),
 
             (Circle c, Point) =>
-                CheckPointCircle(c2X, c2Y, c1X, c1Y, c.Radius),
+                PhysicsService.Intersects(p2, new Circle2D(p1, c.Radius)),
 
             (Point, Box b) =>
-                CheckPointBox(c1X, c1Y, c2X, c2Y, b.Width, b.Height),
+                PhysicsService.Intersects(p1, new Box2D(p2, new Vector2D(b.Width, b.Height))),
 
             (Box b, Point) =>
-                CheckPointBox(c2X, c2Y, c1X, c1Y, b.Width, b.Height),
+                PhysicsService.Intersects(p2, new Box2D(p1, new Vector2D(b.Width, b.Height))),
 
             (Point, Point) =>
-                MathF.Abs(c1X - c2X) < 0.001f && MathF.Abs(c1Y - c2Y) < 0.001f,
+                MathF.Abs(p1.X - p2.X) < 0.001f && MathF.Abs(p1.Y - p2.Y) < 0.001f,
 
             _ => false
         };
-    }
-
-    private static bool CheckCircleCircle(float x1, float y1, float r1, float x2, float y2, float r2)
-    {
-        float dx = x1 - x2;
-        float dy = y1 - y2;
-        float combinedRadius = r1 + r2;
-        return (dx * dx + dy * dy) <= (combinedRadius * combinedRadius);
-    }
-
-    private static bool CheckBoxBox(float x1, float y1, float w1, float h1, float x2, float y2, float w2, float h2)
-    {
-        float dx = MathF.Abs(x1 - x2);
-        float dy = MathF.Abs(y1 - y2);
-        return dx <= (w1 + w2) / 2.0f && dy <= (h1 + h2) / 2.0f;
-    }
-
-    private static bool CheckCircleBox(float cx, float cy, float radius, float bx, float by, float bw, float bh)
-    {
-        float boxLeft = bx - bw / 2.0f;
-        float boxRight = bx + bw / 2.0f;
-        float boxTop = by - bh / 2.0f;
-        float boxBottom = by + bh / 2.0f;
-
-        float closestX = Math.Clamp(cx, boxLeft, boxRight);
-        float closestY = Math.Clamp(cy, boxTop, boxBottom);
-
-        float diffX = cx - closestX;
-        float diffY = cy - closestY;
-        return (diffX * diffX + diffY * diffY) <= (radius * radius);
-    }
-
-    private static bool CheckPointCircle(float px, float py, float cx, float cy, float radius)
-    {
-        float dx = px - cx;
-        float dy = py - cy;
-        return (dx * dx + dy * dy) <= (radius * radius);
-    }
-
-    private static bool CheckPointBox(float px, float py, float bx, float by, float bw, float bh)
-    {
-        float boxLeft = bx - bw / 2.0f;
-        float boxRight = bx + bw / 2.0f;
-        float boxTop = by - bh / 2.0f;
-        float boxBottom = by + bh / 2.0f;
-        return px >= boxLeft && px <= boxRight && py >= boxTop && py <= boxBottom;
     }
 }

@@ -1,6 +1,7 @@
 using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Systems;
 
@@ -21,8 +22,9 @@ public static class BulletPhysicsSystem
              .Each((Entity e, ref Transform trans, ref Velocity vel) =>
              {
                  ArenaConfig arenaCfg = ConfigManager.Arena;
-                 trans.X += vel.Vx;
-                 trans.Y += vel.Vy;
+                 Vector2D newPos = PhysicsService.IntegrateVelocity(new Vector2D(trans.X, trans.Y), new Vector2D(vel.Vx, vel.Vy));
+                 trans.X = newPos.X;
+                 trans.Y = newPos.Y;
                  if (trans.X < arenaCfg.BulletDespawnMinX || trans.X > arenaCfg.BulletDespawnMaxX ||
                      trans.Y < arenaCfg.BulletDespawnMinY || trans.Y > arenaCfg.BulletDespawnMaxY)
                  {
@@ -36,8 +38,9 @@ public static class BulletPhysicsSystem
              .Each((Entity e, ref Transform trans, ref Velocity vel) =>
              {
                  ArenaConfig arenaCfg = ConfigManager.Arena;
-                 trans.X += vel.Vx;
-                 trans.Y += vel.Vy;
+                 Vector2D newPos = PhysicsService.IntegrateVelocity(new Vector2D(trans.X, trans.Y), new Vector2D(vel.Vx, vel.Vy));
+                 trans.X = newPos.X;
+                 trans.Y = newPos.Y;
                  if (trans.X < arenaCfg.BulletDespawnMinX || trans.X > arenaCfg.BulletDespawnMaxX ||
                      trans.Y < arenaCfg.BulletDespawnMinY || trans.Y > arenaCfg.BulletDespawnMaxY)
                  {

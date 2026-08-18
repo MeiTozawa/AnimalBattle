@@ -6,12 +6,14 @@
 
 import RenderService;
 import InputService;
+import PhysicsService;
 
 namespace ab {
 
 namespace {
 IRenderService* g_render_service = nullptr;
 IInputService* g_input_service = nullptr;
+IPhysicsService* g_physics_service = nullptr;
 }
 
 void SetRenderService(IRenderService* service) noexcept {
@@ -30,7 +32,17 @@ IInputService* GetInputService() noexcept {
     return g_input_service;
 }
 
+void SetPhysicsService(IPhysicsService* service) noexcept {
+    g_physics_service = service;
+}
+
+IPhysicsService* GetPhysicsService() noexcept {
+    return g_physics_service;
+}
+
 }  // namespace ab
+
+#pragma warning(disable: 4190)
 
 extern "C" {
 
@@ -540,6 +552,186 @@ __declspec(dllexport) void Draw_RectRotaGraph(int x, int y, int src_x, int src_y
                 turn_x);
         }
     } catch (...) {
+    }
+}
+
+// --- Physics & Mathematics APIs ---
+
+__declspec(dllexport) bool Physics_IntersectsCircleCircle(ab::Circle2D c1, ab::Circle2D c2) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            return physics_service->IntersectsCircleCircle(c1, c2);
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+__declspec(dllexport) bool Physics_IntersectsBoxBox(ab::Box2D b1, ab::Box2D b2) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            return physics_service->IntersectsBoxBox(b1, b2);
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+__declspec(dllexport) bool Physics_IntersectsCircleBox(ab::Circle2D circle, ab::Box2D box) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            return physics_service->IntersectsCircleBox(circle, box);
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+__declspec(dllexport) bool Physics_IntersectsPointCircle(ab::Vec2f point, ab::Circle2D circle) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            return physics_service->IntersectsPointCircle(point, circle);
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+__declspec(dllexport) bool Physics_IntersectsPointBox(ab::Vec2f point, ab::Box2D box) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            return physics_service->IntersectsPointBox(point, box);
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+__declspec(dllexport) bool Physics_CheckPlatformGround(float prev_y, float next_y, ab::Box2D player_box, ab::Box2D platform_box,
+                                                       float* out_ground_y, float* out_vy) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            auto result = physics_service->CheckPlatformGround(prev_y, next_y, player_box, platform_box);
+            if (out_ground_y != nullptr) {
+                *out_ground_y = result.ground_y;
+            }
+            if (out_vy != nullptr) {
+                *out_vy = result.adjusted_vy;
+            }
+            return result.is_grounded;
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+__declspec(dllexport) bool Physics_CheckPenetrationBoxBox(ab::Box2D b1, ab::Box2D b2,
+                                                          ab::Vec2f* out_normal, float* out_depth) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            auto result = physics_service->CheckPenetrationBoxBox(b1, b2);
+            if (out_normal != nullptr) *out_normal = result.normal;
+            if (out_depth != nullptr) *out_depth = result.depth;
+            return result.is_penetrating;
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+__declspec(dllexport) ab::Vec2f Physics_IntegrateVelocity(ab::Vec2f position, ab::Vec2f velocity, float delta_time) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            return physics_service->IntegrateVelocity(position, velocity, delta_time);
+        }
+        return position;
+    } catch (...) {
+        return position;
+    }
+}
+
+__declspec(dllexport) void Physics_ApplyGravity(float* in_out_vy, float gravity, float max_fall_speed, float delta_time) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr && in_out_vy != nullptr) {
+            physics_service->ApplyGravity(*in_out_vy, gravity, max_fall_speed, delta_time);
+        }
+    } catch (...) {
+    }
+}
+
+__declspec(dllexport) float Physics_CalculateDistance(ab::Vec2f a, ab::Vec2f b) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            return physics_service->CalculateDistance(a, b);
+        }
+        return 0.0f;
+    } catch (...) {
+        return 0.0f;
+    }
+}
+
+__declspec(dllexport) float Physics_CalculateAngle(ab::Vec2f from, ab::Vec2f to) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            return physics_service->CalculateAngle(from, to);
+        }
+        return 0.0f;
+    } catch (...) {
+        return 0.0f;
+    }
+}
+
+__declspec(dllexport) ab::Vec2f Physics_DirectionToVector(float angle_rad, float speed) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            return physics_service->DirectionToVector(angle_rad, speed);
+        }
+        return ab::Vec2f{0, 0};
+    } catch (...) {
+        return ab::Vec2f{0, 0};
+    }
+}
+
+__declspec(dllexport) float Physics_Clamp(float value, float min_val, float max_val) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            return physics_service->Clamp(value, min_val, max_val);
+        }
+        return value;
+    } catch (...) {
+        return value;
+    }
+}
+
+__declspec(dllexport) float Physics_Lerp(float a, float b, float t) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            return physics_service->Lerp(a, b, t);
+        }
+        return a;
+    } catch (...) {
+        return a;
     }
 }
 
