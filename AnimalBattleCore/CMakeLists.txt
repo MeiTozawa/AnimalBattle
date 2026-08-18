@@ -1,6 +1,5 @@
 file(GLOB_RECURSE ANIMALBATTLE_SOURCES CONFIGURE_DEPENDS
         "src/*.cpp"
-        "AnimalBattleCore.cpp"
 )
 file(GLOB_RECURSE ANIMALBATTLE_MODULES CONFIGURE_DEPENDS
         "src/*.ixx"

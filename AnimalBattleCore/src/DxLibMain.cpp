@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <string>
 #include <memory>
+#include <vector>
 #include <Windows.h>
 #include <DxLib.h>
 
