@@ -1,11 +1,10 @@
 using Flecs.NET.Core;
-using AnimalBattle.Animations;
 using AnimalBattle.Components;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// スラッシュ斬撃エフェクトのフレームアニメーション進行および再生完了時の自動破棄を制御する ECS System。
+/// スラッシュ斬撃エフェクトの再生完了時の自動破棄を制御する ECS System。
 /// </summary>
 public static class SlashEffectSystem
 {
@@ -15,20 +14,14 @@ public static class SlashEffectSystem
     /// <param name="world">登録先の Flecs.NET ワールド</param>
     public static void Register(World world)
     {
-        world.System<Animation, Sprite>("SlashEffectSystem")
+        world.System<Animation>("SlashEffectSystem")
              .With<EffectTag>()
              .Kind(Ecs.OnUpdate)
-             .Each((Iter it, int i, ref Animation anim, ref Sprite sprite) =>
+             .Each((Iter it, int i, ref Animation anim) =>
              {
-                 anim.Timer += it.DeltaTime();
-                 AnimationConfig? effConfig = AnimationManager.GetEffectConfig(EffectType.SwordShieldEffectSprites);
-                 if (effConfig != null)
+                 if (anim.IsFinished)
                  {
-                     sprite.SrcRect = AnimationManager.CalculateSrcRect(effConfig, anim.CurrentClip, anim.Timer, out bool isFinished);
-                     if (isFinished)
-                     {
-                         it.Entity(i).Destruct();
-                     }
+                     it.Entity(i).Destruct();
                  }
              });
     }

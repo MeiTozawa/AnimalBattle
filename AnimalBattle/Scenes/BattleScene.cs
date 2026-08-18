@@ -1,9 +1,9 @@
 using System;
 using Flecs.NET.Core;
-using AnimalBattle.Animations;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using AnimalBattle.Core.Asset;
 using AnimalBattle.Plugins;
 
 namespace AnimalBattle.Scenes;
@@ -31,19 +31,17 @@ public partial class BattleScene : IDisposable
     /// </summary>
     public void Initialize()
     {
-        Result<bool> cfgRes = ConfigManager.Initialize();
-        if (!cfgRes.IsOk)
+        if (!ConfigManager.Initialize())
         {
-            Console.WriteLine($"[BattleScene 警告] 設定ファイルの初期化で警告が発生しました: {cfgRes.Error?.Description}");
+            Console.WriteLine("[BattleScene 警告] 一部の TOML 設定ファイルの初期化に失敗しました。デフォルト値を使用します。");
         }
 
-        Result<bool> animRes = AnimationManager.Initialize();
-        if (!animRes.IsOk)
+        if (!AnimationAssetService.Initialize())
         {
-            Console.WriteLine($"[BattleScene 警告] アニメーションアセットの初期化で警告が発生しました: {animRes.Error?.Description}");
+            Console.WriteLine("[BattleScene 警告] 一部のキャラクタースプライト画像のロードに失敗しました。");
         }
 
-        int catHandle = AnimationManager.GetCharacterSpriteHandle();
+        int catHandle = AnimationAssetService.GetCharacterSpriteHandle(CharacterType.CatSpriteSheet);
 
         App app = new App(_ecsWorld)
             .AddPluginGroup(new DefaultPlugins());
@@ -62,7 +60,7 @@ public partial class BattleScene : IDisposable
             .Set(new DoubleJump(playerCfg.MaxJumps))
             .Set(new PlayerState())
             .Set(new Sprite(catHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
-            .Set(new Animation("Idle", isPlaying: true))
+            .Set(new Animation("Idle", CharacterType.CatSpriteSheet, isPlaying: true))
             .Add<PlayerTag>();
 
         // 2. Boss の生成 (TOML 設定駆動 被弾 Hurtbox + 肉体接触突進 Hitbox)

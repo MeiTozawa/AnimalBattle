@@ -16,6 +16,7 @@ public class BulletPlugin : IPlugin
     public void Build(App app)
     {
         PlayerMovementSystem.Register(app.World);
+        SpriteAnimationSystem.Register(app.World);
         PlayerShootSystem.Register(app.World);
         BossAiSystem.Register(app.World);
         BulletPhysicsSystem.Register(app.World);

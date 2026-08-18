@@ -1,6 +1,5 @@
 using System;
 using Flecs.NET.Core;
-using AnimalBattle.Animations;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -146,24 +145,17 @@ public static class PlayerMovementSystem
                  vel.Vy = adjustedVy;
                  col.IsGrounded = isGrounded;
 
-                 anim.Timer += dt;
                  if (!col.IsGrounded)
                  {
-                     anim.CurrentClip = "Jump";
+                     anim.Play("Jump");
                  }
                  else if (Math.Abs(vel.Vx) > 0.1f)
                  {
-                     anim.CurrentClip = "Run";
+                     anim.Play("Run");
                  }
                  else
                  {
-                     anim.CurrentClip = "Idle";
-                 }
-
-                 AnimationConfig? charConfig = AnimationManager.GetCharacterConfig(CharacterType.CatSpriteSheet);
-                 if (charConfig != null)
-                 {
-                     sprite.SrcRect = AnimationManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out _);
+                     anim.Play("Idle");
                  }
              });
     }

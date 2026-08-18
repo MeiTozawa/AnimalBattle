@@ -5,7 +5,7 @@
 
 using System.Collections.Generic;
 
-namespace AnimalBattle.Animations;
+namespace AnimalBattle.Configs;
 
 /// <summary>
 /// TOML 設定から自動生成されたキャラクターの種類。
@@ -20,7 +20,6 @@ public enum CharacterType
 /// </summary>
 public enum EffectType
 {
-    SwordShieldEffectSprites,
 }
 
 /// <summary>
@@ -41,8 +40,6 @@ public enum CharacterAnimationType
 /// </summary>
 public enum EffectAnimationType
 {
-    Hit,
-    Slash,
 }
 
 /// <summary>
@@ -83,23 +80,11 @@ internal static class AnimationRegistry
     internal static readonly IReadOnlyDictionary<EffectType, string> EffectSprites =
         new Dictionary<EffectType, string>
         {
-            [EffectType.SwordShieldEffectSprites] = @"Effects\sword & shield effect sprites.png",
         };
 
     /// <summary>エフェクトアニメーション設定。</summary>
     internal static readonly IReadOnlyDictionary<EffectType, AnimationConfig> EffectConfigs =
         new Dictionary<EffectType, AnimationConfig>
         {
-            [EffectType.SwordShieldEffectSprites] = new AnimationConfig
-            {
-                DisplayName = "Sword & Shield Effects",
-                CellWidth = 48,
-                CellHeight = 48,
-                Clips =
-                [
-                    new AnimationClipConfig { Name = "Slash", Row = 0, StartFrame = 0, EndFrame = 3, Fps = 16.0f, IsLooping = false },
-                    new AnimationClipConfig { Name = "Hit", Row = 1, StartFrame = 0, EndFrame = 2, Fps = 18.0f, IsLooping = false },
-                ],
-            },
         };
 }

@@ -36,8 +36,8 @@ public static class ConfigManager
     /// <summary>
     /// 全 TOML 設定ファイルをロードし、自動リロード監視を開始します。
     /// </summary>
-    /// <returns>全設定が正常にロードされた場合は true、1 つでも失敗した場合は <see cref="SimpleError"/></returns>
-    public static Result<bool> Initialize()
+    /// <returns>全設定が正常にロードされた場合は true、1 つでも失敗した場合は false</returns>
+    public static bool Initialize()
     {
         TypeDescriptor.AddAttributes(typeof(Color), new TypeConverterAttribute(typeof(FlexibleColorConverter)));
 
@@ -107,11 +107,11 @@ public static class ConfigManager
         if (failureCount > 0)
         {
             Console.WriteLine($"[C# 設定警告] TOML 設定読み込み完了 (成功: {successCount}, 失敗: {failureCount})。失敗した設定はデフォルト値を使用します。");
-            return Result<bool>.Err(SimpleError.NotFound($"一部の TOML 設定ファイルの読み込みに失敗しました (失敗数: {failureCount})。"));
+            return false;
         }
 
         Console.WriteLine($"[C# 設定初期化] 全ての TOML 設定ファイル（{successCount} 件）の読み込みが正常に完了しました！");
-        return Result<bool>.Ok(true);
+        return true;
     }
 
     /// <summary>
