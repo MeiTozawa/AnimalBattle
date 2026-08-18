@@ -3,6 +3,7 @@ using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using AnimalBattle.Core.Input;
 
 namespace AnimalBattle.Systems;
 
@@ -11,7 +12,6 @@ namespace AnimalBattle.Systems;
 /// </summary>
 public static class PlayerMovementSystem
 {
-    private static bool _prevJumpKey;
 
     /// <summary>
     /// プレイヤー移動・跳躍・地形衝突システムを Flecs.NET ワールドへ登録します。
@@ -38,17 +38,9 @@ public static class PlayerMovementSystem
                      health.InvincibleTimer = Math.Max(0.0f, health.InvincibleTimer - dt);
                  }
 
-                 bool isLeft = GameEngine.CheckHitKey(0x1E) != 0 || GameEngine.CheckHitKey(0xCB) != 0;
-                 bool isRight = GameEngine.CheckHitKey(0x20) != 0 || GameEngine.CheckHitKey(0xCD) != 0;
-                 bool isJump = GameEngine.CheckHitKey(0x39) != 0 || GameEngine.CheckHitKey(0x25) != 0;
-
-                 int pad = GameEngine.GetJoypadInputState(0);
-                 isLeft = isLeft || (pad & GameEngine.PadInputLeft) != 0;
-                 isRight = isRight || (pad & GameEngine.PadInputRight) != 0;
-                 isJump = isJump || (pad & GameEngine.PadInputButton1) != 0;
-
-                 bool jumpJustPressed = isJump && !_prevJumpKey;
-                 _prevJumpKey = isJump;
+                 bool isLeft = InputService.IsHolding(InputAction.Left);
+                 bool isRight = InputService.IsHolding(InputAction.Right);
+                 bool jumpJustPressed = InputService.IsPressed(InputAction.Jump);
 
                  if (!health.IsAlive)
                  {

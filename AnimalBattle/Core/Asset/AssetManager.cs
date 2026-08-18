@@ -48,10 +48,10 @@ public static class AssetManager
             return Result<bool>.Err(SimpleError.ArgumentOutOfRange($"無効なグラフィックハンドルです (Handle: {handle})。"));
         }
 
-        int result = NativeBindings.Engine_DeleteGraph(handle);
-        if (result != 0)
+        bool success = NativeBindings.Engine_DeleteGraph(handle);
+        if (!success)
         {
-            return Result<bool>.Err(SimpleError.NotValid($"グラフィックハンドルの解放に失敗しました (Handle: {handle}, ResultCode: {result})。"));
+            return Result<bool>.Err(SimpleError.NotValid($"グラフィックハンドルの解放に失敗しました (Handle: {handle})。"));
         }
 
         return Result<bool>.Ok(true);

@@ -30,7 +30,7 @@ public static class DebugRenderSystem
                  RenderConfig renderCfg = ConfigManager.Render;
                  DebugRenderConfig dbgCfg = renderCfg.Debug;
 
-                 bool isToggleKey = GameEngine.CheckHitKey(0x3B) != 0 || GameEngine.CheckHitKey(0x23) != 0;
+                 bool isToggleKey = GameEngine.CheckHitKey(0x3B) || GameEngine.CheckHitKey(0x23);
                  bool toggleJustPressed = isToggleKey && !_prevToggleKey;
                  _prevToggleKey = isToggleKey;
 

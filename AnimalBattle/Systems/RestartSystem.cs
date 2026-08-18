@@ -2,6 +2,7 @@ using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using AnimalBattle.Core.Input;
 
 namespace AnimalBattle.Systems;
 
@@ -10,8 +11,6 @@ namespace AnimalBattle.Systems;
 /// </summary>
 public static class RestartSystem
 {
-    private static bool _prevRestartKey;
-
     /// <summary>
     /// リスタートシステムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -22,9 +21,7 @@ public static class RestartSystem
              .Kind(Ecs.PostUpdate)
              .Run((Iter it) =>
              {
-                 bool isRestart = GameEngine.CheckHitKey(0x13) != 0; // R key
-                 bool restartJustPressed = isRestart && !_prevRestartKey;
-                 _prevRestartKey = isRestart;
+                 bool restartJustPressed = InputService.IsPressed(InputAction.Restart);
 
                  if (restartJustPressed)
                  {

@@ -3,6 +3,7 @@ using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using AnimalBattle.Core.Input;
 
 namespace AnimalBattle.Systems;
 
@@ -12,8 +13,6 @@ namespace AnimalBattle.Systems;
 /// </summary>
 public static class PlayerShootSystem
 {
-    private static bool _prevShootKey;
-
     /// <summary>
     /// プレイヤー射撃システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -28,12 +27,7 @@ public static class PlayerShootSystem
                  PlayerConfig pCfg = ConfigManager.Player;
                  float dt = it.DeltaTime();
 
-                 bool isShoot = GameEngine.CheckHitKey(0x24) != 0 || GameEngine.CheckHitKey(0x2C) != 0;
-                 int pad = GameEngine.GetJoypadInputState(0);
-                 isShoot = isShoot || (pad & GameEngine.PadInputButton2) != 0;
-
-                 bool shootJustPressed = isShoot && !_prevShootKey;
-                 _prevShootKey = isShoot;
+                 bool shootJustPressed = InputService.IsPressed(InputAction.Attack);
 
                  if (!health.IsAlive)
                  {
@@ -47,10 +41,10 @@ public static class PlayerShootSystem
 
                  if (shootJustPressed && playerState.ShootCooldown <= 0.0f)
                  {
-                     bool isLeft = GameEngine.CheckHitKey(0x1E) != 0 || GameEngine.CheckHitKey(0xCB) != 0 || (pad & GameEngine.PadInputLeft) != 0;
-                     bool isRight = GameEngine.CheckHitKey(0x20) != 0 || GameEngine.CheckHitKey(0xCD) != 0 || (pad & GameEngine.PadInputRight) != 0;
-                     bool isUp = GameEngine.CheckHitKey(0x11) != 0 || GameEngine.CheckHitKey(0xC8) != 0 || (pad & GameEngine.PadInputUp) != 0;
-                     bool isDown = GameEngine.CheckHitKey(0x1F) != 0 || GameEngine.CheckHitKey(0xD0) != 0 || (pad & GameEngine.PadInputDown) != 0;
+                     bool isLeft = InputService.IsHolding(InputAction.Left);
+                     bool isRight = InputService.IsHolding(InputAction.Right);
+                     bool isUp = InputService.IsHolding(InputAction.Up);
+                     bool isDown = InputService.IsHolding(InputAction.Down);
 
                      float inputX = 0.0f;
                      float inputY = 0.0f;

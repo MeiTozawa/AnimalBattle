@@ -17,55 +17,52 @@ internal class Program
             const int height = 720;
 
             Console.WriteLine("C++ DxLib ネイティブエンジンを初期化中...");
-            if (GameEngine.Initialize(width, height, true) == -1)
+            if (!GameEngine.Initialize(width, height, true))
             {
                 Console.WriteLine("ゲームエンジンの初期化に失敗しました！");
                 return;
             }
 
             Console.WriteLine("Flecs.NET ワールドおよびバトルシーンを初期化中...");
-            using (BattleScene battleScene = new BattleScene())
+            using BattleScene battleScene = new BattleScene();
+            battleScene.Initialize();
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            long lastTime = stopwatch.ElapsedTicks;
+            double tickFrequency = (double)Stopwatch.Frequency;
+
+            Console.WriteLine("メインゲームループを開始します...");
+            int frameCount = 0;
+            while (true)
             {
-                battleScene.Initialize();
-
-                Stopwatch stopwatch = Stopwatch.StartNew();
-                long lastTime = stopwatch.ElapsedTicks;
-                double tickFrequency = (double)Stopwatch.Frequency;
-
-                Console.WriteLine("メインゲームループを開始します...");
-                int frameCount = 0;
-                while (true)
+                if (!GameEngine.ProcessMessage())
                 {
-                    int messageResult = GameEngine.ProcessMessage();
-                    if (messageResult != 0)
-                    {
-                        Console.WriteLine($"[終了] ウィンドウメッセージ処理がコード {messageResult} を返しました (フレーム数: {frameCount})");
-                        break;
-                    }
-
-                    if (GameEngine.IsExitRequested())
-                    {
-                        Console.WriteLine($"[終了] アプリケーション終了要求を受信しました (フレーム数: {frameCount})");
-                        break;
-                    }
-
-                    long currentTime = stopwatch.ElapsedTicks;
-                    float deltaTime = (float)((currentTime - lastTime) / tickFrequency);
-                    lastTime = currentTime;
-
-                    GameEngine.BeginFrame();
-
-                    if (!battleScene.Update(deltaTime))
-                    {
-                        Console.WriteLine($"[終了] バトルシーンの更新が終了を要求しました (フレーム数: {frameCount})");
-                        break;
-                    }
-
-                    battleScene.Render();
-
-                    GameEngine.EndFrame(deltaTime);
-                    frameCount++;
+                    Console.WriteLine($"[終了] ウィンドウメッセージ処理が終了を返しました (フレーム数: {frameCount})");
+                    break;
                 }
+
+                if (GameEngine.IsExitRequested())
+                {
+                    Console.WriteLine($"[終了] アプリケーション終了要求を受信しました (フレーム数: {frameCount})");
+                    break;
+                }
+
+                long currentTime = stopwatch.ElapsedTicks;
+                float deltaTime = (float)((currentTime - lastTime) / tickFrequency);
+                lastTime = currentTime;
+
+                GameEngine.BeginFrame();
+
+                if (!battleScene.Update(deltaTime))
+                {
+                    Console.WriteLine($"[終了] バトルシーンの更新が終了を要求しました (フレーム数: {frameCount})");
+                    break;
+                }
+
+                battleScene.Render();
+
+                GameEngine.EndFrame(deltaTime);
+                frameCount++;
             }
         }
         catch (Exception ex)

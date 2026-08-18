@@ -38,13 +38,9 @@ namespace ab {
         std::unordered_map<InputContext, std::unordered_map<InputAction, std::vector<InputButton>>> action_mappings_{};
 
     public:
-        InputService() {
-            RegisterDefaultActions();
-        }
+        InputService() = default;
 
-        explicit InputService(Backend backend) : backend_(std::move(backend)) {
-            RegisterDefaultActions();
-        }
+        explicit InputService(Backend backend) : backend_(std::move(backend)) {}
 
         Backend& GetBackend() noexcept { return backend_; }
         const Backend& GetBackend() const noexcept { return backend_; }
@@ -282,76 +278,6 @@ namespace ab {
             case InputButton::PadSelect: return 0x2000; // PAD_INPUT_10 / Select
             default:                     return 0;
             }
-        }
-
-        void RegisterDefaultActions() {
-            RegisterInGameActions();
-            RegisterMenuActions();
-            RegisterVolumeControlActions();
-            RegisterCutsceneActions();
-            RegisterPauseActions();
-        }
-
-        void RegisterInGameActions() {
-            auto& m = actionMappingsFor(InputContext::InGame);
-            m[InputAction::Confirm]    = {InputButton::KeySpace, InputButton::KeyReturn, InputButton::Pad1};
-            m[InputAction::Cancel]     = {InputButton::KeyEscape, InputButton::Pad2};
-            m[InputAction::Up]         = {InputButton::KeyUp, InputButton::KeyW, InputButton::PadUp};
-            m[InputAction::Down]       = {InputButton::KeyDown, InputButton::KeyS, InputButton::PadDown};
-            m[InputAction::Left]       = {InputButton::KeyLeft, InputButton::KeyA, InputButton::PadLeft};
-            m[InputAction::Right]      = {InputButton::KeyRight, InputButton::KeyD, InputButton::PadRight};
-            m[InputAction::Jump]       = {InputButton::KeySpace, InputButton::KeyZ, InputButton::Pad1};
-            m[InputAction::Attack]     = {InputButton::KeyJ, InputButton::KeyX, InputButton::Pad2, InputButton::MouseLeft};
-            m[InputAction::Skill]      = {InputButton::KeyK, InputButton::KeyC, InputButton::Pad3, InputButton::MouseRight};
-            m[InputAction::DrawCard]   = {InputButton::KeyQ, InputButton::Pad3};
-            m[InputAction::Restart]    = {InputButton::KeyR};
-            m[InputAction::ToggleMenu] = {InputButton::KeyEscape, InputButton::PadStart};
-            m[InputAction::MouseClick] = {InputButton::MouseLeft};
-        }
-
-        void RegisterMenuActions() {
-            auto& m = actionMappingsFor(InputContext::Menu);
-            m[InputAction::Confirm]    = {InputButton::KeySpace, InputButton::KeyReturn, InputButton::Pad1, InputButton::MouseLeft};
-            m[InputAction::Cancel]     = {InputButton::KeyEscape, InputButton::Pad2};
-            m[InputAction::ToggleMenu] = {InputButton::KeyEscape, InputButton::PadStart, InputButton::Pad2};
-            m[InputAction::Up]         = {InputButton::KeyUp, InputButton::KeyW, InputButton::PadUp};
-            m[InputAction::Down]       = {InputButton::KeyDown, InputButton::KeyS, InputButton::PadDown};
-            m[InputAction::Left]       = {InputButton::KeyLeft, InputButton::KeyA, InputButton::PadLeft};
-            m[InputAction::Right]      = {InputButton::KeyRight, InputButton::KeyD, InputButton::PadRight};
-            m[InputAction::MouseClick] = {InputButton::MouseLeft};
-        }
-
-        void RegisterVolumeControlActions() {
-            auto& m = actionMappingsFor(InputContext::VolumeControl);
-            m[InputAction::Left]       = {InputButton::KeyLeft, InputButton::KeyA, InputButton::PadLeft};
-            m[InputAction::Right]      = {InputButton::KeyRight, InputButton::KeyD, InputButton::PadRight};
-            m[InputAction::Confirm]    = {InputButton::KeySpace, InputButton::KeyReturn, InputButton::Pad1};
-            m[InputAction::Cancel]     = {InputButton::KeyEscape, InputButton::Pad2};
-            m[InputAction::ToggleMenu] = {InputButton::KeyEscape, InputButton::PadStart, InputButton::Pad2};
-            m[InputAction::MouseClick] = {InputButton::MouseLeft};
-        }
-
-        void RegisterCutsceneActions() {
-            auto& m = actionMappingsFor(InputContext::Cutscene);
-            m[InputAction::Confirm]    = {InputButton::KeySpace, InputButton::KeyReturn, InputButton::Pad1, InputButton::MouseLeft};
-            m[InputAction::Cancel]     = {InputButton::KeyEscape, InputButton::Pad2};
-            m[InputAction::ToggleMenu] = {InputButton::KeyEscape, InputButton::PadStart};
-        }
-
-        void RegisterPauseActions() {
-            auto& m = actionMappingsFor(InputContext::Pause);
-            m[InputAction::Confirm]    = {InputButton::KeySpace, InputButton::KeyReturn, InputButton::Pad1};
-            m[InputAction::Cancel]     = {InputButton::KeyEscape, InputButton::Pad2};
-            m[InputAction::ToggleMenu] = {InputButton::KeyEscape, InputButton::PadStart};
-            m[InputAction::Up]         = {InputButton::KeyUp, InputButton::KeyW, InputButton::PadUp};
-            m[InputAction::Down]       = {InputButton::KeyDown, InputButton::KeyS, InputButton::PadDown};
-            m[InputAction::Left]       = {InputButton::KeyLeft, InputButton::KeyA, InputButton::PadLeft};
-            m[InputAction::Right]      = {InputButton::KeyRight, InputButton::KeyD, InputButton::PadRight};
-            m[InputAction::MouseClick] = {InputButton::MouseLeft};
-        }
-
-        std::unordered_map<InputAction, std::vector<InputButton>>& actionMappingsFor(InputContext context) {
-            return action_mappings_[context];
         }
     };
 } // namespace ab

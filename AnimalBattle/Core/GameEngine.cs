@@ -30,10 +30,16 @@ public static class GameEngine
     /// <param name="width">画面幅 (px)</param>
     /// <param name="height">画面高さ (px)</param>
     /// <param name="windowMode">ウィンドウモードで起動するかどうか</param>
-    /// <returns>成功時 0、失敗時 -1</returns>
-    public static int Initialize(int width, int height, bool windowMode = true)
+    /// <returns>成功時 true、失敗時 false</returns>
+    public static bool Initialize(int width, int height, bool windowMode = true)
     {
-        return NativeBindings.Engine_Init(IntPtr.Zero, width, height) ? 0 : -1;
+        if (!NativeBindings.Engine_Init(IntPtr.Zero, width, height))
+        {
+            return false;
+        }
+
+        Input.InputService.RegisterDefaultActions();
+        return true;
     }
 
     /// <summary>
@@ -47,29 +53,29 @@ public static class GameEngine
     /// <summary>
     /// Windows メッセージを処理します。
     /// </summary>
-    /// <returns>正常時 0、終了要求時 -1</returns>
-    public static int ProcessMessage()
+    /// <returns>正常継続時 true、終了要求・失敗時 false</returns>
+    public static bool ProcessMessage()
     {
-        return NativeBindings.Engine_ProcessMessages() ? 0 : -1;
+        return NativeBindings.Engine_ProcessMessages();
     }
 
     /// <summary>
     /// フレーム描画の開始処理（画面クリア等）を行います。
     /// </summary>
-    /// <returns>成功時 0、失敗時 -1</returns>
-    public static int BeginFrame()
+    /// <returns>成功時 true、失敗時 false</returns>
+    public static bool BeginFrame()
     {
-        return NativeBindings.Engine_BeginDraw() ? 0 : -1;
+        return NativeBindings.Engine_BeginDraw();
     }
 
     /// <summary>
     /// フレーム描画の終了処理（バックバッファ反転等）を行います。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過秒数</param>
-    /// <returns>成功時 0、失敗時 -1</returns>
-    public static int EndFrame(float deltaTime)
+    /// <returns>成功時 true、失敗時 false</returns>
+    public static bool EndFrame(float deltaTime)
     {
-        return NativeBindings.Engine_EndDraw() ? 0 : -1;
+        return NativeBindings.Engine_EndDraw();
     }
 
     /// <summary>
@@ -103,8 +109,8 @@ public static class GameEngine
     /// 指定されたキーコードの押下状態を取得します。
     /// </summary>
     /// <param name="keyCode">DirectInput キーコード</param>
-    /// <returns>押されている場合は 1、それ以外は 0</returns>
-    public static int CheckHitKey(int keyCode)
+    /// <returns>押されている場合は true、それ以外は false</returns>
+    public static bool CheckHitKey(int keyCode)
     {
         return NativeBindings.Engine_CheckHitKey(keyCode);
     }
