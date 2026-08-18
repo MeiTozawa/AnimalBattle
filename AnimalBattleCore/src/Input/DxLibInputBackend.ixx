@@ -11,8 +11,8 @@ namespace ab {
     public:
         DxLibInputBackend() = default;
 
-        int CheckHitKey(int key_code) const;
-        int GetHitKeyStateAll(char* key_state_buf) const;
+        bool CheckHitKey(int key_code) const;
+        bool GetHitKeyStateAll(char* key_state_buf) const;
 
         int GetJoypadInputState(int input_type) const;
         int GetJoypadNum() const;

@@ -228,6 +228,46 @@ extern "C" {
         }
     }
 
+    __declspec(dllexport) void Input_BindAction(int context, int action, const int* buttons, int button_count) noexcept {
+        try {
+            if (g_input_service != nullptr && buttons != nullptr && button_count >= 0) {
+                std::vector<ab::InputButton> button_vec;
+                button_vec.reserve(button_count);
+                for (int i = 0; i < button_count; ++i) {
+                    button_vec.push_back(static_cast<ab::InputButton>(buttons[i]));
+                }
+                g_input_service->BindAction(
+                    static_cast<ab::InputContext>(context),
+                    static_cast<ab::InputAction>(action),
+                    std::move(button_vec)
+                );
+            }
+        } catch (...) {
+        }
+    }
+
+    __declspec(dllexport) void Input_AddActionButton(int context, int action, int button) noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                g_input_service->AddActionButton(
+                    static_cast<ab::InputContext>(context),
+                    static_cast<ab::InputAction>(action),
+                    static_cast<ab::InputButton>(button)
+                );
+            }
+        } catch (...) {
+        }
+    }
+
+    __declspec(dllexport) void Input_ClearActions(int context) noexcept {
+        try {
+            if (g_input_service != nullptr) {
+                g_input_service->ClearActions(static_cast<ab::InputContext>(context));
+            }
+        } catch (...) {
+        }
+    }
+
     __declspec(dllexport) int Input_GetCurrentContext() noexcept {
         try {
             if (g_input_service != nullptr) {
@@ -327,11 +367,11 @@ extern "C" {
         }
     }
 
-    __declspec(dllexport) int Engine_CheckHitKey(int key_code) noexcept {
+    __declspec(dllexport) bool Engine_CheckHitKey(int key_code) noexcept {
         try {
-            return ::CheckHitKey(key_code);
+            return ::CheckHitKey(key_code) == 1;
         } catch (...) {
-            return 0;
+            return false;
         }
     }
 
@@ -395,14 +435,14 @@ extern "C" {
         }
     }
 
-    __declspec(dllexport) int Engine_DeleteGraph(int handle) noexcept {
+    __declspec(dllexport) bool Engine_DeleteGraph(int handle) noexcept {
         try {
             if (handle >= 0) {
-                return ::DeleteGraph(handle);
+                return ::DeleteGraph(handle) == 0;
             }
-            return 0;
+            return false;
         } catch (...) {
-            return -1;
+            return false;
         }
     }
 

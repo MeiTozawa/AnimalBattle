@@ -5,12 +5,12 @@ module;
 module DxLibInputBackend;
 
 namespace ab {
-    int DxLibInputBackend::CheckHitKey(int key_code) const {
-        return ::CheckHitKey(key_code);
+    bool DxLibInputBackend::CheckHitKey(int key_code) const {
+        return ::CheckHitKey(key_code) == 1;
     }
 
-    int DxLibInputBackend::GetHitKeyStateAll(char* key_state_buf) const {
-        return ::GetHitKeyStateAll(key_state_buf);
+    bool DxLibInputBackend::GetHitKeyStateAll(char* key_state_buf) const {
+        return ::GetHitKeyStateAll(key_state_buf) == 0;
     }
 
     int DxLibInputBackend::GetJoypadInputState(int input_type) const {

@@ -21,8 +21,8 @@ namespace ab {
         int* out_y,
         bool disp_flag
     ) {
-        { const_backend.CheckHitKey(key_code) } -> std::convertible_to<int>;
-        { const_backend.GetHitKeyStateAll(key_state_buf) } -> std::convertible_to<int>;
+        { const_backend.CheckHitKey(key_code) } -> std::convertible_to<bool>;
+        { const_backend.GetHitKeyStateAll(key_state_buf) } -> std::convertible_to<bool>;
 
         { const_backend.GetJoypadInputState(input_type) } -> std::convertible_to<int>;
         { const_backend.GetJoypadNum() } -> std::convertible_to<int>;
