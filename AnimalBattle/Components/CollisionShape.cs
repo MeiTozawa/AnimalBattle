@@ -140,8 +140,8 @@ public abstract record CollisionShape
     /// <returns>交差していれば true、それ以外は false</returns>
     public static bool Intersects(in Transform t1, CollisionShape s1, in Transform t2, CollisionShape s2)
     {
-        Vector2D p1 = new(t1.X + s1.OffsetX, t1.Y + s1.OffsetY);
-        Vector2D p2 = new(t2.X + s2.OffsetX, t2.Y + s2.OffsetY);
+        Vec2f p1 = new(t1.X + s1.OffsetX, t1.Y + s1.OffsetY);
+        Vec2f p2 = new(t2.X + s2.OffsetX, t2.Y + s2.OffsetY);
 
         return (s1, s2) switch
         {
@@ -149,13 +149,13 @@ public abstract record CollisionShape
                 PhysicsService.Intersects(new Circle2D(p1, c1.Radius), new Circle2D(p2, c2.Radius)),
 
             (Box b1, Box b2) =>
-                PhysicsService.Intersects(new Box2D(p1, new Vector2D(b1.Width, b1.Height)), new Box2D(p2, new Vector2D(b2.Width, b2.Height))),
+                PhysicsService.Intersects(new Box2D(p1, new Vec2f(b1.Width, b1.Height)), new Box2D(p2, new Vec2f(b2.Width, b2.Height))),
 
             (Circle c, Box b) =>
-                PhysicsService.Intersects(new Circle2D(p1, c.Radius), new Box2D(p2, new Vector2D(b.Width, b.Height))),
+                PhysicsService.Intersects(new Circle2D(p1, c.Radius), new Box2D(p2, new Vec2f(b.Width, b.Height))),
 
             (Box b, Circle c) =>
-                PhysicsService.Intersects(new Box2D(p1, new Vector2D(b.Width, b.Height)), new Circle2D(p2, c.Radius)),
+                PhysicsService.Intersects(new Box2D(p1, new Vec2f(b.Width, b.Height)), new Circle2D(p2, c.Radius)),
 
             (Point, Circle c) =>
                 PhysicsService.Intersects(p1, new Circle2D(p2, c.Radius)),
@@ -164,10 +164,10 @@ public abstract record CollisionShape
                 PhysicsService.Intersects(p2, new Circle2D(p1, c.Radius)),
 
             (Point, Box b) =>
-                PhysicsService.Intersects(p1, new Box2D(p2, new Vector2D(b.Width, b.Height))),
+                PhysicsService.Intersects(p1, new Box2D(p2, new Vec2f(b.Width, b.Height))),
 
             (Box b, Point) =>
-                PhysicsService.Intersects(p2, new Box2D(p1, new Vector2D(b.Width, b.Height))),
+                PhysicsService.Intersects(p2, new Box2D(p1, new Vec2f(b.Width, b.Height))),
 
             (Point, Point) =>
                 MathF.Abs(p1.X - p2.X) < 0.001f && MathF.Abs(p1.Y - p2.Y) < 0.001f,

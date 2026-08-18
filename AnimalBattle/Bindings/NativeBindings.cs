@@ -238,12 +238,12 @@ internal static unsafe partial class NativeBindings
     [LibraryImport(_dllName, EntryPoint = "Physics_IntersectsPointCircle")]
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Physics_IntersectsPointCircle(Vector2D point, Circle2D circle);
+    public static partial bool Physics_IntersectsPointCircle(Vec2f point, Circle2D circle);
 
     [LibraryImport(_dllName, EntryPoint = "Physics_IntersectsPointBox")]
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Physics_IntersectsPointBox(Vector2D point, Box2D box);
+    public static partial bool Physics_IntersectsPointBox(Vec2f point, Box2D box);
 
     [LibraryImport(_dllName, EntryPoint = "Physics_CheckPlatformGround")]
     [SuppressGCTransition]
@@ -253,11 +253,11 @@ internal static unsafe partial class NativeBindings
     [LibraryImport(_dllName, EntryPoint = "Physics_CheckPenetrationBoxBox")]
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Physics_CheckPenetrationBoxBox(Box2D b1, Box2D b2, Vector2D* outNormal, float* outDepth);
+    public static partial bool Physics_CheckPenetrationBoxBox(Box2D b1, Box2D b2, Vec2f* outNormal, float* outDepth);
 
     [LibraryImport(_dllName, EntryPoint = "Physics_IntegrateVelocity")]
     [SuppressGCTransition]
-    public static partial Vector2D Physics_IntegrateVelocity(Vector2D position, Vector2D velocity, float deltaTime);
+    public static partial Vec2f Physics_IntegrateVelocity(Vec2f position, Vec2f velocity, float deltaTime);
 
     [LibraryImport(_dllName, EntryPoint = "Physics_ApplyGravity")]
     [SuppressGCTransition]
@@ -265,15 +265,15 @@ internal static unsafe partial class NativeBindings
 
     [LibraryImport(_dllName, EntryPoint = "Physics_CalculateDistance")]
     [SuppressGCTransition]
-    public static partial float Physics_CalculateDistance(Vector2D a, Vector2D b);
+    public static partial float Physics_CalculateDistance(Vec2f a, Vec2f b);
 
     [LibraryImport(_dllName, EntryPoint = "Physics_CalculateAngle")]
     [SuppressGCTransition]
-    public static partial float Physics_CalculateAngle(Vector2D from, Vector2D to);
+    public static partial float Physics_CalculateAngle(Vec2f from, Vec2f to);
 
     [LibraryImport(_dllName, EntryPoint = "Physics_DirectionToVector")]
     [SuppressGCTransition]
-    public static partial Vector2D Physics_DirectionToVector(float angleRad, float speed);
+    public static partial Vec2f Physics_DirectionToVector(float angleRad, float speed);
 
     [LibraryImport(_dllName, EntryPoint = "Physics_Clamp")]
     [SuppressGCTransition]

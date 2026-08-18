@@ -45,7 +45,7 @@ public static unsafe class PhysicsService
     /// <summary>
     /// 点と円形衝突形状の交差を判定します。
     /// </summary>
-    public static bool Intersects(Vector2D point, Circle2D circle)
+    public static bool Intersects(Vec2f point, Circle2D circle)
     {
         return NativeBindings.Physics_IntersectsPointCircle(point, circle);
     }
@@ -53,7 +53,7 @@ public static unsafe class PhysicsService
     /// <summary>
     /// 点と軸平行矩形 (AABB) 衝突形状の交差を判定します。
     /// </summary>
-    public static bool Intersects(Vector2D point, Box2D box)
+    public static bool Intersects(Vec2f point, Box2D box)
     {
         return NativeBindings.Physics_IntersectsPointBox(point, box);
     }
@@ -91,7 +91,7 @@ public static unsafe class PhysicsService
     /// <summary>
     /// 速度ベクトルを位置座標へ積分加算します。
     /// </summary>
-    public static Vector2D IntegrateVelocity(Vector2D position, Vector2D velocity, float deltaTime = 1.0f)
+    public static Vec2f IntegrateVelocity(Vec2f position, Vec2f velocity, float deltaTime = 1.0f)
     {
         return NativeBindings.Physics_IntegrateVelocity(position, velocity, deltaTime);
     }
@@ -110,7 +110,7 @@ public static unsafe class PhysicsService
     /// <summary>
     /// 2 点間のユークリッド距離を計算します。
     /// </summary>
-    public static float CalculateDistance(Vector2D a, Vector2D b)
+    public static float CalculateDistance(Vec2f a, Vec2f b)
     {
         return NativeBindings.Physics_CalculateDistance(a, b);
     }
@@ -118,15 +118,15 @@ public static unsafe class PhysicsService
     /// <summary>
     /// 2 点間のラジアン角度を計算します。
     /// </summary>
-    public static float CalculateAngle(Vector2D from, Vector2D to)
+    public static float CalculateAngle(Vec2f from, Vec2f to)
     {
         return NativeBindings.Physics_CalculateAngle(from, to);
     }
 
     /// <summary>
-    /// 角度と移動速度から速度ベクトル (Vector2D) を算出します。
+    /// 角度と移動速度から速度ベクトル (Vec2f) を算出します。
     /// </summary>
-    public static Vector2D DirectionToVector(float angleRad, float speed)
+    public static Vec2f DirectionToVector(float angleRad, float speed)
     {
         return NativeBindings.Physics_DirectionToVector(angleRad, speed);
     }

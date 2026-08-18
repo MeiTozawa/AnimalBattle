@@ -11,37 +11,37 @@ namespace AnimalBattle.Components;
 public struct Velocity
 {
     /// <summary>移動速度 (Vec2f)</summary>
-    public Vector2D Value;
+    public Vec2f Value;
 
     /// <summary>ノックバック速度 (Vec2f)</summary>
-    public Vector2D Knockback;
+    public Vec2f Knockback;
 
     /// <summary>X 軸移動速度への簡易アクセスプロパティ</summary>
     public float Vx
     {
         readonly get => Value.X;
-        set => Value = new Vector2D(value, Value.Y);
+        set => Value = new Vec2f(value, Value.Y);
     }
 
     /// <summary>Y 軸移動速度への簡易アクセスプロパティ</summary>
     public float Vy
     {
         readonly get => Value.Y;
-        set => Value = new Vector2D(Value.X, value);
+        set => Value = new Vec2f(Value.X, value);
     }
 
     /// <summary>X 軸ノックバック速度への簡易アクセスプロパティ</summary>
     public float KnockbackX
     {
         readonly get => Knockback.X;
-        set => Knockback = new Vector2D(value, Knockback.Y);
+        set => Knockback = new Vec2f(value, Knockback.Y);
     }
 
     /// <summary>Y 軸ノックバック速度への簡易アクセスプロパティ</summary>
     public float KnockbackY
     {
         readonly get => Knockback.Y;
-        set => Knockback = new Vector2D(Knockback.X, value);
+        set => Knockback = new Vec2f(Knockback.X, value);
     }
 
     /// <summary>
@@ -49,14 +49,14 @@ public struct Velocity
     /// </summary>
     public Velocity(float vx = 0.0f, float vy = 0.0f)
     {
-        Value = new Vector2D(vx, vy);
-        Knockback = Vector2D.Zero;
+        Value = new Vec2f(vx, vy);
+        Knockback = Vec2f.Zero;
     }
 
     /// <summary>
     /// 指定された移動速度ベクトル、ノックバックベクトルで <see cref="Velocity"/> の新しいインスタンスを初期化します。
     /// </summary>
-    public Velocity(Vector2D value, Vector2D knockback = default)
+    public Velocity(Vec2f value, Vec2f knockback = default)
     {
         Value = value;
         Knockback = knockback;
