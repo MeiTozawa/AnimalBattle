@@ -34,6 +34,15 @@ public:
     virtual Vec2f DirectionToVector(float angle_rad, float speed) const noexcept = 0;
     virtual float Clamp(float value, float min_val, float max_val) const noexcept = 0;
     virtual float Lerp(float a, float b, float t) const noexcept = 0;
+
+    // --- 高速バッチ SIMD 物理演算 ---
+    virtual void BatchBulletMovement(
+        Transform* transforms,
+        const Velocity* velocities,
+        int count,
+        float delta_time,
+        float min_x, float max_x, float min_y, float max_y,
+        uint8_t* out_despawn_flags) const noexcept = 0;
 };
 
 }  // namespace ab

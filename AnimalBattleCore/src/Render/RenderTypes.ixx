@@ -7,56 +7,52 @@ module;
 
 export module RenderTypes;
 
+export import PhysicsTypes;
+
 namespace ab {
     // --- Vector & Geometry Primitives ---
 
     export template <typename T>
     requires std::integral<T> || std::floating_point<T>
-    struct Rect;
-
-    export template <typename T>
-    requires std::integral<T> || std::floating_point<T>
-    struct Point {
-        T x;
-        T y;
-
-        constexpr bool In(const Rect<T>& r) const;
-    };
-
-    export template <typename T>
-    requires std::integral<T> || std::floating_point<T>
     struct Rect {
-        T x1;
-        T y1;
-        T x2;
-        T y2;
+        Vector2D<T> p1;
+        Vector2D<T> p2;
 
-        constexpr Rect<T> operator+(const Point<T>& p) const {
-            return Rect<T>{x1 + p.x, y1 + p.y, x2 + p.x, y2 + p.y};
+        constexpr Rect() : p1{}, p2{} {}
+        constexpr Rect(Vector2D<T> point1, Vector2D<T> point2) : p1(point1), p2(point2) {}
+        constexpr Rect(T x1, T y1, T x2, T y2) : p1(x1, y1), p2(x2, y2) {}
+
+        constexpr T Left() const noexcept { return p1.x; }
+        constexpr T Top() const noexcept { return p1.y; }
+        constexpr T Right() const noexcept { return p2.x; }
+        constexpr T Bottom() const noexcept { return p2.y; }
+        constexpr T Width() const noexcept { return p2.x - p1.x; }
+        constexpr T Height() const noexcept { return p2.y - p1.y; }
+
+        constexpr Rect<T> operator+(const Vector2D<T>& p) const {
+            return Rect<T>{p1 + p, p2 + p};
         }
 
         constexpr Rect<T> Expand(T amount) const {
-            return Rect<T>{x1 - amount, y1 - amount, x2 + amount, y2 + amount};
+            return Rect<T>{p1.x - amount, p1.y - amount, p2.x + amount, p2.y + amount};
         }
 
         constexpr bool Intersects(const Rect<T>& other) const {
-            return x1 < other.x2 && x2 > other.x1 && y1 < other.y2 && y2 > other.y1;
+            return p1.x < other.p2.x && p2.x > other.p1.x && p1.y < other.p2.y && p2.y > other.p1.y;
         }
 
         constexpr bool Contains(T x, T y) const {
-            return x >= x1 && x <= x2 && y >= y1 && y <= y2;
+            return x >= p1.x && x <= p2.x && y >= p1.y && y <= p2.y;
         }
 
-        constexpr bool Contains(const Point<T>& p) const {
-            return p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2;
+        constexpr bool Contains(const Vector2D<T>& p) const {
+            return p.x >= p1.x && p.x <= p2.x && p.y >= p1.y && p.y <= p2.y;
         }
     };
 
-    template <typename T>
-    requires std::integral<T> || std::floating_point<T>
-    constexpr bool Point<T>::In(const Rect<T>& r) const {
-        return x >= r.x1 && x <= r.x2 && y >= r.y1 && y <= r.y2;
-    }
+    export using Recti = Rect<int>;
+    export using Rectf = Rect<float>;
+
     // --- Color Constants ---
     export constexpr uint32_t COLOR_WHITE = 0xFFFFFF;
     export constexpr uint32_t COLOR_BLACK = 0x000000;
@@ -86,7 +82,7 @@ namespace ab {
     // --- Render Commands ---
 
     export struct DrawStringCmd {
-        Point<int> p;
+        Vec2i pos;
         std::wstring text;
         uint32_t color;
     };
@@ -98,15 +94,15 @@ namespace ab {
     };
 
     export struct DrawCircleCmd {
-        Point<int> p;
+        Vec2i center;
         int radius;
         uint32_t color;
         bool fill_flag;
     };
 
     export struct DrawLineCmd {
-        Point<int> p1;
-        Point<int> p2;
+        Vec2i p1;
+        Vec2i p2;
         uint32_t color;
         int thickness;
     };
@@ -133,13 +129,13 @@ namespace ab {
     };
 
     export struct DrawGraphCmd {
-        Point<int> p;
+        Vec2i pos;
         int handle;
         bool trans_flag;
     };
 
     export struct DrawRotaGraphCmd {
-        Point<int> p;
+        Vec2i center;
         double ext_rate;
         double angle;
         int graph_handle;
@@ -147,7 +143,7 @@ namespace ab {
     };
 
     export struct DrawRectRotaGraphCmd {
-        Point<int> p;
+        Vec2i center;
         Rect<int> src;
         double ext_rate;
         double angle;

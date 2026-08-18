@@ -280,25 +280,21 @@ __declspec(dllexport) int Input_GetActiveDevice() noexcept {
     }
 }
 
-__declspec(dllexport) void Input_GetMousePosition(int* out_x, int* out_y) noexcept {
+__declspec(dllexport) void Input_GetMousePosition(ab::Vec2i* out_pos) noexcept {
     try {
         auto* input_service = ab::GetInputService();
-        if (input_service != nullptr && out_x != nullptr && out_y != nullptr) {
-            auto pos = input_service->GetMousePosition();
-            *out_x = pos.x;
-            *out_y = pos.y;
+        if (input_service != nullptr && out_pos != nullptr) {
+            *out_pos = input_service->GetMousePosition();
         }
     } catch (...) {
     }
 }
 
-__declspec(dllexport) void Input_GetMouseDelta(int* out_dx, int* out_dy) noexcept {
+__declspec(dllexport) void Input_GetMouseDelta(ab::Vec2i* out_delta) noexcept {
     try {
         auto* input_service = ab::GetInputService();
-        if (input_service != nullptr && out_dx != nullptr && out_dy != nullptr) {
-            auto delta = input_service->GetMouseDelta();
-            *out_dx = delta.x;
-            *out_dy = delta.y;
+        if (input_service != nullptr && out_delta != nullptr) {
+            *out_delta = input_service->GetMouseDelta();
         }
     } catch (...) {
     }
@@ -316,11 +312,11 @@ __declspec(dllexport) int Input_GetMouseWheelDelta() noexcept {
     }
 }
 
-__declspec(dllexport) bool Input_IsMouseOver(int x1, int y1, int x2, int y2) noexcept {
+__declspec(dllexport) bool Input_IsMouseOver(ab::Vec2i p1, ab::Vec2i p2) noexcept {
     try {
         auto* input_service = ab::GetInputService();
         if (input_service != nullptr) {
-            return input_service->IsMouseOver(ab::Rect<int>{x1, y1, x2, y2});
+            return input_service->IsMouseOver(p1, p2);
         }
         return false;
     } catch (...) {
@@ -396,11 +392,11 @@ __declspec(dllexport) int Engine_GetJoypadNum() noexcept {
     }
 }
 
-__declspec(dllexport) void Engine_GetMousePoint(int* x, int* y) noexcept {
+__declspec(dllexport) void Engine_GetMousePoint(ab::Vec2i* out_pos) noexcept {
     try {
         auto* input_service = ab::GetInputService();
-        if (input_service != nullptr) {
-            input_service->GetMousePoint(x, y);
+        if (input_service != nullptr && out_pos != nullptr) {
+            input_service->GetMousePoint(out_pos);
         }
     } catch (...) {
     }
@@ -459,11 +455,21 @@ __declspec(dllexport) bool Engine_DeleteGraph(int handle) noexcept {
     }
 }
 
-__declspec(dllexport) void Graph_GetSize(int handle, int* out_width, int* out_height) noexcept {
+__declspec(dllexport) void Graph_GetSize(int handle, ab::Vec2i* out_size) noexcept {
     try {
         auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr && handle >= 0) {
-            render_service->GetGraphSize(handle, out_width, out_height);
+        if (render_service != nullptr && handle >= 0 && out_size != nullptr) {
+            render_service->GetGraphSize(handle, out_size);
+        }
+    } catch (...) {
+    }
+}
+
+__declspec(dllexport) void Engine_GetGraphSize(int handle, ab::Vec2i* out_size) noexcept {
+    try {
+        auto* render_service = ab::GetRenderService();
+        if (render_service != nullptr && handle >= 0 && out_size != nullptr) {
+            render_service->GetGraphSize(handle, out_size);
         }
     } catch (...) {
     }
@@ -471,63 +477,63 @@ __declspec(dllexport) void Graph_GetSize(int handle, int* out_width, int* out_he
 
 // --- 2D Drawing APIs ---
 
-__declspec(dllexport) void Draw_Box(int x1, int y1, int x2, int y2, unsigned int color, bool fill) noexcept {
+__declspec(dllexport) void Draw_Box(ab::Vec2i p1, ab::Vec2i p2, unsigned int color, bool fill) noexcept {
     try {
         auto* render_service = ab::GetRenderService();
         if (render_service != nullptr) {
-            render_service->DrawBox(ab::Rect<int>{x1, y1, x2, y2}, color, fill);
+            render_service->DrawBox(p1, p2, color, fill);
         }
     } catch (...) {
     }
 }
 
-__declspec(dllexport) void Draw_Circle(int x, int y, int radius, unsigned int color, bool fill) noexcept {
+__declspec(dllexport) void Draw_Circle(ab::Vec2i center, int radius, unsigned int color, bool fill) noexcept {
     try {
         auto* render_service = ab::GetRenderService();
         if (render_service != nullptr) {
-            render_service->DrawCircle(ab::Point<int>{x, y}, radius, color, fill);
+            render_service->DrawCircle(center, radius, color, fill);
         }
     } catch (...) {
     }
 }
 
-__declspec(dllexport) void Draw_Line(int x1, int y1, int x2, int y2, unsigned int color, int thickness) noexcept {
+__declspec(dllexport) void Draw_Line(ab::Vec2i p1, ab::Vec2i p2, unsigned int color, int thickness) noexcept {
     try {
         auto* render_service = ab::GetRenderService();
         if (render_service != nullptr) {
-            render_service->DrawLine(ab::Point<int>{x1, y1}, ab::Point<int>{x2, y2}, color, thickness);
+            render_service->DrawLine(p1, p2, color, thickness);
         }
     } catch (...) {
     }
 }
 
-__declspec(dllexport) void Draw_String(int x, int y, const wchar_t* text, unsigned int color) noexcept {
+__declspec(dllexport) void Draw_String(ab::Vec2i pos, const wchar_t* text, unsigned int color) noexcept {
     try {
         auto* render_service = ab::GetRenderService();
         if (render_service != nullptr && text != nullptr) {
-            render_service->DrawString(ab::Point<int>{x, y}, text, color);
+            render_service->DrawString(pos, text, color);
         }
     } catch (...) {
     }
 }
 
-__declspec(dllexport) void Draw_Graph(int x, int y, int handle, bool trans) noexcept {
+__declspec(dllexport) void Draw_Graph(ab::Vec2i pos, int handle, bool trans) noexcept {
     try {
         auto* render_service = ab::GetRenderService();
         if (render_service != nullptr && handle >= 0) {
-            render_service->DrawGraph(ab::Point<int>{x, y}, handle, trans);
+            render_service->DrawGraph(pos, handle, trans);
         }
     } catch (...) {
     }
 }
 
-__declspec(dllexport) void Draw_RectGraph(int dest_x, int dest_y, int src_x, int src_y, int width, int height, int handle, bool trans) noexcept {
+__declspec(dllexport) void Draw_RectGraph(ab::Vec2i dest_pos, ab::Vec2i src_pos, ab::Vec2i src_size, int handle, bool trans) noexcept {
     try {
         auto* render_service = ab::GetRenderService();
         if (render_service != nullptr && handle >= 0) {
             render_service->DrawRectRotaGraph(
-                ab::Point<int>{dest_x, dest_y},
-                ab::Rect<int>{src_x, src_y, src_x + width, src_y + height},
+                dest_pos,
+                ab::Rect<int>{src_pos, src_pos + src_size},
                 1.0,
                 0.0,
                 handle,
@@ -538,18 +544,28 @@ __declspec(dllexport) void Draw_RectGraph(int dest_x, int dest_y, int src_x, int
     }
 }
 
-__declspec(dllexport) void Draw_RectRotaGraph(int x, int y, int src_x, int src_y, int width, int height, double scale, double angle_rad, int handle, bool trans, bool turn_x) noexcept {
+__declspec(dllexport) void Draw_RectRotaGraph(ab::Vec2i center, ab::Vec2i src_pos, ab::Vec2i src_size, double scale, double angle_rad, int handle, bool trans, bool turn_x) noexcept {
     try {
         auto* render_service = ab::GetRenderService();
         if (render_service != nullptr && handle >= 0) {
             render_service->DrawRectRotaGraph(
-                ab::Point<int>{x, y},
-                ab::Rect<int>{src_x, src_y, src_x + width, src_y + height},
+                center,
+                ab::Rect<int>{src_pos, src_pos + src_size},
                 scale,
                 angle_rad,
                 handle,
                 trans,
                 turn_x);
+        }
+    } catch (...) {
+    }
+}
+
+__declspec(dllexport) void Draw_RotaGraph(ab::Vec2i center, double scale, double angle_rad, int handle, bool trans) noexcept {
+    try {
+        auto* render_service = ab::GetRenderService();
+        if (render_service != nullptr && handle >= 0) {
+            render_service->DrawRotaGraph(center, scale, angle_rad, handle, trans);
         }
     } catch (...) {
     }
@@ -732,6 +748,26 @@ __declspec(dllexport) float Physics_Lerp(float a, float b, float t) noexcept {
         return a;
     } catch (...) {
         return a;
+    }
+}
+
+// --- Batch SIMD Physics APIs ---
+
+__declspec(dllexport) void Physics_BatchBulletMovement(
+    ab::Transform* transforms,
+    const ab::Velocity* velocities,
+    int count,
+    float delta_time,
+    float min_x, float max_x, float min_y, float max_y,
+    uint8_t* out_despawn_flags) noexcept {
+    try {
+        auto* physics_service = ab::GetPhysicsService();
+        if (physics_service != nullptr) {
+            physics_service->BatchBulletMovement(
+                transforms, velocities, count, delta_time,
+                min_x, max_x, min_y, max_y, out_despawn_flags);
+        }
+    } catch (...) {
     }
 }
 

@@ -109,4 +109,17 @@ export struct GroundCheckResult {
     float adjusted_vy = 0.0f;
 };
 
+/// @brief C# Transform コンポーネントと完全バイナリ一致する 2D トランスフォーム構造体 (20 bytes)
+export struct Transform {
+    Vec2f position{0.0f, 0.0f};
+    Vec2f scale{1.0f, 1.0f};
+    float rotation = 0.0f;
+};
+
+/// @brief C# Velocity コンポーネントと完全バイナリ一致する速度構造体 (16 bytes)
+export struct Velocity {
+    Vec2f value{0.0f, 0.0f};
+    Vec2f knockback{0.0f, 0.0f};
+};
+
 }  // namespace ab

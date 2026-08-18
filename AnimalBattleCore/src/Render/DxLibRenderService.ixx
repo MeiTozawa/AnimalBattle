@@ -36,36 +36,36 @@ namespace ab {
         void ExecuteCommand(const RenderCommand& cmd) {
             std::visit(Overloaded{
                 [this](const DrawStringCmd& c) {
-                    Point<int> p_draw = c.p;
+                    Vec2i p_draw = c.pos;
                     if (camera_enabled_) {
-                        p_draw.x = static_cast<int>((c.p.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p_draw.y = static_cast<int>((c.p.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        p_draw.x = static_cast<int>((c.pos.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        p_draw.y = static_cast<int>((c.pos.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
                     }
                     ::DrawString(p_draw.x, p_draw.y, c.text.c_str(), c.color);
                 },
                 [this](const DrawBoxCmd& c) {
                     Rect<int> r_draw = c.r;
                     if (camera_enabled_) {
-                        r_draw.x1 = static_cast<int>((c.r.x1 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        r_draw.y1 = static_cast<int>((c.r.y1 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                        r_draw.x2 = static_cast<int>((c.r.x2 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        r_draw.y2 = static_cast<int>((c.r.y2 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        r_draw.p1.x = static_cast<int>((c.r.p1.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        r_draw.p1.y = static_cast<int>((c.r.p1.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        r_draw.p2.x = static_cast<int>((c.r.p2.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        r_draw.p2.y = static_cast<int>((c.r.p2.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
                     }
-                    ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x2, r_draw.y2, c.color, c.fill_flag ? TRUE : FALSE);
+                    ::DrawBox(r_draw.p1.x, r_draw.p1.y, r_draw.p2.x, r_draw.p2.y, c.color, c.fill_flag ? TRUE : FALSE);
                 },
                 [this](const DrawCircleCmd& c) {
-                    Point<int> p_draw = c.p;
+                    Vec2i p_draw = c.center;
                     int radius_draw = c.radius;
                     if (camera_enabled_) {
-                        p_draw.x = static_cast<int>((c.p.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p_draw.y = static_cast<int>((c.p.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        p_draw.x = static_cast<int>((c.center.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        p_draw.y = static_cast<int>((c.center.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
                         radius_draw = static_cast<int>(c.radius * camera_scale_);
                     }
                     ::DrawCircle(p_draw.x, p_draw.y, radius_draw, c.color, c.fill_flag ? TRUE : FALSE);
                 },
                 [this](const DrawLineCmd& c) {
-                    Point<int> p1_draw = c.p1;
-                    Point<int> p2_draw = c.p2;
+                    Vec2i p1_draw = c.p1;
+                    Vec2i p2_draw = c.p2;
                     int thickness_draw = c.thickness;
                     if (camera_enabled_) {
                         p1_draw.x = static_cast<int>((c.p1.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
@@ -81,33 +81,33 @@ namespace ab {
                     Rect<int> r_draw = c.r;
                     int thickness_draw = c.thickness;
                     if (camera_enabled_) {
-                        r_draw.x1 = static_cast<int>((c.r.x1 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        r_draw.y1 = static_cast<int>((c.r.y1 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                        r_draw.x2 = static_cast<int>((c.r.x2 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        r_draw.y2 = static_cast<int>((c.r.y2 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        r_draw.p1.x = static_cast<int>((c.r.p1.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        r_draw.p1.y = static_cast<int>((c.r.p1.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        r_draw.p2.x = static_cast<int>((c.r.p2.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        r_draw.p2.y = static_cast<int>((c.r.p2.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
                         thickness_draw = static_cast<int>(c.thickness * camera_scale_);
                         if (thickness_draw < 1 && c.thickness > 0) thickness_draw = 1;
                     }
-                    ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x2, r_draw.y1 + thickness_draw, c.color, TRUE);
-                    ::DrawBox(r_draw.x1, r_draw.y2 - thickness_draw, r_draw.x2, r_draw.y2, c.color, TRUE);
-                    ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x1 + thickness_draw, r_draw.y2, c.color, TRUE);
-                    ::DrawBox(r_draw.x2 - thickness_draw, r_draw.y1, r_draw.x2, r_draw.y2, c.color, TRUE);
+                    ::DrawBox(r_draw.p1.x, r_draw.p1.y, r_draw.p2.x, r_draw.p1.y + thickness_draw, c.color, TRUE);
+                    ::DrawBox(r_draw.p1.x, r_draw.p2.y - thickness_draw, r_draw.p2.x, r_draw.p2.y, c.color, TRUE);
+                    ::DrawBox(r_draw.p1.x, r_draw.p1.y, r_draw.p1.x + thickness_draw, r_draw.p2.y, c.color, TRUE);
+                    ::DrawBox(r_draw.p2.x - thickness_draw, r_draw.p1.y, r_draw.p2.x, r_draw.p2.y, c.color, TRUE);
                 },
                 [this](const DrawRoundRectFrameCmd& c) {
                     Rect<int> r_draw = c.r;
                     int thickness_draw = c.thickness;
                     int radius_draw = c.corner_radius;
                     if (camera_enabled_) {
-                        r_draw.x1 = static_cast<int>((c.r.x1 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        r_draw.y1 = static_cast<int>((c.r.y1 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                        r_draw.x2 = static_cast<int>((c.r.x2 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        r_draw.y2 = static_cast<int>((c.r.y2 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        r_draw.p1.x = static_cast<int>((c.r.p1.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        r_draw.p1.y = static_cast<int>((c.r.p1.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        r_draw.p2.x = static_cast<int>((c.r.p2.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        r_draw.p2.y = static_cast<int>((c.r.p2.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
                         thickness_draw = static_cast<int>(c.thickness * camera_scale_);
                         if (thickness_draw < 1 && c.thickness > 0) thickness_draw = 1;
                         radius_draw = static_cast<int>(c.corner_radius * camera_scale_);
                     }
                     for (int i = 0; i < thickness_draw; ++i) {
-                        ::DrawRoundRect(r_draw.x1 + i, r_draw.y1 + i, r_draw.x2 - i, r_draw.y2 - i,
+                        ::DrawRoundRect(r_draw.p1.x + i, r_draw.p1.y + i, r_draw.p2.x - i, r_draw.p2.y - i,
                                         radius_draw, radius_draw, c.color, FALSE);
                     }
                 },
@@ -115,83 +115,83 @@ namespace ab {
                     Rect<int> r_draw = c.r;
                     int thickness_draw = 2;
                     if (camera_enabled_) {
-                        r_draw.x1 = static_cast<int>((c.r.x1 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        r_draw.y1 = static_cast<int>((c.r.y1 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                        r_draw.x2 = static_cast<int>((c.r.x2 - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        r_draw.y2 = static_cast<int>((c.r.y2 - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        r_draw.p1.x = static_cast<int>((c.r.p1.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        r_draw.p1.y = static_cast<int>((c.r.p1.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        r_draw.p2.x = static_cast<int>((c.r.p2.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        r_draw.p2.y = static_cast<int>((c.r.p2.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
                         thickness_draw = static_cast<int>(2 * camera_scale_);
                         if (thickness_draw < 1) thickness_draw = 1;
                     }
 
                     switch (c.shape) {
                     case BorderShape::Rectangle:
-                        ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x2, r_draw.y1 + thickness_draw, c.border_color, TRUE);
-                        ::DrawBox(r_draw.x1, r_draw.y2 - thickness_draw, r_draw.x2, r_draw.y2, c.border_color, TRUE);
-                        ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x1 + thickness_draw, r_draw.y2, c.border_color, TRUE);
-                        ::DrawBox(r_draw.x2 - thickness_draw, r_draw.y1, r_draw.x2, r_draw.y2, c.border_color, TRUE);
+                        ::DrawBox(r_draw.p1.x, r_draw.p1.y, r_draw.p2.x, r_draw.p1.y + thickness_draw, c.border_color, TRUE);
+                        ::DrawBox(r_draw.p1.x, r_draw.p2.y - thickness_draw, r_draw.p2.x, r_draw.p2.y, c.border_color, TRUE);
+                        ::DrawBox(r_draw.p1.x, r_draw.p1.y, r_draw.p1.x + thickness_draw, r_draw.p2.y, c.border_color, TRUE);
+                        ::DrawBox(r_draw.p2.x - thickness_draw, r_draw.p1.y, r_draw.p2.x, r_draw.p2.y, c.border_color, TRUE);
                         break;
                     case BorderShape::DoubleRectangle: {
-                        ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x2, r_draw.y1 + thickness_draw, c.border_color, TRUE);
-                        ::DrawBox(r_draw.x1, r_draw.y2 - thickness_draw, r_draw.x2, r_draw.y2, c.border_color, TRUE);
-                        ::DrawBox(r_draw.x1, r_draw.y1, r_draw.x1 + thickness_draw, r_draw.y2, c.border_color, TRUE);
-                        ::DrawBox(r_draw.x2 - thickness_draw, r_draw.y1, r_draw.x2, r_draw.y2, c.border_color, TRUE);
+                        ::DrawBox(r_draw.p1.x, r_draw.p1.y, r_draw.p2.x, r_draw.p1.y + thickness_draw, c.border_color, TRUE);
+                        ::DrawBox(r_draw.p1.x, r_draw.p2.y - thickness_draw, r_draw.p2.x, r_draw.p2.y, c.border_color, TRUE);
+                        ::DrawBox(r_draw.p1.x, r_draw.p1.y, r_draw.p1.x + thickness_draw, r_draw.p2.y, c.border_color, TRUE);
+                        ::DrawBox(r_draw.p2.x - thickness_draw, r_draw.p1.y, r_draw.p2.x, r_draw.p2.y, c.border_color, TRUE);
 
                         Rect<int> r_inner = r_draw.Expand(-2 * thickness_draw);
-                        ::DrawBox(r_inner.x1, r_inner.y1, r_inner.x2, r_inner.y1 + thickness_draw, c.border_color, TRUE);
-                        ::DrawBox(r_inner.x1, r_inner.y2 - thickness_draw, r_inner.x2, r_inner.y2, c.border_color, TRUE);
-                        ::DrawBox(r_inner.x1, r_inner.y1, r_inner.x1 + thickness_draw, r_inner.y2, c.border_color, TRUE);
-                        ::DrawBox(r_inner.x2 - thickness_draw, r_inner.y1, r_inner.x2, r_inner.y2, c.border_color, TRUE);
+                        ::DrawBox(r_inner.p1.x, r_inner.p1.y, r_inner.p2.x, r_inner.p1.y + thickness_draw, c.border_color, TRUE);
+                        ::DrawBox(r_inner.p1.x, r_inner.p2.y - thickness_draw, r_inner.p2.x, r_inner.p2.y, c.border_color, TRUE);
+                        ::DrawBox(r_inner.p1.x, r_inner.p1.y, r_inner.p1.x + thickness_draw, r_inner.p2.y, c.border_color, TRUE);
+                        ::DrawBox(r_inner.p2.x - thickness_draw, r_inner.p1.y, r_inner.p2.x, r_inner.p2.y, c.border_color, TRUE);
                     }
                     break;
                     case BorderShape::Pill: {
-                        int radius = (r_draw.y2 - r_draw.y1) / 2;
+                        int radius = (r_draw.p2.y - r_draw.p1.y) / 2;
                         for (int i = 0; i < thickness_draw; ++i) {
-                            ::DrawRoundRect(r_draw.x1 + i, r_draw.y1 + i, r_draw.x2 - i, r_draw.y2 - i,
+                            ::DrawRoundRect(r_draw.p1.x + i, r_draw.p1.y + i, r_draw.p2.x - i, r_draw.p2.y - i,
                                             radius, radius, c.border_color, FALSE);
                         }
                     }
                     break;
                     case BorderShape::Underline:
-                        ::DrawBox(r_draw.x1, r_draw.y2 - thickness_draw, r_draw.x2, r_draw.y2, c.border_color, TRUE);
+                        ::DrawBox(r_draw.p1.x, r_draw.p2.y - thickness_draw, r_draw.p2.x, r_draw.p2.y, c.border_color, TRUE);
                         break;
                     case BorderShape::Null:
                     default:
                         break;
                     }
 
-                    const int draw_x = (r_draw.x1 + r_draw.x2) / 2 - ::GetDrawStringWidth(c.text.c_str(), -1) / 2;
-                    const int draw_y = (r_draw.y1 + r_draw.y2) / 2 - ::GetFontSize() / 2;
+                    const int draw_x = (r_draw.p1.x + r_draw.p2.x) / 2 - ::GetDrawStringWidth(c.text.c_str(), -1) / 2;
+                    const int draw_y = (r_draw.p1.y + r_draw.p2.y) / 2 - ::GetFontSize() / 2;
                     ::DrawString(draw_x, draw_y, c.text.c_str(), c.text_color);
                 },
                 [this](const DrawGraphCmd& c) {
-                    Point<int> p_draw = c.p;
+                    Vec2i p_draw = c.pos;
                     if (camera_enabled_) {
-                        p_draw.x = static_cast<int>((c.p.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p_draw.y = static_cast<int>((c.p.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        p_draw.x = static_cast<int>((c.pos.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        p_draw.y = static_cast<int>((c.pos.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
                     }
                     ::DrawGraph(p_draw.x, p_draw.y, c.handle, c.trans_flag ? TRUE : FALSE);
                 },
                 [this](const DrawRotaGraphCmd& c) {
-                    Point<int> p_draw = c.p;
+                    Vec2i p_draw = c.center;
                     double scale_draw = c.ext_rate;
                     if (camera_enabled_) {
-                        p_draw.x = static_cast<int>((c.p.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p_draw.y = static_cast<int>((c.p.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        p_draw.x = static_cast<int>((c.center.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        p_draw.y = static_cast<int>((c.center.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
                         scale_draw = c.ext_rate * camera_scale_;
                     }
                     ::DrawRotaGraph(p_draw.x, p_draw.y, scale_draw, c.angle, c.graph_handle, c.trans_flag ? TRUE : FALSE);
                 },
                 [this](const DrawRectRotaGraphCmd& c) {
-                    Point<int> p_draw = c.p;
+                    Vec2i p_draw = c.center;
                     double scale_draw = c.ext_rate;
                     if (camera_enabled_) {
-                        p_draw.x = static_cast<int>((c.p.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p_draw.y = static_cast<int>((c.p.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
+                        p_draw.x = static_cast<int>((c.center.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
+                        p_draw.y = static_cast<int>((c.center.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
                         scale_draw = c.ext_rate * camera_scale_;
                     }
-                    int src_w = c.src.x2 - c.src.x1;
-                    int src_h = c.src.y2 - c.src.y1;
-                    ::DrawRectRotaGraph(p_draw.x, p_draw.y, c.src.x1, c.src.y1, src_w, src_h,
+                    int src_w = c.src.Width();
+                    int src_h = c.src.Height();
+                    ::DrawRectRotaGraph(p_draw.x, p_draw.y, c.src.p1.x, c.src.p1.y, src_w, src_h,
                                         scale_draw, c.angle, c.graph_handle,
                                         c.trans_flag ? TRUE : FALSE, c.turn_flag ? TRUE : FALSE);
                 },
@@ -242,9 +242,16 @@ namespace ab {
             if (handle >= 0) return ::DeleteGraph(handle) == 0;
             return false;
         }
-        void GetGraphSize(int handle, int* out_width, int* out_height) const override {
-            if (handle >= 0 && out_width && out_height) {
-                ::GetGraphSize(handle, out_width, out_height);
+        Vec2i GetGraphSize(int handle) const override {
+            Vec2i size{0, 0};
+            if (handle >= 0) {
+                ::GetGraphSize(handle, &size.x, &size.y);
+            }
+            return size;
+        }
+        void GetGraphSize(int handle, Vec2i* out_size) const override {
+            if (handle >= 0 && out_size != nullptr) {
+                ::GetGraphSize(handle, &out_size->x, &out_size->y);
             }
         }
 
@@ -252,23 +259,26 @@ namespace ab {
         void DrawBox(Rect<int> r, uint32_t color, bool fill_flag) override {
             PushCommand(DrawBoxCmd{r, color, fill_flag});
         }
-        void DrawCircle(Point<int> p, int radius, uint32_t color, bool fill_flag) override {
-            PushCommand(DrawCircleCmd{p, radius, color, fill_flag});
+        void DrawBox(Vec2i p1, Vec2i p2, uint32_t color, bool fill_flag) override {
+            PushCommand(DrawBoxCmd{Rect<int>{p1, p2}, color, fill_flag});
         }
-        void DrawLine(Point<int> p1, Point<int> p2, uint32_t color, int thickness) override {
+        void DrawCircle(Vec2i center, int radius, uint32_t color, bool fill_flag) override {
+            PushCommand(DrawCircleCmd{center, radius, color, fill_flag});
+        }
+        void DrawLine(Vec2i p1, Vec2i p2, uint32_t color, int thickness) override {
             PushCommand(DrawLineCmd{p1, p2, color, thickness});
         }
-        void DrawString(Point<int> p, const wchar_t* text, uint32_t color) override {
-            PushCommand(DrawStringCmd{p, text, color});
+        void DrawString(Vec2i pos, const wchar_t* text, uint32_t color) override {
+            PushCommand(DrawStringCmd{pos, text ? text : L"", color});
         }
-        void DrawGraph(Point<int> p, int handle, bool trans_flag) override {
-            PushCommand(DrawGraphCmd{p, handle, trans_flag});
+        void DrawGraph(Vec2i pos, int handle, bool trans_flag) override {
+            PushCommand(DrawGraphCmd{pos, handle, trans_flag});
         }
-        void DrawRotaGraph(Point<int> p, double ext_rate, double angle, int graph_handle, bool trans_flag) override {
-            PushCommand(DrawRotaGraphCmd{p, ext_rate, angle, graph_handle, trans_flag});
+        void DrawRotaGraph(Vec2i center, double ext_rate, double angle, int graph_handle, bool trans_flag) override {
+            PushCommand(DrawRotaGraphCmd{center, ext_rate, angle, graph_handle, trans_flag});
         }
-        void DrawRectRotaGraph(Point<int> p, Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) override {
-            PushCommand(DrawRectRotaGraphCmd{p, src, ext_rate, angle, graph_handle, trans_flag, turn_flag});
+        void DrawRectRotaGraph(Vec2i center, Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) override {
+            PushCommand(DrawRectRotaGraphCmd{center, src, ext_rate, angle, graph_handle, trans_flag, turn_flag});
         }
         void DrawHollowBox(Rect<int> r, int thickness, uint32_t color) override {
             PushCommand(DrawHollowBoxCmd{r, thickness, color});

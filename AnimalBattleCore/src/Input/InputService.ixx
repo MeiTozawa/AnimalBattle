@@ -38,17 +38,18 @@ namespace ab {
         virtual void ClearActions(ContextId context) = 0;
 
         // --- マウス・デバイス照会 ---
-        virtual Point<int> GetMousePosition() const noexcept = 0;
-        virtual Point<int> GetMouseDelta() const noexcept = 0;
+        virtual Vec2i GetMousePosition() const noexcept = 0;
+        virtual Vec2i GetMouseDelta() const noexcept = 0;
         virtual int GetMouseWheelDelta() const noexcept = 0;
         virtual bool IsMouseOver(const Rect<int>& rect) const noexcept = 0;
-        virtual Point<int> OnMouseClick(ActionId action) const = 0;
+        virtual bool IsMouseOver(Vec2i p1, Vec2i p2) const noexcept = 0;
+        virtual Vec2i OnMouseClick(ActionId action) const = 0;
         virtual InputDevice GetActiveDevice() const noexcept = 0;
 
         // --- 低レベルキー・パッド照会 ---
         virtual bool CheckHitKey(int key_code) const = 0;
         virtual int GetJoypadInputState(int input_type) const = 0;
         virtual int GetJoypadNum() const = 0;
-        virtual void GetMousePoint(int* out_x, int* out_y) const = 0;
+        virtual void GetMousePoint(Vec2i* out_pos) const = 0;
     };
 } // namespace ab

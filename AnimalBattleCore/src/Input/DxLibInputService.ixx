@@ -77,8 +77,8 @@ int GetPadButtonMask(InputButton button) noexcept {
 
         int current_mouse_buttons_ = 0;
         int previous_mouse_buttons_ = 0;
-        Point<int> current_mouse_pos_{0, 0};
-        Point<int> previous_mouse_pos_{0, 0};
+        Vec2i current_mouse_pos_{0, 0};
+        Vec2i previous_mouse_pos_{0, 0};
         int mouse_wheel_delta_ = 0;
 
         int current_pad_state_ = 0;
@@ -253,13 +253,13 @@ int GetPadButtonMask(InputButton button) noexcept {
         }
 
         // --- マウス・デバイス照会 ---
-        Point<int> GetMousePosition() const noexcept override {
+        Vec2i GetMousePosition() const noexcept override {
             return current_mouse_pos_;
         }
 
-        Point<int> GetMouseDelta() const noexcept override {
-            return Point<int>{current_mouse_pos_.x - previous_mouse_pos_.x,
-                              current_mouse_pos_.y - previous_mouse_pos_.y};
+        Vec2i GetMouseDelta() const noexcept override {
+            return Vec2i{current_mouse_pos_.x - previous_mouse_pos_.x,
+                         current_mouse_pos_.y - previous_mouse_pos_.y};
         }
 
         int GetMouseWheelDelta() const noexcept override {
@@ -267,14 +267,18 @@ int GetPadButtonMask(InputButton button) noexcept {
         }
 
         bool IsMouseOver(const Rect<int>& rect) const noexcept override {
-            return current_mouse_pos_.In(rect);
+            return rect.Contains(current_mouse_pos_);
         }
 
-        Point<int> OnMouseClick(ActionId action) const override {
+        bool IsMouseOver(Vec2i p1, Vec2i p2) const noexcept override {
+            return Rect<int>{p1, p2}.Contains(current_mouse_pos_);
+        }
+
+        Vec2i OnMouseClick(ActionId action) const override {
             if (IsPressed(action)) {
                 return current_mouse_pos_;
             }
-            return Point<int>{-1, -1};
+            return Vec2i{-1, -1};
         }
 
         InputDevice GetActiveDevice() const noexcept override {
@@ -294,9 +298,9 @@ int GetPadButtonMask(InputButton button) noexcept {
             return ::GetJoypadNum();
         }
 
-        void GetMousePoint(int* out_x, int* out_y) const override {
-            if (out_x && out_y) {
-                ::GetMousePoint(out_x, out_y);
+        void GetMousePoint(Vec2i* out_pos) const override {
+            if (out_pos != nullptr) {
+                ::GetMousePoint(&out_pos->x, &out_pos->y);
             }
         }
     };
