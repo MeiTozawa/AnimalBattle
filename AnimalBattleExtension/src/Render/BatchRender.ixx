@@ -11,7 +11,7 @@ export module BatchRender;
 export import RenderService;
 export import PhysicsTypes;
 
-export namespace ab::extension::render {
+export namespace ab::extension {
 
 /// @brief 大量の円（弾幕・パーティクル等）に対して、SIMD 並列視口カリングと一括描画を実行します。
 /// @param transforms Transform 連続メモリ配列
@@ -173,4 +173,4 @@ void BatchDrawBossBullets(
     }
 }
 
-}  // namespace ab::extension::render
+}  // namespace ab::extension

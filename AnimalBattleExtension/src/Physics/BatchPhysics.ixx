@@ -7,7 +7,7 @@ export module BatchPhysics;
 
 export import PhysicsTypes;
 
-export namespace ab::extension::physics {
+export namespace ab::extension {
 
 /// @brief 大規模な弾丸 Transform および Velocity 配列に対して、SIMD / OpenMP 並列による一括物理移動と画面外境界判定を実行します。
 /// @param transforms Transform 連続メモリ配列
@@ -46,4 +46,4 @@ void BatchBulletMovement(
     }
 }
 
-}  // namespace ab::extension::physics
+}  // namespace ab::extension

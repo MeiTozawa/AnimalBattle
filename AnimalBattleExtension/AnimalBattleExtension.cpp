@@ -1,7 +1,9 @@
 #include <cstdint>
 
-import BatchPhysics;
 import BatchRender;
+import BatchPhysics;
+
+using namespace ab::extension;
 
 extern "C" {
 
@@ -13,7 +15,7 @@ __declspec(dllexport) void Extension_BatchBulletMovement(
     float min_x, float max_x, float min_y, float max_y,
     uint8_t* out_despawn_flags) noexcept {
     try {
-        ab::extension::physics::BatchBulletMovement(
+        BatchBulletMovement(
             transforms, velocities, count, delta_time,
             min_x, max_x, min_y, max_y, out_despawn_flags);
     } catch (...) {
@@ -28,7 +30,7 @@ __declspec(dllexport) void Extension_BatchDrawCircles(
     bool fill,
     int clip_min_x, int clip_max_x, int clip_min_y, int clip_max_y) noexcept {
     try {
-        ab::extension::render::BatchDrawCircles(
+        BatchDrawCircles(
             transforms, count, radius, color, fill,
             clip_min_x, clip_max_x, clip_min_y, clip_max_y);
     } catch (...) {
@@ -48,7 +50,7 @@ __declspec(dllexport) void Extension_BatchDrawPlayerBullets(
     unsigned int trail_color,
     int clip_min_x, int clip_max_x, int clip_min_y, int clip_max_y) noexcept {
     try {
-        ab::extension::render::BatchDrawPlayerBullets(
+        BatchDrawPlayerBullets(
             transforms, velocities, count,
             outer_radius, outer_color,
             inner_radius, inner_color,
@@ -70,7 +72,7 @@ __declspec(dllexport) void Extension_BatchDrawBossBullets(
     unsigned int core_color,
     int clip_min_x, int clip_max_x, int clip_min_y, int clip_max_y) noexcept {
     try {
-        ab::extension::render::BatchDrawBossBullets(
+        BatchDrawBossBullets(
             transforms, count,
             radius, fill_color, outline_color,
             outline_padding, core_radius_ratio, core_min_radius, core_color,
