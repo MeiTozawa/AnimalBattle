@@ -96,6 +96,8 @@ namespace ab {
         Underline,
     };
 
+    // --- Render Commands ---
+
     export struct DrawStringCmd {
         Point<int> p;
         std::wstring text;
@@ -106,6 +108,20 @@ namespace ab {
         Rect<int> r;
         uint32_t color;
         bool fill_flag;
+    };
+
+    export struct DrawCircleCmd {
+        Point<int> p;
+        int radius;
+        uint32_t color;
+        bool fill_flag;
+    };
+
+    export struct DrawLineCmd {
+        Point<int> p1;
+        Point<int> p2;
+        uint32_t color;
+        int thickness;
     };
 
     export struct DrawHollowBoxCmd {
@@ -200,6 +216,8 @@ namespace ab {
     export using RenderCommand = std::variant<
         DrawStringCmd,
         DrawBoxCmd,
+        DrawCircleCmd,
+        DrawLineCmd,
         DrawHollowBoxCmd,
         DrawRoundRectFrameCmd,
         DrawStringWithBorderCmd,
