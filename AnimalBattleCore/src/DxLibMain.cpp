@@ -139,7 +139,7 @@ extern "C" {
     __declspec(dllexport) bool Input_IsPressed(int action) noexcept {
         try {
             if (g_input_service != nullptr) {
-                return g_input_service->IsPressed(static_cast<ab::InputAction>(action));
+                return g_input_service->IsPressed(action);
             }
             return false;
         } catch (...) {
@@ -150,7 +150,7 @@ extern "C" {
     __declspec(dllexport) bool Input_IsHolding(int action) noexcept {
         try {
             if (g_input_service != nullptr) {
-                return g_input_service->IsHolding(static_cast<ab::InputAction>(action));
+                return g_input_service->IsHolding(action);
             }
             return false;
         } catch (...) {
@@ -161,7 +161,7 @@ extern "C" {
     __declspec(dllexport) bool Input_IsReleased(int action) noexcept {
         try {
             if (g_input_service != nullptr) {
-                return g_input_service->IsReleased(static_cast<ab::InputAction>(action));
+                return g_input_service->IsReleased(action);
             }
             return false;
         } catch (...) {
@@ -205,7 +205,7 @@ extern "C" {
     __declspec(dllexport) void Input_PushContext(int context) noexcept {
         try {
             if (g_input_service != nullptr) {
-                g_input_service->PushContext(static_cast<ab::InputContext>(context));
+                g_input_service->PushContext(context);
             }
         } catch (...) {
         }
@@ -223,7 +223,7 @@ extern "C" {
     __declspec(dllexport) void Input_ClearAndSetContext(int context) noexcept {
         try {
             if (g_input_service != nullptr) {
-                g_input_service->ClearAndSetContext(static_cast<ab::InputContext>(context));
+                g_input_service->ClearAndSetContext(context);
             }
         } catch (...) {
         }
@@ -238,8 +238,8 @@ extern "C" {
                     button_vec.push_back(static_cast<ab::InputButton>(buttons[i]));
                 }
                 g_input_service->BindAction(
-                    static_cast<ab::InputContext>(context),
-                    static_cast<ab::InputAction>(action),
+                    context,
+                    action,
                     std::move(button_vec)
                 );
             }
@@ -251,8 +251,8 @@ extern "C" {
         try {
             if (g_input_service != nullptr) {
                 g_input_service->AddActionButton(
-                    static_cast<ab::InputContext>(context),
-                    static_cast<ab::InputAction>(action),
+                    context,
+                    action,
                     static_cast<ab::InputButton>(button)
                 );
             }
@@ -263,7 +263,7 @@ extern "C" {
     __declspec(dllexport) void Input_ClearActions(int context) noexcept {
         try {
             if (g_input_service != nullptr) {
-                g_input_service->ClearActions(static_cast<ab::InputContext>(context));
+                g_input_service->ClearActions(context);
             }
         } catch (...) {
         }
@@ -272,9 +272,9 @@ extern "C" {
     __declspec(dllexport) int Input_GetCurrentContext() noexcept {
         try {
             if (g_input_service != nullptr) {
-                return static_cast<int>(g_input_service->GetCurrentContext());
+                return g_input_service->GetCurrentContext();
             }
-            return static_cast<int>(ab::InputContext::InGame);
+            return ab::DEFAULT_CONTEXT;
         } catch (...) {
             return 0;
         }

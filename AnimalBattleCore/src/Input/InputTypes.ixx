@@ -7,31 +7,14 @@ export module InputTypes;
 export import RenderTypes;
 
 namespace ab {
-    /// @brief ゲーム内で使用される抽象入力アクション
-    export enum class InputAction {
-        Up,          ///< 上移動 / 上選択
-        Down,        ///< 下移動 / 下選択
-        Left,        ///< 左移動 / 左選択
-        Right,       ///< 右移動 / 右選択
-        Jump,        ///< ジャンプ
-        Attack,      ///< 通常攻撃 / 射撃
-        Skill,       ///< スキル / 特殊アクション
-        Confirm,     ///< 決定 / アクション
-        Cancel,      ///< キャンセル / 戻る
-        ToggleMenu,  ///< メニュー開閉 / ポーズ
-        MouseClick,  ///< マウスクリック
-        DrawCard,    ///< カードを引く / 特殊操作
-        Restart,     ///< リスタート
-    };
+    /// @brief 汎用入力アクション識別子 (C# / 上位層で任意のアクション ID を割り当て可能)
+    export using ActionId = int;
 
-    /// @brief 入力コンテキスト（入力状態の分離スタック用）
-    export enum class InputContext {
-        InGame,         ///< ゲームプレイ中
-        Menu,           ///< メニュー / UI 操作中
-        Cutscene,       ///< イベント / カットシーン中
-        Pause,          ///< ポーズ中
-        VolumeControl,  ///< 音量調整等のサブメニュー
-    };
+    /// @brief 汎用入力コンテキスト識別子 (C# / 上位層で任意のコンテキスト ID を割り当て可能)
+    export using ContextId = int;
+
+    /// @brief デフォルトのベースコンテキスト ID
+    export constexpr ContextId DEFAULT_CONTEXT = 0;
 
     /// @brief 最後に検出されたアクティブな入力デバイス種別
     export enum class InputDevice {

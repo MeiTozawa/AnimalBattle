@@ -33,9 +33,9 @@ namespace ab {
 
         InputDevice active_device_ = InputDevice::Keyboard;
 
-        std::vector<InputContext> context_stack_{InputContext::InGame};
+        std::vector<ContextId> context_stack_{DEFAULT_CONTEXT};
 
-        std::unordered_map<InputContext, std::unordered_map<InputAction, std::vector<InputButton>>> action_mappings_{};
+        std::unordered_map<ContextId, std::unordered_map<ActionId, std::vector<InputButton>>> action_mappings_{};
 
     public:
         InputService() = default;
@@ -80,21 +80,21 @@ namespace ab {
         }
 
         /// @brief 指定したアクションがこのフレームで押されたか（立ち上がりエッジ）を判定する
-        bool IsPressed(InputAction action) const {
+        bool IsPressed(ActionId action) const {
             return CheckActionState(action, [this](InputButton button) {
                 return IsButtonPressed(button);
             });
         }
 
         /// @brief 指定したアクションが現在押され続けているか（ホールド中）を判定する
-        bool IsHolding(InputAction action) const {
+        bool IsHolding(ActionId action) const {
             return CheckActionState(action, [this](InputButton button) {
                 return IsButtonHolding(button);
             });
         }
 
         /// @brief 指定したアクションがこのフレームで離されたか（立ち下がりエッジ）を判定する
-        bool IsReleased(InputAction action) const {
+        bool IsReleased(ActionId action) const {
             return CheckActionState(action, [this](InputButton button) {
                 return IsButtonReleased(button);
             });
@@ -154,7 +154,7 @@ namespace ab {
         }
 
         /// @brief 入力コンテキストをスタックにプッシュする（同一コンテキストの重複プッシュは無視）
-        void PushContext(InputContext context) {
+        void PushContext(ContextId context) {
             if (context_stack_.empty() || context_stack_.back() != context) {
                 context_stack_.push_back(context);
             }
@@ -168,28 +168,28 @@ namespace ab {
         }
 
         /// @brief コンテキストスタックをクリアし、指定したコンテキストを唯一のものとして設定する
-        void ClearAndSetContext(InputContext context) {
+        void ClearAndSetContext(ContextId context) {
             context_stack_.clear();
             context_stack_.push_back(context);
         }
 
         /// @brief 現在アクティブな入力コンテキストを取得する
-        InputContext GetCurrentContext() const noexcept {
-            return context_stack_.empty() ? InputContext::InGame : context_stack_.back();
+        ContextId GetCurrentContext() const noexcept {
+            return context_stack_.empty() ? DEFAULT_CONTEXT : context_stack_.back();
         }
 
         /// @brief コンテキストのアクションに対するボタン割り当てを設定する
-        void BindAction(InputContext context, InputAction action, std::vector<InputButton> buttons) {
+        void BindAction(ContextId context, ActionId action, std::vector<InputButton> buttons) {
             action_mappings_[context][action] = std::move(buttons);
         }
 
         /// @brief コンテキストのアクションにボタンを追加する
-        void AddActionButton(InputContext context, InputAction action, InputButton button) {
+        void AddActionButton(ContextId context, ActionId action, InputButton button) {
             action_mappings_[context][action].push_back(button);
         }
 
         /// @brief コンテキストの全マッピングをクリアする
-        void ClearActions(InputContext context) {
+        void ClearActions(ContextId context) {
             action_mappings_.erase(context);
         }
 
@@ -217,7 +217,7 @@ namespace ab {
         }
 
         /// @brief アクションが押された瞬間のマウス座標を返す（押されていない場合は {-1, -1}）
-        Point<int> OnMouseClick(InputAction action) const {
+        Point<int> OnMouseClick(ActionId action) const {
             if (IsPressed(action)) {
                 return current_mouse_pos_;
             }
@@ -231,8 +231,8 @@ namespace ab {
 
     private:
         template <typename Func>
-        bool CheckActionState(InputAction action, Func&& evaluator) const {
-            InputContext current_context = GetCurrentContext();
+        bool CheckActionState(ActionId action, Func&& evaluator) const {
+            ContextId current_context = GetCurrentContext();
             auto context_it = action_mappings_.find(current_context);
             if (context_it == action_mappings_.end()) {
                 return false;
