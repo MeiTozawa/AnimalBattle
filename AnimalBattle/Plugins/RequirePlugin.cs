@@ -1,53 +1,28 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 using Flecs.NET.Core;
-using AnimalBattle.Components;
 
 namespace AnimalBattle.Plugins;
 
 /// <summary>
-/// Bevy の Required Components 属性 (<c>[Require&lt;T&gt;]</c>) をリフレクションによりスキャンし、
-/// エンティティ作成時の依存関係を Flecs.NET の <c>Add&lt;T&gt;()</c> により自動補完するコアプラグイン。
+/// Bevy の Required Components 属性 (<c>[Require&lt;T&gt;]</c>) が付与された型に対し、
+/// Flecs.NET の <c>With</c> トレイトによる必須コンポーネント自動補完を登録するコアプラグイン。
 /// </summary>
+/// <remarks>
+/// 対象型の走査は <c>RequireComponentGenerator</c> (Incremental Source Generator) が
+/// コンパイル時に行い、<c>RequireComponentRegistry.g.cs</c> として静的なジェネリック呼び出しの
+/// みで構成される登録コードを自動生成します。このプロジェクトは <c>PublishAot</c> を有効化しているため、
+/// 実行時リフレクション (<c>Assembly.GetTypes()</c> / <c>MethodInfo.MakeGenericMethod()</c>) による
+/// 走査はトリミング / Native AOT 環境で動作が保証されません (IL2026 / IL2060 / IL3050)。
+/// <c>[Require&lt;T&gt;]</c> を新しい型に付与するだけで、本プラグインを含めどこも手動で
+/// 変更する必要はありません。
+/// </remarks>
 public class RequirePlugin : IPlugin
 {
     /// <summary>
-    /// アセンブリ内の <see cref="RequireAttribute"/> 付き型を走査し、依存コンポーネントを Flecs.NET ワールドへ登録します。
+    /// コンパイル時に自動生成された Require 関係を Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="app">構築対象の App コンテナ</param>
     public void Build(App app)
     {
-        World world = app.World;
-
-        Assembly assembly = Assembly.GetExecutingAssembly();
-        foreach (Type type in assembly.GetTypes())
-        {
-            IEnumerable<RequireAttribute> attrs = type.GetCustomAttributes<RequireAttribute>(inherit: false);
-            foreach (RequireAttribute attr in attrs)
-            {
-                RegisterRequiredComponent(world, type, attr.RequiredType);
-            }
-        }
-    }
-
-    private static void RegisterRequiredComponent(World world, Type targetType, Type requiredType)
-    {
-        try
-        {
-            MethodInfo? method = Array.Find(
-                typeof(World).GetMethods(),
-                m => m.Name == "Component" && m.IsGenericMethodDefinition && m.GetGenericArguments().Length == 1 && m.GetParameters().Length == 0);
-
-            if (method != null)
-            {
-                MethodInfo generic = method.MakeGenericMethod(targetType);
-                generic.Invoke(world, null);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[RequirePlugin 警告] 依存関係の登録中にエラーが発生しました: {ex.Message}");
-        }
+        RequireComponentRegistry.RegisterAll(app.World);
     }
 }
