@@ -14,7 +14,8 @@ public static class FadeEffectSystem
     /// フェード演出システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddFadeEffectSystem(this World world)
     {
         world.System<FadeEffect>("FadeEffectSystem")
              .Kind(Ecs.OnUpdate)
@@ -25,5 +26,7 @@ public static class FadeEffectSystem
                  float factor = EasingMath.Evaluate(fade.Ease, progress);
                  fade.CurrentAlpha = fade.StartAlpha + (fade.EndAlpha - fade.StartAlpha) * factor;
              });
+
+        return world;
     }
 }

@@ -17,7 +17,8 @@ public static class HudRenderSystem
     /// HUD 描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddHudRenderSystem(this World world)
     {
         Query<DoubleJump> doubleJumpQuery =
             world.QueryBuilder<DoubleJump>()
@@ -178,6 +179,8 @@ public static class HudRenderSystem
                      }
                  });
              });
+
+        return world;
     }
 
     private static string GetFallbackStateName(BossStateKind state)

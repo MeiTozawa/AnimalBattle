@@ -11,7 +11,8 @@ public static class SlashEffectSystem
     /// スラッシュ演出システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddSlashEffectSystem(this World world)
     {
         world.System<Animation>("SlashEffectSystem")
              .With<EffectTag>()
@@ -23,5 +24,7 @@ public static class SlashEffectSystem
                      it.Entity(i).Destruct();
                  }
              });
+
+        return world;
     }
 }

@@ -15,7 +15,8 @@ public static class SpriteAnimationSystem
     /// アニメーション駆動システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddSpriteAnimationSystem(this World world)
     {
         world.System<Animation, Sprite>("SpriteAnimationSystem")
              .Kind(Ecs.OnUpdate)
@@ -35,5 +36,7 @@ public static class SpriteAnimationSystem
                      anim.IsFinished = isFinished;
                  }
              });
+
+        return world;
     }
 }

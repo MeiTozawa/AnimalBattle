@@ -18,7 +18,8 @@ public static class PlayerMovementSystem
     /// プレイヤー移動・跳躍・地形衝突システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddPlayerMovementSystem(this World world)
     {
         Query<Transform, CollisionBox> platformQuery =
             world.QueryBuilder<Transform, CollisionBox>()
@@ -140,5 +141,7 @@ public static class PlayerMovementSystem
                      anim.Play("Idle");
                  }
              });
+
+        return world;
     }
 }

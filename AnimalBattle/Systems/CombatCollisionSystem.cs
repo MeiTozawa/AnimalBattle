@@ -16,7 +16,8 @@ public static class CombatCollisionSystem
     /// 戦闘衝突判定システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddCombatCollisionSystem(this World world)
     {
         Query<Transform, Hurtbox, Health> hurtboxQuery =
             world.QueryBuilder<Transform, Hurtbox, Health>()
@@ -114,5 +115,7 @@ public static class CombatCollisionSystem
                      atkEntity.Destruct();
                  }
              });
+
+        return world;
     }
 }

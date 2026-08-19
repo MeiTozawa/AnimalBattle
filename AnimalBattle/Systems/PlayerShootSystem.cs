@@ -17,7 +17,8 @@ public static class PlayerShootSystem
     /// プレイヤー射撃システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddPlayerShootSystem(this World world)
     {
         world.System<Transform, Health, PlayerState, Sprite>("PlayerShootSystem")
              .With<PlayerTag>()
@@ -103,5 +104,7 @@ public static class PlayerShootSystem
                      playerState.ShootCooldown = pCfg.ShootCooldown;
                  }
              });
+
+        return world;
     }
 }

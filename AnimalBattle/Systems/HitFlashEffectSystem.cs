@@ -11,7 +11,8 @@ public static class HitFlashEffectSystem
     /// 受撃フラッシュ演出システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddHitFlashEffectSystem(this World world)
     {
         world.System<HitFlashEffect>("HitFlashEffectSystem")
              .Kind(Ecs.OnUpdate)
@@ -26,5 +27,7 @@ public static class HitFlashEffectSystem
                      }
                  }
              });
+
+        return world;
     }
 }

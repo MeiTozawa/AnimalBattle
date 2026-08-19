@@ -18,7 +18,8 @@ public static class BossAiSystem
     /// Boss AI および弾幕制御システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddBossAiSystem(this World world)
     {
         Query<Transform, Health> playerQuery =
             world.QueryBuilder<Transform, Health>()
@@ -242,6 +243,8 @@ public static class BossAiSystem
                          break;
                  }
              });
+
+        return world;
     }
 
     private static PhaseFsmConfig GetFallbackPhaseConfig(int phase, BossConfig bCfg)

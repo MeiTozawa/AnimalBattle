@@ -15,15 +15,16 @@ public class BulletPlugin : IPlugin
     /// <param name="app">構築対象の App コンテナ</param>
     public void Build(App app)
     {
-        PlayerMovementSystem.Register(app.World);
-        SpriteAnimationSystem.Register(app.World);
-        PlayerShootSystem.Register(app.World);
-        BossAiSystem.Register(app.World);
-        BulletPhysicsSystem.Register(app.World);
-        CombatCollisionSystem.Register(app.World);
-        RestartSystem.Register(app.World);
-        WorldRenderSystem.Register(app.World);
-        HudRenderSystem.Register(app.World);
-        DebugRenderSystem.Register(app.World);
+        app.World
+           .AddPlayerMovementSystem()
+           .AddSpriteAnimationSystem()
+           .AddPlayerShootSystem()
+           .AddBossAiSystem()
+           .AddBulletPhysicsSystem()
+           .AddCombatCollisionSystem()
+           .AddRestartSystem()
+           .AddWorldRenderSystem()
+           .AddHudRenderSystem()
+           .AddDebugRenderSystem();
     }
 }

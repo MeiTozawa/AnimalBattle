@@ -15,7 +15,8 @@ public static class RestartSystem
     /// リスタートシステムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddRestartSystem(this World world)
     {
         Query playerBulletsQuery =
             world.QueryBuilder()
@@ -95,5 +96,7 @@ public static class RestartSystem
                      });
                  }
              });
+
+        return world;
     }
 }

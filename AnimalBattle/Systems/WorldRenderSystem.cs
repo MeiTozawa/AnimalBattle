@@ -17,7 +17,8 @@ public static class WorldRenderSystem
     /// ワールド描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddWorldRenderSystem(this World world)
     {
         Query<Transform, CollisionBox> platformQuery =
             world.QueryBuilder<Transform, CollisionBox>()
@@ -249,6 +250,8 @@ public static class WorldRenderSystem
                      }
                  });
              });
+
+        return world;
     }
 
     private static Color GetFallbackAuraColor(int phase, Color defaultColor)

@@ -14,7 +14,8 @@ public static class BulletPhysicsSystem
     /// 弾物理システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public static void Register(World world)
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddBulletPhysicsSystem(this World world)
     {
         world.System<Transform, Velocity>("PlayerBulletMovementSystem")
              .With<PlayerBulletTag>()
@@ -91,5 +92,7 @@ public static class BulletPhysicsSystem
                      }
                  }
              });
+
+        return world;
     }
 }
