@@ -1,9 +1,9 @@
 using System;
 using System.Drawing;
 using Flecs.NET.Core;
-using AnimalBattle.Components;
+using AnimalBattle.Bindings;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
+using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Systems;
 
@@ -20,6 +20,11 @@ public static class BossAiSystem
     /// <param name="world">登録先の Flecs.NET ワールド</param>
     public static void Register(World world)
     {
+        Query<Transform, Health> playerQuery =
+            world.QueryBuilder<Transform, Health>()
+                 .With<PlayerTag>()
+                 .Build();
+
         world.System<Transform, Health, BossStats, BossStateMachine, Sprite>("BossAiSystem")
              .With<BossTag>()
              .Kind(Ecs.OnUpdate)
@@ -34,15 +39,12 @@ public static class BossAiSystem
                  float playerY = pCfg.SpawnY;
                  bool isPlayerAlive = false;
 
-                 world.QueryBuilder<Transform, Health>()
-                      .With<PlayerTag>()
-                      .Build()
-                      .Each((ref Transform pTrans, ref Health pHealth) =>
-                      {
-                          playerX = pTrans.X;
-                          playerY = pTrans.Y;
-                          isPlayerAlive = pHealth.IsAlive;
-                      });
+                 playerQuery.Each((ref Transform pTrans, ref Health pHealth) =>
+                 {
+                     playerX = pTrans.X;
+                     playerY = pTrans.Y;
+                     isPlayerAlive = pHealth.IsAlive;
+                 });
 
                  if (stats.HitFlashTimer > 0.0f)
                  {
@@ -84,11 +86,22 @@ public static class BossAiSystem
 
                  if (!isDiving)
                  {
-                     float targetBaseX = stats.BaseX + MathF.Sin(stats.HoverTimer * currentPhaseCfg.HoverSpeedX) * currentPhaseCfg.HoverAmpX + (playerX - stats.BaseX) * currentPhaseCfg.PlayerPursuitWeight;
-                     float targetBaseY = currentPhaseCfg.HoverBaseY + MathF.Cos(stats.HoverTimer * currentPhaseCfg.HoverSpeedY) * currentPhaseCfg.HoverAmpY;
-                     float lerpFactor = MathF.Min(1.0f, currentPhaseCfg.HoverLerpSpeed * dt);
-                     trans.X += (targetBaseX - trans.X) * lerpFactor;
-                     trans.Y += (targetBaseY - trans.Y) * lerpFactor;
+                     Vec2f curPos = trans.Position;
+                     Vec2f basePos = new(stats.BaseX, currentPhaseCfg.HoverBaseY);
+                     Vec2f playerPos = new(playerX, playerY);
+                     NativeExtensionBindings.Extension_CalculateBossHoverPosition(
+                         in curPos,
+                         in basePos,
+                         in playerPos,
+                         stats.HoverTimer,
+                         currentPhaseCfg.HoverSpeedX,
+                         currentPhaseCfg.HoverSpeedY,
+                         currentPhaseCfg.HoverAmpX,
+                         currentPhaseCfg.HoverAmpY,
+                         currentPhaseCfg.PlayerPursuitWeight,
+                         currentPhaseCfg.HoverLerpSpeed,
+                         dt,
+                         out trans.Position);
                  }
 
                  switch (fsm.CurrentState)
@@ -182,9 +195,14 @@ public static class BossAiSystem
                          {
                              if (fsm.StateTimer >= fsm.StateDuration * currentPhaseCfg.RecoverDelayRatio)
                              {
-                                 float returnSpeed = currentPhaseCfg.RecoverFlybackSpeed * dt;
-                                 trans.X += (stats.BaseX - trans.X) * MathF.Min(1.0f, returnSpeed);
-                                 trans.Y += (currentPhaseCfg.HoverBaseY - trans.Y) * MathF.Min(1.0f, returnSpeed);
+                                 Vec2f curPos = trans.Position;
+                                 Vec2f targetBase = new(stats.BaseX, currentPhaseCfg.HoverBaseY);
+                                 NativeExtensionBindings.Extension_CalculateBossReturnPosition(
+                                     in curPos,
+                                     in targetBase,
+                                     currentPhaseCfg.RecoverFlybackSpeed,
+                                     dt,
+                                     out trans.Position);
                              }
                          }
 
@@ -198,9 +216,14 @@ public static class BossAiSystem
 
                      case BossStateKind.PhaseTransition:
                          fsm.IsInvulnerable = true;
-                         float floatSpeed = 3.0f * dt;
-                         trans.X += (stats.BaseX - trans.X) * MathF.Min(1.0f, floatSpeed);
-                         trans.Y += (currentPhaseCfg.HoverBaseY - trans.Y) * MathF.Min(1.0f, floatSpeed);
+                         Vec2f transPos = trans.Position;
+                         Vec2f transBase = new(stats.BaseX, currentPhaseCfg.HoverBaseY);
+                         NativeExtensionBindings.Extension_CalculateBossReturnPosition(
+                             in transPos,
+                             in transBase,
+                             currentPhaseCfg.TransitionFloatSpeed,
+                             dt,
+                             out trans.Position);
 
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
@@ -313,10 +336,14 @@ public static class BossAiSystem
         {
             case "DiveRam":
                 {
-                    float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
-                    float easeProgress = progress * progress;
-                    trans.X = fsm.StartX + (fsm.TargetX - fsm.StartX) * easeProgress;
-                    trans.Y = fsm.StartY + (fsm.TargetY - fsm.StartY) * easeProgress;
+                    Vec2f startPos = new(fsm.StartX, fsm.StartY);
+                    Vec2f targetPos = new(fsm.TargetX, fsm.TargetY);
+                    NativeExtensionBindings.Extension_CalculateBossDiveRamPosition(
+                        in startPos,
+                        in targetPos,
+                        fsm.StateTimer,
+                        fsm.StateDuration,
+                        out trans.Position);
                 }
                 break;
 

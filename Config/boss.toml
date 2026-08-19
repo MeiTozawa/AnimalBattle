@@ -32,6 +32,7 @@ TelegraphShakeIntensity = 8.0
 RecoverFlybackSpeed = 4.0
 RecoverDelayRatio = 0.5
 TransitionDuration = 1.0
+TransitionFloatSpeed = 3.0
 Skills = ["Aimed3Shot", "DiveRam", "RingBurst"]
 
 # Phase 2 State Machine Configuration
@@ -49,6 +50,7 @@ TelegraphShakeIntensity = 10.0
 RecoverFlybackSpeed = 4.5
 RecoverDelayRatio = 0.45
 TransitionDuration = 1.0
+TransitionFloatSpeed = 3.5
 Skills = ["DoubleSpiral", "DiveRam", "RainDrop"]
 
 # Phase 3 State Machine Configuration
@@ -66,4 +68,5 @@ TelegraphShakeIntensity = 12.0
 RecoverFlybackSpeed = 5.0
 RecoverDelayRatio = 0.40
 TransitionDuration = 1.0
+TransitionFloatSpeed = 4.0
 Skills = ["CrossChaos", "DiveRam", "FastSniper"]

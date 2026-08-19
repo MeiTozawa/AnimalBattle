@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using AnimalBattle.Components;
+using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Bindings;
 
@@ -72,6 +73,53 @@ internal static unsafe partial class NativeExtensionBindings
         int radius, uint fillColor, uint outlineColor,
         int outlinePadding, float coreRadiusRatio, int coreMinRadius, uint coreColor,
         int clipMinX, int clipMaxX, int clipMinY, int clipMaxY);
+
+    #endregion
+
+    #region Boss Trajectory Extension
+
+    /// <summary>
+    /// Boss 懸停調和軌跡（雙軸正弦/餘弦波動 + 玩家追隨權重 + 平滑 Lerp 插值）を計算します。
+    /// </summary>
+    [LibraryImport(_dllName, EntryPoint = "Extension_CalculateBossHoverPosition")]
+    [SuppressGCTransition]
+    public static partial void Extension_CalculateBossHoverPosition(
+        in Vec2f currentPos,
+        in Vec2f basePos,
+        in Vec2f playerPos,
+        float hoverTimer,
+        float hoverSpeedX,
+        float hoverSpeedY,
+        float hoverAmpX,
+        float hoverAmpY,
+        float playerPursuitWeight,
+        float hoverLerpSpeed,
+        float deltaTime,
+        out Vec2f outPos);
+
+    /// <summary>
+    /// Boss 俯衝突進 (DiveRam) 軌跡（基於 InQuad 二次緩動曲線的起止點插值）を計算します。
+    /// </summary>
+    [LibraryImport(_dllName, EntryPoint = "Extension_CalculateBossDiveRamPosition")]
+    [SuppressGCTransition]
+    public static partial void Extension_CalculateBossDiveRamPosition(
+        in Vec2f startPos,
+        in Vec2f targetPos,
+        float stateTimer,
+        float stateDuration,
+        out Vec2f outPos);
+
+    /// <summary>
+    /// Boss 回程/平滑歸位軌跡（向目標錨點的指數平滑插值）を計算します。
+    /// </summary>
+    [LibraryImport(_dllName, EntryPoint = "Extension_CalculateBossReturnPosition")]
+    [SuppressGCTransition]
+    public static partial void Extension_CalculateBossReturnPosition(
+        in Vec2f currentPos,
+        in Vec2f targetBasePos,
+        float returnSpeed,
+        float deltaTime,
+        out Vec2f outPos);
 
     #endregion
 }

@@ -1,5 +1,4 @@
 using Flecs.NET.Core;
-using AnimalBattle.Components;
 
 namespace AnimalBattle.Systems;
 

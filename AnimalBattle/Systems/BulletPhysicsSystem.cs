@@ -19,7 +19,7 @@ public static class BulletPhysicsSystem
         world.System<Transform, Velocity>("PlayerBulletMovementSystem")
              .With<PlayerBulletTag>()
              .Kind(Ecs.OnUpdate)
-             .Iter((Iter it, Field<Transform> trans, Field<Velocity> vel) =>
+             .Iter((it, trans, vel) =>
              {
                  int count = it.Count();
                  if (count <= 0)
@@ -57,7 +57,7 @@ public static class BulletPhysicsSystem
         world.System<Transform, Velocity>("BossBulletMovementSystem")
              .With<BossBulletTag>()
              .Kind(Ecs.OnUpdate)
-             .Iter((Iter it, Field<Transform> trans, Field<Velocity> vel) =>
+             .Iter((it, trans, vel) =>
              {
                  int count = it.Count();
                  if (count <= 0)

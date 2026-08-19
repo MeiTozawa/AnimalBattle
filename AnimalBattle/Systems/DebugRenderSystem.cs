@@ -23,6 +23,18 @@ public static class DebugRenderSystem
     /// <param name="world">登録先の Flecs.NET ワールド</param>
     public static void Register(World world)
     {
+        Query<Transform, CollisionBox> colQuery =
+            world.QueryBuilder<Transform, CollisionBox>()
+                 .Build();
+
+        Query<Transform, Hurtbox> hurtboxQuery =
+            world.QueryBuilder<Transform, Hurtbox>()
+                 .Build();
+
+        Query<Transform, Hitbox> hitboxQuery =
+            world.QueryBuilder<Transform, Hitbox>()
+                 .Build();
+
         world.System("DebugRenderSystem")
              .Kind(Ecs.OnStore)
              .Run((Iter it) =>
@@ -44,121 +56,115 @@ public static class DebugRenderSystem
                      return;
                  }
 
-                 world.QueryBuilder<Transform, CollisionBox>()
-                      .Build()
-                      .Each((Entity e, ref Transform trans, ref CollisionBox col) =>
-                      {
-                          int x1 = (int)(trans.X - col.Width / 2.0f);
-                          int y1 = (int)(trans.Y - col.Height / 2.0f);
-                          int x2 = (int)(trans.X + col.Width / 2.0f);
-                          int y2 = (int)(trans.Y + col.Height / 2.0f);
+                 colQuery.Each((Entity e, ref Transform trans, ref CollisionBox col) =>
+                 {
+                     int x1 = (int)(trans.X - col.Width / 2.0f);
+                     int y1 = (int)(trans.Y - col.Height / 2.0f);
+                     int x2 = (int)(trans.X + col.Width / 2.0f);
+                     int y2 = (int)(trans.Y + col.Height / 2.0f);
 
-                          Color boxColor = e.Has<PlatformTag>() ? dbgCfg.PlatformHitboxColor : dbgCfg.PlayerTerrainBoxColor;
-                          GameEngine.DrawBox(x1, y1, x2, y2, boxColor, false);
+                     Color boxColor = e.Has<PlatformTag>() ? dbgCfg.PlatformHitboxColor : dbgCfg.PlayerTerrainBoxColor;
+                     GameEngine.DrawBox(x1, y1, x2, y2, boxColor, false);
 
-                          if (e.Has<PlayerTag>())
-                          {
-                              GameEngine.DrawString(x1 - 10, y1 - 16, $"P({(int)trans.X},{(int)trans.Y}) [Grounded:{col.IsGrounded}]", boxColor);
-                          }
-                      });
+                     if (e.Has<PlayerTag>())
+                     {
+                         GameEngine.DrawString(x1 - 10, y1 - 16, $"P({(int)trans.X},{(int)trans.Y}) [Grounded:{col.IsGrounded}]", boxColor);
+                     }
+                 });
 
-                 world.QueryBuilder<Transform, Hurtbox>()
-                      .Build()
-                      .Each((Entity e, ref Transform trans, ref Hurtbox hurtbox) =>
-                      {
-                          if (e.Has<Health>())
-                          {
-                              ref readonly Health h = ref e.Get<Health>();
-                              if (!h.IsAlive)
-                              {
-                                  return;
-                              }
-                          }
+                 hurtboxQuery.Each((Entity e, ref Transform trans, ref Hurtbox hurtbox) =>
+                 {
+                     if (e.Has<Health>())
+                     {
+                         ref readonly Health h = ref e.Get<Health>();
+                         if (!h.IsAlive)
+                         {
+                             return;
+                         }
+                     }
 
-                          Color hurtColor = hurtbox.Faction switch
-                          {
-                              Faction.Friendly => dbgCfg.PlayerHurtboxColor,
-                              Faction.Hostile => dbgCfg.BossHitboxColor,
-                              Faction.Neutral => ColorPalette.Gray,
-                              _ => GetFallbackFactionColor(hurtbox.Faction, dbgCfg.BossHitboxColor)
-                          };
+                     Color hurtColor = hurtbox.Faction switch
+                     {
+                         Faction.Friendly => dbgCfg.PlayerHurtboxColor,
+                         Faction.Hostile => dbgCfg.BossHitboxColor,
+                         Faction.Neutral => ColorPalette.Gray,
+                         _ => GetFallbackFactionColor(hurtbox.Faction, dbgCfg.BossHitboxColor)
+                     };
 
-                          float worldCenterX = trans.X + hurtbox.Shape.OffsetX;
-                          float worldCenterY = trans.Y + hurtbox.Shape.OffsetY;
+                     float worldCenterX = trans.X + hurtbox.Shape.OffsetX;
+                     float worldCenterY = trans.Y + hurtbox.Shape.OffsetY;
 
-                          switch (hurtbox.Shape)
-                          {
-                              case CollisionShape.Circle circle:
-                                  int cx = (int)worldCenterX;
-                                  int cy = (int)worldCenterY;
-                                  int r = (int)circle.Radius;
-                                  GameEngine.DrawCircle(cx, cy, r, hurtColor, false);
-                                  break;
+                     switch (hurtbox.Shape)
+                     {
+                         case CollisionShape.Circle circle:
+                             int cx = (int)worldCenterX;
+                             int cy = (int)worldCenterY;
+                             int r = (int)circle.Radius;
+                             GameEngine.DrawCircle(cx, cy, r, hurtColor, false);
+                             break;
 
-                              case CollisionShape.Box box:
-                                  int x1 = (int)(worldCenterX - box.Width / 2.0f);
-                                  int y1 = (int)(worldCenterY - box.Height / 2.0f);
-                                  int x2 = (int)(worldCenterX + box.Width / 2.0f);
-                                  int y2 = (int)(worldCenterY + box.Height / 2.0f);
-                                  GameEngine.DrawBox(x1, y1, x2, y2, hurtColor, false);
-                                  break;
+                         case CollisionShape.Box box:
+                             int x1 = (int)(worldCenterX - box.Width / 2.0f);
+                             int y1 = (int)(worldCenterY - box.Height / 2.0f);
+                             int x2 = (int)(worldCenterX + box.Width / 2.0f);
+                             int y2 = (int)(worldCenterY + box.Height / 2.0f);
+                             GameEngine.DrawBox(x1, y1, x2, y2, hurtColor, false);
+                             break;
 
-                              case CollisionShape.Point:
-                                  GameEngine.DrawCircle((int)worldCenterX, (int)worldCenterY, 2, hurtColor, false);
-                                  break;
+                         case CollisionShape.Point:
+                             GameEngine.DrawCircle((int)worldCenterX, (int)worldCenterY, 2, hurtColor, false);
+                             break;
 
-                              default:
-                                  Console.WriteLine($"[DebugRender 警告] 未知の CollisionShape 型です: {hurtbox.Shape?.GetType().Name}");
-                                  break;
-                          }
-                      });
+                         default:
+                             Console.WriteLine($"[DebugRender 警告] 未知の CollisionShape 型です: {hurtbox.Shape?.GetType().Name}");
+                             break;
+                     }
+                 });
 
-                 world.QueryBuilder<Transform, Hitbox>()
-                      .Build()
-                      .Each((Entity e, ref Transform trans, ref Hitbox hitbox) =>
-                      {
-                          if (!hitbox.IsActive)
-                          {
-                              return;
-                          }
+                 hitboxQuery.Each((Entity e, ref Transform trans, ref Hitbox hitbox) =>
+                 {
+                     if (!hitbox.IsActive)
+                     {
+                         return;
+                     }
 
-                          Color hitColor = hitbox.Faction switch
-                          {
-                              Faction.Friendly => dbgCfg.PlayerBulletHitboxColor,
-                              Faction.Hostile => dbgCfg.BossBulletHitboxColor,
-                              Faction.Neutral => ColorPalette.Gray,
-                              _ => GetFallbackFactionColor(hitbox.Faction, dbgCfg.BossBulletHitboxColor)
-                          };
+                     Color hitColor = hitbox.Faction switch
+                     {
+                         Faction.Friendly => dbgCfg.PlayerBulletHitboxColor,
+                         Faction.Hostile => dbgCfg.BossBulletHitboxColor,
+                         Faction.Neutral => ColorPalette.Gray,
+                         _ => GetFallbackFactionColor(hitbox.Faction, dbgCfg.BossBulletHitboxColor)
+                     };
 
-                          float worldCenterX = trans.X + hitbox.Shape.OffsetX;
-                          float worldCenterY = trans.Y + hitbox.Shape.OffsetY;
+                     float worldCenterX = trans.X + hitbox.Shape.OffsetX;
+                     float worldCenterY = trans.Y + hitbox.Shape.OffsetY;
 
-                          switch (hitbox.Shape)
-                          {
-                              case CollisionShape.Circle circle:
-                                  int cx = (int)worldCenterX;
-                                  int cy = (int)worldCenterY;
-                                  int r = (int)circle.Radius;
-                                  GameEngine.DrawCircle(cx, cy, r, hitColor, false);
-                                  break;
+                     switch (hitbox.Shape)
+                     {
+                         case CollisionShape.Circle circle:
+                             int cx = (int)worldCenterX;
+                             int cy = (int)worldCenterY;
+                             int r = (int)circle.Radius;
+                             GameEngine.DrawCircle(cx, cy, r, hitColor, false);
+                             break;
 
-                              case CollisionShape.Box box:
-                                  int x1 = (int)(worldCenterX - box.Width / 2.0f);
-                                  int y1 = (int)(worldCenterY - box.Height / 2.0f);
-                                  int x2 = (int)(worldCenterX + box.Width / 2.0f);
-                                  int y2 = (int)(worldCenterY + box.Height / 2.0f);
-                                  GameEngine.DrawBox(x1, y1, x2, y2, hitColor, false);
-                                  break;
+                         case CollisionShape.Box box:
+                             int x1 = (int)(worldCenterX - box.Width / 2.0f);
+                             int y1 = (int)(worldCenterY - box.Height / 2.0f);
+                             int x2 = (int)(worldCenterX + box.Width / 2.0f);
+                             int y2 = (int)(worldCenterY + box.Height / 2.0f);
+                             GameEngine.DrawBox(x1, y1, x2, y2, hitColor, false);
+                             break;
 
-                              case CollisionShape.Point:
-                                  GameEngine.DrawCircle((int)worldCenterX, (int)worldCenterY, 2, hitColor, false);
-                                  break;
+                         case CollisionShape.Point:
+                             GameEngine.DrawCircle((int)worldCenterX, (int)worldCenterY, 2, hitColor, false);
+                             break;
 
-                              default:
-                                  Console.WriteLine($"[DebugRender 警告] 未知の CollisionShape 型です: {hitbox.Shape?.GetType().Name}");
-                                  break;
-                          }
-                      });
+                         default:
+                             Console.WriteLine($"[DebugRender 警告] 未知の CollisionShape 型です: {hitbox.Shape?.GetType().Name}");
+                             break;
+                     }
+                 });
              });
     }
 

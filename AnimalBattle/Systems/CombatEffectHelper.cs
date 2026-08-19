@@ -12,6 +12,19 @@ namespace AnimalBattle.Systems;
 /// </summary>
 public static class CombatEffectHelper
 {
+    private static Query _bossBulletQuery;
+
+    /// <summary>
+    /// ヘルパークラスで使用する事前構築クエリを初期化します。
+    /// </summary>
+    /// <param name="world">初期化対象の Flecs.NET ワールド</param>
+    public static void Initialize(World world)
+    {
+        _bossBulletQuery = world.QueryBuilder()
+                                .With<BossBulletTag>()
+                                .Build();
+    }
+
     /// <summary>
     /// 指定座標に Boss 弾幕エンティティを生成します。
     /// </summary>
@@ -39,10 +52,13 @@ public static class CombatEffectHelper
     /// <param name="world">対象の Flecs.NET ワールド</param>
     public static void ClearAllBossBullets(World world)
     {
-        world.QueryBuilder()
-             .With<BossBulletTag>()
-             .Build()
-             .Each((Entity e) => e.Destruct());
+        unsafe
+        {
+            if (_bossBulletQuery.Handle != null)
+            {
+                _bossBulletQuery.Each((Entity e) => e.Destruct());
+            }
+        }
     }
 
     /// <summary>

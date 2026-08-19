@@ -49,6 +49,9 @@ public sealed class PhaseFsmConfig
     /// <summary>フェーズ突入時の無敵・清屏演出時間（秒）</summary>
     public float TransitionDuration { get; set; } = 1.0f;
 
+    /// <summary>フェーズ突入時の高空帰還・浮遊移動速度</summary>
+    public float TransitionFloatSpeed { get; set; } = 3.0f;
+
     /// <summary>このフェーズで実行される技能名リスト</summary>
     public List<string> Skills { get; set; } = [];
 }

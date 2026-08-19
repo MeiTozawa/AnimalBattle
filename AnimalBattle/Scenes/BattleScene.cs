@@ -48,6 +48,8 @@ public partial class BattleScene : IDisposable
             .AddPluginGroup(new DefaultPlugins());
         app.FinishSetup();
 
+        CombatEffectHelper.Initialize(_ecsWorld);
+
         PlayerConfig playerCfg = ConfigManager.Player;
         BossConfig bossCfg = ConfigManager.Boss;
 
