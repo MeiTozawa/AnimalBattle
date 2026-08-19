@@ -29,10 +29,11 @@ public static class SpriteAnimationSystem
 
                  anim.Timer += it.DeltaTime();
 
-                 AnimationConfig? charConfig = AnimationAssetService.GetCharacterConfig(anim.CharacterType);
+                 AnimationConfig? charConfig = AssetManager.GetCharacterConfig(anim.CharacterType);
                  if (charConfig != null)
                  {
-                     sprite.SrcRect = AnimationAssetService.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out bool isFinished);
+                     sprite.GraphHandle = AssetManager.GetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip);
+                     sprite.SrcRect = AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out bool isFinished);
                      anim.IsFinished = isFinished;
                  }
              });

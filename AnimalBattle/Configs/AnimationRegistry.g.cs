@@ -12,7 +12,7 @@ namespace AnimalBattle.Configs;
 /// </summary>
 public enum CharacterType
 {
-    CatSpriteSheet,
+    Cat,
 }
 
 /// <summary>
@@ -27,9 +27,7 @@ public enum EffectType
 /// </summary>
 public enum CharacterAnimationType
 {
-    Attack,
     Fall,
-    Hurt,
     Idle,
     Jump,
     Run,
@@ -52,26 +50,23 @@ internal static class AnimationRegistry
     internal static readonly IReadOnlyDictionary<CharacterType, string> CharacterSprites =
         new Dictionary<CharacterType, string>
         {
-            [CharacterType.CatSpriteSheet] = @"Characters\Cat Sprite Sheet.png",
         };
 
     /// <summary>キャラクターアニメーション設定。</summary>
     internal static readonly IReadOnlyDictionary<CharacterType, AnimationConfig> CharacterConfigs =
         new Dictionary<CharacterType, AnimationConfig>
         {
-            [CharacterType.CatSpriteSheet] = new AnimationConfig
+            [CharacterType.Cat] = new AnimationConfig
             {
                 DisplayName = "Cat",
                 CellWidth = 32,
                 CellHeight = 32,
                 Clips =
                 [
-                    new AnimationClipConfig { Name = "Idle", Row = 0, StartFrame = 0, EndFrame = 3, Fps = 6.0f, IsLooping = true },
-                    new AnimationClipConfig { Name = "Run", Row = 4, StartFrame = 0, EndFrame = 7, Fps = 12.0f, IsLooping = true },
-                    new AnimationClipConfig { Name = "Jump", Row = 5, StartFrame = 0, EndFrame = 3, Fps = 16.0f, IsLooping = false },
-                    new AnimationClipConfig { Name = "Fall", Row = 5, StartFrame = 4, EndFrame = 7, Fps = 16.0f, IsLooping = false },
-                    new AnimationClipConfig { Name = "Attack", Row = 7, StartFrame = 0, EndFrame = 5, Fps = 14.0f, IsLooping = false },
-                    new AnimationClipConfig { Name = "Hurt", Row = 6, StartFrame = 0, EndFrame = 3, Fps = 30.0f, IsLooping = false },
+                    new AnimationClipConfig { Name = "Idle", SpritePath = @"Characters\1_Cat_Idle-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 7, Fps = 8.0f, IsLooping = true },
+                    new AnimationClipConfig { Name = "Run", SpritePath = @"Characters\2_Cat_Run-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 9, Fps = 12.0f, IsLooping = true },
+                    new AnimationClipConfig { Name = "Jump", SpritePath = @"Characters\3_Cat_Jump-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 3, Fps = 12.0f, IsLooping = false },
+                    new AnimationClipConfig { Name = "Fall", SpritePath = @"Characters\4_Cat_Fall-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 3, Fps = 12.0f, IsLooping = true },
                 ],
             },
         };

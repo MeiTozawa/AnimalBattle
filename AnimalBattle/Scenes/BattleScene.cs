@@ -37,12 +37,13 @@ public partial class BattleScene : IDisposable
             Console.WriteLine("[BattleScene 警告] 一部の TOML 設定ファイルの初期化に失敗しました。デフォルト値を使用します。");
         }
 
-        if (!AnimationAssetService.Initialize())
+        if (!AssetManager.Initialize())
         {
             Console.WriteLine("[BattleScene 警告] 一部のキャラクタースプライト画像のロードに失敗しました。");
         }
 
-        int catHandle = AnimationAssetService.GetCharacterSpriteHandle(CharacterType.CatSpriteSheet);
+        int playerHandle = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle");
+        int bossHandle = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat);
 
         App app = new App(_ecsWorld)
             .AddPluginGroup(new DefaultPlugins());
@@ -62,8 +63,8 @@ public partial class BattleScene : IDisposable
             .Set(new Health(playerCfg.MaxHp))
             .Set(new DoubleJump(playerCfg.MaxJumps))
             .Set(new PlayerState())
-            .Set(new Sprite(catHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
-            .Set(new Animation("Idle", CharacterType.CatSpriteSheet, isPlaying: true))
+            .Set(new Sprite(playerHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
+            .Set(new Animation("Idle", CharacterType.Cat, isPlaying: true))
             .Add<PlayerTag>();
 
         // 2. Boss の生成 (TOML 設定駆動 被弾 Hurtbox + 肉体接触突進 Hitbox)
@@ -75,7 +76,7 @@ public partial class BattleScene : IDisposable
             .Set(new Health(bossCfg.MaxHp))
             .Set(new BossStats(baseX: bossCfg.BaseX, baseY: bossCfg.BaseY))
             .Set(new BossStateMachine())
-            .Set(new Sprite(catHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
+            .Set(new Sprite(bossHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
             .Add<BossTag>();
 
         // 3. アリーナ足場

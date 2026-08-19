@@ -7,13 +7,14 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Core.Asset;
 
 /// <summary>
-/// <see cref="AnimationRegistry"/> を参照してキャラクタースプライトシート画像をロード・管理し、
+/// <see cref="AnimationRegistry"/> および <see cref="ResourcePath"/> を参照してキャラクタースプライトや各種テクスチャをロード・管理し、
 /// 純粋なスプライト UV 切り出し計算を提供するアセットサービス。
 /// </summary>
-public sealed class AnimationAssetService : IDisposable
+public sealed class AssetManager : IDisposable
 {
     private static readonly Dictionary<CharacterType, int> _characterSpriteHandles = [];
     private static readonly Dictionary<CharacterType, AnimationConfig> _characterConfigs = [];
+    private static readonly Dictionary<string, int> _textureHandles = new(StringComparer.OrdinalIgnoreCase);
     private static bool _isInitialized;
     private bool _isDisposed;
 
@@ -40,16 +41,30 @@ public sealed class AnimationAssetService : IDisposable
             if (AnimationRegistry.CharacterSprites.TryGetValue(charType, out string? relPath))
             {
                 string fullPath = ResolveAssetPath(relPath);
-                Result<int> loadResult = AssetManager.LoadGraph(fullPath);
+                Result<int> loadResult = AssetService.LoadGraph(fullPath);
                 if (loadResult.IsOk)
                 {
                     _characterSpriteHandles[charType] = loadResult.Value;
+                    _textureHandles[relPath] = loadResult.Value;
                     Console.WriteLine($"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {loadResult.Value})");
                 }
                 else
                 {
                     Console.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {loadResult.Error?.Description}");
                     allLoaded = false;
+                }
+            }
+
+            foreach (AnimationClipConfig clip in config.Clips)
+            {
+                if (!string.IsNullOrWhiteSpace(clip.SpritePath))
+                {
+                    int handle = LoadTexture(clip.SpritePath);
+                    if (handle < 0)
+                    {
+                        Console.WriteLine($"[C# アニメーション警告] クリップスプライトのロードに失敗しました ({charType} / {clip.Name}): {clip.SpritePath}");
+                        allLoaded = false;
+                    }
                 }
             }
         }
@@ -59,12 +74,69 @@ public sealed class AnimationAssetService : IDisposable
     }
 
     /// <summary>
-    /// 指定されたキャラクター種別のスプライトグラフィックハンドルを取得します。
+    /// 指定された相対パスまたは絶対パスのテクスチャ画像をロードし、ハンドルをキャッシュして返します。
+    /// 既にロード済みの場合はキャッシュされたハンドルを返します。
+    /// </summary>
+    /// <param name="relativePath">リソース相対パス（例: <see cref="ResourcePath.Platform.SheetPng"/>）</param>
+    /// <returns>グラフィックハンドル（ロード失敗時は -1）</returns>
+    public static int LoadTexture(string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return -1;
+        }
+
+        if (_textureHandles.TryGetValue(relativePath, out int existingHandle))
+        {
+            return existingHandle;
+        }
+
+        string fullPath = ResolveAssetPath(relativePath);
+        Result<int> loadResult = AssetService.LoadGraph(fullPath);
+        if (loadResult.IsOk)
+        {
+            _textureHandles[relativePath] = loadResult.Value;
+            Console.WriteLine($"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {loadResult.Value})");
+            return loadResult.Value;
+        }
+
+        Console.WriteLine($"[C# アセット警告] テクスチャのロードに失敗しました ({relativePath}): {loadResult.Error?.Description}");
+        return -1;
+    }
+
+    /// <summary>
+    /// ロード済みのテクスチャハンドルを取得します。未ロードの場合はロードを試行します。
+    /// </summary>
+    /// <param name="relativePath">リソース相対パス（例: <see cref="ResourcePath.Platform.SheetPng"/>）</param>
+    /// <returns>グラフィックハンドル（未ロード・ロード失敗時は -1）</returns>
+    public static int GetTexture(string relativePath)
+    {
+        return LoadTexture(relativePath);
+    }
+
+    /// <summary>
+    /// 指定されたキャラクター種別およびクリップ名に対応するグラフィックハンドルを取得します。
+    /// クリップ専用のスプライトシートが指定されている場合はそれを返し、未指定の場合はキャラクター標準スプライトを返します。
     /// </summary>
     /// <param name="type">キャラクター種別</param>
+    /// <param name="clipName">再生クリップ名（null の場合は標準スプライトハンドル）</param>
     /// <returns>グラフィックハンドル（未ロード時は -1）</returns>
-    public static int GetCharacterSpriteHandle(CharacterType type = CharacterType.CatSpriteSheet)
+    public static int GetCharacterSpriteHandle(CharacterType type = CharacterType.Cat, string? clipName = null)
     {
+        if (!string.IsNullOrWhiteSpace(clipName) &&
+            _characterConfigs.TryGetValue(type, out AnimationConfig? config))
+        {
+            AnimationClipConfig? clip = config.Clips.Find(c => string.Equals(c.Name, clipName, StringComparison.OrdinalIgnoreCase));
+            if (clip != null && !string.IsNullOrWhiteSpace(clip.SpritePath))
+            {
+                int clipHandle = GetTexture(clip.SpritePath);
+                if (clipHandle >= 0)
+                {
+                    return clipHandle;
+                }
+            }
+        }
+
         return _characterSpriteHandles.TryGetValue(type, out int handle) ? handle : -1;
     }
 
@@ -73,7 +145,7 @@ public sealed class AnimationAssetService : IDisposable
     /// </summary>
     /// <param name="type">キャラクター種別</param>
     /// <returns>アニメーション設定（未登録時は null）</returns>
-    public static AnimationConfig? GetCharacterConfig(CharacterType type = CharacterType.CatSpriteSheet)
+    public static AnimationConfig? GetCharacterConfig(CharacterType type = CharacterType.Cat)
     {
         return _characterConfigs.TryGetValue(type, out AnimationConfig? config) ? config : null;
     }
@@ -126,7 +198,12 @@ public sealed class AnimationAssetService : IDisposable
         return new Rect<int>(x1, y1, x2, y2);
     }
 
-    private static string ResolveAssetPath(string relPath)
+    /// <summary>
+    /// リソース相対パスから実体ファイルの絶対パスを探索・解決します。
+    /// </summary>
+    /// <param name="relPath">リソース相対パス</param>
+    /// <returns>解決された絶対パス、見つからない場合は入力パス</returns>
+    public static string ResolveAssetPath(string relPath)
     {
         try
         {
@@ -169,7 +246,7 @@ public sealed class AnimationAssetService : IDisposable
     }
 
     /// <summary>
-    /// ロード済みのキャラクタースプライトハンドルを解放します。
+    /// ロード済みのキャラクタースプライトおよび汎用テクスチャハンドルをすべて解放します。
     /// </summary>
     public void Dispose()
     {
@@ -177,10 +254,18 @@ public sealed class AnimationAssetService : IDisposable
         {
             foreach (int handle in _characterSpriteHandles.Values)
             {
-                AssetManager.DeleteGraph(handle);
+                AssetService.DeleteGraph(handle);
             }
             _characterSpriteHandles.Clear();
+
+            foreach (int handle in _textureHandles.Values)
+            {
+                AssetService.DeleteGraph(handle);
+            }
+            _textureHandles.Clear();
+
             _isDisposed = true;
         }
     }
 }
+

@@ -129,7 +129,7 @@ public sealed class PlayerConfig
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static Result<ConfigBase<PlayerConfig>> LoadFromFile(string path = "player.toml")
+    public static Result<ConfigBase<PlayerConfig>> LoadFromFile(string path = ResourcePath.Config.Player)
     {
         return ConfigBase<PlayerConfig>.LoadFromFile(path);
     }

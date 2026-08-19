@@ -439,7 +439,7 @@ public sealed class RenderConfig
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static Result<ConfigBase<RenderConfig>> LoadFromFile(string path = "render.toml")
+    public static Result<ConfigBase<RenderConfig>> LoadFromFile(string path = ResourcePath.Config.Render)
     {
         return ConfigBase<RenderConfig>.LoadFromFile(path);
     }

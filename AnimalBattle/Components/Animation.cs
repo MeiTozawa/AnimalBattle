@@ -29,7 +29,7 @@ public struct Animation
     /// <summary>
     /// 指定された初期クリップ名およびキャラクター種別で <see cref="Animation"/> の新しいインスタンスを初期化します。
     /// </summary>
-    public Animation(string defaultClip = "Idle", CharacterType characterType = CharacterType.CatSpriteSheet, bool isPlaying = true)
+    public Animation(string defaultClip = "Idle", CharacterType characterType = CharacterType.Cat, bool isPlaying = true)
     {
         CurrentClip = defaultClip;
         CharacterType = characterType;

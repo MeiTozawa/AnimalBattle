@@ -44,7 +44,7 @@ public static class ConfigManager
         int successCount = 0;
         int failureCount = 0;
 
-        Result<ConfigBase<PlayerConfig>> playerRes = PlayerConfig.LoadFromFile("player.toml");
+        Result<ConfigBase<PlayerConfig>> playerRes = PlayerConfig.LoadFromFile(ResourcePath.Config.Player);
         if (playerRes.IsOk && playerRes.Value != null)
         {
             _playerConfigContainer = playerRes.Value;
@@ -52,11 +52,11 @@ public static class ConfigManager
         }
         else
         {
-            Console.WriteLine($"[C# 設定警告] player.toml の読み込みに失敗しました ({playerRes.Error?.Type}): {playerRes.Error?.Description}");
+            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Player} の読み込みに失敗しました ({playerRes.Error?.Type}): {playerRes.Error?.Description}");
             failureCount++;
         }
 
-        Result<ConfigBase<BossConfig>> bossRes = BossConfig.LoadFromFile("boss.toml");
+        Result<ConfigBase<BossConfig>> bossRes = BossConfig.LoadFromFile(ResourcePath.Config.Boss);
         if (bossRes.IsOk && bossRes.Value != null)
         {
             _bossConfigContainer = bossRes.Value;
@@ -64,11 +64,11 @@ public static class ConfigManager
         }
         else
         {
-            Console.WriteLine($"[C# 設定警告] boss.toml の読み込みに失敗しました ({bossRes.Error?.Type}): {bossRes.Error?.Description}");
+            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Boss} の読み込みに失敗しました ({bossRes.Error?.Type}): {bossRes.Error?.Description}");
             failureCount++;
         }
 
-        Result<ConfigBase<PatternConfig>> patternRes = PatternConfig.LoadFromFile("patterns.toml");
+        Result<ConfigBase<PatternConfig>> patternRes = PatternConfig.LoadFromFile(ResourcePath.Config.Patterns);
         if (patternRes.IsOk && patternRes.Value != null)
         {
             _patternConfigContainer = patternRes.Value;
@@ -76,11 +76,11 @@ public static class ConfigManager
         }
         else
         {
-            Console.WriteLine($"[C# 設定警告] patterns.toml の読み込みに失敗しました ({patternRes.Error?.Type}): {patternRes.Error?.Description}");
+            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Patterns} の読み込みに失敗しました ({patternRes.Error?.Type}): {patternRes.Error?.Description}");
             failureCount++;
         }
 
-        Result<ConfigBase<ArenaConfig>> arenaRes = ArenaConfig.LoadFromFile("arena.toml");
+        Result<ConfigBase<ArenaConfig>> arenaRes = ArenaConfig.LoadFromFile(ResourcePath.Config.Arena);
         if (arenaRes.IsOk && arenaRes.Value != null)
         {
             _arenaConfigContainer = arenaRes.Value;
@@ -88,11 +88,11 @@ public static class ConfigManager
         }
         else
         {
-            Console.WriteLine($"[C# 設定警告] arena.toml の読み込みに失敗しました ({arenaRes.Error?.Type}): {arenaRes.Error?.Description}");
+            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Arena} の読み込みに失敗しました ({arenaRes.Error?.Type}): {arenaRes.Error?.Description}");
             failureCount++;
         }
 
-        Result<ConfigBase<RenderConfig>> renderRes = RenderConfig.LoadFromFile("render.toml");
+        Result<ConfigBase<RenderConfig>> renderRes = RenderConfig.LoadFromFile(ResourcePath.Config.Render);
         if (renderRes.IsOk && renderRes.Value != null)
         {
             _renderConfigContainer = renderRes.Value;
@@ -100,7 +100,7 @@ public static class ConfigManager
         }
         else
         {
-            Console.WriteLine($"[C# 設定警告] render.toml の読み込みに失敗しました ({renderRes.Error?.Type}): {renderRes.Error?.Description}");
+            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Render} の読み込みに失敗しました ({renderRes.Error?.Type}): {renderRes.Error?.Description}");
             failureCount++;
         }
 

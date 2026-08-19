@@ -328,7 +328,7 @@ public sealed class PatternConfig
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static Result<ConfigBase<PatternConfig>> LoadFromFile(string path = "patterns.toml")
+    public static Result<ConfigBase<PatternConfig>> LoadFromFile(string path = ResourcePath.Config.Patterns)
     {
         return ConfigBase<PatternConfig>.LoadFromFile(path);
     }

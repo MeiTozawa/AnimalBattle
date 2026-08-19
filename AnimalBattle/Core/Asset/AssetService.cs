@@ -8,7 +8,7 @@ namespace AnimalBattle.Core;
 /// スプライト画像リソースのロードおよびメモリ解放を管理するマネージャークラス。
 /// ファイル存在確認および DxLib ネイティブハンドルの有効性を検証し、<see cref="Result{T}"/> による型安全な結果を返します。
 /// </summary>
-public static class AssetManager
+public static class AssetService
 {
     /// <summary>
     /// 画像ファイルを指定してスプライトグラフィックハンドルをロードします。

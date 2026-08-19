@@ -130,7 +130,14 @@ public static class PlayerMovementSystem
 
                  if (!col.IsGrounded)
                  {
-                     anim.Play("Jump");
+                     if (vel.Vy < 0.0f)
+                     {
+                         anim.Play("Jump");
+                     }
+                     else
+                     {
+                         anim.Play("Fall");
+                     }
                  }
                  else if (Math.Abs(vel.Vx) > 0.1f)
                  {

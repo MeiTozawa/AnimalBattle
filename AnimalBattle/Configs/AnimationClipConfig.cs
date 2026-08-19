@@ -8,6 +8,9 @@ public sealed class AnimationClipConfig
     /// <summary>アニメーション名（例: "Idle", "Run", "Jump"）</summary>
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>このクリップ専用のスプライトシート相対パス（空の場合は親の CharacterSprites を使用）</summary>
+    public string SpritePath { get; set; } = string.Empty;
+
     /// <summary>スプライトシート上の行インデックス（0 始まり）</summary>
     public int Row { get; set; }
 
