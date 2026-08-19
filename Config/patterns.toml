@@ -14,6 +14,7 @@ ImpactBulletRadius = 7.0
 ImpactFillColor = 0xFFFF1744
 ImpactOutlineColor = 0xFFFF8A80
 TrailColor = 0xFFFF5555
+EaseType = "InQuad"             # 突進補間イージング種別 (例: Linear, InSine, InQuad, InCubic, InExpo, InElastic, OutBounce など)
 
 [Aimed3Shot]
 SkillName = "Aimed 3-Way Shot"

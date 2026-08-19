@@ -346,6 +346,7 @@ public static class BossAiSystem
                         in targetPos,
                         fsm.StateTimer,
                         fsm.StateDuration,
+                        patternCfg.DiveRam.EaseType,
                         out trans.Position);
                 }
                 break;

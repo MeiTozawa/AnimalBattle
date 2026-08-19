@@ -122,4 +122,27 @@ export struct Velocity {
     Vec2f knockback{0.0f, 0.0f};
 };
 
+/// @brief イージング関数の計算タイプを表す列挙型
+export enum class EaseType : int32_t {
+    Linear = 0,
+    InSine = 1,
+    OutSine = 2,
+    InOutSine = 3,
+    InQuad = 4,
+    OutQuad = 5,
+    InOutQuad = 6,
+    InCubic = 7,
+    OutCubic = 8,
+    InOutCubic = 9,
+    InExpo = 10,
+    OutExpo = 11,
+    InOutExpo = 12,
+    InElastic = 13,
+    OutElastic = 14,
+    InOutElastic = 15,
+    InBounce = 16,
+    OutBounce = 17,
+    InOutBounce = 18
+};
+
 }  // namespace ab

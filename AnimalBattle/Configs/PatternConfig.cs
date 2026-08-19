@@ -46,6 +46,9 @@ public sealed class DiveRamConfig
 
     /// <summary>突進残影トレイルカラー (<see cref="Color"/>)</summary>
     public Color TrailColor { get; set; } = ColorPalette.Red;
+
+    /// <summary>突進補間に使用するイージング種別</summary>
+    public EaseType EaseType { get; set; } = EaseType.InQuad;
 }
 
 /// <summary>

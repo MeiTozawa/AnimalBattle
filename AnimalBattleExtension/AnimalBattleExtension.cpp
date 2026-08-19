@@ -115,13 +115,14 @@ __declspec(dllexport) void Extension_CalculateBossDiveRamPosition(
     const ab::Vec2f* target_pos,
     float state_timer,
     float state_duration,
+    ab::EaseType ease_type,
     ab::Vec2f* out_pos) noexcept {
     try {
         if (!start_pos || !target_pos || !out_pos) {
             return;
         }
         *out_pos = CalculateBossDiveRamPosition(
-            *start_pos, *target_pos, state_timer, state_duration);
+            *start_pos, *target_pos, state_timer, state_duration, ease_type);
     } catch (...) {
         if (start_pos && out_pos) {
             *out_pos = *start_pos;

@@ -75,6 +75,7 @@ CMakeUserPresets.json
 build.bat
 scripts/generate_animation_registry.py
 AnimalBattle/*.dll
+tools/
 
 #AI agent files
 docs/

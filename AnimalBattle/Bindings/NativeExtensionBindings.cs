@@ -79,7 +79,7 @@ internal static unsafe partial class NativeExtensionBindings
     #region Boss Trajectory Extension
 
     /// <summary>
-    /// Boss 懸停調和軌跡（雙軸正弦/餘弦波動 + 玩家追隨權重 + 平滑 Lerp 插值）を計算します。
+    /// Boss のホバリング調和軌道（2軸正弦・余弦波動＋プレイヤー追従重み＋平滑 Lerp 補間）を計算します。
     /// </summary>
     [LibraryImport(_dllName, EntryPoint = "Extension_CalculateBossHoverPosition")]
     [SuppressGCTransition]
@@ -98,7 +98,7 @@ internal static unsafe partial class NativeExtensionBindings
         out Vec2f outPos);
 
     /// <summary>
-    /// Boss 俯衝突進 (DiveRam) 軌跡（基於 InQuad 二次緩動曲線的起止點插值）を計算します。
+    /// Boss の急降下突進 (DiveRam) 軌道（指定されたイージング曲線による始点・終点補間）を計算します。
     /// </summary>
     [LibraryImport(_dllName, EntryPoint = "Extension_CalculateBossDiveRamPosition")]
     [SuppressGCTransition]
@@ -107,10 +107,11 @@ internal static unsafe partial class NativeExtensionBindings
         in Vec2f targetPos,
         float stateTimer,
         float stateDuration,
+        EaseType easeType,
         out Vec2f outPos);
 
     /// <summary>
-    /// Boss 回程/平滑歸位軌跡（向目標錨點的指數平滑插值）を計算します。
+    /// Boss の帰還・初期位置復帰軌道（目標アンカーへの指数平滑補間）を計算します。
     /// </summary>
     [LibraryImport(_dllName, EntryPoint = "Extension_CalculateBossReturnPosition")]
     [SuppressGCTransition]
