@@ -71,7 +71,7 @@ public static class CombatEffectHelper
     {
         world.Entity()
              .Set(new Transform(x, y, scaleX: 1.0f, scaleY: 1.0f))
-             .Set(FadeEffect.FadeOut(0.18f))
+             .Set(new FadeEffect(0.18f))
              .Add<EffectTag>();
     }
 
@@ -85,7 +85,7 @@ public static class CombatEffectHelper
     {
         world.Entity()
              .Set(new Transform(x, y, scaleX: 1.5f, scaleY: 1.5f))
-             .Set(FadeEffect.FadeOut(0.12f))
+             .Set(new FadeEffect(0.12f))
              .Set(new HitFlashEffect(0.08f, ColorPalette.SparkYellow))
              .Add<EffectTag>();
     }
@@ -101,7 +101,7 @@ public static class CombatEffectHelper
     {
         world.Entity()
              .Set(new Transform(x, y, scaleX: 2.2f, scaleY: 2.2f))
-             .Set(FadeEffect.FadeOut(0.08f))
+             .Set(new FadeEffect(0.08f))
              .Set(new HitFlashEffect(0.06f, color))
              .Add<EffectTag>();
     }
@@ -122,7 +122,7 @@ public static class CombatEffectHelper
                  .Set(new Transform(x, y))
                  .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
                  .Set(new Bullet(5.0f, ColorPalette.Red, ColorPalette.White))
-                 .Set(FadeEffect.FadeOut(0.60f))
+                 .Set(new FadeEffect(0.60f))
                  .Add<EffectTag>();
         }
     }
@@ -137,7 +137,7 @@ public static class CombatEffectHelper
     {
         world.Entity()
              .Set(new Transform(x, y, scaleX: 3.5f, scaleY: 3.5f))
-             .Set(FadeEffect.FadeOut(0.40f))
+             .Set(new FadeEffect(0.40f))
              .Add<EffectTag>();
     }
 
@@ -157,7 +157,7 @@ public static class CombatEffectHelper
                  .Set(new Transform(x, y))
                  .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
                  .Set(new Bullet(6.0f, ColorPalette.Gold, ColorPalette.GoldLight))
-                 .Set(FadeEffect.FadeOut(0.90f))
+                 .Set(new FadeEffect(0.90f))
                  .Add<EffectTag>();
         }
     }

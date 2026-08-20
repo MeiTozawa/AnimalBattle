@@ -120,7 +120,7 @@ public static class PlayerMovementSystem
 
                  if (isGrounded)
                  {
-                     doubleJump.Reset();
+                     doubleJump.RemainingJumps = doubleJump.MaxJumps;
                  }
 
                  trans.X = nextX;

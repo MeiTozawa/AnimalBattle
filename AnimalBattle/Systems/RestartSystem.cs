@@ -63,7 +63,7 @@ public static class RestartSystem
                          health.Current = pCfg.MaxHp;
                          health.Max = pCfg.MaxHp;
                          health.InvincibleTimer = 0.0f;
-                         doubleJump.Reset();
+                         doubleJump.RemainingJumps = doubleJump.MaxJumps;
                          playerState.ShootCooldown = 0.0f;
                          col.IsGrounded = true;
                          anim.CurrentClip = "Idle";
