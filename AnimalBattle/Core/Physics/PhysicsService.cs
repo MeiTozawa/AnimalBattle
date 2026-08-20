@@ -1,5 +1,6 @@
 using System;
 using AnimalBattle.Bindings;
+using AnimalBattle.Components;
 
 namespace AnimalBattle.Core.Physics;
 
@@ -9,6 +10,52 @@ namespace AnimalBattle.Core.Physics;
 public static unsafe class PhysicsService
 {
     // --- 2D 幾何形状交差判定 ---
+
+    /// <summary>
+    /// 2 つの Transform と CollisionShape 間の幾何学的交差（衝突）判定をパターンマッチングで網羅的に判定します。
+    /// </summary>
+    /// <param name="t1">第 1 エンティティの位置</param>
+    /// <param name="s1">第 1 エンティティの形状バリアント</param>
+    /// <param name="t2">第 2 エンティティの位置</param>
+    /// <param name="s2">第 2 エンティティの形状バリアント</param>
+    /// <returns>交差していれば true、それ以外は false</returns>
+    public static bool Intersects(in Transform t1, CollisionShape s1, in Transform t2, CollisionShape s2)
+    {
+        Vec2f p1 = new(t1.X + s1.OffsetX, t1.Y + s1.OffsetY);
+        Vec2f p2 = new(t2.X + s2.OffsetX, t2.Y + s2.OffsetY);
+
+        return (s1, s2) switch
+        {
+            (CollisionShape.Circle c1, CollisionShape.Circle c2) =>
+                Intersects(new Circle2D(p1, c1.Radius), new Circle2D(p2, c2.Radius)),
+
+            (CollisionShape.Box b1, CollisionShape.Box b2) =>
+                Intersects(new Box2D(p1, new Vec2f(b1.Width, b1.Height)), new Box2D(p2, new Vec2f(b2.Width, b2.Height))),
+
+            (CollisionShape.Circle c, CollisionShape.Box b) =>
+                Intersects(new Circle2D(p1, c.Radius), new Box2D(p2, new Vec2f(b.Width, b.Height))),
+
+            (CollisionShape.Box b, CollisionShape.Circle c) =>
+                Intersects(new Box2D(p1, new Vec2f(b.Width, b.Height)), new Circle2D(p2, c.Radius)),
+
+            (CollisionShape.Point, CollisionShape.Circle c) =>
+                Intersects(p1, new Circle2D(p2, c.Radius)),
+
+            (CollisionShape.Circle c, CollisionShape.Point) =>
+                Intersects(p2, new Circle2D(p1, c.Radius)),
+
+            (CollisionShape.Point, CollisionShape.Box b) =>
+                Intersects(p1, new Box2D(p2, new Vec2f(b.Width, b.Height))),
+
+            (CollisionShape.Box b, CollisionShape.Point) =>
+                Intersects(p2, new Box2D(p1, new Vec2f(b.Width, b.Height))),
+
+            (CollisionShape.Point, CollisionShape.Point) =>
+                MathF.Abs(p1.X - p2.X) < 0.001f && MathF.Abs(p1.Y - p2.Y) < 0.001f,
+
+            _ => false
+        };
+    }
 
     /// <summary>
     /// 2 つの円形衝突形状の交差を判定します。

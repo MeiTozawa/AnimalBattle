@@ -2,6 +2,7 @@ using System;
 using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Systems;
 
@@ -66,7 +67,7 @@ public static class CombatCollisionSystem
                      }
 
                      // 5. 幾何学的交差判定 (双方の Offset を加味した Circle vs Circle, Box vs Box, Circle vs Box)
-                     if (CollisionShape.Intersects(localAtkTrans, localHitbox.Shape, vicTrans, hurtbox.Shape))
+                     if (PhysicsService.Intersects(localAtkTrans, localHitbox.Shape, vicTrans, hurtbox.Shape))
                      {
                          // 5.1 ダメージ適用
                          vicHealth.Current -= localHitbox.Damage;

@@ -112,7 +112,7 @@ public sealed class PlayerConfig
     /// <returns>構築された被弾衝突形状バリアント</returns>
     public CollisionShape GetHurtboxShape()
     {
-        return CollisionShape.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight, HurtboxOffsetX, HurtboxOffsetY);
+        return CollisionShapeFactory.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight, HurtboxOffsetX, HurtboxOffsetY);
     }
 
     /// <summary>
@@ -121,7 +121,7 @@ public sealed class PlayerConfig
     /// <returns>構築された銃弾攻撃衝突形状バリアント</returns>
     public CollisionShape GetBulletHitboxShape()
     {
-        return CollisionShape.CreateWithFallback(BulletHitboxShape, BulletRadius, BulletWidth, BulletHeight, BulletHitboxOffsetX, BulletHitboxOffsetY);
+        return CollisionShapeFactory.CreateWithFallback(BulletHitboxShape, BulletRadius, BulletWidth, BulletHeight, BulletHitboxOffsetX, BulletHitboxOffsetY);
     }
 
     /// <summary>
