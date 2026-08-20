@@ -33,6 +33,21 @@ public static class ConfigManager
     /// <summary>描画および UI 設定オブジェクトを取得します。</summary>
     public static RenderConfig Render => _renderConfigContainer.Config;
 
+    /// <summary>プレイヤー設定コンテナを取得します。</summary>
+    public static ConfigBase<PlayerConfig> PlayerContainer => _playerConfigContainer;
+
+    /// <summary>Boss 設定コンテナを取得します。</summary>
+    public static ConfigBase<BossConfig> BossContainer => _bossConfigContainer;
+
+    /// <summary>弾幕パターン設定コンテナを取得します。</summary>
+    public static ConfigBase<PatternConfig> PatternContainer => _patternConfigContainer;
+
+    /// <summary>アリーナ足場設定コンテナを取得します。</summary>
+    public static ConfigBase<ArenaConfig> ArenaContainer => _arenaConfigContainer;
+
+    /// <summary>描画設定コンテナを取得します。</summary>
+    public static ConfigBase<RenderConfig> RenderContainer => _renderConfigContainer;
+
     /// <summary>
     /// 全 TOML 設定ファイルをロードし、自動リロード監視を開始します。
     /// </summary>

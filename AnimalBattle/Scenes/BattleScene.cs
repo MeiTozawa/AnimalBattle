@@ -89,7 +89,59 @@ public partial class BattleScene : IDisposable
         // 3. アリーナ足場および TileMap
         SetupArena();
 
+        // 4. TOML 設定ホットリロード時の Entity コンポーネント自動再同期
+        RegisterConfigReloadHooks();
+
         Console.WriteLine("[初期化完了] Boss バトルシーンが正常に初期化されました！");
+    }
+
+    /// <summary>
+    /// TOML 設定ファイル変更時のホットリロードコールバックを登録し、Entity の衝突判定・スケールを即時再同期します。
+    /// </summary>
+    private void RegisterConfigReloadHooks()
+    {
+        ConfigManager.BossContainer.OnConfigReloaded += OnBossConfigReloaded;
+        ConfigManager.PlayerContainer.OnConfigReloaded += OnPlayerConfigReloaded;
+    }
+
+    private void OnBossConfigReloaded()
+    {
+        Entity bossEntity = _ecsWorld.Lookup("Boss");
+        if (bossEntity.IsAlive())
+        {
+            BossConfig bCfg = ConfigManager.Boss;
+            bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
+            bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), damage: bCfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false));
+
+            if (bossEntity.Has<Transform>())
+            {
+                ref Transform t = ref bossEntity.GetMut<Transform>();
+                t.ScaleX = bCfg.ScaleX;
+                t.ScaleY = bCfg.ScaleY;
+            }
+
+            Console.WriteLine($"[BattleScene] Boss の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました (HurtboxRadius: {bCfg.HurtboxRadius}, BodyRadius: {bCfg.BodyHitboxRadius})");
+        }
+    }
+
+    private void OnPlayerConfigReloaded()
+    {
+        Entity playerEntity = _ecsWorld.Lookup("Player1");
+        if (playerEntity.IsAlive())
+        {
+            PlayerConfig pCfg = ConfigManager.Player;
+            playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly));
+            playerEntity.Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight));
+
+            if (playerEntity.Has<Transform>())
+            {
+                ref Transform t = ref playerEntity.GetMut<Transform>();
+                t.ScaleX = pCfg.ScaleX;
+                t.ScaleY = pCfg.ScaleY;
+            }
+
+            Console.WriteLine($"[BattleScene] Player の Hurtbox / CollisionBox / Scale を TOML からリアルタイム同期しました (HurtboxRadius: {pCfg.HurtboxRadius}, TerrainBox: {pCfg.HitboxWidth}x{pCfg.HitboxHeight})");
+        }
     }
 
     /// <summary>
@@ -142,6 +194,9 @@ public partial class BattleScene : IDisposable
     {
         if (!_isDisposed)
         {
+            ConfigManager.BossContainer.OnConfigReloaded -= OnBossConfigReloaded;
+            ConfigManager.PlayerContainer.OnConfigReloaded -= OnPlayerConfigReloaded;
+
             _ecsWorld.Dispose();
             _isDisposed = true;
             GC.SuppressFinalize(this);

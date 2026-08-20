@@ -52,12 +52,10 @@ public static class WorldRenderSystem
              .Run((Iter it) =>
              {
                  RenderConfig renderCfg = ConfigManager.Render;
-                 PlatformRenderConfig platCfg = renderCfg.Platform;
                  BossEffectsRenderConfig bossFx = renderCfg.BossEffects;
-                 PlayerRenderConfig playerRenderCfg = renderCfg.Player;
                  BulletRenderConfig bulletCfg = renderCfg.Bullets;
 
-                 // 1. 地図タイルマップの描画（未登録時はフォールバックの単色プラットフォーム描画）
+                 // 1. 地図タイルマップの描画
                  if (it.World().Has<TileMap>())
                  {
                      ref readonly TileMap map = ref it.World().Get<TileMap>();
@@ -76,15 +74,8 @@ public static class WorldRenderSystem
                          int x2 = (int)(trans.X + col.Width / 2.0f);
                          int y2 = (int)(trans.Y + col.Height / 2.0f);
 
-                         GameEngine.DrawBox(x1, y1, x2, y2, platCfg.FillColor, true);
-                         GameEngine.DrawBox(x1, y1, x2, y2, platCfg.BorderColor, false);
-                         GameEngine.DrawBox(
-                             x1 + platCfg.TopHighlightOffset,
-                             y1 + platCfg.TopHighlightOffset,
-                             x2 - platCfg.TopHighlightOffset,
-                             y1 + platCfg.TopHighlightOffset + platCfg.TopHighlightThickness,
-                             platCfg.TopHighlightColor,
-                             true);
+                         GameEngine.DrawBox(x1, y1, x2, y2, ColorPalette.DarkBg, true);
+                         GameEngine.DrawBox(x1, y1, x2, y2, ColorPalette.Cyan, false);
                      });
                  }
 
@@ -150,7 +141,7 @@ public static class WorldRenderSystem
                              sprite.SrcRect.Y1,
                              sprite.SrcRect.Width,
                              sprite.SrcRect.Height,
-                             bossFx.BossSpriteScale,
+                             trans.ScaleX,
                              bossAngle,
                              sprite.GraphHandle,
                              true,
@@ -166,7 +157,7 @@ public static class WorldRenderSystem
                                  sprite.SrcRect.Y1,
                                  sprite.SrcRect.Width,
                                  sprite.SrcRect.Height,
-                                 bossFx.BossSpriteScale,
+                                 trans.ScaleX,
                                  bossAngle,
                                  sprite.GraphHandle,
                                  true,

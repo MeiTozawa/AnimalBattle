@@ -54,10 +54,12 @@ public static class RestartSystem
                      playerBulletsQuery.Each(e => e.Destruct());
                      effectsQuery.Each(e => e.Destruct());
 
-                     playerQuery.Each((ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Health health, ref DoubleJump doubleJump, ref PlayerState playerState, ref Animation anim, ref Sprite sprite) =>
+                     playerQuery.Each((Entity e, ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Health health, ref DoubleJump doubleJump, ref PlayerState playerState, ref Animation anim, ref Sprite sprite) =>
                      {
                          trans.X = pCfg.SpawnX;
                          trans.Y = pCfg.SpawnY;
+                         trans.ScaleX = pCfg.ScaleX;
+                         trans.ScaleY = pCfg.ScaleY;
                          vel.Vx = 0.0f;
                          vel.Vy = 0.0f;
                          health.Current = pCfg.MaxHp;
@@ -65,17 +67,23 @@ public static class RestartSystem
                          health.InvincibleTimer = 0.0f;
                          doubleJump.RemainingJumps = doubleJump.MaxJumps;
                          playerState.ShootCooldown = 0.0f;
+                         col.Width = pCfg.HitboxWidth;
+                         col.Height = pCfg.HitboxHeight;
                          col.IsGrounded = true;
                          anim.CurrentClip = "Idle";
                          anim.Timer = 0.0f;
                          sprite.IsVisible = true;
                          sprite.FlipX = false;
+
+                         e.Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly));
                      });
 
-                     bossQuery.Each((ref Transform trans, ref Health health, ref BossStats stats, ref BossStateMachine fsm) =>
+                     bossQuery.Each((Entity e, ref Transform trans, ref Health health, ref BossStats stats, ref BossStateMachine fsm) =>
                      {
                          trans.X = bCfg.BaseX;
                          trans.Y = bCfg.BaseY;
+                         trans.ScaleX = bCfg.ScaleX;
+                         trans.ScaleY = bCfg.ScaleY;
                          health.Current = bCfg.MaxHp;
                          health.Max = bCfg.MaxHp;
                          health.InvincibleTimer = 0.0f;
@@ -93,6 +101,9 @@ public static class RestartSystem
                          fsm.SubTimer = 0.0f;
                          fsm.AngleOffset = 0.0f;
                          fsm.IsInvulnerable = false;
+
+                         e.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
+                         e.Set(new Hitbox(bCfg.GetHitboxShape(), damage: bCfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false));
                      });
                  }
              });
