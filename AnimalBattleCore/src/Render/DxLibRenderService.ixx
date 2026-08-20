@@ -198,7 +198,14 @@ namespace ab {
                                         c.trans_flag ? TRUE : FALSE, c.turn_flag ? TRUE : FALSE);
                 },
                 [](const SetDrawBlendModeCmd& c) {
-                    int dx_mode = (c.mode == BlendMode::Alpha) ? DX_BLENDMODE_ALPHA : DX_BLENDMODE_NOBLEND;
+                    int dx_mode = DX_BLENDMODE_NOBLEND;
+                    switch (c.mode) {
+                    case BlendMode::Alpha: dx_mode = DX_BLENDMODE_ALPHA; break;
+                    case BlendMode::Add:   dx_mode = DX_BLENDMODE_ADD; break;
+                    case BlendMode::Sub:   dx_mode = DX_BLENDMODE_SUB; break;
+                    case BlendMode::Mul:   dx_mode = DX_BLENDMODE_MULA; break;
+                    default:               dx_mode = DX_BLENDMODE_NOBLEND; break;
+                    }
                     ::SetDrawBlendMode(dx_mode, c.pal);
                 },
                 [](const SetDrawBrightCmd& c) { ::SetDrawBright(c.r, c.g, c.b); },

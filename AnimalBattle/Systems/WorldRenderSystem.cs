@@ -155,11 +155,24 @@ public static class WorldRenderSystem
                              sprite.GraphHandle,
                              true,
                              false);
-                     }
 
-                     if (stats.HitFlashTimer > 0.0f)
-                     {
-                         GameEngine.DrawCircle(bx, by, (int)bossFx.HitFlashRadius, bossFx.HitFlashColor, true);
+                         if (stats.HitFlashTimer > 0.0f)
+                         {
+                             GameEngine.SetDrawBlendMode(BlendMode.Add, 255);
+                             GameEngine.DrawRectRotaGraph(
+                                 bx,
+                                 by,
+                                 sprite.SrcRect.X1,
+                                 sprite.SrcRect.Y1,
+                                 sprite.SrcRect.Width,
+                                 sprite.SrcRect.Height,
+                                 bossFx.BossSpriteScale,
+                                 bossAngle,
+                                 sprite.GraphHandle,
+                                 true,
+                                 false);
+                             GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+                         }
                      }
                  });
 

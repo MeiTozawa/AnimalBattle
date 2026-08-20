@@ -571,6 +571,26 @@ __declspec(dllexport) void Draw_RotaGraph(ab::Vec2i center, double scale, double
     }
 }
 
+__declspec(dllexport) void Draw_SetBlendMode(int mode, int pal) noexcept {
+    try {
+        auto* render_service = ab::GetRenderService();
+        if (render_service != nullptr) {
+            render_service->SetDrawBlendMode(static_cast<ab::BlendMode>(mode), pal);
+        }
+    } catch (...) {
+    }
+}
+
+__declspec(dllexport) void Draw_SetDrawBright(int r, int g, int b) noexcept {
+    try {
+        auto* render_service = ab::GetRenderService();
+        if (render_service != nullptr) {
+            render_service->SetDrawBright(r, g, b);
+        }
+    } catch (...) {
+    }
+}
+
 // --- Physics & Mathematics APIs ---
 
 __declspec(dllexport) bool Physics_IntersectsCircleCircle(ab::Circle2D c1, ab::Circle2D c2) noexcept {

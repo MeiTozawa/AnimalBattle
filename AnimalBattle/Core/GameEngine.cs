@@ -466,4 +466,47 @@ public static class GameEngine
             trans,
             turnX);
     }
+
+    /// <summary>
+    /// 描画ブレンドモードおよびパラメータを設定します。
+    /// </summary>
+    /// <param name="mode">ブレンドモード (<see cref="BlendMode"/>)</param>
+    /// <param name="pal">ブレンドパラメータ (アルファ値 / 輝度など: 0～255)</param>
+    public static void SetDrawBlendMode(BlendMode mode, int pal = 255)
+    {
+        NativeBindings.Draw_SetBlendMode((int)mode, pal);
+    }
+
+    /// <summary>
+    /// 描画輝度（RGB 明るさ）を設定します。
+    /// </summary>
+    /// <param name="r">赤色輝度 (0～255)</param>
+    /// <param name="g">緑色輝度 (0～255)</param>
+    /// <param name="b">青色輝度 (0～255)</param>
+    public static void SetDrawBright(int r, int g, int b)
+    {
+        NativeBindings.Draw_SetDrawBright(r, g, b);
+    }
 }
+
+/// <summary>
+/// 描画合成ブレンドモード。
+/// </summary>
+public enum BlendMode
+{
+    /// <summary>ノーブレンド（通常描画）</summary>
+    NoBlend = 0,
+
+    /// <summary>アルファブレンド（透過合成）</summary>
+    Alpha = 1,
+
+    /// <summary>加算ブレンド（発光・閃白合成）</summary>
+    Add = 2,
+
+    /// <summary>減算ブレンド</summary>
+    Sub = 3,
+
+    /// <summary>乗算ブレンド</summary>
+    Mul = 4,
+}
+

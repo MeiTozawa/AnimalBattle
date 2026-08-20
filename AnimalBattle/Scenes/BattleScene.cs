@@ -50,7 +50,7 @@ public partial class BattleScene : IDisposable
         }
 
         int playerHandle = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle");
-        int bossHandle = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat);
+        int bossHandle = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
 
         App app = new App(_ecsWorld)
             .AddPluginGroup(new DefaultPlugins());
@@ -83,7 +83,7 @@ public partial class BattleScene : IDisposable
             .Set(new Health(bossCfg.MaxHp))
             .Set(new BossStats(baseX: bossCfg.BaseX, baseY: bossCfg.BaseY))
             .Set(new BossStateMachine())
-            .Set(new Sprite(bossHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
+            .Set(new Sprite(bossHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
             .Add<BossTag>();
 
         // 3. アリーナ足場および TileMap

@@ -40,7 +40,7 @@ public static class RestartSystem
 
         world.System("RestartSystem")
              .Kind(Ecs.PostUpdate)
-             .Run((Iter it) =>
+             .Run(it =>
              {
                  bool restartJustPressed = InputService.IsPressed(InputAction.Restart);
 
@@ -51,8 +51,8 @@ public static class RestartSystem
 
                      CombatEffectHelper.ClearAllBossBullets(world);
 
-                     playerBulletsQuery.Each((Entity e) => e.Destruct());
-                     effectsQuery.Each((Entity e) => e.Destruct());
+                     playerBulletsQuery.Each(e => e.Destruct());
+                     effectsQuery.Each(e => e.Destruct());
 
                      playerQuery.Each((ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Health health, ref DoubleJump doubleJump, ref PlayerState playerState, ref Animation anim, ref Sprite sprite) =>
                      {

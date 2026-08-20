@@ -2,8 +2,8 @@
 MaxHp = 30.0
 BaseX = 640.0
 BaseY = 200.0
-ScaleX = 2.8
-ScaleY = 2.8
+ScaleX = 0.6
+ScaleY = 0.6
 HitFlashDuration = 0.08
 
 # Boss Hurtbox (Boss 銃弾被弾判定: "Circle" のため Radius のみ指定)

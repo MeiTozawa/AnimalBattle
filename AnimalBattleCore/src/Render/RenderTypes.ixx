@@ -69,6 +69,9 @@ namespace ab {
     export enum class BlendMode {
         NoBlend,  ///< ブレンドなし（DX_BLENDMODE_NOBLEND）
         Alpha,    ///< アルファブレンド（DX_BLENDMODE_ALPHA）
+        Add,      ///< 加算ブレンド（DX_BLENDMODE_ADD）
+        Sub,      ///< 減算ブレンド（DX_BLENDMODE_SUB）
+        Mul,      ///< 乗算ブレンド（DX_BLENDMODE_MULA）
     };
 
     export enum class BorderShape {

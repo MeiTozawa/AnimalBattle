@@ -216,6 +216,14 @@ internal static unsafe partial class NativeBindings
     [SuppressGCTransition]
     public static partial void Draw_RectRotaGraph(Vec2i center, Vec2i srcPos, Vec2i srcSize, double scale, double angle, int handle, [MarshalAs(UnmanagedType.U1)] bool trans, [MarshalAs(UnmanagedType.U1)] bool turnX);
 
+    [LibraryImport(_dllName, EntryPoint = "Draw_SetBlendMode")]
+    [SuppressGCTransition]
+    public static partial void Draw_SetBlendMode(int mode, int pal);
+
+    [LibraryImport(_dllName, EntryPoint = "Draw_SetDrawBright")]
+    [SuppressGCTransition]
+    public static partial void Draw_SetDrawBright(int r, int g, int b);
+
     #endregion
 
     #region Physics & Mathematics
