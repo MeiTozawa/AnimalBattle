@@ -4,11 +4,13 @@ using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using AnimalBattle.Maps;
+using AnimalBattle.Scenes;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// アリーナ足場、Boss (オーラ・無敵シールド・予兆リング・スプライト・被弾フラッシュ・突進残影)、
+/// アリーナ足場・タイルマップ、Boss (オーラ・無敵シールド・予兆リング・スプライト・被弾フラッシュ・突進残影)、
 /// プレイヤー自機 (スプライト・無敵点滅・判定点)、および 8 方向プレイヤー弾・Boss 弾幕を描画する ECS 描画 System。
 /// </summary>
 public static class WorldRenderSystem
@@ -55,23 +57,36 @@ public static class WorldRenderSystem
                  PlayerRenderConfig playerRenderCfg = renderCfg.Player;
                  BulletRenderConfig bulletCfg = renderCfg.Bullets;
 
-                 platformQuery.Each((ref Transform trans, ref CollisionBox col) =>
+                 // 1. 地図タイルマップの描画（未登録時はフォールバックの単色プラットフォーム描画）
+                 if (it.World().Has<TileMap>())
                  {
-                     int x1 = (int)(trans.X - col.Width / 2.0f);
-                     int y1 = (int)(trans.Y - col.Height / 2.0f);
-                     int x2 = (int)(trans.X + col.Width / 2.0f);
-                     int y2 = (int)(trans.Y + col.Height / 2.0f);
+                     ref readonly TileMap map = ref it.World().Get<TileMap>();
+                     map.Draw();
+                 }
+                 else if (BattleScene.CurrentTileMap != null)
+                 {
+                     BattleScene.CurrentTileMap.Draw();
+                 }
+                 else
+                 {
+                     platformQuery.Each((ref Transform trans, ref CollisionBox col) =>
+                     {
+                         int x1 = (int)(trans.X - col.Width / 2.0f);
+                         int y1 = (int)(trans.Y - col.Height / 2.0f);
+                         int x2 = (int)(trans.X + col.Width / 2.0f);
+                         int y2 = (int)(trans.Y + col.Height / 2.0f);
 
-                     GameEngine.DrawBox(x1, y1, x2, y2, platCfg.FillColor, true);
-                     GameEngine.DrawBox(x1, y1, x2, y2, platCfg.BorderColor, false);
-                     GameEngine.DrawBox(
-                         x1 + platCfg.TopHighlightOffset,
-                         y1 + platCfg.TopHighlightOffset,
-                         x2 - platCfg.TopHighlightOffset,
-                         y1 + platCfg.TopHighlightOffset + platCfg.TopHighlightThickness,
-                         platCfg.TopHighlightColor,
-                         true);
-                 });
+                         GameEngine.DrawBox(x1, y1, x2, y2, platCfg.FillColor, true);
+                         GameEngine.DrawBox(x1, y1, x2, y2, platCfg.BorderColor, false);
+                         GameEngine.DrawBox(
+                             x1 + platCfg.TopHighlightOffset,
+                             y1 + platCfg.TopHighlightOffset,
+                             x2 - platCfg.TopHighlightOffset,
+                             y1 + platCfg.TopHighlightOffset + platCfg.TopHighlightThickness,
+                             platCfg.TopHighlightColor,
+                             true);
+                     });
+                 }
 
                  bossQuery.Each((ref Transform trans, ref Health bHealth, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
                  {

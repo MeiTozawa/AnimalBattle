@@ -5,6 +5,7 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Core.Asset;
+using AnimalBattle.Maps;
 using AnimalBattle.Plugins;
 
 namespace AnimalBattle.Scenes;
@@ -17,7 +18,13 @@ namespace AnimalBattle.Scenes;
 public partial class BattleScene : IDisposable
 {
     private readonly World _ecsWorld;
+    private TileMap? _tileMap;
     private bool _isDisposed;
+
+    /// <summary>
+    /// 現在アクティブなタイルマップインスタンスを取得します。
+    /// </summary>
+    public static TileMap? CurrentTileMap { get; private set; }
 
     /// <summary>
     /// <see cref="BattleScene"/> の新しいインスタンスを初期化します。
@@ -79,42 +86,37 @@ public partial class BattleScene : IDisposable
             .Set(new Sprite(bossHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
             .Add<BossTag>();
 
-        // 3. アリーナ足場
+        // 3. アリーナ足場および TileMap
         SetupArena();
 
         Console.WriteLine("[初期化完了] Boss バトルシーンが正常に初期化されました！");
     }
 
     /// <summary>
-    /// arena.toml に基づいて戦闘用の固定アリーナプラットフォームを生成します。
+    /// arena.toml の TileMap 設定および TileSet の衝突領域に基づいてプラットフォームコライダーを生成します。
     /// </summary>
     private void SetupArena()
     {
         ArenaConfig arenaCfg = ConfigManager.Arena;
 
-        // メイン底面フロア
-        _ecsWorld.Entity("Platform_Floor")
-            .Set(new Transform(arenaCfg.Floor.X, arenaCfg.Floor.Y))
-            .Set(new CollisionBox(arenaCfg.Floor.Width, arenaCfg.Floor.Height))
-            .Add<PlatformTag>();
+        // TileMap のロード、初期化およびコライダー生成
+        TileMapConfig tileMapCfg = arenaCfg.TileMap;
+        Result<ConfigBase<TileSetConfig>> tileSetConfigResult = TileSetConfig.LoadFromFile(tileMapCfg.TileConfig);
+        if (tileSetConfigResult.IsOk && tileSetConfigResult.Value != null)
+        {
+            int sheetHandle = AssetManager.LoadTexture(tileMapCfg.TileSheet);
+            TileSet tileSet = new TileSet(sheetHandle, tileSetConfigResult.Value.Config);
+            _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
+            _ecsWorld.Set(_tileMap);
+            CurrentTileMap = _tileMap;
 
-        // 左側浮遊足場
-        _ecsWorld.Entity("Platform_Left")
-            .Set(new Transform(arenaCfg.PlatformLeft.X, arenaCfg.PlatformLeft.Y))
-            .Set(new CollisionBox(arenaCfg.PlatformLeft.Width, arenaCfg.PlatformLeft.Height))
-            .Add<PlatformTag>();
-
-        // 右側浮遊足場
-        _ecsWorld.Entity("Platform_Right")
-            .Set(new Transform(arenaCfg.PlatformRight.X, arenaCfg.PlatformRight.Y))
-            .Set(new CollisionBox(arenaCfg.PlatformRight.Width, arenaCfg.PlatformRight.Height))
-            .Add<PlatformTag>();
-
-        // 中央高台足場
-        _ecsWorld.Entity("Platform_Center")
-            .Set(new Transform(arenaCfg.PlatformCenter.X, arenaCfg.PlatformCenter.Y))
-            .Set(new CollisionBox(arenaCfg.PlatformCenter.Width, arenaCfg.PlatformCenter.Height))
-            .Add<PlatformTag>();
+            _tileMap.BuildPlatformColliders(_ecsWorld);
+            Console.WriteLine("[BattleScene] TileMap および TileSet プラットフォームコライダーが正常に初期化されました。");
+        }
+        else
+        {
+            Console.WriteLine($"[BattleScene 警告] TileSet 設定のロードに失敗しました: {tileSetConfigResult.Error?.Description}");
+        }
     }
 
     /// <summary>
