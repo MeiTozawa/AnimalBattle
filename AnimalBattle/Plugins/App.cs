@@ -7,9 +7,13 @@ namespace AnimalBattle.Plugins;
 /// Bevy エンジン (<c>bevy_app/app</c>) に準拠したモジュール・プラグイン統合アプリケーションコンテナ。
 /// ドメインごとの ECS システム登録、リソース管理、およびプラグイン構築のライフサイクルを提供します。
 /// </summary>
-public class App
+/// <remarks>
+/// 指定された Flecs.NET World で <see cref="App"/> コンテナを初期化します。
+/// </remarks>
+/// <param name="world">初期化対象の ECS ワールド</param>
+public class App(World world)
 {
-    private readonly World _world;
+    private readonly World _world = world;
     private readonly Dictionary<Type, IPlugin> _plugins = [];
     private readonly Dictionary<Type, object> _resources = [];
     private bool _isBuilt;
@@ -23,15 +27,6 @@ public class App
     /// プラグイン群の構築が完了しているか判定します。
     /// </summary>
     public bool IsBuilt => _isBuilt;
-
-    /// <summary>
-    /// 指定された Flecs.NET World で <see cref="App"/> コンテナを初期化します。
-    /// </summary>
-    /// <param name="world">初期化対象の ECS ワールド</param>
-    public App(World world)
-    {
-        _world = world;
-    }
 
     /// <summary>
     /// 新しい単一プラグインを登録します。

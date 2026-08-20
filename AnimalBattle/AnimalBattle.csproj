@@ -25,11 +25,4 @@
     <PackageReference Include="Tomlyn" Version="2.10.1" />
     <PackageReference Include="Tomlyn.Extensions.Configuration" Version="2.0.0" />
   </ItemGroup>
-
-  <!-- [Require<T>] 属性から With トレイト登録コードを自動生成する Source Generator -->
-  <ItemGroup>
-    <ProjectReference Include="..\AnimalBattle.Generators\AnimalBattle.Generators.csproj"
-                       OutputItemType="Analyzer"
-                       ReferenceOutputAssembly="false" />
-  </ItemGroup>
 </Project>
