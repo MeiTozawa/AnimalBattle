@@ -68,9 +68,6 @@ public sealed class BossEffectsRenderConfig
     /// <summary>後隙時の光輪色 (<see cref="Color"/>)</summary>
     public Color RecoveringAuraColor { get; set; } = ColorPalette.CyanRecovering;
 
-    /// <summary>Boss スプライト描画スケール</summary>
-    public double BossSpriteScale { get; set; } = 2.8;
-
     /// <summary>Boss 浮遊時の揺れ角度振幅</summary>
     public double BossHoverAngleAmp { get; set; } = 0.08;
 

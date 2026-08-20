@@ -24,7 +24,6 @@ ShieldFillColor = 0x44FFFF88
 RecoveringAuraRadius = 65.0      
 RecoveringAuraColor = 0x3300E5FF 
 
-BossSpriteScale = 0.6            
 BossHoverAngleAmp = 0.08         
 BossHoverAngleSpeed = 2.0        
 
