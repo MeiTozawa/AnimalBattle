@@ -60,8 +60,8 @@ public static class ResourcePath
         /// <summary>sheet.png のファイルパス。</summary>
         public const string SheetPng = @"Platform\sheet.png";
 
-        /// <summary>sheet.xml のファイルパス。</summary>
-        public const string SheetXml = @"Platform\sheet.xml";
+        /// <summary>sheet.toml のファイルパス。</summary>
+        public const string SheetToml = @"Platform\sheet.toml";
     }
 
     /// <summary>

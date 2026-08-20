@@ -142,10 +142,34 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
                 return Path.GetFullPath(directConfig);
             }
 
+            string directResource = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resource", fileName);
+            if (File.Exists(directResource))
+            {
+                return Path.GetFullPath(directResource);
+            }
+
+            string directBase = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
+            if (File.Exists(directBase))
+            {
+                return Path.GetFullPath(directBase);
+            }
+
             string cwdConfig = Path.Combine(Environment.CurrentDirectory, "Config", fileName);
             if (File.Exists(cwdConfig))
             {
                 return Path.GetFullPath(cwdConfig);
+            }
+
+            string cwdResource = Path.Combine(Environment.CurrentDirectory, "Resource", fileName);
+            if (File.Exists(cwdResource))
+            {
+                return Path.GetFullPath(cwdResource);
+            }
+
+            string cwdDirect = Path.Combine(Environment.CurrentDirectory, fileName);
+            if (File.Exists(cwdDirect))
+            {
+                return Path.GetFullPath(cwdDirect);
             }
 
             DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
@@ -155,6 +179,18 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
                 if (File.Exists(candidate))
                 {
                     return Path.GetFullPath(candidate);
+                }
+
+                string resCandidate = Path.Combine(dir.FullName, "Resource", fileName);
+                if (File.Exists(resCandidate))
+                {
+                    return Path.GetFullPath(resCandidate);
+                }
+
+                string rootCandidate = Path.Combine(dir.FullName, fileName);
+                if (File.Exists(rootCandidate))
+                {
+                    return Path.GetFullPath(rootCandidate);
                 }
 
                 dir = dir.Parent;

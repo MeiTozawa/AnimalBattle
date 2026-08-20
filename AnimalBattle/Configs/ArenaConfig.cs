@@ -1,41 +1,42 @@
+using System.Collections.Generic;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// 個別プラットフォームの幾何パラメータ定義クラス。
+/// タイルマップの描画・配置設定クラス。
 /// </summary>
-public sealed class PlatformData
+public sealed class TileMapConfig
 {
-    /// <summary>中心 X 座標</summary>
-    public float X { get; set; }
+    /// <summary>タイルセットテクスチャの相対パス</summary>
+    public string TileSheet { get; set; } = ResourcePath.Platform.SheetPng;
 
-    /// <summary>中心 Y 座標</summary>
-    public float Y { get; set; }
+    /// <summary>タイルセットメタデータ TOML の相対パス</summary>
+    public string TileConfig { get; set; } = ResourcePath.Platform.SheetToml;
 
-    /// <summary>足場幅（ピクセル）</summary>
-    public float Width { get; set; }
+    /// <summary>描画時のタイル単体幅（ピクセル）</summary>
+    public int RenderTileWidth { get; set; } = 70;
 
-    /// <summary>足場高さ（ピクセル）</summary>
-    public float Height { get; set; }
+    /// <summary>描画時のタイル単体高さ（ピクセル）</summary>
+    public int RenderTileHeight { get; set; } = 70;
+
+    /// <summary>マップ原点 X 座標（左上）</summary>
+    public float OriginX { get; set; } = 0.0f;
+
+    /// <summary>マップ原点 Y 座標（左上）</summary>
+    public float OriginY { get; set; } = 0.0f;
+
+    /// <summary>2D タイル ID グリッドデータ（0 = 空白/空気）</summary>
+    public List<List<int>> Data { get; set; } = [];
 }
 
 /// <summary>
-/// Config/arena.toml から読み込まれる戦闘アリーナおよび足場設定クラス。
+/// Config/arena.toml から読み込まれる戦闘アリーナ境界およびタイルマップ設定クラス。
 /// </summary>
 public sealed class ArenaConfig
 {
-    /// <summary>底面メインフロア</summary>
-    public PlatformData Floor { get; set; } = new() { X = 640.0f, Y = 600.0f, Width = 1240.0f, Height = 36.0f };
-
-    /// <summary>左側浮遊足場</summary>
-    public PlatformData PlatformLeft { get; set; } = new() { X = 280.0f, Y = 440.0f, Width = 240.0f, Height = 22.0f };
-
-    /// <summary>右側浮遊足場</summary>
-    public PlatformData PlatformRight { get; set; } = new() { X = 1000.0f, Y = 440.0f, Width = 240.0f, Height = 22.0f };
-
-    /// <summary>中央高台足場</summary>
-    public PlatformData PlatformCenter { get; set; } = new() { X = 640.0f, Y = 300.0f, Width = 200.0f, Height = 20.0f };
+    /// <summary>タイルマップ配置設定</summary>
+    public TileMapConfig TileMap { get; set; } = new();
 
     /// <summary>プレイヤー移動可能な最小 X 境界</summary>
     public float BoundaryMinX { get; set; } = 25.0f;

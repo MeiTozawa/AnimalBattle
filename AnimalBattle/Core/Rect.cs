@@ -8,6 +8,11 @@ namespace AnimalBattle.Core;
 public struct Rect<T> where T : struct
 {
     /// <summary>
+    /// 全成分が 0 の矩形定数。
+    /// </summary>
+    public static readonly Rect<T> Zero = default;
+
+    /// <summary>
     /// 矩形の左端 X 座標を取得または設定します。
     /// </summary>
     public T Left { get; set; }

@@ -1,0 +1,16 @@
+# Platform TileSet Configuration
+TileWidth = 70
+TileHeight = 70
+Columns = 6
+Rows = 7
+
+# Platform Block Tile IDs
+LeftBlock = 1
+MiddleBlock = 21
+RightBlock = 41
+
+# Collision Box (Top-Left (0, 0) to Bottom-Right (70, 40))
+CollisionX1 = 0
+CollisionY1 = 0
+CollisionX2 = 70
+CollisionY2 = 40

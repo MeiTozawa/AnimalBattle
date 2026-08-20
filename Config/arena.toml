@@ -1,4 +1,4 @@
-# Combat Arena Platforms Configuration
+# Combat Arena Platforms & TileMap Configuration
 BoundaryMinX = 25.0
 BoundaryMaxX = 1255.0
 BulletDespawnMinX = -80.0
@@ -6,30 +6,24 @@ BulletDespawnMaxX = 1360.0
 BulletDespawnMinY = -80.0
 BulletDespawnMaxY = 800.0
 
-# Bottom Main Floor
-[Floor]
-X = 640.0
-Y = 600.0
-Width = 1240.0
-Height = 36.0
-
-# Left Floating Platform
-[PlatformLeft]
-X = 280.0
-Y = 440.0
-Width = 240.0
-Height = 22.0
-
-# Right Floating Platform
-[PlatformRight]
-X = 1000.0
-Y = 440.0
-Width = 240.0
-Height = 22.0
-
-# Center High Platform
-[PlatformCenter]
-X = 640.0
-Y = 300.0
-Width = 200.0
-Height = 20.0
+# 2D Grid TileMap Configuration
+[TileMap]
+TileSheet = "Platform\\sheet.png"
+TileConfig = "Platform\\sheet.toml"
+RenderTileWidth = 70
+RenderTileHeight = 70
+OriginX = -25.0
+OriginY = 0.0
+Data = [
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 1, 21, 41, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 1, 21, 41, 0, 0, 0, 0, 0, 0, 0, 1, 21, 41, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [1, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 41],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+]
