@@ -1,5 +1,5 @@
 # Boss Base Attributes
-MaxHp = 30.0
+MaxHp = 60.0
 BaseX = 640.0
 BaseY = 200.0
 ScaleX = 0.6
@@ -8,12 +8,12 @@ HitFlashDuration = 0.08
 
 # Boss Hurtbox (Boss 銃弾被弾判定: "Circle" のため Radius のみ指定)
 HurtboxShape = "Circle"
-HurtboxRadius = 55.0
+HurtboxRadius = 60.0
 HurtboxOffsetY = 0.0
 
 # Boss Body Contact Hitbox (Boss 肉体接触・突進攻撃判定: "Circle" のため Radius のみ指定)
 HitboxShape = "Circle"
-BodyHitboxRadius = 55.0
+BodyHitboxRadius = 50.0
 BodyHitboxOffsetY = 0.0
 BodyContactDamage = 1.0
 
