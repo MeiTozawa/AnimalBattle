@@ -1,21 +1,21 @@
 # Player Configuration
 MaxHp = 3
 InvincibleDuration = 0.5
-MoveSpeed = 288.0           # 288.0 px/s (4.8 px/frame @ 60fps)
-FirstJumpVelocity = -672.0  # -672.0 px/s (-11.2 px/frame @ 60fps)
-SecondJumpVelocity = -552.0 # -552.0 px/s (-9.2 px/frame @ 60fps)
-Gravity = 1620.0            # 1620.0 px/s² (0.45 px/frame² @ 60fps)
-MaxFallSpeed = 600.0        # 600.0 px/s (10.0 px/frame @ 60fps)
+MoveSpeed = 288.0
+FirstJumpVelocity = -672.0
+SecondJumpVelocity = -552.0
+Gravity = 1620.0
+MaxFallSpeed = 600.0
 MaxJumps = 2
 
-# Player Terrain Collision (地形足場衝突)
+# Player Terrain Collision
 HitboxWidth = 32.0
 HitboxHeight = 48.0
 
-# Player Hurtbox (プレイヤー被弾判定: "Circle" のため Radius のみ指定)
+# Player Hurtbox
 HurtboxShape = "Circle"
 HurtboxRadius = 7.0
-HurtboxOffsetY = 16.0   # 下方向に 16 ピクセル微調整し、猫の躯体（胸腹部中心）へアライン
+HurtboxOffsetY = 16.0
 
 ScaleX = 2.0
 ScaleY = 2.0
@@ -24,11 +24,11 @@ SpawnY = 500.0
 
 # Shoot & Bullet Configuration
 ShootCooldown = 0.16
-BulletSpeed = 960.0         # 960.0 px/s (16.0 px/frame @ 60fps)
+BulletSpeed = 960.0
 BulletSpawnOffset = 24.0
 BulletSpawnOffsetY = -4.0
 
-# Player Bullet Hitbox (プレイヤー銃弾攻撃判定: "Box" のため Width / Height のみ指定)
+# Player Bullet Hitbox
 BulletHitboxShape = "Box"
 BulletWidth = 12.0
 BulletHeight = 8.0

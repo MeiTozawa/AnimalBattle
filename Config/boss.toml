@@ -6,12 +6,12 @@ ScaleX = 0.6
 ScaleY = 0.6
 HitFlashDuration = 0.08
 
-# Boss Hurtbox (Boss 銃弾被弾判定: "Circle" のため Radius のみ指定)
+# Boss Hurtbox
 HurtboxShape = "Circle"
 HurtboxRadius = 60.0
 HurtboxOffsetY = 0.0
 
-# Boss Body Contact Hitbox (Boss 肉体接触・突進攻撃判定: "Circle" のため Radius のみ指定)
+# Boss Body Contact Hitbox
 HitboxShape = "Circle"
 BodyHitboxRadius = 50.0
 BodyHitboxOffsetY = 0.0

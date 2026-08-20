@@ -47,14 +47,26 @@ public static class HudRenderSystem
 
                  // 1. 操作説明テキスト
                  GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY, hudCfg.TitleText, hudCfg.TitleColor);
-                 GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY + hudCfg.LineSpacing * 1, hudCfg.MoveHelpText, hudCfg.HelpTextColor);
-                 GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY + hudCfg.LineSpacing * 2, hudCfg.JumpHelpText, hudCfg.HelpTextColor);
-                 GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY + hudCfg.LineSpacing * 3, hudCfg.ShootHelpText, hudCfg.HelpTextColor);
-                 GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY + hudCfg.LineSpacing * 4, hudCfg.RestartHelpText, hudCfg.HelpTextColor);
 
-                 string dbgStatus = dbgCfg.Enabled ? " [ON - H / F1 to toggle]" : " [OFF - H / F1 to toggle]";
-                 Color dbgColor = dbgCfg.Enabled ? dbgCfg.IndicatorColor : hudCfg.HelpTextColor;
-                 GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY + hudCfg.LineSpacing * 5, $"{hudCfg.DebugHelpText}{dbgStatus}", dbgColor);
+                 int lineIndex = 1;
+                 foreach (HudTextItem item in hudCfg.Text)
+                 {
+                     int drawY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
+
+                     if (item.Text.Contains("F1", StringComparison.OrdinalIgnoreCase) ||
+                         item.Text.Contains("Hitbox", StringComparison.OrdinalIgnoreCase))
+                     {
+                         string dbgStatus = dbgCfg.Enabled ? " [ON - H / F1 to toggle]" : " [OFF - H / F1 to toggle]";
+                         Color statusColor = dbgCfg.Enabled ? dbgCfg.IndicatorColor : item.Color;
+                         GameEngine.DrawString(hudCfg.TitleX, drawY, $"{item.Text}{dbgStatus}", statusColor);
+                     }
+                     else
+                     {
+                         GameEngine.DrawString(hudCfg.TitleX, drawY, item.Text, item.Color);
+                     }
+
+                     lineIndex++;
+                 }
 
                  // 2. プレイヤージャンプ残数表示
                  doubleJumpQuery.Each((ref DoubleJump doubleJump) =>

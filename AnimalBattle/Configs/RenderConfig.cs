@@ -121,6 +121,18 @@ public sealed class BulletRenderConfig
 }
 
 /// <summary>
+/// 左上 HUD 操作案内テキストの 1 行（テキストと色）を表す設定クラス。
+/// </summary>
+public sealed class HudTextItem
+{
+    /// <summary>案内テキスト文字列</summary>
+    public string Text { get; set; } = string.Empty;
+
+    /// <summary>文字色 (<see cref="Color"/>)</summary>
+    public Color Color { get; set; } = ColorPalette.GrayLight;
+}
+
+/// <summary>
 /// 左上 HUD 操作案内表示の設定クラス。
 /// </summary>
 public sealed class HudRenderConfig
@@ -140,26 +152,10 @@ public sealed class HudRenderConfig
     /// <summary>行間隔ピクセル</summary>
     public int LineSpacing { get; set; } = 18;
 
-    /// <summary>移動操作案内テキスト</summary>
-    public string MoveHelpText { get; set; } = "[A/D/Left/Right]: Move (Instant Stop)";
-
-    /// <summary>ジャンプ操作案内テキスト</summary>
-    public string JumpHelpText { get; set; } = "[Space/K]: Jump & Air Double Jump";
-
-    /// <summary>射撃操作案内テキスト</summary>
-    public string ShootHelpText { get; set; } = "[J/Z] + Direction: 8-Way Aim & Shoot";
-
-    /// <summary>通常案内文字色 (<see cref="Color"/>)</summary>
-    public Color HelpTextColor { get; set; } = ColorPalette.GrayLight;
-
-    /// <summary>リスタート案内テキスト</summary>
-    public string RestartHelpText { get; set; } = "[R]: Instant Restart (1-Frame Reset)";
-
-    /// <summary>リスタート案内文字色 (<see cref="Color"/>)</summary>
-    public Color RestartHelpColor { get; set; } = ColorPalette.RedRestart;
-
-    /// <summary>デバッグ表示切替案内テキスト</summary>
-    public string DebugHelpText { get; set; } = "[F1/H]: Toggle Hitbox Debug";
+    /// <summary>
+    /// 操作案内テキスト項目のリスト。
+    /// </summary>
+    public List<HudTextItem> Text { get; set; } = new();
 
     /// <summary>二段ジャンプインジケータ Y 座標</summary>
     public int DoubleJumpY { get; set; } = 134;

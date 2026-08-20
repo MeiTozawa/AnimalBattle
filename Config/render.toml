@@ -44,23 +44,23 @@ ViewportCullingMarginX = 50
 ViewportCullingMarginY = 50     
 
 [Hud]
-TitleX = 20                      
-TitleY = 16                      
-TitleColor = 0xFFFFD700          
+TitleX = 20
+TitleY = 16
+TitleColor = 0xFFFFD700
 TitleText = "=== BULLET BATTLE (TOML FSM) ==="
 
-LineSpacing = 18                 
-MoveHelpText = "[A/D/Left/Right]: Move (Instant Stop)"
-JumpHelpText = "[Space/K]: Jump & Air Double Jump"
-ShootHelpText = "[J/Z] + Direction: 8-Way Aim & Shoot"
-RestartHelpText = "[R]: Instant Restart (1-Frame Reset)"
-RestartHelpColor = 0xFFFF8080    
-DebugHelpText = "[F1/H]: Toggle Hitbox/Hurtbox Debug"
-HelpTextColor = 0xFFCCCCCC       
+LineSpacing = 18
+Text = [
+    { Text = "[A/D/Left/Right]: Move (Instant Stop)", Color = 0xFFCCCCCC },
+    { Text = "[Space/K]: Jump & Air Double Jump", Color = 0xFFCCCCCC },
+    { Text = "[J/Z] + Direction: 8-Way Aim & Shoot", Color = 0xFFCCCCCC },
+    { Text = "[R]: Instant Restart (1-Frame Reset)", Color = 0xFFFF8080 },
+    { Text = "[F1/H]: Toggle Hitbox/Hurtbox Debug", Color = 0xFFCCCCCC },
+]
 
-DoubleJumpY = 134                
-DoubleJumpActiveColor = 0xFF00E5FF   
-DoubleJumpInactiveColor = 0xFF888888 
+DoubleJumpY = 134
+DoubleJumpActiveColor = 0xFF00E5FF
+DoubleJumpInactiveColor = 0xFF888888
 
 [BossHpBar]
 BarX1 = 240                      
