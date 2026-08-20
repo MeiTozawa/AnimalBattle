@@ -4,28 +4,10 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// Boss の光環・予兆リング・無敵シールド・受撃フラッシュ等の描画エフェクト設定クラス。
+/// Boss の予兆リング・無敵シールド等の描画エフェクト設定クラス。
 /// </summary>
 public sealed class BossEffectsRenderConfig
 {
-    /// <summary>Phase 1 オーラカラー (<see cref="Color"/>)</summary>
-    public Color Phase1AuraColor { get; set; } = ColorPalette.Cyan;
-
-    /// <summary>Phase 2 オーラカラー (<see cref="Color"/>)</summary>
-    public Color Phase2AuraColor { get; set; } = ColorPalette.Purple;
-
-    /// <summary>Phase 3 オーラカラー (<see cref="Color"/>)</summary>
-    public Color Phase3AuraColor { get; set; } = ColorPalette.RedBright;
-
-    /// <summary>オーラ基本半径</summary>
-    public float AuraBaseRadius { get; set; } = 75.0f;
-
-    /// <summary>オーラ脈動振幅</summary>
-    public float AuraPulseAmp { get; set; } = 8.0f;
-
-    /// <summary>オーラ脈動周波数</summary>
-    public float AuraPulseSpeed { get; set; } = 4.0f;
-
     /// <summary>前隙予兆リング開始外径</summary>
     public float TelegraphStartRadius { get; set; } = 140.0f;
 
@@ -183,6 +165,15 @@ public sealed class BossHpBarRenderConfig
 
     /// <summary>HP バー右下 Y 座標</summary>
     public int BarY2 { get; set; } = 688;
+
+    /// <summary>Phase 1 HP ゲージ色 (<see cref="Color"/>)</summary>
+    public Color Phase1Color { get; set; } = ColorPalette.Cyan;
+
+    /// <summary>Phase 2 HP ゲージ色 (<see cref="Color"/>)</summary>
+    public Color Phase2Color { get; set; } = ColorPalette.Purple;
+
+    /// <summary>Phase 3 HP ゲージ色 (<see cref="Color"/>)</summary>
+    public Color Phase3Color { get; set; } = ColorPalette.RedBright;
 
     /// <summary>HP バー背景外枠パディング</summary>
     public int BgPadding { get; set; } = 4;

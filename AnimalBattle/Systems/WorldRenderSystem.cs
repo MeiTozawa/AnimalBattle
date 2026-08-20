@@ -81,14 +81,6 @@ public static class WorldRenderSystem
 
                  bossQuery.Each((ref Transform trans, ref Health bHealth, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
                  {
-                     Color auraColor = stats.Phase switch
-                     {
-                         1 => bossFx.Phase1AuraColor,
-                         2 => bossFx.Phase2AuraColor,
-                         3 => bossFx.Phase3AuraColor,
-                         _ => GetFallbackAuraColor(stats.Phase, bossFx.Phase1AuraColor)
-                     };
-
                      int bx = (int)trans.X;
                      int by = (int)trans.Y;
 
@@ -126,10 +118,6 @@ public static class WorldRenderSystem
                      {
                          GameEngine.DrawCircle(bx, by, (int)bossFx.RecoveringAuraRadius, bossFx.RecoveringAuraColor, true);
                      }
-
-                     int auraRadius = (int)(bossFx.AuraBaseRadius + MathF.Sin(stats.HoverTimer * bossFx.AuraPulseSpeed) * bossFx.AuraPulseAmp);
-                     GameEngine.DrawCircle(bx, by, auraRadius, auraColor, false);
-                     GameEngine.DrawCircle(bx, by, auraRadius - 2, auraColor, false);
 
                      if (sprite.IsVisible && sprite.GraphHandle >= 0 && bHealth.IsAlive)
                      {
@@ -271,11 +259,5 @@ public static class WorldRenderSystem
              });
 
         return world;
-    }
-
-    private static Color GetFallbackAuraColor(int phase, Color defaultColor)
-    {
-        Console.WriteLine($"[WorldRender 警告] 未知の Boss Phase 番号です: {phase} (有効値: 1, 2, 3)");
-        return defaultColor;
     }
 }

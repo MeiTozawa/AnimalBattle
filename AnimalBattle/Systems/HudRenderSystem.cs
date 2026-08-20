@@ -147,10 +147,10 @@ public static class HudRenderSystem
                      // 4.3 Boss HP ゲージ塗りつぶし
                      Color hpFillColor = stats.Phase switch
                      {
-                         1 => renderCfg.BossEffects.Phase1AuraColor,
-                         2 => renderCfg.BossEffects.Phase2AuraColor,
-                         3 => renderCfg.BossEffects.Phase3AuraColor,
-                         _ => GetFallbackPhaseColor(stats.Phase, renderCfg.BossEffects.Phase1AuraColor)
+                         1 => hpCfg.Phase1Color,
+                         2 => hpCfg.Phase2Color,
+                         3 => hpCfg.Phase3Color,
+                         _ => GetFallbackPhaseColor(stats.Phase, hpCfg.Phase1Color)
                      };
 
                      float hpRatio = health.Ratio;

@@ -1,12 +1,5 @@
 
 [BossEffects]
-Phase1AuraColor = 0xFF00E5FF     
-Phase2AuraColor = 0xFFBA55D3     
-Phase3AuraColor = 0xFFFF1744     
-AuraBaseRadius = 75.0            
-AuraPulseAmp = 8.0               
-AuraPulseSpeed = 4.0             
-
 TelegraphStartRadius = 140.0     
 TelegraphEndRadiusDelta = 60.0   
 TelegraphRingColor = 0xFFFF3333  
@@ -67,6 +60,10 @@ BarX1 = 240
 BarY1 = 662                      
 BarX2 = 1040                     
 BarY2 = 688                      
+
+Phase1Color = 0xFF00E5FF
+Phase2Color = 0xFFBA55D3
+Phase3Color = 0xFFFF1744
 
 BgPadding = 4                    
 BgColor = 0xDD0A0D14             
