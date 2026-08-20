@@ -4,27 +4,6 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// 地図足場プラットフォームの描画設定クラス。
-/// </summary>
-public sealed class PlatformRenderConfig
-{
-    /// <summary>プラットフォーム内部塗りつぶし色 (<see cref="Color"/>)</summary>
-    public Color FillColor { get; set; } = ColorPalette.DarkBg;
-
-    /// <summary>プラットフォーム外枠線色 (<see cref="Color"/>)</summary>
-    public Color BorderColor { get; set; } = ColorPalette.Cyan;
-
-    /// <summary>プラットフォーム上面ハイライト色 (<see cref="Color"/>)</summary>
-    public Color TopHighlightColor { get; set; } = ColorPalette.CyanLight;
-
-    /// <summary>上面ハイライトの内側オフセット量</summary>
-    public int TopHighlightOffset { get; set; } = 2;
-
-    /// <summary>上面ハイライトの厚み</summary>
-    public int TopHighlightThickness { get; set; } = 2;
-}
-
-/// <summary>
 /// Boss の光環・予兆リング・無敵シールド・受撃フラッシュ等の描画エフェクト設定クラス。
 /// </summary>
 public sealed class BossEffectsRenderConfig
@@ -89,12 +68,6 @@ public sealed class BossEffectsRenderConfig
     /// <summary>後隙時の光輪色 (<see cref="Color"/>)</summary>
     public Color RecoveringAuraColor { get; set; } = ColorPalette.CyanRecovering;
 
-    /// <summary>被弾ホワイトフラッシュ半径</summary>
-    public float HitFlashRadius { get; set; } = 45.0f;
-
-    /// <summary>被弾ホワイトフラッシュ色 (<see cref="Color"/>)</summary>
-    public Color HitFlashColor { get; set; } = ColorPalette.HitFlashWhite;
-
     /// <summary>Boss スプライト描画スケール</summary>
     public double BossSpriteScale { get; set; } = 2.8;
 
@@ -103,24 +76,6 @@ public sealed class BossEffectsRenderConfig
 
     /// <summary>Boss 浮遊時の揺れ角速度</summary>
     public float BossHoverAngleSpeed { get; set; } = 2.0f;
-}
-
-/// <summary>
-/// プレイヤー自機描画設定クラス。
-/// </summary>
-public sealed class PlayerRenderConfig
-{
-    /// <summary>当たり判定コア点（内円）半径</summary>
-    public float HitboxCoreRadius { get; set; } = 3.0f;
-
-    /// <summary>当たり判定コア点塗りつぶし色 (<see cref="Color"/>)</summary>
-    public Color HitboxCoreColor { get; set; } = ColorPalette.RedHitbox;
-
-    /// <summary>当たり判定枠（外円）半径</summary>
-    public float HitboxBorderRadius { get; set; } = 4.0f;
-
-    /// <summary>当たり判定枠色 (<see cref="Color"/>)</summary>
-    public Color HitboxBorderColor { get; set; } = ColorPalette.White;
 }
 
 /// <summary>
@@ -410,14 +365,8 @@ public sealed class DebugRenderConfig
 /// </summary>
 public sealed class RenderConfig
 {
-    /// <summary>プラットフォーム足場描画設定</summary>
-    public PlatformRenderConfig Platform { get; set; } = new();
-
     /// <summary>Boss 描画エフェクト設定</summary>
     public BossEffectsRenderConfig BossEffects { get; set; } = new();
-
-    /// <summary>プレイヤー自機描画設定</summary>
-    public PlayerRenderConfig Player { get; set; } = new();
 
     /// <summary>銃弾および弾幕描画設定</summary>
     public BulletRenderConfig Bullets { get; set; } = new();

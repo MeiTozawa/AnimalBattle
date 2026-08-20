@@ -1,11 +1,4 @@
 
-[Platform]
-FillColor = 0xFF141926           
-BorderColor = 0xFF00E5FF         
-TopHighlightColor = 0xFF80FFFF  
-TopHighlightOffset = 2          
-TopHighlightThickness = 2       
-
 [BossEffects]
 Phase1AuraColor = 0xFF00E5FF     
 Phase2AuraColor = 0xFFBA55D3     
@@ -31,18 +24,9 @@ ShieldFillColor = 0x44FFFF88
 RecoveringAuraRadius = 65.0      
 RecoveringAuraColor = 0x3300E5FF 
 
-HitFlashRadius = 45.0            
-HitFlashColor = 0x88FFFFFF       
-
 BossSpriteScale = 0.6            
 BossHoverAngleAmp = 0.08         
 BossHoverAngleSpeed = 2.0        
-
-[Player]
-HitboxCoreRadius = 3.0           
-HitboxCoreColor = 0xFFFF0033     
-HitboxBorderRadius = 4.0         
-HitboxBorderColor = 0xFFFFFFFF  
 
 [Bullets]
 PlayerBulletOuterRadius = 6.0    
