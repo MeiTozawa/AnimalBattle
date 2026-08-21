@@ -118,6 +118,14 @@ public static class PlayerMovementSystem
                      }
                  });
 
+                 float floorLimitY = 560.0f - colHeight / 2.0f;
+                 if (adjustedPosY >= floorLimitY)
+                 {
+                     isGrounded = true;
+                     adjustedPosY = floorLimitY;
+                     adjustedVy = 0.0f;
+                 }
+
                  if (isGrounded)
                  {
                      doubleJump.RemainingJumps = doubleJump.MaxJumps;

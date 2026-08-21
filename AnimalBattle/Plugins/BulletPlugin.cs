@@ -3,7 +3,7 @@ using AnimalBattle.Systems;
 namespace AnimalBattle.Plugins;
 
 /// <summary>
-/// 弾幕 Boss 戦における移動・跳躍・射撃・Boss AI・弾物理・当たり判定・描画システムを
+/// 弾幕 Boss 戦における移動・跳躍・射撃・Boss 1 / Boss 2 AI・弾物理・当たり判定・描画システムを
 /// Flecs.NET ECS 常駐 Routine として一括登録するプラグイン。
 /// 各種単一責任の System クラスを順次登録します。
 /// </summary>
@@ -19,7 +19,8 @@ public class BulletPlugin : IPlugin
            .AddPlayerMovementSystem()
            .AddSpriteAnimationSystem()
            .AddPlayerShootSystem()
-           .AddBossAiSystem()
+           .AddBoss1AiSystem()
+           .AddBoss2AiSystem()
            .AddBulletPhysicsSystem()
            .AddCombatCollisionSystem()
            .AddRestartSystem()

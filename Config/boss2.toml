@@ -1,0 +1,61 @@
+# Boss 2: Ground Crusher Golem Base Attributes
+BossName = "GROUND CRUSHER"
+MaxHp = 80.0
+SpawnX = 900.0
+SpawnY = 480.0
+ScaleX = 0.65
+ScaleY = 0.65
+HitFlashDuration = 0.08
+
+# Boss Hurtbox (Collision check against player bullets)
+HurtboxShape = "Box"
+HurtboxWidth = 90.0
+HurtboxHeight = 110.0
+HurtboxOffsetY = 0.0
+
+# Boss Body Contact Hitbox (Damage to player upon contact)
+HitboxShape = "Box"
+BodyHitboxWidth = 80.0
+BodyHitboxHeight = 100.0
+BodyHitboxOffsetY = 0.0
+BodyContactDamage = 1.0
+
+# Terrain Collision Box
+CollisionWidth = 70.0
+CollisionHeight = 90.0
+
+# Ground Physics & Movement
+MoveSpeed = 160.0
+JumpForce = 580.0
+Gravity = 980.0
+PatrolRadius = 250.0
+
+# Phase 1 State Machine Configuration
+[Phase1]
+HpThreshold = 1.0
+IdleDuration = 0.8
+MoveSpeed = 160.0
+JumpForce = 580.0
+TelegraphShakeIntensity = 6.0
+TransitionDuration = 1.0
+Skills = ["HeavySlash", "GroundStomp", "HeavySlash", "LeapSmash"]
+
+# Phase 2 State Machine Configuration
+[Phase2]
+HpThreshold = 0.66
+IdleDuration = 0.5
+MoveSpeed = 220.0
+JumpForce = 640.0
+TelegraphShakeIntensity = 10.0
+TransitionDuration = 1.0
+Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "DoubleCleave"]
+
+# Phase 3 State Machine Configuration
+[Phase3]
+HpThreshold = 0.33
+IdleDuration = 0.3
+MoveSpeed = 280.0
+JumpForce = 700.0
+TelegraphShakeIntensity = 14.0
+TransitionDuration = 1.2
+Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash"]

@@ -199,6 +199,8 @@ public static unsafe class InputService
         BindAction(InputContext.InGame, InputAction.Attack, InputButton.KeyJ, InputButton.KeyX, InputButton.Pad2, InputButton.MouseLeft);
         BindAction(InputContext.InGame, InputAction.Skill, InputButton.KeyK, InputButton.KeyC, InputButton.Pad3, InputButton.MouseRight);
         BindAction(InputContext.InGame, InputAction.Restart, InputButton.KeyR);
+        BindAction(InputContext.InGame, InputAction.SelectBoss1, InputButton.Key1);
+        BindAction(InputContext.InGame, InputAction.SelectBoss2, InputButton.Key2);
         BindAction(InputContext.InGame, InputAction.ToggleMenu, InputButton.KeyEscape, InputButton.PadStart);
         BindAction(InputContext.InGame, InputAction.MouseClick, InputButton.MouseLeft);
 

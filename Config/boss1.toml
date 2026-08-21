@@ -1,4 +1,5 @@
-# Boss Base Attributes
+# Boss 1: Ancient Cat Overlord Base Attributes
+BossName = "ANCIENT CAT OVERLORD"
 MaxHp = 60.0
 BaseX = 640.0
 BaseY = 200.0
@@ -6,12 +7,12 @@ ScaleX = 0.6
 ScaleY = 0.6
 HitFlashDuration = 0.08
 
-# Boss Hurtbox
+# Boss Hurtbox (Collision check against player bullets)
 HurtboxShape = "Circle"
 HurtboxRadius = 60.0
 HurtboxOffsetY = 0.0
 
-# Boss Body Contact Hitbox
+# Boss Body Contact Hitbox (Damage to player upon contact)
 HitboxShape = "Circle"
 BodyHitboxRadius = 50.0
 BodyHitboxOffsetY = 0.0

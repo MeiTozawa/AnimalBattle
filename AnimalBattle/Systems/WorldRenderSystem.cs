@@ -10,7 +10,7 @@ using AnimalBattle.Scenes;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// アリーナ足場・タイルマップ、Boss (オーラ・無敵シールド・予兆リング・スプライト・被弾フラッシュ・突進残影)、
+/// アリーナ足場・タイルマップ、Boss 1 / Boss 2 (オーラ・無敵シールド・予兆リング・スプライト・被弾フラッシュ・突進残影)、
 /// プレイヤー自機 (スプライト・無敵点滅・判定点)、および 8 方向プレイヤー弾・Boss 弾幕を描画する ECS 描画 System。
 /// </summary>
 public static class WorldRenderSystem
@@ -27,9 +27,16 @@ public static class WorldRenderSystem
                  .With<PlatformTag>()
                  .Build();
 
-        Query<Transform, Health, BossStats, BossStateMachine, Sprite> bossQuery =
-            world.QueryBuilder<Transform, Health, BossStats, BossStateMachine, Sprite>()
+        Query<Transform, Health, Boss1Stats, Boss1StateMachine, Sprite> boss1Query =
+            world.QueryBuilder<Transform, Health, Boss1Stats, Boss1StateMachine, Sprite>()
                  .With<BossTag>()
+                 .With<Boss1Tag>()
+                 .Build();
+
+        Query<Transform, Health, Boss2Stats, Boss2StateMachine, Sprite> boss2Query =
+            world.QueryBuilder<Transform, Health, Boss2Stats, Boss2StateMachine, Sprite>()
+                 .With<BossTag>()
+                 .With<Boss2Tag>()
                  .Build();
 
         Query<Transform, Health, PlayerState, Sprite> playerQuery =
@@ -45,6 +52,11 @@ public static class WorldRenderSystem
         Query<Transform, Bullet> bossBulletQuery =
             world.QueryBuilder<Transform, Bullet>()
                  .With<BossBulletTag>()
+                 .Build();
+
+        Query<Transform, Hitbox, HitFlashEffect, FadeEffect, Sprite> meleeSlashQuery =
+            world.QueryBuilder<Transform, Hitbox, HitFlashEffect, FadeEffect, Sprite>()
+                 .With<EffectTag>()
                  .Build();
 
         world.System("WorldRenderSystem")
@@ -79,12 +91,13 @@ public static class WorldRenderSystem
                      });
                  }
 
-                 bossQuery.Each((ref Transform trans, ref Health bHealth, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
+                 // 2.1 Boss 1 (Ancient Cat) の描画
+                 boss1Query.Each((ref Transform trans, ref Health bHealth, ref Boss1Stats stats, ref Boss1StateMachine fsm, ref Sprite sprite) =>
                  {
                      int bx = (int)trans.X;
                      int by = (int)trans.Y;
 
-                     if (fsm.CurrentState == BossStateKind.Telegraphing)
+                     if (fsm.CurrentState == Boss1StateKind.Telegraphing)
                      {
                          float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
                          int ringRadius = (int)(bossFx.TelegraphStartRadius - progress * bossFx.TelegraphEndRadiusDelta);
@@ -101,20 +114,20 @@ public static class WorldRenderSystem
                              GameEngine.DrawCircle(tx, ty, lockRadius - 2, ColorPalette.Gold, false);
                          }
                      }
-                     else if (fsm.CurrentState == BossStateKind.Casting && fsm.CurrentSkillName == "DiveRam")
+                     else if (fsm.CurrentState == Boss1StateKind.Casting && fsm.CurrentSkillName == "DiveRam")
                      {
                          GameEngine.DrawCircle(bx, by, 90, ColorPalette.RedBright, false);
                          GameEngine.DrawCircle(bx, by, 85, ColorPalette.Gold, false);
                          GameEngine.DrawCircle(bx, by, 60, ColorPalette.RedTelegraphCore, true);
                      }
-                     else if (fsm.CurrentState == BossStateKind.PhaseTransition || fsm.IsInvulnerable)
+                     else if (fsm.CurrentState == Boss1StateKind.PhaseTransition || fsm.IsInvulnerable)
                      {
                          int shieldRadius = (int)(bossFx.ShieldBaseRadius + MathF.Sin(fsm.StateTimer * bossFx.ShieldPulseSpeed) * bossFx.ShieldPulseAmp);
                          GameEngine.DrawCircle(bx, by, shieldRadius, bossFx.ShieldOuterColor, false);
                          GameEngine.DrawCircle(bx, by, shieldRadius - 3, bossFx.ShieldInnerColor, false);
                          GameEngine.DrawCircle(bx, by, shieldRadius - 8, bossFx.ShieldFillColor, true);
                      }
-                     else if (fsm.CurrentState == BossStateKind.Recovering)
+                     else if (fsm.CurrentState == Boss1StateKind.Recovering)
                      {
                          GameEngine.DrawCircle(bx, by, (int)bossFx.RecoveringAuraRadius, bossFx.RecoveringAuraColor, true);
                      }
@@ -150,6 +163,67 @@ public static class WorldRenderSystem
                                  sprite.GraphHandle,
                                  true,
                                  false);
+                             GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+                         }
+                     }
+                 });
+
+                 // 2.2 Boss 2 (Ground Crusher) の描画
+                 boss2Query.Each((ref Transform trans, ref Health bHealth, ref Boss2Stats stats, ref Boss2StateMachine fsm, ref Sprite sprite) =>
+                 {
+                     int bx = (int)trans.X;
+                     int by = (int)trans.Y;
+
+                     if (fsm.CurrentState == Boss2StateKind.Telegraphing)
+                     {
+                         float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
+                         int ringRadius = (int)(bossFx.TelegraphStartRadius - progress * bossFx.TelegraphEndRadiusDelta);
+                         GameEngine.DrawCircle(bx, by, ringRadius, ColorPalette.RedOrange, false);
+                         GameEngine.DrawCircle(bx, by, ringRadius - 2, ColorPalette.Amber, false);
+                         GameEngine.DrawCircle(bx, by, (int)bossFx.TelegraphCoreRadius, ColorPalette.OrangeBright, true);
+                     }
+                     else if (fsm.CurrentState == Boss2StateKind.PhaseTransition || fsm.IsInvulnerable)
+                     {
+                         int shieldRadius = (int)(bossFx.ShieldBaseRadius + MathF.Sin(fsm.StateTimer * bossFx.ShieldPulseSpeed) * bossFx.ShieldPulseAmp);
+                         GameEngine.DrawCircle(bx, by, shieldRadius, ColorPalette.RedCrimson, false);
+                         GameEngine.DrawCircle(bx, by, shieldRadius - 3, ColorPalette.Amber, false);
+                         GameEngine.DrawCircle(bx, by, shieldRadius - 8, ColorPalette.RedTelegraphCore, true);
+                     }
+                     else if (fsm.CurrentState == Boss2StateKind.Recovering)
+                     {
+                         GameEngine.DrawCircle(bx, by, (int)bossFx.RecoveringAuraRadius, ColorPalette.CyanRecovering, true);
+                     }
+
+                     if (sprite.IsVisible && sprite.GraphHandle >= 0 && bHealth.IsAlive)
+                     {
+                         GameEngine.DrawRectRotaGraph(
+                             bx,
+                             by,
+                             sprite.SrcRect.X1,
+                             sprite.SrcRect.Y1,
+                             sprite.SrcRect.Width,
+                             sprite.SrcRect.Height,
+                             trans.ScaleX,
+                             0.0,
+                             sprite.GraphHandle,
+                             true,
+                             sprite.FlipX);
+
+                         if (stats.HitFlashTimer > 0.0f)
+                         {
+                             GameEngine.SetDrawBlendMode(BlendMode.Add, 255);
+                             GameEngine.DrawRectRotaGraph(
+                                 bx,
+                                 by,
+                                 sprite.SrcRect.X1,
+                                 sprite.SrcRect.Y1,
+                                 sprite.SrcRect.Width,
+                                 sprite.SrcRect.Height,
+                                 trans.ScaleX,
+                                 0.0,
+                                 sprite.GraphHandle,
+                                 true,
+                                 sprite.FlipX);
                              GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
                          }
                      }
@@ -254,6 +328,46 @@ public static class WorldRenderSystem
                              clipMaxX,
                              clipMinY,
                              clipMaxY);
+                     }
+                 });
+
+                 // 6. 近接斬撃スプライトエフェクト描画
+                 meleeSlashQuery.Each((ref Transform trans, ref Hitbox hit, ref HitFlashEffect flash, ref FadeEffect fade, ref Sprite sprite) =>
+                 {
+                     int alpha = (int)(fade.CurrentAlpha * 255.0f);
+                     if (alpha <= 0)
+                     {
+                         return;
+                     }
+
+                     if (sprite.IsVisible && sprite.GraphHandle >= 0)
+                     {
+                         GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
+                         GameEngine.DrawRectRotaGraph(
+                             (int)trans.X,
+                             (int)trans.Y,
+                             sprite.SrcRect.X1,
+                             sprite.SrcRect.Y1,
+                             sprite.SrcRect.Width,
+                             sprite.SrcRect.Height,
+                             trans.ScaleX,
+                             trans.Rotation,
+                             sprite.GraphHandle,
+                             true,
+                             sprite.FlipX);
+                         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+                     }
+                     else if (hit.Shape is CollisionShape.Box box)
+                     {
+                         int x1 = (int)(trans.X - box.Width / 2.0f);
+                         int y1 = (int)(trans.Y - box.Height / 2.0f);
+                         int x2 = (int)(trans.X + box.Width / 2.0f);
+                         int y2 = (int)(trans.Y + box.Height / 2.0f);
+
+                         GameEngine.SetDrawBlendMode(BlendMode.Add, (int)(alpha * 0.8f));
+                         GameEngine.DrawBox(x1, y1, x2, y2, flash.FlashColor, true);
+                         GameEngine.DrawBox(x1 - 2, y1 - 2, x2 + 2, y2 + 2, ColorPalette.White, false);
+                         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
                      }
                  });
              });

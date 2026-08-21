@@ -139,6 +139,31 @@ public static class ColorPalette
     public static readonly Color PinkMagenta = Color.FromArgb(0xFF, 0xFF, 0x88, 0xFF);
 
     // ==========================================
+    // オレンジ・ブラウン・アース系 (Orange & Earth)
+    // ==========================================
+
+    /// <summary>レッドオレンジ (0xFFFF5722)</summary>
+    public static readonly Color RedOrange = Color.FromArgb(0xFF, 0xFF, 0x57, 0x22);
+
+    /// <summary>ブライトオレンジ / 斬撃色 (0xFFFF7043)</summary>
+    public static readonly Color OrangeBright = Color.FromArgb(0xFF, 0xFF, 0x70, 0x43);
+
+    /// <summary>アンバーゴールド / 震波色 (0xFFFFC107)</summary>
+    public static readonly Color Amber = Color.FromArgb(0xFF, 0xFF, 0xC1, 0x07);
+
+    /// <summary>ディープクリムゾン (0xFFD50000)</summary>
+    public static readonly Color RedCrimson = Color.FromArgb(0xFF, 0xD5, 0x00, 0x00);
+
+    /// <summary>ブラウン (0xFF795548)</summary>
+    public static readonly Color Brown = Color.FromArgb(0xFF, 0x79, 0x55, 0x48);
+
+    /// <summary>アースブラウン / 落石色 (0xFF8D6E63)</summary>
+    public static readonly Color EarthBrown = Color.FromArgb(0xFF, 0x8D, 0x6E, 0x63);
+
+    /// <summary>アースストーン外枠色 (0xFFD7CCC8)</summary>
+    public static readonly Color EarthStone = Color.FromArgb(0xFF, 0xD7, 0xCC, 0xC8);
+
+    // ==========================================
     // 半透明エフェクト色 (Translucent FX)
     // ==========================================
 

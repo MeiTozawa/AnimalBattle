@@ -17,4 +17,6 @@ public enum InputAction
     ToggleMenu = 9,
     MouseClick = 10,
     Restart = 11,
+    SelectBoss1 = 12,
+    SelectBoss2 = 13,
 }

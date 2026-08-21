@@ -11,8 +11,8 @@ using AnimalBattle.Plugins;
 namespace AnimalBattle.Scenes;
 
 /// <summary>
-/// Flecs.NET ワールドおよび Boss 戦パイプラインを統括するバトルシーンクラス。
-/// TOML 設定ファイル（player.toml, boss.toml, arena.toml）から初期パラメータをロードし、
+/// Flecs.NET ワールドおよび多 Boss (Boss 1 / Boss 2) 戦パイプラインを統括するバトルシーンクラス。
+/// TOML 設定ファイル（player.toml, boss1.toml, boss2.toml, arena.toml）から初期パラメータをロードし、
 /// プレイヤー、Boss、プラットフォームへ Bevy スタイルの Hitbox / Hurtbox を付与します。
 /// </summary>
 public partial class BattleScene : IDisposable
@@ -22,9 +22,19 @@ public partial class BattleScene : IDisposable
     private bool _isDisposed;
 
     /// <summary>
+    /// 現在アクティブな BattleScene インスタンスを取得します。
+    /// </summary>
+    public static BattleScene? Current { get; private set; }
+
+    /// <summary>
     /// 現在アクティブなタイルマップインスタンスを取得します。
     /// </summary>
     public static TileMap? CurrentTileMap { get; private set; }
+
+    /// <summary>
+    /// 現在戦闘中の Boss 識別名（"Boss1" または "Boss2"）を取得します。
+    /// </summary>
+    public string CurrentBossId { get; private set; } = "Boss1";
 
     /// <summary>
     /// <see cref="BattleScene"/> の新しいインスタンスを初期化します。
@@ -32,6 +42,7 @@ public partial class BattleScene : IDisposable
     public BattleScene()
     {
         _ecsWorld = World.Create();
+        Current = this;
     }
 
     /// <summary>
@@ -50,7 +61,6 @@ public partial class BattleScene : IDisposable
         }
 
         int playerHandle = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle");
-        int bossHandle = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
 
         App app = new App(_ecsWorld)
             .AddPluginGroup(new DefaultPlugins());
@@ -59,7 +69,7 @@ public partial class BattleScene : IDisposable
         CombatEffectHelper.Initialize(_ecsWorld);
 
         PlayerConfig playerCfg = ConfigManager.Player;
-        BossConfig bossCfg = ConfigManager.Boss;
+        ArenaConfig arenaCfg = ConfigManager.Arena;
 
         // 1. プレイヤーの生成 (地形 CollisionBox + TOML 設定駆動 Hurtbox)
         _ecsWorld.Entity("Player1")
@@ -74,17 +84,9 @@ public partial class BattleScene : IDisposable
             .Set(new Animation("Idle", CharacterType.Cat, isPlaying: true))
             .Add<PlayerTag>();
 
-        // 2. Boss の生成 (TOML 設定駆動 被弾 Hurtbox + 肉体接触突進 Hitbox)
-        _ecsWorld.Entity("Boss")
-            .Set(new Transform(bossCfg.BaseX, bossCfg.BaseY, scaleX: bossCfg.ScaleX, scaleY: bossCfg.ScaleY))
-            .Set(new Velocity())
-            .Set(new Hurtbox(bossCfg.GetHurtboxShape(), Faction.Hostile))
-            .Set(new Hitbox(bossCfg.GetHitboxShape(), damage: bossCfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
-            .Set(new Health(bossCfg.MaxHp))
-            .Set(new BossStats(baseX: bossCfg.BaseX, baseY: bossCfg.BaseY))
-            .Set(new BossStateMachine())
-            .Set(new Sprite(bossHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
-            .Add<BossTag>();
+        // 2. arena.toml で指定された初期 Boss の生成
+        CurrentBossId = string.IsNullOrWhiteSpace(arenaCfg.TargetBoss) ? "Boss1" : arenaCfg.TargetBoss;
+        SpawnBoss(CurrentBossId);
 
         // 3. アリーナ足場および TileMap
         SetupArena();
@@ -92,7 +94,92 @@ public partial class BattleScene : IDisposable
         // 4. TOML 設定ホットリロード時の Entity コンポーネント自動再同期
         RegisterConfigReloadHooks();
 
-        Console.WriteLine("[初期化完了] Boss バトルシーンが正常に初期化されました！");
+        Console.WriteLine($"[初期化完了] Boss バトルシーンが正常に初期化されました！(初期ターゲット: {CurrentBossId})");
+    }
+
+    /// <summary>
+    /// 指定された Boss 識別名（"Boss1" または "Boss2"）に対応する Boss エンティティを生成・切り替えます。
+    /// </summary>
+    /// <param name="bossId">対象 Boss 識別名</param>
+    public void SpawnBoss(string bossId)
+    {
+        CurrentBossId = bossId;
+
+        Entity bossEntity = _ecsWorld.Lookup("Boss");
+        if (!bossEntity.IsAlive())
+        {
+            bossEntity = _ecsWorld.Entity("Boss");
+        }
+        else
+        {
+            // 他の Boss 種別の古いコンポーネントを安全に除去
+            bossEntity.Remove<Boss1Tag>()
+                      .Remove<Boss1Stats>()
+                      .Remove<Boss1StateMachine>()
+                      .Remove<Boss2Tag>()
+                      .Remove<Boss2Stats>()
+                      .Remove<Boss2StateMachine>()
+                      .Remove<CollisionBox>();
+        }
+
+        CombatEffectHelper.ClearAllBossBullets(_ecsWorld);
+
+        if (bossId.Equals("Boss2", StringComparison.OrdinalIgnoreCase))
+        {
+            Boss2Config b2Cfg = ConfigManager.Boss2;
+            int boss2Handle = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
+
+            bossEntity
+                .Set(new Transform(b2Cfg.SpawnX, b2Cfg.SpawnY, scaleX: b2Cfg.ScaleX, scaleY: b2Cfg.ScaleY))
+                .Set(new Velocity())
+                .Set(new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight))
+                .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
+                .Set(new Hitbox(b2Cfg.GetHitboxShape(), damage: b2Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
+                .Set(new Health(b2Cfg.MaxHp))
+                .Set(new Boss2Stats(spawnX: b2Cfg.SpawnX, spawnY: b2Cfg.SpawnY))
+                .Set(new Boss2StateMachine())
+                .Set(new Sprite(boss2Handle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
+                .Add<BossTag>()
+                .Add<Boss2Tag>();
+
+            Console.WriteLine($"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {b2Cfg.MaxHp}, Pos: {b2Cfg.SpawnX}, {b2Cfg.SpawnY})");
+        }
+        else
+        {
+            Boss1Config b1Cfg = ConfigManager.Boss1;
+            int boss1Handle = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
+
+            bossEntity
+                .Set(new Transform(b1Cfg.BaseX, b1Cfg.BaseY, scaleX: b1Cfg.ScaleX, scaleY: b1Cfg.ScaleY))
+                .Set(new Velocity())
+                .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
+                .Set(new Hitbox(b1Cfg.GetHitboxShape(), damage: b1Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
+                .Set(new Health(b1Cfg.MaxHp))
+                .Set(new Boss1Stats(baseX: b1Cfg.BaseX, baseY: b1Cfg.BaseY))
+                .Set(new Boss1StateMachine())
+                .Set(new Sprite(boss1Handle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
+                .Add<BossTag>()
+                .Add<Boss1Tag>();
+
+            Console.WriteLine($"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {b1Cfg.MaxHp}, Pos: {b1Cfg.BaseX}, {b1Cfg.BaseY})");
+        }
+    }
+
+    /// <summary>
+    /// 現在の Boss を初期状態にリセットして再生成します。
+    /// </summary>
+    public void ResetCurrentBoss()
+    {
+        SpawnBoss(CurrentBossId);
+    }
+
+    /// <summary>
+    /// 対象の Boss へ切り替えます。
+    /// </summary>
+    /// <param name="bossId">切り替え先の Boss 識別名 ("Boss1" または "Boss2")</param>
+    public void SwitchBoss(string bossId)
+    {
+        SpawnBoss(bossId);
     }
 
     /// <summary>
@@ -100,27 +187,55 @@ public partial class BattleScene : IDisposable
     /// </summary>
     private void RegisterConfigReloadHooks()
     {
-        ConfigManager.BossContainer.OnConfigReloaded += OnBossConfigReloaded;
+        ConfigManager.Boss1Container.OnConfigReloaded += OnBoss1ConfigReloaded;
+        ConfigManager.Boss2Container.OnConfigReloaded += OnBoss2ConfigReloaded;
         ConfigManager.PlayerContainer.OnConfigReloaded += OnPlayerConfigReloaded;
     }
 
-    private void OnBossConfigReloaded()
+    private void OnBoss1ConfigReloaded()
     {
-        Entity bossEntity = _ecsWorld.Lookup("Boss");
-        if (bossEntity.IsAlive())
+        if (CurrentBossId.Equals("Boss1", StringComparison.OrdinalIgnoreCase))
         {
-            BossConfig bCfg = ConfigManager.Boss;
-            bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
-            bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), damage: bCfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false));
-
-            if (bossEntity.Has<Transform>())
+            Entity bossEntity = _ecsWorld.Lookup("Boss");
+            if (bossEntity.IsAlive() && bossEntity.Has<Boss1Tag>())
             {
-                ref Transform t = ref bossEntity.GetMut<Transform>();
-                t.ScaleX = bCfg.ScaleX;
-                t.ScaleY = bCfg.ScaleY;
-            }
+                Boss1Config bCfg = ConfigManager.Boss1;
+                bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
+                bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), damage: bCfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false));
 
-            Console.WriteLine($"[BattleScene] Boss の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました (HurtboxRadius: {bCfg.HurtboxRadius}, BodyRadius: {bCfg.BodyHitboxRadius})");
+                if (bossEntity.Has<Transform>())
+                {
+                    ref Transform t = ref bossEntity.GetMut<Transform>();
+                    t.ScaleX = bCfg.ScaleX;
+                    t.ScaleY = bCfg.ScaleY;
+                }
+
+                Console.WriteLine($"[BattleScene] Boss 1 の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
+            }
+        }
+    }
+
+    private void OnBoss2ConfigReloaded()
+    {
+        if (CurrentBossId.Equals("Boss2", StringComparison.OrdinalIgnoreCase))
+        {
+            Entity bossEntity = _ecsWorld.Lookup("Boss");
+            if (bossEntity.IsAlive() && bossEntity.Has<Boss2Tag>())
+            {
+                Boss2Config bCfg = ConfigManager.Boss2;
+                bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
+                bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), damage: bCfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false));
+                bossEntity.Set(new CollisionBox(bCfg.CollisionWidth, bCfg.CollisionHeight));
+
+                if (bossEntity.Has<Transform>())
+                {
+                    ref Transform t = ref bossEntity.GetMut<Transform>();
+                    t.ScaleX = bCfg.ScaleX;
+                    t.ScaleY = bCfg.ScaleY;
+                }
+
+                Console.WriteLine($"[BattleScene] Boss 2 の Hurtbox / Hitbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
+            }
         }
     }
 
@@ -140,7 +255,7 @@ public partial class BattleScene : IDisposable
                 t.ScaleY = pCfg.ScaleY;
             }
 
-            Console.WriteLine($"[BattleScene] Player の Hurtbox / CollisionBox / Scale を TOML からリアルタイム同期しました (HurtboxRadius: {pCfg.HurtboxRadius}, TerrainBox: {pCfg.HitboxWidth}x{pCfg.HitboxHeight})");
+            Console.WriteLine($"[BattleScene] Player の Hurtbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
         }
     }
 
@@ -151,7 +266,6 @@ public partial class BattleScene : IDisposable
     {
         ArenaConfig arenaCfg = ConfigManager.Arena;
 
-        // TileMap のロード、初期化およびコライダー生成
         TileMapConfig tileMapCfg = arenaCfg.TileMap;
         Result<ConfigBase<TileSetConfig>> tileSetConfigResult = TileSetConfig.LoadFromFile(tileMapCfg.TileConfig);
         if (tileSetConfigResult.IsOk && tileSetConfigResult.Value != null)
@@ -194,10 +308,15 @@ public partial class BattleScene : IDisposable
     {
         if (!_isDisposed)
         {
-            ConfigManager.BossContainer.OnConfigReloaded -= OnBossConfigReloaded;
+            ConfigManager.Boss1Container.OnConfigReloaded -= OnBoss1ConfigReloaded;
+            ConfigManager.Boss2Container.OnConfigReloaded -= OnBoss2ConfigReloaded;
             ConfigManager.PlayerContainer.OnConfigReloaded -= OnPlayerConfigReloaded;
 
             _ecsWorld.Dispose();
+            if (Current == this)
+            {
+                Current = null;
+            }
             _isDisposed = true;
             GC.SuppressFinalize(this);
         }

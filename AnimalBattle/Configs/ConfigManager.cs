@@ -6,14 +6,15 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// 各種 TOML 設定ファイル（player.toml, boss.toml, patterns.toml, arena.toml, render.toml）を統括管理し、
+/// 各種 TOML 設定ファイル（player.toml, boss1.toml, boss2.toml, patterns.toml, arena.toml, render.toml）を統括管理し、
 /// 自動リロードおよびプロパティ参照を提供する静的設定マネージャークラス。
 /// 全てのファイル読み込み結果（<see cref="Result{T}"/>）を検証し、エラー時は詳細な診断ログを出力します。
 /// </summary>
 public static class ConfigManager
 {
     private static ConfigBase<PlayerConfig> _playerConfigContainer = new(new PlayerConfig());
-    private static ConfigBase<BossConfig> _bossConfigContainer = new(new BossConfig());
+    private static ConfigBase<Boss1Config> _boss1ConfigContainer = new(new Boss1Config());
+    private static ConfigBase<Boss2Config> _boss2ConfigContainer = new(new Boss2Config());
     private static ConfigBase<PatternConfig> _patternConfigContainer = new(new PatternConfig());
     private static ConfigBase<ArenaConfig> _arenaConfigContainer = new(new ArenaConfig());
     private static ConfigBase<RenderConfig> _renderConfigContainer = new(new RenderConfig());
@@ -21,10 +22,13 @@ public static class ConfigManager
     /// <summary>プレイヤー設定オブジェクトを取得します。</summary>
     public static PlayerConfig Player => _playerConfigContainer.Config;
 
-    /// <summary>Boss 設定オブジェクトを取得します。</summary>
-    public static BossConfig Boss => _bossConfigContainer.Config;
+    /// <summary>Boss 1 (Ancient Cat Overlord) 設定オブジェクトを取得します。</summary>
+    public static Boss1Config Boss1 => _boss1ConfigContainer.Config;
 
-    /// <summary>弾幕パターン設定オブジェクトを取得します。</summary>
+    /// <summary>Boss 2 (Ground Crusher) 設定オブジェクトを取得します。</summary>
+    public static Boss2Config Boss2 => _boss2ConfigContainer.Config;
+
+    /// <summary>弾幕・技能パターン設定オブジェクトを取得します。</summary>
     public static PatternConfig Pattern => _patternConfigContainer.Config;
 
     /// <summary>アリーナ足場設定オブジェクトを取得します。</summary>
@@ -36,10 +40,13 @@ public static class ConfigManager
     /// <summary>プレイヤー設定コンテナを取得します。</summary>
     public static ConfigBase<PlayerConfig> PlayerContainer => _playerConfigContainer;
 
-    /// <summary>Boss 設定コンテナを取得します。</summary>
-    public static ConfigBase<BossConfig> BossContainer => _bossConfigContainer;
+    /// <summary>Boss 1 設定コンテナを取得します。</summary>
+    public static ConfigBase<Boss1Config> Boss1Container => _boss1ConfigContainer;
 
-    /// <summary>弾幕パターン設定コンテナを取得します。</summary>
+    /// <summary>Boss 2 設定コンテナを取得します。</summary>
+    public static ConfigBase<Boss2Config> Boss2Container => _boss2ConfigContainer;
+
+    /// <summary>弾幕・技能パターン設定コンテナを取得します。</summary>
     public static ConfigBase<PatternConfig> PatternContainer => _patternConfigContainer;
 
     /// <summary>アリーナ足場設定コンテナを取得します。</summary>
@@ -71,15 +78,27 @@ public static class ConfigManager
             failureCount++;
         }
 
-        Result<ConfigBase<BossConfig>> bossRes = BossConfig.LoadFromFile(ResourcePath.Config.Boss);
-        if (bossRes.IsOk && bossRes.Value != null)
+        Result<ConfigBase<Boss1Config>> boss1Res = Boss1Config.LoadFromFile(ResourcePath.Config.Boss1);
+        if (boss1Res.IsOk && boss1Res.Value != null)
         {
-            _bossConfigContainer = bossRes.Value;
+            _boss1ConfigContainer = boss1Res.Value;
             successCount++;
         }
         else
         {
-            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Boss} の読み込みに失敗しました ({bossRes.Error?.Type}): {bossRes.Error?.Description}");
+            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Boss1} の読み込みに失敗しました ({boss1Res.Error?.Type}): {boss1Res.Error?.Description}");
+            failureCount++;
+        }
+
+        Result<ConfigBase<Boss2Config>> boss2Res = Boss2Config.LoadFromFile(ResourcePath.Config.Boss2);
+        if (boss2Res.IsOk && boss2Res.Value != null)
+        {
+            _boss2ConfigContainer = boss2Res.Value;
+            successCount++;
+        }
+        else
+        {
+            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Boss2} の読み込みに失敗しました ({boss2Res.Error?.Type}): {boss2Res.Error?.Description}");
             failureCount++;
         }
 
@@ -135,7 +154,8 @@ public static class ConfigManager
     public static void Dispose()
     {
         _playerConfigContainer.Dispose();
-        _bossConfigContainer.Dispose();
+        _boss1ConfigContainer.Dispose();
+        _boss2ConfigContainer.Dispose();
         _patternConfigContainer.Dispose();
         _arenaConfigContainer.Dispose();
         _renderConfigContainer.Dispose();

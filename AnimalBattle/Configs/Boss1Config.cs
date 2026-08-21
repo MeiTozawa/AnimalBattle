@@ -6,9 +6,9 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// 個別フェーズの FSM 状態機械設定クラス。
+/// Boss 1 (Ancient Cat Overlord) 個別フェーズの FSM 状態機械設定クラス。
 /// </summary>
-public sealed class PhaseFsmConfig
+public sealed class Boss1PhaseFsmConfig
 {
     /// <summary>このフェーズが有効となる HP 割合上限</summary>
     public float HpThreshold { get; set; } = 1.0f;
@@ -57,13 +57,16 @@ public sealed class PhaseFsmConfig
 }
 
 /// <summary>
-/// Config/boss.toml から読み込まれる Boss の基本パラメータおよび各フェーズの FSM 設定クラス。
+/// Config/boss1.toml から読み込まれる Boss 1 の基本パラメータおよび各フェーズの FSM 設定クラス。
 /// 形状種別、寸法、および局所オフセット (HurtboxOffsetX/Y, BodyHitboxOffsetX/Y) を完全管理します。
 /// </summary>
-public sealed class BossConfig
+public sealed class Boss1Config
 {
+    /// <summary>Boss 表示名</summary>
+    public string BossName { get; set; } = "ANCIENT CAT OVERLORD";
+
     /// <summary>Boss の最大 HP</summary>
-    public float MaxHp { get; set; } = 90.0f;
+    public float MaxHp { get; set; } = 60.0f;
 
     /// <summary>Boss の基準出現 X 座標</summary>
     public float BaseX { get; set; } = 640.0f;
@@ -72,10 +75,10 @@ public sealed class BossConfig
     public float BaseY { get; set; } = 200.0f;
 
     /// <summary>Boss 描画スケール X</summary>
-    public float ScaleX { get; set; } = 2.8f;
+    public float ScaleX { get; set; } = 0.6f;
 
     /// <summary>Boss 描画スケール Y</summary>
-    public float ScaleY { get; set; } = 2.8f;
+    public float ScaleY { get; set; } = 0.6f;
 
     /// <summary>Boss 被弾判定 (Hurtbox) の幾何形状種別（"Box" または "Circle"）</summary>
     public string HurtboxShape { get; set; } = "Circle";
@@ -87,19 +90,13 @@ public sealed class BossConfig
     public float HurtboxHeight { get; set; } = 100.0f;
 
     /// <summary>Boss 被弾当たり判定円半径（HurtboxShape == "Circle" 時に使用）</summary>
-    public float HurtboxRadius { get; set; } = 55.0f;
+    public float HurtboxRadius { get; set; } = 60.0f;
 
     /// <summary>Boss 被弾判定の X 軸局所オフセット</summary>
     public float HurtboxOffsetX { get; set; } = 0.0f;
 
     /// <summary>Boss 被弾判定の Y 軸局所オフセット</summary>
     public float HurtboxOffsetY { get; set; } = 0.0f;
-
-    /// <summary>Boss 銃弾被弾当たり判定幅（後方互換プロパティ）</summary>
-    public float HitboxWidth => HurtboxWidth;
-
-    /// <summary>Boss 銃弾被弾当たり判定高さ（後方互換プロパティ）</summary>
-    public float HitboxHeight => HurtboxHeight;
 
     /// <summary>Boss 身体接触・突進攻撃判定 (Hitbox) の幾何形状種別（"Box" または "Circle"）</summary>
     public string HitboxShape { get; set; } = "Circle";
@@ -111,7 +108,7 @@ public sealed class BossConfig
     public float BodyHitboxHeight { get; set; } = 100.0f;
 
     /// <summary>Boss 接触攻撃判定円半径（HitboxShape == "Circle" 時に使用）</summary>
-    public float BodyHitboxRadius { get; set; } = 55.0f;
+    public float BodyHitboxRadius { get; set; } = 50.0f;
 
     /// <summary>Boss 接触判定の X 軸局所オフセット</summary>
     public float BodyHitboxOffsetX { get; set; } = 0.0f;
@@ -126,7 +123,7 @@ public sealed class BossConfig
     public float HitFlashDuration { get; set; } = 0.08f;
 
     /// <summary>Phase 1 状態機設定</summary>
-    public PhaseFsmConfig Phase1 { get; set; } = new()
+    public Boss1PhaseFsmConfig Phase1 { get; set; } = new()
     {
         HpThreshold = 1.0f,
         HoverDuration = 0.8f,
@@ -145,7 +142,7 @@ public sealed class BossConfig
     };
 
     /// <summary>Phase 2 状態機設定</summary>
-    public PhaseFsmConfig Phase2 { get; set; } = new()
+    public Boss1PhaseFsmConfig Phase2 { get; set; } = new()
     {
         HpThreshold = 0.66f,
         HoverDuration = 0.6f,
@@ -164,7 +161,7 @@ public sealed class BossConfig
     };
 
     /// <summary>Phase 3 状態機設定</summary>
-    public PhaseFsmConfig Phase3 { get; set; } = new()
+    public Boss1PhaseFsmConfig Phase3 { get; set; } = new()
     {
         HpThreshold = 0.33f,
         HoverDuration = 0.4f,
@@ -183,7 +180,7 @@ public sealed class BossConfig
     };
 
     /// <summary>
-    /// 設定に基づいた Boss 被弾判定 (<see cref="CollisionShape"/>) を取得します。
+    /// 設定に基づいた Boss 1 被弾判定 (<see cref="CollisionShape"/>) を取得します。
     /// </summary>
     /// <returns>構築された被弾衝突形状バリアント</returns>
     public CollisionShape GetHurtboxShape()
@@ -192,7 +189,7 @@ public sealed class BossConfig
     }
 
     /// <summary>
-    /// 設定に基づいた Boss 接触・突進攻撃判定 (<see cref="CollisionShape"/>) を取得します。
+    /// 設定に基づいた Boss 1 接触・突進攻撃判定 (<see cref="CollisionShape"/>) を取得します。
     /// </summary>
     /// <returns>構築された接触攻撃衝突形状バリアント</returns>
     public CollisionShape GetHitboxShape()
@@ -201,12 +198,12 @@ public sealed class BossConfig
     }
 
     /// <summary>
-    /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{BossConfig}"/> インスタンスを生成します。
+    /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{Boss1Config}"/> インスタンスを生成します。
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static Result<ConfigBase<BossConfig>> LoadFromFile(string path = ResourcePath.Config.Boss)
+    public static Result<ConfigBase<Boss1Config>> LoadFromFile(string path = ResourcePath.Config.Boss1)
     {
-        return ConfigBase<BossConfig>.LoadFromFile(path);
+        return ConfigBase<Boss1Config>.LoadFromFile(path);
     }
 }

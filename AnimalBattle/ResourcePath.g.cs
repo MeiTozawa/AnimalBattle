@@ -47,6 +47,9 @@ public static class ResourcePath
 
         /// <summary>Cat.toml のファイルパス。</summary>
         public const string CatToml = @"Characters\Cat.toml";
+
+        /// <summary>sword & shield effect sprites.png のファイルパス。</summary>
+        public const string SwordShieldEffectSpritesPng = @"Characters\sword & shield effect sprites.png";
     }
 
     /// <summary>
@@ -84,8 +87,11 @@ public static class ResourcePath
         /// <summary>arena.toml 設定ファイル名。</summary>
         public const string Arena = "arena.toml";
 
-        /// <summary>boss.toml 設定ファイル名。</summary>
-        public const string Boss = "boss.toml";
+        /// <summary>boss1.toml 設定ファイル名。</summary>
+        public const string Boss1 = "boss1.toml";
+
+        /// <summary>boss2.toml 設定ファイル名。</summary>
+        public const string Boss2 = "boss2.toml";
 
         /// <summary>patterns.toml 設定ファイル名。</summary>
         public const string Patterns = "patterns.toml";
@@ -99,8 +105,11 @@ public static class ResourcePath
         /// <summary>arena.toml の相対パス。</summary>
         public const string ArenaToml = @"Config\arena.toml";
 
-        /// <summary>boss.toml の相対パス。</summary>
-        public const string BossToml = @"Config\boss.toml";
+        /// <summary>boss1.toml の相対パス。</summary>
+        public const string Boss1Toml = @"Config\boss1.toml";
+
+        /// <summary>boss2.toml の相対パス。</summary>
+        public const string Boss2Toml = @"Config\boss2.toml";
 
         /// <summary>patterns.toml の相対パス。</summary>
         public const string PatternsToml = @"Config\patterns.toml";

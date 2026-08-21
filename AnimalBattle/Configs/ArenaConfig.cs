@@ -35,6 +35,9 @@ public sealed class TileMapConfig
 /// </summary>
 public sealed class ArenaConfig
 {
+    /// <summary>デフォルトで生成・交戦する対象 Boss 識別名（"Boss1" または "Boss2"）</summary>
+    public string TargetBoss { get; set; } = "Boss1";
+
     /// <summary>タイルマップ配置設定</summary>
     public TileMapConfig TileMap { get; set; } = new();
 

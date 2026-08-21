@@ -1,5 +1,9 @@
 # Bullet Patterns & Skill State Lifecycle Configuration
 
+# -------------------------------------------------------------
+# Boss 1 (Ancient Cat Overlord) Skills & Patterns
+# -------------------------------------------------------------
+
 [DiveRam]
 SkillName = "Meteor Dive Ram"
 WindUpTime = 0.55
@@ -97,3 +101,85 @@ BulletSpeed = 510.0
 BulletRadius = 6.5
 FillColor = 0xFFFF5252
 OutlineColor = 0xFFFFFFFF
+
+# -------------------------------------------------------------
+# Boss 2 (Ground Crusher Golem) Skills & Patterns
+# -------------------------------------------------------------
+
+[HeavySlash]
+SkillName = "Heavy Cleave Slash"
+WindUpTime = 0.45
+TelegraphColor = 0xFFFF5722
+CastDuration = 0.35
+RecoveryTime = 0.55
+DashSpeed = 360.0
+SlashRangeX = 85.0
+SlashRangeY = 65.0
+SlashRadius = 55.0
+SlashDamage = 1.0
+SlashColor = 0xFFFF7043
+
+[GroundStomp]
+SkillName = "Ground Stomp Shockwave"
+WindUpTime = 0.50
+TelegraphColor = 0xFFFFC107
+CastDuration = 0.40
+RecoveryTime = 0.60
+ShockwaveSpeed = 420.0
+ShockwaveRadius = 13.0
+ShockwaveDamage = 1.0
+FillColor = 0xFFFF9800
+OutlineColor = 0xFFFFE082
+
+[LeapSmash]
+SkillName = "Titan Leap Smash"
+WindUpTime = 0.40
+TelegraphColor = 0xFFFF3D00
+CastDuration = 0.75
+RecoveryTime = 0.70
+JumpForce = 680.0
+ShrapnelCount = 6
+ShrapnelSpeed = 260.0
+ShrapnelRadius = 7.5
+ShrapnelFillColor = 0xFFFF6D00
+ShrapnelOutlineColor = 0xFFFFD180
+
+[DoubleCleave]
+SkillName = "Twin Cleave Fury"
+WindUpTime = 0.35
+TelegraphColor = 0xFFFF1744
+CastDuration = 0.70
+RecoveryTime = 0.50
+DashSpeed = 420.0
+SlashInterval = 0.30
+SlashRangeX = 90.0
+SlashRangeY = 70.0
+SlashDamage = 1.0
+SlashColor = 0xFFFF1744
+
+[FrenzyCharge]
+SkillName = "Frenzy Rampage Charge"
+WindUpTime = 0.55
+TelegraphColor = 0xFFD50000
+CastDuration = 1.30
+RecoveryTime = 0.75
+ChargeSpeed = 620.0
+ShrapnelCount = 8
+ShrapnelSpeed = 240.0
+ShrapnelRadius = 8.0
+ShrapnelFillColor = 0xFFFF5252
+ShrapnelOutlineColor = 0xFFFF8A80
+
+[EarthquakeRoar]
+SkillName = "Cataclysm Earthquake Roar"
+WindUpTime = 0.60
+TelegraphColor = 0xFF795548
+CastDuration = 1.80
+RecoveryTime = 0.90
+Interval = 0.25
+MinX = 80.0
+MaxX = 1200.0
+RockSpeed = 360.0
+RockRadius = 9.0
+RockFillColor = 0xFF8D6E63
+RockOutlineColor = 0xFFD7CCC8

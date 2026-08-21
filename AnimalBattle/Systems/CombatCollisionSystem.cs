@@ -28,7 +28,6 @@ public static class CombatCollisionSystem
              .Kind(Ecs.OnUpdate)
              .Each((Entity atkEntity, ref Transform atkTrans, ref Hitbox hitbox) =>
              {
-                 BossConfig bCfg = ConfigManager.Boss;
                  PlayerConfig pCfg = ConfigManager.Player;
 
                  Transform localAtkTrans = atkTrans;
@@ -57,10 +56,18 @@ public static class CombatCollisionSystem
                      }
 
                      // 4. Boss が状態機フェーズ無敵中の場合は無視
-                     if (vicEntity.Has<BossStateMachine>())
+                     if (vicEntity.Has<Boss1StateMachine>())
                      {
-                         ref readonly BossStateMachine fsm = ref vicEntity.Get<BossStateMachine>();
-                         if (fsm.IsInvulnerable)
+                         ref readonly Boss1StateMachine fsm1 = ref vicEntity.Get<Boss1StateMachine>();
+                         if (fsm1.IsInvulnerable)
+                         {
+                             return;
+                         }
+                     }
+                     else if (vicEntity.Has<Boss2StateMachine>())
+                     {
+                         ref readonly Boss2StateMachine fsm2 = ref vicEntity.Get<Boss2StateMachine>();
+                         if (fsm2.IsInvulnerable)
                          {
                              return;
                          }
@@ -90,10 +97,22 @@ public static class CombatCollisionSystem
                                  CombatEffectHelper.SpawnPlayerDeathParticles(world, vicTrans.X, vicTrans.Y);
                              }
                          }
-                         else if (vicEntity.Has<BossStats>())
+                         else if (vicEntity.Has<Boss1Stats>())
                          {
-                             ref BossStats bStats = ref vicEntity.GetMut<BossStats>();
-                             bStats.HitFlashTimer = bCfg.HitFlashDuration;
+                             ref Boss1Stats bStats1 = ref vicEntity.GetMut<Boss1Stats>();
+                             bStats1.HitFlashTimer = ConfigManager.Boss1.HitFlashDuration;
+
+                             if (!vicHealth.IsAlive)
+                             {
+                                 vicHealth.Current = 0.0f;
+                                 CombatEffectHelper.ClearAllBossBullets(world);
+                                 CombatEffectHelper.SpawnVictoryExplosions(world, vicTrans.X, vicTrans.Y);
+                             }
+                         }
+                         else if (vicEntity.Has<Boss2Stats>())
+                         {
+                             ref Boss2Stats bStats2 = ref vicEntity.GetMut<Boss2Stats>();
+                             bStats2.HitFlashTimer = ConfigManager.Boss2.HitFlashDuration;
 
                              if (!vicHealth.IsAlive)
                              {

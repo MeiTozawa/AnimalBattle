@@ -3,6 +3,7 @@ using System.Drawing;
 using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Core;
+using AnimalBattle.Core.Asset;
 
 namespace AnimalBattle.Systems;
 
@@ -160,5 +161,65 @@ public static class CombatEffectHelper
                  .Set(new FadeEffect(0.90f))
                  .Add<EffectTag>();
         }
+    }
+
+    /// <summary>
+    /// 近接斬撃判定（矩形 Hitbox ＋ 斬撃スプライト視覚エフェクト）を生成します。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド</param>
+    /// <param name="x">判定中心 X 座標</param>
+    /// <param name="y">判定中心 Y 座標</param>
+    /// <param name="width">判定幅</param>
+    /// <param name="height">判定高さ</param>
+    /// <param name="damage">与ダメージ量</param>
+    /// <param name="lifetime">持続時間（秒）</param>
+    /// <param name="color">斬撃エフェクトカラー</param>
+    /// <param name="direction">斬撃展開方向（朝下, 朝上, 朝右, 朝左）</param>
+    public static void SpawnMeleeSlashHitbox(
+        World world,
+        float x,
+        float y,
+        float width,
+        float height,
+        float damage,
+        float lifetime,
+        Color color,
+        SlashDirection direction = SlashDirection.Right)
+    {
+        int slashHandle = AssetManager.GetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng);
+        int colIndex = 5; // 第 6 列 (0-based: 5)
+        int rowIndex = (int)direction;
+        Rect<int> srcRect = new(colIndex * 64, rowIndex * 64, 64, 64);
+        float scaleX = width / 40.0f;
+        float scaleY = height / 40.0f;
+
+        world.Entity()
+             .Set(new Transform(x, y, scaleX: scaleX, scaleY: scaleY))
+             .Set(new Hitbox(new CollisionShape.Box(width, height), damage: damage, faction: Faction.Hostile, destroyOnHit: false))
+             .Set(new Sprite(slashHandle, flipX: false, isVisible: true, srcRect: srcRect))
+             .Set(new FadeEffect(lifetime))
+             .Set(new HitFlashEffect(lifetime, color))
+             .Add<EffectTag>();
+    }
+
+    /// <summary>
+    /// 地面を這う衝撃波弾幕エンティティを生成します。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド</param>
+    /// <param name="x">出現 X 座標</param>
+    /// <param name="y">出現 Y 座標</param>
+    /// <param name="vx">水平移動速度</param>
+    /// <param name="radius">判定半径</param>
+    /// <param name="damage">与ダメージ量</param>
+    /// <param name="fillColor">塗りつぶし色</param>
+    /// <param name="outlineColor">外枠発光色</param>
+    public static void SpawnGroundShockwave(World world, float x, float y, float vx, float radius, float damage, Color fillColor, Color outlineColor)
+    {
+        world.Entity()
+             .Set(new Transform(x, y))
+             .Set(new Velocity(vx, 0.0f))
+             .Set(new Bullet(radius, fillColor, outlineColor))
+             .Set(new Hitbox(new CollisionShape.Circle(radius), damage: damage, faction: Faction.Hostile, destroyOnHit: true))
+             .Add<BossBulletTag>();
     }
 }

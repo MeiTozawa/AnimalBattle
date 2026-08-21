@@ -2,36 +2,38 @@ using System;
 using System.Drawing;
 using Flecs.NET.Core;
 using AnimalBattle.Bindings;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// Boss の階層状態機 (HFSM: Phase -> Hovering -> Telegraphing -> Casting -> Recovering)、
-/// 8 字・波状・追従を含む立体移動、俯衝突進（Dive Ram）、および各技能の弾幕発射サイクルを制御する ECS System。
-/// 全ての座標・速度・時間・色パラメータは外部 TOML 設定ファイルから読み出され、マジックナンバーや静默兜底を排除しています。
+/// Boss 1 (Ancient Cat Overlord) の階層状態機 (HFSM: Phase -> Hovering -> Telegraphing -> Casting -> Recovering)、
+/// 8 字・波状・追従を含む立体浮遊移動、俯衝突進（Dive Ram）、および各技能の弾幕発射サイクルを制御する ECS System。
+/// 全ての座標・速度・時間・色パラメータは外部 TOML 設定ファイルから読み出されます。
 /// </summary>
-public static class BossAiSystem
+public static class Boss1AiSystem
 {
     /// <summary>
-    /// Boss AI および弾幕制御システムを Flecs.NET ワールドへ登録します。
+    /// Boss 1 AI および弾幕制御システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
     /// <returns>メソッドチェーン用の <see cref="World"/></returns>
-    public static World AddBossAiSystem(this World world)
+    public static World AddBoss1AiSystem(this World world)
     {
         Query<Transform, Health> playerQuery =
             world.QueryBuilder<Transform, Health>()
                  .With<PlayerTag>()
                  .Build();
 
-        world.System<Transform, Health, BossStats, BossStateMachine, Sprite>("BossAiSystem")
-             .With<BossTag>()
+        world.System<Transform, Health, Boss1Stats, Boss1StateMachine, Sprite>("Boss1AiSystem")
+             .With<Boss1Tag>()
              .Kind(Ecs.OnUpdate)
-             .Each((Iter it, int i, ref Transform trans, ref Health bHealth, ref BossStats stats, ref BossStateMachine fsm, ref Sprite sprite) =>
+             .Each((Iter it, int i, ref Transform trans, ref Health bHealth, ref Boss1Stats stats, ref Boss1StateMachine fsm, ref Sprite sprite) =>
              {
-                 BossConfig bCfg = ConfigManager.Boss;
+                 Boss1Config bCfg = ConfigManager.Boss1;
                  PlayerConfig pCfg = ConfigManager.Player;
                  PatternConfig patternCfg = ConfigManager.Pattern;
                  float dt = it.DeltaTime();
@@ -61,10 +63,10 @@ public static class BossAiSystem
                  float hpRatio = bHealth.Ratio;
                  int targetPhase = hpRatio > bCfg.Phase2.HpThreshold ? 1 : (hpRatio > bCfg.Phase3.HpThreshold ? 2 : 3);
 
-                 if (targetPhase > stats.Phase && fsm.CurrentState != BossStateKind.PhaseTransition)
+                 if (targetPhase > stats.Phase && fsm.CurrentState != Boss1StateKind.PhaseTransition)
                  {
                      stats.Phase = targetPhase;
-                     fsm.CurrentState = BossStateKind.PhaseTransition;
+                     fsm.CurrentState = Boss1StateKind.PhaseTransition;
                      fsm.StateTimer = 0.0f;
                      fsm.StateDuration = bCfg.Phase1.TransitionDuration;
                      fsm.IsInvulnerable = true;
@@ -72,7 +74,7 @@ public static class BossAiSystem
                      CombatEffectHelper.SpawnShockwave(world, trans.X, trans.Y);
                  }
 
-                 PhaseFsmConfig currentPhaseCfg = stats.Phase switch
+                 Boss1PhaseFsmConfig currentPhaseCfg = stats.Phase switch
                  {
                      1 => bCfg.Phase1,
                      2 => bCfg.Phase2,
@@ -83,7 +85,7 @@ public static class BossAiSystem
                  stats.HoverTimer += dt;
                  fsm.StateTimer += dt;
 
-                 bool isDiving = fsm.CurrentSkillName == "DiveRam" && (fsm.CurrentState == BossStateKind.Casting || fsm.CurrentState == BossStateKind.Recovering);
+                 bool isDiving = fsm.CurrentSkillName == "DiveRam" && (fsm.CurrentState == Boss1StateKind.Casting || fsm.CurrentState == Boss1StateKind.Recovering);
 
                  if (!isDiving)
                  {
@@ -107,7 +109,7 @@ public static class BossAiSystem
 
                  switch (fsm.CurrentState)
                  {
-                     case BossStateKind.Hovering:
+                     case Boss1StateKind.Hovering:
                          fsm.IsInvulnerable = false;
                          if (fsm.StateTimer >= fsm.StateDuration && isPlayerAlive)
                          {
@@ -118,14 +120,14 @@ public static class BossAiSystem
                              }
                              else
                              {
-                                 Console.WriteLine($"[BossAI 警告] Phase {stats.Phase} の技能リストが空です。boss.toml の Skills を確認してください。デフォルト 'Aimed3Shot' を使用します。");
+                                 Console.WriteLine($"[Boss1AI 警告] Phase {stats.Phase} の技能リストが空です。boss1.toml の Skills を確認してください。デフォルト 'Aimed3Shot' を使用します。");
                                  fsm.CurrentSkillName = "Aimed3Shot";
                              }
 
                              float windUp = GetSkillWindUpTime(fsm.CurrentSkillName, patternCfg);
                              Color telegraphColor = GetSkillTelegraphColor(fsm.CurrentSkillName, patternCfg);
 
-                             fsm.CurrentState = BossStateKind.Telegraphing;
+                             fsm.CurrentState = Boss1StateKind.Telegraphing;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = windUp;
                              fsm.SubTimer = 0.0f;
@@ -138,7 +140,7 @@ public static class BossAiSystem
                          }
                          break;
 
-                     case BossStateKind.Telegraphing:
+                     case Boss1StateKind.Telegraphing:
                          fsm.IsInvulnerable = false;
                          if (fsm.CurrentSkillName == "DiveRam")
                          {
@@ -155,7 +157,7 @@ public static class BossAiSystem
                          {
                              float castDuration = GetSkillCastDuration(fsm.CurrentSkillName, patternCfg);
 
-                             fsm.CurrentState = BossStateKind.Casting;
+                             fsm.CurrentState = Boss1StateKind.Casting;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = castDuration;
                              fsm.SubTimer = 0.0f;
@@ -171,15 +173,15 @@ public static class BossAiSystem
                          }
                          break;
 
-                     case BossStateKind.Casting:
+                     case Boss1StateKind.Casting:
                          fsm.IsInvulnerable = false;
-                         ExecuteBossSkill(world, ref fsm, patternCfg, ref trans, playerX, playerY, dt);
+                         ExecuteBoss1Skill(world, ref fsm, patternCfg, ref trans, playerX, playerY, dt);
 
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
                              float recoveryTime = GetSkillRecoveryTime(fsm.CurrentSkillName, patternCfg);
 
-                             fsm.CurrentState = BossStateKind.Recovering;
+                             fsm.CurrentState = Boss1StateKind.Recovering;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = recoveryTime;
 
@@ -190,7 +192,7 @@ public static class BossAiSystem
                          }
                          break;
 
-                     case BossStateKind.Recovering:
+                     case Boss1StateKind.Recovering:
                          fsm.IsInvulnerable = false;
                          if (fsm.CurrentSkillName == "DiveRam")
                          {
@@ -209,13 +211,13 @@ public static class BossAiSystem
 
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
-                             fsm.CurrentState = BossStateKind.Hovering;
+                             fsm.CurrentState = Boss1StateKind.Hovering;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = currentPhaseCfg.HoverDuration;
                          }
                          break;
 
-                     case BossStateKind.PhaseTransition:
+                     case Boss1StateKind.PhaseTransition:
                          fsm.IsInvulnerable = true;
                          Vec2f transPos = trans.Position;
                          Vec2f transBase = new(stats.BaseX, currentPhaseCfg.HoverBaseY);
@@ -228,7 +230,7 @@ public static class BossAiSystem
 
                          if (fsm.StateTimer >= fsm.StateDuration)
                          {
-                             fsm.CurrentState = BossStateKind.Hovering;
+                             fsm.CurrentState = Boss1StateKind.Hovering;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = currentPhaseCfg.HoverDuration;
                              fsm.IsInvulnerable = false;
@@ -236,8 +238,8 @@ public static class BossAiSystem
                          break;
 
                      default:
-                         Console.WriteLine($"[BossAI エラー] 未知の Boss 状態種別です: {fsm.CurrentState}。Hovering 状態に強制復帰します。");
-                         fsm.CurrentState = BossStateKind.Hovering;
+                         Console.WriteLine($"[Boss1AI エラー] 未知の Boss 状態種別です: {fsm.CurrentState}。Hovering 状態に強制復帰します。");
+                         fsm.CurrentState = Boss1StateKind.Hovering;
                          fsm.StateTimer = 0.0f;
                          fsm.StateDuration = currentPhaseCfg.HoverDuration;
                          break;
@@ -247,9 +249,9 @@ public static class BossAiSystem
         return world;
     }
 
-    private static PhaseFsmConfig GetFallbackPhaseConfig(int phase, BossConfig bCfg)
+    private static Boss1PhaseFsmConfig GetFallbackPhaseConfig(int phase, Boss1Config bCfg)
     {
-        Console.WriteLine($"[BossAI 警告] 無効な Boss フェーズ番号です: {phase} (有効値: 1, 2, 3)。Phase 1 を安全に使用します。");
+        Console.WriteLine($"[Boss1AI 警告] 無効な Boss フェーズ番号です: {phase} (有効値: 1, 2, 3)。Phase 1 を安全に使用します。");
         return bCfg.Phase1;
     }
 
@@ -267,7 +269,7 @@ public static class BossAiSystem
 
     private static float LogUnknownSkillWindUp(string skillName, PatternConfig patternCfg)
     {
-        Console.WriteLine($"[BossAI 警告] 未知の技能名です: '{skillName}' (WindUpTime)。デフォルトの Aimed3Shot を使用します。");
+        Console.WriteLine($"[Boss1AI 警告] 未知の技能名です: '{skillName}' (WindUpTime)。デフォルトの Aimed3Shot を使用します。");
         return patternCfg.Aimed3Shot.WindUpTime;
     }
 
@@ -285,7 +287,7 @@ public static class BossAiSystem
 
     private static Color LogUnknownSkillTelegraphColor(string skillName)
     {
-        Console.WriteLine($"[BossAI 警告] 未知の技能名です: '{skillName}' (TelegraphColor)。デフォルト色を使用します。");
+        Console.WriteLine($"[Boss1AI 警告] 未知の技能名です: '{skillName}' (TelegraphColor)。デフォルト色を使用します。");
         return ColorPalette.RedLight;
     }
 
@@ -303,7 +305,7 @@ public static class BossAiSystem
 
     private static float LogUnknownSkillCastDuration(string skillName, PatternConfig patternCfg)
     {
-        Console.WriteLine($"[BossAI 警告] 未知の技能名です: '{skillName}' (CastDuration)。デフォルトの Aimed3Shot を使用します。");
+        Console.WriteLine($"[Boss1AI 警告] 未知の技能名です: '{skillName}' (CastDuration)。デフォルトの Aimed3Shot を使用します。");
         return patternCfg.Aimed3Shot.CastDuration;
     }
 
@@ -321,11 +323,11 @@ public static class BossAiSystem
 
     private static float LogUnknownSkillRecoveryTime(string skillName, PatternConfig patternCfg)
     {
-        Console.WriteLine($"[BossAI 警告] 未知の技能名です: '{skillName}' (RecoveryTime)。デフォルトの Aimed3Shot を使用します。");
+        Console.WriteLine($"[Boss1AI 警告] 未知の技能名です: '{skillName}' (RecoveryTime)。デフォルトの Aimed3Shot を使用します。");
         return patternCfg.Aimed3Shot.RecoveryTime;
     }
 
-    private static void ExecuteBossSkill(World world, ref BossStateMachine fsm, PatternConfig patternCfg, ref Transform trans, float px, float py, float dt)
+    private static void ExecuteBoss1Skill(World world, ref Boss1StateMachine fsm, PatternConfig patternCfg, ref Transform trans, float px, float py, float dt)
     {
         if (fsm.SubTimer > 0.0f)
         {
@@ -435,7 +437,7 @@ public static class BossAiSystem
                 break;
 
             default:
-                Console.WriteLine($"[BossAI エラー] 技能 '{fsm.CurrentSkillName}' に対する弾幕実行ロジックが存在しません！boss.toml の Skills 名を確認してください。");
+                Console.WriteLine($"[Boss1AI エラー] 技能 '{fsm.CurrentSkillName}' に対する弾幕実行ロジックが存在しません！boss1.toml の Skills 名を確認してください。");
                 break;
         }
     }
