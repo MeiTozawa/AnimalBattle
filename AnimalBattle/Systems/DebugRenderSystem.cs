@@ -4,6 +4,9 @@ using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using AnimalBattle.Maps;
+using AnimalBattle.Maps.Navigation;
+using AnimalBattle.Scenes;
 
 namespace AnimalBattle.Systems;
 
@@ -166,6 +169,33 @@ public static class DebugRenderSystem
                              break;
                      }
                  });
+
+                 // 4. プラットフォームナビゲーショングラフのデバッグ描画
+                 TileMap? tileMap = BattleScene.CurrentTileMap;
+                 if (tileMap != null && tileMap.NavGraph.Nodes.Count > 0)
+                 {
+                     foreach (PlatformNode node in tileMap.NavGraph.Nodes)
+                     {
+                         int nx1 = (int)node.LeftX;
+                         int nx2 = (int)node.RightX;
+                         int ny = (int)node.TopY;
+                         GameEngine.DrawLine(nx1, ny, nx2, ny, ColorPalette.Cyan, 3);
+                         GameEngine.DrawString(nx1 + 5, ny - 16, $"Plat #{node.Id} (W:{node.Width:F0})", ColorPalette.Cyan);
+                     }
+
+                     foreach (PlatformLink link in tileMap.NavGraph.Links)
+                     {
+                         int tx = (int)link.TakeoffX;
+                         int ty = (int)link.FromNode.TopY;
+                         int lx = (int)link.LandingX;
+                         int ly = (int)link.ToNode.TopY;
+
+                         Color linkColor = link.Action == NavActionType.Jump ? ColorPalette.Green : ColorPalette.Amber;
+                         GameEngine.DrawLine(tx, ty, lx, ly, linkColor, 1);
+                         GameEngine.DrawCircle(tx, ty, 4, linkColor, true);
+                         GameEngine.DrawCircle(lx, ly, 3, ColorPalette.White, true);
+                     }
+                 }
              });
 
         return world;

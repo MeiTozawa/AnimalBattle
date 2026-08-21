@@ -30,7 +30,7 @@ SlashSpawnOffsetY = -10.0
 
 # Ground Physics & Movement
 MoveSpeed = 160.0
-JumpForce = 580.0
+JumpForce = 640.0
 Gravity = 980.0
 PatrolRadius = 250.0
 
@@ -39,7 +39,7 @@ PatrolRadius = 250.0
 HpThreshold = 1.0
 IdleDuration = 0.8
 MoveSpeed = 160.0
-JumpForce = 580.0
+JumpForce = 640.0
 TelegraphShakeIntensity = 6.0
 TransitionDuration = 1.0
 Skills = ["HeavySlash", "GroundStomp", "HeavySlash", "LeapSmash"]
@@ -49,7 +49,7 @@ Skills = ["HeavySlash", "GroundStomp", "HeavySlash", "LeapSmash"]
 HpThreshold = 0.66
 IdleDuration = 0.5
 MoveSpeed = 220.0
-JumpForce = 640.0
+JumpForce = 680.0
 TelegraphShakeIntensity = 10.0
 TransitionDuration = 1.0
 Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "DoubleCleave"]
@@ -59,7 +59,7 @@ Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "DoubleCleave"]
 HpThreshold = 0.33
 IdleDuration = 0.3
 MoveSpeed = 280.0
-JumpForce = 700.0
+JumpForce = 720.0
 TelegraphShakeIntensity = 14.0
 TransitionDuration = 1.2
 Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash"]

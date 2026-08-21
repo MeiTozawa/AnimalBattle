@@ -5,6 +5,9 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Core.Physics;
+using AnimalBattle.Maps;
+using AnimalBattle.Maps.Navigation;
+using AnimalBattle.Scenes;
 
 namespace AnimalBattle.Systems;
 
@@ -100,68 +103,135 @@ public static class Boss2AiSystem
                  // 状態機更新
                  switch (fsm.CurrentState)
                  {
-                     case Boss2StateKind.PatrolChase:
-                         fsm.IsInvulnerable = false;
-                         stats.FacingRight = playerX >= trans.X;
-                         sprite.FlipX = !stats.FacingRight;
+                      case Boss2StateKind.PatrolChase:
+                          fsm.IsInvulnerable = false;
+                          float bossFootY = trans.Y + col.Height / 2.0f;
+                          float playerFootY = playerY + pCfg.HitboxHeight / 2.0f;
 
-                         float moveDir = stats.FacingRight ? 1.0f : -1.0f;
-                         float distanceToPlayer = MathF.Abs(playerX - trans.X);
+                          TileMap? tileMap = BattleScene.CurrentTileMap;
+                          if (col.IsGrounded)
+                          {
+                              if (tileMap != null && tileMap.NavGraph.Nodes.Count > 0)
+                              {
+                                  NavPlan plan = tileMap.NavGraph.FindPath(
+                                      trans.X,
+                                      bossFootY,
+                                      playerX,
+                                      playerFootY,
+                                      col.IsGrounded,
+                                      currentPhaseCfg.MoveSpeed);
 
-                         if (col.IsGrounded)
-                         {
-                             vel.Vx = moveDir * currentPhaseCfg.MoveSpeed;
+                                  switch (plan.Status)
+                                  {
+                                      case NavStatus.DirectWalk:
+                                          float dir = playerX >= trans.X ? 1.0f : -1.0f;
+                                          vel.Vx = dir * currentPhaseCfg.MoveSpeed;
+                                          break;
 
-                             // プレイヤーが上層足場にいる場合の跳躍追従
-                             if (playerY < trans.Y - 90.0f && distanceToPlayer < 250.0f && stats.JumpCooldown <= 0.0f)
-                             {
-                                 vel.Vy = -currentPhaseCfg.JumpForce;
-                                 stats.JumpCooldown = 3.0f;
-                                 col.IsGrounded = false;
-                             }
-                         }
+                                      case NavStatus.MoveToTakeoff:
+                                          vel.Vx = plan.RequiredVx;
+                                          break;
 
-                         if (fsm.StateTimer >= fsm.StateDuration && isPlayerAlive)
-                         {
-                             vel.Vx = 0.0f;
-                             if (currentPhaseCfg.Skills.Count > 0)
-                             {
-                                 fsm.CurrentSkillName = currentPhaseCfg.Skills[fsm.CurrentSkillIndex];
-                                 fsm.CurrentSkillIndex = (fsm.CurrentSkillIndex + 1) % currentPhaseCfg.Skills.Count;
-                             }
-                             else
-                             {
-                                 Console.WriteLine($"[Boss2AI 警告] Phase {stats.Phase} の技能リストが空です。デフォルト 'HeavySlash' を使用します。");
-                                 fsm.CurrentSkillName = "HeavySlash";
-                             }
+                                      case NavStatus.ExecuteJump:
+                                          if (stats.JumpCooldown <= 0.0f)
+                                          {
+                                              vel.Vx = plan.RequiredVx;
+                                              vel.Vy = plan.RequiredVy != 0.0f ? plan.RequiredVy : -currentPhaseCfg.JumpForce;
+                                              stats.JumpCooldown = 1.0f;
+                                              col.IsGrounded = false;
+                                              trans.Y -= 6.0f;
+                                          }
+                                          break;
 
-                             float windUp = GetBoss2SkillWindUpTime(fsm.CurrentSkillName, patternCfg);
-                             Color telegraphColor = GetBoss2SkillTelegraphColor(fsm.CurrentSkillName, patternCfg);
+                                      case NavStatus.ExecuteDrop:
+                                          vel.Vx = plan.RequiredVx;
+                                          break;
 
-                             fsm.CurrentState = Boss2StateKind.Telegraphing;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = windUp;
-                             fsm.SubTimer = 0.0f;
-                             fsm.StartX = trans.X;
-                             fsm.StartY = trans.Y;
-                             fsm.TargetX = playerX;
-                             fsm.TargetY = playerY;
+                                      case NavStatus.InAir:
+                                      case NavStatus.NoPath:
+                                      default:
+                                          float defaultDir = playerX >= trans.X ? 1.0f : -1.0f;
+                                          vel.Vx = defaultDir * currentPhaseCfg.MoveSpeed;
+                                          break;
+                                  }
+                              }
+                              else
+                              {
+                                  float dir = playerX >= trans.X ? 1.0f : -1.0f;
+                                  vel.Vx = dir * currentPhaseCfg.MoveSpeed;
+                              }
+                          }
 
-                             if (fsm.CurrentSkillName == "GroundStomp")
-                             {
-                                 float groundY = trans.Y + bCfg.CollisionHeight / 2.0f - 10.0f;
-                                 CombatEffectHelper.SpawnTelegraphSpark(world, trans.X - 35.0f, groundY, telegraphColor);
-                                 CombatEffectHelper.SpawnTelegraphSpark(world, trans.X + 35.0f, groundY, telegraphColor);
-                             }
-                             else
-                             {
-                                 float forwardDir = stats.FacingRight ? 1.0f : -1.0f;
-                                 float sparkX = trans.X + forwardDir * bCfg.SlashSpawnOffsetX;
-                                 float sparkY = trans.Y + bCfg.SlashSpawnOffsetY;
-                                 CombatEffectHelper.SpawnTelegraphSpark(world, sparkX, sparkY, telegraphColor);
-                             }
-                         }
-                         break;
+                          // 速度駆動の朝向更新（微小位置振動による左右反転を防ぐ死区付き）
+                          if (vel.Vx > 15.0f)
+                          {
+                              stats.FacingRight = true;
+                          }
+                          else if (vel.Vx < -15.0f)
+                          {
+                              stats.FacingRight = false;
+                          }
+                          else if (MathF.Abs(playerX - trans.X) > 20.0f)
+                          {
+                              stats.FacingRight = playerX >= trans.X;
+                          }
+                          sprite.FlipX = !stats.FacingRight;
+
+                          string pendingSkill = currentPhaseCfg.Skills.Count > 0
+                              ? currentPhaseCfg.Skills[fsm.CurrentSkillIndex % currentPhaseCfg.Skills.Count]
+                              : "HeavySlash";
+
+                          NavStatus currentNavStatus = tileMap != null && tileMap.NavGraph.Nodes.Count > 0
+                              ? tileMap.NavGraph.FindPath(trans.X, bossFootY, playerX, playerFootY, col.IsGrounded, currentPhaseCfg.MoveSpeed).Status
+                              : NavStatus.DirectWalk;
+
+                          bool inRange = CheckBoss2SkillRange(pendingSkill, trans.X, trans.Y, playerX, playerY, currentNavStatus);
+
+                          // 防風箏機制 (Anti-Kiting)：プレイヤーが離れていて 2.5 秒以上接近できない場合は泰坦躍撃 LeapSmash に切り替えて強襲
+                          bool isKitingTimeout = fsm.StateTimer >= 2.5f && col.IsGrounded;
+                          if (isKitingTimeout && !inRange)
+                          {
+                              pendingSkill = "LeapSmash";
+                              inRange = true;
+                          }
+
+                          // プレイヤーが射程内に入り、かつ接地中で最低巡航時間 (IdleDuration) を満たした場合に出招開始
+                          if (inRange && fsm.StateTimer >= currentPhaseCfg.IdleDuration && isPlayerAlive && col.IsGrounded)
+                          {
+                              vel.Vx = 0.0f;
+                              fsm.CurrentSkillName = pendingSkill;
+                              if (currentPhaseCfg.Skills.Count > 0)
+                              {
+                                  fsm.CurrentSkillIndex = (fsm.CurrentSkillIndex + 1) % currentPhaseCfg.Skills.Count;
+                              }
+
+                              float windUp = GetBoss2SkillWindUpTime(fsm.CurrentSkillName, patternCfg);
+                              Color telegraphColor = GetBoss2SkillTelegraphColor(fsm.CurrentSkillName, patternCfg);
+
+                              fsm.CurrentState = Boss2StateKind.Telegraphing;
+                              fsm.StateTimer = 0.0f;
+                              fsm.StateDuration = windUp;
+                              fsm.SubTimer = 0.0f;
+                              fsm.StartX = trans.X;
+                              fsm.StartY = trans.Y;
+                              fsm.TargetX = playerX;
+                              fsm.TargetY = playerY;
+
+                              if (fsm.CurrentSkillName == "GroundStomp")
+                              {
+                                  float groundY = trans.Y + bCfg.CollisionHeight / 2.0f - 10.0f;
+                                  CombatEffectHelper.SpawnTelegraphSpark(world, trans.X - 35.0f, groundY, telegraphColor);
+                                  CombatEffectHelper.SpawnTelegraphSpark(world, trans.X + 35.0f, groundY, telegraphColor);
+                              }
+                              else
+                              {
+                                  float forwardDir = stats.FacingRight ? 1.0f : -1.0f;
+                                  float sparkX = trans.X + forwardDir * bCfg.SlashSpawnOffsetX;
+                                  float sparkY = trans.Y + bCfg.SlashSpawnOffsetY;
+                                  CombatEffectHelper.SpawnTelegraphSpark(world, sparkX, sparkY, telegraphColor);
+                              }
+                          }
+                          break;
 
                      case Boss2StateKind.Telegraphing:
                          fsm.IsInvulnerable = false;
@@ -497,6 +567,45 @@ public static class Boss2AiSystem
             default:
                 Console.WriteLine($"[Boss2AI エラー] 未知の技能名です: {fsm.CurrentSkillName}");
                 break;
+        }
+    }
+
+    /// <summary>
+    /// 技能ごとの有効間合い・攻撃射程・プラットフォーム位置関係を判定します。
+    /// </summary>
+    private static bool CheckBoss2SkillRange(string skillName, float bossX, float bossY, float playerX, float playerY, NavStatus navStatus)
+    {
+        float dx = MathF.Abs(playerX - bossX);
+        float dy = MathF.Abs(playerY - bossY);
+
+        switch (skillName)
+        {
+            case "HeavySlash":
+                // 近接重劈：同一プラットフォーム上または高低差が小さく、水平間合いが近接有効射程内 (dx <= 160, dy <= 60)
+                return (navStatus == NavStatus.DirectWalk || dy <= 60.0f) && dx <= 160.0f;
+
+            case "DoubleCleave":
+                // 双重連撃：近接突進有効射程内 (dx <= 175, dy <= 60)
+                return (navStatus == NavStatus.DirectWalk || dy <= 60.0f) && dx <= 175.0f;
+
+            case "GroundStomp":
+                // 地面踏撃衝撃波：同一高度層または地上付近 (dx <= 420, dy <= 75)
+                return dy <= 75.0f && dx <= 420.0f;
+
+            case "FrenzyCharge":
+                // 狂暴突進：水平直線突進 (dx <= 480, dy <= 60)
+                return dy <= 60.0f && dx <= 480.0f;
+
+            case "LeapSmash":
+                // 泰坦躍撃：長距離強襲・上層強襲 (dx <= 580)
+                return dx <= 580.0f;
+
+            case "EarthquakeRoar":
+                // 天崩地裂：全画面範囲攻撃
+                return true;
+
+            default:
+                return dx <= 180.0f && dy <= 70.0f;
         }
     }
 }

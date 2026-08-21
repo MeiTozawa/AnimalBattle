@@ -4,6 +4,7 @@ using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using AnimalBattle.Maps.Navigation;
 
 namespace AnimalBattle.Maps;
 
@@ -20,6 +21,7 @@ public sealed class TileMap
     private readonly int _renderTileHeight;
     private readonly float _originX;
     private readonly float _originY;
+    private readonly PlatformNavigationGraph _navGraph = new();
 
     /// <summary>関連付けられたタイルセット</summary>
     public TileSet TileSet => _tileSet;
@@ -41,6 +43,9 @@ public sealed class TileMap
 
     /// <summary>マップ原点 Y 座標（左上）</summary>
     public float OriginY => _originY;
+
+    /// <summary>プラットフォーム間跳躍ナビゲーショングラフ</summary>
+    public PlatformNavigationGraph NavGraph => _navGraph;
 
     /// <summary>
     /// 指定されたパラメータで <see cref="TileMap"/> の新しいインスタンスを初期化します。
@@ -176,7 +181,8 @@ public sealed class TileMap
 
     /// <summary>
     /// タイルマップのグリッドデータおよびタイルセットの衝突領域（CollisionRect）に基づいて、
-    /// 水平方向に連続するブロックを結合したプラットフォームコライダーエンティティ群を生成します。
+    /// 水平方向に連続するブロックを結合したプラットフォームコライダーエンティティ群を生成し、
+    /// ナビゲーショングラフ (<see cref="PlatformNavigationGraph"/>) を自動構築します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
     public void BuildPlatformColliders(World world)
@@ -193,6 +199,9 @@ public sealed class TileMap
         float colOffsetY = _tileSet.CollisionRect.Y1 * scaleY;
         float colWidth = _tileSet.CollisionRect.Width * scaleX;
         float colHeight = _tileSet.CollisionRect.Height * scaleY;
+
+        List<PlatformNode> nodes = new();
+        int nodeId = 0;
 
         for (int r = 0; r < _rows; r++)
         {
@@ -221,11 +230,22 @@ public sealed class TileMap
                 float centerX = leftX + colOffsetX + platformWidth / 2.0f;
                 float centerY = topY + colOffsetY + platformHeight / 2.0f;
 
+                float leftBoundX = leftX + colOffsetX;
+                float rightBoundX = leftBoundX + platformWidth;
+                float topSurfaceY = topY + colOffsetY;
+
+                nodes.Add(new PlatformNode(nodeId++, leftBoundX, rightBoundX, topSurfaceY, platformHeight));
+
                 world.Entity($"Platform_{r}_{startCol}")
                     .Set(new Transform(centerX, centerY))
                     .Set(new CollisionBox(platformWidth, platformHeight))
                     .Add<PlatformTag>();
             }
         }
+
+        Boss2Config b2Cfg = ConfigManager.Boss2;
+        _navGraph.Build(nodes, b2Cfg.JumpForce, b2Cfg.Gravity, b2Cfg.MoveSpeed);
+        Console.WriteLine($"[TileMap ナビゲーション] プラットフォームナビゲーショングラフを正常に構築しました: {_navGraph.Nodes.Count} ノード, {_navGraph.Links.Count} リンク (跳躍/落下遷移)");
     }
 }
+
