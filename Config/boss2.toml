@@ -24,6 +24,10 @@ BodyContactDamage = 1.0
 CollisionWidth = 70.0
 CollisionHeight = 90.0
 
+# Melee Attack Spawn Point Offset
+SlashSpawnOffsetX = 105.0
+SlashSpawnOffsetY = -10.0
+
 # Ground Physics & Movement
 MoveSpeed = 160.0
 JumpForce = 580.0

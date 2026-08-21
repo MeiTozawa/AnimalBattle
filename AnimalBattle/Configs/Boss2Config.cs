@@ -100,6 +100,12 @@ public sealed class Boss2Config
     /// <summary>地形衝突判定高さ</summary>
     public float CollisionHeight { get; set; } = 90.0f;
 
+    /// <summary>近接斬撃エフェクトの基準前方生成オフセット X</summary>
+    public float SlashSpawnOffsetX { get; set; } = 105.0f;
+
+    /// <summary>近接斬撃エフェクトの基準生成オフセット Y</summary>
+    public float SlashSpawnOffsetY { get; set; } = -10.0f;
+
     /// <summary>基本地面移動速度</summary>
     public float MoveSpeed { get; set; } = 160.0f;
 

@@ -32,6 +32,15 @@ public static class FadeEffectSystem
                  float progress = Math.Clamp(fade.ElapsedTimer / Math.Max(0.001f, fade.Duration), 0.0f, 1.0f);
                  float factor = EasingMath.Evaluate(fade.Ease, progress);
                  fade.CurrentAlpha = fade.StartAlpha + (fade.EndAlpha - fade.StartAlpha) * factor;
+
+                 Entity entity = it.Entity(i);
+                 if (entity.Has<Velocity>() && entity.Has<Transform>())
+                 {
+                     ref Transform trans = ref entity.GetMut<Transform>();
+                     ref readonly Velocity vel = ref entity.Get<Velocity>();
+                     trans.X += vel.Vx * it.DeltaTime();
+                     trans.Y += vel.Vy * it.DeltaTime();
+                 }
              });
 
         return world;

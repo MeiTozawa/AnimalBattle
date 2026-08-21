@@ -176,11 +176,64 @@ public static class WorldRenderSystem
 
                      if (fsm.CurrentState == Boss2StateKind.Telegraphing)
                      {
+                         Boss2Config b2Cfg = ConfigManager.Boss2;
                          float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
                          int ringRadius = (int)(bossFx.TelegraphStartRadius - progress * bossFx.TelegraphEndRadiusDelta);
-                         GameEngine.DrawCircle(bx, by, ringRadius, ColorPalette.RedOrange, false);
-                         GameEngine.DrawCircle(bx, by, ringRadius - 2, ColorPalette.Amber, false);
-                         GameEngine.DrawCircle(bx, by, (int)bossFx.TelegraphCoreRadius, ColorPalette.OrangeBright, true);
+
+                         switch (fsm.CurrentSkillName)
+                         {
+                             case "GroundStomp":
+                                 {
+                                     float groundY = trans.Y + b2Cfg.CollisionHeight / 2.0f - 10.0f;
+                                     int leftFx = (int)(bx - 35.0f);
+                                     int rightFx = (int)(bx + 35.0f);
+                                     int fy = (int)groundY;
+
+                                     GameEngine.DrawCircle(leftFx, fy, ringRadius, ColorPalette.Amber, false);
+                                     GameEngine.DrawCircle(leftFx, fy, ringRadius - 2, ColorPalette.RedOrange, false);
+                                     GameEngine.DrawCircle(leftFx, fy, (int)bossFx.TelegraphCoreRadius, ColorPalette.OrangeBright, true);
+
+                                     GameEngine.DrawCircle(rightFx, fy, ringRadius, ColorPalette.Amber, false);
+                                     GameEngine.DrawCircle(rightFx, fy, ringRadius - 2, ColorPalette.RedOrange, false);
+                                     GameEngine.DrawCircle(rightFx, fy, (int)bossFx.TelegraphCoreRadius, ColorPalette.OrangeBright, true);
+                                 }
+                                 break;
+
+                             case "LeapSmash":
+                                 {
+                                     // 泰坦躍撃：目標着地位置 (TargetX, TargetY) および Boss 起跳位置にロックオン予兆リングを描画
+                                     int tx = (int)fsm.TargetX;
+                                     int ty = (int)fsm.TargetY;
+                                     int lockRadius = (int)(50.0f - progress * 15.0f);
+                                     GameEngine.DrawCircle(tx, ty, lockRadius, ColorPalette.RedBright, false);
+                                     GameEngine.DrawCircle(tx, ty, lockRadius - 2, ColorPalette.Gold, false);
+                                     GameEngine.DrawCircle(tx, ty, 8, ColorPalette.OrangeBright, true);
+
+                                     GameEngine.DrawCircle(bx, by, ringRadius, ColorPalette.RedOrange, false);
+                                 }
+                                 break;
+
+                             case "EarthquakeRoar":
+                                 {
+                                     // 天崩地裂：Boss 身体中心に全画面共鳴の大型オーラリング
+                                     GameEngine.DrawCircle(bx, by, ringRadius + 15, ColorPalette.Amber, false);
+                                     GameEngine.DrawCircle(bx, by, ringRadius, ColorPalette.RedOrange, false);
+                                     GameEngine.DrawCircle(bx, by, (int)bossFx.TelegraphCoreRadius + 5, ColorPalette.OrangeBright, true);
+                                 }
+                                 break;
+
+                             default: // HeavySlash, DoubleCleave, FrenzyCharge など前方攻撃
+                                 {
+                                     float forwardDir = stats.FacingRight ? 1.0f : -1.0f;
+                                     int targetFx = (int)(bx + forwardDir * b2Cfg.SlashSpawnOffsetX);
+                                     int targetFy = (int)(by + b2Cfg.SlashSpawnOffsetY);
+
+                                     GameEngine.DrawCircle(targetFx, targetFy, ringRadius, ColorPalette.RedOrange, false);
+                                     GameEngine.DrawCircle(targetFx, targetFy, ringRadius - 2, ColorPalette.Amber, false);
+                                     GameEngine.DrawCircle(targetFx, targetFy, (int)bossFx.TelegraphCoreRadius, ColorPalette.OrangeBright, true);
+                                 }
+                                 break;
+                         }
                      }
                      else if (fsm.CurrentState == Boss2StateKind.PhaseTransition || fsm.IsInvulnerable)
                      {
@@ -334,7 +387,7 @@ public static class WorldRenderSystem
                  // 6. 近接斬撃スプライトエフェクト描画
                  meleeSlashQuery.Each((ref Transform trans, ref Hitbox hit, ref HitFlashEffect flash, ref FadeEffect fade, ref Sprite sprite) =>
                  {
-                     int alpha = (int)(fade.CurrentAlpha * 255.0f);
+                     int alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
                      if (alpha <= 0)
                      {
                          return;
@@ -342,6 +395,7 @@ public static class WorldRenderSystem
 
                      if (sprite.IsVisible && sprite.GraphHandle >= 0)
                      {
+                         GameEngine.SetDrawBright(flash.FlashColor.R, flash.FlashColor.G, flash.FlashColor.B);
                          GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
                          GameEngine.DrawRectRotaGraph(
                              (int)trans.X,
@@ -356,6 +410,7 @@ public static class WorldRenderSystem
                              true,
                              sprite.FlipX);
                          GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+                         GameEngine.SetDrawBright(255, 255, 255);
                      }
                      else if (hit.Shape is CollisionShape.Box box)
                      {

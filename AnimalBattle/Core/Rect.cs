@@ -152,4 +152,20 @@ public struct Rect<T> where T : struct
         Right = right;
         Bottom = bottom;
     }
+
+    /// <summary>
+    /// 左上座標および幅・高さを指定して整数の <see cref="Rect{int}"/> を生成します。
+    /// </summary>
+    public static Rect<int> FromWidthHeight(int left, int top, int width, int height)
+    {
+        return new Rect<int>(left, top, left + width, top + height);
+    }
+
+    /// <summary>
+    /// 左上座標および幅・高さを指定して浮動小数点数の <see cref="Rect{float}"/> を生成します。
+    /// </summary>
+    public static Rect<float> FromWidthHeight(float left, float top, float width, float height)
+    {
+        return new Rect<float>(left, top, left + width, top + height);
+    }
 }

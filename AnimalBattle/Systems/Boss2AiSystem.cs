@@ -126,8 +126,8 @@ public static class Boss2AiSystem
                              vel.Vx = 0.0f;
                              if (currentPhaseCfg.Skills.Count > 0)
                              {
-                                 fsm.CurrentSkillIndex = (fsm.CurrentSkillIndex + 1) % currentPhaseCfg.Skills.Count;
                                  fsm.CurrentSkillName = currentPhaseCfg.Skills[fsm.CurrentSkillIndex];
+                                 fsm.CurrentSkillIndex = (fsm.CurrentSkillIndex + 1) % currentPhaseCfg.Skills.Count;
                              }
                              else
                              {
@@ -147,7 +147,19 @@ public static class Boss2AiSystem
                              fsm.TargetX = playerX;
                              fsm.TargetY = playerY;
 
-                             CombatEffectHelper.SpawnTelegraphSpark(world, trans.X, trans.Y, telegraphColor);
+                             if (fsm.CurrentSkillName == "GroundStomp")
+                             {
+                                 float groundY = trans.Y + bCfg.CollisionHeight / 2.0f - 10.0f;
+                                 CombatEffectHelper.SpawnTelegraphSpark(world, trans.X - 35.0f, groundY, telegraphColor);
+                                 CombatEffectHelper.SpawnTelegraphSpark(world, trans.X + 35.0f, groundY, telegraphColor);
+                             }
+                             else
+                             {
+                                 float forwardDir = stats.FacingRight ? 1.0f : -1.0f;
+                                 float sparkX = trans.X + forwardDir * bCfg.SlashSpawnOffsetX;
+                                 float sparkY = trans.Y + bCfg.SlashSpawnOffsetY;
+                                 CombatEffectHelper.SpawnTelegraphSpark(world, sparkX, sparkY, telegraphColor);
+                             }
                          }
                          break;
 
@@ -239,6 +251,10 @@ public static class Boss2AiSystem
                              fsm.CurrentState = Boss2StateKind.PatrolChase;
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = currentPhaseCfg.IdleDuration;
+                             if (currentPhaseCfg.Skills.Count > 0)
+                             {
+                                 fsm.CurrentSkillName = currentPhaseCfg.Skills[fsm.CurrentSkillIndex % currentPhaseCfg.Skills.Count];
+                             }
                          }
                          break;
 
@@ -251,6 +267,10 @@ public static class Boss2AiSystem
                              fsm.StateTimer = 0.0f;
                              fsm.StateDuration = currentPhaseCfg.IdleDuration;
                              fsm.IsInvulnerable = false;
+                             if (currentPhaseCfg.Skills.Count > 0)
+                             {
+                                 fsm.CurrentSkillName = currentPhaseCfg.Skills[fsm.CurrentSkillIndex % currentPhaseCfg.Skills.Count];
+                             }
                          }
                          break;
                  }
@@ -363,6 +383,7 @@ public static class Boss2AiSystem
             fsm.SubTimer = Math.Max(0.0f, fsm.SubTimer - dt);
         }
 
+        Boss2Config bCfg = ConfigManager.Boss2;
         float forwardDir = stats.FacingRight ? 1.0f : -1.0f;
 
         switch (fsm.CurrentSkillName)
@@ -375,10 +396,11 @@ public static class Boss2AiSystem
                     if (stats.ComboIndex == 0)
                     {
                         stats.ComboIndex = 1;
-                        float hitX = trans.X + forwardDir * 50.0f;
-                        float hitY = trans.Y;
+                        float hitX = trans.X + forwardDir * bCfg.SlashSpawnOffsetX;
+                        float hitY = trans.Y + bCfg.SlashSpawnOffsetY;
+                        float slashVx = forwardDir * p.DashSpeed;
                         SlashDirection dir = stats.FacingRight ? SlashDirection.Right : SlashDirection.Left;
-                        CombatEffectHelper.SpawnMeleeSlashHitbox(world, hitX, hitY, p.SlashRangeX, p.SlashRangeY, p.SlashDamage, 0.20f, p.SlashColor, dir);
+                        CombatEffectHelper.SpawnMeleeSlashHitbox(world, hitX, hitY, slashVx, 0.0f, p.SlashRangeX, p.SlashRangeY, p.SlashDamage, 0.20f, p.SlashColor, dir);
                     }
                 }
                 break;
@@ -407,16 +429,20 @@ public static class Boss2AiSystem
                     if (stats.ComboIndex == 0 && fsm.StateTimer >= 0.05f)
                     {
                         stats.ComboIndex = 1;
-                        float hitX1 = trans.X + forwardDir * 55.0f;
+                        float hitX1 = trans.X + forwardDir * bCfg.SlashSpawnOffsetX;
+                        float hitY1 = trans.Y + bCfg.SlashSpawnOffsetY;
+                        float slashVx1 = forwardDir * p.DashSpeed;
                         SlashDirection dir1 = stats.FacingRight ? SlashDirection.Right : SlashDirection.Left;
-                        CombatEffectHelper.SpawnMeleeSlashHitbox(world, hitX1, trans.Y, p.SlashRangeX, p.SlashRangeY, p.SlashDamage, 0.18f, p.SlashColor, dir1);
+                        CombatEffectHelper.SpawnMeleeSlashHitbox(world, hitX1, hitY1, slashVx1, 0.0f, p.SlashRangeX, p.SlashRangeY, p.SlashDamage, 0.18f, p.SlashColor, dir1);
                     }
                     else if (stats.ComboIndex == 1 && fsm.StateTimer >= p.SlashInterval)
                     {
                         stats.ComboIndex = 2;
-                        float hitX2 = trans.X + forwardDir * 60.0f;
+                        float hitX2 = trans.X + forwardDir * (bCfg.SlashSpawnOffsetX + 15.0f);
+                        float hitY2 = trans.Y + bCfg.SlashSpawnOffsetY;
+                        float slashVx2 = forwardDir * p.DashSpeed;
                         SlashDirection dir2 = stats.FacingRight ? SlashDirection.Right : SlashDirection.Left;
-                        CombatEffectHelper.SpawnMeleeSlashHitbox(world, hitX2, trans.Y, p.SlashRangeX, p.SlashRangeY, p.SlashDamage, 0.18f, p.SlashColor, dir2);
+                        CombatEffectHelper.SpawnMeleeSlashHitbox(world, hitX2, hitY2, slashVx2, 0.0f, p.SlashRangeX, p.SlashRangeY, p.SlashDamage, 0.18f, p.SlashColor, dir2);
                     }
                 }
                 break;

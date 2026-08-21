@@ -147,11 +147,15 @@ public static class HudRenderSystem
                      string bossTitle = $"BOSS: {ConfigManager.Boss2.BossName} [PHASE {stats.Phase}/3]";
                      string stateName = fsm.CurrentState switch
                      {
-                         Boss2StateKind.PatrolChase => "[STATE: PATROL & CHASE]",
+                         Boss2StateKind.PatrolChase => string.IsNullOrEmpty(fsm.CurrentSkillName)
+                             ? "[STATE: PATROL & CHASE]"
+                             : $"[STATE: PATROL & CHASE (NEXT: {fsm.CurrentSkillName})]",
                          Boss2StateKind.Telegraphing => $"[STATE: TELEGRAPHING (WIND-UP: {fsm.CurrentSkillName})]",
                          Boss2StateKind.Casting => $"[STATE: CASTING ({fsm.CurrentSkillName})]",
                          Boss2StateKind.LeapJumping => $"[STATE: LEAP SMASH (AIRBORNE)]",
-                         Boss2StateKind.Recovering => "[STATE: RECOVERING (VULNERABLE)]",
+                         Boss2StateKind.Recovering => string.IsNullOrEmpty(fsm.CurrentSkillName)
+                             ? "[STATE: RECOVERING (VULNERABLE)]"
+                             : $"[STATE: RECOVERING (NEXT: {fsm.CurrentSkillName})]",
                          Boss2StateKind.PhaseTransition => "[STATE: ROAR TRANSITION (INVULNERABLE)]",
                          _ => "[STATE: UNKNOWN]"
                      };

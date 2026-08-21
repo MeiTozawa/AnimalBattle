@@ -169,6 +169,8 @@ public static class CombatEffectHelper
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="x">判定中心 X 座標</param>
     /// <param name="y">判定中心 Y 座標</param>
+    /// <param name="vx">X 方向移動速度（突進追従用）</param>
+    /// <param name="vy">Y 方向移動速度</param>
     /// <param name="width">判定幅</param>
     /// <param name="height">判定高さ</param>
     /// <param name="damage">与ダメージ量</param>
@@ -179,6 +181,8 @@ public static class CombatEffectHelper
         World world,
         float x,
         float y,
+        float vx,
+        float vy,
         float width,
         float height,
         float damage,
@@ -189,13 +193,28 @@ public static class CombatEffectHelper
         int slashHandle = AssetManager.GetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng);
         int colIndex = 5; // 第 6 列 (0-based: 5)
         int rowIndex = (int)direction;
-        Rect<int> srcRect = new(colIndex * 64, rowIndex * 64, 64, 64);
-        float scaleX = width / 40.0f;
-        float scaleY = height / 40.0f;
+        Rect<int> srcRect = Rect<int>.FromWidthHeight(colIndex * 64, rowIndex * 64, 64, 64);
+        float scaleX = width / 28.0f;
+        float scaleY = height / 28.0f;
+
+        // 64x64 セル内の斬撃ピクセル重心偏り（Right: +18px, Left: -18px）を逆補正して視覚中心を (x, y) に一致させる
+        float offsetX = direction switch
+        {
+            SlashDirection.Right => -18.0f * scaleX,
+            SlashDirection.Left => 18.0f * scaleX,
+            _ => 0.0f
+        };
+        float offsetY = direction switch
+        {
+            SlashDirection.Down => -18.0f * scaleY,
+            SlashDirection.Up => 18.0f * scaleY,
+            _ => 0.0f
+        };
 
         world.Entity()
-             .Set(new Transform(x, y, scaleX: scaleX, scaleY: scaleY))
-             .Set(new Hitbox(new CollisionShape.Box(width, height), damage: damage, faction: Faction.Hostile, destroyOnHit: false))
+             .Set(new Transform(x + offsetX, y + offsetY, scaleX: scaleX, scaleY: scaleY))
+             .Set(new Velocity(vx, vy))
+             .Set(new Hitbox(new CollisionShape.Box(width, height, OffsetX: -offsetX, OffsetY: -offsetY), damage: damage, faction: Faction.Hostile, destroyOnHit: false))
              .Set(new Sprite(slashHandle, flipX: false, isVisible: true, srcRect: srcRect))
              .Set(new FadeEffect(lifetime))
              .Set(new HitFlashEffect(lifetime, color))

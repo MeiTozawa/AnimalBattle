@@ -74,7 +74,7 @@ public struct Boss2StateMachine
         StateTimer = 0.0f;
         StateDuration = 1.0f;
         CurrentSkillIndex = 0;
-        CurrentSkillName = string.Empty;
+        CurrentSkillName = "HeavySlash";
         SubTimer = 0.0f;
         StartX = 0.0f;
         StartY = 0.0f;
