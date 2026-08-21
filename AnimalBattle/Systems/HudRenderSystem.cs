@@ -147,27 +147,45 @@ public static class HudRenderSystem
                      string bossTitle = $"BOSS: {ConfigManager.Boss2.BossName} [PHASE {stats.Phase}/3]";
                      string stateName = fsm.CurrentState switch
                      {
-                         Boss2StateKind.PatrolChase => string.IsNullOrEmpty(fsm.CurrentSkillName)
-                             ? "[STATE: PATROL & CHASE]"
-                             : $"[STATE: PATROL & CHASE (NEXT: {fsm.CurrentSkillName})]",
-                         Boss2StateKind.Telegraphing => $"[STATE: TELEGRAPHING (WIND-UP: {fsm.CurrentSkillName})]",
-                         Boss2StateKind.Casting => $"[STATE: CASTING ({fsm.CurrentSkillName})]",
-                         Boss2StateKind.LeapJumping => $"[STATE: LEAP SMASH (AIRBORNE)]",
-                         Boss2StateKind.Recovering => string.IsNullOrEmpty(fsm.CurrentSkillName)
-                             ? "[STATE: RECOVERING (VULNERABLE)]"
-                             : $"[STATE: RECOVERING (NEXT: {fsm.CurrentSkillName})]",
+                         Boss2StateKind.Idle => "[STATE: IDLE / ALERT]",
+                         Boss2StateKind.PatrolChase => $"[STATE: CHASE (NEXT: {fsm.CurrentSkillName})]",
+                         Boss2StateKind.MoveToTakeoff => "[STATE: NAVIGATING TO TAKEOFF]",
+                         Boss2StateKind.PlatformJumping => "[STATE: PLATFORM JUMP (AIRBORNE)]",
+                         Boss2StateKind.PlatformFalling => "[STATE: PLATFORM FALLING]",
+                         Boss2StateKind.LandingRecovery => "[STATE: LANDING IMPACT]",
+                         Boss2StateKind.TelegraphHeavySlash => "[STATE: TELEGRAPH (HEAVY SLASH)]",
+                         Boss2StateKind.TelegraphDoubleCleave => "[STATE: TELEGRAPH (DOUBLE CLEAVE)]",
+                         Boss2StateKind.TelegraphGroundStomp => "[STATE: TELEGRAPH (GROUND STOMP)]",
+                         Boss2StateKind.TelegraphLeapSmash => "[STATE: TELEGRAPH (LEAP SMASH)]",
+                         Boss2StateKind.TelegraphFrenzyCharge => "[STATE: TELEGRAPH (FRENZY CHARGE)]",
+                         Boss2StateKind.TelegraphEarthquakeRoar => "[STATE: TELEGRAPH (EARTHQUAKE ROAR)]",
+                         Boss2StateKind.ExecutingHeavySlash => "[STATE: EXECUTING (HEAVY SLASH)]",
+                         Boss2StateKind.ExecutingDoubleCleave => "[STATE: EXECUTING (DOUBLE CLEAVE)]",
+                         Boss2StateKind.ExecutingGroundStomp => "[STATE: EXECUTING (GROUND STOMP)]",
+                         Boss2StateKind.ExecutingLeapAscent => "[STATE: LEAP ASCENT (TITAN LEAP)]",
+                         Boss2StateKind.ExecutingLeapDescent => "[STATE: LEAP DESCENT (SLAM)]",
+                         Boss2StateKind.ExecutingFrenzyCharge => "[STATE: FRENZY CHARGE (RAM)]",
+                         Boss2StateKind.ExecutingEarthquakeRoar => "[STATE: EARTHQUAKE ROAR (METEOR)]",
+                         Boss2StateKind.WallCrashStun => "[STATE: WALL CRASH STUNNED (VULNERABLE)]",
+                         Boss2StateKind.SkillRecovery => "[STATE: SKILL RECOVERY (VULNERABLE)]",
                          Boss2StateKind.PhaseTransition => "[STATE: ROAR TRANSITION (INVULNERABLE)]",
+                         Boss2StateKind.Dead => "[STATE: DEFEATED]",
                          _ => "[STATE: UNKNOWN]"
                      };
 
                      Color stateBadgeColor = fsm.CurrentState switch
                      {
-                         Boss2StateKind.PatrolChase => hpCfg.StateDefaultColor,
-                         Boss2StateKind.Telegraphing => hpCfg.StateTelegraphingColor,
-                         Boss2StateKind.Casting => hpCfg.StateCastingColor,
-                         Boss2StateKind.LeapJumping => ColorPalette.OrangeBright,
-                         Boss2StateKind.Recovering => hpCfg.StateRecoveringColor,
+                         Boss2StateKind.Idle or Boss2StateKind.PatrolChase or Boss2StateKind.MoveToTakeoff => hpCfg.StateDefaultColor,
+                         Boss2StateKind.PlatformJumping or Boss2StateKind.PlatformFalling or Boss2StateKind.LandingRecovery => ColorPalette.BlueSky,
+                         Boss2StateKind.TelegraphHeavySlash or Boss2StateKind.TelegraphDoubleCleave or Boss2StateKind.TelegraphGroundStomp
+                             or Boss2StateKind.TelegraphLeapSmash or Boss2StateKind.TelegraphFrenzyCharge or Boss2StateKind.TelegraphEarthquakeRoar => hpCfg.StateTelegraphingColor,
+                         Boss2StateKind.ExecutingHeavySlash or Boss2StateKind.ExecutingDoubleCleave or Boss2StateKind.ExecutingGroundStomp
+                             or Boss2StateKind.ExecutingLeapAscent or Boss2StateKind.ExecutingLeapDescent or Boss2StateKind.ExecutingFrenzyCharge
+                             or Boss2StateKind.ExecutingEarthquakeRoar => hpCfg.StateCastingColor,
+                         Boss2StateKind.WallCrashStun => ColorPalette.Gold,
+                         Boss2StateKind.SkillRecovery => hpCfg.StateRecoveringColor,
                          Boss2StateKind.PhaseTransition => hpCfg.StatePhaseTransitionColor,
+                         Boss2StateKind.Dead => ColorPalette.Gray,
                          _ => hpCfg.StateDefaultColor
                      };
 

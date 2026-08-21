@@ -6,45 +6,36 @@ namespace AnimalBattle.Maps.Navigation;
 /// 2D プラットフォームナビゲーショングラフにおける単一の独立プラットフォームノード。
 /// プラットフォームの表面幾何範囲、着地基準面 Y 座標、および空間包含判定メソッドを保持します。
 /// </summary>
-public sealed class PlatformNode
+/// <remarks>
+/// <see cref="PlatformNode"/> の新しいインスタンスを初期化します。
+/// </remarks>
+/// <param name="id">プラットフォーム ID</param>
+/// <param name="leftX">左端 X 座標</param>
+/// <param name="rightX">右端 X 座標</param>
+/// <param name="topY">上面 Y 座標</param>
+/// <param name="height">プラットフォーム高さ</param>
+public sealed class PlatformNode(int id, float leftX, float rightX, float topY, float height)
 {
     /// <summary>プラットフォームの一意な識別番号 (0-based)</summary>
-    public int Id { get; }
+    public int Id { get; } = id;
 
     /// <summary>プラットフォーム上面（着地基準面）の Y 座標</summary>
-    public float TopY { get; }
+    public float TopY { get; } = topY;
 
     /// <summary>プラットフォームの左端 X 座標</summary>
-    public float LeftX { get; }
+    public float LeftX { get; } = leftX;
 
     /// <summary>プラットフォームの右端 X 座標</summary>
-    public float RightX { get; }
+    public float RightX { get; } = rightX;
 
     /// <summary>プラットフォームの厚み（高さ）</summary>
-    public float Height { get; }
+    public float Height { get; } = height;
 
     /// <summary>プラットフォームの中心 X 座標</summary>
     public float CenterX => (LeftX + RightX) * 0.5f;
 
     /// <summary>プラットフォームの横幅</summary>
     public float Width => RightX - LeftX;
-
-    /// <summary>
-    /// <see cref="PlatformNode"/> の新しいインスタンスを初期化します。
-    /// </summary>
-    /// <param name="id">プラットフォーム ID</param>
-    /// <param name="leftX">左端 X 座標</param>
-    /// <param name="rightX">右端 X 座標</param>
-    /// <param name="topY">上面 Y 座標</param>
-    /// <param name="height">プラットフォーム高さ</param>
-    public PlatformNode(int id, float leftX, float rightX, float topY, float height)
-    {
-        Id = id;
-        LeftX = leftX;
-        RightX = rightX;
-        TopY = topY;
-        Height = height;
-    }
 
     /// <summary>
     /// 指定された X 座標がプラットフォームの水平範囲内に含まれているかを判定します。

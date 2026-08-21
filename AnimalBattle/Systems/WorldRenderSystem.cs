@@ -174,15 +174,15 @@ public static class WorldRenderSystem
                      int bx = (int)trans.X;
                      int by = (int)trans.Y;
 
-                     if (fsm.CurrentState == Boss2StateKind.Telegraphing)
+                     if (fsm.IsTelegraphing)
                      {
                          Boss2Config b2Cfg = ConfigManager.Boss2;
                          float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
                          int ringRadius = (int)(bossFx.TelegraphStartRadius - progress * bossFx.TelegraphEndRadiusDelta);
 
-                         switch (fsm.CurrentSkillName)
+                         switch (fsm.CurrentState)
                          {
-                             case "GroundStomp":
+                             case Boss2StateKind.TelegraphGroundStomp:
                                  {
                                      float groundY = trans.Y + b2Cfg.CollisionHeight / 2.0f - 10.0f;
                                      int leftFx = (int)(bx - 35.0f);
@@ -199,7 +199,7 @@ public static class WorldRenderSystem
                                  }
                                  break;
 
-                             case "LeapSmash":
+                             case Boss2StateKind.TelegraphLeapSmash:
                                  {
                                      // 泰坦躍撃：目標着地位置 (TargetX, TargetY) および Boss 起跳位置にロックオン予兆リングを描画
                                      int tx = (int)fsm.TargetX;
@@ -213,7 +213,7 @@ public static class WorldRenderSystem
                                  }
                                  break;
 
-                             case "EarthquakeRoar":
+                             case Boss2StateKind.TelegraphEarthquakeRoar:
                                  {
                                      // 天崩地裂：Boss 身体中心に全画面共鳴の大型オーラリング
                                      GameEngine.DrawCircle(bx, by, ringRadius + 15, ColorPalette.Amber, false);
@@ -242,9 +242,22 @@ public static class WorldRenderSystem
                          GameEngine.DrawCircle(bx, by, shieldRadius - 3, ColorPalette.Amber, false);
                          GameEngine.DrawCircle(bx, by, shieldRadius - 8, ColorPalette.RedTelegraphCore, true);
                      }
-                     else if (fsm.CurrentState == Boss2StateKind.Recovering)
+                     else if (fsm.CurrentState == Boss2StateKind.SkillRecovery)
                      {
                          GameEngine.DrawCircle(bx, by, (int)bossFx.RecoveringAuraRadius, ColorPalette.CyanRecovering, true);
+                     }
+                     else if (fsm.CurrentState == Boss2StateKind.WallCrashStun)
+                     {
+                         // 壁激突気絶：頭上に回転する星型／光点エフェクトを描画
+                         float angle = fsm.StateTimer * 6.0f;
+                         for (int k = 0; k < 3; k++)
+                         {
+                             float starAngle = angle + k * (MathF.PI * 2.0f / 3.0f);
+                             int sx = (int)(bx + MathF.Cos(starAngle) * 26.0f);
+                             int sy = (int)(by - 42.0f + MathF.Sin(starAngle) * 8.0f);
+                             GameEngine.DrawCircle(sx, sy, 6, ColorPalette.Gold, true);
+                             GameEngine.DrawCircle(sx, sy, 7, ColorPalette.Amber, false);
+                         }
                      }
 
                      if (sprite.IsVisible && sprite.GraphHandle >= 0 && bHealth.IsAlive)
