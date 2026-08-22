@@ -42,69 +42,57 @@ public static class PlayerShootSystem
 
                  if (shootJustPressed && playerState.ShootCooldown <= 0.0f)
                  {
-                     bool isLeft = InputService.IsHolding(InputAction.Left);
-                     bool isRight = InputService.IsHolding(InputAction.Right);
-                     bool isUp = InputService.IsHolding(InputAction.Up);
-                     bool isDown = InputService.IsHolding(InputAction.Down);
-
-                     float inputX = 0.0f;
-                     float inputY = 0.0f;
-
-                     if (isLeft)
-                     {
-                         inputX -= 1.0f;
-                     }
-                     if (isRight)
-                     {
-                         inputX += 1.0f;
-                     }
-                     if (isUp)
-                     {
-                         inputY -= 1.0f;
-                     }
-                     if (isDown)
-                     {
-                         inputY += 1.0f;
-                     }
-
-                     float dirX;
-                     float dirY;
-
-                     if (Math.Abs(inputX) > 0.001f || Math.Abs(inputY) > 0.001f)
-                     {
-                         float length = MathF.Sqrt(inputX * inputX + inputY * inputY);
-                         dirX = inputX / length;
-                         dirY = inputY / length;
-
-                         if (inputX < 0.0f)
-                         {
-                             sprite.FlipX = true;
-                         }
-                         else if (inputX > 0.0f)
-                         {
-                             sprite.FlipX = false;
-                         }
-                     }
-                     else
-                     {
-                         dirX = sprite.FlipX ? -1.0f : 1.0f;
-                         dirY = 0.0f;
-                     }
-
-                     float spawnX = trans.X + dirX * pCfg.BulletSpawnOffset;
-                     float spawnY = trans.Y + pCfg.BulletSpawnOffsetY + dirY * pCfg.BulletSpawnOffset;
-
-                     world.Entity()
-                          .Set(new Transform(spawnX, spawnY))
-                          .Set(new Velocity(dirX * pCfg.BulletSpeed, dirY * pCfg.BulletSpeed))
-                          .Set(new CollisionBox(pCfg.BulletWidth, pCfg.BulletHeight))
-                          .Set(new Hitbox(pCfg.GetBulletHitboxShape(), damage: pCfg.BulletDamage, faction: Faction.Friendly, destroyOnHit: true))
-                          .Add<PlayerBulletTag>();
-
+                     CalculateAimDirection(ref sprite, out float dirX, out float dirY);
+                     SpawnPlayerBullet(world, pCfg, trans.X, trans.Y, dirX, dirY);
                      playerState.ShootCooldown = pCfg.ShootCooldown;
                  }
              });
 
         return world;
+    }
+
+    private static void CalculateAimDirection(ref Sprite sprite, out float dirX, out float dirY)
+    {
+        bool isLeft = InputService.IsHolding(InputAction.Left);
+        bool isRight = InputService.IsHolding(InputAction.Right);
+        bool isUp = InputService.IsHolding(InputAction.Up);
+        bool isDown = InputService.IsHolding(InputAction.Down);
+
+        float inputX = (isRight ? 1.0f : 0.0f) - (isLeft ? 1.0f : 0.0f);
+        float inputY = (isDown ? 1.0f : 0.0f) - (isUp ? 1.0f : 0.0f);
+
+        if (Math.Abs(inputX) > 0.001f || Math.Abs(inputY) > 0.001f)
+        {
+            float length = MathF.Sqrt(inputX * inputX + inputY * inputY);
+            dirX = inputX / length;
+            dirY = inputY / length;
+
+            if (inputX < 0.0f)
+            {
+                sprite.FlipX = true;
+            }
+            else if (inputX > 0.0f)
+            {
+                sprite.FlipX = false;
+            }
+        }
+        else
+        {
+            dirX = sprite.FlipX ? -1.0f : 1.0f;
+            dirY = 0.0f;
+        }
+    }
+
+    private static void SpawnPlayerBullet(World world, PlayerConfig pCfg, float posX, float posY, float dirX, float dirY)
+    {
+        float spawnX = posX + dirX * pCfg.BulletSpawnOffset;
+        float spawnY = posY + pCfg.BulletSpawnOffsetY + dirY * pCfg.BulletSpawnOffset;
+
+        world.Entity()
+             .Set(new Transform(spawnX, spawnY))
+             .Set(new Velocity(dirX * pCfg.BulletSpeed, dirY * pCfg.BulletSpeed))
+             .Set(new CollisionBox(pCfg.BulletWidth, pCfg.BulletHeight))
+             .Set(new Hitbox(pCfg.GetBulletHitboxShape(), damage: pCfg.BulletDamage, faction: Faction.Friendly, destroyOnHit: true))
+             .Add<PlayerBulletTag>();
     }
 }

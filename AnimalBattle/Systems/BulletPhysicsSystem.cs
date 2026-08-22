@@ -20,79 +20,53 @@ public static class BulletPhysicsSystem
         world.System<Transform, Velocity>("PlayerBulletMovementSystem")
              .With<PlayerBulletTag>()
              .Kind(Ecs.OnUpdate)
-             .Iter((it, trans, vel) =>
-             {
-                 int count = it.Count();
-                 if (count <= 0)
-                 {
-                     return;
-                 }
-
-                 ArenaConfig arenaCfg = ConfigManager.Arena;
-                 Span<byte> despawnFlags = stackalloc byte[count];
-
-                 unsafe
-                 {
-                     Transform* pTrans = (Transform*)trans.Data;
-                     Velocity* pVel = (Velocity*)vel.Data;
-
-                     fixed (byte* pFlags = despawnFlags)
-                     {
-                         NativeExtensionBindings.Extension_BatchBulletMovement(
-                             pTrans, pVel, count, it.DeltaTime(),
-                             arenaCfg.BulletDespawnMinX, arenaCfg.BulletDespawnMaxX,
-                             arenaCfg.BulletDespawnMinY, arenaCfg.BulletDespawnMaxY,
-                             pFlags);
-                     }
-                 }
-
-                 for (int i = 0; i < count; ++i)
-                 {
-                     if (despawnFlags[i] != 0)
-                     {
-                         it.Entity(i).Destruct();
-                     }
-                 }
-             });
+             .Iter(RunBatchBulletMovement);
 
         world.System<Transform, Velocity>("BossBulletMovementSystem")
              .With<BossBulletTag>()
              .Kind(Ecs.OnUpdate)
-             .Iter((it, trans, vel) =>
-             {
-                 int count = it.Count();
-                 if (count <= 0)
-                 {
-                     return;
-                 }
-
-                 ArenaConfig arenaCfg = ConfigManager.Arena;
-                 Span<byte> despawnFlags = stackalloc byte[count];
-
-                 unsafe
-                 {
-                     Transform* pTrans = (Transform*)trans.Data;
-                     Velocity* pVel = (Velocity*)vel.Data;
-
-                     fixed (byte* pFlags = despawnFlags)
-                     {
-                         NativeExtensionBindings.Extension_BatchBulletMovement(
-                             pTrans, pVel, count, it.DeltaTime(),
-                             arenaCfg.BulletDespawnMinX, arenaCfg.BulletDespawnMaxX,
-                             arenaCfg.BulletDespawnMinY, arenaCfg.BulletDespawnMaxY,
-                             pFlags);
-                     }
-                 }
-
-                 for (int i = 0; i < count; ++i)
-                 {
-                     if (despawnFlags[i] != 0)
-                     {
-                         it.Entity(i).Destruct();
-                     }
-                 }
-             });
+             .Iter(RunBatchBulletMovement);
 
         return world;
+    }
+
+    private static void RunBatchBulletMovement(Iter it, Field<Transform> trans, Field<Velocity> vel)
+    {
+        int count = it.Count();
+        if (count <= 0)
+        {
+            return;
+        }
+
+        ArenaConfig arenaCfg = ConfigManager.Arena;
+        Span<byte> despawnFlags = stackalloc byte[count];
+
+        unsafe
+        {
+            Transform* pTrans = (Transform*)trans.Data;
+            Velocity* pVel = (Velocity*)vel.Data;
+
+            fixed (byte* pFlags = despawnFlags)
+            {
+                NativeExtensionBindings.Extension_BatchBulletMovement(
+                    pTrans,
+                    pVel,
+                    count,
+                    it.DeltaTime(),
+                    arenaCfg.BulletDespawnMinX,
+                    arenaCfg.BulletDespawnMaxX,
+                    arenaCfg.BulletDespawnMinY,
+                    arenaCfg.BulletDespawnMaxY,
+                    pFlags);
+            }
+        }
+
+        for (int i = 0; i < count; ++i)
+        {
+            if (despawnFlags[i] != 0)
+            {
+                it.Entity(i).Destruct();
+            }
+        }
     }
 }

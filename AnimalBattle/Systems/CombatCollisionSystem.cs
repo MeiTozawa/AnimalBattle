@@ -29,11 +29,9 @@ public static class CombatCollisionSystem
              .Each((Entity atkEntity, ref Transform atkTrans, ref Hitbox hitbox) =>
              {
                  PlayerConfig pCfg = ConfigManager.Player;
-
                  Transform localAtkTrans = atkTrans;
                  Hitbox localHitbox = hitbox;
 
-                 // 1. 攻撃判定が無効（休眠中）の場合は判定をスキップ
                  if (!localHitbox.IsActive)
                  {
                      return;
@@ -43,90 +41,14 @@ public static class CombatCollisionSystem
 
                  hurtboxQuery.Each((Entity vicEntity, ref Transform vicTrans, ref Hurtbox hurtbox, ref Health vicHealth) =>
                  {
-                     // 2. 同一陣営または死亡済みの場合は無視
-                     if (localHitbox.Faction == hurtbox.Faction || !vicHealth.IsAlive)
+                     if (localHitbox.Faction == hurtbox.Faction || !vicHealth.IsAlive || IsTargetInvulnerable(vicEntity, in vicHealth))
                      {
                          return;
                      }
 
-                     // 3. 無敵時間中の場合は無視
-                     if (vicHealth.IsInvincible)
-                     {
-                         return;
-                     }
-
-                     // 4. Boss が状態機フェーズ無敵中の場合は無視
-                     if (vicEntity.Has<Boss1StateMachine>())
-                     {
-                         ref readonly Boss1StateMachine fsm1 = ref vicEntity.Get<Boss1StateMachine>();
-                         if (fsm1.IsInvulnerable)
-                         {
-                             return;
-                         }
-                     }
-                     else if (vicEntity.Has<Boss2StateMachine>())
-                     {
-                         ref readonly Boss2StateMachine fsm2 = ref vicEntity.Get<Boss2StateMachine>();
-                         if (fsm2.IsInvulnerable)
-                         {
-                             return;
-                         }
-                     }
-
-                     // 5. 幾何学的交差判定 (双方の Offset を加味した Circle vs Circle, Box vs Box, Circle vs Box)
                      if (PhysicsService.Intersects(localAtkTrans, localHitbox.Shape, vicTrans, hurtbox.Shape))
                      {
-                         // 5.1 ダメージ適用
-                         vicHealth.Current -= localHitbox.Damage;
-
-                         // 5.2 被弾演出 (火花)
-                         CombatEffectHelper.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX, vicTrans.Y + hurtbox.Shape.OffsetY);
-
-                         // 5.3 被弾者種別に応じた固有リアクション
-                         if (vicEntity.Has<PlayerTag>())
-                         {
-                             vicHealth.InvincibleTimer = pCfg.InvincibleDuration;
-                             if (!vicHealth.IsAlive)
-                             {
-                                 vicHealth.Current = 0.0f;
-                                 if (vicEntity.Has<Sprite>())
-                                 {
-                                     ref Sprite spr = ref vicEntity.GetMut<Sprite>();
-                                     spr.IsVisible = false;
-                                 }
-                                 CombatEffectHelper.SpawnPlayerDeathParticles(world, vicTrans.X, vicTrans.Y);
-                             }
-                         }
-                         else if (vicEntity.Has<Boss1Stats>())
-                         {
-                             ref Boss1Stats bStats1 = ref vicEntity.GetMut<Boss1Stats>();
-                             bStats1.HitFlashTimer = ConfigManager.Boss1.HitFlashDuration;
-
-                             if (!vicHealth.IsAlive)
-                             {
-                                 vicHealth.Current = 0.0f;
-                                 CombatEffectHelper.ClearAllBossBullets(world);
-                                 CombatEffectHelper.SpawnVictoryExplosions(world, vicTrans.X, vicTrans.Y);
-                             }
-                         }
-                         else if (vicEntity.Has<Boss2Stats>())
-                         {
-                             ref Boss2Stats bStats2 = ref vicEntity.GetMut<Boss2Stats>();
-                             bStats2.HitFlashTimer = ConfigManager.Boss2.HitFlashDuration;
-
-                             if (!vicHealth.IsAlive)
-                             {
-                                 vicHealth.Current = 0.0f;
-                                 CombatEffectHelper.ClearAllBossBullets(world);
-                                 CombatEffectHelper.SpawnVictoryExplosions(world, vicTrans.X, vicTrans.Y);
-                             }
-                         }
-
-                         // 5.4 攻撃エンティティの消滅判定（銃弾など）
-                         if (localHitbox.DestroyOnHit)
-                         {
-                             shouldDestroyAttacker = true;
-                         }
+                         ApplyDamageAndEffects(world, vicEntity, ref vicTrans, ref hurtbox, ref vicHealth, in localHitbox, pCfg, ref shouldDestroyAttacker);
                      }
                  });
 
@@ -137,5 +59,90 @@ public static class CombatCollisionSystem
              });
 
         return world;
+    }
+
+    private static bool IsTargetInvulnerable(Entity vicEntity, in Health vicHealth)
+    {
+        if (vicHealth.IsInvincible)
+        {
+            return true;
+        }
+
+        if (vicEntity.Has<Boss1StateMachine>())
+        {
+            ref readonly Boss1StateMachine fsm1 = ref vicEntity.Get<Boss1StateMachine>();
+            if (fsm1.IsInvulnerable)
+            {
+                return true;
+            }
+        }
+        else if (vicEntity.Has<Boss2StateMachine>())
+        {
+            ref readonly Boss2StateMachine fsm2 = ref vicEntity.Get<Boss2StateMachine>();
+            if (fsm2.IsInvulnerable)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void ApplyDamageAndEffects(
+        World world,
+        Entity vicEntity,
+        ref Transform vicTrans,
+        ref Hurtbox hurtbox,
+        ref Health vicHealth,
+        in Hitbox localHitbox,
+        PlayerConfig pCfg,
+        ref bool shouldDestroyAttacker)
+    {
+        vicHealth.Current -= localHitbox.Damage;
+        CombatEffectHelper.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX, vicTrans.Y + hurtbox.Shape.OffsetY);
+
+        if (vicEntity.Has<PlayerTag>())
+        {
+            vicHealth.InvincibleTimer = pCfg.InvincibleDuration;
+            if (!vicHealth.IsAlive)
+            {
+                vicHealth.Current = 0.0f;
+                if (vicEntity.Has<Sprite>())
+                {
+                    ref Sprite spr = ref vicEntity.GetMut<Sprite>();
+                    spr.IsVisible = false;
+                }
+                CombatEffectHelper.SpawnPlayerDeathParticles(world, vicTrans.X, vicTrans.Y);
+            }
+        }
+        else if (vicEntity.Has<Boss1Stats>())
+        {
+            ref Boss1Stats bStats1 = ref vicEntity.GetMut<Boss1Stats>();
+            bStats1.HitFlashTimer = ConfigManager.Boss1.HitFlashDuration;
+
+            if (!vicHealth.IsAlive)
+            {
+                vicHealth.Current = 0.0f;
+                CombatEffectHelper.ClearAllBossBullets(world);
+                CombatEffectHelper.SpawnVictoryExplosions(world, vicTrans.X, vicTrans.Y);
+            }
+        }
+        else if (vicEntity.Has<Boss2Stats>())
+        {
+            ref Boss2Stats bStats2 = ref vicEntity.GetMut<Boss2Stats>();
+            bStats2.HitFlashTimer = ConfigManager.Boss2.HitFlashDuration;
+
+            if (!vicHealth.IsAlive)
+            {
+                vicHealth.Current = 0.0f;
+                CombatEffectHelper.ClearAllBossBullets(world);
+                CombatEffectHelper.SpawnVictoryExplosions(world, vicTrans.X, vicTrans.Y);
+            }
+        }
+
+        if (localHitbox.DestroyOnHit)
+        {
+            shouldDestroyAttacker = true;
+        }
     }
 }

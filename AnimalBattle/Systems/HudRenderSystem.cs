@@ -52,161 +52,183 @@ public static class HudRenderSystem
                  ModalRenderConfig modalCfg = renderCfg.Modals;
                  DebugRenderConfig dbgCfg = renderCfg.Debug;
 
-                 // 1. 操作説明テキスト
-                 GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY, hudCfg.TitleText, hudCfg.TitleColor);
-
-                 int lineIndex = 1;
-                 foreach (HudTextItem item in hudCfg.Text)
-                 {
-                     int drawY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
-
-                     if (item.Text.Contains("F1", StringComparison.OrdinalIgnoreCase) ||
-                         item.Text.Contains("Hitbox", StringComparison.OrdinalIgnoreCase))
-                     {
-                         string dbgStatus = dbgCfg.Enabled ? " [ON - H / F1 to toggle]" : " [OFF - H / F1 to toggle]";
-                         Color statusColor = dbgCfg.Enabled ? dbgCfg.IndicatorColor : item.Color;
-                         GameEngine.DrawString(hudCfg.TitleX, drawY, $"{item.Text}{dbgStatus}", statusColor);
-                     }
-                     else
-                     {
-                         GameEngine.DrawString(hudCfg.TitleX, drawY, item.Text, item.Color);
-                     }
-
-                     lineIndex++;
-                 }
-
-                 // Boss 選択ホットキー表示
-                 int switchGuideY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
-                 GameEngine.DrawString(hudCfg.TitleX, switchGuideY, "[1] Boss 1 (Aerial Cat)  [2] Boss 2 (Ground Crusher)", ColorPalette.GoldLight);
-
-                 // 2. プレイヤージャンプ残数表示
-                 doubleJumpQuery.Each((ref DoubleJump doubleJump) =>
-                 {
-                     string jumpSymbol = doubleJump.RemainingJumps switch
-                     {
-                         >= 2 => "[ ●  ● ]",
-                         1 => "[ ●  ○ ]",
-                         _ => "[ ○  ○ ]"
-                     };
-                     Color jumpColor = doubleJump.RemainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
-                     GameEngine.DrawString(hudCfg.TitleX, hudCfg.DoubleJumpY, $"DOUBLE JUMP: {jumpSymbol}", jumpColor);
-                 });
-
-                 // 3. プレイヤー HP 表示
-                 playerHealthQuery.Each((ref Health health) =>
-                 {
-                     int currentHp = (int)health.Current;
-                     string hpSymbol = currentHp switch
-                     {
-                         >= 3 => "[ ●  ●  ● ]",
-                         2 => "[ ●  ●  ○ ]",
-                         1 => "[ ●  ○  ○ ]",
-                         _ => "[ ○  ○  ○ ]"
-                     };
-                     Color hpColor = currentHp switch
-                     {
-                         >= 3 => ColorPalette.Green,
-                         2 => ColorPalette.Gold,
-                         1 => ColorPalette.Red,
-                         _ => ColorPalette.Gray
-                     };
-                     string invBadge = health.IsInvincible ? $" [INVINCIBLE {health.InvincibleTimer:F1}s]" : "";
-                     GameEngine.DrawString(hudCfg.TitleX, hudCfg.DoubleJumpY + 20, $"PLAYER HP:   {hpSymbol} ({currentHp}/{(int)health.Max}){invBadge}", hpColor);
-                 });
-
-                 // 4.1 Boss 1 大 HP バーおよび状態表示
-                 boss1StatusQuery.Each((ref Health health, ref Boss1Stats stats, ref Boss1StateMachine fsm) =>
-                 {
-                     string bossTitle = $"BOSS: {ConfigManager.Boss1.BossName} [PHASE {stats.Phase}/3]";
-                     string stateName = fsm.CurrentState switch
-                     {
-                         Boss1StateKind.Hovering => "[STATE: HOVERING (IDLE)]",
-                         Boss1StateKind.Telegraphing => $"[STATE: TELEGRAPHING (WIND-UP: {fsm.CurrentSkillName})]",
-                         Boss1StateKind.Casting => $"[STATE: CASTING ({fsm.CurrentSkillName})]",
-                         Boss1StateKind.Recovering => "[STATE: RECOVERING (VULNERABLE)]",
-                         Boss1StateKind.PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
-                         _ => "[STATE: UNKNOWN]"
-                     };
-
-                     Color stateBadgeColor = fsm.CurrentState switch
-                     {
-                         Boss1StateKind.Hovering => hpCfg.StateDefaultColor,
-                         Boss1StateKind.Telegraphing => hpCfg.StateTelegraphingColor,
-                         Boss1StateKind.Casting => hpCfg.StateCastingColor,
-                         Boss1StateKind.Recovering => hpCfg.StateRecoveringColor,
-                         Boss1StateKind.PhaseTransition => hpCfg.StatePhaseTransitionColor,
-                         _ => hpCfg.StateDefaultColor
-                     };
-
-                     DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, health, stats.Phase, fsm.StateTimer, fsm.StateDuration);
-                 });
-
-                 // 4.2 Boss 2 大 HP バーおよび状態表示
-                 boss2StatusQuery.Each((ref Health health, ref Boss2Stats stats, ref Boss2StateMachine fsm) =>
-                 {
-                     string bossTitle = $"BOSS: {ConfigManager.Boss2.BossName} [PHASE {stats.Phase}/3]";
-                     string stateName = fsm.CurrentState switch
-                     {
-                         Boss2StateKind.Idle => "[STATE: IDLE / ALERT]",
-                         Boss2StateKind.PatrolChase => $"[STATE: CHASE (NEXT: {fsm.CurrentSkillName})]",
-                         Boss2StateKind.MoveToTakeoff => "[STATE: NAVIGATING TO TAKEOFF]",
-                         Boss2StateKind.PlatformJumping => "[STATE: PLATFORM JUMP (AIRBORNE)]",
-                         Boss2StateKind.PlatformFalling => "[STATE: PLATFORM FALLING]",
-                         Boss2StateKind.LandingRecovery => "[STATE: LANDING IMPACT]",
-                         Boss2StateKind.TelegraphHeavySlash => "[STATE: TELEGRAPH (HEAVY SLASH)]",
-                         Boss2StateKind.TelegraphDoubleCleave => "[STATE: TELEGRAPH (DOUBLE CLEAVE)]",
-                         Boss2StateKind.TelegraphGroundStomp => "[STATE: TELEGRAPH (GROUND STOMP)]",
-                         Boss2StateKind.TelegraphLeapSmash => "[STATE: TELEGRAPH (LEAP SMASH)]",
-                         Boss2StateKind.TelegraphFrenzyCharge => "[STATE: TELEGRAPH (FRENZY CHARGE)]",
-                         Boss2StateKind.TelegraphEarthquakeRoar => "[STATE: TELEGRAPH (EARTHQUAKE ROAR)]",
-                         Boss2StateKind.ExecutingHeavySlash => "[STATE: EXECUTING (HEAVY SLASH)]",
-                         Boss2StateKind.ExecutingDoubleCleave => "[STATE: EXECUTING (DOUBLE CLEAVE)]",
-                         Boss2StateKind.ExecutingGroundStomp => "[STATE: EXECUTING (GROUND STOMP)]",
-                         Boss2StateKind.ExecutingLeapAscent => "[STATE: LEAP ASCENT (TITAN LEAP)]",
-                         Boss2StateKind.ExecutingLeapDescent => "[STATE: LEAP DESCENT (SLAM)]",
-                         Boss2StateKind.ExecutingFrenzyCharge => "[STATE: FRENZY CHARGE (RAM)]",
-                         Boss2StateKind.ExecutingEarthquakeRoar => "[STATE: EARTHQUAKE ROAR (METEOR)]",
-                         Boss2StateKind.WallCrashStun => "[STATE: WALL CRASH STUNNED (VULNERABLE)]",
-                         Boss2StateKind.SkillRecovery => "[STATE: SKILL RECOVERY (VULNERABLE)]",
-                         Boss2StateKind.PhaseTransition => "[STATE: ROAR TRANSITION (INVULNERABLE)]",
-                         Boss2StateKind.Dead => "[STATE: DEFEATED]",
-                         _ => "[STATE: UNKNOWN]"
-                     };
-
-                     Color stateBadgeColor = fsm.CurrentState switch
-                     {
-                         Boss2StateKind.Idle or Boss2StateKind.PatrolChase or Boss2StateKind.MoveToTakeoff => hpCfg.StateDefaultColor,
-                         Boss2StateKind.PlatformJumping or Boss2StateKind.PlatformFalling or Boss2StateKind.LandingRecovery => ColorPalette.BlueSky,
-                         Boss2StateKind.TelegraphHeavySlash or Boss2StateKind.TelegraphDoubleCleave or Boss2StateKind.TelegraphGroundStomp
-                             or Boss2StateKind.TelegraphLeapSmash or Boss2StateKind.TelegraphFrenzyCharge or Boss2StateKind.TelegraphEarthquakeRoar => hpCfg.StateTelegraphingColor,
-                         Boss2StateKind.ExecutingHeavySlash or Boss2StateKind.ExecutingDoubleCleave or Boss2StateKind.ExecutingGroundStomp
-                             or Boss2StateKind.ExecutingLeapAscent or Boss2StateKind.ExecutingLeapDescent or Boss2StateKind.ExecutingFrenzyCharge
-                             or Boss2StateKind.ExecutingEarthquakeRoar => hpCfg.StateCastingColor,
-                         Boss2StateKind.WallCrashStun => ColorPalette.Gold,
-                         Boss2StateKind.SkillRecovery => hpCfg.StateRecoveringColor,
-                         Boss2StateKind.PhaseTransition => hpCfg.StatePhaseTransitionColor,
-                         Boss2StateKind.Dead => ColorPalette.Gray,
-                         _ => hpCfg.StateDefaultColor
-                     };
-
-                     DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, health, stats.Phase, fsm.StateTimer, fsm.StateDuration);
-                 });
-
-                 // 5. プレイヤー死亡時 GAME OVER バナー
-                 playerHealthQuery.Each((ref Health pHealth) =>
-                 {
-                     if (pHealth.Current <= 0.0f)
-                     {
-                         GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2, modalCfg.GameOverBgColor, true);
-                         GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2, modalCfg.GameOverOuterBorderColor, false);
-                         GameEngine.DrawBox(modalCfg.GameOverX1 + 2, modalCfg.GameOverY1 + 2, modalCfg.GameOverX2 - 2, modalCfg.GameOverY2 - 2, modalCfg.GameOverInnerBorderColor, false);
-                         GameEngine.DrawString(modalCfg.GameOverTitleX, modalCfg.GameOverTitleY, modalCfg.GameOverTitleText, modalCfg.GameOverTitleColor);
-                         GameEngine.DrawString(modalCfg.GameOverRetryX, modalCfg.GameOverRetryY, modalCfg.GameOverRetryText, modalCfg.GameOverRetryColor);
-                     }
-                 });
+                 DrawControlHelp(hudCfg, dbgCfg);
+                 DrawPlayerStatus(doubleJumpQuery, playerHealthQuery, hudCfg);
+                 DrawBoss1Status(boss1StatusQuery, hpCfg, modalCfg);
+                 DrawBoss2Status(boss2StatusQuery, hpCfg, modalCfg);
+                 DrawGameOverModal(playerHealthQuery, modalCfg);
              });
 
         return world;
+    }
+
+    private static void DrawControlHelp(HudRenderConfig hudCfg, DebugRenderConfig dbgCfg)
+    {
+        GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY, hudCfg.TitleText, hudCfg.TitleColor);
+
+        int lineIndex = 1;
+        foreach (HudTextItem item in hudCfg.Text)
+        {
+            int drawY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
+
+            if (item.Text.Contains("F1", StringComparison.OrdinalIgnoreCase) ||
+                item.Text.Contains("Hitbox", StringComparison.OrdinalIgnoreCase))
+            {
+                string dbgStatus = dbgCfg.Enabled ? " [ON - H / F1 to toggle]" : " [OFF - H / F1 to toggle]";
+                Color statusColor = dbgCfg.Enabled ? dbgCfg.IndicatorColor : item.Color;
+                GameEngine.DrawString(hudCfg.TitleX, drawY, $"{item.Text}{dbgStatus}", statusColor);
+            }
+            else
+            {
+                GameEngine.DrawString(hudCfg.TitleX, drawY, item.Text, item.Color);
+            }
+
+            lineIndex++;
+        }
+
+        int switchGuideY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
+        GameEngine.DrawString(hudCfg.TitleX, switchGuideY, "[1] Boss 1 (Aerial Cat)  [2] Boss 2 (Ground Crusher)", ColorPalette.GoldLight);
+    }
+
+    private static void DrawPlayerStatus(Query<DoubleJump> doubleJumpQuery, Query<Health> playerHealthQuery, HudRenderConfig hudCfg)
+    {
+        doubleJumpQuery.Each((ref DoubleJump doubleJump) =>
+        {
+            string jumpSymbol = doubleJump.RemainingJumps switch
+            {
+                >= 2 => "[ ●  ● ]",
+                1 => "[ ●  ○ ]",
+                _ => "[ ○  ○ ]"
+            };
+            Color jumpColor = doubleJump.RemainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
+            GameEngine.DrawString(hudCfg.TitleX, hudCfg.DoubleJumpY, $"DOUBLE JUMP: {jumpSymbol}", jumpColor);
+        });
+
+        playerHealthQuery.Each((ref Health health) =>
+        {
+            int currentHp = (int)health.Current;
+            string hpSymbol = currentHp switch
+            {
+                >= 3 => "[ ●  ●  ● ]",
+                2 => "[ ●  ●  ○ ]",
+                1 => "[ ●  ○  ○ ]",
+                _ => "[ ○  ○  ○ ]"
+            };
+            Color hpColor = currentHp switch
+            {
+                >= 3 => ColorPalette.Green,
+                2 => ColorPalette.Gold,
+                1 => ColorPalette.Red,
+                _ => ColorPalette.Gray
+            };
+            string invBadge = health.IsInvincible ? $" [INVINCIBLE {health.InvincibleTimer:F1}s]" : "";
+            GameEngine.DrawString(hudCfg.TitleX, hudCfg.DoubleJumpY + 20, $"PLAYER HP:   {hpSymbol} ({currentHp}/{(int)health.Max}){invBadge}", hpColor);
+        });
+    }
+
+    private static void DrawBoss1Status(Query<Health, Boss1Stats, Boss1StateMachine> boss1Query, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
+    {
+        boss1Query.Each((ref Health health, ref Boss1Stats stats, ref Boss1StateMachine fsm) =>
+        {
+            string bossTitle = $"BOSS: {ConfigManager.Boss1.BossName} [PHASE {stats.Phase}/3]";
+            GetBoss1StateInfo(fsm, hpCfg, out string stateName, out Color stateBadgeColor);
+            DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, health, stats.Phase, fsm.StateTimer, fsm.StateDuration);
+        });
+    }
+
+    private static void DrawBoss2Status(Query<Health, Boss2Stats, Boss2StateMachine> boss2Query, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
+    {
+        boss2Query.Each((ref Health health, ref Boss2Stats stats, ref Boss2StateMachine fsm) =>
+        {
+            string bossTitle = $"BOSS: {ConfigManager.Boss2.BossName} [PHASE {stats.Phase}/3]";
+            GetBoss2StateInfo(fsm, hpCfg, out string stateName, out Color stateBadgeColor);
+            DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, health, stats.Phase, fsm.StateTimer, fsm.StateDuration);
+        });
+    }
+
+    private static void DrawGameOverModal(Query<Health> playerHealthQuery, ModalRenderConfig modalCfg)
+    {
+        playerHealthQuery.Each((ref Health pHealth) =>
+        {
+            if (pHealth.Current <= 0.0f)
+            {
+                GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2, modalCfg.GameOverBgColor, true);
+                GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2, modalCfg.GameOverOuterBorderColor, false);
+                GameEngine.DrawBox(modalCfg.GameOverX1 + 2, modalCfg.GameOverY1 + 2, modalCfg.GameOverX2 - 2, modalCfg.GameOverY2 - 2, modalCfg.GameOverInnerBorderColor, false);
+                GameEngine.DrawString(modalCfg.GameOverTitleX, modalCfg.GameOverTitleY, modalCfg.GameOverTitleText, modalCfg.GameOverTitleColor);
+                GameEngine.DrawString(modalCfg.GameOverRetryX, modalCfg.GameOverRetryY, modalCfg.GameOverRetryText, modalCfg.GameOverRetryColor);
+            }
+        });
+    }
+
+    private static void GetBoss1StateInfo(Boss1StateMachine fsm, BossHpBarRenderConfig hpCfg, out string stateName, out Color badgeColor)
+    {
+        stateName = fsm.CurrentState switch
+        {
+            Boss1StateKind.Hovering => "[STATE: HOVERING (IDLE)]",
+            Boss1StateKind.Telegraphing => $"[STATE: TELEGRAPHING (WIND-UP: {fsm.CurrentSkillName})]",
+            Boss1StateKind.Casting => $"[STATE: CASTING ({fsm.CurrentSkillName})]",
+            Boss1StateKind.Recovering => "[STATE: RECOVERING (VULNERABLE)]",
+            Boss1StateKind.PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
+            _ => "[STATE: UNKNOWN]"
+        };
+
+        badgeColor = fsm.CurrentState switch
+        {
+            Boss1StateKind.Hovering => hpCfg.StateDefaultColor,
+            Boss1StateKind.Telegraphing => hpCfg.StateTelegraphingColor,
+            Boss1StateKind.Casting => hpCfg.StateCastingColor,
+            Boss1StateKind.Recovering => hpCfg.StateRecoveringColor,
+            Boss1StateKind.PhaseTransition => hpCfg.StatePhaseTransitionColor,
+            _ => hpCfg.StateDefaultColor
+        };
+    }
+
+    private static void GetBoss2StateInfo(Boss2StateMachine fsm, BossHpBarRenderConfig hpCfg, out string stateName, out Color badgeColor)
+    {
+        stateName = fsm.CurrentState switch
+        {
+            Boss2StateKind.Idle => "[STATE: IDLE / ALERT]",
+            Boss2StateKind.PatrolChase => $"[STATE: CHASE (NEXT: {fsm.CurrentSkillName})]",
+            Boss2StateKind.MoveToTakeoff => "[STATE: NAVIGATING TO TAKEOFF]",
+            Boss2StateKind.PlatformJumping => "[STATE: PLATFORM JUMP (AIRBORNE)]",
+            Boss2StateKind.PlatformFalling => "[STATE: PLATFORM FALLING]",
+            Boss2StateKind.LandingRecovery => "[STATE: LANDING IMPACT]",
+            Boss2StateKind.TelegraphHeavySlash => "[STATE: TELEGRAPH (HEAVY SLASH)]",
+            Boss2StateKind.TelegraphDoubleCleave => "[STATE: TELEGRAPH (DOUBLE CLEAVE)]",
+            Boss2StateKind.TelegraphGroundStomp => "[STATE: TELEGRAPH (GROUND STOMP)]",
+            Boss2StateKind.TelegraphLeapSmash => "[STATE: TELEGRAPH (LEAP SMASH)]",
+            Boss2StateKind.TelegraphFrenzyCharge => "[STATE: TELEGRAPH (FRENZY CHARGE)]",
+            Boss2StateKind.TelegraphEarthquakeRoar => "[STATE: TELEGRAPH (EARTHQUAKE ROAR)]",
+            Boss2StateKind.ExecutingHeavySlash => "[STATE: EXECUTING (HEAVY SLASH)]",
+            Boss2StateKind.ExecutingDoubleCleave => "[STATE: EXECUTING (DOUBLE CLEAVE)]",
+            Boss2StateKind.ExecutingGroundStomp => "[STATE: EXECUTING (GROUND STOMP)]",
+            Boss2StateKind.ExecutingLeapAscent => "[STATE: LEAP ASCENT (TITAN LEAP)]",
+            Boss2StateKind.ExecutingLeapDescent => "[STATE: LEAP DESCENT (SLAM)]",
+            Boss2StateKind.ExecutingFrenzyCharge => "[STATE: FRENZY CHARGE (RAM)]",
+            Boss2StateKind.ExecutingEarthquakeRoar => "[STATE: EARTHQUAKE ROAR (METEOR)]",
+            Boss2StateKind.WallCrashStun => "[STATE: WALL CRASH STUNNED (VULNERABLE)]",
+            Boss2StateKind.SkillRecovery => "[STATE: SKILL RECOVERY (VULNERABLE)]",
+            Boss2StateKind.PhaseTransition => "[STATE: ROAR TRANSITION (INVULNERABLE)]",
+            Boss2StateKind.Dead => "[STATE: DEFEATED]",
+            _ => "[STATE: UNKNOWN]"
+        };
+
+        badgeColor = fsm.CurrentState switch
+        {
+            Boss2StateKind.Idle or Boss2StateKind.PatrolChase or Boss2StateKind.MoveToTakeoff => hpCfg.StateDefaultColor,
+            Boss2StateKind.PlatformJumping or Boss2StateKind.PlatformFalling or Boss2StateKind.LandingRecovery => ColorPalette.BlueSky,
+            Boss2StateKind.TelegraphHeavySlash or Boss2StateKind.TelegraphDoubleCleave or Boss2StateKind.TelegraphGroundStomp
+                or Boss2StateKind.TelegraphLeapSmash or Boss2StateKind.TelegraphFrenzyCharge or Boss2StateKind.TelegraphEarthquakeRoar => hpCfg.StateTelegraphingColor,
+            Boss2StateKind.ExecutingHeavySlash or Boss2StateKind.ExecutingDoubleCleave or Boss2StateKind.ExecutingGroundStomp
+                or Boss2StateKind.ExecutingLeapAscent or Boss2StateKind.ExecutingLeapDescent or Boss2StateKind.ExecutingFrenzyCharge
+                or Boss2StateKind.ExecutingEarthquakeRoar => hpCfg.StateCastingColor,
+            Boss2StateKind.WallCrashStun => ColorPalette.Gold,
+            Boss2StateKind.SkillRecovery => hpCfg.StateRecoveringColor,
+            Boss2StateKind.PhaseTransition => hpCfg.StatePhaseTransitionColor,
+            Boss2StateKind.Dead => ColorPalette.Gray,
+            _ => hpCfg.StateDefaultColor
+        };
     }
 
     private static void DrawBossHpBar(BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg, string bossTitle, string stateName, Color stateBadgeColor, Health health, int phase, float stateTimer, float stateDuration)
