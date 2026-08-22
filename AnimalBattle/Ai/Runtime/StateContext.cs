@@ -1,0 +1,126 @@
+using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai.Ports;
+
+namespace AnimalBattle.Ai.Runtime;
+
+/// <summary>
+/// State_Module が使用する Entity 単位の依存関係と Frame_Update 値の境界です。
+/// </summary>
+public struct StateContext
+{
+    private IConfigProvider? _configProvider;
+    private BossConfigSnapshot _configSnapshot;
+    private IMovementPort? _movement;
+    private IAttackPort? _attack;
+    private IEffectPort? _effect;
+    private IObservationService? _observation;
+    private IRandomSource? _random;
+    private PlayerObservation _playerObservation;
+
+    /// <summary>Boss Entity の識別子を取得します。</summary>
+    public ulong EntityId { get; private set; }
+    /// <summary>Boss 種別を取得します。</summary>
+    public BossType BossType { get; private set; }
+    /// <summary>Frame_Update 番号を取得します。</summary>
+    public long FrameUpdateNumber { get; private set; }
+    /// <summary>現在の Frame_Update の経過時間を取得します。</summary>
+    public float DeltaTime { get; private set; }
+    /// <summary>現在の親 Phase を取得します。</summary>
+    public Phase Phase { get; private set; }
+    /// <summary>同じ Frame_Update で共有するプレイヤー観測を取得します。</summary>
+    public PlayerObservation PlayerObservation => _playerObservation;
+    /// <summary>検証済み設定 snapshot の提供元を取得します。</summary>
+    public IConfigProvider ConfigProvider => _configProvider!;
+    /// <summary>同じ Frame_Update で共有する設定 snapshot を取得します。</summary>
+    public BossConfigSnapshot ConfigSnapshot => _configSnapshot;
+    /// <summary>移動 command port を取得します。</summary>
+    public IMovementPort Movement => _movement!;
+    /// <summary>攻撃 command port を取得します。</summary>
+    public IAttackPort Attack => _attack!;
+    /// <summary>演出 command port を取得します。</summary>
+    public IEffectPort Effect => _effect!;
+    /// <summary>観測サービスを取得します。</summary>
+    public IObservationService Observation => _observation!;
+    /// <summary>明示的に注入された乱数源を取得します。</summary>
+    public IRandomSource Random => _random!;
+    /// <summary>全依存関係と現在値が実行可能な状態かどうかを取得します。</summary>
+    public bool IsReady => EntityId != 0
+        && BossType != BossType.Unknown
+        && FrameUpdateNumber >= 0
+        && IsFinite(DeltaTime)
+        && DeltaTime >= 0
+        && Phase != Phase.Unknown
+        && _configProvider is not null
+        && _configSnapshot.IsValid
+        && _movement is not null
+        && _attack is not null
+        && _effect is not null
+        && _observation is not null
+        && _random is not null;
+
+    /// <summary>StateContext を初期化時の依存関係で生成します。</summary>
+    public StateContext(
+        ulong entityId,
+        BossType bossType,
+        IConfigProvider configProvider,
+        BossConfigSnapshot configSnapshot,
+        IMovementPort movement,
+        IAttackPort attack,
+        IEffectPort effect,
+        IObservationService observation,
+        IRandomSource random)
+    {
+        if (entityId == 0) throw new ArgumentOutOfRangeException(nameof(entityId));
+        if (bossType == BossType.Unknown) throw new ArgumentOutOfRangeException(nameof(bossType));
+        ArgumentNullException.ThrowIfNull(configProvider);
+        if (!configSnapshot.IsValid) throw new ArgumentException("設定 snapshot が未検証です。", nameof(configSnapshot));
+        ArgumentNullException.ThrowIfNull(movement);
+        ArgumentNullException.ThrowIfNull(attack);
+        ArgumentNullException.ThrowIfNull(effect);
+        ArgumentNullException.ThrowIfNull(observation);
+        ArgumentNullException.ThrowIfNull(random);
+
+        EntityId = entityId;
+        BossType = bossType;
+        FrameUpdateNumber = 0;
+        DeltaTime = 0;
+        Phase = Phase.Phase1;
+        _configProvider = configProvider;
+        _configSnapshot = configSnapshot;
+        _movement = movement;
+        _attack = attack;
+        _effect = effect;
+        _observation = observation;
+        _random = random;
+        _playerObservation = default;
+    }
+
+    /// <summary>設定更新境界で、次の Frame_Update 用 snapshot を反映します。</summary>
+    public void SetConfigSnapshot(BossConfigSnapshot configSnapshot)
+    {
+        if (!configSnapshot.IsValid) throw new ArgumentException("設定 snapshot が未検証です。", nameof(configSnapshot));
+        _configSnapshot = configSnapshot;
+    }
+
+    /// <summary>フレーム境界の値を検証して context に設定します。</summary>
+    public bool TryBeginFrame(long frameUpdateNumber, float deltaTime, Phase phase, in PlayerObservation playerObservation)
+    {
+        if (frameUpdateNumber < 0 || !IsFinite(deltaTime) || deltaTime < 0 || phase == Phase.Unknown)
+        {
+            return false;
+        }
+
+        if (playerObservation.FrameUpdateNumber != frameUpdateNumber)
+        {
+            return false;
+        }
+
+        FrameUpdateNumber = frameUpdateNumber;
+        DeltaTime = deltaTime;
+        Phase = phase;
+        _playerObservation = playerObservation;
+        return true;
+    }
+
+    private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+}
