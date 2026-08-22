@@ -47,12 +47,14 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     [UnconditionalSuppressMessage("Microsoft.Configuration.Binder", "SYSLIB1104", Justification = "Generic binder fallback is intentional in config container class.")]
     public static Result<ConfigBase<T>> LoadFromFile(string defaultFileName)
     {
-        string? fullPath = FindConfigPath(defaultFileName);
-        if (fullPath == null || !File.Exists(fullPath))
+        Result<string> pathResult = FindConfigPath(defaultFileName);
+        if (!pathResult.IsOk || string.IsNullOrEmpty(pathResult.Value) || !File.Exists(pathResult.Value))
         {
             Console.WriteLine($"[C# 設定警告] TOML 設定ファイルが見つかりませんでした: {defaultFileName}");
             return SimpleError.NotFound($"TOML 設定ファイルが見つかりません ({defaultFileName})。");
         }
+
+        string fullPath = pathResult.Value;
 
         try
         {
@@ -131,8 +133,8 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     /// カレントディレクトリ、出力ディレクトリ、およびプロジェクトルートの Config フォルダを優先的に探索します。
     /// </summary>
     /// <param name="fileName">対象ファイル名</param>
-    /// <returns>絶対パス。見つからない場合は null</returns>
-    private static string? FindConfigPath(string fileName)
+    /// <returns>検索結果を含む <see cref="Result{T}"/></returns>
+    private static Result<string> FindConfigPath(string fileName)
     {
         try
         {
@@ -141,20 +143,20 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
             string[] directRoots = [AppDomain.CurrentDomain.BaseDirectory, Environment.CurrentDirectory];
             foreach (string root in directRoots)
             {
-                string? found = TryFindInSubDirectories(root, subDirs, fileName);
-                if (found != null)
+                Result<string> findResult = FindInSubDirectories(root, subDirs, fileName);
+                if (findResult.IsOk)
                 {
-                    return found;
+                    return findResult;
                 }
             }
 
             DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
             while (dir != null)
             {
-                string? found = TryFindInSubDirectories(dir.FullName, subDirs, fileName);
-                if (found != null)
+                Result<string> findResult = FindInSubDirectories(dir.FullName, subDirs, fileName);
+                if (findResult.IsOk)
                 {
-                    return found;
+                    return findResult;
                 }
                 dir = dir.Parent;
             }
@@ -162,12 +164,13 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
         catch (Exception ex)
         {
             Console.WriteLine($"[C# 設定警告] 設定ファイルパス探索中に例外が発生しました ({fileName}): {ex.Message}");
+            return SimpleError.Exception(ex);
         }
 
-        return null;
+        return SimpleError.NotFound($"設定ファイルが見つかりません: {fileName}");
     }
 
-    private static string? TryFindInSubDirectories(string rootDir, string[] subDirs, string fileName)
+    private static Result<string> FindInSubDirectories(string rootDir, string[] subDirs, string fileName)
     {
         foreach (string subDir in subDirs)
         {
@@ -177,11 +180,11 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
 
             if (File.Exists(candidate))
             {
-                return Path.GetFullPath(candidate);
+                return Result<string>.Ok(Path.GetFullPath(candidate));
             }
         }
 
-        return null;
+        return SimpleError.NotFound($"ディレクトリ '{rootDir}' 下に対象ファイルが見つかりません: {fileName}");
     }
 
     private bool _isDisposed;

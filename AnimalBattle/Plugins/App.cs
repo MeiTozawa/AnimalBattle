@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Flecs.NET.Core;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Plugins;
 /// <summary>
@@ -100,10 +101,15 @@ public class App(World world)
     /// 登録されている共有リソースを取得します。
     /// </summary>
     /// <typeparam name="T">リソースの型</typeparam>
-    /// <returns>リソースインスタンス（存在しない場合は null）</returns>
-    public T? GetResource<T>() where T : class
+    /// <returns>リソースインスタンスを含む <see cref="Result{T}"/>、未登録時は <see cref="SimpleError"/></returns>
+    public Result<T> GetResource<T>() where T : class
     {
-        return _resources.TryGetValue(typeof(T), out object? res) ? (T)res : null;
+        if (_resources.TryGetValue(typeof(T), out object? res) && res is T typedRes)
+        {
+            return Result<T>.Ok(typedRes);
+        }
+
+        return SimpleError.NotFound($"リソース型 '{typeof(T).Name}' は登録されていません。");
     }
 
     /// <summary>

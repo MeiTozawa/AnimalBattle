@@ -55,6 +55,16 @@ public readonly record struct Result<T>
         return new Result<T>(error);
     }
 
+    /// <summary>
+    /// 成功時は保持している値を返し、失敗時は指定されたデフォルト値を返します。
+    /// </summary>
+    /// <param name="defaultValue">失敗時の代替値</param>
+    /// <returns>成功値またはデフォルト値</returns>
+    public T ValueOrDefault(T defaultValue = default!)
+    {
+        return IsOk && Value != null ? Value : defaultValue;
+    }
+
     public static implicit operator Result<T>(T value) => new(value);
 
     public static implicit operator Result<T>(SimpleError error) => new(error);

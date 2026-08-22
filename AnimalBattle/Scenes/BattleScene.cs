@@ -60,7 +60,7 @@ public partial class BattleScene : IDisposable
             Console.WriteLine("[BattleScene 警告] 一部のキャラクタースプライト画像のロードに失敗しました。");
         }
 
-        int playerHandle = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle");
+        int playerHandle = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle").ValueOrDefault(-1);
 
         App app = new App(_ecsWorld)
             .AddPluginGroup(new DefaultPlugins());
@@ -139,7 +139,7 @@ public partial class BattleScene : IDisposable
     private static void SpawnBoss1(Entity bossEntity)
     {
         Boss1Config b1Cfg = ConfigManager.Boss1;
-        int boss1Handle = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
+        int boss1Handle = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png).ValueOrDefault(-1);
 
         bossEntity
             .Set(new Transform(b1Cfg.BaseX, b1Cfg.BaseY, scaleX: b1Cfg.ScaleX, scaleY: b1Cfg.ScaleY))
@@ -159,7 +159,7 @@ public partial class BattleScene : IDisposable
     private static void SpawnBoss2(Entity bossEntity)
     {
         Boss2Config b2Cfg = ConfigManager.Boss2;
-        int boss2Handle = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
+        int boss2Handle = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png).ValueOrDefault(-1);
 
         bossEntity
             .Set(new Transform(b2Cfg.SpawnX, b2Cfg.SpawnY, scaleX: b2Cfg.ScaleX, scaleY: b2Cfg.ScaleY))
@@ -282,7 +282,7 @@ public partial class BattleScene : IDisposable
         Result<ConfigBase<TileSetConfig>> tileSetConfigResult = TileSetConfig.LoadFromFile(tileMapCfg.TileConfig);
         if (tileSetConfigResult.IsOk && tileSetConfigResult.Value != null)
         {
-            int sheetHandle = AssetManager.LoadTexture(tileMapCfg.TileSheet);
+            int sheetHandle = AssetManager.LoadTexture(tileMapCfg.TileSheet).ValueOrDefault(-1);
             TileSet tileSet = new TileSet(sheetHandle, tileSetConfigResult.Value.Config);
             _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
             _ecsWorld.Set(_tileMap);

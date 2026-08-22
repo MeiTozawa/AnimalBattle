@@ -1,6 +1,7 @@
 using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using AnimalBattle.Core.Asset;
 
 namespace AnimalBattle.Systems;
@@ -29,10 +30,11 @@ public static class SpriteAnimationSystem
 
                  anim.Timer += it.DeltaTime();
 
-                 AnimationConfig? charConfig = AssetManager.GetCharacterConfig(anim.CharacterType);
-                 if (charConfig != null)
+                 Result<AnimationConfig> charConfigRes = AssetManager.GetCharacterConfig(anim.CharacterType);
+                 if (charConfigRes.IsOk && charConfigRes.Value != null)
                  {
-                     sprite.GraphHandle = AssetManager.GetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip);
+                     AnimationConfig charConfig = charConfigRes.Value;
+                     sprite.GraphHandle = AssetManager.GetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip).ValueOrDefault(-1);
                      sprite.SrcRect = AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out bool isFinished);
                      anim.IsFinished = isFinished;
                  }

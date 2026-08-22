@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Maps.Navigation;
 
@@ -120,12 +121,13 @@ public sealed class PlatformNavigationGraph
         }
 
         // 3. A* 経路探索 (Boss の現在 X 座標を考慮して最近の起跳点を選択)
-        List<PlatformLink>? path = SearchAStar(currentNode, targetNode, currentX);
-        if (path == null || path.Count == 0)
+        Result<List<PlatformLink>> pathResult = SearchAStar(currentNode, targetNode, currentX);
+        if (!pathResult.IsOk || pathResult.Value == null || pathResult.Value.Count == 0)
         {
             return NavPlan.CreateNoPath(targetX, moveSpeed, currentNode, targetNode);
         }
 
+        List<PlatformLink> path = pathResult.Value;
         PlatformLink firstLink = path[0];
 
         // 4. 空中滞空中の場合：着地目標地点に向かって水平推力を維持
@@ -244,7 +246,7 @@ public sealed class PlatformNavigationGraph
     /// <summary>
     /// A* 最短経路探索を実行します。
     /// </summary>
-    private List<PlatformLink>? SearchAStar(PlatformNode start, PlatformNode goal, float startX)
+    private Result<List<PlatformLink>> SearchAStar(PlatformNode start, PlatformNode goal, float startX)
     {
         Dictionary<int, float> gScore = new();
         Dictionary<int, PlatformLink> cameFromLink = new();
@@ -265,7 +267,7 @@ public sealed class PlatformNavigationGraph
             int currentId = openSet.Dequeue();
             if (currentId == goal.Id)
             {
-                return ReconstructPath(start.Id, goal.Id, cameFromLink, cameFromNode);
+                return Result<List<PlatformLink>>.Ok(ReconstructPath(start.Id, goal.Id, cameFromLink, cameFromNode));
             }
 
             if (!closedSet.Add(currentId) || !_adjacency.TryGetValue(currentId, out List<PlatformLink>? links))
@@ -296,7 +298,7 @@ public sealed class PlatformNavigationGraph
             }
         }
 
-        return null;
+        return SimpleError.NotFound($"ノード {start.Id} から {goal.Id} への移動経路が見つかりませんでした。");
     }
 
     private static List<PlatformLink> ReconstructPath(
