@@ -34,20 +34,10 @@ public static class Boss1AiSystem
              .Each((Iter it, int i, ref Transform trans, ref Health bHealth, ref Boss1Stats stats, ref Boss1StateMachine fsm, ref Sprite sprite) =>
              {
                  Boss1Config bCfg = ConfigManager.Boss1;
-                 PlayerConfig pCfg = ConfigManager.Player;
                  PatternConfig patternCfg = ConfigManager.Pattern;
                  float dt = it.DeltaTime();
 
-                 float playerX = pCfg.SpawnX;
-                 float playerY = pCfg.SpawnY;
-                 bool isPlayerAlive = false;
-
-                 playerQuery.Each((ref Transform pTrans, ref Health pHealth) =>
-                 {
-                     playerX = pTrans.X;
-                     playerY = pTrans.Y;
-                     isPlayerAlive = pHealth.IsAlive;
-                 });
+                 FetchPlayerTarget(playerQuery, out float playerX, out float playerY, out bool isPlayerAlive);
 
                  if (stats.HitFlashTimer > 0.0f)
                  {
@@ -60,19 +50,7 @@ public static class Boss1AiSystem
                      return;
                  }
 
-                 float hpRatio = bHealth.Ratio;
-                 int targetPhase = hpRatio > bCfg.Phase2.HpThreshold ? 1 : (hpRatio > bCfg.Phase3.HpThreshold ? 2 : 3);
-
-                 if (targetPhase > stats.Phase && fsm.CurrentState != Boss1StateKind.PhaseTransition)
-                 {
-                     stats.Phase = targetPhase;
-                     fsm.CurrentState = Boss1StateKind.PhaseTransition;
-                     fsm.StateTimer = 0.0f;
-                     fsm.StateDuration = bCfg.Phase1.TransitionDuration;
-                     fsm.IsInvulnerable = true;
-                     CombatEffectHelper.ClearAllBossBullets(world);
-                     CombatEffectHelper.SpawnShockwave(world, trans.X, trans.Y);
-                 }
+                 EvaluateBoss1Phase(world, ref bHealth, ref stats, ref fsm, trans.Position, bCfg);
 
                  Boss1PhaseFsmConfig currentPhaseCfg = stats.Phase switch
                  {
@@ -85,168 +63,218 @@ public static class Boss1AiSystem
                  stats.HoverTimer += dt;
                  fsm.StateTimer += dt;
 
-                 bool isDiving = fsm.CurrentSkillName == "DiveRam" && (fsm.CurrentState == Boss1StateKind.Casting || fsm.CurrentState == Boss1StateKind.Recovering);
-
-                 if (!isDiving)
-                 {
-                     Vec2f curPos = trans.Position;
-                     Vec2f basePos = new(stats.BaseX, currentPhaseCfg.HoverBaseY);
-                     Vec2f playerPos = new(playerX, playerY);
-                     NativeExtensionBindings.Extension_CalculateBossHoverPosition(
-                         in curPos,
-                         in basePos,
-                         in playerPos,
-                         stats.HoverTimer,
-                         currentPhaseCfg.HoverSpeedX,
-                         currentPhaseCfg.HoverSpeedY,
-                         currentPhaseCfg.HoverAmpX,
-                         currentPhaseCfg.HoverAmpY,
-                         currentPhaseCfg.PlayerPursuitWeight,
-                         currentPhaseCfg.HoverLerpSpeed,
-                         dt,
-                         out trans.Position);
-                 }
-
-                 switch (fsm.CurrentState)
-                 {
-                     case Boss1StateKind.Hovering:
-                         fsm.IsInvulnerable = false;
-                         if (fsm.StateTimer >= fsm.StateDuration && isPlayerAlive)
-                         {
-                             if (currentPhaseCfg.Skills.Count > 0)
-                             {
-                                 fsm.CurrentSkillIndex = (fsm.CurrentSkillIndex + 1) % currentPhaseCfg.Skills.Count;
-                                 fsm.CurrentSkillName = currentPhaseCfg.Skills[fsm.CurrentSkillIndex];
-                             }
-                             else
-                             {
-                                 Console.WriteLine($"[Boss1AI 警告] Phase {stats.Phase} の技能リストが空です。boss1.toml の Skills を確認してください。デフォルト 'Aimed3Shot' を使用します。");
-                                 fsm.CurrentSkillName = "Aimed3Shot";
-                             }
-
-                             float windUp = GetSkillWindUpTime(fsm.CurrentSkillName, patternCfg);
-                             Color telegraphColor = GetSkillTelegraphColor(fsm.CurrentSkillName, patternCfg);
-
-                             fsm.CurrentState = Boss1StateKind.Telegraphing;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = windUp;
-                             fsm.SubTimer = 0.0f;
-                             fsm.StartX = trans.X;
-                             fsm.StartY = trans.Y;
-                             fsm.TargetX = playerX;
-                             fsm.TargetY = playerY;
-
-                             CombatEffectHelper.SpawnTelegraphSpark(world, trans.X, trans.Y, telegraphColor);
-                         }
-                         break;
-
-                     case Boss1StateKind.Telegraphing:
-                         fsm.IsInvulnerable = false;
-                         if (fsm.CurrentSkillName == "DiveRam")
-                         {
-                             fsm.TargetX = playerX;
-                             fsm.TargetY = playerY;
-                             float shakeIntensity = currentPhaseCfg.TelegraphShakeIntensity;
-                             float shakeX = (Random.Shared.NextSingle() - 0.5f) * shakeIntensity;
-                             float shakeY = (Random.Shared.NextSingle() - 0.5f) * shakeIntensity;
-                             trans.X += shakeX;
-                             trans.Y += shakeY;
-                         }
-
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             float castDuration = GetSkillCastDuration(fsm.CurrentSkillName, patternCfg);
-
-                             fsm.CurrentState = Boss1StateKind.Casting;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = castDuration;
-                             fsm.SubTimer = 0.0f;
-                             fsm.AngleOffset = 0.0f;
-
-                             if (fsm.CurrentSkillName == "DiveRam")
-                             {
-                                 fsm.StartX = trans.X;
-                                 fsm.StartY = trans.Y;
-                                 fsm.TargetX = playerX;
-                                 fsm.TargetY = playerY;
-                             }
-                         }
-                         break;
-
-                     case Boss1StateKind.Casting:
-                         fsm.IsInvulnerable = false;
-                         ExecuteBoss1Skill(world, ref fsm, patternCfg, ref trans, playerX, playerY, dt);
-
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             float recoveryTime = GetSkillRecoveryTime(fsm.CurrentSkillName, patternCfg);
-
-                             fsm.CurrentState = Boss1StateKind.Recovering;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = recoveryTime;
-
-                             if (fsm.CurrentSkillName == "DiveRam")
-                             {
-                                 CombatEffectHelper.SpawnShockwave(world, trans.X, trans.Y);
-                             }
-                         }
-                         break;
-
-                     case Boss1StateKind.Recovering:
-                         fsm.IsInvulnerable = false;
-                         if (fsm.CurrentSkillName == "DiveRam")
-                         {
-                             if (fsm.StateTimer >= fsm.StateDuration * currentPhaseCfg.RecoverDelayRatio)
-                             {
-                                 Vec2f curPos = trans.Position;
-                                 Vec2f targetBase = new(stats.BaseX, currentPhaseCfg.HoverBaseY);
-                                 NativeExtensionBindings.Extension_CalculateBossReturnPosition(
-                                     in curPos,
-                                     in targetBase,
-                                     currentPhaseCfg.RecoverFlybackSpeed,
-                                     dt,
-                                     out trans.Position);
-                             }
-                         }
-
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             fsm.CurrentState = Boss1StateKind.Hovering;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = currentPhaseCfg.HoverDuration;
-                         }
-                         break;
-
-                     case Boss1StateKind.PhaseTransition:
-                         fsm.IsInvulnerable = true;
-                         Vec2f transPos = trans.Position;
-                         Vec2f transBase = new(stats.BaseX, currentPhaseCfg.HoverBaseY);
-                         NativeExtensionBindings.Extension_CalculateBossReturnPosition(
-                             in transPos,
-                             in transBase,
-                             currentPhaseCfg.TransitionFloatSpeed,
-                             dt,
-                             out trans.Position);
-
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             fsm.CurrentState = Boss1StateKind.Hovering;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = currentPhaseCfg.HoverDuration;
-                             fsm.IsInvulnerable = false;
-                         }
-                         break;
-
-                     default:
-                         Console.WriteLine($"[Boss1AI エラー] 未知の Boss 状態種別です: {fsm.CurrentState}。Hovering 状態に強制復帰します。");
-                         fsm.CurrentState = Boss1StateKind.Hovering;
-                         fsm.StateTimer = 0.0f;
-                         fsm.StateDuration = currentPhaseCfg.HoverDuration;
-                         break;
-                 }
+                 UpdateBoss1HoverPosition(ref trans, ref stats, ref fsm, currentPhaseCfg, playerX, playerY, dt);
+                 UpdateBoss1StateMachine(world, ref trans, ref stats, ref fsm, currentPhaseCfg, patternCfg, playerX, playerY, isPlayerAlive, dt);
              });
 
         return world;
+    }
+
+    private static void FetchPlayerTarget(Query<Transform, Health> playerQuery, out float playerX, out float playerY, out bool isPlayerAlive)
+    {
+        PlayerConfig pCfg = ConfigManager.Player;
+        float px = pCfg.SpawnX;
+        float py = pCfg.SpawnY;
+        bool alive = false;
+
+        playerQuery.Each((ref Transform pTrans, ref Health pHealth) =>
+        {
+            px = pTrans.X;
+            py = pTrans.Y;
+            alive = pHealth.IsAlive;
+        });
+
+        playerX = px;
+        playerY = py;
+        isPlayerAlive = alive;
+    }
+
+    private static void EvaluateBoss1Phase(World world, ref Health bHealth, ref Boss1Stats stats, ref Boss1StateMachine fsm, Vec2f pos, Boss1Config bCfg)
+    {
+        float hpRatio = bHealth.Ratio;
+        int targetPhase = hpRatio > bCfg.Phase2.HpThreshold ? 1 : (hpRatio > bCfg.Phase3.HpThreshold ? 2 : 3);
+
+        if (targetPhase > stats.Phase && fsm.CurrentState != Boss1StateKind.PhaseTransition)
+        {
+            stats.Phase = targetPhase;
+            fsm.CurrentState = Boss1StateKind.PhaseTransition;
+            fsm.StateTimer = 0.0f;
+            fsm.StateDuration = bCfg.Phase1.TransitionDuration;
+            fsm.IsInvulnerable = true;
+            CombatEffectHelper.ClearAllBossBullets(world);
+            CombatEffectHelper.SpawnShockwave(world, pos.X, pos.Y);
+        }
+    }
+
+    private static void UpdateBoss1HoverPosition(ref Transform trans, ref Boss1Stats stats, ref Boss1StateMachine fsm, Boss1PhaseFsmConfig currentPhaseCfg, float playerX, float playerY, float dt)
+    {
+        bool isDiving = fsm.CurrentSkillName == "DiveRam" && (fsm.CurrentState == Boss1StateKind.Casting || fsm.CurrentState == Boss1StateKind.Recovering);
+        if (isDiving)
+        {
+            return;
+        }
+
+        Vec2f curPos = trans.Position;
+        Vec2f basePos = new(stats.BaseX, currentPhaseCfg.HoverBaseY);
+        Vec2f playerPos = new(playerX, playerY);
+
+        NativeExtensionBindings.Extension_CalculateBossHoverPosition(
+            in curPos,
+            in basePos,
+            in playerPos,
+            stats.HoverTimer,
+            currentPhaseCfg.HoverSpeedX,
+            currentPhaseCfg.HoverSpeedY,
+            currentPhaseCfg.HoverAmpX,
+            currentPhaseCfg.HoverAmpY,
+            currentPhaseCfg.PlayerPursuitWeight,
+            currentPhaseCfg.HoverLerpSpeed,
+            dt,
+            out trans.Position);
+    }
+
+    private static void UpdateBoss1StateMachine(
+        World world,
+        ref Transform trans,
+        ref Boss1Stats stats,
+        ref Boss1StateMachine fsm,
+        Boss1PhaseFsmConfig currentPhaseCfg,
+        PatternConfig patternCfg,
+        float playerX,
+        float playerY,
+        bool isPlayerAlive,
+        float dt)
+    {
+        switch (fsm.CurrentState)
+        {
+            case Boss1StateKind.Hovering:
+                fsm.IsInvulnerable = false;
+                if (fsm.StateTimer >= fsm.StateDuration && isPlayerAlive)
+                {
+                    if (currentPhaseCfg.Skills.Count > 0)
+                    {
+                        fsm.CurrentSkillIndex = (fsm.CurrentSkillIndex + 1) % currentPhaseCfg.Skills.Count;
+                        fsm.CurrentSkillName = currentPhaseCfg.Skills[fsm.CurrentSkillIndex];
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[Boss1AI 警告] Phase {stats.Phase} の技能リストが空です。boss1.toml の Skills を確認してください。デフォルト 'Aimed3Shot' を使用します。");
+                        fsm.CurrentSkillName = "Aimed3Shot";
+                    }
+
+                    float windUp = GetSkillWindUpTime(fsm.CurrentSkillName, patternCfg);
+                    Color telegraphColor = GetSkillTelegraphColor(fsm.CurrentSkillName, patternCfg);
+
+                    fsm.CurrentState = Boss1StateKind.Telegraphing;
+                    fsm.StateTimer = 0.0f;
+                    fsm.StateDuration = windUp;
+                    fsm.SubTimer = 0.0f;
+                    fsm.StartX = trans.X;
+                    fsm.StartY = trans.Y;
+                    fsm.TargetX = playerX;
+                    fsm.TargetY = playerY;
+
+                    CombatEffectHelper.SpawnTelegraphSpark(world, trans.X, trans.Y, telegraphColor);
+                }
+                break;
+
+            case Boss1StateKind.Telegraphing:
+                fsm.IsInvulnerable = false;
+                if (fsm.CurrentSkillName == "DiveRam")
+                {
+                    fsm.TargetX = playerX;
+                    fsm.TargetY = playerY;
+                    float shakeIntensity = currentPhaseCfg.TelegraphShakeIntensity;
+                    trans.X += (Random.Shared.NextSingle() - 0.5f) * shakeIntensity;
+                    trans.Y += (Random.Shared.NextSingle() - 0.5f) * shakeIntensity;
+                }
+
+                if (fsm.StateTimer >= fsm.StateDuration)
+                {
+                    float castDuration = GetSkillCastDuration(fsm.CurrentSkillName, patternCfg);
+                    fsm.CurrentState = Boss1StateKind.Casting;
+                    fsm.StateTimer = 0.0f;
+                    fsm.StateDuration = castDuration;
+                    fsm.SubTimer = 0.0f;
+                    fsm.AngleOffset = 0.0f;
+
+                    if (fsm.CurrentSkillName == "DiveRam")
+                    {
+                        fsm.StartX = trans.X;
+                        fsm.StartY = trans.Y;
+                        fsm.TargetX = playerX;
+                        fsm.TargetY = playerY;
+                    }
+                }
+                break;
+
+            case Boss1StateKind.Casting:
+                fsm.IsInvulnerable = false;
+                ExecuteBoss1Skill(world, ref fsm, patternCfg, ref trans, playerX, playerY, dt);
+
+                if (fsm.StateTimer >= fsm.StateDuration)
+                {
+                    float recoveryTime = GetSkillRecoveryTime(fsm.CurrentSkillName, patternCfg);
+                    fsm.CurrentState = Boss1StateKind.Recovering;
+                    fsm.StateTimer = 0.0f;
+                    fsm.StateDuration = recoveryTime;
+
+                    if (fsm.CurrentSkillName == "DiveRam")
+                    {
+                        CombatEffectHelper.SpawnShockwave(world, trans.X, trans.Y);
+                    }
+                }
+                break;
+
+            case Boss1StateKind.Recovering:
+                fsm.IsInvulnerable = false;
+                if (fsm.CurrentSkillName == "DiveRam" && fsm.StateTimer >= fsm.StateDuration * currentPhaseCfg.RecoverDelayRatio)
+                {
+                    Vec2f curPos = trans.Position;
+                    Vec2f targetBase = new(stats.BaseX, currentPhaseCfg.HoverBaseY);
+                    NativeExtensionBindings.Extension_CalculateBossReturnPosition(
+                        in curPos,
+                        in targetBase,
+                        currentPhaseCfg.RecoverFlybackSpeed,
+                        dt,
+                        out trans.Position);
+                }
+
+                if (fsm.StateTimer >= fsm.StateDuration)
+                {
+                    fsm.CurrentState = Boss1StateKind.Hovering;
+                    fsm.StateTimer = 0.0f;
+                    fsm.StateDuration = currentPhaseCfg.HoverDuration;
+                }
+                break;
+
+            case Boss1StateKind.PhaseTransition:
+                fsm.IsInvulnerable = true;
+                Vec2f transPos = trans.Position;
+                Vec2f transBase = new(stats.BaseX, currentPhaseCfg.HoverBaseY);
+                NativeExtensionBindings.Extension_CalculateBossReturnPosition(
+                    in transPos,
+                    in transBase,
+                    currentPhaseCfg.TransitionFloatSpeed,
+                    dt,
+                    out trans.Position);
+
+                if (fsm.StateTimer >= fsm.StateDuration)
+                {
+                    fsm.CurrentState = Boss1StateKind.Hovering;
+                    fsm.StateTimer = 0.0f;
+                    fsm.StateDuration = currentPhaseCfg.HoverDuration;
+                    fsm.IsInvulnerable = false;
+                }
+                break;
+
+            default:
+                Console.WriteLine($"[Boss1AI エラー] 未知の Boss 状態種別です: {fsm.CurrentState}。Hovering 状態に強制復帰します。");
+                fsm.CurrentState = Boss1StateKind.Hovering;
+                fsm.StateTimer = 0.0f;
+                fsm.StateDuration = currentPhaseCfg.HoverDuration;
+                break;
+        }
     }
 
     private static Boss1PhaseFsmConfig GetFallbackPhaseConfig(int phase, Boss1Config bCfg)
@@ -340,105 +368,144 @@ public static class Boss1AiSystem
         switch (fsm.CurrentSkillName)
         {
             case "DiveRam":
-                {
-                    Vec2f startPos = new(fsm.StartX, fsm.StartY);
-                    Vec2f targetPos = new(fsm.TargetX, fsm.TargetY);
-                    NativeExtensionBindings.Extension_CalculateBossDiveRamPosition(
-                        in startPos,
-                        in targetPos,
-                        fsm.StateTimer,
-                        fsm.StateDuration,
-                        patternCfg.DiveRam.EaseType,
-                        out trans.Position);
-                }
+                ExecuteDiveRam(ref fsm, patternCfg, ref trans);
                 break;
 
             case "Aimed3Shot":
-                if (fsm.SubTimer <= 0.0f)
-                {
-                    Aimed3ShotConfig p = patternCfg.Aimed3Shot;
-                    fsm.SubTimer = p.Interval;
-                    float baseAngle = MathF.Atan2(py - by, px - bx);
-                    for (int i = -1; i <= 1; i++)
-                    {
-                        float angle = baseAngle + i * p.SpreadAngle;
-                        CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(angle) * p.BulletSpeed, MathF.Sin(angle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
-                    }
-                }
+                ExecuteAimed3Shot(world, ref fsm, patternCfg.Aimed3Shot, bx, by, px, py);
                 break;
 
             case "RingBurst":
-                if (fsm.SubTimer <= 0.0f)
-                {
-                    RingBurstConfig p = patternCfg.RingBurst;
-                    fsm.SubTimer = p.Interval;
-                    int count = Math.Max(4, p.BulletCount);
-                    for (int i = 0; i < count; i++)
-                    {
-                        float angle = (i / (float)count) * MathF.PI * 2.0f + fsm.AngleOffset;
-                        CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(angle) * p.BulletSpeed, MathF.Sin(angle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
-                    }
-                    fsm.AngleOffset += p.AngleStep;
-                }
+                ExecuteRingBurst(world, ref fsm, patternCfg.RingBurst, bx, by);
                 break;
 
             case "DoubleSpiral":
-                if (fsm.SubTimer <= 0.0f)
-                {
-                    DoubleSpiralConfig p = patternCfg.DoubleSpiral;
-                    fsm.SubTimer = p.Interval;
-                    float angle1 = fsm.AngleOffset;
-                    float angle2 = fsm.AngleOffset + MathF.PI;
-
-                    CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(angle1) * p.BulletSpeed, MathF.Sin(angle1) * p.BulletSpeed, p.BulletRadius, p.FillColor1, p.OutlineColor1);
-                    CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(angle2) * p.BulletSpeed, MathF.Sin(angle2) * p.BulletSpeed, p.BulletRadius, p.FillColor2, p.OutlineColor2);
-
-                    fsm.AngleOffset += p.AngleStep;
-                }
+                ExecuteDoubleSpiral(world, ref fsm, patternCfg.DoubleSpiral, bx, by);
                 break;
 
             case "RainDrop":
-                if (fsm.SubTimer <= 0.0f)
-                {
-                    RainDropConfig p = patternCfg.RainDrop;
-                    fsm.SubTimer = p.Interval;
-                    Random random = Random.Shared;
-                    int minX = (int)p.MinX;
-                    int maxX = (int)p.MaxX;
-                    float rainX1 = random.Next(minX, maxX);
-                    float rainX2 = random.Next(minX, maxX);
-                    CombatEffectHelper.SpawnBossBullet(world, rainX1, 0.0f, 0.0f, p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
-                    CombatEffectHelper.SpawnBossBullet(world, rainX2, 0.0f, 0.0f, p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
-                }
+                ExecuteRainDrop(world, ref fsm, patternCfg.RainDrop);
                 break;
 
             case "CrossChaos":
-                if (fsm.SubTimer <= 0.0f)
-                {
-                    CrossChaosConfig p = patternCfg.CrossChaos;
-                    fsm.SubTimer = p.Interval;
-                    for (int k = 0; k < 4; k++)
-                    {
-                        float angle = fsm.AngleOffset + k * (MathF.PI / 2.0f);
-                        CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(angle) * p.BulletSpeed, MathF.Sin(angle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
-                    }
-                    fsm.AngleOffset += p.AngleStep;
-                }
+                ExecuteCrossChaos(world, ref fsm, patternCfg.CrossChaos, bx, by);
                 break;
 
             case "FastSniper":
-                if (fsm.SubTimer <= 0.0f)
-                {
-                    FastSniperConfig p = patternCfg.FastSniper;
-                    fsm.SubTimer = p.Interval;
-                    float aimAngle = MathF.Atan2(py - by, px - bx);
-                    CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(aimAngle) * p.BulletSpeed, MathF.Sin(aimAngle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
-                }
+                ExecuteFastSniper(world, ref fsm, patternCfg.FastSniper, bx, by, px, py);
                 break;
 
             default:
                 Console.WriteLine($"[Boss1AI エラー] 技能 '{fsm.CurrentSkillName}' に対する弾幕実行ロジックが存在しません！boss1.toml の Skills 名を確認してください。");
                 break;
         }
+    }
+
+    private static void ExecuteDiveRam(ref Boss1StateMachine fsm, PatternConfig patternCfg, ref Transform trans)
+    {
+        Vec2f startPos = new(fsm.StartX, fsm.StartY);
+        Vec2f targetPos = new(fsm.TargetX, fsm.TargetY);
+        NativeExtensionBindings.Extension_CalculateBossDiveRamPosition(
+            in startPos,
+            in targetPos,
+            fsm.StateTimer,
+            fsm.StateDuration,
+            patternCfg.DiveRam.EaseType,
+            out trans.Position);
+    }
+
+    private static void ExecuteAimed3Shot(World world, ref Boss1StateMachine fsm, Aimed3ShotConfig p, float bx, float by, float px, float py)
+    {
+        if (fsm.SubTimer > 0.0f)
+        {
+            return;
+        }
+
+        fsm.SubTimer = p.Interval;
+        float baseAngle = MathF.Atan2(py - by, px - bx);
+        for (int i = -1; i <= 1; i++)
+        {
+            float angle = baseAngle + i * p.SpreadAngle;
+            CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(angle) * p.BulletSpeed, MathF.Sin(angle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
+        }
+    }
+
+    private static void ExecuteRingBurst(World world, ref Boss1StateMachine fsm, RingBurstConfig p, float bx, float by)
+    {
+        if (fsm.SubTimer > 0.0f)
+        {
+            return;
+        }
+
+        fsm.SubTimer = p.Interval;
+        int count = Math.Max(4, p.BulletCount);
+        for (int i = 0; i < count; i++)
+        {
+            float angle = (i / (float)count) * MathF.PI * 2.0f + fsm.AngleOffset;
+            CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(angle) * p.BulletSpeed, MathF.Sin(angle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
+        }
+        fsm.AngleOffset += p.AngleStep;
+    }
+
+    private static void ExecuteDoubleSpiral(World world, ref Boss1StateMachine fsm, DoubleSpiralConfig p, float bx, float by)
+    {
+        if (fsm.SubTimer > 0.0f)
+        {
+            return;
+        }
+
+        fsm.SubTimer = p.Interval;
+        float angle1 = fsm.AngleOffset;
+        float angle2 = fsm.AngleOffset + MathF.PI;
+
+        CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(angle1) * p.BulletSpeed, MathF.Sin(angle1) * p.BulletSpeed, p.BulletRadius, p.FillColor1, p.OutlineColor1);
+        CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(angle2) * p.BulletSpeed, MathF.Sin(angle2) * p.BulletSpeed, p.BulletRadius, p.FillColor2, p.OutlineColor2);
+
+        fsm.AngleOffset += p.AngleStep;
+    }
+
+    private static void ExecuteRainDrop(World world, ref Boss1StateMachine fsm, RainDropConfig p)
+    {
+        if (fsm.SubTimer > 0.0f)
+        {
+            return;
+        }
+
+        fsm.SubTimer = p.Interval;
+        Random random = Random.Shared;
+        int minX = (int)p.MinX;
+        int maxX = (int)p.MaxX;
+        float rainX1 = random.Next(minX, maxX);
+        float rainX2 = random.Next(minX, maxX);
+        CombatEffectHelper.SpawnBossBullet(world, rainX1, 0.0f, 0.0f, p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
+        CombatEffectHelper.SpawnBossBullet(world, rainX2, 0.0f, 0.0f, p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
+    }
+
+    private static void ExecuteCrossChaos(World world, ref Boss1StateMachine fsm, CrossChaosConfig p, float bx, float by)
+    {
+        if (fsm.SubTimer > 0.0f)
+        {
+            return;
+        }
+
+        fsm.SubTimer = p.Interval;
+        for (int k = 0; k < 4; k++)
+        {
+            float angle = fsm.AngleOffset + k * (MathF.PI / 2.0f);
+            CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(angle) * p.BulletSpeed, MathF.Sin(angle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
+        }
+        fsm.AngleOffset += p.AngleStep;
+    }
+
+    private static void ExecuteFastSniper(World world, ref Boss1StateMachine fsm, FastSniperConfig p, float bx, float by, float px, float py)
+    {
+        if (fsm.SubTimer > 0.0f)
+        {
+            return;
+        }
+
+        fsm.SubTimer = p.Interval;
+        float aimAngle = MathF.Atan2(py - by, px - bx);
+        CombatEffectHelper.SpawnBossBullet(world, bx, by, MathF.Cos(aimAngle) * p.BulletSpeed, MathF.Sin(aimAngle) * p.BulletSpeed, p.BulletRadius, p.FillColor, p.OutlineColor);
     }
 }

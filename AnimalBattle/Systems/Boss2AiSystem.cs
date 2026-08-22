@@ -40,21 +40,11 @@ public static class Boss2AiSystem
              .Each((Iter it, int i, ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Health bHealth, ref Boss2Stats stats, ref Boss2StateMachine fsm, ref Sprite sprite) =>
              {
                  Boss2Config bCfg = ConfigManager.Boss2;
-                 PlayerConfig pCfg = ConfigManager.Player;
                  PatternConfig patternCfg = ConfigManager.Pattern;
                  ArenaConfig arenaCfg = ConfigManager.Arena;
                  float dt = it.DeltaTime();
 
-                 float playerX = pCfg.SpawnX;
-                 float playerY = pCfg.SpawnY;
-                 bool isPlayerAlive = false;
-
-                 playerQuery.Each((ref Transform pTrans, ref Health pHealth) =>
-                 {
-                     playerX = pTrans.X;
-                     playerY = pTrans.Y;
-                     isPlayerAlive = pHealth.IsAlive;
-                 });
+                 FetchPlayerTarget(playerQuery, out float playerX, out float playerY, out bool isPlayerAlive);
 
                  if (stats.HitFlashTimer > 0.0f)
                  {
@@ -74,20 +64,7 @@ public static class Boss2AiSystem
                      return;
                  }
 
-                 float hpRatio = bHealth.Ratio;
-                 int targetPhase = hpRatio > bCfg.Phase2.HpThreshold ? 1 : (hpRatio > bCfg.Phase3.HpThreshold ? 2 : 3);
-
-                 if (targetPhase > stats.Phase && fsm.CurrentState != Boss2StateKind.PhaseTransition)
-                 {
-                     stats.Phase = targetPhase;
-                     fsm.CurrentState = Boss2StateKind.PhaseTransition;
-                     fsm.StateTimer = 0.0f;
-                     fsm.StateDuration = bCfg.Phase1.TransitionDuration;
-                     fsm.IsInvulnerable = true;
-                     vel.Vx = 0.0f;
-                     CombatEffectHelper.ClearAllBossBullets(world);
-                     CombatEffectHelper.SpawnShockwave(world, trans.X, trans.Y);
-                 }
+                 EvaluateBoss2Phase(world, ref bHealth, ref stats, ref fsm, ref vel, trans.Position, bCfg);
 
                  Boss2PhaseConfig currentPhaseCfg = stats.Phase switch
                  {
@@ -100,375 +77,523 @@ public static class Boss2AiSystem
                  fsm.StateTimer += dt;
                  stats.PatrolTimer += dt;
 
-                 switch (fsm.CurrentState)
-                 {
-                     case Boss2StateKind.Idle:
-                         fsm.IsInvulnerable = false;
-                         vel.Vx = 0.0f;
-                         if (MathF.Abs(playerX - trans.X) > 20.0f)
-                         {
-                             stats.FacingRight = playerX >= trans.X;
-                         }
-                         sprite.FlipX = !stats.FacingRight;
+                 UpdateBoss2StateMachine(
+                     world,
+                     ref trans,
+                     ref vel,
+                     ref col,
+                     ref stats,
+                     ref fsm,
+                     ref sprite,
+                     currentPhaseCfg,
+                     patternCfg,
+                     arenaCfg,
+                     bCfg,
+                     playerX,
+                     playerY,
+                     isPlayerAlive,
+                     dt);
 
-                         if (fsm.StateTimer >= fsm.StateDuration && isPlayerAlive && col.IsGrounded)
-                         {
-                             fsm.CurrentState = Boss2StateKind.PatrolChase;
-                             fsm.StateTimer = 0.0f;
-                         }
-                         break;
-
-                     case Boss2StateKind.PatrolChase:
-                     case Boss2StateKind.MoveToTakeoff:
-                         fsm.IsInvulnerable = false;
-                         float bossFootY = trans.Y + col.Height / 2.0f;
-                         float playerFootY = playerY + pCfg.HitboxHeight / 2.0f;
-
-                         TileMap? tileMap = BattleScene.CurrentTileMap;
-                         NavStatus currentNavStatus = NavStatus.DirectWalk;
-
-                         if (col.IsGrounded)
-                         {
-                             if (tileMap != null && tileMap.NavGraph.Nodes.Count > 0)
-                             {
-                                 NavPlan plan = tileMap.NavGraph.FindPath(
-                                     trans.X,
-                                     bossFootY,
-                                     playerX,
-                                     playerFootY,
-                                     col.IsGrounded,
-                                     currentPhaseCfg.MoveSpeed);
-
-                                 currentNavStatus = plan.Status;
-
-                                 switch (plan.Status)
-                                 {
-                                     case NavStatus.DirectWalk:
-                                         fsm.CurrentState = Boss2StateKind.PatrolChase;
-                                         float dir = playerX >= trans.X ? 1.0f : -1.0f;
-                                         vel.Vx = dir * currentPhaseCfg.MoveSpeed;
-                                         break;
-
-                                     case NavStatus.MoveToTakeoff:
-                                     case NavStatus.ExecuteDrop:
-                                         fsm.CurrentState = Boss2StateKind.MoveToTakeoff;
-                                         vel.Vx = plan.RequiredVx;
-                                         break;
-
-                                     case NavStatus.ExecuteJump:
-                                         if (stats.JumpCooldown <= 0.0f)
-                                         {
-                                             vel.Vx = plan.RequiredVx;
-                                             vel.Vy = plan.RequiredVy != 0.0f ? plan.RequiredVy : -currentPhaseCfg.JumpForce;
-                                             stats.JumpCooldown = 1.0f;
-                                             col.IsGrounded = false;
-                                             trans.Y -= 6.0f;
-                                             fsm.CurrentState = Boss2StateKind.PlatformJumping;
-                                             fsm.StateTimer = 0.0f;
-                                         }
-                                         break;
-
-                                     case NavStatus.InAir:
-                                     case NavStatus.NoPath:
-                                     default:
-                                         fsm.CurrentState = Boss2StateKind.PatrolChase;
-                                         float defaultDir = playerX >= trans.X ? 1.0f : -1.0f;
-                                         vel.Vx = defaultDir * currentPhaseCfg.MoveSpeed;
-                                         break;
-                                 }
-                             }
-                             else
-                             {
-                                 fsm.CurrentState = Boss2StateKind.PatrolChase;
-                                 float dir = playerX >= trans.X ? 1.0f : -1.0f;
-                                 vel.Vx = dir * currentPhaseCfg.MoveSpeed;
-                             }
-                         }
-                         else
-                         {
-                             fsm.CurrentState = vel.Vy < 0.0f ? Boss2StateKind.PlatformJumping : Boss2StateKind.PlatformFalling;
-                             fsm.StateTimer = 0.0f;
-                             break;
-                         }
-
-                         if (vel.Vx > 15.0f)
-                         {
-                             stats.FacingRight = true;
-                         }
-                         else if (vel.Vx < -15.0f)
-                         {
-                             stats.FacingRight = false;
-                         }
-                         else if (MathF.Abs(playerX - trans.X) > 20.0f)
-                         {
-                             stats.FacingRight = playerX >= trans.X;
-                         }
-                         sprite.FlipX = !stats.FacingRight;
-
-                         string pendingSkill = currentPhaseCfg.Skills.Count > 0
-                             ? currentPhaseCfg.Skills[fsm.CurrentSkillIndex % currentPhaseCfg.Skills.Count]
-                             : "HeavySlash";
-
-                         bool inRange = CheckBoss2SkillRange(pendingSkill, trans.X, trans.Y, playerX, playerY, currentNavStatus);
-
-                         bool isKitingTimeout = fsm.StateTimer >= 2.5f && col.IsGrounded;
-                         if (isKitingTimeout && !inRange)
-                         {
-                             pendingSkill = "LeapSmash";
-                             inRange = true;
-                         }
-
-                         if (inRange && fsm.StateTimer >= currentPhaseCfg.IdleDuration && isPlayerAlive && col.IsGrounded)
-                         {
-                             vel.Vx = 0.0f;
-                             TriggerBoss2Telegraph(world, ref fsm, pendingSkill, patternCfg, bCfg, ref trans, ref stats, playerX, playerY, currentPhaseCfg);
-                         }
-                         break;
-
-                     case Boss2StateKind.PlatformJumping:
-                         fsm.IsInvulnerable = false;
-                         if (vel.Vy >= 0.0f)
-                         {
-                             fsm.CurrentState = Boss2StateKind.PlatformFalling;
-                             fsm.StateTimer = 0.0f;
-                         }
-                         else if (col.IsGrounded && fsm.StateTimer > 0.1f)
-                         {
-                             fsm.CurrentState = Boss2StateKind.LandingRecovery;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = 0.10f;
-                             vel.Vx = 0.0f;
-                         }
-                         break;
-
-                     case Boss2StateKind.PlatformFalling:
-                         fsm.IsInvulnerable = false;
-                         if (col.IsGrounded && fsm.StateTimer > 0.04f)
-                         {
-                             CombatEffectHelper.SpawnShockwave(world, trans.X, trans.Y + col.Height / 2.0f);
-                             fsm.CurrentState = Boss2StateKind.LandingRecovery;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = 0.10f;
-                             vel.Vx = 0.0f;
-                         }
-                         break;
-
-                     case Boss2StateKind.LandingRecovery:
-                         fsm.IsInvulnerable = false;
-                         vel.Vx = 0.0f;
-                         if (MathF.Abs(playerX - trans.X) > 20.0f)
-                         {
-                             stats.FacingRight = playerX >= trans.X;
-                         }
-                         sprite.FlipX = !stats.FacingRight;
-
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             fsm.CurrentState = Boss2StateKind.PatrolChase;
-                             fsm.StateTimer = 0.0f;
-                         }
-                         break;
-
-                     case Boss2StateKind.TelegraphHeavySlash:
-                     case Boss2StateKind.TelegraphDoubleCleave:
-                     case Boss2StateKind.TelegraphGroundStomp:
-                     case Boss2StateKind.TelegraphLeapSmash:
-                     case Boss2StateKind.TelegraphFrenzyCharge:
-                     case Boss2StateKind.TelegraphEarthquakeRoar:
-                         fsm.IsInvulnerable = false;
-                         stats.FacingRight = playerX >= trans.X;
-                         sprite.FlipX = !stats.FacingRight;
-                         vel.Vx = 0.0f;
-
-                         float telegraphShake = currentPhaseCfg.TelegraphShakeIntensity;
-                         if (telegraphShake > 0.0f)
-                         {
-                             trans.X += (Random.Shared.NextSingle() - 0.5f) * telegraphShake;
-                         }
-
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             fsm.StartX = trans.X;
-                             fsm.StartY = trans.Y;
-                             fsm.TargetX = playerX;
-                             fsm.TargetY = playerY;
-                             fsm.SubTimer = 0.0f;
-                             stats.ComboIndex = 0;
-
-                             TransitionFromTelegraphToExecuting(ref fsm, patternCfg, ref vel, ref col, trans.X, playerX);
-                         }
-                         break;
-
-                     // 各技能の独立実行状態
-                     case Boss2StateKind.ExecutingHeavySlash:
-                         fsm.IsInvulnerable = false;
-                         ExecuteHeavySlash(world, ref fsm, patternCfg, bCfg, ref trans, ref vel, ref stats);
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             vel.Vx = 0.0f;
-                             TransitionToRecovery(ref fsm, patternCfg.HeavySlash.RecoveryTime);
-                         }
-                         break;
-
-                     case Boss2StateKind.ExecutingDoubleCleave:
-                         fsm.IsInvulnerable = false;
-                         ExecuteDoubleCleave(world, ref fsm, patternCfg, bCfg, ref trans, ref vel, ref stats);
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             vel.Vx = 0.0f;
-                             TransitionToRecovery(ref fsm, patternCfg.DoubleCleave.RecoveryTime);
-                         }
-                         break;
-
-                     case Boss2StateKind.ExecutingGroundStomp:
-                         fsm.IsInvulnerable = false;
-                         ExecuteGroundStomp(world, ref fsm, patternCfg, ref trans, ref vel, ref col, ref stats);
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             vel.Vx = 0.0f;
-                             TransitionToRecovery(ref fsm, patternCfg.GroundStomp.RecoveryTime);
-                         }
-                         break;
-
-                     case Boss2StateKind.ExecutingLeapAscent:
-                         fsm.IsInvulnerable = false;
-                         if (vel.Vy >= 0.0f)
-                         {
-                             fsm.CurrentState = Boss2StateKind.ExecutingLeapDescent;
-                             fsm.StateTimer = 0.0f;
-                         }
-                         else if (col.IsGrounded && fsm.StateTimer > 0.15f)
-                         {
-                             TriggerLeapImpact(world, ref fsm, patternCfg, ref trans, ref col);
-                         }
-                         break;
-
-                     case Boss2StateKind.ExecutingLeapDescent:
-                         fsm.IsInvulnerable = false;
-                         if (col.IsGrounded)
-                         {
-                             TriggerLeapImpact(world, ref fsm, patternCfg, ref trans, ref col);
-                         }
-                         break;
-
-                     case Boss2StateKind.ExecutingFrenzyCharge:
-                         fsm.IsInvulnerable = false;
-                         ExecuteFrenzyCharge(world, ref fsm, patternCfg, arenaCfg, ref trans, ref vel, ref stats);
-                         if (fsm.CurrentState != Boss2StateKind.WallCrashStun && fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             vel.Vx = 0.0f;
-                             TransitionToRecovery(ref fsm, patternCfg.FrenzyCharge.RecoveryTime);
-                         }
-                         break;
-
-                     case Boss2StateKind.ExecutingEarthquakeRoar:
-                         fsm.IsInvulnerable = false;
-                         ExecuteEarthquakeRoar(world, ref fsm, patternCfg, dt);
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             vel.Vx = 0.0f;
-                             TransitionToRecovery(ref fsm, patternCfg.EarthquakeRoar.RecoveryTime);
-                         }
-                         break;
-
-                     case Boss2StateKind.WallCrashStun:
-                         fsm.IsInvulnerable = false;
-                         vel.Vx = 0.0f;
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             fsm.CurrentState = Boss2StateKind.Idle;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = 0.4f;
-                         }
-                         break;
-
-                     case Boss2StateKind.SkillRecovery:
-                         fsm.IsInvulnerable = false;
-                         vel.Vx = 0.0f;
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             fsm.CurrentState = Boss2StateKind.Idle;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = currentPhaseCfg.IdleDuration;
-                             if (currentPhaseCfg.Skills.Count > 0)
-                             {
-                                 fsm.CurrentSkillName = currentPhaseCfg.Skills[fsm.CurrentSkillIndex % currentPhaseCfg.Skills.Count];
-                             }
-                         }
-                         break;
-
-                     case Boss2StateKind.PhaseTransition:
-                         fsm.IsInvulnerable = true;
-                         vel.Vx = 0.0f;
-                         if (fsm.StateTimer >= fsm.StateDuration)
-                         {
-                             fsm.CurrentState = Boss2StateKind.Idle;
-                             fsm.StateTimer = 0.0f;
-                             fsm.StateDuration = currentPhaseCfg.IdleDuration;
-                             fsm.IsInvulnerable = false;
-                             if (currentPhaseCfg.Skills.Count > 0)
-                             {
-                                 fsm.CurrentSkillName = currentPhaseCfg.Skills[fsm.CurrentSkillIndex % currentPhaseCfg.Skills.Count];
-                             }
-                         }
-                         break;
-
-                     case Boss2StateKind.Dead:
-                         fsm.IsInvulnerable = false;
-                         vel.Vx = 0.0f;
-                         vel.Vy = 0.0f;
-                         break;
-                 }
-
-                 // 地面重力与平台物理更新
-                 float currentVy = vel.Vy;
-                 PhysicsService.ApplyGravity(ref currentVy, bCfg.Gravity, 850.0f, dt);
-                 vel.Vy = currentVy;
-
-                 float nextX = trans.X + vel.Vx * dt;
-                 float nextY = trans.Y + vel.Vy * dt;
-
-                 nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
-
-                 bool isGrounded = false;
-                 float adjustedPosY = nextY;
-                 float adjustedVy = vel.Vy;
-
-                 float currentY = trans.Y;
-                 Box2D bossBox = new(nextX, nextY, col.Width, col.Height);
-
-                 platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
-                 {
-                     Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
-                     if (PhysicsService.CheckPlatformGround(
-                         currentY,
-                         nextY,
-                         bossBox,
-                         platformBox,
-                         out float groundY,
-                         out float vy))
-                     {
-                         isGrounded = true;
-                         adjustedPosY = groundY;
-                         adjustedVy = vy;
-                     }
-                 });
-
-                 float floorLimitY = 560.0f - col.Height / 2.0f;
-                 if (adjustedPosY >= floorLimitY)
-                 {
-                     isGrounded = true;
-                     adjustedPosY = floorLimitY;
-                     adjustedVy = 0.0f;
-                 }
-
-                 trans.X = nextX;
-                 trans.Y = adjustedPosY;
-                 vel.Vy = adjustedVy;
-                 col.IsGrounded = isGrounded;
+                 ApplyBoss2PhysicsAndCollisions(platformQuery, bCfg, arenaCfg, dt, ref trans, ref vel, ref col);
              });
 
         return world;
+    }
+
+    private static void FetchPlayerTarget(Query<Transform, Health> playerQuery, out float playerX, out float playerY, out bool isPlayerAlive)
+    {
+        PlayerConfig pCfg = ConfigManager.Player;
+        float px = pCfg.SpawnX;
+        float py = pCfg.SpawnY;
+        bool alive = false;
+
+        playerQuery.Each((ref Transform pTrans, ref Health pHealth) =>
+        {
+            px = pTrans.X;
+            py = pTrans.Y;
+            alive = pHealth.IsAlive;
+        });
+
+        playerX = px;
+        playerY = py;
+        isPlayerAlive = alive;
+    }
+
+    private static void EvaluateBoss2Phase(World world, ref Health bHealth, ref Boss2Stats stats, ref Boss2StateMachine fsm, ref Velocity vel, Vec2f pos, Boss2Config bCfg)
+    {
+        float hpRatio = bHealth.Ratio;
+        int targetPhase = hpRatio > bCfg.Phase2.HpThreshold ? 1 : (hpRatio > bCfg.Phase3.HpThreshold ? 2 : 3);
+
+        if (targetPhase > stats.Phase && fsm.CurrentState != Boss2StateKind.PhaseTransition)
+        {
+            stats.Phase = targetPhase;
+            fsm.CurrentState = Boss2StateKind.PhaseTransition;
+            fsm.StateTimer = 0.0f;
+            fsm.StateDuration = bCfg.Phase1.TransitionDuration;
+            fsm.IsInvulnerable = true;
+            vel.Vx = 0.0f;
+            CombatEffectHelper.ClearAllBossBullets(world);
+            CombatEffectHelper.SpawnShockwave(world, pos.X, pos.Y);
+        }
+    }
+
+    private static void UpdateBoss2StateMachine(
+        World world,
+        ref Transform trans,
+        ref Velocity vel,
+        ref CollisionBox col,
+        ref Boss2Stats stats,
+        ref Boss2StateMachine fsm,
+        ref Sprite sprite,
+        Boss2PhaseConfig currentPhaseCfg,
+        PatternConfig patternCfg,
+        ArenaConfig arenaCfg,
+        Boss2Config bCfg,
+        float playerX,
+        float playerY,
+        bool isPlayerAlive,
+        float dt)
+    {
+        switch (fsm.CurrentState)
+        {
+            case Boss2StateKind.Idle:
+                fsm.IsInvulnerable = false;
+                vel.Vx = 0.0f;
+                if (MathF.Abs(playerX - trans.X) > 20.0f)
+                {
+                    stats.FacingRight = playerX >= trans.X;
+                }
+                sprite.FlipX = !stats.FacingRight;
+
+                if (fsm.StateTimer >= fsm.StateDuration && isPlayerAlive && col.IsGrounded)
+                {
+                    fsm.CurrentState = Boss2StateKind.PatrolChase;
+                    fsm.StateTimer = 0.0f;
+                }
+                break;
+
+            case Boss2StateKind.PatrolChase:
+            case Boss2StateKind.MoveToTakeoff:
+                HandlePatrolChaseNavigation(world, ref trans, ref vel, ref col, ref stats, ref fsm, ref sprite, currentPhaseCfg, patternCfg, bCfg, playerX, playerY, isPlayerAlive);
+                break;
+
+            case Boss2StateKind.PlatformJumping:
+            case Boss2StateKind.PlatformFalling:
+            case Boss2StateKind.LandingRecovery:
+                HandleAirborneStates(world, ref trans, ref vel, ref col, ref stats, ref fsm, ref sprite, playerX);
+                break;
+
+            case Boss2StateKind.TelegraphHeavySlash:
+            case Boss2StateKind.TelegraphDoubleCleave:
+            case Boss2StateKind.TelegraphGroundStomp:
+            case Boss2StateKind.TelegraphLeapSmash:
+            case Boss2StateKind.TelegraphFrenzyCharge:
+            case Boss2StateKind.TelegraphEarthquakeRoar:
+                HandleTelegraphingState(ref trans, ref vel, ref col, ref stats, ref fsm, ref sprite, currentPhaseCfg, patternCfg, playerX, playerY);
+                break;
+
+            case Boss2StateKind.ExecutingHeavySlash:
+            case Boss2StateKind.ExecutingDoubleCleave:
+            case Boss2StateKind.ExecutingGroundStomp:
+            case Boss2StateKind.ExecutingLeapAscent:
+            case Boss2StateKind.ExecutingLeapDescent:
+            case Boss2StateKind.ExecutingFrenzyCharge:
+            case Boss2StateKind.ExecutingEarthquakeRoar:
+            case Boss2StateKind.WallCrashStun:
+            case Boss2StateKind.SkillRecovery:
+            case Boss2StateKind.PhaseTransition:
+            case Boss2StateKind.Dead:
+                HandleExecutingStates(world, ref trans, ref vel, ref col, ref stats, ref fsm, currentPhaseCfg, patternCfg, arenaCfg, bCfg, dt);
+                break;
+        }
+    }
+
+    private static void HandlePatrolChaseNavigation(
+        World world,
+        ref Transform trans,
+        ref Velocity vel,
+        ref CollisionBox col,
+        ref Boss2Stats stats,
+        ref Boss2StateMachine fsm,
+        ref Sprite sprite,
+        Boss2PhaseConfig currentPhaseCfg,
+        PatternConfig patternCfg,
+        Boss2Config bCfg,
+        float playerX,
+        float playerY,
+        bool isPlayerAlive)
+    {
+        fsm.IsInvulnerable = false;
+        PlayerConfig pCfg = ConfigManager.Player;
+        float bossFootY = trans.Y + col.Height / 2.0f;
+        float playerFootY = playerY + pCfg.HitboxHeight / 2.0f;
+
+        TileMap? tileMap = BattleScene.CurrentTileMap;
+        NavStatus currentNavStatus = NavStatus.DirectWalk;
+
+        if (col.IsGrounded)
+        {
+            if (tileMap != null && tileMap.NavGraph.Nodes.Count > 0)
+            {
+                NavPlan plan = tileMap.NavGraph.FindPath(
+                    trans.X,
+                    bossFootY,
+                    playerX,
+                    playerFootY,
+                    col.IsGrounded,
+                    currentPhaseCfg.MoveSpeed);
+
+                currentNavStatus = plan.Status;
+
+                switch (plan.Status)
+                {
+                    case NavStatus.DirectWalk:
+                        fsm.CurrentState = Boss2StateKind.PatrolChase;
+                        vel.Vx = (playerX >= trans.X ? 1.0f : -1.0f) * currentPhaseCfg.MoveSpeed;
+                        break;
+
+                    case NavStatus.MoveToTakeoff:
+                    case NavStatus.ExecuteDrop:
+                        fsm.CurrentState = Boss2StateKind.MoveToTakeoff;
+                        vel.Vx = plan.RequiredVx;
+                        break;
+
+                    case NavStatus.ExecuteJump:
+                        if (stats.JumpCooldown <= 0.0f)
+                        {
+                            vel.Vx = plan.RequiredVx;
+                            vel.Vy = plan.RequiredVy != 0.0f ? plan.RequiredVy : -currentPhaseCfg.JumpForce;
+                            stats.JumpCooldown = 1.0f;
+                            col.IsGrounded = false;
+                            trans.Y -= 6.0f;
+                            fsm.CurrentState = Boss2StateKind.PlatformJumping;
+                            fsm.StateTimer = 0.0f;
+                        }
+                        break;
+
+                    case NavStatus.InAir:
+                    case NavStatus.NoPath:
+                    default:
+                        fsm.CurrentState = Boss2StateKind.PatrolChase;
+                        vel.Vx = (playerX >= trans.X ? 1.0f : -1.0f) * currentPhaseCfg.MoveSpeed;
+                        break;
+                }
+            }
+            else
+            {
+                fsm.CurrentState = Boss2StateKind.PatrolChase;
+                vel.Vx = (playerX >= trans.X ? 1.0f : -1.0f) * currentPhaseCfg.MoveSpeed;
+            }
+        }
+        else
+        {
+            fsm.CurrentState = vel.Vy < 0.0f ? Boss2StateKind.PlatformJumping : Boss2StateKind.PlatformFalling;
+            fsm.StateTimer = 0.0f;
+            return;
+        }
+
+        if (vel.Vx > 15.0f)
+        {
+            stats.FacingRight = true;
+        }
+        else if (vel.Vx < -15.0f)
+        {
+            stats.FacingRight = false;
+        }
+        else if (MathF.Abs(playerX - trans.X) > 20.0f)
+        {
+            stats.FacingRight = playerX >= trans.X;
+        }
+        sprite.FlipX = !stats.FacingRight;
+
+        string pendingSkill = currentPhaseCfg.Skills.Count > 0
+            ? currentPhaseCfg.Skills[fsm.CurrentSkillIndex % currentPhaseCfg.Skills.Count]
+            : "HeavySlash";
+
+        bool inRange = CheckBoss2SkillRange(pendingSkill, trans.X, trans.Y, playerX, playerY, currentNavStatus);
+
+        bool isKitingTimeout = fsm.StateTimer >= 2.5f && col.IsGrounded;
+        if (isKitingTimeout && !inRange)
+        {
+            pendingSkill = "LeapSmash";
+            inRange = true;
+        }
+
+        if (inRange && fsm.StateTimer >= currentPhaseCfg.IdleDuration && isPlayerAlive && col.IsGrounded)
+        {
+            vel.Vx = 0.0f;
+            TriggerBoss2Telegraph(world, ref fsm, pendingSkill, patternCfg, bCfg, ref trans, ref stats, playerX, playerY, currentPhaseCfg);
+        }
+    }
+
+    private static void HandleAirborneStates(
+        World world,
+        ref Transform trans,
+        ref Velocity vel,
+        ref CollisionBox col,
+        ref Boss2Stats stats,
+        ref Boss2StateMachine fsm,
+        ref Sprite sprite,
+        float playerX)
+    {
+        fsm.IsInvulnerable = false;
+
+        switch (fsm.CurrentState)
+        {
+            case Boss2StateKind.PlatformJumping:
+                if (vel.Vy >= 0.0f)
+                {
+                    fsm.CurrentState = Boss2StateKind.PlatformFalling;
+                    fsm.StateTimer = 0.0f;
+                }
+                else if (col.IsGrounded && fsm.StateTimer > 0.1f)
+                {
+                    fsm.CurrentState = Boss2StateKind.LandingRecovery;
+                    fsm.StateTimer = 0.0f;
+                    fsm.StateDuration = 0.10f;
+                    vel.Vx = 0.0f;
+                }
+                break;
+
+            case Boss2StateKind.PlatformFalling:
+                if (col.IsGrounded && fsm.StateTimer > 0.04f)
+                {
+                    CombatEffectHelper.SpawnShockwave(world, trans.X, trans.Y + col.Height / 2.0f);
+                    fsm.CurrentState = Boss2StateKind.LandingRecovery;
+                    fsm.StateTimer = 0.0f;
+                    fsm.StateDuration = 0.10f;
+                    vel.Vx = 0.0f;
+                }
+                break;
+
+            case Boss2StateKind.LandingRecovery:
+                vel.Vx = 0.0f;
+                if (MathF.Abs(playerX - trans.X) > 20.0f)
+                {
+                    stats.FacingRight = playerX >= trans.X;
+                }
+                sprite.FlipX = !stats.FacingRight;
+
+                if (fsm.StateTimer >= fsm.StateDuration)
+                {
+                    fsm.CurrentState = Boss2StateKind.PatrolChase;
+                    fsm.StateTimer = 0.0f;
+                }
+                break;
+        }
+    }
+
+    private static void HandleTelegraphingState(
+        ref Transform trans,
+        ref Velocity vel,
+        ref CollisionBox col,
+        ref Boss2Stats stats,
+        ref Boss2StateMachine fsm,
+        ref Sprite sprite,
+        Boss2PhaseConfig currentPhaseCfg,
+        PatternConfig patternCfg,
+        float playerX,
+        float playerY)
+    {
+        fsm.IsInvulnerable = false;
+        stats.FacingRight = playerX >= trans.X;
+        sprite.FlipX = !stats.FacingRight;
+        vel.Vx = 0.0f;
+
+        float telegraphShake = currentPhaseCfg.TelegraphShakeIntensity;
+        if (telegraphShake > 0.0f)
+        {
+            trans.X += (Random.Shared.NextSingle() - 0.5f) * telegraphShake;
+        }
+
+        if (fsm.StateTimer >= fsm.StateDuration)
+        {
+            fsm.StartX = trans.X;
+            fsm.StartY = trans.Y;
+            fsm.TargetX = playerX;
+            fsm.TargetY = playerY;
+            fsm.SubTimer = 0.0f;
+            stats.ComboIndex = 0;
+
+            TransitionFromTelegraphToExecuting(ref fsm, patternCfg, ref vel, ref col, trans.X, playerX);
+        }
+    }
+
+    private static void HandleExecutingStates(
+        World world,
+        ref Transform trans,
+        ref Velocity vel,
+        ref CollisionBox col,
+        ref Boss2Stats stats,
+        ref Boss2StateMachine fsm,
+        Boss2PhaseConfig currentPhaseCfg,
+        PatternConfig patternCfg,
+        ArenaConfig arenaCfg,
+        Boss2Config bCfg,
+        float dt)
+    {
+        switch (fsm.CurrentState)
+        {
+            case Boss2StateKind.ExecutingHeavySlash:
+                fsm.IsInvulnerable = false;
+                ExecuteHeavySlash(world, ref fsm, patternCfg, bCfg, ref trans, ref vel, ref stats);
+                if (fsm.StateTimer >= fsm.StateDuration)
+                {
+                    vel.Vx = 0.0f;
+                    TransitionToRecovery(ref fsm, patternCfg.HeavySlash.RecoveryTime);
+                }
+                break;
+
+            case Boss2StateKind.ExecutingDoubleCleave:
+                fsm.IsInvulnerable = false;
+                ExecuteDoubleCleave(world, ref fsm, patternCfg, bCfg, ref trans, ref vel, ref stats);
+                if (fsm.StateTimer >= fsm.StateDuration)
+                {
+                    vel.Vx = 0.0f;
+                    TransitionToRecovery(ref fsm, patternCfg.DoubleCleave.RecoveryTime);
+                }
+                break;
+
+            case Boss2StateKind.ExecutingGroundStomp:
+                fsm.IsInvulnerable = false;
+                ExecuteGroundStomp(world, ref fsm, patternCfg, ref trans, ref vel, ref col, ref stats);
+                if (fsm.StateTimer >= fsm.StateDuration)
+                {
+                    vel.Vx = 0.0f;
+                    TransitionToRecovery(ref fsm, patternCfg.GroundStomp.RecoveryTime);
+                }
+                break;
+
+            case Boss2StateKind.ExecutingLeapAscent:
+                fsm.IsInvulnerable = false;
+                if (vel.Vy >= 0.0f)
+                {
+                    fsm.CurrentState = Boss2StateKind.ExecutingLeapDescent;
+                    fsm.StateTimer = 0.0f;
+                }
+                else if (col.IsGrounded && fsm.StateTimer > 0.15f)
+                {
+                    TriggerLeapImpact(world, ref fsm, patternCfg, ref trans, ref col);
+                }
+                break;
+
+            case Boss2StateKind.ExecutingLeapDescent:
+                fsm.IsInvulnerable = false;
+                if (col.IsGrounded)
+                {
+                    TriggerLeapImpact(world, ref fsm, patternCfg, ref trans, ref col);
+                }
+                break;
+
+            case Boss2StateKind.ExecutingFrenzyCharge:
+                fsm.IsInvulnerable = false;
+                ExecuteFrenzyCharge(world, ref fsm, patternCfg, arenaCfg, ref trans, ref vel, ref stats);
+                if (fsm.CurrentState != Boss2StateKind.WallCrashStun && fsm.StateTimer >= fsm.StateDuration)
+                {
+                    vel.Vx = 0.0f;
+                    TransitionToRecovery(ref fsm, patternCfg.FrenzyCharge.RecoveryTime);
+                }
+                break;
+
+            case Boss2StateKind.ExecutingEarthquakeRoar:
+                fsm.IsInvulnerable = false;
+                ExecuteEarthquakeRoar(world, ref fsm, patternCfg, dt);
+                if (fsm.StateTimer >= fsm.StateDuration)
+                {
+                    vel.Vx = 0.0f;
+                    TransitionToRecovery(ref fsm, patternCfg.EarthquakeRoar.RecoveryTime);
+                }
+                break;
+
+            case Boss2StateKind.WallCrashStun:
+                fsm.IsInvulnerable = false;
+                vel.Vx = 0.0f;
+                if (fsm.StateTimer >= fsm.StateDuration)
+                {
+                    fsm.CurrentState = Boss2StateKind.Idle;
+                    fsm.StateTimer = 0.0f;
+                    fsm.StateDuration = 0.4f;
+                }
+                break;
+
+            case Boss2StateKind.SkillRecovery:
+            case Boss2StateKind.PhaseTransition:
+                vel.Vx = 0.0f;
+                if (fsm.StateTimer >= fsm.StateDuration)
+                {
+                    fsm.CurrentState = Boss2StateKind.Idle;
+                    fsm.StateTimer = 0.0f;
+                    fsm.StateDuration = currentPhaseCfg.IdleDuration;
+                    fsm.IsInvulnerable = false;
+                    if (currentPhaseCfg.Skills.Count > 0)
+                    {
+                        fsm.CurrentSkillName = currentPhaseCfg.Skills[fsm.CurrentSkillIndex % currentPhaseCfg.Skills.Count];
+                    }
+                }
+                break;
+
+            case Boss2StateKind.Dead:
+                fsm.IsInvulnerable = false;
+                vel.Vx = 0.0f;
+                vel.Vy = 0.0f;
+                break;
+        }
+    }
+
+    private static void ApplyBoss2PhysicsAndCollisions(
+        Query<Transform, CollisionBox> platformQuery,
+        Boss2Config bCfg,
+        ArenaConfig arenaCfg,
+        float dt,
+        ref Transform trans,
+        ref Velocity vel,
+        ref CollisionBox col)
+    {
+        float currentVy = vel.Vy;
+        PhysicsService.ApplyGravity(ref currentVy, bCfg.Gravity, 850.0f, dt);
+        vel.Vy = currentVy;
+
+        float nextX = trans.X + vel.Vx * dt;
+        float nextY = trans.Y + vel.Vy * dt;
+
+        nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
+
+        bool isGrounded = false;
+        float adjustedPosY = nextY;
+        float adjustedVy = vel.Vy;
+
+        float currentY = trans.Y;
+        Box2D bossBox = new(nextX, nextY, col.Width, col.Height);
+
+        platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
+        {
+            Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
+            if (PhysicsService.CheckPlatformGround(
+                currentY,
+                nextY,
+                bossBox,
+                platformBox,
+                out float groundY,
+                out float vy))
+            {
+                isGrounded = true;
+                adjustedPosY = groundY;
+                adjustedVy = vy;
+            }
+        });
+
+        float floorLimitY = 560.0f - col.Height / 2.0f;
+        if (adjustedPosY >= floorLimitY)
+        {
+            isGrounded = true;
+            adjustedPosY = floorLimitY;
+            adjustedVy = 0.0f;
+        }
+
+        trans.X = nextX;
+        trans.Y = adjustedPosY;
+        vel.Vy = adjustedVy;
+        col.IsGrounded = isGrounded;
     }
 
     private static Boss2PhaseConfig GetFallbackPhaseConfig(int phase, Boss2Config bCfg)
