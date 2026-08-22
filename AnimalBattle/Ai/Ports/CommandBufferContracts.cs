@@ -34,7 +34,15 @@ public readonly record struct CommandOneShotKey(
     long FrameUpdateNumber)
 {
     /// <summary>key が発行可能な値かどうかを取得します。</summary>
-    public bool IsValid => Component != 0 && ComponentIndex >= 0 && FrameUpdateNumber >= 0;
+    /// <remarks>
+    /// Movement / Effect の command は AttackId を持たないため、攻撃識別子の検証は
+    /// component の値検証とは分離しています。
+    /// </remarks>
+    public bool IsValid => (Component is CommandComponentKind.Movement
+        or CommandComponentKind.Attack
+        or CommandComponentKind.Effect)
+        && ComponentIndex >= 0
+        && FrameUpdateNumber >= 0;
 }
 
 /// <summary>command buffer の拒否理由です。</summary>

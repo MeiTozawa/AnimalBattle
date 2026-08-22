@@ -44,10 +44,7 @@ public sealed class BossAiEcsBoundary
     /// <summary>gate 後にだけ Query の読み書きを行います。</summary>
     public BossEcsBoundaryResult TryUpdate(in BossEcsUpdateGate gate, long frameUpdateNumber, BossAiEcsUpdateCallback callback)
     {
-        if (callback is null)
-        {
-            throw new ArgumentNullException(nameof(callback));
-        }
+        ArgumentNullException.ThrowIfNull(callback);
         if (!gate.IsOpen || frameUpdateNumber < 0)
         {
             return new BossEcsBoundaryResult(false, 0, ErrorCode.MissingDependency, frameUpdateNumber);

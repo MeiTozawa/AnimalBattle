@@ -17,6 +17,7 @@ public sealed class BossRuntimeSlot
     private bool _stateEntered;
     private bool _moduleStopped;
     private long _lastUpdatedFrame = -1;
+    private long _commandFrame = -1;
     private int _transitionDepth;
 
     /// <summary>Entity 単位の状態 context への参照を取得します。</summary>
@@ -55,11 +56,11 @@ public sealed class BossRuntimeSlot
     public ulong LastErrorFingerprint { get; private set; }
 
     /// <summary>移動 command の事前確保 buffer を取得します。</summary>
-    public ICommandBuffer<MovementCommand> MovementCommands { get; }
+    public PreallocatedCommandBuffer<MovementCommand> MovementCommands { get; }
     /// <summary>攻撃 command の事前確保 buffer を取得します。</summary>
-    public ICommandBuffer<AttackCommand> AttackCommands { get; }
+    public PreallocatedCommandBuffer<AttackCommand> AttackCommands { get; }
     /// <summary>演出 command の事前確保 buffer を取得します。</summary>
-    public ICommandBuffer<EffectCommand> EffectCommands { get; }
+    public PreallocatedCommandBuffer<EffectCommand> EffectCommands { get; }
 
     /// <summary>指定 command の index から one-shot key を runtime 経由で取得します。</summary>
     public bool TryGetOneShotKey(CommandComponentKind component, int index, out CommandOneShotKey key)
@@ -71,6 +72,58 @@ public sealed class BossRuntimeSlot
             CommandComponentKind.Effect => EffectCommands.TryGetOneShotKey(index, out key),
             _ => InvalidOneShotKey(out key)
         };
+    }
+
+    /// <summary>指定 index の移動 command を runtime 経由で取得します。</summary>
+    public bool TryGetMovementCommand(int index, out MovementCommand command)
+    {
+        if ((uint)index >= (uint)MovementCommands.Count)
+        {
+            command = default;
+            return false;
+        }
+
+        command = MovementCommands[index];
+        return true;
+    }
+
+    /// <summary>指定 index の攻撃 command を runtime 経由で取得します。</summary>
+    public bool TryGetAttackCommand(int index, out AttackCommand command)
+    {
+        if ((uint)index >= (uint)AttackCommands.Count)
+        {
+            command = default;
+            return false;
+        }
+
+        command = AttackCommands[index];
+        return true;
+    }
+
+    /// <summary>指定 index の演出 command を runtime 経由で取得します。</summary>
+    public bool TryGetEffectCommand(int index, out EffectCommand command)
+    {
+        if ((uint)index >= (uint)EffectCommands.Count)
+        {
+            command = default;
+            return false;
+        }
+
+        command = EffectCommands[index];
+        return true;
+    }
+
+    /// <summary>指定 command buffer の直近の overflow / one-shot 診断を取得します。</summary>
+    public bool TryGetCommandDiagnostic(CommandComponentKind component, out CommandBufferDiagnostic diagnostic)
+    {
+        diagnostic = component switch
+        {
+            CommandComponentKind.Movement => MovementCommands.LastDiagnostic,
+            CommandComponentKind.Attack => AttackCommands.LastDiagnostic,
+            CommandComponentKind.Effect => EffectCommands.LastDiagnostic,
+            _ => default
+        };
+        return diagnostic.Reason != CommandBufferFailureReason.None;
     }
 
     private static bool InvalidOneShotKey(out CommandOneShotKey key)
@@ -173,7 +226,18 @@ public sealed class BossRuntimeSlot
             return false;
         }
 
-        return _context.TryBeginFrame(frameUpdateNumber, deltaTime, phase, in playerObservation);
+        if (!_context.TryBeginFrame(frameUpdateNumber, deltaTime, phase, in playerObservation))
+        {
+            return false;
+        }
+
+        if (_commandFrame != frameUpdateNumber)
+        {
+            ClearCommands();
+            _commandFrame = frameUpdateNumber;
+        }
+
+        return true;
     }
 
     /// <summary>Frame_Update の command 数を 0 に戻します。配列は再確保しません。</summary>

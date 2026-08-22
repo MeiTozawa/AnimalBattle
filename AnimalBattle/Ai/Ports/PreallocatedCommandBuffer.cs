@@ -8,13 +8,19 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
     private readonly T[] _commands;
     private readonly CommandPriority[] _priorities;
     private readonly CommandOneShotKey[] _keys;
+    private readonly CommandOneShotKey[] _seenOneShotKeys;
     private readonly ICommandBufferDiagnosticSink? _diagnosticSink;
     private int _count;
+    private int _seenOneShotKeyCount;
 
     /// <summary>現在の command 数です。</summary>
     public int Count => _count;
     /// <summary>最大 command 数です。</summary>
     public int Capacity => _commands.Length;
+    /// <summary>Frame_Update 中に記憶できる one-shot key の最大数です。</summary>
+    public int OneShotKeyCapacity => _seenOneShotKeys.Length;
+    /// <summary>現在記憶している one-shot key 数です。</summary>
+    public int OneShotKeyCount => _seenOneShotKeyCount;
     /// <summary>容量超過などで破棄した command 数です。</summary>
     public long DroppedCount { get; private set; }
     /// <summary>診断記録に失敗した回数です。</summary>
@@ -23,12 +29,28 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
     public CommandBufferDiagnostic LastDiagnostic { get; private set; }
 
     /// <summary>指定容量の command buffer を初期化します。</summary>
-    public PreallocatedCommandBuffer(int capacity, ICommandBufferDiagnosticSink? diagnosticSink = null)
+    /// <param name="capacity">同時に保持できる command 数。</param>
+    /// <param name="diagnosticSink">容量超過と重複を受け取る診断境界。</param>
+    /// <param name="oneShotKeyCapacity">Frame_Update 中に記憶する key の最大数。省略時は command 容量の二倍です。</param>
+    public PreallocatedCommandBuffer(
+        int capacity,
+        ICommandBufferDiagnosticSink? diagnosticSink = null,
+        int oneShotKeyCapacity = 0)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
+        ArgumentOutOfRangeException.ThrowIfNegative(oneShotKeyCapacity);
+
+        int defaultKeyCapacity = capacity > int.MaxValue / 2 ? capacity : capacity * 2;
+        int keyCapacity = oneShotKeyCapacity == 0 ? defaultKeyCapacity : oneShotKeyCapacity;
+        if (keyCapacity < capacity)
+        {
+            throw new ArgumentOutOfRangeException(nameof(oneShotKeyCapacity), "one-shot key 容量は command 容量以上にしてください。");
+        }
+
         _commands = new T[capacity];
         _priorities = new CommandPriority[capacity];
         _keys = new CommandOneShotKey[capacity];
+        _seenOneShotKeys = new CommandOneShotKey[keyCapacity];
         _diagnosticSink = diagnosticSink;
     }
 
@@ -41,19 +63,6 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
     /// <summary>指定した one-shot key を重複なく command とともに記録します。</summary>
     public CommandWriteResult TryAddOneShot(in T command, in CommandOneShotKey key, CommandPriority priority = CommandPriority.Attack)
     {
-        if (!key.IsValid)
-        {
-            return Reject(CommandBufferFailureReason.InvalidOneShotKey, priority, CommandPriority.Normal, key, ErrorCode.ExecutionFailed);
-        }
-
-        for (int i = 0; i < _count; i++)
-        {
-            if (_keys[i] == key)
-            {
-                return Reject(CommandBufferFailureReason.DuplicateOneShot, priority, _priorities[i], key, ErrorCode.ExecutionFailed);
-            }
-        }
-
         return TryAddCommand(in command, priority, key);
     }
 
@@ -66,19 +75,18 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
             return Reject(CommandBufferFailureReason.InvalidOneShotKey, priority, CommandPriority.Normal, key, ErrorCode.ExecutionFailed);
         }
 
-        if (hasKey)
+        if (hasKey && ContainsSeenKey(key))
         {
-            for (int i = 0; i < _count; i++)
-            {
-                if (_keys[i] == key)
-                {
-                    return Reject(CommandBufferFailureReason.DuplicateOneShot, priority, _priorities[i], key, ErrorCode.ExecutionFailed);
-                }
-            }
+            return Reject(CommandBufferFailureReason.DuplicateOneShot, priority, FindExistingPriority(key), key, ErrorCode.ExecutionFailed);
         }
 
         if (_count < _commands.Length)
         {
+            if (hasKey && !TryRememberKey(key))
+            {
+                return Reject(CommandBufferFailureReason.CapacityExceeded, priority, CommandPriority.Normal, key, ErrorCode.ExecutionFailed);
+            }
+
             Store(_count, in command, priority, key);
             _count++;
             return Accepted(key);
@@ -90,8 +98,19 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
             return Reject(CommandBufferFailureReason.CapacityExceeded, priority, lowestPriority, key, ErrorCode.ExecutionFailed);
         }
 
+        if (hasKey && !TryRememberKey(key))
+        {
+            return Reject(CommandBufferFailureReason.CapacityExceeded, priority, lowestPriority, key, ErrorCode.ExecutionFailed);
+        }
+
         Store(evictionIndex, in command, priority, key);
         DroppedCount++;
+        RecordDiagnostic(new CommandBufferDiagnostic(
+            CommandBufferFailureReason.CapacityExceeded,
+            priority,
+            lowestPriority,
+            key,
+            ErrorCode.ExecutionFailed));
         return Accepted(key);
     }
 
@@ -109,7 +128,11 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
     }
 
     /// <summary>次の Frame_Update 用に command と key を破棄します。</summary>
-    public void Clear() => _count = 0;
+    public void Clear()
+    {
+        _count = 0;
+        _seenOneShotKeyCount = 0;
+    }
 
     /// <summary>格納済み command を index で読み取ります。</summary>
     public T this[int index]
@@ -130,6 +153,43 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
         _commands[index] = command;
         _priorities[index] = priority;
         _keys[index] = key;
+    }
+
+    private bool ContainsSeenKey(CommandOneShotKey key)
+    {
+        for (int i = 0; i < _seenOneShotKeyCount; i++)
+        {
+            if (_seenOneShotKeys[i] == key)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private CommandPriority FindExistingPriority(CommandOneShotKey key)
+    {
+        for (int i = 0; i < _count; i++)
+        {
+            if (_keys[i] == key)
+            {
+                return _priorities[i];
+            }
+        }
+
+        return CommandPriority.Normal;
+    }
+
+    private bool TryRememberKey(CommandOneShotKey key)
+    {
+        if (_seenOneShotKeyCount >= _seenOneShotKeys.Length)
+        {
+            return false;
+        }
+
+        _seenOneShotKeys[_seenOneShotKeyCount++] = key;
+        return true;
     }
 
     private int FindLowestPriorityIndex(out CommandPriority priority)
@@ -153,18 +213,39 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
     private CommandWriteResult Reject(CommandBufferFailureReason reason, CommandPriority incoming, CommandPriority existing, CommandOneShotKey key, ErrorCode errorCode)
     {
         DroppedCount++;
-        LastDiagnostic = new CommandBufferDiagnostic(reason, incoming, existing, key, errorCode);
+        CommandBufferDiagnostic diagnostic = new(reason, incoming, existing, key, errorCode);
+        bool diagnosticRecorded = RecordDiagnostic(diagnostic);
+        if (!diagnosticRecorded)
+        {
+            return new CommandWriteResult(false, key, CommandBufferFailureReason.DiagnosticFailed, ErrorCode.ObservationFailed);
+        }
+
+        return new CommandWriteResult(false, key, reason, errorCode);
+    }
+
+    private bool RecordDiagnostic(in CommandBufferDiagnostic diagnostic)
+    {
+        LastDiagnostic = diagnostic;
+        if (_diagnosticSink is null)
+        {
+            return true;
+        }
+
         try
         {
-            CommandBufferDiagnostic diagnostic = LastDiagnostic;
-            _diagnosticSink?.TryRecord(in diagnostic);
+            if (!_diagnosticSink.TryRecord(in diagnostic))
+            {
+                DiagnosticFailureCount++;
+                return false;
+            }
+
+            return true;
         }
         catch
         {
             DiagnosticFailureCount++;
+            return false;
         }
-
-        return new CommandWriteResult(false, key, reason, errorCode);
     }
 }
 
