@@ -67,7 +67,6 @@ public static class WorldRenderSystem
                  BossEffectsRenderConfig bossFx = renderCfg.BossEffects;
                  BulletRenderConfig bulletCfg = renderCfg.Bullets;
 
-                 // 1. 地図タイルマップの描画
                  if (it.World().Has<TileMap>())
                  {
                      ref readonly TileMap map = ref it.World().Get<TileMap>();
@@ -91,7 +90,6 @@ public static class WorldRenderSystem
                      });
                  }
 
-                 // 2.1 Boss 1 (Ancient Cat) の描画
                  boss1Query.Each((ref Transform trans, ref Health bHealth, ref Boss1Stats stats, ref Boss1StateMachine fsm, ref Sprite sprite) =>
                  {
                      int bx = (int)trans.X;
@@ -168,7 +166,6 @@ public static class WorldRenderSystem
                      }
                  });
 
-                 // 2.2 Boss 2 (Ground Crusher) の描画
                  boss2Query.Each((ref Transform trans, ref Health bHealth, ref Boss2Stats stats, ref Boss2StateMachine fsm, ref Sprite sprite) =>
                  {
                      int bx = (int)trans.X;
@@ -201,7 +198,6 @@ public static class WorldRenderSystem
 
                              case Boss2StateKind.TelegraphLeapSmash:
                                  {
-                                     // 泰坦躍撃：目標着地位置 (TargetX, TargetY) および Boss 起跳位置にロックオン予兆リングを描画
                                      int tx = (int)fsm.TargetX;
                                      int ty = (int)fsm.TargetY;
                                      int lockRadius = (int)(50.0f - progress * 15.0f);
@@ -215,14 +211,13 @@ public static class WorldRenderSystem
 
                              case Boss2StateKind.TelegraphEarthquakeRoar:
                                  {
-                                     // 天崩地裂：Boss 身体中心に全画面共鳴の大型オーラリング
                                      GameEngine.DrawCircle(bx, by, ringRadius + 15, ColorPalette.Amber, false);
                                      GameEngine.DrawCircle(bx, by, ringRadius, ColorPalette.RedOrange, false);
                                      GameEngine.DrawCircle(bx, by, (int)bossFx.TelegraphCoreRadius + 5, ColorPalette.OrangeBright, true);
                                  }
                                  break;
 
-                             default: // HeavySlash, DoubleCleave, FrenzyCharge など前方攻撃
+                             default:
                                  {
                                      float forwardDir = stats.FacingRight ? 1.0f : -1.0f;
                                      int targetFx = (int)(bx + forwardDir * b2Cfg.SlashSpawnOffsetX);
@@ -248,7 +243,6 @@ public static class WorldRenderSystem
                      }
                      else if (fsm.CurrentState == Boss2StateKind.WallCrashStun)
                      {
-                         // 壁激突気絶：頭上に回転する星型／光点エフェクトを描画
                          float angle = fsm.StateTimer * 6.0f;
                          for (int k = 0; k < 3; k++)
                          {
@@ -295,7 +289,6 @@ public static class WorldRenderSystem
                      }
                  });
 
-                 // 3. プレイヤー自機描画
                  playerQuery.Each((ref Transform trans, ref Health health, ref PlayerState playerState, ref Sprite sprite) =>
                  {
                      if (!health.IsAlive || !sprite.IsVisible || sprite.GraphHandle < 0)
@@ -303,7 +296,6 @@ public static class WorldRenderSystem
                          return;
                      }
 
-                     // 無敵時間点滅演出（i-frames flickering）
                      bool shouldDrawSprite = !health.IsInvincible || ((int)(health.InvincibleTimer * 30.0f) % 2 == 0);
 
                      if (shouldDrawSprite)
@@ -334,70 +326,70 @@ public static class WorldRenderSystem
                  int clipMinY = (int)arenaCfg.BulletDespawnMinY - bulletCfg.ViewportCullingMarginY;
                  int clipMaxY = (int)arenaCfg.BulletDespawnMaxY + bulletCfg.ViewportCullingMarginY;
 
-                 // 4. プレイヤー銃弾描画（SIMD 原生批量レンダリング）
+                 int pOuterRadius = (int)bulletCfg.PlayerBulletOuterRadius;
+                 Color pOuterColor = bulletCfg.PlayerBulletOuterColor;
+                 int pInnerRadius = (int)bulletCfg.PlayerBulletInnerRadius;
+                 Color pInnerColor = bulletCfg.PlayerBulletInnerColor;
+                 int pTrailOffset = bulletCfg.PlayerBulletTrailHalfWidth;
+                 int pTrailRadius = bulletCfg.PlayerBulletTrailHalfHeight * 2;
+                 Color pTrailColor = bulletCfg.PlayerBulletTrailColor;
+
                  playerBulletQuery.Iter((Iter it, Field<Transform> trans, Field<Velocity> vel) =>
                  {
                      int count = it.Count();
-                     if (count <= 0)
+                     for (int i = 0; i < count; ++i)
                      {
-                         return;
-                     }
+                         int px = (int)trans[i].X;
+                         int py = (int)trans[i].Y;
+                         if (px < clipMinX || px > clipMaxX || py < clipMinY || py > clipMaxY)
+                         {
+                             continue;
+                         }
 
-                     unsafe
-                     {
-                         Transform* pTrans = (Transform*)trans.Data;
-                         Velocity* pVel = (Velocity*)vel.Data;
+                         float vx = vel[i].Vx;
+                         float vy = vel[i].Vy;
+                         float lenSq = vx * vx + vy * vy;
+                         if (lenSq > 0.0001f)
+                         {
+                             float invLen = 1.0f / MathF.Sqrt(lenSq);
+                             int tx = (int)(px - (vx * invLen) * pTrailOffset);
+                             int ty = (int)(py - (vy * invLen) * pTrailOffset);
+                             GameEngine.DrawCircle(tx, ty, pTrailRadius, pTrailColor, true);
+                         }
 
-                         GameEngine.BatchDrawPlayerBullets(
-                             pTrans,
-                             pVel,
-                             count,
-                             (int)bulletCfg.PlayerBulletOuterRadius,
-                             bulletCfg.PlayerBulletOuterColor,
-                             (int)bulletCfg.PlayerBulletInnerRadius,
-                             bulletCfg.PlayerBulletInnerColor,
-                             bulletCfg.PlayerBulletTrailHalfWidth,
-                             bulletCfg.PlayerBulletTrailHalfHeight * 2,
-                             bulletCfg.PlayerBulletTrailColor,
-                             clipMinX,
-                             clipMaxX,
-                             clipMinY,
-                             clipMaxY);
+                         GameEngine.DrawCircle(px, py, pOuterRadius, pOuterColor, true);
+                         GameEngine.DrawCircle(px, py, pInnerRadius, pInnerColor, true);
                      }
                  });
 
-                 // 5. Boss 弾幕描画（SIMD 原生批量レンダリング）
+                 int outlinePadding = bulletCfg.BossBulletOutlinePadding;
+                 float coreRadiusRatio = bulletCfg.BossBulletCoreRadiusRatio;
+                 int coreMinRadius = bulletCfg.BossBulletCoreMinRadius;
+                 Color coreColor = bulletCfg.BossBulletCoreColor;
+
                  bossBulletQuery.Iter((Iter it, Field<Transform> trans, Field<Bullet> bullet) =>
                  {
                      int count = it.Count();
-                     if (count <= 0)
+                     for (int i = 0; i < count; ++i)
                      {
-                         return;
-                     }
+                         int bx = (int)trans[i].X;
+                         int by = (int)trans[i].Y;
+                         if (bx < clipMinX || bx > clipMaxX || by < clipMinY || by > clipMaxY)
+                         {
+                             continue;
+                         }
 
-                     unsafe
-                     {
-                         Transform* pTrans = (Transform*)trans.Data;
-                         Bullet b = bullet[0];
+                         Bullet b = bullet[i];
+                         int radius = (int)b.Radius;
+                         int outlineRadius = radius + outlinePadding;
+                         int coreRadius = Math.Max(coreMinRadius, (int)(radius * coreRadiusRatio));
 
-                         GameEngine.BatchDrawBossBullets(
-                             pTrans,
-                             count,
-                             (int)b.Radius,
-                             b.FillColor,
-                             b.OutlineColor,
-                             bulletCfg.BossBulletOutlinePadding,
-                             bulletCfg.BossBulletCoreRadiusRatio,
-                             bulletCfg.BossBulletCoreMinRadius,
-                             bulletCfg.BossBulletCoreColor,
-                             clipMinX,
-                             clipMaxX,
-                             clipMinY,
-                             clipMaxY);
+                         GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                         GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                         GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
                      }
                  });
 
-                 // 6. 近接斬撃スプライトエフェクト描画
                  meleeSlashQuery.Each((ref Transform trans, ref Hitbox hit, ref HitFlashEffect flash, ref FadeEffect fade, ref Sprite sprite) =>
                  {
                      int alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);

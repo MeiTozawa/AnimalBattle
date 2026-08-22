@@ -53,9 +53,6 @@ ab::Vec2f CalculateBossHoverPosition(
 
 /// @brief OutBounce 補間係数を計算します。
 constexpr float EvaluateOutBounce(float x) noexcept {
-    // Robert Penner バウンスアルゴリズムの定数:
-    // d1: 全 4 段階のバウンス時間比率の合計 (1.0 + 1.0 + 0.5 + 0.25 = 2.75)
-    // n1: 第 1 段階終了時 (x = 1/d1) で到達位置 y = 1.0 となる放物線加速度係数 (d1^2 = 2.75^2 = 7.5625)
     constexpr float n1 = 7.5625f;
     constexpr float d1 = 2.75f;
     if (x < 1.0f / d1) {

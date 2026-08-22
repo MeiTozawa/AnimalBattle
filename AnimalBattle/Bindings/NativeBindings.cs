@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using AnimalBattle.Core.Physics;
+using AnimalBattle.Render;
 
 namespace AnimalBattle.Bindings;
 
@@ -34,6 +35,14 @@ internal static unsafe partial class NativeBindings
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Engine_EndDraw();
+
+    [LibraryImport(_dllName, EntryPoint = "Engine_SubmitRenderCommands")]
+    [SuppressGCTransition]
+    public static partial void Engine_SubmitRenderCommands(
+        RenderPacket* packets,
+        int packetCount,
+        char* textBuffer,
+        int textLength);
 
     [LibraryImport(_dllName, EntryPoint = "Engine_RequestExit")]
     [SuppressGCTransition]

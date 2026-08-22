@@ -1,4 +1,5 @@
 #include "Core/EngineCore.h"
+#include "Render/RenderPacket.h"
 
 #include <cstdint>
 #include <string>
@@ -96,6 +97,99 @@ __declspec(dllexport) bool Engine_EndDraw() noexcept {
         return false;
     } catch (...) {
         return false;
+    }
+}
+
+__declspec(dllexport) void Engine_SubmitRenderCommands(
+    const ab::RenderPacket* packets,
+    int packet_count,
+    const wchar_t* text_buffer,
+    int text_length) noexcept {
+    if (packets == nullptr || packet_count <= 0) {
+        return;
+    }
+    try {
+        auto* render_service = ab::GetRenderService();
+        if (render_service == nullptr) {
+            return;
+        }
+
+        for (int i = 0; i < packet_count; ++i) {
+            const auto& p = packets[i];
+            switch (p.type) {
+            case ab::RenderPacketType::DrawBox:
+                render_service->DrawBox(
+                    ab::Rect<int>{ab::Vec2i{p.box.x1, p.box.y1}, ab::Vec2i{p.box.x2, p.box.y2}},
+                    p.box.color,
+                    p.box.fill != 0);
+                break;
+            case ab::RenderPacketType::DrawCircle:
+                render_service->DrawCircle(
+                    ab::Vec2i{p.circle.center_x, p.circle.center_y},
+                    p.circle.radius,
+                    p.circle.color,
+                    p.circle.fill != 0);
+                break;
+            case ab::RenderPacketType::DrawLine:
+                render_service->DrawLine(
+                    ab::Vec2i{p.line.x1, p.line.y1},
+                    ab::Vec2i{p.line.x2, p.line.y2},
+                    p.line.color,
+                    p.line.thickness);
+                break;
+            case ab::RenderPacketType::DrawGraph:
+                render_service->DrawGraph(
+                    ab::Vec2i{p.graph.x, p.graph.y},
+                    p.graph.handle,
+                    p.graph.trans != 0);
+                break;
+            case ab::RenderPacketType::DrawRotaGraph:
+                render_service->DrawRotaGraph(
+                    ab::Vec2i{p.rota_graph.center_x, p.rota_graph.center_y},
+                    static_cast<double>(p.rota_graph.scale),
+                    static_cast<double>(p.rota_graph.angle),
+                    p.rota_graph.handle,
+                    p.rota_graph.trans != 0);
+                break;
+            case ab::RenderPacketType::DrawRectRotaGraph:
+                render_service->DrawRectRotaGraph(
+                    ab::Vec2i{p.rect_rota_graph.center_x, p.rect_rota_graph.center_y},
+                    ab::Rect<int>{
+                        ab::Vec2i{p.rect_rota_graph.src_x, p.rect_rota_graph.src_y},
+                        ab::Vec2i{p.rect_rota_graph.src_x + p.rect_rota_graph.src_w,
+                                  p.rect_rota_graph.src_y + p.rect_rota_graph.src_h}},
+                    static_cast<double>(p.rect_rota_graph.scale),
+                    static_cast<double>(p.rect_rota_graph.angle),
+                    p.rect_rota_graph.handle,
+                    p.rect_rota_graph.trans != 0,
+                    p.rect_rota_graph.turn_x != 0);
+                break;
+            case ab::RenderPacketType::DrawString:
+                if (text_buffer != nullptr && p.string_data.text_offset >= 0 &&
+                    p.string_data.text_offset < text_length) {
+                    const wchar_t* str = text_buffer + p.string_data.text_offset;
+                    render_service->DrawString(
+                        ab::Vec2i{p.string_data.x, p.string_data.y},
+                        str,
+                        p.string_data.color);
+                }
+                break;
+            case ab::RenderPacketType::SetDrawBlendMode:
+                render_service->SetDrawBlendMode(
+                    static_cast<ab::BlendMode>(p.blend.mode),
+                    p.blend.pal);
+                break;
+            case ab::RenderPacketType::SetDrawBright:
+                render_service->SetDrawBright(
+                    p.bright.r,
+                    p.bright.g,
+                    p.bright.b);
+                break;
+            default:
+                break;
+            }
+        }
+    } catch (...) {
     }
 }
 

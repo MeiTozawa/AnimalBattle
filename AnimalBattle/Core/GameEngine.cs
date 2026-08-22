@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using AnimalBattle.Bindings;
 using AnimalBattle.Core.Physics;
+using AnimalBattle.Render;
 
 namespace AnimalBattle.Core;
 
@@ -12,6 +13,8 @@ namespace AnimalBattle.Core;
 /// </summary>
 public static class GameEngine
 {
+    private static readonly RenderCommandBuffer _commandBuffer = new();
+
     public const int PadInputDown = 0x0001;
     public const int PadInputLeft = 0x0002;
     public const int PadInputRight = 0x0004;
@@ -66,16 +69,18 @@ public static class GameEngine
     /// <returns>成功時 true、失敗時 false</returns>
     public static bool BeginFrame()
     {
+        _commandBuffer.Reset();
         return NativeBindings.Engine_BeginDraw();
     }
 
     /// <summary>
-    /// フレーム描画の終了処理（バックバッファ反転等）を行います。
+    /// フレーム描画の終了処理（コマンド一括提出・バックバッファ反転等）を行います。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過秒数</param>
     /// <returns>成功時 true、失敗時 false</returns>
     public static bool EndFrame(float deltaTime)
     {
+        _commandBuffer.Submit();
         return NativeBindings.Engine_EndDraw();
     }
 
@@ -198,7 +203,7 @@ public static class GameEngine
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawCircle(Vec2i center, int radius, Color color, bool fill)
     {
-        NativeBindings.Draw_Circle(center, radius, color.ToUint(), fill);
+        _commandBuffer.PushDrawCircle(center.X, center.Y, radius, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -211,87 +216,7 @@ public static class GameEngine
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawCircle(int x, int y, int radius, Color color, bool fill)
     {
-        DrawCircle(new Vec2i(x, y), radius, color, fill);
-    }
-
-    /// <summary>
-    /// 複数の円（弾幕・パーティクル等）を SIMD 原生最適化で一括描画します。
-    /// </summary>
-    /// <param name="transforms">Transform 連続配列ポインタ</param>
-    /// <param name="count">描画個数</param>
-    /// <param name="radius">半径 (px)</param>
-    /// <param name="color">描画カラー (<see cref="Color"/>)</param>
-    /// <param name="fill">塗りつぶすかどうか</param>
-    /// <param name="clipMinX">画面外カリング最小 X</param>
-    /// <param name="clipMaxX">画面外カリング最大 X</param>
-    /// <param name="clipMinY">画面外カリング最小 Y</param>
-    /// <param name="clipMaxY">画面外カリング最大 Y</param>
-    public static unsafe void BatchDrawCircles(
-        Transform* transforms, int count, int radius, Color color, bool fill,
-        int clipMinX, int clipMaxX, int clipMinY, int clipMaxY)
-    {
-        NativeExtensionBindings.Extension_BatchDrawCircles(transforms, count, radius, color.ToUint(), fill, clipMinX, clipMaxX, clipMinY, clipMaxY);
-    }
-
-    /// <summary>
-    /// プレイヤー銃弾（発光外層＋内層コア＋ビームトレイル）を SIMD 原生最適化で一括描画します。
-    /// </summary>
-    /// <param name="transforms">Transform 連続配列ポインタ</param>
-    /// <param name="velocities">Velocity 連続配列ポインタ</param>
-    /// <param name="count">描画個数</param>
-    /// <param name="outerRadius">外層グロー半径</param>
-    /// <param name="outerColor">外層グロー色 (<see cref="Color"/>)</param>
-    /// <param name="innerRadius">内層コア半径</param>
-    /// <param name="innerColor">内層コア色 (<see cref="Color"/>)</param>
-    /// <param name="trailOffset">ビームトレイルオフセット</param>
-    /// <param name="trailRadius">ビームトレイル半径</param>
-    /// <param name="trailColor">ビームトレイル色 (<see cref="Color"/>)</param>
-    /// <param name="clipMinX">画面外カリング最小 X</param>
-    /// <param name="clipMaxX">画面外カリング最大 X</param>
-    /// <param name="clipMinY">画面外カリング最小 Y</param>
-    /// <param name="clipMaxY">画面外カリング最大 Y</param>
-    public static unsafe void BatchDrawPlayerBullets(
-        Transform* transforms, Velocity* velocities, int count,
-        int outerRadius, Color outerColor,
-        int innerRadius, Color innerColor,
-        int trailOffset, int trailRadius, Color trailColor,
-        int clipMinX, int clipMaxX, int clipMinY, int clipMaxY)
-    {
-        NativeExtensionBindings.Extension_BatchDrawPlayerBullets(
-            transforms, velocities, count,
-            outerRadius, outerColor.ToUint(),
-            innerRadius, innerColor.ToUint(),
-            trailOffset, trailRadius, trailColor.ToUint(),
-            clipMinX, clipMaxX, clipMinY, clipMaxY);
-    }
-
-    /// <summary>
-    /// Boss 弾幕（多層同心光暈・枠線・コア）を SIMD 原生最適化で一括描画します。
-    /// </summary>
-    /// <param name="transforms">Transform 連続配列ポインタ</param>
-    /// <param name="count">描画個数</param>
-    /// <param name="radius">基本半径</param>
-    /// <param name="fillColor">塗りつぶし色 (<see cref="Color"/>)</param>
-    /// <param name="outlineColor">外枠色 (<see cref="Color"/>)</param>
-    /// <param name="outlinePadding">外枠オフセット幅</param>
-    /// <param name="coreRadiusRatio">ホワイトコア半径比率</param>
-    /// <param name="coreMinRadius">ホワイトコア最小ピクセル半径</param>
-    /// <param name="coreColor">ホワイトコア色 (<see cref="Color"/>)</param>
-    /// <param name="clipMinX">画面外カリング最小 X</param>
-    /// <param name="clipMaxX">画面外カリング最大 X</param>
-    /// <param name="clipMinY">画面外カリング最小 Y</param>
-    /// <param name="clipMaxY">画面外カリング最大 Y</param>
-    public static unsafe void BatchDrawBossBullets(
-        Transform* transforms, int count,
-        int radius, Color fillColor, Color outlineColor,
-        int outlinePadding, float coreRadiusRatio, int coreMinRadius, Color coreColor,
-        int clipMinX, int clipMaxX, int clipMinY, int clipMaxY)
-    {
-        NativeExtensionBindings.Extension_BatchDrawBossBullets(
-            transforms, count,
-            radius, fillColor.ToUint(), outlineColor.ToUint(),
-            outlinePadding, coreRadiusRatio, coreMinRadius, coreColor.ToUint(),
-            clipMinX, clipMaxX, clipMinY, clipMaxY);
+        _commandBuffer.PushDrawCircle(x, y, radius, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -303,7 +228,7 @@ public static class GameEngine
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawBox(Vec2i p1, Vec2i p2, Color color, bool fill)
     {
-        NativeBindings.Draw_Box(p1, p2, color.ToUint(), fill);
+        _commandBuffer.PushDrawBox(p1.X, p1.Y, p2.X, p2.Y, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -317,7 +242,7 @@ public static class GameEngine
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawBox(int x1, int y1, int x2, int y2, Color color, bool fill)
     {
-        DrawBox(new Vec2i(x1, y1), new Vec2i(x2, y2), color, fill);
+        _commandBuffer.PushDrawBox(x1, y1, x2, y2, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -329,7 +254,7 @@ public static class GameEngine
     /// <param name="thickness">線の太さ</param>
     public static void DrawLine(Vec2i p1, Vec2i p2, Color color, int thickness = 1)
     {
-        NativeBindings.Draw_Line(p1, p2, color.ToUint(), thickness);
+        _commandBuffer.PushDrawLine(p1.X, p1.Y, p2.X, p2.Y, color.ToUint(), thickness);
     }
 
     /// <summary>
@@ -343,7 +268,7 @@ public static class GameEngine
     /// <param name="thickness">線の太さ</param>
     public static void DrawLine(int x1, int y1, int x2, int y2, Color color, int thickness = 1)
     {
-        DrawLine(new Vec2i(x1, y1), new Vec2i(x2, y2), color, thickness);
+        _commandBuffer.PushDrawLine(x1, y1, x2, y2, color.ToUint(), thickness);
     }
 
     /// <summary>
@@ -354,7 +279,7 @@ public static class GameEngine
     /// <param name="color">描画カラー (<see cref="Color"/>)</param>
     public static void DrawString(Vec2i pos, string text, Color color)
     {
-        NativeBindings.Draw_String(pos, text, color.ToUint());
+        _commandBuffer.PushDrawString(pos.X, pos.Y, text, color.ToUint());
     }
 
     /// <summary>
@@ -366,7 +291,19 @@ public static class GameEngine
     /// <param name="color">描画カラー (<see cref="Color"/>)</param>
     public static void DrawString(int x, int y, string text, Color color)
     {
-        DrawString(new Vec2i(x, y), text, color);
+        _commandBuffer.PushDrawString(x, y, text, color.ToUint());
+    }
+
+    /// <summary>
+    /// 指定座標に文字列を描画します。
+    /// </summary>
+    /// <param name="x">X 座標</param>
+    /// <param name="y">Y 座標</param>
+    /// <param name="text">描画文字列 (<see cref="ReadOnlySpan{Char}"/>)</param>
+    /// <param name="color">描画カラー (<see cref="Color"/>)</param>
+    public static void DrawString(int x, int y, ReadOnlySpan<char> text, Color color)
+    {
+        _commandBuffer.PushDrawString(x, y, text, color.ToUint());
     }
 
     /// <summary>
@@ -377,7 +314,7 @@ public static class GameEngine
     /// <param name="trans">透過を有効にするかどうか</param>
     public static void DrawGraph(Vec2i pos, int handle, bool trans)
     {
-        NativeBindings.Draw_Graph(pos, handle, trans);
+        _commandBuffer.PushDrawGraph(pos.X, pos.Y, handle, trans);
     }
 
     /// <summary>
@@ -389,7 +326,7 @@ public static class GameEngine
     /// <param name="trans">透過を有効にするかどうか</param>
     public static void DrawGraph(int x, int y, int handle, bool trans)
     {
-        DrawGraph(new Vec2i(x, y), handle, trans);
+        _commandBuffer.PushDrawGraph(x, y, handle, trans);
     }
 
     /// <summary>
@@ -402,7 +339,7 @@ public static class GameEngine
     /// <param name="trans">透過描画を有効にするかどうか</param>
     public static void DrawRotaGraph(Vec2i center, double scale, double angle, int handle, bool trans)
     {
-        NativeBindings.Draw_RotaGraph(center, scale, angle, handle, trans);
+        _commandBuffer.PushDrawRotaGraph(center.X, center.Y, (float)scale, (float)angle, handle, trans);
     }
 
     /// <summary>
@@ -426,7 +363,14 @@ public static class GameEngine
         bool trans,
         bool turnX)
     {
-        NativeBindings.Draw_RectRotaGraph(center, srcPos, srcSize, scale, angle, handle, trans, turnX);
+        _commandBuffer.PushDrawRectRotaGraph(
+            center.X, center.Y,
+            srcPos.X, srcPos.Y,
+            srcSize.X, srcSize.Y,
+            (float)scale, (float)angle,
+            handle,
+            trans,
+            turnX);
     }
 
     /// <summary>
@@ -456,12 +400,11 @@ public static class GameEngine
         bool trans,
         bool turnX)
     {
-        DrawRectRotaGraph(
-            new Vec2i(x, y),
-            new Vec2i(srcX, srcY),
-            new Vec2i(width, height),
-            scale,
-            angle,
+        _commandBuffer.PushDrawRectRotaGraph(
+            x, y,
+            srcX, srcY,
+            width, height,
+            (float)scale, (float)angle,
             handle,
             trans,
             turnX);
@@ -474,7 +417,7 @@ public static class GameEngine
     /// <param name="pal">ブレンドパラメータ (アルファ値 / 輝度など: 0～255)</param>
     public static void SetDrawBlendMode(BlendMode mode, int pal = 255)
     {
-        NativeBindings.Draw_SetBlendMode((int)mode, pal);
+        _commandBuffer.PushSetDrawBlendMode((int)mode, pal);
     }
 
     /// <summary>
@@ -485,7 +428,7 @@ public static class GameEngine
     /// <param name="b">青色輝度 (0～255)</param>
     public static void SetDrawBright(int r, int g, int b)
     {
-        NativeBindings.Draw_SetDrawBright(r, g, b);
+        _commandBuffer.PushSetDrawBright(r, g, b);
     }
 }
 

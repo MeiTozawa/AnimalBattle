@@ -40,42 +40,6 @@ internal static unsafe partial class NativeExtensionBindings
 
     #endregion
 
-    #region Batch SIMD Drawing Extension
-
-    /// <summary>
-    /// 大量の円（弾幕・パーティクル等）に対して、SIMD 並列視口カリングと一括描画を実行します。
-    /// </summary>
-    [LibraryImport(_dllName, EntryPoint = "Extension_BatchDrawCircles")]
-    [SuppressGCTransition]
-    public static partial void Extension_BatchDrawCircles(
-        Transform* transforms, int count, int radius, uint color, [MarshalAs(UnmanagedType.U1)] bool fill,
-        int clipMinX, int clipMaxX, int clipMinY, int clipMaxY);
-
-    /// <summary>
-    /// プレイヤー銃弾（発光外層＋内層コア＋ビームトレイル）に対して、SIMD 並列視口カリングと一括描画を実行します。
-    /// </summary>
-    [LibraryImport(_dllName, EntryPoint = "Extension_BatchDrawPlayerBullets")]
-    [SuppressGCTransition]
-    public static partial void Extension_BatchDrawPlayerBullets(
-        Transform* transforms, Velocity* velocities, int count,
-        int outerRadius, uint outerColor,
-        int innerRadius, uint innerColor,
-        int trailOffset, int trailRadius, uint trailColor,
-        int clipMinX, int clipMaxX, int clipMinY, int clipMaxY);
-
-    /// <summary>
-    /// Boss 弾幕（多層同心光暈・枠線・コア）に対して、SIMD 並列視口カリングと一括描画を実行します。
-    /// </summary>
-    [LibraryImport(_dllName, EntryPoint = "Extension_BatchDrawBossBullets")]
-    [SuppressGCTransition]
-    public static partial void Extension_BatchDrawBossBullets(
-        Transform* transforms, int count,
-        int radius, uint fillColor, uint outlineColor,
-        int outlinePadding, float coreRadiusRatio, int coreMinRadius, uint coreColor,
-        int clipMinX, int clipMaxX, int clipMinY, int clipMaxY);
-
-    #endregion
-
     #region Boss Trajectory Extension
 
     /// <summary>
