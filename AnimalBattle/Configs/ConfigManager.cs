@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using AnimalBattle.Core;
 
@@ -66,77 +67,12 @@ public static class ConfigManager
         int successCount = 0;
         int failureCount = 0;
 
-        Result<ConfigBase<PlayerConfig>> playerRes = PlayerConfig.LoadFromFile(ResourcePath.Config.Player);
-        if (playerRes.IsOk && playerRes.Value != null)
-        {
-            _playerConfigContainer = playerRes.Value;
-            successCount++;
-        }
-        else
-        {
-            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Player} の読み込みに失敗しました ({playerRes.Error?.Type}): {playerRes.Error?.Description}");
-            failureCount++;
-        }
-
-        Result<ConfigBase<Boss1Config>> boss1Res = Boss1Config.LoadFromFile(ResourcePath.Config.Boss1);
-        if (boss1Res.IsOk && boss1Res.Value != null)
-        {
-            _boss1ConfigContainer = boss1Res.Value;
-            successCount++;
-        }
-        else
-        {
-            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Boss1} の読み込みに失敗しました ({boss1Res.Error?.Type}): {boss1Res.Error?.Description}");
-            failureCount++;
-        }
-
-        Result<ConfigBase<Boss2Config>> boss2Res = Boss2Config.LoadFromFile(ResourcePath.Config.Boss2);
-        if (boss2Res.IsOk && boss2Res.Value != null)
-        {
-            _boss2ConfigContainer = boss2Res.Value;
-            successCount++;
-        }
-        else
-        {
-            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Boss2} の読み込みに失敗しました ({boss2Res.Error?.Type}): {boss2Res.Error?.Description}");
-            failureCount++;
-        }
-
-        Result<ConfigBase<PatternConfig>> patternRes = PatternConfig.LoadFromFile(ResourcePath.Config.Patterns);
-        if (patternRes.IsOk && patternRes.Value != null)
-        {
-            _patternConfigContainer = patternRes.Value;
-            successCount++;
-        }
-        else
-        {
-            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Patterns} の読み込みに失敗しました ({patternRes.Error?.Type}): {patternRes.Error?.Description}");
-            failureCount++;
-        }
-
-        Result<ConfigBase<ArenaConfig>> arenaRes = ArenaConfig.LoadFromFile(ResourcePath.Config.Arena);
-        if (arenaRes.IsOk && arenaRes.Value != null)
-        {
-            _arenaConfigContainer = arenaRes.Value;
-            successCount++;
-        }
-        else
-        {
-            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Arena} の読み込みに失敗しました ({arenaRes.Error?.Type}): {arenaRes.Error?.Description}");
-            failureCount++;
-        }
-
-        Result<ConfigBase<RenderConfig>> renderRes = RenderConfig.LoadFromFile(ResourcePath.Config.Render);
-        if (renderRes.IsOk && renderRes.Value != null)
-        {
-            _renderConfigContainer = renderRes.Value;
-            successCount++;
-        }
-        else
-        {
-            Console.WriteLine($"[C# 設定警告] {ResourcePath.Config.Render} の読み込みに失敗しました ({renderRes.Error?.Type}): {renderRes.Error?.Description}");
-            failureCount++;
-        }
+        LoadConfig(ResourcePath.Config.Player, ref _playerConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Boss1, ref _boss1ConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Boss2, ref _boss2ConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Patterns, ref _patternConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Arena, ref _arenaConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Render, ref _renderConfigContainer, ref successCount, ref failureCount);
 
         if (failureCount > 0)
         {
@@ -146,6 +82,25 @@ public static class ConfigManager
 
         Console.WriteLine($"[C# 設定初期化] 全ての TOML 設定ファイル（{successCount} 件）の読み込みが正常に完了しました！");
         return true;
+    }
+
+    private static void LoadConfig<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(
+        string configPath,
+        ref ConfigBase<T> container,
+        ref int successCount,
+        ref int failureCount) where T : class, new()
+    {
+        Result<ConfigBase<T>> res = ConfigBase<T>.LoadFromFile(configPath);
+        if (res.IsOk && res.Value != null)
+        {
+            container = res.Value;
+            successCount++;
+        }
+        else
+        {
+            Console.WriteLine($"[C# 設定警告] {configPath} の読み込みに失敗しました ({res.Error?.Type}): {res.Error?.Description}");
+            failureCount++;
+        }
     }
 
     /// <summary>

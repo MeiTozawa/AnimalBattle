@@ -38,39 +38,58 @@ public sealed class AssetManager : IDisposable
         foreach ((CharacterType charType, AnimationConfig config) in AnimationRegistry.CharacterConfigs)
         {
             _characterConfigs[charType] = config;
-            if (AnimationRegistry.CharacterSprites.TryGetValue(charType, out string? relPath))
+            if (!LoadCharacterSprite(charType))
             {
-                string fullPath = ResolveAssetPath(relPath);
-                Result<int> loadResult = AssetService.LoadGraph(fullPath);
-                if (loadResult.IsOk)
-                {
-                    _characterSpriteHandles[charType] = loadResult.Value;
-                    _textureHandles[relPath] = loadResult.Value;
-                    Console.WriteLine($"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {loadResult.Value})");
-                }
-                else
-                {
-                    Console.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {loadResult.Error?.Description}");
-                    allLoaded = false;
-                }
+                allLoaded = false;
             }
 
-            foreach (AnimationClipConfig clip in config.Clips)
+            if (!LoadCharacterClips(charType, config))
             {
-                if (!string.IsNullOrWhiteSpace(clip.SpritePath))
-                {
-                    int handle = LoadTexture(clip.SpritePath);
-                    if (handle < 0)
-                    {
-                        Console.WriteLine($"[C# アニメーション警告] クリップスプライトのロードに失敗しました ({charType} / {clip.Name}): {clip.SpritePath}");
-                        allLoaded = false;
-                    }
-                }
+                allLoaded = false;
             }
         }
 
         _isInitialized = true;
         return allLoaded;
+    }
+
+    private static bool LoadCharacterSprite(CharacterType charType)
+    {
+        if (!AnimationRegistry.CharacterSprites.TryGetValue(charType, out string? relPath))
+        {
+            return true;
+        }
+
+        string fullPath = ResolveAssetPath(relPath);
+        Result<int> loadResult = AssetService.LoadGraph(fullPath);
+        if (loadResult.IsOk)
+        {
+            _characterSpriteHandles[charType] = loadResult.Value;
+            _textureHandles[relPath] = loadResult.Value;
+            Console.WriteLine($"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {loadResult.Value})");
+            return true;
+        }
+
+        Console.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {loadResult.Error?.Description}");
+        return false;
+    }
+
+    private static bool LoadCharacterClips(CharacterType charType, AnimationConfig config)
+    {
+        bool allClipsLoaded = true;
+        foreach (AnimationClipConfig clip in config.Clips)
+        {
+            if (!string.IsNullOrWhiteSpace(clip.SpritePath))
+            {
+                int handle = LoadTexture(clip.SpritePath);
+                if (handle < 0)
+                {
+                    Console.WriteLine($"[C# アニメーション警告] クリップスプライトのロードに失敗しました ({charType} / {clip.Name}): {clip.SpritePath}");
+                    allClipsLoaded = false;
+                }
+            }
+        }
+        return allClipsLoaded;
     }
 
     /// <summary>
@@ -207,33 +226,24 @@ public sealed class AssetManager : IDisposable
     {
         try
         {
-            string directResource = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resource", relPath);
-            if (File.Exists(directResource))
+            string[] directRoots = [AppDomain.CurrentDomain.BaseDirectory, Environment.CurrentDirectory];
+            foreach (string root in directRoots)
             {
-                return Path.GetFullPath(directResource);
-            }
-
-            string cwdResource = Path.Combine(Environment.CurrentDirectory, "Resource", relPath);
-            if (File.Exists(cwdResource))
-            {
-                return Path.GetFullPath(cwdResource);
+                string? found = TryFindAssetFile(root, relPath);
+                if (found != null)
+                {
+                    return found;
+                }
             }
 
             DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
             while (dir != null)
             {
-                string directCandidate = Path.Combine(dir.FullName, "Resource", relPath);
-                if (File.Exists(directCandidate))
+                string? found = TryFindAssetFile(dir.FullName, relPath);
+                if (found != null)
                 {
-                    return Path.GetFullPath(directCandidate);
+                    return found;
                 }
-
-                string altCandidate = Path.Combine(dir.FullName, relPath);
-                if (File.Exists(altCandidate))
-                {
-                    return Path.GetFullPath(altCandidate);
-                }
-
                 dir = dir.Parent;
             }
         }
@@ -243,6 +253,23 @@ public sealed class AssetManager : IDisposable
         }
 
         return relPath;
+    }
+
+    private static string? TryFindAssetFile(string rootDir, string relPath)
+    {
+        string directResource = Path.Combine(rootDir, "Resource", relPath);
+        if (File.Exists(directResource))
+        {
+            return Path.GetFullPath(directResource);
+        }
+
+        string directCandidate = Path.Combine(rootDir, relPath);
+        if (File.Exists(directCandidate))
+        {
+            return Path.GetFullPath(directCandidate);
+        }
+
+        return null;
     }
 
     /// <summary>

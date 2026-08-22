@@ -104,65 +104,77 @@ public partial class BattleScene : IDisposable
     public void SpawnBoss(string bossId)
     {
         CurrentBossId = bossId;
-
-        Entity bossEntity = _ecsWorld.Lookup("Boss");
-        if (!bossEntity.IsAlive())
-        {
-            bossEntity = _ecsWorld.Entity("Boss");
-        }
-        else
-        {
-            // 他の Boss 種別の古いコンポーネントを安全に除去
-            bossEntity.Remove<Boss1Tag>()
-                      .Remove<Boss1Stats>()
-                      .Remove<Boss1StateMachine>()
-                      .Remove<Boss2Tag>()
-                      .Remove<Boss2Stats>()
-                      .Remove<Boss2StateMachine>()
-                      .Remove<CollisionBox>();
-        }
-
+        Entity bossEntity = GetOrCreateCleanBossEntity();
         CombatEffectHelper.ClearAllBossBullets(_ecsWorld);
 
         if (bossId.Equals("Boss2", StringComparison.OrdinalIgnoreCase))
         {
-            Boss2Config b2Cfg = ConfigManager.Boss2;
-            int boss2Handle = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
-
-            bossEntity
-                .Set(new Transform(b2Cfg.SpawnX, b2Cfg.SpawnY, scaleX: b2Cfg.ScaleX, scaleY: b2Cfg.ScaleY))
-                .Set(new Velocity())
-                .Set(new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight))
-                .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
-                .Set(new Hitbox(b2Cfg.GetHitboxShape(), damage: b2Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
-                .Set(new Health(b2Cfg.MaxHp))
-                .Set(new Boss2Stats(spawnX: b2Cfg.SpawnX, spawnY: b2Cfg.SpawnY))
-                .Set(new Boss2StateMachine())
-                .Set(new Sprite(boss2Handle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
-                .Add<BossTag>()
-                .Add<Boss2Tag>();
-
-            Console.WriteLine($"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {b2Cfg.MaxHp}, Pos: {b2Cfg.SpawnX}, {b2Cfg.SpawnY})");
+            SpawnBoss2(bossEntity);
         }
         else
         {
-            Boss1Config b1Cfg = ConfigManager.Boss1;
-            int boss1Handle = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
-
-            bossEntity
-                .Set(new Transform(b1Cfg.BaseX, b1Cfg.BaseY, scaleX: b1Cfg.ScaleX, scaleY: b1Cfg.ScaleY))
-                .Set(new Velocity())
-                .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
-                .Set(new Hitbox(b1Cfg.GetHitboxShape(), damage: b1Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
-                .Set(new Health(b1Cfg.MaxHp))
-                .Set(new Boss1Stats(baseX: b1Cfg.BaseX, baseY: b1Cfg.BaseY))
-                .Set(new Boss1StateMachine())
-                .Set(new Sprite(boss1Handle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
-                .Add<BossTag>()
-                .Add<Boss1Tag>();
-
-            Console.WriteLine($"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {b1Cfg.MaxHp}, Pos: {b1Cfg.BaseX}, {b1Cfg.BaseY})");
+            SpawnBoss1(bossEntity);
         }
+    }
+
+    private Entity GetOrCreateCleanBossEntity()
+    {
+        Entity bossEntity = _ecsWorld.Lookup("Boss");
+        if (!bossEntity.IsAlive())
+        {
+            return _ecsWorld.Entity("Boss");
+        }
+
+        bossEntity.Remove<Boss1Tag>()
+                  .Remove<Boss1Stats>()
+                  .Remove<Boss1StateMachine>()
+                  .Remove<Boss2Tag>()
+                  .Remove<Boss2Stats>()
+                  .Remove<Boss2StateMachine>()
+                  .Remove<CollisionBox>();
+
+        return bossEntity;
+    }
+
+    private static void SpawnBoss1(Entity bossEntity)
+    {
+        Boss1Config b1Cfg = ConfigManager.Boss1;
+        int boss1Handle = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
+
+        bossEntity
+            .Set(new Transform(b1Cfg.BaseX, b1Cfg.BaseY, scaleX: b1Cfg.ScaleX, scaleY: b1Cfg.ScaleY))
+            .Set(new Velocity())
+            .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
+            .Set(new Hitbox(b1Cfg.GetHitboxShape(), damage: b1Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
+            .Set(new Health(b1Cfg.MaxHp))
+            .Set(new Boss1Stats(baseX: b1Cfg.BaseX, baseY: b1Cfg.BaseY))
+            .Set(new Boss1StateMachine())
+            .Set(new Sprite(boss1Handle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
+            .Add<BossTag>()
+            .Add<Boss1Tag>();
+
+        Console.WriteLine($"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {b1Cfg.MaxHp}, Pos: {b1Cfg.BaseX}, {b1Cfg.BaseY})");
+    }
+
+    private static void SpawnBoss2(Entity bossEntity)
+    {
+        Boss2Config b2Cfg = ConfigManager.Boss2;
+        int boss2Handle = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
+
+        bossEntity
+            .Set(new Transform(b2Cfg.SpawnX, b2Cfg.SpawnY, scaleX: b2Cfg.ScaleX, scaleY: b2Cfg.ScaleY))
+            .Set(new Velocity())
+            .Set(new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight))
+            .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
+            .Set(new Hitbox(b2Cfg.GetHitboxShape(), damage: b2Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
+            .Set(new Health(b2Cfg.MaxHp))
+            .Set(new Boss2Stats(spawnX: b2Cfg.SpawnX, spawnY: b2Cfg.SpawnY))
+            .Set(new Boss2StateMachine())
+            .Set(new Sprite(boss2Handle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
+            .Add<BossTag>()
+            .Add<Boss2Tag>();
+
+        Console.WriteLine($"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {b2Cfg.MaxHp}, Pos: {b2Cfg.SpawnX}, {b2Cfg.SpawnY})");
     }
 
     /// <summary>

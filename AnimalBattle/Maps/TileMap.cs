@@ -221,31 +221,46 @@ public sealed class TileMap
                 }
 
                 int tileCount = c - startCol;
-                float leftX = _originX + startCol * _renderTileWidth;
-                float topY = _originY + r * _renderTileHeight;
-
-                float platformWidth = tileCount * colWidth;
-                float platformHeight = colHeight;
-
-                float centerX = leftX + colOffsetX + platformWidth / 2.0f;
-                float centerY = topY + colOffsetY + platformHeight / 2.0f;
-
-                float leftBoundX = leftX + colOffsetX;
-                float rightBoundX = leftBoundX + platformWidth;
-                float topSurfaceY = topY + colOffsetY;
-
-                nodes.Add(new PlatformNode(nodeId++, leftBoundX, rightBoundX, topSurfaceY, platformHeight));
-
-                world.Entity($"Platform_{r}_{startCol}")
-                    .Set(new Transform(centerX, centerY))
-                    .Set(new CollisionBox(platformWidth, platformHeight))
-                    .Add<PlatformTag>();
+                RegisterPlatformNodeAndEntity(world, nodes, ref nodeId, r, startCol, tileCount, colOffsetX, colOffsetY, colWidth, colHeight);
             }
         }
 
         Boss2Config b2Cfg = ConfigManager.Boss2;
         _navGraph.Build(nodes, b2Cfg.JumpForce, b2Cfg.Gravity, b2Cfg.MoveSpeed);
         Console.WriteLine($"[TileMap ナビゲーション] プラットフォームナビゲーショングラフを正常に構築しました: {_navGraph.Nodes.Count} ノード, {_navGraph.Links.Count} リンク (跳躍/落下遷移)");
+    }
+
+    private void RegisterPlatformNodeAndEntity(
+        World world,
+        List<PlatformNode> nodes,
+        ref int nodeId,
+        int row,
+        int startCol,
+        int tileCount,
+        float colOffsetX,
+        float colOffsetY,
+        float colWidth,
+        float colHeight)
+    {
+        float leftX = _originX + startCol * _renderTileWidth;
+        float topY = _originY + row * _renderTileHeight;
+
+        float platformWidth = tileCount * colWidth;
+        float platformHeight = colHeight;
+
+        float centerX = leftX + colOffsetX + platformWidth / 2.0f;
+        float centerY = topY + colOffsetY + platformHeight / 2.0f;
+
+        float leftBoundX = leftX + colOffsetX;
+        float rightBoundX = leftBoundX + platformWidth;
+        float topSurfaceY = topY + colOffsetY;
+
+        nodes.Add(new PlatformNode(nodeId++, leftBoundX, rightBoundX, topSurfaceY, platformHeight));
+
+        world.Entity($"Platform_{row}_{startCol}")
+            .Set(new Transform(centerX, centerY))
+            .Set(new CollisionBox(platformWidth, platformHeight))
+            .Add<PlatformTag>();
     }
 }
 

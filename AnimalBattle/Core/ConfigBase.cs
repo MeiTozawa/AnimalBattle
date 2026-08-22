@@ -136,69 +136,49 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     {
         try
         {
-            string directConfig = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config", fileName);
-            if (File.Exists(directConfig))
-            {
-                return Path.GetFullPath(directConfig);
-            }
+            string[] subDirs = ["Config", "Resource", ""];
 
-            string directResource = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resource", fileName);
-            if (File.Exists(directResource))
+            string[] directRoots = [AppDomain.CurrentDomain.BaseDirectory, Environment.CurrentDirectory];
+            foreach (string root in directRoots)
             {
-                return Path.GetFullPath(directResource);
-            }
-
-            string directBase = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
-            if (File.Exists(directBase))
-            {
-                return Path.GetFullPath(directBase);
-            }
-
-            string cwdConfig = Path.Combine(Environment.CurrentDirectory, "Config", fileName);
-            if (File.Exists(cwdConfig))
-            {
-                return Path.GetFullPath(cwdConfig);
-            }
-
-            string cwdResource = Path.Combine(Environment.CurrentDirectory, "Resource", fileName);
-            if (File.Exists(cwdResource))
-            {
-                return Path.GetFullPath(cwdResource);
-            }
-
-            string cwdDirect = Path.Combine(Environment.CurrentDirectory, fileName);
-            if (File.Exists(cwdDirect))
-            {
-                return Path.GetFullPath(cwdDirect);
+                string? found = TryFindInSubDirectories(root, subDirs, fileName);
+                if (found != null)
+                {
+                    return found;
+                }
             }
 
             DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
             while (dir != null)
             {
-                string candidate = Path.Combine(dir.FullName, "Config", fileName);
-                if (File.Exists(candidate))
+                string? found = TryFindInSubDirectories(dir.FullName, subDirs, fileName);
+                if (found != null)
                 {
-                    return Path.GetFullPath(candidate);
+                    return found;
                 }
-
-                string resCandidate = Path.Combine(dir.FullName, "Resource", fileName);
-                if (File.Exists(resCandidate))
-                {
-                    return Path.GetFullPath(resCandidate);
-                }
-
-                string rootCandidate = Path.Combine(dir.FullName, fileName);
-                if (File.Exists(rootCandidate))
-                {
-                    return Path.GetFullPath(rootCandidate);
-                }
-
                 dir = dir.Parent;
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[C# 設定警告] 設定ファイルパス探索中に例外が発生しました ({fileName}): {ex.Message}");
+        }
+
+        return null;
+    }
+
+    private static string? TryFindInSubDirectories(string rootDir, string[] subDirs, string fileName)
+    {
+        foreach (string subDir in subDirs)
+        {
+            string candidate = string.IsNullOrEmpty(subDir)
+                ? Path.Combine(rootDir, fileName)
+                : Path.Combine(rootDir, subDir, fileName);
+
+            if (File.Exists(candidate))
+            {
+                return Path.GetFullPath(candidate);
+            }
         }
 
         return null;

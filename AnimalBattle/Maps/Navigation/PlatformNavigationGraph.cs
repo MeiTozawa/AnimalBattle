@@ -249,7 +249,6 @@ public sealed class PlatformNavigationGraph
         Dictionary<int, float> gScore = new();
         Dictionary<int, PlatformLink> cameFromLink = new();
         Dictionary<int, int> cameFromNode = new();
-
         PriorityQueue<int, float> openSet = new();
 
         foreach (PlatformNode node in _nodes)
@@ -259,7 +258,6 @@ public sealed class PlatformNavigationGraph
 
         gScore[start.Id] = 0.0f;
         openSet.Enqueue(start.Id, Heuristic(start, goal));
-
         HashSet<int> closedSet = new();
 
         while (openSet.Count > 0)
@@ -267,24 +265,10 @@ public sealed class PlatformNavigationGraph
             int currentId = openSet.Dequeue();
             if (currentId == goal.Id)
             {
-                // 経路復元
-                List<PlatformLink> path = new();
-                int curr = goal.Id;
-                while (curr != start.Id && cameFromLink.TryGetValue(curr, out PlatformLink? link))
-                {
-                    path.Add(link);
-                    curr = cameFromNode[curr];
-                }
-                path.Reverse();
-                return path;
+                return ReconstructPath(start.Id, goal.Id, cameFromLink, cameFromNode);
             }
 
-            if (!closedSet.Add(currentId))
-            {
-                continue;
-            }
-
-            if (!_adjacency.TryGetValue(currentId, out List<PlatformLink>? links))
+            if (!closedSet.Add(currentId) || !_adjacency.TryGetValue(currentId, out List<PlatformLink>? links))
             {
                 continue;
             }
@@ -297,7 +281,6 @@ public sealed class PlatformNavigationGraph
                     continue;
                 }
 
-                // 起始プラットフォームからの起跳点は、Boss の現在 X 座標からの実走行距離を加味して評価
                 float linkTravelCost = currentId == start.Id
                     ? MathF.Abs(startX - link.TakeoffX) + link.Cost
                     : link.Cost;
@@ -308,14 +291,30 @@ public sealed class PlatformNavigationGraph
                     gScore[neighborId] = tentativeG;
                     cameFromLink[neighborId] = link;
                     cameFromNode[neighborId] = currentId;
-
-                    float fScore = tentativeG + Heuristic(link.ToNode, goal);
-                    openSet.Enqueue(neighborId, fScore);
+                    openSet.Enqueue(neighborId, tentativeG + Heuristic(link.ToNode, goal));
                 }
             }
         }
 
         return null;
+    }
+
+    private static List<PlatformLink> ReconstructPath(
+        int startId,
+        int goalId,
+        Dictionary<int, PlatformLink> cameFromLink,
+        Dictionary<int, int> cameFromNode)
+    {
+        List<PlatformLink> path = new();
+        int curr = goalId;
+        while (curr != startId && cameFromLink.TryGetValue(curr, out PlatformLink? link))
+        {
+            path.Add(link);
+            curr = cameFromNode[curr];
+        }
+
+        path.Reverse();
+        return path;
     }
 
     /// <summary>
