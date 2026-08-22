@@ -12,6 +12,12 @@ public sealed class BossRuntimeSlot
     private BossConfigSnapshot _currentConfig;
     private BossConfigSnapshot _pendingConfig;
     private bool _hasPendingConfig;
+    private StateId _currentStateId;
+    private TransitionReason _currentTransitionReason;
+    private bool _stateEntered;
+    private bool _moduleStopped;
+    private long _lastUpdatedFrame = -1;
+    private int _transitionDepth;
 
     /// <summary>Entity 単位の状態 context への参照を取得します。</summary>
     public ref StateContext Context => ref _context;
@@ -29,6 +35,16 @@ public sealed class BossRuntimeSlot
     public float DeltaTime => _context.DeltaTime;
     /// <summary>現在の親 Phase を取得します。</summary>
     public Phase Phase => _context.Phase;
+    /// <summary>現在有効な State_Id を取得します。</summary>
+    public StateId CurrentStateId => _currentStateId;
+    /// <summary>現在状態へ入場済みかどうかを取得します。</summary>
+    public bool StateEntered => _stateEntered;
+    /// <summary>module が停止済みかどうかを取得します。</summary>
+    public bool ModuleStopped => _moduleStopped;
+    /// <summary>最後に Update を実行した Frame_Update 番号を取得します。</summary>
+    public long LastUpdatedFrame => _lastUpdatedFrame;
+    /// <summary>現在状態に適用した遷移理由を取得します。</summary>
+    public TransitionReason CurrentTransitionReason => _currentTransitionReason;
     /// <summary>初期化完了 gate の状態を取得します。</summary>
     public bool InitializationComplete { get; private set; }
     /// <summary>runtime 準備完了 gate の状態を取得します。</summary>
@@ -89,7 +105,13 @@ public sealed class BossRuntimeSlot
     public void MarkInitializationComplete() => InitializationComplete = true;
 
     /// <summary>依存関係検証後に runtime 使用可能状態を反映します。</summary>
-    public void MarkRuntimeReady() => RuntimeReady = InitializationComplete;
+    public void MarkRuntimeReady() => MarkRuntimeReady(true);
+
+    /// <summary>依存関係検証結果を runtime gate に反映します。</summary>
+    public void MarkRuntimeReady(bool dependenciesValid)
+    {
+        RuntimeReady = InitializationComplete && dependenciesValid && _context.IsReady;
+    }
 
     /// <summary>module 差し替え後の登録世代を更新します。</summary>
     public void SetModuleGeneration(long generation)
@@ -141,5 +163,52 @@ public sealed class BossRuntimeSlot
         MovementCommands.Clear();
         AttackCommands.Clear();
         EffectCommands.Clear();
+    }
+
+    internal void SetCurrentState(StateId stateId, TransitionReason reason)
+    {
+        _currentStateId = stateId;
+        _currentTransitionReason = reason;
+        _stateEntered = false;
+        _moduleStopped = false;
+    }
+
+    internal void MarkStateEntered()
+    {
+        _stateEntered = true;
+        _moduleStopped = false;
+    }
+
+    internal void MarkModuleStopped()
+    {
+        _moduleStopped = true;
+        _stateEntered = false;
+    }
+
+    internal bool TryMarkUpdated(long frameUpdateNumber)
+    {
+        if (_lastUpdatedFrame == frameUpdateNumber)
+        {
+            return false;
+        }
+
+        _lastUpdatedFrame = frameUpdateNumber;
+        return true;
+    }
+
+    internal bool TryEnterTransition()
+    {
+        if (_transitionDepth != 0)
+        {
+            return false;
+        }
+
+        _transitionDepth = 1;
+        return true;
+    }
+
+    internal void ExitTransition()
+    {
+        _transitionDepth = 0;
     }
 }
