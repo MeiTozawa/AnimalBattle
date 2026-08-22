@@ -105,6 +105,12 @@ public interface ICommandBuffer<T> where T : struct
     int Capacity { get; }
     /// <summary>command を追加します。容量超過時は false を返します。</summary>
     bool TryAdd(in T command);
+    /// <summary>指定優先度で command を追加します。</summary>
+    bool TryAdd(in T command, CommandPriority priority);
+    /// <summary>one-shot key を重複なく command とともに追加します。</summary>
+    CommandWriteResult TryAddOneShot(in T command, in CommandOneShotKey key, CommandPriority priority = CommandPriority.Attack);
+    /// <summary>格納済み command の one-shot key を取得します。</summary>
+    bool TryGetOneShotKey(int index, out CommandOneShotKey key);
     /// <summary>次の Frame_Update に向けて command 数だけを 0 に戻します。</summary>
     void Clear();
     /// <summary>格納済み command を index で読み取ります。</summary>

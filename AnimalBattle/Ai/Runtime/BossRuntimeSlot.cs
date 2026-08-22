@@ -61,6 +61,24 @@ public sealed class BossRuntimeSlot
     /// <summary>演出 command の事前確保 buffer を取得します。</summary>
     public ICommandBuffer<EffectCommand> EffectCommands { get; }
 
+    /// <summary>指定 command の index から one-shot key を runtime 経由で取得します。</summary>
+    public bool TryGetOneShotKey(CommandComponentKind component, int index, out CommandOneShotKey key)
+    {
+        return component switch
+        {
+            CommandComponentKind.Movement => MovementCommands.TryGetOneShotKey(index, out key),
+            CommandComponentKind.Attack => AttackCommands.TryGetOneShotKey(index, out key),
+            CommandComponentKind.Effect => EffectCommands.TryGetOneShotKey(index, out key),
+            _ => InvalidOneShotKey(out key)
+        };
+    }
+
+    private static bool InvalidOneShotKey(out CommandOneShotKey key)
+    {
+        key = default;
+        return false;
+    }
+
     /// <summary>
     /// Entity 用の context、ports、snapshot、bounded command buffer を初期化します。
     /// </summary>
@@ -75,7 +93,8 @@ public sealed class BossRuntimeSlot
         IRandomSource random,
         int movementCommandCapacity = 32,
         int attackCommandCapacity = 32,
-        int effectCommandCapacity = 16)
+        int effectCommandCapacity = 16,
+        ICommandBufferDiagnosticSink? commandDiagnosticSink = null)
     {
         ArgumentNullException.ThrowIfNull(configProvider);
         var configSnapshot = configProvider.Current;
@@ -84,9 +103,9 @@ public sealed class BossRuntimeSlot
             throw new ArgumentException("設定 provider が未検証 snapshot を返しました。", nameof(configProvider));
         }
 
-        MovementCommands = new PreallocatedCommandBuffer<MovementCommand>(movementCommandCapacity);
-        AttackCommands = new PreallocatedCommandBuffer<AttackCommand>(attackCommandCapacity);
-        EffectCommands = new PreallocatedCommandBuffer<EffectCommand>(effectCommandCapacity);
+        MovementCommands = new PreallocatedCommandBuffer<MovementCommand>(movementCommandCapacity, commandDiagnosticSink);
+        AttackCommands = new PreallocatedCommandBuffer<AttackCommand>(attackCommandCapacity, commandDiagnosticSink);
+        EffectCommands = new PreallocatedCommandBuffer<EffectCommand>(effectCommandCapacity, commandDiagnosticSink);
         _currentConfig = configSnapshot;
         _context = new StateContext(
             entityId,
