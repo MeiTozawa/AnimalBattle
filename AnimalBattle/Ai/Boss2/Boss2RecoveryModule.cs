@@ -1,0 +1,27 @@
+using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai.Runtime;
+
+namespace AnimalBattle.Ai.Boss2;
+
+/// <summary>Boss2 の攻撃後 Recovery State_Module です。</summary>
+public sealed class Boss2RecoveryModule : IBossStateModule, IStateModuleDependencyProvider
+{
+    private readonly Boss2RecoveryRunner _runner;
+    /// <inheritdoc />
+    public StateId Id => Boss2StateIds.Recovery;
+    /// <inheritdoc />
+    public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "ObservationService"];
+
+    /// <summary>Boss2 攻撃設定と共有実行値を注入します。</summary>
+    public Boss2RecoveryModule(IBoss2Configuration configuration, Boss2BehaviorState state)
+    {
+        _runner = new Boss2RecoveryRunner(configuration ?? throw new ArgumentNullException(nameof(configuration)), state ?? throw new ArgumentNullException(nameof(state)));
+    }
+
+    /// <inheritdoc />
+    public void Enter(ref StateContext context, in LifecycleInvocation invocation) => _runner.Enter(ref context, in invocation);
+    /// <inheritdoc />
+    public void Update(ref StateContext context, in LifecycleInvocation invocation) => _runner.Update(ref context, in invocation);
+    /// <inheritdoc />
+    public void Exit(ref StateContext context, in LifecycleInvocation invocation) => _runner.Exit(ref context, in invocation);
+}

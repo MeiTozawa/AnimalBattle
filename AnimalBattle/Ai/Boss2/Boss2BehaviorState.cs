@@ -1,0 +1,80 @@
+using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Core.Physics;
+
+namespace AnimalBattle.Ai.Boss2;
+
+/// <summary>Boss2 State_Module 間で共有する Entity 単位の実行値です。</summary>
+public sealed class Boss2BehaviorState
+{
+    /// <summary>現在位置です。</summary>
+    public Vec2f CurrentPosition { get; set; }
+    /// <summary>現在速度です。</summary>
+    public Vec2f CurrentVelocity { get; set; }
+    /// <summary>現在状態の経過時間です。</summary>
+    public float StateElapsed { get; set; }
+    /// <summary>攻撃中のサブタイマーです。</summary>
+    public float AttackSubTimer { get; set; }
+    /// <summary>現在攻撃の順序 index です。</summary>
+    public int CurrentAttackIndex { get; set; }
+    /// <summary>現在攻撃 ID です。</summary>
+    public AttackId CurrentAttackId { get; set; }
+    /// <summary>攻撃開始位置です。</summary>
+    public Vec2f AttackStartPosition { get; set; }
+    /// <summary>攻撃開始時の対象位置です。</summary>
+    public Vec2f AttackTargetPosition { get; set; }
+    /// <summary>攻撃対象 Entity です。</summary>
+    public ulong AttackTargetEntityId { get; set; }
+    /// <summary>Boss が接地しているかどうかです。</summary>
+    public bool IsGrounded { get; set; }
+    /// <summary>プレイヤーが生存しているかどうかです。</summary>
+    public bool IsPlayerAlive { get; set; }
+    /// <summary>右向きかどうかです。</summary>
+    public bool FacingRight { get; set; }
+    /// <summary>Phase 遷移中の無敵状態です。</summary>
+    public bool IsInvulnerable { get; set; }
+    /// <summary>Dead が確定しているかどうかです。</summary>
+    public bool IsDead { get; set; }
+    /// <summary>攻撃が開始済みかどうかです。</summary>
+    public bool IsAttackActive { get; set; }
+    /// <summary>次に要求する State_Id です。</summary>
+    public StateId PendingStateId { get; private set; }
+    /// <summary>次の状態へ渡す遷移理由です。</summary>
+    public TransitionReason PendingTransitionReason { get; private set; }
+
+    /// <summary>Boss2 の位置を指定して共有値を初期化します。</summary>
+    public Boss2BehaviorState(float startX = 900.0f, float startY = 480.0f)
+    {
+        CurrentPosition = new Vec2f(startX, startY);
+        AttackStartPosition = CurrentPosition;
+        AttackTargetPosition = CurrentPosition;
+        CurrentAttackId = AttackId.Unknown;
+        PendingStateId = StateId.Unknown;
+        PendingTransitionReason = TransitionReason.None;
+        IsPlayerAlive = true;
+    }
+
+    /// <summary>次の遷移要求を一件だけ保持します。</summary>
+    public void RequestTransition(StateId stateId, in TransitionReason reason)
+    {
+        if (!stateId.IsValid || reason.Kind == ReasonKind.Unknown)
+        {
+            return;
+        }
+
+        PendingStateId = stateId;
+        PendingTransitionReason = reason;
+    }
+
+    /// <summary>保持済みの遷移要求を読み取り、要求を消費します。</summary>
+    public bool TryConsumeTransition(out StateId stateId, out TransitionReason reason)
+    {
+        stateId = PendingStateId;
+        reason = PendingTransitionReason;
+        PendingStateId = StateId.Unknown;
+        PendingTransitionReason = TransitionReason.None;
+        return stateId.IsValid;
+    }
+
+    /// <summary>現在状態の経過時間を初期化します。</summary>
+    public void ResetStateTimer() => StateElapsed = 0.0f;
+}
