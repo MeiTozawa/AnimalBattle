@@ -8,7 +8,7 @@ namespace AnimalBattle.Ai.Boss1;
 public sealed class Aimed3ShotExecuteModule(IBoss1Configuration configuration, Boss1BehaviorState state) : Boss1BarrageExecuteModule(configuration, state, Boss1AttackIds.Aimed3Shot)
 {
     /// <inheritdoc />
-    public override StateId Id => Boss1StateIds.Aimed3ShotExecute;
+    public override BossState Id => Boss1StateIds.Aimed3ShotExecute;
 
     /// <inheritdoc />
     protected override void EmitComponents(ref StateContext context, in LifecycleInvocation invocation, int emissionIndex)

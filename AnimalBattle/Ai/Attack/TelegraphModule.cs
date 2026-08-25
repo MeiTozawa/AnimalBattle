@@ -13,7 +13,7 @@ public sealed class TelegraphModule : IBossStateModule
     private PlayerObservation _target;
 
     /// <summary>Telegraph の State_Id を取得します。</summary>
-    public StateId Id { get; }
+    public BossState Id { get; }
     /// <summary>現在の攻撃 ID を取得します。</summary>
     public AttackId AttackId => _definition.AttackId;
     /// <summary>攻撃定義を取得します。</summary>
@@ -33,9 +33,9 @@ public sealed class TelegraphModule : IBossStateModule
     public PlayerObservation Target => _target;
 
     /// <summary>攻撃定義と State_Id を指定して Telegraph を生成します。</summary>
-    public TelegraphModule(StateId stateId, AttackDefinition definition)
+    public TelegraphModule(BossState stateId, AttackDefinition definition)
     {
-        if (!stateId.IsValid) throw new ArgumentOutOfRangeException(nameof(stateId));
+        if (!stateId.IsValid()) throw new ArgumentOutOfRangeException(nameof(stateId));
         ArgumentNullException.ThrowIfNull(definition);
         Id = stateId;
         _definition = definition;
@@ -123,7 +123,7 @@ public sealed class TelegraphModule : IBossStateModule
         ObservationEvent observation = new(
             context.EntityId,
             context.BossType,
-            invocation.StateId,
+            invocation.State,
             context.Phase,
             invocation.Operation,
             context.FrameUpdateNumber,

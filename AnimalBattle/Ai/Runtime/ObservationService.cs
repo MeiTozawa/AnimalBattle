@@ -71,7 +71,7 @@ public sealed class ObservationService : IObservationService
         ObservationEvent observation = new(
             diagnostic.EntityId,
             bossType,
-            diagnostic.StateId,
+            diagnostic.State,
             diagnostic.Phase,
             operation,
             diagnostic.FrameUpdateNumber,

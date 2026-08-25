@@ -2,58 +2,58 @@ using AnimalBattle.Ai.Contracts;
 
 namespace AnimalBattle.Ai.Boss2;
 
-/// <summary>Boss2 の State_Id と Attack_Id を集中管理します。</summary>
+/// <summary>Boss2 の固定 BossState と AttackId の対応を提供します。</summary>
 public static class Boss2StateIds
 {
     /// <summary>待機状態です。</summary>
-    public static readonly StateId Idle = new(201);
+    public const BossState Idle = BossState.Boss2_Idle;
     /// <summary>同一足場の追跡状態です。</summary>
-    public static readonly StateId PatrolChase = new(202);
+    public const BossState PatrolChase = BossState.Boss2_PatrolChase;
     /// <summary>跳躍開始位置への移動状態です。</summary>
-    public static readonly StateId MoveToTakeoff = new(203);
+    public const BossState MoveToTakeoff = BossState.Boss2_MoveToTakeoff;
     /// <summary>足場間跳躍の上昇状態です。</summary>
-    public static readonly StateId PlatformJump = new(204);
+    public const BossState PlatformJump = BossState.Boss2_PlatformJump;
     /// <summary>足場間跳躍の落下状態です。</summary>
-    public static readonly StateId PlatformFall = new(205);
+    public const BossState PlatformFall = BossState.Boss2_PlatformFall;
     /// <summary>着地後の回復状態です。</summary>
-    public static readonly StateId LandingRecovery = new(206);
+    public const BossState LandingRecovery = BossState.Boss2_LandingRecovery;
     /// <summary>HeavySlash の Telegraph 状態です。</summary>
-    public static readonly StateId HeavySlashTelegraph = new(207);
+    public const BossState HeavySlashTelegraph = BossState.Boss2_HeavySlashTelegraph;
     /// <summary>DoubleCleave の Telegraph 状態です。</summary>
-    public static readonly StateId DoubleCleaveTelegraph = new(208);
+    public const BossState DoubleCleaveTelegraph = BossState.Boss2_DoubleCleaveTelegraph;
     /// <summary>GroundStomp の Telegraph 状態です。</summary>
-    public static readonly StateId GroundStompTelegraph = new(209);
+    public const BossState GroundStompTelegraph = BossState.Boss2_GroundStompTelegraph;
     /// <summary>LeapSmash の Telegraph 状態です。</summary>
-    public static readonly StateId LeapSmashTelegraph = new(210);
+    public const BossState LeapSmashTelegraph = BossState.Boss2_LeapSmashTelegraph;
     /// <summary>FrenzyCharge の Telegraph 状態です。</summary>
-    public static readonly StateId FrenzyChargeTelegraph = new(211);
+    public const BossState FrenzyChargeTelegraph = BossState.Boss2_FrenzyChargeTelegraph;
     /// <summary>EarthquakeRoar の Telegraph 状態です。</summary>
-    public static readonly StateId EarthquakeRoarTelegraph = new(212);
+    public const BossState EarthquakeRoarTelegraph = BossState.Boss2_EarthquakeRoarTelegraph;
     /// <summary>HeavySlash の Execute 状態です。</summary>
-    public static readonly StateId HeavySlashExecute = new(213);
+    public const BossState HeavySlashExecute = BossState.Boss2_HeavySlashExecute;
     /// <summary>DoubleCleave の Execute 状態です。</summary>
-    public static readonly StateId DoubleCleaveExecute = new(214);
+    public const BossState DoubleCleaveExecute = BossState.Boss2_DoubleCleaveExecute;
     /// <summary>GroundStomp の Execute 状態です。</summary>
-    public static readonly StateId GroundStompExecute = new(215);
+    public const BossState GroundStompExecute = BossState.Boss2_GroundStompExecute;
     /// <summary>LeapSmash の上昇 Execute 状態です。</summary>
-    public static readonly StateId LeapSmashAscent = new(216);
+    public const BossState LeapSmashAscent = BossState.Boss2_LeapSmashAscent;
     /// <summary>LeapSmash の落下 Execute 状態です。</summary>
-    public static readonly StateId LeapSmashDescent = new(217);
+    public const BossState LeapSmashDescent = BossState.Boss2_LeapSmashDescent;
     /// <summary>FrenzyCharge の Execute 状態です。</summary>
-    public static readonly StateId FrenzyChargeExecute = new(218);
+    public const BossState FrenzyChargeExecute = BossState.Boss2_FrenzyChargeExecute;
     /// <summary>EarthquakeRoar の Execute 状態です。</summary>
-    public static readonly StateId EarthquakeRoarExecute = new(219);
+    public const BossState EarthquakeRoarExecute = BossState.Boss2_EarthquakeRoarExecute;
     /// <summary>壁激突後の気絶状態です。</summary>
-    public static readonly StateId WallCrashStun = new(220);
+    public const BossState WallCrashStun = BossState.Boss2_WallCrashStun;
     /// <summary>攻撃後の回復状態です。</summary>
-    public static readonly StateId Recovery = new(221);
+    public const BossState Recovery = BossState.Boss2_Recovery;
     /// <summary>Phase 切り替え状態です。</summary>
-    public static readonly StateId PhaseTransition = new(222);
+    public const BossState PhaseTransition = BossState.Boss2_PhaseTransition;
     /// <summary>死亡終端状態です。</summary>
-    public static readonly StateId Dead = new(223);
+    public const BossState Dead = BossState.Boss2_Dead;
 
-    /// <summary>攻撃 ID に対応する Telegraph State_Id を取得します。</summary>
-    public static StateId GetTelegraphStateId(AttackId attackId)
+    /// <summary>攻撃 ID に対応する固定 Telegraph BossState を取得します。</summary>
+    public static BossState GetTelegraphState(AttackId attackId)
     {
         return attackId.Value switch
         {
@@ -63,12 +63,12 @@ public static class Boss2StateIds
             204 => LeapSmashTelegraph,
             205 => FrenzyChargeTelegraph,
             206 => EarthquakeRoarTelegraph,
-            _ => StateId.Unknown
+            _ => BossState.Unknown
         };
     }
 
-    /// <summary>攻撃 ID に対応する Execute State_Id を取得します。</summary>
-    public static StateId GetExecuteStateId(AttackId attackId)
+    /// <summary>攻撃 ID に対応する固定 Execute BossState を取得します。</summary>
+    public static BossState GetExecuteState(AttackId attackId)
     {
         return attackId.Value switch
         {
@@ -78,9 +78,17 @@ public static class Boss2StateIds
             204 => LeapSmashAscent,
             205 => FrenzyChargeExecute,
             206 => EarthquakeRoarExecute,
-            _ => StateId.Unknown
+            _ => BossState.Unknown
         };
     }
+
+    /// <summary>旧 API 名から固定 Telegraph BossState を取得します。</summary>
+    [Obsolete("StateId から BossState への移行用です。")]
+    public static BossState GetTelegraphStateId(AttackId attackId) => GetTelegraphState(attackId);
+
+    /// <summary>旧 API 名から固定 Execute BossState を取得します。</summary>
+    [Obsolete("StateId から BossState への移行用です。")]
+    public static BossState GetExecuteStateId(AttackId attackId) => GetExecuteState(attackId);
 }
 
 /// <summary>Boss2 固有の安定した攻撃識別子です。</summary>

@@ -7,8 +7,11 @@ namespace AnimalBattle.Ai.Runtime;
 /// </summary>
 public interface IBossStateModule
 {
-    /// <summary>状態を一意に識別する ID を取得します。</summary>
-    StateId Id { get; }
+    /// <summary>旧実装が返す固定状態識別子です。</summary>
+    BossState Id { get; }
+
+    /// <summary>状態を固定 enum で一意に識別します。</summary>
+    BossState State => Id;
 
     /// <summary>状態へ入場します。</summary>
     void Enter(ref StateContext context, in LifecycleInvocation invocation);

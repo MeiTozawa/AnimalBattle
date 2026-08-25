@@ -2,57 +2,62 @@ using AnimalBattle.Ai.Contracts;
 
 namespace AnimalBattle.Ai.Runtime;
 
-/// <summary>
-/// State_Id と State_Module の登録を検証して取得する境界です。
-/// </summary>
-public interface IStateRegistry
+/// <summary>固定 enum と State_Module の対応を取得する初期化境界です。</summary>
+public interface IEnumModuleMap
 {
-    /// <summary>現在の登録内容を検証します。</summary>
-    RegistryValidationResult Validate();
-
-    /// <summary>登録済みの State_Module を取得します。</summary>
-    bool TryGet(StateId stateId, out IBossStateModule module);
+    /// <summary>固定 BossState 集合の完全性を検証します。</summary>
+    EnumCompletenessResult ValidateComplete();
+    /// <summary>固定状態に対応する State_Module を取得します。</summary>
+    bool TryGet(BossState state, out IBossStateModule module);
 }
 
-/// <summary>
-/// Registry の検証または登録結果を表します。
-/// </summary>
-public readonly record struct RegistryValidationResult
+/// <summary>旧 registry 名との互換境界です。実行時登録 API は提供しません。</summary>
+[Obsolete("IEnumModuleMap を使用してください。")]
+public interface IStateRegistry : IEnumModuleMap
 {
-    /// <summary>成功結果を生成します。</summary>
-    public static RegistryValidationResult Success(long generation, string message = "Registry は正常です。") => new(true, generation, ErrorCode.None, message, default);
+    /// <summary>固定 module 集合を検証します。</summary>
+    RegistryValidationResult Validate();
+}
 
-    /// <summary>失敗結果を生成します。</summary>
-    public static RegistryValidationResult Failure(ErrorCode errorCode, string message, StateId stateId = default, long generation = 0) => new(false, generation, errorCode, message, stateId);
-
-    /// <summary>検証または登録が成功したかどうかを取得します。</summary>
-    public bool IsSuccess { get; }
-
-    /// <summary>検証または登録が有効だったかどうかを取得します。</summary>
+/// <summary>固定 enum/module 完全性検査の結果です。</summary>
+public readonly record struct EnumCompletenessResult(
+    bool IsSuccess,
+    ErrorCode ErrorCode,
+    string Message,
+    BossState State)
+{
+    /// <summary>検査が成功したかどうかを取得します。</summary>
     public bool IsValid => IsSuccess;
-
-    /// <summary>検証または登録が失敗したかどうかを取得します。</summary>
+    /// <summary>検査失敗かどうかを取得します。</summary>
     public bool IsFailure => !IsSuccess;
 
-    /// <summary>登録世代を取得します。</summary>
-    public long Generation { get; }
+    /// <summary>成功結果を生成します。</summary>
+    public static EnumCompletenessResult Success(string message = "固定 BossState の対応は完全です。")
+        => new(true, ErrorCode.None, message, BossState.Unknown);
+    /// <summary>失敗結果を生成します。</summary>
+    public static EnumCompletenessResult Failure(ErrorCode errorCode, string message, BossState state = BossState.Unknown)
+        => new(false, errorCode, message, state);
+}
 
-    /// <summary>失敗時のエラー分類を取得します。</summary>
-    public ErrorCode ErrorCode { get; }
+/// <summary>固定 module 集合の検証結果です。</summary>
+public readonly record struct RegistryValidationResult(
+    bool IsSuccess,
+    ErrorCode ErrorCode,
+    string Message,
+    BossState State)
+{
+    /// <summary>検証が有効だったかどうかを取得します。</summary>
+    public bool IsValid => IsSuccess;
+    /// <summary>検証失敗かどうかを取得します。</summary>
+    public bool IsFailure => !IsSuccess;
+    /// <summary>旧プロパティ名です。</summary>
+    [Obsolete("State を使用してください。")]
+    public BossState StateId => State;
 
-    /// <summary>簡潔な日本語メッセージを取得します。</summary>
-    public string Message { get; }
-
-    /// <summary>失敗対象の State_Id を取得します。</summary>
-    public StateId StateId { get; }
-
-    private RegistryValidationResult(bool isSuccess, long generation, ErrorCode errorCode, string message, StateId stateId)
-    {
-        ArgumentNullException.ThrowIfNull(message);
-        IsSuccess = isSuccess;
-        Generation = generation;
-        ErrorCode = errorCode;
-        Message = message;
-        StateId = stateId;
-    }
+    /// <summary>成功結果を生成します。</summary>
+    public static RegistryValidationResult Success(string message = "固定 State_Module は正常です。")
+        => new(true, ErrorCode.None, message, BossState.Unknown);
+    /// <summary>失敗結果を生成します。</summary>
+    public static RegistryValidationResult Failure(ErrorCode errorCode, string message, BossState state = BossState.Unknown)
+        => new(false, errorCode, message, state);
 }

@@ -10,7 +10,7 @@ public sealed class Boss2PhaseTransitionModule : IBossStateModule, IStateModuleD
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.PhaseTransition;
+    public BossState Id => Boss2StateIds.PhaseTransition;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "AttackPort", "EffectPort"];
 

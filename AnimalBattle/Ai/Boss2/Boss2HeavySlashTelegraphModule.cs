@@ -8,7 +8,7 @@ public sealed class Boss2HeavySlashTelegraphModule : IBossStateModule, IStateMod
 {
     private readonly Boss2TelegraphRunner _runner;
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.HeavySlashTelegraph;
+    public BossState Id => Boss2StateIds.HeavySlashTelegraph;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "EffectPort", "ObservationService"];
 

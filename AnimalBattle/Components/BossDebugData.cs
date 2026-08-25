@@ -9,7 +9,7 @@ namespace AnimalBattle.Components;
 public struct BossDebugData
 {
     /// <summary>現在の State_Id です。</summary>
-    public StateId StateId;
+    public BossState BossState;
     /// <summary>現在の Phase です。</summary>
     public Phase Phase;
     /// <summary>現在の Attack_Id です。</summary>

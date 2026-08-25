@@ -9,7 +9,7 @@ public sealed class Boss2WallCrashStunModule : IBossStateModule, IStateModuleDep
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.WallCrashStun;
+    public BossState Id => Boss2StateIds.WallCrashStun;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "ObservationService"];
 

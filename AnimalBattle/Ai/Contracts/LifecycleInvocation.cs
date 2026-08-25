@@ -1,77 +1,41 @@
 namespace AnimalBattle.Ai.Contracts;
 
-/// <summary>
-/// State module の各ライフサイクル呼び出しに渡す不変メタデータを表します。
-/// </summary>
+/// <summary>State_Module のライフサイクル呼び出しに渡す不変メタデータです。</summary>
 public readonly record struct LifecycleInvocation
 {
-    /// <summary>
-    /// 呼び出し対象の Boss 種別を取得します。
-    /// </summary>
+    /// <summary>呼び出し対象の Boss 種別です。</summary>
     public BossType BossType { get; }
-
-    /// <summary>
-    /// 呼び出し対象の Entity 識別子を取得します。
-    /// </summary>
+    /// <summary>呼び出し対象の Entity 識別子です。</summary>
     public ulong EntityId { get; }
-
-    /// <summary>
-    /// 呼び出し対象の状態識別子を取得します。
-    /// </summary>
-    public StateId StateId { get; }
-
-    /// <summary>
-    /// 呼び出しのライフサイクル種別を取得します。
-    /// </summary>
+    /// <summary>呼び出し対象の固定 BossState です。</summary>
+    public BossState State { get; }
+    /// <summary>旧プロパティ名です。値の型は固定 BossState です。</summary>
+    [Obsolete("State を使用してください。")]
+    public BossState StateId => State;
+    /// <summary>互換用の固定 BossState 名です。</summary>
+    [Obsolete("State を使用してください。")]
+    public BossState BossState => State;
     public LifecycleOperation Operation { get; }
-
-    /// <summary>
-    /// フレーム更新番号を取得します。
-    /// </summary>
+    /// <summary>Frame_Update 番号です。</summary>
     public long FrameUpdateNumber { get; }
-
-    /// <summary>
-    /// この呼び出しに渡された経過時間を秒単位で取得します。
-    /// </summary>
+    /// <summary>経過時間（秒）です。</summary>
     public float DeltaTime { get; }
-
-    /// <summary>
-    /// 呼び出し時点の親 Phase を取得します。
-    /// </summary>
+    /// <summary>親 Phase です。</summary>
     public Phase Phase { get; }
-
-    /// <summary>
-    /// Entity、StateId、フレーム番号、経過時間が契約を満たすかどうかを取得します。
-    /// </summary>
+    /// <summary>呼び出しメタデータが有効かどうかを取得します。</summary>
     public bool IsValid => EntityId != 0
-        && StateId.IsValid
+        && State.IsValid()
         && FrameUpdateNumber >= 0
         && !float.IsNaN(DeltaTime)
         && !float.IsInfinity(DeltaTime)
         && DeltaTime >= 0;
 
-    /// <summary>
-    /// ライフサイクル呼び出しのメタデータを生成します。
-    /// </summary>
-    /// <param name="bossType">呼び出し対象の Boss 種別。</param>
-    /// <param name="entityId">呼び出し対象の Entity 識別子。</param>
-    /// <param name="stateId">呼び出し対象の状態識別子。</param>
-    /// <param name="operation">呼び出しのライフサイクル種別。</param>
-    /// <param name="frameUpdateNumber">フレーム更新番号。</param>
-    /// <param name="deltaTime">経過時間（秒）。0 以上である必要があります。</param>
-    /// <param name="phase">呼び出し時点の親 Phase。</param>
-    public LifecycleInvocation(
-        BossType bossType,
-        ulong entityId,
-        StateId stateId,
-        LifecycleOperation operation,
-        long frameUpdateNumber,
-        float deltaTime,
-        Phase phase)
+    /// <summary>ライフサイクル呼び出しのメタデータを生成します。</summary>
+    public LifecycleInvocation(BossType bossType, ulong entityId, BossState state, LifecycleOperation operation, long frameUpdateNumber, float deltaTime, Phase phase)
     {
         BossType = bossType;
         EntityId = entityId;
-        StateId = stateId;
+        State = state;
         Operation = operation;
         FrameUpdateNumber = frameUpdateNumber;
         DeltaTime = deltaTime;

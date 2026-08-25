@@ -9,7 +9,7 @@ public sealed class Boss1DeadModule : IBossStateModule, IStateModuleDependencyPr
     private readonly Boss1BehaviorState _state;
 
     /// <inheritdoc />
-    public StateId Id => Boss1StateIds.Dead;
+    public BossState Id => Boss1StateIds.Dead;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "AttackPort"];
 

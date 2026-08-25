@@ -8,7 +8,7 @@ public sealed class Boss2EarthquakeRoarTelegraphModule : IBossStateModule, IStat
 {
     private readonly Boss2TelegraphRunner _runner;
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.EarthquakeRoarTelegraph;
+    public BossState Id => Boss2StateIds.EarthquakeRoarTelegraph;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "EffectPort", "ObservationService"];
 

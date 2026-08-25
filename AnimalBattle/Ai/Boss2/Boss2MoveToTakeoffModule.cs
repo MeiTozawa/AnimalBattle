@@ -11,7 +11,7 @@ public sealed class Boss2MoveToTakeoffModule : IBossStateModule, IStateModuleDep
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.MoveToTakeoff;
+    public BossState Id => Boss2StateIds.MoveToTakeoff;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "PlayerObservation"];
 

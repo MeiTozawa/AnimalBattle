@@ -10,7 +10,7 @@ public sealed class HoverMovementModule : IBossStateModule, IStateModuleDependen
     private readonly Boss1BehaviorState _state;
 
     /// <inheritdoc />
-    public StateId Id => Boss1StateIds.Hover;
+    public BossState Id => Boss1StateIds.Hover;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "MovementPort"];
 

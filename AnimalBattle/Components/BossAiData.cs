@@ -7,12 +7,12 @@ namespace AnimalBattle.Components;
 /// <summary>Boss AI の共通実行値を保持する純粋な ECS データです。</summary>
 /// <remarks>共通 Boss AI データを生成します。</remarks>
 [StructLayout(LayoutKind.Sequential)]
-public struct BossAiData(BossType bossType, StateId stateId, Phase phase)
+public struct BossAiData(BossType bossType, BossState stateId, Phase phase)
 {
     /// <summary>Boss 種別です。</summary>
     public BossType BossType = bossType;
     /// <summary>現在の安定した State_Id です。</summary>
-    public StateId StateId = stateId;
+    public BossState BossState = stateId;
     /// <summary>現在の親 Phase です。</summary>
     public Phase Phase = phase;
     /// <summary>現在状態の経過時間です。</summary>

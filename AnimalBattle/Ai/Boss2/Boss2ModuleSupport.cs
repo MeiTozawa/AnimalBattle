@@ -21,7 +21,7 @@ internal static class Boss2ModuleSupport
         ObservationEvent observation = new(
             context.EntityId,
             context.BossType,
-            invocation.StateId,
+            invocation.State,
             context.Phase,
             invocation.Operation,
             context.FrameUpdateNumber,
@@ -59,18 +59,18 @@ internal static class Boss2ModuleSupport
         return false;
     }
 
-    internal static StateId SafeMovementState => Boss2StateIds.Idle;
-    internal static StateId SafeAttackState => Boss2StateIds.Idle;
+    internal static BossState SafeMovementState => Boss2StateIds.Idle;
+    internal static BossState SafeAttackState => Boss2StateIds.Idle;
 }
 
 internal sealed class Boss2TelegraphRunner
 {
-    private readonly StateId _stateId;
+    private readonly BossState _stateId;
     private readonly IBoss2Configuration _configuration;
     private readonly Boss2BehaviorState _state;
     private TelegraphModule? _active;
 
-    internal Boss2TelegraphRunner(StateId stateId, IBoss2Configuration configuration, Boss2BehaviorState state)
+    internal Boss2TelegraphRunner(BossState stateId, IBoss2Configuration configuration, Boss2BehaviorState state)
     {
         _stateId = stateId;
         _configuration = configuration;
@@ -108,8 +108,8 @@ internal sealed class Boss2TelegraphRunner
         _active.Update(ref context, in invocation);
         if (IsComplete)
         {
-            StateId executeState = Boss2StateIds.GetExecuteStateId(_state.CurrentAttackId);
-            if (!executeState.IsValid)
+            BossState executeState = Boss2StateIds.GetExecuteState(_state.CurrentAttackId);
+            if (!executeState.IsValid())
             {
                 _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
                 return;

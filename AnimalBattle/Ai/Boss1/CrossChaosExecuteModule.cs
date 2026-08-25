@@ -8,7 +8,7 @@ namespace AnimalBattle.Ai.Boss1;
 public sealed class CrossChaosExecuteModule(IBoss1Configuration configuration, Boss1BehaviorState state) : Boss1BarrageExecuteModule(configuration, state, Boss1AttackIds.CrossChaos)
 {
     /// <inheritdoc />
-    public override StateId Id => Boss1StateIds.CrossChaosExecute;
+    public override BossState Id => Boss1StateIds.CrossChaosExecute;
 
     /// <inheritdoc />
     protected override void EmitComponents(ref StateContext context, in LifecycleInvocation invocation, int emissionIndex)

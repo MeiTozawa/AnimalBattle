@@ -7,7 +7,7 @@ namespace AnimalBattle.Ai.Boss1;
 public sealed class RainDropExecuteModule : Boss1BarrageExecuteModule
 {
     /// <inheritdoc />
-    public override StateId Id => Boss1StateIds.RainDropExecute;
+    public override BossState Id => Boss1StateIds.RainDropExecute;
 
     /// <summary>Boss1 の設定と実行値を注入します。</summary>
     public RainDropExecuteModule(IBoss1Configuration configuration, Boss1BehaviorState state)

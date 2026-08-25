@@ -13,7 +13,7 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
     private TelegraphModule? _activeTelegraph;
 
     /// <inheritdoc />
-    public StateId Id => Boss1StateIds.Telegraph;
+    public BossState Id => Boss1StateIds.Telegraph;
     /// <summary>現在 Telegraph が完了しているかどうかを取得します。</summary>
     public bool IsComplete => _activeTelegraph is not null && _activeTelegraph.IsComplete;
     /// <inheritdoc />
@@ -69,8 +69,8 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
         _activeTelegraph.Update(ref context, in invocation);
         if (_activeTelegraph.IsComplete)
         {
-            StateId executeState = Boss1StateIds.GetExecuteStateId(_state.CurrentAttackId);
-            if (!executeState.IsValid)
+            BossState executeState = Boss1StateIds.GetExecuteState(_state.CurrentAttackId);
+            if (!executeState.IsValid())
             {
                 _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
                 return;

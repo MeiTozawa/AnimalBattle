@@ -9,7 +9,7 @@ public sealed class Boss2LandingRecoveryModule : IBossStateModule, IStateModuleD
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.LandingRecovery;
+    public BossState Id => Boss2StateIds.LandingRecovery;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "EffectPort"];
 

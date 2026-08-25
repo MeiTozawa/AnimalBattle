@@ -20,7 +20,7 @@ internal static class Boss1ModuleSupport
         ObservationEvent observation = new(
             context.EntityId,
             context.BossType,
-            invocation.StateId,
+            invocation.State,
             context.Phase,
             invocation.Operation,
             context.FrameUpdateNumber,

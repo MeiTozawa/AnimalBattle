@@ -35,19 +35,19 @@ public readonly record struct DiagnosticResult
     /// <param name="entityId">診断対象の Entity 識別子。</param>
     /// <param name="frameUpdateNumber">診断時点のフレーム更新番号。</param>
     /// <param name="updateSource">値を更新した責務の出所。</param>
-    /// <param name="recoveryStateId">安全復帰先として使用する状態識別子。</param>
+    /// <param name="recoveryBossState">安全復帰先として使用する状態識別子。</param>
     /// <returns>指定された診断情報を持つ結果。</returns>
     public static DiagnosticResult Failure(
         DiagnosticSeverity severity,
         ErrorCode errorCode,
         string message,
-        StateId stateId = default,
+        BossState stateId = default,
         AttackId attackId = default,
         Phase phase = Phase.Unknown,
         ulong entityId = 0,
         long frameUpdateNumber = 0,
         UpdateSource updateSource = UpdateSource.NewRuntime,
-        StateId recoveryStateId = default) => new(
+        BossState recoveryBossState = default) => new(
             false,
             severity,
             errorCode,
@@ -58,7 +58,7 @@ public readonly record struct DiagnosticResult
             entityId,
             frameUpdateNumber,
             updateSource,
-            recoveryStateId);
+            recoveryBossState);
 
     /// <summary>
     /// 処理が成功したかどうかを取得します。
@@ -88,11 +88,11 @@ public readonly record struct DiagnosticResult
     /// <summary>
     /// 診断対象の状態識別子を取得します。
     /// </summary>
-    public StateId StateId { get; }
+    public BossState State { get; }
 
-    /// <summary>
-    /// 診断対象の攻撃識別子を取得します。
-    /// </summary>
+    /// <summary>旧プロパティ名です。値の型は固定 BossState です。</summary>
+    [Obsolete("State を使用してください。")]
+    public BossState StateId => State;
     public AttackId AttackId { get; }
 
     /// <summary>
@@ -118,32 +118,36 @@ public readonly record struct DiagnosticResult
     /// <summary>
     /// 異常時に使用する安全復帰先の状態識別子を取得します。
     /// </summary>
-    public StateId RecoveryStateId { get; }
+    public BossState RecoveryState { get; }
+
+    /// <summary>旧プロパティ名です。</summary>
+    [Obsolete("RecoveryState を使用してください.")]
+    public BossState RecoveryBossState => RecoveryState;
 
     private DiagnosticResult(
         bool isSuccess,
         DiagnosticSeverity severity,
         ErrorCode errorCode,
         string message,
-        StateId stateId,
+        BossState stateId,
         AttackId attackId,
         Phase phase,
         ulong entityId,
         long frameUpdateNumber,
         UpdateSource updateSource,
-        StateId recoveryStateId)
+        BossState recoveryBossState)
     {
         ArgumentNullException.ThrowIfNull(message);
         IsSuccess = isSuccess;
         Severity = severity;
         ErrorCode = errorCode;
         Message = message;
-        StateId = stateId;
+        State = stateId;
         AttackId = attackId;
         Phase = phase;
         EntityId = entityId;
         FrameUpdateNumber = frameUpdateNumber;
         UpdateSource = updateSource;
-        RecoveryStateId = recoveryStateId;
+        RecoveryState = recoveryBossState;
     }
 }

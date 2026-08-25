@@ -8,7 +8,7 @@ public sealed class Boss2RecoveryModule : IBossStateModule, IStateModuleDependen
 {
     private readonly Boss2RecoveryRunner _runner;
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.Recovery;
+    public BossState Id => Boss2StateIds.Recovery;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "ObservationService"];
 

@@ -11,7 +11,7 @@ public sealed class Boss1PhaseTransitionModule : IBossStateModule, IStateModuleD
     private float _elapsed;
 
     /// <inheritdoc />
-    public StateId Id => Boss1StateIds.PhaseTransition;
+    public BossState Id => Boss1StateIds.PhaseTransition;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "MovementPort", "AttackPort", "EffectPort"];
 

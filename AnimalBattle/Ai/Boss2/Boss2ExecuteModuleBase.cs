@@ -12,7 +12,7 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
     private ExecuteGate? _gate;
 
     /// <summary>State_Id、Boss2 設定、共有実行値を注入します。</summary>
-    protected Boss2ExecuteModuleBase(StateId stateId, IBoss2Configuration configuration, Boss2BehaviorState state)
+    protected Boss2ExecuteModuleBase(BossState stateId, IBoss2Configuration configuration, Boss2BehaviorState state)
     {
         Id = stateId;
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
@@ -20,7 +20,7 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
     }
 
     /// <summary>Execute 状態を識別する State_Id です。</summary>
-    public StateId Id { get; }
+    public BossState Id { get; }
     /// <summary>Execute 状態が必要とする依存関係です。</summary>
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "AttackPort", "ObservationService"];
     /// <summary>派生 module が参照する Boss2 共有実行値です。</summary>

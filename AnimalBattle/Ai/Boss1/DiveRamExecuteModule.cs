@@ -14,7 +14,7 @@ public sealed class DiveRamExecuteModule : IBossStateModule, IStateModuleDepende
     private float _elapsed;
 
     /// <inheritdoc />
-    public StateId Id => Boss1StateIds.DiveRamExecute;
+    public BossState Id => Boss1StateIds.DiveRamExecute;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "AttackPort", "MovementPort"];
 

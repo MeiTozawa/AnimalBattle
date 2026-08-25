@@ -21,7 +21,7 @@ public abstract class Boss1BarrageExecuteModule : IBossStateModule, IStateModule
     /// <summary>現在の攻撃 pattern を取得します。</summary>
     protected Boss1AttackPattern Pattern { get; private set; }
     /// <inheritdoc />
-    public abstract StateId Id { get; }
+    public abstract BossState Id { get; }
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "AttackPort", "MovementPort", "RandomSource"];
 

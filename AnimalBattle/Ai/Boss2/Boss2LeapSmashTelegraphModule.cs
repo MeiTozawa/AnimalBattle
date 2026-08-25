@@ -8,7 +8,7 @@ public sealed class Boss2LeapSmashTelegraphModule : IBossStateModule, IStateModu
 {
     private readonly Boss2TelegraphRunner _runner;
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.LeapSmashTelegraph;
+    public BossState Id => Boss2StateIds.LeapSmashTelegraph;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "EffectPort", "ObservationService"];
 

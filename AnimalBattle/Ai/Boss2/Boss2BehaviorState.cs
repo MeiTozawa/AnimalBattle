@@ -37,7 +37,7 @@ public sealed class Boss2BehaviorState
     /// <summary>攻撃が開始済みかどうかです。</summary>
     public bool IsAttackActive { get; set; }
     /// <summary>次に要求する State_Id です。</summary>
-    public StateId PendingStateId { get; private set; }
+    public BossState PendingBossState { get; private set; }
     /// <summary>次の状態へ渡す遷移理由です。</summary>
     public TransitionReason PendingTransitionReason { get; private set; }
 
@@ -48,31 +48,31 @@ public sealed class Boss2BehaviorState
         AttackStartPosition = CurrentPosition;
         AttackTargetPosition = CurrentPosition;
         CurrentAttackId = AttackId.Unknown;
-        PendingStateId = StateId.Unknown;
+        PendingBossState = BossState.Unknown;
         PendingTransitionReason = TransitionReason.None;
         IsPlayerAlive = true;
     }
 
     /// <summary>次の遷移要求を一件だけ保持します。</summary>
-    public void RequestTransition(StateId stateId, in TransitionReason reason)
+    public void RequestTransition(BossState stateId, in TransitionReason reason)
     {
-        if (!stateId.IsValid || reason.Kind == ReasonKind.Unknown)
+        if (!stateId.IsValid() || reason.Kind == ReasonKind.Unknown)
         {
             return;
         }
 
-        PendingStateId = stateId;
+        PendingBossState = stateId;
         PendingTransitionReason = reason;
     }
 
     /// <summary>保持済みの遷移要求を読み取り、要求を消費します。</summary>
-    public bool TryConsumeTransition(out StateId stateId, out TransitionReason reason)
+    public bool TryConsumeTransition(out BossState stateId, out TransitionReason reason)
     {
-        stateId = PendingStateId;
+        stateId = PendingBossState;
         reason = PendingTransitionReason;
-        PendingStateId = StateId.Unknown;
+        PendingBossState = BossState.Unknown;
         PendingTransitionReason = TransitionReason.None;
-        return stateId.IsValid;
+        return stateId.IsValid();
     }
 
     /// <summary>現在状態の経過時間を初期化します。</summary>

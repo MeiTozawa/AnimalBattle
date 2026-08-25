@@ -16,7 +16,7 @@ public struct BossMovementData
     /// <summary>現在要求されている速度です。</summary>
     public Vec2f Velocity;
     /// <summary>現在の Movement State_Id です。</summary>
-    public StateId StateId;
+    public BossState BossState;
     /// <summary>向きが右かどうかです。</summary>
     public bool FacingRight;
     /// <summary>移動の残りクールダウンです。</summary>
@@ -27,12 +27,12 @@ public struct BossMovementData
     public bool IsAirborne;
 
     /// <summary>移動データを生成します。</summary>
-    public BossMovementData(StateId stateId)
+    public BossMovementData(BossState stateId)
     {
         TargetPosition = Vec2f.Zero;
         StartPosition = Vec2f.Zero;
         Velocity = Vec2f.Zero;
-        StateId = stateId;
+        BossState = stateId;
         FacingRight = false;
         Cooldown = 0.0f;
         IsGrounded = false;

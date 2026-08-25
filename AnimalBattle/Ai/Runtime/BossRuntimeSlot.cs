@@ -12,7 +12,7 @@ public sealed class BossRuntimeSlot
     private BossConfigSnapshot _currentConfig;
     private BossConfigSnapshot _pendingConfig;
     private bool _hasPendingConfig;
-    private StateId _currentStateId;
+    private BossState _currentBossState;
     private TransitionReason _currentTransitionReason;
     private bool _stateEntered;
     private bool _moduleStopped;
@@ -37,8 +37,10 @@ public sealed class BossRuntimeSlot
     /// <summary>現在の親 Phase を取得します。</summary>
     public Phase Phase => _context.Phase;
     /// <summary>現在有効な State_Id を取得します。</summary>
-    public StateId CurrentStateId => _currentStateId;
-    /// <summary>現在状態へ入場済みかどうかを取得します。</summary>
+    public BossState CurrentStateId => _currentBossState;
+    /// <summary>互換用の現在状態名です。</summary>
+    [Obsolete("CurrentStateId を使用してください。")]
+    public BossState CurrentBossState => CurrentStateId;
     public bool StateEntered => _stateEntered;
     /// <summary>module が停止済みかどうかを取得します。</summary>
     public bool ModuleStopped => _moduleStopped;
@@ -50,8 +52,6 @@ public sealed class BossRuntimeSlot
     public bool InitializationComplete { get; private set; }
     /// <summary>runtime 準備完了 gate の状態を取得します。</summary>
     public bool RuntimeReady { get; private set; }
-    /// <summary>現在の module 登録世代を取得します。</summary>
-    public long ModuleGeneration { get; private set; }
     /// <summary>最後に処理したエラー fingerprint を取得します。</summary>
     public ulong LastErrorFingerprint { get; private set; }
 
@@ -170,7 +170,6 @@ public sealed class BossRuntimeSlot
             effect,
             observation,
             random);
-        ModuleGeneration = 0;
     }
 
     /// <summary>初期化完了を runtime gate に反映します。</summary>
@@ -183,13 +182,6 @@ public sealed class BossRuntimeSlot
     public void MarkRuntimeReady(bool dependenciesValid)
     {
         RuntimeReady = InitializationComplete && dependenciesValid && _context.IsReady;
-    }
-
-    /// <summary>module 差し替え後の登録世代を更新します。</summary>
-    public void SetModuleGeneration(long generation)
-    {
-        if (generation < 0) throw new ArgumentOutOfRangeException(nameof(generation));
-        ModuleGeneration = generation;
     }
 
     /// <summary>エラー fingerprint を記録します。</summary>
@@ -248,9 +240,9 @@ public sealed class BossRuntimeSlot
         EffectCommands.Clear();
     }
 
-    internal void SetCurrentState(StateId stateId, TransitionReason reason)
+    internal void SetCurrentState(BossState stateId, TransitionReason reason)
     {
-        _currentStateId = stateId;
+        _currentBossState = stateId;
         _currentTransitionReason = reason;
         _stateEntered = false;
         _moduleStopped = false;

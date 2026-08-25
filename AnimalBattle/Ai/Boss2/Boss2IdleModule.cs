@@ -9,7 +9,7 @@ public sealed class Boss2IdleModule : IBossStateModule, IStateModuleDependencyPr
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.Idle;
+    public BossState Id => Boss2StateIds.Idle;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "PlayerObservation"];
 

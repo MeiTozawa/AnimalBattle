@@ -8,7 +8,7 @@ public sealed class Boss2DoubleCleaveTelegraphModule : IBossStateModule, IStateM
 {
     private readonly Boss2TelegraphRunner _runner;
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.DoubleCleaveTelegraph;
+    public BossState Id => Boss2StateIds.DoubleCleaveTelegraph;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "EffectPort", "ObservationService"];
 

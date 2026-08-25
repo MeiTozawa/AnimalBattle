@@ -11,7 +11,7 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.PatrolChase;
+    public BossState Id => Boss2StateIds.PatrolChase;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "PlayerObservation"];
 
@@ -83,6 +83,6 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
         _state.AttackTargetPosition = new Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         _state.IsAttackActive = true;
-        _state.RequestTransition(Boss2StateIds.GetTelegraphStateId(attackId), new TransitionReason(ReasonKind.PlayerObservation, attackId: attackId));
+        _state.RequestTransition(Boss2StateIds.GetTelegraphState(attackId), new TransitionReason(ReasonKind.PlayerObservation, attackId: attackId));
     }
 }

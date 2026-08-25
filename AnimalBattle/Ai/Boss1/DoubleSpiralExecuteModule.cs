@@ -7,7 +7,7 @@ namespace AnimalBattle.Ai.Boss1;
 public sealed class DoubleSpiralExecuteModule : Boss1BarrageExecuteModule
 {
     /// <inheritdoc />
-    public override StateId Id => Boss1StateIds.DoubleSpiralExecute;
+    public override BossState Id => Boss1StateIds.DoubleSpiralExecute;
 
     /// <summary>Boss1 の設定と実行値を注入します。</summary>
     public DoubleSpiralExecuteModule(IBoss1Configuration configuration, Boss1BehaviorState state)

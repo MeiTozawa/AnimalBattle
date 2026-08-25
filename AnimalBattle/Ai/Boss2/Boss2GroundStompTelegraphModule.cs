@@ -8,7 +8,7 @@ public sealed class Boss2GroundStompTelegraphModule : IBossStateModule, IStateMo
 {
     private readonly Boss2TelegraphRunner _runner;
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.GroundStompTelegraph;
+    public BossState Id => Boss2StateIds.GroundStompTelegraph;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "EffectPort", "ObservationService"];
 

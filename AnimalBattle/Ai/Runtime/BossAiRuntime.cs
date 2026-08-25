@@ -8,18 +8,18 @@ namespace AnimalBattle.Ai.Runtime;
 /// </summary>
 public sealed class BossAiRuntime
 {
-    private readonly IStateRegistry _registry;
+    private readonly IEnumModuleMap _registry;
     private readonly ITransitionService _transitionService;
     private readonly IObservationService _observation;
     private readonly IEntityComponentValidator? _componentValidator;
-    private readonly StateId _safeStateId;
+    private readonly BossState _safeBossState;
 
     /// <summary>共通 runtime を生成します。</summary>
     public BossAiRuntime(
-        IStateRegistry registry,
+        IEnumModuleMap registry,
         ITransitionService transitionService,
         IObservationService observation,
-        StateId safeStateId = default,
+        BossState safeBossState = default,
         IEntityComponentValidator? componentValidator = null)
     {
         ArgumentNullException.ThrowIfNull(registry);
@@ -28,20 +28,20 @@ public sealed class BossAiRuntime
         _registry = registry;
         _transitionService = transitionService;
         _observation = observation;
-        _safeStateId = safeStateId;
+        _safeBossState = safeBossState;
         _componentValidator = componentValidator;
     }
 
     /// <summary>Registry、context、component を検証して初期状態へ一回入場します。</summary>
-    public bool TryInitialize(BossRuntimeSlot runtime, StateId initialStateId)
+    public bool TryInitialize(BossRuntimeSlot runtime, BossState initialBossState)
     {
         ArgumentNullException.ThrowIfNull(runtime);
         if (runtime.InitializationComplete && runtime.RuntimeReady)
         {
-            return runtime.CurrentStateId == initialStateId;
+            return runtime.CurrentStateId == initialBossState;
         }
 
-        RegistryValidationResult registryValidation = _registry.Validate();
+        EnumCompletenessResult registryValidation = _registry.ValidateComplete();
         if (registryValidation.IsFailure)
         {
             RecordFailure(runtime, registryValidation.ErrorCode, registryValidation.Message, LifecycleOperation.Enter);
@@ -60,21 +60,21 @@ public sealed class BossAiRuntime
             return false;
         }
 
-        if (!_registry.TryGet(initialStateId, out IBossStateModule module))
+        if (!_registry.TryGet(initialBossState, out IBossStateModule module))
         {
-            RecordFailure(runtime, ErrorCode.UnregisteredState, "初期 State_Id が未登録です。", LifecycleOperation.Enter, initialStateId);
+            RecordFailure(runtime, ErrorCode.UnregisteredState, "初期 State_Id が未登録です。", LifecycleOperation.Enter, initialBossState);
             return false;
         }
 
         runtime.MarkInitializationComplete();
         runtime.MarkRuntimeReady(true);
         TransitionReason reason = new(ReasonKind.InitialEntry);
-        runtime.SetCurrentState(initialStateId, reason);
+        runtime.SetCurrentState(initialBossState, reason);
         ref StateContext context = ref runtime.Context;
         LifecycleInvocation invocation = new(
             runtime.BossType,
             runtime.EntityId,
-            initialStateId,
+            initialBossState,
             LifecycleOperation.Enter,
             runtime.FrameUpdateNumber,
             runtime.DeltaTime,
@@ -89,7 +89,7 @@ public sealed class BossAiRuntime
         catch
         {
             runtime.MarkModuleStopped();
-            RecordFailure(runtime, ErrorCode.ModuleExecutionFailed, "初期 State_Module の Enter に失敗しました。", LifecycleOperation.Enter, initialStateId);
+            RecordFailure(runtime, ErrorCode.ModuleExecutionFailed, "初期 State_Module の Enter に失敗しました。", LifecycleOperation.Enter, initialBossState);
             TrySafetyTransition(runtime, runtime.FrameUpdateNumber);
             return false;
         }
@@ -162,7 +162,7 @@ public sealed class BossAiRuntime
             return false;
         }
 
-        if (!runtime.CurrentStateId.IsValid || !runtime.StateEntered || !_registry.TryGet(runtime.CurrentStateId, out IBossStateModule module))
+        if (!runtime.CurrentStateId.IsValid() || !runtime.StateEntered || !_registry.TryGet(runtime.CurrentStateId, out IBossStateModule module))
         {
             RecordFailure(runtime, ErrorCode.UnregisteredState, "現在 State_Module が実行可能ではありません。", LifecycleOperation.Update, runtime.CurrentStateId);
             runtime.MarkModuleStopped();
@@ -198,7 +198,7 @@ public sealed class BossAiRuntime
 
     private bool TrySafetyTransition(BossRuntimeSlot runtime, long frameUpdateNumber)
     {
-        if (!_safeStateId.IsValid || runtime.CurrentStateId == _safeStateId || !_registry.TryGet(_safeStateId, out _))
+        if (!_safeBossState.IsValid() || runtime.CurrentStateId == _safeBossState || !_registry.TryGet(_safeBossState, out _))
         {
             return false;
         }
@@ -206,16 +206,16 @@ public sealed class BossAiRuntime
         TransitionReason reason = new(
             ReasonKind.ErrorRecovery,
             errorCode: ErrorCode.ModuleExecutionFailed,
-            originalInput: (long)runtime.CurrentStateId.Value,
+            originalInput: (long)runtime.CurrentStateId,
             supplementaryValue: frameUpdateNumber);
         TransitionRequest request = new(
             runtime.CurrentStateId,
-            _safeStateId,
+            _safeBossState,
             reason,
             runtime.Phase,
             runtime.EntityId,
             frameUpdateNumber,
-            _safeStateId);
+            _safeBossState);
         TransitionResult result = _transitionService.Apply(ref runtime, in request);
         if (result.IsRejected)
         {
@@ -232,7 +232,7 @@ public sealed class BossAiRuntime
         ObservationEvent observation = new(
             invocation.EntityId,
             invocation.BossType,
-            invocation.StateId,
+            invocation.State,
             invocation.Phase,
             invocation.Operation,
             invocation.FrameUpdateNumber,
@@ -251,13 +251,13 @@ public sealed class BossAiRuntime
         ErrorCode errorCode,
         string message,
         LifecycleOperation operation,
-        StateId stateId = default)
+        BossState stateId = default)
     {
-        StateId effectiveStateId = stateId.IsValid ? stateId : runtime.CurrentStateId;
+        BossState effectiveBossState = stateId.IsValid() ? stateId : runtime.CurrentStateId;
         ObservationEvent observation = new(
             runtime.EntityId,
             runtime.BossType,
-            effectiveStateId,
+            effectiveBossState,
             runtime.Phase,
             operation,
             runtime.FrameUpdateNumber,

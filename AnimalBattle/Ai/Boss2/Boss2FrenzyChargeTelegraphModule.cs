@@ -8,7 +8,7 @@ public sealed class Boss2FrenzyChargeTelegraphModule : IBossStateModule, IStateM
 {
     private readonly Boss2TelegraphRunner _runner;
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.FrenzyChargeTelegraph;
+    public BossState Id => Boss2StateIds.FrenzyChargeTelegraph;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "EffectPort", "ObservationService"];
 

@@ -11,7 +11,7 @@ public sealed class Boss2PlatformJumpModule : IBossStateModule, IStateModuleDepe
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public StateId Id => Boss2StateIds.PlatformJump;
+    public BossState Id => Boss2StateIds.PlatformJump;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort"];
 

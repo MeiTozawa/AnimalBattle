@@ -7,7 +7,7 @@ namespace AnimalBattle.Ai.Boss1;
 public sealed class FastSniperExecuteModule : Boss1BarrageExecuteModule
 {
     /// <inheritdoc />
-    public override StateId Id => Boss1StateIds.FastSniperExecute;
+    public override BossState Id => Boss1StateIds.FastSniperExecute;
 
     /// <summary>Boss1 の設定と実行値を注入します。</summary>
     public FastSniperExecuteModule(IBoss1Configuration configuration, Boss1BehaviorState state)

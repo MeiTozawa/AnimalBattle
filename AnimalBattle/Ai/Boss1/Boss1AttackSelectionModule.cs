@@ -11,7 +11,7 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
     private readonly Boss1BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
 
     /// <inheritdoc />
-    public StateId Id => Boss1StateIds.AttackSelection;
+    public BossState Id => Boss1StateIds.AttackSelection;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "PlayerObservation"];
 

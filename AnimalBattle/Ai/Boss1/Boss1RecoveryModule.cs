@@ -13,7 +13,7 @@ public sealed class Boss1RecoveryModule : IBossStateModule, IStateModuleDependen
     private RecoveryModule? _activeRecovery;
 
     /// <inheritdoc />
-    public StateId Id => Boss1StateIds.Recovery;
+    public BossState Id => Boss1StateIds.Recovery;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "MovementPort", "ObservationService"];
 
