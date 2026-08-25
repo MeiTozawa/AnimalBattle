@@ -213,10 +213,15 @@ public sealed class BossRuntimeSlot
         _hasPendingConfig = true;
     }
 
-    /// <summary>安全な境界で保留 snapshot を現在値へ反映します。</summary>
-    public bool ApplyPendingConfig()
+    /// <summary>
+    /// 保留 snapshot を指定した reload 境界で現在値へ反映します。
+    /// </summary>
+    /// <param name="boundary">設定を反映できる lifecycle 境界。</param>
+    /// <returns>snapshot を反映した場合は true。</returns>
+    public bool ApplyPendingConfig(ConfigReloadBoundary boundary)
     {
-        if (!_hasPendingConfig)
+        if (boundary is not (ConfigReloadBoundary.Transition or ConfigReloadBoundary.AttackSelection)
+            || !_hasPendingConfig)
         {
             return false;
         }
@@ -227,6 +232,24 @@ public sealed class BossRuntimeSlot
         _hasPendingConfig = false;
         return true;
     }
+
+    /// <summary>
+    /// 任意の実行時点からの設定反映を拒否します。
+    /// </summary>
+    /// <remarks>
+    /// 設定 reload は Transition または AttackSelection 境界からだけ行います。
+    /// 既存呼び出しとの互換性のためメソッドは残しますが、境界なしでは反映しません。
+    /// </remarks>
+    [Obsolete("ApplyPendingConfig(ConfigReloadBoundary) を使用してください。")]
+    public bool ApplyPendingConfig() => false;
+
+    /// <summary>状態遷移境界で保留 snapshot を反映します。</summary>
+    internal bool ApplyPendingConfigAtTransition()
+        => ApplyPendingConfig(ConfigReloadBoundary.Transition);
+
+    /// <summary>攻撃選択境界で保留 snapshot を反映します。</summary>
+    internal bool ApplyPendingConfigAtAttackSelection()
+        => ApplyPendingConfig(ConfigReloadBoundary.AttackSelection);
 
     /// <summary>両 gate と入力値を検証し、同一 Entity の Frame_Update を開始します。</summary>
     public bool TryBeginFrame(long frameUpdateNumber, float deltaTime, Phase phase, in PlayerObservation playerObservation)

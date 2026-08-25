@@ -100,6 +100,15 @@ public sealed class TransitionService : ITransitionService
                 }
             }
 
+            if (request.ToStateId == BossState.Boss1_AttackSelection)
+            {
+                runtime.ApplyPendingConfigAtAttackSelection();
+            }
+            else
+            {
+                runtime.ApplyPendingConfigAtTransition();
+            }
+
             TransitionReason previousReason = runtime.CurrentTransitionReason;
             runtime.SetCurrentState(request.ToStateId, request.Reason);
             LifecycleInvocation enterInvocation = CreateInvocation(runtime, request.ToStateId, LifecycleOperation.Enter, runtime.DeltaTime);

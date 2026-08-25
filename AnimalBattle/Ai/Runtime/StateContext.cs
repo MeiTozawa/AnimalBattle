@@ -95,7 +95,7 @@ public struct StateContext
         _playerObservation = default;
     }
 
-    /// <summary>設定更新境界で、次の Frame_Update 用 snapshot を反映します。</summary>
+    /// <summary>reload 境界で現在の State_Module が参照する設定 snapshot を反映します。</summary>
     public void SetConfigSnapshot(BossConfigSnapshot configSnapshot)
     {
         if (!configSnapshot.IsValid) throw new ArgumentException("設定 snapshot が未検証です。", nameof(configSnapshot));
