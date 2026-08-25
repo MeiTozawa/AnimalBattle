@@ -36,7 +36,7 @@ public enum ErrorCode
     MissingDependency = 5,
 
     /// <summary>
-    /// StateId または module が registry に登録されていないことを示します。
+    /// StateId または module が固定 map に対応していないことを示します。
     /// </summary>
     UnregisteredState = 6,
 

@@ -62,7 +62,7 @@ public sealed class BossAiRuntime
 
         if (!_registry.TryGet(initialBossState, out IBossStateModule module))
         {
-            RecordFailure(runtime, ErrorCode.UnregisteredState, "初期 State_Id が未登録です。", LifecycleOperation.Enter, initialBossState);
+            RecordFailure(runtime, ErrorCode.UnregisteredState, "初期 State_Id が固定 map に対応していません。", LifecycleOperation.Enter, initialBossState);
             return false;
         }
 
@@ -164,7 +164,7 @@ public sealed class BossAiRuntime
 
         if (!runtime.CurrentStateId.IsValid() || !runtime.StateEntered || !_registry.TryGet(runtime.CurrentStateId, out IBossStateModule module))
         {
-            RecordFailure(runtime, ErrorCode.UnregisteredState, "現在 State_Module が実行可能ではありません。", LifecycleOperation.Update, runtime.CurrentStateId);
+            RecordFailure(runtime, ErrorCode.UnregisteredState, "現在 State_Module が固定 map から取得できません。", LifecycleOperation.Update, runtime.CurrentStateId);
             runtime.MarkModuleStopped();
             runtime.TryMarkUpdated(frameUpdateNumber);
             return false;

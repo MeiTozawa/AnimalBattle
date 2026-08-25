@@ -78,7 +78,7 @@ public sealed class TransitionService : ITransitionService
             if (!_registry.TryGet(request.FromStateId, out IBossStateModule currentModule)
                 || !_registry.TryGet(request.ToStateId, out IBossStateModule nextModule))
             {
-                TransitionResult unregistered = Reject(in request, runtime.CurrentStateId, ErrorCode.UnregisteredState, "遷移対象の State_Module が未登録です。", false);
+                TransitionResult unregistered = Reject(in request, runtime.CurrentStateId, ErrorCode.UnregisteredState, "固定 map に対応する State_Module がありません。", false);
                 RecordTransition(in request, unregistered, runtime.BossType);
                 return unregistered;
             }
@@ -143,7 +143,7 @@ public sealed class TransitionService : ITransitionService
         bool toRegistered = _registry.TryGet(request.ToStateId, out _);
         if (!fromRegistered || !toRegistered)
         {
-            return Reject(in request, currentBossState, ErrorCode.UnregisteredState, "遷移対象の State_Id が未登録です。", record);
+            return Reject(in request, currentBossState, ErrorCode.UnregisteredState, "固定 map に対応する State_Id がありません。", record);
         }
 
         if (request.FromStateId == _deadStateId && request.ToStateId != _deadStateId)

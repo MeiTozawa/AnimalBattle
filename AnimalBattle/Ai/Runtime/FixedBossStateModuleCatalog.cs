@@ -25,7 +25,7 @@ public readonly record struct FixedBossStateModule(
 /// </summary>
 public static class FixedBossStateModuleCatalog
 {
-    private static readonly FixedBossStateModule[] _entries =
+    private static readonly IReadOnlyList<FixedBossStateModule> _entries = Array.AsReadOnly(
     [
         Entry(BossState.Boss1_Hover, BossType.Boss1, nameof(HoverMovementModule)),
         Entry(BossState.Boss1_AttackSelection, BossType.Boss1, nameof(Boss1AttackSelectionModule)),
@@ -64,7 +64,7 @@ public static class FixedBossStateModuleCatalog
         Entry(BossState.Boss2_Recovery, BossType.Boss2, nameof(Boss2RecoveryModule)),
         Entry(BossState.Boss2_PhaseTransition, BossType.Boss2, nameof(Boss2PhaseTransitionModule)),
         Entry(BossState.Boss2_Dead, BossType.Boss2, nameof(Boss2DeadModule))
-    ];
+    ]);
 
     /// <summary>Unknown を除く固定状態の全対応を取得します。</summary>
     public static IReadOnlyList<FixedBossStateModule> Entries => _entries;
@@ -72,7 +72,7 @@ public static class FixedBossStateModuleCatalog
     /// <summary>固定状態に対応する module 記述を取得します。</summary>
     public static bool TryGet(BossState state, out FixedBossStateModule entry)
     {
-        for (int index = 0; index < _entries.Length; index++)
+        for (int index = 0; index < _entries.Count; index++)
         {
             if (_entries[index].State == state)
             {
@@ -88,13 +88,13 @@ public static class FixedBossStateModuleCatalog
     /// <summary>固定集合の完全性と一対一対応を検査します。</summary>
     public static bool IsComplete(out string diagnostic)
     {
-        if (_entries.Length != Enum.GetValues<BossState>().Length - 1)
+        if (_entries.Count != Enum.GetValues<BossState>().Length - 1)
         {
             diagnostic = "固定 BossState の対応数が一致しません。";
             return false;
         }
 
-        for (int index = 0; index < _entries.Length; index++)
+        for (int index = 0; index < _entries.Count; index++)
         {
             FixedBossStateModule entry = _entries[index];
             if (!entry.IsValid)
@@ -103,7 +103,7 @@ public static class FixedBossStateModuleCatalog
                 return false;
             }
 
-            for (int other = index + 1; other < _entries.Length; other++)
+            for (int other = index + 1; other < _entries.Count; other++)
             {
                 if (_entries[other].State == entry.State || _entries[other].ModuleType == entry.ModuleType)
                 {
