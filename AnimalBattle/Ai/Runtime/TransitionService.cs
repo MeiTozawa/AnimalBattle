@@ -146,7 +146,7 @@ public sealed class TransitionService : ITransitionService
             return Reject(in request, currentBossState, ErrorCode.UnregisteredState, "固定 map に対応する State_Id がありません。", record);
         }
 
-        if (request.FromStateId == _deadStateId && request.ToStateId != _deadStateId)
+        if (IsDeadState(request.FromStateId) && request.ToStateId != request.FromStateId)
         {
             return Reject(in request, currentBossState, ErrorCode.TerminalStateViolation, "Dead 状態からの復帰を拒否しました。", record);
         }
@@ -191,6 +191,9 @@ public sealed class TransitionService : ITransitionService
 
         return result;
     }
+
+    private static bool IsDeadState(BossState state)
+        => state is BossState.Boss1_Dead or BossState.Boss2_Dead;
 
     private void RecordTransition(in TransitionRequest request, TransitionResult result, BossType bossType)
     {

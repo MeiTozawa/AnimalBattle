@@ -1,9 +1,10 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Components;
 
 namespace AnimalBattle.Ai.Boss2;
 
-/// <summary>Boss2 の死亡終端状態を保持し、新規攻撃と移動を停止する State_Module です。</summary>
+/// <summary>Boss2 の死亡理由と終端 data を保持し、新規攻撃と移動を停止する State_Module です。</summary>
 public sealed class Boss2DeadModule : IBossStateModule, IStateModuleDependencyProvider
 {
     private readonly Boss2BehaviorState _state;
@@ -25,18 +26,44 @@ public sealed class Boss2DeadModule : IBossStateModule, IStateModuleDependencyPr
         _state.IsDead = true;
         _state.IsAttackActive = false;
         _state.IsInvulnerable = false;
-        context.Movement.Stop();
-        context.Attack.ClearBossBullets();
-        Boss2ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Information, ErrorCode.None, "Boss2 は Dead 終端状態へ移行しました。");
+        TransitionReason reason = _state.TerminalData.IsTerminal
+            ? _state.TerminalData.DeathReason
+            : PhaseDeathController.CreateDeathReason(0.0f);
+        _state.TerminalData.TryCapture(
+            Boss2StateIds.Dead,
+            context.Phase,
+            in reason,
+            invocation.FrameUpdateNumber,
+            _state.CurrentAttackId,
+            AttackStage.None,
+            0.0f);
+
+        try
+        {
+            _state.TerminalData.MovementStopped = context.Movement.Stop();
+            _state.TerminalData.AttackGenerationStopped = true;
+            context.Attack.ClearBossBullets();
+        }
+        catch
+        {
+            _state.TerminalData.AttackGenerationStopped = true;
+            Boss2ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "Boss2 の死亡停止処理に失敗しました。", stage: AttackStage.None);
+        }
+
+        Boss2ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Information, ErrorCode.None, "Boss2 は Dead 終端状態へ移行しました。", stage: AttackStage.None);
     }
 
     /// <inheritdoc />
     public void Update(ref StateContext context, in LifecycleInvocation invocation)
     {
-        if (_state.IsDead)
+        if (!_state.IsDead)
         {
-            context.Movement.Stop();
+            return;
         }
+
+        _state.IsAttackActive = false;
+        _state.TerminalData.AttackGenerationStopped = true;
+        _state.TerminalData.MovementStopped = context.Movement.Stop();
     }
 
     /// <inheritdoc />

@@ -120,7 +120,143 @@ public sealed class BossAiRuntime
         return RunUpdate(runtime, frameUpdateNumber);
     }
 
-    /// <summary>すでに開始済みの Frame_Update で現在 module を更新します。</summary>
+    /// <summary>HP を同じ Frame_Update で評価し、PhaseTransition または Dead を先に確定します。</summary>
+    public bool TryUpdate(
+        BossRuntimeSlot runtime,
+        long frameUpdateNumber,
+        float deltaTime,
+        Phase phase,
+        in PlayerObservation playerObservation,
+        float currentHp,
+        float maxHp,
+        in BossPhaseThresholds thresholds)
+    {
+        ArgumentNullException.ThrowIfNull(runtime);
+        if (!runtime.InitializationComplete || !runtime.RuntimeReady)
+        {
+            RecordFailure(runtime, ErrorCode.MissingDependency, "初期化 gate が成立していません。", LifecycleOperation.Update);
+            return false;
+        }
+
+        if (runtime.LastUpdatedFrame >= 0 && frameUpdateNumber <= runtime.LastUpdatedFrame)
+        {
+            RecordFailure(runtime, ErrorCode.LifecycleViolation, "Frame_Update 番号が後退または重複しています。", LifecycleOperation.Update);
+            return false;
+        }
+
+        if (!runtime.TryBeginFrame(frameUpdateNumber, deltaTime, phase, in playerObservation))
+        {
+            RecordFailure(runtime, ErrorCode.InvalidTimer, "Frame_Update の入力値が不正です。", LifecycleOperation.Update);
+            return false;
+        }
+
+        if (!float.IsFinite(currentHp) || !float.IsFinite(maxHp) || maxHp <= 0.0f)
+        {
+            RecordFailure(runtime, ErrorCode.InvalidConfiguration, "Boss の HP 設定が不正です。", LifecycleOperation.Update);
+            runtime.TryMarkUpdated(frameUpdateNumber);
+            return false;
+        }
+
+        runtime.ClearCommands();
+        if (runtime.TerminalData.IsTerminal)
+        {
+            PhaseDeathController.ApplyDeathStop(ref runtime.TerminalData, runtime.Context.Movement, runtime.Context.Attack);
+            runtime.TryMarkUpdated(frameUpdateNumber);
+            return true;
+        }
+
+        if (currentHp <= 0.0f)
+        {
+            return ApplyDeathInCurrentFrame(runtime, currentHp, frameUpdateNumber);
+        }
+
+        if (thresholds.TryGetNextPhase(phase, currentHp / maxHp, out Phase nextPhase, out float threshold)
+            && !runtime.PhaseTransitionData.IsActive
+            && runtime.CurrentStateId is not (BossState.Boss1_PhaseTransition or BossState.Boss2_PhaseTransition or BossState.Boss1_Dead or BossState.Boss2_Dead))
+        {
+            TransitionReason reason = new(ReasonKind.PhaseThreshold, threshold: threshold);
+            BossState transitionState = PhaseDeathController.GetPhaseTransitionState(runtime.BossType);
+            TransitionRequest request = new(
+                runtime.CurrentStateId,
+                transitionState,
+                reason,
+                nextPhase,
+                runtime.EntityId,
+                frameUpdateNumber,
+                transitionState);
+            runtime.Context.SetPhaseForTransition(nextPhase);
+            TransitionResult result = _transitionService.Apply(ref runtime, in request);
+            if (result.IsAccepted)
+            {
+                runtime.PhaseTransitionData = new BossPhaseTransitionData(nextPhase, in reason)
+                {
+                    IsActive = true,
+                    TriggeredPhaseMask = nextPhase == Phase.Phase2
+                        ? PhaseTransitionApplyMask.Phase2
+                        : PhaseTransitionApplyMask.Phase3
+                };
+                runtime.AiData.Phase = nextPhase;
+                runtime.AiData.BossState = transitionState;
+                runtime.TryMarkUpdated(frameUpdateNumber);
+                return true;
+            }
+
+            runtime.TryMarkUpdated(frameUpdateNumber);
+            return false;
+        }
+
+        return RunUpdate(runtime, frameUpdateNumber);
+    }
+
+    /// <summary>既存設定の Phase 閾値で HP-aware 更新を実行します。</summary>
+    public bool TryUpdate(
+        BossRuntimeSlot runtime,
+        long frameUpdateNumber,
+        float deltaTime,
+        Phase phase,
+        in PlayerObservation playerObservation,
+        float currentHp,
+        float maxHp)
+        => TryUpdate(runtime, frameUpdateNumber, deltaTime, phase, in playerObservation, currentHp, maxHp, BossPhaseThresholds.Default);
+
+    private bool ApplyDeathInCurrentFrame(BossRuntimeSlot runtime, float currentHp, long frameUpdateNumber)
+    {
+        BossState deadState = PhaseDeathController.GetDeadState(runtime.BossType);
+        TransitionReason reason = PhaseDeathController.CreateDeathReason(currentHp);
+        if (!runtime.AiData.IsDead)
+        {
+            runtime.AiData.Phase = runtime.Context.Phase;
+            runtime.AiData.BossType = runtime.BossType;
+            PhaseDeathController.TryCaptureDeath(
+                ref runtime.AiData,
+                ref runtime.TerminalData,
+                ref runtime.PhaseTransitionData,
+                ref runtime.AttackData,
+                currentHp,
+                frameUpdateNumber);
+        }
+
+        PhaseDeathController.ApplyDeathStop(ref runtime.TerminalData, runtime.Context.Movement, runtime.Context.Attack);
+        if (runtime.CurrentStateId == deadState)
+        {
+            runtime.TryMarkUpdated(frameUpdateNumber);
+            return true;
+        }
+
+        TransitionRequest request = new(
+            runtime.CurrentStateId,
+            deadState,
+            reason,
+            runtime.Context.Phase,
+            runtime.EntityId,
+            frameUpdateNumber,
+            deadState);
+        TransitionResult result = _transitionService.Apply(ref runtime, in request);
+        runtime.TryMarkUpdated(frameUpdateNumber);
+        return result.IsAccepted;
+    }
+
+
     public bool TryUpdate(BossRuntimeSlot runtime)
     {
         ArgumentNullException.ThrowIfNull(runtime);

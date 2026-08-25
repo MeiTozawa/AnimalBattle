@@ -1,4 +1,5 @@
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Components;
 using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Boss2;
@@ -36,6 +37,15 @@ public sealed class Boss2BehaviorState
     public bool IsDead { get; set; }
     /// <summary>攻撃が開始済みかどうかです。</summary>
     public bool IsAttackActive { get; set; }
+    private BossPhaseTransitionData _phaseTransitionData;
+    private BossTerminalData _terminalData;
+    /// <summary>PhaseTransition の項目別適用 data です。</summary>
+    public ref BossPhaseTransitionData PhaseTransitionData => ref _phaseTransitionData;
+    /// <summary>Dead 状態で保持する終端 data です。</summary>
+    public ref BossTerminalData TerminalData => ref _terminalData;
+    /// <summary>直近の PhaseTransition target を取得します。</summary>
+    public Phase PhaseTransitionTargetPhase { get; set; }
+
     /// <summary>次に要求する State_Id です。</summary>
     public BossState PendingBossState { get; private set; }
     /// <summary>次の状態へ渡す遷移理由です。</summary>

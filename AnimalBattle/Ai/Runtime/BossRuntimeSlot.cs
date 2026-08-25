@@ -1,5 +1,6 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
+using AnimalBattle.Components;
 
 namespace AnimalBattle.Ai.Runtime;
 
@@ -19,6 +20,10 @@ public sealed class BossRuntimeSlot
     private long _lastUpdatedFrame = -1;
     private long _commandFrame = -1;
     private int _transitionDepth;
+    private BossAiData _aiData;
+    private BossAttackData _attackData;
+    private BossPhaseTransitionData _phaseTransitionData;
+    private BossTerminalData _terminalData;
 
     /// <summary>Entity 単位の状態 context への参照を取得します。</summary>
     public ref StateContext Context => ref _context;
@@ -61,6 +66,15 @@ public sealed class BossRuntimeSlot
     public PreallocatedCommandBuffer<AttackCommand> AttackCommands { get; }
     /// <summary>演出 command の事前確保 buffer を取得します。</summary>
     public PreallocatedCommandBuffer<EffectCommand> EffectCommands { get; }
+
+    /// <summary>死亡後も HUD、衝突、Restart が参照できる終端 data です。</summary>
+    public ref BossTerminalData TerminalData => ref _terminalData;
+    /// <summary>PhaseTransition の項目別適用 data です。</summary>
+    public ref BossPhaseTransitionData PhaseTransitionData => ref _phaseTransitionData;
+    /// <summary>同一 frame の攻撃 stage を保持する data です。</summary>
+    public ref BossAttackData AttackData => ref _attackData;
+    /// <summary>共通 ECS data 互換の AI 値です。</summary>
+    public ref BossAiData AiData => ref _aiData;
 
     /// <summary>指定 command の index から one-shot key を runtime 経由で取得します。</summary>
     public bool TryGetOneShotKey(CommandComponentKind component, int index, out CommandOneShotKey key)
@@ -160,6 +174,10 @@ public sealed class BossRuntimeSlot
         AttackCommands = new PreallocatedCommandBuffer<AttackCommand>(attackCommandCapacity, commandDiagnosticSink);
         EffectCommands = new PreallocatedCommandBuffer<EffectCommand>(effectCommandCapacity, commandDiagnosticSink);
         _currentConfig = configSnapshot;
+        _aiData = new BossAiData(bossType, BossState.Unknown, Phase.Phase1);
+        _attackData = new BossAttackData(AttackId.Unknown);
+        _phaseTransitionData = default;
+        _terminalData = default;
         _context = new StateContext(
             entityId,
             bossType,
@@ -229,6 +247,9 @@ public sealed class BossRuntimeSlot
             _commandFrame = frameUpdateNumber;
         }
 
+        _aiData.FrameUpdateNumber = frameUpdateNumber;
+        _aiData.Phase = phase;
+        _aiData.UpdateSource = UpdateSource.NewRuntime;
         return true;
     }
 
@@ -244,6 +265,9 @@ public sealed class BossRuntimeSlot
     {
         _currentBossState = stateId;
         _currentTransitionReason = reason;
+        _aiData.BossState = stateId;
+        _aiData.Phase = _context.Phase;
+        _aiData.IsDead = stateId is BossState.Boss1_Dead or BossState.Boss2_Dead;
         _stateEntered = false;
         _moduleStopped = false;
     }

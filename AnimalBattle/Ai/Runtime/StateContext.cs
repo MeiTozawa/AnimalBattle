@@ -102,6 +102,17 @@ public struct StateContext
         _configSnapshot = configSnapshot;
     }
 
+    /// <summary>PhaseTransition の受理後に target Phase を context へ反映します。</summary>
+    public void SetPhaseForTransition(Phase phase)
+    {
+        if (phase is not (Phase.Phase1 or Phase.Phase2 or Phase.Phase3))
+        {
+            throw new ArgumentOutOfRangeException(nameof(phase));
+        }
+
+        Phase = phase;
+    }
+
     /// <summary>フレーム境界の値を検証して context に設定します。</summary>
     public bool TryBeginFrame(long frameUpdateNumber, float deltaTime, Phase phase, in PlayerObservation playerObservation)
     {

@@ -1,5 +1,6 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Components;
 
 namespace AnimalBattle.Ai.Boss1;
 
@@ -27,32 +28,22 @@ public sealed class Boss1PhaseTransitionModule : IBossStateModule, IStateModuleD
     {
         _elapsed = 0.0f;
         _state.StateElapsed = 0.0f;
-        _state.IsInvulnerable = true;
-
-        if (!context.Movement.Stop())
-        {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "PhaseTransition の移動停止に失敗しました。");
-        }
-
-        if (!context.Attack.ClearBossBullets())
-        {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "PhaseTransition の弾整理に失敗しました。");
-        }
-
-        if (!context.Effect.RequestTelegraph(_state.CurrentPosition.X, _state.CurrentPosition.Y))
-        {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "PhaseTransition の演出 command を発行できませんでした。");
-        }
+        _state.PhaseTransitionData = new BossPhaseTransitionData(
+            context.Phase,
+            new TransitionReason(ReasonKind.PhaseThreshold));
+        _state.PhaseTransitionData.IsActive = true;
+        ApplyItems(ref context, in invocation);
     }
 
     /// <inheritdoc />
     public void Update(ref StateContext context, in LifecycleInvocation invocation)
     {
-        if (_state.IsDead || context.Phase is not (Phase.Phase1 or Phase.Phase2 or Phase.Phase3))
+        if (_state.IsDead)
         {
             return;
         }
 
+        ApplyItems(ref context, in invocation);
         Boss1PhaseSettings settings = _configuration.GetPhase(context.Phase);
         _elapsed = MathF.Min(settings.TransitionDuration, _elapsed + context.DeltaTime);
         _state.StateElapsed = _elapsed;
@@ -61,8 +52,9 @@ public sealed class Boss1PhaseTransitionModule : IBossStateModule, IStateModuleD
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "PhaseTransition の帰還 command を発行できませんでした。");
         }
 
-        if (_elapsed >= settings.TransitionDuration)
+        if (_elapsed >= settings.TransitionDuration && !_state.IsDead)
         {
+            _state.PhaseTransitionData.IsActive = false;
             _state.IsInvulnerable = false;
             _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.PhaseThreshold, threshold: 0));
         }
@@ -72,5 +64,43 @@ public sealed class Boss1PhaseTransitionModule : IBossStateModule, IStateModuleD
     public void Exit(ref StateContext context, in LifecycleInvocation invocation)
     {
         _elapsed = 0.0f;
+        _state.PhaseTransitionData.IsActive = false;
     }
+
+    private void ApplyItems(ref StateContext context, in LifecycleInvocation invocation)
+    {
+        ref BossPhaseTransitionData data = ref _state.PhaseTransitionData;
+        _state.IsInvulnerable = true;
+        data.AppliedMask |= PhaseTransitionApplyMask.Invulnerability;
+
+        if (!data.AppliedMask.HasFlag(PhaseTransitionApplyMask.MovementStop))
+        {
+            if (context.Movement.Stop()) data.AppliedMask |= PhaseTransitionApplyMask.MovementStop;
+            else RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.MovementStop, "PhaseTransition の移動停止に失敗しました。");
+        }
+
+        if (!data.AppliedMask.HasFlag(PhaseTransitionApplyMask.BulletCleanup))
+        {
+            if (context.Attack.ClearBossBullets()) data.AppliedMask |= PhaseTransitionApplyMask.BulletCleanup;
+            else RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.BulletCleanup, "PhaseTransition の弾整理に失敗しました。");
+        }
+
+        if (!data.AppliedMask.HasFlag(PhaseTransitionApplyMask.Effect))
+        {
+            if (context.Effect.RequestTelegraph(_state.CurrentPosition.X, _state.CurrentPosition.Y)) data.AppliedMask |= PhaseTransitionApplyMask.Effect;
+            else RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.Effect, "PhaseTransition の演出 command を発行できませんでした。");
+        }
+    }
+
+    private void RecordFailure(ref StateContext context, in LifecycleInvocation invocation, PhaseTransitionApplyMask item, string message)
+    {
+        if (_state.PhaseTransitionData.FailedMask.HasFlag(item))
+        {
+            return;
+        }
+
+        _state.PhaseTransitionData.FailedMask |= item;
+        Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, message);
+    }
+
 }

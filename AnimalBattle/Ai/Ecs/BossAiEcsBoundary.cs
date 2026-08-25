@@ -10,7 +10,8 @@ public delegate void BossAiEcsUpdateCallback(
     ref BossAiData ai,
     ref BossMovementData movement,
     ref BossAttackData attack,
-    ref BossPhaseTransitionData phaseTransition);
+    ref BossPhaseTransitionData phaseTransition,
+    ref BossTerminalData terminal);
 
 /// <summary>ECS 更新の gate 状態です。</summary>
 public readonly record struct BossEcsUpdateGate(bool InitializationComplete, bool RuntimeReady)
@@ -33,12 +34,12 @@ public readonly record struct BossEcsBoundaryResult(
 /// <summary>Boss AI data component の Query と gate を所有する ECS 境界です。</summary>
 public sealed class BossAiEcsBoundary
 {
-    private readonly Query<BossAiData, BossMovementData, BossAttackData, BossPhaseTransitionData> _query;
+    private readonly Query<BossAiData, BossMovementData, BossAttackData, BossPhaseTransitionData, BossTerminalData> _query;
 
     /// <summary>指定 World に必須 Boss AI Query を構築します。</summary>
     public BossAiEcsBoundary(World world)
     {
-        _query = world.QueryBuilder<BossAiData, BossMovementData, BossAttackData, BossPhaseTransitionData>().Build();
+        _query = world.QueryBuilder<BossAiData, BossMovementData, BossAttackData, BossPhaseTransitionData, BossTerminalData>().Build();
     }
 
     /// <summary>gate 後にだけ Query の読み書きを行います。</summary>
@@ -53,9 +54,9 @@ public sealed class BossAiEcsBoundary
         int updatedCount = 0;
         try
         {
-            _query.Each((Entity entity, ref BossAiData ai, ref BossMovementData movement, ref BossAttackData attack, ref BossPhaseTransitionData phaseTransition) =>
+            _query.Each((Entity entity, ref BossAiData ai, ref BossMovementData movement, ref BossAttackData attack, ref BossPhaseTransitionData phaseTransition, ref BossTerminalData terminal) =>
             {
-                callback(entity, ref ai, ref movement, ref attack, ref phaseTransition);
+                callback(entity, ref ai, ref movement, ref attack, ref phaseTransition, ref terminal);
                 updatedCount++;
             });
             return new BossEcsBoundaryResult(true, updatedCount, ErrorCode.None, frameUpdateNumber);

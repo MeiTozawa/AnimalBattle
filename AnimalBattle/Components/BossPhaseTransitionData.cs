@@ -12,6 +12,10 @@ public struct BossPhaseTransitionData
     public Phase TargetPhase;
     /// <summary>遷移理由と payload です。</summary>
     public TransitionReason Reason;
+    /// <summary>PhaseTransition が有効かどうかです。</summary>
+    public bool IsActive;
+    /// <summary>一度開始した Phase 閾値の bit mask です。</summary>
+    public PhaseTransitionApplyMask TriggeredPhaseMask;
     /// <summary>成功した適用項目です。</summary>
     public PhaseTransitionApplyMask AppliedMask;
     /// <summary>失敗した適用項目です。</summary>
@@ -24,6 +28,8 @@ public struct BossPhaseTransitionData
     {
         TargetPhase = targetPhase;
         Reason = reason;
+        IsActive = false;
+        TriggeredPhaseMask = PhaseTransitionApplyMask.None;
         AppliedMask = PhaseTransitionApplyMask.None;
         FailedMask = PhaseTransitionApplyMask.None;
         TransitionTimer = 0.0f;
@@ -43,5 +49,9 @@ public enum PhaseTransitionApplyMask
     /// <summary>Boss 弾整理です。</summary>
     BulletCleanup = 4,
     /// <summary>演出です。</summary>
-    Effect = 8
+    Effect = 8,
+    /// <summary>Phase2 の閾値を一度開始したことを示します。</summary>
+    Phase2 = 16,
+    /// <summary>Phase3 の閾値を一度開始したことを示します。</summary>
+    Phase3 = 32
 }
