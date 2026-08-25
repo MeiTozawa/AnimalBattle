@@ -1,4 +1,5 @@
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Regions;
 
@@ -8,6 +9,7 @@ public sealed class AttackRegion
     private readonly PhaseChildStateRules _rules;
     private StateId _currentStateId;
     private bool _isActive;
+    private RegionTransitionResult _lastTransitionResult;
 
     /// <summary>Attack 子領域を生成します。</summary>
     public AttackRegion(PhaseChildStateRules rules)
@@ -27,17 +29,26 @@ public sealed class AttackRegion
     public RegionFailure LastFailure { get; private set; }
     /// <summary>直近の中間 State_Id です。</summary>
     public StateId IntermediateStateId => LastFailure.IntermediateStateId;
+    /// <summary>直近の遷移結果を取得します。失敗時も中間状態を含みます。</summary>
+    public RegionTransitionResult LastTransitionResult => _lastTransitionResult;
 
     /// <summary>Phase の安全な初期状態へ入場します。</summary>
-    public RegionTransitionResult TryActivateInitial(Phase phase, in TransitionReason reason, Func<StateId, bool>? transition = null)
+    public Result<RegionTransitionResult> ActivateInitial(
+        Phase phase,
+        in TransitionReason reason,
+        Func<StateId, Result<bool>>? transition = null)
     {
-        if (!_rules.TryGet(phase, out RegionStateRange range))
+        Result<RegionStateRange> rangeResult = _rules.Get(phase);
+        if (!rangeResult.IsOk)
         {
             return Fail(RegionFailureKind.InvalidPhase, phase, _currentStateId, default, default, reason);
         }
 
-        bool accepted = transition is null || transition(range.InitialStateId);
-        if (!accepted)
+        RegionStateRange range = rangeResult.ValueOrDefault();
+        Result<bool> transitionResult = transition is null
+            ? Result<bool>.Ok(true)
+            : transition(range.InitialStateId);
+        if (!transitionResult.IsOk || transitionResult.Value != true)
         {
             return Fail(RegionFailureKind.SafeInitialTransitionFailed, phase, _currentStateId, default, range.InitialStateId, reason);
         }
@@ -47,40 +58,68 @@ public sealed class AttackRegion
         _isActive = true;
         EnterCount++;
         LastFailure = default;
-        return new RegionTransitionResult(true, false, false, previous, _currentStateId, default);
+        RegionTransitionResult result = new(true, false, false, previous, _currentStateId, default);
+        _lastTransitionResult = result;
+        return Result<RegionTransitionResult>.Ok(result);
     }
 
     /// <summary>指定 State_Id へ遷移し、範囲外なら安全初期状態を試行します。</summary>
-    public RegionTransitionResult TryTransition(Phase phase, StateId requestedStateId, in TransitionReason reason, Func<StateId, bool>? safeTransition = null)
+    public Result<RegionTransitionResult> Transition(
+        Phase phase,
+        StateId requestedStateId,
+        in TransitionReason reason,
+        Func<StateId, Result<bool>>? safeTransition = null)
     {
         if (!_isActive)
         {
-            return TryActivateInitial(phase, in reason, safeTransition);
+            return ActivateInitial(phase, in reason, safeTransition);
         }
 
-        if (!_rules.TryGet(phase, out RegionStateRange range))
+        Result<RegionStateRange> rangeResult = _rules.Get(phase);
+        if (!rangeResult.IsOk)
         {
             return Fail(RegionFailureKind.InvalidPhase, phase, _currentStateId, requestedStateId, default, reason);
         }
 
+        RegionStateRange range = rangeResult.ValueOrDefault();
         if (range.Contains(requestedStateId))
         {
             StateId previous = _currentStateId;
+            if (requestedStateId == _currentStateId)
+            {
+                LastFailure = default;
+                RegionTransitionResult unchanged = new(true, false, false, previous, _currentStateId, default);
+                _lastTransitionResult = unchanged;
+                return Result<RegionTransitionResult>.Ok(unchanged);
+            }
+
             _currentStateId = requestedStateId;
             EnterCount++;
             LastFailure = default;
-            return new RegionTransitionResult(true, false, false, previous, _currentStateId, default);
+            RegionTransitionResult changed = new(true, false, false, previous, _currentStateId, default);
+            _lastTransitionResult = changed;
+            return Result<RegionTransitionResult>.Ok(changed);
         }
 
-        RegionTransitionResult recovery = TryActivateInitial(phase, in reason, safeTransition);
-        if (recovery.IsSuccess)
+        Result<RegionTransitionResult> recoveryResult = ActivateInitial(phase, in reason, safeTransition);
+        if (!recoveryResult.IsOk)
         {
-            RegionFailure failure = new(RegionKind.Attack, RegionFailureKind.ChildOutOfRange, phase, requestedStateId, requestedStateId, recovery.CurrentStateId, range.InitialStateId, reason);
-            LastFailure = failure;
-            return new RegionTransitionResult(false, true, false, recovery.PreviousStateId, recovery.CurrentStateId, failure);
+            RegionFailure safeFailure = LastFailure with
+            {
+                RequestedStateId = requestedStateId,
+                IntermediateStateId = _currentStateId
+            };
+            LastFailure = safeFailure;
+            _lastTransitionResult = new RegionTransitionResult(false, false, true, _currentStateId, _currentStateId, safeFailure);
+            return Result<RegionTransitionResult>.Err(safeFailure.ToSimpleError());
         }
 
-        return recovery;
+        RegionTransitionResult recovery = recoveryResult.ValueOrDefault();
+        RegionFailure failure = new(RegionKind.Attack, RegionFailureKind.ChildOutOfRange, phase, recovery.PreviousStateId, requestedStateId, recovery.CurrentStateId, range.InitialStateId, reason);
+        LastFailure = failure;
+        RegionTransitionResult recovered = new(true, true, false, recovery.PreviousStateId, recovery.CurrentStateId, failure);
+        _lastTransitionResult = recovered;
+        return Result<RegionTransitionResult>.Ok(recovered);
     }
 
     /// <summary>Phase 変更前に Attack 子領域を終了します。</summary>
@@ -95,10 +134,17 @@ public sealed class AttackRegion
         ExitCount++;
     }
 
-    private RegionTransitionResult Fail(RegionFailureKind kind, Phase phase, StateId current, StateId requested, StateId safeInitial, in TransitionReason reason)
+    private Result<RegionTransitionResult> Fail(
+        RegionFailureKind kind,
+        Phase phase,
+        StateId current,
+        StateId requested,
+        StateId safeInitial,
+        in TransitionReason reason)
     {
         RegionFailure failure = new(RegionKind.Attack, kind, phase, current, requested, current, safeInitial, reason);
         LastFailure = failure;
-        return new RegionTransitionResult(false, false, kind == RegionFailureKind.SafeInitialTransitionFailed, current, current, failure);
+        _lastTransitionResult = new RegionTransitionResult(false, false, true, current, current, failure);
+        return Result<RegionTransitionResult>.Err(failure.ToSimpleError());
     }
 }

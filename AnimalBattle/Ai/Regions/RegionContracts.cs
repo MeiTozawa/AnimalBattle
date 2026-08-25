@@ -1,24 +1,18 @@
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Regions;
 
 /// <summary>Phase ごとの子状態許可範囲を表します。</summary>
-public readonly struct RegionStateRange
+/// <remarks>状態範囲を生成します。</remarks>
+public readonly struct RegionStateRange(StateId initialStateId, StateId minimumStateId, StateId maximumStateId)
 {
     /// <summary>安全な初期 State_Id です。</summary>
-    public StateId InitialStateId { get; }
+    public StateId InitialStateId { get; } = initialStateId;
     /// <summary>許可範囲の最小 State_Id です。</summary>
-    public StateId MinimumStateId { get; }
+    public StateId MinimumStateId { get; } = minimumStateId;
     /// <summary>許可範囲の最大 State_Id です。</summary>
-    public StateId MaximumStateId { get; }
-
-    /// <summary>状態範囲を生成します。</summary>
-    public RegionStateRange(StateId initialStateId, StateId minimumStateId, StateId maximumStateId)
-    {
-        InitialStateId = initialStateId;
-        MinimumStateId = minimumStateId;
-        MaximumStateId = maximumStateId;
-    }
+    public StateId MaximumStateId { get; } = maximumStateId;
 
     /// <summary>State_Id が範囲内かどうかを取得します。</summary>
     public bool Contains(StateId stateId) => stateId.IsValid
@@ -29,31 +23,23 @@ public readonly struct RegionStateRange
 }
 
 /// <summary>Phase 1〜3 の子状態許可範囲を保持します。</summary>
-public sealed class PhaseChildStateRules
+/// <remarks>許可範囲を生成します。</remarks>
+public sealed class PhaseChildStateRules(RegionStateRange phase1, RegionStateRange phase2, RegionStateRange phase3)
 {
-    private readonly RegionStateRange _phase1;
-    private readonly RegionStateRange _phase2;
-    private readonly RegionStateRange _phase3;
-
-    /// <summary>許可範囲を生成します。</summary>
-    public PhaseChildStateRules(RegionStateRange phase1, RegionStateRange phase2, RegionStateRange phase3)
-    {
-        _phase1 = phase1;
-        _phase2 = phase2;
-        _phase3 = phase3;
-    }
+    private readonly RegionStateRange _phase1 = phase1;
+    private readonly RegionStateRange _phase2 = phase2;
+    private readonly RegionStateRange _phase3 = phase3;
 
     /// <summary>指定 Phase の許可範囲を取得します。</summary>
-    public bool TryGet(Phase phase, out RegionStateRange range)
+    public Result<RegionStateRange> Get(Phase phase)
     {
-        range = phase switch
+        return phase switch
         {
-            Phase.Phase1 => _phase1,
-            Phase.Phase2 => _phase2,
-            Phase.Phase3 => _phase3,
-            _ => default
+            Phase.Phase1 => Result<RegionStateRange>.Ok(_phase1),
+            Phase.Phase2 => Result<RegionStateRange>.Ok(_phase2),
+            Phase.Phase3 => Result<RegionStateRange>.Ok(_phase3),
+            _ => SimpleError.NotValid($"子領域の許可範囲を取得できない Phase です: {phase}。")
         };
-        return phase is Phase.Phase1 or Phase.Phase2 or Phase.Phase3;
     }
 }
 
@@ -94,7 +80,26 @@ public readonly record struct RegionFailure(
     StateId RequestedStateId,
     StateId IntermediateStateId,
     StateId SafeInitialStateId,
-    TransitionReason Reason);
+    TransitionReason Reason) : IDomainFailure
+{
+    /// <summary>Result 型が扱える共通エラー表現へ変換します。</summary>
+    public SimpleError ToSimpleError()
+    {
+        string description = $"{Region} 領域の遷移に失敗しました (原因: {Kind}, Phase: {Phase}, "
+            + $"Current: {CurrentStateId.Value}, Requested: {RequestedStateId.Value}, "
+            + $"Intermediate: {IntermediateStateId.Value}, SafeInitial: {SafeInitialStateId.Value}, Reason: {Reason.Kind})。";
+        ErrorType type = Kind == RegionFailureKind.ChildOutOfRange
+            ? ErrorType.ArgumentOutOfRange
+            : ErrorType.NotValid;
+        return new SimpleError(description, type);
+    }
+
+    /// <summary>共通エラー表現を取得します。</summary>
+    public SimpleError Error => ToSimpleError();
+
+    /// <summary>領域失敗を共通エラーへ暗黙変換します。</summary>
+    public static implicit operator SimpleError(RegionFailure failure) => failure.ToSimpleError();
+}
 
 /// <summary>子領域または親領域の遷移結果です。</summary>
 public readonly record struct RegionTransitionResult(
@@ -107,6 +112,12 @@ public readonly record struct RegionTransitionResult(
 {
     /// <summary>成功した変更を保持しながら別領域が失敗した部分成功かどうかです。</summary>
     public bool IsPartialSuccess => IsSuccess && WasRecovered;
+
+    /// <summary>状態識別子が実際に変更されたかどうかを取得します。</summary>
+    public bool IsChanged => IsSuccess && PreviousStateId != CurrentStateId;
+
+    /// <summary>この遷移に失敗情報が含まれるかどうかを取得します。</summary>
+    public bool HasFailure => Failure.Kind != RegionFailureKind.None;
 }
 
 /// <summary>Phase、Movement、Attack の同一 frame 更新結果です。</summary>
@@ -116,4 +127,11 @@ public readonly record struct CompositeRegionResult(
     bool ParentInvalid,
     RegionTransitionResult Movement,
     RegionTransitionResult Attack,
-    RegionFailure Failure);
+    RegionFailure Failure)
+{
+    /// <summary>いずれかの子領域で失敗が発生したかどうかを取得します。</summary>
+    public bool HasFailure => Movement.HasFailure || Attack.HasFailure || Failure.Kind != RegionFailureKind.None;
+
+    /// <summary>失敗した子領域を取得します。複数失敗時は検証順序の先頭です。</summary>
+    public RegionKind FailedRegion => Failure.Kind == RegionFailureKind.None ? default : Failure.Region;
+}
