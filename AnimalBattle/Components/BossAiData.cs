@@ -25,6 +25,8 @@ public struct BossAiData(BossType bossType, BossState stateId, Phase phase)
     public bool IsInvulnerable = false;
     /// <summary>Boss が死亡終端状態かどうかです。</summary>
     public bool IsDead = false;
+    /// <summary>新しい攻撃生成と攻撃判定を許可するかどうかです。</summary>
+    public bool AttackGenerationEnabled = true;
     /// <summary>値を書き込んだ実行基盤です。</summary>
     public UpdateSource UpdateSource = UpdateSource.NewRuntime;
 }

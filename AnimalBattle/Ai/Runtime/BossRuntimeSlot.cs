@@ -20,6 +20,7 @@ public sealed class BossRuntimeSlot
     private long _lastUpdatedFrame = -1;
     private long _commandFrame = -1;
     private int _transitionDepth;
+    private bool _failureActive;
     private BossAiData _aiData;
     private BossAttackData _attackData;
     private BossPhaseTransitionData _phaseTransitionData;
@@ -59,6 +60,22 @@ public sealed class BossRuntimeSlot
     public bool RuntimeReady { get; private set; }
     /// <summary>最後に処理したエラー fingerprint を取得します。</summary>
     public ulong LastErrorFingerprint { get; private set; }
+    /// <summary>最後に同一 fingerprint を処理した Frame_Update 番号を取得します。</summary>
+    public long LastHandledFrame { get; private set; } = -1;
+    /// <summary>処理エラー以外の理由で module が停止した理由を取得します。</summary>
+    public ErrorCode ModuleStopReason { get; private set; } = ErrorCode.None;
+    /// <summary>module を停止した Frame_Update 番号を取得します。</summary>
+    public long ModuleStoppedFrame { get; private set; } = -1;
+    /// <summary>安全遷移を既に一度試行したかどうかを取得します。</summary>
+    public bool SafetyTransitionAttempted { get; private set; }
+    /// <summary>安全な復帰先が使えず fail-closed になったかどうかを取得します。</summary>
+    public bool IsFailClosed { get; private set; }
+    /// <summary>最後に適用した安全値の成功項目を取得します。</summary>
+    public SafetyParameterApplyMask AppliedSafetyParameters { get; private set; }
+    /// <summary>最後に適用した安全値の失敗項目を取得します。</summary>
+    public SafetyParameterApplyMask FailedSafetyParameters { get; private set; }
+    /// <summary>攻撃を新規生成できる状態かどうかを取得します。</summary>
+    public bool CanGenerateAttack => !IsFailClosed && !AiData.IsDead && AiData.AttackGenerationEnabled;
 
     /// <summary>移動 command の事前確保 buffer を取得します。</summary>
     public PreallocatedCommandBuffer<MovementCommand> MovementCommands { get; }
@@ -104,7 +121,7 @@ public sealed class BossRuntimeSlot
     /// <summary>指定 index の攻撃 command を runtime 経由で取得します。</summary>
     public bool TryGetAttackCommand(int index, out AttackCommand command)
     {
-        if ((uint)index >= (uint)AttackCommands.Count)
+        if (!CanGenerateAttack || (uint)index >= (uint)AttackCommands.Count)
         {
             command = default;
             return false;
@@ -203,7 +220,110 @@ public sealed class BossRuntimeSlot
     }
 
     /// <summary>エラー fingerprint を記録します。</summary>
-    public void SetLastErrorFingerprint(ulong fingerprint) => LastErrorFingerprint = fingerprint;
+    public void SetLastErrorFingerprint(ulong fingerprint)
+    {
+        LastErrorFingerprint = fingerprint;
+        _failureActive = fingerprint != 0;
+    }
+
+    /// <summary>同じ異常の二重処理を抑止し、初回処理 frame を保存します。</summary>
+    internal bool TryHandleFailure(ulong fingerprint, long frameUpdateNumber)
+    {
+        if (fingerprint == 0 || (_failureActive && LastErrorFingerprint == fingerprint))
+        {
+            return false;
+        }
+
+        LastErrorFingerprint = fingerprint;
+        LastHandledFrame = frameUpdateNumber;
+        _failureActive = true;
+        return true;
+    }
+
+    /// <summary>正常な frame の完了後に次の異常を受け付けられるようにします。</summary>
+    internal void MarkHealthyFrame()
+    {
+        if (!IsFailClosed && !ModuleStopped)
+        {
+            ModuleStopReason = ErrorCode.None;
+            _failureActive = false;
+        }
+    }
+
+    /// <summary>処理エラー以外で停止した module を依存関係検証後に再開します。</summary>
+    public bool TryRevalidateStoppedModule()
+    {
+        if (!ModuleStopped || IsFailClosed || ModuleStopReason == ErrorCode.ModuleExecutionFailed)
+        {
+            return false;
+        }
+
+        if (!_context.IsReady)
+        {
+            return false;
+        }
+
+        _moduleStopped = false;
+        ModuleStopReason = ErrorCode.None;
+        return true;
+    }
+
+    /// <summary>module を停止し、停止理由と frame を保存します。</summary>
+    internal void StopModule(ErrorCode reason)
+    {
+        _moduleStopped = true;
+        _stateEntered = false;
+        ModuleStopReason = reason;
+        ModuleStoppedFrame = FrameUpdateNumber;
+    }
+
+    /// <summary>安全値を項目単位で適用し、成功値を保持します。</summary>
+    public SafetyParameterApplicationResult ApplySafetyParameters(in SafetyParameter parameter)
+    {
+        SafetyParameterApplicationResult result = SafetyParameterApplier.Apply(
+            this,
+            in parameter,
+            AppliedSafetyParameters,
+            FailedSafetyParameters);
+        AppliedSafetyParameters = result.AppliedMask;
+        FailedSafetyParameters = result.FailedMask;
+        return result;
+    }
+
+    /// <summary>安全遷移の再帰的な再試行を一回に制限します。</summary>
+    internal bool TryBeginSafetyTransition()
+    {
+        if (SafetyTransitionAttempted)
+        {
+            return false;
+        }
+
+        SafetyTransitionAttempted = true;
+        return true;
+    }
+
+    /// <summary>安全復帰先が使えない場合に Dead/停止へ固定します。</summary>
+    internal void FailClosed(BossState deadState, in TransitionReason reason, long frameUpdateNumber)
+    {
+        IsFailClosed = true;
+        StopModule(ErrorCode.SafetyRecoveryFailed);
+        _currentBossState = deadState.IsValid() ? deadState : BossState.Unknown;
+        _currentTransitionReason = reason;
+        _aiData.BossState = _currentBossState;
+        _aiData.IsDead = deadState.IsValid();
+        _aiData.AttackGenerationEnabled = false;
+        _aiData.IsInvulnerable = true;
+        _attackData.Stage = AttackStage.None;
+        _attackData.OneShotEmissionMask = 0;
+        _terminalData.IsTerminal = true;
+        _terminalData.DeadState = _currentBossState;
+        _terminalData.Phase = Phase;
+        _terminalData.DeathReason = reason;
+        _terminalData.FrameUpdateNumber = frameUpdateNumber;
+        _terminalData.AttackStage = AttackStage.None;
+        _terminalData.AttackGenerationStopped = true;
+        ClearCommands();
+    }
 
     /// <summary>設定更新境界で次の有効 snapshot を保留します。</summary>
     public void QueueConfig(BossConfigSnapshot configSnapshot)
@@ -291,6 +411,10 @@ public sealed class BossRuntimeSlot
         _aiData.BossState = stateId;
         _aiData.Phase = _context.Phase;
         _aiData.IsDead = stateId is BossState.Boss1_Dead or BossState.Boss2_Dead;
+        if (_aiData.IsDead)
+        {
+            _aiData.AttackGenerationEnabled = false;
+        }
         _stateEntered = false;
         _moduleStopped = false;
     }
@@ -299,12 +423,13 @@ public sealed class BossRuntimeSlot
     {
         _stateEntered = true;
         _moduleStopped = false;
+        ModuleStopReason = ErrorCode.None;
+        _failureActive = false;
     }
 
-    internal void MarkModuleStopped()
+    internal void MarkModuleStopped(ErrorCode reason = ErrorCode.ModuleExecutionFailed)
     {
-        _moduleStopped = true;
-        _stateEntered = false;
+        StopModule(reason);
     }
 
     internal bool TryMarkUpdated(long frameUpdateNumber)

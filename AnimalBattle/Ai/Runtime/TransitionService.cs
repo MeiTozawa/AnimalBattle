@@ -93,7 +93,7 @@ public sealed class TransitionService : ITransitionService
                 }
                 catch
                 {
-                    runtime.MarkModuleStopped();
+                    runtime.MarkModuleStopped(ErrorCode.ModuleExecutionFailed);
                     TransitionResult exitFailure = TransitionResult.Rejected(in request, runtime.CurrentStateId, ErrorCode.ModuleExecutionFailed, "現在 State_Module の Exit に失敗しました。");
                     RecordTransition(in request, exitFailure, runtime.BossType);
                     return exitFailure;
