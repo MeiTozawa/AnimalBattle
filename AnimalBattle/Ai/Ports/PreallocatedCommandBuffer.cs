@@ -256,13 +256,36 @@ public sealed class BufferedMovementPort : IMovementPort
     /// <summary>buffer を指定します。</summary>
     public BufferedMovementPort(PreallocatedCommandBuffer<MovementCommand> buffer) => _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
     /// <inheritdoc />
-    public bool SetVelocity(float x, float y) => _buffer.TryAdd(new MovementCommand(MovementCommandKind.SetVelocity, x, y), CommandPriority.Safety);
+    public bool SetVelocity(float x, float y)
+    {
+        return IsFinite(x) && IsFinite(y)
+            && _buffer.TryAdd(new MovementCommand(MovementCommandKind.SetVelocity, x, y), CommandPriority.Safety);
+    }
+
     /// <inheritdoc />
-    public bool MoveTo(float x, float y) => _buffer.TryAdd(new MovementCommand(MovementCommandKind.MoveTo, x, y), CommandPriority.Normal);
+    public bool MoveTo(float x, float y)
+    {
+        return IsFinite(x) && IsFinite(y)
+            && _buffer.TryAdd(new MovementCommand(MovementCommandKind.MoveTo, x, y), CommandPriority.Normal);
+    }
+
     /// <inheritdoc />
-    public bool ApplyGravity(float gravity, float maxFallSpeed) => _buffer.TryAdd(new MovementCommand(MovementCommandKind.ApplyGravity, gravity, maxFallSpeed), CommandPriority.Normal);
+    public bool ApplyGravity(float gravity, float maxFallSpeed)
+    {
+        return IsFinite(gravity) && IsFinite(maxFallSpeed) && gravity >= 0.0f && maxFallSpeed >= 0.0f
+            && _buffer.TryAdd(new MovementCommand(MovementCommandKind.ApplyGravity, gravity, maxFallSpeed), CommandPriority.Normal);
+    }
+
     /// <inheritdoc />
-    public bool Stop() => _buffer.TryAdd(new MovementCommand(MovementCommandKind.Stop, 0.0f, 0.0f), CommandPriority.Safety);
+    public bool Stop()
+    {
+        return _buffer.TryAdd(new MovementCommand(MovementCommandKind.Stop, 0.0f, 0.0f), CommandPriority.Safety);
+    }
+
+    private static bool IsFinite(float value)
+    {
+        return float.IsFinite(value);
+    }
 }
 
 /// <summary>攻撃 command buffer を攻撃 port として公開します。</summary>
@@ -272,11 +295,29 @@ public sealed class BufferedAttackPort : IAttackPort
     /// <summary>buffer を指定します。</summary>
     public BufferedAttackPort(PreallocatedCommandBuffer<AttackCommand> buffer) => _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
     /// <inheritdoc />
-    public bool EmitBullet(AttackId attackId, float x, float y) => _buffer.TryAdd(new AttackCommand(AttackCommandKind.EmitBullet, attackId, x, y), CommandPriority.Attack);
+    public bool EmitBullet(AttackId attackId, float x, float y)
+    {
+        return CanEmit(attackId, x, y)
+            && _buffer.TryAdd(new AttackCommand(AttackCommandKind.EmitBullet, attackId, x, y), CommandPriority.Attack);
+    }
+
     /// <inheritdoc />
-    public bool CreateHitbox(AttackId attackId, float x, float y) => _buffer.TryAdd(new AttackCommand(AttackCommandKind.CreateHitbox, attackId, x, y), CommandPriority.Safety);
+    public bool CreateHitbox(AttackId attackId, float x, float y)
+    {
+        return CanEmit(attackId, x, y)
+            && _buffer.TryAdd(new AttackCommand(AttackCommandKind.CreateHitbox, attackId, x, y), CommandPriority.Safety);
+    }
+
     /// <inheritdoc />
-    public bool ClearBossBullets() => _buffer.TryAdd(new AttackCommand(AttackCommandKind.ClearBossBullets), CommandPriority.Safety);
+    public bool ClearBossBullets()
+    {
+        return _buffer.TryAdd(new AttackCommand(AttackCommandKind.ClearBossBullets), CommandPriority.Safety);
+    }
+
+    private static bool CanEmit(AttackId attackId, float x, float y)
+    {
+        return attackId.IsValid && float.IsFinite(x) && float.IsFinite(y);
+    }
 }
 
 /// <summary>演出 command buffer を演出 port として公開します。</summary>
@@ -286,5 +327,10 @@ public sealed class BufferedEffectPort : IEffectPort
     /// <summary>buffer を指定します。</summary>
     public BufferedEffectPort(PreallocatedCommandBuffer<EffectCommand> buffer) => _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
     /// <inheritdoc />
-    public bool RequestTelegraph(float x, float y) => _buffer.TryAdd(new EffectCommand(EffectCommandKind.RequestTelegraph, x, y));
+    public bool RequestTelegraph(float x, float y)
+    {
+        return float.IsFinite(x)
+            && float.IsFinite(y)
+            && _buffer.TryAdd(new EffectCommand(EffectCommandKind.RequestTelegraph, x, y), CommandPriority.Normal);
+    }
 }
