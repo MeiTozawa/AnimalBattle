@@ -170,6 +170,7 @@ public sealed class BossAiRuntime
         if (runtime.TerminalData.IsTerminal)
         {
             PhaseDeathController.ApplyDeathStop(ref runtime.TerminalData, runtime.Context.Movement, runtime.Context.Attack);
+            runtime.RefreshDebugData();
             runtime.TryMarkUpdated(frameUpdateNumber);
             return true;
         }
@@ -206,6 +207,7 @@ public sealed class BossAiRuntime
                 };
                 runtime.AiData.Phase = nextPhase;
                 runtime.AiData.BossState = transitionState;
+                runtime.RefreshDebugData();
                 runtime.TryMarkUpdated(frameUpdateNumber);
                 return true;
             }
@@ -261,6 +263,7 @@ public sealed class BossAiRuntime
             frameUpdateNumber,
             deadState);
         TransitionResult result = _transitionService.Apply(ref runtime, in request);
+        runtime.RefreshDebugData();
         runtime.TryMarkUpdated(frameUpdateNumber);
         return result.IsAccepted;
     }
@@ -358,6 +361,7 @@ public sealed class BossAiRuntime
             module.Update(ref context, in invocation);
             runtime.TryMarkUpdated(frameUpdateNumber);
             runtime.MarkHealthyFrame();
+            runtime.RefreshDebugData();
             RecordLifecycle(runtime, in invocation);
             return true;
         }

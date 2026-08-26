@@ -25,6 +25,9 @@ public sealed class BossRuntimeSlot
     private BossAttackData _attackData;
     private BossPhaseTransitionData _phaseTransitionData;
     private BossTerminalData _terminalData;
+    private BossDebugData _debugData;
+    private bool _debugEnabled;
+    private bool _hasDebugData;
 
     /// <summary>Entity 単位の状態 context への参照を取得します。</summary>
     public ref StateContext Context => ref _context;
@@ -74,8 +77,90 @@ public sealed class BossRuntimeSlot
     public SafetyParameterApplyMask AppliedSafetyParameters { get; private set; }
     /// <summary>最後に適用した安全値の失敗項目を取得します。</summary>
     public SafetyParameterApplyMask FailedSafetyParameters { get; private set; }
+    /// <summary>Debug_Data を生成・更新する設定を取得します。</summary>
+    public bool DebugEnabled => _debugEnabled;
+    /// <summary>現在の Debug_Data が利用可能かどうかを取得します。</summary>
+    public bool HasDebugData => _hasDebugData;
     /// <summary>攻撃を新規生成できる状態かどうかを取得します。</summary>
     public bool CanGenerateAttack => !IsFailClosed && !AiData.IsDead && AiData.AttackGenerationEnabled;
+
+    /// <summary>HUD と WorldRender が読む互換 view を取得します。</summary>
+    public BossCompatibilityData CompatibilityView
+    {
+        get
+        {
+            return new BossCompatibilityData
+            {
+                LegacyStateValue = (int)_currentBossState,
+                LegacyAttackValue = _attackData.AttackId.Value,
+                LegacyStateTimer = _aiData.StateTimer,
+                LegacyStateDuration = _aiData.StateDuration,
+                LegacyIsInvulnerable = _aiData.IsInvulnerable,
+                UpdateSource = _aiData.UpdateSource,
+                BossState = _currentBossState,
+                Phase = _aiData.Phase,
+                AttackId = _attackData.AttackId,
+                TransitionReason = _currentTransitionReason,
+                IsInvulnerable = _aiData.IsInvulnerable,
+                AttackStage = _attackData.Stage,
+                HasDebugData = _hasDebugData,
+                FrameUpdateNumber = _aiData.FrameUpdateNumber
+            };
+        }
+    }
+
+    /// <summary>現在の Debug_Data を取得します。Debug 無効時は生成しません。</summary>
+    /// <param name="debugData">生成済みの Debug_Data。</param>
+    /// <returns>Debug_Data が有効な場合は true。</returns>
+    public bool TryGetDebugData(out BossDebugData debugData)
+    {
+        debugData = _debugData;
+        return _hasDebugData;
+    }
+
+    /// <summary>Debug_Data の生成可否を切り替えます。</summary>
+    /// <param name="enabled">Debug_Data を生成・更新する場合は true。</param>
+    public void SetDebugEnabled(bool enabled)
+    {
+        if (_debugEnabled == enabled)
+        {
+            return;
+        }
+
+        _debugEnabled = enabled;
+        if (!enabled)
+        {
+            _debugData = default;
+            _hasDebugData = false;
+            return;
+        }
+
+        RefreshDebugData();
+    }
+
+    /// <summary>現在の runtime 値から Debug_Data を更新します。</summary>
+    /// <remarks>Debug 無効時は値を生成せず、既存値も破棄します。</remarks>
+    public void RefreshDebugData()
+    {
+        if (!_debugEnabled)
+        {
+            _debugData = default;
+            _hasDebugData = false;
+            return;
+        }
+
+        _debugData = new BossDebugData
+        {
+            BossState = _currentBossState,
+            Phase = _aiData.Phase,
+            AttackId = _attackData.AttackId,
+            TransitionReason = _currentTransitionReason,
+            IsInvulnerable = _aiData.IsInvulnerable,
+            AttackStage = _attackData.Stage,
+            FrameUpdateNumber = _aiData.FrameUpdateNumber
+        };
+        _hasDebugData = true;
+    }
 
     /// <summary>移動 command の事前確保 buffer を取得します。</summary>
     public PreallocatedCommandBuffer<MovementCommand> MovementCommands { get; }
@@ -178,7 +263,8 @@ public sealed class BossRuntimeSlot
         int movementCommandCapacity = 32,
         int attackCommandCapacity = 32,
         int effectCommandCapacity = 16,
-        ICommandBufferDiagnosticSink? commandDiagnosticSink = null)
+        ICommandBufferDiagnosticSink? commandDiagnosticSink = null,
+        bool debugEnabled = false)
     {
         ArgumentNullException.ThrowIfNull(configProvider);
         var configSnapshot = configProvider.Current;
@@ -205,6 +291,8 @@ public sealed class BossRuntimeSlot
             effect,
             observation,
             random);
+        _debugEnabled = debugEnabled;
+        RefreshDebugData();
     }
 
     /// <summary>初期化完了を runtime gate に反映します。</summary>
@@ -287,6 +375,7 @@ public sealed class BossRuntimeSlot
             FailedSafetyParameters);
         AppliedSafetyParameters = result.AppliedMask;
         FailedSafetyParameters = result.FailedMask;
+        RefreshDebugData();
         return result;
     }
 
@@ -323,6 +412,7 @@ public sealed class BossRuntimeSlot
         _terminalData.AttackStage = AttackStage.None;
         _terminalData.AttackGenerationStopped = true;
         ClearCommands();
+        RefreshDebugData();
     }
 
     /// <summary>設定更新境界で次の有効 snapshot を保留します。</summary>
@@ -393,6 +483,7 @@ public sealed class BossRuntimeSlot
         _aiData.FrameUpdateNumber = frameUpdateNumber;
         _aiData.Phase = phase;
         _aiData.UpdateSource = UpdateSource.NewRuntime;
+        RefreshDebugData();
         return true;
     }
 
@@ -417,6 +508,7 @@ public sealed class BossRuntimeSlot
         }
         _stateEntered = false;
         _moduleStopped = false;
+        RefreshDebugData();
     }
 
     internal void MarkStateEntered()
