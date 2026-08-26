@@ -24,6 +24,41 @@ public readonly record struct DiagnosticResult
         default);
 
     /// <summary>
+    /// 処理を継続できる警告を表す診断結果を生成します。
+    /// </summary>
+    /// <param name="errorCode">警告の分類。</param>
+    /// <param name="message">原因、影響、継続処理を表す簡潔な日本語メッセージ。</param>
+    /// <param name="stateId">診断対象の状態識別子。</param>
+    /// <param name="attackId">診断対象の攻撃識別子。</param>
+    /// <param name="phase">診断時点の Phase。</param>
+    /// <param name="entityId">診断対象の Entity 識別子。</param>
+    /// <param name="frameUpdateNumber">診断時点のフレーム更新番号。</param>
+    /// <param name="updateSource">固定した値の更新元。</param>
+    /// <param name="recoveryBossState">継続処理に使用する安全状態識別子。</param>
+    /// <returns>継続可能な警告を表す診断結果。</returns>
+    public static DiagnosticResult Warning(
+        ErrorCode errorCode,
+        string message,
+        BossState stateId = default,
+        AttackId attackId = default,
+        Phase phase = Phase.Unknown,
+        ulong entityId = 0,
+        long frameUpdateNumber = 0,
+        UpdateSource updateSource = UpdateSource.NewRuntime,
+        BossState recoveryBossState = default) => new(
+            true,
+            DiagnosticSeverity.Warning,
+            errorCode,
+            message,
+            stateId,
+            attackId,
+            phase,
+            entityId,
+            frameUpdateNumber,
+            updateSource,
+            recoveryBossState);
+
+    /// <summary>
     /// 失敗または警告を表す診断結果を生成します。
     /// </summary>
     /// <param name="severity">診断の重大度。</param>
