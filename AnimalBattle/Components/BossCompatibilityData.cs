@@ -18,6 +18,38 @@ public struct BossCompatibilityData
     public float LegacyStateDuration;
     /// <summary>旧無敵表現です。</summary>
     public bool LegacyIsInvulnerable;
+    /// <summary>旧 state machine の技能 index です。</summary>
+    public int LegacySkillIndex;
+    /// <summary>旧 state machine の sub timer です。</summary>
+    public float LegacySubTimer;
+    /// <summary>旧 state machine の角度 offset です。</summary>
+    public float LegacyAngleOffset;
+    /// <summary>旧 state machine の移動開始位置 X です。</summary>
+    public float LegacyStartX;
+    /// <summary>旧 state machine の移動開始位置 Y です。</summary>
+    public float LegacyStartY;
+    /// <summary>旧 state machine の移動目標位置 X です。</summary>
+    public float LegacyTargetX;
+    /// <summary>旧 state machine の移動目標位置 Y です。</summary>
+    public float LegacyTargetY;
+    /// <summary>旧 Boss の基準または出現位置 X です。</summary>
+    public float LegacyBaseOrSpawnX;
+    /// <summary>旧 Boss の基準または出現位置 Y です。</summary>
+    public float LegacyBaseOrSpawnY;
+    /// <summary>旧 Boss の移動補助 timer です。</summary>
+    public float LegacyAuxiliaryTimer;
+    /// <summary>旧 Boss の被弾演出 timer です。</summary>
+    public float LegacyHitFlashTimer;
+    /// <summary>旧 Boss1 stats の弾幕回転角度 offset です。</summary>
+    public float LegacyBoss1StatsAngleOffset;
+    /// <summary>旧 Boss2 stats の跳躍 cooldown です。</summary>
+    public float LegacyJumpCooldown;
+    /// <summary>旧 Boss2 の攻撃速度です。</summary>
+    public float LegacyActionSpeed;
+    /// <summary>旧 Boss2 の向きです。</summary>
+    public bool LegacyFacingRight;
+    /// <summary>旧 Boss2 の combo index です。</summary>
+    public int LegacyComboIndex;
     /// <summary>互換値の更新元です。</summary>
     public UpdateSource UpdateSource;
     /// <summary>互換 view が公開する固定 BossState です。</summary>

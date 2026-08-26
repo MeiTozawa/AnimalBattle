@@ -22,9 +22,11 @@ public sealed class BossRuntimeSlot
     private int _transitionDepth;
     private bool _failureActive;
     private BossAiData _aiData;
+    private BossMovementData _movementData;
     private BossAttackData _attackData;
     private BossPhaseTransitionData _phaseTransitionData;
     private BossTerminalData _terminalData;
+    private BossCompatibilityData _compatibilityData;
     private BossDebugData _debugData;
     private bool _debugEnabled;
     private bool _hasDebugData;
@@ -50,6 +52,7 @@ public sealed class BossRuntimeSlot
     /// <summary>互換用の現在状態名です。</summary>
     [Obsolete("CurrentStateId を使用してください。")]
     public BossState CurrentBossState => CurrentStateId;
+    /// <summary>状態 module の Enter が完了しているかどうかを取得します。</summary>
     public bool StateEntered => _stateEntered;
     /// <summary>module が停止済みかどうかを取得します。</summary>
     public bool ModuleStopped => _moduleStopped;
@@ -89,23 +92,21 @@ public sealed class BossRuntimeSlot
     {
         get
         {
-            return new BossCompatibilityData
-            {
-                LegacyStateValue = (int)_currentBossState,
-                LegacyAttackValue = _attackData.AttackId.Value,
-                LegacyStateTimer = _aiData.StateTimer,
-                LegacyStateDuration = _aiData.StateDuration,
-                LegacyIsInvulnerable = _aiData.IsInvulnerable,
-                UpdateSource = _aiData.UpdateSource,
-                BossState = _currentBossState,
-                Phase = _aiData.Phase,
-                AttackId = _attackData.AttackId,
-                TransitionReason = _currentTransitionReason,
-                IsInvulnerable = _aiData.IsInvulnerable,
-                AttackStage = _attackData.Stage,
-                HasDebugData = _hasDebugData,
-                FrameUpdateNumber = _aiData.FrameUpdateNumber
-            };
+            BossCompatibilityData view = _compatibilityData;
+            view.LegacyAttackValue = _attackData.AttackId.Value;
+            view.LegacyStateTimer = _aiData.StateTimer;
+            view.LegacyStateDuration = _aiData.StateDuration;
+            view.LegacyIsInvulnerable = _aiData.IsInvulnerable;
+            view.UpdateSource = _aiData.UpdateSource;
+            view.BossState = _currentBossState;
+            view.Phase = _aiData.Phase;
+            view.AttackId = _attackData.AttackId;
+            view.TransitionReason = _currentTransitionReason;
+            view.IsInvulnerable = _aiData.IsInvulnerable;
+            view.AttackStage = _attackData.Stage;
+            view.HasDebugData = _hasDebugData;
+            view.FrameUpdateNumber = _aiData.FrameUpdateNumber;
+            return view;
         }
     }
 
@@ -175,6 +176,8 @@ public sealed class BossRuntimeSlot
     public ref BossPhaseTransitionData PhaseTransitionData => ref _phaseTransitionData;
     /// <summary>同一 frame の攻撃 stage を保持する data です。</summary>
     public ref BossAttackData AttackData => ref _attackData;
+    /// <summary>移行時に復元した Movement data を保持します。</summary>
+    public ref BossMovementData MovementData => ref _movementData;
     /// <summary>共通 ECS data 互換の AI 値です。</summary>
     public ref BossAiData AiData => ref _aiData;
 
@@ -278,6 +281,7 @@ public sealed class BossRuntimeSlot
         EffectCommands = new PreallocatedCommandBuffer<EffectCommand>(effectCommandCapacity, commandDiagnosticSink);
         _currentConfig = configSnapshot;
         _aiData = new BossAiData(bossType, BossState.Unknown, Phase.Phase1);
+        _movementData = new BossMovementData(BossState.Unknown);
         _attackData = new BossAttackData(AttackId.Unknown);
         _phaseTransitionData = default;
         _terminalData = default;
@@ -293,6 +297,34 @@ public sealed class BossRuntimeSlot
             random);
         _debugEnabled = debugEnabled;
         RefreshDebugData();
+    }
+
+    /// <summary>
+    /// MigrationAdapter が検証した旧値を runtime の source of truth として取り込みます。
+    /// </summary>
+    /// <param name="migration">検証済みの移行結果。</param>
+    /// <returns>現在の Entity/Boss に適用できた場合は true。</returns>
+    internal bool TryApplyMigration(in MigrationResult migration)
+    {
+        if (!migration.IsSuccess || migration.BossType != BossType || migration.AiData.BossState == BossState.Unknown)
+        {
+            return false;
+        }
+
+        _context.SetPhaseForTransition(migration.AiData.Phase);
+        _aiData = migration.AiData;
+        _aiData.UpdateSource = UpdateSource.NewRuntime;
+        _movementData = migration.MovementData;
+        _attackData = migration.AttackData;
+        _compatibilityData = migration.CompatibilityData;
+        _compatibilityData.UpdateSource = UpdateSource.NewRuntime;
+        _currentBossState = _aiData.BossState;
+        _currentTransitionReason = _compatibilityData.TransitionReason;
+        _stateEntered = false;
+        _moduleStopped = false;
+        _hasDebugData = false;
+        RefreshDebugData();
+        return true;
     }
 
     /// <summary>初期化完了を runtime gate に反映します。</summary>
