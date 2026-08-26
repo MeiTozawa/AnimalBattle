@@ -267,18 +267,21 @@ public sealed class BossRuntimeSlot
         int attackCommandCapacity = 32,
         int effectCommandCapacity = 16,
         ICommandBufferDiagnosticSink? commandDiagnosticSink = null,
-        bool debugEnabled = false)
+        bool debugEnabled = false,
+        PreallocatedCommandBuffer<MovementCommand>? movementCommandBuffer = null,
+        PreallocatedCommandBuffer<AttackCommand>? attackCommandBuffer = null,
+        PreallocatedCommandBuffer<EffectCommand>? effectCommandBuffer = null)
     {
         ArgumentNullException.ThrowIfNull(configProvider);
-        var configSnapshot = configProvider.Current;
+        BossConfigSnapshot configSnapshot = configProvider.Current;
         if (!configSnapshot.IsValid)
         {
             throw new ArgumentException("設定 provider が未検証 snapshot を返しました。", nameof(configProvider));
         }
 
-        MovementCommands = new PreallocatedCommandBuffer<MovementCommand>(movementCommandCapacity, commandDiagnosticSink);
-        AttackCommands = new PreallocatedCommandBuffer<AttackCommand>(attackCommandCapacity, commandDiagnosticSink);
-        EffectCommands = new PreallocatedCommandBuffer<EffectCommand>(effectCommandCapacity, commandDiagnosticSink);
+        MovementCommands = movementCommandBuffer ?? new PreallocatedCommandBuffer<MovementCommand>(movementCommandCapacity, commandDiagnosticSink);
+        AttackCommands = attackCommandBuffer ?? new PreallocatedCommandBuffer<AttackCommand>(attackCommandCapacity, commandDiagnosticSink);
+        EffectCommands = effectCommandBuffer ?? new PreallocatedCommandBuffer<EffectCommand>(effectCommandCapacity, commandDiagnosticSink);
         _currentConfig = configSnapshot;
         _aiData = new BossAiData(bossType, BossState.Unknown, Phase.Phase1);
         _movementData = new BossMovementData(BossState.Unknown);
