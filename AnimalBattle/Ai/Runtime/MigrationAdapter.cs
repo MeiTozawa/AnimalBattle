@@ -162,7 +162,9 @@ public static class MigrationAdapter
         in Boss2StateMachine stateMachine,
         in Boss2Stats stats)
     {
-        AttackId attackId = ResolveAttackName(stateMachine.CurrentSkillName);
+        AttackId legacyAttackId = ResolveAttackName(stateMachine.CurrentSkillName);
+        bool hasStateAttackId = TryResolveBoss2StateAttack(stateMachine.CurrentState, out AttackId stateAttackId);
+        AttackId attackId = hasStateAttackId ? stateAttackId : legacyAttackId;
         bool attackRequired = stateMachine.IsTelegraphing || stateMachine.IsAttacking;
         if (!TryMapBoss2State(stateMachine.CurrentState, out BossState stateId))
         {
@@ -197,6 +199,41 @@ public static class MigrationAdapter
                     "固定 BossState に対応しない旧状態です。",
                     BossState.Boss2_Idle,
                     attackId));
+        }
+
+        if (hasStateAttackId && legacyAttackId != stateAttackId)
+        {
+            return CreateSafeResult(
+                BossType.Boss2,
+                stateId,
+                stateAttackId,
+                ToSafePhase(stats.Phase),
+                stateMachine.StateTimer,
+                stateMachine.StateDuration,
+                stateMachine.IsInvulnerable,
+                stateMachine.CurrentSkillIndex,
+                stateMachine.SubTimer,
+                angleOffset: 0,
+                new Vec2f(stateMachine.StartX, stateMachine.StartY),
+                new Vec2f(stateMachine.TargetX, stateMachine.TargetY),
+                stateMachine.CurrentState,
+                stats.SpawnX,
+                stats.SpawnY,
+                stats.PatrolTimer,
+                stats.HitFlashTimer,
+                legacyBoss1StatsAngleOffset: 0,
+                stats.JumpCooldown,
+                stateMachine.ActionSpeed,
+                stats.FacingRight,
+                stats.ComboIndex,
+                ErrorCode.InvalidAttackId,
+                CreateConversionWarningMessage(
+                    "Boss2",
+                    stateMachine.CurrentState,
+                    stateMachine.CurrentSkillName,
+                    "攻撃別の旧状態と AttackId が一致しないため、状態に対応する安全な AttackId を使用します。",
+                    stateId,
+                    stateAttackId));
         }
 
         if (attackRequired && !attackId.IsValid)
@@ -903,6 +940,21 @@ public static class MigrationAdapter
             _ => BossState.Unknown
         };
         return stateId.IsValid();
+    }
+
+    private static bool TryResolveBoss2StateAttack(Boss2StateKind legacyState, out AttackId attackId)
+    {
+        attackId = legacyState switch
+        {
+            Boss2StateKind.TelegraphHeavySlash or Boss2StateKind.ExecutingHeavySlash => Boss2AttackIds.HeavySlash,
+            Boss2StateKind.TelegraphDoubleCleave or Boss2StateKind.ExecutingDoubleCleave => Boss2AttackIds.DoubleCleave,
+            Boss2StateKind.TelegraphGroundStomp or Boss2StateKind.ExecutingGroundStomp => Boss2AttackIds.GroundStomp,
+            Boss2StateKind.TelegraphLeapSmash or Boss2StateKind.ExecutingLeapAscent or Boss2StateKind.ExecutingLeapDescent => Boss2AttackIds.LeapSmash,
+            Boss2StateKind.TelegraphFrenzyCharge or Boss2StateKind.ExecutingFrenzyCharge => Boss2AttackIds.FrenzyCharge,
+            Boss2StateKind.TelegraphEarthquakeRoar or Boss2StateKind.ExecutingEarthquakeRoar => Boss2AttackIds.EarthquakeRoar,
+            _ => AttackId.Unknown
+        };
+        return attackId.IsValid;
     }
 
     private static bool TryMapBoss2State(Boss2StateKind legacyState, out BossState stateId)
