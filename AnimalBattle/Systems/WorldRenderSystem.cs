@@ -1,5 +1,7 @@
 using System;
 using System.Drawing;
+
+using AnimalBattle.Ai.Contracts;
 using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
@@ -27,14 +29,14 @@ public static class WorldRenderSystem
                  .With<PlatformTag>()
                  .Build();
 
-        Query<Transform, Health, Boss1Stats, Boss1StateMachine, Sprite> boss1Query =
-            world.QueryBuilder<Transform, Health, Boss1Stats, Boss1StateMachine, Sprite>()
+        Query<Transform, Health, Boss1Stats, Boss1StateMachine, BossCompatibilityData, Sprite> boss1Query =
+            world.QueryBuilder<Transform, Health, Boss1Stats, Boss1StateMachine, BossCompatibilityData, Sprite>()
                  .With<BossTag>()
                  .With<Boss1Tag>()
                  .Build();
 
-        Query<Transform, Health, Boss2Stats, Boss2StateMachine, Sprite> boss2Query =
-            world.QueryBuilder<Transform, Health, Boss2Stats, Boss2StateMachine, Sprite>()
+        Query<Transform, Health, Boss2Stats, Boss2StateMachine, BossCompatibilityData, Sprite> boss2Query =
+            world.QueryBuilder<Transform, Health, Boss2Stats, Boss2StateMachine, BossCompatibilityData, Sprite>()
                  .With<BossTag>()
                  .With<Boss2Tag>()
                  .Build();
@@ -106,44 +108,44 @@ public static class WorldRenderSystem
         }
     }
 
-    private static void DrawBoss1(Query<Transform, Health, Boss1Stats, Boss1StateMachine, Sprite> boss1Query, BossEffectsRenderConfig bossFx)
+    private static void DrawBoss1(Query<Transform, Health, Boss1Stats, Boss1StateMachine, BossCompatibilityData, Sprite> boss1Query, BossEffectsRenderConfig bossFx)
     {
-        boss1Query.Each((ref Transform trans, ref Health bHealth, ref Boss1Stats stats, ref Boss1StateMachine fsm, ref Sprite sprite) =>
+        boss1Query.Each((ref Transform trans, ref Health bHealth, ref Boss1Stats stats, ref Boss1StateMachine legacyState, ref BossCompatibilityData compatibility, ref Sprite sprite) =>
         {
             int bx = (int)trans.X;
             int by = (int)trans.Y;
 
-            if (fsm.CurrentState == Boss1StateKind.Telegraphing)
+            if (compatibility.AttackStage == AttackStage.Telegraph)
             {
-                float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
+                float progress = Math.Clamp(compatibility.LegacyStateTimer / Math.Max(0.01f, compatibility.LegacyStateDuration), 0.0f, 1.0f);
                 int ringRadius = (int)(bossFx.TelegraphStartRadius - progress * bossFx.TelegraphEndRadiusDelta);
                 GameEngine.DrawCircle(bx, by, ringRadius, bossFx.TelegraphRingColor, false);
                 GameEngine.DrawCircle(bx, by, ringRadius - 2, bossFx.TelegraphInnerRingColor, false);
                 GameEngine.DrawCircle(bx, by, (int)bossFx.TelegraphCoreRadius, bossFx.TelegraphCoreColor, true);
 
-                if (fsm.CurrentSkillName == "DiveRam")
+                if (compatibility.AttackId.Value == 7)
                 {
-                    int tx = (int)fsm.TargetX;
-                    int ty = (int)fsm.TargetY;
+                    int tx = (int)compatibility.LegacyTargetX;
+                    int ty = (int)compatibility.LegacyTargetY;
                     int lockRadius = (int)(45.0f - progress * 15.0f);
                     GameEngine.DrawCircle(tx, ty, lockRadius, ColorPalette.RedBright, false);
                     GameEngine.DrawCircle(tx, ty, lockRadius - 2, ColorPalette.Gold, false);
                 }
             }
-            else if (fsm.CurrentState == Boss1StateKind.Casting && fsm.CurrentSkillName == "DiveRam")
+            else if (compatibility.BossState == BossState.Boss1_DiveRamExecute)
             {
                 GameEngine.DrawCircle(bx, by, 90, ColorPalette.RedBright, false);
                 GameEngine.DrawCircle(bx, by, 85, ColorPalette.Gold, false);
                 GameEngine.DrawCircle(bx, by, 60, ColorPalette.RedTelegraphCore, true);
             }
-            else if (fsm.CurrentState == Boss1StateKind.PhaseTransition || fsm.IsInvulnerable)
+            else if (compatibility.BossState == BossState.Boss1_PhaseTransition || compatibility.IsInvulnerable)
             {
-                int shieldRadius = (int)(bossFx.ShieldBaseRadius + MathF.Sin(fsm.StateTimer * bossFx.ShieldPulseSpeed) * bossFx.ShieldPulseAmp);
+                int shieldRadius = (int)(bossFx.ShieldBaseRadius + MathF.Sin(compatibility.LegacyStateTimer * bossFx.ShieldPulseSpeed) * bossFx.ShieldPulseAmp);
                 GameEngine.DrawCircle(bx, by, shieldRadius, bossFx.ShieldOuterColor, false);
                 GameEngine.DrawCircle(bx, by, shieldRadius - 3, bossFx.ShieldInnerColor, false);
                 GameEngine.DrawCircle(bx, by, shieldRadius - 8, bossFx.ShieldFillColor, true);
             }
-            else if (fsm.CurrentState == Boss1StateKind.Recovering)
+            else if (compatibility.BossState == BossState.Boss1_Recovery)
             {
                 GameEngine.DrawCircle(bx, by, (int)bossFx.RecoveringAuraRadius, bossFx.RecoveringAuraColor, true);
             }
@@ -185,31 +187,31 @@ public static class WorldRenderSystem
         });
     }
 
-    private static void DrawBoss2(Query<Transform, Health, Boss2Stats, Boss2StateMachine, Sprite> boss2Query, BossEffectsRenderConfig bossFx)
+    private static void DrawBoss2(Query<Transform, Health, Boss2Stats, Boss2StateMachine, BossCompatibilityData, Sprite> boss2Query, BossEffectsRenderConfig bossFx)
     {
-        boss2Query.Each((ref Transform trans, ref Health bHealth, ref Boss2Stats stats, ref Boss2StateMachine fsm, ref Sprite sprite) =>
+        boss2Query.Each((ref Transform trans, ref Health bHealth, ref Boss2Stats stats, ref Boss2StateMachine legacyState, ref BossCompatibilityData compatibility, ref Sprite sprite) =>
         {
             int bx = (int)trans.X;
             int by = (int)trans.Y;
 
-            if (fsm.IsTelegraphing)
+            if (compatibility.AttackStage == AttackStage.Telegraph)
             {
-                DrawBoss2Telegraph(trans, fsm, stats, bossFx);
+                DrawBoss2Telegraph(trans, compatibility, stats, bossFx);
             }
-            else if (fsm.CurrentState == Boss2StateKind.PhaseTransition || fsm.IsInvulnerable)
+            else if (compatibility.BossState == BossState.Boss2_PhaseTransition || compatibility.IsInvulnerable)
             {
-                int shieldRadius = (int)(bossFx.ShieldBaseRadius + MathF.Sin(fsm.StateTimer * bossFx.ShieldPulseSpeed) * bossFx.ShieldPulseAmp);
+                int shieldRadius = (int)(bossFx.ShieldBaseRadius + MathF.Sin(compatibility.LegacyStateTimer * bossFx.ShieldPulseSpeed) * bossFx.ShieldPulseAmp);
                 GameEngine.DrawCircle(bx, by, shieldRadius, ColorPalette.RedCrimson, false);
                 GameEngine.DrawCircle(bx, by, shieldRadius - 3, ColorPalette.Amber, false);
                 GameEngine.DrawCircle(bx, by, shieldRadius - 8, ColorPalette.RedTelegraphCore, true);
             }
-            else if (fsm.CurrentState == Boss2StateKind.SkillRecovery)
+            else if (compatibility.BossState == BossState.Boss2_Recovery)
             {
                 GameEngine.DrawCircle(bx, by, (int)bossFx.RecoveringAuraRadius, ColorPalette.CyanRecovering, true);
             }
-            else if (fsm.CurrentState == Boss2StateKind.WallCrashStun)
+            else if (compatibility.BossState == BossState.Boss2_WallCrashStun)
             {
-                float angle = fsm.StateTimer * 6.0f;
+                float angle = compatibility.LegacyStateTimer * 6.0f;
                 for (int k = 0; k < 3; k++)
                 {
                     float starAngle = angle + k * (MathF.PI * 2.0f / 3.0f);
@@ -256,17 +258,17 @@ public static class WorldRenderSystem
         });
     }
 
-    private static void DrawBoss2Telegraph(Transform trans, Boss2StateMachine fsm, Boss2Stats stats, BossEffectsRenderConfig bossFx)
+    private static void DrawBoss2Telegraph(Transform trans, BossCompatibilityData compatibility, Boss2Stats stats, BossEffectsRenderConfig bossFx)
     {
         Boss2Config b2Cfg = ConfigManager.Boss2;
         int bx = (int)trans.X;
         int by = (int)trans.Y;
-        float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
+        float progress = Math.Clamp(compatibility.LegacyStateTimer / Math.Max(0.01f, compatibility.LegacyStateDuration), 0.0f, 1.0f);
         int ringRadius = (int)(bossFx.TelegraphStartRadius - progress * bossFx.TelegraphEndRadiusDelta);
 
-        switch (fsm.CurrentState)
+        switch (compatibility.BossState)
         {
-            case Boss2StateKind.TelegraphGroundStomp:
+            case BossState.Boss2_GroundStompTelegraph:
                 float groundY = trans.Y + b2Cfg.CollisionHeight / 2.0f - 10.0f;
                 int leftFx = (int)(bx - 35.0f);
                 int rightFx = (int)(bx + 35.0f);
@@ -281,9 +283,9 @@ public static class WorldRenderSystem
                 GameEngine.DrawCircle(rightFx, fy, (int)bossFx.TelegraphCoreRadius, ColorPalette.OrangeBright, true);
                 break;
 
-            case Boss2StateKind.TelegraphLeapSmash:
-                int tx = (int)fsm.TargetX;
-                int ty = (int)fsm.TargetY;
+            case BossState.Boss2_LeapSmashTelegraph:
+                int tx = (int)compatibility.LegacyTargetX;
+                int ty = (int)compatibility.LegacyTargetY;
                 int lockRadius = (int)(50.0f - progress * 15.0f);
                 GameEngine.DrawCircle(tx, ty, lockRadius, ColorPalette.RedBright, false);
                 GameEngine.DrawCircle(tx, ty, lockRadius - 2, ColorPalette.Gold, false);
@@ -291,14 +293,14 @@ public static class WorldRenderSystem
                 GameEngine.DrawCircle(bx, by, ringRadius, ColorPalette.RedOrange, false);
                 break;
 
-            case Boss2StateKind.TelegraphEarthquakeRoar:
+            case BossState.Boss2_EarthquakeRoarTelegraph:
                 GameEngine.DrawCircle(bx, by, ringRadius + 15, ColorPalette.Amber, false);
                 GameEngine.DrawCircle(bx, by, ringRadius, ColorPalette.RedOrange, false);
                 GameEngine.DrawCircle(bx, by, (int)bossFx.TelegraphCoreRadius + 5, ColorPalette.OrangeBright, true);
                 break;
 
             default:
-                float forwardDir = stats.FacingRight ? 1.0f : -1.0f;
+                float forwardDir = compatibility.LegacyFacingRight ? 1.0f : -1.0f;
                 int targetFx = (int)(bx + forwardDir * b2Cfg.SlashSpawnOffsetX);
                 int targetFy = (int)(by + b2Cfg.SlashSpawnOffsetY);
 

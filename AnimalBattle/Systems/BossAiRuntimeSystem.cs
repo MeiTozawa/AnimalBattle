@@ -3,6 +3,7 @@ using AnimalBattle.Ai.Ecs;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Components;
+using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -118,6 +119,8 @@ public sealed class BossAiRuntimeSystem
             return;
         }
 
+        slot.SetDebugEnabled(ConfigManager.Render.Debug.Enabled);
+
         if (!TryGetHealth(entityId, ai.BossType, out float currentHealth, out float maximumHealth))
         {
             return;
@@ -144,6 +147,7 @@ public sealed class BossAiRuntimeSystem
         ai = slot.AiData;
         ai.UpdateSource = UpdateSource.NewRuntime;
 
+        SynchronizeCompatibilityViews(entity, slot);
         SynchronizeLegacy(entityId, slot);
     }
 
@@ -216,6 +220,21 @@ public sealed class BossAiRuntimeSystem
             imported = MigrationAdapter.TryImportBoss2(slot, in stateMachine, in stats, out _);
         });
         return imported;
+    }
+
+    private static void SynchronizeCompatibilityViews(Entity entity, BossRuntimeSlot slot)
+    {
+        entity.Set(slot.CompatibilityView);
+        if (slot.TryGetDebugData(out BossDebugData debugData))
+        {
+            entity.Set(debugData);
+            return;
+        }
+
+        if (entity.Has<BossDebugData>())
+        {
+            entity.Remove<BossDebugData>();
+        }
     }
 
     private void SynchronizeLegacy(ulong entityId, BossRuntimeSlot slot)

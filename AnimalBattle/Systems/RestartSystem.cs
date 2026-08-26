@@ -35,6 +35,11 @@ public static class RestartSystem
                  .With<PlayerTag>()
                  .Build();
 
+        Query<BossCompatibilityData, BossTerminalData> bossRestartQuery =
+            world.QueryBuilder<BossCompatibilityData, BossTerminalData>()
+                 .With<BossTag>()
+                 .Build();
+
         world.System("RestartSystem")
              .Kind(Ecs.PostUpdate)
              .Run(it =>
@@ -55,12 +60,32 @@ public static class RestartSystem
                  }
                  else if (restartJustPressed)
                  {
-                     BattleScene.Current?.ResetCurrentBoss();
+                     RestartBossFromCompatibilityView(bossRestartQuery);
                      ResetPlayer(world, playerBulletsQuery, effectsQuery, playerQuery);
                  }
              });
 
         return world;
+    }
+
+    private static void RestartBossFromCompatibilityView(Query<BossCompatibilityData, BossTerminalData> bossRestartQuery)
+    {
+        bool restarted = false;
+        bossRestartQuery.Each((ref BossCompatibilityData compatibility, ref BossTerminalData terminal) =>
+        {
+            if (restarted)
+            {
+                return;
+            }
+
+            BattleScene.Current?.ResetCurrentBoss(in compatibility, in terminal);
+            restarted = true;
+        });
+
+        if (!restarted)
+        {
+            BattleScene.Current?.ResetCurrentBoss();
+        }
     }
 
     private static void ResetPlayer(World world, Query playerBulletsQuery, Query effectsQuery, Query<Transform, Velocity, CollisionBox, Health, DoubleJump, PlayerState, Animation, Sprite> playerQuery)

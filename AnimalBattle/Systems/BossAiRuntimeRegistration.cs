@@ -3,6 +3,7 @@ using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Ecs;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -121,6 +122,7 @@ public static class BossAiRuntimeRegistration
             new BufferedEffectPort(effectCommands),
             observation,
             new SystemRandomSource(),
+            debugEnabled: ConfigManager.Render.Debug.Enabled,
             movementCommandBuffer: movementCommands,
             attackCommandBuffer: attackCommands,
             effectCommandBuffer: effectCommands);

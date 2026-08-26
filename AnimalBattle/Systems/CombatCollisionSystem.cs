@@ -68,6 +68,15 @@ public static class CombatCollisionSystem
             return true;
         }
 
+        if (vicEntity.Has<BossCompatibilityData>())
+        {
+            ref readonly BossCompatibilityData compatibility = ref vicEntity.Get<BossCompatibilityData>();
+            if (compatibility.IsInvulnerable)
+            {
+                return true;
+            }
+        }
+
         if (vicEntity.Has<Boss1StateMachine>())
         {
             ref readonly Boss1StateMachine fsm1 = ref vicEntity.Get<Boss1StateMachine>();

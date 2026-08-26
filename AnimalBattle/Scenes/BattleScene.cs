@@ -1,4 +1,7 @@
 using System;
+
+using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai.Runtime;
 using Flecs.NET.Core;
 using AnimalBattle.Bindings;
 using AnimalBattle.Components;
@@ -131,6 +134,13 @@ public partial class BattleScene : IDisposable
                   .Remove<Boss2Tag>()
                   .Remove<Boss2Stats>()
                   .Remove<Boss2StateMachine>()
+                  .Remove<BossAiData>()
+                  .Remove<BossMovementData>()
+                  .Remove<BossAttackData>()
+                  .Remove<BossPhaseTransitionData>()
+                  .Remove<BossTerminalData>()
+                  .Remove<BossCompatibilityData>()
+                  .Remove<BossDebugData>()
                   .Remove<CollisionBox>();
 
         return bossEntity;
@@ -153,6 +163,8 @@ public partial class BattleScene : IDisposable
             .Add<BossTag>()
             .Add<Boss1Tag>();
 
+        InitializeBoss1Migration(bossEntity);
+
         Console.WriteLine($"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {b1Cfg.MaxHp}, Pos: {b1Cfg.BaseX}, {b1Cfg.BaseY})");
     }
 
@@ -174,7 +186,64 @@ public partial class BattleScene : IDisposable
             .Add<BossTag>()
             .Add<Boss2Tag>();
 
+        InitializeBoss2Migration(bossEntity);
+
         Console.WriteLine($"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {b2Cfg.MaxHp}, Pos: {b2Cfg.SpawnX}, {b2Cfg.SpawnY})");
+    }
+
+    private static void InitializeBoss1Migration(Entity bossEntity)
+    {
+        ref readonly Boss1StateMachine stateMachine = ref bossEntity.Get<Boss1StateMachine>();
+        ref readonly Boss1Stats stats = ref bossEntity.Get<Boss1Stats>();
+        MigrationResult migration = MigrationAdapter.ConvertBoss1(in stateMachine, in stats);
+        ApplyMigrationResult(bossEntity, in migration);
+    }
+
+    private static void InitializeBoss2Migration(Entity bossEntity)
+    {
+        ref readonly Boss2StateMachine stateMachine = ref bossEntity.Get<Boss2StateMachine>();
+        ref readonly Boss2Stats stats = ref bossEntity.Get<Boss2Stats>();
+        MigrationResult migration = MigrationAdapter.ConvertBoss2(in stateMachine, in stats);
+        ApplyMigrationResult(bossEntity, in migration);
+    }
+
+    private static void ApplyMigrationResult(Entity bossEntity, in MigrationResult migration)
+    {
+        if (!migration.IsSuccess)
+        {
+            Console.WriteLine($"[BattleScene 警告] Boss 移行データを生成できませんでした: {migration.Diagnostic.Message}");
+            return;
+        }
+
+        bossEntity.Set(migration.AiData);
+        bossEntity.Set(migration.MovementData);
+        bossEntity.Set(migration.AttackData);
+        bossEntity.Set(new BossPhaseTransitionData());
+        bossEntity.Set(new BossTerminalData());
+        bossEntity.Set(migration.CompatibilityData);
+        bossEntity.Remove<BossDebugData>();
+    }
+
+    private static void RefreshMigrationCompatibilityView(Entity bossEntity)
+    {
+        if (!bossEntity.Has<BossAiData>()
+            || !bossEntity.Has<BossMovementData>()
+            || !bossEntity.Has<BossAttackData>()
+            || !bossEntity.Has<BossCompatibilityData>())
+        {
+            return;
+        }
+
+        ref readonly BossAiData aiData = ref bossEntity.Get<BossAiData>();
+        ref readonly BossMovementData movementData = ref bossEntity.Get<BossMovementData>();
+        ref readonly BossAttackData attackData = ref bossEntity.Get<BossAttackData>();
+        ref readonly BossCompatibilityData compatibilityData = ref bossEntity.Get<BossCompatibilityData>();
+        BossCompatibilityData refreshed = MigrationAdapter.CreateCompatibilityView(
+            in aiData,
+            in movementData,
+            in attackData,
+            in compatibilityData);
+        bossEntity.Set(refreshed);
     }
 
     /// <summary>
@@ -182,6 +251,25 @@ public partial class BattleScene : IDisposable
     /// </summary>
     public void ResetCurrentBoss()
     {
+        SpawnBoss(CurrentBossId);
+    }
+
+    /// <summary>
+    /// compatibility view と終端 data を確認して現在の Boss を初期状態へ戻します。
+    /// </summary>
+    /// <param name="compatibility">新 runtime が公開した現在の compatibility view。</param>
+    /// <param name="terminal">死亡後も保持する終端 data。</param>
+    public void ResetCurrentBoss(in BossCompatibilityData compatibility, in BossTerminalData terminal)
+    {
+        if (terminal.IsTerminal)
+        {
+            Console.WriteLine($"[BattleScene] 終端状態 {terminal.DeadState} を確認して Boss を再生成します。");
+        }
+        else if (compatibility.BossState.IsValid())
+        {
+            Console.WriteLine($"[BattleScene] 互換状態 {compatibility.BossState} から Boss を再生成します。");
+        }
+
         SpawnBoss(CurrentBossId);
     }
 
@@ -222,6 +310,7 @@ public partial class BattleScene : IDisposable
                     t.ScaleY = bCfg.ScaleY;
                 }
 
+                RefreshMigrationCompatibilityView(bossEntity);
                 Console.WriteLine($"[BattleScene] Boss 1 の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
             }
         }
@@ -246,6 +335,7 @@ public partial class BattleScene : IDisposable
                     t.ScaleY = bCfg.ScaleY;
                 }
 
+                RefreshMigrationCompatibilityView(bossEntity);
                 Console.WriteLine($"[BattleScene] Boss 2 の Hurtbox / Hitbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
             }
         }

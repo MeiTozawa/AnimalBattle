@@ -333,6 +333,44 @@ public static class MigrationAdapter
         return true;
     }
 
+    /// <summary>
+    /// 新 runtime の純粋な ECS data から compatibility view を更新します。
+    /// </summary>
+    /// <param name="aiData">新 runtime が所有する共通 AI data。</param>
+    /// <param name="movementData">新 runtime が所有する移動 data。</param>
+    /// <param name="attackData">新 runtime が所有する攻撃 data。</param>
+    /// <param name="currentView">維持する旧 component 向けの補助値を含む現在の view。</param>
+    /// <returns>HUD、描画、衝突、再起動が参照する更新済み compatibility view。</returns>
+    public static BossCompatibilityData CreateCompatibilityView(
+        in BossAiData aiData,
+        in BossMovementData movementData,
+        in BossAttackData attackData,
+        in BossCompatibilityData currentView)
+    {
+        BossCompatibilityData view = currentView;
+        view.LegacyAttackValue = attackData.AttackId.Value;
+        view.LegacyStateTimer = aiData.StateTimer;
+        view.LegacyStateDuration = aiData.StateDuration;
+        view.LegacyIsInvulnerable = aiData.IsInvulnerable;
+        view.LegacyStartX = movementData.StartPosition.X;
+        view.LegacyStartY = movementData.StartPosition.Y;
+        view.LegacyTargetX = movementData.TargetPosition.X;
+        view.LegacyTargetY = movementData.TargetPosition.Y;
+        view.LegacyJumpCooldown = movementData.Cooldown;
+        view.LegacyActionSpeed = movementData.Velocity.X;
+        view.LegacyFacingRight = movementData.FacingRight;
+        view.UpdateSource = aiData.UpdateSource == UpdateSource.Unknown
+            ? UpdateSource.NewRuntime
+            : aiData.UpdateSource;
+        view.BossState = aiData.BossState;
+        view.Phase = aiData.Phase;
+        view.AttackId = attackData.AttackId;
+        view.IsInvulnerable = aiData.IsInvulnerable;
+        view.AttackStage = attackData.Stage;
+        view.FrameUpdateNumber = aiData.FrameUpdateNumber;
+        return view;
+    }
+
     /// <summary>新 runtime の値を旧 Boss1 component へ互換投影します。</summary>
     public static bool TryProjectBoss1(
         BossRuntimeSlot runtime,

@@ -1,5 +1,7 @@
 using System;
 using System.Drawing;
+
+using AnimalBattle.Ai.Contracts;
 using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
@@ -30,14 +32,14 @@ public static class HudRenderSystem
                  .With<PlayerTag>()
                  .Build();
 
-        Query<Health, Boss1Stats, Boss1StateMachine> boss1StatusQuery =
-            world.QueryBuilder<Health, Boss1Stats, Boss1StateMachine>()
+        Query<Health, Boss1Stats, Boss1StateMachine, BossCompatibilityData> boss1StatusQuery =
+            world.QueryBuilder<Health, Boss1Stats, Boss1StateMachine, BossCompatibilityData>()
                  .With<BossTag>()
                  .With<Boss1Tag>()
                  .Build();
 
-        Query<Health, Boss2Stats, Boss2StateMachine> boss2StatusQuery =
-            world.QueryBuilder<Health, Boss2Stats, Boss2StateMachine>()
+        Query<Health, Boss2Stats, Boss2StateMachine, BossCompatibilityData> boss2StatusQuery =
+            world.QueryBuilder<Health, Boss2Stats, Boss2StateMachine, BossCompatibilityData>()
                  .With<BossTag>()
                  .With<Boss2Tag>()
                  .Build();
@@ -126,23 +128,25 @@ public static class HudRenderSystem
         });
     }
 
-    private static void DrawBoss1Status(Query<Health, Boss1Stats, Boss1StateMachine> boss1Query, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
+    private static void DrawBoss1Status(Query<Health, Boss1Stats, Boss1StateMachine, BossCompatibilityData> boss1Query, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
     {
-        boss1Query.Each((ref Health health, ref Boss1Stats stats, ref Boss1StateMachine fsm) =>
+        boss1Query.Each((Entity entity, ref Health health, ref Boss1Stats stats, ref Boss1StateMachine legacyState, ref BossCompatibilityData compatibility) =>
         {
-            string bossTitle = $"BOSS: {ConfigManager.Boss1.BossName} [PHASE {stats.Phase}/3]";
-            GetBoss1StateInfo(fsm, hpCfg, out string stateName, out Color stateBadgeColor);
-            DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, health, stats.Phase, fsm.StateTimer, fsm.StateDuration);
+            BossDisplayData display = GetBossDisplayData(entity, in compatibility);
+            string bossTitle = $"BOSS: {ConfigManager.Boss1.BossName} [PHASE {ToLegacyPhase(display.Phase)}/3]";
+            GetBossStateInfo(display.State, display.AttackId, hpCfg, out string stateName, out Color stateBadgeColor);
+            DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, health, ToLegacyPhase(display.Phase), compatibility.LegacyStateTimer, compatibility.LegacyStateDuration);
         });
     }
 
-    private static void DrawBoss2Status(Query<Health, Boss2Stats, Boss2StateMachine> boss2Query, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
+    private static void DrawBoss2Status(Query<Health, Boss2Stats, Boss2StateMachine, BossCompatibilityData> boss2Query, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
     {
-        boss2Query.Each((ref Health health, ref Boss2Stats stats, ref Boss2StateMachine fsm) =>
+        boss2Query.Each((Entity entity, ref Health health, ref Boss2Stats stats, ref Boss2StateMachine legacyState, ref BossCompatibilityData compatibility) =>
         {
-            string bossTitle = $"BOSS: {ConfigManager.Boss2.BossName} [PHASE {stats.Phase}/3]";
-            GetBoss2StateInfo(fsm, hpCfg, out string stateName, out Color stateBadgeColor);
-            DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, health, stats.Phase, fsm.StateTimer, fsm.StateDuration);
+            BossDisplayData display = GetBossDisplayData(entity, in compatibility);
+            string bossTitle = $"BOSS: {ConfigManager.Boss2.BossName} [PHASE {ToLegacyPhase(display.Phase)}/3]";
+            GetBossStateInfo(display.State, display.AttackId, hpCfg, out string stateName, out Color stateBadgeColor);
+            DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, health, ToLegacyPhase(display.Phase), compatibility.LegacyStateTimer, compatibility.LegacyStateDuration);
         });
     }
 
@@ -159,6 +163,102 @@ public static class HudRenderSystem
                 GameEngine.DrawString(modalCfg.GameOverRetryX, modalCfg.GameOverRetryY, modalCfg.GameOverRetryText, modalCfg.GameOverRetryColor);
             }
         });
+    }
+
+    private readonly record struct BossDisplayData(BossState State, Phase Phase, AttackId AttackId, bool IsInvulnerable, AttackStage AttackStage);
+
+    private static BossDisplayData GetBossDisplayData(Entity entity, in BossCompatibilityData compatibility)
+    {
+        if (compatibility.HasDebugData && entity.Has<BossDebugData>())
+        {
+            ref readonly BossDebugData debugData = ref entity.Get<BossDebugData>();
+            return new BossDisplayData(
+                debugData.BossState,
+                debugData.Phase,
+                debugData.AttackId,
+                debugData.IsInvulnerable,
+                debugData.AttackStage);
+        }
+
+        return new BossDisplayData(
+            compatibility.BossState,
+            compatibility.Phase,
+            compatibility.AttackId,
+            compatibility.IsInvulnerable,
+            compatibility.AttackStage);
+    }
+
+    private static int ToLegacyPhase(Phase phase)
+    {
+        return phase switch
+        {
+            Phase.Phase2 => 2,
+            Phase.Phase3 => 3,
+            _ => 1
+        };
+    }
+
+    private static void GetBossStateInfo(BossState state, AttackId attackId, BossHpBarRenderConfig hpCfg, out string stateName, out Color badgeColor)
+    {
+        stateName = state switch
+        {
+            BossState.Boss1_Hover => "[STATE: HOVERING (IDLE)]",
+            BossState.Boss1_AttackSelection => "[STATE: ATTACK SELECTION]",
+            BossState.Boss1_Telegraph => $"[STATE: TELEGRAPHING (WIND-UP: {attackId.Value})]",
+            BossState.Boss1_Recovery or BossState.Boss2_Recovery => "[STATE: RECOVERING (VULNERABLE)]",
+            BossState.Boss1_PhaseTransition or BossState.Boss2_PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
+            BossState.Boss1_Dead or BossState.Boss2_Dead => "[STATE: DEFEATED]",
+            BossState.Boss2_Idle => "[STATE: IDLE / ALERT]",
+            BossState.Boss2_PatrolChase => $"[STATE: CHASE (NEXT: {attackId.Value})]",
+            BossState.Boss2_MoveToTakeoff => "[STATE: NAVIGATING TO TAKEOFF]",
+            BossState.Boss2_PlatformJump => "[STATE: PLATFORM JUMP (AIRBORNE)]",
+            BossState.Boss2_PlatformFall => "[STATE: PLATFORM FALLING]",
+            BossState.Boss2_LandingRecovery => "[STATE: LANDING IMPACT]",
+            BossState.Boss2_WallCrashStun => "[STATE: WALL CRASH STUNNED (VULNERABLE)]",
+            _ when IsTelegraphState(state) => $"[STATE: TELEGRAPH ({attackId.Value})]",
+            _ when IsExecuteState(state) => $"[STATE: EXECUTING ({attackId.Value})]",
+            _ => "[STATE: UNKNOWN]"
+        };
+
+        badgeColor = state switch
+        {
+            BossState.Boss1_PhaseTransition or BossState.Boss2_PhaseTransition => hpCfg.StatePhaseTransitionColor,
+            BossState.Boss1_Recovery or BossState.Boss2_Recovery => hpCfg.StateRecoveringColor,
+            BossState.Boss1_Dead or BossState.Boss2_Dead => ColorPalette.Gray,
+            BossState.Boss2_WallCrashStun => ColorPalette.Gold,
+            _ when IsTelegraphState(state) => hpCfg.StateTelegraphingColor,
+            _ when IsExecuteState(state) => hpCfg.StateCastingColor,
+            _ => hpCfg.StateDefaultColor
+        };
+    }
+
+    private static bool IsTelegraphState(BossState state)
+    {
+        return state is BossState.Boss1_Telegraph
+            or BossState.Boss2_HeavySlashTelegraph
+            or BossState.Boss2_DoubleCleaveTelegraph
+            or BossState.Boss2_GroundStompTelegraph
+            or BossState.Boss2_LeapSmashTelegraph
+            or BossState.Boss2_FrenzyChargeTelegraph
+            or BossState.Boss2_EarthquakeRoarTelegraph;
+    }
+
+    private static bool IsExecuteState(BossState state)
+    {
+        return state is BossState.Boss1_Aimed3ShotExecute
+            or BossState.Boss1_RingBurstExecute
+            or BossState.Boss1_DoubleSpiralExecute
+            or BossState.Boss1_RainDropExecute
+            or BossState.Boss1_CrossChaosExecute
+            or BossState.Boss1_FastSniperExecute
+            or BossState.Boss1_DiveRamExecute
+            or BossState.Boss2_HeavySlashExecute
+            or BossState.Boss2_DoubleCleaveExecute
+            or BossState.Boss2_GroundStompExecute
+            or BossState.Boss2_LeapSmashAscent
+            or BossState.Boss2_LeapSmashDescent
+            or BossState.Boss2_FrenzyChargeExecute
+            or BossState.Boss2_EarthquakeRoarExecute;
     }
 
     private static void GetBoss1StateInfo(Boss1StateMachine fsm, BossHpBarRenderConfig hpCfg, out string stateName, out Color badgeColor)
