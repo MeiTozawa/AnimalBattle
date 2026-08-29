@@ -17,19 +17,19 @@ public sealed class PlayerConfig
     public float InvincibleDuration { get; set; } = 0.5f;
 
     /// <summary>プレイヤーの左右移動速度（ピクセル/秒基準）</summary>
-    public float MoveSpeed { get; set; } = 4.8f;
+    public float MoveSpeed { get; set; } = 288.0f;
 
     /// <summary>地上初段ジャンプの初速度（上向き負値）</summary>
-    public float FirstJumpVelocity { get; set; } = -11.2f;
+    public float FirstJumpVelocity { get; set; } = -672.0f;
 
     /// <summary>空中二段ジャンプの初速度（上向き負値）</summary>
-    public float SecondJumpVelocity { get; set; } = -9.2f;
+    public float SecondJumpVelocity { get; set; } = -552.0f;
 
     /// <summary>下向き重力加速度</summary>
-    public float Gravity { get; set; } = 0.45f;
+    public float Gravity { get; set; } = 1620.0f;
 
     /// <summary>最大落下終端速度</summary>
-    public float MaxFallSpeed { get; set; } = 10.0f;
+    public float MaxFallSpeed { get; set; } = 600.0f;
 
     /// <summary>最大跳躍可能回数（空中二段ジャンプ）</summary>
     public int MaxJumps { get; set; } = 2;
@@ -50,7 +50,7 @@ public sealed class PlayerConfig
     public float HurtboxOffsetX { get; set; } = 0.0f;
 
     /// <summary>プレイヤー被弾判定の Y 軸局所オフセット（ピクセル、下向き正値で胸腹部へ微調整）</summary>
-    public float HurtboxOffsetY { get; set; } = 4.0f;
+    public float HurtboxOffsetY { get; set; } = 16.0f;
 
     /// <summary>敵弾に対するプレイヤー当たり判定半径（後方互換プロパティ）</summary>
     public float HitboxRadius => HurtboxRadius;
@@ -77,7 +77,7 @@ public sealed class PlayerConfig
     public float ShootCooldown { get; set; } = 0.16f;
 
     /// <summary>手銃弾の飛行速度</summary>
-    public float BulletSpeed { get; set; } = 16.0f;
+    public float BulletSpeed { get; set; } = 960.0f;
 
     /// <summary>銃弾生成時のプレイヤー中心からの X オフセット</summary>
     public float BulletSpawnOffset { get; set; } = 24.0f;

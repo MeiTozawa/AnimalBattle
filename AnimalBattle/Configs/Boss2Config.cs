@@ -110,7 +110,7 @@ public sealed class Boss2Config
     public float MoveSpeed { get; set; } = 160.0f;
 
     /// <summary>基本跳躍初速</summary>
-    public float JumpForce { get; set; } = 580.0f;
+    public float JumpForce { get; set; } = 640.0f;
 
     /// <summary>重力加速度</summary>
     public float Gravity { get; set; } = 980.0f;
@@ -127,7 +127,7 @@ public sealed class Boss2Config
         HpThreshold = 1.0f,
         IdleDuration = 0.8f,
         MoveSpeed = 160.0f,
-        JumpForce = 580.0f,
+        JumpForce = 640.0f,
         TelegraphShakeIntensity = 6.0f,
         TransitionDuration = 1.0f,
         Skills = ["HeavySlash", "GroundStomp", "HeavySlash", "LeapSmash"]
@@ -139,7 +139,7 @@ public sealed class Boss2Config
         HpThreshold = 0.66f,
         IdleDuration = 0.5f,
         MoveSpeed = 220.0f,
-        JumpForce = 640.0f,
+        JumpForce = 680.0f,
         TelegraphShakeIntensity = 10.0f,
         TransitionDuration = 1.0f,
         Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "DoubleCleave"]
@@ -151,7 +151,7 @@ public sealed class Boss2Config
         HpThreshold = 0.33f,
         IdleDuration = 0.3f,
         MoveSpeed = 280.0f,
-        JumpForce = 700.0f,
+        JumpForce = 720.0f,
         TelegraphShakeIntensity = 14.0f,
         TransitionDuration = 1.2f,
         Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash"]

@@ -31,7 +31,9 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     /// <summary>
     /// 設定ファイル変更にともない自動リロードが発生した際に発火するイベント。
     /// </summary>
+#pragma warning disable CS0067
     public event Action? OnConfigReloaded;
+#pragma warning restore CS0067
 
     /// <summary>
     /// デフォルト設定オブジェクトインスタンスで <see cref="ConfigBase{T}"/> の新しいインスタンスを初期化します。
@@ -42,12 +44,16 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
 
     /// <summary>
     /// 指定された TOML ファイルから設定を読み込み、自動リロード（reloadOnChange: true）を有効にした <see cref="ConfigBase{T}"/> インスタンスを生成します。
+    /// Release ビルド時は外部ファイルに依存せず、コード内にベイクされたデフォルト設定インスタンスを即座に返却します。
     /// </summary>
     /// <param name="defaultFileName">TOML ファイル名</param>
     /// <returns>成功時は設定コンテナインスタンスを含む <see cref="ErrorOr{T}"/>、失敗時は <see cref="Error"/></returns>
     [UnconditionalSuppressMessage("Microsoft.Configuration.Binder", "SYSLIB1104", Justification = "Generic binder fallback is intentional in config container class.")]
     public static ErrorOr<ConfigBase<T>> LoadFromFile(string defaultFileName)
     {
+#if !DEBUG
+        return new ConfigBase<T>(new T());
+#else
         ErrorOr<string> pathResult = FindConfigPath(defaultFileName);
         if (pathResult.IsError || string.IsNullOrEmpty(pathResult.Value) || !File.Exists(pathResult.Value))
         {
@@ -70,9 +76,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
                 .AddTomlFile(
                     fileName,
                     optional: true,
-#if DEBUG
                     reloadOnChange: true
-#endif
                 );
 
             IConfigurationRoot configRoot = builder.Build();
@@ -101,6 +105,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
         {
             return Error.Failure("Config.Exception", ex.Message);
         }
+#endif
     }
 
     /// <summary>

@@ -14,12 +14,12 @@ namespace AnimalBattle.Configs;
 /// </summary>
 public static class ConfigManager
 {
-    private static ConfigBase<PlayerConfig> _playerConfigContainer = new(new PlayerConfig());
-    private static ConfigBase<Boss1Config> _boss1ConfigContainer = new(new Boss1Config());
-    private static ConfigBase<Boss2Config> _boss2ConfigContainer = new(new Boss2Config());
-    private static ConfigBase<PatternConfig> _patternConfigContainer = new(new PatternConfig());
-    private static ConfigBase<ArenaConfig> _arenaConfigContainer = new(new ArenaConfig());
-    private static ConfigBase<RenderConfig> _renderConfigContainer = new(new RenderConfig());
+    private static ConfigBase<PlayerConfig> _playerConfigContainer = new(BakedConfigs.CreatePlayerConfig());
+    private static ConfigBase<Boss1Config> _boss1ConfigContainer = new(BakedConfigs.CreateBoss1Config());
+    private static ConfigBase<Boss2Config> _boss2ConfigContainer = new(BakedConfigs.CreateBoss2Config());
+    private static ConfigBase<PatternConfig> _patternConfigContainer = new(BakedConfigs.CreatePatternConfig());
+    private static ConfigBase<ArenaConfig> _arenaConfigContainer = new(BakedConfigs.CreateArenaConfig());
+    private static ConfigBase<RenderConfig> _renderConfigContainer = new(BakedConfigs.CreateRenderConfig());
 
     /// <summary>プレイヤー設定オブジェクトを取得します。</summary>
     public static PlayerConfig Player => _playerConfigContainer.Config;
@@ -58,10 +58,13 @@ public static class ConfigManager
     public static ConfigBase<RenderConfig> RenderContainer => _renderConfigContainer;
 
     /// <summary>
-    /// 全 TOML 設定ファイルをロードし、自動リロード監視を開始します。
+    /// 全設定を初期化します。
+    /// Debug ビルド時は TOML ファイル群を動的ロードしてホットリロード監視を開始します。
+    /// Release ビルド時はコード内にベイクされた初期設定データをそのまま使用し、外部ファイル不要で独立動作します。
     /// </summary>
     public static void Initialize()
     {
+#if DEBUG
         TypeDescriptor.AddAttributes(typeof(Color), new TypeConverterAttribute(typeof(FlexibleColorConverter)));
 
         int successCount = 0;
@@ -83,8 +86,12 @@ public static class ConfigManager
         }
 
         Console.WriteLine($"[C# 設定初期化] 全ての TOML 設定ファイル（{successCount} 件）の読み込みが正常に完了しました！");
+#else
+        Console.WriteLine("[C# 設定初期化] Release 版: 埋め込み (Baked) 設定データを使用して独立起動しました。");
+#endif
     }
 
+#if DEBUG
     private static void LoadConfig<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(
         string configPath,
         ref ConfigBase<T> container,
@@ -103,6 +110,7 @@ public static class ConfigManager
             failureCount++;
         }
     }
+#endif
 
     /// <summary>
     /// 全設定コンテナのファイル監視リソースを安全に解放します。

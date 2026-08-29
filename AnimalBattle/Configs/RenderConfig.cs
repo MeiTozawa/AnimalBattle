@@ -137,7 +137,14 @@ public sealed class HudRenderConfig
     /// <summary>
     /// 操作案内テキスト項目のリスト。
     /// </summary>
-    public List<HudTextItem> Text { get; set; } = new();
+    public List<HudTextItem> Text { get; set; } =
+    [
+        new() { Text = "[A/D/Left/Right]: Move (Instant Stop)", Color = ColorPalette.GrayLight },
+        new() { Text = "[Space/K]: Jump & Air Double Jump", Color = ColorPalette.GrayLight },
+        new() { Text = "[J/Z] + Direction: 8-Way Aim & Shoot", Color = ColorPalette.GrayLight },
+        new() { Text = "[R]: Instant Restart (1-Frame Reset)", Color = ColorPalette.RedCoral },
+        new() { Text = "[F1/H]: Toggle Hitbox/Hurtbox Debug", Color = ColorPalette.GrayLight },
+    ];
 
     /// <summary>二段ジャンプインジケータ Y 座標</summary>
     public int DoubleJumpY { get; set; } = 134;

@@ -138,6 +138,7 @@ public sealed class Boss1Config
         RecoverFlybackSpeed = 4.0f,
         RecoverDelayRatio = 0.5f,
         TransitionDuration = 1.0f,
+        TransitionFloatSpeed = 3.0f,
         Skills = ["Aimed3Shot", "DiveRam", "RingBurst"]
     };
 
@@ -157,6 +158,7 @@ public sealed class Boss1Config
         RecoverFlybackSpeed = 4.5f,
         RecoverDelayRatio = 0.45f,
         TransitionDuration = 1.0f,
+        TransitionFloatSpeed = 3.5f,
         Skills = ["DoubleSpiral", "DiveRam", "RainDrop"]
     };
 
@@ -176,6 +178,7 @@ public sealed class Boss1Config
         RecoverFlybackSpeed = 5.0f,
         RecoverDelayRatio = 0.40f,
         TransitionDuration = 1.0f,
+        TransitionFloatSpeed = 4.0f,
         Skills = ["CrossChaos", "DiveRam", "FastSniper"]
     };
 
