@@ -135,7 +135,8 @@ public sealed class BossAiRuntimeSystem
         if (entity.Has<Transform>())
         {
             ref readonly Transform bossTransform = ref entity.Get<Transform>();
-            _runtime.SynchronizeBossPosition(ai.BossType, bossTransform.X, bossTransform.Y);
+            bool isGrounded = entity.Has<CollisionBox>() && entity.Get<CollisionBox>().IsGrounded;
+            _runtime.SynchronizeBossState(ai.BossType, bossTransform.X, bossTransform.Y, isGrounded, playerObservation.IsAlive);
         }
 
         // Phase 判定を先に確定し、その後に state module が発行した Movement / Attack command を適用します。

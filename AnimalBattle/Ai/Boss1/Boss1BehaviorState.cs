@@ -65,6 +65,12 @@ public sealed class Boss1BehaviorState : IBossBehaviorState
         CurrentPosition = new Vec2f(x, y);
     }
 
+    /// <inheritdoc />
+    public void SynchronizeState(float x, float y, bool isGrounded, bool isPlayerAlive)
+    {
+        CurrentPosition = new Vec2f(x, y);
+    }
+
     /// <summary>次の遷移要求を一件だけ保持します。</summary>
     public void RequestTransition(BossState stateId, in TransitionReason reason)
     {

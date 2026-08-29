@@ -75,11 +75,8 @@ public partial class BattleScene : IDisposable
         // 2. タイルマップとプラットフォームの生成
         SetupArena();
 
-        // 3. Boss 1 (Ancient Cat Overlord) の生成
-        SpawnBoss(BossType.Boss1);
-
-        // 4. Boss 2 (Void Serpent) の生成
-        SpawnBoss(BossType.Boss2);
+        // 3. アクティブな Boss (デフォルト: Boss 1) の生成
+        SpawnBoss(CurrentBossType);
     }
 
     /// <summary>
@@ -89,6 +86,13 @@ public partial class BattleScene : IDisposable
     /// <returns>生成または再初期化された Flecs エンティティ</returns>
     public Entity SpawnBoss(BossType bossType)
     {
+        string otherBossName = bossType == BossType.Boss1 ? "Boss2" : "Boss1";
+        Entity otherBoss = _ecsWorld.Lookup(otherBossName);
+        if (otherBoss.IsAlive())
+        {
+            otherBoss.Destruct();
+        }
+
         string entityName = bossType == BossType.Boss1 ? "Boss1" : "Boss2";
         Entity bossEntity = _ecsWorld.Entity(entityName);
 

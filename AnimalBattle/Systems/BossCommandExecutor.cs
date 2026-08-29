@@ -180,8 +180,7 @@ public static class BossCommandExecutor
             switch (cmd.Kind)
             {
                 case MovementCommandKind.SetVelocity:
-                    float forwardDir = slot.MovementData.FacingRight ? 1.0f : -1.0f;
-                    vel.Vx = forwardDir * cmd.X;
+                    vel.Vx = cmd.X;
                     if (cmd.Y != 0.0f)
                     {
                         vel.Vy = cmd.Y;
