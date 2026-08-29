@@ -26,70 +26,74 @@ public sealed class AssetManager : IDisposable
     /// <summary>
     /// 静的レジストリからのスプライトシート画像ロードおよび設定初期化を行います。
     /// </summary>
-    /// <returns>全アセットが正常にロードされた場合は true、失敗した場合は false</returns>
-    public static bool Initialize()
+    /// <returns>初期化結果</returns>
+    public static ErrorOr.ErrorOr<ErrorOr.Success> Initialize()
     {
         if (_isInitialized)
         {
-            return true;
+            return ErrorOr.Result.Success;
         }
 
         bool allLoaded = true;
         foreach ((CharacterType charType, AnimationConfig config) in AnimationRegistry.CharacterConfigs)
         {
             _characterConfigs[charType] = config;
-            if (!LoadCharacterSprite(charType))
+            if (LoadCharacterSprite(charType).IsError)
             {
                 allLoaded = false;
             }
 
-            if (!LoadCharacterClips(charType, config))
+            if (LoadCharacterClips(charType, config).IsError)
             {
                 allLoaded = false;
             }
         }
 
         _isInitialized = true;
-        return allLoaded;
+        return allLoaded
+            ? ErrorOr.Result.Success
+            : ErrorOr.Error.Failure("AssetManager.Initialize", "一部のアセットのロードに失敗しました。");
     }
 
-    private static bool LoadCharacterSprite(CharacterType charType)
+    private static ErrorOr.ErrorOr<ErrorOr.Success> LoadCharacterSprite(CharacterType charType)
     {
         if (!AnimationRegistry.CharacterSprites.TryGetValue(charType, out string? relPath))
         {
-            return true;
+            return ErrorOr.Result.Success;
         }
 
         string fullPath = ResolveAssetPath(relPath);
-        Result<int> loadResult = AssetService.LoadGraph(fullPath);
-        if (loadResult.IsOk)
+        ErrorOr.ErrorOr<int> loadResult = AssetService.LoadGraph(fullPath);
+        if (!loadResult.IsError)
         {
             _characterSpriteHandles[charType] = loadResult.Value;
             _textureHandles[relPath] = loadResult.Value;
             Console.WriteLine($"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {loadResult.Value})");
-            return true;
+            return ErrorOr.Result.Success;
         }
 
-        Console.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {loadResult.Error?.Description}");
-        return false;
+        Console.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {loadResult.FirstError.Description}");
+        return ErrorOr.Error.Failure("AssetManager.LoadCharacterSprite", loadResult.FirstError.Description);
     }
 
-    private static bool LoadCharacterClips(CharacterType charType, AnimationConfig config)
+    private static ErrorOr.ErrorOr<ErrorOr.Success> LoadCharacterClips(CharacterType charType, AnimationConfig config)
     {
         bool allClipsLoaded = true;
         foreach (AnimationClipConfig clip in config.Clips)
         {
             if (!string.IsNullOrWhiteSpace(clip.SpritePath))
             {
-                Result<int> loadResult = LoadTexture(clip.SpritePath);
-                if (!loadResult.IsOk)
+                ErrorOr.ErrorOr<int> loadResult = LoadTexture(clip.SpritePath);
+                if (loadResult.IsError)
                 {
                     Console.WriteLine($"[C# アニメーション警告] クリップスプライトのロードに失敗しました ({charType} / {clip.Name}): {clip.SpritePath}");
                     allClipsLoaded = false;
                 }
             }
         }
-        return allClipsLoaded;
+        return allClipsLoaded
+            ? ErrorOr.Result.Success
+            : ErrorOr.Error.Failure("AssetManager.LoadCharacterClips", "一部のクリップスプライトのロードに失敗しました。");
     }
 
     /// <summary>
@@ -97,29 +101,29 @@ public sealed class AssetManager : IDisposable
     /// 既にロード済みの場合はキャッシュされたハンドルを返します。
     /// </summary>
     /// <param name="relativePath">リソース相対パス（例: <see cref="ResourcePath.Platform.SheetPng"/>）</param>
-    /// <returns>グラフィックハンドルを含む <see cref="Result{T}"/></returns>
-    public static Result<int> LoadTexture(string relativePath)
+    /// <returns>グラフィックハンドルを含む <see cref="ErrorOr.ErrorOr{T}"/></returns>
+    public static ErrorOr.ErrorOr<int> LoadTexture(string relativePath)
     {
         if (string.IsNullOrWhiteSpace(relativePath))
         {
-            return SimpleError.NotValid("相対パスが null または空です。");
+            return ErrorOr.Error.Validation("Asset.EmptyPath", "相対パスが null または空です。");
         }
 
         if (_textureHandles.TryGetValue(relativePath, out int existingHandle))
         {
-            return Result<int>.Ok(existingHandle);
+            return existingHandle;
         }
 
         string fullPath = ResolveAssetPath(relativePath);
-        Result<int> loadResult = AssetService.LoadGraph(fullPath);
-        if (loadResult.IsOk)
+        ErrorOr.ErrorOr<int> loadResult = AssetService.LoadGraph(fullPath);
+        if (!loadResult.IsError)
         {
             _textureHandles[relativePath] = loadResult.Value;
             Console.WriteLine($"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {loadResult.Value})");
             return loadResult;
         }
 
-        Console.WriteLine($"[C# アセット警告] テクスチャのロードに失敗しました ({relativePath}): {loadResult.Error?.Description}");
+        Console.WriteLine($"[C# アセット警告] テクスチャのロードに失敗しました ({relativePath}): {loadResult.FirstError.Description}");
         return loadResult;
     }
 
@@ -127,8 +131,8 @@ public sealed class AssetManager : IDisposable
     /// ロード済みのテクスチャハンドルを取得します。未ロードの場合はロードを試行します。
     /// </summary>
     /// <param name="relativePath">リソース相対パス（例: <see cref="ResourcePath.Platform.SheetPng"/>）</param>
-    /// <returns>グラフィックハンドルを含む <see cref="Result{T}"/></returns>
-    public static Result<int> GetTexture(string relativePath)
+    /// <returns>グラフィックハンドルを含む <see cref="ErrorOr.ErrorOr{T}"/></returns>
+    public static ErrorOr.ErrorOr<int> GetTexture(string relativePath)
     {
         return LoadTexture(relativePath);
     }
@@ -139,8 +143,8 @@ public sealed class AssetManager : IDisposable
     /// </summary>
     /// <param name="type">キャラクター種別</param>
     /// <param name="clipName">再生クリップ名（null の場合は標準スプライトハンドル）</param>
-    /// <returns>グラフィックハンドルを含む <see cref="Result{T}"/></returns>
-    public static Result<int> GetCharacterSpriteHandle(CharacterType type = CharacterType.Cat, string? clipName = null)
+    /// <returns>グラフィックハンドルを含む <see cref="ErrorOr.ErrorOr{T}"/></returns>
+    public static ErrorOr.ErrorOr<int> GetCharacterSpriteHandle(CharacterType type = CharacterType.Cat, string? clipName = null)
     {
         if (!string.IsNullOrWhiteSpace(clipName) &&
             _characterConfigs.TryGetValue(type, out AnimationConfig? config))
@@ -148,8 +152,8 @@ public sealed class AssetManager : IDisposable
             AnimationClipConfig? clip = config.Clips.Find(c => string.Equals(c.Name, clipName, StringComparison.OrdinalIgnoreCase));
             if (clip != null && !string.IsNullOrWhiteSpace(clip.SpritePath))
             {
-                Result<int> clipResult = GetTexture(clip.SpritePath);
-                if (clipResult.IsOk)
+                ErrorOr.ErrorOr<int> clipResult = GetTexture(clip.SpritePath);
+                if (!clipResult.IsError)
                 {
                     return clipResult;
                 }
@@ -158,25 +162,25 @@ public sealed class AssetManager : IDisposable
 
         if (_characterSpriteHandles.TryGetValue(type, out int handle))
         {
-            return Result<int>.Ok(handle);
+            return handle;
         }
 
-        return SimpleError.NotFound($"キャラクター '{type}' のスプライトハンドルが見つかりません。");
+        return ErrorOr.Error.NotFound("Asset.SpriteNotFound", $"キャラクター '{type}' のスプライトハンドルが見つかりません。");
     }
 
     /// <summary>
     /// 指定されたキャラクター設定を取得します。
     /// </summary>
     /// <param name="type">キャラクター種別</param>
-    /// <returns>アニメーション設定を含む <see cref="Result{T}"/></returns>
-    public static Result<AnimationConfig> GetCharacterConfig(CharacterType type = CharacterType.Cat)
+    /// <returns>アニメーション設定を含む <see cref="ErrorOr.ErrorOr{T}"/></returns>
+    public static ErrorOr.ErrorOr<AnimationConfig> GetCharacterConfig(CharacterType type = CharacterType.Cat)
     {
         if (_characterConfigs.TryGetValue(type, out AnimationConfig? config) && config != null)
         {
-            return Result<AnimationConfig>.Ok(config);
+            return config;
         }
 
-        return SimpleError.NotFound($"キャラクター '{type}' のアニメーション設定が見つかりません。");
+        return ErrorOr.Error.NotFound("Asset.ConfigNotFound", $"キャラクター '{type}' のアニメーション設定が見つかりません。");
     }
 
     /// <summary>
@@ -239,8 +243,8 @@ public sealed class AssetManager : IDisposable
             string[] directRoots = [AppDomain.CurrentDomain.BaseDirectory, Environment.CurrentDirectory];
             foreach (string root in directRoots)
             {
-                Result<string> findResult = FindAssetFile(root, relPath);
-                if (findResult.IsOk && !string.IsNullOrEmpty(findResult.Value))
+                ErrorOr.ErrorOr<string> findResult = FindAssetFile(root, relPath);
+                if (!findResult.IsError && !string.IsNullOrEmpty(findResult.Value))
                 {
                     return findResult.Value;
                 }
@@ -249,8 +253,8 @@ public sealed class AssetManager : IDisposable
             DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
             while (dir != null)
             {
-                Result<string> findResult = FindAssetFile(dir.FullName, relPath);
-                if (findResult.IsOk && !string.IsNullOrEmpty(findResult.Value))
+                ErrorOr.ErrorOr<string> findResult = FindAssetFile(dir.FullName, relPath);
+                if (!findResult.IsError && !string.IsNullOrEmpty(findResult.Value))
                 {
                     return findResult.Value;
                 }
@@ -265,21 +269,21 @@ public sealed class AssetManager : IDisposable
         return relPath;
     }
 
-    private static Result<string> FindAssetFile(string rootDir, string relPath)
+    private static ErrorOr.ErrorOr<string> FindAssetFile(string rootDir, string relPath)
     {
         string directResource = Path.Combine(rootDir, "Resource", relPath);
         if (File.Exists(directResource))
         {
-            return Result<string>.Ok(Path.GetFullPath(directResource));
+            return Path.GetFullPath(directResource);
         }
 
         string directCandidate = Path.Combine(rootDir, relPath);
         if (File.Exists(directCandidate))
         {
-            return Result<string>.Ok(Path.GetFullPath(directCandidate));
+            return Path.GetFullPath(directCandidate);
         }
 
-        return SimpleError.NotFound($"ディレクトリ '{rootDir}' 下にアセットファイルが見つかりません: {relPath}");
+        return ErrorOr.Error.NotFound("Asset.NotFound", $"ディレクトリ '{rootDir}' 下にアセットファイルが見つかりません: {relPath}");
     }
 
     /// <summary>

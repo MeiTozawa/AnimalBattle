@@ -33,7 +33,7 @@ internal static class Boss1ModuleSupport
             message);
         try
         {
-            context.Observation.TryRecord(in observation);
+            context.Observation.Record(in observation);
         }
         catch
         {

@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
-
 using AnimalBattle.Ai.Contracts;
+using ErrorOr;
 
 namespace AnimalBattle.Components;
 
@@ -36,7 +36,7 @@ public struct BossTerminalData
     }
 
     /// <summary>死亡理由と死亡 frame を一度だけ終端データへ保存します。</summary>
-    public bool TryCapture(
+    public ErrorOr<Success> Capture(
         BossState deadState,
         Phase phase,
         in TransitionReason deathReason,
@@ -47,7 +47,7 @@ public struct BossTerminalData
     {
         if (IsTerminal)
         {
-            return false;
+            return Error.Validation("BossTerminalData.Capture", "既に終端データが確定しています。");
         }
 
         IsTerminal = true;
@@ -60,6 +60,6 @@ public struct BossTerminalData
         Hp = hp;
         MovementStopped = false;
         AttackGenerationStopped = true;
-        return true;
+        return Result.Success;
     }
 }

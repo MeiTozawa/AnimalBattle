@@ -50,7 +50,7 @@ public static class AttackStateModuleMap
     public static IReadOnlyList<AttackStateModuleMapping> Entries => _entries;
 
     /// <summary>AttackId に対応する固定 Telegraph/Execute mapping を取得します。</summary>
-    public static bool TryGet(AttackId attackId, out AttackStateModuleMapping mapping)
+    public static bool Get(AttackId attackId, out AttackStateModuleMapping mapping)
     {
         for (int index = 0; index < _entries.Count; index++)
         {

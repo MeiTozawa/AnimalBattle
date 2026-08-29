@@ -40,7 +40,7 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
         int nextIndex = (_state.CurrentAttackIndex + 1) % settings.AttackOrder.Count;
         _state.CurrentAttackIndex = nextIndex;
         AttackId attackId = settings.AttackOrder[nextIndex];
-        if (!_configuration.TryGetAttack(attackId, out Boss1AttackPattern pattern) || !pattern.IsValid)
+        if (!_configuration.GetAttack(attackId, out Boss1AttackPattern pattern) || !pattern.IsValid)
         {
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidAttackId, "Boss1 の攻撃設定が不正なため Hover へ復帰します。", attackId);
             _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, attackId: attackId, errorCode: ErrorCode.InvalidAttackId));

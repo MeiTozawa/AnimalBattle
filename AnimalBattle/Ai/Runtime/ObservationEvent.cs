@@ -37,6 +37,7 @@ public readonly struct ObservationEvent(
     /// <summary>互換用の固定 BossState 名です。</summary>
     [Obsolete("State を使用してください。")]
     public BossState BossState => State;
+    /// <summary>遷移前の固定 BossState です。</summary>
     public BossState PreviousState { get; } = previousState;
     /// <summary>遷移先の固定 BossState です。</summary>
     public BossState NextState { get; } = nextState;
@@ -46,6 +47,7 @@ public readonly struct ObservationEvent(
     /// <summary>互換用の遷移先状態名です。</summary>
     [Obsolete("NextState を使用してください。")]
     public BossState NextBossState => NextState;
+    /// <summary>旧遷移前プロパティ名です。</summary>
     [Obsolete("PreviousState を使用してください。")]
     public BossState PreviousStateId => PreviousState;
     /// <summary>旧遷移先プロパティ名です。</summary>

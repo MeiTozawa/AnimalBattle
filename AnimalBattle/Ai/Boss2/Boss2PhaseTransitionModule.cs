@@ -68,20 +68,38 @@ public sealed class Boss2PhaseTransitionModule : IBossStateModule, IStateModuleD
 
         if (!data.AppliedMask.HasFlag(PhaseTransitionApplyMask.MovementStop))
         {
-            if (context.Movement.Stop()) data.AppliedMask |= PhaseTransitionApplyMask.MovementStop;
-            else RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.MovementStop, "PhaseTransition の移動停止に失敗しました。");
+            if (!context.Movement.Stop().IsError)
+            {
+                data.AppliedMask |= PhaseTransitionApplyMask.MovementStop;
+            }
+            else
+            {
+                RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.MovementStop, "PhaseTransition の移動停止に失敗しました。");
+            }
         }
 
         if (!data.AppliedMask.HasFlag(PhaseTransitionApplyMask.BulletCleanup))
         {
-            if (context.Attack.ClearBossBullets()) data.AppliedMask |= PhaseTransitionApplyMask.BulletCleanup;
-            else RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.BulletCleanup, "PhaseTransition の弾整理に失敗しました。");
+            if (!context.Attack.ClearBossBullets().IsError)
+            {
+                data.AppliedMask |= PhaseTransitionApplyMask.BulletCleanup;
+            }
+            else
+            {
+                RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.BulletCleanup, "PhaseTransition の弾整理に失敗しました。");
+            }
         }
 
         if (!data.AppliedMask.HasFlag(PhaseTransitionApplyMask.Effect))
         {
-            if (context.Effect.RequestTelegraph(_state.CurrentPosition.X, _state.CurrentPosition.Y)) data.AppliedMask |= PhaseTransitionApplyMask.Effect;
-            else RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.Effect, "PhaseTransition の演出 command を発行できませんでした。");
+            if (!context.Effect.RequestTelegraph(_state.CurrentPosition.X, _state.CurrentPosition.Y).IsError)
+            {
+                data.AppliedMask |= PhaseTransitionApplyMask.Effect;
+            }
+            else
+            {
+                RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.Effect, "PhaseTransition の演出 command を発行できませんでした。");
+            }
         }
     }
 

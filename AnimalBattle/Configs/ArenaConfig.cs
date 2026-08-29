@@ -64,7 +64,7 @@ public sealed class ArenaConfig
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static Result<ConfigBase<ArenaConfig>> LoadFromFile(string path = ResourcePath.Config.Arena)
+    public static ErrorOr.ErrorOr<ConfigBase<ArenaConfig>> LoadFromFile(string path = ResourcePath.Config.Arena)
     {
         return ConfigBase<ArenaConfig>.LoadFromFile(path);
     }

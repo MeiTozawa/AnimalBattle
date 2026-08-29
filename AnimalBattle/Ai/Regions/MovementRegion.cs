@@ -1,5 +1,5 @@
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Regions;
 
@@ -28,22 +28,22 @@ public sealed class MovementRegion(PhaseChildStateRules rules)
     public RegionTransitionResult LastTransitionResult => _lastTransitionResult;
 
     /// <summary>Phase の安全な初期状態へ入場します。</summary>
-    public Result<RegionTransitionResult> ActivateInitial(
+    public ErrorOr<RegionTransitionResult> ActivateInitial(
         Phase phase,
         in TransitionReason reason,
-        Func<StateId, Result<bool>>? transition = null)
+        Func<StateId, ErrorOr<Success>>? transition = null)
     {
-        Result<RegionStateRange> rangeResult = _rules.Get(phase);
-        if (!rangeResult.IsOk)
+        ErrorOr<RegionStateRange> rangeResult = _rules.Get(phase);
+        if (rangeResult.IsError)
         {
             return Fail(RegionFailureKind.InvalidPhase, phase, _currentStateId, default, default, reason);
         }
 
-        RegionStateRange range = rangeResult.ValueOrDefault();
-        Result<bool> transitionResult = transition is null
-            ? Result<bool>.Ok(true)
+        RegionStateRange range = rangeResult.Value;
+        ErrorOr<Success> transitionResult = transition is null
+            ? Result.Success
             : transition(range.InitialStateId);
-        if (!transitionResult.IsOk || transitionResult.Value != true)
+        if (transitionResult.IsError)
         {
             return Fail(RegionFailureKind.SafeInitialTransitionFailed, phase, _currentStateId, default, range.InitialStateId, reason);
         }
@@ -55,28 +55,28 @@ public sealed class MovementRegion(PhaseChildStateRules rules)
         LastFailure = default;
         RegionTransitionResult result = new(true, false, false, previous, _currentStateId, default);
         _lastTransitionResult = result;
-        return Result<RegionTransitionResult>.Ok(result);
+        return result;
     }
 
     /// <summary>指定 State_Id へ遷移し、範囲外なら安全初期状態を試行します。</summary>
-    public Result<RegionTransitionResult> Transition(
+    public ErrorOr<RegionTransitionResult> Transition(
         Phase phase,
         StateId requestedStateId,
         in TransitionReason reason,
-        Func<StateId, Result<bool>>? safeTransition = null)
+        Func<StateId, ErrorOr<Success>>? safeTransition = null)
     {
         if (!_isActive)
         {
             return ActivateInitial(phase, in reason, safeTransition);
         }
 
-        Result<RegionStateRange> rangeResult = _rules.Get(phase);
-        if (!rangeResult.IsOk)
+        ErrorOr<RegionStateRange> rangeResult = _rules.Get(phase);
+        if (rangeResult.IsError)
         {
             return Fail(RegionFailureKind.InvalidPhase, phase, _currentStateId, requestedStateId, default, reason);
         }
 
-        RegionStateRange range = rangeResult.ValueOrDefault();
+        RegionStateRange range = rangeResult.Value;
         if (range.Contains(requestedStateId))
         {
             StateId previous = _currentStateId;
@@ -85,7 +85,7 @@ public sealed class MovementRegion(PhaseChildStateRules rules)
                 LastFailure = default;
                 RegionTransitionResult unchanged = new(true, false, false, previous, _currentStateId, default);
                 _lastTransitionResult = unchanged;
-                return Result<RegionTransitionResult>.Ok(unchanged);
+                return unchanged;
             }
 
             _currentStateId = requestedStateId;
@@ -93,11 +93,11 @@ public sealed class MovementRegion(PhaseChildStateRules rules)
             LastFailure = default;
             RegionTransitionResult changed = new(true, false, false, previous, _currentStateId, default);
             _lastTransitionResult = changed;
-            return Result<RegionTransitionResult>.Ok(changed);
+            return changed;
         }
 
-        Result<RegionTransitionResult> recoveryResult = ActivateInitial(phase, in reason, safeTransition);
-        if (!recoveryResult.IsOk)
+        ErrorOr<RegionTransitionResult> recoveryResult = ActivateInitial(phase, in reason, safeTransition);
+        if (recoveryResult.IsError)
         {
             RegionFailure safeFailure = LastFailure with
             {
@@ -106,15 +106,15 @@ public sealed class MovementRegion(PhaseChildStateRules rules)
             };
             LastFailure = safeFailure;
             _lastTransitionResult = new RegionTransitionResult(false, false, true, _currentStateId, _currentStateId, safeFailure);
-            return Result<RegionTransitionResult>.Err(safeFailure.ToSimpleError());
+            return safeFailure.ToError();
         }
 
-        RegionTransitionResult recovery = recoveryResult.ValueOrDefault();
+        RegionTransitionResult recovery = recoveryResult.Value;
         RegionFailure failure = new(RegionKind.Movement, RegionFailureKind.ChildOutOfRange, phase, recovery.PreviousStateId, requestedStateId, recovery.CurrentStateId, range.InitialStateId, reason);
         LastFailure = failure;
         RegionTransitionResult recovered = new(true, true, false, recovery.PreviousStateId, recovery.CurrentStateId, failure);
         _lastTransitionResult = recovered;
-        return Result<RegionTransitionResult>.Ok(recovered);
+        return recovered;
     }
 
     /// <summary>Phase 変更前に Movement 子領域を終了します。</summary>
@@ -129,7 +129,7 @@ public sealed class MovementRegion(PhaseChildStateRules rules)
         ExitCount++;
     }
 
-    private Result<RegionTransitionResult> Fail(
+    private ErrorOr<RegionTransitionResult> Fail(
         RegionFailureKind kind,
         Phase phase,
         StateId current,
@@ -140,6 +140,6 @@ public sealed class MovementRegion(PhaseChildStateRules rules)
         RegionFailure failure = new(RegionKind.Movement, kind, phase, current, requested, current, safeInitial, reason);
         LastFailure = failure;
         _lastTransitionResult = new RegionTransitionResult(false, false, true, current, current, failure);
-        return Result<RegionTransitionResult>.Err(failure.ToSimpleError());
+        return failure.ToError();
     }
 }

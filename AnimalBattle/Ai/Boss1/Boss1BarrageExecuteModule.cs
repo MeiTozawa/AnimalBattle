@@ -30,7 +30,7 @@ public abstract class Boss1BarrageExecuteModule : IBossStateModule, IStateModule
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _state = state ?? throw new ArgumentNullException(nameof(state));
-        if (!configuration.TryGetAttack(attackId, out Boss1AttackPattern pattern))
+        if (!configuration.GetAttack(attackId, out Boss1AttackPattern pattern))
         {
             pattern = new Boss1AttackPattern(attackId, Boss1AttackKind.Aimed3Shot, 0, 0, 0);
         }

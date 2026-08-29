@@ -1,5 +1,6 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Runtime;
 
@@ -39,13 +40,13 @@ public sealed class ObservationService : IObservationService
     }
 
     /// <summary>観測を ring buffer へ記録します。</summary>
-    public bool TryRecord(in ObservationEvent observation)
+    public ErrorOr<Success> Record(in ObservationEvent observation)
     {
         try
         {
-            if (!TryStore(in observation))
+            if (!Store(in observation))
             {
-                return true;
+                return Result.Success;
             }
 
             if (_logger is not null)
@@ -53,17 +54,17 @@ public sealed class ObservationService : IObservationService
                 _logger(observation);
             }
 
-            return true;
+            return Result.Success;
         }
-        catch
+        catch (Exception ex)
         {
             _recordFailureCount++;
-            return false;
+            return Error.Failure("Observation.RecordFailed", ex.Message);
         }
     }
 
     /// <summary>重大度付きの診断を構造化観測へ変換して記録します。</summary>
-    public bool TryRecordDiagnostic(
+    public ErrorOr<Success> RecordDiagnostic(
         DiagnosticResult diagnostic,
         BossType bossType = BossType.Unknown,
         LifecycleOperation operation = LifecycleOperation.Update)
@@ -82,11 +83,11 @@ public sealed class ObservationService : IObservationService
             diagnostic.Severity,
             diagnostic.ErrorCode,
             diagnostic.Message);
-        return TryRecord(in observation);
+        return Record(in observation);
     }
 
     /// <summary>保存済み観測を古い順に読み取ります。</summary>
-    public bool TryGet(int index, out ObservationEvent observation)
+    public bool Get(int index, out ObservationEvent observation)
     {
         if ((uint)index >= (uint)_count)
         {
@@ -106,7 +107,7 @@ public sealed class ObservationService : IObservationService
         _count = 0;
     }
 
-    private bool TryStore(in ObservationEvent observation)
+    private bool Store(in ObservationEvent observation)
     {
         if (_count < _events.Length)
         {

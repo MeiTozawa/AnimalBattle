@@ -1,5 +1,5 @@
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Regions;
 
@@ -31,14 +31,14 @@ public sealed class PhaseChildStateRules(RegionStateRange phase1, RegionStateRan
     private readonly RegionStateRange _phase3 = phase3;
 
     /// <summary>指定 Phase の許可範囲を取得します。</summary>
-    public Result<RegionStateRange> Get(Phase phase)
+    public ErrorOr<RegionStateRange> Get(Phase phase)
     {
         return phase switch
         {
-            Phase.Phase1 => Result<RegionStateRange>.Ok(_phase1),
-            Phase.Phase2 => Result<RegionStateRange>.Ok(_phase2),
-            Phase.Phase3 => Result<RegionStateRange>.Ok(_phase3),
-            _ => SimpleError.NotValid($"子領域の許可範囲を取得できない Phase です: {phase}。")
+            Phase.Phase1 => _phase1,
+            Phase.Phase2 => _phase2,
+            Phase.Phase3 => _phase3,
+            _ => Error.Validation("Region.InvalidPhase", $"子領域の許可範囲を取得できない Phase です: {phase}。")
         };
     }
 }
@@ -80,25 +80,24 @@ public readonly record struct RegionFailure(
     StateId RequestedStateId,
     StateId IntermediateStateId,
     StateId SafeInitialStateId,
-    TransitionReason Reason) : IDomainFailure
+    TransitionReason Reason)
 {
-    /// <summary>Result 型が扱える共通エラー表現へ変換します。</summary>
-    public SimpleError ToSimpleError()
+    /// <summary>ErrorOr 型が扱える共通エラー表現へ変換します。</summary>
+    public Error ToError()
     {
         string description = $"{Region} 領域の遷移に失敗しました (原因: {Kind}, Phase: {Phase}, "
             + $"Current: {CurrentStateId.Value}, Requested: {RequestedStateId.Value}, "
             + $"Intermediate: {IntermediateStateId.Value}, SafeInitial: {SafeInitialStateId.Value}, Reason: {Reason.Kind})。";
-        ErrorType type = Kind == RegionFailureKind.ChildOutOfRange
-            ? ErrorType.ArgumentOutOfRange
-            : ErrorType.NotValid;
-        return new SimpleError(description, type);
+        return Kind == RegionFailureKind.ChildOutOfRange
+            ? Error.Validation("Region.ChildOutOfRange", description)
+            : Error.Failure("Region.TransitionFailed", description);
     }
 
     /// <summary>共通エラー表現を取得します。</summary>
-    public SimpleError Error => ToSimpleError();
+    public Error Error => ToError();
 
     /// <summary>領域失敗を共通エラーへ暗黙変換します。</summary>
-    public static implicit operator SimpleError(RegionFailure failure) => failure.ToSimpleError();
+    public static implicit operator Error(RegionFailure failure) => failure.ToError();
 }
 
 /// <summary>子領域または親領域の遷移結果です。</summary>

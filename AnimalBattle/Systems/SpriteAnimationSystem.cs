@@ -1,8 +1,8 @@
-using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
 using AnimalBattle.Core.Asset;
+using ErrorOr;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
@@ -30,11 +30,12 @@ public static class SpriteAnimationSystem
 
                  anim.Timer += it.DeltaTime();
 
-                 Result<AnimationConfig> charConfigRes = AssetManager.GetCharacterConfig(anim.CharacterType);
-                 if (charConfigRes.IsOk && charConfigRes.Value != null)
+                 ErrorOr<AnimationConfig> charConfigRes = AssetManager.GetCharacterConfig(anim.CharacterType);
+                 if (!charConfigRes.IsError && charConfigRes.Value != null)
                  {
                      AnimationConfig charConfig = charConfigRes.Value;
-                     sprite.GraphHandle = AssetManager.GetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip).ValueOrDefault(-1);
+                     ErrorOr<int> handleRes = AssetManager.GetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip);
+                     sprite.GraphHandle = !handleRes.IsError ? handleRes.Value : -1;
                      sprite.SrcRect = AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out bool isFinished);
                      anim.IsFinished = isFinished;
                  }

@@ -93,7 +93,7 @@ public interface IBoss2Configuration
     /// <summary>指定 Phase の設定を取得します。</summary>
     Boss2PhaseSettings GetPhase(Phase phase);
     /// <summary>指定 Attack_Id の pattern を取得します。</summary>
-    bool TryGetAttack(AttackId attackId, out Boss2AttackPattern pattern);
+    bool GetAttack(AttackId attackId, out Boss2AttackPattern pattern);
 }
 
 /// <summary>既存 Boss2 設定の検証済み既定 snapshot です。</summary>
@@ -129,7 +129,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
     }
 
     /// <inheritdoc />
-    public bool TryGetAttack(AttackId attackId, out Boss2AttackPattern pattern)
+    public bool GetAttack(AttackId attackId, out Boss2AttackPattern pattern)
     {
         for (int index = 0; index < _attacks.Length; index++)
         {

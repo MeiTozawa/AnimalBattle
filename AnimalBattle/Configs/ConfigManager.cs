@@ -59,8 +59,8 @@ public static class ConfigManager
     /// <summary>
     /// 全 TOML 設定ファイルをロードし、自動リロード監視を開始します。
     /// </summary>
-    /// <returns>全設定が正常にロードされた場合は true、1 つでも失敗した場合は false</returns>
-    public static bool Initialize()
+    /// <returns>初期化結果</returns>
+    public static ErrorOr.ErrorOr<ErrorOr.Success> Initialize()
     {
         TypeDescriptor.AddAttributes(typeof(Color), new TypeConverterAttribute(typeof(FlexibleColorConverter)));
 
@@ -77,11 +77,11 @@ public static class ConfigManager
         if (failureCount > 0)
         {
             Console.WriteLine($"[C# 設定警告] TOML 設定読み込み完了 (成功: {successCount}, 失敗: {failureCount})。失敗した設定はデフォルト値を使用します。");
-            return false;
+            return ErrorOr.Error.Failure("ConfigManager.Initialize", "一部の TOML 設定ファイルの読み込みに失敗しました。");
         }
 
         Console.WriteLine($"[C# 設定初期化] 全ての TOML 設定ファイル（{successCount} 件）の読み込みが正常に完了しました！");
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     private static void LoadConfig<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(
@@ -90,15 +90,15 @@ public static class ConfigManager
         ref int successCount,
         ref int failureCount) where T : class, new()
     {
-        Result<ConfigBase<T>> res = ConfigBase<T>.LoadFromFile(configPath);
-        if (res.IsOk && res.Value != null)
+        ErrorOr.ErrorOr<ConfigBase<T>> res = ConfigBase<T>.LoadFromFile(configPath);
+        if (!res.IsError && res.Value != null)
         {
             container = res.Value;
             successCount++;
         }
         else
         {
-            Console.WriteLine($"[C# 設定警告] {configPath} の読み込みに失敗しました ({res.Error?.Type}): {res.Error?.Description}");
+            Console.WriteLine($"[C# 設定警告] {configPath} の読み込みに失敗しました ({res.FirstError.Type}): {res.FirstError.Description}");
             failureCount++;
         }
     }

@@ -1,5 +1,5 @@
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Regions;
 
@@ -7,7 +7,6 @@ namespace AnimalBattle.Ai.Regions;
 /// <remarks>Phase 親領域と子領域を生成します。</remarks>
 public sealed class PhaseRegion(PhaseChildStateRules movementRules, PhaseChildStateRules attackRules)
 {
-
     /// <summary>現在の親 Phase です。</summary>
     public Phase CurrentPhase { get; private set; } = Phase.Unknown;
     /// <summary>親領域が有効かどうかです。</summary>
@@ -32,16 +31,16 @@ public sealed class PhaseRegion(PhaseChildStateRules movementRules, PhaseChildSt
     public CompositeRegionResult LastCompositeResult { get; private set; }
 
     /// <summary>初期 Phase と許可された子状態へ入場します。</summary>
-    public Result<CompositeRegionResult> Initialize(
+    public ErrorOr<CompositeRegionResult> Initialize(
         Phase phase,
         in TransitionReason reason,
-        Func<StateId, Result<bool>>? movementTransition = null,
-        Func<StateId, Result<bool>>? attackTransition = null)
+        Func<StateId, ErrorOr<Success>>? movementTransition = null,
+        Func<StateId, ErrorOr<Success>>? attackTransition = null)
     {
         if (IsValid)
         {
             return phase == CurrentPhase
-                ? Result<CompositeRegionResult>.Ok(CurrentResult())
+                ? CurrentResult()
                 : Failure(new RegionFailure(RegionKind.Phase, RegionFailureKind.ParentInvalid, CurrentPhase, default, default, default, default, reason));
         }
 
@@ -53,30 +52,30 @@ public sealed class PhaseRegion(PhaseChildStateRules movementRules, PhaseChildSt
         CurrentPhase = phase;
         LastPhaseTransitionReason = reason;
         EnterCount++;
-        Result<RegionTransitionResult> movementResult = Movement.ActivateInitial(phase, in reason, movementTransition);
-        Result<RegionTransitionResult> attackResult = Attack.ActivateInitial(phase, in reason, attackTransition);
+        ErrorOr<RegionTransitionResult> movementResult = Movement.ActivateInitial(phase, in reason, movementTransition);
+        ErrorOr<RegionTransitionResult> attackResult = Attack.ActivateInitial(phase, in reason, attackTransition);
         CompositeRegionResult composite = StoreComposite(
-            movementResult.IsOk ? movementResult.ValueOrDefault() : Movement.LastTransitionResult,
-            attackResult.IsOk ? attackResult.ValueOrDefault() : Attack.LastTransitionResult);
-        if (!movementResult.IsOk || !attackResult.IsOk)
+            !movementResult.IsError ? movementResult.Value : Movement.LastTransitionResult,
+            !attackResult.IsError ? attackResult.Value : Attack.LastTransitionResult);
+        if (movementResult.IsError || attackResult.IsError)
         {
             IsValid = false;
             return Failure(SelectFailure(
-                movementResult.IsOk ? default : Movement.LastFailure,
-                attackResult.IsOk ? default : Attack.LastFailure));
+                !movementResult.IsError ? default : Movement.LastFailure,
+                !attackResult.IsError ? default : Attack.LastFailure));
         }
 
         IsValid = true;
         LastCompositeResult = composite;
-        return Result<CompositeRegionResult>.Ok(composite);
+        return composite;
     }
 
     /// <summary>Phase を変更し、子を終了して新 Phase の初期子を選択します。</summary>
-    public Result<CompositeRegionResult> ChangePhase(
+    public ErrorOr<CompositeRegionResult> ChangePhase(
         Phase phase,
         in TransitionReason reason,
-        Func<StateId, Result<bool>>? movementTransition = null,
-        Func<StateId, Result<bool>>? attackTransition = null)
+        Func<StateId, ErrorOr<Success>>? movementTransition = null,
+        Func<StateId, ErrorOr<Success>>? attackTransition = null)
     {
         if (!IsValid || phase == Phase.Unknown || (int)phase < (int)CurrentPhase)
         {
@@ -86,7 +85,7 @@ public sealed class PhaseRegion(PhaseChildStateRules movementRules, PhaseChildSt
 
         if (phase == CurrentPhase)
         {
-            return Result<CompositeRegionResult>.Ok(CurrentResult());
+            return CurrentResult();
         }
 
         ExitCount++;
@@ -100,106 +99,106 @@ public sealed class PhaseRegion(PhaseChildStateRules movementRules, PhaseChildSt
         {
             IsValid = true;
             LastCompositeResult = CurrentResult();
-            return Result<CompositeRegionResult>.Ok(LastCompositeResult);
+            return LastCompositeResult;
         }
 
         IsValid = false;
-        Result<RegionTransitionResult> movementResult = Movement.ActivateInitial(phase, in reason, movementTransition);
-        Result<RegionTransitionResult> attackResult = Attack.ActivateInitial(phase, in reason, attackTransition);
+        ErrorOr<RegionTransitionResult> movementResult = Movement.ActivateInitial(phase, in reason, movementTransition);
+        ErrorOr<RegionTransitionResult> attackResult = Attack.ActivateInitial(phase, in reason, attackTransition);
         CompositeRegionResult composite = StoreComposite(
-            movementResult.IsOk ? movementResult.ValueOrDefault() : Movement.LastTransitionResult,
-            attackResult.IsOk ? attackResult.ValueOrDefault() : Attack.LastTransitionResult);
-        if (!movementResult.IsOk || !attackResult.IsOk)
+            !movementResult.IsError ? movementResult.Value : Movement.LastTransitionResult,
+            !attackResult.IsError ? attackResult.Value : Attack.LastTransitionResult);
+        if (movementResult.IsError || attackResult.IsError)
         {
             return Failure(SelectFailure(
-                movementResult.IsOk ? default : Movement.LastFailure,
-                attackResult.IsOk ? default : Attack.LastFailure));
+                !movementResult.IsError ? default : Movement.LastFailure,
+                !attackResult.IsError ? default : Attack.LastFailure));
         }
 
         IsValid = true;
         LastCompositeResult = composite;
-        return Result<CompositeRegionResult>.Ok(composite);
+        return composite;
     }
 
     /// <summary>Phase 非変更時に Movement と Attack を独立更新します。</summary>
-    public Result<CompositeRegionResult> UpdateChildren(
+    public ErrorOr<CompositeRegionResult> UpdateChildren(
         StateId movementStateId,
         StateId attackStateId,
         in TransitionReason reason,
-        Func<StateId, Result<bool>>? movementRecovery = null,
-        Func<StateId, Result<bool>>? attackRecovery = null)
+        Func<StateId, ErrorOr<Success>>? movementRecovery = null,
+        Func<StateId, ErrorOr<Success>>? attackRecovery = null)
     {
-        Result<bool> validation = ValidateChildUpdate(in reason);
-        if (!validation.IsOk)
+        ErrorOr<Success> validation = ValidateChildUpdate(in reason);
+        if (validation.IsError)
         {
-            return Result<CompositeRegionResult>.Err(LastFailure.ToSimpleError());
+            return LastFailure.ToError();
         }
 
-        Result<RegionTransitionResult> movementResult = Movement.Transition(CurrentPhase, movementStateId, in reason, movementRecovery);
+        ErrorOr<RegionTransitionResult> movementResult = Movement.Transition(CurrentPhase, movementStateId, in reason, movementRecovery);
         // Movement の失敗後も Attack を同じ Frame_Update で評価し、成功した値を保持します。
-        Result<RegionTransitionResult> attackResult = Attack.Transition(CurrentPhase, attackStateId, in reason, attackRecovery);
+        ErrorOr<RegionTransitionResult> attackResult = Attack.Transition(CurrentPhase, attackStateId, in reason, attackRecovery);
         CompositeRegionResult composite = StoreComposite(
-            movementResult.IsOk ? movementResult.ValueOrDefault() : Movement.LastTransitionResult,
-            attackResult.IsOk ? attackResult.ValueOrDefault() : Attack.LastTransitionResult);
-        if (!movementResult.IsOk || !attackResult.IsOk)
+            !movementResult.IsError ? movementResult.Value : Movement.LastTransitionResult,
+            !attackResult.IsError ? attackResult.Value : Attack.LastTransitionResult);
+        if (movementResult.IsError || attackResult.IsError)
         {
-            return Result<CompositeRegionResult>.Err(SelectFailure(
-                movementResult.IsOk ? default : Movement.LastFailure,
-                attackResult.IsOk ? default : Attack.LastFailure).ToSimpleError());
+            return SelectFailure(
+                !movementResult.IsError ? default : Movement.LastFailure,
+                !attackResult.IsError ? default : Attack.LastFailure).ToError();
         }
 
-        return Result<CompositeRegionResult>.Ok(composite);
+        return composite;
     }
 
     /// <summary>Movement だけを変更し、Attack の現在値を保持します。</summary>
-    public Result<RegionTransitionResult> UpdateMovement(
+    public ErrorOr<RegionTransitionResult> UpdateMovement(
         StateId movementStateId,
         in TransitionReason reason,
-        Func<StateId, Result<bool>>? safeTransition = null)
+        Func<StateId, ErrorOr<Success>>? safeTransition = null)
     {
-        Result<bool> validation = ValidateChildUpdate(in reason);
-        if (!validation.IsOk)
+        ErrorOr<Success> validation = ValidateChildUpdate(in reason);
+        if (validation.IsError)
         {
-            return Result<RegionTransitionResult>.Err(LastFailure.ToSimpleError());
+            return LastFailure.ToError();
         }
 
-        Result<RegionTransitionResult> result = Movement.Transition(CurrentPhase, movementStateId, in reason, safeTransition);
-        RecordSingleChildResult(RegionKind.Movement, result.IsOk ? result.ValueOrDefault() : Movement.LastTransitionResult);
+        ErrorOr<RegionTransitionResult> result = Movement.Transition(CurrentPhase, movementStateId, in reason, safeTransition);
+        RecordSingleChildResult(RegionKind.Movement, !result.IsError ? result.Value : Movement.LastTransitionResult);
         return result;
     }
 
     /// <summary>Attack だけを変更し、Movement の現在値を保持します。</summary>
-    public Result<RegionTransitionResult> UpdateAttack(
+    public ErrorOr<RegionTransitionResult> UpdateAttack(
         StateId attackStateId,
         in TransitionReason reason,
-        Func<StateId, Result<bool>>? safeTransition = null)
+        Func<StateId, ErrorOr<Success>>? safeTransition = null)
     {
-        Result<bool> validation = ValidateChildUpdate(in reason);
-        if (!validation.IsOk)
+        ErrorOr<Success> validation = ValidateChildUpdate(in reason);
+        if (validation.IsError)
         {
-            return Result<RegionTransitionResult>.Err(LastFailure.ToSimpleError());
+            return LastFailure.ToError();
         }
 
-        Result<RegionTransitionResult> result = Attack.Transition(CurrentPhase, attackStateId, in reason, safeTransition);
-        RecordSingleChildResult(RegionKind.Attack, result.IsOk ? result.ValueOrDefault() : Attack.LastTransitionResult);
+        ErrorOr<RegionTransitionResult> result = Attack.Transition(CurrentPhase, attackStateId, in reason, safeTransition);
+        RecordSingleChildResult(RegionKind.Attack, !result.IsError ? result.Value : Attack.LastTransitionResult);
         return result;
     }
 
-    private Result<bool> ValidateChildUpdate(in TransitionReason reason)
+    private ErrorOr<Success> ValidateChildUpdate(in TransitionReason reason)
     {
         if (!IsValid)
         {
             LastFailure = new RegionFailure(RegionKind.Phase, RegionFailureKind.ParentInvalid, CurrentPhase, default, default, default, default, reason);
-            return SimpleError.NotValid("Phase 親領域が無効なため子領域を更新できません。");
+            return Error.Validation("PhaseRegion.ParentInvalid", "Phase 親領域が無効なため子領域を更新できません。");
         }
 
         if (CurrentPhase == Phase.Dead)
         {
             LastFailure = new RegionFailure(RegionKind.Phase, RegionFailureKind.TerminalPhase, CurrentPhase, default, default, default, default, reason);
-            return SimpleError.NotValid("終端 Phase の子領域は更新できません。");
+            return Error.Validation("PhaseRegion.TerminalPhase", "終端 Phase の子領域は更新できません。");
         }
 
-        return Result<bool>.Ok(true);
+        return Result.Success;
     }
 
     private CompositeRegionResult CurrentResult()
@@ -284,10 +283,10 @@ public sealed class PhaseRegion(PhaseChildStateRules movementRules, PhaseChildSt
         }
     }
 
-    private Result<CompositeRegionResult> Failure(RegionFailure failure)
+    private ErrorOr<CompositeRegionResult> Failure(RegionFailure failure)
     {
         LastFailure = failure;
-        return Result<CompositeRegionResult>.Err(failure.ToSimpleError());
+        return failure.ToError();
     }
 
     /// <summary>親領域を明示的に無効化します。</summary>

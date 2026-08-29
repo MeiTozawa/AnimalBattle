@@ -17,7 +17,7 @@ internal class Program
             const int height = 720;
 
             Console.WriteLine("C++ DxLib ネイティブエンジンを初期化中...");
-            if (!GameEngine.Initialize(width, height, true))
+            if (GameEngine.Initialize(width, height, true).IsError)
             {
                 Console.WriteLine("ゲームエンジンの初期化に失敗しました！");
                 return;
@@ -25,7 +25,11 @@ internal class Program
 
             Console.WriteLine("Flecs.NET ワールドおよびバトルシーンを初期化中...");
             using BattleScene battleScene = new BattleScene();
-            battleScene.Initialize();
+            if (battleScene.Initialize().IsError)
+            {
+                Console.WriteLine("バトルシーンの初期化に失敗しました！");
+                return;
+            }
 
             Stopwatch stopwatch = Stopwatch.StartNew();
             long lastTime = stopwatch.ElapsedTicks;
@@ -53,7 +57,7 @@ internal class Program
 
                 GameEngine.BeginFrame();
 
-                if (!battleScene.Update(deltaTime))
+                if (battleScene.Update(deltaTime).IsError)
                 {
                     Console.WriteLine($"[終了] バトルシーンの更新が終了を要求しました (フレーム数: {frameCount})");
                     break;

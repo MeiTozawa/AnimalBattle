@@ -34,7 +34,7 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
     public virtual void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
         _gate = null;
-        if (!Boss2ModuleSupport.TryGetPattern(_configuration, _state.CurrentAttackId, in context, in invocation, out Boss2AttackPattern pattern))
+        if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentAttackId, in context, in invocation, out Boss2AttackPattern pattern))
         {
             _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
             return;
@@ -44,7 +44,7 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
         _state.StateElapsed = 0.0f;
         _state.AttackSubTimer = 0.0f;
         _state.IsAttackActive = true;
-        _gate.TryStart(ref context, in invocation);
+        _gate.Start(ref context, in invocation);
     }
 
     /// <summary>Execute 状態を一回更新します。</summary>

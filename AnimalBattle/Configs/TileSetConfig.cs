@@ -51,7 +51,7 @@ public sealed class TileSetConfig
     /// </summary>
     /// <param name="path">TOML ファイル名または相対パス</param>
     /// <returns>読み込み結果</returns>
-    public static Result<ConfigBase<TileSetConfig>> LoadFromFile(string path = ResourcePath.Platform.SheetToml)
+    public static ErrorOr.ErrorOr<ConfigBase<TileSetConfig>> LoadFromFile(string path = ResourcePath.Platform.SheetToml)
     {
         return ConfigBase<TileSetConfig>.LoadFromFile(path);
     }

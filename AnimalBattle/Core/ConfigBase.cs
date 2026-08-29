@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
+using ErrorOr;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 using Tomlyn.Extensions.Configuration;
@@ -43,15 +44,15 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     /// 指定された TOML ファイルから設定を読み込み、自動リロード（reloadOnChange: true）を有効にした <see cref="ConfigBase{T}"/> インスタンスを生成します。
     /// </summary>
     /// <param name="defaultFileName">TOML ファイル名</param>
-    /// <returns>成功時は設定コンテナインスタンスを含む <see cref="Result{T}"/>、失敗時は <see cref="SimpleError"/></returns>
+    /// <returns>成功時は設定コンテナインスタンスを含む <see cref="ErrorOr{T}"/>、失敗時は <see cref="Error"/></returns>
     [UnconditionalSuppressMessage("Microsoft.Configuration.Binder", "SYSLIB1104", Justification = "Generic binder fallback is intentional in config container class.")]
-    public static Result<ConfigBase<T>> LoadFromFile(string defaultFileName)
+    public static ErrorOr<ConfigBase<T>> LoadFromFile(string defaultFileName)
     {
-        Result<string> pathResult = FindConfigPath(defaultFileName);
-        if (!pathResult.IsOk || string.IsNullOrEmpty(pathResult.Value) || !File.Exists(pathResult.Value))
+        ErrorOr<string> pathResult = FindConfigPath(defaultFileName);
+        if (pathResult.IsError || string.IsNullOrEmpty(pathResult.Value) || !File.Exists(pathResult.Value))
         {
             Console.WriteLine($"[C# 設定警告] TOML 設定ファイルが見つかりませんでした: {defaultFileName}");
-            return SimpleError.NotFound($"TOML 設定ファイルが見つかりません ({defaultFileName})。");
+            return Error.NotFound("Config.NotFound", $"TOML 設定ファイルが見つかりません ({defaultFileName})。");
         }
 
         string fullPath = pathResult.Value;
@@ -98,7 +99,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
         }
         catch (Exception ex)
         {
-            return SimpleError.Exception(ex);
+            return Error.Failure("Config.Exception", ex.Message);
         }
     }
 
@@ -133,8 +134,8 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     /// カレントディレクトリ、出力ディレクトリ、およびプロジェクトルートの Config フォルダを優先的に探索します。
     /// </summary>
     /// <param name="fileName">対象ファイル名</param>
-    /// <returns>検索結果を含む <see cref="Result{T}"/></returns>
-    private static Result<string> FindConfigPath(string fileName)
+    /// <returns>検索結果を含む <see cref="ErrorOr{T}"/></returns>
+    private static ErrorOr<string> FindConfigPath(string fileName)
     {
         try
         {
@@ -143,8 +144,8 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
             string[] directRoots = [AppDomain.CurrentDomain.BaseDirectory, Environment.CurrentDirectory];
             foreach (string root in directRoots)
             {
-                Result<string> findResult = FindInSubDirectories(root, subDirs, fileName);
-                if (findResult.IsOk)
+                ErrorOr<string> findResult = FindInSubDirectories(root, subDirs, fileName);
+                if (!findResult.IsError)
                 {
                     return findResult;
                 }
@@ -153,8 +154,8 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
             DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
             while (dir != null)
             {
-                Result<string> findResult = FindInSubDirectories(dir.FullName, subDirs, fileName);
-                if (findResult.IsOk)
+                ErrorOr<string> findResult = FindInSubDirectories(dir.FullName, subDirs, fileName);
+                if (!findResult.IsError)
                 {
                     return findResult;
                 }
@@ -164,13 +165,13 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
         catch (Exception ex)
         {
             Console.WriteLine($"[C# 設定警告] 設定ファイルパス探索中に例外が発生しました ({fileName}): {ex.Message}");
-            return SimpleError.Exception(ex);
+            return Error.Failure("Config.Exception", ex.Message);
         }
 
-        return SimpleError.NotFound($"設定ファイルが見つかりません: {fileName}");
+        return Error.NotFound("Config.NotFound", $"設定ファイルが見つかりません: {fileName}");
     }
 
-    private static Result<string> FindInSubDirectories(string rootDir, string[] subDirs, string fileName)
+    private static ErrorOr<string> FindInSubDirectories(string rootDir, string[] subDirs, string fileName)
     {
         foreach (string subDir in subDirs)
         {
@@ -180,11 +181,11 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
 
             if (File.Exists(candidate))
             {
-                return Result<string>.Ok(Path.GetFullPath(candidate));
+                return Path.GetFullPath(candidate);
             }
         }
 
-        return SimpleError.NotFound($"ディレクトリ '{rootDir}' 下に対象ファイルが見つかりません: {fileName}");
+        return Error.NotFound("Config.DirectoryNotFound", $"ディレクトリ '{rootDir}' 下に対象ファイルが見つかりません: {fileName}");
     }
 
     private bool _isDisposed;

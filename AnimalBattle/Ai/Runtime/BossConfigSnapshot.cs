@@ -71,7 +71,7 @@ public readonly struct BossConfigSnapshot
     /// <param name="phase">取得する Phase。</param>
     /// <param name="snapshot">取得した Phase 設定。</param>
     /// <returns>設定が存在する場合は true。</returns>
-    public bool TryGetPhase(BossType bossType, Phase phase, out BossPhaseSnapshot snapshot)
+    public bool GetPhase(BossType bossType, Phase phase, out BossPhaseSnapshot snapshot)
     {
         return Phases.TryGetValue(new BossPhaseKey(bossType, phase), out snapshot);
     }
@@ -80,7 +80,7 @@ public readonly struct BossConfigSnapshot
     /// <param name="phase">取得する Phase。</param>
     /// <param name="snapshot">取得した Phase 設定。</param>
     /// <returns>Boss 種別を限定せず一意に取得できる場合は true。</returns>
-    public bool TryGetPhase(Phase phase, out BossPhaseSnapshot snapshot)
+    public bool GetPhase(Phase phase, out BossPhaseSnapshot snapshot)
     {
         BossPhaseSnapshot? found = null;
         foreach (KeyValuePair<BossPhaseKey, BossPhaseSnapshot> item in Phases)
@@ -107,7 +107,7 @@ public readonly struct BossConfigSnapshot
     /// <param name="attackId">取得する AttackId。</param>
     /// <param name="definition">取得した攻撃定義。</param>
     /// <returns>設定が存在する場合は true。</returns>
-    public bool TryGetAttack(AttackId attackId, out AttackDefinition definition)
+    public bool GetAttack(AttackId attackId, out AttackDefinition definition)
     {
         return Attacks.TryGetValue(attackId, out definition!);
     }

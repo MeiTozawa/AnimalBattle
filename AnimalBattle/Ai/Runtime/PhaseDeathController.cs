@@ -1,6 +1,7 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Components;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Runtime;
 
@@ -38,7 +39,7 @@ public readonly struct BossPhaseThresholds
     }
 
     /// <summary>現在 Phase より先へ進む必要がある場合だけ次 Phase を返します。</summary>
-    public bool TryGetNextPhase(Phase current, float hpRatio, out Phase next, out float threshold)
+    public bool GetNextPhase(Phase current, float hpRatio, out Phase next, out float threshold)
     {
         next = current;
         threshold = 0.0f;
@@ -88,7 +89,7 @@ public static class PhaseDeathController
     }
 
     /// <summary>HP 閾値を検査し、PhaseTransition data を一度だけ開始します。</summary>
-    public static bool TryBeginPhaseTransition(
+    public static ErrorOr<Success> BeginPhaseTransition(
         ref BossAiData ai,
         ref BossPhaseTransitionData transition,
         in BossPhaseThresholds thresholds,
@@ -98,18 +99,18 @@ public static class PhaseDeathController
     {
         if (transition.IsActive || ai.IsDead || maxHp <= 0.0f || !float.IsFinite(maxHp))
         {
-            return false;
+            return Error.Validation("PhaseDeathController.BeginPhaseTransition", "PhaseTransition 開始条件を満たしていません。");
         }
 
         float ratio = float.IsFinite(currentHp) ? currentHp / maxHp : 0.0f;
-        if (!thresholds.TryGetNextPhase(ai.Phase, ratio, out Phase target, out float threshold))
+        if (!thresholds.GetNextPhase(ai.Phase, ratio, out Phase target, out float threshold))
         {
-            return false;
+            return Error.Validation("PhaseDeathController.BeginPhaseTransition", "次 Phase への遷移閾値に達していません。");
         }
 
         if (transition.TriggeredPhaseMask.HasFlag(target.ToTransitionMask()))
         {
-            return false;
+            return Error.Validation("PhaseDeathController.BeginPhaseTransition", "該当 Phase への遷移は既に実行済みです。");
         }
 
         TransitionReason effectiveReason = reason.Kind == ReasonKind.Unknown
@@ -123,7 +124,7 @@ public static class PhaseDeathController
         ai.Phase = target;
         ai.BossState = GetPhaseTransitionState(ai.BossType);
         ai.IsInvulnerable = true;
-        return true;
+        return Result.Success;
     }
 
     /// <summary>PhaseTransition の適用を項目単位で試行し、成功値を保持します。</summary>
@@ -147,19 +148,19 @@ public static class PhaseDeathController
 
         if (!applied.HasFlag(PhaseTransitionApplyMask.MovementStop))
         {
-            if (movement.Stop()) applied |= PhaseTransitionApplyMask.MovementStop;
+            if (!movement.Stop().IsError) applied |= PhaseTransitionApplyMask.MovementStop;
             else failed |= PhaseTransitionApplyMask.MovementStop;
         }
 
         if (!applied.HasFlag(PhaseTransitionApplyMask.BulletCleanup))
         {
-            if (attack.ClearBossBullets()) applied |= PhaseTransitionApplyMask.BulletCleanup;
+            if (!attack.ClearBossBullets().IsError) applied |= PhaseTransitionApplyMask.BulletCleanup;
             else failed |= PhaseTransitionApplyMask.BulletCleanup;
         }
 
         if (!applied.HasFlag(PhaseTransitionApplyMask.Effect))
         {
-            if (effect.RequestTelegraph(effectX, effectY)) applied |= PhaseTransitionApplyMask.Effect;
+            if (!effect.RequestTelegraph(effectX, effectY).IsError) applied |= PhaseTransitionApplyMask.Effect;
             else failed |= PhaseTransitionApplyMask.Effect;
         }
 
@@ -176,7 +177,7 @@ public static class PhaseDeathController
     }
 
     /// <summary>同じ frame の死亡を確定し、終端 data を一度だけ保存します。</summary>
-    public static bool TryCaptureDeath(
+    public static ErrorOr<Success> CaptureDeath(
         ref BossAiData ai,
         ref BossTerminalData terminal,
         ref BossPhaseTransitionData transition,
@@ -186,12 +187,12 @@ public static class PhaseDeathController
     {
         if (terminal.IsTerminal || ai.IsDead || !float.IsFinite(currentHp) || currentHp > 0.0f)
         {
-            return false;
+            return Error.Validation("PhaseDeathController.CaptureDeath", "死亡確定条件を満たしていません。");
         }
 
         TransitionReason reason = CreateDeathReason(currentHp);
         BossState deadState = GetDeadState(ai.BossType);
-        bool captured = terminal.TryCapture(
+        ErrorOr<Success> captured = terminal.Capture(
             deadState,
             ai.Phase,
             in reason,
@@ -199,9 +200,9 @@ public static class PhaseDeathController
             attack.AttackId,
             attack.Stage,
             currentHp);
-        if (!captured)
+        if (captured.IsError)
         {
-            return false;
+            return captured;
         }
 
         ai.IsDead = true;
@@ -210,7 +211,7 @@ public static class PhaseDeathController
         transition.IsActive = false;
         attack.Stage = AttackStage.None;
         attack.OneShotEmissionMask = 0;
-        return true;
+        return Result.Success;
     }
 
     /// <summary>死亡 frame に移動停止と弾整理を適用します。</summary>
@@ -221,7 +222,7 @@ public static class PhaseDeathController
     {
         ArgumentNullException.ThrowIfNull(movement);
         ArgumentNullException.ThrowIfNull(attack);
-        terminal.MovementStopped = movement.Stop();
+        terminal.MovementStopped = !movement.Stop().IsError;
         terminal.AttackGenerationStopped = true;
         attack.ClearBossBullets();
     }

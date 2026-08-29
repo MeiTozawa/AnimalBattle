@@ -70,7 +70,7 @@ public static class FixedBossStateModuleCatalog
     public static IReadOnlyList<FixedBossStateModule> Entries => _entries;
 
     /// <summary>固定状態に対応する module 記述を取得します。</summary>
-    public static bool TryGet(BossState state, out FixedBossStateModule entry)
+    public static bool Get(BossState state, out FixedBossStateModule entry)
     {
         for (int index = 0; index < _entries.Count; index++)
         {

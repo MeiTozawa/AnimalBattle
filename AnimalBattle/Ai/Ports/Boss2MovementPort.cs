@@ -1,5 +1,6 @@
 using AnimalBattle.Core.Physics;
 using AnimalBattle.Maps.Navigation;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Ports;
 
@@ -19,27 +20,27 @@ public sealed class Boss2MovementPort : IMovementPort
     }
 
     /// <inheritdoc />
-    public bool SetVelocity(float x, float y)
+    public ErrorOr<Success> SetVelocity(float x, float y)
     {
-        return _buffer.TryAdd(new MovementCommand(MovementCommandKind.SetVelocity, x, y), CommandPriority.Safety);
+        return _buffer.Add(new MovementCommand(MovementCommandKind.SetVelocity, x, y), CommandPriority.Safety);
     }
 
     /// <inheritdoc />
-    public bool MoveTo(float x, float y)
+    public ErrorOr<Success> MoveTo(float x, float y)
     {
-        return _buffer.TryAdd(new MovementCommand(MovementCommandKind.MoveTo, x, y), CommandPriority.Normal);
+        return _buffer.Add(new MovementCommand(MovementCommandKind.MoveTo, x, y), CommandPriority.Normal);
     }
 
     /// <inheritdoc />
-    public bool ApplyGravity(float gravity, float maxFallSpeed)
+    public ErrorOr<Success> ApplyGravity(float gravity, float maxFallSpeed)
     {
-        return _buffer.TryAdd(new MovementCommand(MovementCommandKind.ApplyGravity, gravity, maxFallSpeed), CommandPriority.Normal);
+        return _buffer.Add(new MovementCommand(MovementCommandKind.ApplyGravity, gravity, maxFallSpeed), CommandPriority.Normal);
     }
 
     /// <inheritdoc />
-    public bool Stop()
+    public ErrorOr<Success> Stop()
     {
-        return _buffer.TryAdd(new MovementCommand(MovementCommandKind.Stop, 0.0f, 0.0f), CommandPriority.Safety);
+        return _buffer.Add(new MovementCommand(MovementCommandKind.Stop, 0.0f, 0.0f), CommandPriority.Safety);
     }
 
     /// <summary>検証済み navigation graph から Boss2 の次の移動計画を取得します。</summary>
@@ -47,7 +48,7 @@ public sealed class Boss2MovementPort : IMovementPort
     /// <param name="request">Boss とプレイヤーの位置・速度観測。</param>
     /// <param name="plan">計算された navigation 計画。</param>
     /// <returns>計画を取得できた場合は true。</returns>
-    public bool TryCreateNavigationPlan(
+    public bool CreateNavigationPlan(
         PlatformNavigationGraph graph,
         in Boss2NavigationRequest request,
         out NavPlan plan)
@@ -92,7 +93,7 @@ public sealed class Boss2MovementPort : IMovementPort
     /// <param name="minimumX">移動可能な X の最小値。</param>
     /// <param name="maximumX">移動可能な X の最大値。</param>
     /// <returns>command がすべて検証済みで適用できた場合は true。</returns>
-    public bool TryApplyPhysics(
+    public bool ApplyPhysics(
         ref Boss2MovementFrame frame,
         float deltaTime,
         PlatformNavigationGraph? graph,

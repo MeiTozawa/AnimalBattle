@@ -73,14 +73,17 @@ internal static class SafetyParameterApplier
         if (!applied.HasFlag(SafetyParameterApplyMask.MovementSpeed))
         {
             bool success = parameter.MovementSpeedX == 0.0f && parameter.MovementSpeedY == 0.0f
-                ? runtime.Context.Movement.Stop()
-                : runtime.Context.Movement.SetVelocity(parameter.MovementSpeedX, parameter.MovementSpeedY);
+                ? !runtime.Context.Movement.Stop().IsError
+                : !runtime.Context.Movement.SetVelocity(parameter.MovementSpeedX, parameter.MovementSpeedY).IsError;
             if (success)
             {
                 applied |= SafetyParameterApplyMask.MovementSpeed;
                 failed &= ~SafetyParameterApplyMask.MovementSpeed;
             }
-            else failed |= SafetyParameterApplyMask.MovementSpeed;
+            else
+            {
+                failed |= SafetyParameterApplyMask.MovementSpeed;
+            }
         }
 
         if (!applied.HasFlag(SafetyParameterApplyMask.AttackHitbox))
@@ -89,13 +92,16 @@ internal static class SafetyParameterApplier
             runtime.AiData.AttackGenerationEnabled = !parameter.DisableAttackHitbox;
             runtime.AttackData.Stage = AttackStage.None;
             runtime.AttackData.OneShotEmissionMask = 0;
-            bool success = !parameter.DisableAttackHitbox || runtime.Context.Attack.ClearBossBullets();
+            bool success = !parameter.DisableAttackHitbox || !runtime.Context.Attack.ClearBossBullets().IsError;
             if (success)
             {
                 applied |= SafetyParameterApplyMask.AttackHitbox;
                 failed &= ~SafetyParameterApplyMask.AttackHitbox;
             }
-            else failed |= SafetyParameterApplyMask.AttackHitbox;
+            else
+            {
+                failed |= SafetyParameterApplyMask.AttackHitbox;
+            }
         }
 
         if (!applied.HasFlag(SafetyParameterApplyMask.Invulnerability))

@@ -15,6 +15,7 @@ public readonly record struct LifecycleInvocation
     /// <summary>互換用の固定 BossState 名です。</summary>
     [Obsolete("State を使用してください。")]
     public BossState BossState => State;
+    /// <summary>呼び出し操作種別です。</summary>
     public LifecycleOperation Operation { get; }
     /// <summary>Frame_Update 番号です。</summary>
     public long FrameUpdateNumber { get; }

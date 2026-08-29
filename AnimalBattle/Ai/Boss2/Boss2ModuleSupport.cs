@@ -34,7 +34,7 @@ internal static class Boss2ModuleSupport
             message);
         try
         {
-            context.Observation.TryRecord(in observation);
+            context.Observation.Record(in observation);
         }
         catch
         {
@@ -42,14 +42,14 @@ internal static class Boss2ModuleSupport
         }
     }
 
-    internal static bool TryGetPattern(
+    internal static bool GetPattern(
         IBoss2Configuration configuration,
         AttackId attackId,
         in StateContext context,
         in LifecycleInvocation invocation,
         out Boss2AttackPattern pattern)
     {
-        if (configuration.TryGetAttack(attackId, out pattern) && pattern.IsValid)
+        if (configuration.GetAttack(attackId, out pattern) && pattern.IsValid)
         {
             return true;
         }
@@ -82,7 +82,7 @@ internal sealed class Boss2TelegraphRunner
     internal void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
         _active = null;
-        if (!Boss2ModuleSupport.TryGetPattern(_configuration, _state.CurrentAttackId, in context, in invocation, out Boss2AttackPattern pattern))
+        if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentAttackId, in context, in invocation, out Boss2AttackPattern pattern))
         {
             _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
             return;
@@ -141,7 +141,7 @@ internal sealed class Boss2RecoveryRunner
     internal void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
         _active = null;
-        if (!Boss2ModuleSupport.TryGetPattern(_configuration, _state.CurrentAttackId, in context, in invocation, out Boss2AttackPattern pattern))
+        if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentAttackId, in context, in invocation, out Boss2AttackPattern pattern))
         {
             _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
             return;

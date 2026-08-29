@@ -47,7 +47,7 @@ public static class MigrationAdapter
     {
         AttackId attackId = ResolveAttackName(stateMachine.CurrentSkillName);
         bool attackRequired = stateMachine.CurrentState is Boss1StateKind.Telegraphing or Boss1StateKind.Casting;
-        if (!TryMapBoss1State(stateMachine.CurrentState, attackId, out BossState stateId))
+        if (!MapBoss1State(stateMachine.CurrentState, attackId, out BossState stateId))
         {
             BossState safeState = attackRequired && !attackId.IsValid
                 ? BossState.Boss1_AttackSelection
@@ -163,10 +163,10 @@ public static class MigrationAdapter
         in Boss2Stats stats)
     {
         AttackId legacyAttackId = ResolveAttackName(stateMachine.CurrentSkillName);
-        bool hasStateAttackId = TryResolveBoss2StateAttack(stateMachine.CurrentState, out AttackId stateAttackId);
+        bool hasStateAttackId = ResolveBoss2StateAttack(stateMachine.CurrentState, out AttackId stateAttackId);
         AttackId attackId = hasStateAttackId ? stateAttackId : legacyAttackId;
         bool attackRequired = stateMachine.IsTelegraphing || stateMachine.IsAttacking;
-        if (!TryMapBoss2State(stateMachine.CurrentState, out BossState stateId))
+        if (!MapBoss2State(stateMachine.CurrentState, out BossState stateId))
         {
             return CreateSafeResult(
                 BossType.Boss2,
@@ -297,7 +297,7 @@ public static class MigrationAdapter
     }
 
     /// <summary>変換済み Boss1 data を runtime slot へ取り込みます。</summary>
-    public static bool TryImportBoss1(
+    public static ErrorOr.ErrorOr<ErrorOr.Success> ImportBoss1(
         BossRuntimeSlot runtime,
         in Boss1StateMachine stateMachine,
         in Boss1Stats stats,
@@ -308,10 +308,11 @@ public static class MigrationAdapter
         if (!migration.IsSuccess)
         {
             diagnostic = migration.Diagnostic;
-            return false;
+            return ErrorOr.Error.Failure("MigrationAdapter.ImportBoss1", diagnostic.Message);
         }
 
-        if (!runtime.TryApplyMigration(in migration))
+        ErrorOr.ErrorOr<ErrorOr.Success> applyResult = runtime.ApplyMigration(in migration);
+        if (applyResult.IsError)
         {
             diagnostic = DiagnosticResult.Failure(
                 DiagnosticSeverity.ExecutionError,
@@ -324,17 +325,17 @@ public static class MigrationAdapter
                 runtime.FrameUpdateNumber,
                 UpdateSource.NewRuntime,
                 BossState.Boss1_Hover);
-            return false;
+            return ErrorOr.Error.Failure("MigrationAdapter.ImportBoss1", diagnostic.Message);
         }
 
         diagnostic = migration.Diagnostic.Severity == DiagnosticSeverity.Warning
             ? migration.Diagnostic
             : DiagnosticResult.Success("旧 Boss1 値を新 runtime へ移行しました。");
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     /// <summary>変換済み Boss2 data を runtime slot へ取り込みます。</summary>
-    public static bool TryImportBoss2(
+    public static ErrorOr.ErrorOr<ErrorOr.Success> ImportBoss2(
         BossRuntimeSlot runtime,
         in Boss2StateMachine stateMachine,
         in Boss2Stats stats,
@@ -345,10 +346,11 @@ public static class MigrationAdapter
         if (!migration.IsSuccess)
         {
             diagnostic = migration.Diagnostic;
-            return false;
+            return ErrorOr.Error.Failure("MigrationAdapter.ImportBoss2", diagnostic.Message);
         }
 
-        if (!runtime.TryApplyMigration(in migration))
+        ErrorOr.ErrorOr<ErrorOr.Success> applyResult = runtime.ApplyMigration(in migration);
+        if (applyResult.IsError)
         {
             diagnostic = DiagnosticResult.Failure(
                 DiagnosticSeverity.ExecutionError,
@@ -361,13 +363,13 @@ public static class MigrationAdapter
                 runtime.FrameUpdateNumber,
                 UpdateSource.NewRuntime,
                 BossState.Boss2_Idle);
-            return false;
+            return ErrorOr.Error.Failure("MigrationAdapter.ImportBoss2", diagnostic.Message);
         }
 
         diagnostic = migration.Diagnostic.Severity == DiagnosticSeverity.Warning
             ? migration.Diagnostic
             : DiagnosticResult.Success("旧 Boss2 値を新 runtime へ移行しました。");
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     /// <summary>
@@ -409,14 +411,14 @@ public static class MigrationAdapter
     }
 
     /// <summary>新 runtime の値を旧 Boss1 component へ互換投影します。</summary>
-    public static bool TryProjectBoss1(
+    public static ErrorOr.ErrorOr<ErrorOr.Success> ProjectBoss1(
         BossRuntimeSlot runtime,
         ref Boss1StateMachine stateMachine,
         ref Boss1Stats stats,
         out DiagnosticResult diagnostic)
     {
         ArgumentNullException.ThrowIfNull(runtime);
-        if (runtime.BossType != BossType.Boss1 || !TryMapLegacyBoss1State(runtime.CurrentStateId, out Boss1StateKind state))
+        if (runtime.BossType != BossType.Boss1 || !MapLegacyBoss1State(runtime.CurrentStateId, out Boss1StateKind state))
         {
             stateMachine = new Boss1StateMachine
             {
@@ -437,7 +439,7 @@ public static class MigrationAdapter
                 runtime.FrameUpdateNumber,
                 UpdateSource.NewRuntime,
                 BossState.Boss1_Hover);
-            return true;
+            return ErrorOr.Result.Success;
         }
 
         BossCompatibilityData compatibility = runtime.CompatibilityView;
@@ -461,18 +463,18 @@ public static class MigrationAdapter
         stats.HitFlashTimer = compatibility.LegacyHitFlashTimer;
         stats.AngleOffset = compatibility.LegacyBoss1StatsAngleOffset;
         diagnostic = DiagnosticResult.Success("新 runtime の Boss1 値を互換 component へ投影しました。");
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     /// <summary>新 runtime の値を旧 Boss2 component へ互換投影します。</summary>
-    public static bool TryProjectBoss2(
+    public static ErrorOr.ErrorOr<ErrorOr.Success> ProjectBoss2(
         BossRuntimeSlot runtime,
         ref Boss2StateMachine stateMachine,
         ref Boss2Stats stats,
         out DiagnosticResult diagnostic)
     {
         ArgumentNullException.ThrowIfNull(runtime);
-        if (runtime.BossType != BossType.Boss2 || !TryMapLegacyBoss2State(runtime.CurrentStateId, out Boss2StateKind state))
+        if (runtime.BossType != BossType.Boss2 || !MapLegacyBoss2State(runtime.CurrentStateId, out Boss2StateKind state))
         {
             stateMachine = new Boss2StateMachine
             {
@@ -493,7 +495,7 @@ public static class MigrationAdapter
                 runtime.FrameUpdateNumber,
                 UpdateSource.NewRuntime,
                 BossState.Boss2_Idle);
-            return true;
+            return ErrorOr.Result.Success;
         }
 
         BossCompatibilityData compatibility = runtime.CompatibilityView;
@@ -519,7 +521,7 @@ public static class MigrationAdapter
         stats.HitFlashTimer = compatibility.LegacyHitFlashTimer;
         stats.ComboIndex = compatibility.LegacyComboIndex;
         diagnostic = DiagnosticResult.Success("新 runtime の Boss2 値を互換 component へ投影しました。");
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     /// <summary>
@@ -531,7 +533,7 @@ public static class MigrationAdapter
     /// <param name="hasMismatch">新旧値に不一致がある場合は true。</param>
     /// <param name="diagnostic">判定不能または不一致を表す日本語診断。</param>
     /// <returns>診断後も互換処理を継続できる場合は true。</returns>
-    public static bool TrySynchronizeFrame(
+    public static ErrorOr.ErrorOr<ErrorOr.Success> SynchronizeFrame(
         BossRuntimeSlot runtime,
         in MigrationResult legacyMigration,
         UpdateSource detectedSource,
@@ -553,7 +555,7 @@ public static class MigrationAdapter
                 runtime.FrameUpdateNumber,
                 UpdateSource.NewRuntime,
                 runtime.CurrentStateId);
-            return true;
+            return ErrorOr.Result.Success;
         }
 
         hasMismatch = legacyMigration.BossType != runtime.BossType
@@ -574,11 +576,11 @@ public static class MigrationAdapter
                 runtime.FrameUpdateNumber,
                 UpdateSource.NewRuntime,
                 runtime.CurrentStateId);
-            return true;
+            return ErrorOr.Result.Success;
         }
 
         diagnostic = DiagnosticResult.Success("新旧値は一致しています。Update_Source は新 runtime に固定します。");
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     /// <summary>移行結果と明示依存関係から StateContext を生成します。</summary>
@@ -594,7 +596,7 @@ public static class MigrationAdapter
     /// <param name="context">生成した State_Context。</param>
     /// <param name="diagnostic">生成の成否を示す診断。</param>
     /// <returns>依存関係と Entity 識別子が有効な場合は true。</returns>
-    public static bool TryCreateContext(
+    public static ErrorOr.ErrorOr<ErrorOr.Success> CreateContext(
         ulong entityId,
         in MigrationResult migration,
         IConfigProvider configProvider,
@@ -618,14 +620,14 @@ public static class MigrationAdapter
                 migration.AttackData.AttackId,
                 migration.AiData.Phase,
                 entityId);
-            return false;
+            return ErrorOr.Error.Validation("MigrationAdapter.CreateContext", "Entity 識別子が未指定です。");
         }
 
         if (!migration.IsSuccess)
         {
             context = default;
             diagnostic = migration.Diagnostic;
-            return false;
+            return ErrorOr.Error.Failure("MigrationAdapter.CreateContext", diagnostic.Message);
         }
 
         ArgumentNullException.ThrowIfNull(configProvider);
@@ -644,7 +646,7 @@ public static class MigrationAdapter
                 migration.AiData.BossState,
                 migration.AttackData.AttackId,
                 migration.AiData.Phase);
-            return false;
+            return ErrorOr.Error.Validation("MigrationAdapter.CreateContext", "設定 snapshot が未検証です。");
         }
 
         context = new StateContext(
@@ -659,7 +661,7 @@ public static class MigrationAdapter
             random);
         context.SetPhaseForTransition(migration.AiData.Phase);
         diagnostic = DiagnosticResult.Success("移行用 State_Context を生成しました。");
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     private static MigrationResult BuildResult(
@@ -928,7 +930,7 @@ public static class MigrationAdapter
             _ => AttackStage.None
         };
 
-    private static bool TryMapBoss1State(Boss1StateKind legacyState, AttackId attackId, out BossState stateId)
+    private static bool MapBoss1State(Boss1StateKind legacyState, AttackId attackId, out BossState stateId)
     {
         stateId = legacyState switch
         {
@@ -942,7 +944,7 @@ public static class MigrationAdapter
         return stateId.IsValid();
     }
 
-    private static bool TryResolveBoss2StateAttack(Boss2StateKind legacyState, out AttackId attackId)
+    private static bool ResolveBoss2StateAttack(Boss2StateKind legacyState, out AttackId attackId)
     {
         attackId = legacyState switch
         {
@@ -957,7 +959,7 @@ public static class MigrationAdapter
         return attackId.IsValid;
     }
 
-    private static bool TryMapBoss2State(Boss2StateKind legacyState, out BossState stateId)
+    private static bool MapBoss2State(Boss2StateKind legacyState, out BossState stateId)
     {
         stateId = legacyState switch
         {
@@ -989,7 +991,7 @@ public static class MigrationAdapter
         return stateId.IsValid();
     }
 
-    private static bool TryMapLegacyBoss1State(BossState stateId, out Boss1StateKind state)
+    private static bool MapLegacyBoss1State(BossState stateId, out Boss1StateKind state)
     {
         state = stateId switch
         {
@@ -1006,7 +1008,7 @@ public static class MigrationAdapter
         return stateId is >= BossState.Boss1_Hover and <= BossState.Boss1_Dead;
     }
 
-    private static bool TryMapLegacyBoss2State(BossState stateId, out Boss2StateKind state)
+    private static bool MapLegacyBoss2State(BossState stateId, out Boss2StateKind state)
     {
         state = stateId switch
         {

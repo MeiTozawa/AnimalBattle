@@ -1,5 +1,6 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Ports;
 
@@ -103,14 +104,14 @@ public interface ICommandBuffer<T> where T : struct
     int Count { get; }
     /// <summary>command の最大格納数を取得します。</summary>
     int Capacity { get; }
-    /// <summary>command を追加します。容量超過時は false を返します。</summary>
-    bool TryAdd(in T command);
+    /// <summary>command を追加します。</summary>
+    ErrorOr<Success> Add(in T command);
     /// <summary>指定優先度で command を追加します。</summary>
-    bool TryAdd(in T command, CommandPriority priority);
+    ErrorOr<Success> Add(in T command, CommandPriority priority);
     /// <summary>one-shot key を重複なく command とともに追加します。</summary>
-    CommandWriteResult TryAddOneShot(in T command, in CommandOneShotKey key, CommandPriority priority = CommandPriority.Attack);
+    CommandWriteResult AddOneShot(in T command, in CommandOneShotKey key, CommandPriority priority = CommandPriority.Attack);
     /// <summary>格納済み command の one-shot key を取得します。</summary>
-    bool TryGetOneShotKey(int index, out CommandOneShotKey key);
+    bool GetOneShotKey(int index, out CommandOneShotKey key);
     /// <summary>次の Frame_Update に向けて command 数だけを 0 に戻します。</summary>
     void Clear();
     /// <summary>格納済み command を index で読み取ります。</summary>
@@ -121,38 +122,38 @@ public interface ICommandBuffer<T> where T : struct
 public interface IMovementPort
 {
     /// <summary>速度設定 command を積みます。</summary>
-    bool SetVelocity(float x, float y);
+    ErrorOr<Success> SetVelocity(float x, float y);
     /// <summary>移動先 command を積みます。</summary>
-    bool MoveTo(float x, float y);
+    ErrorOr<Success> MoveTo(float x, float y);
     /// <summary>重力適用 command を積みます。</summary>
-    bool ApplyGravity(float gravity, float maxFallSpeed);
+    ErrorOr<Success> ApplyGravity(float gravity, float maxFallSpeed);
     /// <summary>移動停止 command を積みます。</summary>
-    bool Stop();
+    ErrorOr<Success> Stop();
 }
 
 /// <summary>攻撃処理への command 境界です。</summary>
 public interface IAttackPort
 {
     /// <summary>弾生成 command を積みます。</summary>
-    bool EmitBullet(AttackId attackId, float x, float y);
+    ErrorOr<Success> EmitBullet(AttackId attackId, float x, float y);
     /// <summary>攻撃判定生成 command を積みます。</summary>
-    bool CreateHitbox(AttackId attackId, float x, float y);
+    ErrorOr<Success> CreateHitbox(AttackId attackId, float x, float y);
     /// <summary>Boss の弾整理 command を積みます。</summary>
-    bool ClearBossBullets();
+    ErrorOr<Success> ClearBossBullets();
 }
 
 /// <summary>演出処理への command 境界です。</summary>
 public interface IEffectPort
 {
     /// <summary>攻撃予告 command を積みます。</summary>
-    bool RequestTelegraph(float x, float y);
+    ErrorOr<Success> RequestTelegraph(float x, float y);
 }
 
 /// <summary>状態モジュールが読む観測・診断記録の境界です。</summary>
 public interface IObservationService
 {
     /// <summary>構造化された観測イベントを事前確保領域へ記録します。</summary>
-    bool TryRecord(in ObservationEvent observation);
+    ErrorOr<Success> Record(in ObservationEvent observation);
 }
 
 /// <summary>明示的に注入される決定的な乱数源です。</summary>

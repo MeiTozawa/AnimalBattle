@@ -27,7 +27,7 @@ public sealed class Aimed3ShotExecuteModule(IBoss1Configuration configuration, B
         for (int index = -1; index <= 1; index++)
         {
             float angle = baseAngle + index * Pattern.AngleStep;
-            if (!context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed))
+            if (context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
             {
                 Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "Aimed3Shot の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
             }

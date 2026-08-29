@@ -1,5 +1,6 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Attack;
 
@@ -42,17 +43,17 @@ public sealed class TelegraphModule : IBossStateModule
     }
 
     /// <summary>Telegraph を開始し、開始時点の対象を固定します。</summary>
-    public bool TryStart(ref StateContext context, in LifecycleInvocation invocation)
+    public ErrorOr<Success> Start(ref StateContext context, in LifecycleInvocation invocation)
     {
         if (_active)
         {
-            return true;
+            return Result.Success;
         }
 
         if (!_definition.IsValid || !invocation.IsValid)
         {
             Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidConfiguration, "攻撃時間が不正なため Telegraph を開始せず、安全な非攻撃行動へ移行します。", 0);
-            return false;
+            return Error.Validation("TelegraphModule.Start", "攻撃定義またはフレーム呼び出しが不正です。");
         }
 
         _target = context.PlayerObservation;
@@ -60,13 +61,13 @@ public sealed class TelegraphModule : IBossStateModule
         _startTime = 0;
         _active = true;
         EmitTelegraph(ref context, in invocation);
-        return true;
+        return Result.Success;
     }
 
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
-        TryStart(ref context, in invocation);
+        Start(ref context, in invocation);
     }
 
     /// <inheritdoc />
@@ -96,7 +97,7 @@ public sealed class TelegraphModule : IBossStateModule
         bool displayed;
         try
         {
-            displayed = context.Effect.RequestTelegraph(_target.PositionX, _target.PositionY);
+            displayed = !context.Effect.RequestTelegraph(_target.PositionX, _target.PositionY).IsError;
         }
         catch
         {
@@ -141,7 +142,7 @@ public sealed class TelegraphModule : IBossStateModule
             attackStartTime: _startTime);
         try
         {
-            context.Observation.TryRecord(in observation);
+            context.Observation.Record(in observation);
         }
         catch
         {

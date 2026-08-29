@@ -28,7 +28,7 @@ public sealed class Boss1RecoveryModule : IBossStateModule, IStateModuleDependen
         for (int value = 1; value < _recoveries.Length; value++)
         {
             AttackId attackId = new(value);
-            AttackDefinition definition = configuration.TryGetAttack(attackId, out Boss1AttackPattern pattern)
+            AttackDefinition definition = configuration.GetAttack(attackId, out Boss1AttackPattern pattern)
                 ? pattern.Definition
                 : new AttackDefinition(attackId, 0, 0, 0, 0);
             _recoveries[value] = new RecoveryModule(Boss1StateIds.Recovery, definition);
@@ -80,7 +80,7 @@ public sealed class Boss1RecoveryModule : IBossStateModule, IStateModuleDependen
                 context.DeltaTime,
                 out Vec2f newPos);
             _state.CurrentPosition = newPos;
-            if (!context.Movement.MoveTo(newPos.X, newPos.Y))
+            if (context.Movement.MoveTo(newPos.X, newPos.Y).IsError)
             {
                 Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の帰還 command を発行できませんでした。", _state.CurrentAttackId, AttackStage.Recovery);
             }

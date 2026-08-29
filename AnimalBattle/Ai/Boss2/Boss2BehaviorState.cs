@@ -83,7 +83,7 @@ public sealed class Boss2BehaviorState : IBossBehaviorState
     }
 
     /// <summary>保持済みの遷移要求を読み取り、要求を消費します。</summary>
-    public bool TryConsumeTransition(out BossState stateId, out TransitionReason reason)
+    public bool ConsumeTransition(out BossState stateId, out TransitionReason reason)
     {
         stateId = PendingBossState;
         reason = PendingTransitionReason;

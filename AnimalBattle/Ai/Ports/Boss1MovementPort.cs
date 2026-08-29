@@ -1,3 +1,5 @@
+using ErrorOr;
+
 namespace AnimalBattle.Ai.Ports;
 
 /// <summary>
@@ -17,25 +19,25 @@ public sealed class Boss1MovementPort(
     public Boss1NativeTrajectoryPort NativeTrajectory { get; } = nativeTrajectory ?? new Boss1NativeTrajectoryPort();
 
     /// <inheritdoc />
-    public bool SetVelocity(float x, float y)
+    public ErrorOr<Success> SetVelocity(float x, float y)
     {
         return _buffered.SetVelocity(x, y);
     }
 
     /// <inheritdoc />
-    public bool MoveTo(float x, float y)
+    public ErrorOr<Success> MoveTo(float x, float y)
     {
         return _buffered.MoveTo(x, y);
     }
 
     /// <inheritdoc />
-    public bool ApplyGravity(float gravity, float maxFallSpeed)
+    public ErrorOr<Success> ApplyGravity(float gravity, float maxFallSpeed)
     {
         return _buffered.ApplyGravity(gravity, maxFallSpeed);
     }
 
     /// <inheritdoc />
-    public bool Stop()
+    public ErrorOr<Success> Stop()
     {
         return _buffered.Stop();
     }

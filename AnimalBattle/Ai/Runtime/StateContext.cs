@@ -114,23 +114,23 @@ public struct StateContext
     }
 
     /// <summary>フレーム境界の値を検証して context に設定します。</summary>
-    public bool TryBeginFrame(long frameUpdateNumber, float deltaTime, Phase phase, in PlayerObservation playerObservation)
+    public ErrorOr.ErrorOr<ErrorOr.Success> BeginFrame(long frameUpdateNumber, float deltaTime, Phase phase, in PlayerObservation playerObservation)
     {
         if (frameUpdateNumber < 0 || !IsFinite(deltaTime) || deltaTime < 0 || phase == Phase.Unknown)
         {
-            return false;
+            return ErrorOr.Error.Validation("StateContext.BeginFrame", "フレーム更新パラメータが不正です。");
         }
 
         if (playerObservation.FrameUpdateNumber != frameUpdateNumber)
         {
-            return false;
+            return ErrorOr.Error.Validation("StateContext.BeginFrame", "プレイヤー観測のフレーム番号が一致しません。");
         }
 
         FrameUpdateNumber = frameUpdateNumber;
         DeltaTime = deltaTime;
         Phase = phase;
         _playerObservation = playerObservation;
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);

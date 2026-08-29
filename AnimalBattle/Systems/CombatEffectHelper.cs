@@ -190,7 +190,8 @@ public static class CombatEffectHelper
         Color color,
         SlashDirection direction = SlashDirection.Right)
     {
-        int slashHandle = AssetManager.GetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng).ValueOrDefault(-1);
+        ErrorOr.ErrorOr<int> slashRes = AssetManager.GetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng);
+        int slashHandle = !slashRes.IsError ? slashRes.Value : -1;
         int colIndex = 5; // 第 6 列 (0-based: 5)
         int rowIndex = (int)direction;
         Rect<int> srcRect = Rect<int>.FromWidthHeight(colIndex * 64, rowIndex * 64, 64, 64);

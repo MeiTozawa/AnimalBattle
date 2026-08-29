@@ -11,7 +11,7 @@ public interface IBossBehaviorState
     /// <param name="stateId">次に要求された状態 ID。</param>
     /// <param name="reason">遷移理由。</param>
     /// <returns>有効な遷移要求が存在した場合は true。</returns>
-    bool TryConsumeTransition(out BossState stateId, out TransitionReason reason);
+    bool ConsumeTransition(out BossState stateId, out TransitionReason reason);
 
     /// <summary>現在の Boss 実体位置を同期します。</summary>
     /// <param name="x">Boss の X 座標。</param>

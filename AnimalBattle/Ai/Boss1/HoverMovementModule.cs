@@ -47,7 +47,7 @@ public sealed class HoverMovementModule : IBossStateModule, IStateModuleDependen
         float y = settings.HoverBaseY
             + MathF.Sin(_state.HoverTimer * settings.HoverSpeedY) * settings.HoverAmpY;
 
-        if (!context.Movement.MoveTo(x, y))
+        if (context.Movement.MoveTo(x, y).IsError)
         {
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "Boss1 の浮遊移動 command を発行できませんでした。");
         }

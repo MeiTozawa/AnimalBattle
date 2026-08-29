@@ -1,6 +1,7 @@
 using System;
 using AnimalBattle.Components;
 using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Configs;
 
@@ -11,7 +12,7 @@ public static class CollisionShapeFactory
 {
     /// <summary>
     /// 形状文字列（"Circle", "Box", "Point"）および各種寸法・オフセットから衝突形状インスタンスの生成を行います。
-    /// 未対応の形状種別や寸法不正時は <see cref="SimpleError"/> を返します。
+    /// 未対応の形状種別や寸法不正時は <see cref="Error"/> を返します。
     /// </summary>
     /// <param name="shapeKind">形状種別文字列（"Circle", "Box", "Point"）</param>
     /// <param name="radius">円形半径（Circle 時に使用、> 0 である必要があります）</param>
@@ -19,8 +20,8 @@ public static class CollisionShapeFactory
     /// <param name="height">矩形高さ（Box 時に使用、> 0 である必要があります）</param>
     /// <param name="offsetX">X 軸局所オフセット</param>
     /// <param name="offsetY">Y 軸局所オフセット</param>
-    /// <returns>成功時は <see cref="CollisionShape"/>、失敗時は <see cref="SimpleError"/></returns>
-    public static Result<CollisionShape> Create(
+    /// <returns>成功時は <see cref="CollisionShape"/>、失敗時は <see cref="Error"/></returns>
+    public static ErrorOr<CollisionShape> Create(
         string? shapeKind,
         float radius = 0.0f,
         float width = 0.0f,
@@ -30,17 +31,17 @@ public static class CollisionShapeFactory
     {
         if (string.IsNullOrWhiteSpace(shapeKind))
         {
-            return Result<CollisionShape>.Err(SimpleError.NotValid("衝突形状種別 (shapeKind) が null または空白です。"));
+            return Error.Validation("CollisionShape.EmptyKind", "衝突形状種別 (shapeKind) が null または空白です。");
         }
 
         if (string.Equals(shapeKind, "Circle", StringComparison.OrdinalIgnoreCase))
         {
             if (radius <= 0.0f)
             {
-                return Result<CollisionShape>.Err(SimpleError.ArgumentOutOfRange($"Circle の半径 (radius) は 0 より大きい正数である必要があります (指定値: {radius})。"));
+                return Error.Validation("CollisionShape.InvalidRadius", $"Circle の半径 (radius) は 0 より大きい正数である必要があります (指定値: {radius})。");
             }
 
-            return Result<CollisionShape>.Ok(new CollisionShape.Circle(radius, offsetX, offsetY));
+            return new CollisionShape.Circle(radius, offsetX, offsetY);
         }
 
         if (string.Equals(shapeKind, "Box", StringComparison.OrdinalIgnoreCase) ||
@@ -49,23 +50,23 @@ public static class CollisionShapeFactory
         {
             if (width <= 0.0f || height <= 0.0f)
             {
-                return Result<CollisionShape>.Err(SimpleError.ArgumentOutOfRange($"Box の幅と高さ (width, height) は 0 より大きい正数である必要があります (指定値: {width}x{height})。"));
+                return Error.Validation("CollisionShape.InvalidDimensions", $"Box の幅と高さ (width, height) は 0 より大きい正数である必要があります (指定値: {width}x{height})。");
             }
 
-            return Result<CollisionShape>.Ok(new CollisionShape.Box(width, height, offsetX, offsetY));
+            return new CollisionShape.Box(width, height, offsetX, offsetY);
         }
 
         if (string.Equals(shapeKind, "Point", StringComparison.OrdinalIgnoreCase))
         {
-            return Result<CollisionShape>.Ok(new CollisionShape.Point(offsetX, offsetY));
+            return new CollisionShape.Point(offsetX, offsetY);
         }
 
-        return Result<CollisionShape>.Err(SimpleError.NotFound($"未対応の衝突形状種別です: '{shapeKind}' (有効な値: 'Circle', 'Box', 'Point')。"));
+        return Error.NotFound("CollisionShape.NotFound", $"未対応の衝突形状種別です: '{shapeKind}' (有効な値: 'Circle', 'Box', 'Point')。");
     }
 
     /// <summary>
     /// 形状文字列から衝突形状インスタンスを生成します。
-    /// 生成に失敗した場合は <see cref="SimpleError"/> の説明をログ出力し、安全なフォールバック形状を返します。
+    /// 生成に失敗した場合は <see cref="Error"/> の説明をログ出力し、安全なフォールバック形状を返します。
     /// </summary>
     /// <param name="shapeKind">形状種別文字列</param>
     /// <param name="radius">円形半径</param>
@@ -82,13 +83,13 @@ public static class CollisionShapeFactory
         float offsetX = 0.0f,
         float offsetY = 0.0f)
     {
-        Result<CollisionShape> result = Create(shapeKind, radius, width, height, offsetX, offsetY);
-        if (result.IsOk && result.Value is not null)
+        ErrorOr<CollisionShape> result = Create(shapeKind, radius, width, height, offsetX, offsetY);
+        if (!result.IsError && result.Value is not null)
         {
             return result.Value;
         }
 
-        Console.WriteLine($"[警告] 衝突形状の生成に失敗しました ({result.Error?.Type}): {result.Error?.Description}。安全なフォールバック (Circle 8px) を使用します。");
+        Console.WriteLine($"[警告] 衝突形状の生成に失敗しました ({result.FirstError.Type}): {result.FirstError.Description}。安全なフォールバック (Circle 8px) を使用します。");
         return new CollisionShape.Circle(radius > 0.0f ? radius : 8.0f, offsetX, offsetY);
     }
 }

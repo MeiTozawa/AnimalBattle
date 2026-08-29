@@ -20,8 +20,8 @@ public sealed class DoubleSpiralExecuteModule : Boss1BarrageExecuteModule
     {
         float first = State.AngleOffset;
         float second = first + MathF.PI;
-        if (!context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(first) * Pattern.BulletSpeed, MathF.Sin(first) * Pattern.BulletSpeed)
-            || !context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(second) * Pattern.BulletSpeed, MathF.Sin(second) * Pattern.BulletSpeed))
+        if (context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(first) * Pattern.BulletSpeed, MathF.Sin(first) * Pattern.BulletSpeed).IsError
+            || context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(second) * Pattern.BulletSpeed, MathF.Sin(second) * Pattern.BulletSpeed).IsError)
         {
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DoubleSpiral の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
         }

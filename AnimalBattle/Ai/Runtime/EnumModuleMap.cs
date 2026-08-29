@@ -93,7 +93,7 @@ public sealed class EnumModuleMap : IEnumModuleMap
     public EnumCompletenessResult ValidateComplete() => _validation;
 
     /// <inheritdoc />
-    public bool TryGet(BossState state, out IBossStateModule module)
+    public bool Get(BossState state, out IBossStateModule module)
     {
         if (!_validation.IsSuccess)
         {
@@ -126,7 +126,7 @@ public sealed class EnumModuleMap : IEnumModuleMap
             message: validation.Message);
         try
         {
-            if (observation.TryRecord(in diagnostic))
+            if (!observation.Record(in diagnostic).IsError)
             {
                 return validation;
             }

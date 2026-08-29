@@ -14,7 +14,7 @@ public interface IEnumModuleMap
 
     /// <summary>固定状態に対応する State_Module を取得します。</summary>
     /// <remarks>初期化検査に失敗した map は、いかなる module も返しません。</remarks>
-    bool TryGet(BossState state, out IBossStateModule module);
+    bool Get(BossState state, out IBossStateModule module);
 }
 
 /// <summary>固定 enum/module 完全性検査の結果です。</summary>

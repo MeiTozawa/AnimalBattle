@@ -22,7 +22,7 @@ public sealed class RingBurstExecuteModule : Boss1BarrageExecuteModule
         for (int index = 0; index < count; index++)
         {
             float angle = index / (float)count * MathF.Tau + State.AngleOffset;
-            if (!context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed))
+            if (context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
             {
                 Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "RingBurst の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
             }

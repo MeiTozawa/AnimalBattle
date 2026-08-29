@@ -2,7 +2,6 @@ using System;
 
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
-using Flecs.NET.Core;
 using AnimalBattle.Bindings;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
@@ -10,6 +9,8 @@ using AnimalBattle.Core;
 using AnimalBattle.Core.Asset;
 using AnimalBattle.Maps;
 using AnimalBattle.Plugins;
+using ErrorOr;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Scenes;
 
@@ -35,35 +36,26 @@ public partial class BattleScene : IDisposable
     public static TileMap? CurrentTileMap { get; private set; }
 
     /// <summary>
-    /// 現在戦闘中の Boss 識別名（"Boss1" または "Boss2"）を取得します。
-    /// </summary>
-    public string CurrentBossId { get; private set; } = "Boss1";
-
-    /// <summary>
-    /// <see cref="BattleScene"/> の新しいインスタンスを初期化します。
+    /// <see cref="BattleScene"/> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
     /// </summary>
     public BattleScene()
     {
         _ecsWorld = World.Create();
         Current = this;
-    }
 
-    /// <summary>
-    /// 各種 TOML 設定ファイル、システムおよびエンティティ（プレイヤー、Boss、プラットフォーム）の初期化を行います。
-    /// </summary>
-    public void Initialize()
-    {
-        if (!ConfigManager.Initialize())
+        // 0. 基本設定 & アセットのロード
+        if (ConfigManager.Initialize().IsError)
         {
-            Console.WriteLine("[BattleScene 警告] 一部の TOML 設定ファイルの初期化に失敗しました。デフォルト値を使用します。");
+            Console.WriteLine("[BattleScene 警告] 一部の TOML 設定ファイルの読み込みに失敗しました。デフォルト値を使用します。");
         }
 
-        if (!AssetManager.Initialize())
+        if (AssetManager.Initialize().IsError)
         {
             Console.WriteLine("[BattleScene 警告] 一部のキャラクタースプライト画像のロードに失敗しました。");
         }
 
-        int playerHandle = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle").ValueOrDefault(-1);
+        ErrorOr<int> playerHandleRes = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle");
+        int playerHandle = !playerHandleRes.IsError ? playerHandleRes.Value : -1;
 
         App app = new App(_ecsWorld)
             .AddPluginGroup(new DefaultPlugins());
@@ -83,65 +75,38 @@ public partial class BattleScene : IDisposable
             .Set(new Health(playerCfg.MaxHp))
             .Set(new DoubleJump(playerCfg.MaxJumps))
             .Set(new PlayerState())
-            .Set(new Sprite(playerHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 32, 32)))
+            .Set(new Sprite(playerHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 64, 64)))
             .Set(new Animation("Idle", CharacterType.Cat, isPlaying: true))
             .Add<PlayerTag>();
 
-        // 2. arena.toml で指定された初期 Boss の生成
-        CurrentBossId = string.IsNullOrWhiteSpace(arenaCfg.TargetBoss) ? "Boss1" : arenaCfg.TargetBoss;
-        SpawnBoss(CurrentBossId);
-
-        // 3. アリーナ足場および TileMap
+        // 2. タイルマップとプラットフォームの生成
         SetupArena();
 
-        // 4. TOML 設定ホットリロード時の Entity コンポーネント自動再同期
-        RegisterConfigReloadHooks();
+        // 3. Boss 1 (Ancient Cat Overlord) の生成
+        SpawnBoss(BossType.Boss1);
 
-        Console.WriteLine($"[初期化完了] Boss バトルシーンが正常に初期化されました！(初期ターゲット: {CurrentBossId})");
+        // 4. Boss 2 (Void Serpent) の生成
+        SpawnBoss(BossType.Boss2);
     }
 
     /// <summary>
-    /// 指定された Boss 識別名（"Boss1" または "Boss2"）に対応する Boss エンティティを生成・切り替えます。
+    /// 指定された種類の Boss エンティティを生成またはリセットします。
     /// </summary>
-    /// <param name="bossId">対象 Boss 識別名</param>
-    public void SpawnBoss(string bossId)
+    /// <param name="bossType">生成する Boss の種別 (<see cref="BossType.Boss1"/> または <see cref="BossType.Boss2"/>)</param>
+    /// <returns>生成または再初期化された Flecs エンティティ</returns>
+    public Entity SpawnBoss(BossType bossType)
     {
-        CurrentBossId = bossId;
-        Entity bossEntity = GetOrCreateCleanBossEntity();
-        CombatEffectHelper.ClearAllBossBullets(_ecsWorld);
+        string entityName = bossType == BossType.Boss1 ? "Boss1" : "Boss2";
+        Entity bossEntity = _ecsWorld.Entity(entityName);
 
-        if (bossId.Equals("Boss2", StringComparison.OrdinalIgnoreCase))
-        {
-            SpawnBoss2(bossEntity);
-        }
-        else
+        if (bossType == BossType.Boss1)
         {
             SpawnBoss1(bossEntity);
         }
-    }
-
-    private Entity GetOrCreateCleanBossEntity()
-    {
-        Entity bossEntity = _ecsWorld.Lookup("Boss");
-        if (!bossEntity.IsAlive())
+        else if (bossType == BossType.Boss2)
         {
-            return _ecsWorld.Entity("Boss");
+            SpawnBoss2(bossEntity);
         }
-
-        bossEntity.Remove<Boss1Tag>()
-                  .Remove<Boss1Stats>()
-                  .Remove<Boss1StateMachine>()
-                  .Remove<Boss2Tag>()
-                  .Remove<Boss2Stats>()
-                  .Remove<Boss2StateMachine>()
-                  .Remove<BossAiData>()
-                  .Remove<BossMovementData>()
-                  .Remove<BossAttackData>()
-                  .Remove<BossPhaseTransitionData>()
-                  .Remove<BossTerminalData>()
-                  .Remove<BossCompatibilityData>()
-                  .Remove<BossDebugData>()
-                  .Remove<CollisionBox>();
 
         return bossEntity;
     }
@@ -149,7 +114,8 @@ public partial class BattleScene : IDisposable
     private static void SpawnBoss1(Entity bossEntity)
     {
         Boss1Config b1Cfg = ConfigManager.Boss1;
-        int boss1Handle = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png).ValueOrDefault(-1);
+        ErrorOr<int> boss1HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
+        int boss1Handle = !boss1HandleRes.IsError ? boss1HandleRes.Value : -1;
 
         bossEntity
             .Set(new Transform(b1Cfg.BaseX, b1Cfg.BaseY, scaleX: b1Cfg.ScaleX, scaleY: b1Cfg.ScaleY))
@@ -171,7 +137,8 @@ public partial class BattleScene : IDisposable
     private static void SpawnBoss2(Entity bossEntity)
     {
         Boss2Config b2Cfg = ConfigManager.Boss2;
-        int boss2Handle = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png).ValueOrDefault(-1);
+        ErrorOr<int> boss2HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
+        int boss2Handle = !boss2HandleRes.IsError ? boss2HandleRes.Value : -1;
 
         bossEntity
             .Set(new Transform(b2Cfg.SpawnX, b2Cfg.SpawnY, scaleX: b2Cfg.ScaleX, scaleY: b2Cfg.ScaleY))
@@ -247,11 +214,30 @@ public partial class BattleScene : IDisposable
     }
 
     /// <summary>
+    /// 現在アクティブな Boss の種別を取得または設定します。
+    /// </summary>
+    public BossType CurrentBossType { get; private set; } = BossType.Boss1;
+
+    /// <summary>
+    /// 現在アクティブな Boss の識別名を取得します。
+    /// </summary>
+    public string CurrentBossId => CurrentBossType == BossType.Boss1 ? "Boss1" : "Boss2";
+
+    /// <summary>
+    /// シーンの追加初期化処理（設定ホットリロードフックの登録等）を行います。
+    /// </summary>
+    public ErrorOr<Success> Initialize()
+    {
+        RegisterConfigReloadHooks();
+        return Result.Success;
+    }
+
+    /// <summary>
     /// 現在の Boss を初期状態にリセットして再生成します。
     /// </summary>
     public void ResetCurrentBoss()
     {
-        SpawnBoss(CurrentBossId);
+        SpawnBoss(CurrentBossType);
     }
 
     /// <summary>
@@ -270,7 +256,7 @@ public partial class BattleScene : IDisposable
             Console.WriteLine($"[BattleScene] 互換状態 {compatibility.BossState} から Boss を再生成します。");
         }
 
-        SpawnBoss(CurrentBossId);
+        SpawnBoss(CurrentBossType);
     }
 
     /// <summary>
@@ -279,7 +265,11 @@ public partial class BattleScene : IDisposable
     /// <param name="bossId">切り替え先の Boss 識別名 ("Boss1" または "Boss2")</param>
     public void SwitchBoss(string bossId)
     {
-        SpawnBoss(bossId);
+        BossType targetType = bossId.Equals("Boss2", StringComparison.OrdinalIgnoreCase)
+            ? BossType.Boss2
+            : BossType.Boss1;
+        CurrentBossType = targetType;
+        SpawnBoss(targetType);
     }
 
     /// <summary>
@@ -296,7 +286,7 @@ public partial class BattleScene : IDisposable
     {
         if (CurrentBossId.Equals("Boss1", StringComparison.OrdinalIgnoreCase))
         {
-            Entity bossEntity = _ecsWorld.Lookup("Boss");
+            Entity bossEntity = _ecsWorld.Lookup("Boss1");
             if (bossEntity.IsAlive() && bossEntity.Has<Boss1Tag>())
             {
                 Boss1Config bCfg = ConfigManager.Boss1;
@@ -320,7 +310,7 @@ public partial class BattleScene : IDisposable
     {
         if (CurrentBossId.Equals("Boss2", StringComparison.OrdinalIgnoreCase))
         {
-            Entity bossEntity = _ecsWorld.Lookup("Boss");
+            Entity bossEntity = _ecsWorld.Lookup("Boss2");
             if (bossEntity.IsAlive() && bossEntity.Has<Boss2Tag>())
             {
                 Boss2Config bCfg = ConfigManager.Boss2;
@@ -369,10 +359,11 @@ public partial class BattleScene : IDisposable
         ArenaConfig arenaCfg = ConfigManager.Arena;
 
         TileMapConfig tileMapCfg = arenaCfg.TileMap;
-        Result<ConfigBase<TileSetConfig>> tileSetConfigResult = TileSetConfig.LoadFromFile(tileMapCfg.TileConfig);
-        if (tileSetConfigResult.IsOk && tileSetConfigResult.Value != null)
+        ErrorOr<ConfigBase<TileSetConfig>> tileSetConfigResult = TileSetConfig.LoadFromFile(tileMapCfg.TileConfig);
+        if (!tileSetConfigResult.IsError && tileSetConfigResult.Value != null)
         {
-            int sheetHandle = AssetManager.LoadTexture(tileMapCfg.TileSheet).ValueOrDefault(-1);
+            ErrorOr<int> sheetHandleRes = AssetManager.LoadTexture(tileMapCfg.TileSheet);
+            int sheetHandle = !sheetHandleRes.IsError ? sheetHandleRes.Value : -1;
             TileSet tileSet = new TileSet(sheetHandle, tileSetConfigResult.Value.Config);
             _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
             _ecsWorld.Set(_tileMap);
@@ -383,7 +374,7 @@ public partial class BattleScene : IDisposable
         }
         else
         {
-            Console.WriteLine($"[BattleScene 警告] TileSet 設定のロードに失敗しました: {tileSetConfigResult.Error?.Description}");
+            Console.WriteLine($"[BattleScene 警告] TileSet 設定のロードに失敗しました: {tileSetConfigResult.FirstError.Description}");
         }
     }
 
@@ -391,11 +382,11 @@ public partial class BattleScene : IDisposable
     /// シーンのフレーム更新処理を行います。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過時間（秒）</param>
-    /// <returns>正常続行時は true</returns>
-    public bool Update(float deltaTime)
+    /// <returns>正常続行時は Result.Success</returns>
+    public ErrorOr<Success> Update(float deltaTime)
     {
         _ecsWorld.Progress(deltaTime);
-        return true;
+        return Result.Success;
     }
 
     /// <summary>

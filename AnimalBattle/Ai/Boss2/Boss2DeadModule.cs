@@ -29,7 +29,7 @@ public sealed class Boss2DeadModule : IBossStateModule, IStateModuleDependencyPr
         TransitionReason reason = _state.TerminalData.IsTerminal
             ? _state.TerminalData.DeathReason
             : PhaseDeathController.CreateDeathReason(0.0f);
-        _state.TerminalData.TryCapture(
+        _state.TerminalData.Capture(
             Boss2StateIds.Dead,
             context.Phase,
             in reason,
@@ -40,7 +40,7 @@ public sealed class Boss2DeadModule : IBossStateModule, IStateModuleDependencyPr
 
         try
         {
-            _state.TerminalData.MovementStopped = context.Movement.Stop();
+            _state.TerminalData.MovementStopped = !context.Movement.Stop().IsError;
             _state.TerminalData.AttackGenerationStopped = true;
             context.Attack.ClearBossBullets();
         }
@@ -63,7 +63,7 @@ public sealed class Boss2DeadModule : IBossStateModule, IStateModuleDependencyPr
 
         _state.IsAttackActive = false;
         _state.TerminalData.AttackGenerationStopped = true;
-        _state.TerminalData.MovementStopped = context.Movement.Stop();
+        _state.TerminalData.MovementStopped = !context.Movement.Stop().IsError;
     }
 
     /// <inheritdoc />

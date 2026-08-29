@@ -86,7 +86,7 @@ public sealed class AttackIdRegistry
     }
 
     /// <summary>攻撃 ID に対応する初期化済み定義を取得します。</summary>
-    public bool TryGet(AttackId attackId, out AttackDefinition definition)
+    public bool Get(AttackId attackId, out AttackDefinition definition)
     {
         if (!_validation.IsSuccess)
         {

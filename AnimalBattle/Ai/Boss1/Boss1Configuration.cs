@@ -152,7 +152,7 @@ public interface IBoss1Configuration
     /// <summary>指定 Phase の検証済み設定を取得します。</summary>
     Boss1PhaseSettings GetPhase(Phase phase);
     /// <summary>指定 Attack_Id の検証済み pattern を取得します。</summary>
-    bool TryGetAttack(AttackId attackId, out Boss1AttackPattern pattern);
+    bool GetAttack(AttackId attackId, out Boss1AttackPattern pattern);
 }
 
 /// <summary>既存 boss1.toml と patterns.toml の既定値を保持する Boss1 設定です。</summary>
@@ -197,7 +197,7 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration
     }
 
     /// <inheritdoc />
-    public bool TryGetAttack(AttackId attackId, out Boss1AttackPattern pattern)
+    public bool GetAttack(AttackId attackId, out Boss1AttackPattern pattern)
     {
         for (int index = 0; index < _attacks.Length; index++)
         {

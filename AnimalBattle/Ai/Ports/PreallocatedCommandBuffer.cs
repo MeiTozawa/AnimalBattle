@@ -1,4 +1,5 @@
 using AnimalBattle.Ai.Contracts;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Ports;
 
@@ -55,19 +56,27 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
     }
 
     /// <summary>通常優先度で command を追加します。</summary>
-    public bool TryAdd(in T command) => TryAddCommand(in command, CommandPriority.Normal).IsAccepted;
+    public ErrorOr<Success> Add(in T command)
+    {
+        CommandWriteResult res = AddCommand(in command, CommandPriority.Normal);
+        return res.IsAccepted ? Result.Success : Error.Failure("CommandBuffer.CapacityExceeded", "コマンドバッファの容量を超過しました。");
+    }
 
     /// <summary>指定優先度で command を追加します。</summary>
-    public bool TryAdd(in T command, CommandPriority priority) => TryAddCommand(in command, priority).IsAccepted;
+    public ErrorOr<Success> Add(in T command, CommandPriority priority)
+    {
+        CommandWriteResult res = AddCommand(in command, priority);
+        return res.IsAccepted ? Result.Success : Error.Failure("CommandBuffer.CapacityExceeded", "コマンドバッファの容量を超過しました。");
+    }
 
     /// <summary>指定した one-shot key を重複なく command とともに記録します。</summary>
-    public CommandWriteResult TryAddOneShot(in T command, in CommandOneShotKey key, CommandPriority priority = CommandPriority.Attack)
+    public CommandWriteResult AddOneShot(in T command, in CommandOneShotKey key, CommandPriority priority = CommandPriority.Attack)
     {
-        return TryAddCommand(in command, priority, key);
+        return AddCommand(in command, priority, key);
     }
 
     /// <summary>command を優先度付きで追加し、結果を返します。</summary>
-    public CommandWriteResult TryAddCommand(in T command, CommandPriority priority, CommandOneShotKey key = default)
+    public CommandWriteResult AddCommand(in T command, CommandPriority priority, CommandOneShotKey key = default)
     {
         bool hasKey = key != default;
         if (hasKey && !key.IsValid)
@@ -82,7 +91,7 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
 
         if (_count < _commands.Length)
         {
-            if (hasKey && !TryRememberKey(key))
+            if (hasKey && !RememberKey(key))
             {
                 return Reject(CommandBufferFailureReason.CapacityExceeded, priority, CommandPriority.Normal, key, ErrorCode.ExecutionFailed);
             }
@@ -98,7 +107,7 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
             return Reject(CommandBufferFailureReason.CapacityExceeded, priority, lowestPriority, key, ErrorCode.ExecutionFailed);
         }
 
-        if (hasKey && !TryRememberKey(key))
+        if (hasKey && !RememberKey(key))
         {
             return Reject(CommandBufferFailureReason.CapacityExceeded, priority, lowestPriority, key, ErrorCode.ExecutionFailed);
         }
@@ -115,7 +124,7 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
     }
 
     /// <summary>指定位置に保持された one-shot key を取得します。</summary>
-    public bool TryGetOneShotKey(int index, out CommandOneShotKey key)
+    public bool GetOneShotKey(int index, out CommandOneShotKey key)
     {
         if ((uint)index >= (uint)_count)
         {
@@ -181,7 +190,7 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
         return CommandPriority.Normal;
     }
 
-    private bool TryRememberKey(CommandOneShotKey key)
+    private bool RememberKey(CommandOneShotKey key)
     {
         if (_seenOneShotKeyCount >= _seenOneShotKeys.Length)
         {
@@ -233,7 +242,7 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
 
         try
         {
-            if (!_diagnosticSink.TryRecord(in diagnostic))
+            if (_diagnosticSink.Record(in diagnostic).IsError)
             {
                 DiagnosticFailureCount++;
                 return false;
@@ -256,30 +265,42 @@ public sealed class BufferedMovementPort : IMovementPort
     /// <summary>buffer を指定します。</summary>
     public BufferedMovementPort(PreallocatedCommandBuffer<MovementCommand> buffer) => _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
     /// <inheritdoc />
-    public bool SetVelocity(float x, float y)
+    public ErrorOr<Success> SetVelocity(float x, float y)
     {
-        return IsFinite(x) && IsFinite(y)
-            && _buffer.TryAdd(new MovementCommand(MovementCommandKind.SetVelocity, x, y), CommandPriority.Safety);
+        if (!IsFinite(x) || !IsFinite(y))
+        {
+            return Error.Validation("BufferedMovementPort.SetVelocity", "速度値が有限値ではありません。");
+        }
+
+        return _buffer.Add(new MovementCommand(MovementCommandKind.SetVelocity, x, y), CommandPriority.Safety);
     }
 
     /// <inheritdoc />
-    public bool MoveTo(float x, float y)
+    public ErrorOr<Success> MoveTo(float x, float y)
     {
-        return IsFinite(x) && IsFinite(y)
-            && _buffer.TryAdd(new MovementCommand(MovementCommandKind.MoveTo, x, y), CommandPriority.Normal);
+        if (!IsFinite(x) || !IsFinite(y))
+        {
+            return Error.Validation("BufferedMovementPort.MoveTo", "移動先座標が有限値ではありません。");
+        }
+
+        return _buffer.Add(new MovementCommand(MovementCommandKind.MoveTo, x, y), CommandPriority.Normal);
     }
 
     /// <inheritdoc />
-    public bool ApplyGravity(float gravity, float maxFallSpeed)
+    public ErrorOr<Success> ApplyGravity(float gravity, float maxFallSpeed)
     {
-        return IsFinite(gravity) && IsFinite(maxFallSpeed) && gravity >= 0.0f && maxFallSpeed >= 0.0f
-            && _buffer.TryAdd(new MovementCommand(MovementCommandKind.ApplyGravity, gravity, maxFallSpeed), CommandPriority.Normal);
+        if (!IsFinite(gravity) || !IsFinite(maxFallSpeed) || gravity < 0.0f || maxFallSpeed < 0.0f)
+        {
+            return Error.Validation("BufferedMovementPort.ApplyGravity", "重力または最大落下速度が不正です。");
+        }
+
+        return _buffer.Add(new MovementCommand(MovementCommandKind.ApplyGravity, gravity, maxFallSpeed), CommandPriority.Normal);
     }
 
     /// <inheritdoc />
-    public bool Stop()
+    public ErrorOr<Success> Stop()
     {
-        return _buffer.TryAdd(new MovementCommand(MovementCommandKind.Stop, 0.0f, 0.0f), CommandPriority.Safety);
+        return _buffer.Add(new MovementCommand(MovementCommandKind.Stop, 0.0f, 0.0f), CommandPriority.Safety);
     }
 
     private static bool IsFinite(float value)
@@ -295,23 +316,31 @@ public sealed class BufferedAttackPort : IAttackPort
     /// <summary>buffer を指定します。</summary>
     public BufferedAttackPort(PreallocatedCommandBuffer<AttackCommand> buffer) => _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
     /// <inheritdoc />
-    public bool EmitBullet(AttackId attackId, float x, float y)
+    public ErrorOr<Success> EmitBullet(AttackId attackId, float x, float y)
     {
-        return CanEmit(attackId, x, y)
-            && _buffer.TryAdd(new AttackCommand(AttackCommandKind.EmitBullet, attackId, x, y), CommandPriority.Attack);
+        if (!CanEmit(attackId, x, y))
+        {
+            return Error.Validation("BufferedAttackPort.EmitBullet", "攻撃 ID または弾丸座標が不正です。");
+        }
+
+        return _buffer.Add(new AttackCommand(AttackCommandKind.EmitBullet, attackId, x, y), CommandPriority.Attack);
     }
 
     /// <inheritdoc />
-    public bool CreateHitbox(AttackId attackId, float x, float y)
+    public ErrorOr<Success> CreateHitbox(AttackId attackId, float x, float y)
     {
-        return CanEmit(attackId, x, y)
-            && _buffer.TryAdd(new AttackCommand(AttackCommandKind.CreateHitbox, attackId, x, y), CommandPriority.Safety);
+        if (!CanEmit(attackId, x, y))
+        {
+            return Error.Validation("BufferedAttackPort.CreateHitbox", "攻撃 ID または判定座標が不正です。");
+        }
+
+        return _buffer.Add(new AttackCommand(AttackCommandKind.CreateHitbox, attackId, x, y), CommandPriority.Safety);
     }
 
     /// <inheritdoc />
-    public bool ClearBossBullets()
+    public ErrorOr<Success> ClearBossBullets()
     {
-        return _buffer.TryAdd(new AttackCommand(AttackCommandKind.ClearBossBullets), CommandPriority.Safety);
+        return _buffer.Add(new AttackCommand(AttackCommandKind.ClearBossBullets), CommandPriority.Safety);
     }
 
     private static bool CanEmit(AttackId attackId, float x, float y)
@@ -327,10 +356,13 @@ public sealed class BufferedEffectPort : IEffectPort
     /// <summary>buffer を指定します。</summary>
     public BufferedEffectPort(PreallocatedCommandBuffer<EffectCommand> buffer) => _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
     /// <inheritdoc />
-    public bool RequestTelegraph(float x, float y)
+    public ErrorOr<Success> RequestTelegraph(float x, float y)
     {
-        return float.IsFinite(x)
-            && float.IsFinite(y)
-            && _buffer.TryAdd(new EffectCommand(EffectCommandKind.RequestTelegraph, x, y), CommandPriority.Normal);
+        if (!float.IsFinite(x) || !float.IsFinite(y))
+        {
+            return Error.Validation("BufferedEffectPort.RequestTelegraph", "予告表示座標が有限値ではありません。");
+        }
+
+        return _buffer.Add(new EffectCommand(EffectCommandKind.RequestTelegraph, x, y), CommandPriority.Normal);
     }
 }

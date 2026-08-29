@@ -121,8 +121,8 @@ public sealed class PlatformNavigationGraph
         }
 
         // 3. A* 経路探索 (Boss の現在 X 座標を考慮して最近の起跳点を選択)
-        Result<List<PlatformLink>> pathResult = SearchAStar(currentNode, targetNode, currentX);
-        if (!pathResult.IsOk || pathResult.Value == null || pathResult.Value.Count == 0)
+        ErrorOr.ErrorOr<List<PlatformLink>> pathResult = SearchAStar(currentNode, targetNode, currentX);
+        if (pathResult.IsError || pathResult.Value == null || pathResult.Value.Count == 0)
         {
             return NavPlan.CreateNoPath(targetX, moveSpeed, currentNode, targetNode);
         }
@@ -246,7 +246,7 @@ public sealed class PlatformNavigationGraph
     /// <summary>
     /// A* 最短経路探索を実行します。
     /// </summary>
-    private Result<List<PlatformLink>> SearchAStar(PlatformNode start, PlatformNode goal, float startX)
+    private ErrorOr.ErrorOr<List<PlatformLink>> SearchAStar(PlatformNode start, PlatformNode goal, float startX)
     {
         Dictionary<int, float> gScore = new();
         Dictionary<int, PlatformLink> cameFromLink = new();
@@ -267,7 +267,7 @@ public sealed class PlatformNavigationGraph
             int currentId = openSet.Dequeue();
             if (currentId == goal.Id)
             {
-                return Result<List<PlatformLink>>.Ok(ReconstructPath(start.Id, goal.Id, cameFromLink, cameFromNode));
+                return ReconstructPath(start.Id, goal.Id, cameFromLink, cameFromNode);
             }
 
             if (!closedSet.Add(currentId) || !_adjacency.TryGetValue(currentId, out List<PlatformLink>? links))
@@ -298,7 +298,7 @@ public sealed class PlatformNavigationGraph
             }
         }
 
-        return SimpleError.NotFound($"ノード {start.Id} から {goal.Id} への移動経路が見つかりませんでした。");
+        return ErrorOr.Error.NotFound("Nav.NoPath", $"ノード {start.Id} から {goal.Id} への移動経路が見つかりませんでした。");
     }
 
     private static List<PlatformLink> ReconstructPath(

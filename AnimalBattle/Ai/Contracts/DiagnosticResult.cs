@@ -128,6 +128,10 @@ public readonly record struct DiagnosticResult
     /// <summary>旧プロパティ名です。値の型は固定 BossState です。</summary>
     [Obsolete("State を使用してください。")]
     public BossState StateId => State;
+
+    /// <summary>
+    /// 診断対象の攻撃識別子を取得します。
+    /// </summary>
     public AttackId AttackId { get; }
 
     /// <summary>

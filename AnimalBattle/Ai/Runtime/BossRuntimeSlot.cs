@@ -113,7 +113,7 @@ public sealed class BossRuntimeSlot
     /// <summary>現在の Debug_Data を取得します。Debug 無効時は生成しません。</summary>
     /// <param name="debugData">生成済みの Debug_Data。</param>
     /// <returns>Debug_Data が有効な場合は true。</returns>
-    public bool TryGetDebugData(out BossDebugData debugData)
+    public bool GetDebugData(out BossDebugData debugData)
     {
         debugData = _debugData;
         return _hasDebugData;
@@ -182,19 +182,19 @@ public sealed class BossRuntimeSlot
     public ref BossAiData AiData => ref _aiData;
 
     /// <summary>指定 command の index から one-shot key を runtime 経由で取得します。</summary>
-    public bool TryGetOneShotKey(CommandComponentKind component, int index, out CommandOneShotKey key)
+    public bool GetOneShotKey(CommandComponentKind component, int index, out CommandOneShotKey key)
     {
         return component switch
         {
-            CommandComponentKind.Movement => MovementCommands.TryGetOneShotKey(index, out key),
-            CommandComponentKind.Attack => AttackCommands.TryGetOneShotKey(index, out key),
-            CommandComponentKind.Effect => EffectCommands.TryGetOneShotKey(index, out key),
+            CommandComponentKind.Movement => MovementCommands.GetOneShotKey(index, out key),
+            CommandComponentKind.Attack => AttackCommands.GetOneShotKey(index, out key),
+            CommandComponentKind.Effect => EffectCommands.GetOneShotKey(index, out key),
             _ => InvalidOneShotKey(out key)
         };
     }
 
     /// <summary>指定 index の移動 command を runtime 経由で取得します。</summary>
-    public bool TryGetMovementCommand(int index, out MovementCommand command)
+    public bool GetMovementCommand(int index, out MovementCommand command)
     {
         if ((uint)index >= (uint)MovementCommands.Count)
         {
@@ -207,7 +207,7 @@ public sealed class BossRuntimeSlot
     }
 
     /// <summary>指定 index の攻撃 command を runtime 経由で取得します。</summary>
-    public bool TryGetAttackCommand(int index, out AttackCommand command)
+    public bool GetAttackCommand(int index, out AttackCommand command)
     {
         if (!CanGenerateAttack || (uint)index >= (uint)AttackCommands.Count)
         {
@@ -220,7 +220,7 @@ public sealed class BossRuntimeSlot
     }
 
     /// <summary>指定 index の演出 command を runtime 経由で取得します。</summary>
-    public bool TryGetEffectCommand(int index, out EffectCommand command)
+    public bool GetEffectCommand(int index, out EffectCommand command)
     {
         if ((uint)index >= (uint)EffectCommands.Count)
         {
@@ -233,7 +233,7 @@ public sealed class BossRuntimeSlot
     }
 
     /// <summary>指定 command buffer の直近の overflow / one-shot 診断を取得します。</summary>
-    public bool TryGetCommandDiagnostic(CommandComponentKind component, out CommandBufferDiagnostic diagnostic)
+    public bool GetCommandDiagnostic(CommandComponentKind component, out CommandBufferDiagnostic diagnostic)
     {
         diagnostic = component switch
         {
@@ -306,12 +306,12 @@ public sealed class BossRuntimeSlot
     /// MigrationAdapter が検証した旧値を runtime の source of truth として取り込みます。
     /// </summary>
     /// <param name="migration">検証済みの移行結果。</param>
-    /// <returns>現在の Entity/Boss に適用できた場合は true。</returns>
-    internal bool TryApplyMigration(in MigrationResult migration)
+    /// <returns>現在の Entity/Boss に適用できた場合は Success。</returns>
+    internal ErrorOr.ErrorOr<ErrorOr.Success> ApplyMigration(in MigrationResult migration)
     {
         if (!migration.IsSuccess || migration.BossType != BossType || migration.AiData.BossState == BossState.Unknown)
         {
-            return false;
+            return ErrorOr.Error.Validation("BossRuntimeSlot.ApplyMigration", "Migration 結果が無効です。");
         }
 
         _context.SetPhaseForTransition(migration.AiData.Phase);
@@ -327,7 +327,7 @@ public sealed class BossRuntimeSlot
         _moduleStopped = false;
         _hasDebugData = false;
         RefreshDebugData();
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     /// <summary>初期化完了を runtime gate に反映します。</summary>
@@ -350,7 +350,7 @@ public sealed class BossRuntimeSlot
     }
 
     /// <summary>同じ異常の二重処理を抑止し、初回処理 frame を保存します。</summary>
-    internal bool TryHandleFailure(ulong fingerprint, long frameUpdateNumber)
+    internal bool HandleFailure(ulong fingerprint, long frameUpdateNumber)
     {
         if (fingerprint == 0 || (_failureActive && LastErrorFingerprint == fingerprint))
         {
@@ -374,21 +374,21 @@ public sealed class BossRuntimeSlot
     }
 
     /// <summary>処理エラー以外で停止した module を依存関係検証後に再開します。</summary>
-    public bool TryRevalidateStoppedModule()
+    public ErrorOr.ErrorOr<ErrorOr.Success> RevalidateStoppedModule()
     {
         if (!ModuleStopped || IsFailClosed || ModuleStopReason == ErrorCode.ModuleExecutionFailed)
         {
-            return false;
+            return ErrorOr.Error.Failure("BossRuntimeSlot.Revalidate", "再開条件を満たしていません。");
         }
 
         if (!_context.IsReady)
         {
-            return false;
+            return ErrorOr.Error.Failure("BossRuntimeSlot.Revalidate", "Context が準備完了していません。");
         }
 
         _moduleStopped = false;
         ModuleStopReason = ErrorCode.None;
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     /// <summary>module を停止し、停止理由と frame を保存します。</summary>
@@ -415,15 +415,15 @@ public sealed class BossRuntimeSlot
     }
 
     /// <summary>安全遷移の再帰的な再試行を一回に制限します。</summary>
-    internal bool TryBeginSafetyTransition()
+    internal ErrorOr.ErrorOr<ErrorOr.Success> BeginSafetyTransition()
     {
         if (SafetyTransitionAttempted)
         {
-            return false;
+            return ErrorOr.Error.Failure("BossRuntimeSlot.SafetyTransition", "安全遷移は既に試行済みです。");
         }
 
         SafetyTransitionAttempted = true;
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     /// <summary>安全復帰先が使えない場合に Dead/停止へ固定します。</summary>
@@ -497,16 +497,17 @@ public sealed class BossRuntimeSlot
         => ApplyPendingConfig(ConfigReloadBoundary.AttackSelection);
 
     /// <summary>両 gate と入力値を検証し、同一 Entity の Frame_Update を開始します。</summary>
-    public bool TryBeginFrame(long frameUpdateNumber, float deltaTime, Phase phase, in PlayerObservation playerObservation)
+    public ErrorOr.ErrorOr<ErrorOr.Success> BeginFrame(long frameUpdateNumber, float deltaTime, Phase phase, in PlayerObservation playerObservation)
     {
         if (!InitializationComplete || !RuntimeReady)
         {
-            return false;
+            return ErrorOr.Error.Failure("BossRuntimeSlot.GateClosed", "初期化 gate または runtime ready gate が未成立です。");
         }
 
-        if (!_context.TryBeginFrame(frameUpdateNumber, deltaTime, phase, in playerObservation))
+        ErrorOr.ErrorOr<ErrorOr.Success> beginResult = _context.BeginFrame(frameUpdateNumber, deltaTime, phase, in playerObservation);
+        if (beginResult.IsError)
         {
-            return false;
+            return beginResult;
         }
 
         if (_commandFrame != frameUpdateNumber)
@@ -519,7 +520,7 @@ public sealed class BossRuntimeSlot
         _aiData.Phase = phase;
         _aiData.UpdateSource = UpdateSource.NewRuntime;
         RefreshDebugData();
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     /// <summary>Frame_Update の command 数を 0 に戻します。配列は再確保しません。</summary>
@@ -559,26 +560,26 @@ public sealed class BossRuntimeSlot
         StopModule(reason);
     }
 
-    internal bool TryMarkUpdated(long frameUpdateNumber)
+    internal ErrorOr.ErrorOr<ErrorOr.Success> MarkUpdated(long frameUpdateNumber)
     {
         if (_lastUpdatedFrame == frameUpdateNumber)
         {
-            return false;
+            return ErrorOr.Error.Validation("BossRuntimeSlot.MarkUpdated", "同一フレームで既に更新済みです。");
         }
 
         _lastUpdatedFrame = frameUpdateNumber;
-        return true;
+        return ErrorOr.Result.Success;
     }
 
-    internal bool TryEnterTransition()
+    internal ErrorOr.ErrorOr<ErrorOr.Success> EnterTransition()
     {
         if (_transitionDepth != 0)
         {
-            return false;
+            return ErrorOr.Error.Validation("BossRuntimeSlot.EnterTransition", "遷移深度が不正です。");
         }
 
         _transitionDepth = 1;
-        return true;
+        return ErrorOr.Result.Success;
     }
 
     internal void ExitTransition()

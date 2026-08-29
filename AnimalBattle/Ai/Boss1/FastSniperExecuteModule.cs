@@ -21,7 +21,7 @@ public sealed class FastSniperExecuteModule : Boss1BarrageExecuteModule
         float dx = context.PlayerObservation.PositionX - State.AttackStartPosition.X;
         float dy = context.PlayerObservation.PositionY - State.AttackStartPosition.Y;
         float angle = MathF.Atan2(dy, dx);
-        if (!context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed))
+        if (context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
         {
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "FastSniper の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
         }

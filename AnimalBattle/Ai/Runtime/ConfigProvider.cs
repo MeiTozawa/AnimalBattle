@@ -76,7 +76,7 @@ public sealed class ConfigProvider : IConfigProvider
         ArgumentNullException.ThrowIfNull(pattern);
         _observation = observation;
         _current = BossConfigSnapshot.Empty;
-        _lastResult = TryBuildSnapshot(
+        _lastResult = BuildSnapshot(
             boss1,
             boss2,
             pattern,
@@ -99,14 +99,14 @@ public sealed class ConfigProvider : IConfigProvider
     /// <param name="version">新しい snapshot version。</param>
     /// <param name="sourceName">設定の入力元。</param>
     /// <returns>検証に成功して snapshot を公開した場合は true。</returns>
-    public bool TryPublish(
+    public bool Publish(
         Boss1Config boss1,
         Boss2Config boss2,
         PatternConfig pattern,
         long version = 0,
         string? sourceName = null)
     {
-        ConfigProviderResult result = TryBuildSnapshot(
+        ConfigProviderResult result = BuildSnapshot(
             boss1,
             boss2,
             pattern,
@@ -130,13 +130,13 @@ public sealed class ConfigProvider : IConfigProvider
     /// <param name="pattern">攻撃パターン設定。</param>
     /// <param name="snapshot">成功時に生成された snapshot。</param>
     /// <returns>検証結果。</returns>
-    public static ConfigProviderResult TryBuildSnapshot(
+    public static ConfigProviderResult BuildSnapshot(
         Boss1Config? boss1,
         Boss2Config? boss2,
         PatternConfig? pattern,
         out BossConfigSnapshot snapshot)
     {
-        return TryBuildSnapshot(boss1, boss2, pattern, 0, null, null, out snapshot);
+        return BuildSnapshot(boss1, boss2, pattern, 0, null, null, out snapshot);
     }
 
     /// <summary>
@@ -150,7 +150,7 @@ public sealed class ConfigProvider : IConfigProvider
     /// <param name="observation">設定診断を記録する任意の観測サービス。</param>
     /// <param name="snapshot">成功時に生成された snapshot。</param>
     /// <returns>検証結果。</returns>
-    public static ConfigProviderResult TryBuildSnapshot(
+    public static ConfigProviderResult BuildSnapshot(
         Boss1Config? boss1,
         Boss2Config? boss2,
         PatternConfig? pattern,
@@ -215,12 +215,12 @@ public sealed class ConfigProvider : IConfigProvider
     /// <param name="name">TOML 境界から受け取った状態名。</param>
     /// <param name="state">解決された固定 BossState。</param>
     /// <returns>具体的な固定状態へ解決できた場合は true。</returns>
-    public static bool TryResolveBossState(string? name, out BossState state)
+    public static bool ResolveBossState(string? name, out BossState state)
     {
         if (string.IsNullOrWhiteSpace(name)
             || !Enum.TryParse(name, false, out state)
             || !state.IsValid()
-            || !FixedBossStateModuleCatalog.TryGet(state, out _))
+            || !FixedBossStateModuleCatalog.Get(state, out _))
         {
             state = BossState.Unknown;
             return false;
@@ -236,7 +236,7 @@ public sealed class ConfigProvider : IConfigProvider
     /// <param name="name">TOML 境界から受け取った攻撃名。</param>
     /// <param name="attackId">解決された固定 AttackId。</param>
     /// <returns>具体的な攻撃へ解決できた場合は true。</returns>
-    public static bool TryResolveAttack(BossType bossType, string? name, out AttackId attackId)
+    public static bool ResolveAttack(BossType bossType, string? name, out AttackId attackId)
     {
         attackId = bossType switch
         {
@@ -245,7 +245,7 @@ public sealed class ConfigProvider : IConfigProvider
             _ => AttackId.Unknown
         };
 
-        return attackId.IsValid && AttackStateModuleMap.TryGet(attackId, out AttackStateModuleMapping mapping)
+        return attackId.IsValid && AttackStateModuleMap.Get(attackId, out AttackStateModuleMapping mapping)
             && mapping.BossType == bossType;
     }
 
@@ -332,7 +332,7 @@ public sealed class ConfigProvider : IConfigProvider
         for (int index = 0; index < skills.Count; index++)
         {
             string? skill = skills[index];
-            if (!TryResolveAttack(bossType, skill, out AttackId attackId))
+            if (!ResolveAttack(bossType, skill, out AttackId attackId))
             {
                 AddFailure(
                     diagnostics,
@@ -500,12 +500,12 @@ public sealed class ConfigProvider : IConfigProvider
         for (int index = 0; index < AttackStateModuleMap.Entries.Count; index++)
         {
             AttackStateModuleMapping mapping = AttackStateModuleMap.Entries[index];
-            if (!FixedBossStateModuleCatalog.TryGet(mapping.TelegraphState, out FixedBossStateModule telegraph)
+            if (!FixedBossStateModuleCatalog.Get(mapping.TelegraphState, out FixedBossStateModule telegraph)
                 || telegraph.BossType != mapping.BossType
-                || !FixedBossStateModuleCatalog.TryGet(mapping.ExecuteState, out FixedBossStateModule execute)
+                || !FixedBossStateModuleCatalog.Get(mapping.ExecuteState, out FixedBossStateModule execute)
                 || execute.BossType != mapping.BossType
                 || (mapping.SecondaryExecuteState != BossState.Unknown
-                    && (!FixedBossStateModuleCatalog.TryGet(mapping.SecondaryExecuteState, out FixedBossStateModule secondaryExecute)
+                    && (!FixedBossStateModuleCatalog.Get(mapping.SecondaryExecuteState, out FixedBossStateModule secondaryExecute)
                         || secondaryExecute.BossType != mapping.BossType)))
             {
                 AddFailure(
@@ -595,7 +595,7 @@ public sealed class ConfigProvider : IConfigProvider
 
         for (int index = 0; index < skills.Count; index++)
         {
-            if (!TryResolveAttack(bossType, skills[index], out AttackId attackId))
+            if (!ResolveAttack(bossType, skills[index], out AttackId attackId))
             {
                 AddFailure(diagnostics, ErrorCode.InvalidAttackId, $"{bossType} の {phase} の Skills に未知の攻撃があります。", attackId, phase);
             }
@@ -676,7 +676,7 @@ public sealed class ConfigProvider : IConfigProvider
                         severity: diagnostic.Severity,
                         errorCode: diagnostic.ErrorCode,
                         message: diagnostic.Message);
-                    observation.TryRecord(in observationEvent);
+                    observation.Record(in observationEvent);
                 }
                 catch
                 {

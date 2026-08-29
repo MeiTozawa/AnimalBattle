@@ -1,5 +1,6 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Attack;
 
@@ -29,27 +30,27 @@ public sealed class OneShotEventGuard
     }
 
     /// <summary>新しい攻撃 lifecycle を開始し、以前の key を破棄します。</summary>
-    public bool Begin(AttackId attackId, long frameUpdateNumber)
+    public ErrorOr<Success> Begin(AttackId attackId, long frameUpdateNumber)
     {
         if (!attackId.IsValid || frameUpdateNumber < 0)
         {
-            return false;
+            return Error.Validation("OneShotEventGuard.Begin", "攻撃 ID または開始フレーム番号が無効です。");
         }
 
         Reset();
         _attackId = attackId;
         _startFrame = frameUpdateNumber;
         _started = true;
-        return true;
+        return Result.Success;
     }
 
     /// <summary>指定 component の発行権を一度だけ予約します。</summary>
     /// <remarks>予約後の port 失敗も key を消費したままにし、同じ component を再発動しません。</remarks>
-    public bool TryReserve(int componentIndex)
+    public ErrorOr<Success> Reserve(int componentIndex)
     {
         if (!_started || componentIndex < 0)
         {
-            return false;
+            return Error.Validation("OneShotEventGuard.Reserve", "Guard が未開始か component index が不正です。");
         }
 
         CommandOneShotKey key = new(CommandComponentKind.Attack, _attackId, componentIndex, _startFrame);
@@ -57,17 +58,17 @@ public sealed class OneShotEventGuard
         {
             if (_keys[index] == key)
             {
-                return false;
+                return Error.Failure("OneShotEventGuard.DuplicateKey", "該当 component は既に発行予約済みです。");
             }
         }
 
         if (_count >= _keys.Length)
         {
-            return false;
+            return Error.Failure("OneShotEventGuard.CapacityExceeded", "One-shot key 保持容量を超過しました。");
         }
 
         _keys[_count++] = key;
-        return true;
+        return Result.Success;
     }
 
     /// <summary>指定 component が既に予約済みかどうかを取得します。</summary>

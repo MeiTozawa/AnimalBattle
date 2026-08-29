@@ -1,6 +1,7 @@
 using AnimalBattle.Bindings;
 using AnimalBattle.Core;
 using AnimalBattle.Core.Physics;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Ports;
 
@@ -11,7 +12,7 @@ namespace AnimalBattle.Ai.Ports;
 public sealed class Boss1NativeTrajectoryPort
 {
     /// <summary>Boss1 の浮遊軌道を native extension で計算します。</summary>
-    public bool TryCalculateHover(
+    public ErrorOr<Vec2f> CalculateHover(
         in Vec2f currentPosition,
         in Vec2f basePosition,
         in Vec2f playerPosition,
@@ -22,10 +23,8 @@ public sealed class Boss1NativeTrajectoryPort
         float hoverAmplitudeY,
         float playerPursuitWeight,
         float hoverLerpSpeed,
-        float deltaTime,
-        out Vec2f position)
+        float deltaTime)
     {
-        position = default;
         if (!AreFinite(
                 currentPosition,
                 basePosition,
@@ -40,7 +39,7 @@ public sealed class Boss1NativeTrajectoryPort
                 deltaTime)
             || deltaTime < 0.0f)
         {
-            return false;
+            return Error.Validation("Trajectory.Hover", "軌道計算パラメータが不正です。");
         }
 
         try
@@ -57,31 +56,28 @@ public sealed class Boss1NativeTrajectoryPort
                 playerPursuitWeight,
                 hoverLerpSpeed,
                 deltaTime,
-                out position);
-            return IsFinite(position);
+                out Vec2f position);
+            return IsFinite(position) ? position : Error.Failure("Trajectory.Hover", "計算結果が無効な浮動小数点数です。");
         }
-        catch
+        catch (Exception ex)
         {
-            position = default;
-            return false;
+            return Error.Failure("Trajectory.Hover", ex.Message);
         }
     }
 
     /// <summary>Boss1 の DiveRam 軌道を native extension で計算します。</summary>
-    public static bool TryCalculateDiveRam(
+    public static ErrorOr<Vec2f> CalculateDiveRam(
         in Vec2f startPosition,
         in Vec2f targetPosition,
         float stateTimer,
         float stateDuration,
-        EaseType easeType,
-        out Vec2f position)
+        EaseType easeType)
     {
-        position = default;
         if (!AreFinite(startPosition, targetPosition, stateTimer, stateDuration)
             || stateTimer < 0.0f
             || stateDuration <= 0.0f)
         {
-            return false;
+            return Error.Validation("Trajectory.DiveRam", "DiveRam 軌道パラメータが不正です。");
         }
 
         try
@@ -92,30 +88,27 @@ public sealed class Boss1NativeTrajectoryPort
                 stateTimer,
                 stateDuration,
                 easeType,
-                out position);
-            return IsFinite(position);
+                out Vec2f position);
+            return IsFinite(position) ? position : Error.Failure("Trajectory.DiveRam", "計算結果が無効な浮動小数点数です。");
         }
-        catch
+        catch (Exception ex)
         {
-            position = default;
-            return false;
+            return Error.Failure("Trajectory.DiveRam", ex.Message);
         }
     }
 
     /// <summary>Boss1 の基準位置への帰還軌道を native extension で計算します。</summary>
-    public bool TryCalculateReturn(
+    public ErrorOr<Vec2f> CalculateReturn(
         in Vec2f currentPosition,
         in Vec2f targetBasePosition,
         float returnSpeed,
-        float deltaTime,
-        out Vec2f position)
+        float deltaTime)
     {
-        position = default;
         if (!AreFinite(currentPosition, targetBasePosition, returnSpeed, deltaTime)
             || returnSpeed < 0.0f
             || deltaTime < 0.0f)
         {
-            return false;
+            return Error.Validation("Trajectory.Return", "Return 軌道パラメータが不正です。");
         }
 
         try
@@ -125,13 +118,12 @@ public sealed class Boss1NativeTrajectoryPort
                 in targetBasePosition,
                 returnSpeed,
                 deltaTime,
-                out position);
-            return IsFinite(position);
+                out Vec2f position);
+            return IsFinite(position) ? position : Error.Failure("Trajectory.Return", "計算結果が無効な浮動小数点数です。");
         }
-        catch
+        catch (Exception ex)
         {
-            position = default;
-            return false;
+            return Error.Failure("Trajectory.Return", ex.Message);
         }
     }
 

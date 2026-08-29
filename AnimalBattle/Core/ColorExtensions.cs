@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Globalization;
+using ErrorOr;
 
 namespace AnimalBattle.Core;
 
@@ -35,12 +36,12 @@ public static class ColorExtensions
     /// <see cref="Color"/> への厳格な解析を行います。
     /// </summary>
     /// <param name="colorString">変換対象のカラー文字列</param>
-    /// <returns>成功時は <see cref="Color"/>、失敗時は <see cref="SimpleError"/></returns>
-    public static Result<Color> ParseColor(this string? colorString)
+    /// <returns>成功時は <see cref="Color"/>、失敗時は <see cref="Error"/></returns>
+    public static ErrorOr<Color> ParseColor(this string? colorString)
     {
         if (string.IsNullOrWhiteSpace(colorString))
         {
-            return Result<Color>.Err(SimpleError.NotValid("カラー文字列が null または空白です。"));
+            return Error.Validation("Color.Empty", "カラー文字列が null または空白です。");
         }
 
         string trimmed = colorString.Trim();
@@ -54,10 +55,10 @@ public static class ColorExtensions
                 {
                     argb |= 0xFF000000;
                 }
-                return Result<Color>.Ok(Color.FromArgb((int)argb));
+                return Color.FromArgb((int)argb);
             }
 
-            return Result<Color>.Err(SimpleError.NotValid($"16 進数カラー文字列の解析に失敗しました: '{colorString}'"));
+            return Error.Validation("Color.InvalidHex", $"16 進数カラー文字列の解析に失敗しました: '{colorString}'");
         }
 
         if (trimmed.StartsWith('#'))
@@ -69,24 +70,24 @@ public static class ColorExtensions
                 {
                     argb |= 0xFF000000;
                 }
-                return Result<Color>.Ok(Color.FromArgb((int)argb));
+                return Color.FromArgb((int)argb);
             }
 
-            return Result<Color>.Err(SimpleError.NotValid($"'#' プレフィックスカラー文字列の解析に失敗しました: '{colorString}'"));
+            return Error.Validation("Color.InvalidHashHex", $"'#' プレフィックスカラー文字列の解析に失敗しました: '{colorString}'");
         }
 
         if (uint.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out uint decArgb))
         {
-            return Result<Color>.Ok(Color.FromArgb((int)decArgb));
+            return Color.FromArgb((int)decArgb);
         }
 
         Color named = Color.FromName(trimmed);
         if (named.IsKnownColor)
         {
-            return Result<Color>.Ok(named);
+            return named;
         }
 
-        return Result<Color>.Err(SimpleError.NotFound($"未対応の色名またはカラー値です: '{colorString}'"));
+        return Error.NotFound("Color.NotFound", $"未対応の色名またはカラー値です: '{colorString}'");
     }
 
     /// <summary>
@@ -98,15 +99,15 @@ public static class ColorExtensions
     /// <returns>変換された <see cref="Color"/>。失敗時は <paramref name="fallback"/></returns>
     public static Color ToColor(this string? colorString, Color fallback = default)
     {
-        Result<Color> result = ParseColor(colorString);
-        if (result.IsOk)
+        ErrorOr<Color> result = ParseColor(colorString);
+        if (!result.IsError)
         {
             return result.Value;
         }
 
         if (!string.IsNullOrWhiteSpace(colorString))
         {
-            Console.WriteLine($"[C# 描画警告] カラー文字列の解析に失敗しました ({result.Error?.Description})。デフォルト色 ({fallback}) を使用します。");
+            Console.WriteLine($"[C# 描画警告] カラー文字列の解析に失敗しました ({result.FirstError.Description})。デフォルト色 ({fallback}) を使用します。");
         }
 
         return fallback;

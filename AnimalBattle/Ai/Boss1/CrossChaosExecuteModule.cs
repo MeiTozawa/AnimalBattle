@@ -13,14 +13,17 @@ public sealed class CrossChaosExecuteModule(IBoss1Configuration configuration, B
     /// <inheritdoc />
     protected override void EmitComponents(ref StateContext context, in LifecycleInvocation invocation, int emissionIndex)
     {
-        bool accepted = true;
+        bool hasError = false;
         for (int index = 0; index < 4; index++)
         {
             float angle = State.AngleOffset + index * (MathF.PI / 2.0f);
-            accepted &= context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed);
+            if (context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
+            {
+                hasError = true;
+            }
         }
 
-        if (!accepted)
+        if (hasError)
         {
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "CrossChaos の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
         }

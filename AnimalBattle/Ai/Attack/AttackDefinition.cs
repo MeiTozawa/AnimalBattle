@@ -97,7 +97,7 @@ public sealed class AttackDefinition
     }
 
     /// <summary>指定 index の component を取得します。</summary>
-    public bool TryGetComponent(int index, out AttackComponent component)
+    public bool GetComponent(int index, out AttackComponent component)
     {
         if ((uint)index >= (uint)_components.Length)
         {

@@ -75,7 +75,7 @@ public sealed class BossAiRuntimeSystem
         long frameUpdateNumber = _nextFrameUpdateNumber;
         if (!gate.IsOpen || !float.IsFinite(deltaTime) || deltaTime < 0.0f)
         {
-            return _ecsBoundary.TryUpdate(
+            return _ecsBoundary.Update(
                 in gate,
                 frameUpdateNumber,
                 (Entity ignoredEntity, ref BossAiData ignoredAi, ref BossMovementData ignoredMovement, ref BossAttackData ignoredAttack, ref BossPhaseTransitionData ignoredPhaseTransition, ref BossTerminalData ignoredTerminal) => { });
@@ -83,7 +83,7 @@ public sealed class BossAiRuntimeSystem
 
         _nextFrameUpdateNumber++;
         PlayerObservation playerObservation = GetPlayerObservation(frameUpdateNumber);
-        return _ecsBoundary.TryUpdate(
+        return _ecsBoundary.Update(
             in gate,
             frameUpdateNumber,
             (Entity entity, ref BossAiData ai, ref BossMovementData movement, ref BossAttackData attack, ref BossPhaseTransitionData phaseTransition, ref BossTerminalData terminal) =>
@@ -127,7 +127,7 @@ public sealed class BossAiRuntimeSystem
 
         slot.SetDebugEnabled(ConfigManager.Render.Debug.Enabled);
 
-        if (!TryGetHealth(entityId, ai.BossType, out float currentHealth, out float maximumHealth))
+        if (!GetHealth(entityId, ai.BossType, out float currentHealth, out float maximumHealth))
         {
             return;
         }
@@ -139,7 +139,7 @@ public sealed class BossAiRuntimeSystem
         }
 
         // Phase 判定を先に確定し、その後に state module が発行した Movement / Attack command を適用します。
-        bool updated = _runtime.TryUpdate(
+        ErrorOr.ErrorOr<ErrorOr.Success> updateResult = _runtime.Update(
             slot,
             frameUpdateNumber,
             deltaTime,
@@ -147,7 +147,7 @@ public sealed class BossAiRuntimeSystem
             in playerObservation,
             currentHp: ai.IsDead ? 0.0f : currentHealth,
             maxHp: maximumHealth);
-        if (!updated)
+        if (updateResult.IsError)
         {
             return;
         }
@@ -194,8 +194,8 @@ public sealed class BossAiRuntimeSystem
 
         bool imported = bossType switch
         {
-            BossType.Boss1 => TryImportBoss1(entityId, slot),
-            BossType.Boss2 => TryImportBoss2(entityId, slot),
+            BossType.Boss1 => ImportBoss1(entityId, slot),
+            BossType.Boss2 => ImportBoss2(entityId, slot),
             _ => false
         };
         if (!imported)
@@ -206,10 +206,10 @@ public sealed class BossAiRuntimeSystem
         BossState initialState = slot.CurrentStateId.IsValid()
             ? slot.CurrentStateId
             : queryState;
-        return initialState.IsValid() && _runtime.TryInitialize(slot, initialState);
+        return initialState.IsValid() && !_runtime.Initialize(slot, initialState).IsError;
     }
 
-    private bool TryImportBoss1(ulong entityId, BossRuntimeSlot slot)
+    private bool ImportBoss1(ulong entityId, BossRuntimeSlot slot)
     {
         bool imported = false;
         _boss1LegacyQuery.Each((Entity entity, ref Health health, ref Boss1StateMachine stateMachine, ref Boss1Stats stats) =>
@@ -219,12 +219,12 @@ public sealed class BossAiRuntimeSystem
                 return;
             }
 
-            imported = MigrationAdapter.TryImportBoss1(slot, in stateMachine, in stats, out _);
+            imported = !MigrationAdapter.ImportBoss1(slot, in stateMachine, in stats, out _).IsError;
         });
         return imported;
     }
 
-    private bool TryImportBoss2(ulong entityId, BossRuntimeSlot slot)
+    private bool ImportBoss2(ulong entityId, BossRuntimeSlot slot)
     {
         bool imported = false;
         _boss2LegacyQuery.Each((Entity entity, ref Health health, ref Boss2StateMachine stateMachine, ref Boss2Stats stats) =>
@@ -234,7 +234,7 @@ public sealed class BossAiRuntimeSystem
                 return;
             }
 
-            imported = MigrationAdapter.TryImportBoss2(slot, in stateMachine, in stats, out _);
+            imported = !MigrationAdapter.ImportBoss2(slot, in stateMachine, in stats, out _).IsError;
         });
         return imported;
     }
@@ -242,7 +242,7 @@ public sealed class BossAiRuntimeSystem
     private static void SynchronizeCompatibilityViews(Entity entity, BossRuntimeSlot slot)
     {
         entity.Set(slot.CompatibilityView);
-        if (slot.TryGetDebugData(out BossDebugData debugData))
+        if (slot.GetDebugData(out BossDebugData debugData))
         {
             entity.Set(debugData);
             return;
@@ -266,13 +266,13 @@ public sealed class BossAiRuntimeSystem
                 }
 
                 MigrationResult legacy = MigrationAdapter.ConvertBoss1(in stateMachine, in stats);
-                MigrationAdapter.TrySynchronizeFrame(
+                MigrationAdapter.SynchronizeFrame(
                     slot,
                     in legacy,
                     UpdateSource.NewRuntime,
                     out _,
                     out _);
-                MigrationAdapter.TryProjectBoss1(slot, ref stateMachine, ref stats, out _);
+                MigrationAdapter.ProjectBoss1(slot, ref stateMachine, ref stats, out _);
             });
             return;
         }
@@ -285,13 +285,13 @@ public sealed class BossAiRuntimeSystem
             }
 
             MigrationResult legacy = MigrationAdapter.ConvertBoss2(in stateMachine, in stats);
-            MigrationAdapter.TrySynchronizeFrame(
+            MigrationAdapter.SynchronizeFrame(
                 slot,
                 in legacy,
                 UpdateSource.NewRuntime,
                 out _,
                 out _);
-            MigrationAdapter.TryProjectBoss2(slot, ref stateMachine, ref stats, out _);
+            MigrationAdapter.ProjectBoss2(slot, ref stateMachine, ref stats, out _);
         });
     }
 
@@ -312,7 +312,7 @@ public sealed class BossAiRuntimeSystem
         return observation;
     }
 
-    private bool TryGetHealth(ulong entityId, BossType bossType, out float current, out float maximum)
+    private bool GetHealth(ulong entityId, BossType bossType, out float current, out float maximum)
     {
         float observedCurrent = 0.0f;
         float observedMaximum = 0.0f;

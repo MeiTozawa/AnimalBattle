@@ -23,7 +23,7 @@ public sealed class DiveRamExecuteModule : IBossStateModule, IStateModuleDepende
     {
         ArgumentNullException.ThrowIfNull(configuration);
         _state = state ?? throw new ArgumentNullException(nameof(state));
-        _pattern = configuration.TryGetAttack(Boss1AttackIds.DiveRam, out Boss1AttackPattern pattern)
+        _pattern = configuration.GetAttack(Boss1AttackIds.DiveRam, out Boss1AttackPattern pattern)
             ? pattern
             : new Boss1AttackPattern(Boss1AttackIds.DiveRam, Boss1AttackKind.DiveRam, 0, 0, 0);
         _gate = new ExecuteGate(_pattern.Definition);
@@ -61,7 +61,7 @@ public sealed class DiveRamExecuteModule : IBossStateModule, IStateModuleDepende
         Vec2f position = _state.AttackStartPosition
             + (_state.AttackTargetPosition - _state.AttackStartPosition) * eased;
         _state.CurrentPosition = position;
-        if (!context.Movement.MoveTo(position.X, position.Y))
+        if (context.Movement.MoveTo(position.X, position.Y).IsError)
         {
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の移動 command を発行できませんでした。", _pattern.AttackId, AttackStage.Execute);
         }

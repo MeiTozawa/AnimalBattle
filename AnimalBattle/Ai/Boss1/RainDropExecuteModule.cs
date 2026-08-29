@@ -21,9 +21,9 @@ public sealed class RainDropExecuteModule : Boss1BarrageExecuteModule
         float range = Pattern.MaxX - Pattern.MinX;
         float firstX = Pattern.MinX + context.Random.NextSingle() * range;
         float secondX = Pattern.MinX + context.Random.NextSingle() * range;
-        bool firstAccepted = context.Attack.EmitBullet(Pattern.AttackId, firstX, Pattern.BulletSpeed);
-        bool secondAccepted = context.Attack.EmitBullet(Pattern.AttackId, secondX, Pattern.BulletSpeed);
-        if (!firstAccepted || !secondAccepted)
+        bool firstError = context.Attack.EmitBullet(Pattern.AttackId, firstX, Pattern.BulletSpeed).IsError;
+        bool secondError = context.Attack.EmitBullet(Pattern.AttackId, secondX, Pattern.BulletSpeed).IsError;
+        if (firstError || secondError)
         {
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "RainDrop の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
         }

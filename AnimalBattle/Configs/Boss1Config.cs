@@ -202,7 +202,7 @@ public sealed class Boss1Config
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static Result<ConfigBase<Boss1Config>> LoadFromFile(string path = ResourcePath.Config.Boss1)
+    public static ErrorOr.ErrorOr<ConfigBase<Boss1Config>> LoadFromFile(string path = ResourcePath.Config.Boss1)
     {
         return ConfigBase<Boss1Config>.LoadFromFile(path);
     }

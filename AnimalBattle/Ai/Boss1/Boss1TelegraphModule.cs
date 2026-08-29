@@ -28,7 +28,7 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
         for (int value = 1; value < _telegraphs.Length; value++)
         {
             AttackId attackId = new(value);
-            AttackDefinition definition = configuration.TryGetAttack(attackId, out Boss1AttackPattern pattern)
+            AttackDefinition definition = configuration.GetAttack(attackId, out Boss1AttackPattern pattern)
                 ? pattern.Definition
                 : new AttackDefinition(attackId, 0, 0, 0, 0);
             _telegraphs[value] = new TelegraphModule(Boss1StateIds.Telegraph, definition);

@@ -66,7 +66,7 @@ public sealed class TransitionService : ITransitionService
             return frameMismatch;
         }
 
-        if (!runtime.TryEnterTransition())
+        if (runtime.EnterTransition().IsError)
         {
             TransitionResult cycle = Reject(in request, runtime.CurrentStateId, ErrorCode.TransitionCycle, "即時遷移の再帰を拒否しました。", false);
             RecordTransition(in request, cycle, runtime.BossType);
@@ -75,8 +75,8 @@ public sealed class TransitionService : ITransitionService
 
         try
         {
-            if (!_registry.TryGet(request.FromStateId, out IBossStateModule currentModule)
-                || !_registry.TryGet(request.ToStateId, out IBossStateModule nextModule))
+            if (!_registry.Get(request.FromStateId, out IBossStateModule currentModule)
+                || !_registry.Get(request.ToStateId, out IBossStateModule nextModule))
             {
                 TransitionResult unregistered = Reject(in request, runtime.CurrentStateId, ErrorCode.UnregisteredState, "固定 map に対応する State_Module がありません。", false);
                 RecordTransition(in request, unregistered, runtime.BossType);
@@ -148,8 +148,8 @@ public sealed class TransitionService : ITransitionService
             return Reject(in request, currentBossState, ErrorCode.InvalidConfiguration, "遷移要求の必須値が不正です。", record);
         }
 
-        bool fromRegistered = _registry.TryGet(request.FromStateId, out _);
-        bool toRegistered = _registry.TryGet(request.ToStateId, out _);
+        bool fromRegistered = _registry.Get(request.FromStateId, out _);
+        bool toRegistered = _registry.Get(request.ToStateId, out _);
         if (!fromRegistered || !toRegistered)
         {
             return Reject(in request, currentBossState, ErrorCode.UnregisteredState, "固定 map に対応する State_Id がありません。", record);
@@ -232,7 +232,7 @@ public sealed class TransitionService : ITransitionService
             request.ToStateId);
         try
         {
-            _observation.TryRecord(in observation);
+            _observation.Record(in observation);
         }
         catch
         {

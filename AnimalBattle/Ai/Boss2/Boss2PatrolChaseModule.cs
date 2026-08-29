@@ -72,7 +72,7 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
         int index = _state.CurrentAttackIndex % settings.AttackOrder.Count;
         _state.CurrentAttackIndex++;
         AttackId attackId = settings.AttackOrder[index];
-        if (!Boss2ModuleSupport.TryGetPattern(_configuration, attackId, in context, in invocation, out Boss2AttackPattern pattern))
+        if (!Boss2ModuleSupport.GetPattern(_configuration, attackId, in context, in invocation, out Boss2AttackPattern pattern))
         {
             _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: attackId, errorCode: ErrorCode.InvalidAttackId));
             return;

@@ -1,4 +1,5 @@
 using AnimalBattle.Ai.Contracts;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Ports;
 
@@ -83,5 +84,5 @@ public readonly record struct CommandWriteResult(
 public interface ICommandBufferDiagnosticSink
 {
     /// <summary>overflow または重複を記録します。</summary>
-    bool TryRecord(in CommandBufferDiagnostic diagnostic);
+    ErrorOr<Success> Record(in CommandBufferDiagnostic diagnostic);
 }

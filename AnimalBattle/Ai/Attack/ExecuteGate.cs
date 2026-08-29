@@ -1,6 +1,7 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Attack;
 
@@ -33,34 +34,34 @@ public sealed class ExecuteGate
     }
 
     /// <summary>Execute を開始し、component 発行 key を新しい lifecycle に切り替えます。</summary>
-    public bool TryStart(ref StateContext context, in LifecycleInvocation invocation)
+    public ErrorOr<Success> Start(ref StateContext context, in LifecycleInvocation invocation)
     {
         if (_active)
         {
-            return true;
+            return Result.Success;
         }
 
         if (_completed)
         {
-            return false;
+            return Error.Failure("ExecuteGate.Start", "既に Execute は完了しています。");
         }
 
-        if (!_definition.IsValid || !invocation.IsValid || !_oneShot.Begin(_definition.AttackId, invocation.FrameUpdateNumber))
+        if (!_definition.IsValid || !invocation.IsValid || _oneShot.Begin(_definition.AttackId, invocation.FrameUpdateNumber).IsError)
         {
             _completed = true;
             Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidConfiguration, "攻撃時間が不正なため Execute を開始せず、安全な非攻撃行動へ移行します。", 0, -1);
-            return false;
+            return Error.Validation("ExecuteGate.Start", "攻撃設定またはフレーム番号が不正です。");
         }
 
         _elapsed = 0;
         _active = true;
-        return true;
+        return Result.Success;
     }
 
     /// <summary>現在 frame の Execute を更新し、未発行 component を port へ一回だけ渡します。</summary>
     public ExecuteResult Execute(ref StateContext context, in LifecycleInvocation invocation)
     {
-        if (!_active && !TryStart(ref context, in invocation))
+        if (!_active && Start(ref context, in invocation).IsError)
         {
             return ExecuteResult.Rejected;
         }
@@ -70,12 +71,12 @@ public sealed class ExecuteGate
         int suppressed = 0;
         for (int index = 0; index < _definition.ComponentCount; index++)
         {
-            if (!_definition.TryGetComponent(index, out AttackComponent component))
+            if (!_definition.GetComponent(index, out AttackComponent component))
             {
                 continue;
             }
 
-            if (!_oneShot.TryReserve(component.Index))
+            if (_oneShot.Reserve(component.Index).IsError)
             {
                 suppressed++;
                 continue;
@@ -84,7 +85,7 @@ public sealed class ExecuteGate
             bool accepted;
             try
             {
-                accepted = TryEmit(ref context, in component);
+                accepted = !Emit(ref context, in component).IsError;
             }
             catch
             {
@@ -124,14 +125,14 @@ public sealed class ExecuteGate
         _oneShot.Reset();
     }
 
-    private bool TryEmit(ref StateContext context, in AttackComponent component)
+    private ErrorOr<Success> Emit(ref StateContext context, in AttackComponent component)
     {
         return component.Kind switch
         {
             AttackComponentKind.Bullet => context.Attack.EmitBullet(_definition.AttackId, component.X, component.Y),
             AttackComponentKind.Hitbox => context.Attack.CreateHitbox(_definition.AttackId, component.X, component.Y),
             AttackComponentKind.Movement => context.Movement.SetVelocity(component.X, component.Y),
-            _ => false
+            _ => Error.Validation("ExecuteGate.Emit", "未知の AttackComponentKind です。")
         };
     }
 
@@ -166,7 +167,7 @@ public sealed class ExecuteGate
             realDuration: realDuration);
         try
         {
-            context.Observation.TryRecord(in observation);
+            context.Observation.Record(in observation);
         }
         catch
         {
