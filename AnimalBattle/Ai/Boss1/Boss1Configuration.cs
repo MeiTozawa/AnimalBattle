@@ -173,13 +173,13 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration
 
         _attacks =
         [
-            new Boss1AttackPattern(Boss1AttackIds.Aimed3Shot, Boss1AttackKind.Aimed3Shot, 0.40f, 0.90f, 0.50f, 0.45f, 6.2f, 3, 0.16f),
-            new Boss1AttackPattern(Boss1AttackIds.RingBurst, Boss1AttackKind.RingBurst, 0.55f, 1.00f, 0.70f, 0.50f, 3.8f, 16, 0.25f),
-            new Boss1AttackPattern(Boss1AttackIds.DoubleSpiral, Boss1AttackKind.DoubleSpiral, 0.45f, 1.60f, 0.60f, 0.075f, 4.8f, 2, 0.22f),
-            new Boss1AttackPattern(Boss1AttackIds.RainDrop, Boss1AttackKind.RainDrop, 0.35f, 1.80f, 0.80f, 0.32f, 5.2f, 2, 0, 60.0f, 1220.0f),
-            new Boss1AttackPattern(Boss1AttackIds.CrossChaos, Boss1AttackKind.CrossChaos, 0.35f, 2.00f, 0.50f, 0.10f, 5.2f, 4, 0.18f),
-            new Boss1AttackPattern(Boss1AttackIds.FastSniper, Boss1AttackKind.FastSniper, 0.50f, 0.60f, 0.60f, 0.30f, 8.5f, 1),
-            new Boss1AttackPattern(Boss1AttackIds.DiveRam, Boss1AttackKind.DiveRam, 0.55f, 0.45f, 0.65f, dashSpeed: 16.0f, easeType: EaseType.InQuad)
+            new Boss1AttackPattern(Boss1AttackIds.Aimed3Shot, Boss1AttackKind.Aimed3Shot, 0.40f, 0.90f, 0.50f, 0.45f, 372.0f, 3, 0.16f),
+            new Boss1AttackPattern(Boss1AttackIds.RingBurst, Boss1AttackKind.RingBurst, 0.55f, 1.00f, 0.70f, 0.50f, 228.0f, 16, 0.25f),
+            new Boss1AttackPattern(Boss1AttackIds.DoubleSpiral, Boss1AttackKind.DoubleSpiral, 0.45f, 1.60f, 0.60f, 0.075f, 288.0f, 2, 0.22f),
+            new Boss1AttackPattern(Boss1AttackIds.RainDrop, Boss1AttackKind.RainDrop, 0.35f, 1.80f, 0.80f, 0.32f, 312.0f, 2, 0, 60.0f, 1220.0f),
+            new Boss1AttackPattern(Boss1AttackIds.CrossChaos, Boss1AttackKind.CrossChaos, 0.35f, 2.00f, 0.50f, 0.10f, 312.0f, 4, 0.18f),
+            new Boss1AttackPattern(Boss1AttackIds.FastSniper, Boss1AttackKind.FastSniper, 0.50f, 0.60f, 0.60f, 0.30f, 510.0f, 1),
+            new Boss1AttackPattern(Boss1AttackIds.DiveRam, Boss1AttackKind.DiveRam, 0.55f, 0.45f, 0.65f, dashSpeed: 960.0f, easeType: EaseType.InQuad)
         ];
     }
 

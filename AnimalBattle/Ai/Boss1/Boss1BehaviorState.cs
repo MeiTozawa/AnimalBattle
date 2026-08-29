@@ -1,14 +1,15 @@
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Components;
 using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Boss1;
 
 /// <summary>Boss1 State_Module 間で共有する Entity 単位の実行値です。</summary>
-public sealed class Boss1BehaviorState
+public sealed class Boss1BehaviorState : IBossBehaviorState
 {
     /// <summary>浮遊基準 X 座標です。</summary>
-    public float BaseX { get; }
+    public float BaseX { get; set; } = 640.0f;
     /// <summary>現在の Boss 位置です。runtime adapter が frame 境界で同期します。</summary>
     public Vec2f CurrentPosition { get; set; }
     /// <summary>浮遊の累積時間です。</summary>
@@ -47,7 +48,7 @@ public sealed class Boss1BehaviorState
     public ref BossTerminalData TerminalData => ref _terminalData;
 
     /// <summary>Boss1 の基準位置を指定して実行値を初期化します。</summary>
-    public Boss1BehaviorState(float baseX, float baseY)
+    public Boss1BehaviorState(float baseX = 640.0f, float baseY = 200.0f)
     {
         BaseX = baseX;
         CurrentPosition = new Vec2f(baseX, baseY);
@@ -56,6 +57,12 @@ public sealed class Boss1BehaviorState
         CurrentAttackId = AttackId.Unknown;
         PendingBossState = BossState.Unknown;
         PendingTransitionReason = TransitionReason.None;
+    }
+
+    /// <inheritdoc />
+    public void SynchronizePosition(float x, float y)
+    {
+        CurrentPosition = new Vec2f(x, y);
     }
 
     /// <summary>次の遷移要求を一件だけ保持します。</summary>

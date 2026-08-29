@@ -24,7 +24,7 @@ public sealed class DiveRamConfig
     public float RecoveryTime { get; set; } = 0.65f;
 
     /// <summary>突進速度倍率</summary>
-    public float DashSpeed { get; set; } = 16.0f;
+    public float DashSpeed { get; set; } = 960.0f;
 
     /// <summary>着地衝撃波半径</summary>
     public float ImpactRadius { get; set; } = 40.0f;
@@ -33,7 +33,7 @@ public sealed class DiveRamConfig
     public int ImpactBulletCount { get; set; } = 8;
 
     /// <summary>着地炸裂弾速度</summary>
-    public float ImpactBulletSpeed { get; set; } = 3.5f;
+    public float ImpactBulletSpeed { get; set; } = 210.0f;
 
     /// <summary>着地炸裂弾半径</summary>
     public float ImpactBulletRadius { get; set; } = 7.0f;
@@ -75,7 +75,7 @@ public sealed class Aimed3ShotConfig
     public float Interval { get; set; } = 0.45f;
 
     /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; } = 6.2f;
+    public float BulletSpeed { get; set; } = 372.0f;
 
     /// <summary>拡散角度（ラジアン）</summary>
     public float SpreadAngle { get; set; } = 0.16f;
@@ -117,7 +117,7 @@ public sealed class RingBurstConfig
     public float Interval { get; set; } = 0.50f;
 
     /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; } = 3.8f;
+    public float BulletSpeed { get; set; } = 228.0f;
 
     /// <summary>弾間の角度間隔（ラジアン）</summary>
     public float AngleStep { get; set; } = 0.25f;
@@ -156,7 +156,7 @@ public sealed class DoubleSpiralConfig
     public float RecoveryTime { get; set; } = 0.60f;
 
     /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; } = 4.8f;
+    public float BulletSpeed { get; set; } = 288.0f;
 
     /// <summary>発射ごとの角度変化量（ラジアン）</summary>
     public float AngleStep { get; set; } = 0.22f;
@@ -201,7 +201,7 @@ public sealed class RainDropConfig
     public float RecoveryTime { get; set; } = 0.80f;
 
     /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; } = 5.2f;
+    public float BulletSpeed { get; set; } = 312.0f;
 
     /// <summary>発射間隔（秒）</summary>
     public float Interval { get; set; } = 0.32f;
@@ -243,7 +243,7 @@ public sealed class CrossChaosConfig
     public float RecoveryTime { get; set; } = 0.50f;
 
     /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; } = 5.2f;
+    public float BulletSpeed { get; set; } = 312.0f;
 
     /// <summary>発射ごとの角度変化量（ラジアン）</summary>
     public float AngleStep { get; set; } = 0.18f;
@@ -285,7 +285,7 @@ public sealed class FastSniperConfig
     public float Interval { get; set; } = 0.30f;
 
     /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; } = 8.5f;
+    public float BulletSpeed { get; set; } = 510.0f;
 
     /// <summary>弾の半径</summary>
     public float BulletRadius { get; set; } = 6.5f;

@@ -12,6 +12,7 @@ public sealed class BossAiRuntime
     private readonly IEnumModuleMap _registry;
     private readonly ITransitionService _transitionService;
     private readonly IObservationService _observation;
+    private readonly Func<BossType, IBossBehaviorState?>? _behaviorStateProvider;
     private readonly IEntityComponentValidator? _componentValidator;
     private readonly BossState _safeBossState;
 
@@ -20,6 +21,7 @@ public sealed class BossAiRuntime
         IEnumModuleMap registry,
         ITransitionService transitionService,
         IObservationService observation,
+        Func<BossType, IBossBehaviorState?>? behaviorStateProvider = null,
         BossState safeBossState = default,
         IEntityComponentValidator? componentValidator = null)
     {
@@ -29,6 +31,7 @@ public sealed class BossAiRuntime
         _registry = registry;
         _transitionService = transitionService;
         _observation = observation;
+        _behaviorStateProvider = behaviorStateProvider;
         _safeBossState = safeBossState;
         _componentValidator = componentValidator;
     }
@@ -85,6 +88,7 @@ public sealed class BossAiRuntime
             module.Enter(ref context, in invocation);
             runtime.MarkStateEntered();
             RecordLifecycle(runtime, in invocation);
+            ProcessPendingTransitions(runtime, runtime.FrameUpdateNumber);
             return true;
         }
         catch
@@ -363,6 +367,10 @@ public sealed class BossAiRuntime
             runtime.MarkHealthyFrame();
             runtime.RefreshDebugData();
             RecordLifecycle(runtime, in invocation);
+
+            // State_Module からの遷移要求を消費して適用します
+            ProcessPendingTransitions(runtime, frameUpdateNumber);
+
             return true;
         }
         catch
@@ -374,6 +382,59 @@ public sealed class BossAiRuntime
                 LifecycleOperation.Update,
                 runtime.CurrentStateId,
                 frameUpdateNumber);
+        }
+    }
+
+    /// <summary>Boss の現在位置を BehaviorState へ同期します。</summary>
+    /// <param name="bossType">Boss の種別。</param>
+    /// <param name="x">Boss の X 座標。</param>
+    /// <param name="y">Boss の Y 座標。</param>
+    public void SynchronizeBossPosition(BossType bossType, float x, float y)
+    {
+        IBossBehaviorState? state = _behaviorStateProvider?.Invoke(bossType);
+        state?.SynchronizePosition(x, y);
+    }
+
+    private void ProcessPendingTransitions(BossRuntimeSlot runtime, long frameUpdateNumber)
+    {
+        if (_behaviorStateProvider is null)
+        {
+            return;
+        }
+
+        IBossBehaviorState? behaviorState = _behaviorStateProvider(runtime.BossType);
+        if (behaviorState is null)
+        {
+            return;
+        }
+
+        int maxTransitions = 4;
+        while (maxTransitions-- > 0)
+        {
+            if (!behaviorState.TryConsumeTransition(out BossState nextStateId, out TransitionReason reason))
+            {
+                break;
+            }
+
+            if (!nextStateId.IsValid())
+            {
+                break;
+            }
+
+            TransitionRequest request = new(
+                runtime.CurrentStateId,
+                nextStateId,
+                reason,
+                runtime.Phase,
+                runtime.EntityId,
+                frameUpdateNumber,
+                nextStateId);
+
+            TransitionResult result = _transitionService.Apply(ref runtime, in request);
+            if (!result.IsAccepted)
+            {
+                break;
+            }
         }
     }
 

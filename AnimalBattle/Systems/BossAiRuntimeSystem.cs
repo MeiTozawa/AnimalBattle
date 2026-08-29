@@ -16,8 +16,10 @@ namespace AnimalBattle.Systems;
 /// </remarks>
 public sealed class BossAiRuntimeSystem
 {
+    private readonly World _world;
     private readonly BossAiEcsBoundary _ecsBoundary;
     private readonly Query<Transform, Health> _playerQuery;
+    private readonly Query<Transform, CollisionBox> _platformQuery;
     private readonly Query<Health, Boss1StateMachine, Boss1Stats> _boss1LegacyQuery;
     private readonly Query<Health, Boss2StateMachine, Boss2Stats> _boss2LegacyQuery;
     private readonly BossAiRuntime _runtime;
@@ -43,9 +45,13 @@ public sealed class BossAiRuntimeSystem
         ArgumentNullException.ThrowIfNull(slotFactory);
         ArgumentNullException.ThrowIfNull(gateProvider);
 
+        _world = world;
         _ecsBoundary = new BossAiEcsBoundary(world);
         _playerQuery = world.QueryBuilder<Transform, Health>()
             .With<PlayerTag>()
+            .Build();
+        _platformQuery = world.QueryBuilder<Transform, CollisionBox>()
+            .With<PlatformTag>()
             .Build();
         _boss1LegacyQuery = world.QueryBuilder<Health, Boss1StateMachine, Boss1Stats>()
             .With<Boss1Tag>()
@@ -126,6 +132,12 @@ public sealed class BossAiRuntimeSystem
             return;
         }
 
+        if (entity.Has<Transform>())
+        {
+            ref readonly Transform bossTransform = ref entity.Get<Transform>();
+            _runtime.SynchronizeBossPosition(ai.BossType, bossTransform.X, bossTransform.Y);
+        }
+
         // Phase 判定を先に確定し、その後に state module が発行した Movement / Attack command を適用します。
         bool updated = _runtime.TryUpdate(
             slot,
@@ -149,6 +161,11 @@ public sealed class BossAiRuntimeSystem
 
         SynchronizeCompatibilityViews(entity, slot);
         SynchronizeLegacy(entityId, slot);
+
+        // Movement / Attack / Effect commands を Flecs ECS ワールド（Transform, Velocity, 弾幕, 近接判定, 特效）へ適用します。
+        BossCommandExecutor.ExecuteMovement(_world, entity, slot, deltaTime, _platformQuery);
+        BossCommandExecutor.ExecuteAttack(_world, entity, slot);
+        BossCommandExecutor.ExecuteEffects(_world, entity, slot);
     }
 
     private BossRuntimeSlot GetOrCreateSlot(ulong entityId, BossType bossType)

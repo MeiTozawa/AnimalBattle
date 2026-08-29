@@ -22,9 +22,13 @@ public static class BossAiRuntimeRegistration
     {
         ObservationService observation = new();
         ConfigProvider configProvider = ConfigProvider.FromConfigManager(observation: observation);
-        EnumModuleMap moduleMap = CreateModuleMap(observation);
+        EnumModuleMap moduleMap = CreateModuleMap(observation, out Boss1BehaviorState boss1State, out Boss2BehaviorState boss2State);
         TransitionService transitionService = new(moduleMap, observation);
-        BossAiRuntime runtime = new(moduleMap, transitionService, observation);
+        BossAiRuntime runtime = new(
+            moduleMap,
+            transitionService,
+            observation,
+            bossType => bossType == AnimalBattle.Ai.Contracts.BossType.Boss1 ? boss1State : (bossType == AnimalBattle.Ai.Contracts.BossType.Boss2 ? boss2State : null));
         BossAiRuntimeSystem runtimeSystem = new(
             world,
             runtime,
@@ -38,12 +42,15 @@ public static class BossAiRuntimeRegistration
         return world;
     }
 
-    private static EnumModuleMap CreateModuleMap(ObservationService observation)
+    private static EnumModuleMap CreateModuleMap(
+        ObservationService observation,
+        out Boss1BehaviorState boss1State,
+        out Boss2BehaviorState boss2State)
     {
         Boss1DefaultConfiguration boss1Configuration = new();
         Boss2DefaultConfiguration boss2Configuration = new();
-        Boss1BehaviorState boss1State = new(0.0f, 0.0f);
-        Boss2BehaviorState boss2State = new();
+        boss1State = new Boss1BehaviorState(ConfigManager.Boss1.BaseX, ConfigManager.Boss1.BaseY);
+        boss2State = new Boss2BehaviorState(ConfigManager.Boss2.SpawnX, ConfigManager.Boss2.SpawnY);
 
         IBossStateModule[] modules =
         [

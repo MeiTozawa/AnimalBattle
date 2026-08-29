@@ -1,6 +1,8 @@
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Bindings;
+using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Boss1;
 
@@ -69,7 +71,16 @@ public sealed class Boss1RecoveryModule : IBossStateModule, IStateModuleDependen
             && _configuration.GetPhase(context.Phase) is Boss1PhaseSettings settings
             && _activeRecovery.Elapsed >= _activeRecovery.Definition.RecoveryDuration * settings.RecoverDelayRatio)
         {
-            if (!context.Movement.MoveTo(_state.BaseX, settings.HoverBaseY))
+            Vec2f curPos = _state.CurrentPosition;
+            Vec2f targetBase = new(_state.BaseX, settings.HoverBaseY);
+            NativeExtensionBindings.Extension_CalculateBossReturnPosition(
+                in curPos,
+                in targetBase,
+                settings.RecoverFlybackSpeed,
+                context.DeltaTime,
+                out Vec2f newPos);
+            _state.CurrentPosition = newPos;
+            if (!context.Movement.MoveTo(newPos.X, newPos.Y))
             {
                 Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の帰還 command を発行できませんでした。", _state.CurrentAttackId, AttackStage.Recovery);
             }

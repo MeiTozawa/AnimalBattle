@@ -1,6 +1,8 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Bindings;
 using AnimalBattle.Components;
+using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Boss1;
 
@@ -47,7 +49,16 @@ public sealed class Boss1PhaseTransitionModule : IBossStateModule, IStateModuleD
         Boss1PhaseSettings settings = _configuration.GetPhase(context.Phase);
         _elapsed = MathF.Min(settings.TransitionDuration, _elapsed + context.DeltaTime);
         _state.StateElapsed = _elapsed;
-        if (!context.Movement.MoveTo(_state.BaseX, settings.HoverBaseY))
+        Vec2f curPos = _state.CurrentPosition;
+        Vec2f targetBase = new(_state.BaseX, settings.HoverBaseY);
+        NativeExtensionBindings.Extension_CalculateBossReturnPosition(
+            in curPos,
+            in targetBase,
+            settings.TransitionFloatSpeed,
+            context.DeltaTime,
+            out Vec2f newPos);
+        _state.CurrentPosition = newPos;
+        if (!context.Movement.MoveTo(newPos.X, newPos.Y))
         {
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "PhaseTransition の帰還 command を発行できませんでした。");
         }

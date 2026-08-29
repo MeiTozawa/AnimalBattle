@@ -1,11 +1,12 @@
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Components;
 using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Boss2;
 
 /// <summary>Boss2 State_Module 間で共有する Entity 単位の実行値です。</summary>
-public sealed class Boss2BehaviorState
+public sealed class Boss2BehaviorState : IBossBehaviorState
 {
     /// <summary>現在位置です。</summary>
     public Vec2f CurrentPosition { get; set; }
@@ -61,6 +62,12 @@ public sealed class Boss2BehaviorState
         PendingBossState = BossState.Unknown;
         PendingTransitionReason = TransitionReason.None;
         IsPlayerAlive = true;
+    }
+
+    /// <inheritdoc />
+    public void SynchronizePosition(float x, float y)
+    {
+        CurrentPosition = new Vec2f(x, y);
     }
 
     /// <summary>次の遷移要求を一件だけ保持します。</summary>
