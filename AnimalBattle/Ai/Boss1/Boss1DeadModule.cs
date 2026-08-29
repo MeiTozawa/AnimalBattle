@@ -5,20 +5,15 @@ using AnimalBattle.Components;
 namespace AnimalBattle.Ai.Boss1;
 
 /// <summary>Boss1 の死亡理由と終端 data を保持し、新規攻撃と移動を停止する State_Module です。</summary>
-public sealed class Boss1DeadModule : IBossStateModule, IStateModuleDependencyProvider
+/// <remarks>Boss1 の共有実行値を注入して Dead module を生成します。</remarks>
+public sealed class Boss1DeadModule(Boss1BehaviorState state) : IBossStateModule, IStateModuleDependencyProvider
 {
-    private readonly Boss1BehaviorState _state;
+    private readonly Boss1BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
 
     /// <inheritdoc />
     public BossState Id => Boss1StateIds.Dead;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "AttackPort"];
-
-    /// <summary>Boss1 の共有実行値を注入して Dead module を生成します。</summary>
-    public Boss1DeadModule(Boss1BehaviorState state)
-    {
-        _state = state ?? throw new ArgumentNullException(nameof(state));
-    }
 
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)

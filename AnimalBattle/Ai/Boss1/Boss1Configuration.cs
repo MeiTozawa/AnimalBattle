@@ -21,6 +21,8 @@ public readonly struct Boss1PhaseSettings
     public float HoverAmpY { get; }
     /// <summary>プレイヤーへの追従重みです。</summary>
     public float PlayerPursuitWeight { get; }
+    /// <summary>座標追従の平滑補間速度です。</summary>
+    public float HoverLerpSpeed { get; }
     /// <summary>突進予兆の振動量です。</summary>
     public float TelegraphShakeIntensity { get; }
     /// <summary>攻撃後の帰還速度です。</summary>
@@ -43,6 +45,7 @@ public readonly struct Boss1PhaseSettings
         float hoverSpeedY,
         float hoverAmpY,
         float playerPursuitWeight,
+        float hoverLerpSpeed,
         float telegraphShakeIntensity,
         float recoverFlybackSpeed,
         float recoverDelayRatio,
@@ -57,6 +60,7 @@ public readonly struct Boss1PhaseSettings
         HoverSpeedY = hoverSpeedY;
         HoverAmpY = hoverAmpY;
         PlayerPursuitWeight = playerPursuitWeight;
+        HoverLerpSpeed = hoverLerpSpeed;
         TelegraphShakeIntensity = telegraphShakeIntensity;
         RecoverFlybackSpeed = recoverFlybackSpeed;
         RecoverDelayRatio = recoverDelayRatio;
@@ -166,9 +170,9 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration
     {
         _phases =
         [
-            new Boss1PhaseSettings(0.8f, 220.0f, 1.6f, 240.0f, 1.8f, 60.0f, 0.12f, 8.0f, 4.0f, 0.5f, 1.0f, 3.0f, [Boss1AttackIds.Aimed3Shot, Boss1AttackIds.DiveRam, Boss1AttackIds.RingBurst]),
-            new Boss1PhaseSettings(0.6f, 250.0f, 2.0f, 350.0f, 2.4f, 90.0f, 0.15f, 10.0f, 4.5f, 0.45f, 1.0f, 3.5f, [Boss1AttackIds.DoubleSpiral, Boss1AttackIds.DiveRam, Boss1AttackIds.RainDrop]),
-            new Boss1PhaseSettings(0.4f, 280.0f, 2.6f, 420.0f, 3.0f, 120.0f, 0.20f, 12.0f, 5.0f, 0.40f, 1.0f, 4.0f, [Boss1AttackIds.CrossChaos, Boss1AttackIds.DiveRam, Boss1AttackIds.FastSniper])
+            new Boss1PhaseSettings(0.8f, 220.0f, 1.6f, 240.0f, 1.8f, 60.0f, 0.12f, 3.5f, 8.0f, 4.0f, 0.5f, 1.0f, 3.0f, [Boss1AttackIds.Aimed3Shot, Boss1AttackIds.DiveRam, Boss1AttackIds.RingBurst]),
+            new Boss1PhaseSettings(0.6f, 250.0f, 2.0f, 350.0f, 2.4f, 90.0f, 0.15f, 4.0f, 10.0f, 4.5f, 0.45f, 1.0f, 3.5f, [Boss1AttackIds.DoubleSpiral, Boss1AttackIds.DiveRam, Boss1AttackIds.RainDrop]),
+            new Boss1PhaseSettings(0.4f, 280.0f, 2.6f, 420.0f, 3.0f, 120.0f, 0.20f, 4.5f, 12.0f, 5.0f, 0.40f, 1.0f, 4.0f, [Boss1AttackIds.CrossChaos, Boss1AttackIds.DiveRam, Boss1AttackIds.FastSniper])
         ];
 
         _attacks =

@@ -17,7 +17,7 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
     /// <summary>現在 Telegraph が完了しているかどうかを取得します。</summary>
     public bool IsComplete => _activeTelegraph is not null && _activeTelegraph.IsComplete;
     /// <inheritdoc />
-    public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "EffectPort", "ObservationService"];
+    public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "EffectPort", "MovementPort", "ObservationService"];
 
     /// <summary>Boss1 の攻撃 pattern と共有実行値を注入します。</summary>
     public Boss1TelegraphModule(IBoss1Configuration configuration, Boss1BehaviorState state)
@@ -49,6 +49,7 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
         }
 
         _activeTelegraph = _telegraphs[_state.CurrentAttackId.Value];
+        _state.AttackStartPosition = _state.CurrentPosition;
         _state.AttackTargetPosition = new Core.Physics.Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         _activeTelegraph.Enter(ref context, in invocation);
@@ -64,6 +65,30 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
         if (_activeTelegraph is null || !_activeTelegraph.IsActive)
         {
             return;
+        }
+
+        if (_state.CurrentAttackId == Boss1AttackIds.DiveRam)
+        {
+            _state.AttackTargetPosition = new Core.Physics.Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
+            if (context.Phase is Phase.Phase1 or Phase.Phase2 or Phase.Phase3)
+            {
+                Boss1PhaseSettings settings = _configuration.GetPhase(context.Phase);
+                float shake = settings.TelegraphShakeIntensity;
+                float offsetX = (Random.Shared.NextSingle() - 0.5f) * shake;
+                float offsetY = (Random.Shared.NextSingle() - 0.5f) * shake;
+                float sx = _state.AttackStartPosition.X + offsetX;
+                float sy = _state.AttackStartPosition.Y + offsetY;
+                _state.CurrentPosition = new Core.Physics.Vec2f(sx, sy);
+                if (context.Movement.MoveTo(sx, sy).IsError)
+                {
+                    Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の予兆振動移動 command を発行できませんでした。", _state.CurrentAttackId, AttackStage.Telegraph);
+                }
+            }
+        }
+        else
+        {
+            Boss1ModuleSupport.ApplyHoverMovement(ref context, in invocation, _configuration, _state, _state.CurrentAttackId, AttackStage.Telegraph);
+            _state.AttackStartPosition = _state.CurrentPosition;
         }
 
         _activeTelegraph.Update(ref context, in invocation);

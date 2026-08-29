@@ -1,6 +1,7 @@
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Bindings;
 using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Boss1;
@@ -56,10 +57,15 @@ public sealed class DiveRamExecuteModule : IBossStateModule, IStateModuleDepende
         }
 
         float duration = _pattern.Definition.ExecuteDuration;
-        float progress = duration > 0 ? _elapsed / duration : 1.0f;
-        float eased = Boss1ModuleSupport.Ease(progress, _pattern.EaseType);
-        Vec2f position = _state.AttackStartPosition
-            + (_state.AttackTargetPosition - _state.AttackStartPosition) * eased;
+        Vec2f startPos = _state.AttackStartPosition;
+        Vec2f targetPos = _state.AttackTargetPosition;
+        NativeExtensionBindings.Extension_CalculateBossDiveRamPosition(
+            in startPos,
+            in targetPos,
+            _elapsed,
+            duration,
+            _pattern.EaseType,
+            out Vec2f position);
         _state.CurrentPosition = position;
         if (context.Movement.MoveTo(position.X, position.Y).IsError)
         {

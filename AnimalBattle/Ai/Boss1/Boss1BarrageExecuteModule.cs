@@ -69,6 +69,9 @@ public abstract class Boss1BarrageExecuteModule : IBossStateModule, IStateModule
             return;
         }
 
+        Boss1ModuleSupport.ApplyHoverMovement(ref context, in invocation, _configuration, _state, Pattern.AttackId, AttackStage.Execute);
+        _state.AttackStartPosition = _state.CurrentPosition;
+
         float duration = Pattern.Definition.ExecuteDuration;
         float interval = Pattern.Interval;
         if (interval > 0 && _elapsed >= _nextEmission && _elapsed <= duration)

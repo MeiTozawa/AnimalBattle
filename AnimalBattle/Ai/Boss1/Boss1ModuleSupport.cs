@@ -1,5 +1,7 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Bindings;
+using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Boss1;
 
@@ -7,6 +9,48 @@ internal static class Boss1ModuleSupport
 {
     internal static bool IsBoss1(in StateContext context, in LifecycleInvocation invocation)
         => context.BossType == BossType.Boss1 && invocation.BossType == BossType.Boss1;
+
+    internal static void ApplyHoverMovement(
+        ref StateContext context,
+        in LifecycleInvocation invocation,
+        IBoss1Configuration configuration,
+        Boss1BehaviorState state,
+        AttackId attackId = default,
+        AttackStage stage = AttackStage.None)
+    {
+        if (context.Phase is not (Phase.Phase1 or Phase.Phase2 or Phase.Phase3))
+        {
+            return;
+        }
+
+        Boss1PhaseSettings settings = configuration.GetPhase(context.Phase);
+        float deltaTime = context.DeltaTime;
+        state.HoverTimer += deltaTime;
+
+        Vec2f curPos = state.CurrentPosition;
+        Vec2f basePos = new(state.BaseX, settings.HoverBaseY);
+        Vec2f playerPos = new(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
+
+        NativeExtensionBindings.Extension_CalculateBossHoverPosition(
+            in curPos,
+            in basePos,
+            in playerPos,
+            state.HoverTimer,
+            settings.HoverSpeedX,
+            settings.HoverSpeedY,
+            settings.HoverAmpX,
+            settings.HoverAmpY,
+            settings.PlayerPursuitWeight,
+            settings.HoverLerpSpeed,
+            deltaTime,
+            out Vec2f newPos);
+
+        state.CurrentPosition = newPos;
+        if (context.Movement.MoveTo(newPos.X, newPos.Y).IsError)
+        {
+            Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "Boss1 の浮遊移動 command を発行できませんでした。", attackId, stage);
+        }
+    }
 
     internal static void Record(
         in StateContext context,

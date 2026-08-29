@@ -14,25 +14,17 @@ public enum AttackComponentKind
 }
 
 /// <summary>設定から解決済みの攻撃 component を表す初期化時データです。</summary>
-public readonly struct AttackComponent
+/// <remarks>攻撃 component を生成します。</remarks>
+public readonly struct AttackComponent(AttackComponentKind kind, int index, float x = 0, float y = 0)
 {
     /// <summary>component の種類を取得します。</summary>
-    public AttackComponentKind Kind { get; }
+    public AttackComponentKind Kind { get; } = kind;
     /// <summary>攻撃内で一意な component index を取得します。</summary>
-    public int Index { get; }
+    public int Index { get; } = index;
     /// <summary>component に渡す X 値を取得します。</summary>
-    public float X { get; }
+    public float X { get; } = x;
     /// <summary>component に渡す Y 値を取得します。</summary>
-    public float Y { get; }
-
-    /// <summary>攻撃 component を生成します。</summary>
-    public AttackComponent(AttackComponentKind kind, int index, float x = 0, float y = 0)
-    {
-        Kind = kind;
-        Index = index;
-        X = x;
-        Y = y;
-    }
+    public float Y { get; } = y;
 
     /// <summary>component の設定値が実行可能かどうかを取得します。</summary>
     public bool IsValid => (Kind is AttackComponentKind.Bullet

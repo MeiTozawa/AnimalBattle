@@ -67,23 +67,30 @@ public sealed class Boss1RecoveryModule : IBossStateModule, IStateModuleDependen
 
         _activeRecovery.Update(ref context, in invocation);
         _state.StateElapsed = _activeRecovery.Elapsed;
-        if (_state.CurrentAttackId == Boss1AttackIds.DiveRam
-            && _configuration.GetPhase(context.Phase) is Boss1PhaseSettings settings
-            && _activeRecovery.Elapsed >= _activeRecovery.Definition.RecoveryDuration * settings.RecoverDelayRatio)
+        if (_state.CurrentAttackId == Boss1AttackIds.DiveRam)
         {
-            Vec2f curPos = _state.CurrentPosition;
-            Vec2f targetBase = new(_state.BaseX, settings.HoverBaseY);
-            NativeExtensionBindings.Extension_CalculateBossReturnPosition(
-                in curPos,
-                in targetBase,
-                settings.RecoverFlybackSpeed,
-                context.DeltaTime,
-                out Vec2f newPos);
-            _state.CurrentPosition = newPos;
-            if (context.Movement.MoveTo(newPos.X, newPos.Y).IsError)
+            if (_configuration.GetPhase(context.Phase) is Boss1PhaseSettings settings
+                && _activeRecovery.Elapsed >= _activeRecovery.Definition.RecoveryDuration * settings.RecoverDelayRatio)
             {
-                Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の帰還 command を発行できませんでした。", _state.CurrentAttackId, AttackStage.Recovery);
+                Vec2f curPos = _state.CurrentPosition;
+                Vec2f targetBase = new(_state.BaseX, settings.HoverBaseY);
+                NativeExtensionBindings.Extension_CalculateBossReturnPosition(
+                    in curPos,
+                    in targetBase,
+                    settings.RecoverFlybackSpeed,
+                    context.DeltaTime,
+                    out Vec2f newPos);
+                _state.CurrentPosition = newPos;
+                if (context.Movement.MoveTo(newPos.X, newPos.Y).IsError)
+                {
+                    Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の帰還 command を発行できませんでした。", _state.CurrentAttackId, AttackStage.Recovery);
+                }
             }
+        }
+        else
+        {
+            Boss1ModuleSupport.ApplyHoverMovement(ref context, in invocation, _configuration, _state, _state.CurrentAttackId, AttackStage.Recovery);
+            _state.AttackStartPosition = _state.CurrentPosition;
         }
 
         if (_activeRecovery.CanEvaluateNextTransition)
