@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -26,40 +27,37 @@ public sealed class AssetManager : IDisposable
     /// <summary>
     /// 静的レジストリからのスプライトシート画像ロードおよび設定初期化を行います。
     /// </summary>
-    /// <returns>初期化結果</returns>
-    public static ErrorOr.ErrorOr<ErrorOr.Success> Initialize()
+    public static void Initialize()
     {
         if (_isInitialized)
         {
-            return ErrorOr.Result.Success;
+            return;
         }
 
         bool allLoaded = true;
         foreach ((CharacterType charType, AnimationConfig config) in AnimationRegistry.CharacterConfigs)
         {
             _characterConfigs[charType] = config;
-            if (LoadCharacterSprite(charType).IsError)
+            if (!LoadCharacterSprite(charType))
             {
                 allLoaded = false;
             }
 
-            if (LoadCharacterClips(charType, config).IsError)
+            if (!LoadCharacterClips(charType, config))
             {
                 allLoaded = false;
             }
         }
 
         _isInitialized = true;
-        return allLoaded
-            ? ErrorOr.Result.Success
-            : ErrorOr.Error.Failure("AssetManager.Initialize", "一部のアセットのロードに失敗しました。");
+        Debug.Assert(allLoaded, "一部のアセットのロードに失敗しました。");
     }
 
-    private static ErrorOr.ErrorOr<ErrorOr.Success> LoadCharacterSprite(CharacterType charType)
+    private static bool LoadCharacterSprite(CharacterType charType)
     {
         if (!AnimationRegistry.CharacterSprites.TryGetValue(charType, out string? relPath))
         {
-            return ErrorOr.Result.Success;
+            return true;
         }
 
         string fullPath = ResolveAssetPath(relPath);
@@ -69,14 +67,14 @@ public sealed class AssetManager : IDisposable
             _characterSpriteHandles[charType] = loadResult.Value;
             _textureHandles[relPath] = loadResult.Value;
             Console.WriteLine($"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {loadResult.Value})");
-            return ErrorOr.Result.Success;
+            return true;
         }
 
         Console.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {loadResult.FirstError.Description}");
-        return ErrorOr.Error.Failure("AssetManager.LoadCharacterSprite", loadResult.FirstError.Description);
+        return false;
     }
 
-    private static ErrorOr.ErrorOr<ErrorOr.Success> LoadCharacterClips(CharacterType charType, AnimationConfig config)
+    private static bool LoadCharacterClips(CharacterType charType, AnimationConfig config)
     {
         bool allClipsLoaded = true;
         foreach (AnimationClipConfig clip in config.Clips)
@@ -91,9 +89,8 @@ public sealed class AssetManager : IDisposable
                 }
             }
         }
-        return allClipsLoaded
-            ? ErrorOr.Result.Success
-            : ErrorOr.Error.Failure("AssetManager.LoadCharacterClips", "一部のクリップスプライトのロードに失敗しました。");
+
+        return allClipsLoaded;
     }
 
     /// <summary>

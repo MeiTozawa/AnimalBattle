@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Bindings;
 using AnimalBattle.Core.Physics;
@@ -34,16 +35,12 @@ public static class GameEngine
     /// <param name="width">画面幅 (px)</param>
     /// <param name="height">画面高さ (px)</param>
     /// <param name="windowMode">ウィンドウモードで起動するかどうか</param>
-    /// <returns>初期化結果</returns>
-    public static ErrorOr.ErrorOr<ErrorOr.Success> Initialize(int width, int height, bool windowMode = true)
+    public static void Initialize(int width, int height, bool windowMode = true)
     {
-        if (!NativeBindings.Engine_Init(IntPtr.Zero, width, height))
-        {
-            return ErrorOr.Error.Failure("GameEngine.Initialize", "Native エンジンの初期化に失敗しました。");
-        }
+        bool initSuccess = NativeBindings.Engine_Init(IntPtr.Zero, width, height);
+        Debug.Assert(initSuccess, "Native エンジンの初期化に失敗しました。");
 
         Input.InputService.RegisterDefaultActions();
-        return ErrorOr.Result.Success;
     }
 
     /// <summary>

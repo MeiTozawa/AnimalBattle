@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using AnimalBattle.Core;
@@ -59,8 +60,7 @@ public static class ConfigManager
     /// <summary>
     /// 全 TOML 設定ファイルをロードし、自動リロード監視を開始します。
     /// </summary>
-    /// <returns>初期化結果</returns>
-    public static ErrorOr.ErrorOr<ErrorOr.Success> Initialize()
+    public static void Initialize()
     {
         TypeDescriptor.AddAttributes(typeof(Color), new TypeConverterAttribute(typeof(FlexibleColorConverter)));
 
@@ -74,14 +74,15 @@ public static class ConfigManager
         LoadConfig(ResourcePath.Config.Arena, ref _arenaConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Render, ref _renderConfigContainer, ref successCount, ref failureCount);
 
+        Debug.Assert(failureCount == 0, "一部の TOML 設定ファイルの読み込みに失敗しました。");
+
         if (failureCount > 0)
         {
             Console.WriteLine($"[C# 設定警告] TOML 設定読み込み完了 (成功: {successCount}, 失敗: {failureCount})。失敗した設定はデフォルト値を使用します。");
-            return ErrorOr.Error.Failure("ConfigManager.Initialize", "一部の TOML 設定ファイルの読み込みに失敗しました。");
+            return;
         }
 
         Console.WriteLine($"[C# 設定初期化] 全ての TOML 設定ファイル（{successCount} 件）の読み込みが正常に完了しました！");
-        return ErrorOr.Result.Success;
     }
 
     private static void LoadConfig<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(

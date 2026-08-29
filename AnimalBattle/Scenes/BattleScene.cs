@@ -44,15 +44,8 @@ public partial class BattleScene : IDisposable
         Current = this;
 
         // 0. 基本設定 & アセットのロード
-        if (ConfigManager.Initialize().IsError)
-        {
-            Console.WriteLine("[BattleScene 警告] 一部の TOML 設定ファイルの読み込みに失敗しました。デフォルト値を使用します。");
-        }
-
-        if (AssetManager.Initialize().IsError)
-        {
-            Console.WriteLine("[BattleScene 警告] 一部のキャラクタースプライト画像のロードに失敗しました。");
-        }
+        ConfigManager.Initialize();
+        AssetManager.Initialize();
 
         ErrorOr<int> playerHandleRes = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle");
         int playerHandle = !playerHandleRes.IsError ? playerHandleRes.Value : -1;
@@ -226,10 +219,9 @@ public partial class BattleScene : IDisposable
     /// <summary>
     /// シーンの追加初期化処理（設定ホットリロードフックの登録等）を行います。
     /// </summary>
-    public ErrorOr<Success> Initialize()
+    public void Initialize()
     {
         RegisterConfigReloadHooks();
-        return Result.Success;
     }
 
     /// <summary>
@@ -382,11 +374,9 @@ public partial class BattleScene : IDisposable
     /// シーンのフレーム更新処理を行います。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過時間（秒）</param>
-    /// <returns>正常続行時は Result.Success</returns>
-    public ErrorOr<Success> Update(float deltaTime)
+    public void Update(float deltaTime)
     {
         _ecsWorld.Progress(deltaTime);
-        return Result.Success;
     }
 
     /// <summary>
