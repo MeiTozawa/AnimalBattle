@@ -16,9 +16,14 @@ public sealed class Boss2LeapSmashAscentModule : Boss2ExecuteModuleBase
     public override void Update(ref StateContext context, in LifecycleInvocation invocation)
     {
         base.Update(ref context, in invocation);
-        if (!State.IsDead && State.CurrentVelocity.Y >= 0.0f && Gate is not null && Gate.IsActive)
+        if (!State.IsDead && Gate is not null && Gate.IsActive)
         {
-            State.RequestTransition(Boss2StateIds.LeapSmashDescent, new TransitionReason(ReasonKind.TimerElapsed, attackId: State.CurrentAttackId));
+            Boss2PhaseSettings settings = Configuration.GetPhase(context.Phase);
+            context.Movement.ApplyGravity(settings.Gravity, settings.MaxFallSpeed);
+            if (State.CurrentVelocity.Y >= 0.0f || State.StateElapsed >= 0.75f)
+            {
+                State.RequestTransition(Boss2StateIds.LeapSmashDescent, new TransitionReason(ReasonKind.TimerElapsed, attackId: State.CurrentAttackId));
+            }
         }
     }
 }

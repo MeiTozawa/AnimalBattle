@@ -18,10 +18,12 @@ public interface IBossBehaviorState
     /// <param name="y">Boss の Y 座標。</param>
     void SynchronizePosition(float x, float y);
 
-    /// <summary>現在の Boss 実体位置、接地状態およびプレイヤー生存状態を同期します。</summary>
+    /// <summary>現在の Boss 実体位置、速度、接地状態およびプレイヤー生存状態を同期します。</summary>
     /// <param name="x">Boss の X 座標。</param>
     /// <param name="y">Boss の Y 座標。</param>
+    /// <param name="vx">Boss の X 速度。</param>
+    /// <param name="vy">Boss の Y 速度。</param>
     /// <param name="isGrounded">Boss が足場または地面に接地しているかどうか。</param>
     /// <param name="isPlayerAlive">プレイヤーが生存しているかどうか。</param>
-    void SynchronizeState(float x, float y, bool isGrounded, bool isPlayerAlive);
+    void SynchronizeState(float x, float y, float vx, float vy, bool isGrounded, bool isPlayerAlive);
 }

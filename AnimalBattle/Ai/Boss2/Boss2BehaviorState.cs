@@ -47,6 +47,9 @@ public sealed class Boss2BehaviorState : IBossBehaviorState
     /// <summary>直近の PhaseTransition target を取得します。</summary>
     public Phase PhaseTransitionTargetPhase { get; set; }
 
+    /// <summary>跳躍のクールダウンタイマーです。</summary>
+    public float JumpCooldown { get; set; }
+
     /// <summary>次に要求する State_Id です。</summary>
     public BossState PendingBossState { get; private set; }
     /// <summary>次の状態へ渡す遷移理由です。</summary>
@@ -71,9 +74,10 @@ public sealed class Boss2BehaviorState : IBossBehaviorState
     }
 
     /// <inheritdoc />
-    public void SynchronizeState(float x, float y, bool isGrounded, bool isPlayerAlive)
+    public void SynchronizeState(float x, float y, float vx, float vy, bool isGrounded, bool isPlayerAlive)
     {
         CurrentPosition = new Vec2f(x, y);
+        CurrentVelocity = new Vec2f(vx, vy);
         IsGrounded = isGrounded;
         IsPlayerAlive = isPlayerAlive;
     }

@@ -12,6 +12,8 @@ public sealed class Boss1BehaviorState : IBossBehaviorState
     public float BaseX { get; set; } = 640.0f;
     /// <summary>現在の Boss 位置です。runtime adapter が frame 境界で同期します。</summary>
     public Vec2f CurrentPosition { get; set; }
+    /// <summary>現在の Boss 速度です。</summary>
+    public Vec2f CurrentVelocity { get; set; }
     /// <summary>浮遊の累積時間です。</summary>
     public float HoverTimer { get; set; }
     /// <summary>現在状態の経過時間です。</summary>
@@ -66,9 +68,10 @@ public sealed class Boss1BehaviorState : IBossBehaviorState
     }
 
     /// <inheritdoc />
-    public void SynchronizeState(float x, float y, bool isGrounded, bool isPlayerAlive)
+    public void SynchronizeState(float x, float y, float vx, float vy, bool isGrounded, bool isPlayerAlive)
     {
         CurrentPosition = new Vec2f(x, y);
+        CurrentVelocity = new Vec2f(vx, vy);
     }
 
     /// <summary>次の遷移要求を一件だけ保持します。</summary>

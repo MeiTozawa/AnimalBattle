@@ -1,6 +1,10 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Configs;
 using AnimalBattle.Core.Physics;
+using AnimalBattle.Maps;
+using AnimalBattle.Maps.Navigation;
+using AnimalBattle.Scenes;
 
 namespace AnimalBattle.Ai.Boss2;
 
@@ -41,14 +45,84 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
             return;
         }
 
+        if (_state.JumpCooldown > 0.0f)
+        {
+            _state.JumpCooldown = MathF.Max(0.0f, _state.JumpCooldown - context.DeltaTime);
+        }
+
         Boss2PhaseSettings settings = _configuration.GetPhase(context.Phase);
         float deltaX = context.PlayerObservation.PositionX - _state.CurrentPosition.X;
-        _state.FacingRight = deltaX >= 0.0f;
-        float velocityX = MathF.Sign(deltaX) * settings.MoveSpeed;
-        _state.CurrentVelocity = new Vec2f(velocityX, _state.CurrentVelocity.Y);
-        context.Movement.SetVelocity(velocityX, _state.CurrentVelocity.Y);
+        float deltaY = context.PlayerObservation.PositionY - _state.CurrentPosition.Y;
+
+        TileMap? tileMap = BattleScene.CurrentTileMap;
+        NavPlan? plan = null;
+
+        if (tileMap is not null && tileMap.NavGraph.Nodes.Count > 0)
+        {
+            float bossFootY = _state.CurrentPosition.Y + (ConfigManager.Boss2.CollisionHeight / 2.0f);
+            float playerFootY = context.PlayerObservation.PositionY + (ConfigManager.Player.HitboxHeight / 2.0f);
+            plan = tileMap.NavGraph.FindPath(
+                _state.CurrentPosition.X,
+                bossFootY,
+                context.PlayerObservation.PositionX,
+                playerFootY,
+                _state.IsGrounded,
+                settings.MoveSpeed);
+        }
+
+        if (plan is not null)
+        {
+            switch (plan.Status)
+            {
+                case NavStatus.ExecuteJump:
+                    if (_state.JumpCooldown <= 0.0f)
+                    {
+                        float jumpVy = plan.RequiredVy != 0.0f ? plan.RequiredVy : -settings.JumpForce;
+                        float jumpVx = plan.RequiredVx;
+                        _state.FacingRight = jumpVx >= 0.0f;
+                        _state.IsGrounded = false;
+                        _state.JumpCooldown = 1.0f;
+                        _state.CurrentVelocity = new Vec2f(jumpVx, jumpVy);
+                        context.Movement.SetVelocity(jumpVx, jumpVy);
+                        _state.RequestTransition(Boss2StateIds.PlatformJump, new TransitionReason(ReasonKind.PlayerObservation));
+                        return;
+                    }
+                    else
+                    {
+                        float velocityX = plan.RequiredVx;
+                        _state.FacingRight = velocityX >= 0.0f;
+                        _state.CurrentVelocity = new Vec2f(velocityX, _state.CurrentVelocity.Y);
+                        context.Movement.SetVelocity(velocityX, _state.CurrentVelocity.Y);
+                    }
+                    break;
+
+                case NavStatus.MoveToTakeoff:
+                case NavStatus.ExecuteDrop:
+                    float takeoffVx = plan.RequiredVx;
+                    _state.FacingRight = takeoffVx >= 0.0f;
+                    _state.CurrentVelocity = new Vec2f(takeoffVx, _state.CurrentVelocity.Y);
+                    context.Movement.SetVelocity(takeoffVx, _state.CurrentVelocity.Y);
+                    break;
+
+                case NavStatus.DirectWalk:
+                default:
+                    _state.FacingRight = deltaX >= 0.0f;
+                    float directVx = MathF.Sign(deltaX) * settings.MoveSpeed;
+                    _state.CurrentVelocity = new Vec2f(directVx, _state.CurrentVelocity.Y);
+                    context.Movement.SetVelocity(directVx, _state.CurrentVelocity.Y);
+                    break;
+            }
+        }
+        else
+        {
+            _state.FacingRight = deltaX >= 0.0f;
+            float velocityX = MathF.Sign(deltaX) * settings.MoveSpeed;
+            _state.CurrentVelocity = new Vec2f(velocityX, _state.CurrentVelocity.Y);
+            context.Movement.SetVelocity(velocityX, _state.CurrentVelocity.Y);
+        }
+
         _state.StateElapsed += context.DeltaTime;
-        if (MathF.Abs(deltaX) <= 175.0f && MathF.Abs(context.PlayerObservation.PositionY - _state.CurrentPosition.Y) <= 75.0f)
+        if (MathF.Abs(deltaX) <= 175.0f && MathF.Abs(deltaY) <= 75.0f)
         {
             SelectNextAttack(ref context, in invocation);
         }

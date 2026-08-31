@@ -405,16 +405,18 @@ public sealed class BossAiRuntime
         state?.SynchronizePosition(x, y);
     }
 
-    /// <summary>Boss の現在位置、接地状態およびプレイヤー生存状態を BehaviorState へ同期します。</summary>
+    /// <summary>Boss の現在位置、速度、接地状態およびプレイヤー生存状態を BehaviorState へ同期します。</summary>
     /// <param name="bossType">Boss の種別。</param>
     /// <param name="x">Boss の X 座標。</param>
     /// <param name="y">Boss の Y 座標。</param>
+    /// <param name="vx">Boss の X 速度。</param>
+    /// <param name="vy">Boss の Y 速度。</param>
     /// <param name="isGrounded">Boss が接地しているかどうか。</param>
     /// <param name="isPlayerAlive">プレイヤーが生存しているかどうか。</param>
-    public void SynchronizeBossState(BossType bossType, float x, float y, bool isGrounded, bool isPlayerAlive)
+    public void SynchronizeBossState(BossType bossType, float x, float y, float vx, float vy, bool isGrounded, bool isPlayerAlive)
     {
         IBossBehaviorState? state = _behaviorStateProvider?.Invoke(bossType);
-        state?.SynchronizeState(x, y, isGrounded, isPlayerAlive);
+        state?.SynchronizeState(x, y, vx, vy, isGrounded, isPlayerAlive);
     }
 
     private void ProcessPendingTransitions(BossRuntimeSlot runtime, long frameUpdateNumber)

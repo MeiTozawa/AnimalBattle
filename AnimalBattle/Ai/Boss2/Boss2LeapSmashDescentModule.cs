@@ -20,6 +20,11 @@ public sealed class Boss2LeapSmashDescentModule : Boss2ExecuteModuleBase
         {
             Boss2PhaseSettings settings = Configuration.GetPhase(context.Phase);
             context.Movement.ApplyGravity(settings.Gravity, settings.MaxFallSpeed);
+            if (State.IsGrounded && State.StateElapsed > 0.05f)
+            {
+                State.IsAttackActive = false;
+                State.RequestTransition(Boss2StateIds.Recovery, new TransitionReason(ReasonKind.AttackCompleted, attackId: State.CurrentAttackId));
+            }
         }
     }
 }

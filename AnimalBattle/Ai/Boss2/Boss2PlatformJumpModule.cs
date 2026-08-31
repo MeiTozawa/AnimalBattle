@@ -28,8 +28,9 @@ public sealed class Boss2PlatformJumpModule : IBossStateModule, IStateModuleDepe
         Boss2PhaseSettings settings = _configuration.GetPhase(context.Phase);
         _state.IsGrounded = false;
         _state.StateElapsed = 0.0f;
-        _state.CurrentVelocity = new Vec2f(_state.CurrentVelocity.X, -settings.JumpForce);
-        context.Movement.SetVelocity(_state.CurrentVelocity.X, -settings.JumpForce);
+        float jumpVy = _state.CurrentVelocity.Y < 0.0f ? _state.CurrentVelocity.Y : -settings.JumpForce;
+        _state.CurrentVelocity = new Vec2f(_state.CurrentVelocity.X, jumpVy);
+        context.Movement.SetVelocity(_state.CurrentVelocity.X, jumpVy);
     }
 
     /// <inheritdoc />
@@ -43,7 +44,7 @@ public sealed class Boss2PlatformJumpModule : IBossStateModule, IStateModuleDepe
         Boss2PhaseSettings settings = _configuration.GetPhase(context.Phase);
         context.Movement.ApplyGravity(settings.Gravity, settings.MaxFallSpeed);
         _state.StateElapsed += context.DeltaTime;
-        if (_state.CurrentVelocity.Y >= 0.0f)
+        if (_state.CurrentVelocity.Y >= 0.0f || _state.StateElapsed >= 0.8f)
         {
             _state.RequestTransition(Boss2StateIds.PlatformFall, new TransitionReason(ReasonKind.TimerElapsed));
         }
