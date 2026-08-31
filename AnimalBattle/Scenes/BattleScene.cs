@@ -114,19 +114,23 @@ public partial class BattleScene : IDisposable
         ErrorOr<int> boss1HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
         int boss1Handle = !boss1HandleRes.IsError ? boss1HandleRes.Value : -1;
 
+        Boss1Stats stats = new Boss1Stats(baseX: b1Cfg.BaseX, baseY: b1Cfg.BaseY);
+        Boss1StateMachine stateMachine = new Boss1StateMachine();
+
         bossEntity
             .Set(new Transform(b1Cfg.BaseX, b1Cfg.BaseY, scaleX: b1Cfg.ScaleX, scaleY: b1Cfg.ScaleY))
             .Set(new Velocity())
             .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
             .Set(new Hitbox(b1Cfg.GetHitboxShape(), damage: b1Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
             .Set(new Health(b1Cfg.MaxHp))
-            .Set(new Boss1Stats(baseX: b1Cfg.BaseX, baseY: b1Cfg.BaseY))
-            .Set(new Boss1StateMachine())
+            .Set(stats)
+            .Set(stateMachine)
             .Set(new Sprite(boss1Handle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
             .Add<BossTag>()
             .Add<Boss1Tag>();
 
-        InitializeBoss1Migration(bossEntity);
+        MigrationResult migration = MigrationAdapter.ConvertBoss1(in stateMachine, in stats);
+        ApplyMigrationResult(bossEntity, in migration);
 
         Console.WriteLine($"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {b1Cfg.MaxHp}, Pos: {b1Cfg.BaseX}, {b1Cfg.BaseY})");
     }
@@ -137,6 +141,9 @@ public partial class BattleScene : IDisposable
         ErrorOr<int> boss2HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
         int boss2Handle = !boss2HandleRes.IsError ? boss2HandleRes.Value : -1;
 
+        Boss2Stats stats = new Boss2Stats(spawnX: b2Cfg.SpawnX, spawnY: b2Cfg.SpawnY);
+        Boss2StateMachine stateMachine = new Boss2StateMachine();
+
         bossEntity
             .Set(new Transform(b2Cfg.SpawnX, b2Cfg.SpawnY, scaleX: b2Cfg.ScaleX, scaleY: b2Cfg.ScaleY))
             .Set(new Velocity())
@@ -144,31 +151,16 @@ public partial class BattleScene : IDisposable
             .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
             .Set(new Hitbox(b2Cfg.GetHitboxShape(), damage: b2Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
             .Set(new Health(b2Cfg.MaxHp))
-            .Set(new Boss2Stats(spawnX: b2Cfg.SpawnX, spawnY: b2Cfg.SpawnY))
-            .Set(new Boss2StateMachine())
+            .Set(stats)
+            .Set(stateMachine)
             .Set(new Sprite(boss2Handle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
             .Add<BossTag>()
             .Add<Boss2Tag>();
 
-        InitializeBoss2Migration(bossEntity);
-
-        Console.WriteLine($"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {b2Cfg.MaxHp}, Pos: {b2Cfg.SpawnX}, {b2Cfg.SpawnY})");
-    }
-
-    private static void InitializeBoss1Migration(Entity bossEntity)
-    {
-        ref readonly Boss1StateMachine stateMachine = ref bossEntity.Get<Boss1StateMachine>();
-        ref readonly Boss1Stats stats = ref bossEntity.Get<Boss1Stats>();
-        MigrationResult migration = MigrationAdapter.ConvertBoss1(in stateMachine, in stats);
-        ApplyMigrationResult(bossEntity, in migration);
-    }
-
-    private static void InitializeBoss2Migration(Entity bossEntity)
-    {
-        ref readonly Boss2StateMachine stateMachine = ref bossEntity.Get<Boss2StateMachine>();
-        ref readonly Boss2Stats stats = ref bossEntity.Get<Boss2Stats>();
         MigrationResult migration = MigrationAdapter.ConvertBoss2(in stateMachine, in stats);
         ApplyMigrationResult(bossEntity, in migration);
+
+        Console.WriteLine($"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {b2Cfg.MaxHp}, Pos: {b2Cfg.SpawnX}, {b2Cfg.SpawnY})");
     }
 
     private static void ApplyMigrationResult(Entity bossEntity, in MigrationResult migration)
