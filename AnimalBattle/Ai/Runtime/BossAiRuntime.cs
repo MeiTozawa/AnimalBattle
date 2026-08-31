@@ -373,6 +373,13 @@ public sealed class BossAiRuntime
         try
         {
             module.Update(ref context, in invocation);
+
+            IBossBehaviorState? behaviorState = _behaviorStateProvider?.Invoke(runtime.BossType);
+            if (behaviorState is not null)
+            {
+                runtime.MovementData.FacingRight = behaviorState.FacingRight;
+            }
+
             runtime.MarkUpdated(frameUpdateNumber);
             runtime.MarkHealthyFrame();
             runtime.RefreshDebugData();
@@ -393,6 +400,14 @@ public sealed class BossAiRuntime
                 runtime.CurrentStateId,
                 frameUpdateNumber);
         }
+    }
+
+    /// <summary>Boss の行動状態（BehaviorState）を取得します。</summary>
+    /// <param name="bossType">Boss の種別。</param>
+    /// <returns>登録済みの行動状態インターフェース、存在しない場合は null。</returns>
+    public IBossBehaviorState? GetBehaviorState(BossType bossType)
+    {
+        return _behaviorStateProvider?.Invoke(bossType);
     }
 
     /// <summary>Boss の現在位置を BehaviorState へ同期します。</summary>

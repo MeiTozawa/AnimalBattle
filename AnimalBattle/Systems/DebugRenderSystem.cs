@@ -188,17 +188,67 @@ public static class DebugRenderSystem
             GameEngine.DrawString(nx1 + 5, ny - 16, $"Plat #{node.Id} (W:{node.Width:F0})", ColorPalette.Cyan);
         }
 
+        Boss2Config b2Cfg = ConfigManager.Boss2;
+        float gravity = b2Cfg.Gravity > 0.0f ? b2Cfg.Gravity : 980.0f;
+
         foreach (PlatformLink link in tileMap.NavGraph.Links)
         {
-            int tx = (int)link.TakeoffX;
-            int ty = (int)link.FromNode.TopY;
-            int lx = (int)link.LandingX;
-            int ly = (int)link.ToNode.TopY;
+            float tx = link.TakeoffX;
+            float ty = link.FromNode.TopY;
+            float lx = link.LandingX;
+            float ly = link.ToNode.TopY;
 
             Color linkColor = link.Action == NavActionType.Jump ? ColorPalette.Green : ColorPalette.Amber;
-            GameEngine.DrawLine(tx, ty, lx, ly, linkColor, 1);
-            GameEngine.DrawCircle(tx, ty, 4, linkColor, true);
-            GameEngine.DrawCircle(lx, ly, 3, ColorPalette.White, true);
+
+            if (link.Action == NavActionType.Jump)
+            {
+                float vx = link.RequiredJumpVx;
+                float vy = link.RequiredJumpVy;
+                float a = 0.5f * gravity;
+                float b = vy;
+                float c = ty - ly;
+                float disc = b * b - 4.0f * a * c;
+                float tTotal = disc >= 0.0f ? (-b + MathF.Sqrt(disc)) / (2.0f * a) : (MathF.Abs(lx - tx) / MathF.Max(1.0f, MathF.Abs(vx)));
+                if (tTotal <= 0.01f)
+                {
+                    tTotal = 0.5f;
+                }
+
+                int segments = 12;
+                float prevX = tx;
+                float prevY = ty;
+                for (int s = 1; s <= segments; s++)
+                {
+                    float t = tTotal * (s / (float)segments);
+                    float curX = tx + vx * t;
+                    float curY = ty + vy * t + 0.5f * gravity * t * t;
+                    GameEngine.DrawLine((int)prevX, (int)prevY, (int)curX, (int)curY, linkColor, 1);
+                    prevX = curX;
+                    prevY = curY;
+                }
+            }
+            else
+            {
+                float dropHeight = MathF.Max(1.0f, ly - ty);
+                float tFall = MathF.Sqrt(2.0f * dropHeight / gravity);
+                float vx = link.RequiredJumpVx;
+
+                int segments = 10;
+                float prevX = tx;
+                float prevY = ty;
+                for (int s = 1; s <= segments; s++)
+                {
+                    float t = tFall * (s / (float)segments);
+                    float curX = tx + vx * t;
+                    float curY = ty + 0.5f * gravity * t * t;
+                    GameEngine.DrawLine((int)prevX, (int)prevY, (int)curX, (int)curY, linkColor, 1);
+                    prevX = curX;
+                    prevY = curY;
+                }
+            }
+
+            GameEngine.DrawCircle((int)tx, (int)ty, 4, linkColor, true);
+            GameEngine.DrawCircle((int)lx, (int)ly, 3, ColorPalette.White, true);
         }
     }
 

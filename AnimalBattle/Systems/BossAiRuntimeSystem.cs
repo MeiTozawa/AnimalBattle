@@ -360,8 +360,14 @@ public sealed class BossAiRuntimeSystem
         terminal = slot.TerminalData;
     }
 
-    private static void ApplyMovement(BossRuntimeSlot slot, ref BossMovementData movement)
+    private void ApplyMovement(BossRuntimeSlot slot, ref BossMovementData movement)
     {
+        IBossBehaviorState? behaviorState = _runtime.GetBehaviorState(slot.BossType);
+        if (behaviorState is not null)
+        {
+            slot.MovementData.FacingRight = behaviorState.FacingRight;
+        }
+
         movement = slot.MovementData;
         for (int index = 0; index < slot.MovementCommands.Count; index++)
         {

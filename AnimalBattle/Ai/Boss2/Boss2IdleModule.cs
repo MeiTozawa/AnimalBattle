@@ -30,6 +30,7 @@ public sealed class Boss2IdleModule : IBossStateModule, IStateModuleDependencyPr
         }
 
         _state.IsInvulnerable = false;
+        _state.FacingRight = context.PlayerObservation.PositionX >= _state.CurrentPosition.X;
         context.Movement.Stop();
     }
 
@@ -41,6 +42,7 @@ public sealed class Boss2IdleModule : IBossStateModule, IStateModuleDependencyPr
             return;
         }
 
+        _state.FacingRight = context.PlayerObservation.PositionX >= _state.CurrentPosition.X;
         _state.StateElapsed += context.DeltaTime;
         context.Movement.Stop();
         if (_state.IsPlayerAlive && _state.IsGrounded && _state.StateElapsed >= 0.0f)

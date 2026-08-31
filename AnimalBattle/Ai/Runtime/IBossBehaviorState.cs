@@ -26,4 +26,7 @@ public interface IBossBehaviorState
     /// <param name="isGrounded">Boss が足場または地面に接地しているかどうか。</param>
     /// <param name="isPlayerAlive">プレイヤーが生存しているかどうか。</param>
     void SynchronizeState(float x, float y, float vx, float vy, bool isGrounded, bool isPlayerAlive);
+
+    /// <summary>現在 Boss が右を向いているかどうかを取得します。</summary>
+    bool FacingRight { get; }
 }

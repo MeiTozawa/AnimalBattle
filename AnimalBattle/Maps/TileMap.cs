@@ -255,7 +255,14 @@ public sealed class TileMap
         float rightBoundX = leftBoundX + platformWidth;
         float topSurfaceY = topY + colOffsetY;
 
-        nodes.Add(new PlatformNode(nodeId++, leftBoundX, rightBoundX, topSurfaceY, platformHeight));
+        ArenaConfig arenaCfg = ConfigManager.Arena;
+        float clampedLeft = MathF.Max(leftBoundX, arenaCfg.BoundaryMinX);
+        float clampedRight = MathF.Min(rightBoundX, arenaCfg.BoundaryMaxX);
+
+        if (clampedRight > clampedLeft + 10.0f)
+        {
+            nodes.Add(new PlatformNode(nodeId++, clampedLeft, clampedRight, topSurfaceY, platformHeight));
+        }
 
         world.Entity($"Platform_{row}_{startCol}")
             .Set(new Transform(centerX, centerY))

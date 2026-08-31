@@ -14,6 +14,8 @@ public sealed class Boss1BehaviorState : IBossBehaviorState
     public Vec2f CurrentPosition { get; set; }
     /// <summary>現在の Boss 速度です。</summary>
     public Vec2f CurrentVelocity { get; set; }
+    /// <inheritdoc />
+    public bool FacingRight { get; set; } = false;
     /// <summary>浮遊の累積時間です。</summary>
     public float HoverTimer { get; set; }
     /// <summary>現在状態の経過時間です。</summary>

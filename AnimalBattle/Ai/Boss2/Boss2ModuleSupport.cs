@@ -91,6 +91,7 @@ internal sealed class Boss2TelegraphRunner
         _active = new TelegraphModule(_stateId, pattern.Definition);
         _state.AttackTargetPosition = new Core.Physics.Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
+        _state.FacingRight = context.PlayerObservation.PositionX >= _state.CurrentPosition.X;
         _active.Enter(ref context, in invocation);
         if (!_active.IsActive && !_active.IsComplete)
         {

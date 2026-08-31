@@ -362,8 +362,8 @@ public sealed class PlatformNavigationGraph
                 if (overlapRight >= overlapLeft + 20.0f)
                 {
                     // 左側アプローチ斜め跳躍
-                    float leftTakeoffX = Math.Max(a.LeftX + 20.0f, overlapLeft - 25.0f);
-                    float leftLandingX = Math.Min(b.RightX - 20.0f, overlapLeft + 35.0f);
+                    float leftTakeoffX = Math.Clamp(overlapLeft - 25.0f, a.LeftX + 15.0f, a.RightX - 15.0f);
+                    float leftLandingX = Math.Clamp(overlapLeft + 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
                     AddLink(new PlatformLink(
                         a, b, NavActionType.Jump,
                         takeoffX: leftTakeoffX,
@@ -373,8 +373,8 @@ public sealed class PlatformNavigationGraph
                         cost: deltaY + 40.0f));
 
                     // 右側アプローチ斜め跳躍
-                    float rightTakeoffX = Math.Min(a.RightX - 20.0f, overlapRight + 25.0f);
-                    float rightLandingX = Math.Max(b.LeftX + 20.0f, overlapRight - 35.0f);
+                    float rightTakeoffX = Math.Clamp(overlapRight + 25.0f, a.LeftX + 15.0f, a.RightX - 15.0f);
+                    float rightLandingX = Math.Clamp(overlapRight - 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
                     AddLink(new PlatformLink(
                         a, b, NavActionType.Jump,
                         takeoffX: rightTakeoffX,
@@ -388,8 +388,8 @@ public sealed class PlatformNavigationGraph
                     float gap = b.LeftX - a.RightX;
                     if (gap <= maxReachDist)
                     {
-                        float takeoffX = a.RightX - 15.0f;
-                        float landingX = b.LeftX + 30.0f;
+                        float takeoffX = Math.Clamp(a.RightX - 15.0f, a.LeftX, a.RightX);
+                        float landingX = Math.Clamp(b.LeftX + 30.0f, b.LeftX, b.RightX);
                         float flightDist = landingX - takeoffX;
                         float reqVx = Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * 0.8f, moveSpeed * 1.5f);
 
@@ -407,8 +407,8 @@ public sealed class PlatformNavigationGraph
                     float gap = a.LeftX - b.RightX;
                     if (gap <= maxReachDist)
                     {
-                        float takeoffX = a.LeftX + 15.0f;
-                        float landingX = b.RightX - 30.0f;
+                        float takeoffX = Math.Clamp(a.LeftX + 15.0f, a.LeftX, a.RightX);
+                        float landingX = Math.Clamp(b.RightX - 30.0f, b.LeftX, b.RightX);
                         float flightDist = takeoffX - landingX;
                         float reqVx = -Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * 0.8f, moveSpeed * 1.5f);
 
@@ -433,8 +433,8 @@ public sealed class PlatformNavigationGraph
             // A の左端から下落
             if (b.ContainsX(a.LeftX - 15.0f, margin: maxDropSpan))
             {
-                float takeoffX = a.LeftX + 15.0f;
-                float landingX = Math.Clamp(a.LeftX - 35.0f, b.LeftX + 20.0f, b.RightX - 20.0f);
+                float takeoffX = Math.Clamp(a.LeftX + 15.0f, a.LeftX, a.RightX);
+                float landingX = Math.Clamp(a.LeftX - 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
 
                 AddLink(new PlatformLink(
                     a, b, NavActionType.Drop,
@@ -448,8 +448,8 @@ public sealed class PlatformNavigationGraph
             // A の右端から下落
             if (b.ContainsX(a.RightX + 15.0f, margin: maxDropSpan))
             {
-                float takeoffX = a.RightX - 15.0f;
-                float landingX = Math.Clamp(a.RightX + 35.0f, b.LeftX + 20.0f, b.RightX - 20.0f);
+                float takeoffX = Math.Clamp(a.RightX - 15.0f, a.LeftX, a.RightX);
+                float landingX = Math.Clamp(a.RightX + 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
 
                 AddLink(new PlatformLink(
                     a, b, NavActionType.Drop,
@@ -464,10 +464,25 @@ public sealed class PlatformNavigationGraph
 
     private void AddLink(PlatformLink link)
     {
-        _links.Add(link);
-        if (_adjacency.TryGetValue(link.FromNode.Id, out List<PlatformLink>? list))
+        float clampedTakeoffX = Math.Clamp(link.TakeoffX, link.FromNode.LeftX, link.FromNode.RightX);
+        float clampedLandingX = Math.Clamp(link.LandingX, link.ToNode.LeftX, link.ToNode.RightX);
+
+        PlatformLink clampedLink = (clampedTakeoffX == link.TakeoffX && clampedLandingX == link.LandingX)
+            ? link
+            : new PlatformLink(
+                link.FromNode,
+                link.ToNode,
+                link.Action,
+                takeoffX: clampedTakeoffX,
+                landingX: clampedLandingX,
+                requiredJumpVy: link.RequiredJumpVy,
+                requiredJumpVx: link.RequiredJumpVx,
+                cost: link.Cost);
+
+        _links.Add(clampedLink);
+        if (_adjacency.TryGetValue(clampedLink.FromNode.Id, out List<PlatformLink>? list))
         {
-            list.Add(link);
+            list.Add(clampedLink);
         }
     }
 }
