@@ -259,7 +259,7 @@ public sealed class TileMap
         float clampedLeft = MathF.Max(leftBoundX, arenaCfg.BoundaryMinX);
         float clampedRight = MathF.Min(rightBoundX, arenaCfg.BoundaryMaxX);
 
-        if (clampedRight > clampedLeft + 10.0f)
+        if (topSurfaceY <= 720.0f && clampedRight > clampedLeft + 10.0f)
         {
             nodes.Add(new PlatformNode(nodeId++, clampedLeft, clampedRight, topSurfaceY, platformHeight));
         }

@@ -231,16 +231,15 @@ public static class DebugRenderSystem
             {
                 float dropHeight = MathF.Max(1.0f, ly - ty);
                 float tFall = MathF.Sqrt(2.0f * dropHeight / gravity);
-                float vx = link.RequiredJumpVx;
 
                 int segments = 10;
                 float prevX = tx;
                 float prevY = ty;
                 for (int s = 1; s <= segments; s++)
                 {
-                    float t = tFall * (s / (float)segments);
-                    float curX = tx + vx * t;
-                    float curY = ty + 0.5f * gravity * t * t;
+                    float ratio = s / (float)segments;
+                    float curX = tx + (lx - tx) * ratio;
+                    float curY = ty + 0.5f * gravity * (tFall * ratio) * (tFall * ratio);
                     GameEngine.DrawLine((int)prevX, (int)prevY, (int)curX, (int)curY, linkColor, 1);
                     prevX = curX;
                     prevY = curY;
