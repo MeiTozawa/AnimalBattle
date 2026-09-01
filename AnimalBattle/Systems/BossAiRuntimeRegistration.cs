@@ -1,5 +1,6 @@
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
+using AnimalBattle.Ai.Dsl.Modules;
 using AnimalBattle.Ai.Ecs;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
@@ -74,19 +75,19 @@ public static class BossAiRuntimeRegistration
             new Boss2PlatformJumpModule(boss2Configuration, boss2State),
             new Boss2PlatformFallModule(boss2Configuration, boss2State),
             new Boss2LandingRecoveryModule(boss2State),
-            new Boss2HeavySlashTelegraphModule(boss2Configuration, boss2State),
-            new Boss2DoubleCleaveTelegraphModule(boss2Configuration, boss2State),
-            new Boss2GroundStompTelegraphModule(boss2Configuration, boss2State),
-            new Boss2LeapSmashTelegraphModule(boss2Configuration, boss2State),
-            new Boss2FrenzyChargeTelegraphModule(boss2Configuration, boss2State),
-            new Boss2EarthquakeRoarTelegraphModule(boss2Configuration, boss2State),
-            new Boss2HeavySlashExecuteModule(boss2Configuration, boss2State),
-            new Boss2DoubleCleaveExecuteModule(boss2Configuration, boss2State),
-            new Boss2GroundStompExecuteModule(boss2Configuration, boss2State),
+            new DslTelegraphModule(Boss2StateIds.HeavySlashTelegraph, boss2Configuration, boss2State),
+            new DslTelegraphModule(Boss2StateIds.DoubleCleaveTelegraph, boss2Configuration, boss2State),
+            new DslTelegraphModule(Boss2StateIds.GroundStompTelegraph, boss2Configuration, boss2State),
+            new DslTelegraphModule(Boss2StateIds.LeapSmashTelegraph, boss2Configuration, boss2State),
+            new DslTelegraphModule(Boss2StateIds.FrenzyChargeTelegraph, boss2Configuration, boss2State),
+            new DslTelegraphModule(Boss2StateIds.EarthquakeRoarTelegraph, boss2Configuration, boss2State),
+            new DslExecuteModule(Boss2StateIds.HeavySlashExecute, boss2Configuration, boss2State),
+            new DslExecuteModule(Boss2StateIds.DoubleCleaveExecute, boss2Configuration, boss2State),
+            new DslExecuteModule(Boss2StateIds.GroundStompExecute, boss2Configuration, boss2State),
             new Boss2LeapSmashAscentModule(boss2Configuration, boss2State),
             new Boss2LeapSmashDescentModule(boss2Configuration, boss2State),
-            new Boss2FrenzyChargeExecuteModule(boss2Configuration, boss2State),
-            new Boss2EarthquakeRoarExecuteModule(boss2Configuration, boss2State),
+            new DslExecuteModule(Boss2StateIds.FrenzyChargeExecute, boss2Configuration, boss2State),
+            new DslExecuteModule(Boss2StateIds.EarthquakeRoarExecute, boss2Configuration, boss2State),
             new Boss2WallCrashStunModule(boss2State),
             new Boss2RecoveryModule(boss2Configuration, boss2State),
             new Boss2PhaseTransitionModule(boss2Configuration, boss2State),

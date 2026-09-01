@@ -1,0 +1,90 @@
+using System;
+using System.Collections.Generic;
+using AnimalBattle.Ai.Contracts;
+
+namespace AnimalBattle.Ai.Dsl;
+
+/// <summary>
+/// 単一の Phase（Phase1, Phase2, Phase3 等）の動作と攻撃一覧を宣言的に構築するビルダーです。
+/// </summary>
+public sealed class PhasePipelineBuilder
+{
+    private readonly BossPipelineBuilder _parent;
+    private readonly Phase _phase;
+    private readonly List<AttackPipelineBuilder> _attackBuilders = [];
+    private float _idleDuration = 0.8f;
+    private float _patrolDuration = 2.0f;
+    private float _transitionDuration = 1.0f;
+
+    /// <summary>対象の Phase を取得します。</summary>
+    public Phase CurrentPhase => _phase;
+
+    /// <summary>親の BossPipelineBuilder を指定して初期化します。</summary>
+    /// <param name="parent">親の BossPipelineBuilder。</param>
+    /// <param name="phase">対象の Phase。</param>
+    public PhasePipelineBuilder(BossPipelineBuilder parent, Phase phase)
+    {
+        _parent = parent;
+        _phase = phase;
+    }
+
+    /// <summary>
+    /// Phase の基礎時間パラメータを設定します。
+    /// </summary>
+    /// <param name="idleDuration">待機時間（秒）。</param>
+    /// <param name="patrolDuration">巡回時間（秒）。</param>
+    /// <param name="transitionDuration">フェーズ移行演出時間（秒）。</param>
+    /// <returns>現在の Phase ビルダー。</returns>
+    public PhasePipelineBuilder Timing(float idleDuration = 0.8f, float patrolDuration = 2.0f, float transitionDuration = 1.0f)
+    {
+        _idleDuration = idleDuration;
+        _patrolDuration = patrolDuration;
+        _transitionDuration = transitionDuration;
+        return this;
+    }
+
+    /// <summary>
+    /// この Phase に新しい攻撃パターンを追加します。
+    /// </summary>
+    /// <param name="attackId">攻撃識別子。</param>
+    /// <returns>新しい攻撃パイプラインビルダー。</returns>
+    public AttackPipelineBuilder Attack(AttackId attackId)
+    {
+        AttackPipelineBuilder builder = new(this, attackId);
+        _attackBuilders.Add(builder);
+        return builder;
+    }
+
+    /// <summary>
+    /// 次の Phase の定義に進みます。
+    /// </summary>
+    /// <param name="phase">次に定義する Phase。</param>
+    /// <returns>新しい Phase ビルダー。</returns>
+    public PhasePipelineBuilder Phase(Phase phase) => _parent.Phase(phase);
+
+    /// <summary>
+    /// 全体のパイプラインをビルドして終了します。
+    /// </summary>
+    /// <returns>構築された BossBehaviorPipeline。</returns>
+    public BossBehaviorPipeline Build() => _parent.Build();
+
+    /// <summary>
+    /// この Phase で定義された全攻撃ビルダーを取得します。
+    /// </summary>
+    internal IReadOnlyList<AttackPipelineBuilder> AttackBuilders => _attackBuilders;
+
+    /// <summary>
+    /// 待機時間を取得します。
+    /// </summary>
+    internal float IdleDuration => _idleDuration;
+
+    /// <summary>
+    /// 巡回時間を取得します。
+    /// </summary>
+    internal float PatrolDuration => _patrolDuration;
+
+    /// <summary>
+    /// 移行演出時間を取得します。
+    /// </summary>
+    internal float TransitionDuration => _transitionDuration;
+}

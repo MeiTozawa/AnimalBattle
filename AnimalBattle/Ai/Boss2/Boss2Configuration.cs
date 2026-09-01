@@ -113,11 +113,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
             850.0f,
             1.0f,
             [Boss2AttackIds.HeavySlash, Boss2AttackIds.GroundStomp, Boss2AttackIds.HeavySlash, Boss2AttackIds.LeapSmash],
-            [
-                new AttackDecisionRule(Boss2AttackIds.HeavySlash, cooldown: 2.0f, minDistance: 0.0f, maxDistance: 160.0f, weight: 100.0f, requireSamePlatform: true),
-                new AttackDecisionRule(Boss2AttackIds.GroundStomp, cooldown: 5.0f, minDistance: 50.0f, maxDistance: 350.0f, weight: 70.0f, requireSamePlatform: true),
-                new AttackDecisionRule(Boss2AttackIds.LeapSmash, cooldown: 8.0f, minDistance: 150.0f, maxDistance: 600.0f, weight: 80.0f, preferAirborneBonus: 1.5f)
-            ]),
+            Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase1)),
         new Boss2PhaseSettings(
             0.5f,
             220.0f,
@@ -126,11 +122,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
             850.0f,
             1.0f,
             [Boss2AttackIds.DoubleCleave, Boss2AttackIds.GroundStomp, Boss2AttackIds.LeapSmash, Boss2AttackIds.DoubleCleave],
-            [
-                new AttackDecisionRule(Boss2AttackIds.DoubleCleave, cooldown: 3.0f, minDistance: 0.0f, maxDistance: 175.0f, weight: 100.0f, requireSamePlatform: true),
-                new AttackDecisionRule(Boss2AttackIds.GroundStomp, cooldown: 4.5f, minDistance: 50.0f, maxDistance: 400.0f, weight: 70.0f, requireSamePlatform: true),
-                new AttackDecisionRule(Boss2AttackIds.LeapSmash, cooldown: 6.0f, minDistance: 120.0f, maxDistance: 650.0f, weight: 90.0f, preferAirborneBonus: 1.8f)
-            ]),
+            Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase2)),
         new Boss2PhaseSettings(
             0.3f,
             280.0f,
@@ -139,21 +131,16 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
             850.0f,
             1.2f,
             [Boss2AttackIds.FrenzyCharge, Boss2AttackIds.EarthquakeRoar, Boss2AttackIds.DoubleCleave, Boss2AttackIds.LeapSmash],
-            [
-                new AttackDecisionRule(Boss2AttackIds.FrenzyCharge, cooldown: 7.0f, minDistance: 250.0f, maxDistance: 650.0f, weight: 100.0f, requireSamePlatform: true),
-                new AttackDecisionRule(Boss2AttackIds.EarthquakeRoar, cooldown: 10.0f, minDistance: 0.0f, maxDistance: 1000.0f, weight: 80.0f),
-                new AttackDecisionRule(Boss2AttackIds.DoubleCleave, cooldown: 2.5f, minDistance: 0.0f, maxDistance: 175.0f, weight: 90.0f, requireSamePlatform: true),
-                new AttackDecisionRule(Boss2AttackIds.LeapSmash, cooldown: 5.0f, minDistance: 120.0f, maxDistance: 700.0f, weight: 85.0f, preferAirborneBonus: 2.0f)
-            ])
+            Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase3))
     ];
     private readonly Boss2AttackPattern[] _attacks =
     [
-        new Boss2AttackPattern(Boss2AttackIds.HeavySlash, Boss2AttackKind.HeavySlash, new AttackDefinition(Boss2AttackIds.HeavySlash, 0.45f, 0.35f, 0.55f, 160.0f, [new AttackComponent(AttackComponentKind.Hitbox, 0, 80.0f, -10.0f, triggerTime: 0.0f), new AttackComponent(AttackComponentKind.Movement, 1, 360.0f, 0.0f, triggerTime: 0.0f)]), 360.0f),
-        new Boss2AttackPattern(Boss2AttackIds.DoubleCleave, Boss2AttackKind.DoubleCleave, new AttackDefinition(Boss2AttackIds.DoubleCleave, 0.35f, 0.70f, 0.50f, 175.0f, [new AttackComponent(AttackComponentKind.Hitbox, 0, 80.0f, -10.0f, triggerTime: 0.0f), new AttackComponent(AttackComponentKind.Hitbox, 1, 95.0f, -10.0f, triggerTime: 0.30f), new AttackComponent(AttackComponentKind.Movement, 2, 420.0f, 0.0f, triggerTime: 0.0f)]), 420.0f, 0.30f),
-        new Boss2AttackPattern(Boss2AttackIds.GroundStomp, Boss2AttackKind.GroundStomp, new AttackDefinition(Boss2AttackIds.GroundStomp, 0.50f, 0.40f, 0.60f, 420.0f, [new AttackComponent(AttackComponentKind.Hitbox, 0, 0.0f, 35.0f)])),
-        new Boss2AttackPattern(Boss2AttackIds.LeapSmash, Boss2AttackKind.LeapSmash, new AttackDefinition(Boss2AttackIds.LeapSmash, 0.40f, 0.75f, 0.70f, 580.0f, [new AttackComponent(AttackComponentKind.Movement, 0, 0.0f, -680.0f), new AttackComponent(AttackComponentKind.Hitbox, 1, 0.0f, 45.0f)]), 680.0f),
-        new Boss2AttackPattern(Boss2AttackIds.FrenzyCharge, Boss2AttackKind.FrenzyCharge, new AttackDefinition(Boss2AttackIds.FrenzyCharge, 0.55f, 1.30f, 0.75f, 480.0f, [new AttackComponent(AttackComponentKind.Movement, 0, 620.0f, 0.0f), new AttackComponent(AttackComponentKind.Hitbox, 1, 0.0f, 0.0f)]), 620.0f),
-        new Boss2AttackPattern(Boss2AttackIds.EarthquakeRoar, Boss2AttackKind.EarthquakeRoar, new AttackDefinition(Boss2AttackIds.EarthquakeRoar, 0.60f, 1.80f, 0.90f, 1220.0f, [new AttackComponent(AttackComponentKind.Bullet, 0, 0.0f, 360.0f)]), interval: 0.25f)
+        new Boss2AttackPattern(Boss2AttackIds.HeavySlash, Boss2AttackKind.HeavySlash, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.HeavySlash], 360.0f),
+        new Boss2AttackPattern(Boss2AttackIds.DoubleCleave, Boss2AttackKind.DoubleCleave, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.DoubleCleave], 420.0f, 0.30f),
+        new Boss2AttackPattern(Boss2AttackIds.GroundStomp, Boss2AttackKind.GroundStomp, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.GroundStomp]),
+        new Boss2AttackPattern(Boss2AttackIds.LeapSmash, Boss2AttackKind.LeapSmash, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.LeapSmash], 680.0f),
+        new Boss2AttackPattern(Boss2AttackIds.FrenzyCharge, Boss2AttackKind.FrenzyCharge, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.FrenzyCharge], 620.0f),
+        new Boss2AttackPattern(Boss2AttackIds.EarthquakeRoar, Boss2AttackKind.EarthquakeRoar, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.EarthquakeRoar], interval: 0.25f)
     ];
 
     /// <inheritdoc />

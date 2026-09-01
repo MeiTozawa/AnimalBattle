@@ -135,7 +135,7 @@ public static class BakedConfigs
     public static Boss2Config CreateBoss2Config() => new()
     {
         BossName = "GROUND CRUSHER",
-        MaxHp = 80.0f,
+        MaxHp = 60.0f,
         SpawnX = 900.0f,
         SpawnY = 480.0f,
         ScaleX = 0.65f,

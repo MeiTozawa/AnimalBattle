@@ -17,6 +17,7 @@ public sealed class RecoveryModule : IBossStateModule
     public AttackId AttackId => _definition.AttackId;
     /// <summary>攻撃定義を取得します。</summary>
     public AttackDefinition Definition => _definition;
+    /// <summary>Recovery が現在アクティブかどうかを取得します。</summary>
     public bool IsActive => _active;
     /// <summary>Recovery 完了後に次遷移を評価できるかどうかを取得します。</summary>
     public bool CanEvaluateNextTransition => !_active && _elapsed > 0;

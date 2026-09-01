@@ -1,6 +1,7 @@
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai.Dsl.Modules;
 
 namespace AnimalBattle.Ai.Runtime;
 
@@ -47,19 +48,19 @@ public static class FixedBossStateModuleCatalog
         Entry(BossState.Boss2_PlatformJump, BossType.Boss2, nameof(Boss2PlatformJumpModule)),
         Entry(BossState.Boss2_PlatformFall, BossType.Boss2, nameof(Boss2PlatformFallModule)),
         Entry(BossState.Boss2_LandingRecovery, BossType.Boss2, nameof(Boss2LandingRecoveryModule)),
-        Entry(BossState.Boss2_HeavySlashTelegraph, BossType.Boss2, nameof(Boss2HeavySlashTelegraphModule)),
-        Entry(BossState.Boss2_DoubleCleaveTelegraph, BossType.Boss2, nameof(Boss2DoubleCleaveTelegraphModule)),
-        Entry(BossState.Boss2_GroundStompTelegraph, BossType.Boss2, nameof(Boss2GroundStompTelegraphModule)),
-        Entry(BossState.Boss2_LeapSmashTelegraph, BossType.Boss2, nameof(Boss2LeapSmashTelegraphModule)),
-        Entry(BossState.Boss2_FrenzyChargeTelegraph, BossType.Boss2, nameof(Boss2FrenzyChargeTelegraphModule)),
-        Entry(BossState.Boss2_EarthquakeRoarTelegraph, BossType.Boss2, nameof(Boss2EarthquakeRoarTelegraphModule)),
-        Entry(BossState.Boss2_HeavySlashExecute, BossType.Boss2, nameof(Boss2HeavySlashExecuteModule)),
-        Entry(BossState.Boss2_DoubleCleaveExecute, BossType.Boss2, nameof(Boss2DoubleCleaveExecuteModule)),
-        Entry(BossState.Boss2_GroundStompExecute, BossType.Boss2, nameof(Boss2GroundStompExecuteModule)),
+        Entry(BossState.Boss2_HeavySlashTelegraph, BossType.Boss2, nameof(DslTelegraphModule)),
+        Entry(BossState.Boss2_DoubleCleaveTelegraph, BossType.Boss2, nameof(DslTelegraphModule)),
+        Entry(BossState.Boss2_GroundStompTelegraph, BossType.Boss2, nameof(DslTelegraphModule)),
+        Entry(BossState.Boss2_LeapSmashTelegraph, BossType.Boss2, nameof(DslTelegraphModule)),
+        Entry(BossState.Boss2_FrenzyChargeTelegraph, BossType.Boss2, nameof(DslTelegraphModule)),
+        Entry(BossState.Boss2_EarthquakeRoarTelegraph, BossType.Boss2, nameof(DslTelegraphModule)),
+        Entry(BossState.Boss2_HeavySlashExecute, BossType.Boss2, nameof(DslExecuteModule)),
+        Entry(BossState.Boss2_DoubleCleaveExecute, BossType.Boss2, nameof(DslExecuteModule)),
+        Entry(BossState.Boss2_GroundStompExecute, BossType.Boss2, nameof(DslExecuteModule)),
         Entry(BossState.Boss2_LeapSmashAscent, BossType.Boss2, nameof(Boss2LeapSmashAscentModule)),
         Entry(BossState.Boss2_LeapSmashDescent, BossType.Boss2, nameof(Boss2LeapSmashDescentModule)),
-        Entry(BossState.Boss2_FrenzyChargeExecute, BossType.Boss2, nameof(Boss2FrenzyChargeExecuteModule)),
-        Entry(BossState.Boss2_EarthquakeRoarExecute, BossType.Boss2, nameof(Boss2EarthquakeRoarExecuteModule)),
+        Entry(BossState.Boss2_FrenzyChargeExecute, BossType.Boss2, nameof(DslExecuteModule)),
+        Entry(BossState.Boss2_EarthquakeRoarExecute, BossType.Boss2, nameof(DslExecuteModule)),
         Entry(BossState.Boss2_WallCrashStun, BossType.Boss2, nameof(Boss2WallCrashStunModule)),
         Entry(BossState.Boss2_Recovery, BossType.Boss2, nameof(Boss2RecoveryModule)),
         Entry(BossState.Boss2_PhaseTransition, BossType.Boss2, nameof(Boss2PhaseTransitionModule)),
@@ -105,9 +106,9 @@ public static class FixedBossStateModuleCatalog
 
             for (int other = index + 1; other < _entries.Count; other++)
             {
-                if (_entries[other].State == entry.State || _entries[other].ModuleType == entry.ModuleType)
+                if (_entries[other].State == entry.State)
                 {
-                    diagnostic = $"固定 BossState/module が重複しています: {entry.State}";
+                    diagnostic = $"固定 BossState が重複しています: {entry.State}";
                     return false;
                 }
             }
@@ -145,19 +146,19 @@ public static class FixedBossStateModuleCatalog
             BossState.Boss2_PlatformJump => typeof(Boss2PlatformJumpModule),
             BossState.Boss2_PlatformFall => typeof(Boss2PlatformFallModule),
             BossState.Boss2_LandingRecovery => typeof(Boss2LandingRecoveryModule),
-            BossState.Boss2_HeavySlashTelegraph => typeof(Boss2HeavySlashTelegraphModule),
-            BossState.Boss2_DoubleCleaveTelegraph => typeof(Boss2DoubleCleaveTelegraphModule),
-            BossState.Boss2_GroundStompTelegraph => typeof(Boss2GroundStompTelegraphModule),
-            BossState.Boss2_LeapSmashTelegraph => typeof(Boss2LeapSmashTelegraphModule),
-            BossState.Boss2_FrenzyChargeTelegraph => typeof(Boss2FrenzyChargeTelegraphModule),
-            BossState.Boss2_EarthquakeRoarTelegraph => typeof(Boss2EarthquakeRoarTelegraphModule),
-            BossState.Boss2_HeavySlashExecute => typeof(Boss2HeavySlashExecuteModule),
-            BossState.Boss2_DoubleCleaveExecute => typeof(Boss2DoubleCleaveExecuteModule),
-            BossState.Boss2_GroundStompExecute => typeof(Boss2GroundStompExecuteModule),
+            BossState.Boss2_HeavySlashTelegraph => typeof(DslTelegraphModule),
+            BossState.Boss2_DoubleCleaveTelegraph => typeof(DslTelegraphModule),
+            BossState.Boss2_GroundStompTelegraph => typeof(DslTelegraphModule),
+            BossState.Boss2_LeapSmashTelegraph => typeof(DslTelegraphModule),
+            BossState.Boss2_FrenzyChargeTelegraph => typeof(DslTelegraphModule),
+            BossState.Boss2_EarthquakeRoarTelegraph => typeof(DslTelegraphModule),
+            BossState.Boss2_HeavySlashExecute => typeof(DslExecuteModule),
+            BossState.Boss2_DoubleCleaveExecute => typeof(DslExecuteModule),
+            BossState.Boss2_GroundStompExecute => typeof(DslExecuteModule),
             BossState.Boss2_LeapSmashAscent => typeof(Boss2LeapSmashAscentModule),
             BossState.Boss2_LeapSmashDescent => typeof(Boss2LeapSmashDescentModule),
-            BossState.Boss2_FrenzyChargeExecute => typeof(Boss2FrenzyChargeExecuteModule),
-            BossState.Boss2_EarthquakeRoarExecute => typeof(Boss2EarthquakeRoarExecuteModule),
+            BossState.Boss2_FrenzyChargeExecute => typeof(DslExecuteModule),
+            BossState.Boss2_EarthquakeRoarExecute => typeof(DslExecuteModule),
             BossState.Boss2_WallCrashStun => typeof(Boss2WallCrashStunModule),
             BossState.Boss2_Recovery => typeof(Boss2RecoveryModule),
             BossState.Boss2_PhaseTransition => typeof(Boss2PhaseTransitionModule),

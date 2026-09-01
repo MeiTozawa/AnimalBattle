@@ -25,6 +25,7 @@ public sealed class TelegraphModule : IBossStateModule
     public float AttackStartTime => _startTime;
     /// <summary>Telegraph 開始時に固定した対象 Entity を取得します。</summary>
     public ulong TargetEntityId => _target.EntityId;
+    /// <summary>Telegraph が現在アクティブかどうかを取得します。</summary>
     public bool IsActive => _active;
     /// <summary>Telegraph が完了したかどうかを取得します。</summary>
     public bool IsComplete => !_active && _elapsed > 0;
