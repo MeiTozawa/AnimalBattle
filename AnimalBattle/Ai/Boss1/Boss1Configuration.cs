@@ -1,5 +1,7 @@
+using System.Linq;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Configs;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Boss1;
@@ -211,19 +213,99 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration
     /// <inheritdoc />
     public Boss1PhaseSettings GetPhase(Phase phase)
     {
-        int index = phase switch
+        int index = ((int)phase) - 1;
+        if (index < 0 || index >= _phases.Length)
         {
-            Phase.Phase1 => 0,
-            Phase.Phase2 => 1,
-            Phase.Phase3 => 2,
-            _ => throw new ArgumentOutOfRangeException(nameof(phase), "Boss1 の Phase が不正です。")
-        };
+            return _phases[0];
+        }
+
+        try
+        {
+            Boss1PhaseFsmConfig tomlPhase = phase switch
+            {
+                Phase.Phase1 => ConfigManager.Boss1.Phase1,
+                Phase.Phase2 => ConfigManager.Boss1.Phase2,
+                Phase.Phase3 => ConfigManager.Boss1.Phase3,
+                _ => ConfigManager.Boss1.Phase1
+            };
+
+            if (tomlPhase is not null && tomlPhase.HoverDuration > 0.0f)
+            {
+                AttackId[] order = tomlPhase.Skills.Count > 0
+                    ? tomlPhase.Skills.Select(ResolveAttackId).Where(id => id.IsValid).ToArray()
+                    : _phases[index].AttackOrder.ToArray();
+
+                return new Boss1PhaseSettings(
+                    tomlPhase.HoverDuration,
+                    tomlPhase.HoverBaseY,
+                    tomlPhase.HoverSpeedX,
+                    tomlPhase.HoverAmpX,
+                    tomlPhase.HoverSpeedY,
+                    tomlPhase.HoverAmpY,
+                    tomlPhase.PlayerPursuitWeight,
+                    tomlPhase.HoverLerpSpeed,
+                    tomlPhase.TelegraphShakeIntensity,
+                    tomlPhase.RecoverFlybackSpeed,
+                    tomlPhase.RecoverDelayRatio,
+                    tomlPhase.TransitionDuration,
+                    tomlPhase.TransitionFloatSpeed,
+                    order.Length > 0 ? order : _phases[index].AttackOrder);
+            }
+        }
+        catch
+        {
+            // TOML 未ロード環境（単体テスト等）はデフォルト設定を返却
+        }
+
         return _phases[index];
     }
 
     /// <inheritdoc />
     public bool GetAttack(AttackId attackId, out Boss1AttackPattern pattern)
     {
+        try
+        {
+            PatternConfig toml = ConfigManager.Pattern;
+            if (toml is not null)
+            {
+                switch (attackId.Value)
+                {
+                    case 1: // Aimed3Shot
+                        Aimed3ShotConfig a3 = toml.Aimed3Shot;
+                        pattern = new Boss1AttackPattern(attackId, Boss1AttackKind.Aimed3Shot, a3.WindUpTime, a3.CastDuration, a3.RecoveryTime, a3.Interval, a3.BulletSpeed, a3.BulletCount, a3.SpreadAngle);
+                        return true;
+                    case 2: // RingBurst
+                        RingBurstConfig rb = toml.RingBurst;
+                        pattern = new Boss1AttackPattern(attackId, Boss1AttackKind.RingBurst, rb.WindUpTime, rb.CastDuration, rb.RecoveryTime, rb.Interval, rb.BulletSpeed, rb.BulletCount, rb.AngleStep);
+                        return true;
+                    case 3: // DoubleSpiral
+                        DoubleSpiralConfig ds = toml.DoubleSpiral;
+                        pattern = new Boss1AttackPattern(attackId, Boss1AttackKind.DoubleSpiral, ds.WindUpTime, ds.CastDuration, ds.RecoveryTime, ds.Interval, ds.BulletSpeed, 2, ds.AngleStep);
+                        return true;
+                    case 4: // RainDrop
+                        RainDropConfig rd = toml.RainDrop;
+                        pattern = new Boss1AttackPattern(attackId, Boss1AttackKind.RainDrop, rd.WindUpTime, rd.CastDuration, rd.RecoveryTime, rd.Interval, rd.BulletSpeed, 2, 0.0f, rd.MinX, rd.MaxX);
+                        return true;
+                    case 5: // CrossChaos
+                        CrossChaosConfig cc = toml.CrossChaos;
+                        pattern = new Boss1AttackPattern(attackId, Boss1AttackKind.CrossChaos, cc.WindUpTime, cc.CastDuration, cc.RecoveryTime, cc.Interval, cc.BulletSpeed, 4, cc.AngleStep);
+                        return true;
+                    case 6: // FastSniper
+                        FastSniperConfig fs = toml.FastSniper;
+                        pattern = new Boss1AttackPattern(attackId, Boss1AttackKind.FastSniper, fs.WindUpTime, fs.CastDuration, fs.RecoveryTime, fs.Interval, fs.BulletSpeed, 1);
+                        return true;
+                    case 7: // DiveRam
+                        DiveRamConfig dr = toml.DiveRam;
+                        pattern = new Boss1AttackPattern(attackId, Boss1AttackKind.DiveRam, dr.WindUpTime, dr.CastDuration, dr.RecoveryTime, dashSpeed: dr.DashSpeed, easeType: dr.EaseType);
+                        return true;
+                }
+            }
+        }
+        catch
+        {
+            // TOML 未ロード環境はフォールバック
+        }
+
         for (int index = 0; index < _attacks.Length; index++)
         {
             if (_attacks[index].AttackId == attackId)
@@ -235,5 +317,20 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration
 
         pattern = null!;
         return false;
+    }
+
+    private static AttackId ResolveAttackId(string skillName)
+    {
+        return skillName switch
+        {
+            "Aimed3Shot" => Boss1AttackIds.Aimed3Shot,
+            "RingBurst" => Boss1AttackIds.RingBurst,
+            "DoubleSpiral" => Boss1AttackIds.DoubleSpiral,
+            "RainDrop" => Boss1AttackIds.RainDrop,
+            "CrossChaos" => Boss1AttackIds.CrossChaos,
+            "FastSniper" => Boss1AttackIds.FastSniper,
+            "DiveRam" => Boss1AttackIds.DiveRam,
+            _ => AttackId.Unknown
+        };
     }
 }
