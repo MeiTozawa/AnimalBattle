@@ -373,8 +373,10 @@ public static class BossCommandExecutor
 
         if (cmd.AttackId == Boss2AttackIds.HeavySlash)
         {
-            float hitX = trans.X + forwardDir * b2Cfg.SlashSpawnOffsetX;
-            float hitY = trans.Y + b2Cfg.SlashSpawnOffsetY;
+            float offsetX = cmd.X != 0.0f ? cmd.X : b2Cfg.SlashSpawnOffsetX;
+            float offsetY = cmd.Y != 0.0f ? cmd.Y : b2Cfg.SlashSpawnOffsetY;
+            float hitX = trans.X + forwardDir * offsetX;
+            float hitY = trans.Y + offsetY;
             CombatEffectHelper.SpawnMeleeSlashHitbox(
                 world,
                 hitX,
@@ -384,14 +386,16 @@ public static class BossCommandExecutor
                 patternCfg.HeavySlash.SlashRangeX,
                 patternCfg.HeavySlash.SlashRangeY,
                 patternCfg.HeavySlash.SlashDamage,
-                0.20f,
+                0.28f,
                 patternCfg.HeavySlash.SlashColor,
                 dir);
         }
         else if (cmd.AttackId == Boss2AttackIds.DoubleCleave)
         {
-            float hitX = trans.X + forwardDir * (b2Cfg.SlashSpawnOffsetX + MathF.Max(0.0f, cmd.X - 105.0f));
-            float hitY = trans.Y + b2Cfg.SlashSpawnOffsetY;
+            float offsetX = cmd.X != 0.0f ? cmd.X : b2Cfg.SlashSpawnOffsetX;
+            float offsetY = cmd.Y != 0.0f ? cmd.Y : b2Cfg.SlashSpawnOffsetY;
+            float hitX = trans.X + forwardDir * offsetX;
+            float hitY = trans.Y + offsetY;
             CombatEffectHelper.SpawnMeleeSlashHitbox(
                 world,
                 hitX,
@@ -401,7 +405,7 @@ public static class BossCommandExecutor
                 patternCfg.DoubleCleave.SlashRangeX,
                 patternCfg.DoubleCleave.SlashRangeY,
                 patternCfg.DoubleCleave.SlashDamage,
-                0.18f,
+                0.24f,
                 patternCfg.DoubleCleave.SlashColor,
                 dir);
         }

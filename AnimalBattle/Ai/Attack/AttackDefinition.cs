@@ -15,7 +15,7 @@ public enum AttackComponentKind
 
 /// <summary>設定から解決済みの攻撃 component を表す初期化時データです。</summary>
 /// <remarks>攻撃 component を生成します。</remarks>
-public readonly struct AttackComponent(AttackComponentKind kind, int index, float x = 0, float y = 0)
+public readonly struct AttackComponent(AttackComponentKind kind, int index, float x = 0, float y = 0, float triggerTime = 0.0f)
 {
     /// <summary>component の種類を取得します。</summary>
     public AttackComponentKind Kind { get; } = kind;
@@ -25,6 +25,8 @@ public readonly struct AttackComponent(AttackComponentKind kind, int index, floa
     public float X { get; } = x;
     /// <summary>component に渡す Y 値を取得します。</summary>
     public float Y { get; } = y;
+    /// <summary>Execute 開始からの発動遅延時間（秒）を取得します。</summary>
+    public float TriggerTime { get; } = triggerTime;
 
     /// <summary>component の設定値が実行可能かどうかを取得します。</summary>
     public bool IsValid => (Kind is AttackComponentKind.Bullet
@@ -32,7 +34,9 @@ public readonly struct AttackComponent(AttackComponentKind kind, int index, floa
         or AttackComponentKind.Movement)
         && Index >= 0
         && IsFinite(X)
-        && IsFinite(Y);
+        && IsFinite(Y)
+        && TriggerTime >= 0.0f
+        && IsFinite(TriggerTime);
 
     private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 }

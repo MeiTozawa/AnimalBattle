@@ -76,6 +76,12 @@ public sealed class ExecuteGate
                 continue;
             }
 
+            // 指定された発動時刻に達していないコンポーネントは保留（浮動小数点の累積誤差を考慮）
+            if (_elapsed + 0.0001f < component.TriggerTime)
+            {
+                continue;
+            }
+
             if (_oneShot.Reserve(component.Index).IsError)
             {
                 suppressed++;
