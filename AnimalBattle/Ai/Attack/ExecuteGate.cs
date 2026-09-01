@@ -10,6 +10,7 @@ public sealed class ExecuteGate
 {
     private readonly AttackDefinition _definition;
     private readonly OneShotEventGuard _oneShot;
+    private readonly float _facingDirection;
     private bool _active;
     private bool _completed;
     private float _elapsed;
@@ -25,11 +26,15 @@ public sealed class ExecuteGate
     /// <summary>component 発行を抑止する one-shot guard を取得します。</summary>
     public OneShotEventGuard OneShot => _oneShot;
 
-    /// <summary>攻撃定義と one-shot guard を指定して Execute gate を生成します。</summary>
-    public ExecuteGate(AttackDefinition definition, OneShotEventGuard? oneShot = null)
+    /// <summary>攻撃定義と向き、one-shot guard を指定して Execute gate を生成します。</summary>
+    /// <param name="definition">攻撃定義。</param>
+    /// <param name="facingDirection">キャラクターの向き（正: 右向き 1.0f、負: 左向き -1.0f）。</param>
+    /// <param name="oneShot">多重発火防止ガード。</param>
+    public ExecuteGate(AttackDefinition definition, float facingDirection = 1.0f, OneShotEventGuard? oneShot = null)
     {
         ArgumentNullException.ThrowIfNull(definition);
         _definition = definition;
+        _facingDirection = facingDirection >= 0.0f ? 1.0f : -1.0f;
         _oneShot = oneShot ?? new OneShotEventGuard(Math.Max(1, definition.ComponentCount));
     }
 
@@ -137,7 +142,7 @@ public sealed class ExecuteGate
         {
             AttackComponentKind.Bullet => context.Attack.EmitBullet(_definition.AttackId, component.X, component.Y),
             AttackComponentKind.Hitbox => context.Attack.CreateHitbox(_definition.AttackId, component.X, component.Y),
-            AttackComponentKind.Movement => context.Movement.SetVelocity(component.X, component.Y),
+            AttackComponentKind.Movement => context.Movement.SetVelocity(component.X * _facingDirection, component.Y),
             _ => Error.Validation("ExecuteGate.Emit", "未知の AttackComponentKind です。")
         };
     }
