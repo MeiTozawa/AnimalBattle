@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Configs;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Dsl;
@@ -95,6 +96,33 @@ public sealed class AttackPipelineBuilder
         ArgumentNullException.ThrowIfNull(configure);
         _ruleBuilder = new DecisionRuleBuilder();
         configure(_ruleBuilder);
+        return this;
+    }
+
+    /// <summary>
+    /// TOML 設定オブジェクトから意思決定ルール（AI 発動条件・クールダウン等）を適用します。
+    /// </summary>
+    /// <param name="config">TOML から読み込まれたルール設定オブジェクト。</param>
+    /// <returns>現在の攻撃ビルダー。</returns>
+    public AttackPipelineBuilder Rule(AttackRuleConfig? config)
+    {
+        if (config is null)
+        {
+            return this;
+        }
+
+        _ruleBuilder = new DecisionRuleBuilder()
+            .Cooldown(config.Cooldown)
+            .Distance(config.MinDistance, config.MaxDistance)
+            .Weight(config.Weight)
+            .RequireSamePlatform(config.RequireSamePlatform)
+            .PreferAirborneBonus(config.PreferAirborneBonus);
+
+        if (config.RequirePlayerGrounded.HasValue)
+        {
+            _ruleBuilder.RequirePlayerGrounded(config.RequirePlayerGrounded.Value);
+        }
+
         return this;
     }
 

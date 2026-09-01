@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Dsl;
 using AnimalBattle.Configs;
@@ -30,18 +32,18 @@ public static class Boss1PipelineDefinition
                     .Telegraph(pattern.Aimed3Shot.WindUpTime, pattern.Aimed3Shot.TelegraphColor)
                     .Execute(pattern.Aimed3Shot.CastDuration, range: 600.0f)
                     .Recovery(pattern.Aimed3Shot.RecoveryTime)
-                    .Rule(r => r.Cooldown(3.0f).Distance(0.0f, 800.0f).Weight(100.0f))
+                    .Rule(FindRule(boss1.Phase1.Rules, "Aimed3Shot"))
                 .Attack(Boss1AttackIds.DiveRam)
                     .Telegraph(pattern.DiveRam.WindUpTime, pattern.DiveRam.TelegraphColor)
                     .Execute(pattern.DiveRam.CastDuration, range: 650.0f)
                         .Action(atTime: 0.0f, act => act.Dash(pattern.DiveRam.DashSpeed).Hitbox(x: 0.0f, y: 0.0f))
                     .Recovery(pattern.DiveRam.RecoveryTime)
-                    .Rule(r => r.Cooldown(7.0f).Distance(100.0f, 700.0f).Weight(110.0f))
+                    .Rule(FindRule(boss1.Phase1.Rules, "DiveRam"))
                 .Attack(Boss1AttackIds.RingBurst)
                     .Telegraph(pattern.RingBurst.WindUpTime, pattern.RingBurst.TelegraphColor)
                     .Execute(pattern.RingBurst.CastDuration, range: 700.0f)
                     .Recovery(pattern.RingBurst.RecoveryTime)
-                    .Rule(r => r.Cooldown(5.0f).Distance(0.0f, 900.0f).Weight(90.0f))
+                    .Rule(FindRule(boss1.Phase1.Rules, "RingBurst"))
 
             .Phase(Phase.Phase2)
                 .Timing(
@@ -52,18 +54,18 @@ public static class Boss1PipelineDefinition
                     .Telegraph(pattern.DoubleSpiral.WindUpTime, pattern.DoubleSpiral.TelegraphColor)
                     .Execute(pattern.DoubleSpiral.CastDuration, range: 800.0f)
                     .Recovery(pattern.DoubleSpiral.RecoveryTime)
-                    .Rule(r => r.Cooldown(4.0f).Distance(0.0f, 850.0f).Weight(95.0f))
+                    .Rule(FindRule(boss1.Phase2.Rules, "DoubleSpiral"))
                 .Attack(Boss1AttackIds.DiveRam)
                     .Telegraph(pattern.DiveRam.WindUpTime, pattern.DiveRam.TelegraphColor)
                     .Execute(pattern.DiveRam.CastDuration, range: 650.0f)
                         .Action(atTime: 0.0f, act => act.Dash(pattern.DiveRam.DashSpeed).Hitbox(x: 0.0f, y: 0.0f))
                     .Recovery(pattern.DiveRam.RecoveryTime)
-                    .Rule(r => r.Cooldown(6.0f).Distance(100.0f, 750.0f).Weight(110.0f))
+                    .Rule(FindRule(boss1.Phase2.Rules, "DiveRam"))
                 .Attack(Boss1AttackIds.RainDrop)
                     .Telegraph(pattern.RainDrop.WindUpTime, pattern.RainDrop.TelegraphColor)
                     .Execute(pattern.RainDrop.CastDuration, range: 1000.0f)
                     .Recovery(pattern.RainDrop.RecoveryTime)
-                    .Rule(r => r.Cooldown(6.0f).Distance(0.0f, 1000.0f).Weight(85.0f))
+                    .Rule(FindRule(boss1.Phase2.Rules, "RainDrop"))
 
             .Phase(Phase.Phase3)
                 .Timing(
@@ -74,18 +76,23 @@ public static class Boss1PipelineDefinition
                     .Telegraph(pattern.CrossChaos.WindUpTime, pattern.CrossChaos.TelegraphColor)
                     .Execute(pattern.CrossChaos.CastDuration, range: 900.0f)
                     .Recovery(pattern.CrossChaos.RecoveryTime)
-                    .Rule(r => r.Cooldown(4.5f).Distance(0.0f, 900.0f).Weight(90.0f))
+                    .Rule(FindRule(boss1.Phase3.Rules, "CrossChaos"))
                 .Attack(Boss1AttackIds.DiveRam)
                     .Telegraph(pattern.DiveRam.WindUpTime, pattern.DiveRam.TelegraphColor)
                     .Execute(pattern.DiveRam.CastDuration, range: 650.0f)
                         .Action(atTime: 0.0f, act => act.Dash(pattern.DiveRam.DashSpeed).Hitbox(x: 0.0f, y: 0.0f))
                     .Recovery(pattern.DiveRam.RecoveryTime)
-                    .Rule(r => r.Cooldown(5.0f).Distance(100.0f, 800.0f).Weight(110.0f))
+                    .Rule(FindRule(boss1.Phase3.Rules, "DiveRam"))
                 .Attack(Boss1AttackIds.FastSniper)
                     .Telegraph(pattern.FastSniper.WindUpTime, pattern.FastSniper.TelegraphColor)
                     .Execute(pattern.FastSniper.CastDuration, range: 1200.0f)
                     .Recovery(pattern.FastSniper.RecoveryTime)
-                    .Rule(r => r.Cooldown(3.5f).Distance(150.0f, 1200.0f).Weight(100.0f))
+                    .Rule(FindRule(boss1.Phase3.Rules, "FastSniper"))
             .Build();
+    }
+
+    private static AttackRuleConfig? FindRule(List<AttackRuleConfig>? rules, string skillName)
+    {
+        return rules?.Find(r => string.Equals(r.Skill, skillName, StringComparison.OrdinalIgnoreCase));
     }
 }

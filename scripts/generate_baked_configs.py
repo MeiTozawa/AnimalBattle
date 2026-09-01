@@ -51,6 +51,21 @@ def _format_string(val: str) -> str:
     return f'"{escaped}"'
 
 
+def _format_rule(r: dict) -> str:
+    parts = [
+        f"Skill = {_format_string(r.get('Skill', ''))}",
+        f"Cooldown = {_format_float(r.get('Cooldown', 0.0))}",
+        f"MinDistance = {_format_float(r.get('MinDistance', 0.0))}",
+        f"MaxDistance = {_format_float(r.get('MaxDistance', 1000.0))}",
+        f"Weight = {_format_float(r.get('Weight', 100.0))}",
+        f"RequireSamePlatform = {'true' if r.get('RequireSamePlatform', False) else 'false'}",
+        f"PreferAirborneBonus = {_format_float(r.get('PreferAirborneBonus', 1.0))}",
+    ]
+    if "RequirePlayerGrounded" in r:
+        parts.append(f"RequirePlayerGrounded = {'true' if r['RequirePlayerGrounded'] else 'false'}")
+    return "new AttackRuleConfig { " + ", ".join(parts) + " }"
+
+
 def _load_toml(path: Path) -> dict:
     if not path.exists():
         print(f"[ConfigGen 警告] TOML ファイルが見つかりません: {path}")
@@ -174,6 +189,13 @@ def generate_code() -> str:
             lines.append(f"            TransitionDuration = {_format_float(phase.get('TransitionDuration', 1.0))},")
             lines.append(f"            TransitionFloatSpeed = {_format_float(phase.get('TransitionFloatSpeed', 3.0))},")
             lines.append(f"            Skills = [{skills_str}],")
+            rules_list = phase.get("Rules", [])
+            if rules_list:
+                lines.append("            Rules =")
+                lines.append("            [")
+                for r in rules_list:
+                    lines.append(f"                {_format_rule(r)},")
+                lines.append("            ],")
             lines.append("        },")
     lines.append("    };")
     lines.append("")
@@ -224,6 +246,13 @@ def generate_code() -> str:
             lines.append(f"            TelegraphShakeIntensity = {_format_float(phase.get('TelegraphShakeIntensity', 6.0))},")
             lines.append(f"            TransitionDuration = {_format_float(phase.get('TransitionDuration', 1.0))},")
             lines.append(f"            Skills = [{skills_str}],")
+            rules_list = phase.get("Rules", [])
+            if rules_list:
+                lines.append("            Rules =")
+                lines.append("            [")
+                for r in rules_list:
+                    lines.append(f"                {_format_rule(r)},")
+                lines.append("            ],")
             lines.append("        },")
     lines.append("    };")
     lines.append("")

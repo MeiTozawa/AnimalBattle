@@ -54,6 +54,9 @@ public sealed class Boss1PhaseFsmConfig
 
     /// <summary>このフェーズで実行される技能名リスト</summary>
     public List<string> Skills { get; set; } = [];
+
+    /// <summary>このフェーズで評価される技能意思決定ルールリスト</summary>
+    public List<AttackRuleConfig> Rules { get; set; } = [];
 }
 
 /// <summary>

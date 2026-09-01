@@ -92,6 +92,12 @@ public static class BakedConfigs
             TransitionDuration = 1.0f,
             TransitionFloatSpeed = 3.0f,
             Skills = ["Aimed3Shot", "DiveRam", "RingBurst"],
+            Rules =
+            [
+                new AttackRuleConfig { Skill = "Aimed3Shot", Cooldown = 3.0f, MinDistance = 0.0f, MaxDistance = 800.0f, Weight = 100.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "DiveRam", Cooldown = 7.0f, MinDistance = 100.0f, MaxDistance = 700.0f, Weight = 110.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "RingBurst", Cooldown = 5.0f, MinDistance = 0.0f, MaxDistance = 900.0f, Weight = 90.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+            ],
         },
         Phase2 = new Boss1PhaseFsmConfig
         {
@@ -110,6 +116,12 @@ public static class BakedConfigs
             TransitionDuration = 1.0f,
             TransitionFloatSpeed = 3.5f,
             Skills = ["DoubleSpiral", "DiveRam", "RainDrop"],
+            Rules =
+            [
+                new AttackRuleConfig { Skill = "DoubleSpiral", Cooldown = 4.0f, MinDistance = 0.0f, MaxDistance = 850.0f, Weight = 95.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "DiveRam", Cooldown = 6.0f, MinDistance = 100.0f, MaxDistance = 750.0f, Weight = 110.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "RainDrop", Cooldown = 6.0f, MinDistance = 0.0f, MaxDistance = 1000.0f, Weight = 85.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+            ],
         },
         Phase3 = new Boss1PhaseFsmConfig
         {
@@ -128,6 +140,12 @@ public static class BakedConfigs
             TransitionDuration = 1.0f,
             TransitionFloatSpeed = 4.0f,
             Skills = ["CrossChaos", "DiveRam", "FastSniper"],
+            Rules =
+            [
+                new AttackRuleConfig { Skill = "CrossChaos", Cooldown = 4.5f, MinDistance = 0.0f, MaxDistance = 900.0f, Weight = 90.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "DiveRam", Cooldown = 5.0f, MinDistance = 100.0f, MaxDistance = 800.0f, Weight = 110.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "FastSniper", Cooldown = 3.5f, MinDistance = 150.0f, MaxDistance = 1200.0f, Weight = 100.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+            ],
         },
     };
 
@@ -171,6 +189,12 @@ public static class BakedConfigs
             TelegraphShakeIntensity = 6.0f,
             TransitionDuration = 1.0f,
             Skills = ["HeavySlash", "GroundStomp", "HeavySlash", "LeapSmash"],
+            Rules =
+            [
+                new AttackRuleConfig { Skill = "HeavySlash", Cooldown = 2.0f, MinDistance = 0.0f, MaxDistance = 160.0f, Weight = 100.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "GroundStomp", Cooldown = 5.0f, MinDistance = 50.0f, MaxDistance = 350.0f, Weight = 70.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "LeapSmash", Cooldown = 8.0f, MinDistance = 150.0f, MaxDistance = 600.0f, Weight = 80.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.5f },
+            ],
         },
         Phase2 = new Boss2PhaseConfig
         {
@@ -181,6 +205,12 @@ public static class BakedConfigs
             TelegraphShakeIntensity = 10.0f,
             TransitionDuration = 1.0f,
             Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "DoubleCleave"],
+            Rules =
+            [
+                new AttackRuleConfig { Skill = "DoubleCleave", Cooldown = 3.0f, MinDistance = 0.0f, MaxDistance = 175.0f, Weight = 100.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "GroundStomp", Cooldown = 4.5f, MinDistance = 50.0f, MaxDistance = 400.0f, Weight = 70.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "LeapSmash", Cooldown = 6.0f, MinDistance = 120.0f, MaxDistance = 650.0f, Weight = 90.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.8f },
+            ],
         },
         Phase3 = new Boss2PhaseConfig
         {
@@ -191,6 +221,13 @@ public static class BakedConfigs
             TelegraphShakeIntensity = 14.0f,
             TransitionDuration = 1.2f,
             Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash"],
+            Rules =
+            [
+                new AttackRuleConfig { Skill = "FrenzyCharge", Cooldown = 7.0f, MinDistance = 250.0f, MaxDistance = 650.0f, Weight = 100.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "EarthquakeRoar", Cooldown = 10.0f, MinDistance = 0.0f, MaxDistance = 1000.0f, Weight = 80.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "DoubleCleave", Cooldown = 2.5f, MinDistance = 0.0f, MaxDistance = 175.0f, Weight = 90.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new AttackRuleConfig { Skill = "LeapSmash", Cooldown = 5.0f, MinDistance = 120.0f, MaxDistance = 700.0f, Weight = 85.0f, RequireSamePlatform = false, PreferAirborneBonus = 2.0f },
+            ],
         },
     };
 

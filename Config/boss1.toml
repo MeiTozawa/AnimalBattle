@@ -36,6 +36,27 @@ TransitionDuration = 1.0
 TransitionFloatSpeed = 3.0
 Skills = ["Aimed3Shot", "DiveRam", "RingBurst"]
 
+[[Phase1.Rules]]
+Skill = "Aimed3Shot"
+Cooldown = 3.0
+MinDistance = 0.0
+MaxDistance = 800.0
+Weight = 100.0
+
+[[Phase1.Rules]]
+Skill = "DiveRam"
+Cooldown = 7.0
+MinDistance = 100.0
+MaxDistance = 700.0
+Weight = 110.0
+
+[[Phase1.Rules]]
+Skill = "RingBurst"
+Cooldown = 5.0
+MinDistance = 0.0
+MaxDistance = 900.0
+Weight = 90.0
+
 # Phase 2 State Machine Configuration
 [Phase2]
 HpThreshold = 0.66
@@ -54,6 +75,27 @@ TransitionDuration = 1.0
 TransitionFloatSpeed = 3.5
 Skills = ["DoubleSpiral", "DiveRam", "RainDrop"]
 
+[[Phase2.Rules]]
+Skill = "DoubleSpiral"
+Cooldown = 4.0
+MinDistance = 0.0
+MaxDistance = 850.0
+Weight = 95.0
+
+[[Phase2.Rules]]
+Skill = "DiveRam"
+Cooldown = 6.0
+MinDistance = 100.0
+MaxDistance = 750.0
+Weight = 110.0
+
+[[Phase2.Rules]]
+Skill = "RainDrop"
+Cooldown = 6.0
+MinDistance = 0.0
+MaxDistance = 1000.0
+Weight = 85.0
+
 # Phase 3 State Machine Configuration
 [Phase3]
 HpThreshold = 0.33
@@ -71,3 +113,25 @@ RecoverDelayRatio = 0.40
 TransitionDuration = 1.0
 TransitionFloatSpeed = 4.0
 Skills = ["CrossChaos", "DiveRam", "FastSniper"]
+
+[[Phase3.Rules]]
+Skill = "CrossChaos"
+Cooldown = 4.5
+MinDistance = 0.0
+MaxDistance = 900.0
+Weight = 90.0
+
+[[Phase3.Rules]]
+Skill = "DiveRam"
+Cooldown = 5.0
+MinDistance = 100.0
+MaxDistance = 800.0
+Weight = 110.0
+
+[[Phase3.Rules]]
+Skill = "FastSniper"
+Cooldown = 3.5
+MinDistance = 150.0
+MaxDistance = 1200.0
+Weight = 100.0
+
