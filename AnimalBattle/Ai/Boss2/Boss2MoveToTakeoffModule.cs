@@ -37,9 +37,13 @@ public sealed class Boss2MoveToTakeoffModule : IBossStateModule, IStateModuleDep
         }
 
         Boss2PhaseSettings settings = _configuration.GetPhase(context.Phase);
-        float direction = MathF.Sign(context.PlayerObservation.PositionX - _state.CurrentPosition.X);
+        float deltaX = context.PlayerObservation.PositionX - _state.CurrentPosition.X;
+        float direction = MathF.Abs(deltaX) > 6.0f ? MathF.Sign(deltaX) : 0.0f;
         float velocityX = direction * settings.MoveSpeed;
-        _state.FacingRight = direction >= 0.0f;
+        if (MathF.Abs(deltaX) > 6.0f)
+        {
+            _state.FacingRight = deltaX > 0.0f;
+        }
         _state.CurrentVelocity = new Vec2f(velocityX, _state.CurrentVelocity.Y);
         context.Movement.SetVelocity(velocityX, _state.CurrentVelocity.Y);
         _state.StateElapsed += context.DeltaTime;

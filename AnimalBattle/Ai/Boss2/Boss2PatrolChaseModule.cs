@@ -89,25 +89,30 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
                     }
                     else
                     {
-                        float velocityX = plan.RequiredVx;
-                        _state.FacingRight = velocityX >= 0.0f;
-                        _state.CurrentVelocity = new Vec2f(velocityX, _state.CurrentVelocity.Y);
-                        context.Movement.SetVelocity(velocityX, _state.CurrentVelocity.Y);
+                        _state.FacingRight = plan.TargetX >= _state.CurrentPosition.X;
+                        _state.CurrentVelocity = new Vec2f(0.0f, _state.CurrentVelocity.Y);
+                        context.Movement.SetVelocity(0.0f, _state.CurrentVelocity.Y);
                     }
                     break;
 
                 case NavStatus.MoveToTakeoff:
                 case NavStatus.ExecuteDrop:
                     float takeoffVx = plan.RequiredVx;
-                    _state.FacingRight = takeoffVx >= 0.0f;
+                    if (MathF.Abs(takeoffVx) > 5.0f)
+                    {
+                        _state.FacingRight = takeoffVx > 0.0f;
+                    }
                     _state.CurrentVelocity = new Vec2f(takeoffVx, _state.CurrentVelocity.Y);
                     context.Movement.SetVelocity(takeoffVx, _state.CurrentVelocity.Y);
                     break;
 
                 case NavStatus.DirectWalk:
                 default:
-                    _state.FacingRight = deltaX >= 0.0f;
-                    float directVx = MathF.Sign(deltaX) * settings.MoveSpeed;
+                    if (MathF.Abs(deltaX) > 6.0f)
+                    {
+                        _state.FacingRight = deltaX > 0.0f;
+                    }
+                    float directVx = MathF.Abs(deltaX) > 6.0f ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
                     _state.CurrentVelocity = new Vec2f(directVx, _state.CurrentVelocity.Y);
                     context.Movement.SetVelocity(directVx, _state.CurrentVelocity.Y);
                     break;
@@ -115,8 +120,11 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
         }
         else
         {
-            _state.FacingRight = deltaX >= 0.0f;
-            float velocityX = MathF.Sign(deltaX) * settings.MoveSpeed;
+            if (MathF.Abs(deltaX) > 6.0f)
+            {
+                _state.FacingRight = deltaX > 0.0f;
+            }
+            float velocityX = MathF.Abs(deltaX) > 6.0f ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
             _state.CurrentVelocity = new Vec2f(velocityX, _state.CurrentVelocity.Y);
             context.Movement.SetVelocity(velocityX, _state.CurrentVelocity.Y);
         }
