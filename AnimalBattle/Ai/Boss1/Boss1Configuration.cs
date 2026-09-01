@@ -119,9 +119,7 @@ public sealed class Boss1AttackPattern
     public Boss1AttackPattern(
         AttackId attackId,
         Boss1AttackKind kind,
-        float telegraphDuration,
-        float executeDuration,
-        float recoveryDuration,
+        AttackDefinition definition,
         float interval = 0,
         float bulletSpeed = 0,
         int bulletCount = 0,
@@ -133,7 +131,7 @@ public sealed class Boss1AttackPattern
     {
         AttackId = attackId;
         Kind = kind;
-        Definition = new AttackDefinition(attackId, telegraphDuration, executeDuration, recoveryDuration, 0);
+        Definition = definition;
         Interval = interval;
         BulletSpeed = bulletSpeed;
         BulletCount = bulletCount;
@@ -142,6 +140,36 @@ public sealed class Boss1AttackPattern
         MaxX = maxX;
         DashSpeed = dashSpeed;
         EaseType = easeType;
+    }
+
+    /// <summary>Boss1 攻撃 pattern を生成します。</summary>
+    public Boss1AttackPattern(
+        AttackId attackId,
+        Boss1AttackKind kind,
+        float telegraphDuration,
+        float executeDuration,
+        float recoveryDuration,
+        float interval = 0,
+        float bulletSpeed = 0,
+        int bulletCount = 0,
+        float angleStep = 0,
+        float minX = 0,
+        float maxX = 0,
+        float dashSpeed = 0,
+        EaseType easeType = EaseType.Linear)
+        : this(
+            attackId,
+            kind,
+            new AttackDefinition(attackId, telegraphDuration, executeDuration, recoveryDuration, 0),
+            interval,
+            bulletSpeed,
+            bulletCount,
+            angleStep,
+            minX,
+            maxX,
+            dashSpeed,
+            easeType)
+    {
     }
 
     /// <summary>三段階と固有パラメータが実行可能かどうかを取得します。</summary>
@@ -162,30 +190,23 @@ public interface IBoss1Configuration
 /// <summary>既存 boss1.toml と patterns.toml の既定値を保持する Boss1 設定です。</summary>
 public sealed class Boss1DefaultConfiguration : IBoss1Configuration
 {
-    private readonly Boss1PhaseSettings[] _phases;
-    private readonly Boss1AttackPattern[] _attacks;
+    private readonly Boss1PhaseSettings[] _phases =
+    [
+        new Boss1PhaseSettings(0.8f, 220.0f, 1.6f, 240.0f, 1.8f, 60.0f, 0.12f, 3.5f, 8.0f, 4.0f, 0.5f, 1.0f, 3.0f, [Boss1AttackIds.Aimed3Shot, Boss1AttackIds.DiveRam, Boss1AttackIds.RingBurst]),
+        new Boss1PhaseSettings(0.6f, 250.0f, 2.0f, 350.0f, 2.4f, 90.0f, 0.15f, 4.0f, 10.0f, 4.5f, 0.45f, 1.0f, 3.5f, [Boss1AttackIds.DoubleSpiral, Boss1AttackIds.DiveRam, Boss1AttackIds.RainDrop]),
+        new Boss1PhaseSettings(0.4f, 280.0f, 2.6f, 420.0f, 3.0f, 120.0f, 0.20f, 4.5f, 12.0f, 5.0f, 0.40f, 1.0f, 4.0f, [Boss1AttackIds.CrossChaos, Boss1AttackIds.DiveRam, Boss1AttackIds.FastSniper])
+    ];
 
-    /// <summary>既存設定と同じ値で Boss1 設定を初期化します。</summary>
-    public Boss1DefaultConfiguration()
-    {
-        _phases =
-        [
-            new Boss1PhaseSettings(0.8f, 220.0f, 1.6f, 240.0f, 1.8f, 60.0f, 0.12f, 3.5f, 8.0f, 4.0f, 0.5f, 1.0f, 3.0f, [Boss1AttackIds.Aimed3Shot, Boss1AttackIds.DiveRam, Boss1AttackIds.RingBurst]),
-            new Boss1PhaseSettings(0.6f, 250.0f, 2.0f, 350.0f, 2.4f, 90.0f, 0.15f, 4.0f, 10.0f, 4.5f, 0.45f, 1.0f, 3.5f, [Boss1AttackIds.DoubleSpiral, Boss1AttackIds.DiveRam, Boss1AttackIds.RainDrop]),
-            new Boss1PhaseSettings(0.4f, 280.0f, 2.6f, 420.0f, 3.0f, 120.0f, 0.20f, 4.5f, 12.0f, 5.0f, 0.40f, 1.0f, 4.0f, [Boss1AttackIds.CrossChaos, Boss1AttackIds.DiveRam, Boss1AttackIds.FastSniper])
-        ];
-
-        _attacks =
-        [
-            new Boss1AttackPattern(Boss1AttackIds.Aimed3Shot, Boss1AttackKind.Aimed3Shot, 0.40f, 0.90f, 0.50f, 0.45f, 372.0f, 3, 0.16f),
-            new Boss1AttackPattern(Boss1AttackIds.RingBurst, Boss1AttackKind.RingBurst, 0.55f, 1.00f, 0.70f, 0.50f, 228.0f, 16, 0.25f),
-            new Boss1AttackPattern(Boss1AttackIds.DoubleSpiral, Boss1AttackKind.DoubleSpiral, 0.45f, 1.60f, 0.60f, 0.075f, 288.0f, 2, 0.22f),
-            new Boss1AttackPattern(Boss1AttackIds.RainDrop, Boss1AttackKind.RainDrop, 0.35f, 1.80f, 0.80f, 0.32f, 312.0f, 2, 0, 60.0f, 1220.0f),
-            new Boss1AttackPattern(Boss1AttackIds.CrossChaos, Boss1AttackKind.CrossChaos, 0.35f, 2.00f, 0.50f, 0.10f, 312.0f, 4, 0.18f),
-            new Boss1AttackPattern(Boss1AttackIds.FastSniper, Boss1AttackKind.FastSniper, 0.50f, 0.60f, 0.60f, 0.30f, 510.0f, 1),
-            new Boss1AttackPattern(Boss1AttackIds.DiveRam, Boss1AttackKind.DiveRam, 0.55f, 0.45f, 0.65f, dashSpeed: 960.0f, easeType: EaseType.InQuad)
-        ];
-    }
+    private readonly Boss1AttackPattern[] _attacks =
+    [
+        new Boss1AttackPattern(Boss1AttackIds.Aimed3Shot, Boss1AttackKind.Aimed3Shot, Boss1PipelineDefinition.Pipeline.Attacks[Boss1AttackIds.Aimed3Shot], 0.45f, 372.0f, 3, 0.16f),
+        new Boss1AttackPattern(Boss1AttackIds.RingBurst, Boss1AttackKind.RingBurst, Boss1PipelineDefinition.Pipeline.Attacks[Boss1AttackIds.RingBurst], 0.50f, 228.0f, 16, 0.25f),
+        new Boss1AttackPattern(Boss1AttackIds.DoubleSpiral, Boss1AttackKind.DoubleSpiral, Boss1PipelineDefinition.Pipeline.Attacks[Boss1AttackIds.DoubleSpiral], 0.075f, 288.0f, 2, 0.22f),
+        new Boss1AttackPattern(Boss1AttackIds.RainDrop, Boss1AttackKind.RainDrop, Boss1PipelineDefinition.Pipeline.Attacks[Boss1AttackIds.RainDrop], 0.32f, 312.0f, 2, 0, 60.0f, 1220.0f),
+        new Boss1AttackPattern(Boss1AttackIds.CrossChaos, Boss1AttackKind.CrossChaos, Boss1PipelineDefinition.Pipeline.Attacks[Boss1AttackIds.CrossChaos], 0.10f, 312.0f, 4, 0.18f),
+        new Boss1AttackPattern(Boss1AttackIds.FastSniper, Boss1AttackKind.FastSniper, Boss1PipelineDefinition.Pipeline.Attacks[Boss1AttackIds.FastSniper], 0.30f, 510.0f, 1),
+        new Boss1AttackPattern(Boss1AttackIds.DiveRam, Boss1AttackKind.DiveRam, Boss1PipelineDefinition.Pipeline.Attacks[Boss1AttackIds.DiveRam], dashSpeed: 960.0f, easeType: EaseType.InQuad)
+    ];
 
     /// <inheritdoc />
     public Boss1PhaseSettings GetPhase(Phase phase)
