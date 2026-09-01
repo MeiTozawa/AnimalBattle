@@ -50,6 +50,9 @@ public sealed class Boss2BehaviorState : IBossBehaviorState
     /// <summary>跳躍のクールダウンタイマーです。</summary>
     public float JumpCooldown { get; set; }
 
+    /// <summary>技能ごとの残り冷却時間を管理する追跡器を取得します。</summary>
+    public BossCooldownTracker CooldownTracker { get; } = new();
+
     /// <summary>次に要求する State_Id です。</summary>
     public BossState PendingBossState { get; private set; }
     /// <summary>次の状態へ渡す遷移理由です。</summary>

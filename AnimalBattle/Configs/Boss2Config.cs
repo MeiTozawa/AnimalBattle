@@ -28,8 +28,41 @@ public sealed class Boss2PhaseConfig
     /// <summary>フェーズ突入時の無敵・吼叫演出時間（秒）</summary>
     public float TransitionDuration { get; set; } = 1.0f;
 
-    /// <summary>このフェーズで実行される技能名リスト</summary>
+    /// <summary>このフェーズで実行される技能名リスト（旧仕様との互換用）</summary>
     public List<string> Skills { get; set; } = [];
+
+    /// <summary>このフェーズで評価される技能意思決定ルールリスト</summary>
+    public List<AttackRuleConfig> Rules { get; set; } = [];
+}
+
+/// <summary>
+/// Config/boss2.toml から読み込まれる技能意思決定ルールの設定クラスです。
+/// </summary>
+public sealed class AttackRuleConfig
+{
+    /// <summary>技能識別名（例: "HeavySlash", "DoubleCleave"）</summary>
+    public string Skill { get; set; } = string.Empty;
+
+    /// <summary>技能の基本冷却時間（秒）</summary>
+    public float Cooldown { get; set; } = 0.0f;
+
+    /// <summary>最小有効距離（ピクセル）</summary>
+    public float MinDistance { get; set; } = 0.0f;
+
+    /// <summary>最大有効距離（ピクセル）</summary>
+    public float MaxDistance { get; set; } = 300.0f;
+
+    /// <summary>基礎加重（欲望値）</summary>
+    public float Weight { get; set; } = 100.0f;
+
+    /// <summary>同一足場を要求するかどうか</summary>
+    public bool RequireSamePlatform { get; set; } = false;
+
+    /// <summary>プレイヤーの接地を要求するかどうか（null の場合は問わない）</summary>
+    public bool? RequirePlayerGrounded { get; set; }
+
+    /// <summary>プレイヤー空中時の加重倍率</summary>
+    public float PreferAirborneBonus { get; set; } = 1.0f;
 }
 
 /// <summary>

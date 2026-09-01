@@ -121,10 +121,46 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
             context.Movement.SetVelocity(velocityX, _state.CurrentVelocity.Y);
         }
 
-        _state.StateElapsed += context.DeltaTime;
-        if (MathF.Abs(deltaX) <= 175.0f && MathF.Abs(deltaY) <= 75.0f)
+        _state.CooldownTracker.Update(context.DeltaTime);
+
+        if (settings.Rules.Count > 0)
         {
-            SelectNextAttack(ref context, in invocation);
+            float distance = MathF.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
+            bool isSamePlatform = MathF.Abs(deltaY) <= 60.0f;
+            bool isPlayerAirborne = MathF.Abs(context.PlayerObservation.VelocityY) > 15.0f || deltaY < -50.0f;
+            bool isPlayerGrounded = !isPlayerAirborne;
+
+            AttackDecisionContext decisionContext = new(
+                distance,
+                isSamePlatform,
+                isPlayerGrounded,
+                isPlayerAirborne);
+
+            AttackId chosenAttack = BossDecisionEvaluator.EvaluateWeighted(
+                settings.Rules,
+                _state.CooldownTracker,
+                in decisionContext);
+
+            if (chosenAttack != AttackId.Unknown)
+            {
+                // 選択された技能の冷却時間をトリガー
+                for (int index = 0; index < settings.Rules.Count; index++)
+                {
+                    AttackDecisionRule rule = settings.Rules[index];
+                    if (rule.AttackId == chosenAttack)
+                    {
+                        _state.CooldownTracker.Trigger(chosenAttack, rule.Cooldown);
+                        break;
+                    }
+                }
+
+                ExecuteAttack(chosenAttack, ref context, in invocation);
+                return;
+            }
+        }
+        else if (MathF.Abs(deltaX) <= 175.0f && MathF.Abs(deltaY) <= 75.0f)
+        {
+            SelectNextLegacyAttack(ref context, in invocation);
         }
     }
 
@@ -134,18 +170,8 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
         _state.StateElapsed = 0.0f;
     }
 
-    private void SelectNextAttack(ref StateContext context, in LifecycleInvocation invocation)
+    private void ExecuteAttack(AttackId attackId, ref StateContext context, in LifecycleInvocation invocation)
     {
-        Boss2PhaseSettings settings = _configuration.GetPhase(context.Phase);
-        if (settings.AttackOrder.Count == 0)
-        {
-            Boss2ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidConfiguration, "Boss2 の攻撃順が空です。");
-            return;
-        }
-
-        int index = _state.CurrentAttackIndex % settings.AttackOrder.Count;
-        _state.CurrentAttackIndex++;
-        AttackId attackId = settings.AttackOrder[index];
         if (!Boss2ModuleSupport.GetPattern(_configuration, attackId, in context, in invocation, out Boss2AttackPattern pattern))
         {
             _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: attackId, errorCode: ErrorCode.InvalidAttackId));
@@ -158,5 +184,20 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         _state.IsAttackActive = true;
         _state.RequestTransition(Boss2StateIds.GetTelegraphState(attackId), new TransitionReason(ReasonKind.PlayerObservation, attackId: attackId));
+    }
+
+    private void SelectNextLegacyAttack(ref StateContext context, in LifecycleInvocation invocation)
+    {
+        Boss2PhaseSettings settings = _configuration.GetPhase(context.Phase);
+        if (settings.AttackOrder.Count == 0)
+        {
+            Boss2ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidConfiguration, "Boss2 の攻撃順が空です。");
+            return;
+        }
+
+        int index = _state.CurrentAttackIndex % settings.AttackOrder.Count;
+        _state.CurrentAttackIndex++;
+        AttackId attackId = settings.AttackOrder[index];
+        ExecuteAttack(attackId, ref context, in invocation);
     }
 }

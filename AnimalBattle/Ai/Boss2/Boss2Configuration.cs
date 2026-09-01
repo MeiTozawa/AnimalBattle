@@ -18,8 +18,10 @@ public readonly struct Boss2PhaseSettings
     public float MaxFallSpeed { get; }
     /// <summary>Phase 切り替え時間です。</summary>
     public float TransitionDuration { get; }
-    /// <summary>この Phase の攻撃順です。</summary>
+    /// <summary>この Phase の攻撃順です（旧仕様との互換用）。</summary>
     public IReadOnlyList<AttackId> AttackOrder { get; }
+    /// <summary>この Phase で評価される技能意思決定ルールリストです。</summary>
+    public IReadOnlyList<AttackDecisionRule> Rules { get; }
 
     /// <summary>Boss2 Phase 設定を生成します。</summary>
     public Boss2PhaseSettings(
@@ -29,7 +31,8 @@ public readonly struct Boss2PhaseSettings
         float gravity,
         float maxFallSpeed,
         float transitionDuration,
-        IReadOnlyList<AttackId> attackOrder)
+        IReadOnlyList<AttackId> attackOrder,
+        IReadOnlyList<AttackDecisionRule>? rules = null)
     {
         IdleDuration = idleDuration;
         MoveSpeed = moveSpeed;
@@ -38,6 +41,7 @@ public readonly struct Boss2PhaseSettings
         MaxFallSpeed = maxFallSpeed;
         TransitionDuration = transitionDuration;
         AttackOrder = attackOrder ?? throw new ArgumentNullException(nameof(attackOrder));
+        Rules = rules ?? [];
     }
 }
 
@@ -101,9 +105,46 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
 {
     private readonly Boss2PhaseSettings[] _phases =
     [
-        new Boss2PhaseSettings(0.8f, 160.0f, 580.0f, 980.0f, 850.0f, 1.0f, [Boss2AttackIds.HeavySlash, Boss2AttackIds.GroundStomp, Boss2AttackIds.HeavySlash, Boss2AttackIds.LeapSmash]),
-        new Boss2PhaseSettings(0.5f, 220.0f, 640.0f, 980.0f, 850.0f, 1.0f, [Boss2AttackIds.DoubleCleave, Boss2AttackIds.GroundStomp, Boss2AttackIds.LeapSmash, Boss2AttackIds.DoubleCleave]),
-        new Boss2PhaseSettings(0.3f, 280.0f, 700.0f, 980.0f, 850.0f, 1.2f, [Boss2AttackIds.FrenzyCharge, Boss2AttackIds.EarthquakeRoar, Boss2AttackIds.DoubleCleave, Boss2AttackIds.LeapSmash])
+        new Boss2PhaseSettings(
+            0.8f,
+            160.0f,
+            580.0f,
+            980.0f,
+            850.0f,
+            1.0f,
+            [Boss2AttackIds.HeavySlash, Boss2AttackIds.GroundStomp, Boss2AttackIds.HeavySlash, Boss2AttackIds.LeapSmash],
+            [
+                new AttackDecisionRule(Boss2AttackIds.HeavySlash, cooldown: 2.0f, minDistance: 0.0f, maxDistance: 160.0f, weight: 100.0f, requireSamePlatform: true),
+                new AttackDecisionRule(Boss2AttackIds.GroundStomp, cooldown: 5.0f, minDistance: 50.0f, maxDistance: 350.0f, weight: 70.0f, requireSamePlatform: true),
+                new AttackDecisionRule(Boss2AttackIds.LeapSmash, cooldown: 8.0f, minDistance: 150.0f, maxDistance: 600.0f, weight: 80.0f, preferAirborneBonus: 1.5f)
+            ]),
+        new Boss2PhaseSettings(
+            0.5f,
+            220.0f,
+            640.0f,
+            980.0f,
+            850.0f,
+            1.0f,
+            [Boss2AttackIds.DoubleCleave, Boss2AttackIds.GroundStomp, Boss2AttackIds.LeapSmash, Boss2AttackIds.DoubleCleave],
+            [
+                new AttackDecisionRule(Boss2AttackIds.DoubleCleave, cooldown: 3.0f, minDistance: 0.0f, maxDistance: 175.0f, weight: 100.0f, requireSamePlatform: true),
+                new AttackDecisionRule(Boss2AttackIds.GroundStomp, cooldown: 4.5f, minDistance: 50.0f, maxDistance: 400.0f, weight: 70.0f, requireSamePlatform: true),
+                new AttackDecisionRule(Boss2AttackIds.LeapSmash, cooldown: 6.0f, minDistance: 120.0f, maxDistance: 650.0f, weight: 90.0f, preferAirborneBonus: 1.8f)
+            ]),
+        new Boss2PhaseSettings(
+            0.3f,
+            280.0f,
+            700.0f,
+            980.0f,
+            850.0f,
+            1.2f,
+            [Boss2AttackIds.FrenzyCharge, Boss2AttackIds.EarthquakeRoar, Boss2AttackIds.DoubleCleave, Boss2AttackIds.LeapSmash],
+            [
+                new AttackDecisionRule(Boss2AttackIds.FrenzyCharge, cooldown: 7.0f, minDistance: 250.0f, maxDistance: 650.0f, weight: 100.0f, requireSamePlatform: true),
+                new AttackDecisionRule(Boss2AttackIds.EarthquakeRoar, cooldown: 10.0f, minDistance: 0.0f, maxDistance: 1000.0f, weight: 80.0f),
+                new AttackDecisionRule(Boss2AttackIds.DoubleCleave, cooldown: 2.5f, minDistance: 0.0f, maxDistance: 175.0f, weight: 90.0f, requireSamePlatform: true),
+                new AttackDecisionRule(Boss2AttackIds.LeapSmash, cooldown: 5.0f, minDistance: 120.0f, maxDistance: 700.0f, weight: 85.0f, preferAirborneBonus: 2.0f)
+            ])
     ];
     private readonly Boss2AttackPattern[] _attacks =
     [

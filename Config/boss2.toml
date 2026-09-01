@@ -44,6 +44,30 @@ TelegraphShakeIntensity = 6.0
 TransitionDuration = 1.0
 Skills = ["HeavySlash", "GroundStomp", "HeavySlash", "LeapSmash"]
 
+[[Phase1.Rules]]
+Skill = "HeavySlash"
+Cooldown = 2.0
+MinDistance = 0.0
+MaxDistance = 160.0
+Weight = 100.0
+RequireSamePlatform = true
+
+[[Phase1.Rules]]
+Skill = "GroundStomp"
+Cooldown = 5.0
+MinDistance = 50.0
+MaxDistance = 350.0
+Weight = 70.0
+RequireSamePlatform = true
+
+[[Phase1.Rules]]
+Skill = "LeapSmash"
+Cooldown = 8.0
+MinDistance = 150.0
+MaxDistance = 600.0
+Weight = 80.0
+PreferAirborneBonus = 1.5
+
 # Phase 2 State Machine Configuration
 [Phase2]
 HpThreshold = 0.66
@@ -54,6 +78,30 @@ TelegraphShakeIntensity = 10.0
 TransitionDuration = 1.0
 Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "DoubleCleave"]
 
+[[Phase2.Rules]]
+Skill = "DoubleCleave"
+Cooldown = 3.0
+MinDistance = 0.0
+MaxDistance = 175.0
+Weight = 100.0
+RequireSamePlatform = true
+
+[[Phase2.Rules]]
+Skill = "GroundStomp"
+Cooldown = 4.5
+MinDistance = 50.0
+MaxDistance = 400.0
+Weight = 70.0
+RequireSamePlatform = true
+
+[[Phase2.Rules]]
+Skill = "LeapSmash"
+Cooldown = 6.0
+MinDistance = 120.0
+MaxDistance = 650.0
+Weight = 90.0
+PreferAirborneBonus = 1.8
+
 # Phase 3 State Machine Configuration
 [Phase3]
 HpThreshold = 0.33
@@ -63,3 +111,34 @@ JumpForce = 720.0
 TelegraphShakeIntensity = 14.0
 TransitionDuration = 1.2
 Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash"]
+
+[[Phase3.Rules]]
+Skill = "FrenzyCharge"
+Cooldown = 7.0
+MinDistance = 250.0
+MaxDistance = 650.0
+Weight = 100.0
+RequireSamePlatform = true
+
+[[Phase3.Rules]]
+Skill = "EarthquakeRoar"
+Cooldown = 10.0
+MinDistance = 0.0
+MaxDistance = 1000.0
+Weight = 80.0
+
+[[Phase3.Rules]]
+Skill = "DoubleCleave"
+Cooldown = 2.5
+MinDistance = 0.0
+MaxDistance = 175.0
+Weight = 90.0
+RequireSamePlatform = true
+
+[[Phase3.Rules]]
+Skill = "LeapSmash"
+Cooldown = 5.0
+MinDistance = 120.0
+MaxDistance = 700.0
+Weight = 85.0
+PreferAirborneBonus = 2.0
