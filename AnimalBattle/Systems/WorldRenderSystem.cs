@@ -142,21 +142,9 @@ public static class WorldRenderSystem
                 float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
                 DrawBoss1Telegraph(trans, fsm, playerX, playerY, progress);
             }
-            else if (fsm.CurrentState == Boss1StateKind.PhaseTransition || fsm.IsInvulnerable)
-            {
-                int half = (int)bossFx.ShieldBaseRadius;
-                GameEngine.SetDrawBlendMode(BlendMode.Alpha, 60);
-                GameEngine.DrawBox(bx - half, by - half, bx + half, by + half, bossFx.ShieldOuterColor, true);
-                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-                GameEngine.DrawBox(bx - half, by - half, bx + half, by + half, bossFx.ShieldOuterColor, false);
-                GameEngine.DrawString(bx - 48, by - half - 16, "[INVULNERABLE]", bossFx.ShieldOuterColor);
-            }
-            else if (fsm.CurrentState == Boss1StateKind.Recovering)
-            {
-                GameEngine.DrawString(bx - 44, by - 60, "[VULNERABLE]", ColorPalette.CyanRecovering);
-            }
 
             if (sprite.IsVisible && sprite.GraphHandle >= 0 && bHealth.IsAlive)
+
             {
                 double bossAngle = MathF.Sin(stats.HoverTimer * bossFx.BossHoverAngleSpeed) * bossFx.BossHoverAngleAmp;
                 GameEngine.DrawRectRotaGraph(
@@ -171,6 +159,37 @@ public static class WorldRenderSystem
                     sprite.GraphHandle,
                     true,
                     false);
+
+                // 隙あり（Vulnerable / Recovering）時の直接変色・脈動発光 & 醒目攻撃チャンスマーカー
+                // Boss1 は冲撞（DiveRam）後隙のみ易傷エフェクトを適用
+                if (fsm.CurrentState == Boss1StateKind.Recovering && fsm.CurrentSkillName == "DiveRam")
+                {
+                    float pulse = 0.5f + 0.5f * MathF.Sin(fsm.StateTimer * 10.0f);
+                    int vulnAlpha = (int)(130 + 110 * pulse);
+                    GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
+                    GameEngine.DrawRectRotaGraph(
+                        bx,
+                        by,
+                        sprite.SrcRect.X1,
+                        sprite.SrcRect.Y1,
+                        sprite.SrcRect.Width,
+                        sprite.SrcRect.Height,
+                        trans.ScaleX * 1.04f,
+                        bossAngle,
+                        sprite.GraphHandle,
+                        true,
+                        false);
+                    GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+
+                    // 頭上にボビングする醒目攻撃チャンスサイン (策划調整可能テキスト)
+                    float bobbing = MathF.Sin(fsm.StateTimer * 8.0f) * 4.0f;
+                    int textWidth = bossFx.ChanceMarkerText.Length * 7;
+                    int textX = bx - textWidth / 2;
+                    int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
+                    GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
+                }
+
+
 
                 if (stats.HitFlashTimer > 0.0f)
                 {
@@ -192,6 +211,7 @@ public static class WorldRenderSystem
             }
         });
     }
+
 
     private static void DrawBoss1Telegraph(Transform trans, Boss1StateMachine fsm, float playerX, float playerY, float progress)
     {
@@ -318,26 +338,9 @@ public static class WorldRenderSystem
                 float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
                 DrawBoss2Telegraph(trans, fsm, playerX, playerY, !sprite.FlipX, progress);
             }
-            else if (fsm.CurrentState == Boss2StateKind.PhaseTransition || fsm.IsInvulnerable)
-            {
-                int half = (int)bossFx.ShieldBaseRadius;
-                GameEngine.SetDrawBlendMode(BlendMode.Alpha, 60);
-                GameEngine.DrawBox(bx - half, by - half, bx + half, by + half, ColorPalette.RedCrimson, true);
-                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-                GameEngine.DrawBox(bx - half, by - half, bx + half, by + half, ColorPalette.Amber, false);
-                GameEngine.DrawString(bx - 48, by - half - 16, "[INVULNERABLE]", ColorPalette.Amber);
-            }
-            else if (fsm.CurrentState == Boss2StateKind.LandingRecovery)
-            {
-                GameEngine.DrawString(bx - 44, by - 60, "[VULNERABLE]", ColorPalette.CyanRecovering);
-            }
-            else if (fsm.CurrentState == Boss2StateKind.WallCrashStun)
-            {
-                GameEngine.DrawString(bx - 36, by - 60, "[STUNNED!]", ColorPalette.Gold);
-            }
-
 
             if (sprite.IsVisible && sprite.GraphHandle >= 0 && bHealth.IsAlive)
+
             {
                 GameEngine.DrawRectRotaGraph(
                     bx,
@@ -351,6 +354,36 @@ public static class WorldRenderSystem
                     sprite.GraphHandle,
                     true,
                     sprite.FlipX);
+
+                // 隙あり（LandingRecovery / WallCrashStun / SkillRecovery）時の直接変色・脈動発光 & 醒目攻撃チャンスマーカー
+                if (fsm.CurrentState is Boss2StateKind.LandingRecovery or Boss2StateKind.WallCrashStun or Boss2StateKind.SkillRecovery)
+                {
+                    float pulse = 0.5f + 0.5f * MathF.Sin(fsm.StateTimer * 10.0f);
+                    int vulnAlpha = (int)(130 + 110 * pulse);
+                    GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
+                    GameEngine.DrawRectRotaGraph(
+                        bx,
+                        by,
+                        sprite.SrcRect.X1,
+                        sprite.SrcRect.Y1,
+                        sprite.SrcRect.Width,
+                        sprite.SrcRect.Height,
+                        trans.ScaleX * 1.04f,
+                        0.0,
+                        sprite.GraphHandle,
+                        true,
+                        sprite.FlipX);
+                    GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+
+                    // 頭上にボビングする醒目攻撃チャンスサイン (策划調整可能テキスト)
+                    float bobbing = MathF.Sin(fsm.StateTimer * 8.0f) * 4.0f;
+                    int textWidth = bossFx.ChanceMarkerText.Length * 7;
+                    int textX = bx - textWidth / 2;
+                    int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
+                    GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
+                }
+
+
 
                 if (stats.HitFlashTimer > 0.0f)
                 {

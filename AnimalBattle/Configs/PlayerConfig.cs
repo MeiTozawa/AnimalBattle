@@ -106,6 +106,9 @@ public sealed class PlayerConfig
     /// <summary>銃弾 1 発あたりの与ダメージ量</summary>
     public float BulletDamage { get; set; } = 1.0f;
 
+    /// <summary>隙あり（Vulnerable / 易傷）状態の Boss に対する与ダメージ倍率（デフォルト: 2.0 倍）</summary>
+    public float VulnerableDamageMultiplier { get; set; } = 2.0f;
+
     /// <summary>
     /// 設定に基づいたプレイヤー被弾判定 (<see cref="CollisionShape"/>) を取得します。
     /// </summary>

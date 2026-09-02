@@ -140,7 +140,9 @@ def generate_code() -> str:
         lines.append(f"        BulletHitboxOffsetX = {_format_float(player_data.get('BulletHitboxOffsetX', 0.0))},")
         lines.append(f"        BulletHitboxOffsetY = {_format_float(player_data.get('BulletHitboxOffsetY', 0.0))},")
         lines.append(f"        BulletDamage = {_format_float(player_data.get('BulletDamage', 1.0))},")
+        lines.append(f"        VulnerableDamageMultiplier = {_format_float(player_data.get('VulnerableDamageMultiplier', 2.0))},")
     lines.append("    };")
+
     lines.append("")
 
     # ---- 2. Boss1Config ----
@@ -548,17 +550,13 @@ def generate_code() -> str:
         lines.append(f"            StompTextOffsetY = {_format_float(be.get('StompTextOffsetY', 14.0))},")
         lines.append(f"            SkyfallTextOffsetX = {_format_float(be.get('SkyfallTextOffsetX', 20.0))},")
         lines.append(f"            SkyfallTextOffsetY = {_format_float(be.get('SkyfallTextOffsetY', 20.0))},")
-        lines.append(f"            ShieldBaseRadius = {_format_float(be.get('ShieldBaseRadius', 85.0))},")
-        lines.append(f"            ShieldPulseAmp = {_format_float(be.get('ShieldPulseAmp', 6.0))},")
-        lines.append(f"            ShieldPulseSpeed = {_format_float(be.get('ShieldPulseSpeed', 12.0))},")
-        lines.append(f"            ShieldOuterColor = {_format_color(be.get('ShieldOuterColor', 0xFFFFD700))},")
-        lines.append(f"            ShieldInnerColor = {_format_color(be.get('ShieldInnerColor', 0xFFFFF275))},")
-        lines.append(f"            ShieldFillColor = {_format_color(be.get('ShieldFillColor', 0x44FFFF88))},")
-        lines.append(f"            RecoveringAuraRadius = {_format_float(be.get('RecoveringAuraRadius', 65.0))},")
-        lines.append(f"            RecoveringAuraColor = {_format_color(be.get('RecoveringAuraColor', 0x3300E5FF))},")
+        lines.append(f"            ChanceMarkerText = {_format_string(be.get('ChanceMarkerText', '▼ ATTACK! 2x DMG ▼'))},")
+        lines.append(f"            ChanceMarkerOffsetY = {_format_float(be.get('ChanceMarkerOffsetY', 55.0))},")
+        lines.append(f"            ChanceMarkerColor = {_format_color(be.get('ChanceMarkerColor', 0xFFFFD700))},")
         lines.append(f"            BossHoverAngleAmp = {_format_double(be.get('BossHoverAngleAmp', 0.08))},")
         lines.append(f"            BossHoverAngleSpeed = {_format_float(be.get('BossHoverAngleSpeed', 2.0))},")
         lines.append("        },")
+
 
 
         bul = render_data.get("Bullets", {})

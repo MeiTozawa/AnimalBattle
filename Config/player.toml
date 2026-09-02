@@ -33,3 +33,7 @@ BulletHitboxShape = "Box"
 BulletWidth = 12.0
 BulletHeight = 8.0
 BulletDamage = 1.0
+
+# 隙あり（Vulnerable / 易傷）状態の Boss に対するダメージ倍率
+VulnerableDamageMultiplier = 2.0
+

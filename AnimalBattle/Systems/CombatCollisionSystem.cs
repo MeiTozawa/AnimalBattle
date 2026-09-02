@@ -97,6 +97,31 @@ public static class CombatCollisionSystem
         return false;
     }
 
+    private static bool IsTargetVulnerable(Entity vicEntity)
+    {
+        if (vicEntity.Has<Boss1StateMachine>())
+        {
+            ref readonly Boss1StateMachine fsm1 = ref vicEntity.Get<Boss1StateMachine>();
+            // Boss1 は冲撞（DiveRam）後隙のみ易傷（2倍ダメージ）を適用
+            if (fsm1.CurrentState == Boss1StateKind.Recovering && fsm1.CurrentSkillName == "DiveRam")
+            {
+                return true;
+            }
+        }
+        else if (vicEntity.Has<Boss2StateMachine>())
+        {
+            ref readonly Boss2StateMachine fsm2 = ref vicEntity.Get<Boss2StateMachine>();
+            if (fsm2.CurrentState is Boss2StateKind.LandingRecovery or Boss2StateKind.WallCrashStun or Boss2StateKind.SkillRecovery)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
     private static void ApplyDamageAndEffects(
         World world,
         Entity vicEntity,
@@ -107,8 +132,22 @@ public static class CombatCollisionSystem
         PlayerConfig pCfg,
         ref bool shouldDestroyAttacker)
     {
-        vicHealth.Current -= localHitbox.Damage;
+        float damage = localHitbox.Damage;
+        bool isVulnerable = IsTargetVulnerable(vicEntity);
+        if (isVulnerable)
+        {
+            damage *= pCfg.VulnerableDamageMultiplier;
+        }
+
+        vicHealth.Current -= damage;
         CombatEffectHelper.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX, vicTrans.Y + hurtbox.Shape.OffsetY);
+
+        if (isVulnerable)
+        {
+            // 易傷特効クリティカル火花
+            CombatEffectHelper.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX - 8.0f, vicTrans.Y + hurtbox.Shape.OffsetY - 8.0f);
+            CombatEffectHelper.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX + 8.0f, vicTrans.Y + hurtbox.Shape.OffsetY + 8.0f);
+        }
 
         if (vicEntity.Has<PlayerTag>())
         {
@@ -155,3 +194,4 @@ public static class CombatCollisionSystem
         }
     }
 }
+

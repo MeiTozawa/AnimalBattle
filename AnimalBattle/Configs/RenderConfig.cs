@@ -47,34 +47,18 @@ public sealed class BossEffectsRenderConfig
     /// <summary>落雨落石（Skyfall）予兆テキストの Y オフセット (px)</summary>
     public float SkyfallTextOffsetY { get; set; } = 20.0f;
 
-    /// <summary>無敵シールド基本半径</summary>
-    public float ShieldBaseRadius { get; set; } = 85.0f;
+    /// <summary>易傷・隙あり（Vulnerable）時の醒目攻撃チャンス表示テキスト</summary>
+    public string ChanceMarkerText { get; set; } = "▼ ATTACK! 2x DMG ▼";
 
+    /// <summary>易傷時の醒目攻撃チャンス表示 Y 軸オフセット (px)</summary>
+    public float ChanceMarkerOffsetY { get; set; } = 55.0f;
 
-
-    /// <summary>無敵シールド脈動振幅</summary>
-    public float ShieldPulseAmp { get; set; } = 6.0f;
-
-    /// <summary>無敵シールド脈動周波数</summary>
-    public float ShieldPulseSpeed { get; set; } = 12.0f;
-
-    /// <summary>無敵シールド外枠色 (<see cref="Color"/>)</summary>
-    public Color ShieldOuterColor { get; set; } = ColorPalette.Gold;
-
-    /// <summary>無敵シールド内枠色 (<see cref="Color"/>)</summary>
-    public Color ShieldInnerColor { get; set; } = ColorPalette.GoldLight;
-
-    /// <summary>無敵シールド半透明塗りつぶし色 (<see cref="Color"/>)</summary>
-    public Color ShieldFillColor { get; set; } = ColorPalette.GoldShieldFill;
-
-    /// <summary>後隙（隙あり）時の光輪半径</summary>
-    public float RecoveringAuraRadius { get; set; } = 65.0f;
-
-    /// <summary>後隙時の光輪色 (<see cref="Color"/>)</summary>
-    public Color RecoveringAuraColor { get; set; } = ColorPalette.CyanRecovering;
+    /// <summary>易傷時の醒目攻撃チャンス表示色 (<see cref="Color"/>)</summary>
+    public Color ChanceMarkerColor { get; set; } = ColorPalette.Gold;
 
     /// <summary>Boss 浮遊時の揺れ角度振幅</summary>
     public double BossHoverAngleAmp { get; set; } = 0.08;
+
 
     /// <summary>Boss 浮遊時の揺れ角速度</summary>
     public float BossHoverAngleSpeed { get; set; } = 2.0f;

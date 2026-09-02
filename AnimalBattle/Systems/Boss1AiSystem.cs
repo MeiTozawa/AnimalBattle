@@ -228,18 +228,6 @@ public static class Boss1AiSystem
 
             case Boss1StateKind.Recovering:
                 fsm.IsInvulnerable = false;
-                if (fsm.CurrentSkillName == "DiveRam" && fsm.StateTimer >= fsm.StateDuration * currentPhaseCfg.RecoverDelayRatio)
-                {
-                    Vec2f curPos = trans.Position;
-                    Vec2f targetBase = new(stats.BaseX, currentPhaseCfg.HoverBaseY);
-                    NativeExtensionBindings.Extension_CalculateBossReturnPosition(
-                        in curPos,
-                        in targetBase,
-                        currentPhaseCfg.RecoverFlybackSpeed,
-                        dt,
-                        out trans.Position);
-                }
-
                 if (fsm.StateTimer >= fsm.StateDuration)
                 {
                     fsm.CurrentState = Boss1StateKind.Hovering;
@@ -247,6 +235,7 @@ public static class Boss1AiSystem
                     fsm.StateDuration = currentPhaseCfg.HoverDuration;
                 }
                 break;
+
 
             case Boss1StateKind.PhaseTransition:
                 fsm.IsInvulnerable = true;

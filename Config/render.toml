@@ -16,18 +16,14 @@ StompTextOffsetY = 14.0
 SkyfallTextOffsetX = 20.0
 SkyfallTextOffsetY = 20.0
 
-ShieldBaseRadius = 85.0          
-ShieldPulseAmp = 6.0             
-ShieldPulseSpeed = 12.0          
-ShieldOuterColor = 0xFFFFD700    
-ShieldInnerColor = 0xFFFFF275    
-ShieldFillColor = 0x44FFFF88    
-
-RecoveringAuraRadius = 65.0      
-RecoveringAuraColor = 0x3300E5FF 
+# 易傷・反撃チャンス醒目标志設定
+ChanceMarkerText = "▼ ATTACK! ▼"
+ChanceMarkerOffsetY = 70.0
+ChanceMarkerColor = 0xFFFFD700
 
 BossHoverAngleAmp = 0.08         
 BossHoverAngleSpeed = 2.0        
+        
 
 
 [Bullets]
