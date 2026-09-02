@@ -57,12 +57,12 @@ public static class Boss2StateIds
     {
         return attackId.Value switch
         {
-            201 => HeavySlashTelegraph,
-            202 => DoubleCleaveTelegraph,
-            203 => GroundStompTelegraph,
-            204 => LeapSmashTelegraph,
-            205 => FrenzyChargeTelegraph,
-            206 => EarthquakeRoarTelegraph,
+            Boss2AttackIds.HeavySlashValue => HeavySlashTelegraph,
+            Boss2AttackIds.DoubleCleaveValue => DoubleCleaveTelegraph,
+            Boss2AttackIds.GroundStompValue => GroundStompTelegraph,
+            Boss2AttackIds.LeapSmashValue => LeapSmashTelegraph,
+            Boss2AttackIds.FrenzyChargeValue => FrenzyChargeTelegraph,
+            Boss2AttackIds.EarthquakeRoarValue => EarthquakeRoarTelegraph,
             _ => BossState.Unknown
         };
     }
@@ -72,12 +72,12 @@ public static class Boss2StateIds
     {
         return attackId.Value switch
         {
-            201 => HeavySlashExecute,
-            202 => DoubleCleaveExecute,
-            203 => GroundStompExecute,
-            204 => LeapSmashAscent,
-            205 => FrenzyChargeExecute,
-            206 => EarthquakeRoarExecute,
+            Boss2AttackIds.HeavySlashValue => HeavySlashExecute,
+            Boss2AttackIds.DoubleCleaveValue => DoubleCleaveExecute,
+            Boss2AttackIds.GroundStompValue => GroundStompExecute,
+            Boss2AttackIds.LeapSmashValue => LeapSmashAscent,
+            Boss2AttackIds.FrenzyChargeValue => FrenzyChargeExecute,
+            Boss2AttackIds.EarthquakeRoarValue => EarthquakeRoarExecute,
             _ => BossState.Unknown
         };
     }
@@ -94,16 +94,30 @@ public static class Boss2StateIds
 /// <summary>Boss2 固有の安定した攻撃識別子です。</summary>
 public static class Boss2AttackIds
 {
+    /// <summary>重劈斬撃の数値 ID です。</summary>
+    public const int HeavySlashValue = 201;
+    /// <summary>二連重斬の数値 ID です。</summary>
+    public const int DoubleCleaveValue = 202;
+    /// <summary>撼地踏撃の数値 ID です。</summary>
+    public const int GroundStompValue = 203;
+    /// <summary>泰山圧頂の数値 ID です。</summary>
+    public const int LeapSmashValue = 204;
+    /// <summary>狂暴突進の数値 ID です。</summary>
+    public const int FrenzyChargeValue = 205;
+    /// <summary>滅地狂吼の数値 ID です。</summary>
+    public const int EarthquakeRoarValue = 206;
+
     /// <summary>重劈斬撃です。</summary>
-    public static readonly AttackId HeavySlash = new(201);
+    public static readonly AttackId HeavySlash = new(HeavySlashValue);
     /// <summary>二連重斬です。</summary>
-    public static readonly AttackId DoubleCleave = new(202);
+    public static readonly AttackId DoubleCleave = new(DoubleCleaveValue);
     /// <summary>撼地踏撃です。</summary>
-    public static readonly AttackId GroundStomp = new(203);
+    public static readonly AttackId GroundStomp = new(GroundStompValue);
     /// <summary>泰山圧頂です。</summary>
-    public static readonly AttackId LeapSmash = new(204);
+    public static readonly AttackId LeapSmash = new(LeapSmashValue);
     /// <summary>狂暴突進です。</summary>
-    public static readonly AttackId FrenzyCharge = new(205);
+    public static readonly AttackId FrenzyCharge = new(FrenzyChargeValue);
     /// <summary>滅地狂吼です。</summary>
-    public static readonly AttackId EarthquakeRoar = new(206);
+    public static readonly AttackId EarthquakeRoar = new(EarthquakeRoarValue);
 }
+
