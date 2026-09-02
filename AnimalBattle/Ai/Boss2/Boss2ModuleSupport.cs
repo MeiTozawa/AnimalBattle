@@ -165,11 +165,19 @@ internal sealed class Boss2RecoveryRunner
 
         _active.Update(ref context, in invocation);
         _state.StateElapsed = _active.Elapsed;
+
+        // 泰山圧頂（LeapSmash）の易傷着地後隙（2.0s）中は移動を完全停止しプレイヤーの攻撃好機を維持
+        if (_state.CurrentAttackId == Boss2AttackIds.LeapSmash)
+        {
+            context.Movement.Stop();
+        }
+
         if (_active.CanEvaluateNextTransition)
         {
             _state.IsAttackActive = false;
             _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.AttackCompleted, attackId: _state.CurrentAttackId));
         }
+
     }
 
     internal void Exit(ref StateContext context, in LifecycleInvocation invocation)

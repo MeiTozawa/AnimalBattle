@@ -111,7 +111,8 @@ public static class CombatCollisionSystem
         else if (vicEntity.Has<Boss2StateMachine>())
         {
             ref readonly Boss2StateMachine fsm2 = ref vicEntity.Get<Boss2StateMachine>();
-            if (fsm2.CurrentState is Boss2StateKind.LandingRecovery or Boss2StateKind.WallCrashStun or Boss2StateKind.SkillRecovery)
+            // Boss2 は泰山圧頂（LeapSmash）着地後隙のみ易傷（2倍ダメージ）を適用
+            if (fsm2.CurrentState == Boss2StateKind.SkillRecovery && fsm2.CurrentSkillName == "LeapSmash")
             {
                 return true;
             }
@@ -119,6 +120,7 @@ public static class CombatCollisionSystem
 
         return false;
     }
+
 
 
 

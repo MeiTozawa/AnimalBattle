@@ -355,8 +355,9 @@ public static class WorldRenderSystem
                     true,
                     sprite.FlipX);
 
-                // 隙あり（LandingRecovery / WallCrashStun / SkillRecovery）時の直接変色・脈動発光 & 醒目攻撃チャンスマーカー
-                if (fsm.CurrentState is Boss2StateKind.LandingRecovery or Boss2StateKind.WallCrashStun or Boss2StateKind.SkillRecovery)
+                // 隙あり（Vulnerable）時の直接変色・脈動発光 & 醒目攻撃チャンスマーカー
+                // Boss2 は泰山圧頂（LeapSmash）着地後隙のみ易傷エフェクトを適用
+                if (fsm.CurrentState == Boss2StateKind.SkillRecovery && fsm.CurrentSkillName == "LeapSmash")
                 {
                     float pulse = 0.5f + 0.5f * MathF.Sin(fsm.StateTimer * 10.0f);
                     int vulnAlpha = (int)(130 + 110 * pulse);
@@ -382,8 +383,6 @@ public static class WorldRenderSystem
                     int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
                     GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
                 }
-
-
 
                 if (stats.HitFlashTimer > 0.0f)
                 {
