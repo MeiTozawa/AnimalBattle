@@ -395,8 +395,22 @@ public sealed class LeapSmashConfig
     /// <summary>跳躍初速</summary>
     public float JumpForce { get; set; } = 680.0f;
 
+    /// <summary>プレイヤー頭上への飛翔所要時間（秒）</summary>
+    public float FlyDuration { get; set; } = 0.45f;
+
+    /// <summary>最高点ホバリング滞空時の Y 座標高度</summary>
+    public float PeakAltitudeY { get; set; } = 130.0f;
+
+    /// <summary>最高点でのホバリング滞空時間（秒）</summary>
+    public float ApexHangDuration { get; set; } = 0.5f;
+
+    /// <summary>垂直急降下叩きつけ速度</summary>
+    public float DescentSpeed { get; set; } = 1200.0f;
+
     /// <summary>着地破片弾数</summary>
     public int ShrapnelCount { get; set; } = 6;
+
+
 
     /// <summary>破片飛散速度</summary>
     public float ShrapnelSpeed { get; set; } = 260.0f;

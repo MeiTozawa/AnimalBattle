@@ -233,34 +233,32 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
             PatternConfig toml = ConfigManager.Pattern;
             if (toml is not null)
             {
-                switch (attackId.Value)
+                Boss2AttackPattern? configuredPattern = attackId switch
                 {
-                    case 8: // HeavySlash
-                        HeavySlashConfig hs = toml.HeavySlash;
-                        pattern = new Boss2AttackPattern(attackId, Boss2AttackKind.HeavySlash, hs.WindUpTime, hs.CastDuration, hs.RecoveryTime, 360.0f);
-                        return true;
-                    case 9: // DoubleCleave
-                        DoubleCleaveConfig dc = toml.DoubleCleave;
-                        pattern = new Boss2AttackPattern(attackId, Boss2AttackKind.DoubleCleave, dc.WindUpTime, dc.CastDuration, dc.RecoveryTime, 420.0f, 0.30f);
-                        return true;
-                    case 10: // GroundStomp
-                        GroundStompConfig gs = toml.GroundStomp;
-                        pattern = new Boss2AttackPattern(attackId, Boss2AttackKind.GroundStomp, gs.WindUpTime, gs.CastDuration, gs.RecoveryTime);
-                        return true;
-                    case 11: // LeapSmash
-                        LeapSmashConfig ls = toml.LeapSmash;
-                        pattern = new Boss2AttackPattern(attackId, Boss2AttackKind.LeapSmash, ls.WindUpTime, ls.CastDuration, ls.RecoveryTime, 680.0f);
-                        return true;
-                    case 12: // FrenzyCharge
-                        FrenzyChargeConfig fc = toml.FrenzyCharge;
-                        pattern = new Boss2AttackPattern(attackId, Boss2AttackKind.FrenzyCharge, fc.WindUpTime, fc.CastDuration, fc.RecoveryTime, 620.0f);
-                        return true;
-                    case 13: // EarthquakeRoar
-                        EarthquakeRoarConfig er = toml.EarthquakeRoar;
-                        pattern = new Boss2AttackPattern(attackId, Boss2AttackKind.EarthquakeRoar, er.WindUpTime, er.CastDuration, er.RecoveryTime, interval: 0.25f);
-                        return true;
+                    _ when attackId == Boss2AttackIds.HeavySlash =>
+                        new Boss2AttackPattern(attackId, Boss2AttackKind.HeavySlash, toml.HeavySlash.WindUpTime, toml.HeavySlash.CastDuration, toml.HeavySlash.RecoveryTime, 360.0f),
+                    _ when attackId == Boss2AttackIds.DoubleCleave =>
+                        new Boss2AttackPattern(attackId, Boss2AttackKind.DoubleCleave, toml.DoubleCleave.WindUpTime, toml.DoubleCleave.CastDuration, toml.DoubleCleave.RecoveryTime, 420.0f, 0.30f),
+                    _ when attackId == Boss2AttackIds.GroundStomp =>
+                        new Boss2AttackPattern(attackId, Boss2AttackKind.GroundStomp, toml.GroundStomp.WindUpTime, toml.GroundStomp.CastDuration, toml.GroundStomp.RecoveryTime),
+                    _ when attackId == Boss2AttackIds.LeapSmash =>
+                        new Boss2AttackPattern(attackId, Boss2AttackKind.LeapSmash, toml.LeapSmash.WindUpTime, toml.LeapSmash.CastDuration, toml.LeapSmash.RecoveryTime, toml.LeapSmash.JumpForce),
+                    _ when attackId == Boss2AttackIds.FrenzyCharge =>
+                        new Boss2AttackPattern(attackId, Boss2AttackKind.FrenzyCharge, toml.FrenzyCharge.WindUpTime, toml.FrenzyCharge.CastDuration, toml.FrenzyCharge.RecoveryTime, 620.0f),
+                    _ when attackId == Boss2AttackIds.EarthquakeRoar =>
+                        new Boss2AttackPattern(attackId, Boss2AttackKind.EarthquakeRoar, toml.EarthquakeRoar.WindUpTime, toml.EarthquakeRoar.CastDuration, toml.EarthquakeRoar.RecoveryTime, interval: 0.25f),
+                    _ => null
+                };
+
+                if (configuredPattern is not null && configuredPattern.IsValid)
+                {
+                    pattern = configuredPattern;
+                    return true;
                 }
             }
+
+
+
         }
         catch
         {

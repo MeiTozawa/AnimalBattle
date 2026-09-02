@@ -431,9 +431,15 @@ def generate_code() -> str:
         lines.append(f"            WindUpTime = {_format_float(ls.get('WindUpTime', 0.40))},")
         lines.append(f"            TelegraphColor = {_format_color(ls.get('TelegraphColor', 0xFFFF3D00))},")
         lines.append(f"            CastDuration = {_format_float(ls.get('CastDuration', 0.75))},")
-        lines.append(f"            RecoveryTime = {_format_float(ls.get('RecoveryTime', 0.70))},")
+        lines.append(f"            RecoveryTime = {_format_float(ls.get('RecoveryTime', 2.00))},")
         lines.append(f"            JumpForce = {_format_float(ls.get('JumpForce', 680.0))},")
+        lines.append(f"            FlyDuration = {_format_float(ls.get('FlyDuration', 0.45))},")
+        lines.append(f"            PeakAltitudeY = {_format_float(ls.get('PeakAltitudeY', 130.0))},")
+        lines.append(f"            ApexHangDuration = {_format_float(ls.get('ApexHangDuration', 1.00))},")
+        lines.append(f"            DescentSpeed = {_format_float(ls.get('DescentSpeed', 1200.0))},")
         lines.append(f"            ShrapnelCount = {ls.get('ShrapnelCount', 6)},")
+
+
         lines.append(f"            ShrapnelSpeed = {_format_float(ls.get('ShrapnelSpeed', 260.0))},")
         lines.append(f"            ShrapnelRadius = {_format_float(ls.get('ShrapnelRadius', 7.5))},")
         lines.append(f"            ShrapnelFillColor = {_format_color(ls.get('ShrapnelFillColor', 0xFFFF6D00))},")

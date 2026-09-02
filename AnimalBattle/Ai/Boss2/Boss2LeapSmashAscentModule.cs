@@ -2,18 +2,25 @@ using System;
 using System.Collections.Generic;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Configs;
 using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Boss2;
 
+
 /// <summary>
-/// Boss 2: 泰山圧頂（LeapSmash）の上昇 Execute State_Module です。
-/// 目標プレイヤー位置へ向かう跳躍初速と水平速度を設定して空高く跳び上がります。
+/// Boss 2: 泰山圧頂（LeapSmash）の上昇・飛翔 Execute State_Module です。
+/// 地上からプレイヤーの頭上空中へ向けて高速飛翔し、最高点で 1.0 秒間ホバリング滞空（懸停）します。
 /// </summary>
-public sealed class Boss2LeapSmashAscentModule : IBossStateModule, IStateModuleDependencyProvider
+/// <remarks>Boss2 設定と共有実行値を注入します。</remarks>
+public sealed class Boss2LeapSmashAscentModule(IBoss2Configuration configuration, Boss2BehaviorState state) : IBossStateModule, IStateModuleDependencyProvider
 {
-    private readonly IBoss2Configuration _configuration;
-    private readonly Boss2BehaviorState _state;
+    private readonly IBoss2Configuration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+    private readonly Boss2BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
+    private float _startX;
+    private float _startY;
+    private bool _isHoveringAtPeak;
+    private float _hoverTimer;
 
     /// <inheritdoc />
     public BossState Id => Boss2StateIds.LeapSmashAscent;
@@ -21,37 +28,21 @@ public sealed class Boss2LeapSmashAscentModule : IBossStateModule, IStateModuleD
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "ObservationService", "PlayerObservation"];
 
-    /// <summary>Boss2 設定と共有実行値を注入します。</summary>
-    public Boss2LeapSmashAscentModule(IBoss2Configuration configuration, Boss2BehaviorState state)
-    {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _state = state ?? throw new ArgumentNullException(nameof(state));
-    }
-
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
         _state.StateElapsed = 0.0f;
         _state.IsAttackActive = true;
+        _isHoveringAtPeak = false;
+        _hoverTimer = 0.0f;
 
-        if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentAttackId, in context, in invocation, out Boss2AttackPattern pattern))
-        {
-            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
-            return;
-        }
+        _startX = _state.CurrentPosition.X;
+        _startY = _state.CurrentPosition.Y;
 
-        // 目標プレイヤー座標へ向けて跳躍力と水平速度を算出・適用
-        float jumpForce = pattern.MoveSpeed > 0.0f ? pattern.MoveSpeed : 680.0f;
-        float targetX = _state.AttackTargetPosition.X != 0.0f ? _state.AttackTargetPosition.X : context.PlayerObservation.PositionX;
-        float currentX = _state.CurrentPosition.X;
-        float horizontalDist = targetX - currentX;
-
-        // 上昇所要時間（約 0.40秒）でプレイヤーの X 座標に到達する水平初速を計算
-        float ascentDuration = 0.40f;
-        float targetVx = Math.Clamp(horizontalDist / ascentDuration, -550.0f, 550.0f);
-
-        _state.FacingRight = targetVx >= 0.0f;
-        context.Movement.SetVelocity(targetVx, -jumpForce);
+        LeapSmashConfig leapCfg = ConfigManager.Pattern.LeapSmash;
+        float targetX = context.PlayerObservation.PositionX;
+        _state.AttackTargetPosition = new Vec2f(targetX, leapCfg.PeakAltitudeY);
+        _state.FacingRight = targetX >= _startX;
     }
 
     /// <inheritdoc />
@@ -63,19 +54,53 @@ public sealed class Boss2LeapSmashAscentModule : IBossStateModule, IStateModuleD
         }
 
         _state.StateElapsed += context.DeltaTime;
-        Boss2PhaseSettings settings = _configuration.GetPhase(context.Phase);
-        context.Movement.ApplyGravity(settings.Gravity, settings.MaxFallSpeed);
+        LeapSmashConfig leapCfg = ConfigManager.Pattern.LeapSmash;
+        float flyDuration = leapCfg.FlyDuration > 0.0f ? leapCfg.FlyDuration : 0.45f;
+        float peakY = leapCfg.PeakAltitudeY > 0.0f ? leapCfg.PeakAltitudeY : 130.0f;
+        float apexHangDuration = leapCfg.ApexHangDuration > 0.0f ? leapCfg.ApexHangDuration : 1.00f;
 
-        // 垂直速度が下向き（頂点到達）または一定時間経過で叩きつけ急降下（Descent）へ移行
-        if (_state.CurrentVelocity.Y >= 0.0f || _state.StateElapsed >= 0.40f)
+        if (!_isHoveringAtPeak)
         {
-            _state.RequestTransition(Boss2StateIds.LeapSmashDescent, new TransitionReason(ReasonKind.TimerElapsed, attackId: _state.CurrentAttackId));
+            float t = flyDuration > 0.0f ? Math.Clamp(_state.StateElapsed / flyDuration, 0.0f, 1.0f) : 1.0f;
+            // 滑らかなイージング（Sine イーズアウト）でプレイヤー頭上へ上昇飛翔
+            float easeT = MathF.Sin(t * MathF.PI * 0.5f);
+
+            // プレイヤーの最新位置に向けて頭上目標 X を追随
+            float targetX = context.PlayerObservation.PositionX;
+            float currentX = _startX + (targetX - _startX) * easeT;
+            float currentY = _startY + (peakY - _startY) * easeT;
+
+            _state.FacingRight = targetX >= _state.CurrentPosition.X;
+            context.Movement.MoveTo(currentX, currentY);
+
+            // 設定された飛翔所要時間を超えたら最高点滞空（停顿）フェーズへ
+            if (_state.StateElapsed >= flyDuration)
+            {
+                _isHoveringAtPeak = true;
+                _hoverTimer = 0.0f;
+                _state.AttackTargetPosition = new Vec2f(targetX, peakY);
+            }
+        }
+
+        else
+        {
+            // 最高点頭上懸停（停顿）中：空中で完全静止し、プレイヤーに回避・反応時間を与える
+            _hoverTimer += context.DeltaTime;
+            context.Movement.MoveTo(_state.AttackTargetPosition.X, peakY);
+
+            // 懸停完了後、垂直急降下叩きつけ（Descent）へ移行
+            if (_hoverTimer >= apexHangDuration)
+            {
+                _state.RequestTransition(Boss2StateIds.LeapSmashDescent, new TransitionReason(ReasonKind.TimerElapsed, attackId: _state.CurrentAttackId));
+            }
         }
     }
 
     /// <inheritdoc />
     public void Exit(ref StateContext context, in LifecycleInvocation invocation)
     {
+        _isHoveringAtPeak = false;
+        _hoverTimer = 0.0f;
     }
 }
 

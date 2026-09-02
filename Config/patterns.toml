@@ -138,6 +138,10 @@ TelegraphColor = 0xFFFF3D00
 CastDuration = 0.75
 RecoveryTime = 2.00
 JumpForce = 680.0
+FlyDuration = 0.45
+PeakAltitudeY = 130.0
+ApexHangDuration = 0.5
+DescentSpeed = 1200.0
 ShrapnelCount = 6
 ShrapnelSpeed = 260.0
 ShrapnelRadius = 7.5
@@ -183,4 +187,3 @@ RockSpeed = 360.0
 RockRadius = 9.0
 RockFillColor = 0xFF8D6E63
 RockOutlineColor = 0xFFD7CCC8
-
