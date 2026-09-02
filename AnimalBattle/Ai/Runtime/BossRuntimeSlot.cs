@@ -97,6 +97,14 @@ public sealed class BossRuntimeSlot
             view.LegacyStateTimer = _aiData.StateTimer;
             view.LegacyStateDuration = _aiData.StateDuration;
             view.LegacyIsInvulnerable = _aiData.IsInvulnerable;
+            view.LegacyStartX = _movementData.StartPosition.X;
+            view.LegacyStartY = _movementData.StartPosition.Y;
+            if (_context.PlayerObservation.IsAlive || _context.PlayerObservation.PositionX != 0.0f || _context.PlayerObservation.PositionY != 0.0f)
+            {
+                view.LegacyTargetX = _context.PlayerObservation.PositionX;
+                view.LegacyTargetY = _context.PlayerObservation.PositionY;
+            }
+            view.LegacyFacingRight = _movementData.FacingRight;
             view.UpdateSource = _aiData.UpdateSource;
             view.BossState = _currentBossState;
             view.Phase = _aiData.Phase;
@@ -109,6 +117,7 @@ public sealed class BossRuntimeSlot
             return view;
         }
     }
+
 
     /// <summary>現在の Debug_Data を取得します。Debug 無効時は生成しません。</summary>
     /// <param name="debugData">生成済みの Debug_Data。</param>
@@ -542,10 +551,15 @@ public sealed class BossRuntimeSlot
         {
             _aiData.AttackGenerationEnabled = false;
         }
+        if (reason.AttackId.IsValid)
+        {
+            _attackData.AttackId = reason.AttackId;
+        }
         _stateEntered = false;
         _moduleStopped = false;
         RefreshDebugData();
     }
+
 
     internal void MarkStateEntered()
     {

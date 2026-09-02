@@ -4,30 +4,53 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// Boss の予兆リング・無敵シールド等の描画エフェクト設定クラス。
+/// Boss の攻撃予兆・無敵シールド等の描画エフェクト設定クラス。
 /// </summary>
 public sealed class BossEffectsRenderConfig
 {
-    /// <summary>前隙予兆リング開始外径</summary>
-    public float TelegraphStartRadius { get; set; } = 140.0f;
+    /// <summary>危険判定矩形 (Danger Box) の半透明アルファ値 (0～255)</summary>
+    public int DangerBoxAlpha { get; set; } = 100;
 
-    /// <summary>前隙予兆リング収縮距離</summary>
-    public float TelegraphEndRadiusDelta { get; set; } = 60.0f;
+    /// <summary>照準レーザー (Aiming Laser) の半透明アルファ値 (0～255)</summary>
+    public int LaserAlpha { get; set; } = 140;
 
-    /// <summary>前隙予兆リング外枠色 (<see cref="Color"/>)</summary>
-    public Color TelegraphRingColor { get; set; } = ColorPalette.Red;
+    /// <summary>突進軌道レーン (Charge Track) の半透明アルファ値 (0～255)</summary>
+    public int ChargeTrackAlpha { get; set; } = 85;
 
-    /// <summary>前隙予兆リング内枠色 (<see cref="Color"/>)</summary>
-    public Color TelegraphInnerRingColor { get; set; } = ColorPalette.White;
+    /// <summary>警告テキスト・マーカー表示色 (<see cref="Color"/>)</summary>
+    public Color WarningTextColor { get; set; } = ColorPalette.RedCoral;
 
-    /// <summary>前隙予兆中心コア半径</summary>
-    public float TelegraphCoreRadius { get; set; } = 35.0f;
+    /// <summary>照準レーザー線の太さ (px)</summary>
+    public int LaserThickness { get; set; } = 2;
 
-    /// <summary>前隙予兆中心コア色 (<see cref="Color"/>)</summary>
-    public Color TelegraphCoreColor { get; set; } = ColorPalette.RedTelegraphCore;
+    /// <summary>俯衝突進（DiveRam）予兆テキストの X オフセット (px)</summary>
+    public float DiveRamTextOffsetX { get; set; } = 28.0f;
+
+    /// <summary>俯衝突進（DiveRam）予兆テキストの Y オフセット (px)</summary>
+    public float DiveRamTextOffsetY { get; set; } = 16.0f;
+
+    /// <summary>泰山圧頂（LeapSmash）予兆テキストの X オフセット (px)</summary>
+    public float LeapSmashTextOffsetX { get; set; } = 32.0f;
+
+    /// <summary>泰山圧頂（LeapSmash）予兆テキストの Y オフセット (px)</summary>
+    public float LeapSmashTextOffsetY { get; set; } = 18.0f;
+
+    /// <summary>撼地踏撃（Stomp）予兆テキストの X オフセット (px)</summary>
+    public float StompTextOffsetX { get; set; } = 10.0f;
+
+    /// <summary>撼地踏撃（Stomp）予兆テキストの Y オフセット (px)</summary>
+    public float StompTextOffsetY { get; set; } = 14.0f;
+
+    /// <summary>落雨落石（Skyfall）予兆テキストの X オフセット (px)</summary>
+    public float SkyfallTextOffsetX { get; set; } = 20.0f;
+
+    /// <summary>落雨落石（Skyfall）予兆テキストの Y オフセット (px)</summary>
+    public float SkyfallTextOffsetY { get; set; } = 20.0f;
 
     /// <summary>無敵シールド基本半径</summary>
     public float ShieldBaseRadius { get; set; } = 85.0f;
+
+
 
     /// <summary>無敵シールド脈動振幅</summary>
     public float ShieldPulseAmp { get; set; } = 6.0f;
