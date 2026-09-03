@@ -77,7 +77,7 @@ public static class BossAiRuntimeRegistration
             new Boss2MoveToTakeoffModule(boss2Configuration, boss2State),
             new Boss2PlatformJumpModule(boss2Configuration, boss2State),
             new Boss2PlatformFallModule(boss2Configuration, boss2State),
-            new Boss2LandingRecoveryModule(boss2State),
+            new Boss2LandingRecoveryModule(boss2State, boss2Configuration),
             new DslTelegraphModule(Boss2StateIds.HeavySlashTelegraph, boss2Configuration, boss2State),
             new DslTelegraphModule(Boss2StateIds.DoubleCleaveTelegraph, boss2Configuration, boss2State),
             new DslTelegraphModule(Boss2StateIds.GroundStompTelegraph, boss2Configuration, boss2State),

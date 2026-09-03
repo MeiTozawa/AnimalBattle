@@ -38,8 +38,6 @@ public static class Boss2StateIds
     public const BossState GroundStompExecute = BossState.Boss2_GroundStompExecute;
     /// <summary>LeapSmash の Execute 状態です。</summary>
     public const BossState LeapSmashExecute = BossState.Boss2_LeapSmashExecute;
-    /// <summary>LeapSmash の Execute 状態です（互換用）。</summary>
-    public const BossState LeapSmashAscent = LeapSmashExecute;
     /// <summary>FrenzyCharge の Execute 状態です。</summary>
     public const BossState FrenzyChargeExecute = BossState.Boss2_FrenzyChargeExecute;
     /// <summary>EarthquakeRoar の Execute 状態です。</summary>

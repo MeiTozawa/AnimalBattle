@@ -14,6 +14,7 @@ public sealed class BossBehaviorPipeline
     private readonly string _name;
     private readonly FrozenDictionary<Phase, IReadOnlyList<AttackDecisionRule>> _rulesByPhase;
     private readonly FrozenDictionary<BossSkill, AttackDefinition> _attacks;
+    private readonly FrozenDictionary<Phase, PhaseLocomotionSettings> _locomotionByPhase;
 
     /// <summary>Boss の種別を取得します。</summary>
     public BossType BossType => _bossType;
@@ -31,12 +32,14 @@ public sealed class BossBehaviorPipeline
         BossType bossType,
         string name,
         Dictionary<Phase, IReadOnlyList<AttackDecisionRule>> rulesByPhase,
-        Dictionary<BossSkill, AttackDefinition> attacks)
+        Dictionary<BossSkill, AttackDefinition> attacks,
+        Dictionary<Phase, PhaseLocomotionSettings>? locomotionByPhase = null)
     {
         _bossType = bossType;
         _name = name;
         _rulesByPhase = rulesByPhase.ToFrozenDictionary();
         _attacks = attacks.ToFrozenDictionary();
+        _locomotionByPhase = (locomotionByPhase ?? []).ToFrozenDictionary();
     }
 
     /// <summary>
@@ -60,6 +63,17 @@ public sealed class BossBehaviorPipeline
     public bool TryGetAttack(BossSkill skill, out AttackDefinition definition)
     {
         return _attacks.TryGetValue(skill, out definition!);
+    }
+
+    /// <summary>
+    /// 指定 Phase の足場間跳躍・落下・着地機動パラメータを取得します。
+    /// </summary>
+    /// <param name="phase">対象の Phase。</param>
+    /// <param name="settings">見つかった機動パラメータ。</param>
+    /// <returns>設定が存在する場合は true。</returns>
+    public bool TryGetLocomotion(Phase phase, out PhaseLocomotionSettings settings)
+    {
+        return _locomotionByPhase.TryGetValue(phase, out settings);
     }
 
 }

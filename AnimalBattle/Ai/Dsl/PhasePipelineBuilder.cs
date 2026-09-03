@@ -15,6 +15,7 @@ public sealed class PhasePipelineBuilder
     private float _idleDuration = 0.8f;
     private float _patrolDuration = 2.0f;
     private float _transitionDuration = 1.0f;
+    private PhaseLocomotionSettings _locomotionSettings = new(580.0f);
 
     /// <summary>対象の Phase を取得します。</summary>
     public Phase CurrentPhase => _phase;
@@ -40,6 +41,34 @@ public sealed class PhasePipelineBuilder
         _idleDuration = idleDuration;
         _patrolDuration = patrolDuration;
         _transitionDuration = transitionDuration;
+        return this;
+    }
+
+    /// <summary>
+    /// Phase の足場間跳躍・落下・着地機動パラメータを設定します。
+    /// </summary>
+    /// <param name="jumpForce">跳躍初速（px/s）。</param>
+    /// <param name="gravity">適用される重力加速度（px/s^2）。</param>
+    /// <param name="maxFallSpeed">最大落下終端速度（px/s）。</param>
+    /// <param name="maxAscentDuration">跳躍上昇の最大許容時間（秒）。</param>
+    /// <param name="landingRecoveryDuration">着地後の硬直待機時間（秒）。</param>
+    /// <param name="takeoffDistance">足場間跳躍への移行を開始する水平距離閾値（px）。</param>
+    /// <returns>現在の Phase ビルダー。</returns>
+    public PhasePipelineBuilder PlatformJump(
+        float jumpForce,
+        float gravity = 980.0f,
+        float maxFallSpeed = 850.0f,
+        float maxAscentDuration = 0.80f,
+        float landingRecoveryDuration = 0.10f,
+        float takeoffDistance = 50.0f)
+    {
+        _locomotionSettings = new PhaseLocomotionSettings(
+            jumpForce,
+            gravity,
+            maxFallSpeed,
+            maxAscentDuration,
+            landingRecoveryDuration,
+            takeoffDistance);
         return this;
     }
 
@@ -88,4 +117,9 @@ public sealed class PhasePipelineBuilder
     /// 移行演出時間を取得します。
     /// </summary>
     internal float TransitionDuration => _transitionDuration;
+
+    /// <summary>
+    /// 機動パラメータ設定を取得します。
+    /// </summary>
+    internal PhaseLocomotionSettings LocomotionSettings => _locomotionSettings;
 }

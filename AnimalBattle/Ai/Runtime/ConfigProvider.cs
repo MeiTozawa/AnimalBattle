@@ -505,10 +505,7 @@ public sealed class ConfigProvider : IConfigProvider
             if (!FixedBossStateModuleCatalog.Get(mapping.TelegraphState, out FixedBossStateModule telegraph)
                 || telegraph.BossType != mapping.BossType
                 || !FixedBossStateModuleCatalog.Get(mapping.ExecuteState, out FixedBossStateModule execute)
-                || execute.BossType != mapping.BossType
-                || (mapping.SecondaryExecuteState != BossState.Unknown
-                    && (!FixedBossStateModuleCatalog.Get(mapping.SecondaryExecuteState, out FixedBossStateModule secondaryExecute)
-                        || secondaryExecute.BossType != mapping.BossType)))
+                || execute.BossType != mapping.BossType)
             {
                 AddFailure(
                     diagnostics,

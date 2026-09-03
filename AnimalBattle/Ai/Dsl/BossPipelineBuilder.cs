@@ -50,9 +50,11 @@ public sealed class BossPipelineBuilder
     {
         Dictionary<Phase, IReadOnlyList<AttackDecisionRule>> rulesByPhase = [];
         Dictionary<BossSkill, AttackDefinition> attacks = [];
+        Dictionary<Phase, PhaseLocomotionSettings> locomotionByPhase = [];
 
         foreach (PhasePipelineBuilder phaseBuilder in _phaseBuilders)
         {
+            locomotionByPhase[phaseBuilder.CurrentPhase] = phaseBuilder.LocomotionSettings;
             List<AttackDecisionRule> phaseRules = [];
             foreach (AttackPipelineBuilder attackBuilder in phaseBuilder.AttackBuilders)
             {
@@ -68,7 +70,7 @@ public sealed class BossPipelineBuilder
             rulesByPhase[phaseBuilder.CurrentPhase] = phaseRules.AsReadOnly();
         }
 
-        return new BossBehaviorPipeline(_bossType, _name, rulesByPhase, attacks);
+        return new BossBehaviorPipeline(_bossType, _name, rulesByPhase, attacks, locomotionByPhase);
     }
 }
 

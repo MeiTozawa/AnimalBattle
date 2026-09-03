@@ -7,16 +7,18 @@ namespace AnimalBattle.Ai.Boss2;
 public sealed class Boss2LandingRecoveryModule : IBossStateModule, IStateModuleDependencyProvider
 {
     private readonly Boss2BehaviorState _state;
+    private readonly IBoss2Configuration? _configuration;
 
     /// <inheritdoc />
     public BossState Id => Boss2StateIds.LandingRecovery;
     /// <inheritdoc />
-    public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "EffectPort"];
+    public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "EffectPort", "Boss2Configuration"];
 
-    /// <summary>共有実行値を注入して着地 recovery module を生成します。</summary>
-    public Boss2LandingRecoveryModule(Boss2BehaviorState state)
+    /// <summary>共有実行値および設定を注入して着地 recovery module を生成します。</summary>
+    public Boss2LandingRecoveryModule(Boss2BehaviorState state, IBoss2Configuration? configuration = null)
     {
         _state = state ?? throw new ArgumentNullException(nameof(state));
+        _configuration = configuration;
     }
 
     /// <inheritdoc />
@@ -37,7 +39,8 @@ public sealed class Boss2LandingRecoveryModule : IBossStateModule, IStateModuleD
 
         context.Movement.Stop();
         _state.StateElapsed += context.DeltaTime;
-        if (_state.StateElapsed >= 0.10f)
+        float recoveryDuration = _configuration?.GetPhase(context.Phase).LandingRecoveryDuration ?? 0.10f;
+        if (_state.StateElapsed >= recoveryDuration)
         {
             _state.RequestTransition(Boss2StateIds.PatrolChase, new TransitionReason(ReasonKind.TimerElapsed));
         }

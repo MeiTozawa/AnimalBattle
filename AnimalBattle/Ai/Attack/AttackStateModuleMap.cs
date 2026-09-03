@@ -9,15 +9,13 @@ public readonly record struct AttackStateModuleMapping(
     BossSkill Skill,
     BossType BossType,
     BossState TelegraphState,
-    BossState ExecuteState,
-    BossState SecondaryExecuteState = BossState.Unknown)
+    BossState ExecuteState)
 {
     /// <summary>対応が固定実行状態を持つかどうかを取得します。</summary>
     public bool IsValid => Skill.IsValid()
         && BossType != BossType.Unknown
         && TelegraphState.IsValid()
-        && ExecuteState.IsValid()
-        && (SecondaryExecuteState == BossState.Unknown || SecondaryExecuteState.IsValid());
+        && ExecuteState.IsValid();
 }
 
 /// <summary>
@@ -25,7 +23,7 @@ public readonly record struct AttackStateModuleMapping(
 /// </summary>
 /// <remarks>
 /// この map はコードに固定され、実行中の登録、削除、生成、差し替えを行いません。
-/// LeapSmash だけは Execute の上昇と落下を同じ BossSkill の二段状態として保持します。
+/// 全技能が均一に対称的な Telegraph と Execute 状態へ対応します。
 /// </remarks>
 public static class AttackStateModuleMap
 {

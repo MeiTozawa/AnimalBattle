@@ -47,7 +47,7 @@ public sealed class Boss2MoveToTakeoffModule : IBossStateModule, IStateModuleDep
         _state.CurrentVelocity = new Vec2f(velocityX, _state.CurrentVelocity.Y);
         context.Movement.SetVelocity(velocityX, _state.CurrentVelocity.Y);
         _state.StateElapsed += context.DeltaTime;
-        if (_state.IsGrounded && MathF.Abs(context.PlayerObservation.PositionX - _state.CurrentPosition.X) <= 50.0f)
+        if (_state.IsGrounded && MathF.Abs(context.PlayerObservation.PositionX - _state.CurrentPosition.X) <= settings.TakeoffDistance)
         {
             _state.RequestTransition(Boss2StateIds.PlatformJump, new TransitionReason(ReasonKind.PlayerObservation));
         }

@@ -27,7 +27,14 @@ public static class Boss2PipelineDefinition
             .Timing(
                 idleDuration: boss2.Phase1.IdleDuration,
                 patrolDuration: 2.0f,
-                transitionDuration: boss2.Phase1.TransitionDuration);
+                transitionDuration: boss2.Phase1.TransitionDuration)
+            .PlatformJump(
+                jumpForce: boss2.Phase1.JumpForce,
+                gravity: boss2.Gravity,
+                maxFallSpeed: 850.0f,
+                maxAscentDuration: 0.80f,
+                landingRecoveryDuration: 0.10f,
+                takeoffDistance: 50.0f);
 
         p1.Attack(BossSkill.HeavySlash)
             .Telegraph(pattern.HeavySlash.WindUpTime, pattern.HeavySlash.TelegraphColor)
@@ -50,7 +57,14 @@ public static class Boss2PipelineDefinition
             .Timing(
                 idleDuration: boss2.Phase2.IdleDuration,
                 patrolDuration: 1.5f,
-                transitionDuration: boss2.Phase2.TransitionDuration);
+                transitionDuration: boss2.Phase2.TransitionDuration)
+            .PlatformJump(
+                jumpForce: boss2.Phase2.JumpForce,
+                gravity: boss2.Gravity,
+                maxFallSpeed: 850.0f,
+                maxAscentDuration: 0.80f,
+                landingRecoveryDuration: 0.10f,
+                takeoffDistance: 50.0f);
 
         p2.Attack(BossSkill.DoubleCleave)
             .Telegraph(pattern.DoubleCleave.WindUpTime, pattern.DoubleCleave.TelegraphColor)
@@ -74,7 +88,14 @@ public static class Boss2PipelineDefinition
             .Timing(
                 idleDuration: boss2.Phase3.IdleDuration,
                 patrolDuration: 1.0f,
-                transitionDuration: boss2.Phase3.TransitionDuration);
+                transitionDuration: boss2.Phase3.TransitionDuration)
+            .PlatformJump(
+                jumpForce: boss2.Phase3.JumpForce,
+                gravity: boss2.Gravity,
+                maxFallSpeed: 850.0f,
+                maxAscentDuration: 0.80f,
+                landingRecoveryDuration: 0.10f,
+                takeoffDistance: 50.0f);
 
         AttackPipelineBuilder frenzy = p3.Attack(BossSkill.FrenzyCharge)
             .Telegraph(pattern.FrenzyCharge.WindUpTime, pattern.FrenzyCharge.TelegraphColor)

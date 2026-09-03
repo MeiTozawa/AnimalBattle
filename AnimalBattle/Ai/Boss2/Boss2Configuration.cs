@@ -1,6 +1,7 @@
 using System.Linq;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai.Dsl;
 using AnimalBattle.Configs;
 
 namespace AnimalBattle.Ai.Boss2;
@@ -28,6 +29,12 @@ public readonly struct Boss2PhaseSettings
     public IReadOnlyList<BossSkill> AttackOrder => Skills;
     /// <summary>この Phase で評価される攻撃意思決定ルールです。</summary>
     public IReadOnlyList<AttackDecisionRule> Rules { get; }
+    /// <summary>跳躍上昇の最大許容時間（秒）です。</summary>
+    public float MaxAscentDuration { get; }
+    /// <summary>着地後の硬直待機時間（秒）です。</summary>
+    public float LandingRecoveryDuration { get; }
+    /// <summary>足場間跳躍への移行を開始する水平距離閾値（px）です。</summary>
+    public float TakeoffDistance { get; }
 
     /// <summary>Boss2 Phase 設定を生成します。</summary>
     public Boss2PhaseSettings(
@@ -39,7 +46,10 @@ public readonly struct Boss2PhaseSettings
         float patrolRadius,
         float transitionDuration,
         IReadOnlyList<BossSkill> skills,
-        IReadOnlyList<AttackDecisionRule>? rules = null)
+        IReadOnlyList<AttackDecisionRule>? rules = null,
+        float maxAscentDuration = 0.80f,
+        float landingRecoveryDuration = 0.10f,
+        float takeoffDistance = 50.0f)
     {
         IdleDuration = idleDuration;
         MoveSpeed = moveSpeed;
@@ -50,20 +60,9 @@ public readonly struct Boss2PhaseSettings
         TransitionDuration = transitionDuration;
         Skills = skills ?? [];
         Rules = rules ?? [];
-    }
-
-    /// <summary>Boss2 Phase 設定を生成します（互換用）。</summary>
-    public Boss2PhaseSettings(
-        float idleDuration,
-        float moveSpeed,
-        float jumpForce,
-        float gravity,
-        float patrolRadius,
-        float transitionDuration,
-        IReadOnlyList<BossSkill> skills,
-        IReadOnlyList<AttackDecisionRule>? rules = null)
-        : this(idleDuration, moveSpeed, jumpForce, gravity, 850.0f, patrolRadius, transitionDuration, skills, rules)
-    {
+        MaxAscentDuration = maxAscentDuration;
+        LandingRecoveryDuration = landingRecoveryDuration;
+        TakeoffDistance = takeoffDistance;
     }
 }
 
@@ -112,12 +111,6 @@ public interface IBoss2Configuration
 /// <summary>既存 Boss2 設定の検証済み既定 snapshot です。</summary>
 public sealed class Boss2DefaultConfiguration : IBoss2Configuration
 {
-    private readonly Boss2PhaseSettings[] _phases =
-    [
-        new Boss2PhaseSettings(0.8f, 160.0f, 580.0f, 980.0f, 400.0f, 1.0f, [BossSkill.HeavySlash, BossSkill.GroundStomp, BossSkill.HeavySlash, BossSkill.LeapSmash], Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase1)),
-        new Boss2PhaseSettings(0.5f, 220.0f, 640.0f, 980.0f, 400.0f, 1.0f, [BossSkill.DoubleCleave, BossSkill.GroundStomp, BossSkill.LeapSmash, BossSkill.DoubleCleave], Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase2)),
-        new Boss2PhaseSettings(0.3f, 280.0f, 700.0f, 980.0f, 400.0f, 1.2f, [BossSkill.FrenzyCharge, BossSkill.EarthquakeRoar, BossSkill.DoubleCleave, BossSkill.LeapSmash], Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase3))
-    ];
     private readonly Boss2AttackPattern[] _attacks =
     [
         new Boss2AttackPattern(BossSkill.HeavySlash, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.HeavySlash], 360.0f),
@@ -131,15 +124,45 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
     /// <inheritdoc />
     public Boss2PhaseSettings GetPhase(Phase phase)
     {
-        int index = phase switch
+        Boss2Config toml = ConfigManager.Boss2;
+        Boss2PipelineDefinition.Pipeline.TryGetLocomotion(phase, out PhaseLocomotionSettings loco);
+
+        Boss2PhaseConfig phaseCfg = phase switch
         {
-            Phase.Phase1 => 0,
-            Phase.Phase2 => 1,
-            Phase.Phase3 => 2,
-            _ => 0
+            Phase.Phase1 => toml.Phase1,
+            Phase.Phase2 => toml.Phase2,
+            Phase.Phase3 => toml.Phase3,
+            _ => toml.Phase1
         };
 
-        return _phases[index];
+        IReadOnlyList<BossSkill> skills = phase switch
+        {
+            Phase.Phase1 => [BossSkill.HeavySlash, BossSkill.GroundStomp, BossSkill.HeavySlash, BossSkill.LeapSmash],
+            Phase.Phase2 => [BossSkill.DoubleCleave, BossSkill.GroundStomp, BossSkill.LeapSmash, BossSkill.DoubleCleave],
+            Phase.Phase3 => [BossSkill.FrenzyCharge, BossSkill.EarthquakeRoar, BossSkill.DoubleCleave, BossSkill.LeapSmash],
+            _ => [BossSkill.HeavySlash]
+        };
+
+        float jumpForce = loco.JumpForce > 0 ? loco.JumpForce : phaseCfg.JumpForce;
+        float gravity = loco.Gravity > 0 ? loco.Gravity : toml.Gravity;
+        float maxFallSpeed = loco.MaxFallSpeed > 0 ? loco.MaxFallSpeed : 850.0f;
+        float maxAscent = loco.MaxAscentDuration > 0 ? loco.MaxAscentDuration : 0.80f;
+        float landingRecovery = loco.LandingRecoveryDuration > 0 ? loco.LandingRecoveryDuration : 0.10f;
+        float takeoffDistance = loco.TakeoffDistance > 0 ? loco.TakeoffDistance : 50.0f;
+
+        return new Boss2PhaseSettings(
+            idleDuration: phaseCfg.IdleDuration,
+            moveSpeed: phaseCfg.MoveSpeed,
+            jumpForce: jumpForce,
+            gravity: gravity,
+            maxFallSpeed: maxFallSpeed,
+            patrolRadius: toml.PatrolRadius,
+            transitionDuration: phaseCfg.TransitionDuration,
+            skills: skills,
+            rules: Boss2PipelineDefinition.Pipeline.GetRules(phase),
+            maxAscentDuration: maxAscent,
+            landingRecoveryDuration: landingRecovery,
+            takeoffDistance: takeoffDistance);
     }
 
     /// <inheritdoc />
@@ -196,11 +219,6 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
 
         pattern = null!;
         return false;
-    }
-
-    private static BossSkill ResolveBossSkill(string skillName)
-    {
-        return Enum.TryParse<BossSkill>(skillName, ignoreCase: true, out BossSkill skill) ? skill : BossSkill.None;
     }
 }
 
