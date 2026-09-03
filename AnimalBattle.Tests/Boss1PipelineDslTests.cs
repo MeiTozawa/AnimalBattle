@@ -237,6 +237,49 @@ public sealed class Boss1PipelineDslTests
 
         Assert.Equal(Boss1StateIds.Hover, state.PendingBossState);
     }
+
+    /// <summary>
+    /// DslBoss1BarrageExecuteModule が弾幕攻撃完了後に正しい Recovery 状態へ遷移要求を発行することを検証します。
+    /// </summary>
+    [Fact]
+    public void DslBoss1BarrageExecuteModule_Lifecycle_TransitionsToRecovery()
+    {
+        Boss1DefaultConfiguration config = new();
+        Boss1BehaviorState state = new();
+        state.CurrentSkill = BossSkill.Aimed3Shot;
+        AnimalBattle.Ai.Dsl.Modules.DslBoss1BarrageExecuteModule module = new(Boss1StateIds.Aimed3ShotExecute, config, state, BossSkill.Aimed3Shot);
+
+        Boss1MockMovementPort movement = new();
+        Boss1MockAttackPort attack = new();
+        Boss1MockEffectPort effect = new();
+        Boss1MockRandomSource random = new();
+        Boss1MockConfigProvider configProvider = new();
+        Boss1MockObservationService observation = new();
+
+        StateContext context = new(
+            entityId: 1,
+            bossType: BossType.Boss1,
+            configProvider: configProvider,
+            configSnapshot: configProvider.Current,
+            movement: movement,
+            attack: attack,
+            effect: effect,
+            observation: observation,
+            random: random);
+
+        LifecycleInvocation invocation = new(BossType.Boss1, 1, Boss1StateIds.Aimed3ShotExecute, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
+
+        PlayerObservation obs1 = new(10, true, 200, 200, 0, 0, 1);
+        context.BeginFrame(1, 0.016f, Phase.Phase1, in obs1);
+        module.Enter(ref context, in invocation);
+
+        // Aimed3Shot の持続時間（0.90s）を経過させる
+        PlayerObservation obs2 = new(10, true, 200, 200, 0, 0, 2);
+        context.BeginFrame(2, 0.95f, Phase.Phase1, in obs2);
+        module.Update(ref context, in invocation);
+
+        Assert.Equal(Boss1StateIds.Recovery, state.PendingBossState);
+    }
 }
 
 
