@@ -59,7 +59,7 @@ public static class BossAiRuntimeRegistration
         [
             new HoverMovementModule(boss1Configuration, boss1State),
             new Boss1AttackSelectionModule(boss1Configuration, boss1State),
-            new Boss1TelegraphModule(boss1Configuration, boss1State),
+            new DslBoss1TelegraphModule(boss1Configuration, boss1State),
             new Boss1BarrageExecuteModule(Boss1StateIds.Aimed3ShotExecute, boss1Configuration, boss1State, BossSkill.Aimed3Shot),
             new Boss1BarrageExecuteModule(Boss1StateIds.RingBurstExecute, boss1Configuration, boss1State, BossSkill.RingBurst),
             new Boss1BarrageExecuteModule(Boss1StateIds.DoubleSpiralExecute, boss1Configuration, boss1State, BossSkill.DoubleSpiral),
@@ -67,8 +67,8 @@ public static class BossAiRuntimeRegistration
             new Boss1BarrageExecuteModule(Boss1StateIds.CrossChaosExecute, boss1Configuration, boss1State, BossSkill.CrossChaos),
             new Boss1BarrageExecuteModule(Boss1StateIds.FastSniperExecute, boss1Configuration, boss1State, BossSkill.FastSniper),
 
-            new DiveRamExecuteModule(boss1Configuration, boss1State),
-            new Boss1RecoveryModule(boss1Configuration, boss1State),
+            new DslBoss1DiveRamExecuteModule(boss1Configuration, boss1State),
+            new DslBoss1RecoveryModule(boss1Configuration, boss1State),
             new Boss1PhaseTransitionModule(boss1Configuration, boss1State),
             new Boss1DeadModule(boss1State),
 
