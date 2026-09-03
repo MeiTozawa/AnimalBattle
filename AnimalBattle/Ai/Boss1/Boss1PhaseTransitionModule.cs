@@ -14,7 +14,7 @@ public sealed class Boss1PhaseTransitionModule : IBossStateModule, IStateModuleD
     private float _elapsed;
 
     /// <inheritdoc />
-    public BossState Id => Boss1StateIds.PhaseTransition;
+    public BossState Id => BossState.Boss1_PhaseTransition;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "MovementPort", "AttackPort", "EffectPort"];
 
@@ -67,7 +67,7 @@ public sealed class Boss1PhaseTransitionModule : IBossStateModule, IStateModuleD
         {
             _state.PhaseTransitionData.IsActive = false;
             _state.IsInvulnerable = false;
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.PhaseThreshold, threshold: 0));
+            _state.RequestTransition(BossState.Boss1_Hover, new TransitionReason(ReasonKind.PhaseThreshold, threshold: 0));
         }
     }
 

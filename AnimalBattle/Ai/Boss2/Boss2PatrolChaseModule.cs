@@ -15,7 +15,7 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public BossState Id => Boss2StateIds.PatrolChase;
+    public BossState Id => BossState.Boss2_PatrolChase;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "PlayerObservation"];
 
@@ -40,7 +40,7 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
         {
             if (!_state.IsGrounded)
             {
-                _state.RequestTransition(Boss2StateIds.PlatformFall, new TransitionReason(ReasonKind.PlayerObservation));
+                _state.RequestTransition(BossState.Boss2_PlatformTraverse, new TransitionReason(ReasonKind.PlayerObservation));
             }
             return;
         }
@@ -84,7 +84,7 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
                         _state.JumpCooldown = 1.0f;
                         _state.CurrentVelocity = new Vec2f(jumpVx, jumpVy);
                         context.Movement.SetVelocity(jumpVx, jumpVy);
-                        _state.RequestTransition(Boss2StateIds.PlatformJump, new TransitionReason(ReasonKind.PlayerObservation));
+                        _state.RequestTransition(BossState.Boss2_PlatformTraverse, new TransitionReason(ReasonKind.PlayerObservation));
                         return;
                     }
                     else
@@ -183,7 +183,7 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
     {
         if (!Boss2ModuleSupport.GetPattern(_configuration, skill, in context, in invocation, out Boss2AttackPattern pattern))
         {
-            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
+            _state.RequestTransition(BossState.Boss2_Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
@@ -193,7 +193,7 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
         _state.AttackTargetPosition = new Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         _state.IsAttackActive = true;
-        _state.RequestTransition(Boss2StateIds.GetTelegraphState(skill), new TransitionReason(ReasonKind.PlayerObservation, skill: skill));
+        _state.RequestTransition(BossState.Boss2_Telegraph, new TransitionReason(ReasonKind.PlayerObservation, skill: skill));
     }
 
     private void SelectNextLegacyAttack(ref StateContext context, in LifecycleInvocation invocation)

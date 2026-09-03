@@ -140,7 +140,7 @@ public sealed class DslPlatformTraverseModule : IBossStateModule, IStateModuleDe
                 context.Movement.Stop();
                 if (_stageElapsed >= settings.LandingRecoveryDuration)
                 {
-                    _state.RequestTransition(Boss2StateIds.PatrolChase, new TransitionReason(ReasonKind.TimerElapsed));
+                    _state.RequestTransition(BossState.Boss2_PatrolChase, new TransitionReason(ReasonKind.TimerElapsed));
                 }
                 break;
             }

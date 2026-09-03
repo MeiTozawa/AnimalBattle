@@ -11,7 +11,7 @@ public sealed class Boss2PhaseTransitionModule : IBossStateModule, IStateModuleD
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public BossState Id => Boss2StateIds.PhaseTransition;
+    public BossState Id => BossState.Boss2_PhaseTransition;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "AttackPort", "EffectPort"];
 
@@ -48,7 +48,7 @@ public sealed class Boss2PhaseTransitionModule : IBossStateModule, IStateModuleD
         {
             _state.PhaseTransitionData.IsActive = false;
             _state.IsInvulnerable = false;
-            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.PhaseThreshold, threshold: 0));
+            _state.RequestTransition(BossState.Boss2_Idle, new TransitionReason(ReasonKind.PhaseThreshold, threshold: 0));
         }
     }
 

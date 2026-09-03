@@ -18,7 +18,7 @@ public sealed class DslBoss1TelegraphModule : IBossStateModule, IStateModuleDepe
     private TelegraphModule? _activeTelegraph;
 
     /// <inheritdoc />
-    public BossState Id => Boss1StateIds.Telegraph;
+    public BossState Id => BossState.Boss1_Telegraph;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "EffectPort", "MovementPort", "ObservationService"];
 
@@ -36,7 +36,7 @@ public sealed class DslBoss1TelegraphModule : IBossStateModule, IStateModuleDepe
         if (!DslBoss1Support.IsBoss1(in context, in invocation) || !_state.CurrentSkill.IsValid())
         {
             DslBoss1Support.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss1 の Telegraph 対象が不正です。", _state.CurrentSkill);
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
+            _state.RequestTransition(BossState.Boss1_Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
@@ -45,7 +45,7 @@ public sealed class DslBoss1TelegraphModule : IBossStateModule, IStateModuleDepe
             pattern = new Boss1AttackPattern(_state.CurrentSkill, 0, 0, 0);
         }
 
-        _activeTelegraph = new TelegraphModule(Boss1StateIds.Telegraph, pattern.Definition);
+        _activeTelegraph = new TelegraphModule(BossState.Boss1_Telegraph, pattern.Definition);
         _state.AttackStartPosition = _state.CurrentPosition;
         _state.AttackTargetPosition = new Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
@@ -53,7 +53,7 @@ public sealed class DslBoss1TelegraphModule : IBossStateModule, IStateModuleDepe
 
         if (!_activeTelegraph.IsActive && !_activeTelegraph.IsComplete)
         {
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(BossState.Boss1_Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
         }
     }
 
@@ -92,10 +92,10 @@ public sealed class DslBoss1TelegraphModule : IBossStateModule, IStateModuleDepe
         _activeTelegraph.Update(ref context, in invocation);
         if (_activeTelegraph.IsComplete)
         {
-            BossState executeState = Boss1StateIds.GetExecuteState(_state.CurrentSkill);
+            BossState executeState = BossState.Boss1_Execute;
             if (!executeState.IsValid())
             {
-                _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
+                _state.RequestTransition(BossState.Boss1_Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
                 return;
             }
 

@@ -11,7 +11,7 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
     private readonly Boss1BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
 
     /// <inheritdoc />
-    public BossState Id => Boss1StateIds.AttackSelection;
+    public BossState Id => BossState.Boss1_AttackSelection;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "PlayerObservation"];
 
@@ -25,7 +25,7 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
 
         if (context.Phase is not (Phase.Phase1 or Phase.Phase2 or Phase.Phase3))
         {
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback));
+            _state.RequestTransition(BossState.Boss1_Hover, new TransitionReason(ReasonKind.SafetyFallback));
             return;
         }
 
@@ -33,7 +33,7 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
         if (settings.AttackOrder.Count == 0)
         {
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidConfiguration, "Boss1 の攻撃順が空のため Hover へ復帰します。");
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(BossState.Boss1_Hover, new TransitionReason(ReasonKind.SafetyFallback, errorCode: ErrorCode.InvalidConfiguration));
             return;
         }
 
@@ -43,7 +43,7 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
         if (!_configuration.GetAttack(skill, out Boss1AttackPattern pattern) || !pattern.IsValid)
         {
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss1 の攻撃設定が不正なため Hover へ復帰します。", skill);
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
+            _state.RequestTransition(BossState.Boss1_Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
@@ -56,7 +56,7 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
         _state.AngleOffset = 0.0f;
         _state.IsAttackActive = true;
         _state.RequestTransition(
-            Boss1StateIds.Telegraph,
+            BossState.Boss1_Telegraph,
             new TransitionReason(ReasonKind.PlayerObservation, skill: skill, originalInput: context.PlayerObservation.EntityId > long.MaxValue ? long.MaxValue : (long)context.PlayerObservation.EntityId));
 
     }

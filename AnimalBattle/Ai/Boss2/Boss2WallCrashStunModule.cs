@@ -9,7 +9,7 @@ public sealed class Boss2WallCrashStunModule : IBossStateModule, IStateModuleDep
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public BossState Id => Boss2StateIds.WallCrashStun;
+    public BossState Id => BossState.Boss2_WallCrashStun;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "ObservationService"];
 
@@ -39,7 +39,7 @@ public sealed class Boss2WallCrashStunModule : IBossStateModule, IStateModuleDep
         _state.StateElapsed += context.DeltaTime;
         if (_state.StateElapsed >= 1.2f)
         {
-            _state.RequestTransition(Boss2StateIds.Recovery, new TransitionReason(ReasonKind.TimerElapsed, skill: _state.CurrentSkill));
+            _state.RequestTransition(BossState.Boss2_Recovery, new TransitionReason(ReasonKind.TimerElapsed, skill: _state.CurrentSkill));
         }
 
     }

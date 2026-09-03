@@ -1065,7 +1065,7 @@ public static class MigrationAdapter
     }
 
     private static BossState ResolveBoss1Execute(BossSkill skill)
-        => Boss1StateIds.GetExecuteState(skill);
+        => skill.IsValid() ? BossState.Boss1_Execute : BossState.Unknown;
 
     private static bool IsAirborne(BossState stateId, BossSkill skill = BossSkill.None)
         => stateId is BossState.Boss2_PlatformTraverse || (stateId == BossState.Boss2_Execute && skill == BossSkill.LeapSmash);

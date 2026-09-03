@@ -138,7 +138,7 @@ public sealed class Boss1PipelineDslTests
             observation: observation,
             random: random);
 
-        LifecycleInvocation invocation = new(BossType.Boss1, 1, Boss1StateIds.Telegraph, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
+        LifecycleInvocation invocation = new(BossType.Boss1, 1, BossState.Boss1_Telegraph, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
 
         PlayerObservation obs1 = new(10, true, 0, 0, 0, 0, 1);
         context.BeginFrame(1, 0.016f, Phase.Phase1, in obs1);
@@ -149,7 +149,7 @@ public sealed class Boss1PipelineDslTests
         context.BeginFrame(2, 0.45f, Phase.Phase1, in obs2);
         module.Update(ref context, in invocation);
 
-        Assert.Equal(Boss1StateIds.Aimed3ShotExecute, state.PendingBossState);
+        Assert.Equal(BossState.Boss1_Execute, state.PendingBossState);
     }
 
     /// <summary>
@@ -181,7 +181,7 @@ public sealed class Boss1PipelineDslTests
             observation: observation,
             random: random);
 
-        LifecycleInvocation invocation = new(BossType.Boss1, 1, Boss1StateIds.Execute, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
+        LifecycleInvocation invocation = new(BossType.Boss1, 1, BossState.Boss1_Execute, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
 
         PlayerObservation obs1 = new(10, true, 100, 100, 0, 0, 1);
         context.BeginFrame(1, 0.016f, Phase.Phase1, in obs1);
@@ -192,7 +192,7 @@ public sealed class Boss1PipelineDslTests
         context.BeginFrame(2, 0.50f, Phase.Phase1, in obs2);
         module.Update(ref context, in invocation);
 
-        Assert.Equal(Boss1StateIds.Recovery, state.PendingBossState);
+        Assert.Equal(BossState.Boss1_Recovery, state.PendingBossState);
     }
 
     /// <summary>
@@ -224,7 +224,7 @@ public sealed class Boss1PipelineDslTests
             observation: observation,
             random: random);
 
-        LifecycleInvocation invocation = new(BossType.Boss1, 1, Boss1StateIds.Recovery, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
+        LifecycleInvocation invocation = new(BossType.Boss1, 1, BossState.Boss1_Recovery, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
 
         PlayerObservation obs1 = new(10, true, 0, 0, 0, 0, 1);
         context.BeginFrame(1, 0.016f, Phase.Phase1, in obs1);
@@ -235,7 +235,7 @@ public sealed class Boss1PipelineDslTests
         context.BeginFrame(2, 1.45f, Phase.Phase1, in obs2);
         module.Update(ref context, in invocation);
 
-        Assert.Equal(Boss1StateIds.Hover, state.PendingBossState);
+        Assert.Equal(BossState.Boss1_Hover, state.PendingBossState);
     }
 
     /// <summary>
@@ -267,7 +267,7 @@ public sealed class Boss1PipelineDslTests
             observation: observation,
             random: random);
 
-        LifecycleInvocation invocation = new(BossType.Boss1, 1, Boss1StateIds.Execute, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
+        LifecycleInvocation invocation = new(BossType.Boss1, 1, BossState.Boss1_Execute, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
 
         PlayerObservation obs1 = new(10, true, 200, 200, 0, 0, 1);
         context.BeginFrame(1, 0.016f, Phase.Phase1, in obs1);
@@ -278,7 +278,7 @@ public sealed class Boss1PipelineDslTests
         context.BeginFrame(2, 0.95f, Phase.Phase1, in obs2);
         module.Update(ref context, in invocation);
 
-        Assert.Equal(Boss1StateIds.Recovery, state.PendingBossState);
+        Assert.Equal(BossState.Boss1_Recovery, state.PendingBossState);
     }
 }
 

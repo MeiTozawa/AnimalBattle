@@ -11,7 +11,7 @@ public sealed class HoverMovementModule(IBoss1Configuration configuration, Boss1
     private readonly Boss1BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
 
     /// <inheritdoc />
-    public BossState Id => Boss1StateIds.Hover;
+    public BossState Id => BossState.Boss1_Hover;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "MovementPort"];
 
@@ -38,7 +38,7 @@ public sealed class HoverMovementModule(IBoss1Configuration configuration, Boss1
         if (_state.StateElapsed >= settings.HoverDuration && context.PlayerObservation.IsAlive)
         {
             _state.RequestTransition(
-                Boss1StateIds.AttackSelection,
+                BossState.Boss1_AttackSelection,
                 new TransitionReason(ReasonKind.TimerElapsed, skill: _state.CurrentSkill));
         }
 

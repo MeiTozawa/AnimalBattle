@@ -36,7 +36,7 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
         _gate = null;
         if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentSkill, in context, in invocation, out Boss2AttackPattern pattern))
         {
-            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
+            _state.RequestTransition(BossState.Boss2_Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
@@ -67,7 +67,7 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
         if (result.IsComplete)
         {
             _state.IsAttackActive = false;
-            _state.RequestTransition(Boss2StateIds.Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
+            _state.RequestTransition(BossState.Boss2_Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
         }
     }
 
