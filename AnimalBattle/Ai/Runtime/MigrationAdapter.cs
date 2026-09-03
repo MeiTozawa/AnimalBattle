@@ -481,7 +481,7 @@ public static class MigrationAdapter
         out DiagnosticResult diagnostic)
     {
         ArgumentNullException.ThrowIfNull(runtime);
-        if (runtime.BossType != BossType.Boss2 || !MapLegacyBoss2State(runtime.CurrentStateId, out Boss2StateKind state))
+        if (runtime.BossType != BossType.Boss2 || !MapLegacyBoss2State(runtime.CurrentStateId, runtime.AttackData.Skill, out Boss2StateKind state))
         {
             stateMachine = new Boss2StateMachine
             {
@@ -778,8 +778,8 @@ public static class MigrationAdapter
                 : Vec2f.Zero,
             FacingRight = facingRight,
             Cooldown = jumpCooldown,
-            IsAirborne = IsAirborne(stateId),
-            IsGrounded = bossType == BossType.Boss2 && !IsAirborne(stateId)
+            IsAirborne = IsAirborne(stateId, skill),
+            IsGrounded = bossType == BossType.Boss2 && !IsAirborne(stateId, skill)
         };
         BossAttackData attackData = new(skill, stage)
         {
@@ -954,17 +954,8 @@ public static class MigrationAdapter
     private static AttackStage GetAttackStage(BossState state)
         => state switch
         {
-            BossState.Boss1_Telegraph or BossState.Boss2_HeavySlashTelegraph
-                or BossState.Boss2_DoubleCleaveTelegraph or BossState.Boss2_GroundStompTelegraph
-                or BossState.Boss2_LeapSmashTelegraph or BossState.Boss2_FrenzyChargeTelegraph
-                or BossState.Boss2_EarthquakeRoarTelegraph => AttackStage.Telegraph,
-            BossState.Boss1_Aimed3ShotExecute or BossState.Boss1_RingBurstExecute
-                or BossState.Boss1_DoubleSpiralExecute or BossState.Boss1_RainDropExecute
-                or BossState.Boss1_CrossChaosExecute or BossState.Boss1_FastSniperExecute
-                or BossState.Boss1_DiveRamExecute or BossState.Boss2_HeavySlashExecute
-                or BossState.Boss2_DoubleCleaveExecute or BossState.Boss2_GroundStompExecute
-                or BossState.Boss2_LeapSmashExecute
-                or BossState.Boss2_FrenzyChargeExecute or BossState.Boss2_EarthquakeRoarExecute => AttackStage.Execute,
+            BossState.Boss1_Telegraph or BossState.Boss2_Telegraph => AttackStage.Telegraph,
+            BossState.Boss1_Execute or BossState.Boss2_Execute => AttackStage.Execute,
             BossState.Boss1_Recovery or BossState.Boss2_Recovery => AttackStage.Recovery,
             _ => AttackStage.None
         };
@@ -1005,21 +996,14 @@ public static class MigrationAdapter
             Boss2StateKind.Idle => BossState.Boss2_Idle,
             Boss2StateKind.PatrolChase => BossState.Boss2_PatrolChase,
             Boss2StateKind.MoveToTakeoff => BossState.Boss2_MoveToTakeoff,
-            Boss2StateKind.PlatformJumping => BossState.Boss2_PlatformJump,
-            Boss2StateKind.PlatformFalling => BossState.Boss2_PlatformFall,
-            Boss2StateKind.LandingRecovery => BossState.Boss2_LandingRecovery,
-            Boss2StateKind.TelegraphHeavySlash => BossState.Boss2_HeavySlashTelegraph,
-            Boss2StateKind.TelegraphDoubleCleave => BossState.Boss2_DoubleCleaveTelegraph,
-            Boss2StateKind.TelegraphGroundStomp => BossState.Boss2_GroundStompTelegraph,
-            Boss2StateKind.TelegraphLeapSmash => BossState.Boss2_LeapSmashTelegraph,
-            Boss2StateKind.TelegraphFrenzyCharge => BossState.Boss2_FrenzyChargeTelegraph,
-            Boss2StateKind.TelegraphEarthquakeRoar => BossState.Boss2_EarthquakeRoarTelegraph,
-            Boss2StateKind.ExecutingHeavySlash => BossState.Boss2_HeavySlashExecute,
-            Boss2StateKind.ExecutingDoubleCleave => BossState.Boss2_DoubleCleaveExecute,
-            Boss2StateKind.ExecutingGroundStomp => BossState.Boss2_GroundStompExecute,
-            Boss2StateKind.ExecutingLeapAscent or Boss2StateKind.ExecutingLeapDescent => BossState.Boss2_LeapSmashExecute,
-            Boss2StateKind.ExecutingFrenzyCharge => BossState.Boss2_FrenzyChargeExecute,
-            Boss2StateKind.ExecutingEarthquakeRoar => BossState.Boss2_EarthquakeRoarExecute,
+            Boss2StateKind.PlatformJumping or Boss2StateKind.PlatformFalling or Boss2StateKind.LandingRecovery => BossState.Boss2_PlatformTraverse,
+            Boss2StateKind.TelegraphHeavySlash or Boss2StateKind.TelegraphDoubleCleave
+                or Boss2StateKind.TelegraphGroundStomp or Boss2StateKind.TelegraphLeapSmash
+                or Boss2StateKind.TelegraphFrenzyCharge or Boss2StateKind.TelegraphEarthquakeRoar => BossState.Boss2_Telegraph,
+            Boss2StateKind.ExecutingHeavySlash or Boss2StateKind.ExecutingDoubleCleave
+                or Boss2StateKind.ExecutingGroundStomp or Boss2StateKind.ExecutingLeapAscent
+                or Boss2StateKind.ExecutingLeapDescent or Boss2StateKind.ExecutingFrenzyCharge
+                or Boss2StateKind.ExecutingEarthquakeRoar => BossState.Boss2_Execute,
             Boss2StateKind.WallCrashStun => BossState.Boss2_WallCrashStun,
             Boss2StateKind.SkillRecovery => BossState.Boss2_Recovery,
             Boss2StateKind.PhaseTransition => BossState.Boss2_PhaseTransition,
@@ -1035,10 +1019,7 @@ public static class MigrationAdapter
         {
             BossState.Boss1_Hover or BossState.Boss1_AttackSelection => Boss1StateKind.Hovering,
             BossState.Boss1_Telegraph => Boss1StateKind.Telegraphing,
-            BossState.Boss1_Aimed3ShotExecute or BossState.Boss1_RingBurstExecute
-                or BossState.Boss1_DoubleSpiralExecute or BossState.Boss1_RainDropExecute
-                or BossState.Boss1_CrossChaosExecute or BossState.Boss1_FastSniperExecute
-                or BossState.Boss1_DiveRamExecute => Boss1StateKind.Casting,
+            BossState.Boss1_Execute => Boss1StateKind.Casting,
             BossState.Boss1_Recovery => Boss1StateKind.Recovering,
             BossState.Boss1_PhaseTransition or BossState.Boss1_Dead => Boss1StateKind.PhaseTransition,
             _ => default
@@ -1046,28 +1027,34 @@ public static class MigrationAdapter
         return stateId is >= BossState.Boss1_Hover and <= BossState.Boss1_Dead;
     }
 
-    private static bool MapLegacyBoss2State(BossState stateId, out Boss2StateKind state)
+    private static bool MapLegacyBoss2State(BossState stateId, BossSkill skill, out Boss2StateKind state)
     {
         state = stateId switch
         {
             BossState.Boss2_Idle => Boss2StateKind.Idle,
             BossState.Boss2_PatrolChase => Boss2StateKind.PatrolChase,
             BossState.Boss2_MoveToTakeoff => Boss2StateKind.MoveToTakeoff,
-            BossState.Boss2_PlatformJump => Boss2StateKind.PlatformJumping,
-            BossState.Boss2_PlatformFall => Boss2StateKind.PlatformFalling,
-            BossState.Boss2_LandingRecovery => Boss2StateKind.LandingRecovery,
-            BossState.Boss2_HeavySlashTelegraph => Boss2StateKind.TelegraphHeavySlash,
-            BossState.Boss2_DoubleCleaveTelegraph => Boss2StateKind.TelegraphDoubleCleave,
-            BossState.Boss2_GroundStompTelegraph => Boss2StateKind.TelegraphGroundStomp,
-            BossState.Boss2_LeapSmashTelegraph => Boss2StateKind.TelegraphLeapSmash,
-            BossState.Boss2_FrenzyChargeTelegraph => Boss2StateKind.TelegraphFrenzyCharge,
-            BossState.Boss2_EarthquakeRoarTelegraph => Boss2StateKind.TelegraphEarthquakeRoar,
-            BossState.Boss2_HeavySlashExecute => Boss2StateKind.ExecutingHeavySlash,
-            BossState.Boss2_DoubleCleaveExecute => Boss2StateKind.ExecutingDoubleCleave,
-            BossState.Boss2_GroundStompExecute => Boss2StateKind.ExecutingGroundStomp,
-            BossState.Boss2_LeapSmashExecute => Boss2StateKind.ExecutingLeapAscent,
-            BossState.Boss2_FrenzyChargeExecute => Boss2StateKind.ExecutingFrenzyCharge,
-            BossState.Boss2_EarthquakeRoarExecute => Boss2StateKind.ExecutingEarthquakeRoar,
+            BossState.Boss2_PlatformTraverse => Boss2StateKind.PlatformJumping,
+            BossState.Boss2_Telegraph => skill switch
+            {
+                BossSkill.HeavySlash => Boss2StateKind.TelegraphHeavySlash,
+                BossSkill.DoubleCleave => Boss2StateKind.TelegraphDoubleCleave,
+                BossSkill.GroundStomp => Boss2StateKind.TelegraphGroundStomp,
+                BossSkill.LeapSmash => Boss2StateKind.TelegraphLeapSmash,
+                BossSkill.FrenzyCharge => Boss2StateKind.TelegraphFrenzyCharge,
+                BossSkill.EarthquakeRoar => Boss2StateKind.TelegraphEarthquakeRoar,
+                _ => Boss2StateKind.TelegraphHeavySlash
+            },
+            BossState.Boss2_Execute => skill switch
+            {
+                BossSkill.HeavySlash => Boss2StateKind.ExecutingHeavySlash,
+                BossSkill.DoubleCleave => Boss2StateKind.ExecutingDoubleCleave,
+                BossSkill.GroundStomp => Boss2StateKind.ExecutingGroundStomp,
+                BossSkill.LeapSmash => Boss2StateKind.ExecutingLeapAscent,
+                BossSkill.FrenzyCharge => Boss2StateKind.ExecutingFrenzyCharge,
+                BossSkill.EarthquakeRoar => Boss2StateKind.ExecutingEarthquakeRoar,
+                _ => Boss2StateKind.ExecutingHeavySlash
+            },
             BossState.Boss2_WallCrashStun => Boss2StateKind.WallCrashStun,
             BossState.Boss2_Recovery => Boss2StateKind.SkillRecovery,
             BossState.Boss2_PhaseTransition => Boss2StateKind.PhaseTransition,
@@ -1080,10 +1067,8 @@ public static class MigrationAdapter
     private static BossState ResolveBoss1Execute(BossSkill skill)
         => Boss1StateIds.GetExecuteState(skill);
 
-
-    private static bool IsAirborne(BossState stateId)
-        => stateId is BossState.Boss2_PlatformJump or BossState.Boss2_PlatformFall
-            or BossState.Boss2_LeapSmashExecute;
+    private static bool IsAirborne(BossState stateId, BossSkill skill = BossSkill.None)
+        => stateId is BossState.Boss2_PlatformTraverse || (stateId == BossState.Boss2_Execute && skill == BossSkill.LeapSmash);
 }
 
 /// <summary>旧値を新 runtime data へ変換した結果です。</summary>

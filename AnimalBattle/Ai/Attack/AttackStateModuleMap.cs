@@ -1,5 +1,3 @@
-using AnimalBattle.Ai.Boss1;
-using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
 
 namespace AnimalBattle.Ai.Attack;
@@ -29,19 +27,19 @@ public static class AttackStateModuleMap
 {
     private static readonly IReadOnlyList<AttackStateModuleMapping> _entries = new List<AttackStateModuleMapping>
     {
-        new(BossSkill.Aimed3Shot, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.Aimed3ShotExecute),
-        new(BossSkill.RingBurst, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.RingBurstExecute),
-        new(BossSkill.DoubleSpiral, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.DoubleSpiralExecute),
-        new(BossSkill.RainDrop, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.RainDropExecute),
-        new(BossSkill.CrossChaos, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.CrossChaosExecute),
-        new(BossSkill.FastSniper, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.FastSniperExecute),
-        new(BossSkill.DiveRam, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.DiveRamExecute),
-        new(BossSkill.HeavySlash, BossType.Boss2, Boss2StateIds.HeavySlashTelegraph, Boss2StateIds.HeavySlashExecute),
-        new(BossSkill.DoubleCleave, BossType.Boss2, Boss2StateIds.DoubleCleaveTelegraph, Boss2StateIds.DoubleCleaveExecute),
-        new(BossSkill.GroundStomp, BossType.Boss2, Boss2StateIds.GroundStompTelegraph, Boss2StateIds.GroundStompExecute),
-        new(BossSkill.LeapSmash, BossType.Boss2, Boss2StateIds.LeapSmashTelegraph, Boss2StateIds.LeapSmashExecute),
-        new(BossSkill.FrenzyCharge, BossType.Boss2, Boss2StateIds.FrenzyChargeTelegraph, Boss2StateIds.FrenzyChargeExecute),
-        new(BossSkill.EarthquakeRoar, BossType.Boss2, Boss2StateIds.EarthquakeRoarTelegraph, Boss2StateIds.EarthquakeRoarExecute)
+        new(BossSkill.Aimed3Shot, BossType.Boss1, BossState.Boss1_Telegraph, BossState.Boss1_Execute),
+        new(BossSkill.RingBurst, BossType.Boss1, BossState.Boss1_Telegraph, BossState.Boss1_Execute),
+        new(BossSkill.DoubleSpiral, BossType.Boss1, BossState.Boss1_Telegraph, BossState.Boss1_Execute),
+        new(BossSkill.RainDrop, BossType.Boss1, BossState.Boss1_Telegraph, BossState.Boss1_Execute),
+        new(BossSkill.CrossChaos, BossType.Boss1, BossState.Boss1_Telegraph, BossState.Boss1_Execute),
+        new(BossSkill.FastSniper, BossType.Boss1, BossState.Boss1_Telegraph, BossState.Boss1_Execute),
+        new(BossSkill.DiveRam, BossType.Boss1, BossState.Boss1_Telegraph, BossState.Boss1_Execute),
+        new(BossSkill.HeavySlash, BossType.Boss2, BossState.Boss2_Telegraph, BossState.Boss2_Execute),
+        new(BossSkill.DoubleCleave, BossType.Boss2, BossState.Boss2_Telegraph, BossState.Boss2_Execute),
+        new(BossSkill.GroundStomp, BossType.Boss2, BossState.Boss2_Telegraph, BossState.Boss2_Execute),
+        new(BossSkill.LeapSmash, BossType.Boss2, BossState.Boss2_Telegraph, BossState.Boss2_Execute),
+        new(BossSkill.FrenzyCharge, BossType.Boss2, BossState.Boss2_Telegraph, BossState.Boss2_Execute),
+        new(BossSkill.EarthquakeRoar, BossType.Boss2, BossState.Boss2_Telegraph, BossState.Boss2_Execute)
     }.AsReadOnly();
 
 

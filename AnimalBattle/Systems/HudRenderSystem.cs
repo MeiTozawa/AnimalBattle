@@ -204,24 +204,18 @@ public static class HudRenderSystem
         {
             BossState.Boss1_Hover => "[STATE: HOVERING (IDLE)]",
             BossState.Boss1_AttackSelection => "[STATE: ATTACK SELECTION]",
-            BossState.Boss1_Telegraph => $"[STATE: TELEGRAPHING (WIND-UP: {skill})]",
-
+            BossState.Boss1_Telegraph or BossState.Boss2_Telegraph => $"[STATE: TELEGRAPHING (WIND-UP: {skill})]",
+            BossState.Boss1_Execute or BossState.Boss2_Execute => $"[STATE: EXECUTING ({skill})]",
             BossState.Boss1_Recovery or BossState.Boss2_Recovery => "[STATE: RECOVERING (VULNERABLE)]",
             BossState.Boss1_PhaseTransition or BossState.Boss2_PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
             BossState.Boss1_Dead or BossState.Boss2_Dead => "[STATE: DEFEATED]",
             BossState.Boss2_Idle => "[STATE: IDLE / ALERT]",
             BossState.Boss2_PatrolChase => $"[STATE: CHASE (NEXT: {skill})]",
             BossState.Boss2_MoveToTakeoff => "[STATE: NAVIGATING TO TAKEOFF]",
-            BossState.Boss2_PlatformJump => "[STATE: PLATFORM JUMP (AIRBORNE)]",
-            BossState.Boss2_PlatformFall => "[STATE: PLATFORM FALLING]",
-            BossState.Boss2_LandingRecovery => "[STATE: LANDING IMPACT]",
+            BossState.Boss2_PlatformTraverse => "[STATE: PLATFORM TRAVERSE (AIRBORNE)]",
             BossState.Boss2_WallCrashStun => "[STATE: WALL CRASH STUNNED (VULNERABLE)]",
-            _ when IsTelegraphState(state) => $"[STATE: TELEGRAPH ({skill})]",
-            _ when IsExecuteState(state) => $"[STATE: EXECUTING ({skill})]",
             _ => "[STATE: UNKNOWN]"
         };
-
-
 
         badgeColor = state switch
         {
@@ -237,30 +231,12 @@ public static class HudRenderSystem
 
     private static bool IsTelegraphState(BossState state)
     {
-        return state is BossState.Boss1_Telegraph
-            or BossState.Boss2_HeavySlashTelegraph
-            or BossState.Boss2_DoubleCleaveTelegraph
-            or BossState.Boss2_GroundStompTelegraph
-            or BossState.Boss2_LeapSmashTelegraph
-            or BossState.Boss2_FrenzyChargeTelegraph
-            or BossState.Boss2_EarthquakeRoarTelegraph;
+        return state is BossState.Boss1_Telegraph or BossState.Boss2_Telegraph;
     }
 
     private static bool IsExecuteState(BossState state)
     {
-        return state is BossState.Boss1_Aimed3ShotExecute
-            or BossState.Boss1_RingBurstExecute
-            or BossState.Boss1_DoubleSpiralExecute
-            or BossState.Boss1_RainDropExecute
-            or BossState.Boss1_CrossChaosExecute
-            or BossState.Boss1_FastSniperExecute
-            or BossState.Boss1_DiveRamExecute
-            or BossState.Boss2_HeavySlashExecute
-            or BossState.Boss2_DoubleCleaveExecute
-            or BossState.Boss2_GroundStompExecute
-            or BossState.Boss2_LeapSmashExecute
-            or BossState.Boss2_FrenzyChargeExecute
-            or BossState.Boss2_EarthquakeRoarExecute;
+        return state is BossState.Boss1_Execute or BossState.Boss2_Execute;
     }
 
     private static void GetBoss1StateInfo(Boss1StateMachine fsm, BossHpBarRenderConfig hpCfg, out string stateName, out Color badgeColor)

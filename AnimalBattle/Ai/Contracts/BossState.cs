@@ -15,25 +15,13 @@ public enum BossState
     Boss1_Hover,
     /// <summary>Boss1 の攻撃選択状態です。</summary>
     Boss1_AttackSelection,
-    /// <summary>Boss1 の Telegraph 状態です。</summary>
+    /// <summary>Boss1 の攻撃予兆（前揺れ）状態です（全技能共通）。</summary>
     Boss1_Telegraph,
-    /// <summary>Boss1 の Aimed3Shot Execute 状態です。</summary>
-    Boss1_Aimed3ShotExecute,
-    /// <summary>Boss1 の RingBurst Execute 状態です。</summary>
-    Boss1_RingBurstExecute,
-    /// <summary>Boss1 の DoubleSpiral Execute 状態です。</summary>
-    Boss1_DoubleSpiralExecute,
-    /// <summary>Boss1 の RainDrop Execute 状態です。</summary>
-    Boss1_RainDropExecute,
-    /// <summary>Boss1 の CrossChaos Execute 状態です。</summary>
-    Boss1_CrossChaosExecute,
-    /// <summary>Boss1 の FastSniper Execute 状態です。</summary>
-    Boss1_FastSniperExecute,
-    /// <summary>Boss1 の DiveRam Execute 状態です。</summary>
-    Boss1_DiveRamExecute,
-    /// <summary>Boss1 の Recovery 状態です。</summary>
+    /// <summary>Boss1 の攻撃判定実行（弾幕・突進）状態です（全技能共通）。</summary>
+    Boss1_Execute,
+    /// <summary>Boss1 の攻撃後隙状態です（全技能共通）。</summary>
     Boss1_Recovery,
-    /// <summary>Boss1 の PhaseTransition 状態です。</summary>
+    /// <summary>Boss1 の Phase 遷移状態です。</summary>
     Boss1_PhaseTransition,
     /// <summary>Boss1 の Dead 状態です。</summary>
     Boss1_Dead,
@@ -44,41 +32,17 @@ public enum BossState
     Boss2_PatrolChase,
     /// <summary>Boss2 の跳躍開始位置への移動状態です。</summary>
     Boss2_MoveToTakeoff,
-    /// <summary>Boss2 の足場間跳躍上昇状態です。</summary>
-    Boss2_PlatformJump,
-    /// <summary>Boss2 の足場間跳躍落下状態です。</summary>
-    Boss2_PlatformFall,
-    /// <summary>Boss2 の着地回復状態です。</summary>
-    Boss2_LandingRecovery,
-    /// <summary>Boss2 HeavySlash の Telegraph 状態です。</summary>
-    Boss2_HeavySlashTelegraph,
-    /// <summary>Boss2 DoubleCleave の Telegraph 状態です。</summary>
-    Boss2_DoubleCleaveTelegraph,
-    /// <summary>Boss2 GroundStomp の Telegraph 状態です。</summary>
-    Boss2_GroundStompTelegraph,
-    /// <summary>Boss2 LeapSmash の Telegraph 状態です。</summary>
-    Boss2_LeapSmashTelegraph,
-    /// <summary>Boss2 FrenzyCharge の Telegraph 状態です。</summary>
-    Boss2_FrenzyChargeTelegraph,
-    /// <summary>Boss2 EarthquakeRoar の Telegraph 状態です。</summary>
-    Boss2_EarthquakeRoarTelegraph,
-    /// <summary>Boss2 HeavySlash Execute 状態です。</summary>
-    Boss2_HeavySlashExecute,
-    /// <summary>Boss2 DoubleCleave Execute 状態です。</summary>
-    Boss2_DoubleCleaveExecute,
-    /// <summary>Boss2 GroundStomp Execute 状態です。</summary>
-    Boss2_GroundStompExecute,
-    /// <summary>Boss2 LeapSmash Execute 状態です。</summary>
-    Boss2_LeapSmashExecute,
-    /// <summary>Boss2 FrenzyCharge Execute 状態です。</summary>
-    Boss2_FrenzyChargeExecute,
-    /// <summary>Boss2 EarthquakeRoar Execute 状態です。</summary>
-    Boss2_EarthquakeRoarExecute,
+    /// <summary>Boss2 の足場間機動（跳躍・落下・着地）状態です。</summary>
+    Boss2_PlatformTraverse,
+    /// <summary>Boss2 の攻撃予兆（前揺れ）状態です（全技能共通）。</summary>
+    Boss2_Telegraph,
+    /// <summary>Boss2 の攻撃判定実行状態です（全技能共通）。</summary>
+    Boss2_Execute,
     /// <summary>Boss2 の壁激突気絶状態です。</summary>
     Boss2_WallCrashStun,
-    /// <summary>Boss2 の Recovery 状態です。</summary>
+    /// <summary>Boss2 の攻撃後隙状態です（全技能共通）。</summary>
     Boss2_Recovery,
-    /// <summary>Boss2 の PhaseTransition 状態です。</summary>
+    /// <summary>Boss2 の Phase 遷移状態です。</summary>
     Boss2_PhaseTransition,
     /// <summary>Boss2 の Dead 状態です。</summary>
     Boss2_Dead

@@ -153,15 +153,15 @@ public sealed class Boss1PipelineDslTests
     }
 
     /// <summary>
-    /// DslBoss1DiveRamExecuteModule が突進完了後に正しい Recovery 状態へ遷移要求を発行することを検証します。
+    /// DslBoss1ExecuteModule が突進（DiveRam）完了後に正しい Recovery 状態へ遷移要求を発行することを検証します。
     /// </summary>
     [Fact]
-    public void DslBoss1DiveRamExecuteModule_Lifecycle_TransitionsToRecovery()
+    public void DslBoss1ExecuteModule_DiveRam_TransitionsToRecovery()
     {
         Boss1DefaultConfiguration config = new();
         Boss1BehaviorState state = new();
         state.CurrentSkill = BossSkill.DiveRam;
-        AnimalBattle.Ai.Dsl.Modules.DslBoss1DiveRamExecuteModule module = new(config, state);
+        AnimalBattle.Ai.Dsl.Modules.DslBoss1ExecuteModule module = new(config, state);
 
         Boss1MockMovementPort movement = new();
         Boss1MockAttackPort attack = new();
@@ -181,7 +181,7 @@ public sealed class Boss1PipelineDslTests
             observation: observation,
             random: random);
 
-        LifecycleInvocation invocation = new(BossType.Boss1, 1, Boss1StateIds.DiveRamExecute, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
+        LifecycleInvocation invocation = new(BossType.Boss1, 1, Boss1StateIds.Execute, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
 
         PlayerObservation obs1 = new(10, true, 100, 100, 0, 0, 1);
         context.BeginFrame(1, 0.016f, Phase.Phase1, in obs1);
@@ -239,15 +239,15 @@ public sealed class Boss1PipelineDslTests
     }
 
     /// <summary>
-    /// DslBoss1BarrageExecuteModule が弾幕攻撃完了後に正しい Recovery 状態へ遷移要求を発行することを検証します。
+    /// DslBoss1ExecuteModule が弾幕攻撃完了後に正しい Recovery 状態へ遷移要求を発行することを検証します。
     /// </summary>
     [Fact]
-    public void DslBoss1BarrageExecuteModule_Lifecycle_TransitionsToRecovery()
+    public void DslBoss1ExecuteModule_Barrage_TransitionsToRecovery()
     {
         Boss1DefaultConfiguration config = new();
         Boss1BehaviorState state = new();
         state.CurrentSkill = BossSkill.Aimed3Shot;
-        AnimalBattle.Ai.Dsl.Modules.DslBoss1BarrageExecuteModule module = new(Boss1StateIds.Aimed3ShotExecute, config, state, BossSkill.Aimed3Shot);
+        AnimalBattle.Ai.Dsl.Modules.DslBoss1ExecuteModule module = new(config, state);
 
         Boss1MockMovementPort movement = new();
         Boss1MockAttackPort attack = new();
@@ -267,7 +267,7 @@ public sealed class Boss1PipelineDslTests
             observation: observation,
             random: random);
 
-        LifecycleInvocation invocation = new(BossType.Boss1, 1, Boss1StateIds.Aimed3ShotExecute, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
+        LifecycleInvocation invocation = new(BossType.Boss1, 1, Boss1StateIds.Execute, LifecycleOperation.Update, 1, 0.016f, Phase.Phase1);
 
         PlayerObservation obs1 = new(10, true, 200, 200, 0, 0, 1);
         context.BeginFrame(1, 0.016f, Phase.Phase1, in obs1);
