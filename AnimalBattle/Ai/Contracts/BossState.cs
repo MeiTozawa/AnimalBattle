@@ -68,10 +68,8 @@ public enum BossState
     Boss2_DoubleCleaveExecute,
     /// <summary>Boss2 GroundStomp Execute 状態です。</summary>
     Boss2_GroundStompExecute,
-    /// <summary>Boss2 LeapSmash 上昇 Execute 状態です。</summary>
-    Boss2_LeapSmashAscent,
-    /// <summary>Boss2 LeapSmash 落下 Execute 状態です。</summary>
-    Boss2_LeapSmashDescent,
+    /// <summary>Boss2 LeapSmash Execute 状態です。</summary>
+    Boss2_LeapSmashExecute,
     /// <summary>Boss2 FrenzyCharge Execute 状態です。</summary>
     Boss2_FrenzyChargeExecute,
     /// <summary>Boss2 EarthquakeRoar Execute 状態です。</summary>

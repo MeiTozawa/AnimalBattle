@@ -963,7 +963,7 @@ public static class MigrationAdapter
                 or BossState.Boss1_CrossChaosExecute or BossState.Boss1_FastSniperExecute
                 or BossState.Boss1_DiveRamExecute or BossState.Boss2_HeavySlashExecute
                 or BossState.Boss2_DoubleCleaveExecute or BossState.Boss2_GroundStompExecute
-                or BossState.Boss2_LeapSmashAscent or BossState.Boss2_LeapSmashDescent
+                or BossState.Boss2_LeapSmashExecute
                 or BossState.Boss2_FrenzyChargeExecute or BossState.Boss2_EarthquakeRoarExecute => AttackStage.Execute,
             BossState.Boss1_Recovery or BossState.Boss2_Recovery => AttackStage.Recovery,
             _ => AttackStage.None
@@ -1017,8 +1017,7 @@ public static class MigrationAdapter
             Boss2StateKind.ExecutingHeavySlash => BossState.Boss2_HeavySlashExecute,
             Boss2StateKind.ExecutingDoubleCleave => BossState.Boss2_DoubleCleaveExecute,
             Boss2StateKind.ExecutingGroundStomp => BossState.Boss2_GroundStompExecute,
-            Boss2StateKind.ExecutingLeapAscent => BossState.Boss2_LeapSmashAscent,
-            Boss2StateKind.ExecutingLeapDescent => BossState.Boss2_LeapSmashDescent,
+            Boss2StateKind.ExecutingLeapAscent or Boss2StateKind.ExecutingLeapDescent => BossState.Boss2_LeapSmashExecute,
             Boss2StateKind.ExecutingFrenzyCharge => BossState.Boss2_FrenzyChargeExecute,
             Boss2StateKind.ExecutingEarthquakeRoar => BossState.Boss2_EarthquakeRoarExecute,
             Boss2StateKind.WallCrashStun => BossState.Boss2_WallCrashStun,
@@ -1066,8 +1065,7 @@ public static class MigrationAdapter
             BossState.Boss2_HeavySlashExecute => Boss2StateKind.ExecutingHeavySlash,
             BossState.Boss2_DoubleCleaveExecute => Boss2StateKind.ExecutingDoubleCleave,
             BossState.Boss2_GroundStompExecute => Boss2StateKind.ExecutingGroundStomp,
-            BossState.Boss2_LeapSmashAscent => Boss2StateKind.ExecutingLeapAscent,
-            BossState.Boss2_LeapSmashDescent => Boss2StateKind.ExecutingLeapDescent,
+            BossState.Boss2_LeapSmashExecute => Boss2StateKind.ExecutingLeapAscent,
             BossState.Boss2_FrenzyChargeExecute => Boss2StateKind.ExecutingFrenzyCharge,
             BossState.Boss2_EarthquakeRoarExecute => Boss2StateKind.ExecutingEarthquakeRoar,
             BossState.Boss2_WallCrashStun => Boss2StateKind.WallCrashStun,
@@ -1085,7 +1083,7 @@ public static class MigrationAdapter
 
     private static bool IsAirborne(BossState stateId)
         => stateId is BossState.Boss2_PlatformJump or BossState.Boss2_PlatformFall
-            or BossState.Boss2_LeapSmashAscent or BossState.Boss2_LeapSmashDescent;
+            or BossState.Boss2_LeapSmashExecute;
 }
 
 /// <summary>旧値を新 runtime data へ変換した結果です。</summary>

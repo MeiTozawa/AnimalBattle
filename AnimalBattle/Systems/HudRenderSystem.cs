@@ -258,8 +258,7 @@ public static class HudRenderSystem
             or BossState.Boss2_HeavySlashExecute
             or BossState.Boss2_DoubleCleaveExecute
             or BossState.Boss2_GroundStompExecute
-            or BossState.Boss2_LeapSmashAscent
-            or BossState.Boss2_LeapSmashDescent
+            or BossState.Boss2_LeapSmashExecute
             or BossState.Boss2_FrenzyChargeExecute
             or BossState.Boss2_EarthquakeRoarExecute;
     }

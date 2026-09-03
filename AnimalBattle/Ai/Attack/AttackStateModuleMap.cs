@@ -41,7 +41,7 @@ public static class AttackStateModuleMap
         new(BossSkill.HeavySlash, BossType.Boss2, Boss2StateIds.HeavySlashTelegraph, Boss2StateIds.HeavySlashExecute),
         new(BossSkill.DoubleCleave, BossType.Boss2, Boss2StateIds.DoubleCleaveTelegraph, Boss2StateIds.DoubleCleaveExecute),
         new(BossSkill.GroundStomp, BossType.Boss2, Boss2StateIds.GroundStompTelegraph, Boss2StateIds.GroundStompExecute),
-        new(BossSkill.LeapSmash, BossType.Boss2, Boss2StateIds.LeapSmashTelegraph, Boss2StateIds.LeapSmashAscent, Boss2StateIds.LeapSmashDescent),
+        new(BossSkill.LeapSmash, BossType.Boss2, Boss2StateIds.LeapSmashTelegraph, Boss2StateIds.LeapSmashExecute),
         new(BossSkill.FrenzyCharge, BossType.Boss2, Boss2StateIds.FrenzyChargeTelegraph, Boss2StateIds.FrenzyChargeExecute),
         new(BossSkill.EarthquakeRoar, BossType.Boss2, Boss2StateIds.EarthquakeRoarTelegraph, Boss2StateIds.EarthquakeRoarExecute)
     }.AsReadOnly();

@@ -57,7 +57,12 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
             return;
         }
 
-        ExecuteResult result = _gate.Execute(ref context, in invocation);
+        ExecuteResult result = _gate.Execute(
+            ref context,
+            in invocation,
+            _state.IsGrounded,
+            _state.CurrentPosition.X,
+            _state.CurrentPosition.Y);
         _state.StateElapsed = _gate.Elapsed;
         if (result.IsComplete)
         {

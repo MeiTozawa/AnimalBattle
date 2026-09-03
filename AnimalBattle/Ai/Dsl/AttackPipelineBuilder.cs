@@ -76,6 +76,19 @@ public sealed class AttackPipelineBuilder
     }
 
     /// <summary>
+    /// 接地時（着地衝突時）に発火するイベント駆動アクションを定義します。
+    /// </summary>
+    /// <param name="configure">アクションビルダーの設定デリゲート。</param>
+    /// <returns>現在の攻撃ビルダー。</returns>
+    public AttackPipelineBuilder OnGrounded(Action<AttackActionBuilder> configure)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        AttackActionBuilder actionBuilder = new(0.0f, _components, isOnGrounded: true);
+        configure(actionBuilder);
+        return this;
+    }
+
+    /// <summary>
     /// 攻撃の後隙（Recovery）時間を設定します。
     /// </summary>
     /// <param name="duration">後隙時間（秒）。</param>

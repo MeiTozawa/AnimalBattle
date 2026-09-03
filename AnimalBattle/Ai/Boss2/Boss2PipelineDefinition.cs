@@ -20,61 +20,61 @@ public static class Boss2PipelineDefinition
         PatternConfig pattern = ConfigManager.Pattern;
         Boss2Config boss2 = ConfigManager.Boss2;
 
-        PhasePipelineBuilder p3 = BossPipeline.Define(BossType.Boss2, boss2.BossName)
-            .Phase(Phase.Phase1)
-                .Timing(
-                    idleDuration: boss2.Phase1.IdleDuration,
-                    patrolDuration: 2.0f,
-                    transitionDuration: boss2.Phase1.TransitionDuration)
-                .Attack(BossSkill.HeavySlash)
-                    .Telegraph(pattern.HeavySlash.WindUpTime, pattern.HeavySlash.TelegraphColor)
-                    .Execute(pattern.HeavySlash.CastDuration, range: pattern.HeavySlash.SlashRangeX)
-                        .Action(atTime: 0.0f, act => act.Dash(pattern.HeavySlash.DashSpeed).Slash(offsetX: boss2.SlashSpawnOffsetX, offsetY: boss2.SlashSpawnOffsetY))
-                    .Recovery(pattern.HeavySlash.RecoveryTime)
-                    .Rule(FindRule(boss2.Phase1.Rules, "HeavySlash"))
-                .Attack(BossSkill.GroundStomp)
-                    .Telegraph(pattern.GroundStomp.WindUpTime, pattern.GroundStomp.TelegraphColor)
-                    .Execute(pattern.GroundStomp.CastDuration, range: pattern.GroundStomp.ShockwaveSpeed)
-                        .Action(atTime: 0.0f, act => act.Hitbox(x: 0.0f, y: 35.0f))
-                    .Recovery(pattern.GroundStomp.RecoveryTime)
-                    .Rule(FindRule(boss2.Phase1.Rules, "GroundStomp"))
-                .Attack(BossSkill.LeapSmash)
-                    .Telegraph(pattern.LeapSmash.WindUpTime, pattern.LeapSmash.TelegraphColor)
-                    .Execute(pattern.LeapSmash.CastDuration, range: pattern.LeapSmash.JumpForce)
-                        .Action(atTime: 0.0f, act => act.Dash(0.0f, -pattern.LeapSmash.JumpForce).Hitbox(x: 0.0f, y: 45.0f))
-                    .Recovery(pattern.LeapSmash.RecoveryTime)
-                    .Rule(FindRule(boss2.Phase1.Rules, "LeapSmash"))
+        BossPipelineBuilder builder = BossPipeline.Define(BossType.Boss2, boss2.BossName);
 
-            .Phase(Phase.Phase2)
-                .Timing(
-                    idleDuration: boss2.Phase2.IdleDuration,
-                    patrolDuration: 1.5f,
-                    transitionDuration: boss2.Phase2.TransitionDuration)
-                .Attack(BossSkill.DoubleCleave)
-                    .Telegraph(pattern.DoubleCleave.WindUpTime, pattern.DoubleCleave.TelegraphColor)
-                    .Execute(pattern.DoubleCleave.CastDuration, range: pattern.DoubleCleave.SlashRangeX)
-                        .Action(atTime: 0.0f, act => act.Dash(pattern.DoubleCleave.DashSpeed).Slash(offsetX: boss2.SlashSpawnOffsetX, offsetY: boss2.SlashSpawnOffsetY))
-                        .Action(atTime: pattern.DoubleCleave.SlashInterval, act => act.Slash(offsetX: boss2.SlashSpawnOffsetX + 15.0f, offsetY: boss2.SlashSpawnOffsetY))
-                    .Recovery(pattern.DoubleCleave.RecoveryTime)
-                    .Rule(FindRule(boss2.Phase2.Rules, "DoubleCleave"))
-                .Attack(BossSkill.GroundStomp)
-                    .Telegraph(pattern.GroundStomp.WindUpTime, pattern.GroundStomp.TelegraphColor)
-                    .Execute(pattern.GroundStomp.CastDuration, range: pattern.GroundStomp.ShockwaveSpeed)
-                        .Action(atTime: 0.0f, act => act.Hitbox(x: 0.0f, y: 35.0f))
-                    .Recovery(pattern.GroundStomp.RecoveryTime)
-                    .Rule(FindRule(boss2.Phase2.Rules, "GroundStomp"))
-                .Attack(BossSkill.LeapSmash)
-                    .Telegraph(pattern.LeapSmash.WindUpTime, pattern.LeapSmash.TelegraphColor)
-                    .Execute(pattern.LeapSmash.CastDuration, range: pattern.LeapSmash.JumpForce)
-                        .Action(atTime: 0.0f, act => act.Dash(0.0f, -pattern.LeapSmash.JumpForce).Hitbox(x: 0.0f, y: 45.0f))
-                    .Recovery(pattern.LeapSmash.RecoveryTime)
-                    .Rule(FindRule(boss2.Phase2.Rules, "LeapSmash"))
+        // Phase 1
+        PhasePipelineBuilder p1 = builder.Phase(Phase.Phase1)
+            .Timing(
+                idleDuration: boss2.Phase1.IdleDuration,
+                patrolDuration: 2.0f,
+                transitionDuration: boss2.Phase1.TransitionDuration);
 
-            .Phase(Phase.Phase3)
-                .Timing(
-                    idleDuration: boss2.Phase3.IdleDuration,
-                    patrolDuration: 1.0f,
-                    transitionDuration: boss2.Phase3.TransitionDuration);
+        p1.Attack(BossSkill.HeavySlash)
+            .Telegraph(pattern.HeavySlash.WindUpTime, pattern.HeavySlash.TelegraphColor)
+            .Execute(pattern.HeavySlash.CastDuration, range: pattern.HeavySlash.SlashRangeX)
+                .Action(atTime: 0.0f, act => act.Dash(pattern.HeavySlash.DashSpeed).Slash(offsetX: boss2.SlashSpawnOffsetX, offsetY: boss2.SlashSpawnOffsetY))
+            .Recovery(pattern.HeavySlash.RecoveryTime)
+            .Rule(FindRule(boss2.Phase1.Rules, "HeavySlash"));
+
+        p1.Attack(BossSkill.GroundStomp)
+            .Telegraph(pattern.GroundStomp.WindUpTime, pattern.GroundStomp.TelegraphColor)
+            .Execute(pattern.GroundStomp.CastDuration, range: pattern.GroundStomp.ShockwaveSpeed)
+                .Action(atTime: 0.0f, act => act.Hitbox(x: 0.0f, y: 35.0f))
+            .Recovery(pattern.GroundStomp.RecoveryTime)
+            .Rule(FindRule(boss2.Phase1.Rules, "GroundStomp"));
+
+        ConfigureLeapSmash(p1.Attack(BossSkill.LeapSmash), pattern, FindRule(boss2.Phase1.Rules, "LeapSmash"));
+
+        // Phase 2
+        PhasePipelineBuilder p2 = builder.Phase(Phase.Phase2)
+            .Timing(
+                idleDuration: boss2.Phase2.IdleDuration,
+                patrolDuration: 1.5f,
+                transitionDuration: boss2.Phase2.TransitionDuration);
+
+        p2.Attack(BossSkill.DoubleCleave)
+            .Telegraph(pattern.DoubleCleave.WindUpTime, pattern.DoubleCleave.TelegraphColor)
+            .Execute(pattern.DoubleCleave.CastDuration, range: pattern.DoubleCleave.SlashRangeX)
+                .Action(atTime: 0.0f, act => act.Dash(pattern.DoubleCleave.DashSpeed).Slash(offsetX: boss2.SlashSpawnOffsetX, offsetY: boss2.SlashSpawnOffsetY))
+                .Action(atTime: pattern.DoubleCleave.SlashInterval, act => act.Slash(offsetX: boss2.SlashSpawnOffsetX + 15.0f, offsetY: boss2.SlashSpawnOffsetY))
+            .Recovery(pattern.DoubleCleave.RecoveryTime)
+            .Rule(FindRule(boss2.Phase2.Rules, "DoubleCleave"));
+
+        p2.Attack(BossSkill.GroundStomp)
+            .Telegraph(pattern.GroundStomp.WindUpTime, pattern.GroundStomp.TelegraphColor)
+            .Execute(pattern.GroundStomp.CastDuration, range: pattern.GroundStomp.ShockwaveSpeed)
+                .Action(atTime: 0.0f, act => act.Hitbox(x: 0.0f, y: 35.0f))
+            .Recovery(pattern.GroundStomp.RecoveryTime)
+            .Rule(FindRule(boss2.Phase2.Rules, "GroundStomp"));
+
+        ConfigureLeapSmash(p2.Attack(BossSkill.LeapSmash), pattern, FindRule(boss2.Phase2.Rules, "LeapSmash"));
+
+        // Phase 3
+        PhasePipelineBuilder p3 = builder.Phase(Phase.Phase3)
+            .Timing(
+                idleDuration: boss2.Phase3.IdleDuration,
+                patrolDuration: 1.0f,
+                transitionDuration: boss2.Phase3.TransitionDuration);
 
         AttackPipelineBuilder frenzy = p3.Attack(BossSkill.FrenzyCharge)
             .Telegraph(pattern.FrenzyCharge.WindUpTime, pattern.FrenzyCharge.TelegraphColor)
@@ -104,15 +104,29 @@ public static class Boss2PipelineDefinition
                 .Action(atTime: 0.0f, act => act.Dash(pattern.DoubleCleave.DashSpeed).Slash(offsetX: boss2.SlashSpawnOffsetX, offsetY: boss2.SlashSpawnOffsetY))
                 .Action(atTime: pattern.DoubleCleave.SlashInterval, act => act.Slash(offsetX: boss2.SlashSpawnOffsetX + 15.0f, offsetY: boss2.SlashSpawnOffsetY))
             .Recovery(pattern.DoubleCleave.RecoveryTime)
-            .Rule(FindRule(boss2.Phase3.Rules, "DoubleCleave"))
-        .Attack(BossSkill.LeapSmash)
-            .Telegraph(pattern.LeapSmash.WindUpTime, pattern.LeapSmash.TelegraphColor)
-            .Execute(pattern.LeapSmash.CastDuration, range: pattern.LeapSmash.JumpForce)
-                .Action(atTime: 0.0f, act => act.Dash(0.0f, -pattern.LeapSmash.JumpForce).Hitbox(x: 0.0f, y: 45.0f))
-            .Recovery(pattern.LeapSmash.RecoveryTime)
-            .Rule(FindRule(boss2.Phase3.Rules, "LeapSmash"));
+            .Rule(FindRule(boss2.Phase3.Rules, "DoubleCleave"));
 
-        return p3.Build();
+        ConfigureLeapSmash(p3.Attack(BossSkill.LeapSmash), pattern, FindRule(boss2.Phase3.Rules, "LeapSmash"));
+
+        return builder.Build();
+    }
+
+    private static void ConfigureLeapSmash(AttackPipelineBuilder builder, PatternConfig pattern, AttackRuleConfig? rule)
+    {
+        float flyDuration = pattern.LeapSmash.FlyDuration > 0.0f ? pattern.LeapSmash.FlyDuration : 0.45f;
+        float peakY = pattern.LeapSmash.PeakAltitudeY > 0.0f ? pattern.LeapSmash.PeakAltitudeY : 130.0f;
+        float hangDuration = pattern.LeapSmash.ApexHangDuration > 0.0f ? pattern.LeapSmash.ApexHangDuration : 0.50f;
+        float descentSpeed = pattern.LeapSmash.DescentSpeed > 0.0f ? pattern.LeapSmash.DescentSpeed : 1200.0f;
+        float diveStartTime = flyDuration + hangDuration;
+        float maxExecuteDuration = MathF.Max(pattern.LeapSmash.CastDuration, diveStartTime + 1.5f);
+
+        builder.Telegraph(pattern.LeapSmash.WindUpTime, pattern.LeapSmash.TelegraphColor)
+            .Execute(maxExecuteDuration, range: pattern.LeapSmash.JumpForce)
+                .Action(atTime: 0.0f, act => act.FlyToTarget(peakY, flyDuration))
+                .Action(atTime: diveStartTime, act => act.Dive(descentSpeed))
+                .OnGrounded(act => act.Hitbox(x: 0.0f, y: 45.0f))
+            .Recovery(pattern.LeapSmash.RecoveryTime)
+            .Rule(rule);
     }
 
     private static AttackRuleConfig? FindRule(List<AttackRuleConfig>? rules, string skillName)

@@ -14,13 +14,15 @@ public sealed class ExecuteGate
     private bool _active;
     private bool _completed;
     private float _elapsed;
+    private float _startX = float.NaN;
+    private float _startY = float.NaN;
 
     /// <summary>Execute が有効かどうかを取得します。</summary>
     public bool IsActive => _active;
     /// <summary>攻撃定義を取得します。</summary>
     public AttackDefinition Definition => _definition;
     /// <summary>Execute 完了後かどうかを取得します。</summary>
-    public bool IsComplete => !_active && _elapsed > 0;
+    public bool IsComplete => !_active && (_completed || _elapsed > 0);
     /// <summary>Execute の経過時間を取得します。</summary>
     public float Elapsed => _elapsed;
     /// <summary>component 発行を抑止する one-shot guard を取得します。</summary>
@@ -60,15 +62,33 @@ public sealed class ExecuteGate
 
         _elapsed = 0;
         _active = true;
+        _startX = float.NaN;
+        _startY = float.NaN;
         return Result.Success;
     }
 
-    /// <summary>現在 frame の Execute を更新し、未発行 component を port へ一回だけ渡します。</summary>
-    public ExecuteResult Execute(ref StateContext context, in LifecycleInvocation invocation)
+    /// <summary>現在 frame の Execute を更新し、未発行 component を port へ渡します。</summary>
+    /// <param name="context">状態コンテキスト。</param>
+    /// <param name="invocation">ライフサイクル呼び出し情報。</param>
+    /// <param name="isGrounded">現在キャラクターが接地しているかどうか。</param>
+    /// <param name="currentX">キャラクターの現在 X 座標。</param>
+    /// <param name="currentY">キャラクターの現在 Y 座標。</param>
+    public ExecuteResult Execute(
+        ref StateContext context,
+        in LifecycleInvocation invocation,
+        bool isGrounded = false,
+        float currentX = float.NaN,
+        float currentY = float.NaN)
     {
         if (!_active && Start(ref context, in invocation).IsError)
         {
             return ExecuteResult.Rejected;
+        }
+
+        if (float.IsNaN(_startX) && !float.IsNaN(currentX))
+        {
+            _startX = currentX;
+            _startY = currentY;
         }
 
         int emitted = 0;
@@ -81,9 +101,74 @@ public sealed class ExecuteGate
                 continue;
             }
 
+            // 接地時イベント駆動コンポーネントの処理
+            if (component.Kind == AttackComponentKind.OnGroundedHitbox)
+            {
+                // 跳躍開始直後の接地判定の誤検知を防ぐため、0.05 秒以上経過してから判定
+                if (isGrounded && _elapsed > 0.05f)
+                {
+                    if (_oneShot.Reserve(component.Index).IsError)
+                    {
+                        suppressed++;
+                        continue;
+                    }
+
+                    bool accepted;
+                    try
+                    {
+                        accepted = !Emit(ref context, in component).IsError;
+                    }
+                    catch
+                    {
+                        accepted = false;
+                    }
+
+                    if (accepted)
+                    {
+                        emitted++;
+                        // 接地判定が成功したら、即座に Execute を完了して Recovery へ遷移
+                        _active = false;
+                        _completed = true;
+                    }
+                    else
+                    {
+                        failed++;
+                        Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "接地判定 component の実行に失敗しました。", _elapsed, component.Index);
+                    }
+                }
+
+                continue;
+            }
+
             // 指定された発動時刻に達していないコンポーネントは保留（浮動小数点の累積誤差を考慮）
             if (_elapsed + 0.0001f < component.TriggerTime)
             {
+                continue;
+            }
+
+            // 継続的移動コンポーネント（FlyToTarget: 対象頭上へのイージング飛翔）の更新
+            if (component.Kind == AttackComponentKind.FlyToTarget)
+            {
+                float peakY = component.X;
+                float flyDuration = component.Y;
+                float t = flyDuration > 0.0f ? Math.Clamp((_elapsed - component.TriggerTime) / flyDuration, 0.0f, 1.0f) : 1.0f;
+                float easeT = MathF.Sin(t * MathF.PI * 0.5f);
+
+                float targetX = context.PlayerObservation.PositionX;
+                float startX = !float.IsNaN(_startX) ? _startX : targetX;
+                float startY = !float.IsNaN(_startY) ? _startY : peakY;
+                float curX = startX + (targetX - startX) * easeT;
+                float curY = startY + (peakY - startY) * easeT;
+
+                context.Movement.MoveTo(curX, curY);
+                continue;
+            }
+
+            // 継続的移動コンポーネント（Dive: 垂直急降下）の更新
+            if (component.Kind == AttackComponentKind.Dive)
+            {
+                float descentSpeed = component.Y;
+                context.Movement.SetVelocity(0.0f, descentSpeed);
                 continue;
             }
 
@@ -93,16 +178,16 @@ public sealed class ExecuteGate
                 continue;
             }
 
-            bool accepted;
+            bool acceptedOneShot;
             try
             {
-                accepted = !Emit(ref context, in component).IsError;
+                acceptedOneShot = !Emit(ref context, in component).IsError;
             }
             catch
             {
-                accepted = false;
+                acceptedOneShot = false;
             }
-            if (accepted)
+            if (acceptedOneShot)
             {
                 emitted++;
             }
@@ -113,11 +198,14 @@ public sealed class ExecuteGate
             }
         }
 
-        _elapsed = MathF.Min(_definition.ExecuteDuration, _elapsed + context.DeltaTime);
-        if (_elapsed >= _definition.ExecuteDuration)
+        if (_active)
         {
-            _active = false;
-            _completed = true;
+            _elapsed = MathF.Min(_definition.ExecuteDuration, _elapsed + context.DeltaTime);
+            if (_elapsed >= _definition.ExecuteDuration)
+            {
+                _active = false;
+                _completed = true;
+            }
         }
 
         return new ExecuteResult(true, _active, emitted, failed, suppressed);
@@ -133,6 +221,8 @@ public sealed class ExecuteGate
         _active = false;
         _completed = false;
         _elapsed = 0;
+        _startX = float.NaN;
+        _startY = float.NaN;
         _oneShot.Reset();
     }
 
@@ -141,7 +231,7 @@ public sealed class ExecuteGate
         return component.Kind switch
         {
             AttackComponentKind.Bullet => context.Attack.EmitBullet(_definition.Skill, component.X, component.Y),
-            AttackComponentKind.Hitbox => context.Attack.CreateHitbox(_definition.Skill, component.X, component.Y),
+            AttackComponentKind.Hitbox or AttackComponentKind.OnGroundedHitbox => context.Attack.CreateHitbox(_definition.Skill, component.X, component.Y),
             AttackComponentKind.Movement => context.Movement.SetVelocity(component.X * _facingDirection, component.Y),
             _ => Error.Validation("ExecuteGate.Emit", "未知の AttackComponentKind です。")
         };

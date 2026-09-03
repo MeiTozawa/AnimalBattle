@@ -36,10 +36,10 @@ public static class Boss2StateIds
     public const BossState DoubleCleaveExecute = BossState.Boss2_DoubleCleaveExecute;
     /// <summary>GroundStomp の Execute 状態です。</summary>
     public const BossState GroundStompExecute = BossState.Boss2_GroundStompExecute;
-    /// <summary>LeapSmash の上昇 Execute 状態です。</summary>
-    public const BossState LeapSmashAscent = BossState.Boss2_LeapSmashAscent;
-    /// <summary>LeapSmash の落下 Execute 状態です。</summary>
-    public const BossState LeapSmashDescent = BossState.Boss2_LeapSmashDescent;
+    /// <summary>LeapSmash の Execute 状態です。</summary>
+    public const BossState LeapSmashExecute = BossState.Boss2_LeapSmashExecute;
+    /// <summary>LeapSmash の Execute 状態です（互換用）。</summary>
+    public const BossState LeapSmashAscent = LeapSmashExecute;
     /// <summary>FrenzyCharge の Execute 状態です。</summary>
     public const BossState FrenzyChargeExecute = BossState.Boss2_FrenzyChargeExecute;
     /// <summary>EarthquakeRoar の Execute 状態です。</summary>
@@ -76,7 +76,7 @@ public static class Boss2StateIds
             BossSkill.HeavySlash => HeavySlashExecute,
             BossSkill.DoubleCleave => DoubleCleaveExecute,
             BossSkill.GroundStomp => GroundStompExecute,
-            BossSkill.LeapSmash => LeapSmashAscent,
+            BossSkill.LeapSmash => LeapSmashExecute,
             BossSkill.FrenzyCharge => FrenzyChargeExecute,
             BossSkill.EarthquakeRoar => EarthquakeRoarExecute,
             _ => BossState.Unknown

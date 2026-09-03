@@ -10,7 +10,13 @@ public enum AttackComponentKind
     /// <summary>攻撃判定を生成する component です。</summary>
     Hitbox = 2,
     /// <summary>攻撃に伴う速度を設定する component です。</summary>
-    Movement = 3
+    Movement = 3,
+    /// <summary>対象頭上へイージング飛翔・滞空する component です。</summary>
+    FlyToTarget = 4,
+    /// <summary>真下へ高速急降下する component です。</summary>
+    Dive = 5,
+    /// <summary>接地時に判定を生成するイベント駆動 component です。</summary>
+    OnGroundedHitbox = 6
 }
 
 /// <summary>設定から解決済みの攻撃 component を表す初期化時データです。</summary>
@@ -31,7 +37,10 @@ public readonly struct AttackComponent(AttackComponentKind kind, int index, floa
     /// <summary>component の設定値が実行可能かどうかを取得します。</summary>
     public bool IsValid => (Kind is AttackComponentKind.Bullet
         or AttackComponentKind.Hitbox
-        or AttackComponentKind.Movement)
+        or AttackComponentKind.Movement
+        or AttackComponentKind.FlyToTarget
+        or AttackComponentKind.Dive
+        or AttackComponentKind.OnGroundedHitbox)
         && Index >= 0
         && IsFinite(X)
         && IsFinite(Y)
