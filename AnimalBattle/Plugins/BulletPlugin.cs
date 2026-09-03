@@ -16,9 +16,7 @@ public class BulletPlugin : IPlugin
     public void Build(App app)
     {
         app.World
-           .AddPlayerMovementSystem()
            .AddSpriteAnimationSystem()
-           .AddPlayerShootSystem()
            .AddBossAiRuntimeSystem()
            .AddBulletPhysicsSystem()
            .AddCombatCollisionSystem()

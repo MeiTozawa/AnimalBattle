@@ -1,8 +1,8 @@
 using System;
-
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Bindings;
+using AnimalBattle.Characters;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -22,6 +22,8 @@ namespace AnimalBattle.Scenes;
 public partial class BattleScene : IDisposable
 {
     private readonly World _ecsWorld;
+    private Player? _player;
+    private Query<Transform, CollisionBox> _platformQuery;
     private TileMap? _tileMap;
     private bool _isDisposed;
 
@@ -34,6 +36,11 @@ public partial class BattleScene : IDisposable
     /// 現在アクティブなタイルマップインスタンスを取得します。
     /// </summary>
     public static TileMap? CurrentTileMap { get; private set; }
+
+    /// <summary>
+    /// 現在アクティブなプレイヤー自機インスタンスを取得します。
+    /// </summary>
+    public Player? Player => _player;
 
     /// <summary>
     /// <see cref="BattleScene"/> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
@@ -59,21 +66,16 @@ public partial class BattleScene : IDisposable
         PlayerConfig playerCfg = ConfigManager.Player;
         ArenaConfig arenaCfg = ConfigManager.Arena;
 
-        // 1. プレイヤーの生成 (地形 CollisionBox + TOML 設定駆動 Hurtbox)
-        _ecsWorld.Entity("Player1")
-            .Set(new Transform(playerCfg.SpawnX, playerCfg.SpawnY, scaleX: playerCfg.ScaleX, scaleY: playerCfg.ScaleY))
-            .Set(new Velocity())
-            .Set(new CollisionBox(playerCfg.HitboxWidth, playerCfg.HitboxHeight))
-            .Set(new Hurtbox(playerCfg.GetHurtboxShape(), Faction.Friendly))
-            .Set(new Health(playerCfg.MaxHp))
-            .Set(new DoubleJump(playerCfg.MaxJumps))
-            .Set(new PlayerState())
-            .Set(new Sprite(playerHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 64, 64)))
-            .Set(new Animation("Idle", CharacterType.Cat, isPlaying: true))
-            .Add<PlayerTag>();
+        // 1. プレイヤーの生成 (高内聚な領域オブジェクト Player の初期化)
+        Entity playerEntity = _ecsWorld.Entity("Player1");
+        _player = new Player(playerEntity, playerCfg, playerHandle);
 
         // 2. タイルマップとプラットフォームの生成
         SetupArena();
+
+        _platformQuery = _ecsWorld.QueryBuilder<Transform, CollisionBox>()
+            .With<PlatformTag>()
+            .Build();
 
         // 3. アクティブな Boss (デフォルト: Boss 1) の生成
         SpawnBoss(CurrentBossType);
@@ -372,6 +374,11 @@ public partial class BattleScene : IDisposable
     /// <param name="deltaTime">前フレームからの経過時間（秒）</param>
     public void Update(float deltaTime)
     {
+        if (_player != null)
+        {
+            _player.Update(deltaTime, ConfigManager.Player, ConfigManager.Arena, _platformQuery, _ecsWorld);
+        }
+
         _ecsWorld.Progress(deltaTime);
     }
 
@@ -391,6 +398,7 @@ public partial class BattleScene : IDisposable
             ConfigManager.Boss2Container.OnConfigReloaded -= OnBoss2ConfigReloaded;
             ConfigManager.PlayerContainer.OnConfigReloaded -= OnPlayerConfigReloaded;
 
+            _platformQuery.Dispose();
             _ecsWorld.Dispose();
             if (Current == this)
             {

@@ -30,11 +30,6 @@ public static class RestartSystem
                  .With<EffectTag>()
                  .Build();
 
-        Query<Transform, Velocity, CollisionBox, Health, DoubleJump, PlayerState, Animation, Sprite> playerQuery =
-            world.QueryBuilder<Transform, Velocity, CollisionBox, Health, DoubleJump, PlayerState, Animation, Sprite>()
-                 .With<PlayerTag>()
-                 .Build();
-
         Query<BossCompatibilityData, BossTerminalData> bossRestartQuery =
             world.QueryBuilder<BossCompatibilityData, BossTerminalData>()
                  .With<BossTag>()
@@ -51,17 +46,17 @@ public static class RestartSystem
                  if (selectBoss1Pressed)
                  {
                      BattleScene.Current?.SwitchBoss("Boss1");
-                     ResetPlayer(world, playerBulletsQuery, effectsQuery, playerQuery);
+                     ResetPlayer(world, playerBulletsQuery, effectsQuery);
                  }
                  else if (selectBoss2Pressed)
                  {
                      BattleScene.Current?.SwitchBoss("Boss2");
-                     ResetPlayer(world, playerBulletsQuery, effectsQuery, playerQuery);
+                     ResetPlayer(world, playerBulletsQuery, effectsQuery);
                  }
                  else if (restartJustPressed)
                  {
                      RestartBossFromCompatibilityView(bossRestartQuery);
-                     ResetPlayer(world, playerBulletsQuery, effectsQuery, playerQuery);
+                     ResetPlayer(world, playerBulletsQuery, effectsQuery);
                  }
              });
 
@@ -88,7 +83,7 @@ public static class RestartSystem
         }
     }
 
-    private static void ResetPlayer(World world, Query playerBulletsQuery, Query effectsQuery, Query<Transform, Velocity, CollisionBox, Health, DoubleJump, PlayerState, Animation, Sprite> playerQuery)
+    private static void ResetPlayer(World world, Query playerBulletsQuery, Query effectsQuery)
     {
         PlayerConfig pCfg = ConfigManager.Player;
 
@@ -96,28 +91,6 @@ public static class RestartSystem
         playerBulletsQuery.Each(e => e.Destruct());
         effectsQuery.Each(e => e.Destruct());
 
-        playerQuery.Each((Entity e, ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Health health, ref DoubleJump doubleJump, ref PlayerState playerState, ref Animation anim, ref Sprite sprite) =>
-        {
-            trans.X = pCfg.SpawnX;
-            trans.Y = pCfg.SpawnY;
-            trans.ScaleX = pCfg.ScaleX;
-            trans.ScaleY = pCfg.ScaleY;
-            vel.Vx = 0.0f;
-            vel.Vy = 0.0f;
-            health.Current = pCfg.MaxHp;
-            health.Max = pCfg.MaxHp;
-            health.InvincibleTimer = 0.0f;
-            doubleJump.RemainingJumps = doubleJump.MaxJumps;
-            playerState.ShootCooldown = 0.0f;
-            col.Width = pCfg.HitboxWidth;
-            col.Height = pCfg.HitboxHeight;
-            col.IsGrounded = true;
-            anim.CurrentClip = "Idle";
-            anim.Timer = 0.0f;
-            sprite.IsVisible = true;
-            sprite.FlipX = false;
-
-            e.Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly));
-        });
+        BattleScene.Current?.Player?.Reset(pCfg);
     }
 }
