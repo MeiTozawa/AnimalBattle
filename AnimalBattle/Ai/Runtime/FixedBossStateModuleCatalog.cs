@@ -70,7 +70,8 @@ public static class FixedBossStateModuleCatalog
     /// <summary>固定集合の完全性と一対一対応を検査します。</summary>
     public static bool IsComplete(out string diagnostic)
     {
-        if (_entries.Count != Enum.GetValues<BossState>().Length - 1)
+        int expectedCount = (Enum.GetValues<Boss1State>().Length - 1) + (Enum.GetValues<Boss2State>().Length - 1);
+        if (_entries.Count != expectedCount)
         {
             diagnostic = "固定 BossState の対応数が一致しません。";
             return false;
@@ -106,26 +107,33 @@ public static class FixedBossStateModuleCatalog
 
     private static Type ResolveType(BossState state)
     {
-        return state switch
+        return state.BossType switch
         {
-            BossState.Boss1_Hover => typeof(HoverMovementModule),
-            BossState.Boss1_AttackSelection => typeof(Boss1AttackSelectionModule),
-            BossState.Boss1_Telegraph => typeof(DslBoss1TelegraphModule),
-            BossState.Boss1_Execute => typeof(DslBoss1ExecuteModule),
-            BossState.Boss1_Recovery => typeof(DslBoss1RecoveryModule),
-            BossState.Boss1_PhaseTransition => typeof(Boss1PhaseTransitionModule),
-            BossState.Boss1_Dead => typeof(Boss1DeadModule),
-
-            BossState.Boss2_Idle => typeof(Boss2IdleModule),
-            BossState.Boss2_PatrolChase => typeof(Boss2PatrolChaseModule),
-            BossState.Boss2_MoveToTakeoff => typeof(Boss2MoveToTakeoffModule),
-            BossState.Boss2_PlatformTraverse => typeof(DslPlatformTraverseModule),
-            BossState.Boss2_Telegraph => typeof(DslTelegraphModule),
-            BossState.Boss2_Execute => typeof(DslExecuteModule),
-            BossState.Boss2_WallCrashStun => typeof(Boss2WallCrashStunModule),
-            BossState.Boss2_Recovery => typeof(Boss2RecoveryModule),
-            BossState.Boss2_PhaseTransition => typeof(Boss2PhaseTransitionModule),
-            BossState.Boss2_Dead => typeof(Boss2DeadModule),
+            BossType.Boss1 => state.AsBoss1() switch
+            {
+                Boss1State.Hover => typeof(HoverMovementModule),
+                Boss1State.AttackSelection => typeof(Boss1AttackSelectionModule),
+                Boss1State.Telegraph => typeof(DslBoss1TelegraphModule),
+                Boss1State.Execute => typeof(DslBoss1ExecuteModule),
+                Boss1State.Recovery => typeof(DslBoss1RecoveryModule),
+                Boss1State.PhaseTransition => typeof(Boss1PhaseTransitionModule),
+                Boss1State.Dead => typeof(Boss1DeadModule),
+                _ => typeof(object)
+            },
+            BossType.Boss2 => state.AsBoss2() switch
+            {
+                Boss2State.Idle => typeof(Boss2IdleModule),
+                Boss2State.PatrolChase => typeof(Boss2PatrolChaseModule),
+                Boss2State.MoveToTakeoff => typeof(Boss2MoveToTakeoffModule),
+                Boss2State.PlatformTraverse => typeof(DslPlatformTraverseModule),
+                Boss2State.Telegraph => typeof(DslTelegraphModule),
+                Boss2State.Execute => typeof(DslExecuteModule),
+                Boss2State.WallCrashStun => typeof(Boss2WallCrashStunModule),
+                Boss2State.Recovery => typeof(Boss2RecoveryModule),
+                Boss2State.PhaseTransition => typeof(Boss2PhaseTransitionModule),
+                Boss2State.Dead => typeof(Boss2DeadModule),
+                _ => typeof(object)
+            },
             _ => typeof(object)
         };
     }

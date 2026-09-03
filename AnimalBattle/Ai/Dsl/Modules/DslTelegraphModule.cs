@@ -11,11 +11,11 @@ namespace AnimalBattle.Ai.Dsl.Modules;
 /// </summary>
 public sealed class DslTelegraphModule : IBossStateModule, IStateModuleDependencyProvider
 {
-    private readonly BossState _stateId;
+    private readonly BossState _handledState;
     private readonly Boss2TelegraphRunner _runner;
 
     /// <inheritdoc />
-    public BossState Id => _stateId;
+    public BossState HandledState => _handledState;
 
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "EffectPort", "ObservationService"];
@@ -23,15 +23,15 @@ public sealed class DslTelegraphModule : IBossStateModule, IStateModuleDependenc
     /// <summary>
     /// 予兆状態モジュールを初期化します。
     /// </summary>
-    /// <param name="stateId">この予兆状態の識別子。</param>
+    /// <param name="handledState">この予兆状態の識別値。</param>
     /// <param name="configuration">Boss2 攻撃設定。</param>
     /// <param name="state">Boss2 実行時状態。</param>
-    public DslTelegraphModule(BossState stateId, IBoss2Configuration configuration, Boss2BehaviorState state)
+    public DslTelegraphModule(BossState handledState, IBoss2Configuration configuration, Boss2BehaviorState state)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(state);
-        _stateId = stateId;
-        _runner = new Boss2TelegraphRunner(stateId, configuration, state);
+        _handledState = handledState;
+        _runner = new Boss2TelegraphRunner(handledState, configuration, state);
     }
 
     /// <inheritdoc />

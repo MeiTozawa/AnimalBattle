@@ -14,13 +14,13 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
     /// <summary>State_Id、Boss2 設定、共有実行値を注入します。</summary>
     protected Boss2ExecuteModuleBase(BossState stateId, IBoss2Configuration configuration, Boss2BehaviorState state)
     {
-        Id = stateId;
+        HandledState = stateId;
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _state = state ?? throw new ArgumentNullException(nameof(state));
     }
 
-    /// <summary>Execute 状態を識別する State_Id です。</summary>
-    public BossState Id { get; }
+    /// <summary>Execute 担当状態です。</summary>
+    public BossState HandledState { get; }
     /// <summary>Execute 状態が必要とする依存関係です。</summary>
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "AttackPort", "ObservationService"];
     /// <summary>派生 module が参照する Boss2 共有実行値です。</summary>
@@ -36,7 +36,7 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
         _gate = null;
         if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentSkill, in context, in invocation, out Boss2AttackPattern pattern))
         {
-            _state.RequestTransition(BossState.Boss2_Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
+            _state.RequestTransition(Boss2State.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
@@ -67,7 +67,7 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
         if (result.IsComplete)
         {
             _state.IsAttackActive = false;
-            _state.RequestTransition(BossState.Boss2_Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
+            _state.RequestTransition(Boss2State.Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
         }
     }
 

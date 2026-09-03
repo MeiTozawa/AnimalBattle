@@ -42,7 +42,7 @@ public sealed class DslPlatformTraverseModule : IBossStateModule, IStateModuleDe
     private float _stageElapsed;
 
     /// <inheritdoc />
-    public BossState Id => _stateId;
+    public BossState HandledState => _stateId;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "EffectPort"];
     /// <summary>現在の内部進行段階を取得します。</summary>
@@ -140,7 +140,7 @@ public sealed class DslPlatformTraverseModule : IBossStateModule, IStateModuleDe
                 context.Movement.Stop();
                 if (_stageElapsed >= settings.LandingRecoveryDuration)
                 {
-                    _state.RequestTransition(BossState.Boss2_PatrolChase, new TransitionReason(ReasonKind.TimerElapsed));
+                    _state.RequestTransition(Boss2State.PatrolChase, new TransitionReason(ReasonKind.TimerElapsed));
                 }
                 break;
             }

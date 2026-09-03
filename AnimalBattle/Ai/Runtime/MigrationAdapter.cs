@@ -765,8 +765,8 @@ public static class MigrationAdapter
             StateTimer = stateTimer,
             StateDuration = stateDuration,
             IsInvulnerable = isInvulnerable,
-            IsDead = stateId is BossState.Boss1_Dead or BossState.Boss2_Dead,
-            AttackGenerationEnabled = stateId is not (BossState.Boss1_Dead or BossState.Boss2_Dead),
+            IsDead = stateId.IsDead,
+            AttackGenerationEnabled = !stateId.IsDead,
             UpdateSource = UpdateSource.NewRuntime
         };
         BossMovementData movementData = new(stateId)
@@ -889,7 +889,7 @@ public static class MigrationAdapter
         BossState recoveryState,
         BossSkill skill,
         Phase phase,
-        BossState stateId = BossState.Unknown)
+        BossState stateId = default)
     {
         DiagnosticResult diagnostic = DiagnosticResult.Failure(
             DiagnosticSeverity.ExecutionError,
@@ -952,13 +952,21 @@ public static class MigrationAdapter
         };
 
     private static AttackStage GetAttackStage(BossState state)
-        => state switch
+    {
+        if (state.IsTelegraph)
         {
-            BossState.Boss1_Telegraph or BossState.Boss2_Telegraph => AttackStage.Telegraph,
-            BossState.Boss1_Execute or BossState.Boss2_Execute => AttackStage.Execute,
-            BossState.Boss1_Recovery or BossState.Boss2_Recovery => AttackStage.Recovery,
-            _ => AttackStage.None
-        };
+            return AttackStage.Telegraph;
+        }
+        if (state.IsExecute)
+        {
+            return AttackStage.Execute;
+        }
+        if (state.IsRecovery)
+        {
+            return AttackStage.Recovery;
+        }
+        return AttackStage.None;
+    }
 
     private static bool MapBoss1State(Boss1StateKind legacyState, BossSkill skill, out BossState stateId)
     {
@@ -1015,27 +1023,39 @@ public static class MigrationAdapter
 
     private static bool MapLegacyBoss1State(BossState stateId, out Boss1StateKind state)
     {
-        state = stateId switch
+        if (stateId.BossType != BossType.Boss1)
         {
-            BossState.Boss1_Hover or BossState.Boss1_AttackSelection => Boss1StateKind.Hovering,
-            BossState.Boss1_Telegraph => Boss1StateKind.Telegraphing,
-            BossState.Boss1_Execute => Boss1StateKind.Casting,
-            BossState.Boss1_Recovery => Boss1StateKind.Recovering,
-            BossState.Boss1_PhaseTransition or BossState.Boss1_Dead => Boss1StateKind.PhaseTransition,
+            state = default;
+            return false;
+        }
+
+        state = stateId.AsBoss1() switch
+        {
+            Boss1State.Hover or Boss1State.AttackSelection => Boss1StateKind.Hovering,
+            Boss1State.Telegraph => Boss1StateKind.Telegraphing,
+            Boss1State.Execute => Boss1StateKind.Casting,
+            Boss1State.Recovery => Boss1StateKind.Recovering,
+            Boss1State.PhaseTransition or Boss1State.Dead => Boss1StateKind.PhaseTransition,
             _ => default
         };
-        return stateId is >= BossState.Boss1_Hover and <= BossState.Boss1_Dead;
+        return stateId.IsValid;
     }
 
     private static bool MapLegacyBoss2State(BossState stateId, BossSkill skill, out Boss2StateKind state)
     {
-        state = stateId switch
+        if (stateId.BossType != BossType.Boss2)
         {
-            BossState.Boss2_Idle => Boss2StateKind.Idle,
-            BossState.Boss2_PatrolChase => Boss2StateKind.PatrolChase,
-            BossState.Boss2_MoveToTakeoff => Boss2StateKind.MoveToTakeoff,
-            BossState.Boss2_PlatformTraverse => Boss2StateKind.PlatformJumping,
-            BossState.Boss2_Telegraph => skill switch
+            state = default;
+            return false;
+        }
+
+        state = stateId.AsBoss2() switch
+        {
+            Boss2State.Idle => Boss2StateKind.Idle,
+            Boss2State.PatrolChase => Boss2StateKind.PatrolChase,
+            Boss2State.MoveToTakeoff => Boss2StateKind.MoveToTakeoff,
+            Boss2State.PlatformTraverse => Boss2StateKind.PlatformJumping,
+            Boss2State.Telegraph => skill switch
             {
                 BossSkill.HeavySlash => Boss2StateKind.TelegraphHeavySlash,
                 BossSkill.DoubleCleave => Boss2StateKind.TelegraphDoubleCleave,
@@ -1045,7 +1065,7 @@ public static class MigrationAdapter
                 BossSkill.EarthquakeRoar => Boss2StateKind.TelegraphEarthquakeRoar,
                 _ => Boss2StateKind.TelegraphHeavySlash
             },
-            BossState.Boss2_Execute => skill switch
+            Boss2State.Execute => skill switch
             {
                 BossSkill.HeavySlash => Boss2StateKind.ExecutingHeavySlash,
                 BossSkill.DoubleCleave => Boss2StateKind.ExecutingDoubleCleave,
@@ -1055,20 +1075,20 @@ public static class MigrationAdapter
                 BossSkill.EarthquakeRoar => Boss2StateKind.ExecutingEarthquakeRoar,
                 _ => Boss2StateKind.ExecutingHeavySlash
             },
-            BossState.Boss2_WallCrashStun => Boss2StateKind.WallCrashStun,
-            BossState.Boss2_Recovery => Boss2StateKind.SkillRecovery,
-            BossState.Boss2_PhaseTransition => Boss2StateKind.PhaseTransition,
-            BossState.Boss2_Dead => Boss2StateKind.Dead,
+            Boss2State.WallCrashStun => Boss2StateKind.WallCrashStun,
+            Boss2State.Recovery => Boss2StateKind.SkillRecovery,
+            Boss2State.PhaseTransition => Boss2StateKind.PhaseTransition,
+            Boss2State.Dead => Boss2StateKind.Dead,
             _ => default
         };
-        return stateId is >= BossState.Boss2_Idle and <= BossState.Boss2_Dead;
+        return stateId.IsValid;
     }
 
     private static BossState ResolveBoss1Execute(BossSkill skill)
         => skill.IsValid() ? BossState.Boss1_Execute : BossState.Unknown;
 
     private static bool IsAirborne(BossState stateId, BossSkill skill = BossSkill.None)
-        => stateId is BossState.Boss2_PlatformTraverse || (stateId == BossState.Boss2_Execute && skill == BossSkill.LeapSmash);
+        => stateId == BossState.Boss2_PlatformTraverse || (stateId == BossState.Boss2_Execute && skill == BossSkill.LeapSmash);
 }
 
 /// <summary>旧値を新 runtime data へ変換した結果です。</summary>

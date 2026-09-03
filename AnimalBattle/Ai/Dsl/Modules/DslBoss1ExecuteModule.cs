@@ -23,7 +23,7 @@ public sealed class DslBoss1ExecuteModule : IBossStateModule, IStateModuleDepend
     private int _emissionIndex;
 
     /// <inheritdoc />
-    public BossState Id => BossState.Boss1_Execute;
+    public BossState HandledState => Boss1State.Execute;
 
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "AttackPort", "MovementPort", "RandomSource"];
@@ -88,7 +88,7 @@ public sealed class DslBoss1ExecuteModule : IBossStateModule, IStateModuleDepend
         ExecuteResult result = gate.Execute(ref context, in invocation);
         if (!result.Started)
         {
-            _state.RequestTransition(BossState.Boss1_Recovery, new TransitionReason(ReasonKind.SafetyFallback, skill: pattern.Skill, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(Boss1State.Recovery, new TransitionReason(ReasonKind.SafetyFallback, skill: pattern.Skill, errorCode: ErrorCode.InvalidConfiguration));
             return;
         }
 
@@ -138,7 +138,7 @@ public sealed class DslBoss1ExecuteModule : IBossStateModule, IStateModuleDepend
         _state.StateElapsed = _elapsed;
         if (result.IsComplete || _elapsed >= duration)
         {
-            _state.RequestTransition(BossState.Boss1_Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: pattern.Skill));
+            _state.RequestTransition(Boss1State.Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: pattern.Skill));
         }
     }
 
@@ -162,7 +162,7 @@ public sealed class DslBoss1ExecuteModule : IBossStateModule, IStateModuleDepend
 
         if (result.IsComplete || _elapsed >= duration)
         {
-            _state.RequestTransition(BossState.Boss1_Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: pattern.Skill));
+            _state.RequestTransition(Boss1State.Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: pattern.Skill));
         }
     }
 

@@ -17,7 +17,7 @@ public sealed class DslBoss1RecoveryModule : IBossStateModule, IStateModuleDepen
     private RecoveryModule? _activeRecovery;
 
     /// <inheritdoc />
-    public BossState Id => BossState.Boss1_Recovery;
+    public BossState HandledState => Boss1State.Recovery;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "MovementPort", "ObservationService"];
 
@@ -36,7 +36,7 @@ public sealed class DslBoss1RecoveryModule : IBossStateModule, IStateModuleDepen
         if (!DslBoss1Support.IsBoss1(in context, in invocation) || !_state.CurrentSkill.IsValid())
         {
             DslBoss1Support.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss1 の Recovery 対象が不正です。", _state.CurrentSkill, AttackStage.Recovery);
-            _state.RequestTransition(BossState.Boss1_Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
+            _state.RequestTransition(Boss1State.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
@@ -45,12 +45,12 @@ public sealed class DslBoss1RecoveryModule : IBossStateModule, IStateModuleDepen
             pattern = new Boss1AttackPattern(_state.CurrentSkill, 0, 0, 0);
         }
 
-        _activeRecovery = new RecoveryModule(BossState.Boss1_Recovery, pattern.Definition);
+        _activeRecovery = new RecoveryModule(Boss1State.Recovery, pattern.Definition);
         _activeRecovery.Enter(ref context, in invocation);
 
         if (!_activeRecovery.IsActive && !_activeRecovery.CanEvaluateNextTransition)
         {
-            _state.RequestTransition(BossState.Boss1_Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(Boss1State.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
         }
     }
 
@@ -82,7 +82,7 @@ public sealed class DslBoss1RecoveryModule : IBossStateModule, IStateModuleDepen
         if (_activeRecovery.CanEvaluateNextTransition)
         {
             _state.IsAttackActive = false;
-            _state.RequestTransition(BossState.Boss1_Hover, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
+            _state.RequestTransition(Boss1State.Hover, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
         }
     }
 

@@ -536,7 +536,7 @@ public sealed class BossRuntimeSlot
         _currentTransitionReason = reason;
         _aiData.BossState = stateId;
         _aiData.Phase = _context.Phase;
-        _aiData.IsDead = stateId is BossState.Boss1_Dead or BossState.Boss2_Dead;
+        _aiData.IsDead = stateId.IsDead;
         if (_aiData.IsDead)
         {
             _aiData.AttackGenerationEnabled = false;

@@ -1,11 +1,12 @@
 using System;
 using System.Drawing;
-
+using AnimalBattle.Ai.Boss1;
+using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
-using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
@@ -200,44 +201,69 @@ public static class HudRenderSystem
 
     private static void GetBossStateInfo(BossState state, BossSkill skill, BossHpBarRenderConfig hpCfg, out string stateName, out Color badgeColor)
     {
-        stateName = state switch
+        stateName = state.BossType switch
         {
-            BossState.Boss1_Hover => "[STATE: HOVERING (IDLE)]",
-            BossState.Boss1_AttackSelection => "[STATE: ATTACK SELECTION]",
-            BossState.Boss1_Telegraph or BossState.Boss2_Telegraph => $"[STATE: TELEGRAPHING (WIND-UP: {skill})]",
-            BossState.Boss1_Execute or BossState.Boss2_Execute => $"[STATE: EXECUTING ({skill})]",
-            BossState.Boss1_Recovery or BossState.Boss2_Recovery => "[STATE: RECOVERING (VULNERABLE)]",
-            BossState.Boss1_PhaseTransition or BossState.Boss2_PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
-            BossState.Boss1_Dead or BossState.Boss2_Dead => "[STATE: DEFEATED]",
-            BossState.Boss2_Idle => "[STATE: IDLE / ALERT]",
-            BossState.Boss2_PatrolChase => $"[STATE: CHASE (NEXT: {skill})]",
-            BossState.Boss2_MoveToTakeoff => "[STATE: NAVIGATING TO TAKEOFF]",
-            BossState.Boss2_PlatformTraverse => "[STATE: PLATFORM TRAVERSE (AIRBORNE)]",
-            BossState.Boss2_WallCrashStun => "[STATE: WALL CRASH STUNNED (VULNERABLE)]",
+            BossType.Boss1 => state.AsBoss1() switch
+            {
+                Boss1State.Hover => "[STATE: HOVERING (IDLE)]",
+                Boss1State.AttackSelection => "[STATE: ATTACK SELECTION]",
+                Boss1State.Telegraph => $"[STATE: TELEGRAPHING (WIND-UP: {skill})]",
+                Boss1State.Execute => $"[STATE: EXECUTING ({skill})]",
+                Boss1State.Recovery => "[STATE: RECOVERING (VULNERABLE)]",
+                Boss1State.PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
+                Boss1State.Dead => "[STATE: DEFEATED]",
+                _ => "[STATE: UNKNOWN]"
+            },
+            BossType.Boss2 => state.AsBoss2() switch
+            {
+                Boss2State.Idle => "[STATE: IDLE / ALERT]",
+                Boss2State.PatrolChase => $"[STATE: CHASE (NEXT: {skill})]",
+                Boss2State.MoveToTakeoff => "[STATE: NAVIGATING TO TAKEOFF]",
+                Boss2State.PlatformTraverse => "[STATE: PLATFORM TRAVERSE (AIRBORNE)]",
+                Boss2State.Telegraph => $"[STATE: TELEGRAPHING (WIND-UP: {skill})]",
+                Boss2State.Execute => $"[STATE: EXECUTING ({skill})]",
+                Boss2State.WallCrashStun => "[STATE: WALL CRASH STUNNED (VULNERABLE)]",
+                Boss2State.Recovery => "[STATE: RECOVERING (VULNERABLE)]",
+                Boss2State.PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
+                Boss2State.Dead => "[STATE: DEFEATED]",
+                _ => "[STATE: UNKNOWN]"
+            },
             _ => "[STATE: UNKNOWN]"
         };
 
-        badgeColor = state switch
+        if (state.IsDead)
         {
-            BossState.Boss1_PhaseTransition or BossState.Boss2_PhaseTransition => hpCfg.StatePhaseTransitionColor,
-            BossState.Boss1_Recovery or BossState.Boss2_Recovery => hpCfg.StateRecoveringColor,
-            BossState.Boss1_Dead or BossState.Boss2_Dead => ColorPalette.Gray,
-            BossState.Boss2_WallCrashStun => ColorPalette.Gold,
-            _ when IsTelegraphState(state) => hpCfg.StateTelegraphingColor,
-            _ when IsExecuteState(state) => hpCfg.StateCastingColor,
-            _ => hpCfg.StateDefaultColor
-        };
+            badgeColor = ColorPalette.Gray;
+        }
+        else if (state.IsPhaseTransition)
+        {
+            badgeColor = hpCfg.StatePhaseTransitionColor;
+        }
+        else if (state.IsRecovery)
+        {
+            badgeColor = hpCfg.StateRecoveringColor;
+        }
+        else if (state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.WallCrashStun)
+        {
+            badgeColor = ColorPalette.Gold;
+        }
+        else if (state.IsTelegraph)
+        {
+            badgeColor = hpCfg.StateTelegraphingColor;
+        }
+        else if (state.IsExecute)
+        {
+            badgeColor = hpCfg.StateCastingColor;
+        }
+        else
+        {
+            badgeColor = hpCfg.StateDefaultColor;
+        }
     }
 
-    private static bool IsTelegraphState(BossState state)
-    {
-        return state is BossState.Boss1_Telegraph or BossState.Boss2_Telegraph;
-    }
+    private static bool IsTelegraphState(BossState state) => state.IsTelegraph;
 
-    private static bool IsExecuteState(BossState state)
-    {
-        return state is BossState.Boss1_Execute or BossState.Boss2_Execute;
-    }
+    private static bool IsExecuteState(BossState state) => state.IsExecute;
 
     private static void GetBoss1StateInfo(Boss1StateMachine fsm, BossHpBarRenderConfig hpCfg, out string stateName, out Color badgeColor)
     {

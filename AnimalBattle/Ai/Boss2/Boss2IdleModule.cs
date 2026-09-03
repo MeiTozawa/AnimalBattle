@@ -10,7 +10,7 @@ public sealed class Boss2IdleModule(Boss2BehaviorState state) : IBossStateModule
     private readonly Boss2BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
 
     /// <inheritdoc />
-    public BossState Id => BossState.Boss2_Idle;
+    public BossState HandledState => Boss2State.Idle;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "PlayerObservation"];
 
@@ -53,7 +53,7 @@ public sealed class Boss2IdleModule(Boss2BehaviorState state) : IBossStateModule
             long playerInput = _state.AttackTargetEntityId > long.MaxValue
                 ? long.MaxValue
                 : (long)_state.AttackTargetEntityId;
-            _state.RequestTransition(BossState.Boss2_PatrolChase, new TransitionReason(ReasonKind.PlayerObservation, originalInput: playerInput));
+            _state.RequestTransition(Boss2State.PatrolChase, new TransitionReason(ReasonKind.PlayerObservation, originalInput: playerInput));
         }
     }
 

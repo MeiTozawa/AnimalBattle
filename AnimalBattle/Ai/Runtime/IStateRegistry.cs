@@ -38,6 +38,6 @@ public readonly record struct EnumCompletenessResult(
     public static EnumCompletenessResult Failure(
         ErrorCode errorCode,
         string message,
-        BossState state = BossState.Unknown)
+        BossState state = default)
         => new(false, errorCode, message, state);
 }

@@ -11,7 +11,7 @@ public sealed class Boss2MoveToTakeoffModule : IBossStateModule, IStateModuleDep
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public BossState Id => BossState.Boss2_MoveToTakeoff;
+    public BossState HandledState => Boss2State.MoveToTakeoff;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "PlayerObservation"];
 
@@ -49,7 +49,7 @@ public sealed class Boss2MoveToTakeoffModule : IBossStateModule, IStateModuleDep
         _state.StateElapsed += context.DeltaTime;
         if (_state.IsGrounded && MathF.Abs(context.PlayerObservation.PositionX - _state.CurrentPosition.X) <= settings.TakeoffDistance)
         {
-            _state.RequestTransition(BossState.Boss2_PlatformTraverse, new TransitionReason(ReasonKind.PlayerObservation));
+            _state.RequestTransition(Boss2State.PlatformTraverse, new TransitionReason(ReasonKind.PlayerObservation));
         }
     }
 

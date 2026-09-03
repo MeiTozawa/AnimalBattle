@@ -202,7 +202,7 @@ public sealed class TransitionService : ITransitionService
     }
 
     private static bool IsDeadState(BossState state)
-        => state is BossState.Boss1_Dead or BossState.Boss2_Dead;
+        => state.IsDead;
 
     private void RecordTransition(in TransitionRequest request, TransitionResult result, BossType bossType)
     {

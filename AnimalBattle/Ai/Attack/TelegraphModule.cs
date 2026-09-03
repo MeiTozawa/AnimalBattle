@@ -13,8 +13,8 @@ public sealed class TelegraphModule : IBossStateModule
     private float _startTime;
     private PlayerObservation _target;
 
-    /// <summary>Telegraph の State_Id を取得します。</summary>
-    public BossState Id { get; }
+    /// <summary>Telegraph の担当状態を取得します。</summary>
+    public BossState HandledState { get; }
     /// <summary>現在の技能識別子を取得します。</summary>
     public BossSkill Skill => _definition.Skill;
 
@@ -28,8 +28,8 @@ public sealed class TelegraphModule : IBossStateModule
     public ulong TargetEntityId => _target.EntityId;
     /// <summary>Telegraph が現在アクティブかどうかを取得します。</summary>
     public bool IsActive => _active;
-    /// <summary>Telegraph が完了したかどうかを取得します。</summary>
-    public bool IsComplete => !_active && _elapsed > 0;
+    /// <summary>Telegraph 終了条件を満たしたかどうかを取得します。</summary>
+    public bool IsComplete => _elapsed >= _definition.TelegraphDuration;
     /// <summary>Telegraph の経過時間を取得します。</summary>
     public float Elapsed => _elapsed;
     /// <summary>Telegraph 開始時に固定した対象観測を取得します。</summary>
@@ -38,9 +38,9 @@ public sealed class TelegraphModule : IBossStateModule
     /// <summary>攻撃定義と State_Id を指定して Telegraph を生成します。</summary>
     public TelegraphModule(BossState stateId, AttackDefinition definition)
     {
-        if (!stateId.IsValid()) throw new ArgumentOutOfRangeException(nameof(stateId));
+        if (!stateId.IsValid) throw new ArgumentOutOfRangeException(nameof(stateId));
         ArgumentNullException.ThrowIfNull(definition);
-        Id = stateId;
+        HandledState = stateId;
         _definition = definition;
     }
 

@@ -10,7 +10,7 @@ public sealed class Boss2DeadModule : IBossStateModule, IStateModuleDependencyPr
     private readonly Boss2BehaviorState _state;
 
     /// <inheritdoc />
-    public BossState Id => BossState.Boss2_Dead;
+    public BossState HandledState => Boss2State.Dead;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "AttackPort"];
 
@@ -30,7 +30,7 @@ public sealed class Boss2DeadModule : IBossStateModule, IStateModuleDependencyPr
             ? _state.TerminalData.DeathReason
             : PhaseDeathController.CreateDeathReason(0.0f);
         _state.TerminalData.Capture(
-            BossState.Boss2_Dead,
+            Boss2State.Dead,
             context.Phase,
             in reason,
             invocation.FrameUpdateNumber,

@@ -11,8 +11,8 @@ public sealed class RecoveryModule : IBossStateModule
     private bool _active;
     private float _elapsed;
 
-    /// <summary>Recovery の State_Id を取得します。</summary>
-    public BossState Id { get; }
+    /// <summary>Recovery の担当状態を取得します。</summary>
+    public BossState HandledState { get; }
     /// <summary>現在の技能識別子を取得します。</summary>
     public BossSkill Skill => _definition.Skill;
 
@@ -28,9 +28,9 @@ public sealed class RecoveryModule : IBossStateModule
     /// <summary>攻撃定義と State_Id を指定して Recovery を生成します。</summary>
     public RecoveryModule(BossState stateId, AttackDefinition definition)
     {
-        if (!stateId.IsValid()) throw new ArgumentOutOfRangeException(nameof(stateId));
+        if (!stateId.IsValid) throw new ArgumentOutOfRangeException(nameof(stateId));
         ArgumentNullException.ThrowIfNull(definition);
-        Id = stateId;
+        HandledState = stateId;
         _definition = definition;
     }
 

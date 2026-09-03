@@ -191,7 +191,8 @@ public sealed class BossAiRuntime
 
         if (thresholds.GetNextPhase(phase, currentHp / maxHp, out Phase nextPhase, out float threshold)
             && !runtime.PhaseTransitionData.IsActive
-            && runtime.CurrentStateId is not (BossState.Boss1_PhaseTransition or BossState.Boss2_PhaseTransition or BossState.Boss1_Dead or BossState.Boss2_Dead))
+            && !runtime.CurrentStateId.IsPhaseTransition
+            && !runtime.CurrentStateId.IsDead)
         {
             TransitionReason reason = new(ReasonKind.PhaseThreshold, threshold: threshold);
             BossState transitionState = PhaseDeathController.GetPhaseTransitionState(runtime.BossType);
@@ -517,11 +518,11 @@ public sealed class BossAiRuntime
             return Error.Failure("BossAiRuntime.SafetyTransition", "安全遷移は既に試行済みです。");
         }
 
-        BossState safeState = _safeBossState.IsValid()
+        BossState safeState = _safeBossState.IsValid
             ? _safeBossState
-            : PhaseDeathController.GetPhaseTransitionState(runtime.BossType) switch
+            : runtime.BossType switch
             {
-                BossState.Boss2_PhaseTransition => BossState.Boss2_Idle,
+                BossType.Boss2 => BossState.Boss2_Idle,
                 _ => BossState.Boss1_Hover
             };
         if (!safeState.IsValid() || runtime.CurrentStateId == safeState || !_registry.Get(safeState, out _))

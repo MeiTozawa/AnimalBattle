@@ -59,8 +59,8 @@ internal static class Boss2ModuleSupport
         return false;
     }
 
-    internal static BossState SafeMovementState => BossState.Boss2_Idle;
-    internal static BossState SafeAttackState => BossState.Boss2_Idle;
+    internal static BossState SafeMovementState => Boss2State.Idle;
+    internal static BossState SafeAttackState => Boss2State.Idle;
 }
 
 internal sealed class Boss2TelegraphRunner
@@ -84,7 +84,7 @@ internal sealed class Boss2TelegraphRunner
         _active = null;
         if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentSkill, in context, in invocation, out Boss2AttackPattern pattern))
         {
-            _state.RequestTransition(BossState.Boss2_Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
+            _state.RequestTransition(Boss2State.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
@@ -95,7 +95,7 @@ internal sealed class Boss2TelegraphRunner
         _active.Enter(ref context, in invocation);
         if (!_active.IsActive && !_active.IsComplete)
         {
-            _state.RequestTransition(BossState.Boss2_Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(Boss2State.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
         }
     }
 
@@ -109,10 +109,10 @@ internal sealed class Boss2TelegraphRunner
         _active.Update(ref context, in invocation);
         if (IsComplete)
         {
-            BossState executeState = BossState.Boss2_Execute;
-            if (!executeState.IsValid())
+            BossState executeState = Boss2State.Execute;
+            if (!executeState.IsValid)
             {
-                _state.RequestTransition(BossState.Boss2_Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
+                _state.RequestTransition(Boss2State.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
                 return;
             }
 
@@ -144,16 +144,16 @@ internal sealed class Boss2RecoveryRunner
         _active = null;
         if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentSkill, in context, in invocation, out Boss2AttackPattern pattern))
         {
-            _state.RequestTransition(BossState.Boss2_Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
+            _state.RequestTransition(Boss2State.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
 
-        _active = new RecoveryModule(BossState.Boss2_Recovery, pattern.Definition);
+        _active = new RecoveryModule(Boss2State.Recovery, pattern.Definition);
         _active.Enter(ref context, in invocation);
         if (!_active.IsActive && !_active.CanEvaluateNextTransition)
         {
-            _state.RequestTransition(BossState.Boss2_Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(Boss2State.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
         }
     }
 
@@ -176,7 +176,7 @@ internal sealed class Boss2RecoveryRunner
         if (_active.CanEvaluateNextTransition)
         {
             _state.IsAttackActive = false;
-            _state.RequestTransition(BossState.Boss2_Idle, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
+            _state.RequestTransition(Boss2State.Idle, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
         }
     }
 
