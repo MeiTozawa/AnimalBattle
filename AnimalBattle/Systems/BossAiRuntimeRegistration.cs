@@ -54,14 +54,16 @@ public static class BossAiRuntimeRegistration
         Boss2DefaultConfiguration boss2Configuration = new();
         boss1State = new Boss1BehaviorState(ConfigManager.Boss1.BaseX, ConfigManager.Boss1.BaseY);
         boss2State = new Boss2BehaviorState(ConfigManager.Boss2.SpawnX, ConfigManager.Boss2.SpawnY);
+        Boss1AttackAdapter boss1AttackAdapter = new(boss1Configuration, boss1State);
+        Boss2AttackAdapter boss2AttackAdapter = new(boss2Configuration, boss2State);
 
         IBossStateModule[] modules =
         [
             new HoverMovementModule(boss1Configuration, boss1State),
             new Boss1AttackSelectionModule(boss1Configuration, boss1State),
-            new DslBoss1TelegraphModule(boss1Configuration, boss1State),
+            new DslTelegraphModule(boss1AttackAdapter),
             new DslBoss1ExecuteModule(boss1Configuration, boss1State),
-            new DslBoss1RecoveryModule(boss1Configuration, boss1State),
+            new DslRecoveryModule(boss1AttackAdapter),
             new Boss1PhaseTransitionModule(boss1Configuration, boss1State),
             new Boss1DeadModule(boss1State),
 
@@ -69,10 +71,10 @@ public static class BossAiRuntimeRegistration
             new Boss2PatrolChaseModule(boss2Configuration, boss2State),
             new Boss2MoveToTakeoffModule(boss2Configuration, boss2State),
             new DslPlatformTraverseModule(BossState.Boss2_PlatformTraverse, TraverseMode.Jump, boss2Configuration, boss2State),
-            new DslTelegraphModule(BossState.Boss2_Telegraph, boss2Configuration, boss2State),
-            new DslExecuteModule(BossState.Boss2_Execute, boss2Configuration, boss2State),
+            new DslTelegraphModule(boss2AttackAdapter),
+            new DslBoss2ExecuteModule(boss2Configuration, boss2State),
             new Boss2WallCrashStunModule(boss2State),
-            new Boss2RecoveryModule(boss2Configuration, boss2State),
+            new DslRecoveryModule(boss2AttackAdapter),
             new Boss2PhaseTransitionModule(boss2Configuration, boss2State),
             new Boss2DeadModule(boss2State)
         ];

@@ -118,7 +118,8 @@ public sealed class Boss1PipelineDslTests
         Boss1DefaultConfiguration config = new();
         Boss1BehaviorState state = new();
         state.CurrentSkill = BossSkill.Aimed3Shot;
-        AnimalBattle.Ai.Dsl.Modules.DslBoss1TelegraphModule module = new(config, state);
+        Boss1AttackAdapter adapter = new(config, state);
+        AnimalBattle.Ai.Dsl.Modules.DslTelegraphModule module = new(adapter);
 
         Boss1MockMovementPort movement = new();
         Boss1MockAttackPort attack = new();
@@ -204,7 +205,8 @@ public sealed class Boss1PipelineDslTests
         Boss1DefaultConfiguration config = new();
         Boss1BehaviorState state = new();
         state.CurrentSkill = BossSkill.DiveRam;
-        AnimalBattle.Ai.Dsl.Modules.DslBoss1RecoveryModule module = new(config, state);
+        Boss1AttackAdapter adapter = new(config, state);
+        AnimalBattle.Ai.Dsl.Modules.DslRecoveryModule module = new(adapter);
 
         Boss1MockMovementPort movement = new();
         Boss1MockAttackPort attack = new();

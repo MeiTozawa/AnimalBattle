@@ -1,57 +1,82 @@
+using System;
+using System.Collections.Generic;
+using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Dsl.Modules;
 
 /// <summary>
 /// 宣言的パイプラインで使用される汎用の攻撃後隙（Recovery）状態モジュールです。
+/// Boss1 および Boss2 で共通利用され、攻撃後の隙・硬直とデフォルト状態への復帰を処理します。
 /// </summary>
-public sealed class DslRecoveryModule : IBossStateModule
+/// <remarks>
+/// 汎用後隙モジュールを初期化します。
+/// </remarks>
+/// <param name="adapter">Boss 攻撃アダプター。</param>
+public sealed class DslRecoveryModule(IBossAttackAdapter adapter) : IBossStateModule, IStateModuleDependencyProvider
 {
-    private readonly BossState _handledState;
-    private readonly BossState _nextState;
-    private readonly BossSkill _skill;
-    private readonly float _duration;
-    private float _elapsed;
+    private readonly IBossAttackAdapter _adapter = adapter ?? throw new ArgumentNullException(nameof(adapter));
+    private RecoveryModule? _activeRecovery;
 
     /// <inheritdoc />
-    public BossState HandledState => _handledState;
+    public BossState HandledState => _adapter.RecoveryState;
 
-    /// <summary>
-    /// 後隙状態モジュールを初期化します。
-    /// </summary>
-    /// <param name="handledState">この後隙状態の識別値。</param>
-    /// <param name="nextState">後隙完了後に遷移する次の状態の識別値。</param>
-    /// <param name="skill">対象の技能識別子。</param>
-    /// <param name="duration">後隙持続時間（秒）。</param>
-    public DslRecoveryModule(BossState handledState, BossState nextState, BossSkill skill, float duration)
-    {
-        _handledState = handledState;
-        _nextState = nextState;
-        _skill = skill;
-        _duration = duration;
-    }
-
+    /// <inheritdoc />
+    public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "ObservationService"];
 
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
-        _elapsed = 0.0f;
+        _activeRecovery = null;
+        _adapter.OnRecoveryEnter(ref context, in invocation);
+
+        BossSkill skill = _adapter.CurrentSkill;
+        if (!skill.IsValid())
+        {
+            _adapter.RequestTransition(_adapter.DefaultState, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
+            return;
+        }
+
+        ErrorOr<AttackDefinition> definitionResult = _adapter.GetAttackDefinition(skill);
+        if (definitionResult.IsError)
+        {
+            _adapter.RequestTransition(_adapter.DefaultState, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
+            return;
+        }
+
+        _activeRecovery = new RecoveryModule(_adapter.RecoveryState, definitionResult.Value);
+        _activeRecovery.Enter(ref context, in invocation);
+
+        if (!_activeRecovery.IsActive && !_activeRecovery.CanEvaluateNextTransition)
+        {
+            _adapter.RequestTransition(_adapter.DefaultState, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
+        }
     }
 
     /// <inheritdoc />
     public void Update(ref StateContext context, in LifecycleInvocation invocation)
     {
-        _elapsed += context.DeltaTime;
-        if (_elapsed >= _duration)
+        if (_activeRecovery is null || !_activeRecovery.IsActive)
         {
-            // 次の状態へ遷移
+            return;
+        }
+
+        _activeRecovery.Update(ref context, in invocation);
+        _adapter.OnRecoveryUpdate(ref context, in invocation, _activeRecovery.Elapsed);
+
+        if (_activeRecovery.CanEvaluateNextTransition)
+        {
+            _adapter.OnRecoveryCompleted();
         }
     }
 
     /// <inheritdoc />
     public void Exit(ref StateContext context, in LifecycleInvocation invocation)
     {
-        _elapsed = 0.0f;
+        _activeRecovery?.Exit(ref context, in invocation);
+        _activeRecovery = null;
+        _adapter.SetStateElapsed(0.0f);
     }
 }
