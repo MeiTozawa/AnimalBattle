@@ -10,7 +10,7 @@ public sealed class DslRecoveryModule : IBossStateModule
 {
     private readonly BossState _stateId;
     private readonly BossState _nextStateId;
-    private readonly AttackId _attackId;
+    private readonly BossSkill _skill;
     private readonly float _duration;
     private float _elapsed;
 
@@ -22,15 +22,16 @@ public sealed class DslRecoveryModule : IBossStateModule
     /// </summary>
     /// <param name="stateId">この後隙状態の識別子。</param>
     /// <param name="nextStateId">後隙完了後に遷移する次の状態の識別子。</param>
-    /// <param name="attackId">対象の攻撃識別子。</param>
+    /// <param name="skill">対象の技能識別子。</param>
     /// <param name="duration">後隙持続時間（秒）。</param>
-    public DslRecoveryModule(BossState stateId, BossState nextStateId, AttackId attackId, float duration)
+    public DslRecoveryModule(BossState stateId, BossState nextStateId, BossSkill skill, float duration)
     {
         _stateId = stateId;
         _nextStateId = nextStateId;
-        _attackId = attackId;
+        _skill = skill;
         _duration = duration;
     }
+
 
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)

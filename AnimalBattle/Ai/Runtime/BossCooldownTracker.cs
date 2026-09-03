@@ -9,7 +9,7 @@ namespace AnimalBattle.Ai.Runtime;
 /// </summary>
 public sealed class BossCooldownTracker
 {
-    private readonly Dictionary<AttackId, float> _cooldowns = new();
+    private readonly Dictionary<BossSkill, float> _cooldowns = new();
 
     /// <summary>
     /// 経過時間に基づいてすべての技能の冷却時間を減衰更新します。
@@ -22,12 +22,12 @@ public sealed class BossCooldownTracker
             return;
         }
 
-        foreach (AttackId attackId in _cooldowns.Keys)
+        foreach (BossSkill skill in _cooldowns.Keys)
         {
-            float current = _cooldowns[attackId];
+            float current = _cooldowns[skill];
             if (current > 0.0f)
             {
-                _cooldowns[attackId] = MathF.Max(0.0f, current - deltaTime);
+                _cooldowns[skill] = MathF.Max(0.0f, current - deltaTime);
             }
         }
     }
@@ -35,47 +35,49 @@ public sealed class BossCooldownTracker
     /// <summary>
     /// 指定技能の冷却時間を設定し、クールダウンを開始します。
     /// </summary>
-    /// <param name="attackId">対象の攻撃識別子。</param>
+    /// <param name="skill">対象の技能識別子。</param>
     /// <param name="cooldown">冷却時間（秒）。</param>
-    public void Trigger(AttackId attackId, float cooldown)
+    public void Trigger(BossSkill skill, float cooldown)
     {
-        if (!attackId.IsValid || cooldown <= 0.0f)
+        if (!skill.IsValid() || cooldown <= 0.0f)
         {
             return;
         }
 
-        _cooldowns[attackId] = cooldown;
+        _cooldowns[skill] = cooldown;
     }
 
     /// <summary>
     /// 指定技能が使用可能（冷却完了）かどうかを判定します。
     /// </summary>
-    /// <param name="attackId">対象の攻撃識別子。</param>
+    /// <param name="skill">対象の技能識別子。</param>
     /// <returns>冷却が完了している場合は true。</returns>
-    public bool IsReady(AttackId attackId)
+    public bool IsReady(BossSkill skill)
     {
-        if (!attackId.IsValid)
+        if (!skill.IsValid())
         {
             return false;
         }
 
-        return !_cooldowns.TryGetValue(attackId, out float remaining) || remaining <= 0.0f;
+        return !_cooldowns.TryGetValue(skill, out float remaining) || remaining <= 0.0f;
     }
 
     /// <summary>
     /// 指定技能の残り冷却時間（秒）を取得します。
     /// </summary>
-    /// <param name="attackId">対象の攻撃識別子。</param>
+    /// <param name="skill">対象の技能識別子。</param>
     /// <returns>残り冷却時間（秒）。冷却完了時は 0.0f。</returns>
-    public float GetRemaining(AttackId attackId)
+    public float GetRemaining(BossSkill skill)
     {
-        if (!attackId.IsValid || !_cooldowns.TryGetValue(attackId, out float remaining))
+        if (!skill.IsValid() || !_cooldowns.TryGetValue(skill, out float remaining))
         {
             return 0.0f;
         }
 
         return remaining;
     }
+
+
 
     /// <summary>
     /// すべての技能の冷却時間をリセット（クリア）します。

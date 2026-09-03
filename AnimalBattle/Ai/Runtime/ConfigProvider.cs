@@ -9,13 +9,14 @@ using AnimalBattle.Configs;
 namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>
-/// ConfigManager の型付き設定を固定 BossState と AttackId に解決する境界です。
+/// ConfigManager の型付き設定を固定 BossState と BossSkill に解決する境界です。
 /// </summary>
 /// <remarks>
 /// この型より内側へ ConfigManager、TOML の状態名、可変設定オブジェクトを渡しません。
 /// 検証済み snapshot だけを公開し、検証に失敗した入力は現在の snapshot を変更しません。
 /// </remarks>
 public sealed class ConfigProvider : IConfigProvider
+
 {
     private readonly IObservationService? _observation;
     private BossConfigSnapshot _current;
@@ -230,22 +231,22 @@ public sealed class ConfigProvider : IConfigProvider
     }
 
     /// <summary>
-    /// Boss 種別と TOML の攻撃名を固定 AttackId へ解決します。
+    /// Boss 種別と TOML の攻撃名を固定 BossSkill へ解決します。
     /// </summary>
     /// <param name="bossType">攻撃を所有する Boss 種別。</param>
     /// <param name="name">TOML 境界から受け取った攻撃名。</param>
-    /// <param name="attackId">解決された固定 AttackId。</param>
+    /// <param name="skill">解決された固定 BossSkill。</param>
     /// <returns>具体的な攻撃へ解決できた場合は true。</returns>
-    public static bool ResolveAttack(BossType bossType, string? name, out AttackId attackId)
+    public static bool ResolveAttack(BossType bossType, string? name, out BossSkill skill)
     {
-        attackId = bossType switch
+        skill = bossType switch
         {
             BossType.Boss1 => ResolveBoss1Attack(name),
             BossType.Boss2 => ResolveBoss2Attack(name),
-            _ => AttackId.Unknown
+            _ => BossSkill.None
         };
 
-        return attackId.IsValid && AttackStateModuleMap.Get(attackId, out AttackStateModuleMapping mapping)
+        return skill.IsValid() && AttackStateModuleMap.Get(skill, out AttackStateModuleMapping mapping)
             && mapping.BossType == bossType;
     }
 
@@ -277,7 +278,7 @@ public sealed class ConfigProvider : IConfigProvider
             return;
         }
 
-        List<AttackId> attacks = ResolveSkillSequence(bossType, config.Skills, phase, diagnostics);
+        List<BossSkill> attacks = ResolveSkillSequence(bossType, config.Skills, phase, diagnostics);
         phases.Add(new BossPhaseSnapshot(
             bossType,
             phase,
@@ -303,7 +304,7 @@ public sealed class ConfigProvider : IConfigProvider
             return;
         }
 
-        List<AttackId> attacks = ResolveSkillSequence(bossType, config.Skills, phase, diagnostics);
+        List<BossSkill> attacks = ResolveSkillSequence(bossType, config.Skills, phase, diagnostics);
         phases.Add(new BossPhaseSnapshot(
             bossType,
             phase,
@@ -316,13 +317,13 @@ public sealed class ConfigProvider : IConfigProvider
             attacks));
     }
 
-    private static List<AttackId> ResolveSkillSequence(
+    private static List<BossSkill> ResolveSkillSequence(
         BossType bossType,
         IReadOnlyList<string>? skills,
         Phase phase,
         List<DiagnosticResult> diagnostics)
     {
-        List<AttackId> result = new();
+        List<BossSkill> result = new();
         if (skills is null || skills.Count == 0)
         {
             AddFailure(diagnostics, ErrorCode.InvalidConfiguration, $"{bossType} の {phase} に攻撃順序がありません。", phase: phase);
@@ -332,19 +333,19 @@ public sealed class ConfigProvider : IConfigProvider
         for (int index = 0; index < skills.Count; index++)
         {
             string? skill = skills[index];
-            if (!ResolveAttack(bossType, skill, out AttackId attackId))
+            if (!ResolveAttack(bossType, skill, out BossSkill resolvedSkill))
             {
                 AddFailure(
                     diagnostics,
-                    ErrorCode.InvalidAttackId,
+                    ErrorCode.InvalidBossSkill,
                     $"{bossType} の {phase} の攻撃名を解決できません: {skill ?? "(null)"}。",
-                    attackId,
+                    resolvedSkill,
                     phase: phase);
-                result.Add(AttackId.Unknown);
+                result.Add(BossSkill.None);
                 continue;
             }
 
-            result.Add(attackId);
+            result.Add(resolvedSkill);
         }
 
         return result;
@@ -352,37 +353,37 @@ public sealed class ConfigProvider : IConfigProvider
 
     private static void ValidatePattern(PatternConfig pattern, List<DiagnosticResult> diagnostics)
     {
-        ValidatePatternTiming(diagnostics, Boss1AttackIds.Aimed3Shot, pattern.Aimed3Shot?.SkillName, pattern.Aimed3Shot?.WindUpTime ?? float.NaN, pattern.Aimed3Shot?.CastDuration ?? float.NaN, pattern.Aimed3Shot?.RecoveryTime ?? float.NaN, pattern.Aimed3Shot?.Interval ?? float.NaN);
-        ValidatePatternTiming(diagnostics, Boss1AttackIds.RingBurst, pattern.RingBurst?.SkillName, pattern.RingBurst?.WindUpTime ?? float.NaN, pattern.RingBurst?.CastDuration ?? float.NaN, pattern.RingBurst?.RecoveryTime ?? float.NaN, pattern.RingBurst?.Interval ?? float.NaN);
-        ValidatePatternTiming(diagnostics, Boss1AttackIds.DoubleSpiral, pattern.DoubleSpiral?.SkillName, pattern.DoubleSpiral?.WindUpTime ?? float.NaN, pattern.DoubleSpiral?.CastDuration ?? float.NaN, pattern.DoubleSpiral?.RecoveryTime ?? float.NaN, pattern.DoubleSpiral?.Interval ?? float.NaN);
-        ValidatePatternTiming(diagnostics, Boss1AttackIds.RainDrop, pattern.RainDrop?.SkillName, pattern.RainDrop?.WindUpTime ?? float.NaN, pattern.RainDrop?.CastDuration ?? float.NaN, pattern.RainDrop?.RecoveryTime ?? float.NaN, pattern.RainDrop?.Interval ?? float.NaN);
-        ValidatePatternTiming(diagnostics, Boss1AttackIds.CrossChaos, pattern.CrossChaos?.SkillName, pattern.CrossChaos?.WindUpTime ?? float.NaN, pattern.CrossChaos?.CastDuration ?? float.NaN, pattern.CrossChaos?.RecoveryTime ?? float.NaN, pattern.CrossChaos?.Interval ?? float.NaN);
-        ValidatePatternTiming(diagnostics, Boss1AttackIds.FastSniper, pattern.FastSniper?.SkillName, pattern.FastSniper?.WindUpTime ?? float.NaN, pattern.FastSniper?.CastDuration ?? float.NaN, pattern.FastSniper?.RecoveryTime ?? float.NaN, pattern.FastSniper?.Interval ?? float.NaN);
-        ValidatePatternTiming(diagnostics, Boss1AttackIds.DiveRam, pattern.DiveRam?.SkillName, pattern.DiveRam?.WindUpTime ?? float.NaN, pattern.DiveRam?.CastDuration ?? float.NaN, pattern.DiveRam?.RecoveryTime ?? float.NaN, 0);
-        ValidatePatternTiming(diagnostics, Boss2AttackIds.HeavySlash, pattern.HeavySlash?.SkillName, pattern.HeavySlash?.WindUpTime ?? float.NaN, pattern.HeavySlash?.CastDuration ?? float.NaN, pattern.HeavySlash?.RecoveryTime ?? float.NaN, 0);
-        ValidatePatternTiming(diagnostics, Boss2AttackIds.DoubleCleave, pattern.DoubleCleave?.SkillName, pattern.DoubleCleave?.WindUpTime ?? float.NaN, pattern.DoubleCleave?.CastDuration ?? float.NaN, pattern.DoubleCleave?.RecoveryTime ?? float.NaN, pattern.DoubleCleave?.SlashInterval ?? float.NaN);
-        ValidatePatternTiming(diagnostics, Boss2AttackIds.GroundStomp, pattern.GroundStomp?.SkillName, pattern.GroundStomp?.WindUpTime ?? float.NaN, pattern.GroundStomp?.CastDuration ?? float.NaN, pattern.GroundStomp?.RecoveryTime ?? float.NaN, 0);
-        ValidatePatternTiming(diagnostics, Boss2AttackIds.LeapSmash, pattern.LeapSmash?.SkillName, pattern.LeapSmash?.WindUpTime ?? float.NaN, pattern.LeapSmash?.CastDuration ?? float.NaN, pattern.LeapSmash?.RecoveryTime ?? float.NaN, 0);
-        ValidatePatternTiming(diagnostics, Boss2AttackIds.FrenzyCharge, pattern.FrenzyCharge?.SkillName, pattern.FrenzyCharge?.WindUpTime ?? float.NaN, pattern.FrenzyCharge?.CastDuration ?? float.NaN, pattern.FrenzyCharge?.RecoveryTime ?? float.NaN, 0);
-        ValidatePatternTiming(diagnostics, Boss2AttackIds.EarthquakeRoar, pattern.EarthquakeRoar?.SkillName, pattern.EarthquakeRoar?.WindUpTime ?? float.NaN, pattern.EarthquakeRoar?.CastDuration ?? float.NaN, pattern.EarthquakeRoar?.RecoveryTime ?? float.NaN, pattern.EarthquakeRoar?.Interval ?? float.NaN);
+        ValidatePatternTiming(diagnostics, BossSkill.Aimed3Shot, pattern.Aimed3Shot?.SkillName, pattern.Aimed3Shot?.WindUpTime ?? float.NaN, pattern.Aimed3Shot?.CastDuration ?? float.NaN, pattern.Aimed3Shot?.RecoveryTime ?? float.NaN, pattern.Aimed3Shot?.Interval ?? float.NaN);
+        ValidatePatternTiming(diagnostics, BossSkill.RingBurst, pattern.RingBurst?.SkillName, pattern.RingBurst?.WindUpTime ?? float.NaN, pattern.RingBurst?.CastDuration ?? float.NaN, pattern.RingBurst?.RecoveryTime ?? float.NaN, pattern.RingBurst?.Interval ?? float.NaN);
+        ValidatePatternTiming(diagnostics, BossSkill.DoubleSpiral, pattern.DoubleSpiral?.SkillName, pattern.DoubleSpiral?.WindUpTime ?? float.NaN, pattern.DoubleSpiral?.CastDuration ?? float.NaN, pattern.DoubleSpiral?.RecoveryTime ?? float.NaN, pattern.DoubleSpiral?.Interval ?? float.NaN);
+        ValidatePatternTiming(diagnostics, BossSkill.RainDrop, pattern.RainDrop?.SkillName, pattern.RainDrop?.WindUpTime ?? float.NaN, pattern.RainDrop?.CastDuration ?? float.NaN, pattern.RainDrop?.RecoveryTime ?? float.NaN, pattern.RainDrop?.Interval ?? float.NaN);
+        ValidatePatternTiming(diagnostics, BossSkill.CrossChaos, pattern.CrossChaos?.SkillName, pattern.CrossChaos?.WindUpTime ?? float.NaN, pattern.CrossChaos?.CastDuration ?? float.NaN, pattern.CrossChaos?.RecoveryTime ?? float.NaN, pattern.CrossChaos?.Interval ?? float.NaN);
+        ValidatePatternTiming(diagnostics, BossSkill.FastSniper, pattern.FastSniper?.SkillName, pattern.FastSniper?.WindUpTime ?? float.NaN, pattern.FastSniper?.CastDuration ?? float.NaN, pattern.FastSniper?.RecoveryTime ?? float.NaN, pattern.FastSniper?.Interval ?? float.NaN);
+        ValidatePatternTiming(diagnostics, BossSkill.DiveRam, pattern.DiveRam?.SkillName, pattern.DiveRam?.WindUpTime ?? float.NaN, pattern.DiveRam?.CastDuration ?? float.NaN, pattern.DiveRam?.RecoveryTime ?? float.NaN, 0);
+        ValidatePatternTiming(diagnostics, BossSkill.HeavySlash, pattern.HeavySlash?.SkillName, pattern.HeavySlash?.WindUpTime ?? float.NaN, pattern.HeavySlash?.CastDuration ?? float.NaN, pattern.HeavySlash?.RecoveryTime ?? float.NaN, 0);
+        ValidatePatternTiming(diagnostics, BossSkill.DoubleCleave, pattern.DoubleCleave?.SkillName, pattern.DoubleCleave?.WindUpTime ?? float.NaN, pattern.DoubleCleave?.CastDuration ?? float.NaN, pattern.DoubleCleave?.RecoveryTime ?? float.NaN, pattern.DoubleCleave?.SlashInterval ?? float.NaN);
+        ValidatePatternTiming(diagnostics, BossSkill.GroundStomp, pattern.GroundStomp?.SkillName, pattern.GroundStomp?.WindUpTime ?? float.NaN, pattern.GroundStomp?.CastDuration ?? float.NaN, pattern.GroundStomp?.RecoveryTime ?? float.NaN, 0);
+        ValidatePatternTiming(diagnostics, BossSkill.LeapSmash, pattern.LeapSmash?.SkillName, pattern.LeapSmash?.WindUpTime ?? float.NaN, pattern.LeapSmash?.CastDuration ?? float.NaN, pattern.LeapSmash?.RecoveryTime ?? float.NaN, 0);
+        ValidatePatternTiming(diagnostics, BossSkill.FrenzyCharge, pattern.FrenzyCharge?.SkillName, pattern.FrenzyCharge?.WindUpTime ?? float.NaN, pattern.FrenzyCharge?.CastDuration ?? float.NaN, pattern.FrenzyCharge?.RecoveryTime ?? float.NaN, 0);
+        ValidatePatternTiming(diagnostics, BossSkill.EarthquakeRoar, pattern.EarthquakeRoar?.SkillName, pattern.EarthquakeRoar?.WindUpTime ?? float.NaN, pattern.EarthquakeRoar?.CastDuration ?? float.NaN, pattern.EarthquakeRoar?.RecoveryTime ?? float.NaN, pattern.EarthquakeRoar?.Interval ?? float.NaN);
         ValidateNonNegative(diagnostics, pattern.RainDrop?.MinX ?? float.NaN, "RainDrop.MinX");
         ValidateNonNegative(diagnostics, pattern.RainDrop?.MaxX ?? float.NaN, "RainDrop.MaxX");
         ValidateNonNegative(diagnostics, pattern.EarthquakeRoar?.MinX ?? float.NaN, "EarthquakeRoar.MinX");
         ValidateNonNegative(diagnostics, pattern.EarthquakeRoar?.MaxX ?? float.NaN, "EarthquakeRoar.MaxX");
         if (pattern.RainDrop is not null && pattern.RainDrop.MinX > pattern.RainDrop.MaxX)
         {
-            AddFailure(diagnostics, ErrorCode.InvalidConfiguration, "RainDrop の範囲順序が不正です。", Boss1AttackIds.RainDrop);
+            AddFailure(diagnostics, ErrorCode.InvalidConfiguration, "RainDrop の範囲順序が不正です。", BossSkill.RainDrop);
         }
 
         if (pattern.EarthquakeRoar is not null && pattern.EarthquakeRoar.MinX > pattern.EarthquakeRoar.MaxX)
         {
-            AddFailure(diagnostics, ErrorCode.InvalidConfiguration, "EarthquakeRoar の範囲順序が不正です。", Boss2AttackIds.EarthquakeRoar);
+            AddFailure(diagnostics, ErrorCode.InvalidConfiguration, "EarthquakeRoar の範囲順序が不正です。", BossSkill.EarthquakeRoar);
         }
     }
 
     private static void ValidatePatternTiming(
         List<DiagnosticResult> diagnostics,
-        AttackId attackId,
+        BossSkill skill,
         string? skillName,
         float telegraphDuration,
         float executeDuration,
@@ -391,15 +392,15 @@ public sealed class ConfigProvider : IConfigProvider
     {
         if (string.IsNullOrWhiteSpace(skillName))
         {
-            AddFailure(diagnostics, ErrorCode.InvalidConfiguration, $"AttackId {attackId.Value} の SkillName がありません。", attackId);
+            AddFailure(diagnostics, ErrorCode.InvalidConfiguration, $"BossSkill {skill} の SkillName がありません。", skill);
         }
 
-        ValidatePositive(diagnostics, telegraphDuration, $"AttackId {attackId.Value}.TelegraphDuration");
-        ValidatePositive(diagnostics, executeDuration, $"AttackId {attackId.Value}.ExecuteDuration");
-        ValidatePositive(diagnostics, recoveryDuration, $"AttackId {attackId.Value}.RecoveryDuration");
+        ValidatePositive(diagnostics, telegraphDuration, $"BossSkill {skill}.TelegraphDuration");
+        ValidatePositive(diagnostics, executeDuration, $"BossSkill {skill}.ExecuteDuration");
+        ValidatePositive(diagnostics, recoveryDuration, $"BossSkill {skill}.RecoveryDuration");
         if (interval != 0)
         {
-            ValidatePositive(diagnostics, interval, $"AttackId {attackId.Value}.Interval");
+            ValidatePositive(diagnostics, interval, $"BossSkill {skill}.Interval");
         }
     }
 
@@ -408,31 +409,31 @@ public sealed class ConfigProvider : IConfigProvider
         List<DiagnosticResult> diagnostics)
     {
         List<AttackDefinition> definitions = new();
-        AddDefinition(definitions, diagnostics, Boss1AttackIds.Aimed3Shot, pattern.Aimed3Shot);
-        AddDefinition(definitions, diagnostics, Boss1AttackIds.RingBurst, pattern.RingBurst);
-        AddDefinition(definitions, diagnostics, Boss1AttackIds.DoubleSpiral, pattern.DoubleSpiral);
-        AddDefinition(definitions, diagnostics, Boss1AttackIds.RainDrop, pattern.RainDrop);
-        AddDefinition(definitions, diagnostics, Boss1AttackIds.CrossChaos, pattern.CrossChaos);
-        AddDefinition(definitions, diagnostics, Boss1AttackIds.FastSniper, pattern.FastSniper);
-        AddDefinition(definitions, diagnostics, Boss1AttackIds.DiveRam, pattern.DiveRam);
-        AddDefinition(definitions, diagnostics, Boss2AttackIds.HeavySlash, pattern.HeavySlash);
-        AddDefinition(definitions, diagnostics, Boss2AttackIds.DoubleCleave, pattern.DoubleCleave);
-        AddDefinition(definitions, diagnostics, Boss2AttackIds.GroundStomp, pattern.GroundStomp);
-        AddDefinition(definitions, diagnostics, Boss2AttackIds.LeapSmash, pattern.LeapSmash);
-        AddDefinition(definitions, diagnostics, Boss2AttackIds.FrenzyCharge, pattern.FrenzyCharge);
-        AddDefinition(definitions, diagnostics, Boss2AttackIds.EarthquakeRoar, pattern.EarthquakeRoar);
+        AddDefinition(definitions, diagnostics, BossSkill.Aimed3Shot, pattern.Aimed3Shot);
+        AddDefinition(definitions, diagnostics, BossSkill.RingBurst, pattern.RingBurst);
+        AddDefinition(definitions, diagnostics, BossSkill.DoubleSpiral, pattern.DoubleSpiral);
+        AddDefinition(definitions, diagnostics, BossSkill.RainDrop, pattern.RainDrop);
+        AddDefinition(definitions, diagnostics, BossSkill.CrossChaos, pattern.CrossChaos);
+        AddDefinition(definitions, diagnostics, BossSkill.FastSniper, pattern.FastSniper);
+        AddDefinition(definitions, diagnostics, BossSkill.DiveRam, pattern.DiveRam);
+        AddDefinition(definitions, diagnostics, BossSkill.HeavySlash, pattern.HeavySlash);
+        AddDefinition(definitions, diagnostics, BossSkill.DoubleCleave, pattern.DoubleCleave);
+        AddDefinition(definitions, diagnostics, BossSkill.GroundStomp, pattern.GroundStomp);
+        AddDefinition(definitions, diagnostics, BossSkill.LeapSmash, pattern.LeapSmash);
+        AddDefinition(definitions, diagnostics, BossSkill.FrenzyCharge, pattern.FrenzyCharge);
+        AddDefinition(definitions, diagnostics, BossSkill.EarthquakeRoar, pattern.EarthquakeRoar);
         return definitions;
     }
 
     private static void AddDefinition(
         List<AttackDefinition> definitions,
         List<DiagnosticResult> diagnostics,
-        AttackId attackId,
+        BossSkill skill,
         object? config)
     {
         if (config is null)
         {
-            AddFailure(diagnostics, ErrorCode.InvalidConfiguration, $"AttackId {attackId.Value} の設定がありません。", attackId);
+            AddFailure(diagnostics, ErrorCode.InvalidConfiguration, $"BossSkill {skill} の設定がありません。", skill);
             return;
         }
 
@@ -455,14 +456,14 @@ public sealed class ConfigProvider : IConfigProvider
         };
 
         AttackDefinition definition = new(
-            attackId,
+            skill,
             telegraph,
             execute,
             recovery,
             actualRange);
         if (!definition.IsValid)
         {
-            AddFailure(diagnostics, ErrorCode.InvalidConfiguration, $"AttackId {attackId.Value} の時間または範囲が不正です。", attackId);
+            AddFailure(diagnostics, ErrorCode.InvalidConfiguration, $"BossSkill {skill} の時間または範囲が不正です。", skill);
             return;
         }
 
@@ -473,19 +474,19 @@ public sealed class ConfigProvider : IConfigProvider
         IReadOnlyList<AttackDefinition> definitions,
         List<DiagnosticResult> diagnostics)
     {
-        HashSet<AttackId> ids = new();
+        HashSet<BossSkill> ids = new();
         for (int index = 0; index < definitions.Count; index++)
         {
             AttackDefinition definition = definitions[index];
-            if (!ids.Add(definition.AttackId))
+            if (!ids.Add(definition.Skill))
             {
-                AddFailure(diagnostics, ErrorCode.InvalidAttackId, $"AttackId {definition.AttackId.Value} が重複しています。", definition.AttackId);
+                AddFailure(diagnostics, ErrorCode.InvalidBossSkill, $"BossSkill {definition.Skill} が重複しています。", definition.Skill);
             }
         }
 
         if (ids.Count != AttackStateModuleMap.Entries.Count)
         {
-            AddFailure(diagnostics, ErrorCode.InvalidAttackId, "全ての固定 AttackId の設定が必要です。");
+            AddFailure(diagnostics, ErrorCode.InvalidBossSkill, "全ての固定 BossSkill の設定が必要です。");
         }
     }
 
@@ -493,9 +494,10 @@ public sealed class ConfigProvider : IConfigProvider
     {
         if (!AttackStateModuleMap.IsComplete(out string attackDiagnostic))
         {
-            AddFailure(diagnostics, ErrorCode.InvalidAttackId, attackDiagnostic);
+            AddFailure(diagnostics, ErrorCode.InvalidBossSkill, attackDiagnostic);
             return;
         }
+
 
         for (int index = 0; index < AttackStateModuleMap.Entries.Count; index++)
         {
@@ -511,11 +513,13 @@ public sealed class ConfigProvider : IConfigProvider
                 AddFailure(
                     diagnostics,
                     ErrorCode.UnregisteredState,
-                    $"AttackId {mapping.AttackId.Value} の具体的 module 対応がありません。",
-                    mapping.AttackId);
+                    $"BossSkill {mapping.Skill} の具体的 module 対応がありません。",
+                    mapping.Skill);
             }
         }
     }
+
+
 
     private static void ValidateBoss1(Boss1Config config, List<DiagnosticResult> diagnostics)
     {
@@ -595,11 +599,12 @@ public sealed class ConfigProvider : IConfigProvider
 
         for (int index = 0; index < skills.Count; index++)
         {
-            if (!ResolveAttack(bossType, skills[index], out AttackId attackId))
+            if (!ResolveAttack(bossType, skills[index], out BossSkill skill))
             {
-                AddFailure(diagnostics, ErrorCode.InvalidAttackId, $"{bossType} の {phase} の Skills に未知の攻撃があります。", attackId, phase);
+                AddFailure(diagnostics, ErrorCode.InvalidBossSkill, $"{bossType} の {phase} の Skills に未知の攻撃があります。", skill, phase);
             }
         }
+
     }
 
     private static void ValidateThresholdOrder(float first, float second, float third, List<DiagnosticResult> diagnostics)
@@ -672,7 +677,7 @@ public sealed class ConfigProvider : IConfigProvider
                         LifecycleOperation.Update,
                         diagnostic.FrameUpdateNumber,
                         0,
-                        diagnostic.AttackId,
+                        diagnostic.Skill,
                         severity: diagnostic.Severity,
                         errorCode: diagnostic.ErrorCode,
                         message: diagnostic.Message);
@@ -692,46 +697,29 @@ public sealed class ConfigProvider : IConfigProvider
         List<DiagnosticResult> diagnostics,
         ErrorCode errorCode,
         string message,
-        AttackId attackId = default,
+        BossSkill skill = default,
         Phase phase = Phase.Unknown)
     {
         DiagnosticResult diagnostic = DiagnosticResult.Failure(
             DiagnosticSeverity.Warning,
             errorCode,
             message,
-            attackId: attackId,
+            skill: skill,
             phase: phase);
         diagnostics.Add(diagnostic);
     }
 
-    private static AttackId ResolveBoss1Attack(string? name)
+    private static BossSkill ResolveBoss1Attack(string? name)
     {
-        return name switch
-        {
-            "Aimed3Shot" => Boss1AttackIds.Aimed3Shot,
-            "RingBurst" => Boss1AttackIds.RingBurst,
-            "DoubleSpiral" => Boss1AttackIds.DoubleSpiral,
-            "RainDrop" => Boss1AttackIds.RainDrop,
-            "CrossChaos" => Boss1AttackIds.CrossChaos,
-            "FastSniper" => Boss1AttackIds.FastSniper,
-            "DiveRam" => Boss1AttackIds.DiveRam,
-            _ => AttackId.Unknown
-        };
+        return Enum.TryParse<BossSkill>(name, ignoreCase: true, out BossSkill skill) ? skill : BossSkill.None;
     }
 
-    private static AttackId ResolveBoss2Attack(string? name)
+    private static BossSkill ResolveBoss2Attack(string? name)
     {
-        return name switch
-        {
-            "HeavySlash" => Boss2AttackIds.HeavySlash,
-            "DoubleCleave" => Boss2AttackIds.DoubleCleave,
-            "GroundStomp" => Boss2AttackIds.GroundStomp,
-            "LeapSmash" => Boss2AttackIds.LeapSmash,
-            "FrenzyCharge" => Boss2AttackIds.FrenzyCharge,
-            "EarthquakeRoar" => Boss2AttackIds.EarthquakeRoar,
-            _ => AttackId.Unknown
-        };
+        return Enum.TryParse<BossSkill>(name, ignoreCase: true, out BossSkill skill) ? skill : BossSkill.None;
     }
+
+
 
     private static bool IsFinite(float value)
     {

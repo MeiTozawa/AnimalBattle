@@ -63,11 +63,12 @@ public sealed class Boss2LeapSmashDescentModule : IBossStateModule, IStateModule
         if (_state.IsGrounded && _state.StateElapsed > 0.03f)
         {
             // 着地激突衝撃波＆破片弾幕を生成
-            context.Attack.CreateHitbox(Boss2AttackIds.LeapSmash, _state.CurrentPosition.X, _state.CurrentPosition.Y);
+            context.Attack.CreateHitbox(BossSkill.LeapSmash, _state.CurrentPosition.X, _state.CurrentPosition.Y);
 
             _state.IsAttackActive = false;
-            _state.RequestTransition(Boss2StateIds.Recovery, new TransitionReason(ReasonKind.AttackCompleted, attackId: _state.CurrentAttackId));
+            _state.RequestTransition(Boss2StateIds.Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
         }
+
     }
 
     /// <inheritdoc />

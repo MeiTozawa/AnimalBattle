@@ -16,9 +16,10 @@ public enum ErrorCode
     InvalidStateId = 1,
 
     /// <summary>
-    /// AttackId が無効であることを示します。
+    /// BossSkill が無効であることを示します。
     /// </summary>
-    InvalidAttackId = 2,
+    InvalidBossSkill = 2,
+
 
     /// <summary>
     /// Phase が無効であることを示します。

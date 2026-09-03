@@ -51,7 +51,7 @@ public sealed class ExecuteGate
             return Error.Failure("ExecuteGate.Start", "既に Execute は完了しています。");
         }
 
-        if (!_definition.IsValid || !invocation.IsValid || _oneShot.Begin(_definition.AttackId, invocation.FrameUpdateNumber).IsError)
+        if (!_definition.IsValid || !invocation.IsValid || _oneShot.Begin(_definition.Skill, invocation.FrameUpdateNumber).IsError)
         {
             _completed = true;
             Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidConfiguration, "攻撃時間が不正なため Execute を開始せず、安全な非攻撃行動へ移行します。", 0, -1);
@@ -140,8 +140,8 @@ public sealed class ExecuteGate
     {
         return component.Kind switch
         {
-            AttackComponentKind.Bullet => context.Attack.EmitBullet(_definition.AttackId, component.X, component.Y),
-            AttackComponentKind.Hitbox => context.Attack.CreateHitbox(_definition.AttackId, component.X, component.Y),
+            AttackComponentKind.Bullet => context.Attack.EmitBullet(_definition.Skill, component.X, component.Y),
+            AttackComponentKind.Hitbox => context.Attack.CreateHitbox(_definition.Skill, component.X, component.Y),
             AttackComponentKind.Movement => context.Movement.SetVelocity(component.X * _facingDirection, component.Y),
             _ => Error.Validation("ExecuteGate.Emit", "未知の AttackComponentKind です。")
         };
@@ -164,11 +164,11 @@ public sealed class ExecuteGate
             invocation.Operation,
             context.FrameUpdateNumber,
             context.DeltaTime,
-            _definition.AttackId,
+            _definition.Skill,
             AttackStage.Execute,
             new TransitionReason(
                 ReasonKind.AttackCompleted,
-                attackId: _definition.AttackId,
+                skill: _definition.Skill,
                 errorCode: errorCode,
                 originalInput: componentIndex),
             severity,
@@ -176,6 +176,7 @@ public sealed class ExecuteGate
             message,
             configuredDuration: _definition.ExecuteDuration,
             realDuration: realDuration);
+
         try
         {
             context.Observation.Record(in observation);

@@ -91,10 +91,11 @@ public sealed class Boss2LeapSmashAscentModule(IBoss2Configuration configuration
             // 懸停完了後、垂直急降下叩きつけ（Descent）へ移行
             if (_hoverTimer >= apexHangDuration)
             {
-                _state.RequestTransition(Boss2StateIds.LeapSmashDescent, new TransitionReason(ReasonKind.TimerElapsed, attackId: _state.CurrentAttackId));
+                _state.RequestTransition(Boss2StateIds.LeapSmashDescent, new TransitionReason(ReasonKind.TimerElapsed, skill: _state.CurrentSkill));
             }
         }
     }
+
 
     /// <inheritdoc />
     public void Exit(ref StateContext context, in LifecycleInvocation invocation)

@@ -15,7 +15,7 @@ internal static class Boss1ModuleSupport
         in LifecycleInvocation invocation,
         IBoss1Configuration configuration,
         Boss1BehaviorState state,
-        AttackId attackId = default,
+        BossSkill skill = default,
         AttackStage stage = AttackStage.None)
     {
         if (context.Phase is not (Phase.Phase1 or Phase.Phase2 or Phase.Phase3))
@@ -48,7 +48,7 @@ internal static class Boss1ModuleSupport
         state.CurrentPosition = newPos;
         if (context.Movement.MoveTo(newPos.X, newPos.Y).IsError)
         {
-            Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "Boss1 の浮遊移動 command を発行できませんでした。", attackId, stage);
+            Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "Boss1 の浮遊移動 command を発行できませんでした。", skill, stage);
         }
     }
 
@@ -58,7 +58,7 @@ internal static class Boss1ModuleSupport
         DiagnosticSeverity severity,
         ErrorCode errorCode,
         string message,
-        AttackId attackId = default,
+        BossSkill skill = default,
         AttackStage stage = AttackStage.None)
     {
         ObservationEvent observation = new(
@@ -69,15 +69,16 @@ internal static class Boss1ModuleSupport
             invocation.Operation,
             context.FrameUpdateNumber,
             context.DeltaTime,
-            attackId,
+            skill,
             stage,
-            new TransitionReason(ReasonKind.Configuration, attackId: attackId, errorCode: errorCode),
+            new TransitionReason(ReasonKind.Configuration, skill: skill, errorCode: errorCode),
             severity,
             errorCode,
             message);
         try
         {
             context.Observation.Record(in observation);
+
         }
         catch
         {

@@ -4,16 +4,16 @@ using AnimalBattle.Ai.Contracts;
 
 namespace AnimalBattle.Ai.Attack;
 
-/// <summary>AttackId から固定 Telegraph/Execute State_Module へ解決した対応です。</summary>
+/// <summary>BossSkill から固定 Telegraph/Execute State_Module へ解決した対応です。</summary>
 public readonly record struct AttackStateModuleMapping(
-    AttackId AttackId,
+    BossSkill Skill,
     BossType BossType,
     BossState TelegraphState,
     BossState ExecuteState,
     BossState SecondaryExecuteState = BossState.Unknown)
 {
     /// <summary>対応が固定実行状態を持つかどうかを取得します。</summary>
-    public bool IsValid => AttackId.IsValid
+    public bool IsValid => Skill.IsValid()
         && BossType != BossType.Unknown
         && TelegraphState.IsValid()
         && ExecuteState.IsValid()
@@ -21,40 +21,41 @@ public readonly record struct AttackStateModuleMapping(
 }
 
 /// <summary>
-/// 攻撃識別子と具体的な Telegraph/Execute State_Module の固定対応です。
+/// 技能識別子と具体的な Telegraph/Execute State_Module の固定対応です。
 /// </summary>
 /// <remarks>
 /// この map はコードに固定され、実行中の登録、削除、生成、差し替えを行いません。
-/// LeapSmash だけは Execute の上昇と落下を同じ AttackId の二段状態として保持します。
+/// LeapSmash だけは Execute の上昇と落下を同じ BossSkill の二段状態として保持します。
 /// </remarks>
 public static class AttackStateModuleMap
 {
     private static readonly IReadOnlyList<AttackStateModuleMapping> _entries = new List<AttackStateModuleMapping>
     {
-        new(Boss1AttackIds.Aimed3Shot, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.Aimed3ShotExecute),
-        new(Boss1AttackIds.RingBurst, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.RingBurstExecute),
-        new(Boss1AttackIds.DoubleSpiral, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.DoubleSpiralExecute),
-        new(Boss1AttackIds.RainDrop, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.RainDropExecute),
-        new(Boss1AttackIds.CrossChaos, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.CrossChaosExecute),
-        new(Boss1AttackIds.FastSniper, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.FastSniperExecute),
-        new(Boss1AttackIds.DiveRam, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.DiveRamExecute),
-        new(Boss2AttackIds.HeavySlash, BossType.Boss2, Boss2StateIds.HeavySlashTelegraph, Boss2StateIds.HeavySlashExecute),
-        new(Boss2AttackIds.DoubleCleave, BossType.Boss2, Boss2StateIds.DoubleCleaveTelegraph, Boss2StateIds.DoubleCleaveExecute),
-        new(Boss2AttackIds.GroundStomp, BossType.Boss2, Boss2StateIds.GroundStompTelegraph, Boss2StateIds.GroundStompExecute),
-        new(Boss2AttackIds.LeapSmash, BossType.Boss2, Boss2StateIds.LeapSmashTelegraph, Boss2StateIds.LeapSmashAscent, Boss2StateIds.LeapSmashDescent),
-        new(Boss2AttackIds.FrenzyCharge, BossType.Boss2, Boss2StateIds.FrenzyChargeTelegraph, Boss2StateIds.FrenzyChargeExecute),
-        new(Boss2AttackIds.EarthquakeRoar, BossType.Boss2, Boss2StateIds.EarthquakeRoarTelegraph, Boss2StateIds.EarthquakeRoarExecute)
+        new(BossSkill.Aimed3Shot, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.Aimed3ShotExecute),
+        new(BossSkill.RingBurst, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.RingBurstExecute),
+        new(BossSkill.DoubleSpiral, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.DoubleSpiralExecute),
+        new(BossSkill.RainDrop, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.RainDropExecute),
+        new(BossSkill.CrossChaos, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.CrossChaosExecute),
+        new(BossSkill.FastSniper, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.FastSniperExecute),
+        new(BossSkill.DiveRam, BossType.Boss1, Boss1StateIds.Telegraph, Boss1StateIds.DiveRamExecute),
+        new(BossSkill.HeavySlash, BossType.Boss2, Boss2StateIds.HeavySlashTelegraph, Boss2StateIds.HeavySlashExecute),
+        new(BossSkill.DoubleCleave, BossType.Boss2, Boss2StateIds.DoubleCleaveTelegraph, Boss2StateIds.DoubleCleaveExecute),
+        new(BossSkill.GroundStomp, BossType.Boss2, Boss2StateIds.GroundStompTelegraph, Boss2StateIds.GroundStompExecute),
+        new(BossSkill.LeapSmash, BossType.Boss2, Boss2StateIds.LeapSmashTelegraph, Boss2StateIds.LeapSmashAscent, Boss2StateIds.LeapSmashDescent),
+        new(BossSkill.FrenzyCharge, BossType.Boss2, Boss2StateIds.FrenzyChargeTelegraph, Boss2StateIds.FrenzyChargeExecute),
+        new(BossSkill.EarthquakeRoar, BossType.Boss2, Boss2StateIds.EarthquakeRoarTelegraph, Boss2StateIds.EarthquakeRoarExecute)
     }.AsReadOnly();
 
-    /// <summary>固定された全攻撃対応を取得します。</summary>
+
+    /// <summary>固定された全技能対応を取得します。</summary>
     public static IReadOnlyList<AttackStateModuleMapping> Entries => _entries;
 
-    /// <summary>AttackId に対応する固定 Telegraph/Execute mapping を取得します。</summary>
-    public static bool Get(AttackId attackId, out AttackStateModuleMapping mapping)
+    /// <summary>BossSkill に対応する固定 Telegraph/Execute mapping を取得します。</summary>
+    public static bool Get(BossSkill skill, out AttackStateModuleMapping mapping)
     {
         for (int index = 0; index < _entries.Count; index++)
         {
-            if (_entries[index].AttackId == attackId)
+            if (_entries[index].Skill == skill)
             {
                 mapping = _entries[index];
                 return true;
@@ -65,7 +66,7 @@ public static class AttackStateModuleMap
         return false;
     }
 
-    /// <summary>全攻撃が固定された具体的な module 状態へ対応するか検査します。</summary>
+    /// <summary>全技能が固定された具体的な module 状態へ対応するか検査します。</summary>
     public static bool IsComplete(out string diagnostic)
     {
         for (int index = 0; index < _entries.Count; index++)
@@ -73,21 +74,23 @@ public static class AttackStateModuleMap
             AttackStateModuleMapping entry = _entries[index];
             if (!entry.IsValid)
             {
-                diagnostic = $"AttackId の固定 module 対応が不正です: {entry.AttackId.Value}";
+                diagnostic = $"BossSkill の固定 module 対応が不正です: {entry.Skill}";
                 return false;
             }
 
             for (int other = index + 1; other < _entries.Count; other++)
             {
-                if (_entries[other].AttackId == entry.AttackId)
+                if (_entries[other].Skill == entry.Skill)
                 {
-                    diagnostic = $"AttackId の固定 module 対応が重複しています: {entry.AttackId.Value}";
+                    diagnostic = $"BossSkill の固定 module 対応が重複しています: {entry.Skill}";
                     return false;
                 }
             }
+
         }
 
-        diagnostic = "AttackId と Telegraph/Execute の固定対応は完全です。";
+        diagnostic = "BossSkill と Telegraph/Execute の固定対応は完全です。";
         return true;
     }
 }
+

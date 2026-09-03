@@ -14,7 +14,7 @@ namespace AnimalBattle.Ai.Dsl;
 public sealed class AttackPipelineBuilder
 {
     private readonly PhasePipelineBuilder _parent;
-    private readonly AttackId _attackId;
+    private readonly BossSkill _skill;
     private readonly List<AttackComponent> _components = [];
     private float _telegraphDuration = 0.40f;
     private Color _telegraphColor = ColorPalette.Red;
@@ -23,16 +23,16 @@ public sealed class AttackPipelineBuilder
     private float _range = 200.0f;
     private DecisionRuleBuilder? _ruleBuilder;
 
-    /// <summary>対象の攻撃識別子を取得します。</summary>
-    public AttackId AttackId => _attackId;
+    /// <summary>対象の技能識別子を取得します。</summary>
+    public BossSkill Skill => _skill;
 
     /// <summary>親の Phase ビルダーを指定して初期化します。</summary>
     /// <param name="parent">親の Phase ビルダー。</param>
-    /// <param name="attackId">攻撃識別子。</param>
-    public AttackPipelineBuilder(PhasePipelineBuilder parent, AttackId attackId)
+    /// <param name="skill">技能識別子。</param>
+    public AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill skill)
     {
         _parent = parent;
-        _attackId = attackId;
+        _skill = skill;
     }
 
     /// <summary>
@@ -129,9 +129,9 @@ public sealed class AttackPipelineBuilder
     /// <summary>
     /// 次の攻撃の定義に進みます（親の PhasePipelineBuilder へ戻ります）。
     /// </summary>
-    /// <param name="attackId">次に定義する攻撃識別子。</param>
+    /// <param name="skill">次に定義する技能識別子。</param>
     /// <returns>新しい攻撃ビルダー。</returns>
-    public AttackPipelineBuilder Attack(AttackId attackId) => _parent.Attack(attackId);
+    public AttackPipelineBuilder Attack(BossSkill skill) => _parent.Attack(skill);
 
     /// <summary>
     /// 次の Phase の定義に進みます。
@@ -153,7 +153,7 @@ public sealed class AttackPipelineBuilder
     public AttackDefinition BuildAttackDefinition()
     {
         return new AttackDefinition(
-            _attackId,
+            _skill,
             _telegraphDuration,
             _executeDuration,
             _recoveryDuration,
@@ -165,5 +165,6 @@ public sealed class AttackPipelineBuilder
     /// 設定された意思決定ルールを生成します。未定義の場合は null を返します。
     /// </summary>
     /// <returns>生成された AttackDecisionRule、または null。</returns>
-    public AttackDecisionRule? BuildDecisionRule() => _ruleBuilder?.Build(_attackId);
+    public AttackDecisionRule? BuildDecisionRule() => _ruleBuilder?.Build(_skill);
 }
+

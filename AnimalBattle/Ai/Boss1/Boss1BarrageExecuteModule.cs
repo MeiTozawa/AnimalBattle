@@ -31,21 +31,21 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "AttackPort", "MovementPort", "RandomSource"];
 
     /// <summary>
-    /// 指定された状態識別子と攻撃識別子に対応する Boss1 弾幕 Execute module を生成します。
+    /// 指定された状態識別子と技能識別子に対応する Boss1 弾幕 Execute module を生成します。
     /// </summary>
     /// <param name="stateId">対応する状態識別子。</param>
     /// <param name="configuration">Boss1 設定境界。</param>
     /// <param name="state">Boss1 実行時状態。</param>
-    /// <param name="attackId">対象の攻撃識別子。</param>
-    public Boss1BarrageExecuteModule(BossState stateId, IBoss1Configuration configuration, Boss1BehaviorState state, AttackId attackId)
+    /// <param name="skill">対象の技能識別子。</param>
+    public Boss1BarrageExecuteModule(BossState stateId, IBoss1Configuration configuration, Boss1BehaviorState state, BossSkill skill)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         _stateId = stateId;
         _configuration = configuration;
         _state = state ?? throw new ArgumentNullException(nameof(state));
-        if (!configuration.GetAttack(attackId, out Boss1AttackPattern pattern))
+        if (!configuration.GetAttack(skill, out Boss1AttackPattern pattern))
         {
-            pattern = new Boss1AttackPattern(attackId, Boss1AttackKind.Aimed3Shot, 0, 0, 0);
+            pattern = new Boss1AttackPattern(skill, 0, 0, 0);
         }
 
         Pattern = pattern;
@@ -61,10 +61,11 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
         _state.StateElapsed = 0.0f;
         _state.AttackSubTimer = 0.0f;
         _gate!.Reset();
-        if (!Boss1ModuleSupport.IsBoss1(in context, in invocation) || _state.CurrentAttackId != Pattern.AttackId)
+        if (!Boss1ModuleSupport.IsBoss1(in context, in invocation) || _state.CurrentSkill != Pattern.Skill)
         {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidAttackId, "Boss1 の Execute 対象が現在攻撃と一致しません。", Pattern.AttackId, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss1 の Execute 対象が現在攻撃と一致しません。", Pattern.Skill, AttackStage.Execute);
         }
+
     }
 
     /// <inheritdoc />
@@ -78,11 +79,11 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
         ExecuteResult result = _gate.Execute(ref context, in invocation);
         if (!result.Started)
         {
-            _state.RequestTransition(Boss1StateIds.Recovery, new TransitionReason(ReasonKind.SafetyFallback, attackId: Pattern.AttackId, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(Boss1StateIds.Recovery, new TransitionReason(ReasonKind.SafetyFallback, skill: Pattern.Skill, errorCode: ErrorCode.InvalidConfiguration));
             return;
         }
 
-        Boss1ModuleSupport.ApplyHoverMovement(ref context, in invocation, _configuration, _state, Pattern.AttackId, AttackStage.Execute);
+        Boss1ModuleSupport.ApplyHoverMovement(ref context, in invocation, _configuration, _state, Pattern.Skill, AttackStage.Execute);
         _state.AttackStartPosition = _state.CurrentPosition;
 
         float duration = Pattern.Definition.ExecuteDuration;
@@ -98,7 +99,7 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
         _state.AttackSubTimer = MathF.Max(0.0f, _nextEmission - _elapsed);
         if (result.IsComplete || _elapsed >= duration)
         {
-            _state.RequestTransition(Boss1StateIds.Recovery, new TransitionReason(ReasonKind.AttackCompleted, attackId: Pattern.AttackId));
+            _state.RequestTransition(Boss1StateIds.Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: Pattern.Skill));
         }
     }
 
@@ -109,32 +110,30 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
         _state.AttackSubTimer = 0.0f;
     }
 
-    /// <summary>
-    /// 一回の発射時点に必要な Boss1 固有弾幕 component を port へ渡します。
-    /// </summary>
+    /// <summary>指定された発射回数に応じて弾幕を生成します。</summary>
     /// <param name="context">状態コンテキスト。</param>
     /// <param name="invocation">ライフサイクル呼び出しメタデータ。</param>
     /// <param name="emissionIndex">現在の発射回数インデックス。</param>
     protected virtual void EmitComponents(ref StateContext context, in LifecycleInvocation invocation, int emissionIndex)
     {
-        switch (Pattern.Kind)
+        switch (Pattern.Skill)
         {
-            case Boss1AttackKind.Aimed3Shot:
+            case BossSkill.Aimed3Shot:
                 EmitAimed3Shot(ref context, in invocation);
                 break;
-            case Boss1AttackKind.RingBurst:
+            case BossSkill.RingBurst:
                 EmitRingBurst(ref context, in invocation);
                 break;
-            case Boss1AttackKind.DoubleSpiral:
+            case BossSkill.DoubleSpiral:
                 EmitDoubleSpiral(ref context, in invocation);
                 break;
-            case Boss1AttackKind.RainDrop:
+            case BossSkill.RainDrop:
                 EmitRainDrop(ref context, in invocation);
                 break;
-            case Boss1AttackKind.CrossChaos:
+            case BossSkill.CrossChaos:
                 EmitCrossChaos(ref context, in invocation);
                 break;
-            case Boss1AttackKind.FastSniper:
+            case BossSkill.FastSniper:
                 EmitFastSniper(ref context, in invocation);
                 break;
             default:
@@ -162,9 +161,9 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
         for (int index = -1; index <= 1; index++)
         {
             float angle = baseAngle + (index * Pattern.AngleStep);
-            if (context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
+            if (context.Attack.EmitBullet(Pattern.Skill, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
             {
-                Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "Aimed3Shot の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
+                Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "Aimed3Shot の弾発行に失敗しました。", Pattern.Skill, AttackStage.Execute);
             }
         }
     }
@@ -175,9 +174,9 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
         for (int index = 0; index < count; index++)
         {
             float angle = ((index / (float)count) * MathF.Tau) + State.AngleOffset;
-            if (context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
+            if (context.Attack.EmitBullet(Pattern.Skill, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
             {
-                Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "RingBurst の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
+                Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "RingBurst の弾発行に失敗しました。", Pattern.Skill, AttackStage.Execute);
             }
         }
 
@@ -188,10 +187,10 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
     {
         float first = State.AngleOffset;
         float second = first + MathF.PI;
-        if (context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(first) * Pattern.BulletSpeed, MathF.Sin(first) * Pattern.BulletSpeed).IsError
-            || context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(second) * Pattern.BulletSpeed, MathF.Sin(second) * Pattern.BulletSpeed).IsError)
+        if (context.Attack.EmitBullet(Pattern.Skill, MathF.Cos(first) * Pattern.BulletSpeed, MathF.Sin(first) * Pattern.BulletSpeed).IsError
+            || context.Attack.EmitBullet(Pattern.Skill, MathF.Cos(second) * Pattern.BulletSpeed, MathF.Sin(second) * Pattern.BulletSpeed).IsError)
         {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DoubleSpiral の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DoubleSpiral の弾発行に失敗しました。", Pattern.Skill, AttackStage.Execute);
         }
 
         State.AngleOffset += Pattern.AngleStep;
@@ -202,11 +201,11 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
         float range = Pattern.MaxX - Pattern.MinX;
         float firstX = Pattern.MinX + (context.Random.NextSingle() * range);
         float secondX = Pattern.MinX + (context.Random.NextSingle() * range);
-        bool firstError = context.Attack.EmitBullet(Pattern.AttackId, firstX, Pattern.BulletSpeed).IsError;
-        bool secondError = context.Attack.EmitBullet(Pattern.AttackId, secondX, Pattern.BulletSpeed).IsError;
+        bool firstError = context.Attack.EmitBullet(Pattern.Skill, firstX, Pattern.BulletSpeed).IsError;
+        bool secondError = context.Attack.EmitBullet(Pattern.Skill, secondX, Pattern.BulletSpeed).IsError;
         if (firstError || secondError)
         {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "RainDrop の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "RainDrop の弾発行に失敗しました。", Pattern.Skill, AttackStage.Execute);
         }
     }
 
@@ -216,7 +215,7 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
         for (int index = 0; index < 4; index++)
         {
             float angle = State.AngleOffset + (index * (MathF.PI / 2.0f));
-            if (context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
+            if (context.Attack.EmitBullet(Pattern.Skill, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
             {
                 hasError = true;
             }
@@ -224,7 +223,7 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
 
         if (hasError)
         {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "CrossChaos の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "CrossChaos の弾発行に失敗しました。", Pattern.Skill, AttackStage.Execute);
         }
 
         State.AngleOffset += Pattern.AngleStep;
@@ -235,9 +234,10 @@ public class Boss1BarrageExecuteModule : IBossStateModule, IStateModuleDependenc
         float dx = context.PlayerObservation.PositionX - State.AttackStartPosition.X;
         float dy = context.PlayerObservation.PositionY - State.AttackStartPosition.Y;
         float angle = MathF.Atan2(dy, dx);
-        if (context.Attack.EmitBullet(Pattern.AttackId, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
+        if (context.Attack.EmitBullet(Pattern.Skill, MathF.Cos(angle) * Pattern.BulletSpeed, MathF.Sin(angle) * Pattern.BulletSpeed).IsError)
         {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "FastSniper の弾発行に失敗しました。", Pattern.AttackId, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "FastSniper の弾発行に失敗しました。", Pattern.Skill, AttackStage.Execute);
         }
     }
+
 }

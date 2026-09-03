@@ -144,7 +144,7 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
     }
 
     /// <summary>格納済み command を index で読み取ります。</summary>
-    public T this[int index]
+    public ref readonly T this[int index]
     {
         get
         {
@@ -153,9 +153,10 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            return _commands[index];
+            return ref _commands[index];
         }
     }
+
 
     private void Store(int index, in T command, CommandPriority priority, CommandOneShotKey key)
     {
@@ -316,25 +317,25 @@ public sealed class BufferedAttackPort : IAttackPort
     /// <summary>buffer を指定します。</summary>
     public BufferedAttackPort(PreallocatedCommandBuffer<AttackCommand> buffer) => _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
     /// <inheritdoc />
-    public ErrorOr<Success> EmitBullet(AttackId attackId, float x, float y)
+    public ErrorOr<Success> EmitBullet(BossSkill skill, float x, float y)
     {
-        if (!CanEmit(attackId, x, y))
+        if (!CanEmit(skill, x, y))
         {
-            return Error.Validation("BufferedAttackPort.EmitBullet", "攻撃 ID または弾丸座標が不正です。");
+            return Error.Validation("BufferedAttackPort.EmitBullet", "技能または弾丸座標が不正です。");
         }
 
-        return _buffer.Add(new AttackCommand(AttackCommandKind.EmitBullet, attackId, x, y), CommandPriority.Attack);
+        return _buffer.Add(new AttackCommand(AttackCommandKind.EmitBullet, skill, x, y), CommandPriority.Attack);
     }
 
     /// <inheritdoc />
-    public ErrorOr<Success> CreateHitbox(AttackId attackId, float x, float y)
+    public ErrorOr<Success> CreateHitbox(BossSkill skill, float x, float y)
     {
-        if (!CanEmit(attackId, x, y))
+        if (!CanEmit(skill, x, y))
         {
-            return Error.Validation("BufferedAttackPort.CreateHitbox", "攻撃 ID または判定座標が不正です。");
+            return Error.Validation("BufferedAttackPort.CreateHitbox", "技能または判定座標が不正です。");
         }
 
-        return _buffer.Add(new AttackCommand(AttackCommandKind.CreateHitbox, attackId, x, y), CommandPriority.Safety);
+        return _buffer.Add(new AttackCommand(AttackCommandKind.CreateHitbox, skill, x, y), CommandPriority.Safety);
     }
 
     /// <inheritdoc />
@@ -343,11 +344,12 @@ public sealed class BufferedAttackPort : IAttackPort
         return _buffer.Add(new AttackCommand(AttackCommandKind.ClearBossBullets), CommandPriority.Safety);
     }
 
-    private static bool CanEmit(AttackId attackId, float x, float y)
+    private static bool CanEmit(BossSkill skill, float x, float y)
     {
-        return attackId.IsValid && float.IsFinite(x) && float.IsFinite(y);
+        return skill.IsValid() && float.IsFinite(x) && float.IsFinite(y);
     }
 }
+
 
 /// <summary>演出 command buffer を演出 port として公開します。</summary>
 public sealed class BufferedEffectPort : IEffectPort

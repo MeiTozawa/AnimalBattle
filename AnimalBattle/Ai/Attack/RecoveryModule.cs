@@ -13,8 +13,9 @@ public sealed class RecoveryModule : IBossStateModule
 
     /// <summary>Recovery の State_Id を取得します。</summary>
     public BossState Id { get; }
-    /// <summary>現在の攻撃 ID を取得します。</summary>
-    public AttackId AttackId => _definition.AttackId;
+    /// <summary>現在の技能識別子を取得します。</summary>
+    public BossSkill Skill => _definition.Skill;
+
     /// <summary>攻撃定義を取得します。</summary>
     public AttackDefinition Definition => _definition;
     /// <summary>Recovery が現在アクティブかどうかを取得します。</summary>
@@ -104,10 +105,11 @@ public sealed class RecoveryModule : IBossStateModule
             invocation.Operation,
             context.FrameUpdateNumber,
             context.DeltaTime,
-            _definition.AttackId,
+            _definition.Skill,
             AttackStage.Recovery,
-            new TransitionReason(ReasonKind.AttackCompleted, attackId: _definition.AttackId),
+            new TransitionReason(ReasonKind.AttackCompleted, skill: _definition.Skill),
             severity,
+
             errorCode,
             message,
             configuredDuration: _definition.RecoveryDuration,

@@ -117,10 +117,11 @@ public static class BossCommandExecutor
             EffectCommand cmd = slot.EffectCommands[i];
             if (cmd.Kind == EffectCommandKind.RequestTelegraph)
             {
-                Color telegraphColor = GetTelegraphColor(slot.AttackData.AttackId, patternCfg);
+                Color telegraphColor = GetTelegraphColor(slot.AttackData.Skill, patternCfg);
                 float x = cmd.X != 0.0f ? cmd.X : trans.X;
                 float y = cmd.Y != 0.0f ? cmd.Y : trans.Y;
                 CombatEffectHelper.SpawnTelegraphSpark(world, x, y, telegraphColor);
+
             }
         }
     }
@@ -276,7 +277,7 @@ public static class BossCommandExecutor
         in AttackCommand cmd,
         PatternConfig patternCfg)
     {
-        if (cmd.AttackId == Boss1AttackIds.RainDrop)
+        if (cmd.Skill == BossSkill.RainDrop)
         {
             CombatEffectHelper.SpawnBossBullet(
                 world,
@@ -290,7 +291,7 @@ public static class BossCommandExecutor
             return;
         }
 
-        if (cmd.AttackId == Boss2AttackIds.EarthquakeRoar)
+        if (cmd.Skill == BossSkill.EarthquakeRoar)
         {
             Random rand = Random.Shared;
             float rx = rand.Next((int)patternCfg.EarthquakeRoar.MinX, (int)patternCfg.EarthquakeRoar.MaxX);
@@ -310,31 +311,31 @@ public static class BossCommandExecutor
         Color fill;
         Color outline;
 
-        if (cmd.AttackId == Boss1AttackIds.Aimed3Shot)
+        if (cmd.Skill == BossSkill.Aimed3Shot)
         {
             radius = patternCfg.Aimed3Shot.BulletRadius;
             fill = patternCfg.Aimed3Shot.FillColor;
             outline = patternCfg.Aimed3Shot.OutlineColor;
         }
-        else if (cmd.AttackId == Boss1AttackIds.RingBurst)
+        else if (cmd.Skill == BossSkill.RingBurst)
         {
             radius = patternCfg.RingBurst.BulletRadius;
             fill = patternCfg.RingBurst.FillColor;
             outline = patternCfg.RingBurst.OutlineColor;
         }
-        else if (cmd.AttackId == Boss1AttackIds.DoubleSpiral)
+        else if (cmd.Skill == BossSkill.DoubleSpiral)
         {
             radius = patternCfg.DoubleSpiral.BulletRadius;
             fill = patternCfg.DoubleSpiral.FillColor1;
             outline = patternCfg.DoubleSpiral.OutlineColor1;
         }
-        else if (cmd.AttackId == Boss1AttackIds.CrossChaos)
+        else if (cmd.Skill == BossSkill.CrossChaos)
         {
             radius = patternCfg.CrossChaos.BulletRadius;
             fill = patternCfg.CrossChaos.FillColor;
             outline = patternCfg.CrossChaos.OutlineColor;
         }
-        else if (cmd.AttackId == Boss1AttackIds.FastSniper)
+        else if (cmd.Skill == BossSkill.FastSniper)
         {
             radius = patternCfg.FastSniper.BulletRadius;
             fill = patternCfg.FastSniper.FillColor;
@@ -343,19 +344,11 @@ public static class BossCommandExecutor
         else
         {
             radius = 6.0f;
-            fill = ColorPalette.Gold;
+            fill = ColorPalette.RedBright;
             outline = ColorPalette.White;
         }
 
-        CombatEffectHelper.SpawnBossBullet(
-            world,
-            trans.X,
-            trans.Y,
-            cmd.X,
-            cmd.Y,
-            radius,
-            fill,
-            outline);
+        CombatEffectHelper.SpawnBossBullet(world, trans.X, trans.Y, cmd.X, cmd.Y, radius, fill, outline);
     }
 
     private static void ExecuteCreateHitbox(
@@ -371,7 +364,8 @@ public static class BossCommandExecutor
         float forwardDir = slot.MovementData.FacingRight ? 1.0f : -1.0f;
         SlashDirection dir = slot.MovementData.FacingRight ? SlashDirection.Right : SlashDirection.Left;
 
-        if (cmd.AttackId == Boss2AttackIds.HeavySlash)
+
+        if (cmd.Skill == BossSkill.HeavySlash)
         {
             float offsetX = cmd.X != 0.0f ? cmd.X : b2Cfg.SlashSpawnOffsetX;
             float offsetY = cmd.Y != 0.0f ? cmd.Y : b2Cfg.SlashSpawnOffsetY;
@@ -390,7 +384,7 @@ public static class BossCommandExecutor
                 patternCfg.HeavySlash.SlashColor,
                 dir);
         }
-        else if (cmd.AttackId == Boss2AttackIds.DoubleCleave)
+        else if (cmd.Skill == BossSkill.DoubleCleave)
         {
             float offsetX = cmd.X != 0.0f ? cmd.X : b2Cfg.SlashSpawnOffsetX;
             float offsetY = cmd.Y != 0.0f ? cmd.Y : b2Cfg.SlashSpawnOffsetY;
@@ -409,7 +403,7 @@ public static class BossCommandExecutor
                 patternCfg.DoubleCleave.SlashColor,
                 dir);
         }
-        else if (cmd.AttackId == Boss2AttackIds.GroundStomp)
+        else if (cmd.Skill == BossSkill.GroundStomp)
         {
             float colHeight = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
             float groundY = trans.Y + colHeight / 2.0f - 10.0f;
@@ -433,7 +427,7 @@ public static class BossCommandExecutor
                 patternCfg.GroundStomp.FillColor,
                 patternCfg.GroundStomp.OutlineColor);
         }
-        else if (cmd.AttackId == Boss2AttackIds.LeapSmash)
+        else if (cmd.Skill == BossSkill.LeapSmash)
         {
             float colHeight = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
             float groundY = trans.Y + colHeight / 2.0f;
@@ -454,7 +448,7 @@ public static class BossCommandExecutor
                     leapCfg.ShrapnelOutlineColor);
             }
         }
-        else if (cmd.AttackId == Boss2AttackIds.FrenzyCharge)
+        else if (cmd.Skill == BossSkill.FrenzyCharge)
         {
             CombatEffectHelper.SpawnMeleeSlashHitbox(
                 world,
@@ -469,67 +463,32 @@ public static class BossCommandExecutor
                 ColorPalette.RedBright,
                 dir);
         }
-        else if (cmd.AttackId == Boss1AttackIds.DiveRam)
+        else if (cmd.Skill == BossSkill.DiveRam)
         {
             CombatEffectHelper.SpawnShockwave(world, trans.X, trans.Y);
         }
     }
 
-    private static Color GetTelegraphColor(AttackId attackId, PatternConfig patternCfg)
+    private static Color GetTelegraphColor(BossSkill skill, PatternConfig patternCfg)
     {
-        if (attackId == Boss1AttackIds.Aimed3Shot)
+        return skill switch
         {
-            return patternCfg.Aimed3Shot.TelegraphColor;
-        }
-        if (attackId == Boss1AttackIds.RingBurst)
-        {
-            return patternCfg.RingBurst.TelegraphColor;
-        }
-        if (attackId == Boss1AttackIds.DoubleSpiral)
-        {
-            return patternCfg.DoubleSpiral.TelegraphColor;
-        }
-        if (attackId == Boss1AttackIds.RainDrop)
-        {
-            return patternCfg.RainDrop.TelegraphColor;
-        }
-        if (attackId == Boss1AttackIds.CrossChaos)
-        {
-            return patternCfg.CrossChaos.TelegraphColor;
-        }
-        if (attackId == Boss1AttackIds.FastSniper)
-        {
-            return patternCfg.FastSniper.TelegraphColor;
-        }
-        if (attackId == Boss1AttackIds.DiveRam)
-        {
-            return patternCfg.DiveRam.TelegraphColor;
-        }
-        if (attackId == Boss2AttackIds.HeavySlash)
-        {
-            return patternCfg.HeavySlash.TelegraphColor;
-        }
-        if (attackId == Boss2AttackIds.DoubleCleave)
-        {
-            return patternCfg.DoubleCleave.TelegraphColor;
-        }
-        if (attackId == Boss2AttackIds.GroundStomp)
-        {
-            return patternCfg.GroundStomp.TelegraphColor;
-        }
-        if (attackId == Boss2AttackIds.LeapSmash)
-        {
-            return patternCfg.LeapSmash.TelegraphColor;
-        }
-        if (attackId == Boss2AttackIds.FrenzyCharge)
-        {
-            return patternCfg.FrenzyCharge.TelegraphColor;
-        }
-        if (attackId == Boss2AttackIds.EarthquakeRoar)
-        {
-            return patternCfg.EarthquakeRoar.TelegraphColor;
-        }
-
-        return ColorPalette.RedOrange;
+            BossSkill.Aimed3Shot => patternCfg.Aimed3Shot.TelegraphColor,
+            BossSkill.RingBurst => patternCfg.RingBurst.TelegraphColor,
+            BossSkill.DoubleSpiral => patternCfg.DoubleSpiral.TelegraphColor,
+            BossSkill.RainDrop => patternCfg.RainDrop.TelegraphColor,
+            BossSkill.CrossChaos => patternCfg.CrossChaos.TelegraphColor,
+            BossSkill.FastSniper => patternCfg.FastSniper.TelegraphColor,
+            BossSkill.DiveRam => patternCfg.DiveRam.TelegraphColor,
+            BossSkill.HeavySlash => patternCfg.HeavySlash.TelegraphColor,
+            BossSkill.DoubleCleave => patternCfg.DoubleCleave.TelegraphColor,
+            BossSkill.GroundStomp => patternCfg.GroundStomp.TelegraphColor,
+            BossSkill.LeapSmash => patternCfg.LeapSmash.TelegraphColor,
+            BossSkill.FrenzyCharge => patternCfg.FrenzyCharge.TelegraphColor,
+            BossSkill.EarthquakeRoar => patternCfg.EarthquakeRoar.TelegraphColor,
+            _ => ColorPalette.RedOrange
+        };
     }
 }
+
+

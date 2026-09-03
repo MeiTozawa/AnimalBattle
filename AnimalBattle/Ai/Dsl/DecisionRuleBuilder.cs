@@ -86,12 +86,12 @@ public sealed class DecisionRuleBuilder
     /// <summary>
     /// 設定されたパラメータから不変の AttackDecisionRule を構築します。
     /// </summary>
-    /// <param name="attackId">対象の攻撃識別子。</param>
+    /// <param name="skill">対象の技能識別子。</param>
     /// <returns>検証済みの AttackDecisionRule。</returns>
-    public AttackDecisionRule Build(AttackId attackId)
+    public AttackDecisionRule Build(BossSkill skill)
     {
         return new AttackDecisionRule(
-            attackId,
+            skill,
             cooldown: _cooldown,
             minDistance: _minDistance,
             maxDistance: _maxDistance,
@@ -101,3 +101,4 @@ public sealed class DecisionRuleBuilder
             preferAirborneBonus: _preferAirborneBonus);
     }
 }
+

@@ -29,9 +29,10 @@ public sealed class Boss1DeadModule(Boss1BehaviorState state) : IBossStateModule
             context.Phase,
             in reason,
             invocation.FrameUpdateNumber,
-            _state.CurrentAttackId,
+            _state.CurrentSkill,
             AttackStage.None,
             0.0f);
+
 
         try
         {

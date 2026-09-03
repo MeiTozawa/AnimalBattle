@@ -46,14 +46,15 @@ public sealed class PhasePipelineBuilder
     /// <summary>
     /// この Phase に新しい攻撃パターンを追加します。
     /// </summary>
-    /// <param name="attackId">攻撃識別子。</param>
+    /// <param name="skill">技能識別子。</param>
     /// <returns>新しい攻撃パイプラインビルダー。</returns>
-    public AttackPipelineBuilder Attack(AttackId attackId)
+    public AttackPipelineBuilder Attack(BossSkill skill)
     {
-        AttackPipelineBuilder builder = new(this, attackId);
+        AttackPipelineBuilder builder = new(this, skill);
         _attackBuilders.Add(builder);
         return builder;
     }
+
 
     /// <summary>
     /// 次の Phase の定義に進みます。

@@ -23,9 +23,9 @@ public readonly struct Boss2PhaseSettings
     /// <summary>Phase 遷移演出時間です。</summary>
     public float TransitionDuration { get; }
     /// <summary>この Phase で実行可能な攻撃順序です。</summary>
-    public IReadOnlyList<AttackId> Skills { get; }
+    public IReadOnlyList<BossSkill> Skills { get; }
     /// <summary>この Phase の攻撃順です（互換用）。</summary>
-    public IReadOnlyList<AttackId> AttackOrder => Skills;
+    public IReadOnlyList<BossSkill> AttackOrder => Skills;
     /// <summary>この Phase で評価される攻撃意思決定ルールです。</summary>
     public IReadOnlyList<AttackDecisionRule> Rules { get; }
 
@@ -38,7 +38,7 @@ public readonly struct Boss2PhaseSettings
         float maxFallSpeed,
         float patrolRadius,
         float transitionDuration,
-        IReadOnlyList<AttackId> skills,
+        IReadOnlyList<BossSkill> skills,
         IReadOnlyList<AttackDecisionRule>? rules = null)
     {
         IdleDuration = idleDuration;
@@ -60,37 +60,18 @@ public readonly struct Boss2PhaseSettings
         float gravity,
         float patrolRadius,
         float transitionDuration,
-        IReadOnlyList<AttackId> skills,
+        IReadOnlyList<BossSkill> skills,
         IReadOnlyList<AttackDecisionRule>? rules = null)
         : this(idleDuration, moveSpeed, jumpForce, gravity, 850.0f, patrolRadius, transitionDuration, skills, rules)
     {
     }
 }
 
-/// <summary>Boss2 固有の攻撃種別です。</summary>
-public enum Boss2AttackKind
-{
-    /// <summary>重劈斬撃です。</summary>
-    HeavySlash,
-    /// <summary>二連重斬です。</summary>
-    DoubleCleave,
-    /// <summary>撼地踏撃です。</summary>
-    GroundStomp,
-    /// <summary>泰山圧頂です。</summary>
-    LeapSmash,
-    /// <summary>狂暴横衝直撞です。</summary>
-    FrenzyCharge,
-    /// <summary>滅地狂吼です。</summary>
-    EarthquakeRoar
-}
-
 /// <summary>Boss2 攻撃の定義と固有パラメータです。</summary>
 public sealed class Boss2AttackPattern
 {
-    /// <summary>攻撃 ID です。</summary>
-    public AttackId AttackId { get; }
-    /// <summary>Boss2 固有の攻撃種別です。</summary>
-    public Boss2AttackKind Kind { get; }
+    /// <summary>技能識別子です。</summary>
+    public BossSkill Skill { get; }
     /// <summary>共通 Telegraph/Execute/Recovery 定義です。</summary>
     public AttackDefinition Definition { get; }
     /// <summary>移動速度です。</summary>
@@ -102,39 +83,17 @@ public sealed class Boss2AttackPattern
 
     /// <summary>Boss2 攻撃 pattern を生成します。</summary>
     public Boss2AttackPattern(
-        AttackId attackId,
-        Boss2AttackKind kind,
+        BossSkill skill,
         AttackDefinition definition,
         float moveSpeed = 0,
         float secondHitDelay = 0,
         float interval = 0)
     {
-        AttackId = attackId;
-        Kind = kind;
+        Skill = skill;
         Definition = definition;
         MoveSpeed = moveSpeed;
         SecondHitDelay = secondHitDelay;
         Interval = interval;
-    }
-
-    /// <summary>Boss2 攻撃 pattern を生成します。</summary>
-    public Boss2AttackPattern(
-        AttackId attackId,
-        Boss2AttackKind kind,
-        float telegraphDuration,
-        float executeDuration,
-        float recoveryDuration,
-        float moveSpeed = 0,
-        float secondHitDelay = 0,
-        float interval = 0)
-        : this(
-            attackId,
-            kind,
-            new AttackDefinition(attackId, telegraphDuration, executeDuration, recoveryDuration, 0),
-            moveSpeed,
-            secondHitDelay,
-            interval)
-    {
     }
 
     /// <summary>設定値が実行可能かどうかを取得します。</summary>
@@ -146,8 +105,8 @@ public interface IBoss2Configuration
 {
     /// <summary>指定 Phase の検証済み設定を取得します。</summary>
     Boss2PhaseSettings GetPhase(Phase phase);
-    /// <summary>指定 Attack_Id の検証済み pattern を取得します。</summary>
-    bool GetAttack(AttackId attackId, out Boss2AttackPattern pattern);
+    /// <summary>指定 BossSkill の検証済み pattern を取得します。</summary>
+    bool GetAttack(BossSkill skill, out Boss2AttackPattern pattern);
 }
 
 /// <summary>既存 Boss2 設定の検証済み既定 snapshot です。</summary>
@@ -155,18 +114,18 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
 {
     private readonly Boss2PhaseSettings[] _phases =
     [
-        new Boss2PhaseSettings(0.8f, 160.0f, 580.0f, 980.0f, 400.0f, 1.0f, [Boss2AttackIds.HeavySlash, Boss2AttackIds.GroundStomp, Boss2AttackIds.HeavySlash, Boss2AttackIds.LeapSmash], Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase1)),
-        new Boss2PhaseSettings(0.5f, 220.0f, 640.0f, 980.0f, 400.0f, 1.0f, [Boss2AttackIds.DoubleCleave, Boss2AttackIds.GroundStomp, Boss2AttackIds.LeapSmash, Boss2AttackIds.DoubleCleave], Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase2)),
-        new Boss2PhaseSettings(0.3f, 280.0f, 700.0f, 980.0f, 400.0f, 1.2f, [Boss2AttackIds.FrenzyCharge, Boss2AttackIds.EarthquakeRoar, Boss2AttackIds.DoubleCleave, Boss2AttackIds.LeapSmash], Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase3))
+        new Boss2PhaseSettings(0.8f, 160.0f, 580.0f, 980.0f, 400.0f, 1.0f, [BossSkill.HeavySlash, BossSkill.GroundStomp, BossSkill.HeavySlash, BossSkill.LeapSmash], Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase1)),
+        new Boss2PhaseSettings(0.5f, 220.0f, 640.0f, 980.0f, 400.0f, 1.0f, [BossSkill.DoubleCleave, BossSkill.GroundStomp, BossSkill.LeapSmash, BossSkill.DoubleCleave], Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase2)),
+        new Boss2PhaseSettings(0.3f, 280.0f, 700.0f, 980.0f, 400.0f, 1.2f, [BossSkill.FrenzyCharge, BossSkill.EarthquakeRoar, BossSkill.DoubleCleave, BossSkill.LeapSmash], Boss2PipelineDefinition.Pipeline.GetRules(Phase.Phase3))
     ];
     private readonly Boss2AttackPattern[] _attacks =
     [
-        new Boss2AttackPattern(Boss2AttackIds.HeavySlash, Boss2AttackKind.HeavySlash, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.HeavySlash], 360.0f),
-        new Boss2AttackPattern(Boss2AttackIds.DoubleCleave, Boss2AttackKind.DoubleCleave, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.DoubleCleave], 420.0f, 0.30f),
-        new Boss2AttackPattern(Boss2AttackIds.GroundStomp, Boss2AttackKind.GroundStomp, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.GroundStomp]),
-        new Boss2AttackPattern(Boss2AttackIds.LeapSmash, Boss2AttackKind.LeapSmash, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.LeapSmash], 680.0f),
-        new Boss2AttackPattern(Boss2AttackIds.FrenzyCharge, Boss2AttackKind.FrenzyCharge, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.FrenzyCharge], 620.0f),
-        new Boss2AttackPattern(Boss2AttackIds.EarthquakeRoar, Boss2AttackKind.EarthquakeRoar, Boss2PipelineDefinition.Pipeline.Attacks[Boss2AttackIds.EarthquakeRoar], interval: 0.25f)
+        new Boss2AttackPattern(BossSkill.HeavySlash, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.HeavySlash], 360.0f),
+        new Boss2AttackPattern(BossSkill.DoubleCleave, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.DoubleCleave], 420.0f, 0.30f),
+        new Boss2AttackPattern(BossSkill.GroundStomp, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.GroundStomp]),
+        new Boss2AttackPattern(BossSkill.LeapSmash, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.LeapSmash], 680.0f),
+        new Boss2AttackPattern(BossSkill.FrenzyCharge, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.FrenzyCharge], 620.0f),
+        new Boss2AttackPattern(BossSkill.EarthquakeRoar, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.EarthquakeRoar], interval: 0.25f)
     ];
 
     /// <inheritdoc />
@@ -180,78 +139,36 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
             _ => 0
         };
 
-        try
-        {
-            Boss2PhaseConfig tomlPhase = phase switch
-            {
-                Phase.Phase1 => ConfigManager.Boss2.Phase1,
-                Phase.Phase2 => ConfigManager.Boss2.Phase2,
-                Phase.Phase3 => ConfigManager.Boss2.Phase3,
-                _ => ConfigManager.Boss2.Phase1
-            };
-
-            if (tomlPhase is not null && tomlPhase.IdleDuration > 0.0f)
-            {
-                AttackId[] skills = tomlPhase.Skills.Count > 0
-                    ? tomlPhase.Skills.Select(ResolveAttackId).Where(id => id.IsValid).ToArray()
-                    : _phases[index].Skills.ToArray();
-
-                IReadOnlyList<AttackDecisionRule> rules = tomlPhase.Rules.Count > 0
-                    ? tomlPhase.Rules.Select(r => new AttackDecisionRule(
-                        ResolveAttackId(r.Skill),
-                        r.Cooldown,
-                        r.MinDistance,
-                        r.MaxDistance,
-                        r.Weight,
-                        r.RequireSamePlatform)).Where(r => r.AttackId.IsValid).ToList()
-                    : _phases[index].Rules;
-
-                return new Boss2PhaseSettings(
-                    tomlPhase.IdleDuration,
-                    tomlPhase.MoveSpeed,
-                    tomlPhase.JumpForce,
-                    ConfigManager.Boss2.Gravity > 0 ? ConfigManager.Boss2.Gravity : _phases[index].Gravity,
-                    ConfigManager.Boss2.PatrolRadius > 0 ? ConfigManager.Boss2.PatrolRadius : _phases[index].PatrolRadius,
-                    tomlPhase.TransitionDuration,
-                    skills.Length > 0 ? skills : _phases[index].Skills,
-                    rules.Count > 0 ? rules : _phases[index].Rules);
-            }
-        }
-        catch
-        {
-            // TOML 未ロード環境はフォールバック
-        }
-
         return _phases[index];
     }
 
     /// <inheritdoc />
-    public bool GetAttack(AttackId attackId, out Boss2AttackPattern pattern)
+    public bool GetAttack(BossSkill skill, out Boss2AttackPattern pattern)
     {
         try
         {
             PatternConfig toml = ConfigManager.Pattern;
-            if (toml is not null)
+            if (toml is not null && Boss2PipelineDefinition.Pipeline.TryGetAttack(skill, out AttackDefinition definition))
             {
-                Boss2AttackPattern? configuredPattern = attackId.Value switch
+                Boss2AttackPattern? configuredPattern = skill switch
                 {
-                    Boss2AttackIds.HeavySlashValue =>
-                        new(attackId, Boss2AttackKind.HeavySlash, toml.HeavySlash.WindUpTime, toml.HeavySlash.CastDuration, toml.HeavySlash.RecoveryTime, toml.HeavySlash.DashSpeed),
+                    BossSkill.HeavySlash =>
+                        new(skill, definition, toml.HeavySlash.DashSpeed),
 
-                    Boss2AttackIds.DoubleCleaveValue =>
-                        new(attackId, Boss2AttackKind.DoubleCleave, toml.DoubleCleave.WindUpTime, toml.DoubleCleave.CastDuration, toml.DoubleCleave.RecoveryTime, toml.DoubleCleave.DashSpeed, toml.DoubleCleave.SlashInterval),
+                    BossSkill.DoubleCleave =>
+                        new(skill, definition, toml.DoubleCleave.DashSpeed, toml.DoubleCleave.SlashInterval),
 
-                    Boss2AttackIds.GroundStompValue =>
-                        new(attackId, Boss2AttackKind.GroundStomp, toml.GroundStomp.WindUpTime, toml.GroundStomp.CastDuration, toml.GroundStomp.RecoveryTime),
+                    BossSkill.GroundStomp =>
+                        new(skill, definition),
 
-                    Boss2AttackIds.LeapSmashValue =>
-                        new(attackId, Boss2AttackKind.LeapSmash, toml.LeapSmash.WindUpTime, toml.LeapSmash.CastDuration, toml.LeapSmash.RecoveryTime, toml.LeapSmash.JumpForce),
+                    BossSkill.LeapSmash =>
+                        new(skill, definition, toml.LeapSmash.JumpForce),
 
-                    Boss2AttackIds.FrenzyChargeValue =>
-                        new(attackId, Boss2AttackKind.FrenzyCharge, toml.FrenzyCharge.WindUpTime, toml.FrenzyCharge.CastDuration, toml.FrenzyCharge.RecoveryTime, toml.FrenzyCharge.ChargeSpeed),
+                    BossSkill.FrenzyCharge =>
+                        new(skill, definition, toml.FrenzyCharge.ChargeSpeed),
 
-                    Boss2AttackIds.EarthquakeRoarValue =>
-                        new(attackId, Boss2AttackKind.EarthquakeRoar, toml.EarthquakeRoar.WindUpTime, toml.EarthquakeRoar.CastDuration, toml.EarthquakeRoar.RecoveryTime, interval: toml.EarthquakeRoar.Interval),
+                    BossSkill.EarthquakeRoar =>
+                        new(skill, definition, interval: toml.EarthquakeRoar.Interval),
 
                     _ => null
                 };
@@ -262,9 +179,6 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
                     return true;
                 }
             }
-
-
-
         }
         catch
         {
@@ -273,7 +187,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
 
         for (int index = 0; index < _attacks.Length; index++)
         {
-            if (_attacks[index].AttackId == attackId)
+            if (_attacks[index].Skill == skill)
             {
                 pattern = _attacks[index];
                 return true;
@@ -284,17 +198,10 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
         return false;
     }
 
-    private static AttackId ResolveAttackId(string skillName)
+    private static BossSkill ResolveBossSkill(string skillName)
     {
-        return skillName switch
-        {
-            "HeavySlash" => Boss2AttackIds.HeavySlash,
-            "DoubleCleave" => Boss2AttackIds.DoubleCleave,
-            "GroundStomp" => Boss2AttackIds.GroundStomp,
-            "LeapSmash" => Boss2AttackIds.LeapSmash,
-            "FrenzyCharge" => Boss2AttackIds.FrenzyCharge,
-            "EarthquakeRoar" => Boss2AttackIds.EarthquakeRoar,
-            _ => AttackId.Unknown
-        };
+        return Enum.TryParse<BossSkill>(skillName, ignoreCase: true, out BossSkill skill) ? skill : BossSkill.None;
     }
 }
+
+

@@ -33,7 +33,7 @@ public readonly struct BossPhaseSnapshot
     public float TransitionDuration { get; }
 
     /// <summary>検証済みの攻撃順序を取得します。</summary>
-    public IReadOnlyList<AttackId> AttackSequence { get; }
+    public IReadOnlyList<BossSkill> AttackSequence { get; }
 
     /// <summary>
     /// 検証済み Phase 設定を生成します。
@@ -46,7 +46,7 @@ public readonly struct BossPhaseSnapshot
     /// <param name="jumpForce">Boss2 の跳躍初速。</param>
     /// <param name="hoverDuration">Boss1 の浮遊待機時間。</param>
     /// <param name="transitionDuration">Phase 遷移時間。</param>
-    /// <param name="attackSequence">固定 AttackId に解決済みの攻撃順序。</param>
+    /// <param name="attackSequence">固定 BossSkill に解決済みの攻撃順序。</param>
     public BossPhaseSnapshot(
         BossType bossType,
         Phase phase,
@@ -56,7 +56,7 @@ public readonly struct BossPhaseSnapshot
         float jumpForce,
         float hoverDuration,
         float transitionDuration,
-        IReadOnlyList<AttackId> attackSequence)
+        IReadOnlyList<BossSkill> attackSequence)
     {
         ArgumentNullException.ThrowIfNull(attackSequence);
 
@@ -68,8 +68,9 @@ public readonly struct BossPhaseSnapshot
         JumpForce = jumpForce;
         HoverDuration = hoverDuration;
         TransitionDuration = transitionDuration;
-        AttackSequence = new ReadOnlyCollection<AttackId>(attackSequence.ToArray());
+        AttackSequence = new ReadOnlyCollection<BossSkill>(attackSequence.ToArray());
     }
+
 }
 
 /// <summary>Boss 種別と Phase の組を表す snapshot のキーです。</summary>

@@ -9,7 +9,7 @@ public sealed class OneShotEventGuard
 {
     private readonly CommandOneShotKey[] _keys;
     private int _count;
-    private AttackId _attackId;
+    private BossSkill _skill;
     private long _startFrame;
     private bool _started;
 
@@ -17,8 +17,8 @@ public sealed class OneShotEventGuard
     public int Count => _count;
     /// <summary>key の最大容量を取得します。</summary>
     public int Capacity => _keys.Length;
-    /// <summary>開始済みの攻撃 ID を取得します。</summary>
-    public AttackId AttackId => _attackId;
+    /// <summary>開始済みの技能を取得します。</summary>
+    public BossSkill Skill => _skill;
     /// <summary>攻撃の開始 frame を取得します。</summary>
     public long StartFrame => _startFrame;
 
@@ -30,19 +30,20 @@ public sealed class OneShotEventGuard
     }
 
     /// <summary>新しい攻撃 lifecycle を開始し、以前の key を破棄します。</summary>
-    public ErrorOr<Success> Begin(AttackId attackId, long frameUpdateNumber)
+    public ErrorOr<Success> Begin(BossSkill skill, long frameUpdateNumber)
     {
-        if (!attackId.IsValid || frameUpdateNumber < 0)
+        if (!skill.IsValid() || frameUpdateNumber < 0)
         {
-            return Error.Validation("OneShotEventGuard.Begin", "攻撃 ID または開始フレーム番号が無効です。");
+            return Error.Validation("OneShotEventGuard.Begin", "技能または開始フレーム番号が無効です。");
         }
 
         Reset();
-        _attackId = attackId;
+        _skill = skill;
         _startFrame = frameUpdateNumber;
         _started = true;
         return Result.Success;
     }
+
 
     /// <summary>指定 component の発行権を一度だけ予約します。</summary>
     /// <remarks>予約後の port 失敗も key を消費したままにし、同じ component を再発動しません。</remarks>
@@ -53,7 +54,7 @@ public sealed class OneShotEventGuard
             return Error.Validation("OneShotEventGuard.Reserve", "Guard が未開始か component index が不正です。");
         }
 
-        CommandOneShotKey key = new(CommandComponentKind.Attack, _attackId, componentIndex, _startFrame);
+        CommandOneShotKey key = new(CommandComponentKind.Attack, _skill, componentIndex, _startFrame);
         for (int index = 0; index < _count; index++)
         {
             if (_keys[index] == key)
@@ -79,7 +80,7 @@ public sealed class OneShotEventGuard
             return false;
         }
 
-        CommandOneShotKey key = new(CommandComponentKind.Attack, _attackId, componentIndex, _startFrame);
+        CommandOneShotKey key = new(CommandComponentKind.Attack, _skill, componentIndex, _startFrame);
         for (int index = 0; index < _count; index++)
         {
             if (_keys[index] == key)
@@ -95,8 +96,9 @@ public sealed class OneShotEventGuard
     public void Reset()
     {
         _count = 0;
-        _attackId = default;
+        _skill = default;
         _startFrame = -1;
         _started = false;
     }
 }
+

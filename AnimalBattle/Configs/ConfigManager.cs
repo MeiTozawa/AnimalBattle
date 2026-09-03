@@ -10,8 +10,9 @@ namespace AnimalBattle.Configs;
 /// <summary>
 /// 各種 TOML 設定ファイル（player.toml, boss1.toml, boss2.toml, patterns.toml, arena.toml, render.toml）を統括管理し、
 /// 自動リロードおよびプロパティ参照を提供する静的設定マネージャークラス。
-/// 全てのファイル読み込み結果（<see cref="Result{T}"/>）を検証し、エラー時は詳細な診断ログを出力します。
+/// 全てのファイル読み込み結果を検証し、エラー時は詳細な診断ログを出力します。
 /// </summary>
+
 public static class ConfigManager
 {
     private static ConfigBase<PlayerConfig> _playerConfigContainer = new(BakedConfigs.CreatePlayerConfig());

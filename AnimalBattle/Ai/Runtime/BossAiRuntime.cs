@@ -664,9 +664,10 @@ public sealed class BossAiRuntime
             LifecycleOperation.Update,
             request.FrameUpdateNumber,
             runtime.DeltaTime,
-            request.Reason.AttackId,
+            request.Reason.Skill,
             default,
             request.Reason,
+
             DiagnosticSeverity.TransitionRejected,
             result.ErrorCode,
             result.Message,

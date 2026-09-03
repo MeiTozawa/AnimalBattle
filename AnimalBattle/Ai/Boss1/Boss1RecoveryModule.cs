@@ -11,7 +11,7 @@ public sealed class Boss1RecoveryModule : IBossStateModule, IStateModuleDependen
 {
     private readonly IBoss1Configuration _configuration;
     private readonly Boss1BehaviorState _state;
-    private readonly RecoveryModule[] _recoveries;
+    private readonly Dictionary<BossSkill, RecoveryModule> _recoveries = new();
     private RecoveryModule? _activeRecovery;
 
     /// <inheritdoc />
@@ -24,14 +24,13 @@ public sealed class Boss1RecoveryModule : IBossStateModule, IStateModuleDependen
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _state = state ?? throw new ArgumentNullException(nameof(state));
-        _recoveries = new RecoveryModule[8];
-        for (int value = 1; value < _recoveries.Length; value++)
+        BossSkill[] boss1Attacks = [BossSkill.Aimed3Shot, BossSkill.RingBurst, BossSkill.DoubleSpiral, BossSkill.RainDrop, BossSkill.CrossChaos, BossSkill.FastSniper, BossSkill.DiveRam];
+        foreach (BossSkill skill in boss1Attacks)
         {
-            AttackId attackId = new(value);
-            AttackDefinition definition = configuration.GetAttack(attackId, out Boss1AttackPattern pattern)
+            AttackDefinition definition = configuration.GetAttack(skill, out Boss1AttackPattern pattern)
                 ? pattern.Definition
-                : new AttackDefinition(attackId, 0, 0, 0, 0);
-            _recoveries[value] = new RecoveryModule(Boss1StateIds.Recovery, definition);
+                : new AttackDefinition(skill, 0, 0, 0, 0);
+            _recoveries[skill] = new RecoveryModule(Boss1StateIds.Recovery, definition);
         }
     }
 
@@ -41,19 +40,19 @@ public sealed class Boss1RecoveryModule : IBossStateModule, IStateModuleDependen
         _activeRecovery = null;
         _state.StateElapsed = 0.0f;
         if (!Boss1ModuleSupport.IsBoss1(in context, in invocation)
-            || !_state.CurrentAttackId.IsValid
-            || _state.CurrentAttackId.Value >= _recoveries.Length)
+            || !_state.CurrentSkill.IsValid()
+            || !_recoveries.TryGetValue(_state.CurrentSkill, out _activeRecovery))
         {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidAttackId, "Boss1 の Recovery 対象が不正です。", _state.CurrentAttackId, AttackStage.Recovery);
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss1 の Recovery 対象が不正です。", _state.CurrentSkill, AttackStage.Recovery);
+            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
-        _activeRecovery = _recoveries[_state.CurrentAttackId.Value];
+
         _activeRecovery.Enter(ref context, in invocation);
         if (!_activeRecovery.IsActive && !_activeRecovery.CanEvaluateNextTransition)
         {
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
         }
     }
 
@@ -69,25 +68,23 @@ public sealed class Boss1RecoveryModule : IBossStateModule, IStateModuleDependen
         _state.StateElapsed = _activeRecovery.Elapsed;
 
         // 冲撞（DiveRam）の易傷・後隙期間中のみ地上で完全停止し、プレイヤーが殴りやすい無防備状態を維持
-        if (_state.CurrentAttackId == Boss1AttackIds.DiveRam)
+        if (_state.CurrentSkill == BossSkill.DiveRam)
         {
             if (context.Movement.MoveTo(_state.CurrentPosition.X, _state.CurrentPosition.Y).IsError)
             {
-                Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam Recovery 中の静止 command を発行できませんでした。", _state.CurrentAttackId, AttackStage.Recovery);
+                Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam Recovery 中の静止 command を発行できませんでした。", _state.CurrentSkill, AttackStage.Recovery);
             }
         }
         else
         {
-            Boss1ModuleSupport.ApplyHoverMovement(ref context, in invocation, _configuration, _state, _state.CurrentAttackId, AttackStage.Recovery);
+            Boss1ModuleSupport.ApplyHoverMovement(ref context, in invocation, _configuration, _state, _state.CurrentSkill, AttackStage.Recovery);
             _state.AttackStartPosition = _state.CurrentPosition;
         }
-
-
 
         if (_activeRecovery.CanEvaluateNextTransition)
         {
             _state.IsAttackActive = false;
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.AttackCompleted, attackId: _state.CurrentAttackId));
+            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
         }
     }
 
@@ -99,3 +96,4 @@ public sealed class Boss1RecoveryModule : IBossStateModule, IStateModuleDependen
         _state.StateElapsed = 0.0f;
     }
 }
+

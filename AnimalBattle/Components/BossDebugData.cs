@@ -12,9 +12,10 @@ public struct BossDebugData
     public BossState BossState;
     /// <summary>現在の Phase です。</summary>
     public Phase Phase;
-    /// <summary>現在の Attack_Id です。</summary>
-    public AttackId AttackId;
+    /// <summary>現在の技能です。</summary>
+    public BossSkill Skill;
     /// <summary>直近の遷移理由です。</summary>
+
     public TransitionReason TransitionReason;
     /// <summary>無敵状態です。</summary>
     public bool IsInvulnerable;

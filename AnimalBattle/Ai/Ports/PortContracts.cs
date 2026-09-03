@@ -45,17 +45,17 @@ public readonly struct AttackCommand
 {
     /// <summary>攻撃要求の種別を取得します。</summary>
     public AttackCommandKind Kind { get; }
-    /// <summary>攻撃識別子を取得します。</summary>
-    public AttackId AttackId { get; }
+    /// <summary>技能識別子を取得します。</summary>
+    public BossSkill Skill { get; }
     /// <summary>command の X 値を取得します。</summary>
     public float X { get; }
     /// <summary>command の Y 値を取得します。</summary>
     public float Y { get; }
     /// <summary>攻撃 command を生成します。</summary>
-    public AttackCommand(AttackCommandKind kind, AttackId attackId = default, float x = 0, float y = 0)
+    public AttackCommand(AttackCommandKind kind, BossSkill skill = default, float x = 0, float y = 0)
     {
         Kind = kind;
-        AttackId = attackId;
+        Skill = skill;
         X = x;
         Y = y;
     }
@@ -112,10 +112,10 @@ public interface ICommandBuffer<T> where T : struct
     CommandWriteResult AddOneShot(in T command, in CommandOneShotKey key, CommandPriority priority = CommandPriority.Attack);
     /// <summary>格納済み command の one-shot key を取得します。</summary>
     bool GetOneShotKey(int index, out CommandOneShotKey key);
-    /// <summary>次の Frame_Update に向けて command 数だけを 0 に戻します。</summary>
+    /// <summary>指定 index の command への参照を取得します。</summary>
+    ref readonly T this[int index] { get; }
+    /// <summary>格納されている全 command をクリアします。</summary>
     void Clear();
-    /// <summary>格納済み command を index で読み取ります。</summary>
-    T this[int index] { get; }
 }
 
 /// <summary>移動処理への command 境界です。</summary>
@@ -135,9 +135,9 @@ public interface IMovementPort
 public interface IAttackPort
 {
     /// <summary>弾生成 command を積みます。</summary>
-    ErrorOr<Success> EmitBullet(AttackId attackId, float x, float y);
+    ErrorOr<Success> EmitBullet(BossSkill skill, float x, float y);
     /// <summary>攻撃判定生成 command を積みます。</summary>
-    ErrorOr<Success> CreateHitbox(AttackId attackId, float x, float y);
+    ErrorOr<Success> CreateHitbox(BossSkill skill, float x, float y);
     /// <summary>Boss の弾整理 command を積みます。</summary>
     ErrorOr<Success> ClearBossBullets();
 }

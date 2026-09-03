@@ -56,9 +56,10 @@ public struct BossCompatibilityData
     public BossState BossState;
     /// <summary>互換 view が公開する親 Phase です。</summary>
     public Phase Phase;
-    /// <summary>互換 view が公開する攻撃識別子です。</summary>
-    public AttackId AttackId;
+    /// <summary>互換 view が公開する技能識別子です。</summary>
+    public BossSkill Skill;
     /// <summary>互換 view が公開する直近の遷移理由です。</summary>
+
     public TransitionReason TransitionReason;
     /// <summary>互換 view が公開する無敵状態です。</summary>
     public bool IsInvulnerable;

@@ -7,8 +7,8 @@ namespace AnimalBattle.Ai.Contracts;
 /// </summary>
 public readonly struct AttackDecisionRule
 {
-    /// <summary>対象の攻撃識別子を取得します。</summary>
-    public AttackId AttackId { get; }
+    /// <summary>対象の技能識別子を取得します。</summary>
+    public BossSkill Skill { get; }
 
     /// <summary>技能の基本冷却時間（秒）を取得します。</summary>
     public float Cooldown { get; }
@@ -32,7 +32,7 @@ public readonly struct AttackDecisionRule
     public float PreferAirborneBonus { get; }
 
     /// <summary>ルール設定が有効かどうかを取得します。</summary>
-    public bool IsValid => AttackId.IsValid
+    public bool IsValid => Skill.IsValid()
         && Cooldown >= 0.0f
         && MinDistance >= 0.0f
         && MaxDistance >= MinDistance
@@ -47,7 +47,7 @@ public readonly struct AttackDecisionRule
     /// <summary>
     /// 技能意思決定ルールを初期化します。
     /// </summary>
-    /// <param name="attackId">攻撃識別子。</param>
+    /// <param name="skill">技能識別子。</param>
     /// <param name="cooldown">基本冷却時間（秒）。</param>
     /// <param name="minDistance">最小有効距離。</param>
     /// <param name="maxDistance">最大有効距離。</param>
@@ -56,7 +56,7 @@ public readonly struct AttackDecisionRule
     /// <param name="requirePlayerGrounded">接地を要求するかどうか。</param>
     /// <param name="preferAirborneBonus">空中ボーナス倍率。</param>
     public AttackDecisionRule(
-        AttackId attackId,
+        BossSkill skill,
         float cooldown = 0.0f,
         float minDistance = 0.0f,
         float maxDistance = 300.0f,
@@ -65,7 +65,7 @@ public readonly struct AttackDecisionRule
         bool? requirePlayerGrounded = null,
         float preferAirborneBonus = 1.0f)
     {
-        AttackId = attackId;
+        Skill = skill;
         Cooldown = cooldown;
         MinDistance = minDistance;
         MaxDistance = maxDistance;
@@ -74,4 +74,5 @@ public readonly struct AttackDecisionRule
         RequirePlayerGrounded = requirePlayerGrounded;
         PreferAirborneBonus = preferAirborneBonus;
     }
+
 }

@@ -5,15 +5,16 @@ using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Components;
 
-/// <summary>Boss の攻撃領域を表す純粋な ECS データです。</summary>
-/// <remarks>攻撃データを生成します。</remarks>
+/// <summary>Boss の攻撃・技能領域を表す純粋な ECS データです。</summary>
+/// <remarks>攻撃・技能データを生成します。</remarks>
 [StructLayout(LayoutKind.Sequential)]
-public struct BossAttackData(AttackId attackId, AttackStage stage = AttackStage.None)
+public struct BossAttackData(BossSkill skill, AttackStage stage = AttackStage.None)
 {
-    /// <summary>現在の攻撃識別子です。</summary>
-    public AttackId AttackId = attackId;
+    /// <summary>現在の技能識別子です。</summary>
+    public BossSkill Skill = skill;
     /// <summary>攻撃の段階です。</summary>
     public AttackStage Stage = stage;
+
     /// <summary>攻撃内の component index です。</summary>
     public int AttackIndex = 0;
     /// <summary>攻撃段階の sub timer です。</summary>

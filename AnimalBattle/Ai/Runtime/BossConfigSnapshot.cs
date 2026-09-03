@@ -11,11 +11,11 @@ public readonly struct BossConfigSnapshot
 {
     private static readonly FrozenDictionary<BossPhaseKey, BossPhaseSnapshot> _emptyPhases =
         new Dictionary<BossPhaseKey, BossPhaseSnapshot>().ToFrozenDictionary();
-    private static readonly FrozenDictionary<AttackId, AttackDefinition> _emptyAttacks =
-        new Dictionary<AttackId, AttackDefinition>().ToFrozenDictionary();
+    private static readonly FrozenDictionary<BossSkill, AttackDefinition> _emptyAttacks =
+        new Dictionary<BossSkill, AttackDefinition>().ToFrozenDictionary();
 
     private readonly FrozenDictionary<BossPhaseKey, BossPhaseSnapshot>? _phases;
-    private readonly FrozenDictionary<AttackId, AttackDefinition>? _attacks;
+    private readonly FrozenDictionary<BossSkill, AttackDefinition>? _attacks;
 
     /// <summary>未初期化の設定 snapshot を表す値です。</summary>
     public static BossConfigSnapshot Empty => default;
@@ -32,8 +32,8 @@ public readonly struct BossConfigSnapshot
     /// <summary>検証済み Phase 設定を取得します。</summary>
     public IReadOnlyDictionary<BossPhaseKey, BossPhaseSnapshot> Phases => _phases ?? _emptyPhases;
 
-    /// <summary>AttackId ごとの検証済み攻撃定義を取得します。</summary>
-    public IReadOnlyDictionary<AttackId, AttackDefinition> Attacks => _attacks ?? _emptyAttacks;
+    /// <summary>BossSkill ごとの検証済み攻撃定義を取得します。</summary>
+    public IReadOnlyDictionary<BossSkill, AttackDefinition> Attacks => _attacks ?? _emptyAttacks;
 
     /// <summary>
     /// 互換用の空の攻撃定義を持つ snapshot を生成します。
@@ -55,7 +55,7 @@ public readonly struct BossConfigSnapshot
         string? sourceName,
         bool isValid,
         FrozenDictionary<BossPhaseKey, BossPhaseSnapshot> phases,
-        FrozenDictionary<AttackId, AttackDefinition> attacks)
+        FrozenDictionary<BossSkill, AttackDefinition> attacks)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(version);
 
@@ -103,13 +103,13 @@ public readonly struct BossConfigSnapshot
         return found.HasValue;
     }
 
-    /// <summary>指定した AttackId の攻撃定義を取得します。</summary>
-    /// <param name="attackId">取得する AttackId。</param>
+    /// <summary>指定した BossSkill の攻撃定義を取得します。</summary>
+    /// <param name="skill">取得する BossSkill。</param>
     /// <param name="definition">取得した攻撃定義。</param>
     /// <returns>設定が存在する場合は true。</returns>
-    public bool GetAttack(AttackId attackId, out AttackDefinition definition)
+    public bool GetAttack(BossSkill skill, out AttackDefinition definition)
     {
-        return Attacks.TryGetValue(attackId, out definition!);
+        return Attacks.TryGetValue(skill, out definition!);
     }
 
     /// <summary>
@@ -135,10 +135,10 @@ public readonly struct BossConfigSnapshot
             phaseMap.Add(new BossPhaseKey(phase.BossType, phase.Phase), phase);
         }
 
-        Dictionary<AttackId, AttackDefinition> attackMap = new();
+        Dictionary<BossSkill, AttackDefinition> attackMap = new();
         foreach (AttackDefinition attack in attacks)
         {
-            attackMap.Add(attack.AttackId, attack);
+            attackMap.Add(attack.Skill, attack);
         }
 
         return new BossConfigSnapshot(
@@ -148,6 +148,7 @@ public readonly struct BossConfigSnapshot
             phaseMap.ToFrozenDictionary(),
             attackMap.ToFrozenDictionary());
     }
+
 }
 
 /// <summary>

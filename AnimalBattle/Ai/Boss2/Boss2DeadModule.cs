@@ -34,9 +34,10 @@ public sealed class Boss2DeadModule : IBossStateModule, IStateModuleDependencyPr
             context.Phase,
             in reason,
             invocation.FrameUpdateNumber,
-            _state.CurrentAttackId,
+            _state.CurrentSkill,
             AttackStage.None,
             0.0f);
+
 
         try
         {

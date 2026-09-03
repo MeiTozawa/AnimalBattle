@@ -19,10 +19,8 @@ public readonly record struct TransitionResult
     public bool IsRejected => !IsAccepted;
     /// <summary>拒否時にも保持する有効な現在状態です。</summary>
     public BossState CurrentStateId { get; }
-    /// <summary>互換用の現在状態名です。</summary>
-    [Obsolete("CurrentStateId を使用してください。")]
-    public BossState CurrentBossState => CurrentStateId;
     /// <summary>遷移要求先状態です。</summary>
+
     public BossState RequestedStateId { get; }
     /// <summary>安全復帰先です。</summary>
     public BossState SafeRecoveryStateId { get; }

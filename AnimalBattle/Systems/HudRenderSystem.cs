@@ -134,7 +134,7 @@ public static class HudRenderSystem
         {
             BossDisplayData display = GetBossDisplayData(entity, in compatibility);
             string bossTitle = $"BOSS: {ConfigManager.Boss1.BossName} [PHASE {ToLegacyPhase(display.Phase)}/3]";
-            GetBossStateInfo(display.State, display.AttackId, hpCfg, out string stateName, out Color stateBadgeColor);
+            GetBossStateInfo(display.State, display.Skill, hpCfg, out string stateName, out Color stateBadgeColor);
             DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, health, ToLegacyPhase(display.Phase), compatibility.LegacyStateTimer, compatibility.LegacyStateDuration);
         });
     }
@@ -145,7 +145,7 @@ public static class HudRenderSystem
         {
             BossDisplayData display = GetBossDisplayData(entity, in compatibility);
             string bossTitle = $"BOSS: {ConfigManager.Boss2.BossName} [PHASE {ToLegacyPhase(display.Phase)}/3]";
-            GetBossStateInfo(display.State, display.AttackId, hpCfg, out string stateName, out Color stateBadgeColor);
+            GetBossStateInfo(display.State, display.Skill, hpCfg, out string stateName, out Color stateBadgeColor);
             DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, health, ToLegacyPhase(display.Phase), compatibility.LegacyStateTimer, compatibility.LegacyStateDuration);
         });
     }
@@ -165,7 +165,7 @@ public static class HudRenderSystem
         });
     }
 
-    private readonly record struct BossDisplayData(BossState State, Phase Phase, AttackId AttackId, bool IsInvulnerable, AttackStage AttackStage);
+    private readonly record struct BossDisplayData(BossState State, Phase Phase, BossSkill Skill, bool IsInvulnerable, AttackStage AttackStage);
 
     private static BossDisplayData GetBossDisplayData(Entity entity, in BossCompatibilityData compatibility)
     {
@@ -175,7 +175,7 @@ public static class HudRenderSystem
             return new BossDisplayData(
                 debugData.BossState,
                 debugData.Phase,
-                debugData.AttackId,
+                debugData.Skill,
                 debugData.IsInvulnerable,
                 debugData.AttackStage);
         }
@@ -183,7 +183,7 @@ public static class HudRenderSystem
         return new BossDisplayData(
             compatibility.BossState,
             compatibility.Phase,
-            compatibility.AttackId,
+            compatibility.Skill,
             compatibility.IsInvulnerable,
             compatibility.AttackStage);
     }
@@ -198,27 +198,30 @@ public static class HudRenderSystem
         };
     }
 
-    private static void GetBossStateInfo(BossState state, AttackId attackId, BossHpBarRenderConfig hpCfg, out string stateName, out Color badgeColor)
+    private static void GetBossStateInfo(BossState state, BossSkill skill, BossHpBarRenderConfig hpCfg, out string stateName, out Color badgeColor)
     {
         stateName = state switch
         {
             BossState.Boss1_Hover => "[STATE: HOVERING (IDLE)]",
             BossState.Boss1_AttackSelection => "[STATE: ATTACK SELECTION]",
-            BossState.Boss1_Telegraph => $"[STATE: TELEGRAPHING (WIND-UP: {attackId.Value})]",
+            BossState.Boss1_Telegraph => $"[STATE: TELEGRAPHING (WIND-UP: {skill})]",
+
             BossState.Boss1_Recovery or BossState.Boss2_Recovery => "[STATE: RECOVERING (VULNERABLE)]",
             BossState.Boss1_PhaseTransition or BossState.Boss2_PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
             BossState.Boss1_Dead or BossState.Boss2_Dead => "[STATE: DEFEATED]",
             BossState.Boss2_Idle => "[STATE: IDLE / ALERT]",
-            BossState.Boss2_PatrolChase => $"[STATE: CHASE (NEXT: {attackId.Value})]",
+            BossState.Boss2_PatrolChase => $"[STATE: CHASE (NEXT: {skill})]",
             BossState.Boss2_MoveToTakeoff => "[STATE: NAVIGATING TO TAKEOFF]",
             BossState.Boss2_PlatformJump => "[STATE: PLATFORM JUMP (AIRBORNE)]",
             BossState.Boss2_PlatformFall => "[STATE: PLATFORM FALLING]",
             BossState.Boss2_LandingRecovery => "[STATE: LANDING IMPACT]",
             BossState.Boss2_WallCrashStun => "[STATE: WALL CRASH STUNNED (VULNERABLE)]",
-            _ when IsTelegraphState(state) => $"[STATE: TELEGRAPH ({attackId.Value})]",
-            _ when IsExecuteState(state) => $"[STATE: EXECUTING ({attackId.Value})]",
+            _ when IsTelegraphState(state) => $"[STATE: TELEGRAPH ({skill})]",
+            _ when IsExecuteState(state) => $"[STATE: EXECUTING ({skill})]",
             _ => "[STATE: UNKNOWN]"
         };
+
+
 
         badgeColor = state switch
         {

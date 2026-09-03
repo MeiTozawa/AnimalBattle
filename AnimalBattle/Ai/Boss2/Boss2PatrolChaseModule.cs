@@ -144,18 +144,19 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
                 isPlayerGrounded,
                 isPlayerAirborne);
 
-            AttackId chosenAttack = BossDecisionEvaluator.EvaluateWeighted(
+            BossSkill chosenAttack = BossDecisionEvaluator.EvaluateWeighted(
                 settings.Rules,
                 _state.CooldownTracker,
                 in decisionContext);
 
-            if (chosenAttack != AttackId.Unknown)
+
+            if (chosenAttack != BossSkill.None)
             {
                 // 選択された技能の冷却時間をトリガー
                 for (int index = 0; index < settings.Rules.Count; index++)
                 {
                     AttackDecisionRule rule = settings.Rules[index];
-                    if (rule.AttackId == chosenAttack)
+                    if (rule.Skill == chosenAttack)
                     {
                         _state.CooldownTracker.Trigger(chosenAttack, rule.Cooldown);
                         break;
@@ -178,20 +179,21 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
         _state.StateElapsed = 0.0f;
     }
 
-    private void ExecuteAttack(AttackId attackId, ref StateContext context, in LifecycleInvocation invocation)
+    private void ExecuteAttack(BossSkill skill, ref StateContext context, in LifecycleInvocation invocation)
     {
-        if (!Boss2ModuleSupport.GetPattern(_configuration, attackId, in context, in invocation, out Boss2AttackPattern pattern))
+        if (!Boss2ModuleSupport.GetPattern(_configuration, skill, in context, in invocation, out Boss2AttackPattern pattern))
         {
-            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: attackId, errorCode: ErrorCode.InvalidAttackId));
+            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
-        _state.CurrentAttackId = pattern.AttackId;
+
+        _state.CurrentSkill = pattern.Skill;
         _state.AttackStartPosition = _state.CurrentPosition;
         _state.AttackTargetPosition = new Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         _state.IsAttackActive = true;
-        _state.RequestTransition(Boss2StateIds.GetTelegraphState(attackId), new TransitionReason(ReasonKind.PlayerObservation, attackId: attackId));
+        _state.RequestTransition(Boss2StateIds.GetTelegraphState(skill), new TransitionReason(ReasonKind.PlayerObservation, skill: skill));
     }
 
     private void SelectNextLegacyAttack(ref StateContext context, in LifecycleInvocation invocation)
@@ -205,7 +207,8 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
 
         int index = _state.CurrentAttackIndex % settings.AttackOrder.Count;
         _state.CurrentAttackIndex++;
-        AttackId attackId = settings.AttackOrder[index];
-        ExecuteAttack(attackId, ref context, in invocation);
+        BossSkill skill = settings.AttackOrder[index];
+        ExecuteAttack(skill, ref context, in invocation);
     }
 }
+

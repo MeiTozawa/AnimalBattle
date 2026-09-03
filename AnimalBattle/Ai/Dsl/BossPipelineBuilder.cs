@@ -49,7 +49,7 @@ public sealed class BossPipelineBuilder
     public BossBehaviorPipeline Build()
     {
         Dictionary<Phase, IReadOnlyList<AttackDecisionRule>> rulesByPhase = [];
-        Dictionary<AttackId, AttackDefinition> attacks = [];
+        Dictionary<BossSkill, AttackDefinition> attacks = [];
 
         foreach (PhasePipelineBuilder phaseBuilder in _phaseBuilders)
         {
@@ -57,7 +57,7 @@ public sealed class BossPipelineBuilder
             foreach (AttackPipelineBuilder attackBuilder in phaseBuilder.AttackBuilders)
             {
                 AttackDefinition def = attackBuilder.BuildAttackDefinition();
-                attacks[attackBuilder.AttackId] = def;
+                attacks[attackBuilder.Skill] = def;
 
                 AttackDecisionRule? rule = attackBuilder.BuildDecisionRule();
                 if (rule.HasValue)
@@ -71,3 +71,4 @@ public sealed class BossPipelineBuilder
         return new BossBehaviorPipeline(_bossType, _name, rulesByPhase, attacks);
     }
 }
+

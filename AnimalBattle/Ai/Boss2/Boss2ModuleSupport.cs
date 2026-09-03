@@ -15,7 +15,7 @@ internal static class Boss2ModuleSupport
         DiagnosticSeverity severity,
         ErrorCode errorCode,
         string message,
-        AttackId attackId = default,
+        BossSkill skill = default,
         AttackStage stage = AttackStage.None)
     {
         ObservationEvent observation = new(
@@ -26,9 +26,9 @@ internal static class Boss2ModuleSupport
             invocation.Operation,
             context.FrameUpdateNumber,
             context.DeltaTime,
-            attackId,
+            skill,
             stage,
-            new TransitionReason(ReasonKind.Configuration, attackId: attackId, errorCode: errorCode),
+            new TransitionReason(ReasonKind.Configuration, skill: skill, errorCode: errorCode),
             severity,
             errorCode,
             message);
@@ -44,17 +44,17 @@ internal static class Boss2ModuleSupport
 
     internal static bool GetPattern(
         IBoss2Configuration configuration,
-        AttackId attackId,
+        BossSkill skill,
         in StateContext context,
         in LifecycleInvocation invocation,
         out Boss2AttackPattern pattern)
     {
-        if (configuration.GetAttack(attackId, out pattern) && pattern.IsValid)
+        if (configuration.GetAttack(skill, out pattern) && pattern.IsValid)
         {
             return true;
         }
 
-        Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidAttackId, "Boss2 の攻撃設定が不正です。", attackId);
+        Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss2 の攻撃設定が不正です。", skill);
         pattern = null!;
         return false;
     }
@@ -82,9 +82,9 @@ internal sealed class Boss2TelegraphRunner
     internal void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
         _active = null;
-        if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentAttackId, in context, in invocation, out Boss2AttackPattern pattern))
+        if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentSkill, in context, in invocation, out Boss2AttackPattern pattern))
         {
-            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
+            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
@@ -95,7 +95,7 @@ internal sealed class Boss2TelegraphRunner
         _active.Enter(ref context, in invocation);
         if (!_active.IsActive && !_active.IsComplete)
         {
-            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
         }
     }
 
@@ -109,14 +109,14 @@ internal sealed class Boss2TelegraphRunner
         _active.Update(ref context, in invocation);
         if (IsComplete)
         {
-            BossState executeState = Boss2StateIds.GetExecuteState(_state.CurrentAttackId);
+            BossState executeState = Boss2StateIds.GetExecuteState(_state.CurrentSkill);
             if (!executeState.IsValid())
             {
-                _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
+                _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
                 return;
             }
 
-            _state.RequestTransition(executeState, new TransitionReason(ReasonKind.TimerElapsed, attackId: _state.CurrentAttackId));
+            _state.RequestTransition(executeState, new TransitionReason(ReasonKind.TimerElapsed, skill: _state.CurrentSkill));
         }
     }
 
@@ -142,17 +142,18 @@ internal sealed class Boss2RecoveryRunner
     internal void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
         _active = null;
-        if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentAttackId, in context, in invocation, out Boss2AttackPattern pattern))
+        if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentSkill, in context, in invocation, out Boss2AttackPattern pattern))
         {
-            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
+            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
+
 
         _active = new RecoveryModule(Boss2StateIds.Recovery, pattern.Definition);
         _active.Enter(ref context, in invocation);
         if (!_active.IsActive && !_active.CanEvaluateNextTransition)
         {
-            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
         }
     }
 
@@ -167,7 +168,7 @@ internal sealed class Boss2RecoveryRunner
         _state.StateElapsed = _active.Elapsed;
 
         // 泰山圧頂（LeapSmash）の易傷着地後隙（2.0s）中は移動を完全停止しプレイヤーの攻撃好機を維持
-        if (_state.CurrentAttackId == Boss2AttackIds.LeapSmash)
+        if (_state.CurrentSkill == BossSkill.LeapSmash)
         {
             context.Movement.Stop();
         }
@@ -175,9 +176,8 @@ internal sealed class Boss2RecoveryRunner
         if (_active.CanEvaluateNextTransition)
         {
             _state.IsAttackActive = false;
-            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.AttackCompleted, attackId: _state.CurrentAttackId));
+            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
         }
-
     }
 
     internal void Exit(ref StateContext context, in LifecycleInvocation invocation)
@@ -187,3 +187,4 @@ internal sealed class Boss2RecoveryRunner
         _state.StateElapsed = 0.0f;
     }
 }
+

@@ -29,7 +29,7 @@ public readonly record struct DiagnosticResult
     /// <param name="errorCode">警告の分類。</param>
     /// <param name="message">原因、影響、継続処理を表す簡潔な日本語メッセージ。</param>
     /// <param name="stateId">診断対象の状態識別子。</param>
-    /// <param name="attackId">診断対象の攻撃識別子。</param>
+    /// <param name="skill">診断対象の技能識別子。</param>
     /// <param name="phase">診断時点の Phase。</param>
     /// <param name="entityId">診断対象の Entity 識別子。</param>
     /// <param name="frameUpdateNumber">診断時点のフレーム更新番号。</param>
@@ -40,7 +40,7 @@ public readonly record struct DiagnosticResult
         ErrorCode errorCode,
         string message,
         BossState stateId = default,
-        AttackId attackId = default,
+        BossSkill skill = default,
         Phase phase = Phase.Unknown,
         ulong entityId = 0,
         long frameUpdateNumber = 0,
@@ -51,7 +51,7 @@ public readonly record struct DiagnosticResult
             errorCode,
             message,
             stateId,
-            attackId,
+            skill,
             phase,
             entityId,
             frameUpdateNumber,
@@ -65,7 +65,7 @@ public readonly record struct DiagnosticResult
     /// <param name="errorCode">エラー分類。</param>
     /// <param name="message">原因を表す簡潔な日本語メッセージ。</param>
     /// <param name="stateId">診断対象の状態識別子。</param>
-    /// <param name="attackId">診断対象の攻撃識別子。</param>
+    /// <param name="skill">診断対象の技能識別子。</param>
     /// <param name="phase">診断時点の Phase。</param>
     /// <param name="entityId">診断対象の Entity 識別子。</param>
     /// <param name="frameUpdateNumber">診断時点のフレーム更新番号。</param>
@@ -77,7 +77,7 @@ public readonly record struct DiagnosticResult
         ErrorCode errorCode,
         string message,
         BossState stateId = default,
-        AttackId attackId = default,
+        BossSkill skill = default,
         Phase phase = Phase.Unknown,
         ulong entityId = 0,
         long frameUpdateNumber = 0,
@@ -88,7 +88,7 @@ public readonly record struct DiagnosticResult
             errorCode,
             message,
             stateId,
-            attackId,
+            skill,
             phase,
             entityId,
             frameUpdateNumber,
@@ -125,14 +125,10 @@ public readonly record struct DiagnosticResult
     /// </summary>
     public BossState State { get; }
 
-    /// <summary>旧プロパティ名です。値の型は固定 BossState です。</summary>
-    [Obsolete("State を使用してください。")]
-    public BossState StateId => State;
-
     /// <summary>
-    /// 診断対象の攻撃識別子を取得します。
+    /// 診断対象の技能識別子を取得します。
     /// </summary>
-    public AttackId AttackId { get; }
+    public BossSkill Skill { get; }
 
     /// <summary>
     /// 診断時点の Phase を取得します。
@@ -159,17 +155,13 @@ public readonly record struct DiagnosticResult
     /// </summary>
     public BossState RecoveryState { get; }
 
-    /// <summary>旧プロパティ名です。</summary>
-    [Obsolete("RecoveryState を使用してください.")]
-    public BossState RecoveryBossState => RecoveryState;
-
     private DiagnosticResult(
         bool isSuccess,
         DiagnosticSeverity severity,
         ErrorCode errorCode,
         string message,
         BossState stateId,
-        AttackId attackId,
+        BossSkill skill,
         Phase phase,
         ulong entityId,
         long frameUpdateNumber,
@@ -182,11 +174,12 @@ public readonly record struct DiagnosticResult
         ErrorCode = errorCode;
         Message = message;
         State = stateId;
-        AttackId = attackId;
+        Skill = skill;
         Phase = phase;
         EntityId = entityId;
         FrameUpdateNumber = frameUpdateNumber;
         UpdateSource = updateSource;
         RecoveryState = recoveryBossState;
     }
+
 }

@@ -21,9 +21,9 @@ public readonly record struct TransitionReason
     public float Threshold { get; }
 
     /// <summary>
-    /// 遷移理由に関連する攻撃識別子を取得します。
+    /// 遷移理由に関連する技能識別子を取得します。
     /// </summary>
-    public AttackId AttackId { get; }
+    public BossSkill Skill { get; }
 
     /// <summary>
     /// 遷移に関連するエラー分類を取得します。
@@ -45,25 +45,26 @@ public readonly record struct TransitionReason
     /// </summary>
     /// <param name="kind">遷移理由の分類。</param>
     /// <param name="threshold">遷移判断に使用した閾値。</param>
-    /// <param name="attackId">関連する攻撃識別子。</param>
+    /// <param name="skill">関連する技能識別子。</param>
     /// <param name="errorCode">関連するエラー分類。</param>
     /// <param name="originalInput">遷移を発生させた元入力。</param>
     /// <param name="supplementaryValue">理由に付随する補足値。</param>
     public TransitionReason(
         ReasonKind kind,
         float threshold = 0,
-        AttackId attackId = default,
+        BossSkill skill = default,
         ErrorCode errorCode = ErrorCode.None,
         long originalInput = 0,
         long supplementaryValue = 0)
     {
         Kind = kind;
         Threshold = threshold;
-        AttackId = attackId;
+        Skill = skill;
         ErrorCode = errorCode;
         OriginalInput = originalInput;
         SupplementaryValue = supplementaryValue;
     }
+
 
     /// <summary>
     /// 理由に保持された閾値が有限値かどうかを取得します。

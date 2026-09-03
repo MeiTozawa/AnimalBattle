@@ -19,23 +19,24 @@ namespace AnimalBattle.Ai.Runtime;
 /// </remarks>
 public static class MigrationAdapter
 {
-    private static readonly FrozenDictionary<string, AttackId> _attackNames =
-        new Dictionary<string, AttackId>(StringComparer.OrdinalIgnoreCase)
+    private static readonly FrozenDictionary<string, BossSkill> _attackNames =
+        new Dictionary<string, BossSkill>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Aimed3Shot"] = Boss1AttackIds.Aimed3Shot,
-            ["RingBurst"] = Boss1AttackIds.RingBurst,
-            ["DoubleSpiral"] = Boss1AttackIds.DoubleSpiral,
-            ["RainDrop"] = Boss1AttackIds.RainDrop,
-            ["CrossChaos"] = Boss1AttackIds.CrossChaos,
-            ["FastSniper"] = Boss1AttackIds.FastSniper,
-            ["DiveRam"] = Boss1AttackIds.DiveRam,
-            ["HeavySlash"] = Boss2AttackIds.HeavySlash,
-            ["DoubleCleave"] = Boss2AttackIds.DoubleCleave,
-            ["GroundStomp"] = Boss2AttackIds.GroundStomp,
-            ["LeapSmash"] = Boss2AttackIds.LeapSmash,
-            ["FrenzyCharge"] = Boss2AttackIds.FrenzyCharge,
-            ["EarthquakeRoar"] = Boss2AttackIds.EarthquakeRoar
+            ["Aimed3Shot"] = BossSkill.Aimed3Shot,
+            ["RingBurst"] = BossSkill.RingBurst,
+            ["DoubleSpiral"] = BossSkill.DoubleSpiral,
+            ["RainDrop"] = BossSkill.RainDrop,
+            ["CrossChaos"] = BossSkill.CrossChaos,
+            ["FastSniper"] = BossSkill.FastSniper,
+            ["DiveRam"] = BossSkill.DiveRam,
+            ["HeavySlash"] = BossSkill.HeavySlash,
+            ["DoubleCleave"] = BossSkill.DoubleCleave,
+            ["GroundStomp"] = BossSkill.GroundStomp,
+            ["LeapSmash"] = BossSkill.LeapSmash,
+            ["FrenzyCharge"] = BossSkill.FrenzyCharge,
+            ["EarthquakeRoar"] = BossSkill.EarthquakeRoar
         }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+
 
     /// <summary>旧 component から Boss1 の新 runtime data を生成します。</summary>
     /// <param name="stateMachine">変換元の旧 Boss1 state machine。</param>
@@ -45,26 +46,26 @@ public static class MigrationAdapter
         in Boss1StateMachine stateMachine,
         in Boss1Stats stats)
     {
-        AttackId attackId = ResolveAttackName(stateMachine.CurrentSkillName);
+        BossSkill skill = ResolveAttackName(stateMachine.CurrentSkillName);
         bool attackRequired = stateMachine.CurrentState is Boss1StateKind.Telegraphing or Boss1StateKind.Casting;
-        if (!MapBoss1State(stateMachine.CurrentState, attackId, out BossState stateId))
+        if (!MapBoss1State(stateMachine.CurrentState, skill, out BossState stateId))
         {
-            BossState safeState = attackRequired && !attackId.IsValid
+            BossState safeState = attackRequired && !skill.IsValid()
                 ? BossState.Boss1_AttackSelection
                 : BossState.Boss1_Hover;
-            AttackId safeAttackId = attackRequired && !attackId.IsValid
-                ? AttackId.Unknown
-                : attackId;
-            ErrorCode errorCode = attackRequired && !attackId.IsValid
-                ? ErrorCode.InvalidAttackId
+            BossSkill safeSkill = attackRequired && !skill.IsValid()
+                ? BossSkill.None
+                : skill;
+            ErrorCode errorCode = attackRequired && !skill.IsValid()
+                ? ErrorCode.InvalidBossSkill
                 : ErrorCode.InvalidStateId;
-            string reason = attackRequired && !attackId.IsValid
-                ? "攻撃段階に必要な AttackId を解決できません。"
+            string reason = attackRequired && !skill.IsValid()
+                ? "攻撃段階に必要な BossSkill を解決できません。"
                 : "固定 BossState に対応しない旧状態です。";
             return CreateSafeResult(
                 BossType.Boss1,
                 safeState,
-                safeAttackId,
+                safeSkill,
                 ToSafePhase(stats.Phase),
                 stateMachine.StateTimer,
                 stateMachine.StateDuration,
@@ -91,15 +92,15 @@ public static class MigrationAdapter
                     stateMachine.CurrentSkillName,
                     reason,
                     safeState,
-                    safeAttackId));
+                    safeSkill));
         }
 
-        if (attackRequired && !attackId.IsValid)
+        if (attackRequired && !skill.IsValid())
         {
             return CreateSafeResult(
                 BossType.Boss1,
                 BossState.Boss1_AttackSelection,
-                AttackId.Unknown,
+                BossSkill.None,
                 ToSafePhase(stats.Phase),
                 stateMachine.StateTimer,
                 stateMachine.StateDuration,
@@ -119,20 +120,22 @@ public static class MigrationAdapter
                 actionSpeed: 0,
                 facingRight: false,
                 comboIndex: 0,
-                ErrorCode.InvalidAttackId,
+                ErrorCode.InvalidBossSkill,
                 CreateConversionWarningMessage(
                     "Boss1",
                     stateMachine.CurrentState,
                     stateMachine.CurrentSkillName,
-                    "攻撃段階に必要な AttackId を解決できません。",
+                    "攻撃段階に必要な BossSkill を解決できません。",
                     BossState.Boss1_AttackSelection,
-                    AttackId.Unknown));
+                    BossSkill.None));
+
         }
 
         return BuildResult(
             BossType.Boss1,
             stateId,
-            attackId,
+            skill,
+
             ToSafePhase(stats.Phase),
             stateMachine.StateTimer,
             stateMachine.StateDuration,
@@ -162,16 +165,16 @@ public static class MigrationAdapter
         in Boss2StateMachine stateMachine,
         in Boss2Stats stats)
     {
-        AttackId legacyAttackId = ResolveAttackName(stateMachine.CurrentSkillName);
-        bool hasStateAttackId = ResolveBoss2StateAttack(stateMachine.CurrentState, out AttackId stateAttackId);
-        AttackId attackId = hasStateAttackId ? stateAttackId : legacyAttackId;
+        BossSkill legacySkill = ResolveAttackName(stateMachine.CurrentSkillName);
+        bool hasStateSkill = ResolveBoss2StateAttack(stateMachine.CurrentState, out BossSkill stateSkill);
+        BossSkill skill = hasStateSkill ? stateSkill : legacySkill;
         bool attackRequired = stateMachine.IsTelegraphing || stateMachine.IsAttacking;
         if (!MapBoss2State(stateMachine.CurrentState, out BossState stateId))
         {
             return CreateSafeResult(
                 BossType.Boss2,
                 BossState.Boss2_Idle,
-                attackId,
+                skill,
                 ToSafePhase(stats.Phase),
                 stateMachine.StateTimer,
                 stateMachine.StateDuration,
@@ -198,15 +201,15 @@ public static class MigrationAdapter
                     stateMachine.CurrentSkillName,
                     "固定 BossState に対応しない旧状態です。",
                     BossState.Boss2_Idle,
-                    attackId));
+                    skill));
         }
 
-        if (hasStateAttackId && legacyAttackId != stateAttackId)
+        if (hasStateSkill && legacySkill != stateSkill)
         {
             return CreateSafeResult(
                 BossType.Boss2,
                 stateId,
-                stateAttackId,
+                stateSkill,
                 ToSafePhase(stats.Phase),
                 stateMachine.StateTimer,
                 stateMachine.StateDuration,
@@ -226,22 +229,22 @@ public static class MigrationAdapter
                 stateMachine.ActionSpeed,
                 stats.FacingRight,
                 stats.ComboIndex,
-                ErrorCode.InvalidAttackId,
+                ErrorCode.InvalidBossSkill,
                 CreateConversionWarningMessage(
                     "Boss2",
                     stateMachine.CurrentState,
                     stateMachine.CurrentSkillName,
-                    "攻撃別の旧状態と AttackId が一致しないため、状態に対応する安全な AttackId を使用します。",
+                    "攻撃別の旧状態と BossSkill が一致しないため、状態に対応する安全な BossSkill を使用します。",
                     stateId,
-                    stateAttackId));
+                    stateSkill));
         }
 
-        if (attackRequired && !attackId.IsValid)
+        if (attackRequired && !skill.IsValid())
         {
             return CreateSafeResult(
                 BossType.Boss2,
                 BossState.Boss2_Idle,
-                AttackId.Unknown,
+                BossSkill.None,
                 ToSafePhase(stats.Phase),
                 stateMachine.StateTimer,
                 stateMachine.StateDuration,
@@ -261,20 +264,21 @@ public static class MigrationAdapter
                 stateMachine.ActionSpeed,
                 stats.FacingRight,
                 stats.ComboIndex,
-                ErrorCode.InvalidAttackId,
+                ErrorCode.InvalidBossSkill,
                 CreateConversionWarningMessage(
                     "Boss2",
                     stateMachine.CurrentState,
                     stateMachine.CurrentSkillName,
-                    "攻撃段階に必要な AttackId を解決できません。",
+                    "攻撃段階に必要な BossSkill を解決できません。",
                     BossState.Boss2_Idle,
-                    AttackId.Unknown));
+                    BossSkill.None));
         }
+
 
         return BuildResult(
             BossType.Boss2,
             stateId,
-            attackId,
+            skill,
             ToSafePhase(stats.Phase),
             stateMachine.StateTimer,
             stateMachine.StateDuration,
@@ -296,6 +300,7 @@ public static class MigrationAdapter
             stats.ComboIndex);
     }
 
+
     /// <summary>変換済み Boss1 data を runtime slot へ取り込みます。</summary>
     public static ErrorOr.ErrorOr<ErrorOr.Success> ImportBoss1(
         BossRuntimeSlot runtime,
@@ -303,6 +308,7 @@ public static class MigrationAdapter
         in Boss1Stats stats,
         out DiagnosticResult diagnostic)
     {
+
         ArgumentNullException.ThrowIfNull(runtime);
         MigrationResult migration = ConvertBoss1(in stateMachine, in stats);
         if (!migration.IsSuccess)
@@ -319,7 +325,7 @@ public static class MigrationAdapter
                 ErrorCode.MissingDependency,
                 "旧 Boss1 値を現在の runtime slot へ適用できません。",
                 migration.AiData.BossState,
-                migration.AttackData.AttackId,
+                migration.AttackData.Skill,
                 migration.AiData.Phase,
                 runtime.EntityId,
                 runtime.FrameUpdateNumber,
@@ -357,7 +363,7 @@ public static class MigrationAdapter
                 ErrorCode.MissingDependency,
                 "旧 Boss2 値を現在の runtime slot へ適用できません。",
                 migration.AiData.BossState,
-                migration.AttackData.AttackId,
+                migration.AttackData.Skill,
                 migration.AiData.Phase,
                 runtime.EntityId,
                 runtime.FrameUpdateNumber,
@@ -387,8 +393,9 @@ public static class MigrationAdapter
         in BossCompatibilityData currentView)
     {
         BossCompatibilityData view = currentView;
-        view.LegacyAttackValue = attackData.AttackId.Value;
+        view.LegacyAttackValue = (int)attackData.Skill;
         view.LegacyStateTimer = aiData.StateTimer;
+
         view.LegacyStateDuration = aiData.StateDuration;
         view.LegacyIsInvulnerable = aiData.IsInvulnerable;
         view.LegacyStartX = movementData.StartPosition.X;
@@ -403,7 +410,7 @@ public static class MigrationAdapter
             : aiData.UpdateSource;
         view.BossState = aiData.BossState;
         view.Phase = aiData.Phase;
-        view.AttackId = attackData.AttackId;
+        view.Skill = attackData.Skill;
         view.IsInvulnerable = aiData.IsInvulnerable;
         view.AttackStage = attackData.Stage;
         view.FrameUpdateNumber = aiData.FrameUpdateNumber;
@@ -433,7 +440,7 @@ public static class MigrationAdapter
                 ErrorCode.InvalidStateId,
                 $"新 runtime の Boss1 状態「{runtime.CurrentStateId}」を旧互換参照へ変換できません。理由: 旧 Boss1 状態に対応しません。影響: 当該状態と攻撃は旧参照へ表示しません。継続: Hovering の安全値で HUD、衝突、再起動の互換処理を継続します。",
                 runtime.CurrentStateId,
-                runtime.AttackData.AttackId,
+                runtime.AttackData.Skill,
                 runtime.Phase,
                 runtime.EntityId,
                 runtime.FrameUpdateNumber,
@@ -447,7 +454,7 @@ public static class MigrationAdapter
         stateMachine.StateTimer = compatibility.LegacyStateTimer;
         stateMachine.StateDuration = compatibility.LegacyStateDuration;
         stateMachine.CurrentSkillIndex = compatibility.LegacySkillIndex;
-        stateMachine.CurrentSkillName = GetLegacySkillName(compatibility.AttackId);
+        stateMachine.CurrentSkillName = GetLegacySkillName(compatibility.Skill);
         stateMachine.SubTimer = compatibility.LegacySubTimer;
         stateMachine.AngleOffset = compatibility.LegacyAngleOffset;
         stateMachine.StartX = compatibility.LegacyStartX;
@@ -489,7 +496,7 @@ public static class MigrationAdapter
                 ErrorCode.InvalidStateId,
                 $"新 runtime の Boss2 状態「{runtime.CurrentStateId}」を旧互換参照へ変換できません。理由: 旧 Boss2 状態に対応しません。影響: 当該状態と攻撃は旧参照へ表示しません。継続: Idle の安全値で HUD、衝突、再起動の互換処理を継続します。",
                 runtime.CurrentStateId,
-                runtime.AttackData.AttackId,
+                runtime.AttackData.Skill,
                 runtime.Phase,
                 runtime.EntityId,
                 runtime.FrameUpdateNumber,
@@ -498,12 +505,13 @@ public static class MigrationAdapter
             return ErrorOr.Result.Success;
         }
 
+
         BossCompatibilityData compatibility = runtime.CompatibilityView;
         stateMachine.CurrentState = state;
         stateMachine.StateTimer = compatibility.LegacyStateTimer;
         stateMachine.StateDuration = compatibility.LegacyStateDuration;
         stateMachine.CurrentSkillIndex = compatibility.LegacySkillIndex;
-        stateMachine.CurrentSkillName = GetLegacySkillName(compatibility.AttackId);
+        stateMachine.CurrentSkillName = GetLegacySkillName(compatibility.Skill);
         stateMachine.SubTimer = compatibility.LegacySubTimer;
         stateMachine.StartX = compatibility.LegacyStartX;
         stateMachine.StartY = compatibility.LegacyStartY;
@@ -549,7 +557,7 @@ public static class MigrationAdapter
                 ErrorCode.ExecutionFailed,
                 $"Frame {runtime.FrameUpdateNumber} の Update_Source を判定できません。理由: 新旧の更新順を特定できません。影響: 旧値は書き戻しません。継続: 新 runtime を固定更新元として既存値で互換処理を継続します。",
                 runtime.CurrentStateId,
-                runtime.AttackData.AttackId,
+                runtime.AttackData.Skill,
                 runtime.Phase,
                 runtime.EntityId,
                 runtime.FrameUpdateNumber,
@@ -561,16 +569,16 @@ public static class MigrationAdapter
         hasMismatch = legacyMigration.BossType != runtime.BossType
             || legacyMigration.AiData.BossState != runtime.CurrentStateId
             || legacyMigration.AiData.Phase != runtime.Phase
-            || legacyMigration.AttackData.AttackId != runtime.AttackData.AttackId
+            || legacyMigration.AttackData.Skill != runtime.AttackData.Skill
             || legacyMigration.AttackData.Stage != runtime.AttackData.Stage
             || legacyMigration.AiData.IsInvulnerable != runtime.AiData.IsInvulnerable;
         if (hasMismatch)
         {
             diagnostic = DiagnosticResult.Warning(
                 ErrorCode.ExecutionFailed,
-                $"Frame {runtime.FrameUpdateNumber} で新旧の Boss 値が不一致です。元値: 旧状態 {legacyMigration.AiData.BossState}、旧 AttackId {legacyMigration.AttackData.AttackId.Value}。理由: 固定更新元 {UpdateSource.NewRuntime} と旧 component の値が異なります。影響: 旧値は runtime を上書きしません。継続: 新 runtime の状態 {runtime.CurrentStateId}、AttackId {runtime.AttackData.AttackId.Value} で互換処理を継続します。",
+                $"Frame {runtime.FrameUpdateNumber} で新旧の Boss 値が不一致です。元値: 旧状態 {legacyMigration.AiData.BossState}、旧 BossSkill {legacyMigration.AttackData.Skill}。理由: 固定更新元 {UpdateSource.NewRuntime} と旧 component の値が異なります。影響: 旧値は runtime を上書きしません。継続: 新 runtime の状態 {runtime.CurrentStateId}、BossSkill {runtime.AttackData.Skill} で互換処理を継続します。",
                 runtime.CurrentStateId,
-                runtime.AttackData.AttackId,
+                runtime.AttackData.Skill,
                 runtime.Phase,
                 runtime.EntityId,
                 runtime.FrameUpdateNumber,
@@ -617,7 +625,7 @@ public static class MigrationAdapter
                 ErrorCode.MissingDependency,
                 "移行用 State_Context の Entity 識別子が未指定です。",
                 migration.AiData.BossState,
-                migration.AttackData.AttackId,
+                migration.AttackData.Skill,
                 migration.AiData.Phase,
                 entityId);
             return ErrorOr.Error.Validation("MigrationAdapter.CreateContext", "Entity 識別子が未指定です。");
@@ -644,7 +652,7 @@ public static class MigrationAdapter
                 ErrorCode.InvalidConfiguration,
                 "移行用 State_Context の設定 snapshot が未検証です。",
                 migration.AiData.BossState,
-                migration.AttackData.AttackId,
+                migration.AttackData.Skill,
                 migration.AiData.Phase);
             return ErrorOr.Error.Validation("MigrationAdapter.CreateContext", "設定 snapshot が未検証です。");
         }
@@ -664,10 +672,73 @@ public static class MigrationAdapter
         return ErrorOr.Result.Success;
     }
 
+    private static BossCompatibilityData BuildCompatibilityData(
+        BossType bossType,
+        BossState stateId,
+        BossSkill skill,
+        Phase phase,
+        float stateTimer,
+        float stateDuration,
+        bool isInvulnerable,
+        int skillIndex,
+        float subTimer,
+        float angleOffset,
+        Vec2f startPosition,
+        Vec2f targetPosition,
+        Enum legacyState,
+        float baseOrSpawnX,
+        float baseOrSpawnY,
+        float auxiliaryTimer,
+        float hitFlashTimer,
+        float legacyBoss1StatsAngleOffset,
+        float jumpCooldown,
+        float actionSpeed,
+        bool facingRight,
+        int comboIndex)
+    {
+        AttackStage stage = GetAttackStage(stateId);
+        BossCompatibilityData compatibility = new()
+        {
+            LegacyStateValue = Convert.ToInt32(legacyState),
+            LegacyAttackValue = (int)skill,
+            LegacyStateTimer = stateTimer,
+            LegacyStateDuration = stateDuration,
+            LegacyIsInvulnerable = isInvulnerable,
+            LegacySkillIndex = skillIndex,
+            LegacySubTimer = subTimer,
+            LegacyAngleOffset = angleOffset,
+            LegacyStartX = startPosition.X,
+            LegacyStartY = startPosition.Y,
+            LegacyTargetX = targetPosition.X,
+            LegacyTargetY = targetPosition.Y,
+            LegacyBaseOrSpawnX = baseOrSpawnX,
+            LegacyBaseOrSpawnY = baseOrSpawnY,
+            LegacyAuxiliaryTimer = auxiliaryTimer,
+            LegacyHitFlashTimer = hitFlashTimer,
+            LegacyBoss1StatsAngleOffset = legacyBoss1StatsAngleOffset,
+            LegacyJumpCooldown = jumpCooldown,
+            LegacyActionSpeed = actionSpeed,
+            LegacyFacingRight = facingRight,
+            LegacyComboIndex = comboIndex,
+            UpdateSource = UpdateSource.NewRuntime,
+            BossState = stateId,
+            Phase = phase,
+            Skill = skill,
+            TransitionReason = new(ReasonKind.ExternalRequest, skill: skill, originalInput: Convert.ToInt32(legacyState)),
+            IsInvulnerable = isInvulnerable,
+            AttackStage = stage,
+            HasDebugData = false,
+            FrameUpdateNumber = 0
+        };
+
+        return compatibility;
+    }
+
+
     private static MigrationResult BuildResult(
         BossType bossType,
         BossState stateId,
-        AttackId attackId,
+        BossSkill skill,
         Phase phase,
         float stateTimer,
         float stateDuration,
@@ -698,15 +769,6 @@ public static class MigrationAdapter
             AttackGenerationEnabled = stateId is not (BossState.Boss1_Dead or BossState.Boss2_Dead),
             UpdateSource = UpdateSource.NewRuntime
         };
-        BossAttackData attackData = new(attackId, stage)
-        {
-            AttackIndex = skillIndex,
-            SubTimer = subTimer,
-            AngleOffset = angleOffset,
-            TargetPosition = targetPosition,
-            ConfiguredDuration = stateDuration,
-            ElapsedDuration = stateTimer
-        };
         BossMovementData movementData = new(stateId)
         {
             StartPosition = startPosition,
@@ -719,39 +781,16 @@ public static class MigrationAdapter
             IsAirborne = IsAirborne(stateId),
             IsGrounded = bossType == BossType.Boss2 && !IsAirborne(stateId)
         };
-        BossCompatibilityData compatibility = new()
+        BossAttackData attackData = new(skill, stage)
         {
-            LegacyStateValue = Convert.ToInt32(legacyState),
-            LegacyAttackValue = attackId.Value,
-            LegacyStateTimer = stateTimer,
-            LegacyStateDuration = stateDuration,
-            LegacyIsInvulnerable = isInvulnerable,
-            LegacySkillIndex = skillIndex,
-            LegacySubTimer = subTimer,
-            LegacyAngleOffset = angleOffset,
-            LegacyStartX = startPosition.X,
-            LegacyStartY = startPosition.Y,
-            LegacyTargetX = targetPosition.X,
-            LegacyTargetY = targetPosition.Y,
-            LegacyBaseOrSpawnX = baseOrSpawnX,
-            LegacyBaseOrSpawnY = baseOrSpawnY,
-            LegacyAuxiliaryTimer = auxiliaryTimer,
-            LegacyHitFlashTimer = hitFlashTimer,
-            LegacyBoss1StatsAngleOffset = legacyBoss1StatsAngleOffset,
-            LegacyJumpCooldown = jumpCooldown,
-            LegacyActionSpeed = actionSpeed,
-            LegacyFacingRight = facingRight,
-            LegacyComboIndex = comboIndex,
-            UpdateSource = UpdateSource.NewRuntime,
-            BossState = stateId,
-            Phase = phase,
-            AttackId = attackId,
-            TransitionReason = new(ReasonKind.ExternalRequest, attackId: attackId, originalInput: Convert.ToInt32(legacyState)),
-            IsInvulnerable = isInvulnerable,
-            AttackStage = stage,
-            HasDebugData = false,
-            FrameUpdateNumber = 0
+            AttackIndex = skillIndex,
+            SubTimer = subTimer,
+            AngleOffset = angleOffset,
+            TargetPosition = targetPosition,
+            ConfiguredDuration = stateDuration,
+            ElapsedDuration = stateTimer
         };
+        BossCompatibilityData compatibility = BuildCompatibilityData(bossType, stateId, skill, phase, stateTimer, stateDuration, isInvulnerable, skillIndex, subTimer, angleOffset, startPosition, targetPosition, legacyState, baseOrSpawnX, baseOrSpawnY, auxiliaryTimer, hitFlashTimer, legacyBoss1StatsAngleOffset, jumpCooldown, actionSpeed, facingRight, comboIndex);
 
         return new MigrationResult(
             bossType,
@@ -767,7 +806,7 @@ public static class MigrationAdapter
     private static MigrationResult CreateSafeResult(
         BossType bossType,
         BossState safeState,
-        AttackId safeAttackId,
+        BossSkill safeSkill,
         Phase phase,
         float stateTimer,
         float stateDuration,
@@ -793,7 +832,7 @@ public static class MigrationAdapter
         MigrationResult result = BuildResult(
             bossType,
             safeState,
-            safeAttackId,
+            safeSkill,
             phase,
             stateTimer,
             stateDuration,
@@ -817,7 +856,7 @@ public static class MigrationAdapter
             errorCode,
             message,
             safeState,
-            safeAttackId,
+            safeSkill,
             phase,
             updateSource: UpdateSource.NewRuntime,
             recoveryBossState: safeState);
@@ -837,10 +876,10 @@ public static class MigrationAdapter
         string? legacyAttackName,
         string reason,
         BossState safeState,
-        AttackId safeAttackId)
+        BossSkill safeSkill)
     {
         string attackName = string.IsNullOrWhiteSpace(legacyAttackName) ? "未指定" : legacyAttackName;
-        return $"旧 {bossName} の元値: 状態「{legacyState}」(値:{Convert.ToInt32(legacyState)})、攻撃「{attackName}」を安全値へ変換しました。理由: {reason} 影響: 変換不能な状態または攻撃は実行しません。継続: 状態 {safeState}、AttackId {safeAttackId.Value} で処理を継続します。";
+        return $"旧 {bossName} の元値: 状態「{legacyState}」(値:{Convert.ToInt32(legacyState)})、攻撃「{attackName}」を安全値へ変換しました。理由: {reason} 影響: 変換不能な状態または攻撃は実行しません。継続: 状態 {safeState}、BossSkill {safeSkill} で処理を継続します。";
     }
 
     private static MigrationResult CreateFailure(
@@ -848,7 +887,7 @@ public static class MigrationAdapter
         ErrorCode errorCode,
         string message,
         BossState recoveryState,
-        AttackId attackId,
+        BossSkill skill,
         Phase phase,
         BossState stateId = BossState.Unknown)
     {
@@ -857,34 +896,34 @@ public static class MigrationAdapter
             errorCode,
             message,
             stateId,
-            attackId,
+            skill,
             phase,
             recoveryBossState: recoveryState);
         return new MigrationResult(bossType, 0, default, default, default, default, diagnostic);
     }
 
-    private static AttackId ResolveAttackName(string? name)
-        => !string.IsNullOrWhiteSpace(name) && _attackNames.TryGetValue(name, out AttackId attackId)
-            ? attackId
-            : AttackId.Unknown;
+    private static BossSkill ResolveAttackName(string? name)
+        => !string.IsNullOrWhiteSpace(name) && _attackNames.TryGetValue(name, out BossSkill skill)
+            ? skill
+            : BossSkill.None;
 
-    private static string GetLegacySkillName(AttackId attackId)
+    private static string GetLegacySkillName(BossSkill skill)
     {
-        return attackId.Value switch
+        return skill switch
         {
-            1 => "Aimed3Shot",
-            2 => "RingBurst",
-            3 => "DoubleSpiral",
-            4 => "RainDrop",
-            5 => "CrossChaos",
-            6 => "FastSniper",
-            7 => "DiveRam",
-            201 => "HeavySlash",
-            202 => "DoubleCleave",
-            203 => "GroundStomp",
-            204 => "LeapSmash",
-            205 => "FrenzyCharge",
-            206 => "EarthquakeRoar",
+            BossSkill.Aimed3Shot => "Aimed3Shot",
+            BossSkill.RingBurst => "RingBurst",
+            BossSkill.DoubleSpiral => "DoubleSpiral",
+            BossSkill.RainDrop => "RainDrop",
+            BossSkill.CrossChaos => "CrossChaos",
+            BossSkill.FastSniper => "FastSniper",
+            BossSkill.DiveRam => "DiveRam",
+            BossSkill.HeavySlash => "HeavySlash",
+            BossSkill.DoubleCleave => "DoubleCleave",
+            BossSkill.GroundStomp => "GroundStomp",
+            BossSkill.LeapSmash => "LeapSmash",
+            BossSkill.FrenzyCharge => "FrenzyCharge",
+            BossSkill.EarthquakeRoar => "EarthquakeRoar",
             _ => string.Empty
         };
     }
@@ -930,13 +969,13 @@ public static class MigrationAdapter
             _ => AttackStage.None
         };
 
-    private static bool MapBoss1State(Boss1StateKind legacyState, AttackId attackId, out BossState stateId)
+    private static bool MapBoss1State(Boss1StateKind legacyState, BossSkill skill, out BossState stateId)
     {
         stateId = legacyState switch
         {
             Boss1StateKind.Hovering => BossState.Boss1_Hover,
             Boss1StateKind.Telegraphing => BossState.Boss1_Telegraph,
-            Boss1StateKind.Casting => ResolveBoss1Execute(attackId),
+            Boss1StateKind.Casting => ResolveBoss1Execute(skill),
             Boss1StateKind.Recovering => BossState.Boss1_Recovery,
             Boss1StateKind.PhaseTransition => BossState.Boss1_PhaseTransition,
             _ => BossState.Unknown
@@ -944,19 +983,19 @@ public static class MigrationAdapter
         return stateId.IsValid();
     }
 
-    private static bool ResolveBoss2StateAttack(Boss2StateKind legacyState, out AttackId attackId)
+    private static bool ResolveBoss2StateAttack(Boss2StateKind legacyState, out BossSkill skill)
     {
-        attackId = legacyState switch
+        skill = legacyState switch
         {
-            Boss2StateKind.TelegraphHeavySlash or Boss2StateKind.ExecutingHeavySlash => Boss2AttackIds.HeavySlash,
-            Boss2StateKind.TelegraphDoubleCleave or Boss2StateKind.ExecutingDoubleCleave => Boss2AttackIds.DoubleCleave,
-            Boss2StateKind.TelegraphGroundStomp or Boss2StateKind.ExecutingGroundStomp => Boss2AttackIds.GroundStomp,
-            Boss2StateKind.TelegraphLeapSmash or Boss2StateKind.ExecutingLeapAscent or Boss2StateKind.ExecutingLeapDescent => Boss2AttackIds.LeapSmash,
-            Boss2StateKind.TelegraphFrenzyCharge or Boss2StateKind.ExecutingFrenzyCharge => Boss2AttackIds.FrenzyCharge,
-            Boss2StateKind.TelegraphEarthquakeRoar or Boss2StateKind.ExecutingEarthquakeRoar => Boss2AttackIds.EarthquakeRoar,
-            _ => AttackId.Unknown
+            Boss2StateKind.TelegraphHeavySlash or Boss2StateKind.ExecutingHeavySlash => BossSkill.HeavySlash,
+            Boss2StateKind.TelegraphDoubleCleave or Boss2StateKind.ExecutingDoubleCleave => BossSkill.DoubleCleave,
+            Boss2StateKind.TelegraphGroundStomp or Boss2StateKind.ExecutingGroundStomp => BossSkill.GroundStomp,
+            Boss2StateKind.TelegraphLeapSmash or Boss2StateKind.ExecutingLeapAscent or Boss2StateKind.ExecutingLeapDescent => BossSkill.LeapSmash,
+            Boss2StateKind.TelegraphFrenzyCharge or Boss2StateKind.ExecutingFrenzyCharge => BossSkill.FrenzyCharge,
+            Boss2StateKind.TelegraphEarthquakeRoar or Boss2StateKind.ExecutingEarthquakeRoar => BossSkill.EarthquakeRoar,
+            _ => BossSkill.None
         };
-        return attackId.IsValid;
+        return skill.IsValid();
     }
 
     private static bool MapBoss2State(Boss2StateKind legacyState, out BossState stateId)
@@ -1040,8 +1079,9 @@ public static class MigrationAdapter
         return stateId is >= BossState.Boss2_Idle and <= BossState.Boss2_Dead;
     }
 
-    private static BossState ResolveBoss1Execute(AttackId attackId)
-        => Boss1StateIds.GetExecuteState(attackId);
+    private static BossState ResolveBoss1Execute(BossSkill skill)
+        => Boss1StateIds.GetExecuteState(skill);
+
 
     private static bool IsAirborne(BossState stateId)
         => stateId is BossState.Boss2_PlatformJump or BossState.Boss2_PlatformFall

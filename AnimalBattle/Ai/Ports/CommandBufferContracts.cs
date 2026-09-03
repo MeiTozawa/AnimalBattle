@@ -30,13 +30,14 @@ public enum CommandComponentKind
 /// <summary>同じ攻撃 component の二重発行を防ぐ値型 key です。</summary>
 public readonly record struct CommandOneShotKey(
     CommandComponentKind Component,
-    AttackId AttackId,
+    BossSkill Skill,
     int ComponentIndex,
     long FrameUpdateNumber)
+
 {
     /// <summary>key が発行可能な値かどうかを取得します。</summary>
     /// <remarks>
-    /// Movement / Effect の command は AttackId を持たないため、攻撃識別子の検証は
+    /// Movement / Effect の command は BossSkill を持たないため、攻撃識別子の検証は
     /// component の値検証とは分離しています。
     /// </remarks>
     public bool IsValid => (Component is CommandComponentKind.Movement

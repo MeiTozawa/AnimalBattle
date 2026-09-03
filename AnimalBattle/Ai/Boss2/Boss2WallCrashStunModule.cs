@@ -39,8 +39,9 @@ public sealed class Boss2WallCrashStunModule : IBossStateModule, IStateModuleDep
         _state.StateElapsed += context.DeltaTime;
         if (_state.StateElapsed >= 1.2f)
         {
-            _state.RequestTransition(Boss2StateIds.Recovery, new TransitionReason(ReasonKind.TimerElapsed, attackId: _state.CurrentAttackId));
+            _state.RequestTransition(Boss2StateIds.Recovery, new TransitionReason(ReasonKind.TimerElapsed, skill: _state.CurrentSkill));
         }
+
     }
 
     /// <inheritdoc />

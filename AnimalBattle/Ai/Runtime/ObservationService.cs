@@ -77,8 +77,9 @@ public sealed class ObservationService : IObservationService
             operation,
             diagnostic.FrameUpdateNumber,
             0,
-            diagnostic.AttackId,
+            diagnostic.Skill,
             AttackStage.None,
+
             default,
             diagnostic.Severity,
             diagnostic.ErrorCode,

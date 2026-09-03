@@ -165,8 +165,9 @@ public static class EnumCompletenessCheck
 
         if (!AttackStateModuleMap.IsComplete(out string attackDiagnostic))
         {
-            return EnumCompletenessResult.Failure(ErrorCode.InvalidAttackId, attackDiagnostic);
+            return EnumCompletenessResult.Failure(ErrorCode.InvalidBossSkill, attackDiagnostic);
         }
+
 
         if (modules.Count != FixedBossStateModuleCatalog.Entries.Count)
         {

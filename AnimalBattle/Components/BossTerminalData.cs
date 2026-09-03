@@ -18,8 +18,8 @@ public struct BossTerminalData
     public TransitionReason DeathReason;
     /// <summary>死亡を確定した Frame_Update 番号です。</summary>
     public long FrameUpdateNumber;
-    /// <summary>死亡時の攻撃識別子です。</summary>
-    public AttackId AttackId;
+    /// <summary>死亡時の技能識別子です。</summary>
+    public BossSkill Skill;
     /// <summary>死亡時の攻撃段階です。</summary>
     public AttackStage AttackStage;
     /// <summary>死亡時の HP です。</summary>
@@ -41,7 +41,7 @@ public struct BossTerminalData
         Phase phase,
         in TransitionReason deathReason,
         long frameUpdateNumber,
-        AttackId attackId,
+        BossSkill skill,
         AttackStage attackStage,
         float hp)
     {
@@ -55,11 +55,12 @@ public struct BossTerminalData
         Phase = phase;
         DeathReason = deathReason;
         FrameUpdateNumber = frameUpdateNumber;
-        AttackId = attackId;
+        Skill = skill;
         AttackStage = attackStage;
         Hp = hp;
         MovementStopped = false;
         AttackGenerationStopped = true;
         return Result.Success;
     }
+
 }

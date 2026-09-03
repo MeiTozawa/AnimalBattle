@@ -13,7 +13,7 @@ public sealed class BossBehaviorPipeline
     private readonly BossType _bossType;
     private readonly string _name;
     private readonly FrozenDictionary<Phase, IReadOnlyList<AttackDecisionRule>> _rulesByPhase;
-    private readonly FrozenDictionary<AttackId, AttackDefinition> _attacks;
+    private readonly FrozenDictionary<BossSkill, AttackDefinition> _attacks;
 
     /// <summary>Boss の種別を取得します。</summary>
     public BossType BossType => _bossType;
@@ -22,7 +22,7 @@ public sealed class BossBehaviorPipeline
     public string Name => _name;
 
     /// <summary>全攻撃の検証済み AttackDefinition マップを取得します。</summary>
-    public IReadOnlyDictionary<AttackId, AttackDefinition> Attacks => _attacks;
+    public IReadOnlyDictionary<BossSkill, AttackDefinition> Attacks => _attacks;
 
     /// <summary>
     /// パイプラインを初期化します。
@@ -31,7 +31,7 @@ public sealed class BossBehaviorPipeline
         BossType bossType,
         string name,
         Dictionary<Phase, IReadOnlyList<AttackDecisionRule>> rulesByPhase,
-        Dictionary<AttackId, AttackDefinition> attacks)
+        Dictionary<BossSkill, AttackDefinition> attacks)
     {
         _bossType = bossType;
         _name = name;
@@ -52,13 +52,14 @@ public sealed class BossBehaviorPipeline
     }
 
     /// <summary>
-    /// 指定された AttackId の AttackDefinition を取得します。
+    /// 指定された BossSkill の AttackDefinition を取得します。
     /// </summary>
-    /// <param name="attackId">攻撃識別子。</param>
+    /// <param name="skill">技能識別子。</param>
     /// <param name="definition">見つかった攻撃定義。</param>
     /// <returns>定義が存在する場合は true。</returns>
-    public bool TryGetAttack(AttackId attackId, out AttackDefinition definition)
+    public bool TryGetAttack(BossSkill skill, out AttackDefinition definition)
     {
-        return _attacks.TryGetValue(attackId, out definition!);
+        return _attacks.TryGetValue(skill, out definition!);
     }
+
 }

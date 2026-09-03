@@ -39,15 +39,16 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
 
         int nextIndex = (_state.CurrentAttackIndex + 1) % settings.AttackOrder.Count;
         _state.CurrentAttackIndex = nextIndex;
-        AttackId attackId = settings.AttackOrder[nextIndex];
-        if (!_configuration.GetAttack(attackId, out Boss1AttackPattern pattern) || !pattern.IsValid)
+        BossSkill skill = settings.AttackOrder[nextIndex];
+        if (!_configuration.GetAttack(skill, out Boss1AttackPattern pattern) || !pattern.IsValid)
         {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidAttackId, "Boss1 の攻撃設定が不正なため Hover へ復帰します。", attackId);
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, attackId: attackId, errorCode: ErrorCode.InvalidAttackId));
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss1 の攻撃設定が不正なため Hover へ復帰します。", skill);
+            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
-        _state.CurrentAttackId = attackId;
+
+        _state.CurrentSkill = skill;
         _state.AttackStartPosition = _state.CurrentPosition;
         _state.AttackTargetPosition = new Core.Physics.Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
@@ -56,7 +57,8 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
         _state.IsAttackActive = true;
         _state.RequestTransition(
             Boss1StateIds.Telegraph,
-            new TransitionReason(ReasonKind.PlayerObservation, attackId: attackId, originalInput: context.PlayerObservation.EntityId > long.MaxValue ? long.MaxValue : (long)context.PlayerObservation.EntityId));
+            new TransitionReason(ReasonKind.PlayerObservation, skill: skill, originalInput: context.PlayerObservation.EntityId > long.MaxValue ? long.MaxValue : (long)context.PlayerObservation.EntityId));
+
     }
 
     /// <inheritdoc />

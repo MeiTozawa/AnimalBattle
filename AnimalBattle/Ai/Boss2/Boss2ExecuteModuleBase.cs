@@ -34,11 +34,12 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
     public virtual void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
         _gate = null;
-        if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentAttackId, in context, in invocation, out Boss2AttackPattern pattern))
+        if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentSkill, in context, in invocation, out Boss2AttackPattern pattern))
         {
-            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
+            _state.RequestTransition(Boss2StateIds.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
+
 
         float forwardDir = _state.FacingRight ? 1.0f : -1.0f;
         _gate = new ExecuteGate(pattern.Definition, forwardDir);
@@ -61,9 +62,10 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
         if (result.IsComplete)
         {
             _state.IsAttackActive = false;
-            _state.RequestTransition(Boss2StateIds.Recovery, new TransitionReason(ReasonKind.AttackCompleted, attackId: _state.CurrentAttackId));
+            _state.RequestTransition(Boss2StateIds.Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
         }
     }
+
 
     /// <summary>Execute 状態から退場します。</summary>
     public virtual void Exit(ref StateContext context, in LifecycleInvocation invocation)

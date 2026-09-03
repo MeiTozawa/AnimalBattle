@@ -24,8 +24,8 @@ public sealed class Boss1BehaviorState : IBossBehaviorState
     public float AttackSubTimer { get; set; }
     /// <summary>弾幕回転角です。</summary>
     public float AngleOffset { get; set; }
-    /// <summary>現在選択されている攻撃です。</summary>
-    public AttackId CurrentAttackId { get; set; }
+    /// <summary>現在選択されている技能です。</summary>
+    public BossSkill CurrentSkill { get; set; }
     /// <summary>現在攻撃の順序 index です。</summary>
     public int CurrentAttackIndex { get; set; }
     /// <summary>攻撃開始位置です。</summary>
@@ -58,10 +58,11 @@ public sealed class Boss1BehaviorState : IBossBehaviorState
         CurrentPosition = new Vec2f(baseX, baseY);
         AttackStartPosition = CurrentPosition;
         AttackTargetPosition = CurrentPosition;
-        CurrentAttackId = AttackId.Unknown;
+        CurrentSkill = BossSkill.None;
         PendingBossState = BossState.Unknown;
         PendingTransitionReason = TransitionReason.None;
     }
+
 
     /// <inheritdoc />
     public void SynchronizePosition(float x, float y)

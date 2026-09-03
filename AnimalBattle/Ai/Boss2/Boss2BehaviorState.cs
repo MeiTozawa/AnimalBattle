@@ -18,8 +18,8 @@ public sealed class Boss2BehaviorState : IBossBehaviorState
     public float AttackSubTimer { get; set; }
     /// <summary>現在攻撃の順序 index です。</summary>
     public int CurrentAttackIndex { get; set; }
-    /// <summary>現在攻撃 ID です。</summary>
-    public AttackId CurrentAttackId { get; set; }
+    /// <summary>現在技能識別子です。</summary>
+    public BossSkill CurrentSkill { get; set; }
     /// <summary>攻撃開始位置です。</summary>
     public Vec2f AttackStartPosition { get; set; }
     /// <summary>攻撃開始時の対象位置です。</summary>
@@ -64,11 +64,12 @@ public sealed class Boss2BehaviorState : IBossBehaviorState
         CurrentPosition = new Vec2f(startX, startY);
         AttackStartPosition = CurrentPosition;
         AttackTargetPosition = CurrentPosition;
-        CurrentAttackId = AttackId.Unknown;
+        CurrentSkill = BossSkill.None;
         PendingBossState = BossState.Unknown;
         PendingTransitionReason = TransitionReason.None;
         IsPlayerAlive = true;
     }
+
 
     /// <inheritdoc />
     public void SynchronizePosition(float x, float y)

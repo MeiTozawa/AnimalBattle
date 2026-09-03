@@ -39,8 +39,9 @@ public sealed class HoverMovementModule(IBoss1Configuration configuration, Boss1
         {
             _state.RequestTransition(
                 Boss1StateIds.AttackSelection,
-                new TransitionReason(ReasonKind.TimerElapsed, attackId: _state.CurrentAttackId));
+                new TransitionReason(ReasonKind.TimerElapsed, skill: _state.CurrentSkill));
         }
+
     }
 
     /// <inheritdoc />

@@ -24,9 +24,10 @@ public sealed class DiveRamExecuteModule : IBossStateModule, IStateModuleDepende
     {
         ArgumentNullException.ThrowIfNull(configuration);
         _state = state ?? throw new ArgumentNullException(nameof(state));
-        _pattern = configuration.GetAttack(Boss1AttackIds.DiveRam, out Boss1AttackPattern pattern)
+        _pattern = configuration.GetAttack(BossSkill.DiveRam, out Boss1AttackPattern pattern)
             ? pattern
-            : new Boss1AttackPattern(Boss1AttackIds.DiveRam, Boss1AttackKind.DiveRam, 0, 0, 0);
+            : new Boss1AttackPattern(BossSkill.DiveRam, 0, 0, 0);
+
         _gate = new ExecuteGate(_pattern.Definition);
     }
 
@@ -52,7 +53,7 @@ public sealed class DiveRamExecuteModule : IBossStateModule, IStateModuleDepende
         ExecuteResult result = _gate.Execute(ref context, in invocation);
         if (!result.Started)
         {
-            _state.RequestTransition(Boss1StateIds.Recovery, new TransitionReason(ReasonKind.SafetyFallback, attackId: _pattern.AttackId, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(Boss1StateIds.Recovery, new TransitionReason(ReasonKind.SafetyFallback, skill: _pattern.Skill, errorCode: ErrorCode.InvalidConfiguration));
             return;
         }
 
@@ -69,16 +70,17 @@ public sealed class DiveRamExecuteModule : IBossStateModule, IStateModuleDepende
         _state.CurrentPosition = position;
         if (context.Movement.MoveTo(position.X, position.Y).IsError)
         {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の移動 command を発行できませんでした。", _pattern.AttackId, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の移動 command を発行できませんでした。", _pattern.Skill, AttackStage.Execute);
         }
 
         _elapsed = MathF.Min(duration, _elapsed + context.DeltaTime);
         _state.StateElapsed = _elapsed;
         if (result.IsComplete || _elapsed >= duration)
         {
-            _state.RequestTransition(Boss1StateIds.Recovery, new TransitionReason(ReasonKind.AttackCompleted, attackId: _pattern.AttackId));
+            _state.RequestTransition(Boss1StateIds.Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: _pattern.Skill));
         }
     }
+
 
     /// <inheritdoc />
     public void Exit(ref StateContext context, in LifecycleInvocation invocation)

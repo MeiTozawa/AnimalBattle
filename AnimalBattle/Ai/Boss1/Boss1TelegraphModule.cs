@@ -9,7 +9,7 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
 {
     private readonly IBoss1Configuration _configuration;
     private readonly Boss1BehaviorState _state;
-    private readonly TelegraphModule[] _telegraphs;
+    private readonly Dictionary<BossSkill, TelegraphModule> _telegraphs = new();
     private TelegraphModule? _activeTelegraph;
 
     /// <inheritdoc />
@@ -24,14 +24,13 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _state = state ?? throw new ArgumentNullException(nameof(state));
-        _telegraphs = new TelegraphModule[8];
-        for (int value = 1; value < _telegraphs.Length; value++)
+        BossSkill[] boss1Attacks = [BossSkill.Aimed3Shot, BossSkill.RingBurst, BossSkill.DoubleSpiral, BossSkill.RainDrop, BossSkill.CrossChaos, BossSkill.FastSniper, BossSkill.DiveRam];
+        foreach (BossSkill skill in boss1Attacks)
         {
-            AttackId attackId = new(value);
-            AttackDefinition definition = configuration.GetAttack(attackId, out Boss1AttackPattern pattern)
+            AttackDefinition definition = configuration.GetAttack(skill, out Boss1AttackPattern pattern)
                 ? pattern.Definition
-                : new AttackDefinition(attackId, 0, 0, 0, 0);
-            _telegraphs[value] = new TelegraphModule(Boss1StateIds.Telegraph, definition);
+                : new AttackDefinition(skill, 0, 0, 0, 0);
+            _telegraphs[skill] = new TelegraphModule(Boss1StateIds.Telegraph, definition);
         }
     }
 
@@ -40,22 +39,21 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
     {
         _activeTelegraph = null;
         if (!Boss1ModuleSupport.IsBoss1(in context, in invocation)
-            || !_state.CurrentAttackId.IsValid
-            || _state.CurrentAttackId.Value >= _telegraphs.Length)
+            || !_state.CurrentSkill.IsValid()
+            || !_telegraphs.TryGetValue(_state.CurrentSkill, out _activeTelegraph))
         {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidAttackId, "Boss1 の Telegraph 対象が不正です。", _state.CurrentAttackId);
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss1 の Telegraph 対象が不正です。", _state.CurrentSkill);
+            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
-        _activeTelegraph = _telegraphs[_state.CurrentAttackId.Value];
         _state.AttackStartPosition = _state.CurrentPosition;
         _state.AttackTargetPosition = new Core.Physics.Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         _activeTelegraph.Enter(ref context, in invocation);
         if (!_activeTelegraph.IsActive && !_activeTelegraph.IsComplete)
         {
-            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidConfiguration));
+            _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidConfiguration));
         }
     }
 
@@ -67,7 +65,7 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
             return;
         }
 
-        if (_state.CurrentAttackId == Boss1AttackIds.DiveRam)
+        if (_state.CurrentSkill == BossSkill.DiveRam)
         {
             _state.AttackTargetPosition = new Core.Physics.Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
             if (context.Phase is Phase.Phase1 or Phase.Phase2 or Phase.Phase3)
@@ -81,27 +79,28 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
                 _state.CurrentPosition = new Core.Physics.Vec2f(sx, sy);
                 if (context.Movement.MoveTo(sx, sy).IsError)
                 {
-                    Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の予兆振動移動 command を発行できませんでした。", _state.CurrentAttackId, AttackStage.Telegraph);
+                    Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の予兆振動移動 command を発行できませんでした。", _state.CurrentSkill, AttackStage.Telegraph);
                 }
             }
         }
         else
         {
-            Boss1ModuleSupport.ApplyHoverMovement(ref context, in invocation, _configuration, _state, _state.CurrentAttackId, AttackStage.Telegraph);
+            Boss1ModuleSupport.ApplyHoverMovement(ref context, in invocation, _configuration, _state, _state.CurrentSkill, AttackStage.Telegraph);
             _state.AttackStartPosition = _state.CurrentPosition;
         }
 
         _activeTelegraph.Update(ref context, in invocation);
         if (_activeTelegraph.IsComplete)
         {
-            BossState executeState = Boss1StateIds.GetExecuteState(_state.CurrentAttackId);
+            BossState executeState = Boss1StateIds.GetExecuteState(_state.CurrentSkill);
             if (!executeState.IsValid())
             {
-                _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, attackId: _state.CurrentAttackId, errorCode: ErrorCode.InvalidAttackId));
+                _state.RequestTransition(Boss1StateIds.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
                 return;
             }
 
-            _state.RequestTransition(executeState, new TransitionReason(ReasonKind.TimerElapsed, attackId: _state.CurrentAttackId));
+
+            _state.RequestTransition(executeState, new TransitionReason(ReasonKind.TimerElapsed, skill: _state.CurrentSkill));
         }
     }
 
@@ -111,4 +110,5 @@ public sealed class Boss1TelegraphModule : IBossStateModule, IStateModuleDepende
         _activeTelegraph?.Exit(ref context, in invocation);
         _activeTelegraph = null;
     }
+
 }

@@ -399,9 +399,10 @@ public sealed class BossAiRuntimeSystem
                 continue;
             }
 
-            attack.AttackId = command.AttackId;
+            attack.Skill = command.Skill;
             attack.TargetPosition = new(command.X, command.Y);
             attack.Stage = AttackStage.Execute;
         }
     }
+
 }

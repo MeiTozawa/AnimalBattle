@@ -46,8 +46,8 @@ public sealed class AttackDefinition
 {
     private readonly AttackComponent[] _components;
 
-    /// <summary>攻撃識別子を取得します。</summary>
-    public AttackId AttackId { get; }
+    /// <summary>技能識別子を取得します。</summary>
+    public BossSkill Skill { get; }
     /// <summary>Telegraph の設定時間を取得します。</summary>
     public float TelegraphDuration { get; }
     /// <summary>Execute の設定時間を取得します。</summary>
@@ -59,7 +59,7 @@ public sealed class AttackDefinition
     /// <summary>設定 component 数を取得します。</summary>
     public int ComponentCount => _components.Length;
     /// <summary>三段階と component の設定が実行可能かどうかを取得します。</summary>
-    public bool IsValid => AttackId.IsValid
+    public bool IsValid => Skill.IsValid()
         && IsPositiveFinite(TelegraphDuration)
         && IsPositiveFinite(ExecuteDuration)
         && IsPositiveFinite(RecoveryDuration)
@@ -69,18 +69,19 @@ public sealed class AttackDefinition
 
     /// <summary>攻撃定義を生成します。component 配列は初期化時にコピーされます。</summary>
     public AttackDefinition(
-        AttackId attackId,
+        BossSkill skill,
         float telegraphDuration,
         float executeDuration,
         float recoveryDuration,
         float range,
         IReadOnlyList<AttackComponent>? components = null)
     {
-        AttackId = attackId;
+        Skill = skill;
         TelegraphDuration = telegraphDuration;
         ExecuteDuration = executeDuration;
         RecoveryDuration = recoveryDuration;
         Range = range;
+
         int componentCount = components?.Count ?? 0;
         _components = new AttackComponent[componentCount];
         if (components is not null)

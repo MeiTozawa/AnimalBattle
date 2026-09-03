@@ -52,8 +52,8 @@ public static class BossDecisionEvaluator
     /// <param name="rules">判定対象の技能意思決定ルール一覧。</param>
     /// <param name="cooldownTracker">冷却時間追跡器。</param>
     /// <param name="context">現在の戦闘判定コンテキスト。</param>
-    /// <returns>選択された攻撃識別子。条件に合致する技能がない場合は AttackId.Unknown。</returns>
-    public static AttackId EvaluateBest(
+    /// <returns>選択された技能識別子。条件に合致する技能がない場合は BossSkill.Unknown。</returns>
+    public static BossSkill EvaluateBest(
         IReadOnlyList<AttackDecisionRule> rules,
         BossCooldownTracker cooldownTracker,
         in AttackDecisionContext context)
@@ -61,7 +61,7 @@ public static class BossDecisionEvaluator
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(cooldownTracker);
 
-        AttackId bestAttack = AttackId.Unknown;
+        BossSkill bestSkill = BossSkill.None;
         float bestScore = -1.0f;
 
         for (int index = 0; index < rules.Count; index++)
@@ -75,11 +75,11 @@ public static class BossDecisionEvaluator
             if (score > bestScore)
             {
                 bestScore = score;
-                bestAttack = rule.AttackId;
+                bestSkill = rule.Skill;
             }
         }
 
-        return bestAttack;
+        return bestSkill;
     }
 
     /// <summary>
@@ -89,8 +89,8 @@ public static class BossDecisionEvaluator
     /// <param name="cooldownTracker">冷却時間追跡器。</param>
     /// <param name="context">現在の戦闘判定コンテキスト。</param>
     /// <param name="random">乱数生成器（null の場合は既定の Random を使用）。</param>
-    /// <returns>選択された攻撃識別子。条件に合致する技能がない場合は AttackId.Unknown。</returns>
-    public static AttackId EvaluateWeighted(
+    /// <returns>選択された技能識別子。条件に合致する技能がない場合は BossSkill.Unknown。</returns>
+    public static BossSkill EvaluateWeighted(
         IReadOnlyList<AttackDecisionRule> rules,
         BossCooldownTracker cooldownTracker,
         in AttackDecisionContext context,
@@ -99,7 +99,7 @@ public static class BossDecisionEvaluator
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(cooldownTracker);
 
-        Span<AttackId> candidateIds = stackalloc AttackId[rules.Count];
+        Span<BossSkill> candidateSkills = stackalloc BossSkill[rules.Count];
         Span<float> candidateScores = stackalloc float[rules.Count];
         int count = 0;
         float totalScore = 0.0f;
@@ -112,7 +112,7 @@ public static class BossDecisionEvaluator
                 continue;
             }
 
-            candidateIds[count] = rule.AttackId;
+            candidateSkills[count] = rule.Skill;
             candidateScores[count] = score;
             totalScore += score;
             count++;
@@ -120,12 +120,12 @@ public static class BossDecisionEvaluator
 
         if (count == 0 || totalScore <= 0.0f)
         {
-            return AttackId.Unknown;
+            return BossSkill.None;
         }
 
         if (count == 1)
         {
-            return candidateIds[0];
+            return candidateSkills[0];
         }
 
         random ??= Random.Shared;
@@ -137,11 +137,11 @@ public static class BossDecisionEvaluator
             cumulative += candidateScores[index];
             if (roll <= cumulative)
             {
-                return candidateIds[index];
+                return candidateSkills[index];
             }
         }
 
-        return candidateIds[count - 1];
+        return candidateSkills[count - 1];
     }
 
     private static bool IsRuleEligible(
@@ -158,7 +158,7 @@ public static class BossDecisionEvaluator
         }
 
         // 1. 冷却時間フィルタ
-        if (!cooldownTracker.IsReady(rule.AttackId))
+        if (!cooldownTracker.IsReady(rule.Skill))
         {
             return false;
         }
@@ -190,4 +190,5 @@ public static class BossDecisionEvaluator
 
         return score > 0.0f;
     }
+
 }

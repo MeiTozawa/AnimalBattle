@@ -49,10 +49,8 @@ public sealed class BossRuntimeSlot
     public Phase Phase => _context.Phase;
     /// <summary>現在有効な State_Id を取得します。</summary>
     public BossState CurrentStateId => _currentBossState;
-    /// <summary>互換用の現在状態名です。</summary>
-    [Obsolete("CurrentStateId を使用してください。")]
-    public BossState CurrentBossState => CurrentStateId;
     /// <summary>状態 module の Enter が完了しているかどうかを取得します。</summary>
+
     public bool StateEntered => _stateEntered;
     /// <summary>module が停止済みかどうかを取得します。</summary>
     public bool ModuleStopped => _moduleStopped;
@@ -93,7 +91,7 @@ public sealed class BossRuntimeSlot
         get
         {
             BossCompatibilityData view = _compatibilityData;
-            view.LegacyAttackValue = _attackData.AttackId.Value;
+            view.LegacyAttackValue = (int)_attackData.Skill;
             view.LegacyStateTimer = _aiData.StateTimer;
             view.LegacyStateDuration = _aiData.StateDuration;
             view.LegacyIsInvulnerable = _aiData.IsInvulnerable;
@@ -108,7 +106,7 @@ public sealed class BossRuntimeSlot
             view.UpdateSource = _aiData.UpdateSource;
             view.BossState = _currentBossState;
             view.Phase = _aiData.Phase;
-            view.AttackId = _attackData.AttackId;
+            view.Skill = _attackData.Skill;
             view.TransitionReason = _currentTransitionReason;
             view.IsInvulnerable = _aiData.IsInvulnerable;
             view.AttackStage = _attackData.Stage;
@@ -117,7 +115,6 @@ public sealed class BossRuntimeSlot
             return view;
         }
     }
-
 
     /// <summary>現在の Debug_Data を取得します。Debug 無効時は生成しません。</summary>
     /// <param name="debugData">生成済みの Debug_Data。</param>
@@ -163,7 +160,7 @@ public sealed class BossRuntimeSlot
         {
             BossState = _currentBossState,
             Phase = _aiData.Phase,
-            AttackId = _attackData.AttackId,
+            Skill = _attackData.Skill,
             TransitionReason = _currentTransitionReason,
             IsInvulnerable = _aiData.IsInvulnerable,
             AttackStage = _attackData.Stage,
@@ -171,6 +168,7 @@ public sealed class BossRuntimeSlot
         };
         _hasDebugData = true;
     }
+
 
     /// <summary>移動 command の事前確保 buffer を取得します。</summary>
     public PreallocatedCommandBuffer<MovementCommand> MovementCommands { get; }
@@ -294,8 +292,9 @@ public sealed class BossRuntimeSlot
         _currentConfig = configSnapshot;
         _aiData = new BossAiData(bossType, BossState.Unknown, Phase.Phase1);
         _movementData = new BossMovementData(BossState.Unknown);
-        _attackData = new BossAttackData(AttackId.Unknown);
+        _attackData = new BossAttackData(BossSkill.None);
         _phaseTransitionData = default;
+
         _terminalData = default;
         _context = new StateContext(
             entityId,
@@ -487,18 +486,9 @@ public sealed class BossRuntimeSlot
         return true;
     }
 
-    /// <summary>
-    /// 任意の実行時点からの設定反映を拒否します。
-    /// </summary>
-    /// <remarks>
-    /// 設定 reload は Transition または AttackSelection 境界からだけ行います。
-    /// 既存呼び出しとの互換性のためメソッドは残しますが、境界なしでは反映しません。
-    /// </remarks>
-    [Obsolete("ApplyPendingConfig(ConfigReloadBoundary) を使用してください。")]
-    public bool ApplyPendingConfig() => false;
-
     /// <summary>状態遷移境界で保留 snapshot を反映します。</summary>
     internal bool ApplyPendingConfigAtTransition()
+
         => ApplyPendingConfig(ConfigReloadBoundary.Transition);
 
     /// <summary>攻撃選択境界で保留 snapshot を反映します。</summary>
@@ -551,10 +541,12 @@ public sealed class BossRuntimeSlot
         {
             _aiData.AttackGenerationEnabled = false;
         }
-        if (reason.AttackId.IsValid)
+        if (reason.Skill.IsValid())
         {
-            _attackData.AttackId = reason.AttackId;
+            _attackData.Skill = reason.Skill;
         }
+
+
         _stateEntered = false;
         _moduleStopped = false;
         RefreshDebugData();

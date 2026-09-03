@@ -222,8 +222,9 @@ public sealed class TransitionService : ITransitionService
             LifecycleOperation.Update,
             request.FrameUpdateNumber,
             0,
-            request.Reason.AttackId,
+            request.Reason.Skill,
             AttackStage.None,
+
             request.Reason,
             severity,
             result.ErrorCode,

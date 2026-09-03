@@ -11,7 +11,7 @@ public readonly struct ObservationEvent(
     LifecycleOperation operation,
     long frameUpdateNumber,
     float deltaTime,
-    AttackId attackId = default,
+    BossSkill skill = default,
     AttackStage attackStage = default,
     TransitionReason transitionReason = default,
     DiagnosticSeverity severity = DiagnosticSeverity.Information,
@@ -31,28 +31,10 @@ public readonly struct ObservationEvent(
     public BossType BossType { get; } = bossType;
     /// <summary>固定 BossState です。</summary>
     public BossState State { get; } = state;
-    /// <summary>旧プロパティ名です。値の型は固定 BossState です。</summary>
-    [Obsolete("State を使用してください。")]
-    public BossState StateId => State;
-    /// <summary>互換用の固定 BossState 名です。</summary>
-    [Obsolete("State を使用してください。")]
-    public BossState BossState => State;
     /// <summary>遷移前の固定 BossState です。</summary>
     public BossState PreviousState { get; } = previousState;
     /// <summary>遷移先の固定 BossState です。</summary>
     public BossState NextState { get; } = nextState;
-    /// <summary>互換用の遷移前状態名です。</summary>
-    [Obsolete("PreviousState を使用してください。")]
-    public BossState PreviousBossState => PreviousState;
-    /// <summary>互換用の遷移先状態名です。</summary>
-    [Obsolete("NextState を使用してください。")]
-    public BossState NextBossState => NextState;
-    /// <summary>旧遷移前プロパティ名です。</summary>
-    [Obsolete("PreviousState を使用してください。")]
-    public BossState PreviousStateId => PreviousState;
-    /// <summary>旧遷移先プロパティ名です。</summary>
-    [Obsolete("NextState を使用してください。")]
-    public BossState NextStateId => NextState;
     /// <summary>親 Phase です。</summary>
     public Phase Phase { get; } = phase;
     /// <summary>処理種別です。</summary>
@@ -67,8 +49,9 @@ public readonly struct ObservationEvent(
     public long FrameUpdateNumber { get; } = frameUpdateNumber;
     /// <summary>経過時間です。</summary>
     public float DeltaTime { get; } = deltaTime;
-    /// <summary>攻撃識別子です。</summary>
-    public AttackId AttackId { get; } = attackId;
+    /// <summary>技能識別子です。</summary>
+    public BossSkill Skill { get; } = skill;
+
     /// <summary>攻撃段階です。</summary>
     public AttackStage AttackStage { get; } = attackStage;
     /// <summary>遷移理由です。</summary>

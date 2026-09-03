@@ -2,8 +2,9 @@ using AnimalBattle.Ai.Contracts;
 
 namespace AnimalBattle.Ai.Boss2;
 
-/// <summary>Boss2 の固定 BossState と AttackId の対応を提供します。</summary>
+/// <summary>Boss2 の固定 BossState と BossSkill の対応を提供します。</summary>
 public static class Boss2StateIds
+
 {
     /// <summary>待機状態です。</summary>
     public const BossState Idle = BossState.Boss2_Idle;
@@ -52,72 +53,37 @@ public static class Boss2StateIds
     /// <summary>死亡終端状態です。</summary>
     public const BossState Dead = BossState.Boss2_Dead;
 
-    /// <summary>攻撃 ID に対応する固定 Telegraph BossState を取得します。</summary>
-    public static BossState GetTelegraphState(AttackId attackId)
+    /// <summary>技能に対応する固定 Telegraph BossState を取得します。</summary>
+    public static BossState GetTelegraphState(BossSkill skill)
     {
-        return attackId.Value switch
+        return skill switch
         {
-            Boss2AttackIds.HeavySlashValue => HeavySlashTelegraph,
-            Boss2AttackIds.DoubleCleaveValue => DoubleCleaveTelegraph,
-            Boss2AttackIds.GroundStompValue => GroundStompTelegraph,
-            Boss2AttackIds.LeapSmashValue => LeapSmashTelegraph,
-            Boss2AttackIds.FrenzyChargeValue => FrenzyChargeTelegraph,
-            Boss2AttackIds.EarthquakeRoarValue => EarthquakeRoarTelegraph,
+            BossSkill.HeavySlash => HeavySlashTelegraph,
+            BossSkill.DoubleCleave => DoubleCleaveTelegraph,
+            BossSkill.GroundStomp => GroundStompTelegraph,
+            BossSkill.LeapSmash => LeapSmashTelegraph,
+            BossSkill.FrenzyCharge => FrenzyChargeTelegraph,
+            BossSkill.EarthquakeRoar => EarthquakeRoarTelegraph,
             _ => BossState.Unknown
         };
     }
 
-    /// <summary>攻撃 ID に対応する固定 Execute BossState を取得します。</summary>
-    public static BossState GetExecuteState(AttackId attackId)
+    /// <summary>技能に対応する固定 Execute BossState を取得します。</summary>
+    public static BossState GetExecuteState(BossSkill skill)
     {
-        return attackId.Value switch
+        return skill switch
         {
-            Boss2AttackIds.HeavySlashValue => HeavySlashExecute,
-            Boss2AttackIds.DoubleCleaveValue => DoubleCleaveExecute,
-            Boss2AttackIds.GroundStompValue => GroundStompExecute,
-            Boss2AttackIds.LeapSmashValue => LeapSmashAscent,
-            Boss2AttackIds.FrenzyChargeValue => FrenzyChargeExecute,
-            Boss2AttackIds.EarthquakeRoarValue => EarthquakeRoarExecute,
+            BossSkill.HeavySlash => HeavySlashExecute,
+            BossSkill.DoubleCleave => DoubleCleaveExecute,
+            BossSkill.GroundStomp => GroundStompExecute,
+            BossSkill.LeapSmash => LeapSmashAscent,
+            BossSkill.FrenzyCharge => FrenzyChargeExecute,
+            BossSkill.EarthquakeRoar => EarthquakeRoarExecute,
             _ => BossState.Unknown
         };
     }
-
-    /// <summary>旧 API 名から固定 Telegraph BossState を取得します。</summary>
-    [Obsolete("StateId から BossState への移行用です。")]
-    public static BossState GetTelegraphStateId(AttackId attackId) => GetTelegraphState(attackId);
-
-    /// <summary>旧 API 名から固定 Execute BossState を取得します。</summary>
-    [Obsolete("StateId から BossState への移行用です。")]
-    public static BossState GetExecuteStateId(AttackId attackId) => GetExecuteState(attackId);
 }
 
-/// <summary>Boss2 固有の安定した攻撃識別子です。</summary>
-public static class Boss2AttackIds
-{
-    /// <summary>重劈斬撃の数値 ID です。</summary>
-    public const int HeavySlashValue = 201;
-    /// <summary>二連重斬の数値 ID です。</summary>
-    public const int DoubleCleaveValue = 202;
-    /// <summary>撼地踏撃の数値 ID です。</summary>
-    public const int GroundStompValue = 203;
-    /// <summary>泰山圧頂の数値 ID です。</summary>
-    public const int LeapSmashValue = 204;
-    /// <summary>狂暴突進の数値 ID です。</summary>
-    public const int FrenzyChargeValue = 205;
-    /// <summary>滅地狂吼の数値 ID です。</summary>
-    public const int EarthquakeRoarValue = 206;
 
-    /// <summary>重劈斬撃です。</summary>
-    public static readonly AttackId HeavySlash = new(HeavySlashValue);
-    /// <summary>二連重斬です。</summary>
-    public static readonly AttackId DoubleCleave = new(DoubleCleaveValue);
-    /// <summary>撼地踏撃です。</summary>
-    public static readonly AttackId GroundStomp = new(GroundStompValue);
-    /// <summary>泰山圧頂です。</summary>
-    public static readonly AttackId LeapSmash = new(LeapSmashValue);
-    /// <summary>狂暴突進です。</summary>
-    public static readonly AttackId FrenzyCharge = new(FrenzyChargeValue);
-    /// <summary>滅地狂吼です。</summary>
-    public static readonly AttackId EarthquakeRoar = new(EarthquakeRoarValue);
-}
+
 

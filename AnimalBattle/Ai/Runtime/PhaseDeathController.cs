@@ -197,8 +197,9 @@ public static class PhaseDeathController
             ai.Phase,
             in reason,
             frameUpdateNumber,
-            attack.AttackId,
+            attack.Skill,
             attack.Stage,
+
             currentHp);
         if (captured.IsError)
         {
