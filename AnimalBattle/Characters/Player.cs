@@ -1,10 +1,12 @@
 using System;
-using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using AnimalBattle.Core.Asset;
 using AnimalBattle.Core.Input;
 using AnimalBattle.Core.Physics;
+using ErrorOr;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters;
 
@@ -16,7 +18,7 @@ public sealed class Player
 {
     private readonly Entity _entity;
     private readonly Hurtbox _hurtbox;
-    private readonly Animation _animation;
+    private Animation _animation;
     private CollisionBox _collisionBox;
     private Sprite _sprite;
 
@@ -113,6 +115,12 @@ public sealed class Player
     /// <summary>スプライト描画設定インスタンスを取得します。</summary>
     public Sprite Sprite => _sprite;
 
+    /// <summary>プレイヤーの描画スケール X を取得します。</summary>
+    public float ScaleX => 1.0f;
+
+    /// <summary>プレイヤーの描画スケール Y を取得します。</summary>
+    public float ScaleY => 1.0f;
+
     /// <summary>互換性保持用の Flecs エンティティ句柄を取得します。</summary>
     public Entity Entity => _entity;
 
@@ -144,6 +152,7 @@ public sealed class Player
         _animation = new Animation("Idle", CharacterType.Cat, isPlaying: true);
         _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 64, 64));
 
+        UpdateAnimation(0.0f);
         SyncToEntity();
     }
 
@@ -196,7 +205,7 @@ public sealed class Player
         ApplyPhysicsAndCollisions(platformQuery, pCfg, arenaCfg, dt);
 
         // 4. アニメーション状態更新
-        UpdateAnimation();
+        UpdateAnimation(dt);
 
         // 5. 手銃射撃処理
         ProcessShootInput(world, pCfg);
@@ -228,6 +237,7 @@ public sealed class Player
         _animation.Play("Idle");
         _sprite.FlipX = false;
         _sprite.IsVisible = true;
+        UpdateAnimation(0.0f);
 
         SyncToEntity();
     }
@@ -355,7 +365,7 @@ public sealed class Player
         _isGrounded = isGrounded;
     }
 
-    private void UpdateAnimation()
+    private void UpdateAnimation(float dt)
     {
         if (!_isGrounded)
         {
@@ -375,6 +385,25 @@ public sealed class Player
         else
         {
             _animation.Play("Idle");
+        }
+
+        if (_animation.IsPlaying)
+        {
+            _animation.Timer += dt;
+
+            ErrorOr<AnimationConfig> charConfigRes = AssetManager.GetCharacterConfig(_animation.CharacterType);
+            if (!charConfigRes.IsError && charConfigRes.Value != null)
+            {
+                AnimationConfig charConfig = charConfigRes.Value;
+                ErrorOr<int> handleRes = AssetManager.GetCharacterSpriteHandle(_animation.CharacterType, _animation.CurrentClip);
+                if (!handleRes.IsError && handleRes.Value >= 0)
+                {
+                    _sprite.GraphHandle = handleRes.Value;
+                }
+
+                _sprite.SrcRect = AssetManager.CalculateSrcRect(charConfig, _animation.CurrentClip, _animation.Timer, out bool isFinished);
+                _animation.IsFinished = isFinished;
+            }
         }
     }
 
