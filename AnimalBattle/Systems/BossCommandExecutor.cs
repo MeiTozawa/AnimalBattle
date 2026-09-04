@@ -206,6 +206,11 @@ public static class BossCommandExecutor
 
         if (hasMoveTo)
         {
+            if (entity.Has<CollisionBox>())
+            {
+                ref CollisionBox col = ref entity.GetMut<CollisionBox>();
+                col.IsGrounded = false;
+            }
             return;
         }
 
@@ -229,22 +234,26 @@ public static class BossCommandExecutor
         float colHeight = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
         Box2D bossBox = new(nextX, nextY, colWidth, colHeight);
 
-        platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
+        bool ignorePlatforms = slot.AttackData.Skill == BossSkill.LeapSmash;
+        if (!ignorePlatforms)
         {
-            Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
-            if (PhysicsService.CheckPlatformGround(
-                currentY,
-                nextY,
-                bossBox,
-                platformBox,
-                out float groundY,
-                out float pVy))
+            platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
             {
-                isGrounded = true;
-                adjustedPosY = groundY;
-                adjustedVy = pVy;
-            }
-        });
+                Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
+                if (PhysicsService.CheckPlatformGround(
+                    currentY,
+                    nextY,
+                    bossBox,
+                    platformBox,
+                    out float groundY,
+                    out float pVy))
+                {
+                    isGrounded = true;
+                    adjustedPosY = groundY;
+                    adjustedVy = pVy;
+                }
+            });
+        }
 
         float floorLimitY = 560.0f - colHeight / 2.0f;
         if (adjustedPosY >= floorLimitY)

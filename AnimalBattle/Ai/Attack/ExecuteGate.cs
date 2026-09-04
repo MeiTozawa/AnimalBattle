@@ -13,9 +13,11 @@ public sealed class ExecuteGate
     private readonly float _facingDirection;
     private bool _active;
     private bool _completed;
+    private bool _hasLeftGround;
     private float _elapsed;
     private float _startX = float.NaN;
     private float _startY = float.NaN;
+    private float _lockedApexX = float.NaN;
 
     /// <summary>Execute が有効かどうかを取得します。</summary>
     public bool IsActive => _active;
@@ -62,8 +64,10 @@ public sealed class ExecuteGate
 
         _elapsed = 0;
         _active = true;
+        _hasLeftGround = false;
         _startX = float.NaN;
         _startY = float.NaN;
+        _lockedApexX = float.NaN;
         return Result.Success;
     }
 
@@ -91,6 +95,11 @@ public sealed class ExecuteGate
             _startY = currentY;
         }
 
+        if (!isGrounded)
+        {
+            _hasLeftGround = true;
+        }
+
         int emitted = 0;
         int failed = 0;
         int suppressed = 0;
@@ -104,8 +113,9 @@ public sealed class ExecuteGate
             // 接地時イベント駆動コンポーネントの処理
             if (component.Kind == AttackComponentKind.OnGroundedHitbox)
             {
-                // 跳躍開始直後の接地判定の誤検知を防ぐため、0.05 秒以上経過してから判定
-                if (isGrounded && _elapsed > 0.05f)
+                // 跳躍前の接地状態による誤発火を防ぐため、一度空中に離脱した後の接地のみ判定
+                float minTime = MathF.Max(component.TriggerTime, 0.05f);
+                if (_hasLeftGround && isGrounded && _elapsed >= minTime)
                 {
                     if (_oneShot.Reserve(component.Index).IsError)
                     {
@@ -149,16 +159,39 @@ public sealed class ExecuteGate
             // 継続的移動コンポーネント（FlyToTarget: 対象頭上へのイージング飛翔）の更新
             if (component.Kind == AttackComponentKind.FlyToTarget)
             {
+                // 後続の急降下（Dive）や移動アクションが既に開始されている場合は MoveTo を停止
+                if (HasLaterMovementStarted(component.TriggerTime))
+                {
+                    continue;
+                }
+
                 float peakY = component.X;
                 float flyDuration = component.Y;
                 float t = flyDuration > 0.0f ? Math.Clamp((_elapsed - component.TriggerTime) / flyDuration, 0.0f, 1.0f) : 1.0f;
-                float easeT = MathF.Sin(t * MathF.PI * 0.5f);
 
-                float targetX = context.PlayerObservation.PositionX;
-                float startX = !float.IsNaN(_startX) ? _startX : targetX;
-                float startY = !float.IsNaN(_startY) ? _startY : peakY;
-                float curX = startX + (targetX - startX) * easeT;
-                float curY = startY + (peakY - startY) * easeT;
+                float curX;
+                float curY;
+                if (t >= 1.0f)
+                {
+                    // 最高点到達後は滞空（ApexHang）中であるため、X 座標を固定してプレイヤーの回避余地を保証
+                    if (float.IsNaN(_lockedApexX))
+                    {
+                        float targetX = context.PlayerObservation.PositionX;
+                        _lockedApexX = targetX;
+                    }
+
+                    curX = _lockedApexX;
+                    curY = peakY;
+                }
+                else
+                {
+                    float easeT = MathF.Sin(t * MathF.PI * 0.5f);
+                    float targetX = context.PlayerObservation.PositionX;
+                    float startX = !float.IsNaN(_startX) ? _startX : targetX;
+                    float startY = !float.IsNaN(_startY) ? _startY : peakY;
+                    curX = startX + (targetX - startX) * easeT;
+                    curY = startY + (peakY - startY) * easeT;
+                }
 
                 context.Movement.MoveTo(curX, curY);
                 continue;
@@ -220,9 +253,11 @@ public sealed class ExecuteGate
     {
         _active = false;
         _completed = false;
+        _hasLeftGround = false;
         _elapsed = 0;
         _startX = float.NaN;
         _startY = float.NaN;
+        _lockedApexX = float.NaN;
         _oneShot.Reset();
     }
 
@@ -275,6 +310,24 @@ public sealed class ExecuteGate
         {
             // 観測失敗だけを理由に Execute の残り component を停止しません。
         }
+    }
+
+    private bool HasLaterMovementStarted(float currentTriggerTime)
+    {
+        for (int i = 0; i < _definition.ComponentCount; i++)
+        {
+            if (_definition.GetComponent(i, out AttackComponent comp))
+            {
+                if ((comp.Kind == AttackComponentKind.Dive || comp.Kind == AttackComponentKind.Movement)
+                    && comp.TriggerTime > currentTriggerTime
+                    && _elapsed + 0.0001f >= comp.TriggerTime)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }
 

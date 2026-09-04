@@ -46,6 +46,7 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
         _state.StateElapsed = 0.0f;
         _state.AttackSubTimer = 0.0f;
         _state.IsAttackActive = true;
+        _state.IsGrounded = false;
         _gate.Start(ref context, in invocation);
     }
 

@@ -29,4 +29,7 @@ public interface IBossBehaviorState
 
     /// <summary>現在 Boss が右を向いているかどうかを取得します。</summary>
     bool FacingRight { get; }
+
+    /// <summary>現在選択されている攻撃技能を取得します。</summary>
+    BossSkill CurrentSkill { get; }
 }

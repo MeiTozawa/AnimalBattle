@@ -33,6 +33,8 @@ public sealed class Player
     private int _maxJumps;
     private bool _isGrounded;
     private float _shootCooldown;
+    private float _scaleX;
+    private float _scaleY;
 
     /// <summary>プレイヤーのワールド X 座標を取得または設定します。</summary>
     public float X
@@ -116,10 +118,10 @@ public sealed class Player
     public Sprite Sprite => _sprite;
 
     /// <summary>プレイヤーの描画スケール X を取得します。</summary>
-    public float ScaleX => 1.0f;
+    public float ScaleX => _scaleX;
 
     /// <summary>プレイヤーの描画スケール Y を取得します。</summary>
-    public float ScaleY => 1.0f;
+    public float ScaleY => _scaleY;
 
     /// <summary>互換性保持用の Flecs エンティティ句柄を取得します。</summary>
     public Entity Entity => _entity;
@@ -146,6 +148,8 @@ public sealed class Player
         _remainingJumps = pCfg.MaxJumps;
         _isGrounded = false;
         _shootCooldown = 0.0f;
+        _scaleX = pCfg.ScaleX;
+        _scaleY = pCfg.ScaleY;
 
         _collisionBox = new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight);
         _hurtbox = new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly);
@@ -233,6 +237,8 @@ public sealed class Player
         _maxJumps = pCfg.MaxJumps;
         _isGrounded = false;
         _shootCooldown = 0.0f;
+        _scaleX = pCfg.ScaleX;
+        _scaleY = pCfg.ScaleY;
 
         _animation.Play("Idle");
         _sprite.FlipX = false;
@@ -493,7 +499,7 @@ public sealed class Player
             return;
         }
 
-        _entity.Set(new Transform(_x, _y, scaleX: 1.0f, scaleY: 1.0f));
+        _entity.Set(new Transform(_x, _y, scaleX: _scaleX, scaleY: _scaleY));
         _entity.Set(new Velocity(_vx, _vy));
 
         _collisionBox.IsGrounded = _isGrounded;

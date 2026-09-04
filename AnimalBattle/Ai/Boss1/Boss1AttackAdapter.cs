@@ -2,6 +2,7 @@ using System;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Dsl;
+using AnimalBattle.Ai.Dsl.Modules;
 using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Core.Physics;
 using ErrorOr;
@@ -65,11 +66,23 @@ public sealed class Boss1AttackAdapter(IBoss1Configuration configuration, Boss1B
     public void OnRecoveryUpdate(ref StateContext context, in LifecycleInvocation invocation, float elapsed)
     {
         _state.StateElapsed = elapsed;
+
+        // 冲撞（DiveRam）の易傷・後隙期間中のみ地上で静止し、他技能の後隙では通常浮遊移動を維持
+        if (_state.CurrentSkill == BossSkill.DiveRam)
+        {
+            context.Movement.MoveTo(_state.CurrentPosition.X, _state.CurrentPosition.Y);
+        }
+        else
+        {
+            DslBoss1Support.ApplyHoverMovement(ref context, in invocation, _configuration, _state, _state.CurrentSkill, AttackStage.Recovery);
+            _state.AttackStartPosition = _state.CurrentPosition;
+        }
     }
 
     /// <inheritdoc />
     public void OnRecoveryCompleted()
     {
+        _state.IsAttackActive = false;
         _state.RequestTransition(Boss1State.Hover, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
     }
 

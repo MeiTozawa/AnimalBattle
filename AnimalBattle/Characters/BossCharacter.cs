@@ -101,10 +101,12 @@ public sealed class BossCharacter
     public BossState CurrentState => _slot.CurrentStateId;
 
     /// <summary>現在選択されている攻撃技能を取得します。</summary>
-    public BossSkill CurrentSkill => _slot.AttackData.Skill;
+    public BossSkill CurrentSkill => _bossType == BossType.Boss1
+        ? (_boss1State?.CurrentSkill ?? _slot.AttackData.Skill)
+        : (_boss2State?.CurrentSkill ?? _slot.AttackData.Skill);
 
     /// <summary>現在選択されている攻撃技能名を取得します。</summary>
-    public string SkillName => _slot.AttackData.Skill != BossSkill.None ? _slot.AttackData.Skill.ToString() : string.Empty;
+    public string SkillName => CurrentSkill != BossSkill.None ? CurrentSkill.ToString() : string.Empty;
 
     /// <summary>AI 目標地点 X 座標を取得します。</summary>
     public float TargetX => _slot.CompatibilityView.LegacyTargetX;
@@ -123,8 +125,8 @@ public sealed class BossCharacter
 
     /// <summary>Boss が後隙による易傷（被ダメージ倍加）状態であるかを取得します。</summary>
     public bool IsVulnerable => _bossType == BossType.Boss1
-        ? (_slot.CurrentStateId == BossState.Boss1_Recovery && _slot.AttackData.Skill == BossSkill.DiveRam)
-        : (_slot.CurrentStateId == BossState.Boss2_Recovery && _slot.AttackData.Skill == BossSkill.LeapSmash);
+        ? (_slot.CurrentStateId == BossState.Boss1_Recovery && CurrentSkill == BossSkill.DiveRam)
+        : (_slot.CurrentStateId == BossState.Boss2_Recovery && CurrentSkill == BossSkill.LeapSmash);
 
     /// <summary>描画スケール X を取得します。</summary>
     public float ScaleX => _scaleX;
@@ -279,6 +281,11 @@ public sealed class BossCharacter
     {
         // 1. 被弾判定システム（CombatCollisionSystem）による HP・HitFlashTimer の反映
         SyncFromEntity();
+
+        if (_hitFlashTimer > 0.0f)
+        {
+            _hitFlashTimer = MathF.Max(0.0f, _hitFlashTimer - deltaTime);
+        }
 
         if (!IsAlive)
         {

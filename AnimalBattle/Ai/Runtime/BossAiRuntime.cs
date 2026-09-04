@@ -379,6 +379,7 @@ public sealed class BossAiRuntime
             if (behaviorState is not null)
             {
                 runtime.MovementData.FacingRight = behaviorState.FacingRight;
+                runtime.AttackData.Skill = behaviorState.CurrentSkill;
             }
 
             runtime.MarkUpdated(frameUpdateNumber);
