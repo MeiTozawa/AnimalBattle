@@ -1,65 +1,59 @@
 using System;
 using System.Drawing;
-using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Maps;
 using AnimalBattle.Maps.Navigation;
-using AnimalBattle.Scenes;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// Bevy スタイルのコンポーネント駆動 (Component-Driven) デバッグ判定枠可视化システム。
-/// 代数的データ型 <see cref="CollisionShape"/> のパターンマッチングにより、
-/// 実際の物理・受撃・攻撃判定の輪郭線（ワイヤーフレーム）のみをシンプルにリアルタイム描画します。
+/// 衝突・被弾・攻撃判定枠およびナビゲーションメッシュをワイヤーフレーム描画するデバッグ表示システム。
 /// F1 または H キーでリアルタイムに ON / OFF を切り替え可能です。
 /// </summary>
-public static class DebugRenderSystem
+public sealed class DebugRenderSystem : IDisposable
 {
     private static bool _prevToggleKey;
+    private readonly Query<Transform, Hurtbox> _hurtboxQuery;
+    private readonly Query<Transform, Hitbox> _hitboxQuery;
+    private bool _isDisposed;
 
     /// <summary>
-    /// デバッグ衝突枠描画システムを Flecs.NET ワールドへ登録します。
+    /// <see cref="DebugRenderSystem"/> の新しいインスタンスを初期化し、判定枠クエリを構築します。
     /// </summary>
-    /// <param name="world">登録先の Flecs.NET ワールド</param>
-    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
-    public static World AddDebugRenderSystem(this World world)
+    /// <param name="world">登録先の Flecs.NET ワールド。</param>
+    public DebugRenderSystem(World world)
     {
-        Query<Transform, CollisionBox> colQuery =
-            world.QueryBuilder<Transform, CollisionBox>()
-                 .Build();
+        _hurtboxQuery = world.QueryBuilder<Transform, Hurtbox>()
+                             .Build();
 
-        Query<Transform, Hurtbox> hurtboxQuery =
-            world.QueryBuilder<Transform, Hurtbox>()
-                 .Build();
+        _hitboxQuery = world.QueryBuilder<Transform, Hitbox>()
+                            .Build();
+    }
 
-        Query<Transform, Hitbox> hitboxQuery =
-            world.QueryBuilder<Transform, Hitbox>()
-                 .Build();
+    /// <summary>
+    /// デバッグ衝突枠およびナビゲーショングラフを描画します。
+    /// </summary>
+    /// <param name="colQuery">地形・プラットフォームコライダークエリ。</param>
+    /// <param name="tileMap">現在のアリーナタイルマップ。</param>
+    public void Render(Query<Transform, CollisionBox> colQuery, TileMap? tileMap)
+    {
+        RenderConfig renderCfg = ConfigManager.Render;
+        DebugRenderConfig dbgCfg = renderCfg.Debug;
 
-        world.System("DebugRenderSystem")
-             .Kind(Ecs.OnStore)
-             .Run((Iter it) =>
-             {
-                 RenderConfig renderCfg = ConfigManager.Render;
-                 DebugRenderConfig dbgCfg = renderCfg.Debug;
+        ProcessToggleInput(dbgCfg);
 
-                 ProcessToggleInput(dbgCfg);
+        if (!dbgCfg.Enabled)
+        {
+            return;
+        }
 
-                 if (!dbgCfg.Enabled)
-                 {
-                     return;
-                 }
-
-                 DrawCollisionBoxes(colQuery, dbgCfg);
-                 DrawHurtboxes(hurtboxQuery, dbgCfg);
-                 DrawHitboxes(hitboxQuery, dbgCfg);
-                 DrawPlatformNavGraph(BattleScene.CurrentTileMap);
-             });
-
-        return world;
+        DrawCollisionBoxes(colQuery, dbgCfg);
+        DrawHurtboxes(_hurtboxQuery, dbgCfg);
+        DrawHitboxes(_hitboxQuery, dbgCfg);
+        DrawPlatformNavGraph(tileMap);
     }
 
     private static void ProcessToggleInput(DebugRenderConfig dbgCfg)
@@ -179,81 +173,47 @@ public static class DebugRenderSystem
             return;
         }
 
-        foreach (PlatformNode node in tileMap.NavGraph.Nodes)
+        PlatformNavigationGraph graph = tileMap.NavGraph;
+        Color nodeColor = ColorPalette.Cyan;
+        Color edgeDropColor = ColorPalette.Gold;
+        Color edgeJumpColor = ColorPalette.Green;
+
+        foreach (PlatformNode node in graph.Nodes)
         {
-            int nx1 = (int)node.LeftX;
-            int nx2 = (int)node.RightX;
+            int nx = (int)node.CenterX;
             int ny = (int)node.TopY;
-            GameEngine.DrawLine(nx1, ny, nx2, ny, ColorPalette.Cyan, 3);
-            GameEngine.DrawString(nx1 + 5, ny - 16, $"Plat #{node.Id} (W:{node.Width:F0})", ColorPalette.Cyan);
+            GameEngine.DrawCircle(nx, ny, 4, nodeColor, true);
         }
 
-        Boss2Config b2Cfg = ConfigManager.Boss2;
-        float gravity = b2Cfg.Gravity > 0.0f ? b2Cfg.Gravity : 980.0f;
-
-        foreach (PlatformLink link in tileMap.NavGraph.Links)
+        foreach (PlatformLink link in graph.Links)
         {
-            float tx = link.TakeoffX;
-            float ty = link.FromNode.TopY;
-            float lx = link.LandingX;
-            float ly = link.ToNode.TopY;
-
-            Color linkColor = link.Action == NavActionType.Jump ? ColorPalette.Green : ColorPalette.Amber;
-
-            if (link.Action == NavActionType.Jump)
-            {
-                float vx = link.RequiredJumpVx;
-                float vy = link.RequiredJumpVy;
-                float a = 0.5f * gravity;
-                float b = vy;
-                float c = ty - ly;
-                float disc = b * b - 4.0f * a * c;
-                float tTotal = disc >= 0.0f ? (-b + MathF.Sqrt(disc)) / (2.0f * a) : (MathF.Abs(lx - tx) / MathF.Max(1.0f, MathF.Abs(vx)));
-                if (tTotal <= 0.01f)
-                {
-                    tTotal = 0.5f;
-                }
-
-                int segments = 12;
-                float prevX = tx;
-                float prevY = ty;
-                for (int s = 1; s <= segments; s++)
-                {
-                    float t = tTotal * (s / (float)segments);
-                    float curX = tx + vx * t;
-                    float curY = ty + vy * t + 0.5f * gravity * t * t;
-                    GameEngine.DrawLine((int)prevX, (int)prevY, (int)curX, (int)curY, linkColor, 1);
-                    prevX = curX;
-                    prevY = curY;
-                }
-            }
-            else
-            {
-                float dropHeight = MathF.Max(1.0f, ly - ty);
-                float tFall = MathF.Sqrt(2.0f * dropHeight / gravity);
-
-                int segments = 10;
-                float prevX = tx;
-                float prevY = ty;
-                for (int s = 1; s <= segments; s++)
-                {
-                    float ratio = s / (float)segments;
-                    float curX = tx + (lx - tx) * ratio;
-                    float curY = ty + 0.5f * gravity * (tFall * ratio) * (tFall * ratio);
-                    GameEngine.DrawLine((int)prevX, (int)prevY, (int)curX, (int)curY, linkColor, 1);
-                    prevX = curX;
-                    prevY = curY;
-                }
-            }
-
-            GameEngine.DrawCircle((int)tx, (int)ty, 4, linkColor, true);
-            GameEngine.DrawCircle((int)lx, (int)ly, 3, ColorPalette.White, true);
+            int fx = (int)link.TakeoffX;
+            int fy = (int)link.FromNode.TopY;
+            int tx = (int)link.LandingX;
+            int ty = (int)link.ToNode.TopY;
+            Color edgeColor = link.Action == NavActionType.Drop ? edgeDropColor : edgeJumpColor;
+            GameEngine.DrawLine(fx, fy, tx, ty, edgeColor);
         }
     }
 
     private static Color GetFallbackFactionColor(Faction faction, Color defaultColor)
     {
-        Console.WriteLine($"[DebugRender 警告] 未知の Faction です: {faction}。デフォルト色を使用します。");
-        return defaultColor;
+        return faction switch
+        {
+            Faction.Friendly => ColorPalette.Green,
+            Faction.Hostile => ColorPalette.Red,
+            _ => defaultColor
+        };
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (!_isDisposed)
+        {
+            _hurtboxQuery.Dispose();
+            _hitboxQuery.Dispose();
+            _isDisposed = true;
+        }
     }
 }

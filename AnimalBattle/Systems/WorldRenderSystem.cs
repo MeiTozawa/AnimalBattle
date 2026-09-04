@@ -1,119 +1,81 @@
 using System;
 using System.Drawing;
-
 using AnimalBattle.Ai.Contracts;
-using Flecs.NET.Core;
+using AnimalBattle.Characters;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Maps;
-using AnimalBattle.Scenes;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
 /// アリーナ足場・タイルマップ、Boss 1 / Boss 2 (オーラ・無敵シールド・予兆リング・スプライト・被弾フラッシュ・突進残影)、
-/// プレイヤー自機 (スプライト・無敵点滅・判定点)、および 8 方向プレイヤー弾・Boss 弾幕を描画する ECS 描画 System。
+/// プレイヤー自機 (スプライト・無敵点滅)、および 8 方向プレイヤー弾・Boss 弾幕・近接斬撃エフェクトを描画する世界描画システム。
+/// 領域モデル（<see cref="Player"/> / <see cref="BossCharacter"/>）から直接キャラクターを描画し、
+/// 海量弾幕・パーティクルエフェクトのみを Flecs ECS 高速クエリで一括描画します。
 /// </summary>
-public static class WorldRenderSystem
+public sealed class WorldRenderSystem : IDisposable
 {
+    private readonly Query<Transform, Velocity> _playerBulletQuery;
+    private readonly Query<Transform, Bullet> _bossBulletQuery;
+    private readonly Query<Transform, Hitbox, HitFlashEffect, FadeEffect, Sprite> _meleeSlashQuery;
+    private bool _isDisposed;
+
     /// <summary>
-    /// ワールド描画システムを Flecs.NET ワールドへ登録します。
+    /// <see cref="WorldRenderSystem"/> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリを構築します。
     /// </summary>
-    /// <param name="world">登録先の Flecs.NET ワールド</param>
-    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
-    public static World AddWorldRenderSystem(this World world)
+    /// <param name="world">描画対象の Flecs.NET ワールド。</param>
+    public WorldRenderSystem(World world)
     {
-        Query<Transform, CollisionBox> platformQuery =
-            world.QueryBuilder<Transform, CollisionBox>()
-                 .With<PlatformTag>()
-                 .Build();
+        _playerBulletQuery = world.QueryBuilder<Transform, Velocity>()
+                                  .With<PlayerBulletTag>()
+                                  .Build();
 
-        Query<Transform, Health, Boss1Stats, Boss1StateMachine, Sprite> boss1Query =
-            world.QueryBuilder<Transform, Health, Boss1Stats, Boss1StateMachine, Sprite>()
+        _bossBulletQuery = world.QueryBuilder<Transform, Bullet>()
+                                .With<BossBulletTag>()
+                                .Build();
 
-                 .With<BossTag>()
-                 .With<Boss1Tag>()
-                 .Build();
-
-        Query<Transform, Health, Boss2Stats, Boss2StateMachine, Sprite> boss2Query =
-            world.QueryBuilder<Transform, Health, Boss2Stats, Boss2StateMachine, Sprite>()
-                 .With<BossTag>()
-                 .With<Boss2Tag>()
-                 .Build();
-
-        Query<Transform, Health, PlayerState, Sprite> playerQuery =
-            world.QueryBuilder<Transform, Health, PlayerState, Sprite>()
-                 .With<PlayerTag>()
-                 .Build();
-
-        Query<Transform, Velocity> playerBulletQuery =
-            world.QueryBuilder<Transform, Velocity>()
-                 .With<PlayerBulletTag>()
-                 .Build();
-
-        Query<Transform, Bullet> bossBulletQuery =
-            world.QueryBuilder<Transform, Bullet>()
-                 .With<BossBulletTag>()
-                 .Build();
-
-        Query<Transform, Hitbox, HitFlashEffect, FadeEffect, Sprite> meleeSlashQuery =
-            world.QueryBuilder<Transform, Hitbox, HitFlashEffect, FadeEffect, Sprite>()
-                 .With<EffectTag>()
-                 .Build();
-
-        world.System("WorldRenderSystem")
-             .Kind(Ecs.OnStore)
-             .Run((Iter it) =>
-             {
-                 RenderConfig renderCfg = ConfigManager.Render;
-                 BossEffectsRenderConfig bossFx = renderCfg.BossEffects;
-                 BulletRenderConfig bulletCfg = renderCfg.Bullets;
-                 ArenaConfig arenaCfg = ConfigManager.Arena;
-
-                 FetchPlayerPosition(playerQuery, out float playerX, out float playerY);
-
-                 DrawPlatforms(it.World(), platformQuery);
-                 DrawBoss1(boss1Query, bossFx, playerX, playerY);
-                 DrawBoss2(boss2Query, bossFx, playerX, playerY);
-                 DrawPlayer(playerQuery);
-                 DrawPlayerBullets(playerBulletQuery, bulletCfg, arenaCfg);
-                 DrawBossBullets(bossBulletQuery, bulletCfg, arenaCfg);
-                 DrawMeleeEffects(meleeSlashQuery);
-             });
-
-        return world;
+        _meleeSlashQuery = world.QueryBuilder<Transform, Hitbox, HitFlashEffect, FadeEffect, Sprite>()
+                                .With<EffectTag>()
+                                .Build();
     }
 
-    private static void FetchPlayerPosition(Query<Transform, Health, PlayerState, Sprite> playerQuery, out float playerX, out float playerY)
+    /// <summary>
+    /// 世界の全ゲームオブジェクト（マップ、Boss、自機、弾幕、エフェクト）を描画します。
+    /// </summary>
+    /// <param name="tileMap">現在のアリーナタイルマップ。</param>
+    /// <param name="platformQuery">プラットフォーム足場検索クエリ。</param>
+    /// <param name="player">現在アクティブなプレイヤー自機。</param>
+    /// <param name="boss">現在アクティブな Boss。</param>
+    public void Render(
+        TileMap? tileMap,
+        Query<Transform, CollisionBox> platformQuery,
+        Player? player,
+        BossCharacter? boss)
     {
-        PlayerConfig pCfg = ConfigManager.Player;
-        float px = pCfg.SpawnX;
-        float py = pCfg.SpawnY;
+        RenderConfig renderCfg = ConfigManager.Render;
+        BossEffectsRenderConfig bossFx = renderCfg.BossEffects;
+        BulletRenderConfig bulletCfg = renderCfg.Bullets;
+        ArenaConfig arenaCfg = ConfigManager.Arena;
 
-        playerQuery.Each((ref Transform pTrans, ref Health pHealth, ref PlayerState pState, ref Sprite pSprite) =>
-        {
-            if (pHealth.IsAlive)
-            {
-                px = pTrans.X;
-                py = pTrans.Y;
-            }
-        });
+        float playerX = player != null ? player.X : ConfigManager.Player.SpawnX;
+        float playerY = player != null ? player.Y : ConfigManager.Player.SpawnY;
 
-        playerX = px;
-        playerY = py;
+        DrawPlatforms(tileMap, platformQuery);
+        DrawBoss(boss, bossFx, playerX, playerY);
+        DrawPlayer(player);
+        DrawPlayerBullets(_playerBulletQuery, bulletCfg, arenaCfg);
+        DrawBossBullets(_bossBulletQuery, bulletCfg, arenaCfg);
+        DrawMeleeEffects(_meleeSlashQuery);
     }
 
-    private static void DrawPlatforms(World world, Query<Transform, CollisionBox> platformQuery)
+    private static void DrawPlatforms(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery)
     {
-        if (world.Has<TileMap>())
+        if (tileMap != null)
         {
-            ref readonly TileMap map = ref world.Get<TileMap>();
-            map.Draw();
-        }
-        else if (BattleScene.CurrentTileMap != null)
-        {
-            BattleScene.CurrentTileMap.Draw();
+            tileMap.Draw();
         }
         else
         {
@@ -130,104 +92,175 @@ public static class WorldRenderSystem
         }
     }
 
-    private static void DrawBoss1(Query<Transform, Health, Boss1Stats, Boss1StateMachine, Sprite> boss1Query, BossEffectsRenderConfig bossFx, float playerX, float playerY)
+    private static void DrawBoss(BossCharacter? boss, BossEffectsRenderConfig bossFx, float playerX, float playerY)
     {
-        boss1Query.Each((ref Transform trans, ref Health bHealth, ref Boss1Stats stats, ref Boss1StateMachine fsm, ref Sprite sprite) =>
+        if (boss == null || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0)
         {
-            int bx = (int)trans.X;
-            int by = (int)trans.Y;
+            return;
+        }
 
-            if (fsm.CurrentState == Boss1StateKind.Telegraphing)
+        int bx = (int)boss.X;
+        int by = (int)boss.Y;
+
+        if (boss.BossType == BossType.Boss1)
+        {
+            if (boss.CurrentState == BossState.Boss1_Telegraph)
             {
-                float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
-                DrawBoss1Telegraph(trans, fsm, playerX, playerY, progress);
+                float progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
+                DrawBoss1Telegraph(boss.X, boss.Y, boss.SkillName, boss.TargetX, boss.TargetY, playerX, playerY, progress, boss.StateTimer);
             }
 
-            if (sprite.IsVisible && sprite.GraphHandle >= 0 && bHealth.IsAlive)
+            double bossAngle = MathF.Sin(boss.HoverTimer * bossFx.BossHoverAngleSpeed) * bossFx.BossHoverAngleAmp;
+            GameEngine.DrawRectRotaGraph(
+                bx,
+                by,
+                boss.Sprite.SrcRect.X1,
+                boss.Sprite.SrcRect.Y1,
+                boss.Sprite.SrcRect.Width,
+                boss.Sprite.SrcRect.Height,
+                boss.ScaleX,
+                bossAngle,
+                boss.Sprite.GraphHandle,
+                true,
+                false);
 
+            // 隙あり（Vulnerable）時の直接変色・脈動発光 & 攻撃チャンスマーカー
+            if (boss.IsVulnerable)
             {
-                double bossAngle = MathF.Sin(stats.HoverTimer * bossFx.BossHoverAngleSpeed) * bossFx.BossHoverAngleAmp;
+                float pulse = 0.5f + 0.5f * MathF.Sin(boss.StateTimer * 10.0f);
+                int vulnAlpha = (int)(130 + 110 * pulse);
+                GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
                 GameEngine.DrawRectRotaGraph(
                     bx,
                     by,
-                    sprite.SrcRect.X1,
-                    sprite.SrcRect.Y1,
-                    sprite.SrcRect.Width,
-                    sprite.SrcRect.Height,
-                    trans.ScaleX,
+                    boss.Sprite.SrcRect.X1,
+                    boss.Sprite.SrcRect.Y1,
+                    boss.Sprite.SrcRect.Width,
+                    boss.Sprite.SrcRect.Height,
+                    boss.ScaleX * 1.04f,
                     bossAngle,
-                    sprite.GraphHandle,
+                    boss.Sprite.GraphHandle,
                     true,
                     false);
+                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
 
-                // 隙あり（Vulnerable / Recovering）時の直接変色・脈動発光 & 醒目攻撃チャンスマーカー
-                // Boss1 は冲撞（DiveRam）後隙のみ易傷エフェクトを適用
-                if (fsm.CurrentState == Boss1StateKind.Recovering && fsm.CurrentSkillName == "DiveRam")
-                {
-                    float pulse = 0.5f + 0.5f * MathF.Sin(fsm.StateTimer * 10.0f);
-                    int vulnAlpha = (int)(130 + 110 * pulse);
-                    GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
-                    GameEngine.DrawRectRotaGraph(
-                        bx,
-                        by,
-                        sprite.SrcRect.X1,
-                        sprite.SrcRect.Y1,
-                        sprite.SrcRect.Width,
-                        sprite.SrcRect.Height,
-                        trans.ScaleX * 1.04f,
-                        bossAngle,
-                        sprite.GraphHandle,
-                        true,
-                        false);
-                    GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-
-                    // 頭上にボビングする醒目攻撃チャンスサイン (策划調整可能テキスト)
-                    float bobbing = MathF.Sin(fsm.StateTimer * 8.0f) * 4.0f;
-                    int textWidth = bossFx.ChanceMarkerText.Length * 7;
-                    int textX = bx - textWidth / 2;
-                    int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
-                    GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
-                }
-
-
-
-                if (stats.HitFlashTimer > 0.0f)
-                {
-                    GameEngine.SetDrawBlendMode(BlendMode.Add, 255);
-                    GameEngine.DrawRectRotaGraph(
-                        bx,
-                        by,
-                        sprite.SrcRect.X1,
-                        sprite.SrcRect.Y1,
-                        sprite.SrcRect.Width,
-                        sprite.SrcRect.Height,
-                        trans.ScaleX,
-                        bossAngle,
-                        sprite.GraphHandle,
-                        true,
-                        false);
-                    GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-                }
+                float bobbing = MathF.Sin(boss.StateTimer * 8.0f) * 4.0f;
+                int textWidth = bossFx.ChanceMarkerText.Length * 7;
+                int textX = bx - textWidth / 2;
+                int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
+                GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
             }
-        });
+
+            if (boss.HitFlashTimer > 0.0f)
+            {
+                GameEngine.SetDrawBlendMode(BlendMode.Add, 255);
+                GameEngine.DrawRectRotaGraph(
+                    bx,
+                    by,
+                    boss.Sprite.SrcRect.X1,
+                    boss.Sprite.SrcRect.Y1,
+                    boss.Sprite.SrcRect.Width,
+                    boss.Sprite.SrcRect.Height,
+                    boss.ScaleX,
+                    bossAngle,
+                    boss.Sprite.GraphHandle,
+                    true,
+                    false);
+                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+            }
+        }
+        else
+        {
+            if (boss.CurrentState == BossState.Boss2_Telegraph)
+            {
+                float progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
+                DrawBoss2Telegraph(boss.X, boss.Y, boss.CurrentSkill, boss.TargetX, boss.TargetY, playerX, playerY, boss.FacingRight, progress);
+            }
+
+            bool flipX = !boss.FacingRight;
+            GameEngine.DrawRectRotaGraph(
+                bx,
+                by,
+                boss.Sprite.SrcRect.X1,
+                boss.Sprite.SrcRect.Y1,
+                boss.Sprite.SrcRect.Width,
+                boss.Sprite.SrcRect.Height,
+                boss.ScaleX,
+                0.0,
+                boss.Sprite.GraphHandle,
+                true,
+                flipX);
+
+            // 隙あり（Vulnerable）時の直接変色・脈動発光 & 攻撃チャンスマーカー
+            if (boss.IsVulnerable)
+            {
+                float pulse = 0.5f + 0.5f * MathF.Sin(boss.StateTimer * 10.0f);
+                int vulnAlpha = (int)(130 + 110 * pulse);
+                GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
+                GameEngine.DrawRectRotaGraph(
+                    bx,
+                    by,
+                    boss.Sprite.SrcRect.X1,
+                    boss.Sprite.SrcRect.Y1,
+                    boss.Sprite.SrcRect.Width,
+                    boss.Sprite.SrcRect.Height,
+                    boss.ScaleX * 1.04f,
+                    0.0,
+                    boss.Sprite.GraphHandle,
+                    true,
+                    flipX);
+                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+
+                float bobbing = MathF.Sin(boss.StateTimer * 8.0f) * 4.0f;
+                int textWidth = bossFx.ChanceMarkerText.Length * 7;
+                int textX = bx - textWidth / 2;
+                int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
+                GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
+            }
+
+            if (boss.HitFlashTimer > 0.0f)
+            {
+                GameEngine.SetDrawBlendMode(BlendMode.Add, 255);
+                GameEngine.DrawRectRotaGraph(
+                    bx,
+                    by,
+                    boss.Sprite.SrcRect.X1,
+                    boss.Sprite.SrcRect.Y1,
+                    boss.Sprite.SrcRect.Width,
+                    boss.Sprite.SrcRect.Height,
+                    boss.ScaleX,
+                    0.0,
+                    boss.Sprite.GraphHandle,
+                    true,
+                    flipX);
+                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+            }
+        }
     }
 
-
-    private static void DrawBoss1Telegraph(Transform trans, Boss1StateMachine fsm, float playerX, float playerY, float progress)
+    private static void DrawBoss1Telegraph(
+        float bx,
+        float by,
+        string skillName,
+        float targetX,
+        float targetY,
+        float playerX,
+        float playerY,
+        float progress,
+        float stateTimer)
     {
         PatternConfig patternCfg = ConfigManager.Pattern;
-        string skillName = fsm.CurrentSkillName;
-        float targetX = (fsm.TargetX != 0.0f || fsm.TargetY != 0.0f) ? fsm.TargetX : playerX;
-        float targetY = (fsm.TargetX != 0.0f || fsm.TargetY != 0.0f) ? fsm.TargetY : playerY;
+        float finalTargetX = (targetX != 0.0f || targetY != 0.0f) ? targetX : playerX;
+        float finalTargetY = (targetX != 0.0f || targetY != 0.0f) ? targetY : playerY;
 
         switch (skillName)
         {
             case "Aimed3Shot":
                 TelegraphRenderHelper.DrawAimingLasers(
-                    trans.X,
-                    trans.Y,
-                    targetX,
-                    targetY,
+                    bx,
+                    by,
+                    finalTargetX,
+                    finalTargetY,
                     patternCfg.Aimed3Shot.SpreadAngle,
                     patternCfg.Aimed3Shot.BulletCount,
                     progress,
@@ -237,10 +270,10 @@ public static class WorldRenderSystem
 
             case "FastSniper":
                 TelegraphRenderHelper.DrawAimingLasers(
-                    trans.X,
-                    trans.Y,
-                    targetX,
-                    targetY,
+                    bx,
+                    by,
+                    finalTargetX,
+                    finalTargetY,
                     0.0f,
                     1,
                     progress,
@@ -250,10 +283,10 @@ public static class WorldRenderSystem
 
             case "DiveRam":
                 TelegraphRenderHelper.DrawDiveRamTelegraph(
-                    trans.X,
-                    trans.Y,
-                    targetX,
-                    targetY,
+                    bx,
+                    by,
+                    finalTargetX,
+                    finalTargetY,
                     patternCfg.DiveRam.ImpactRadius,
                     progress,
                     patternCfg.DiveRam.TelegraphColor);
@@ -261,8 +294,8 @@ public static class WorldRenderSystem
 
             case "RingBurst":
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
-                    trans.X,
-                    trans.Y,
+                    bx,
+                    by,
                     patternCfg.RingBurst.BulletCount,
                     0.0f,
                     75.0f,
@@ -271,10 +304,10 @@ public static class WorldRenderSystem
                 break;
 
             case "DoubleSpiral":
-                float spiralAngle = fsm.StateTimer * 4.0f;
+                float spiralAngle = stateTimer * 4.0f;
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
-                    trans.X,
-                    trans.Y,
+                    bx,
+                    by,
                     2,
                     spiralAngle,
                     90.0f,
@@ -294,10 +327,10 @@ public static class WorldRenderSystem
                 break;
 
             case "CrossChaos":
-                float crossAngle = fsm.StateTimer * 2.5f;
+                float crossAngle = stateTimer * 2.5f;
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
-                    trans.X,
-                    trans.Y,
+                    bx,
+                    by,
                     4,
                     crossAngle,
                     110.0f,
@@ -307,130 +340,51 @@ public static class WorldRenderSystem
 
             default:
                 TelegraphRenderHelper.DrawAimingLasers(
-                    trans.X,
-                    trans.Y,
-                    targetX,
-                    targetY,
+                    bx,
+                    by,
+                    finalTargetX,
+                    finalTargetY,
                     patternCfg.Aimed3Shot.SpreadAngle,
                     patternCfg.Aimed3Shot.BulletCount,
                     progress,
                     patternCfg.Aimed3Shot.TelegraphColor,
                     false);
                 break;
-
         }
     }
 
-    private static void DrawBoss2(Query<Transform, Health, Boss2Stats, Boss2StateMachine, Sprite> boss2Query, BossEffectsRenderConfig bossFx, float playerX, float playerY)
-    {
-        boss2Query.Each((ref Transform trans, ref Health bHealth, ref Boss2Stats stats, ref Boss2StateMachine fsm, ref Sprite sprite) =>
-        {
-            int bx = (int)trans.X;
-            int by = (int)trans.Y;
-
-            if (fsm.CurrentState is Boss2StateKind.TelegraphHeavySlash
-                or Boss2StateKind.TelegraphDoubleCleave
-                or Boss2StateKind.TelegraphGroundStomp
-                or Boss2StateKind.TelegraphLeapSmash
-                or Boss2StateKind.TelegraphFrenzyCharge
-                or Boss2StateKind.TelegraphEarthquakeRoar)
-            {
-                float progress = Math.Clamp(fsm.StateTimer / Math.Max(0.01f, fsm.StateDuration), 0.0f, 1.0f);
-                DrawBoss2Telegraph(trans, fsm, playerX, playerY, !sprite.FlipX, progress);
-            }
-
-            if (sprite.IsVisible && sprite.GraphHandle >= 0 && bHealth.IsAlive)
-
-            {
-                GameEngine.DrawRectRotaGraph(
-                    bx,
-                    by,
-                    sprite.SrcRect.X1,
-                    sprite.SrcRect.Y1,
-                    sprite.SrcRect.Width,
-                    sprite.SrcRect.Height,
-                    trans.ScaleX,
-                    0.0,
-                    sprite.GraphHandle,
-                    true,
-                    sprite.FlipX);
-
-                // 隙あり（Vulnerable）時の直接変色・脈動発光 & 醒目攻撃チャンスマーカー
-                // Boss2 は泰山圧頂（LeapSmash）着地後隙のみ易傷エフェクトを適用
-                if (fsm.CurrentState == Boss2StateKind.SkillRecovery && fsm.CurrentSkillName == "LeapSmash")
-                {
-                    float pulse = 0.5f + 0.5f * MathF.Sin(fsm.StateTimer * 10.0f);
-                    int vulnAlpha = (int)(130 + 110 * pulse);
-                    GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
-                    GameEngine.DrawRectRotaGraph(
-                        bx,
-                        by,
-                        sprite.SrcRect.X1,
-                        sprite.SrcRect.Y1,
-                        sprite.SrcRect.Width,
-                        sprite.SrcRect.Height,
-                        trans.ScaleX * 1.04f,
-                        0.0,
-                        sprite.GraphHandle,
-                        true,
-                        sprite.FlipX);
-                    GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-
-                    // 頭上にボビングする醒目攻撃チャンスサイン (策划調整可能テキスト)
-                    float bobbing = MathF.Sin(fsm.StateTimer * 8.0f) * 4.0f;
-                    int textWidth = bossFx.ChanceMarkerText.Length * 7;
-                    int textX = bx - textWidth / 2;
-                    int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
-                    GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
-                }
-
-                if (stats.HitFlashTimer > 0.0f)
-                {
-                    GameEngine.SetDrawBlendMode(BlendMode.Add, 255);
-                    GameEngine.DrawRectRotaGraph(
-                        bx,
-                        by,
-                        sprite.SrcRect.X1,
-                        sprite.SrcRect.Y1,
-                        sprite.SrcRect.Width,
-                        sprite.SrcRect.Height,
-                        trans.ScaleX,
-                        0.0,
-                        sprite.GraphHandle,
-                        true,
-                        sprite.FlipX);
-                    GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-                }
-            }
-        });
-    }
-
-    private static void DrawBoss2Telegraph(Transform trans, Boss2StateMachine fsm, float playerX, float playerY, bool facingRight, float progress)
+    private static void DrawBoss2Telegraph(
+        float bx,
+        float by,
+        BossSkill skill,
+        float targetX,
+        float targetY,
+        float playerX,
+        float playerY,
+        bool facingRight,
+        float progress)
     {
         Boss2Config b2Cfg = ConfigManager.Boss2;
         PatternConfig patternCfg = ConfigManager.Pattern;
-        int bx = (int)trans.X;
-        int by = (int)trans.Y;
-        float targetX = (fsm.TargetX != 0.0f || fsm.TargetY != 0.0f) ? fsm.TargetX : playerX;
-        float targetY = (fsm.TargetX != 0.0f || fsm.TargetY != 0.0f) ? fsm.TargetY : playerY;
+        float finalTargetX = (targetX != 0.0f || targetY != 0.0f) ? targetX : playerX;
+        float finalTargetY = (targetX != 0.0f || targetY != 0.0f) ? targetY : playerY;
 
-        switch (fsm.CurrentState)
+        switch (skill)
         {
-            case Boss2StateKind.TelegraphGroundStomp:
-                float groundY = trans.Y + b2Cfg.CollisionHeight / 2.0f;
-                TelegraphRenderHelper.DrawGroundShockwaveRails(bx, groundY, progress, patternCfg.GroundStomp.TelegraphColor);
+            case BossSkill.GroundStomp:
+                float groundY = by + b2Cfg.CollisionHeight / 2.0f;
+                TelegraphRenderHelper.DrawGroundShockwaveRails((int)bx, groundY, progress, patternCfg.GroundStomp.TelegraphColor);
                 break;
 
-            case Boss2StateKind.TelegraphLeapSmash:
+            case BossSkill.LeapSmash:
                 TelegraphRenderHelper.DrawLeapSmashTelegraph(
-                    targetX,
-                    targetY,
+                    finalTargetX,
+                    finalTargetY,
                     progress,
                     patternCfg.LeapSmash.TelegraphColor);
                 break;
 
-
-            case Boss2StateKind.TelegraphEarthquakeRoar:
+            case BossSkill.EarthquakeRoar:
                 TelegraphRenderHelper.DrawSkyfallColumns(
                     patternCfg.EarthquakeRoar.MinX,
                     patternCfg.EarthquakeRoar.MaxX,
@@ -441,20 +395,20 @@ public static class WorldRenderSystem
                     "▼ ROCK ▼");
                 break;
 
-            case Boss2StateKind.TelegraphFrenzyCharge:
+            case BossSkill.FrenzyCharge:
                 TelegraphRenderHelper.DrawChargeDangerTrack(
-                    bx,
-                    by,
+                    (int)bx,
+                    (int)by,
                     b2Cfg.CollisionHeight,
                     facingRight,
                     progress,
                     patternCfg.FrenzyCharge.TelegraphColor);
                 break;
 
-            case Boss2StateKind.TelegraphDoubleCleave:
+            case BossSkill.DoubleCleave:
                 TelegraphRenderHelper.DrawMeleeDangerBox(
-                    bx,
-                    by,
+                    (int)bx,
+                    (int)by,
                     patternCfg.DoubleCleave.SlashRangeX,
                     patternCfg.DoubleCleave.SlashRangeY,
                     facingRight,
@@ -462,11 +416,11 @@ public static class WorldRenderSystem
                     patternCfg.DoubleCleave.TelegraphColor);
                 break;
 
-            case Boss2StateKind.TelegraphHeavySlash:
+            case BossSkill.HeavySlash:
             default:
                 TelegraphRenderHelper.DrawMeleeDangerBox(
-                    bx,
-                    by,
+                    (int)bx,
+                    (int)by,
                     patternCfg.HeavySlash.SlashRangeX,
                     patternCfg.HeavySlash.SlashRangeY,
                     facingRight,
@@ -476,37 +430,33 @@ public static class WorldRenderSystem
         }
     }
 
-    private static void DrawPlayer(Query<Transform, Health, PlayerState, Sprite> playerQuery)
+    private static void DrawPlayer(Player? player)
     {
-        playerQuery.Each((ref Transform trans, ref Health health, ref PlayerState playerState, ref Sprite sprite) =>
+        if (player == null || !player.IsAlive || !player.Sprite.IsVisible || player.Sprite.GraphHandle < 0)
         {
-            if (!health.IsAlive || !sprite.IsVisible || sprite.GraphHandle < 0)
-            {
-                return;
-            }
+            return;
+        }
 
-            bool shouldDrawSprite = !health.IsInvincible || ((int)(health.InvincibleTimer * 30.0f) % 2 == 0);
+        bool shouldDrawSprite = player.InvincibleTimer <= 0.0f || ((int)(player.InvincibleTimer * 30.0f) % 2 == 0);
 
-            if (shouldDrawSprite)
-            {
-                GameEngine.DrawRectRotaGraph(
-                    (int)trans.X,
-                    (int)trans.Y,
-                    sprite.SrcRect.X1,
-                    sprite.SrcRect.Y1,
-                    sprite.SrcRect.Width,
-                    sprite.SrcRect.Height,
-                    trans.ScaleX,
-                    trans.Rotation,
-                    sprite.GraphHandle,
-                    true,
-                    sprite.FlipX);
-            }
-        });
+        if (shouldDrawSprite)
+        {
+            GameEngine.DrawRectRotaGraph(
+                (int)player.X,
+                (int)player.Y,
+                player.Sprite.SrcRect.X1,
+                player.Sprite.SrcRect.Y1,
+                player.Sprite.SrcRect.Width,
+                player.Sprite.SrcRect.Height,
+                player.ScaleX,
+                0.0,
+                player.Sprite.GraphHandle,
+                true,
+                player.Sprite.FlipX);
+        }
     }
 
     private static void DrawPlayerBullets(Query<Transform, Velocity> playerBulletQuery, BulletRenderConfig bulletCfg, ArenaConfig arenaCfg)
-
     {
         int clipMinX = (int)arenaCfg.BulletDespawnMinX - bulletCfg.ViewportCullingMarginX;
         int clipMaxX = (int)arenaCfg.BulletDespawnMaxX + bulletCfg.ViewportCullingMarginX;
@@ -518,8 +468,6 @@ public static class WorldRenderSystem
         int pInnerRadius = (int)bulletCfg.PlayerBulletInnerRadius;
         Color pInnerColor = bulletCfg.PlayerBulletInnerColor;
         int pTrailOffset = bulletCfg.PlayerBulletTrailHalfWidth;
-        int pTrailRadius = bulletCfg.PlayerBulletTrailHalfHeight * 2;
-        Color pTrailColor = bulletCfg.PlayerBulletTrailColor;
 
         playerBulletQuery.Iter((Iter it, Field<Transform> trans, Field<Velocity> vel) =>
         {
@@ -535,13 +483,16 @@ public static class WorldRenderSystem
 
                 float vx = vel[i].Vx;
                 float vy = vel[i].Vy;
-                float lenSq = vx * vx + vy * vy;
-                if (lenSq > 0.0001f)
+                float speedSq = vx * vx + vy * vy;
+                if (speedSq > 1.0f)
                 {
-                    float invLen = 1.0f / MathF.Sqrt(lenSq);
-                    int tx = (int)(px - (vx * invLen) * pTrailOffset);
-                    int ty = (int)(py - (vy * invLen) * pTrailOffset);
-                    GameEngine.DrawCircle(tx, ty, pTrailRadius, pTrailColor, true);
+                    float invSpeed = 1.0f / MathF.Sqrt(speedSq);
+                    float dirX = vx * invSpeed;
+                    float dirY = vy * invSpeed;
+
+                    int trailX = (int)(px - dirX * pTrailOffset);
+                    int trailY = (int)(py - dirY * pTrailOffset);
+                    GameEngine.DrawCircle(trailX, trailY, pInnerRadius, pOuterColor, true);
                 }
 
                 GameEngine.DrawCircle(px, py, pOuterRadius, pOuterColor, true);
@@ -628,5 +579,17 @@ public static class WorldRenderSystem
                 GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
             }
         });
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (!_isDisposed)
+        {
+            _playerBulletQuery.Dispose();
+            _bossBulletQuery.Dispose();
+            _meleeSlashQuery.Dispose();
+            _isDisposed = true;
+        }
     }
 }

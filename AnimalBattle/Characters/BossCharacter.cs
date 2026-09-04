@@ -11,6 +11,7 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core.Physics;
 using AnimalBattle.Systems;
+using ErrorOr;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters;
@@ -40,11 +41,17 @@ public sealed class BossCharacter
     private float _currentHp;
     private float _maxHp;
     private float _hitFlashTimer;
+    private float _scaleX = 1.0f;
+    private float _scaleY = 1.0f;
+    private float _hitFlashDuration = 0.1f;
     private bool _isGrounded;
     private long _frameNumber;
 
     /// <summary>Boss の種別を取得します。</summary>
     public BossType BossType => _bossType;
+
+    /// <summary>Boss の名称を取得します。</summary>
+    public string BossName => _bossType == BossType.Boss1 ? ConfigManager.Boss1.BossName : ConfigManager.Boss2.BossName;
 
     /// <summary>ワールド X 座標を取得または設定します。</summary>
     public float X
@@ -96,6 +103,38 @@ public sealed class BossCharacter
     /// <summary>現在選択されている攻撃技能を取得します。</summary>
     public BossSkill CurrentSkill => _slot.AttackData.Skill;
 
+    /// <summary>現在選択されている攻撃技能名を取得します。</summary>
+    public string SkillName => _slot.AttackData.Skill != BossSkill.None ? _slot.AttackData.Skill.ToString() : string.Empty;
+
+    /// <summary>AI 目標地点 X 座標を取得します。</summary>
+    public float TargetX => _slot.CompatibilityView.LegacyTargetX;
+
+    /// <summary>AI 目標地点 Y 座標を取得します。</summary>
+    public float TargetY => _slot.CompatibilityView.LegacyTargetY;
+
+    /// <summary>Boss 1 の浮遊タイマー値を取得します。</summary>
+    public float HoverTimer => _boss1State != null ? _boss1State.HoverTimer : 0.0f;
+
+    /// <summary>Boss が右向きであるかを取得します。</summary>
+    public bool FacingRight => _slot.MovementData.FacingRight;
+
+    /// <summary>Boss が無敵状態であるかを取得します。</summary>
+    public bool IsInvulnerable => _slot.AiData.IsInvulnerable;
+
+    /// <summary>Boss が後隙による易傷（被ダメージ倍加）状態であるかを取得します。</summary>
+    public bool IsVulnerable => _bossType == BossType.Boss1
+        ? (_slot.CurrentStateId == BossState.Boss1_Recovery && _slot.AttackData.Skill == BossSkill.DiveRam)
+        : (_slot.CurrentStateId == BossState.Boss2_Recovery && _slot.AttackData.Skill == BossSkill.LeapSmash);
+
+    /// <summary>描画スケール X を取得します。</summary>
+    public float ScaleX => _scaleX;
+
+    /// <summary>描画スケール Y を取得します。</summary>
+    public float ScaleY => _scaleY;
+
+    /// <summary>スプライト表示情報を取得します。</summary>
+    public Sprite Sprite => _sprite;
+
     /// <summary>現在状態の経過時間（秒）を取得します。</summary>
     public float StateTimer => _slot.AiData.StateTimer;
 
@@ -140,6 +179,7 @@ public sealed class BossCharacter
             _y = b1Cfg.BaseY;
             _maxHp = b1Cfg.MaxHp;
             _currentHp = b1Cfg.MaxHp;
+            _hitFlashDuration = b1Cfg.HitFlashDuration;
 
             _hurtbox = new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile);
             _bodyHitbox = new Hitbox(b1Cfg.GetHitboxShape(), damage: b1Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false);
@@ -147,24 +187,9 @@ public sealed class BossCharacter
             _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192));
 
             _boss1State = new Boss1BehaviorState(b1Cfg.BaseX, b1Cfg.BaseY);
-            _boss2State = null;
+            _boss2State = new Boss2BehaviorState(0.0f, 0.0f);
 
-            Boss1DefaultConfiguration boss1Config = new();
-            Boss1AttackAdapter adapter = new(boss1Config, _boss1State);
-
-            IBossStateModule[] modules =
-            [
-                new HoverMovementModule(boss1Config, _boss1State),
-                new Boss1AttackSelectionModule(boss1Config, _boss1State),
-                new DslTelegraphModule(adapter),
-                new DslBoss1ExecuteModule(boss1Config, _boss1State),
-                new DslRecoveryModule(adapter),
-                new Boss1PhaseTransitionModule(boss1Config, _boss1State),
-                new Boss1DeadModule(_boss1State)
-            ];
-
-            string[] dependencies = ["AttackPort", "Boss1Configuration", "EffectPort", "MovementPort", "ObservationService", "PlayerObservation", "RandomSource"];
-            EnumModuleMap moduleMap = new(modules, dependencies, observation);
+            EnumModuleMap moduleMap = CreateCompleteModuleMap(_boss1State, _boss2State, observation);
             TransitionService transitionService = new(moduleMap, observation);
             _runtime = new BossAiRuntime(moduleMap, transitionService, observation, type => _boss1State);
 
@@ -183,7 +208,12 @@ public sealed class BossCharacter
                 attackCommandBuffer: attackCommands,
                 effectCommandBuffer: effectCommands);
 
-            _runtime.Initialize(_slot, BossState.Boss1_Hover);
+            ErrorOr<Success> initResult = _runtime.Initialize(_slot, BossState.Boss1_Hover);
+            if (initResult.IsError)
+            {
+                Console.WriteLine($"[BossCharacter] Boss1 初期化失敗: {initResult.FirstError.Description}");
+            }
+
             InitializeEntityComponents(b1Cfg.ScaleX, b1Cfg.ScaleY);
         }
         else
@@ -193,34 +223,17 @@ public sealed class BossCharacter
             _y = b2Cfg.SpawnY;
             _maxHp = b2Cfg.MaxHp;
             _currentHp = b2Cfg.MaxHp;
+            _hitFlashDuration = b2Cfg.HitFlashDuration;
 
             _collisionBox = new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight);
             _hurtbox = new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile);
             _bodyHitbox = new Hitbox(b2Cfg.GetHitboxShape(), damage: b2Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false);
             _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192));
 
-            _boss1State = null;
+            _boss1State = new Boss1BehaviorState(0.0f, 0.0f);
             _boss2State = new Boss2BehaviorState(b2Cfg.SpawnX, b2Cfg.SpawnY);
 
-            Boss2DefaultConfiguration boss2Config = new();
-            Boss2AttackAdapter adapter = new(boss2Config, _boss2State);
-
-            IBossStateModule[] modules =
-            [
-                new Boss2IdleModule(_boss2State),
-                new Boss2PatrolChaseModule(boss2Config, _boss2State),
-                new Boss2MoveToTakeoffModule(boss2Config, _boss2State),
-                new DslPlatformTraverseModule(BossState.Boss2_PlatformTraverse, TraverseMode.Jump, boss2Config, _boss2State),
-                new DslTelegraphModule(adapter),
-                new DslBoss2ExecuteModule(boss2Config, _boss2State),
-                new Boss2WallCrashStunModule(_boss2State),
-                new DslRecoveryModule(adapter),
-                new Boss2PhaseTransitionModule(boss2Config, _boss2State),
-                new Boss2DeadModule(_boss2State)
-            ];
-
-            string[] dependencies = ["AttackPort", "Boss2Configuration", "EffectPort", "MovementPort", "ObservationService", "PlayerObservation", "RandomSource"];
-            EnumModuleMap moduleMap = new(modules, dependencies, observation);
+            EnumModuleMap moduleMap = CreateCompleteModuleMap(_boss1State, _boss2State, observation);
             TransitionService transitionService = new(moduleMap, observation);
             _runtime = new BossAiRuntime(moduleMap, transitionService, observation, type => _boss2State);
 
@@ -239,7 +252,12 @@ public sealed class BossCharacter
                 attackCommandBuffer: attackCommands,
                 effectCommandBuffer: effectCommands);
 
-            _runtime.Initialize(_slot, BossState.Boss2_Idle);
+            ErrorOr<Success> initResult = _runtime.Initialize(_slot, BossState.Boss2_Idle);
+            if (initResult.IsError)
+            {
+                Console.WriteLine($"[BossCharacter] Boss2 初期化失敗: {initResult.FirstError.Description}");
+            }
+
             InitializeEntityComponents(b2Cfg.ScaleX, b2Cfg.ScaleY);
         }
 
@@ -280,7 +298,11 @@ public sealed class BossCharacter
 
         // 3. AI 状態機の更新（Phase -> 状態遷移 -> コマンド生成）
         _runtime.SynchronizeBossState(_bossType, _x, _y, _vx, _vy, _isGrounded, playerObservation.IsAlive);
-        _runtime.Update(_slot, _frameNumber++, deltaTime, Phase, in playerObservation, _currentHp, _maxHp);
+        ErrorOr<Success> updateResult = _runtime.Update(_slot, _frameNumber++, deltaTime, Phase, in playerObservation, _currentHp, _maxHp);
+        if (updateResult.IsError && _frameNumber <= 5)
+        {
+            Console.WriteLine($"[BossCharacter] AI 更新エラー (Frame {_frameNumber - 1}): {updateResult.FirstError.Description}");
+        }
 
         // 4. コマンド実行（物理移動・弾幕発射・画面演出）
         BossCommandExecutor.ExecuteMovement(world, _entity, _slot, deltaTime, platformQuery);
@@ -336,7 +358,11 @@ public sealed class BossCharacter
                 _boss1State.AngleOffset = 0.0f;
             }
 
-            _runtime.Initialize(_slot, BossState.Boss1_Hover);
+            ErrorOr<Success> initResult = _runtime.Initialize(_slot, BossState.Boss1_Hover);
+            if (initResult.IsError)
+            {
+                Console.WriteLine($"[BossCharacter] Boss1 リセット失敗: {initResult.FirstError.Description}");
+            }
         }
         else
         {
@@ -357,7 +383,11 @@ public sealed class BossCharacter
                 _boss2State.JumpCooldown = 0.0f;
             }
 
-            _runtime.Initialize(_slot, BossState.Boss2_Idle);
+            ErrorOr<Success> initResult = _runtime.Initialize(_slot, BossState.Boss2_Idle);
+            if (initResult.IsError)
+            {
+                Console.WriteLine($"[BossCharacter] Boss2 リセット失敗: {initResult.FirstError.Description}");
+            }
         }
 
         SyncToEntity();
@@ -365,25 +395,25 @@ public sealed class BossCharacter
 
     private void InitializeEntityComponents(float scaleX, float scaleY)
     {
+        _scaleX = scaleX;
+        _scaleY = scaleY;
+
         _entity.Set(new Transform(_x, _y, scaleX: scaleX, scaleY: scaleY))
                .Set(new Velocity())
                .Set(_hurtbox)
                .Set(_bodyHitbox)
-               .Set(new Health(_maxHp))
+               .Set(new Health(_maxHp, _currentHp))
                .Set(_sprite)
+               .Set(new BossCombatState(IsInvulnerable, IsVulnerable, _hitFlashDuration, _hitFlashTimer))
                .Add<BossTag>();
 
         if (_bossType == BossType.Boss1)
         {
-            _entity.Set(new Boss1Stats(baseX: _x, baseY: _y))
-                   .Set(new Boss1StateMachine())
-                   .Add<Boss1Tag>();
+            _entity.Add<Boss1Tag>();
         }
         else
         {
             _entity.Set(_collisionBox)
-                   .Set(new Boss2Stats(spawnX: _x, spawnY: _y))
-                   .Set(new Boss2StateMachine())
                    .Add<Boss2Tag>();
         }
     }
@@ -401,15 +431,14 @@ public sealed class BossCharacter
             _currentHp = health.Current;
         }
 
-        if (_bossType == BossType.Boss1 && _entity.Has<Boss1Stats>())
+        if (_entity.Has<BossCombatState>())
         {
-            ref Boss1Stats stats = ref _entity.GetMut<Boss1Stats>();
-            _hitFlashTimer = stats.HitFlashTimer;
-        }
-        else if (_bossType == BossType.Boss2 && _entity.Has<Boss2Stats>())
-        {
-            ref Boss2Stats stats = ref _entity.GetMut<Boss2Stats>();
-            _hitFlashTimer = stats.HitFlashTimer;
+            ref BossCombatState combat = ref _entity.GetMut<BossCombatState>();
+            if (combat.HitFlashTimer > 0.0f)
+            {
+                _hitFlashTimer = combat.HitFlashTimer;
+                combat.HitFlashTimer = 0.0f;
+            }
         }
     }
 
@@ -420,102 +449,65 @@ public sealed class BossCharacter
             return;
         }
 
-        ref Health health = ref _entity.GetMut<Health>();
-        health.Current = _currentHp;
-        health.Max = _maxHp;
+        _entity.Set(new Transform(_x, _y, scaleX: _scaleX, scaleY: _scaleY));
 
-        BossCompatibilityData compatibility = _slot.CompatibilityView;
+        Health health = new(_maxHp, _currentHp);
+        _entity.Set(health);
 
-        if (_bossType == BossType.Boss1)
+        _entity.Set(new BossCombatState(IsInvulnerable, IsVulnerable, _hitFlashDuration, _hitFlashTimer));
+
+        if (_entity.Has<Sprite>())
         {
-            ref Boss1StateMachine fsm = ref _entity.GetMut<Boss1StateMachine>();
-            fsm.CurrentState = MapToLegacyBoss1Kind(_slot.CurrentStateId);
-            fsm.CurrentSkillName = _slot.AttackData.Skill != BossSkill.None ? _slot.AttackData.Skill.ToString() : string.Empty;
-            fsm.StateTimer = _slot.AiData.StateTimer;
-            fsm.StateDuration = _slot.AiData.StateDuration;
-            fsm.TargetX = compatibility.LegacyTargetX;
-            fsm.TargetY = compatibility.LegacyTargetY;
-            fsm.IsInvulnerable = _slot.AiData.IsInvulnerable;
-
-            ref Boss1Stats stats = ref _entity.GetMut<Boss1Stats>();
-            stats.HoverTimer = _boss1State != null ? _boss1State.HoverTimer : 0.0f;
-            stats.HitFlashTimer = _hitFlashTimer;
-            stats.Phase = (int)_slot.Phase;
+            ref Sprite sprite = ref _entity.GetMut<Sprite>();
+            sprite.FlipX = !_slot.MovementData.FacingRight;
         }
-        else
-        {
-            ref Boss2StateMachine fsm = ref _entity.GetMut<Boss2StateMachine>();
-            fsm.CurrentState = MapToLegacyBoss2Kind(_slot.CurrentStateId, _slot.AttackData.Skill);
-            fsm.CurrentSkillName = _slot.AttackData.Skill != BossSkill.None ? _slot.AttackData.Skill.ToString() : string.Empty;
-            fsm.StateTimer = _slot.AiData.StateTimer;
-            fsm.StateDuration = _slot.AiData.StateDuration;
-            fsm.TargetX = compatibility.LegacyTargetX;
-            fsm.TargetY = compatibility.LegacyTargetY;
-            fsm.IsInvulnerable = _slot.AiData.IsInvulnerable;
-
-            ref Boss2Stats stats = ref _entity.GetMut<Boss2Stats>();
-            stats.HitFlashTimer = _hitFlashTimer;
-            stats.Phase = (int)_slot.Phase;
-            stats.FacingRight = _slot.MovementData.FacingRight;
-
-            if (_entity.Has<Sprite>())
-            {
-                ref Sprite sprite = ref _entity.GetMut<Sprite>();
-                sprite.FlipX = !_slot.MovementData.FacingRight;
-            }
-        }
-
-        _entity.Set(compatibility);
     }
 
-    private static Boss1StateKind MapToLegacyBoss1Kind(BossState state)
+    private static EnumModuleMap CreateCompleteModuleMap(
+        Boss1BehaviorState boss1State,
+        Boss2BehaviorState boss2State,
+        ObservationService observation)
     {
-        return state.AsBoss1() switch
-        {
-            Boss1State.Hover => Boss1StateKind.Hovering,
-            Boss1State.AttackSelection => Boss1StateKind.Hovering,
-            Boss1State.Telegraph => Boss1StateKind.Telegraphing,
-            Boss1State.Execute => Boss1StateKind.Casting,
-            Boss1State.Recovery => Boss1StateKind.Recovering,
-            Boss1State.PhaseTransition => Boss1StateKind.PhaseTransition,
-            _ => Boss1StateKind.Hovering
-        };
-    }
+        Boss1DefaultConfiguration boss1Config = new();
+        Boss2DefaultConfiguration boss2Config = new();
+        Boss1AttackAdapter adapter1 = new(boss1Config, boss1State);
+        Boss2AttackAdapter adapter2 = new(boss2Config, boss2State);
 
-    private static Boss2StateKind MapToLegacyBoss2Kind(BossState state, BossSkill skill)
-    {
-        return state.AsBoss2() switch
-        {
-            Boss2State.Idle => Boss2StateKind.Idle,
-            Boss2State.PatrolChase => Boss2StateKind.PatrolChase,
-            Boss2State.MoveToTakeoff => Boss2StateKind.MoveToTakeoff,
-            Boss2State.PlatformTraverse => Boss2StateKind.PlatformJumping,
-            Boss2State.Telegraph => skill switch
-            {
-                BossSkill.HeavySlash => Boss2StateKind.TelegraphHeavySlash,
-                BossSkill.DoubleCleave => Boss2StateKind.TelegraphDoubleCleave,
-                BossSkill.GroundStomp => Boss2StateKind.TelegraphGroundStomp,
-                BossSkill.LeapSmash => Boss2StateKind.TelegraphLeapSmash,
-                BossSkill.FrenzyCharge => Boss2StateKind.TelegraphFrenzyCharge,
-                BossSkill.EarthquakeRoar => Boss2StateKind.TelegraphEarthquakeRoar,
-                _ => Boss2StateKind.TelegraphHeavySlash
-            },
-            Boss2State.Execute => skill switch
-            {
-                BossSkill.HeavySlash => Boss2StateKind.ExecutingHeavySlash,
-                BossSkill.DoubleCleave => Boss2StateKind.ExecutingDoubleCleave,
-                BossSkill.GroundStomp => Boss2StateKind.ExecutingGroundStomp,
-                BossSkill.LeapSmash => Boss2StateKind.ExecutingLeapAscent,
-                BossSkill.FrenzyCharge => Boss2StateKind.ExecutingFrenzyCharge,
-                BossSkill.EarthquakeRoar => Boss2StateKind.ExecutingEarthquakeRoar,
-                _ => Boss2StateKind.ExecutingHeavySlash
-            },
-            Boss2State.WallCrashStun => Boss2StateKind.WallCrashStun,
-            Boss2State.Recovery => Boss2StateKind.SkillRecovery,
-            Boss2State.PhaseTransition => Boss2StateKind.PhaseTransition,
-            Boss2State.Dead => Boss2StateKind.Dead,
-            _ => Boss2StateKind.Idle
-        };
+        IBossStateModule[] modules =
+        [
+            new HoverMovementModule(boss1Config, boss1State),
+            new Boss1AttackSelectionModule(boss1Config, boss1State),
+            new DslTelegraphModule(adapter1),
+            new DslBoss1ExecuteModule(boss1Config, boss1State),
+            new DslRecoveryModule(adapter1),
+            new Boss1PhaseTransitionModule(boss1Config, boss1State),
+            new Boss1DeadModule(boss1State),
+
+            new Boss2IdleModule(boss2State),
+            new Boss2PatrolChaseModule(boss2Config, boss2State),
+            new Boss2MoveToTakeoffModule(boss2Config, boss2State),
+            new DslPlatformTraverseModule(BossState.Boss2_PlatformTraverse, TraverseMode.Jump, boss2Config, boss2State),
+            new DslTelegraphModule(adapter2),
+            new DslBoss2ExecuteModule(boss2Config, boss2State),
+            new Boss2WallCrashStunModule(boss2State),
+            new DslRecoveryModule(adapter2),
+            new Boss2PhaseTransitionModule(boss2Config, boss2State),
+            new Boss2DeadModule(boss2State)
+        ];
+
+        string[] dependencies =
+        [
+            "AttackPort",
+            "Boss1Configuration",
+            "Boss2Configuration",
+            "EffectPort",
+            "MovementPort",
+            "ObservationService",
+            "PlayerObservation",
+            "RandomSource"
+        ];
+
+        return new EnumModuleMap(modules, dependencies, observation);
     }
 
     private sealed class SystemRandomSource : IRandomSource

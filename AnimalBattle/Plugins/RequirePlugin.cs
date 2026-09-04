@@ -33,22 +33,10 @@ public class RequirePlugin : IPlugin
              .Add(Ecs.With, world.Component<Transform>().Entity)
              .Add(Ecs.With, world.Component<Velocity>().Entity)
              .Add(Ecs.With, world.Component<Health>().Entity)
-             .Add(Ecs.With, world.Component<BossAiData>().Entity)
-             .Add(Ecs.With, world.Component<BossMovementData>().Entity)
-             .Add(Ecs.With, world.Component<BossAttackData>().Entity)
-             .Add(Ecs.With, world.Component<BossPhaseTransitionData>().Entity)
-             .Add(Ecs.With, world.Component<BossTerminalData>().Entity)
-             .Add(Ecs.With, world.Component<BossCompatibilityData>().Entity);
-
-        // Boss 1 (Ancient Cat) 専用コンポーネント群
-        world.Component<Boss1Tag>().Entity
-             .Add(Ecs.With, world.Component<Boss1Stats>().Entity)
-             .Add(Ecs.With, world.Component<Boss1StateMachine>().Entity);
+             .Add(Ecs.With, world.Component<BossCombatState>().Entity);
 
         // Boss 2 (Ground Crusher) 専用コンポーネント群
         world.Component<Boss2Tag>().Entity
-             .Add(Ecs.With, world.Component<Boss2Stats>().Entity)
-             .Add(Ecs.With, world.Component<Boss2StateMachine>().Entity)
              .Add(Ecs.With, world.Component<CollisionBox>().Entity);
     }
 }

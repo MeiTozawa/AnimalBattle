@@ -68,30 +68,10 @@ public static class CombatCollisionSystem
             return true;
         }
 
-        if (vicEntity.Has<BossCompatibilityData>())
+        if (vicEntity.Has<BossCombatState>())
         {
-            ref readonly BossCompatibilityData compatibility = ref vicEntity.Get<BossCompatibilityData>();
-            if (compatibility.IsInvulnerable)
-            {
-                return true;
-            }
-        }
-
-        if (vicEntity.Has<Boss1StateMachine>())
-        {
-            ref readonly Boss1StateMachine fsm1 = ref vicEntity.Get<Boss1StateMachine>();
-            if (fsm1.IsInvulnerable)
-            {
-                return true;
-            }
-        }
-        else if (vicEntity.Has<Boss2StateMachine>())
-        {
-            ref readonly Boss2StateMachine fsm2 = ref vicEntity.Get<Boss2StateMachine>();
-            if (fsm2.IsInvulnerable)
-            {
-                return true;
-            }
+            ref readonly BossCombatState combat = ref vicEntity.Get<BossCombatState>();
+            return combat.IsInvulnerable;
         }
 
         return false;
@@ -99,30 +79,14 @@ public static class CombatCollisionSystem
 
     private static bool IsTargetVulnerable(Entity vicEntity)
     {
-        if (vicEntity.Has<Boss1StateMachine>())
+        if (vicEntity.Has<BossCombatState>())
         {
-            ref readonly Boss1StateMachine fsm1 = ref vicEntity.Get<Boss1StateMachine>();
-            // Boss1 は冲撞（DiveRam）後隙のみ易傷（2倍ダメージ）を適用
-            if (fsm1.CurrentState == Boss1StateKind.Recovering && fsm1.CurrentSkillName == "DiveRam")
-            {
-                return true;
-            }
-        }
-        else if (vicEntity.Has<Boss2StateMachine>())
-        {
-            ref readonly Boss2StateMachine fsm2 = ref vicEntity.Get<Boss2StateMachine>();
-            // Boss2 は泰山圧頂（LeapSmash）着地後隙のみ易傷（2倍ダメージ）を適用
-            if (fsm2.CurrentState == Boss2StateKind.SkillRecovery && fsm2.CurrentSkillName == "LeapSmash")
-            {
-                return true;
-            }
+            ref readonly BossCombatState combat = ref vicEntity.Get<BossCombatState>();
+            return combat.IsVulnerable;
         }
 
         return false;
     }
-
-
-
 
     private static void ApplyDamageAndEffects(
         World world,
@@ -165,22 +129,10 @@ public static class CombatCollisionSystem
                 CombatEffectHelper.SpawnPlayerDeathParticles(world, vicTrans.X, vicTrans.Y);
             }
         }
-        else if (vicEntity.Has<Boss1Stats>())
+        else if (vicEntity.Has<BossCombatState>())
         {
-            ref Boss1Stats bStats1 = ref vicEntity.GetMut<Boss1Stats>();
-            bStats1.HitFlashTimer = ConfigManager.Boss1.HitFlashDuration;
-
-            if (!vicHealth.IsAlive)
-            {
-                vicHealth.Current = 0.0f;
-                CombatEffectHelper.ClearAllBossBullets(world);
-                CombatEffectHelper.SpawnVictoryExplosions(world, vicTrans.X, vicTrans.Y);
-            }
-        }
-        else if (vicEntity.Has<Boss2Stats>())
-        {
-            ref Boss2Stats bStats2 = ref vicEntity.GetMut<Boss2Stats>();
-            bStats2.HitFlashTimer = ConfigManager.Boss2.HitFlashDuration;
+            ref BossCombatState bCombat = ref vicEntity.GetMut<BossCombatState>();
+            bCombat.HitFlashTimer = bCombat.HitFlashDuration;
 
             if (!vicHealth.IsAlive)
             {

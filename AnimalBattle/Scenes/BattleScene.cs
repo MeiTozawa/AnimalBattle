@@ -7,9 +7,11 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Core.Asset;
+using AnimalBattle.Core.Input;
 using AnimalBattle.Core.Physics;
 using AnimalBattle.Maps;
 using AnimalBattle.Plugins;
+using AnimalBattle.Systems;
 using ErrorOr;
 using Flecs.NET.Core;
 
@@ -23,10 +25,16 @@ namespace AnimalBattle.Scenes;
 public partial class BattleScene : IDisposable
 {
     private readonly World _ecsWorld;
+    private readonly WorldRenderSystem _worldRenderer;
+    private readonly DebugRenderSystem _debugRenderer;
+    private readonly Query _playerBulletsQuery;
+    private readonly Query _effectsQuery;
     private Player? _player;
     private BossCharacter? _currentBoss;
     private Query<Transform, CollisionBox> _platformQuery;
     private TileMap? _tileMap;
+    private bool _prevSelectBoss1;
+    private bool _prevSelectBoss2;
     private bool _isDisposed;
 
     /// <summary>
@@ -83,6 +91,15 @@ public partial class BattleScene : IDisposable
         _platformQuery = _ecsWorld.QueryBuilder<Transform, CollisionBox>()
             .With<PlatformTag>()
             .Build();
+
+        _worldRenderer = new WorldRenderSystem(_ecsWorld);
+        _debugRenderer = new DebugRenderSystem(_ecsWorld);
+        _playerBulletsQuery = _ecsWorld.QueryBuilder()
+                                       .With<PlayerBulletTag>()
+                                       .Build();
+        _effectsQuery = _ecsWorld.QueryBuilder()
+                                 .With<EffectTag>()
+                                 .Build();
 
         // 3. アクティブな Boss (デフォルト: Boss 1) の生成
         SpawnBoss(CurrentBossType);
@@ -282,6 +299,8 @@ public partial class BattleScene : IDisposable
     /// <param name="deltaTime">前フレームからの経過時間（秒）</param>
     public void Update(float deltaTime)
     {
+        HandleInput();
+
         if (_player != null)
         {
             _player.Update(deltaTime, ConfigManager.Player, ConfigManager.Arena, _platformQuery, _ecsWorld);
@@ -296,11 +315,50 @@ public partial class BattleScene : IDisposable
         _ecsWorld.Progress(deltaTime);
     }
 
+    private void HandleInput()
+    {
+        bool restartJustPressed = InputService.IsPressed(InputAction.Restart);
+        bool key1Down = GameEngine.CheckHitKey(0x02);
+        bool key2Down = GameEngine.CheckHitKey(0x03);
+
+        bool selectBoss1Pressed = key1Down && !_prevSelectBoss1;
+        bool selectBoss2Pressed = key2Down && !_prevSelectBoss2;
+        _prevSelectBoss1 = key1Down;
+        _prevSelectBoss2 = key2Down;
+
+        if (selectBoss1Pressed)
+        {
+            SwitchBoss("Boss1");
+            ResetCombat();
+        }
+        else if (selectBoss2Pressed)
+        {
+            SwitchBoss("Boss2");
+            ResetCombat();
+        }
+        else if (restartJustPressed)
+        {
+            ResetCurrentBoss();
+            ResetCombat();
+        }
+    }
+
+    private void ResetCombat()
+    {
+        CombatEffectHelper.ClearAllBossBullets(_ecsWorld);
+        _playerBulletsQuery.Each(e => e.Destruct());
+        _effectsQuery.Each(e => e.Destruct());
+        _player?.Reset(ConfigManager.Player);
+    }
+
     /// <summary>
     /// シーンの描画処理を行います。
     /// </summary>
     public void Render()
     {
+        _worldRenderer.Render(_tileMap, _platformQuery, _player, _currentBoss);
+        HudRenderSystem.Render(_player, _currentBoss);
+        _debugRenderer.Render(_platformQuery, _tileMap);
     }
 
     /// <inheritdoc/>
@@ -312,6 +370,10 @@ public partial class BattleScene : IDisposable
             ConfigManager.Boss2Container.OnConfigReloaded -= OnBoss2ConfigReloaded;
             ConfigManager.PlayerContainer.OnConfigReloaded -= OnPlayerConfigReloaded;
 
+            _worldRenderer.Dispose();
+            _debugRenderer.Dispose();
+            _playerBulletsQuery.Dispose();
+            _effectsQuery.Dispose();
             _platformQuery.Dispose();
             _ecsWorld.Dispose();
             if (Current == this)
