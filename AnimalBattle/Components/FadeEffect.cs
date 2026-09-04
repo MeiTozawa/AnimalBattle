@@ -34,6 +34,13 @@ public struct FadeEffect(float duration, float startAlpha = 255.0f, float endAlp
 
     /// <summary>演出が完了したかどうかを取得します。</summary>
     public readonly bool IsFinished => ElapsedTimer >= Duration;
+
+    /// <summary>
+    /// デフォルト値（持続時間 0.2 秒、OutSine イージング）で <see cref="FadeEffect"/> の新しいインスタンスを初期化します。
+    /// </summary>
+    public FadeEffect() : this(0.2f)
+    {
+    }
 }
 
 

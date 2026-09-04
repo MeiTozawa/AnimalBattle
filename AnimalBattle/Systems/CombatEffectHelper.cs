@@ -71,7 +71,8 @@ public static class CombatEffectHelper
     public static void SpawnJumpRingEffect(World world, float x, float y)
     {
         world.Entity()
-             .Set(new Transform(x, y, scaleX: 1.0f, scaleY: 1.0f))
+             .Set(new Transform(x, y))
+             .Set(new RingEffect(8.0f, 32.0f, ColorPalette.White, isFilled: false))
              .Set(new FadeEffect(0.18f))
              .Add<EffectTag>();
     }
@@ -84,10 +85,17 @@ public static class CombatEffectHelper
     /// <param name="y">中心 Y 座標</param>
     public static void SpawnHitSparkEffect(World world, float x, float y)
     {
-        world.Entity()
-             .Set(new Transform(x, y, scaleX: 1.5f, scaleY: 1.5f))
-             .Set(new FadeEffect(0.12f))
-             .Add<EffectTag>();
+        for (int i = 0; i < 3; i++)
+        {
+            float angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
+            float speed = 60.0f + Random.Shared.NextSingle() * 120.0f;
+            world.Entity()
+                 .Set(new Transform(x, y))
+                 .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
+                 .Set(new Bullet(3.5f, ColorPalette.SparkYellow, ColorPalette.White))
+                 .Set(new FadeEffect(0.12f))
+                 .Add<EffectTag>();
+        }
     }
 
     /// <summary>
@@ -100,8 +108,9 @@ public static class CombatEffectHelper
     public static void SpawnTelegraphSpark(World world, float x, float y, Color color)
     {
         world.Entity()
-             .Set(new Transform(x, y, scaleX: 2.2f, scaleY: 2.2f))
-             .Set(new FadeEffect(0.08f))
+             .Set(new Transform(x, y))
+             .Set(new Bullet(6.0f, color, ColorPalette.White))
+             .Set(new FadeEffect(0.10f))
              .Add<EffectTag>();
     }
 
@@ -135,7 +144,8 @@ public static class CombatEffectHelper
     public static void SpawnShockwave(World world, float x, float y)
     {
         world.Entity()
-             .Set(new Transform(x, y, scaleX: 3.5f, scaleY: 3.5f))
+             .Set(new Transform(x, y))
+             .Set(new RingEffect(20.0f, 150.0f, ColorPalette.Cyan, isFilled: false))
              .Set(new FadeEffect(0.40f))
              .Add<EffectTag>();
     }
@@ -193,25 +203,24 @@ public static class CombatEffectHelper
         int colIndex = 5; // 第 6 列 (0-based: 5)
         int rowIndex = (int)direction;
         Rect<int> srcRect = Rect<int>.FromWidthHeight(colIndex * 64, rowIndex * 64, 64, 64);
-        float scaleX = width / 28.0f;
-        float scaleY = height / 28.0f;
+        float scale = MathF.Max(width, height) / 28.0f;
 
         // 64x64 セル内の斬撃ピクセル重心偏り（Right: +18px, Left: -18px）を逆補正して視覚中心を (x, y) に一致させる
         float offsetX = direction switch
         {
-            SlashDirection.Right => -18.0f * scaleX,
-            SlashDirection.Left => 18.0f * scaleX,
+            SlashDirection.Right => -18.0f * scale,
+            SlashDirection.Left => 18.0f * scale,
             _ => 0.0f
         };
         float offsetY = direction switch
         {
-            SlashDirection.Down => -18.0f * scaleY,
-            SlashDirection.Up => 18.0f * scaleY,
+            SlashDirection.Down => -18.0f * scale,
+            SlashDirection.Up => 18.0f * scale,
             _ => 0.0f
         };
 
         world.Entity()
-             .Set(new Transform(x + offsetX, y + offsetY, scaleX: scaleX, scaleY: scaleY))
+             .Set(new Transform(x + offsetX, y + offsetY, scaleX: scale, scaleY: scale))
              .Set(new Velocity(vx, vy))
              .Set(new Hitbox(new CollisionShape.Box(width, height, OffsetX: -offsetX, OffsetY: -offsetY), damage: damage, faction: Faction.Hostile, destroyOnHit: false))
              .Set(new Sprite(slashHandle, flipX: false, isVisible: true, srcRect: srcRect, color: color))

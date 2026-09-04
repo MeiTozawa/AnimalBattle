@@ -15,7 +15,7 @@ public class EffectPlugin : IPlugin
     public void Build(App app)
     {
         app.World
-           .AddSlashEffectSystem()
+           .AddEffectMovementSystem()
            .AddFadeEffectSystem()
            .AddHitFlashEffectSystem();
     }

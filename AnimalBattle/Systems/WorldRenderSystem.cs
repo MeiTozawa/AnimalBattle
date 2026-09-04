@@ -20,7 +20,9 @@ public sealed class WorldRenderSystem : IDisposable
 {
     private readonly Query<Transform, Velocity> _playerBulletQuery;
     private readonly Query<Transform, Bullet> _bossBulletQuery;
-    private readonly Query<Transform, Hitbox, FadeEffect, Sprite> _meleeSlashQuery;
+    private readonly Query<Transform, Sprite, FadeEffect> _spriteEffectQuery;
+    private readonly Query<Transform, RingEffect, FadeEffect> _ringEffectQuery;
+    private readonly Query<Transform, Bullet, FadeEffect> _particleEffectQuery;
     private readonly Query<Transform, Sprite, HitFlashEffect> _hitFlashQuery;
     private bool _isDisposed;
 
@@ -38,9 +40,17 @@ public sealed class WorldRenderSystem : IDisposable
                                 .With<BossBulletTag>()
                                 .Build();
 
-        _meleeSlashQuery = world.QueryBuilder<Transform, Hitbox, FadeEffect, Sprite>()
+        _spriteEffectQuery = world.QueryBuilder<Transform, Sprite, FadeEffect>()
+                                  .With<EffectTag>()
+                                  .Build();
+
+        _ringEffectQuery = world.QueryBuilder<Transform, RingEffect, FadeEffect>()
                                 .With<EffectTag>()
                                 .Build();
+
+        _particleEffectQuery = world.QueryBuilder<Transform, Bullet, FadeEffect>()
+                                    .With<EffectTag>()
+                                    .Build();
 
         _hitFlashQuery = world.QueryBuilder<Transform, Sprite, HitFlashEffect>()
                               .Build();
@@ -73,7 +83,9 @@ public sealed class WorldRenderSystem : IDisposable
         DrawHitFlashEffects(_hitFlashQuery);
         DrawPlayerBullets(_playerBulletQuery, bulletCfg, arenaCfg);
         DrawBossBullets(_bossBulletQuery, bulletCfg, arenaCfg);
-        DrawMeleeEffects(_meleeSlashQuery);
+        DrawSpriteEffects(_spriteEffectQuery);
+        DrawRingEffects(_ringEffectQuery);
+        DrawParticleEffects(_particleEffectQuery);
     }
 
     private static void DrawPlatforms(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery)
@@ -541,9 +553,38 @@ public sealed class WorldRenderSystem : IDisposable
         });
     }
 
-    private static void DrawMeleeEffects(Query<Transform, Hitbox, FadeEffect, Sprite> meleeSlashQuery)
+    private static void DrawSpriteEffects(Query<Transform, Sprite, FadeEffect> spriteEffectQuery)
     {
-        meleeSlashQuery.Each((ref Transform trans, ref Hitbox hit, ref FadeEffect fade, ref Sprite sprite) =>
+        spriteEffectQuery.Each((ref Transform trans, ref Sprite sprite, ref FadeEffect fade) =>
+        {
+            int alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
+            if (alpha <= 0 || !sprite.IsVisible || sprite.GraphHandle < 0)
+            {
+                return;
+            }
+
+            GameEngine.SetDrawBright(sprite.Color.R, sprite.Color.G, sprite.Color.B);
+            GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
+            GameEngine.DrawRectRotaGraph(
+                (int)trans.X,
+                (int)trans.Y,
+                sprite.SrcRect.X1,
+                sprite.SrcRect.Y1,
+                sprite.SrcRect.Width,
+                sprite.SrcRect.Height,
+                trans.ScaleX,
+                trans.Rotation,
+                sprite.GraphHandle,
+                true,
+                sprite.FlipX);
+            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+            GameEngine.SetDrawBright(255, 255, 255);
+        });
+    }
+
+    private static void DrawRingEffects(Query<Transform, RingEffect, FadeEffect> ringEffectQuery)
+    {
+        ringEffectQuery.Each((ref Transform trans, ref RingEffect ring, ref FadeEffect fade) =>
         {
             int alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
             if (alpha <= 0)
@@ -551,37 +592,33 @@ public sealed class WorldRenderSystem : IDisposable
                 return;
             }
 
-            if (sprite.IsVisible && sprite.GraphHandle >= 0)
-            {
-                GameEngine.SetDrawBright(sprite.Color.R, sprite.Color.G, sprite.Color.B);
-                GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
-                GameEngine.DrawRectRotaGraph(
-                    (int)trans.X,
-                    (int)trans.Y,
-                    sprite.SrcRect.X1,
-                    sprite.SrcRect.Y1,
-                    sprite.SrcRect.Width,
-                    sprite.SrcRect.Height,
-                    trans.ScaleX,
-                    trans.Rotation,
-                    sprite.GraphHandle,
-                    true,
-                    sprite.FlipX);
-                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-                GameEngine.SetDrawBright(255, 255, 255);
-            }
-            else if (hit.Shape is CollisionShape.Box box)
-            {
-                int x1 = (int)(trans.X - box.Width / 2.0f);
-                int y1 = (int)(trans.Y - box.Height / 2.0f);
-                int x2 = (int)(trans.X + box.Width / 2.0f);
-                int y2 = (int)(trans.Y + box.Height / 2.0f);
+            float progress = Math.Clamp(fade.ElapsedTimer / Math.Max(0.001f, fade.Duration), 0.0f, 1.0f);
+            float currentRadius = ring.StartRadius + (ring.EndRadius - ring.StartRadius) * progress;
 
-                GameEngine.SetDrawBlendMode(BlendMode.Add, (int)(alpha * 0.8f));
-                GameEngine.DrawBox(x1, y1, x2, y2, sprite.Color, true);
-                GameEngine.DrawBox(x1 - 2, y1 - 2, x2 + 2, y2 + 2, ColorPalette.White, false);
-                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+            GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
+            GameEngine.DrawCircle((int)trans.X, (int)trans.Y, (int)currentRadius, ring.Color, ring.IsFilled);
+            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+        });
+    }
+
+    private static void DrawParticleEffects(Query<Transform, Bullet, FadeEffect> particleEffectQuery)
+    {
+        particleEffectQuery.Each((ref Transform trans, ref Bullet b, ref FadeEffect fade) =>
+        {
+            int alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
+            if (alpha <= 0)
+            {
+                return;
             }
+
+            int px = (int)trans.X;
+            int py = (int)trans.Y;
+            int radius = (int)b.Radius;
+
+            GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
+            GameEngine.DrawCircle(px, py, radius + 1, b.OutlineColor, true);
+            GameEngine.DrawCircle(px, py, radius, b.FillColor, true);
+            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
         });
     }
 
@@ -592,7 +629,9 @@ public sealed class WorldRenderSystem : IDisposable
         {
             _playerBulletQuery.Dispose();
             _bossBulletQuery.Dispose();
-            _meleeSlashQuery.Dispose();
+            _spriteEffectQuery.Dispose();
+            _ringEffectQuery.Dispose();
+            _particleEffectQuery.Dispose();
             _hitFlashQuery.Dispose();
             _isDisposed = true;
         }
