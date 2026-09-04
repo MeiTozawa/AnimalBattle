@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using Flecs.NET.Core;
+using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Components;
 using AnimalBattle.Core;
 using AnimalBattle.Core.Asset;
@@ -39,12 +40,107 @@ public static class CombatEffectHelper
     /// <param name="outlineColor">外枠発光色</param>
     public static void SpawnBossBullet(World world, float x, float y, float vx, float vy, float radius, Color fillColor, Color outlineColor)
     {
-        world.Entity()
+        SpawnBossSpecialBullet(world, x, y, vx, vy, radius, BulletType.Normal, fillColor, outlineColor);
+    }
+
+    /// <summary>
+    /// 指定座標に特殊挙動（品紅・黄・青・黒）を持つ Boss 弾幕エンティティを生成します。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド。</param>
+    /// <param name="x">出現 X 座標。</param>
+    /// <param name="y">出現 Y 座標。</param>
+    /// <param name="vx">X 方向速度。</param>
+    /// <param name="vy">Y 方向速度。</param>
+    /// <param name="radius">判定半径。</param>
+    /// <param name="type">特殊弾幕種別。</param>
+    /// <param name="fillColor">塗りつぶし色（未指定時は種別既定色）。</param>
+    /// <param name="outlineColor">外枠発光色（未指定時は種別既定色）。</param>
+    public static void SpawnBossSpecialBullet(
+        World world,
+        float x,
+        float y,
+        float vx,
+        float vy,
+        float radius,
+        BulletType type,
+        Color? fillColor = null,
+        Color? outlineColor = null)
+    {
+        Color fill = fillColor ?? GetDefaultFillColor(type);
+        Color outline = outlineColor ?? GetDefaultOutlineColor(type);
+
+        Entity entity = world.Entity()
              .Set(new Transform(x, y))
              .Set(new Velocity(vx, vy))
-             .Set(new Bullet(radius, fillColor, outlineColor))
+             .Set(new Bullet(radius, fill, outline))
              .Set(new Hitbox(new CollisionShape.Circle(radius), damage: 1.0f, faction: Faction.Hostile, destroyOnHit: true))
              .Add<BossBulletTag>();
+
+        if (type != BulletType.Normal)
+        {
+            entity.Set(new BulletModifier(type, radius, vx, vy));
+        }
+    }
+
+    /// <summary>
+    /// Boss 被弾時に、現在の Phase に応じた数量の黑色弾幕を全方位ランダムに発射します。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド。</param>
+    /// <param name="bossX">Boss の中心 X 座標。</param>
+    /// <param name="bossY">Boss の中心 Y 座標。</param>
+    /// <param name="phase">現在の戦闘 Phase（Phase 1: 1枚, Phase 2: 2枚, Phase 3: 3枚）。</param>
+    public static void SpawnBossCounterAttack(World world, float bossX, float bossY, Phase phase)
+    {
+        int bulletCount = phase switch
+        {
+            Phase.Phase1 => 1,
+            Phase.Phase2 => 2,
+            Phase.Phase3 => 3,
+            _ => 1
+        };
+
+        const float counterBulletSpeed = 160.0f;
+        const float counterBulletRadius = 8.0f;
+
+        for (int i = 0; i < bulletCount; i++)
+        {
+            float angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
+            float vx = MathF.Cos(angle) * counterBulletSpeed;
+            float vy = MathF.Sin(angle) * counterBulletSpeed;
+
+            SpawnBossSpecialBullet(
+                world,
+                bossX,
+                bossY,
+                vx,
+                vy,
+                counterBulletRadius,
+                BulletType.Black);
+        }
+    }
+
+    private static Color GetDefaultFillColor(BulletType type)
+    {
+        return type switch
+        {
+            BulletType.Magenta => Color.FromArgb(255, 255, 20, 147),
+            BulletType.Yellow => Color.FromArgb(255, 255, 215, 0),
+            BulletType.Cyan => Color.FromArgb(255, 0, 240, 255),
+            BulletType.Black => Color.FromArgb(255, 12, 12, 16),
+            _ => ColorPalette.RedBright
+        };
+    }
+
+    private static Color GetDefaultOutlineColor(BulletType type)
+    {
+        return type switch
+        {
+            BulletType.Magenta => Color.FromArgb(255, 255, 255, 255),
+            BulletType.Yellow => Color.FromArgb(255, 255, 255, 190),
+            BulletType.Cyan => Color.FromArgb(255, 255, 255, 255),
+            BulletType.Black => Color.FromArgb(255, 230, 25, 75),
+            _ => ColorPalette.White
+        };
     }
 
     /// <summary>

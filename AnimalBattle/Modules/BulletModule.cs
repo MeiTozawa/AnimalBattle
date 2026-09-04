@@ -21,6 +21,7 @@ public readonly struct BulletModule : IFlecsModule
 
         world.AddSpriteAnimationSystem()
              .AddBulletPhysicsSystem()
+             .AddSpecialBulletSystem()
              .AddCombatCollisionSystem();
     }
 }

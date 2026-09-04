@@ -135,6 +135,8 @@ public static class CombatCollisionSystem
         }
         else if (vicEntity.Has<BossCombatState>())
         {
+            ref readonly BossCombatState combat = ref vicEntity.Get<BossCombatState>();
+
             if (!vicHealth.IsAlive)
             {
                 vicHealth.Current = 0.0f;
@@ -145,6 +147,11 @@ public static class CombatCollisionSystem
                 }
                 CombatEffectHelper.ClearAllBossBullets(world);
                 CombatEffectHelper.SpawnVictoryExplosions(world, vicTrans.X, vicTrans.Y);
+            }
+            else
+            {
+                // Boss 被弾反撃：現在の Phase に応じた数量（P1: 1枚, P2: 2枚, P3: 3枚）の黑色弾幕を全方位ランダムに発射
+                CombatEffectHelper.SpawnBossCounterAttack(world, vicTrans.X, vicTrans.Y, combat.Phase);
             }
         }
 

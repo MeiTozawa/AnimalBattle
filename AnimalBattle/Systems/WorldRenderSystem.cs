@@ -512,11 +512,113 @@ public sealed class WorldRenderSystem : IDisposable
                 int outlineRadius = radius + outlinePadding;
                 int coreRadius = Math.Max(coreMinRadius, (int)(radius * coreRadiusRatio));
 
+                Entity e = it.Entity(i);
+                if (e.Has<BulletModifier>())
+                {
+                    ref readonly BulletModifier mod = ref e.Get<BulletModifier>();
+                    DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, outlinePadding, coreRadiusRatio, coreColor);
+                }
+                else
+                {
+                    GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                    GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                    GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                }
+            }
+        });
+    }
+
+    private static void DrawSpecialBossBullet(
+        int bx,
+        int by,
+        in Bullet b,
+        in BulletModifier mod,
+        int radius,
+        int outlineRadius,
+        int coreRadius,
+        int outlinePadding,
+        float coreRadiusRatio,
+        Color coreColor)
+    {
+        switch (mod.Type)
+        {
+            case BulletType.Magenta:
+            {
+                // 品紅色：周期的に明滅・脈動する外周半透明オーラ輪
+                float pulseAura = radius * (1.35f + 0.15f * MathF.Sin(mod.ElapsedTimer * 6.0f));
+                Color auraColor = Color.FromArgb(65, b.FillColor.R, b.FillColor.G, b.FillColor.B);
+                GameEngine.DrawCircle(bx, by, (int)pulseAura, auraColor, false);
                 GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
                 GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
                 GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                break;
             }
-        });
+
+            case BulletType.Yellow:
+            {
+                // 黄色：主円と衛星小円の二重円構成（自転・公転）
+                float orbitDist = radius * 1.5f;
+                float angle = mod.ElapsedTimer * 6.0f;
+                int satX = (int)(bx + MathF.Cos(angle) * orbitDist);
+                int satY = (int)(by + MathF.Sin(angle) * orbitDist);
+                int satRadius = Math.Max(3, (int)(radius * 0.55f));
+                int satOutline = satRadius + outlinePadding;
+                int satCore = Math.Max(2, (int)(satRadius * coreRadiusRatio));
+
+                // 衛星小円の描画
+                GameEngine.DrawCircle(satX, satY, satOutline, b.OutlineColor, true);
+                GameEngine.DrawCircle(satX, satY, satRadius, b.FillColor, true);
+                GameEngine.DrawCircle(satX, satY, satCore, coreColor, true);
+
+                // 主円の描画
+                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                break;
+            }
+
+            case BulletType.Cyan:
+            {
+                // 青色：電光シアンの輪郭とエフェクトリング
+                GameEngine.DrawCircle(bx, by, outlineRadius + 2, Color.FromArgb(50, 0, 240, 255), false);
+                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                break;
+            }
+
+            case BulletType.Black:
+            {
+                // 黑色：全 3 種特効統合（呼吸拡縮オーラ + 自転二重円 + 虚空暗黒芯）
+                float pulseAura = radius * (1.4f + 0.2f * MathF.Sin(mod.ElapsedTimer * 6.0f));
+                GameEngine.DrawCircle(bx, by, (int)pulseAura, Color.FromArgb(90, 220, 20, 80), false);
+
+                // 衛星小円（黒核・赤枠）
+                float orbitDist = radius * 1.55f;
+                float angle = mod.ElapsedTimer * 6.0f;
+                int satX = (int)(bx + MathF.Cos(angle) * orbitDist);
+                int satY = (int)(by + MathF.Sin(angle) * orbitDist);
+                int satRadius = Math.Max(3, (int)(radius * 0.55f));
+                int satOutline = satRadius + outlinePadding;
+
+                GameEngine.DrawCircle(satX, satY, satOutline, b.OutlineColor, true);
+                GameEngine.DrawCircle(satX, satY, satRadius, b.FillColor, true);
+
+                // 主円（深黒コア + ネオン発光輪郭 + 微小ホワイト核）
+                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bx, by, Math.Max(2, coreRadius / 2), Color.FromArgb(255, 255, 180, 200), true);
+                break;
+            }
+
+            default:
+            {
+                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                break;
+            }
+        }
     }
 
     private static void DrawHitFlashEffects(Query<Transform, Sprite, HitFlashEffect> hitFlashQuery)

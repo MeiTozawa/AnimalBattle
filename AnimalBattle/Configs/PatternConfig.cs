@@ -1,4 +1,6 @@
+using System;
 using System.Drawing;
+using AnimalBattle.Components;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Configs;
@@ -91,6 +93,9 @@ public sealed class Aimed3ShotConfig
 
     /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
     public Color OutlineColor { get; set; } = ColorPalette.RedLight;
+
+    /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
+    public string BulletType { get; set; } = "Cyan";
 }
 
 /// <summary>
@@ -133,6 +138,9 @@ public sealed class RingBurstConfig
 
     /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
     public Color OutlineColor { get; set; } = ColorPalette.CyanLight;
+
+    /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
+    public string BulletType { get; set; } = "Magenta";
 }
 
 /// <summary>
@@ -178,6 +186,9 @@ public sealed class DoubleSpiralConfig
 
     /// <summary>第 2 弾の外枠カラー (<see cref="Color"/>)</summary>
     public Color OutlineColor2 { get; set; } = ColorPalette.GoldLight;
+
+    /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
+    public string BulletType { get; set; } = "Yellow";
 }
 
 /// <summary>
@@ -220,6 +231,9 @@ public sealed class RainDropConfig
 
     /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
     public Color OutlineColor { get; set; } = ColorPalette.GreenMint;
+
+    /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
+    public string BulletType { get; set; } = "Cyan";
 }
 
 /// <summary>
@@ -259,6 +273,9 @@ public sealed class CrossChaosConfig
 
     /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
     public Color OutlineColor { get; set; } = ColorPalette.RedCoral;
+
+    /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
+    public string BulletType { get; set; } = "Magenta";
 }
 
 /// <summary>
@@ -295,6 +312,9 @@ public sealed class FastSniperConfig
 
     /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
     public Color OutlineColor { get; set; } = ColorPalette.White;
+
+    /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
+    public string BulletType { get; set; } = "Black";
 }
 
 /// <summary>
@@ -591,6 +611,21 @@ public sealed class PatternConfig
 
     /// <summary>Boss 2 滅地狂吼技能設定</summary>
     public EarthquakeRoarConfig EarthquakeRoar { get; set; } = new();
+
+    /// <summary>
+    /// 文字列で指定された弾幕種別を <see cref="BulletType"/> 列挙型へパースします。
+    /// </summary>
+    /// <param name="typeStr">弾幕種別文字列。</param>
+    /// <param name="defaultType">パース失敗時のデフォルト種別。</param>
+    /// <returns>パースされた <see cref="BulletType"/>。</returns>
+    public static BulletType ParseBulletType(string? typeStr, BulletType defaultType = BulletType.Normal)
+    {
+        if (!string.IsNullOrWhiteSpace(typeStr) && Enum.TryParse<BulletType>(typeStr, true, out BulletType result))
+        {
+            return result;
+        }
+        return defaultType;
+    }
 
     /// <summary>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{PatternConfig}"/> インスタンスを生成します。

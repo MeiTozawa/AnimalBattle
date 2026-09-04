@@ -288,13 +288,15 @@ public static class BossCommandExecutor
     {
         if (cmd.Skill == BossSkill.RainDrop)
         {
-            CombatEffectHelper.SpawnBossBullet(
+            BulletType bType = PatternConfig.ParseBulletType(patternCfg.RainDrop.BulletType, BulletType.Cyan);
+            CombatEffectHelper.SpawnBossSpecialBullet(
                 world,
                 cmd.X,
                 0.0f,
                 0.0f,
                 cmd.Y,
                 patternCfg.RainDrop.BulletRadius,
+                bType,
                 patternCfg.RainDrop.FillColor,
                 patternCfg.RainDrop.OutlineColor);
             return;
@@ -304,13 +306,14 @@ public static class BossCommandExecutor
         {
             Random rand = Random.Shared;
             float rx = rand.Next((int)patternCfg.EarthquakeRoar.MinX, (int)patternCfg.EarthquakeRoar.MaxX);
-            CombatEffectHelper.SpawnBossBullet(
+            CombatEffectHelper.SpawnBossSpecialBullet(
                 world,
                 rx,
                 0.0f,
                 0.0f,
                 cmd.Y,
                 patternCfg.EarthquakeRoar.RockRadius,
+                BulletType.Normal,
                 patternCfg.EarthquakeRoar.RockFillColor,
                 patternCfg.EarthquakeRoar.RockOutlineColor);
             return;
@@ -319,36 +322,42 @@ public static class BossCommandExecutor
         float radius;
         Color fill;
         Color outline;
+        BulletType type = BulletType.Normal;
 
         if (cmd.Skill == BossSkill.Aimed3Shot)
         {
             radius = patternCfg.Aimed3Shot.BulletRadius;
             fill = patternCfg.Aimed3Shot.FillColor;
             outline = patternCfg.Aimed3Shot.OutlineColor;
+            type = PatternConfig.ParseBulletType(patternCfg.Aimed3Shot.BulletType, BulletType.Cyan);
         }
         else if (cmd.Skill == BossSkill.RingBurst)
         {
             radius = patternCfg.RingBurst.BulletRadius;
             fill = patternCfg.RingBurst.FillColor;
             outline = patternCfg.RingBurst.OutlineColor;
+            type = PatternConfig.ParseBulletType(patternCfg.RingBurst.BulletType, BulletType.Magenta);
         }
         else if (cmd.Skill == BossSkill.DoubleSpiral)
         {
             radius = patternCfg.DoubleSpiral.BulletRadius;
             fill = patternCfg.DoubleSpiral.FillColor1;
             outline = patternCfg.DoubleSpiral.OutlineColor1;
+            type = PatternConfig.ParseBulletType(patternCfg.DoubleSpiral.BulletType, BulletType.Yellow);
         }
         else if (cmd.Skill == BossSkill.CrossChaos)
         {
             radius = patternCfg.CrossChaos.BulletRadius;
             fill = patternCfg.CrossChaos.FillColor;
             outline = patternCfg.CrossChaos.OutlineColor;
+            type = PatternConfig.ParseBulletType(patternCfg.CrossChaos.BulletType, BulletType.Magenta);
         }
         else if (cmd.Skill == BossSkill.FastSniper)
         {
             radius = patternCfg.FastSniper.BulletRadius;
             fill = patternCfg.FastSniper.FillColor;
             outline = patternCfg.FastSniper.OutlineColor;
+            type = PatternConfig.ParseBulletType(patternCfg.FastSniper.BulletType, BulletType.Black);
         }
         else
         {
@@ -357,7 +366,7 @@ public static class BossCommandExecutor
             outline = ColorPalette.White;
         }
 
-        CombatEffectHelper.SpawnBossBullet(world, trans.X, trans.Y, cmd.X, cmd.Y, radius, fill, outline);
+        CombatEffectHelper.SpawnBossSpecialBullet(world, trans.X, trans.Y, cmd.X, cmd.Y, radius, type, fill, outline);
     }
 
     private static void ExecuteCreateHitbox(

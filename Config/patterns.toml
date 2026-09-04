@@ -33,6 +33,7 @@ BulletRadius = 8.0
 BulletCount = 3
 FillColor = 0xFFFF3333
 OutlineColor = 0xFFFF8888
+BulletType = "Cyan"
 
 [RingBurst]
 SkillName = "16-Way Ring Burst"
@@ -47,6 +48,7 @@ BulletRadius = 9.0
 BulletCount = 16
 FillColor = 0xFF00E5FF
 OutlineColor = 0xFF80FFFF
+BulletType = "Magenta"
 
 [DoubleSpiral]
 SkillName = "Twin Spiral Barrage"
@@ -62,6 +64,7 @@ FillColor1 = 0xFFB255D3
 OutlineColor1 = 0xFFE0B0FF
 FillColor2 = 0xFFFFD700
 OutlineColor2 = 0xFFFFF275
+BulletType = "Yellow"
 
 [RainDrop]
 SkillName = "Skyfall Rain Barrage"
@@ -76,6 +79,7 @@ MinX = 60.0
 MaxX = 1220.0
 FillColor = 0xFF010676
 OutlineColor = 0xFFB9F6CA
+BulletType = "Cyan"
 
 [CrossChaos]
 SkillName = "Cross Chaos Waves"
@@ -89,6 +93,7 @@ Interval = 0.10
 BulletRadius = 8.5
 FillColor = 0xFFFF1744
 OutlineColor = 0xFFFF8A80
+BulletType = "Magenta"
 
 [FastSniper]
 SkillName = "Laser Fast Sniper"
@@ -101,6 +106,7 @@ BulletSpeed = 510.0
 BulletRadius = 6.5
 FillColor = 0xFFFF5252
 OutlineColor = 0xFFFFFFFF
+BulletType = "Black"
 
 # -------------------------------------------------------------
 # Boss 2 (Ground Crusher Golem) Skills & Patterns

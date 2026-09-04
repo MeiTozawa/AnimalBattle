@@ -402,7 +402,7 @@ public sealed class BossCharacter
                .Set(_bodyHitbox)
                .Set(new Health(_maxHp, _currentHp))
                .Set(_sprite)
-               .Set(new BossCombatState(IsInvulnerable, IsVulnerable))
+               .Set(new BossCombatState(IsInvulnerable, IsVulnerable, Phase))
                .Add<BossTag>();
 
         if (_bossType == BossType.Boss1)
@@ -451,7 +451,7 @@ public sealed class BossCharacter
         Health health = new(_maxHp, _currentHp);
         _entity.Set(health);
 
-        _entity.Set(new BossCombatState(IsInvulnerable, IsVulnerable));
+        _entity.Set(new BossCombatState(IsInvulnerable, IsVulnerable, Phase));
 
         if (_entity.Has<Sprite>())
         {
