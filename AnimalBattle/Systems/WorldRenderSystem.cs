@@ -20,7 +20,8 @@ public sealed class WorldRenderSystem : IDisposable
 {
     private readonly Query<Transform, Velocity> _playerBulletQuery;
     private readonly Query<Transform, Bullet> _bossBulletQuery;
-    private readonly Query<Transform, Hitbox, HitFlashEffect, FadeEffect, Sprite> _meleeSlashQuery;
+    private readonly Query<Transform, Hitbox, FadeEffect, Sprite> _meleeSlashQuery;
+    private readonly Query<Transform, Sprite, HitFlashEffect> _hitFlashQuery;
     private bool _isDisposed;
 
     /// <summary>
@@ -37,9 +38,12 @@ public sealed class WorldRenderSystem : IDisposable
                                 .With<BossBulletTag>()
                                 .Build();
 
-        _meleeSlashQuery = world.QueryBuilder<Transform, Hitbox, HitFlashEffect, FadeEffect, Sprite>()
+        _meleeSlashQuery = world.QueryBuilder<Transform, Hitbox, FadeEffect, Sprite>()
                                 .With<EffectTag>()
                                 .Build();
+
+        _hitFlashQuery = world.QueryBuilder<Transform, Sprite, HitFlashEffect>()
+                              .Build();
     }
 
     /// <summary>
@@ -66,6 +70,7 @@ public sealed class WorldRenderSystem : IDisposable
         DrawPlatforms(tileMap, platformQuery);
         DrawBoss(boss, bossFx, playerX, playerY);
         DrawPlayer(player);
+        DrawHitFlashEffects(_hitFlashQuery);
         DrawPlayerBullets(_playerBulletQuery, bulletCfg, arenaCfg);
         DrawBossBullets(_bossBulletQuery, bulletCfg, arenaCfg);
         DrawMeleeEffects(_meleeSlashQuery);
@@ -150,24 +155,6 @@ public sealed class WorldRenderSystem : IDisposable
                 int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
                 GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
             }
-
-            if (boss.HitFlashTimer > 0.0f)
-            {
-                GameEngine.SetDrawBlendMode(BlendMode.Add, 255);
-                GameEngine.DrawRectRotaGraph(
-                    bx,
-                    by,
-                    boss.Sprite.SrcRect.X1,
-                    boss.Sprite.SrcRect.Y1,
-                    boss.Sprite.SrcRect.Width,
-                    boss.Sprite.SrcRect.Height,
-                    boss.ScaleX,
-                    bossAngle,
-                    boss.Sprite.GraphHandle,
-                    true,
-                    false);
-                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-            }
         }
         else
         {
@@ -216,24 +203,6 @@ public sealed class WorldRenderSystem : IDisposable
                 int textX = bx - textWidth / 2;
                 int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
                 GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
-            }
-
-            if (boss.HitFlashTimer > 0.0f)
-            {
-                GameEngine.SetDrawBlendMode(BlendMode.Add, 255);
-                GameEngine.DrawRectRotaGraph(
-                    bx,
-                    by,
-                    boss.Sprite.SrcRect.X1,
-                    boss.Sprite.SrcRect.Y1,
-                    boss.Sprite.SrcRect.Width,
-                    boss.Sprite.SrcRect.Height,
-                    boss.ScaleX,
-                    0.0,
-                    boss.Sprite.GraphHandle,
-                    true,
-                    flipX);
-                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
             }
         }
     }
@@ -437,9 +406,10 @@ public sealed class WorldRenderSystem : IDisposable
             return;
         }
 
-        bool shouldDrawSprite = player.InvincibleTimer <= 0.0f || ((int)(player.InvincibleTimer * 30.0f) % 2 == 0);
+        bool isFlashing = player.IsFlashing;
+        bool isInvincibleBlinking = !isFlashing && player.InvincibleTimer > 0.0f && ((int)(player.InvincibleTimer * 30.0f) % 2 != 0);
 
-        if (shouldDrawSprite)
+        if (!isInvincibleBlinking)
         {
             GameEngine.DrawRectRotaGraph(
                 (int)player.X,
@@ -537,9 +507,43 @@ public sealed class WorldRenderSystem : IDisposable
         });
     }
 
-    private static void DrawMeleeEffects(Query<Transform, Hitbox, HitFlashEffect, FadeEffect, Sprite> meleeSlashQuery)
+    private static void DrawHitFlashEffects(Query<Transform, Sprite, HitFlashEffect> hitFlashQuery)
     {
-        meleeSlashQuery.Each((ref Transform trans, ref Hitbox hit, ref HitFlashEffect flash, ref FadeEffect fade, ref Sprite sprite) =>
+        hitFlashQuery.Each((ref Transform trans, ref Sprite sprite, ref HitFlashEffect flash) =>
+        {
+            if (!sprite.IsVisible || sprite.GraphHandle < 0)
+            {
+                return;
+            }
+
+            int alpha = (int)(255 * flash.Intensity);
+            if (alpha <= 0)
+            {
+                return;
+            }
+
+            GameEngine.SetDrawBright(flash.FlashColor.R, flash.FlashColor.G, flash.FlashColor.B);
+            GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
+            GameEngine.DrawRectRotaGraph(
+                (int)trans.X,
+                (int)trans.Y,
+                sprite.SrcRect.Width > 0 ? sprite.SrcRect.X1 : 0,
+                sprite.SrcRect.Height > 0 ? sprite.SrcRect.Y1 : 0,
+                sprite.SrcRect.Width,
+                sprite.SrcRect.Height,
+                trans.ScaleX,
+                trans.Rotation,
+                sprite.GraphHandle,
+                true,
+                sprite.FlipX);
+            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+            GameEngine.SetDrawBright(255, 255, 255);
+        });
+    }
+
+    private static void DrawMeleeEffects(Query<Transform, Hitbox, FadeEffect, Sprite> meleeSlashQuery)
+    {
+        meleeSlashQuery.Each((ref Transform trans, ref Hitbox hit, ref FadeEffect fade, ref Sprite sprite) =>
         {
             int alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
             if (alpha <= 0)
@@ -549,7 +553,7 @@ public sealed class WorldRenderSystem : IDisposable
 
             if (sprite.IsVisible && sprite.GraphHandle >= 0)
             {
-                GameEngine.SetDrawBright(flash.FlashColor.R, flash.FlashColor.G, flash.FlashColor.B);
+                GameEngine.SetDrawBright(sprite.Color.R, sprite.Color.G, sprite.Color.B);
                 GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
                 GameEngine.DrawRectRotaGraph(
                     (int)trans.X,
@@ -574,7 +578,7 @@ public sealed class WorldRenderSystem : IDisposable
                 int y2 = (int)(trans.Y + box.Height / 2.0f);
 
                 GameEngine.SetDrawBlendMode(BlendMode.Add, (int)(alpha * 0.8f));
-                GameEngine.DrawBox(x1, y1, x2, y2, flash.FlashColor, true);
+                GameEngine.DrawBox(x1, y1, x2, y2, sprite.Color, true);
                 GameEngine.DrawBox(x1 - 2, y1 - 2, x2 + 2, y2 + 2, ColorPalette.White, false);
                 GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
             }
@@ -589,6 +593,7 @@ public sealed class WorldRenderSystem : IDisposable
             _playerBulletQuery.Dispose();
             _bossBulletQuery.Dispose();
             _meleeSlashQuery.Dispose();
+            _hitFlashQuery.Dispose();
             _isDisposed = true;
         }
     }

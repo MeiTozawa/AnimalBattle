@@ -1,9 +1,10 @@
 using Flecs.NET.Core;
+using AnimalBattle.Components;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// 被弾時ホワイトフラッシュ演出の持続時間タイマーおよび点滅終了を制御する ECS System。
+/// 被弾時ホワイトフラッシュ（白閃）演出の持続時間タイマーおよび自動破棄を制御する ECS System。
 /// </summary>
 public static class HitFlashEffectSystem
 {
@@ -18,13 +19,10 @@ public static class HitFlashEffectSystem
              .Kind(Ecs.OnUpdate)
              .Each((Iter it, int i, ref HitFlashEffect flash) =>
              {
-                 if (flash.IsFlashing)
+                 flash.ElapsedTimer += it.DeltaTime();
+                 if (flash.IsFinished)
                  {
-                     flash.ElapsedTimer += it.DeltaTime();
-                     if (flash.ElapsedTimer >= flash.Duration)
-                     {
-                         flash.IsFlashing = false;
-                     }
+                     it.Entity(i).Remove<HitFlashEffect>();
                  }
              });
 

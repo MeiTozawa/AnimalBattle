@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using Flecs.NET.Core;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
@@ -115,6 +116,9 @@ public static class CombatCollisionSystem
             CombatEffectHelper.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX + 8.0f, vicTrans.Y + hurtbox.Shape.OffsetY + 8.0f);
         }
 
+        // 受撃白閃演出を付与（Ease-Out 減衰）
+        vicEntity.Set(new HitFlashEffect(0.08f, Color.White));
+
         if (vicEntity.Has<PlayerTag>())
         {
             vicHealth.InvincibleTimer = pCfg.InvincibleDuration;
@@ -131,12 +135,14 @@ public static class CombatCollisionSystem
         }
         else if (vicEntity.Has<BossCombatState>())
         {
-            ref BossCombatState bCombat = ref vicEntity.GetMut<BossCombatState>();
-            bCombat.HitFlashTimer = bCombat.HitFlashDuration;
-
             if (!vicHealth.IsAlive)
             {
                 vicHealth.Current = 0.0f;
+                if (vicEntity.Has<Sprite>())
+                {
+                    ref Sprite spr = ref vicEntity.GetMut<Sprite>();
+                    spr.IsVisible = false;
+                }
                 CombatEffectHelper.ClearAllBossBullets(world);
                 CombatEffectHelper.SpawnVictoryExplosions(world, vicTrans.X, vicTrans.Y);
             }

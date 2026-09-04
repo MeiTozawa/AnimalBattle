@@ -24,7 +24,7 @@ public sealed class BossCharacter
 {
     private readonly Entity _entity;
     private readonly BossType _bossType;
-    private readonly Sprite _sprite;
+    private Sprite _sprite;
     private readonly Hurtbox _hurtbox;
     private readonly Hitbox _bodyHitbox;
     private readonly CollisionBox _collisionBox;
@@ -40,10 +40,8 @@ public sealed class BossCharacter
     private float _vy;
     private float _currentHp;
     private float _maxHp;
-    private float _hitFlashTimer;
     private float _scaleX = 1.0f;
     private float _scaleY = 1.0f;
-    private float _hitFlashDuration = 0.1f;
     private bool _isGrounded;
     private long _frameNumber;
 
@@ -143,12 +141,8 @@ public sealed class BossCharacter
     /// <summary>現在状態の目標持続時間（秒）を取得します。</summary>
     public float StateDuration => _slot.AiData.StateDuration;
 
-    /// <summary>被弾時白閃タイマーを取得または設定します。</summary>
-    public float HitFlashTimer
-    {
-        get => _hitFlashTimer;
-        set => _hitFlashTimer = Math.Max(0.0f, value);
-    }
+    /// <summary>被弾時白閃演出中であるかを取得します。</summary>
+    public bool IsFlashing => _entity.IsAlive() && _entity.Has<HitFlashEffect>();
 
     /// <summary>接地状態であるかを取得します。</summary>
     public bool IsGrounded => _isGrounded;
@@ -181,7 +175,6 @@ public sealed class BossCharacter
             _y = b1Cfg.BaseY;
             _maxHp = b1Cfg.MaxHp;
             _currentHp = b1Cfg.MaxHp;
-            _hitFlashDuration = b1Cfg.HitFlashDuration;
 
             _hurtbox = new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile);
             _bodyHitbox = new Hitbox(b1Cfg.GetHitboxShape(), damage: b1Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false);
@@ -225,7 +218,6 @@ public sealed class BossCharacter
             _y = b2Cfg.SpawnY;
             _maxHp = b2Cfg.MaxHp;
             _currentHp = b2Cfg.MaxHp;
-            _hitFlashDuration = b2Cfg.HitFlashDuration;
 
             _collisionBox = new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight);
             _hurtbox = new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile);
@@ -279,13 +271,8 @@ public sealed class BossCharacter
         World world,
         Query<Transform, CollisionBox> platformQuery)
     {
-        // 1. 被弾判定システム（CombatCollisionSystem）による HP・HitFlashTimer の反映
+        // 1. 被弾判定システム（CombatCollisionSystem）による HP の反映
         SyncFromEntity();
-
-        if (_hitFlashTimer > 0.0f)
-        {
-            _hitFlashTimer = MathF.Max(0.0f, _hitFlashTimer - deltaTime);
-        }
 
         if (!IsAlive)
         {
@@ -353,7 +340,6 @@ public sealed class BossCharacter
             _vx = 0.0f;
             _vy = 0.0f;
             _currentHp = b1Cfg.MaxHp;
-            _hitFlashTimer = 0.0f;
             _isGrounded = false;
 
             if (_boss1State != null)
@@ -379,7 +365,6 @@ public sealed class BossCharacter
             _vx = 0.0f;
             _vy = 0.0f;
             _currentHp = b2Cfg.MaxHp;
-            _hitFlashTimer = 0.0f;
             _isGrounded = false;
 
             if (_boss2State != null)
@@ -397,6 +382,12 @@ public sealed class BossCharacter
             }
         }
 
+        _sprite.IsVisible = true;
+        if (_entity.IsAlive() && _entity.Has<HitFlashEffect>())
+        {
+            _entity.Remove<HitFlashEffect>();
+        }
+
         SyncToEntity();
     }
 
@@ -411,7 +402,7 @@ public sealed class BossCharacter
                .Set(_bodyHitbox)
                .Set(new Health(_maxHp, _currentHp))
                .Set(_sprite)
-               .Set(new BossCombatState(IsInvulnerable, IsVulnerable, _hitFlashDuration, _hitFlashTimer))
+               .Set(new BossCombatState(IsInvulnerable, IsVulnerable))
                .Add<BossTag>();
 
         if (_bossType == BossType.Boss1)
@@ -438,14 +429,10 @@ public sealed class BossCharacter
             _currentHp = health.Current;
         }
 
-        if (_entity.Has<BossCombatState>())
+        if (_entity.Has<Sprite>())
         {
-            ref BossCombatState combat = ref _entity.GetMut<BossCombatState>();
-            if (combat.HitFlashTimer > 0.0f)
-            {
-                _hitFlashTimer = combat.HitFlashTimer;
-                combat.HitFlashTimer = 0.0f;
-            }
+            ref Sprite spr = ref _entity.GetMut<Sprite>();
+            _sprite.IsVisible = spr.IsVisible;
         }
     }
 
@@ -456,17 +443,21 @@ public sealed class BossCharacter
             return;
         }
 
-        _entity.Set(new Transform(_x, _y, scaleX: _scaleX, scaleY: _scaleY));
+        float rotation = _bossType == BossType.Boss1 && _boss1State != null
+            ? (float)(MathF.Sin(_boss1State.HoverTimer * ConfigManager.Render.BossEffects.BossHoverAngleSpeed) * ConfigManager.Render.BossEffects.BossHoverAngleAmp)
+            : 0.0f;
+        _entity.Set(new Transform(_x, _y, scaleX: _scaleX, scaleY: _scaleY, rotation: rotation));
 
         Health health = new(_maxHp, _currentHp);
         _entity.Set(health);
 
-        _entity.Set(new BossCombatState(IsInvulnerable, IsVulnerable, _hitFlashDuration, _hitFlashTimer));
+        _entity.Set(new BossCombatState(IsInvulnerable, IsVulnerable));
 
         if (_entity.Has<Sprite>())
         {
             ref Sprite sprite = ref _entity.GetMut<Sprite>();
-            sprite.FlipX = !_slot.MovementData.FacingRight;
+            sprite.IsVisible = _sprite.IsVisible;
+            sprite.FlipX = _bossType == BossType.Boss1 ? false : !_slot.MovementData.FacingRight;
         }
     }
 

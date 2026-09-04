@@ -87,7 +87,6 @@ public static class CombatEffectHelper
         world.Entity()
              .Set(new Transform(x, y, scaleX: 1.5f, scaleY: 1.5f))
              .Set(new FadeEffect(0.12f))
-             .Set(new HitFlashEffect(0.08f, ColorPalette.SparkYellow))
              .Add<EffectTag>();
     }
 
@@ -103,7 +102,6 @@ public static class CombatEffectHelper
         world.Entity()
              .Set(new Transform(x, y, scaleX: 2.2f, scaleY: 2.2f))
              .Set(new FadeEffect(0.08f))
-             .Set(new HitFlashEffect(0.06f, color))
              .Add<EffectTag>();
     }
 
@@ -216,9 +214,8 @@ public static class CombatEffectHelper
              .Set(new Transform(x + offsetX, y + offsetY, scaleX: scaleX, scaleY: scaleY))
              .Set(new Velocity(vx, vy))
              .Set(new Hitbox(new CollisionShape.Box(width, height, OffsetX: -offsetX, OffsetY: -offsetY), damage: damage, faction: Faction.Hostile, destroyOnHit: false))
-             .Set(new Sprite(slashHandle, flipX: false, isVisible: true, srcRect: srcRect))
+             .Set(new Sprite(slashHandle, flipX: false, isVisible: true, srcRect: srcRect, color: color))
              .Set(new FadeEffect(lifetime))
-             .Set(new HitFlashEffect(lifetime, color))
              .Add<EffectTag>();
     }
 

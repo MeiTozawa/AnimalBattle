@@ -84,6 +84,9 @@ public sealed class Player
         set => _invincibleTimer = Math.Max(0.0f, value);
     }
 
+    /// <summary>被弾時白閃演出中であるかを取得します。</summary>
+    public bool IsFlashing => _entity.IsAlive() && _entity.Has<HitFlashEffect>();
+
     /// <summary>接地状態であるかを取得または設定します。</summary>
     public bool IsGrounded
     {
@@ -244,6 +247,11 @@ public sealed class Player
         _sprite.FlipX = false;
         _sprite.IsVisible = true;
         UpdateAnimation(0.0f);
+
+        if (_entity.IsAlive() && _entity.Has<HitFlashEffect>())
+        {
+            _entity.Remove<HitFlashEffect>();
+        }
 
         SyncToEntity();
     }

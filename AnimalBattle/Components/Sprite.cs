@@ -1,3 +1,4 @@
+using System.Drawing;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Components;
@@ -8,7 +9,12 @@ namespace AnimalBattle.Components;
 /// <remarks>
 /// 指定された設定値で <see cref="Sprite"/> の新しいインスタンスを初期化します。
 /// </remarks>
-public struct Sprite(int graphHandle = -1, bool flipX = false, bool isVisible = true, Rect<int> srcRect = default)
+public struct Sprite(
+    int graphHandle = -1,
+    bool flipX = false,
+    bool isVisible = true,
+    Rect<int> srcRect = default,
+    Color? color = null)
 {
     /// <summary>Native グラフィックハンドル</summary>
     public int GraphHandle = graphHandle;
@@ -21,4 +27,7 @@ public struct Sprite(int graphHandle = -1, bool flipX = false, bool isVisible = 
 
     /// <summary>表示フラグ</summary>
     public bool IsVisible = isVisible;
+
+    /// <summary>スプライト描画色（色調補正 / Tint）</summary>
+    public Color Color = color ?? Color.White;
 }
