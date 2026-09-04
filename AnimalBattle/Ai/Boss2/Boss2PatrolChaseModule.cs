@@ -97,6 +97,7 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
 
                 case NavStatus.MoveToTakeoff:
                 case NavStatus.ExecuteDrop:
+                case NavStatus.InAir:
                     float takeoffVx = plan.RequiredVx;
                     if (MathF.Abs(takeoffVx) > 5.0f)
                     {

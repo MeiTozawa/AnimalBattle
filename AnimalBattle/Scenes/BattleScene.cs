@@ -10,7 +10,7 @@ using AnimalBattle.Core.Asset;
 using AnimalBattle.Core.Input;
 using AnimalBattle.Core.Physics;
 using AnimalBattle.Maps;
-using AnimalBattle.Plugins;
+using AnimalBattle.Modules;
 using AnimalBattle.Systems;
 using ErrorOr;
 using Flecs.NET.Core;
@@ -72,9 +72,9 @@ public partial class BattleScene : IDisposable
         ErrorOr<int> playerHandleRes = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle");
         int playerHandle = !playerHandleRes.IsError ? playerHandleRes.Value : -1;
 
-        App app = new App(_ecsWorld)
-            .AddPluginGroup(new DefaultPlugins());
-        app.FinishSetup();
+        _ecsWorld.Import<ComponentRequirementsModule>();
+        _ecsWorld.Import<EffectModule>();
+        _ecsWorld.Import<BulletModule>();
 
         CombatEffectHelper.Initialize(_ecsWorld);
 

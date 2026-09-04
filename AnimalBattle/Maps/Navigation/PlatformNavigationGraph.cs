@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Maps.Navigation;
 
@@ -120,8 +119,8 @@ public sealed class PlatformNavigationGraph
             return NavPlan.CreateNoPath(targetX, moveSpeed, currentNode, targetNode);
         }
 
-        // 3. A* 経路探索 (Boss の現在 X 座標を考慮して最近の起跳点を選択)
-        ErrorOr.ErrorOr<List<PlatformLink>> pathResult = SearchAStar(currentNode, targetNode, currentX);
+        // 3. A* 経路探索 (Boss の現在 X 座標および目標 X 座標を考慮して最短総合到達経路を選択)
+        ErrorOr.ErrorOr<List<PlatformLink>> pathResult = SearchAStar(currentNode, targetNode, currentX, targetX);
         if (pathResult.IsError || pathResult.Value == null || pathResult.Value.Count == 0)
         {
             return NavPlan.CreateNoPath(targetX, moveSpeed, currentNode, targetNode);
@@ -244,75 +243,116 @@ public sealed class PlatformNavigationGraph
     }
 
     /// <summary>
-    /// A* 最短経路探索を実行します。
+    /// A* 最短経路探索を実行し、現在位置 (startX) から目標位置 (targetX) までの最適な遷移リンク列を計算します。
+    /// 各リンクの離陸点・着地点、空中移動コスト、および中間・終端プラットフォーム上での歩行距離を厳密に考慮します。
     /// </summary>
-    private ErrorOr.ErrorOr<List<PlatformLink>> SearchAStar(PlatformNode start, PlatformNode goal, float startX)
+    private ErrorOr.ErrorOr<List<PlatformLink>> SearchAStar(
+        PlatformNode start,
+        PlatformNode goal,
+        float startX,
+        float targetX)
     {
-        Dictionary<int, float> gScore = new();
-        Dictionary<int, PlatformLink> cameFromLink = new();
-        Dictionary<int, int> cameFromNode = new();
-        PriorityQueue<int, float> openSet = new();
-
-        foreach (PlatformNode node in _nodes)
+        if (!_adjacency.TryGetValue(start.Id, out List<PlatformLink>? startLinks) || startLinks.Count == 0)
         {
-            gScore[node.Id] = float.MaxValue;
+            return ErrorOr.Error.NotFound("Nav.NoPath", $"ノード {start.Id} から出る移動リンクが存在しません。");
         }
 
-        gScore[start.Id] = 0.0f;
-        openSet.Enqueue(start.Id, Heuristic(start, goal));
-        HashSet<int> closedSet = new();
+        // 各リンクごとの最小到達累積コスト G(link)
+        Dictionary<PlatformLink, float> gScore = new();
+        Dictionary<PlatformLink, PlatformLink?> cameFrom = new();
+        PriorityQueue<PlatformLink, float> openSet = new();
 
-        while (openSet.Count > 0)
+        // 終端目標地点（goal, targetX）への最良到達解
+        PlatformLink? bestGoalLink = null;
+        float bestGoalCost = float.MaxValue;
+
+        // 1. 開始ノードから直接出発するすべてのリンクを初期化
+        foreach (PlatformLink link in startLinks)
         {
-            int currentId = openSet.Dequeue();
-            if (currentId == goal.Id)
+            float walkToTakeoff = MathF.Abs(startX - link.TakeoffX);
+            float g = walkToTakeoff + link.Cost;
+            gScore[link] = g;
+            cameFrom[link] = null;
+
+            if (link.ToNode.Id == goal.Id)
             {
-                return ReconstructPath(start.Id, goal.Id, cameFromLink, cameFromNode);
+                float totalCostToGoal = g + MathF.Abs(link.LandingX - targetX);
+                if (totalCostToGoal < bestGoalCost)
+                {
+                    bestGoalCost = totalCostToGoal;
+                    bestGoalLink = link;
+                }
             }
 
-            if (!closedSet.Add(currentId) || !_adjacency.TryGetValue(currentId, out List<PlatformLink>? links))
+            float h = Heuristic(link.LandingX, link.ToNode.TopY, targetX, goal.TopY);
+            openSet.Enqueue(link, g + h);
+        }
+
+        // 2. A* / 最短経路探索ループ
+        while (openSet.TryDequeue(out PlatformLink? currentLink, out float priority))
+        {
+            float currentG = gScore[currentLink];
+            float currentH = Heuristic(currentLink.LandingX, currentLink.ToNode.TopY, targetX, goal.TopY);
+
+            // 既に目標への確定コストを下回ることが不可能な場合、またはキュー内の古い項目はスキップ
+            if (currentG + currentH >= bestGoalCost || priority > currentG + currentH + 0.001f)
             {
                 continue;
             }
 
-            foreach (PlatformLink link in links)
+            // 次のプラットフォームからの遷移リンクを展開
+            if (!_adjacency.TryGetValue(currentLink.ToNode.Id, out List<PlatformLink>? nextLinks))
             {
-                int neighborId = link.ToNode.Id;
-                if (closedSet.Contains(neighborId))
+                continue;
+            }
+
+            foreach (PlatformLink nextLink in nextLinks)
+            {
+                // 直前の出発プラットフォームへの逆走ループを抑制
+                if (nextLink.ToNode.Id == currentLink.FromNode.Id)
                 {
                     continue;
                 }
 
-                float linkTravelCost = currentId == start.Id
-                    ? MathF.Abs(startX - link.TakeoffX) + link.Cost
-                    : link.Cost;
+                float intermediateWalk = MathF.Abs(currentLink.LandingX - nextLink.TakeoffX);
+                float tentativeG = currentG + intermediateWalk + nextLink.Cost;
 
-                float tentativeG = gScore[currentId] + linkTravelCost;
-                if (tentativeG < gScore[neighborId])
+                if (!gScore.TryGetValue(nextLink, out float existingG) || tentativeG < existingG)
                 {
-                    gScore[neighborId] = tentativeG;
-                    cameFromLink[neighborId] = link;
-                    cameFromNode[neighborId] = currentId;
-                    openSet.Enqueue(neighborId, tentativeG + Heuristic(link.ToNode, goal));
+                    gScore[nextLink] = tentativeG;
+                    cameFrom[nextLink] = currentLink;
+
+                    if (nextLink.ToNode.Id == goal.Id)
+                    {
+                        float totalCostToGoal = tentativeG + MathF.Abs(nextLink.LandingX - targetX);
+                        if (totalCostToGoal < bestGoalCost)
+                        {
+                            bestGoalCost = totalCostToGoal;
+                            bestGoalLink = nextLink;
+                        }
+                    }
+
+                    float nextH = Heuristic(nextLink.LandingX, nextLink.ToNode.TopY, targetX, goal.TopY);
+                    if (tentativeG + nextH < bestGoalCost)
+                    {
+                        openSet.Enqueue(nextLink, tentativeG + nextH);
+                    }
                 }
             }
         }
 
-        return ErrorOr.Error.NotFound("Nav.NoPath", $"ノード {start.Id} から {goal.Id} への移動経路が見つかりませんでした。");
-    }
-
-    private static List<PlatformLink> ReconstructPath(
-        int startId,
-        int goalId,
-        Dictionary<int, PlatformLink> cameFromLink,
-        Dictionary<int, int> cameFromNode)
-    {
-        List<PlatformLink> path = new();
-        int curr = goalId;
-        while (curr != startId && cameFromLink.TryGetValue(curr, out PlatformLink? link))
+        if (bestGoalLink == null)
         {
-            path.Add(link);
-            curr = cameFromNode[curr];
+            return ErrorOr.Error.NotFound("Nav.NoPath", $"ノード {start.Id} から {goal.Id} への移動経路が見つかりませんでした。");
+        }
+
+        // 3. 最良終端リンクから始点リンクまでバックトラックして経路を復元
+        List<PlatformLink> path = new();
+        PlatformLink? curr = bestGoalLink;
+        while (curr != null)
+        {
+            path.Add(curr);
+            curr = cameFrom[curr];
         }
 
         path.Reverse();
@@ -320,12 +360,12 @@ public sealed class PlatformNavigationGraph
     }
 
     /// <summary>
-    /// 2 プラットフォーム間のユークリッド距離ヒューリスティック関数。
+    /// 着地予測点から目標点までのユークリッド距離ヒューリスティック関数。
     /// </summary>
-    private static float Heuristic(PlatformNode a, PlatformNode b)
+    private static float Heuristic(float fromX, float fromY, float targetX, float targetY)
     {
-        float dx = a.CenterX - b.CenterX;
-        float dy = a.TopY - b.TopY;
+        float dx = fromX - targetX;
+        float dy = fromY - targetY;
         return MathF.Sqrt(dx * dx + dy * dy);
     }
 

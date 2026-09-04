@@ -1,21 +1,22 @@
-using Flecs.NET.Core;
+using System;
 using AnimalBattle.Components;
+using Flecs.NET.Core;
 
-namespace AnimalBattle.Plugins;
+namespace AnimalBattle.Modules;
 
 /// <summary>
 /// Flecs.NET の <c>With</c> 関係を用いて、特定コンポーネント/タグ（PlayerTag, BossTag, Boss1Tag, Boss2Tag 等）に必須となる
-/// 依存コンポーネントを自動補完するコアプラグイン。
+/// 依存コンポーネントを自動補完する Flecs.NET ネイティブモジュール。
 /// </summary>
-public class RequirePlugin : IPlugin
+public readonly struct ComponentRequirementsModule : IFlecsModule
 {
     /// <summary>
-    /// 全ての必須コンポーネント依存関係を Flecs.NET ワールドへ明示的に登録します。
+    /// 全ての必須コンポーネント依存関係を Flecs.NET ワールドへ登録します。
     /// </summary>
-    /// <param name="app">構築対象の App コンテナ</param>
-    public void Build(App app)
+    /// <param name="world">対象の Flecs.NET ワールド</param>
+    public void InitModule(World world)
     {
-        World world = app.World;
+        world.Module<ComponentRequirementsModule>();
 
         // PlayerTag に必須なコンポーネント群を自動補完
         world.Component<PlayerTag>().Entity
