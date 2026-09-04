@@ -23,8 +23,6 @@ public class RequirePlugin : IPlugin
              .Add(Ecs.With, world.Component<Velocity>().Entity)
              .Add(Ecs.With, world.Component<CollisionBox>().Entity)
              .Add(Ecs.With, world.Component<Health>().Entity)
-             .Add(Ecs.With, world.Component<DoubleJump>().Entity)
-             .Add(Ecs.With, world.Component<PlayerState>().Entity)
              .Add(Ecs.With, world.Component<Sprite>().Entity)
              .Add(Ecs.With, world.Component<Animation>().Entity);
 

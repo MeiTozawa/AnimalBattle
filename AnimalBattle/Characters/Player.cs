@@ -511,14 +511,6 @@ public sealed class Player
         health.InvincibleTimer = _invincibleTimer;
         _entity.Set(health);
 
-        DoubleJump doubleJump = new(_maxJumps);
-        doubleJump.RemainingJumps = _remainingJumps;
-        _entity.Set(doubleJump);
-
-        PlayerState playerState = new();
-        playerState.ShootCooldown = _shootCooldown;
-        _entity.Set(playerState);
-
         _entity.Set(_sprite);
         _entity.Set(_animation);
 

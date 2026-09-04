@@ -2,30 +2,39 @@ using System.Runtime.InteropServices;
 using AnimalBattle.Ai.Contracts;
 using ErrorOr;
 
-namespace AnimalBattle.Components;
+namespace AnimalBattle.Ai.Runtime;
 
-/// <summary>Dead 状態で HUD、衝突、勝利演出、再起動経路が参照する終端データです。</summary>
+/// <summary>Dead 状態で HUD、衝突、勝利演出、再起動経路が参照する終端データ構造体です。</summary>
 [StructLayout(LayoutKind.Sequential)]
 public struct BossTerminalData
 {
     /// <summary>終端データが確定しているかどうかです。</summary>
     public bool IsTerminal;
+
     /// <summary>終端として確定した固定 BossState です。</summary>
     public BossState DeadState;
+
     /// <summary>死亡時の Phase です。</summary>
     public Phase Phase;
+
     /// <summary>死亡を発生させた完全な理由です。</summary>
     public TransitionReason DeathReason;
+
     /// <summary>死亡を確定した Frame_Update 番号です。</summary>
     public long FrameUpdateNumber;
+
     /// <summary>死亡時の技能識別子です。</summary>
     public BossSkill Skill;
+
     /// <summary>死亡時の攻撃段階です。</summary>
     public AttackStage AttackStage;
+
     /// <summary>死亡時の HP です。</summary>
     public float Hp;
+
     /// <summary>死亡 frame に移動停止が適用されたかどうかです。</summary>
     public bool MovementStopped;
+
     /// <summary>死亡 frame に攻撃生成停止が適用されたかどうかです。</summary>
     public bool AttackGenerationStopped;
 
@@ -62,5 +71,4 @@ public struct BossTerminalData
         AttackGenerationStopped = true;
         return Result.Success;
     }
-
 }

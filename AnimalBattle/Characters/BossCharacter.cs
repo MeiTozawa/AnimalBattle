@@ -109,10 +109,10 @@ public sealed class BossCharacter
     public string SkillName => CurrentSkill != BossSkill.None ? CurrentSkill.ToString() : string.Empty;
 
     /// <summary>AI 目標地点 X 座標を取得します。</summary>
-    public float TargetX => _slot.CompatibilityView.LegacyTargetX;
+    public float TargetX => _slot.TargetPositionX;
 
     /// <summary>AI 目標地点 Y 座標を取得します。</summary>
-    public float TargetY => _slot.CompatibilityView.LegacyTargetY;
+    public float TargetY => _slot.TargetPositionY;
 
     /// <summary>Boss 1 の浮遊タイマー値を取得します。</summary>
     public float HoverTimer => _boss1State != null ? _boss1State.HoverTimer : 0.0f;

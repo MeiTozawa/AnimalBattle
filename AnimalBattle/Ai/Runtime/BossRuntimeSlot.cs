@@ -84,36 +84,11 @@ public sealed class BossRuntimeSlot
     /// <summary>攻撃を新規生成できる状態かどうかを取得します。</summary>
     public bool CanGenerateAttack => !IsFailClosed && !AiData.IsDead && AiData.AttackGenerationEnabled;
 
-    /// <summary>HUD と WorldRender が読む互換 view を取得します。</summary>
-    public BossCompatibilityData CompatibilityView
-    {
-        get
-        {
-            BossCompatibilityData view = default;
-            view.LegacyAttackValue = (int)_attackData.Skill;
-            view.LegacyStateTimer = _aiData.StateTimer;
-            view.LegacyStateDuration = _aiData.StateDuration;
-            view.LegacyIsInvulnerable = _aiData.IsInvulnerable;
-            view.LegacyStartX = _movementData.StartPosition.X;
-            view.LegacyStartY = _movementData.StartPosition.Y;
-            if (_context.PlayerObservation.IsAlive || _context.PlayerObservation.PositionX != 0.0f || _context.PlayerObservation.PositionY != 0.0f)
-            {
-                view.LegacyTargetX = _context.PlayerObservation.PositionX;
-                view.LegacyTargetY = _context.PlayerObservation.PositionY;
-            }
-            view.LegacyFacingRight = _movementData.FacingRight;
-            view.UpdateSource = _aiData.UpdateSource;
-            view.BossState = _currentBossState;
-            view.Phase = _aiData.Phase;
-            view.Skill = _attackData.Skill;
-            view.TransitionReason = _currentTransitionReason;
-            view.IsInvulnerable = _aiData.IsInvulnerable;
-            view.AttackStage = _attackData.Stage;
-            view.HasDebugData = _hasDebugData;
-            view.FrameUpdateNumber = _aiData.FrameUpdateNumber;
-            return view;
-        }
-    }
+    /// <summary>AI が認識している対象（プレイヤー）の目標 X 座標を取得します。</summary>
+    public float TargetPositionX => _context.PlayerObservation.PositionX;
+
+    /// <summary>AI が認識している対象（プレイヤー）の目標 Y 座標を取得します。</summary>
+    public float TargetPositionY => _context.PlayerObservation.PositionY;
 
     /// <summary>現在の Debug_Data を取得します。Debug 無効時は生成しません。</summary>
     /// <param name="debugData">生成済みの Debug_Data。</param>
