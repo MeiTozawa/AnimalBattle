@@ -26,7 +26,6 @@ public sealed class BossRuntimeSlot
     private BossAttackData _attackData;
     private BossPhaseTransitionData _phaseTransitionData;
     private BossTerminalData _terminalData;
-    private BossCompatibilityData _compatibilityData;
     private BossDebugData _debugData;
     private bool _debugEnabled;
     private bool _hasDebugData;
@@ -90,7 +89,7 @@ public sealed class BossRuntimeSlot
     {
         get
         {
-            BossCompatibilityData view = _compatibilityData;
+            BossCompatibilityData view = default;
             view.LegacyAttackValue = (int)_attackData.Skill;
             view.LegacyStateTimer = _aiData.StateTimer;
             view.LegacyStateDuration = _aiData.StateDuration;
@@ -308,34 +307,6 @@ public sealed class BossRuntimeSlot
             random);
         _debugEnabled = debugEnabled;
         RefreshDebugData();
-    }
-
-    /// <summary>
-    /// MigrationAdapter が検証した旧値を runtime の source of truth として取り込みます。
-    /// </summary>
-    /// <param name="migration">検証済みの移行結果。</param>
-    /// <returns>現在の Entity/Boss に適用できた場合は Success。</returns>
-    internal ErrorOr.ErrorOr<ErrorOr.Success> ApplyMigration(in MigrationResult migration)
-    {
-        if (!migration.IsSuccess || migration.BossType != BossType || migration.AiData.BossState == BossState.Unknown)
-        {
-            return ErrorOr.Error.Validation("BossRuntimeSlot.ApplyMigration", "Migration 結果が無効です。");
-        }
-
-        _context.SetPhaseForTransition(migration.AiData.Phase);
-        _aiData = migration.AiData;
-        _aiData.UpdateSource = UpdateSource.NewRuntime;
-        _movementData = migration.MovementData;
-        _attackData = migration.AttackData;
-        _compatibilityData = migration.CompatibilityData;
-        _compatibilityData.UpdateSource = UpdateSource.NewRuntime;
-        _currentBossState = _aiData.BossState;
-        _currentTransitionReason = _compatibilityData.TransitionReason;
-        _stateEntered = false;
-        _moduleStopped = false;
-        _hasDebugData = false;
-        RefreshDebugData();
-        return ErrorOr.Result.Success;
     }
 
     /// <summary>初期化完了を runtime gate に反映します。</summary>

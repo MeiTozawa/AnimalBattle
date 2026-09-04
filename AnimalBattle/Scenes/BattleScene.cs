@@ -7,6 +7,7 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Core.Asset;
+using AnimalBattle.Core.Physics;
 using AnimalBattle.Maps;
 using AnimalBattle.Plugins;
 using ErrorOr;
@@ -23,6 +24,7 @@ public partial class BattleScene : IDisposable
 {
     private readonly World _ecsWorld;
     private Player? _player;
+    private BossCharacter? _currentBoss;
     private Query<Transform, CollisionBox> _platformQuery;
     private TileMap? _tileMap;
     private bool _isDisposed;
@@ -41,6 +43,11 @@ public partial class BattleScene : IDisposable
     /// 現在アクティブなプレイヤー自機インスタンスを取得します。
     /// </summary>
     public Player? Player => _player;
+
+    /// <summary>
+    /// 現在アクティブな Boss インスタンスを取得します。
+    /// </summary>
+    public BossCharacter? Boss => _currentBoss;
 
     /// <summary>
     /// <see cref="BattleScene"/> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
@@ -110,98 +117,20 @@ public partial class BattleScene : IDisposable
         return bossEntity;
     }
 
-    private static void SpawnBoss1(Entity bossEntity)
+    private void SpawnBoss1(Entity bossEntity)
     {
-        Boss1Config b1Cfg = ConfigManager.Boss1;
         ErrorOr<int> boss1HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
         int boss1Handle = !boss1HandleRes.IsError ? boss1HandleRes.Value : -1;
-
-        Boss1Stats stats = new Boss1Stats(baseX: b1Cfg.BaseX, baseY: b1Cfg.BaseY);
-        Boss1StateMachine stateMachine = new Boss1StateMachine();
-
-        bossEntity
-            .Set(new Transform(b1Cfg.BaseX, b1Cfg.BaseY, scaleX: b1Cfg.ScaleX, scaleY: b1Cfg.ScaleY))
-            .Set(new Velocity())
-            .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
-            .Set(new Hitbox(b1Cfg.GetHitboxShape(), damage: b1Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
-            .Set(new Health(b1Cfg.MaxHp))
-            .Set(stats)
-            .Set(stateMachine)
-            .Set(new Sprite(boss1Handle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
-            .Add<BossTag>()
-            .Add<Boss1Tag>();
-
-        MigrationResult migration = MigrationAdapter.ConvertBoss1(in stateMachine, in stats);
-        ApplyMigrationResult(bossEntity, in migration);
-
-        Console.WriteLine($"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {b1Cfg.MaxHp}, Pos: {b1Cfg.BaseX}, {b1Cfg.BaseY})");
+        _currentBoss = new BossCharacter(bossEntity, BossType.Boss1, boss1Handle);
+        Console.WriteLine($"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {ConfigManager.Boss1.MaxHp}, Pos: {ConfigManager.Boss1.BaseX}, {ConfigManager.Boss1.BaseY})");
     }
 
-    private static void SpawnBoss2(Entity bossEntity)
+    private void SpawnBoss2(Entity bossEntity)
     {
-        Boss2Config b2Cfg = ConfigManager.Boss2;
         ErrorOr<int> boss2HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
         int boss2Handle = !boss2HandleRes.IsError ? boss2HandleRes.Value : -1;
-
-        Boss2Stats stats = new Boss2Stats(spawnX: b2Cfg.SpawnX, spawnY: b2Cfg.SpawnY);
-        Boss2StateMachine stateMachine = new Boss2StateMachine();
-
-        bossEntity
-            .Set(new Transform(b2Cfg.SpawnX, b2Cfg.SpawnY, scaleX: b2Cfg.ScaleX, scaleY: b2Cfg.ScaleY))
-            .Set(new Velocity())
-            .Set(new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight))
-            .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
-            .Set(new Hitbox(b2Cfg.GetHitboxShape(), damage: b2Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false))
-            .Set(new Health(b2Cfg.MaxHp))
-            .Set(stats)
-            .Set(stateMachine)
-            .Set(new Sprite(boss2Handle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192)))
-            .Add<BossTag>()
-            .Add<Boss2Tag>();
-
-        MigrationResult migration = MigrationAdapter.ConvertBoss2(in stateMachine, in stats);
-        ApplyMigrationResult(bossEntity, in migration);
-
-        Console.WriteLine($"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {b2Cfg.MaxHp}, Pos: {b2Cfg.SpawnX}, {b2Cfg.SpawnY})");
-    }
-
-    private static void ApplyMigrationResult(Entity bossEntity, in MigrationResult migration)
-    {
-        if (!migration.IsSuccess)
-        {
-            Console.WriteLine($"[BattleScene 警告] Boss 移行データを生成できませんでした: {migration.Diagnostic.Message}");
-            return;
-        }
-
-        bossEntity.Set(migration.AiData);
-        bossEntity.Set(migration.MovementData);
-        bossEntity.Set(migration.AttackData);
-        bossEntity.Set(new BossPhaseTransitionData());
-        bossEntity.Set(new BossTerminalData());
-        bossEntity.Set(migration.CompatibilityData);
-        bossEntity.Remove<BossDebugData>();
-    }
-
-    private static void RefreshMigrationCompatibilityView(Entity bossEntity)
-    {
-        if (!bossEntity.Has<BossAiData>()
-            || !bossEntity.Has<BossMovementData>()
-            || !bossEntity.Has<BossAttackData>()
-            || !bossEntity.Has<BossCompatibilityData>())
-        {
-            return;
-        }
-
-        ref readonly BossAiData aiData = ref bossEntity.Get<BossAiData>();
-        ref readonly BossMovementData movementData = ref bossEntity.Get<BossMovementData>();
-        ref readonly BossAttackData attackData = ref bossEntity.Get<BossAttackData>();
-        ref readonly BossCompatibilityData compatibilityData = ref bossEntity.Get<BossCompatibilityData>();
-        BossCompatibilityData refreshed = MigrationAdapter.CreateCompatibilityView(
-            in aiData,
-            in movementData,
-            in attackData,
-            in compatibilityData);
-        bossEntity.Set(refreshed);
+        _currentBoss = new BossCharacter(bossEntity, BossType.Boss2, boss2Handle);
+        Console.WriteLine($"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {ConfigManager.Boss2.MaxHp}, Pos: {ConfigManager.Boss2.SpawnX}, {ConfigManager.Boss2.SpawnY})");
     }
 
     /// <summary>
@@ -227,26 +156,7 @@ public partial class BattleScene : IDisposable
     /// </summary>
     public void ResetCurrentBoss()
     {
-        SpawnBoss(CurrentBossType);
-    }
-
-    /// <summary>
-    /// compatibility view と終端 data を確認して現在の Boss を初期状態へ戻します。
-    /// </summary>
-    /// <param name="compatibility">新 runtime が公開した現在の compatibility view。</param>
-    /// <param name="terminal">死亡後も保持する終端 data。</param>
-    public void ResetCurrentBoss(in BossCompatibilityData compatibility, in BossTerminalData terminal)
-    {
-        if (terminal.IsTerminal)
-        {
-            Console.WriteLine($"[BattleScene] 終端状態 {terminal.DeadState} を確認して Boss を再生成します。");
-        }
-        else if (compatibility.BossState.IsValid())
-        {
-            Console.WriteLine($"[BattleScene] 互換状態 {compatibility.BossState} から Boss を再生成します。");
-        }
-
-        SpawnBoss(CurrentBossType);
+        _currentBoss?.Reset();
     }
 
     /// <summary>
@@ -290,7 +200,6 @@ public partial class BattleScene : IDisposable
                     t.ScaleY = bCfg.ScaleY;
                 }
 
-                RefreshMigrationCompatibilityView(bossEntity);
                 Console.WriteLine($"[BattleScene] Boss 1 の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
             }
         }
@@ -315,7 +224,6 @@ public partial class BattleScene : IDisposable
                     t.ScaleY = bCfg.ScaleY;
                 }
 
-                RefreshMigrationCompatibilityView(bossEntity);
                 Console.WriteLine($"[BattleScene] Boss 2 の Hurtbox / Hitbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
             }
         }
@@ -377,6 +285,12 @@ public partial class BattleScene : IDisposable
         if (_player != null)
         {
             _player.Update(deltaTime, ConfigManager.Player, ConfigManager.Arena, _platformQuery, _ecsWorld);
+        }
+
+        if (_currentBoss != null)
+        {
+            Vec2f playerPos = _player != null ? new Vec2f(_player.X, _player.Y) : Vec2f.Zero;
+            _currentBoss.Update(deltaTime, playerPos, _ecsWorld, _platformQuery);
         }
 
         _ecsWorld.Progress(deltaTime);
