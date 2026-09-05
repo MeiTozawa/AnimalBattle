@@ -130,15 +130,6 @@ __declspec(dllexport) void Extension_ProcessBatchSpecialBullets(
     }
 }
 
-__declspec(dllexport) float Extension_EvaluateEase(
-    ab::EaseType ease_type,
-    float progress) noexcept {
-    try {
-        return EvaluateEase(ease_type, progress);
-    } catch (...) {
-        return progress;
-    }
-}
 
 __declspec(dllexport) void Extension_CalculateSpecialBulletModifier(
     int32_t type,
@@ -157,21 +148,6 @@ __declspec(dllexport) void Extension_CalculateSpecialBulletModifier(
         if (out_vx) *out_vx = base_vx;
         if (out_vy) *out_vy = base_vy;
         if (out_radius) *out_radius = base_radius;
-    }
-}
-
-__declspec(dllexport) void Extension_CalculateOrbitPosition(
-    float center_x,
-    float center_y,
-    float orbit_distance,
-    float angle,
-    float* out_x,
-    float* out_y) noexcept {
-    try {
-        CalculateOrbitPosition(center_x, center_y, orbit_distance, angle, out_x, out_y);
-    } catch (...) {
-        if (out_x) *out_x = center_x;
-        if (out_y) *out_y = center_y;
     }
 }
 

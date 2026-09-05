@@ -85,15 +85,6 @@ internal static unsafe partial class NativeExtensionBindings
     [SuppressGCTransition]
     public static partial void Extension_ProcessBatchSpecialBullets(SpecialBulletBatchItem* items, int count);
 
-    /// <summary>
-    /// 単一のイージング値を C++ 原生拡張で同期評価します（単体テストまたは単発計算フォールバック用）。
-    /// </summary>
-    /// <param name="easeType">イージング関数種別。</param>
-    /// <param name="progress">進捗割合 (0.0f～1.0f)。</param>
-    /// <returns>補間値。</returns>
-    [LibraryImport(_dllName, EntryPoint = "Extension_EvaluateEase")]
-    [SuppressGCTransition]
-    public static partial float Extension_EvaluateEase(EaseType easeType, float progress);
 
     /// <summary>
     /// 単一の特殊弾幕変調値を C++ 原生拡張で同期計算します。
@@ -117,25 +108,6 @@ internal static unsafe partial class NativeExtensionBindings
         out float outVx,
         out float outVy,
         out float outRadius);
-
-    /// <summary>
-    /// 衛星小円の公転座標を C++ 原生拡張で計算します。
-    /// </summary>
-    /// <param name="centerX">中心 X 座標。</param>
-    /// <param name="centerY">中心 Y 座標。</param>
-    /// <param name="orbitDistance">公転半径距離。</param>
-    /// <param name="angle">公転角度 (ラジアン)。</param>
-    /// <param name="outX">衛星 X 座標出力。</param>
-    /// <param name="outY">衛星 Y 座標出力。</param>
-    [LibraryImport(_dllName, EntryPoint = "Extension_CalculateOrbitPosition")]
-    [SuppressGCTransition]
-    public static partial void Extension_CalculateOrbitPosition(
-        float centerX,
-        float centerY,
-        float orbitDistance,
-        float angle,
-        out float outX,
-        out float outY);
 
     #endregion
 

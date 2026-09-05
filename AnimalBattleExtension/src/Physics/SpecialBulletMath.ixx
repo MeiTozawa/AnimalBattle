@@ -60,16 +60,4 @@ void CalculateSpecialBulletModifier(
     if (out_radius) *out_radius = radius;
 }
 
-/// @brief 黄色および黒色弾幕の衛星小円の公転座標を計算します。
-void CalculateOrbitPosition(
-    float center_x,
-    float center_y,
-    float orbit_distance,
-    float angle,
-    float* out_x,
-    float* out_y) noexcept {
-    if (out_x) *out_x = center_x + std::cos(angle) * orbit_distance;
-    if (out_y) *out_y = center_y + std::sin(angle) * orbit_distance;
-}
-
 }  // namespace ab::extension
