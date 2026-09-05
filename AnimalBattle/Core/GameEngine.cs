@@ -48,6 +48,7 @@ public static class GameEngine
     /// </summary>
     public static void Shutdown()
     {
+        _commandBuffer.Dispose();
         NativeBindings.Engine_Shutdown();
     }
 
