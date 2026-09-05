@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Bindings;
 using AnimalBattle.Characters;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
@@ -559,8 +560,9 @@ public sealed class WorldRenderSystem : IDisposable
                 // 黄色：主円と衛星小円の二重円構成（自転・公転）
                 float orbitDist = radius * 1.5f;
                 float angle = mod.ElapsedTimer * 6.0f;
-                int satX = (int)(bx + MathF.Cos(angle) * orbitDist);
-                int satY = (int)(by + MathF.Sin(angle) * orbitDist);
+                NativeExtensionBindings.Extension_CalculateOrbitPosition(bx, by, orbitDist, angle, out float satXf, out float satYf);
+                int satX = (int)satXf;
+                int satY = (int)satYf;
                 int satRadius = Math.Max(3, (int)(radius * 0.55f));
                 int satOutline = satRadius + outlinePadding;
                 int satCore = Math.Max(2, (int)(satRadius * coreRadiusRatio));
@@ -596,8 +598,9 @@ public sealed class WorldRenderSystem : IDisposable
                 // 衛星小円（黒核・赤枠）
                 float orbitDist = radius * 1.55f;
                 float angle = mod.ElapsedTimer * 6.0f;
-                int satX = (int)(bx + MathF.Cos(angle) * orbitDist);
-                int satY = (int)(by + MathF.Sin(angle) * orbitDist);
+                NativeExtensionBindings.Extension_CalculateOrbitPosition(bx, by, orbitDist, angle, out float satXf, out float satYf);
+                int satX = (int)satXf;
+                int satY = (int)satYf;
                 int satRadius = Math.Max(3, (int)(radius * 0.55f));
                 int satOutline = satRadius + outlinePadding;
 

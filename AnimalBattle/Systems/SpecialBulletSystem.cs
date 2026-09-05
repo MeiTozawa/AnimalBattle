@@ -1,20 +1,16 @@
 using System;
 using AnimalBattle.Components;
+using AnimalBattle.Compute;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
 /// 特殊弾幕（品紅・黄・青・黒）の周期アニメーション、法線正弦波揺動、および動的拡縮判定を
-/// 一括制御する ECS System。
+/// <see cref="NativeComputeQueue"/> による C++ 原生拡張一括同期バッチ処理で制御する ECS System。
 /// </summary>
 public static class SpecialBulletSystem
 {
-    private const float CyanWaveAmplitude = 28.0f;
-    private const float CyanWaveFrequency = 7.0f;
-    private const float MagentaPulseAmplitude = 0.35f;
-    private const float MagentaPulseFrequency = 6.0f;
-
     /// <summary>
     /// 特殊弾幕変調システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -25,36 +21,48 @@ public static class SpecialBulletSystem
         world.System<Velocity, BulletModifier, Bullet, Hitbox>("SpecialBulletSystem")
              .With<BossBulletTag>()
              .Kind(Ecs.OnUpdate)
-             .Each((Iter it, int i, ref Velocity vel, ref BulletModifier modifier, ref Bullet bullet, ref Hitbox hitbox) =>
+             .Iter((Iter it, Field<Velocity> vel, Field<BulletModifier> modifier, Field<Bullet> bullet, Field<Hitbox> hitbox) =>
              {
-                 float dt = it.DeltaTime();
-                 modifier.ElapsedTimer += dt;
-                 float t = modifier.ElapsedTimer;
-
-                 // 1. 青色 & 黒色：進行方向に対する法線方向の左右正弦波揺動
-                 if (modifier.Type == BulletType.Cyan || modifier.Type == BulletType.Black)
+                 int count = it.Count();
+                 if (count <= 0)
                  {
-                     float baseSpeedSq = modifier.BaseVx * modifier.BaseVx + modifier.BaseVy * modifier.BaseVy;
-                     if (baseSpeedSq > 1.0f)
-                     {
-                         float invSpeed = 1.0f / MathF.Sqrt(baseSpeedSq);
-                         float nx = -modifier.BaseVy * invSpeed;
-                         float ny = modifier.BaseVx * invSpeed;
+                     return;
+                 }
 
-                         float waveVelocity = CyanWaveAmplitude * CyanWaveFrequency * MathF.Cos(t * CyanWaveFrequency);
-                         vel.Vx = modifier.BaseVx + nx * waveVelocity;
-                         vel.Vy = modifier.BaseVy + ny * waveVelocity;
+                 float dt = it.DeltaTime();
+                 NativeComputeQueue queue = NativeComputeQueue.Shared;
+                 queue.Clear();
+
+                 // 1. 全弾幕の変調要求を一括して計算キューへ登録
+                 for (int i = 0; i < count; ++i)
+                 {
+                     modifier[i].ElapsedTimer += dt;
+                     queue.EnqueueSpecialBullet(
+                         modifier[i].Type,
+                         modifier[i].ElapsedTimer,
+                         modifier[i].BaseVx,
+                         modifier[i].BaseVy,
+                         modifier[i].BaseRadius);
+                 }
+
+                 // 2. 1 回の P/Invoke で C++ 原生拡張へ一括転送・並列 SIMD 実行
+                 queue.Dispatch();
+
+                 // 3. 計算結果（変調速度および脈動判定半径）を Entity コンポーネントへ一括反映
+                 for (int i = 0; i < count; ++i)
+                 {
+                     ref readonly SpecialBulletBatchItem res = ref queue.GetBulletResult(i);
+                     vel[i].Vx = res.OutVx;
+                     vel[i].Vy = res.OutVy;
+
+                     if (modifier[i].Type == BulletType.Magenta || modifier[i].Type == BulletType.Black)
+                     {
+                         bullet[i].Radius = res.OutRadius;
+                         hitbox[i].Shape = new CollisionShape.Circle(res.OutRadius);
                      }
                  }
 
-                 // 2. 品紅色 & 黒色：呼吸拡縮アニメーション（当たり判定 Circle 同期）
-                 if (modifier.Type == BulletType.Magenta || modifier.Type == BulletType.Black)
-                 {
-                     float scale = 1.0f + MagentaPulseAmplitude * MathF.Sin(t * MagentaPulseFrequency);
-                     float newRadius = Math.Max(2.0f, modifier.BaseRadius * scale);
-                     bullet.Radius = newRadius;
-                     hitbox.Shape = new CollisionShape.Circle(newRadius);
-                 }
+                 queue.Clear();
              });
 
         return world;

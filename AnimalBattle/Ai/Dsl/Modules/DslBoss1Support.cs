@@ -2,6 +2,7 @@ using System;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Bindings;
 using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Dsl.Modules;
@@ -35,14 +36,19 @@ internal static class DslBoss1Support
         Vec2f basePos = new(state.BaseX, settings.HoverBaseY);
         Vec2f playerPos = new(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
 
-        float targetX = basePos.X + (MathF.Sin(state.HoverTimer * settings.HoverSpeedX) * settings.HoverAmpX)
-                        + ((playerPos.X - basePos.X) * settings.PlayerPursuitWeight);
-        float targetY = basePos.Y + (MathF.Cos(state.HoverTimer * settings.HoverSpeedY) * settings.HoverAmpY);
-        float lerpFactor = MathF.Min(1.0f, settings.HoverLerpSpeed * deltaTime);
-
-        float nextX = curPos.X + ((targetX - curPos.X) * lerpFactor);
-        float nextY = curPos.Y + ((targetY - curPos.Y) * lerpFactor);
-        Vec2f newPos = new(nextX, nextY);
+        NativeExtensionBindings.Extension_CalculateBossHoverPosition(
+            in curPos,
+            in basePos,
+            in playerPos,
+            state.HoverTimer,
+            settings.HoverSpeedX,
+            settings.HoverSpeedY,
+            settings.HoverAmpX,
+            settings.HoverAmpY,
+            settings.PlayerPursuitWeight,
+            settings.HoverLerpSpeed,
+            deltaTime,
+            out Vec2f newPos);
 
         state.CurrentPosition = newPos;
         if (context.Movement.MoveTo(newPos.X, newPos.Y).IsError)

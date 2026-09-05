@@ -116,13 +116,7 @@ public sealed class DslBoss1ExecuteModule : IBossStateModule, IStateModuleDepend
         Vec2f targetPos = _state.AttackTargetPosition;
 
         float progress = Math.Clamp(_elapsed / Math.Max(0.01f, duration), 0.0f, 1.0f);
-        float easeProgress = pattern.EaseType switch
-        {
-            EaseType.InQuad => progress * progress,
-            EaseType.OutQuad => progress * (2.0f - progress),
-            EaseType.InOutQuad => progress < 0.5f ? 2.0f * progress * progress : -1.0f + ((4.0f - (2.0f * progress)) * progress),
-            _ => progress * progress
-        };
+        float easeProgress = EasingMath.Evaluate(pattern.EaseType, progress);
 
         float nextX = startPos.X + ((targetPos.X - startPos.X) * easeProgress);
         float nextY = startPos.Y + ((targetPos.Y - startPos.Y) * easeProgress);

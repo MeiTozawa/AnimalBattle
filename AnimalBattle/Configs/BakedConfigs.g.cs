@@ -57,7 +57,7 @@ public static class BakedConfigs
     public static Boss1Config CreateBoss1Config() => new()
     {
         BossName = "ANCIENT CAT OVERLORD",
-        MaxHp = 60.0f,
+        MaxHp = 30.0f,
         BaseX = 640.0f,
         BaseY = 200.0f,
         ScaleX = 0.6f,
@@ -154,7 +154,7 @@ public static class BakedConfigs
     public static Boss2Config CreateBoss2Config() => new()
     {
         BossName = "GROUND CRUSHER",
-        MaxHp = 60.0f,
+        MaxHp = 30.0f,
         SpawnX = 900.0f,
         SpawnY = 480.0f,
         ScaleX = 0.65f,

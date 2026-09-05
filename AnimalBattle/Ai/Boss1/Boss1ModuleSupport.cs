@@ -90,13 +90,6 @@ internal static class Boss1ModuleSupport
 
     internal static float Ease(float progress, Core.EaseType easeType)
     {
-        float t = Clamp01(progress);
-        return easeType switch
-        {
-            Core.EaseType.InQuad => t * t,
-            Core.EaseType.OutQuad => t * (2.0f - t),
-            Core.EaseType.InOutQuad => t < 0.5f ? 2.0f * t * t : -1.0f + (4.0f - 2.0f * t) * t,
-            _ => t
-        };
+        return Core.EasingMath.Evaluate(easeType, progress);
     }
 }
