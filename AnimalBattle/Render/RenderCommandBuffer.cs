@@ -103,12 +103,15 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
         _packetBuffer[_packetCount++] = new RenderPacket
         {
             Type = RenderPacketType.DrawBox,
-            BoxX1 = x1,
-            BoxY1 = y1,
-            BoxX2 = x2,
-            BoxY2 = y2,
-            BoxColor = color,
-            BoxFill = fill ? (byte)1 : (byte)0,
+            Box = new DrawBoxPacket
+            {
+                X1 = x1,
+                Y1 = y1,
+                X2 = x2,
+                Y2 = y2,
+                Color = color,
+                Fill = fill ? (byte)1 : (byte)0,
+            },
         };
     }
 
@@ -126,11 +129,14 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
         _packetBuffer[_packetCount++] = new RenderPacket
         {
             Type = RenderPacketType.DrawCircle,
-            CircleCenterX = centerX,
-            CircleCenterY = centerY,
-            CircleRadius = radius,
-            CircleColor = color,
-            CircleFill = fill ? (byte)1 : (byte)0,
+            Circle = new DrawCirclePacket
+            {
+                CenterX = centerX,
+                CenterY = centerY,
+                Radius = radius,
+                Color = color,
+                Fill = fill ? (byte)1 : (byte)0,
+            },
         };
     }
 
@@ -149,12 +155,15 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
         _packetBuffer[_packetCount++] = new RenderPacket
         {
             Type = RenderPacketType.DrawLine,
-            LineX1 = x1,
-            LineY1 = y1,
-            LineX2 = x2,
-            LineY2 = y2,
-            LineColor = color,
-            LineThickness = thickness,
+            Line = new DrawLinePacket
+            {
+                X1 = x1,
+                Y1 = y1,
+                X2 = x2,
+                Y2 = y2,
+                Color = color,
+                Thickness = thickness,
+            },
         };
     }
 
@@ -171,10 +180,13 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
         _packetBuffer[_packetCount++] = new RenderPacket
         {
             Type = RenderPacketType.DrawGraph,
-            GraphX = x,
-            GraphY = y,
-            GraphHandle = handle,
-            GraphTrans = trans ? (byte)1 : (byte)0,
+            Graph = new DrawGraphPacket
+            {
+                X = x,
+                Y = y,
+                Handle = handle,
+                Trans = trans ? (byte)1 : (byte)0,
+            },
         };
     }
 
@@ -193,12 +205,15 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
         _packetBuffer[_packetCount++] = new RenderPacket
         {
             Type = RenderPacketType.DrawRotaGraph,
-            RotaCenterX = centerX,
-            RotaCenterY = centerY,
-            RotaScale = scale,
-            RotaAngle = angle,
-            RotaHandle = handle,
-            RotaTrans = trans ? (byte)1 : (byte)0,
+            RotaGraph = new DrawRotaGraphPacket
+            {
+                CenterX = centerX,
+                CenterY = centerY,
+                Scale = scale,
+                Angle = angle,
+                Handle = handle,
+                Trans = trans ? (byte)1 : (byte)0,
+            },
         };
     }
 
@@ -226,17 +241,20 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
         _packetBuffer[_packetCount++] = new RenderPacket
         {
             Type = RenderPacketType.DrawRectRotaGraph,
-            RectRotaCenterX = centerX,
-            RectRotaCenterY = centerY,
-            RectRotaSrcX = srcX,
-            RectRotaSrcY = srcY,
-            RectRotaSrcW = srcW,
-            RectRotaSrcH = srcH,
-            RectRotaScale = scale,
-            RectRotaAngle = angle,
-            RectRotaHandle = handle,
-            RectRotaTrans = trans ? (byte)1 : (byte)0,
-            RectRotaTurnX = turnX ? (byte)1 : (byte)0,
+            RectRotaGraph = new DrawRectRotaGraphPacket
+            {
+                CenterX = centerX,
+                CenterY = centerY,
+                SrcX = srcX,
+                SrcY = srcY,
+                SrcW = srcW,
+                SrcH = srcH,
+                Scale = scale,
+                Angle = angle,
+                Handle = handle,
+                Trans = trans ? (byte)1 : (byte)0,
+                TurnX = turnX ? (byte)1 : (byte)0,
+            },
         };
     }
 
@@ -262,11 +280,14 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
         _packetBuffer[_packetCount++] = new RenderPacket
         {
             Type = RenderPacketType.DrawString,
-            StringX = x,
-            StringY = y,
-            StringColor = color,
-            StringOffset = offset,
-            StringLength = strLength,
+            StringData = new DrawStringPacket
+            {
+                X = x,
+                Y = y,
+                Color = color,
+                TextOffset = offset,
+                TextLength = strLength,
+            },
         };
     }
 
@@ -281,8 +302,11 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
         _packetBuffer[_packetCount++] = new RenderPacket
         {
             Type = RenderPacketType.SetDrawBlendMode,
-            BlendMode = mode,
-            BlendPal = pal,
+            Blend = new SetBlendModePacket
+            {
+                Mode = mode,
+                Pal = pal,
+            },
         };
     }
 
@@ -298,9 +322,12 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
         _packetBuffer[_packetCount++] = new RenderPacket
         {
             Type = RenderPacketType.SetDrawBright,
-            BrightR = r,
-            BrightG = g,
-            BrightB = b,
+            Bright = new SetBrightPacket
+            {
+                R = r,
+                G = g,
+                B = b,
+            },
         };
     }
 

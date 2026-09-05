@@ -79,6 +79,7 @@ tools/
 
 # AnimalBattle.Tests の replay artifact
 /AnimalBattle.Tests
+INTRODUCE.md
 
 #AI agent files
 docs/
