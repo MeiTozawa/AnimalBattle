@@ -2,6 +2,10 @@
 
 import BatchPhysics;
 import BossTrajectory;
+import ComputeTypes;
+import Easing;
+import SpecialBulletMath;
+import BatchComputeProcessor;
 
 using namespace ab::extension;
 
@@ -89,5 +93,75 @@ __declspec(dllexport) void Extension_CalculateBossReturnPosition(
     }
 }
 
+__declspec(dllexport) void Extension_ProcessBatchComputePacket(
+    BatchComputePacket* packet) noexcept {
+    try {
+        ProcessBatchComputePacket(packet);
+    } catch (...) {
+    }
 }
 
+__declspec(dllexport) void Extension_ProcessBatchEasing(
+    EaseBatchItem* items,
+    int32_t count) noexcept {
+    try {
+        ProcessBatchEasing(items, count);
+    } catch (...) {
+    }
+}
+
+__declspec(dllexport) void Extension_ProcessBatchSpecialBullets(
+    SpecialBulletBatchItem* items,
+    int32_t count) noexcept {
+    try {
+        ProcessBatchSpecialBullets(items, count);
+    } catch (...) {
+    }
+}
+
+__declspec(dllexport) float Extension_EvaluateEase(
+    ab::EaseType ease_type,
+    float progress) noexcept {
+    try {
+        return EvaluateEase(ease_type, progress);
+    } catch (...) {
+        return progress;
+    }
+}
+
+__declspec(dllexport) void Extension_CalculateSpecialBulletModifier(
+    int32_t type,
+    float elapsed_timer,
+    float base_vx,
+    float base_vy,
+    float base_radius,
+    float* out_vx,
+    float* out_vy,
+    float* out_radius) noexcept {
+    try {
+        CalculateSpecialBulletModifier(
+            type, elapsed_timer, base_vx, base_vy, base_radius,
+            out_vx, out_vy, out_radius);
+    } catch (...) {
+        if (out_vx) *out_vx = base_vx;
+        if (out_vy) *out_vy = base_vy;
+        if (out_radius) *out_radius = base_radius;
+    }
+}
+
+__declspec(dllexport) void Extension_CalculateOrbitPosition(
+    float center_x,
+    float center_y,
+    float orbit_distance,
+    float angle,
+    float* out_x,
+    float* out_y) noexcept {
+    try {
+        CalculateOrbitPosition(center_x, center_y, orbit_distance, angle, out_x, out_y);
+    } catch (...) {
+        if (out_x) *out_x = center_x;
+        if (out_y) *out_y = center_y;
+    }
+}
+
+}
