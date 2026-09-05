@@ -93,6 +93,17 @@ __declspec(dllexport) void Extension_CalculateBossReturnPosition(
     }
 }
 
+__declspec(dllexport) void Extension_ProcessBatchCompute(
+    EaseBatchItem* ease_items,
+    int32_t ease_count,
+    SpecialBulletBatchItem* bullet_items,
+    int32_t bullet_count) noexcept {
+    try {
+        ProcessBatchCompute(ease_items, ease_count, bullet_items, bullet_count);
+    } catch (...) {
+    }
+}
+
 __declspec(dllexport) void Extension_ProcessBatchComputePacket(
     BatchComputePacket* packet) noexcept {
     try {
