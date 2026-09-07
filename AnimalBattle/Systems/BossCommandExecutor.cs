@@ -248,9 +248,12 @@ public static class BossCommandExecutor
                     out float groundY,
                     out float pVy))
                 {
-                    isGrounded = true;
-                    adjustedPosY = groundY;
-                    adjustedVy = pVy;
+                    if (!isGrounded || groundY < adjustedPosY)
+                    {
+                        isGrounded = true;
+                        adjustedPosY = groundY;
+                        adjustedVy = pVy;
+                    }
                 }
             });
         }

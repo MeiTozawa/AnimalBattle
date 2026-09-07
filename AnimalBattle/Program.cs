@@ -7,7 +7,7 @@ namespace AnimalBattle;
 /// <summary>
 /// アプリケーションのエントリポイントおよびメインループを管理するクラス。
 /// </summary>
-internal class Program
+internal static class Program
 {
     private static void Main(string[] args)
     {

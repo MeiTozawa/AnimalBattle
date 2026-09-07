@@ -183,9 +183,12 @@ public sealed class Boss2MovementPort(PreallocatedCommandBuffer<MovementCommand>
                         out float platformY,
                         out float platformVelocityY))
                 {
-                    grounded = true;
-                    adjustedY = platformY;
-                    adjustedVelocityY = platformVelocityY;
+                    if (!grounded || platformY < adjustedY)
+                    {
+                        grounded = true;
+                        adjustedY = platformY;
+                        adjustedVelocityY = platformVelocityY;
+                    }
                 }
             }
         }

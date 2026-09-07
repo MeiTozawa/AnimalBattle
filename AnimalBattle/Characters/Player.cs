@@ -354,9 +354,12 @@ public sealed class Player
                 out float groundY,
                 out float vy))
             {
-                isGrounded = true;
-                adjustedPosY = groundY;
-                adjustedVy = vy;
+                if (!isGrounded || groundY < adjustedPosY)
+                {
+                    isGrounded = true;
+                    adjustedPosY = groundY;
+                    adjustedVy = vy;
+                }
             }
         });
 

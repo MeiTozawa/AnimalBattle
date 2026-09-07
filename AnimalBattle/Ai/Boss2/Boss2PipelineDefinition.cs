@@ -12,8 +12,16 @@ namespace AnimalBattle.Ai.Boss2;
 /// </summary>
 public static class Boss2PipelineDefinition
 {
+    private static BossBehaviorPipeline _pipeline = BuildPipeline();
+
     /// <summary>構築済みの Boss2 振る舞いパイプラインを取得します。</summary>
-    public static BossBehaviorPipeline Pipeline => BuildPipeline();
+    public static BossBehaviorPipeline Pipeline => _pipeline;
+
+    /// <summary>TOML 設定の再読み込み時などにパイプラインを再構築します。</summary>
+    public static void Reload()
+    {
+        _pipeline = BuildPipeline();
+    }
 
     private static BossBehaviorPipeline BuildPipeline()
     {

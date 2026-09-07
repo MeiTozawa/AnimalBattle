@@ -8,6 +8,7 @@
 import RenderService;
 import InputService;
 import PhysicsService;
+import DefaultPhysicsService;
 
 namespace ab {
 
@@ -15,6 +16,7 @@ namespace {
 IRenderService* g_render_service = nullptr;
 IInputService* g_input_service = nullptr;
 IPhysicsService* g_physics_service = nullptr;
+DefaultPhysicsService g_fallback_physics{};
 }
 
 void SetRenderService(IRenderService* service) noexcept {
@@ -38,7 +40,7 @@ void SetPhysicsService(IPhysicsService* service) noexcept {
 }
 
 IPhysicsService* GetPhysicsService() noexcept {
-    return g_physics_service;
+    return g_physics_service != nullptr ? g_physics_service : &g_fallback_physics;
 }
 
 }  // namespace ab

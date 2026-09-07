@@ -457,7 +457,7 @@ public sealed class BossCharacter
         {
             ref Sprite sprite = ref _entity.GetMut<Sprite>();
             sprite.IsVisible = _sprite.IsVisible;
-            sprite.FlipX = _bossType == BossType.Boss1 ? false : !_slot.MovementData.FacingRight;
+            sprite.FlipX = _bossType != BossType.Boss1 && !_slot.MovementData.FacingRight;
         }
     }
 

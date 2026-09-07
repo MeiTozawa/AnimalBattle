@@ -1,6 +1,8 @@
-using Flecs.NET.Core;
+using System;
+using System.Buffers;
 using AnimalBattle.Bindings;
 using AnimalBattle.Configs;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
@@ -39,33 +41,45 @@ public static class BulletPhysicsSystem
         }
 
         ArenaConfig arenaCfg = ConfigManager.Arena;
-        Span<byte> despawnFlags = stackalloc byte[count];
+        const int stackallocThreshold = 1024;
+        byte[]? rentedArray = count > stackallocThreshold ? ArrayPool<byte>.Shared.Rent(count) : null;
+        Span<byte> despawnFlags = rentedArray != null ? rentedArray.AsSpan(0, count) : stackalloc byte[count];
 
-        unsafe
+        try
         {
-            Transform* pTrans = (Transform*)trans.Data;
-            Velocity* pVel = (Velocity*)vel.Data;
-
-            fixed (byte* pFlags = despawnFlags)
+            unsafe
             {
-                NativeExtensionBindings.Extension_BatchBulletMovement(
-                    pTrans,
-                    pVel,
-                    count,
-                    it.DeltaTime(),
-                    arenaCfg.BulletDespawnMinX,
-                    arenaCfg.BulletDespawnMaxX,
-                    arenaCfg.BulletDespawnMinY,
-                    arenaCfg.BulletDespawnMaxY,
-                    pFlags);
+                Transform* pTrans = (Transform*)trans.Data;
+                Velocity* pVel = (Velocity*)vel.Data;
+
+                fixed (byte* pFlags = despawnFlags)
+                {
+                    NativeExtensionBindings.Extension_BatchBulletMovement(
+                        pTrans,
+                        pVel,
+                        count,
+                        it.DeltaTime(),
+                        arenaCfg.BulletDespawnMinX,
+                        arenaCfg.BulletDespawnMaxX,
+                        arenaCfg.BulletDespawnMinY,
+                        arenaCfg.BulletDespawnMaxY,
+                        pFlags);
+                }
+            }
+
+            for (int i = 0; i < count; ++i)
+            {
+                if (despawnFlags[i] != 0)
+                {
+                    it.Entity(i).Destruct();
+                }
             }
         }
-
-        for (int i = 0; i < count; ++i)
+        finally
         {
-            if (despawnFlags[i] != 0)
+            if (rentedArray != null)
             {
-                it.Entity(i).Destruct();
+                ArrayPool<byte>.Shared.Return(rentedArray);
             }
         }
     }

@@ -42,6 +42,11 @@ public static class CombatCollisionSystem
 
                  hurtboxQuery.Each((Entity vicEntity, ref Transform vicTrans, ref Hurtbox hurtbox, ref Health vicHealth) =>
                  {
+                     if (shouldDestroyAttacker)
+                     {
+                         return;
+                     }
+
                      if (localHitbox.Faction == hurtbox.Faction || !vicHealth.IsAlive || IsTargetInvulnerable(vicEntity, in vicHealth))
                      {
                          return;

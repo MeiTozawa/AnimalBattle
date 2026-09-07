@@ -12,7 +12,7 @@ namespace AnimalBattle.Compute;
 /// C++ 原生拡張 (AnimalBattleExtension.dll) の純粋無状態計算核へ一括並列同期ディスパッチを行うバッチ計算キュー。
 /// fixed ピン留め不要・GC アロケーションゼロで動作し、<see cref="IDisposable"/> による厳格な RAII 寿命管理を提供します。
 /// </summary>
-public unsafe sealed class NativeComputeQueue : IDisposable
+public sealed unsafe class NativeComputeQueue : IDisposable
 {
     /// <summary>全システム間で共有可能な既定のバッチ計算キューインスタンス。</summary>
     public static readonly NativeComputeQueue Shared = new();

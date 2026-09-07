@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace AnimalBattle.Core;
 
@@ -12,6 +13,7 @@ namespace AnimalBattle.Core;
 /// <param name="top">上端 Y 座標</param>
 /// <param name="right">右端 X 座標</param>
 /// <param name="bottom">下端 Y 座標</param>
+[StructLayout(LayoutKind.Sequential)]
 public struct Rect(int left, int top, int right, int bottom)
 {
     /// <summary>
