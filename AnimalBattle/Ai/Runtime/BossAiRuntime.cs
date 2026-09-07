@@ -208,7 +208,7 @@ public sealed class BossAiRuntime
             TransitionResult result = _transitionService.Apply(ref runtime, in request);
             if (result.IsAccepted)
             {
-                runtime.PhaseTransitionData = new BossPhaseTransitionData(nextPhase, in reason)
+                runtime.PhaseTransitionData = new(nextPhase, in reason)
                 {
                     IsActive = true,
                     TriggeredPhaseMask = nextPhase == Phase.Phase2

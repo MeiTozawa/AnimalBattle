@@ -105,7 +105,7 @@ public sealed class MovementRegion(PhaseChildStateRules rules)
                 IntermediateStateId = _currentStateId
             };
             LastFailure = safeFailure;
-            _lastTransitionResult = new RegionTransitionResult(false, false, true, _currentStateId, _currentStateId, safeFailure);
+            _lastTransitionResult = new(false, false, true, _currentStateId, _currentStateId, safeFailure);
             return safeFailure.ToError();
         }
 
@@ -139,7 +139,7 @@ public sealed class MovementRegion(PhaseChildStateRules rules)
     {
         RegionFailure failure = new(RegionKind.Movement, kind, phase, current, requested, current, safeInitial, reason);
         LastFailure = failure;
-        _lastTransitionResult = new RegionTransitionResult(false, false, true, current, current, failure);
+        _lastTransitionResult = new(false, false, true, current, current, failure);
         return failure.ToError();
     }
 }

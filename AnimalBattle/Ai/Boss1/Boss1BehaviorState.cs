@@ -55,7 +55,7 @@ public sealed class Boss1BehaviorState : IBossBehaviorState
     public Boss1BehaviorState(float baseX = 640.0f, float baseY = 200.0f)
     {
         BaseX = baseX;
-        CurrentPosition = new Vec2f(baseX, baseY);
+        CurrentPosition = new(baseX, baseY);
         AttackStartPosition = CurrentPosition;
         AttackTargetPosition = CurrentPosition;
         CurrentSkill = BossSkill.None;
@@ -67,14 +67,14 @@ public sealed class Boss1BehaviorState : IBossBehaviorState
     /// <inheritdoc />
     public void SynchronizePosition(float x, float y)
     {
-        CurrentPosition = new Vec2f(x, y);
+        CurrentPosition = new(x, y);
     }
 
     /// <inheritdoc />
     public void SynchronizeState(float x, float y, float vx, float vy, bool isGrounded, bool isPlayerAlive)
     {
-        CurrentPosition = new Vec2f(x, y);
-        CurrentVelocity = new Vec2f(vx, vy);
+        CurrentPosition = new(x, y);
+        CurrentVelocity = new(vx, vy);
     }
 
     /// <summary>次の遷移要求を一件だけ保持します。</summary>

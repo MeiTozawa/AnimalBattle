@@ -7,10 +7,12 @@ namespace AnimalBattle.Ai.Dsl;
 /// <summary>
 /// Boss の振る舞い・技能パイプラインを宣言的に構築する最上位ビルダーです。
 /// </summary>
-public sealed class BossPipelineBuilder
+/// <param name="bossType">Boss 種別。</param>
+/// <param name="name">パイプラインの識別名。</param>
+public sealed class BossPipelineBuilder(BossType bossType, string name)
 {
-    private readonly BossType _bossType;
-    private readonly string _name;
+    private readonly BossType _bossType = bossType;
+    private readonly string _name = name;
     private readonly List<PhasePipelineBuilder> _phaseBuilders = [];
 
     /// <summary>Boss 種別を取得します。</summary>
@@ -18,17 +20,6 @@ public sealed class BossPipelineBuilder
 
     /// <summary>識別名を取得します。</summary>
     public string Name => _name;
-
-    /// <summary>
-    /// 指定された Boss 種別と名前でビルダーを初期化します。
-    /// </summary>
-    /// <param name="bossType">Boss 種別。</param>
-    /// <param name="name">パイプラインの識別名。</param>
-    public BossPipelineBuilder(BossType bossType, string name)
-    {
-        _bossType = bossType;
-        _name = name;
-    }
 
     /// <summary>
     /// 新しい Phase の定義を開始します。

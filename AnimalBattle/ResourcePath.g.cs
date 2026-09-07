@@ -9,7 +9,7 @@ namespace AnimalBattle;
 
 /// <summary>
 /// プロジェクト内の各種リソース（画像、スプライトシート、XML定義、TOML設定ファイル等）の相対パス定数を提供する自動生成静的クラス。
-/// <see cref="Core.Asset.AssetManager"/> や <see cref="Configs.ConfigManager"/> でのリソース指定を一元管理します。
+/// リソース指定を一元管理します。
 /// </summary>
 public static class ResourcePath
 {
@@ -48,7 +48,7 @@ public static class ResourcePath
         /// <summary>Cat.toml のファイルパス。</summary>
         public const string CatToml = @"Characters\Cat.toml";
 
-        /// <summary>sword & shield effect sprites.png のファイルパス。</summary>
+        /// <summary>sword &amp; shield effect sprites.png のファイルパス。</summary>
         public const string SwordShieldEffectSpritesPng = @"Characters\sword & shield effect sprites.png";
     }
 

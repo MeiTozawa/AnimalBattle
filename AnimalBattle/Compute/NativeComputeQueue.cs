@@ -85,7 +85,7 @@ public unsafe sealed class NativeComputeQueue : IDisposable
         }
 
         int index = _easeCount++;
-        _easeBuffer[index] = new EaseBatchItem(easeType, progress);
+        _easeBuffer[index] = new(easeType, progress);
         return index;
     }
 
@@ -107,7 +107,7 @@ public unsafe sealed class NativeComputeQueue : IDisposable
         }
 
         int index = _bulletCount++;
-        _bulletBuffer[index] = new SpecialBulletBatchItem(type, elapsedTimer, baseVx, baseVy, baseRadius);
+        _bulletBuffer[index] = new(type, elapsedTimer, baseVx, baseVy, baseRadius);
         return index;
     }
 

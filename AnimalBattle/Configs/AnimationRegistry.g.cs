@@ -12,6 +12,7 @@ namespace AnimalBattle.Configs;
 /// </summary>
 public enum CharacterType
 {
+    /// <summary>Cat キャラクター。</summary>
     Cat,
 }
 
@@ -27,9 +28,13 @@ public enum EffectType
 /// </summary>
 public enum CharacterAnimationType
 {
+    /// <summary>Fall アニメーション。</summary>
     Fall,
+    /// <summary>Idle アニメーション。</summary>
     Idle,
+    /// <summary>Jump アニメーション。</summary>
     Jump,
+    /// <summary>Run アニメーション。</summary>
     Run,
 }
 
@@ -56,17 +61,17 @@ internal static class AnimationRegistry
     internal static readonly IReadOnlyDictionary<CharacterType, AnimationConfig> CharacterConfigs =
         new Dictionary<CharacterType, AnimationConfig>
         {
-            [CharacterType.Cat] = new AnimationConfig
+            [CharacterType.Cat] = new()
             {
                 DisplayName = "Cat",
                 CellWidth = 32,
                 CellHeight = 32,
                 Clips =
                 [
-                    new AnimationClipConfig { Name = "Idle", SpritePath = @"Characters\1_Cat_Idle-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 7, Fps = 8.0f, IsLooping = true },
-                    new AnimationClipConfig { Name = "Run", SpritePath = @"Characters\2_Cat_Run-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 9, Fps = 12.0f, IsLooping = true },
-                    new AnimationClipConfig { Name = "Jump", SpritePath = @"Characters\3_Cat_Jump-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 3, Fps = 12.0f, IsLooping = false },
-                    new AnimationClipConfig { Name = "Fall", SpritePath = @"Characters\4_Cat_Fall-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 3, Fps = 12.0f, IsLooping = true },
+                    new() { Name = "Idle", SpritePath = @"Characters\1_Cat_Idle-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 7, Fps = 8.0f, IsLooping = true },
+                    new() { Name = "Run", SpritePath = @"Characters\2_Cat_Run-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 9, Fps = 12.0f, IsLooping = true },
+                    new() { Name = "Jump", SpritePath = @"Characters\3_Cat_Jump-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 3, Fps = 12.0f, IsLooping = false },
+                    new() { Name = "Fall", SpritePath = @"Characters\4_Cat_Fall-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 3, Fps = 12.0f, IsLooping = true },
                 ],
             },
         };

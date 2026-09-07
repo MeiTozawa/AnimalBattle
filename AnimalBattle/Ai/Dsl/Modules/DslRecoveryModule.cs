@@ -42,16 +42,16 @@ public sealed class DslRecoveryModule(IBossAttackAdapter adapter) : IBossStateMo
         ErrorOr<AttackDefinition> definitionResult = _adapter.GetAttackDefinition(skill);
         if (definitionResult.IsError)
         {
-            _adapter.RequestTransition(_adapter.DefaultState, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
+            _adapter.RequestTransition(_adapter.DefaultState, new(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
             return;
         }
 
-        _activeRecovery = new RecoveryModule(_adapter.RecoveryState, definitionResult.Value);
+        _activeRecovery = new(_adapter.RecoveryState, definitionResult.Value);
         _activeRecovery.Enter(ref context, in invocation);
 
         if (!_activeRecovery.IsActive && !_activeRecovery.CanEvaluateNextTransition)
         {
-            _adapter.RequestTransition(_adapter.DefaultState, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
+            _adapter.RequestTransition(_adapter.DefaultState, new(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
         }
     }
 

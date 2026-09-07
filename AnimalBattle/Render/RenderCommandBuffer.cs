@@ -100,10 +100,10 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
     public void PushDrawBox(int x1, int y1, int x2, int y2, uint color, bool fill)
     {
         EnsurePacketCapacity(1);
-        _packetBuffer[_packetCount++] = new RenderPacket
+        _packetBuffer[_packetCount++] = new()
         {
             Type = RenderPacketType.DrawBox,
-            Box = new DrawBoxPacket
+            Box = new()
             {
                 X1 = x1,
                 Y1 = y1,
@@ -126,10 +126,10 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
     public void PushDrawCircle(int centerX, int centerY, int radius, uint color, bool fill)
     {
         EnsurePacketCapacity(1);
-        _packetBuffer[_packetCount++] = new RenderPacket
+        _packetBuffer[_packetCount++] = new()
         {
             Type = RenderPacketType.DrawCircle,
-            Circle = new DrawCirclePacket
+            Circle = new()
             {
                 CenterX = centerX,
                 CenterY = centerY,
@@ -152,10 +152,10 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
     public void PushDrawLine(int x1, int y1, int x2, int y2, uint color, int thickness)
     {
         EnsurePacketCapacity(1);
-        _packetBuffer[_packetCount++] = new RenderPacket
+        _packetBuffer[_packetCount++] = new()
         {
             Type = RenderPacketType.DrawLine,
-            Line = new DrawLinePacket
+            Line = new()
             {
                 X1 = x1,
                 Y1 = y1,
@@ -177,10 +177,10 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
     public void PushDrawGraph(int x, int y, int handle, bool trans)
     {
         EnsurePacketCapacity(1);
-        _packetBuffer[_packetCount++] = new RenderPacket
+        _packetBuffer[_packetCount++] = new()
         {
             Type = RenderPacketType.DrawGraph,
-            Graph = new DrawGraphPacket
+            Graph = new()
             {
                 X = x,
                 Y = y,
@@ -202,10 +202,10 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
     public void PushDrawRotaGraph(int centerX, int centerY, float scale, float angle, int handle, bool trans)
     {
         EnsurePacketCapacity(1);
-        _packetBuffer[_packetCount++] = new RenderPacket
+        _packetBuffer[_packetCount++] = new()
         {
             Type = RenderPacketType.DrawRotaGraph,
-            RotaGraph = new DrawRotaGraphPacket
+            RotaGraph = new()
             {
                 CenterX = centerX,
                 CenterY = centerY,
@@ -238,10 +238,10 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
         int handle, bool trans, bool turnX)
     {
         EnsurePacketCapacity(1);
-        _packetBuffer[_packetCount++] = new RenderPacket
+        _packetBuffer[_packetCount++] = new()
         {
             Type = RenderPacketType.DrawRectRotaGraph,
-            RectRotaGraph = new DrawRectRotaGraphPacket
+            RectRotaGraph = new()
             {
                 CenterX = centerX,
                 CenterY = centerY,
@@ -277,10 +277,10 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
         _textBuffer[offset + strLength] = '\0';
         _textLength += strLength + 1;
 
-        _packetBuffer[_packetCount++] = new RenderPacket
+        _packetBuffer[_packetCount++] = new()
         {
             Type = RenderPacketType.DrawString,
-            StringData = new DrawStringPacket
+            StringData = new()
             {
                 X = x,
                 Y = y,
@@ -299,10 +299,10 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
     public void PushSetDrawBlendMode(int mode, int pal)
     {
         EnsurePacketCapacity(1);
-        _packetBuffer[_packetCount++] = new RenderPacket
+        _packetBuffer[_packetCount++] = new()
         {
             Type = RenderPacketType.SetDrawBlendMode,
-            Blend = new SetBlendModePacket
+            Blend = new()
             {
                 Mode = mode,
                 Pal = pal,
@@ -319,10 +319,10 @@ public unsafe sealed class RenderCommandBuffer : IDisposable
     public void PushSetDrawBright(int r, int g, int b)
     {
         EnsurePacketCapacity(1);
-        _packetBuffer[_packetCount++] = new RenderPacket
+        _packetBuffer[_packetCount++] = new()
         {
             Type = RenderPacketType.SetDrawBright,
-            Bright = new SetBrightPacket
+            Bright = new()
             {
                 R = r,
                 G = g,

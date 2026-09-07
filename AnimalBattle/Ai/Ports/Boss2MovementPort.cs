@@ -8,16 +8,10 @@ namespace AnimalBattle.Ai.Ports;
 /// Boss2 の移動 command、重力、足場衝突、navigation の ECS 境界です。
 /// State_Module はこの型の物理実装を呼び出さず、IMovementPort の値 command だけを積みます。
 /// </summary>
-public sealed class Boss2MovementPort : IMovementPort
+/// <param name="buffer">Entity 用に事前確保された移動 command buffer。</param>
+public sealed class Boss2MovementPort(PreallocatedCommandBuffer<MovementCommand> buffer) : IMovementPort
 {
-    private readonly PreallocatedCommandBuffer<MovementCommand> _buffer;
-
-    /// <summary>Boss2 の移動 command port を生成します。</summary>
-    /// <param name="buffer">Entity 用に事前確保された移動 command buffer。</param>
-    public Boss2MovementPort(PreallocatedCommandBuffer<MovementCommand> buffer)
-    {
-        _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
-    }
+    private readonly PreallocatedCommandBuffer<MovementCommand> _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
 
     /// <inheritdoc />
     public ErrorOr<Success> SetVelocity(float x, float y)
@@ -125,10 +119,10 @@ public sealed class Boss2MovementPort : IMovementPort
             switch (command.Kind)
             {
                 case MovementCommandKind.SetVelocity:
-                    frame.Velocity = new Vec2f(command.X, command.Y);
+                    frame.Velocity = new(command.X, command.Y);
                     break;
                 case MovementCommandKind.MoveTo:
-                    frame.Position = new Vec2f(command.X, command.Y);
+                    frame.Position = new(command.X, command.Y);
                     hasPositionCommand = true;
                     break;
                 case MovementCommandKind.ApplyGravity:
@@ -138,10 +132,10 @@ public sealed class Boss2MovementPort : IMovementPort
                         command.X,
                         command.Y,
                         deltaTime);
-                    frame.Velocity = new Vec2f(frame.Velocity.X, verticalVelocity);
+                    frame.Velocity = new(frame.Velocity.X, verticalVelocity);
                     break;
                 case MovementCommandKind.Stop:
-                    frame.Velocity = new Vec2f(0.0f, 0.0f);
+                    frame.Velocity = new(0.0f, 0.0f);
                     break;
                 default:
                     return false;
@@ -150,12 +144,12 @@ public sealed class Boss2MovementPort : IMovementPort
 
         if (!hasPositionCommand)
         {
-            frame.Position = new Vec2f(
+            frame.Position = new(
                 frame.Position.X + frame.Velocity.X * deltaTime,
                 frame.Position.Y + frame.Velocity.Y * deltaTime);
         }
 
-        frame.Position = new Vec2f(
+        frame.Position = new(
             Math.Clamp(frame.Position.X, minimumX, maximumX),
             frame.Position.Y);
         ResolvePlatforms(ref frame, previousY, graph, floorTopY);
@@ -172,15 +166,15 @@ public sealed class Boss2MovementPort : IMovementPort
         float adjustedY = nextY;
         float adjustedVelocityY = frame.Velocity.Y;
         bool grounded = false;
-        Box2D bossBox = new(frame.Position, new Vec2f(frame.Width, frame.Height));
+        Box2D bossBox = new(frame.Position, new(frame.Width, frame.Height));
 
         if (graph is not null)
         {
             foreach (PlatformNode platform in graph.Nodes)
             {
                 Box2D platformBox = new(
-                    new Vec2f(platform.CenterX, platform.TopY + platform.Height * 0.5f),
-                    new Vec2f(platform.Width, platform.Height));
+                    new(platform.CenterX, platform.TopY + platform.Height * 0.5f),
+                    new(platform.Width, platform.Height));
                 if (PhysicsService.CheckPlatformGround(
                         previousY,
                         nextY,
@@ -204,8 +198,8 @@ public sealed class Boss2MovementPort : IMovementPort
             adjustedVelocityY = 0.0f;
         }
 
-        frame.Position = new Vec2f(frame.Position.X, adjustedY);
-        frame.Velocity = new Vec2f(frame.Velocity.X, adjustedVelocityY);
+        frame.Position = new(frame.Position.X, adjustedY);
+        frame.Velocity = new(frame.Velocity.X, adjustedVelocityY);
         frame.IsGrounded = grounded;
     }
 

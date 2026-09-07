@@ -52,7 +52,7 @@ public sealed class Boss1AttackAdapter(IBoss1Configuration configuration, Boss1B
     public void OnTelegraphEnter(ref StateContext context, in LifecycleInvocation invocation)
     {
         _state.AttackStartPosition = _state.CurrentPosition;
-        _state.AttackTargetPosition = new Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
+        _state.AttackTargetPosition = new(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
     }
 

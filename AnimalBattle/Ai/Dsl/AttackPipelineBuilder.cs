@@ -11,10 +11,12 @@ namespace AnimalBattle.Ai.Dsl;
 /// <summary>
 /// 単一の攻撃パターン（前摇、多段時間軸、後隙、意思決定ルール）を宣言的に構築するビルダーです。
 /// </summary>
-public sealed class AttackPipelineBuilder
+/// <param name="parent">親の Phase ビルダー。</param>
+/// <param name="skill">技能識別子。</param>
+public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill skill)
 {
-    private readonly PhasePipelineBuilder _parent;
-    private readonly BossSkill _skill;
+    private readonly PhasePipelineBuilder _parent = parent;
+    private readonly BossSkill _skill = skill;
     private readonly List<AttackComponent> _components = [];
     private float _telegraphDuration = 0.40f;
     private Color _telegraphColor = ColorPalette.Red;
@@ -25,15 +27,6 @@ public sealed class AttackPipelineBuilder
 
     /// <summary>対象の技能識別子を取得します。</summary>
     public BossSkill Skill => _skill;
-
-    /// <summary>親の Phase ビルダーを指定して初期化します。</summary>
-    /// <param name="parent">親の Phase ビルダー。</param>
-    /// <param name="skill">技能識別子。</param>
-    public AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill skill)
-    {
-        _parent = parent;
-        _skill = skill;
-    }
 
     /// <summary>
     /// 攻撃の前摇（Telegraph）時間と予兆色を設定します。
@@ -107,7 +100,7 @@ public sealed class AttackPipelineBuilder
     public AttackPipelineBuilder Rule(Action<DecisionRuleBuilder> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
-        _ruleBuilder = new DecisionRuleBuilder();
+        _ruleBuilder = new();
         configure(_ruleBuilder);
         return this;
     }

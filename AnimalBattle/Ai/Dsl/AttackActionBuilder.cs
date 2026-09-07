@@ -6,24 +6,14 @@ namespace AnimalBattle.Ai.Dsl;
 /// <summary>
 /// 攻撃の特定トリガー時刻（TriggerTime）におけるアクションを定義するビルダーです。
 /// </summary>
-public sealed class AttackActionBuilder
+/// <param name="triggerTime">発動遅延時間（秒）。</param>
+/// <param name="components">追加対象のコンポーネントリスト。</param>
+/// <param name="isOnGrounded">接地トリガーコンポーネントかどうか。</param>
+public sealed class AttackActionBuilder(float triggerTime, List<AttackComponent> components, bool isOnGrounded = false)
 {
-    private readonly float _triggerTime;
-    private readonly List<AttackComponent> _components;
-    private readonly bool _isOnGrounded;
-
-    /// <summary>
-    /// 指定されたトリガー時刻でアクションビルダーを初期化します。
-    /// </summary>
-    /// <param name="triggerTime">発動遅延時間（秒）。</param>
-    /// <param name="components">追加対象のコンポーネントリスト。</param>
-    /// <param name="isOnGrounded">接地トリガーコンポーネントかどうか。</param>
-    public AttackActionBuilder(float triggerTime, List<AttackComponent> components, bool isOnGrounded = false)
-    {
-        _triggerTime = triggerTime;
-        _components = components;
-        _isOnGrounded = isOnGrounded;
-    }
+    private readonly float _triggerTime = triggerTime;
+    private readonly List<AttackComponent> _components = components;
+    private readonly bool _isOnGrounded = isOnGrounded;
 
     /// <summary>
     /// 突進・移動アクションを追加します。

@@ -14,6 +14,7 @@ AnimalBattle/Asset/ResourcePath.g.cs を自動生成します。
 import sys
 import os
 import re
+import html
 from pathlib import Path
 
 # ---- パス設定 ---------------------------------------------------------------
@@ -109,7 +110,7 @@ def generate_code() -> str:
         "",
         "/// <summary>",
         "/// プロジェクト内の各種リソース（画像、スプライトシート、XML定義、TOML設定ファイル等）の相対パス定数を提供する自動生成静的クラス。",
-        "/// <see cref=\"Core.Asset.AssetManager\"/> や <see cref=\"Configs.ConfigManager\"/> でのリソース指定を一元管理します。",
+        "/// リソース指定を一元管理します。",
         "/// </summary>",
         "public static class ResourcePath",
         "{",
@@ -137,12 +138,13 @@ def generate_code() -> str:
         for file_path in files:
             rel_file_path = f"{subdir_name}\\{file_path.name}"
             ids = _file_to_identifier(file_path.name)
+            safe_name = html.escape(file_path.name)
             for const_id in ids:
                 if const_id in defined_keys:
                     continue
                 defined_keys.add(const_id)
                 lines.append("")
-                lines.append(f'        /// <summary>{file_path.name} のファイルパス。</summary>')
+                lines.append(f'        /// <summary>{safe_name} のファイルパス。</summary>')
                 lines.append(f'        public const string {const_id} = @"{rel_file_path}";')
 
         lines.append(f"    }}")
@@ -161,8 +163,9 @@ def generate_code() -> str:
     # まずファイル名定数（Arena = "arena.toml" など）
     for file_path in config_files:
         stem_name = _to_pascal(file_path.stem)
+        safe_name = html.escape(file_path.name)
         lines.append("")
-        lines.append(f'        /// <summary>{file_path.name} 設定ファイル名。</summary>')
+        lines.append(f'        /// <summary>{safe_name} 設定ファイル名。</summary>')
         lines.append(f'        public const string {stem_name} = "{file_path.name}";')
 
     # 次に相対パス定数（ArenaToml = @"Config\arena.toml" など）
@@ -171,8 +174,9 @@ def generate_code() -> str:
         stem_name = _to_pascal(file_path.stem)
         ext = file_path.suffix.lstrip(".").capitalize()
         const_name = f"{stem_name}{ext}"
+        safe_name = html.escape(file_path.name)
         lines.append("")
-        lines.append(f'        /// <summary>{file_path.name} の相対パス。</summary>')
+        lines.append(f'        /// <summary>{safe_name} の相対パス。</summary>')
         lines.append(f'        public const string {const_name} = @"{rel_file_path}";')
 
     lines.append("    }")

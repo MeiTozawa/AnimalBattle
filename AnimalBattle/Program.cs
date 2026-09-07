@@ -20,7 +20,7 @@ internal class Program
             GameEngine.Initialize(width, height, true);
 
             Console.WriteLine("Flecs.NET ワールドおよびバトルシーンを初期化中...");
-            using BattleScene battleScene = new BattleScene();
+            using BattleScene battleScene = new();
             battleScene.Initialize();
 
             Stopwatch stopwatch = Stopwatch.StartNew();

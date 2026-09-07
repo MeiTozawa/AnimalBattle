@@ -6,11 +6,16 @@ using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Boss1;
 
-/// <summary>Boss1 の PhaseTransition と項目別安全適用を処理する State_Module です。</summary>
-public sealed class Boss1PhaseTransitionModule : IBossStateModule, IStateModuleDependencyProvider
+/// <summary>
+/// Boss1 の PhaseTransition と項目別安全適用を処理する State_Module です。
+/// </summary>
+/// <param name="configuration">Boss1 設定境界。</param>
+/// <param name="state">Boss1 共有実行時状態。</param>
+public sealed class Boss1PhaseTransitionModule(IBoss1Configuration configuration, Boss1BehaviorState state)
+    : IBossStateModule, IStateModuleDependencyProvider
 {
-    private readonly IBoss1Configuration _configuration;
-    private readonly Boss1BehaviorState _state;
+    private readonly IBoss1Configuration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+    private readonly Boss1BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
     private float _elapsed;
 
     /// <inheritdoc />
@@ -18,21 +23,14 @@ public sealed class Boss1PhaseTransitionModule : IBossStateModule, IStateModuleD
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "MovementPort", "AttackPort", "EffectPort"];
 
-    /// <summary>Boss1 の設定と共有実行値を注入します。</summary>
-    public Boss1PhaseTransitionModule(IBoss1Configuration configuration, Boss1BehaviorState state)
-    {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _state = state ?? throw new ArgumentNullException(nameof(state));
-    }
-
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
         _elapsed = 0.0f;
         _state.StateElapsed = 0.0f;
-        _state.PhaseTransitionData = new BossPhaseTransitionData(
+        _state.PhaseTransitionData = new(
             context.Phase,
-            new TransitionReason(ReasonKind.PhaseThreshold));
+            new(ReasonKind.PhaseThreshold));
         _state.PhaseTransitionData.IsActive = true;
         ApplyItems(ref context, in invocation);
     }

@@ -7,10 +7,12 @@ namespace AnimalBattle.Ai.Dsl;
 /// <summary>
 /// 単一の Phase（Phase1, Phase2, Phase3 等）の動作と攻撃一覧を宣言的に構築するビルダーです。
 /// </summary>
-public sealed class PhasePipelineBuilder
+/// <param name="parent">親の BossPipelineBuilder。</param>
+/// <param name="phase">対象の Phase。</param>
+public sealed class PhasePipelineBuilder(BossPipelineBuilder parent, Phase phase)
 {
-    private readonly BossPipelineBuilder _parent;
-    private readonly Phase _phase;
+    private readonly BossPipelineBuilder _parent = parent;
+    private readonly Phase _phase = phase;
     private readonly List<AttackPipelineBuilder> _attackBuilders = [];
     private float _idleDuration = 0.8f;
     private float _patrolDuration = 2.0f;
@@ -19,15 +21,6 @@ public sealed class PhasePipelineBuilder
 
     /// <summary>対象の Phase を取得します。</summary>
     public Phase CurrentPhase => _phase;
-
-    /// <summary>親の BossPipelineBuilder を指定して初期化します。</summary>
-    /// <param name="parent">親の BossPipelineBuilder。</param>
-    /// <param name="phase">対象の Phase。</param>
-    public PhasePipelineBuilder(BossPipelineBuilder parent, Phase phase)
-    {
-        _parent = parent;
-        _phase = phase;
-    }
 
     /// <summary>
     /// Phase の基礎時間パラメータを設定します。
@@ -62,7 +55,7 @@ public sealed class PhasePipelineBuilder
         float landingRecoveryDuration = 0.10f,
         float takeoffDistance = 50.0f)
     {
-        _locomotionSettings = new PhaseLocomotionSettings(
+        _locomotionSettings = new(
             jumpForce,
             gravity,
             maxFallSpeed,

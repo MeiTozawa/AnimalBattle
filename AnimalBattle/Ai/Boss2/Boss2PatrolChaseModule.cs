@@ -8,23 +8,21 @@ using AnimalBattle.Scenes;
 
 namespace AnimalBattle.Ai.Boss2;
 
-/// <summary>Boss2 が現在の足場でプレイヤーへ追跡する State_Module です。</summary>
-public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDependencyProvider
+/// <summary>
+/// Boss2 が現在の足場でプレイヤーへ追跡する State_Module です。
+/// </summary>
+/// <param name="configuration">Boss2 設定境界。</param>
+/// <param name="state">Boss2 共有実行時状態。</param>
+public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Boss2BehaviorState state)
+    : IBossStateModule, IStateModuleDependencyProvider
 {
-    private readonly IBoss2Configuration _configuration;
-    private readonly Boss2BehaviorState _state;
+    private readonly IBoss2Configuration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+    private readonly Boss2BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
 
     /// <inheritdoc />
     public BossState HandledState => Boss2State.PatrolChase;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "PlayerObservation"];
-
-    /// <summary>Boss2 設定と共有実行値を注入します。</summary>
-    public Boss2PatrolChaseModule(IBoss2Configuration configuration, Boss2BehaviorState state)
-    {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _state = state ?? throw new ArgumentNullException(nameof(state));
-    }
 
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)
@@ -82,15 +80,15 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
                         _state.FacingRight = jumpVx >= 0.0f;
                         _state.IsGrounded = false;
                         _state.JumpCooldown = 1.0f;
-                        _state.CurrentVelocity = new Vec2f(jumpVx, jumpVy);
+                        _state.CurrentVelocity = new(jumpVx, jumpVy);
                         context.Movement.SetVelocity(jumpVx, jumpVy);
-                        _state.RequestTransition(Boss2State.PlatformTraverse, new TransitionReason(ReasonKind.PlayerObservation));
+                        _state.RequestTransition(Boss2State.PlatformTraverse, new(ReasonKind.PlayerObservation));
                         return;
                     }
                     else
                     {
                         _state.FacingRight = plan.TargetX >= _state.CurrentPosition.X;
-                        _state.CurrentVelocity = new Vec2f(0.0f, _state.CurrentVelocity.Y);
+                        _state.CurrentVelocity = new(0.0f, _state.CurrentVelocity.Y);
                         context.Movement.SetVelocity(0.0f, _state.CurrentVelocity.Y);
                     }
                     break;
@@ -103,7 +101,7 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
                     {
                         _state.FacingRight = takeoffVx > 0.0f;
                     }
-                    _state.CurrentVelocity = new Vec2f(takeoffVx, _state.CurrentVelocity.Y);
+                    _state.CurrentVelocity = new(takeoffVx, _state.CurrentVelocity.Y);
                     context.Movement.SetVelocity(takeoffVx, _state.CurrentVelocity.Y);
                     break;
 
@@ -114,7 +112,7 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
                         _state.FacingRight = deltaX > 0.0f;
                     }
                     float directVx = MathF.Abs(deltaX) > 6.0f ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
-                    _state.CurrentVelocity = new Vec2f(directVx, _state.CurrentVelocity.Y);
+                    _state.CurrentVelocity = new(directVx, _state.CurrentVelocity.Y);
                     context.Movement.SetVelocity(directVx, _state.CurrentVelocity.Y);
                     break;
             }
@@ -126,7 +124,7 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
                 _state.FacingRight = deltaX > 0.0f;
             }
             float velocityX = MathF.Abs(deltaX) > 6.0f ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
-            _state.CurrentVelocity = new Vec2f(velocityX, _state.CurrentVelocity.Y);
+            _state.CurrentVelocity = new(velocityX, _state.CurrentVelocity.Y);
             context.Movement.SetVelocity(velocityX, _state.CurrentVelocity.Y);
         }
 
@@ -184,17 +182,17 @@ public sealed class Boss2PatrolChaseModule : IBossStateModule, IStateModuleDepen
     {
         if (!Boss2ModuleSupport.GetPattern(_configuration, skill, in context, in invocation, out Boss2AttackPattern pattern))
         {
-            _state.RequestTransition(Boss2State.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
+            _state.RequestTransition(Boss2State.Idle, new(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
 
         _state.CurrentSkill = pattern.Skill;
         _state.AttackStartPosition = _state.CurrentPosition;
-        _state.AttackTargetPosition = new Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
+        _state.AttackTargetPosition = new(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         _state.IsAttackActive = true;
-        _state.RequestTransition(Boss2State.Telegraph, new TransitionReason(ReasonKind.PlayerObservation, skill: skill));
+        _state.RequestTransition(Boss2State.Telegraph, new(ReasonKind.PlayerObservation, skill: skill));
     }
 
     private void SelectNextLegacyAttack(ref StateContext context, in LifecycleInvocation invocation)

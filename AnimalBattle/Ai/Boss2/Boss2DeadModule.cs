@@ -4,21 +4,18 @@ using AnimalBattle.Components;
 
 namespace AnimalBattle.Ai.Boss2;
 
-/// <summary>Boss2 の死亡理由と終端 data を保持し、新規攻撃と移動を停止する State_Module です。</summary>
-public sealed class Boss2DeadModule : IBossStateModule, IStateModuleDependencyProvider
+/// <summary>
+/// Boss2 の死亡理由と終端 data を保持し、新規攻撃と移動を停止する State_Module です。
+/// </summary>
+/// <param name="state">Boss2 共有実行時状態。</param>
+public sealed class Boss2DeadModule(Boss2BehaviorState state) : IBossStateModule, IStateModuleDependencyProvider
 {
-    private readonly Boss2BehaviorState _state;
+    private readonly Boss2BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
 
     /// <inheritdoc />
     public BossState HandledState => Boss2State.Dead;
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["MovementPort", "AttackPort"];
-
-    /// <summary>共有実行値を注入して Dead module を生成します。</summary>
-    public Boss2DeadModule(Boss2BehaviorState state)
-    {
-        _state = state ?? throw new ArgumentNullException(nameof(state));
-    }
 
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)

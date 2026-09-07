@@ -61,7 +61,7 @@ public sealed class Boss2BehaviorState : IBossBehaviorState
     /// <summary>Boss2 の位置を指定して共有値を初期化します。</summary>
     public Boss2BehaviorState(float startX = 900.0f, float startY = 480.0f)
     {
-        CurrentPosition = new Vec2f(startX, startY);
+        CurrentPosition = new(startX, startY);
         AttackStartPosition = CurrentPosition;
         AttackTargetPosition = CurrentPosition;
         CurrentSkill = BossSkill.None;
@@ -74,14 +74,14 @@ public sealed class Boss2BehaviorState : IBossBehaviorState
     /// <inheritdoc />
     public void SynchronizePosition(float x, float y)
     {
-        CurrentPosition = new Vec2f(x, y);
+        CurrentPosition = new(x, y);
     }
 
     /// <inheritdoc />
     public void SynchronizeState(float x, float y, float vx, float vy, bool isGrounded, bool isPlayerAlive)
     {
-        CurrentPosition = new Vec2f(x, y);
-        CurrentVelocity = new Vec2f(vx, vy);
+        CurrentPosition = new(x, y);
+        CurrentVelocity = new(vx, vy);
         IsGrounded = isGrounded;
         IsPlayerAlive = isPlayerAlive;
     }

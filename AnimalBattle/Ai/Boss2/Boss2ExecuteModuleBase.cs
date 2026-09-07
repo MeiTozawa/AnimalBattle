@@ -42,7 +42,7 @@ public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDep
 
 
         float forwardDir = _state.FacingRight ? 1.0f : -1.0f;
-        _gate = new ExecuteGate(pattern.Definition, forwardDir);
+        _gate = new(pattern.Definition, forwardDir);
         _state.StateElapsed = 0.0f;
         _state.AttackSubTimer = 0.0f;
         _state.IsAttackActive = true;

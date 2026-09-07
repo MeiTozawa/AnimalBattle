@@ -40,17 +40,17 @@ public sealed class DslTelegraphModule(IBossAttackAdapter adapter) : IBossStateM
         ErrorOr<AttackDefinition> definitionResult = _adapter.GetAttackDefinition(skill);
         if (definitionResult.IsError)
         {
-            _adapter.RequestTransition(_adapter.DefaultState, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
+            _adapter.RequestTransition(_adapter.DefaultState, new(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
             return;
         }
 
-        _activeTelegraph = new TelegraphModule(_adapter.TelegraphState, definitionResult.Value);
+        _activeTelegraph = new(_adapter.TelegraphState, definitionResult.Value);
         _adapter.OnTelegraphEnter(ref context, in invocation);
         _activeTelegraph.Enter(ref context, in invocation);
 
         if (!_activeTelegraph.IsActive && !_activeTelegraph.IsComplete)
         {
-            _adapter.RequestTransition(_adapter.DefaultState, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
+            _adapter.RequestTransition(_adapter.DefaultState, new(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
         }
     }
 

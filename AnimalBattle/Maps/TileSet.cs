@@ -8,17 +8,35 @@ namespace AnimalBattle.Maps;
 /// スプライトシートテクスチャからタイル UV 切り出しおよび単一タイルの描画を提供するタイルセットクラス。
 /// すべてのパラメータを外部設定または明示的な引数から受け取り、内部でデフォルト値を持ちません。
 /// </summary>
-public sealed class TileSet
+/// <param name="graphHandle">テクスチャ画像ハンドル</param>
+/// <param name="tileWidth">タイル単体の幅（ピクセル）</param>
+/// <param name="tileHeight">タイル単体の高さ（ピクセル）</param>
+/// <param name="columns">テクスチャシート横方向タイル列数</param>
+/// <param name="rows">テクスチャシート縦方向タイル行数</param>
+/// <param name="leftBlock">左端ブロックのタイル ID</param>
+/// <param name="middleBlock">中間ブロックのタイル ID</param>
+/// <param name="rightBlock">右端ブロックのタイル ID</param>
+/// <param name="collisionRect">プラットフォーム衝突領域矩形</param>
+public sealed class TileSet(
+    int graphHandle,
+    int tileWidth,
+    int tileHeight,
+    int columns,
+    int rows,
+    int leftBlock,
+    int middleBlock,
+    int rightBlock,
+    Rect collisionRect)
 {
-    private readonly int _graphHandle;
-    private readonly int _tileWidth;
-    private readonly int _tileHeight;
-    private readonly int _columns;
-    private readonly int _rows;
-    private readonly int _leftBlock;
-    private readonly int _middleBlock;
-    private readonly int _rightBlock;
-    private readonly Rect _collisionRect;
+    private readonly int _graphHandle = graphHandle;
+    private readonly int _tileWidth = tileWidth;
+    private readonly int _tileHeight = tileHeight;
+    private readonly int _columns = columns;
+    private readonly int _rows = rows;
+    private readonly int _leftBlock = leftBlock;
+    private readonly int _middleBlock = middleBlock;
+    private readonly int _rightBlock = rightBlock;
+    private readonly Rect _collisionRect = collisionRect;
 
     /// <summary>Native テクスチャグラフィックハンドル</summary>
     public int GraphHandle => _graphHandle;
@@ -46,41 +64,6 @@ public sealed class TileSet
 
     /// <summary>プラットフォームタイルの衝突判定領域矩形</summary>
     public Rect CollisionRect => _collisionRect;
-
-    /// <summary>
-    /// 指定されたパラメータで <see cref="TileSet"/> の新しいインスタンスを初期化します。
-    /// デフォルト値を持たず、すべての引数を明示的に指定する必要があります。
-    /// </summary>
-    /// <param name="graphHandle">テクスチャ画像ハンドル</param>
-    /// <param name="tileWidth">タイル単体の幅（ピクセル）</param>
-    /// <param name="tileHeight">タイル単体の高さ（ピクセル）</param>
-    /// <param name="columns">テクスチャシート横方向タイル列数</param>
-    /// <param name="rows">テクスチャシート縦方向タイル行数</param>
-    /// <param name="leftBlock">左端ブロックのタイル ID</param>
-    /// <param name="middleBlock">中間ブロックのタイル ID</param>
-    /// <param name="rightBlock">右端ブロックのタイル ID</param>
-    /// <param name="collisionRect">プラットフォーム衝突領域矩形</param>
-    public TileSet(
-        int graphHandle,
-        int tileWidth,
-        int tileHeight,
-        int columns,
-        int rows,
-        int leftBlock,
-        int middleBlock,
-        int rightBlock,
-        Rect collisionRect)
-    {
-        _graphHandle = graphHandle;
-        _tileWidth = tileWidth;
-        _tileHeight = tileHeight;
-        _columns = columns;
-        _rows = rows;
-        _leftBlock = leftBlock;
-        _middleBlock = middleBlock;
-        _rightBlock = rightBlock;
-        _collisionRect = collisionRect;
-    }
 
     /// <summary>
     /// <see cref="TileSetConfig"/> 設定データおよびテクスチャハンドルから <see cref="TileSet"/> の新しいインスタンスを初期化します。

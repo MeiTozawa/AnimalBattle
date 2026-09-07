@@ -76,7 +76,7 @@ public static class BakedConfigs
         BodyHitboxOffsetX = 0.0f,
         BodyHitboxOffsetY = 0.0f,
         BodyContactDamage = 1.0f,
-        Phase1 = new Boss1PhaseFsmConfig
+        Phase1 = new()
         {
             HpThreshold = 1.0f,
             HoverDuration = 0.8f,
@@ -95,12 +95,12 @@ public static class BakedConfigs
             Skills = ["Aimed3Shot", "DiveRam", "RingBurst"],
             Rules =
             [
-                new AttackRuleConfig { Skill = "Aimed3Shot", Cooldown = 3.0f, MinDistance = 0.0f, MaxDistance = 800.0f, Weight = 100.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "DiveRam", Cooldown = 7.0f, MinDistance = 100.0f, MaxDistance = 700.0f, Weight = 110.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "RingBurst", Cooldown = 5.0f, MinDistance = 0.0f, MaxDistance = 900.0f, Weight = 90.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new() { Skill = "Aimed3Shot", Cooldown = 3.0f, MinDistance = 0.0f, MaxDistance = 800.0f, Weight = 100.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new() { Skill = "DiveRam", Cooldown = 7.0f, MinDistance = 100.0f, MaxDistance = 700.0f, Weight = 110.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new() { Skill = "RingBurst", Cooldown = 5.0f, MinDistance = 0.0f, MaxDistance = 900.0f, Weight = 90.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
             ],
         },
-        Phase2 = new Boss1PhaseFsmConfig
+        Phase2 = new()
         {
             HpThreshold = 0.66f,
             HoverDuration = 0.6f,
@@ -119,12 +119,12 @@ public static class BakedConfigs
             Skills = ["DoubleSpiral", "DiveRam", "RainDrop"],
             Rules =
             [
-                new AttackRuleConfig { Skill = "DoubleSpiral", Cooldown = 4.0f, MinDistance = 0.0f, MaxDistance = 850.0f, Weight = 95.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "DiveRam", Cooldown = 6.0f, MinDistance = 100.0f, MaxDistance = 750.0f, Weight = 110.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "RainDrop", Cooldown = 6.0f, MinDistance = 0.0f, MaxDistance = 1000.0f, Weight = 85.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new() { Skill = "DoubleSpiral", Cooldown = 4.0f, MinDistance = 0.0f, MaxDistance = 850.0f, Weight = 95.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new() { Skill = "DiveRam", Cooldown = 6.0f, MinDistance = 100.0f, MaxDistance = 750.0f, Weight = 110.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new() { Skill = "RainDrop", Cooldown = 6.0f, MinDistance = 0.0f, MaxDistance = 1000.0f, Weight = 85.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
             ],
         },
-        Phase3 = new Boss1PhaseFsmConfig
+        Phase3 = new()
         {
             HpThreshold = 0.33f,
             HoverDuration = 0.4f,
@@ -143,9 +143,9 @@ public static class BakedConfigs
             Skills = ["CrossChaos", "DiveRam", "FastSniper"],
             Rules =
             [
-                new AttackRuleConfig { Skill = "CrossChaos", Cooldown = 4.5f, MinDistance = 0.0f, MaxDistance = 900.0f, Weight = 90.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "DiveRam", Cooldown = 5.0f, MinDistance = 100.0f, MaxDistance = 800.0f, Weight = 110.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "FastSniper", Cooldown = 3.5f, MinDistance = 150.0f, MaxDistance = 1200.0f, Weight = 100.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new() { Skill = "CrossChaos", Cooldown = 4.5f, MinDistance = 0.0f, MaxDistance = 900.0f, Weight = 90.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new() { Skill = "DiveRam", Cooldown = 5.0f, MinDistance = 100.0f, MaxDistance = 800.0f, Weight = 110.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new() { Skill = "FastSniper", Cooldown = 3.5f, MinDistance = 150.0f, MaxDistance = 1200.0f, Weight = 100.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
             ],
         },
     };
@@ -181,7 +181,7 @@ public static class BakedConfigs
         JumpForce = 640.0f,
         Gravity = 980.0f,
         PatrolRadius = 250.0f,
-        Phase1 = new Boss2PhaseConfig
+        Phase1 = new()
         {
             HpThreshold = 1.0f,
             IdleDuration = 0.8f,
@@ -192,12 +192,12 @@ public static class BakedConfigs
             Skills = ["HeavySlash", "GroundStomp", "HeavySlash", "LeapSmash"],
             Rules =
             [
-                new AttackRuleConfig { Skill = "HeavySlash", Cooldown = 2.0f, MinDistance = 0.0f, MaxDistance = 160.0f, Weight = 100.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "GroundStomp", Cooldown = 5.0f, MinDistance = 50.0f, MaxDistance = 350.0f, Weight = 70.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "LeapSmash", Cooldown = 8.0f, MinDistance = 150.0f, MaxDistance = 600.0f, Weight = 80.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.5f },
+                new() { Skill = "HeavySlash", Cooldown = 2.0f, MinDistance = 0.0f, MaxDistance = 160.0f, Weight = 100.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new() { Skill = "GroundStomp", Cooldown = 5.0f, MinDistance = 50.0f, MaxDistance = 350.0f, Weight = 70.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new() { Skill = "LeapSmash", Cooldown = 8.0f, MinDistance = 150.0f, MaxDistance = 600.0f, Weight = 80.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.5f },
             ],
         },
-        Phase2 = new Boss2PhaseConfig
+        Phase2 = new()
         {
             HpThreshold = 0.66f,
             IdleDuration = 0.5f,
@@ -208,12 +208,12 @@ public static class BakedConfigs
             Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "DoubleCleave"],
             Rules =
             [
-                new AttackRuleConfig { Skill = "DoubleCleave", Cooldown = 3.0f, MinDistance = 0.0f, MaxDistance = 175.0f, Weight = 100.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "GroundStomp", Cooldown = 4.5f, MinDistance = 50.0f, MaxDistance = 400.0f, Weight = 70.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "LeapSmash", Cooldown = 6.0f, MinDistance = 120.0f, MaxDistance = 650.0f, Weight = 90.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.8f },
+                new() { Skill = "DoubleCleave", Cooldown = 3.0f, MinDistance = 0.0f, MaxDistance = 175.0f, Weight = 100.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new() { Skill = "GroundStomp", Cooldown = 4.5f, MinDistance = 50.0f, MaxDistance = 400.0f, Weight = 70.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new() { Skill = "LeapSmash", Cooldown = 6.0f, MinDistance = 120.0f, MaxDistance = 650.0f, Weight = 90.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.8f },
             ],
         },
-        Phase3 = new Boss2PhaseConfig
+        Phase3 = new()
         {
             HpThreshold = 0.33f,
             IdleDuration = 0.3f,
@@ -224,10 +224,10 @@ public static class BakedConfigs
             Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash"],
             Rules =
             [
-                new AttackRuleConfig { Skill = "FrenzyCharge", Cooldown = 7.0f, MinDistance = 250.0f, MaxDistance = 650.0f, Weight = 100.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "EarthquakeRoar", Cooldown = 10.0f, MinDistance = 0.0f, MaxDistance = 1000.0f, Weight = 80.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "DoubleCleave", Cooldown = 2.5f, MinDistance = 0.0f, MaxDistance = 175.0f, Weight = 90.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
-                new AttackRuleConfig { Skill = "LeapSmash", Cooldown = 5.0f, MinDistance = 120.0f, MaxDistance = 700.0f, Weight = 85.0f, RequireSamePlatform = false, PreferAirborneBonus = 2.0f },
+                new() { Skill = "FrenzyCharge", Cooldown = 7.0f, MinDistance = 250.0f, MaxDistance = 650.0f, Weight = 100.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new() { Skill = "EarthquakeRoar", Cooldown = 10.0f, MinDistance = 0.0f, MaxDistance = 1000.0f, Weight = 80.0f, RequireSamePlatform = false, PreferAirborneBonus = 1.0f },
+                new() { Skill = "DoubleCleave", Cooldown = 2.5f, MinDistance = 0.0f, MaxDistance = 175.0f, Weight = 90.0f, RequireSamePlatform = true, PreferAirborneBonus = 1.0f },
+                new() { Skill = "LeapSmash", Cooldown = 5.0f, MinDistance = 120.0f, MaxDistance = 700.0f, Weight = 85.0f, RequireSamePlatform = false, PreferAirborneBonus = 2.0f },
             ],
         },
     };
@@ -235,7 +235,7 @@ public static class BakedConfigs
     /// <summary>ベイク済みの PatternConfig インスタンスを生成します。</summary>
     public static PatternConfig CreatePatternConfig() => new()
     {
-        DiveRam = new DiveRamConfig
+        DiveRam = new()
         {
             SkillName = "Meteor Dive Ram",
             WindUpTime = 0.55f,
@@ -252,7 +252,7 @@ public static class BakedConfigs
             TrailColor = Color.FromArgb(unchecked((int)0xFFFF5555)),
             EaseType = EaseType.InQuad,
         },
-        Aimed3Shot = new Aimed3ShotConfig
+        Aimed3Shot = new()
         {
             SkillName = "Aimed 3-Way Shot",
             WindUpTime = 0.4f,
@@ -267,7 +267,7 @@ public static class BakedConfigs
             FillColor = Color.FromArgb(unchecked((int)0xFFFF3333)),
             OutlineColor = Color.FromArgb(unchecked((int)0xFFFF8888)),
         },
-        RingBurst = new RingBurstConfig
+        RingBurst = new()
         {
             SkillName = "16-Way Ring Burst",
             WindUpTime = 0.55f,
@@ -282,7 +282,7 @@ public static class BakedConfigs
             FillColor = Color.FromArgb(unchecked((int)0xFF00E5FF)),
             OutlineColor = Color.FromArgb(unchecked((int)0xFF80FFFF)),
         },
-        DoubleSpiral = new DoubleSpiralConfig
+        DoubleSpiral = new()
         {
             SkillName = "Twin Spiral Barrage",
             WindUpTime = 0.45f,
@@ -298,7 +298,7 @@ public static class BakedConfigs
             FillColor2 = Color.FromArgb(unchecked((int)0xFFFFD700)),
             OutlineColor2 = Color.FromArgb(unchecked((int)0xFFFFF275)),
         },
-        RainDrop = new RainDropConfig
+        RainDrop = new()
         {
             SkillName = "Skyfall Rain Barrage",
             WindUpTime = 0.35f,
@@ -313,7 +313,7 @@ public static class BakedConfigs
             FillColor = Color.FromArgb(unchecked((int)0xFF010676)),
             OutlineColor = Color.FromArgb(unchecked((int)0xFFB9F6CA)),
         },
-        CrossChaos = new CrossChaosConfig
+        CrossChaos = new()
         {
             SkillName = "Cross Chaos Waves",
             WindUpTime = 0.35f,
@@ -327,7 +327,7 @@ public static class BakedConfigs
             FillColor = Color.FromArgb(unchecked((int)0xFFFF1744)),
             OutlineColor = Color.FromArgb(unchecked((int)0xFFFF8A80)),
         },
-        FastSniper = new FastSniperConfig
+        FastSniper = new()
         {
             SkillName = "Laser Fast Sniper",
             WindUpTime = 0.5f,
@@ -340,7 +340,7 @@ public static class BakedConfigs
             FillColor = Color.FromArgb(unchecked((int)0xFFFF5252)),
             OutlineColor = Color.FromArgb(unchecked((int)0xFFFFFFFF)),
         },
-        HeavySlash = new HeavySlashConfig
+        HeavySlash = new()
         {
             SkillName = "Heavy Cleave Slash",
             WindUpTime = 0.45f,
@@ -354,7 +354,7 @@ public static class BakedConfigs
             SlashDamage = 1.0f,
             SlashColor = Color.FromArgb(unchecked((int)0xFFFF7043)),
         },
-        GroundStomp = new GroundStompConfig
+        GroundStomp = new()
         {
             SkillName = "Ground Stomp Shockwave",
             WindUpTime = 0.5f,
@@ -367,7 +367,7 @@ public static class BakedConfigs
             FillColor = Color.FromArgb(unchecked((int)0xFFFF9800)),
             OutlineColor = Color.FromArgb(unchecked((int)0xFFFFE082)),
         },
-        LeapSmash = new LeapSmashConfig
+        LeapSmash = new()
         {
             SkillName = "Titan Leap Smash",
             WindUpTime = 0.4f,
@@ -385,7 +385,7 @@ public static class BakedConfigs
             ShrapnelFillColor = Color.FromArgb(unchecked((int)0xFFFF6D00)),
             ShrapnelOutlineColor = Color.FromArgb(unchecked((int)0xFFFFD180)),
         },
-        DoubleCleave = new DoubleCleaveConfig
+        DoubleCleave = new()
         {
             SkillName = "Twin Cleave Fury",
             WindUpTime = 0.35f,
@@ -399,7 +399,7 @@ public static class BakedConfigs
             SlashDamage = 1.0f,
             SlashColor = Color.FromArgb(unchecked((int)0xFFFF1744)),
         },
-        FrenzyCharge = new FrenzyChargeConfig
+        FrenzyCharge = new()
         {
             SkillName = "Frenzy Rampage Charge",
             WindUpTime = 0.55f,
@@ -413,7 +413,7 @@ public static class BakedConfigs
             ShrapnelFillColor = Color.FromArgb(unchecked((int)0xFFFF5252)),
             ShrapnelOutlineColor = Color.FromArgb(unchecked((int)0xFFFF8A80)),
         },
-        EarthquakeRoar = new EarthquakeRoarConfig
+        EarthquakeRoar = new()
         {
             SkillName = "Cataclysm Earthquake Roar",
             WindUpTime = 0.6f,
@@ -441,7 +441,7 @@ public static class BakedConfigs
         BulletDespawnMaxX = 1360.0f,
         BulletDespawnMinY = -80.0f,
         BulletDespawnMaxY = 800.0f,
-        TileMap = new TileMapConfig
+        TileMap = new()
         {
             TileSheet = "Platform\\sheet.png",
             TileConfig = "Platform\\sheet.toml",
@@ -469,7 +469,7 @@ public static class BakedConfigs
     /// <summary>ベイク済みの RenderConfig インスタンスを生成します。</summary>
     public static RenderConfig CreateRenderConfig() => new()
     {
-        BossEffects = new BossEffectsRenderConfig
+        BossEffects = new()
         {
             DangerBoxAlpha = 100,
             LaserAlpha = 140,
@@ -490,7 +490,7 @@ public static class BakedConfigs
             BossHoverAngleAmp = 0.08,
             BossHoverAngleSpeed = 2.0f,
         },
-        Bullets = new BulletRenderConfig
+        Bullets = new()
         {
             PlayerBulletOuterRadius = 6.0f,
             PlayerBulletOuterColor = Color.FromArgb(unchecked((int)0xFF00FFFF)),
@@ -506,7 +506,7 @@ public static class BakedConfigs
             ViewportCullingMarginX = 50,
             ViewportCullingMarginY = 50,
         },
-        Hud = new HudRenderConfig
+        Hud = new()
         {
             TitleX = 20,
             TitleY = 16,
@@ -525,7 +525,7 @@ public static class BakedConfigs
             DoubleJumpActiveColor = Color.FromArgb(unchecked((int)0xFF00E5FF)),
             DoubleJumpInactiveColor = Color.FromArgb(unchecked((int)0xFF888888)),
         },
-        BossHpBar = new BossHpBarRenderConfig
+        BossHpBar = new()
         {
             BarX1 = 240,
             BarY1 = 662,
@@ -549,7 +549,7 @@ public static class BakedConfigs
             StatePhaseTransitionColor = Color.FromArgb(unchecked((int)0xFFFF88FF)),
             StateDefaultColor = Color.FromArgb(unchecked((int)0xFF88CCFF)),
         },
-        Modals = new ModalRenderConfig
+        Modals = new()
         {
             GameOverX1 = 360,
             GameOverY1 = 260,
@@ -582,7 +582,7 @@ public static class BakedConfigs
             VictoryRetryColor = Color.FromArgb(unchecked((int)0xFFFFFFFF)),
             VictoryRetryText = "Congratulations! Press [ R ] to Play Again!",
         },
-        Debug = new DebugRenderConfig
+        Debug = new()
         {
             Enabled = false,
             PlayerTerrainBoxColor = Color.FromArgb(unchecked((int)0xFF00FF88)),

@@ -36,7 +36,7 @@ public sealed class PlatformNavigationGraph
         _nodes.AddRange(nodes);
         foreach (PlatformNode node in _nodes)
         {
-            _adjacency[node.Id] = new List<PlatformLink>();
+            _adjacency[node.Id] = [];
         }
 
         float maxJumpHeight = (jumpForce * jumpForce) / (2.0f * MathF.Max(1.0f, gravity));
@@ -132,7 +132,7 @@ public sealed class PlatformNavigationGraph
         // 4. 空中滞空中の場合：着地目標地点に向かって水平推力を維持
         if (!isGrounded)
         {
-            return new NavPlan(
+            return new(
                 NavStatus.InAir,
                 targetX: firstLink.LandingX,
                 takeoffX: firstLink.TakeoffX,
@@ -150,7 +150,7 @@ public sealed class PlatformNavigationGraph
             float distToTakeoff = MathF.Abs(currentX - firstLink.TakeoffX);
             if (distToTakeoff <= 22.0f)
             {
-                return new NavPlan(
+                return new(
                     NavStatus.ExecuteJump,
                     targetX: firstLink.LandingX,
                     takeoffX: firstLink.TakeoffX,
@@ -164,7 +164,7 @@ public sealed class PlatformNavigationGraph
             else
             {
                 float walkDir = MathF.Sign(firstLink.TakeoffX - currentX);
-                return new NavPlan(
+                return new(
                     NavStatus.MoveToTakeoff,
                     targetX: firstLink.TakeoffX,
                     takeoffX: firstLink.TakeoffX,
@@ -184,7 +184,7 @@ public sealed class PlatformNavigationGraph
                 // 左端から下落：TakeoffX より右側にいるときは左へ走る、TakeoffX 以左に到達したら下落完了まで左へ走り抜ける
                 if (currentX > firstLink.TakeoffX + 16.0f)
                 {
-                    return new NavPlan(
+                    return new(
                         NavStatus.MoveToTakeoff,
                         targetX: firstLink.TakeoffX,
                         takeoffX: firstLink.TakeoffX,
@@ -197,7 +197,7 @@ public sealed class PlatformNavigationGraph
                 }
                 else
                 {
-                    return new NavPlan(
+                    return new(
                         NavStatus.ExecuteDrop,
                         targetX: firstLink.LandingX,
                         takeoffX: firstLink.TakeoffX,
@@ -214,7 +214,7 @@ public sealed class PlatformNavigationGraph
                 // 右端から下落：TakeoffX より左側にいるときは右へ走る、TakeoffX 以右に到達したら下落完了まで右へ走り抜ける
                 if (currentX < firstLink.TakeoffX - 16.0f)
                 {
-                    return new NavPlan(
+                    return new(
                         NavStatus.MoveToTakeoff,
                         targetX: firstLink.TakeoffX,
                         takeoffX: firstLink.TakeoffX,
@@ -227,7 +227,7 @@ public sealed class PlatformNavigationGraph
                 }
                 else
                 {
-                    return new NavPlan(
+                    return new(
                         NavStatus.ExecuteDrop,
                         targetX: firstLink.LandingX,
                         takeoffX: firstLink.TakeoffX,
@@ -404,7 +404,7 @@ public sealed class PlatformNavigationGraph
                     // 左側アプローチ斜め跳躍
                     float leftTakeoffX = Math.Clamp(overlapLeft - 25.0f, a.LeftX + 15.0f, a.RightX - 15.0f);
                     float leftLandingX = Math.Clamp(overlapLeft + 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
-                    AddLink(new PlatformLink(
+                    AddLink(new(
                         a, b, NavActionType.Jump,
                         takeoffX: leftTakeoffX,
                         landingX: leftLandingX,
@@ -415,7 +415,7 @@ public sealed class PlatformNavigationGraph
                     // 右側アプローチ斜め跳躍
                     float rightTakeoffX = Math.Clamp(overlapRight + 25.0f, a.LeftX + 15.0f, a.RightX - 15.0f);
                     float rightLandingX = Math.Clamp(overlapRight - 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
-                    AddLink(new PlatformLink(
+                    AddLink(new(
                         a, b, NavActionType.Jump,
                         takeoffX: rightTakeoffX,
                         landingX: rightLandingX,
@@ -433,7 +433,7 @@ public sealed class PlatformNavigationGraph
                         float flightDist = landingX - takeoffX;
                         float reqVx = Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * 0.8f, moveSpeed * 1.5f);
 
-                        AddLink(new PlatformLink(
+                        AddLink(new(
                             a, b, NavActionType.Jump,
                             takeoffX: takeoffX,
                             landingX: landingX,
@@ -452,7 +452,7 @@ public sealed class PlatformNavigationGraph
                         float flightDist = takeoffX - landingX;
                         float reqVx = -Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * 0.8f, moveSpeed * 1.5f);
 
-                        AddLink(new PlatformLink(
+                        AddLink(new(
                             a, b, NavActionType.Jump,
                             takeoffX: takeoffX,
                             landingX: landingX,
@@ -476,7 +476,7 @@ public sealed class PlatformNavigationGraph
                 float takeoffX = Math.Clamp(a.LeftX + 15.0f, a.LeftX, a.RightX);
                 float landingX = Math.Clamp(a.LeftX - 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
 
-                AddLink(new PlatformLink(
+                AddLink(new(
                     a, b, NavActionType.Drop,
                     takeoffX: takeoffX,
                     landingX: landingX,
@@ -491,7 +491,7 @@ public sealed class PlatformNavigationGraph
                 float takeoffX = Math.Clamp(a.RightX - 15.0f, a.LeftX, a.RightX);
                 float landingX = Math.Clamp(a.RightX + 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
 
-                AddLink(new PlatformLink(
+                AddLink(new(
                     a, b, NavActionType.Drop,
                     takeoffX: takeoffX,
                     landingX: landingX,
@@ -509,7 +509,7 @@ public sealed class PlatformNavigationGraph
 
         PlatformLink clampedLink = (clampedTakeoffX == link.TakeoffX && clampedLandingX == link.LandingX)
             ? link
-            : new PlatformLink(
+            : new(
                 link.FromNode,
                 link.ToNode,
                 link.Action,

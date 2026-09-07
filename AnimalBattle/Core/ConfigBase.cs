@@ -52,7 +52,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     public static ErrorOr<ConfigBase<T>> LoadFromFile(string defaultFileName)
     {
 #if !DEBUG
-        return new ConfigBase<T>(new T());
+        return new(new());
 #else
         ErrorOr<string> pathResult = FindConfigPath(defaultFileName);
         if (pathResult.IsError || string.IsNullOrEmpty(pathResult.Value) || !File.Exists(pathResult.Value))
@@ -65,19 +65,19 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
 
         try
         {
-            T configInstance = new T();
-            ConfigBase<T> container = new ConfigBase<T>(configInstance);
+            T configInstance = new();
+            ConfigBase<T> container = new(configInstance);
 
             string directory = Path.GetDirectoryName(fullPath) ?? AppDomain.CurrentDomain.BaseDirectory;
             string fileName = Path.GetFileName(fullPath);
 
-            IConfigurationBuilder builder = new ConfigurationBuilder()
-                .SetBasePath(directory)
-                .AddTomlFile(
-                    fileName,
-                    optional: true,
-                    reloadOnChange: true
-                );
+            ConfigurationBuilder builder = new();
+            builder.SetBasePath(directory)
+                   .AddTomlFile(
+                       fileName,
+                       optional: true,
+                       reloadOnChange: true
+                   );
 
             IConfigurationRoot configRoot = builder.Build();
             configRoot.Bind(container.Config);

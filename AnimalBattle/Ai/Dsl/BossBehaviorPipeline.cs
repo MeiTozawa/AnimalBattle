@@ -8,13 +8,23 @@ namespace AnimalBattle.Ai.Dsl;
 /// <summary>
 /// 宣言的 DSL から一括構築された不変の Boss 振る舞い・技能パイプラインです。
 /// </summary>
-public sealed class BossBehaviorPipeline
+/// <param name="bossType">Boss の種別。</param>
+/// <param name="name">パイプラインの識別名。</param>
+/// <param name="rulesByPhase">Phase ごとのルール辞書。</param>
+/// <param name="attacks">攻撃定義辞書。</param>
+/// <param name="locomotionByPhase">Phase ごとの機動設定辞書。</param>
+public sealed class BossBehaviorPipeline(
+    BossType bossType,
+    string name,
+    Dictionary<Phase, IReadOnlyList<AttackDecisionRule>> rulesByPhase,
+    Dictionary<BossSkill, AttackDefinition> attacks,
+    Dictionary<Phase, PhaseLocomotionSettings>? locomotionByPhase = null)
 {
-    private readonly BossType _bossType;
-    private readonly string _name;
-    private readonly FrozenDictionary<Phase, IReadOnlyList<AttackDecisionRule>> _rulesByPhase;
-    private readonly FrozenDictionary<BossSkill, AttackDefinition> _attacks;
-    private readonly FrozenDictionary<Phase, PhaseLocomotionSettings> _locomotionByPhase;
+    private readonly BossType _bossType = bossType;
+    private readonly string _name = name;
+    private readonly FrozenDictionary<Phase, IReadOnlyList<AttackDecisionRule>> _rulesByPhase = rulesByPhase.ToFrozenDictionary();
+    private readonly FrozenDictionary<BossSkill, AttackDefinition> _attacks = attacks.ToFrozenDictionary();
+    private readonly FrozenDictionary<Phase, PhaseLocomotionSettings> _locomotionByPhase = (locomotionByPhase ?? []).ToFrozenDictionary();
 
     /// <summary>Boss の種別を取得します。</summary>
     public BossType BossType => _bossType;
@@ -24,23 +34,6 @@ public sealed class BossBehaviorPipeline
 
     /// <summary>全攻撃の検証済み AttackDefinition マップを取得します。</summary>
     public IReadOnlyDictionary<BossSkill, AttackDefinition> Attacks => _attacks;
-
-    /// <summary>
-    /// パイプラインを初期化します。
-    /// </summary>
-    public BossBehaviorPipeline(
-        BossType bossType,
-        string name,
-        Dictionary<Phase, IReadOnlyList<AttackDecisionRule>> rulesByPhase,
-        Dictionary<BossSkill, AttackDefinition> attacks,
-        Dictionary<Phase, PhaseLocomotionSettings>? locomotionByPhase = null)
-    {
-        _bossType = bossType;
-        _name = name;
-        _rulesByPhase = rulesByPhase.ToFrozenDictionary();
-        _attacks = attacks.ToFrozenDictionary();
-        _locomotionByPhase = (locomotionByPhase ?? []).ToFrozenDictionary();
-    }
 
     /// <summary>
     /// 指定 Phase の攻撃意思決定ルール一覧を取得します。

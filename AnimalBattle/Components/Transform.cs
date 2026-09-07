@@ -23,28 +23,28 @@ public struct Transform
     public float X
     {
         readonly get => Position.X;
-        set => Position = new Vec2f(value, Position.Y);
+        set => Position = new(value, Position.Y);
     }
 
     /// <summary>Y 座標への簡易アクセスプロパティ</summary>
     public float Y
     {
         readonly get => Position.Y;
-        set => Position = new Vec2f(Position.X, value);
+        set => Position = new(Position.X, value);
     }
 
     /// <summary>X 軸拡大率への簡易アクセスプロパティ</summary>
     public float ScaleX
     {
         readonly get => Scale.X;
-        set => Scale = new Vec2f(value, Scale.Y);
+        set => Scale = new(value, Scale.Y);
     }
 
     /// <summary>Y 軸拡大率への簡易アクセスプロパティ</summary>
     public float ScaleY
     {
         readonly get => Scale.Y;
-        set => Scale = new Vec2f(Scale.X, value);
+        set => Scale = new(Scale.X, value);
     }
 
     /// <summary>
@@ -52,8 +52,8 @@ public struct Transform
     /// </summary>
     public Transform(float x, float y, float scaleX = 1.0f, float scaleY = 1.0f, float rotation = 0.0f)
     {
-        Position = new Vec2f(x, y);
-        Scale = new Vec2f(scaleX, scaleY);
+        Position = new(x, y);
+        Scale = new(scaleX, scaleY);
         Rotation = rotation;
     }
 
@@ -63,7 +63,7 @@ public struct Transform
     public Transform(Vec2f position, Vec2f scale = default, float rotation = 0.0f)
     {
         Position = position;
-        Scale = scale == default ? new Vec2f(1.0f, 1.0f) : scale;
+        Scale = scale == default ? new(1.0f, 1.0f) : scale;
         Rotation = rotation;
     }
 }

@@ -154,10 +154,10 @@ public sealed class Player
         _scaleX = pCfg.ScaleX;
         _scaleY = pCfg.ScaleY;
 
-        _collisionBox = new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight);
-        _hurtbox = new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly);
-        _animation = new Animation("Idle", CharacterType.Cat, isPlaying: true);
-        _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect(0, 0, 64, 64));
+        _collisionBox = new(pCfg.HitboxWidth, pCfg.HitboxHeight);
+        _hurtbox = new(pCfg.GetHurtboxShape(), Faction.Friendly);
+        _animation = new("Idle", CharacterType.Cat, isPlaying: true);
+        _sprite = new(spriteHandle, flipX: false, isVisible: true, srcRect: new(0, 0, 64, 64));
 
         UpdateAnimation(0.0f);
         SyncToEntity();

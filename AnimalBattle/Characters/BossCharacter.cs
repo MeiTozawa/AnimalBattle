@@ -176,20 +176,20 @@ public sealed class BossCharacter
             _maxHp = b1Cfg.MaxHp;
             _currentHp = b1Cfg.MaxHp;
 
-            _hurtbox = new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile);
-            _bodyHitbox = new Hitbox(b1Cfg.GetHitboxShape(), damage: b1Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false);
+            _hurtbox = new(b1Cfg.GetHurtboxShape(), Faction.Hostile);
+            _bodyHitbox = new(b1Cfg.GetHitboxShape(), damage: b1Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false);
             _collisionBox = default;
-            _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect(0, 0, 192, 192));
+            _sprite = new(spriteHandle, flipX: false, isVisible: true, srcRect: new(0, 0, 192, 192));
 
-            _boss1State = new Boss1BehaviorState(b1Cfg.BaseX, b1Cfg.BaseY);
-            _boss2State = new Boss2BehaviorState(0.0f, 0.0f);
+            _boss1State = new(b1Cfg.BaseX, b1Cfg.BaseY);
+            _boss2State = new(0.0f, 0.0f);
 
             EnumModuleMap moduleMap = CreateCompleteModuleMap(_boss1State, _boss2State, observation);
             TransitionService transitionService = new(moduleMap, observation);
-            _runtime = new BossAiRuntime(moduleMap, transitionService, observation, type => _boss1State);
+            _runtime = new(moduleMap, transitionService, observation, type => _boss1State);
 
             IMovementPort movement = new Boss1MovementPort(movementCommands);
-            _slot = new BossRuntimeSlot(
+            _slot = new(
                 entity.Id,
                 bossType,
                 configProvider,
@@ -219,20 +219,20 @@ public sealed class BossCharacter
             _maxHp = b2Cfg.MaxHp;
             _currentHp = b2Cfg.MaxHp;
 
-            _collisionBox = new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight);
-            _hurtbox = new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile);
-            _bodyHitbox = new Hitbox(b2Cfg.GetHitboxShape(), damage: b2Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false);
-            _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect(0, 0, 192, 192));
+            _collisionBox = new(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight);
+            _hurtbox = new(b2Cfg.GetHurtboxShape(), Faction.Hostile);
+            _bodyHitbox = new(b2Cfg.GetHitboxShape(), damage: b2Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false);
+            _sprite = new(spriteHandle, flipX: false, isVisible: true, srcRect: new(0, 0, 192, 192));
 
-            _boss1State = new Boss1BehaviorState(0.0f, 0.0f);
-            _boss2State = new Boss2BehaviorState(b2Cfg.SpawnX, b2Cfg.SpawnY);
+            _boss1State = new(0.0f, 0.0f);
+            _boss2State = new(b2Cfg.SpawnX, b2Cfg.SpawnY);
 
             EnumModuleMap moduleMap = CreateCompleteModuleMap(_boss1State, _boss2State, observation);
             TransitionService transitionService = new(moduleMap, observation);
-            _runtime = new BossAiRuntime(moduleMap, transitionService, observation, type => _boss2State);
+            _runtime = new(moduleMap, transitionService, observation, type => _boss2State);
 
             IMovementPort movement = new Boss2MovementPort(movementCommands);
-            _slot = new BossRuntimeSlot(
+            _slot = new(
                 entity.Id,
                 bossType,
                 configProvider,
@@ -344,7 +344,7 @@ public sealed class BossCharacter
 
             if (_boss1State != null)
             {
-                _boss1State.CurrentPosition = new Vec2f(_x, _y);
+                _boss1State.CurrentPosition = new(_x, _y);
                 _boss1State.CurrentVelocity = Vec2f.Zero;
                 _boss1State.HoverTimer = 0.0f;
                 _boss1State.AttackSubTimer = 0.0f;
@@ -369,7 +369,7 @@ public sealed class BossCharacter
 
             if (_boss2State != null)
             {
-                _boss2State.CurrentPosition = new Vec2f(_x, _y);
+                _boss2State.CurrentPosition = new(_x, _y);
                 _boss2State.CurrentVelocity = Vec2f.Zero;
                 _boss2State.StateElapsed = 0.0f;
                 _boss2State.JumpCooldown = 0.0f;

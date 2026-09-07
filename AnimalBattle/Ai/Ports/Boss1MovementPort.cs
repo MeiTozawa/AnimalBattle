@@ -13,10 +13,10 @@ public sealed class Boss1MovementPort(
     PreallocatedCommandBuffer<MovementCommand> buffer,
     Boss1NativeTrajectoryPort? nativeTrajectory = null) : IMovementPort
 {
-    private readonly BufferedMovementPort _buffered = new BufferedMovementPort(buffer);
+    private readonly BufferedMovementPort _buffered = new(buffer);
 
     /// <summary>native extension の軌道計算境界を取得します。</summary>
-    public Boss1NativeTrajectoryPort NativeTrajectory { get; } = nativeTrajectory ?? new Boss1NativeTrajectoryPort();
+    public Boss1NativeTrajectoryPort NativeTrajectory { get; } = nativeTrajectory ?? new();
 
     /// <inheritdoc />
     public ErrorOr<Success> SetVelocity(float x, float y)

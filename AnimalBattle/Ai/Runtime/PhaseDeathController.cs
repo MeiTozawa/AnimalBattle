@@ -114,9 +114,9 @@ public static class PhaseDeathController
         }
 
         TransitionReason effectiveReason = reason.Kind == ReasonKind.Unknown
-            ? new TransitionReason(ReasonKind.PhaseThreshold, threshold: threshold)
+            ? new(ReasonKind.PhaseThreshold, threshold: threshold)
             : reason;
-        transition = new BossPhaseTransitionData(target, in effectiveReason)
+        transition = new(target, in effectiveReason)
         {
             IsActive = true,
             TriggeredPhaseMask = transition.TriggeredPhaseMask | target.ToTransitionMask()

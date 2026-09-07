@@ -11,16 +11,32 @@ namespace AnimalBattle.Maps;
 /// <summary>
 /// 2D グリッドデータおよびタイルセットを参照し、ステージマップ全体の配置と描画を管理するクラス。
 /// </summary>
-public sealed class TileMap
+/// <param name="tileSet">使用するタイルセット</param>
+/// <param name="columns">グリッド列数</param>
+/// <param name="rows">グリッド行数</param>
+/// <param name="renderTileWidth">描画時のタイル幅（ピクセル）</param>
+/// <param name="renderTileHeight">描画時のタイル高さ（ピクセル）</param>
+/// <param name="originX">マップ原点 X 座標</param>
+/// <param name="originY">マップ原点 Y 座標</param>
+/// <param name="grid">2D タイル ID 配列</param>
+public sealed class TileMap(
+    TileSet tileSet,
+    int columns,
+    int rows,
+    int renderTileWidth,
+    int renderTileHeight,
+    float originX,
+    float originY,
+    int[,] grid)
 {
-    private readonly TileSet _tileSet;
-    private readonly int[,] _grid;
-    private readonly int _columns;
-    private readonly int _rows;
-    private readonly int _renderTileWidth;
-    private readonly int _renderTileHeight;
-    private readonly float _originX;
-    private readonly float _originY;
+    private readonly TileSet _tileSet = tileSet;
+    private readonly int[,] _grid = grid;
+    private readonly int _columns = columns;
+    private readonly int _rows = rows;
+    private readonly int _renderTileWidth = renderTileWidth;
+    private readonly int _renderTileHeight = renderTileHeight;
+    private readonly float _originX = originX;
+    private readonly float _originY = originY;
     private readonly PlatformNavigationGraph _navGraph = new();
 
     /// <summary>関連付けられたタイルセット</summary>
@@ -46,37 +62,6 @@ public sealed class TileMap
 
     /// <summary>プラットフォーム間跳躍ナビゲーショングラフ</summary>
     public PlatformNavigationGraph NavGraph => _navGraph;
-
-    /// <summary>
-    /// 指定されたパラメータで <see cref="TileMap"/> の新しいインスタンスを初期化します。
-    /// </summary>
-    /// <param name="tileSet">使用するタイルセット</param>
-    /// <param name="columns">グリッド列数</param>
-    /// <param name="rows">グリッド行数</param>
-    /// <param name="renderTileWidth">描画時のタイル幅（ピクセル）</param>
-    /// <param name="renderTileHeight">描画時のタイル高さ（ピクセル）</param>
-    /// <param name="originX">マップ原点 X 座標</param>
-    /// <param name="originY">マップ原点 Y 座標</param>
-    /// <param name="grid">2D タイル ID 配列</param>
-    public TileMap(
-        TileSet tileSet,
-        int columns,
-        int rows,
-        int renderTileWidth,
-        int renderTileHeight,
-        float originX,
-        float originY,
-        int[,] grid)
-    {
-        _tileSet = tileSet;
-        _columns = columns;
-        _rows = rows;
-        _renderTileWidth = renderTileWidth;
-        _renderTileHeight = renderTileHeight;
-        _originX = originX;
-        _originY = originY;
-        _grid = grid;
-    }
 
     /// <summary>
     /// <see cref="TileMapConfig"/> 設定データおよび <see cref="TileSet"/> から <see cref="TileMap"/> を構築します。

@@ -48,7 +48,7 @@ public readonly record struct Circle2D(Vec2f Center, float Radius)
     /// 中心座標 (X, Y) と半径から円形形状を生成します。
     /// </summary>
     public Circle2D(float centerX, float centerY, float radius)
-        : this(new Vec2f(centerX, centerY), radius)
+        : this(new(centerX, centerY), radius)
     {
     }
 }
@@ -63,7 +63,7 @@ public readonly record struct Box2D(Vec2f Center, Vec2f Size)
     /// 中心座標 (X, Y) と幅・高さから矩形形状を生成します。
     /// </summary>
     public Box2D(float centerX, float centerY, float width, float height)
-        : this(new Vec2f(centerX, centerY), new Vec2f(width, height))
+        : this(new(centerX, centerY), new(width, height))
     {
     }
 

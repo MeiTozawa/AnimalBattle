@@ -130,7 +130,7 @@ public sealed class BossRuntimeSlot
             return;
         }
 
-        _debugData = new BossDebugData
+        _debugData = new()
         {
             BossState = _currentBossState,
             Phase = _aiData.Phase,
@@ -260,17 +260,17 @@ public sealed class BossRuntimeSlot
             throw new ArgumentException("設定 provider が未検証 snapshot を返しました。", nameof(configProvider));
         }
 
-        MovementCommands = movementCommandBuffer ?? new PreallocatedCommandBuffer<MovementCommand>(movementCommandCapacity, commandDiagnosticSink);
-        AttackCommands = attackCommandBuffer ?? new PreallocatedCommandBuffer<AttackCommand>(attackCommandCapacity, commandDiagnosticSink);
-        EffectCommands = effectCommandBuffer ?? new PreallocatedCommandBuffer<EffectCommand>(effectCommandCapacity, commandDiagnosticSink);
+        MovementCommands = movementCommandBuffer ?? new(movementCommandCapacity, commandDiagnosticSink);
+        AttackCommands = attackCommandBuffer ?? new(attackCommandCapacity, commandDiagnosticSink);
+        EffectCommands = effectCommandBuffer ?? new(effectCommandCapacity, commandDiagnosticSink);
         _currentConfig = configSnapshot;
-        _aiData = new BossAiData(bossType, BossState.Unknown, Phase.Phase1);
-        _movementData = new BossMovementData(BossState.Unknown);
-        _attackData = new BossAttackData(BossSkill.None);
+        _aiData = new(bossType, BossState.Unknown, Phase.Phase1);
+        _movementData = new(BossState.Unknown);
+        _attackData = new(BossSkill.None);
         _phaseTransitionData = default;
 
         _terminalData = default;
-        _context = new StateContext(
+        _context = new(
             entityId,
             bossType,
             configProvider,

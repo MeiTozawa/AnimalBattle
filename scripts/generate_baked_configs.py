@@ -63,7 +63,7 @@ def _format_rule(r: dict) -> str:
     ]
     if "RequirePlayerGrounded" in r:
         parts.append(f"RequirePlayerGrounded = {'true' if r['RequirePlayerGrounded'] else 'false'}")
-    return "new AttackRuleConfig { " + ", ".join(parts) + " }"
+    return "new() { " + ", ".join(parts) + " }"
 
 
 def _load_toml(path: Path) -> dict:
@@ -174,7 +174,7 @@ def generate_code() -> str:
         for phase_name in ["Phase1", "Phase2", "Phase3"]:
             phase = boss1_data.get(phase_name, {})
             skills_str = ", ".join(_format_string(s) for s in phase.get("Skills", []))
-            lines.append(f"        {phase_name} = new Boss1PhaseFsmConfig")
+            lines.append(f"        {phase_name} = new()")
             lines.append("        {")
             lines.append(f"            HpThreshold = {_format_float(phase.get('HpThreshold', 1.0))},")
             lines.append(f"            HoverDuration = {_format_float(phase.get('HoverDuration', 0.8))},")
@@ -239,7 +239,7 @@ def generate_code() -> str:
         for phase_name in ["Phase1", "Phase2", "Phase3"]:
             phase = boss2_data.get(phase_name, {})
             skills_str = ", ".join(_format_string(s) for s in phase.get("Skills", []))
-            lines.append(f"        {phase_name} = new Boss2PhaseConfig")
+            lines.append(f"        {phase_name} = new()")
             lines.append("        {")
             lines.append(f"            HpThreshold = {_format_float(phase.get('HpThreshold', 1.0))},")
             lines.append(f"            IdleDuration = {_format_float(phase.get('IdleDuration', 0.8))},")
@@ -266,7 +266,7 @@ def generate_code() -> str:
     if patterns_data:
         # DiveRam
         dr = patterns_data.get("DiveRam", {})
-        lines.append("        DiveRam = new DiveRamConfig")
+        lines.append("        DiveRam = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(dr.get('SkillName', 'Meteor Dive Ram'))},")
         lines.append(f"            WindUpTime = {_format_float(dr.get('WindUpTime', 0.55))},")
@@ -286,7 +286,7 @@ def generate_code() -> str:
 
         # Aimed3Shot
         a3 = patterns_data.get("Aimed3Shot", {})
-        lines.append("        Aimed3Shot = new Aimed3ShotConfig")
+        lines.append("        Aimed3Shot = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(a3.get('SkillName', 'Aimed 3-Way Shot'))},")
         lines.append(f"            WindUpTime = {_format_float(a3.get('WindUpTime', 0.40))},")
@@ -304,7 +304,7 @@ def generate_code() -> str:
 
         # RingBurst
         rb = patterns_data.get("RingBurst", {})
-        lines.append("        RingBurst = new RingBurstConfig")
+        lines.append("        RingBurst = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(rb.get('SkillName', '16-Way Ring Burst'))},")
         lines.append(f"            WindUpTime = {_format_float(rb.get('WindUpTime', 0.55))},")
@@ -322,7 +322,7 @@ def generate_code() -> str:
 
         # DoubleSpiral
         ds = patterns_data.get("DoubleSpiral", {})
-        lines.append("        DoubleSpiral = new DoubleSpiralConfig")
+        lines.append("        DoubleSpiral = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(ds.get('SkillName', 'Twin Spiral Barrage'))},")
         lines.append(f"            WindUpTime = {_format_float(ds.get('WindUpTime', 0.45))},")
@@ -341,7 +341,7 @@ def generate_code() -> str:
 
         # RainDrop
         rd = patterns_data.get("RainDrop", {})
-        lines.append("        RainDrop = new RainDropConfig")
+        lines.append("        RainDrop = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(rd.get('SkillName', 'Skyfall Rain Barrage'))},")
         lines.append(f"            WindUpTime = {_format_float(rd.get('WindUpTime', 0.35))},")
@@ -359,7 +359,7 @@ def generate_code() -> str:
 
         # CrossChaos
         cc = patterns_data.get("CrossChaos", {})
-        lines.append("        CrossChaos = new CrossChaosConfig")
+        lines.append("        CrossChaos = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(cc.get('SkillName', 'Cross Chaos Waves'))},")
         lines.append(f"            WindUpTime = {_format_float(cc.get('WindUpTime', 0.35))},")
@@ -376,7 +376,7 @@ def generate_code() -> str:
 
         # FastSniper
         fs = patterns_data.get("FastSniper", {})
-        lines.append("        FastSniper = new FastSniperConfig")
+        lines.append("        FastSniper = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(fs.get('SkillName', 'Laser Fast Sniper'))},")
         lines.append(f"            WindUpTime = {_format_float(fs.get('WindUpTime', 0.50))},")
@@ -392,7 +392,7 @@ def generate_code() -> str:
 
         # HeavySlash
         hs = patterns_data.get("HeavySlash", {})
-        lines.append("        HeavySlash = new HeavySlashConfig")
+        lines.append("        HeavySlash = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(hs.get('SkillName', 'Heavy Cleave Slash'))},")
         lines.append(f"            WindUpTime = {_format_float(hs.get('WindUpTime', 0.45))},")
@@ -409,7 +409,7 @@ def generate_code() -> str:
 
         # GroundStomp
         gs = patterns_data.get("GroundStomp", {})
-        lines.append("        GroundStomp = new GroundStompConfig")
+        lines.append("        GroundStomp = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(gs.get('SkillName', 'Ground Stomp Shockwave'))},")
         lines.append(f"            WindUpTime = {_format_float(gs.get('WindUpTime', 0.50))},")
@@ -425,7 +425,7 @@ def generate_code() -> str:
 
         # LeapSmash
         ls = patterns_data.get("LeapSmash", {})
-        lines.append("        LeapSmash = new LeapSmashConfig")
+        lines.append("        LeapSmash = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(ls.get('SkillName', 'Titan Leap Smash'))},")
         lines.append(f"            WindUpTime = {_format_float(ls.get('WindUpTime', 0.40))},")
@@ -448,7 +448,7 @@ def generate_code() -> str:
 
         # DoubleCleave
         dc = patterns_data.get("DoubleCleave", {})
-        lines.append("        DoubleCleave = new DoubleCleaveConfig")
+        lines.append("        DoubleCleave = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(dc.get('SkillName', 'Twin Cleave Fury'))},")
         lines.append(f"            WindUpTime = {_format_float(dc.get('WindUpTime', 0.35))},")
@@ -465,7 +465,7 @@ def generate_code() -> str:
 
         # FrenzyCharge
         fc = patterns_data.get("FrenzyCharge", {})
-        lines.append("        FrenzyCharge = new FrenzyChargeConfig")
+        lines.append("        FrenzyCharge = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(fc.get('SkillName', 'Frenzy Rampage Charge'))},")
         lines.append(f"            WindUpTime = {_format_float(fc.get('WindUpTime', 0.55))},")
@@ -482,7 +482,7 @@ def generate_code() -> str:
 
         # EarthquakeRoar
         eq = patterns_data.get("EarthquakeRoar", {})
-        lines.append("        EarthquakeRoar = new EarthquakeRoarConfig")
+        lines.append("        EarthquakeRoar = new()")
         lines.append("        {")
         lines.append(f"            SkillName = {_format_string(eq.get('SkillName', 'Cataclysm Earthquake Roar'))},")
         lines.append(f"            WindUpTime = {_format_float(eq.get('WindUpTime', 0.60))},")
@@ -515,7 +515,7 @@ def generate_code() -> str:
         lines.append(f"        BulletDespawnMaxY = {_format_float(arena_data.get('BulletDespawnMaxY', 800.0))},")
 
         tm = arena_data.get("TileMap", {})
-        lines.append("        TileMap = new TileMapConfig")
+        lines.append("        TileMap = new()")
         lines.append("        {")
         lines.append(f"            TileSheet = {_format_string(tm.get('TileSheet', 'Platform\\\\sheet.png'))},")
         lines.append(f"            TileConfig = {_format_string(tm.get('TileConfig', 'Platform\\\\sheet.toml'))},")
@@ -541,7 +541,7 @@ def generate_code() -> str:
     lines.append("    {")
     if render_data:
         be = render_data.get("BossEffects", {})
-        lines.append("        BossEffects = new BossEffectsRenderConfig")
+        lines.append("        BossEffects = new()")
         lines.append("        {")
         lines.append(f"            DangerBoxAlpha = {be.get('DangerBoxAlpha', 100)},")
         lines.append(f"            LaserAlpha = {be.get('LaserAlpha', 140)},")
@@ -566,7 +566,7 @@ def generate_code() -> str:
 
 
         bul = render_data.get("Bullets", {})
-        lines.append("        Bullets = new BulletRenderConfig")
+        lines.append("        Bullets = new()")
         lines.append("        {")
         lines.append(f"            PlayerBulletOuterRadius = {_format_float(bul.get('PlayerBulletOuterRadius', 6.0))},")
         lines.append(f"            PlayerBulletOuterColor = {_format_color(bul.get('PlayerBulletOuterColor', 0xFF00FFFF))},")
@@ -584,7 +584,7 @@ def generate_code() -> str:
         lines.append("        },")
 
         hud = render_data.get("Hud", {})
-        lines.append("        Hud = new HudRenderConfig")
+        lines.append("        Hud = new()")
         lines.append("        {")
         lines.append(f"            TitleX = {hud.get('TitleX', 20)},")
         lines.append(f"            TitleY = {hud.get('TitleY', 16)},")
@@ -602,7 +602,7 @@ def generate_code() -> str:
         lines.append("        },")
 
         hp = render_data.get("BossHpBar", {})
-        lines.append("        BossHpBar = new BossHpBarRenderConfig")
+        lines.append("        BossHpBar = new()")
         lines.append("        {")
         lines.append(f"            BarX1 = {hp.get('BarX1', 240)},")
         lines.append(f"            BarY1 = {hp.get('BarY1', 662)},")
@@ -628,7 +628,7 @@ def generate_code() -> str:
         lines.append("        },")
 
         modals = render_data.get("Modals", {})
-        lines.append("        Modals = new ModalRenderConfig")
+        lines.append("        Modals = new()")
         lines.append("        {")
         lines.append(f"            GameOverX1 = {modals.get('GameOverX1', 360)},")
         lines.append(f"            GameOverY1 = {modals.get('GameOverY1', 260)},")
@@ -663,7 +663,7 @@ def generate_code() -> str:
         lines.append("        },")
 
         dbg = render_data.get("Debug", {})
-        lines.append("        Debug = new DebugRenderConfig")
+        lines.append("        Debug = new()")
         lines.append("        {")
         lines.append(f"            Enabled = {'true' if dbg.get('Enabled', False) else 'false'},")
         lines.append(f"            PlayerTerrainBoxColor = {_format_color(dbg.get('PlayerTerrainBoxColor', 0xFF00FF88))},")

@@ -4,18 +4,13 @@ using ErrorOr;
 namespace AnimalBattle.Ai.Regions;
 
 /// <summary>Phase に従属する独立した Attack 子領域です。</summary>
-public sealed class AttackRegion
+/// <param name="rules">子状態遷移ルール。</param>
+public sealed class AttackRegion(PhaseChildStateRules rules)
 {
-    private readonly PhaseChildStateRules _rules;
+    private readonly PhaseChildStateRules _rules = rules ?? throw new ArgumentNullException(nameof(rules));
     private StateId _currentStateId;
     private bool _isActive;
     private RegionTransitionResult _lastTransitionResult;
-
-    /// <summary>Attack 子領域を生成します。</summary>
-    public AttackRegion(PhaseChildStateRules rules)
-    {
-        _rules = rules ?? throw new ArgumentNullException(nameof(rules));
-    }
 
     /// <summary>現在の Attack State_Id です。</summary>
     public StateId CurrentStateId => _currentStateId;
@@ -110,7 +105,7 @@ public sealed class AttackRegion
                 IntermediateStateId = _currentStateId
             };
             LastFailure = safeFailure;
-            _lastTransitionResult = new RegionTransitionResult(false, false, true, _currentStateId, _currentStateId, safeFailure);
+            _lastTransitionResult = new(false, false, true, _currentStateId, _currentStateId, safeFailure);
             return safeFailure.ToError();
         }
 
@@ -144,7 +139,7 @@ public sealed class AttackRegion
     {
         RegionFailure failure = new(RegionKind.Attack, kind, phase, current, requested, current, safeInitial, reason);
         LastFailure = failure;
-        _lastTransitionResult = new RegionTransitionResult(false, false, true, current, current, failure);
+        _lastTransitionResult = new(false, false, true, current, current, failure);
         return failure.ToError();
     }
 }

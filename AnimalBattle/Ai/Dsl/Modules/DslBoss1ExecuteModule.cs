@@ -12,10 +12,13 @@ namespace AnimalBattle.Ai.Dsl.Modules;
 /// <summary>
 /// Boss1 のすべての攻撃技能（各種弾幕および俯衝突進 DiveRam）の Execute ライフサイクルを宣言的定義に基づいて一元処理する汎用実行モジュールです。
 /// </summary>
-public sealed class DslBoss1ExecuteModule : IBossStateModule, IStateModuleDependencyProvider
+/// <param name="configuration">Boss1 設定境界。</param>
+/// <param name="state">Boss1 実行時状態。</param>
+public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Boss1BehaviorState state)
+    : IBossStateModule, IStateModuleDependencyProvider
 {
-    private readonly IBoss1Configuration _configuration;
-    private readonly Boss1BehaviorState _state;
+    private readonly IBoss1Configuration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+    private readonly Boss1BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
     private ExecuteGate? _gate;
     private Boss1AttackPattern? _pattern;
     private float _elapsed;
@@ -27,17 +30,6 @@ public sealed class DslBoss1ExecuteModule : IBossStateModule, IStateModuleDepend
 
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "AttackPort", "MovementPort", "RandomSource"];
-
-    /// <summary>
-    /// Boss1 設定境界と共有状態を注入して汎用 Execute モジュールを生成します。
-    /// </summary>
-    /// <param name="configuration">Boss1 設定境界。</param>
-    /// <param name="state">Boss1 実行時状態。</param>
-    public DslBoss1ExecuteModule(IBoss1Configuration configuration, Boss1BehaviorState state)
-    {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _state = state ?? throw new ArgumentNullException(nameof(state));
-    }
 
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)
@@ -51,16 +43,16 @@ public sealed class DslBoss1ExecuteModule : IBossStateModule, IStateModuleDepend
         BossSkill skill = _state.CurrentSkill;
         if (!_configuration.GetAttack(skill, out _pattern) || _pattern is null)
         {
-            _pattern = new Boss1AttackPattern(skill, 0, 0, 0);
+            _pattern = new(skill, 0, 0, 0);
         }
 
-        _gate = new ExecuteGate(_pattern.Definition);
+        _gate = new(_pattern.Definition);
         _gate.Reset();
 
         if (skill == BossSkill.DiveRam)
         {
             _state.AttackStartPosition = _state.CurrentPosition;
-            _state.AttackTargetPosition = new Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
+            _state.AttackTargetPosition = new(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
             _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         }
 

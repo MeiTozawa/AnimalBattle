@@ -12,9 +12,9 @@ public sealed class PhaseRegion(PhaseChildStateRules movementRules, PhaseChildSt
     /// <summary>親領域が有効かどうかです。</summary>
     public bool IsValid { get; private set; }
     /// <summary>Movement 子領域です。</summary>
-    public MovementRegion Movement { get; } = new MovementRegion(movementRules);
+    public MovementRegion Movement { get; } = new(movementRules);
     /// <summary>Attack 子領域です。</summary>
-    public AttackRegion Attack { get; } = new AttackRegion(attackRules);
+    public AttackRegion Attack { get; } = new(attackRules);
     /// <summary>Phase 入場回数です。</summary>
     public int EnterCount { get; private set; }
     /// <summary>Phase 退場回数です。</summary>
@@ -188,13 +188,13 @@ public sealed class PhaseRegion(PhaseChildStateRules movementRules, PhaseChildSt
     {
         if (!IsValid)
         {
-            LastFailure = new RegionFailure(RegionKind.Phase, RegionFailureKind.ParentInvalid, CurrentPhase, default, default, default, default, reason);
+            LastFailure = new(RegionKind.Phase, RegionFailureKind.ParentInvalid, CurrentPhase, default, default, default, default, reason);
             return Error.Validation("PhaseRegion.ParentInvalid", "Phase 親領域が無効なため子領域を更新できません。");
         }
 
         if (CurrentPhase == Phase.Dead)
         {
-            LastFailure = new RegionFailure(RegionKind.Phase, RegionFailureKind.TerminalPhase, CurrentPhase, default, default, default, default, reason);
+            LastFailure = new(RegionKind.Phase, RegionFailureKind.TerminalPhase, CurrentPhase, default, default, default, default, reason);
             return Error.Validation("PhaseRegion.TerminalPhase", "終端 Phase の子領域は更新できません。");
         }
 

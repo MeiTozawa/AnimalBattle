@@ -43,21 +43,21 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
         if (!_configuration.GetAttack(skill, out Boss1AttackPattern pattern) || !pattern.IsValid)
         {
             Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss1 の攻撃設定が不正なため Hover へ復帰します。", skill);
-            _state.RequestTransition(Boss1State.Hover, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
+            _state.RequestTransition(Boss1State.Hover, new(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
 
         _state.CurrentSkill = skill;
         _state.AttackStartPosition = _state.CurrentPosition;
-        _state.AttackTargetPosition = new Core.Physics.Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
+        _state.AttackTargetPosition = new(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         _state.AttackSubTimer = 0.0f;
         _state.AngleOffset = 0.0f;
         _state.IsAttackActive = true;
         _state.RequestTransition(
             Boss1State.Telegraph,
-            new TransitionReason(ReasonKind.PlayerObservation, skill: skill, originalInput: context.PlayerObservation.EntityId > long.MaxValue ? long.MaxValue : (long)context.PlayerObservation.EntityId));
+            new(ReasonKind.PlayerObservation, skill: skill, originalInput: context.PlayerObservation.EntityId > long.MaxValue ? long.MaxValue : (long)context.PlayerObservation.EntityId));
 
     }
 

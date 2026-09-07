@@ -83,7 +83,7 @@ public partial class BattleScene : IDisposable
 
         // 1. プレイヤーの生成 (高内聚な領域オブジェクト Player の初期化)
         Entity playerEntity = _ecsWorld.Entity("Player1");
-        _player = new Player(playerEntity, playerCfg, playerHandle);
+        _player = new(playerEntity, playerCfg, playerHandle);
 
         // 2. タイルマップとプラットフォームの生成
         SetupArena();
@@ -92,8 +92,8 @@ public partial class BattleScene : IDisposable
             .With<PlatformTag>()
             .Build();
 
-        _worldRenderer = new WorldRenderSystem(_ecsWorld);
-        _debugRenderer = new DebugRenderSystem(_ecsWorld);
+        _worldRenderer = new(_ecsWorld);
+        _debugRenderer = new(_ecsWorld);
         _playerBulletsQuery = _ecsWorld.QueryBuilder()
                                        .With<PlayerBulletTag>()
                                        .Build();
@@ -138,7 +138,7 @@ public partial class BattleScene : IDisposable
     {
         ErrorOr<int> boss1HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
         int boss1Handle = !boss1HandleRes.IsError ? boss1HandleRes.Value : -1;
-        _currentBoss = new BossCharacter(bossEntity, BossType.Boss1, boss1Handle);
+        _currentBoss = new(bossEntity, BossType.Boss1, boss1Handle);
         Console.WriteLine($"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {ConfigManager.Boss1.MaxHp}, Pos: {ConfigManager.Boss1.BaseX}, {ConfigManager.Boss1.BaseY})");
     }
 
@@ -146,7 +146,7 @@ public partial class BattleScene : IDisposable
     {
         ErrorOr<int> boss2HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
         int boss2Handle = !boss2HandleRes.IsError ? boss2HandleRes.Value : -1;
-        _currentBoss = new BossCharacter(bossEntity, BossType.Boss2, boss2Handle);
+        _currentBoss = new(bossEntity, BossType.Boss2, boss2Handle);
         Console.WriteLine($"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {ConfigManager.Boss2.MaxHp}, Pos: {ConfigManager.Boss2.SpawnX}, {ConfigManager.Boss2.SpawnY})");
     }
 
@@ -279,7 +279,7 @@ public partial class BattleScene : IDisposable
         {
             ErrorOr<int> sheetHandleRes = AssetManager.LoadTexture(tileMapCfg.TileSheet);
             int sheetHandle = !sheetHandleRes.IsError ? sheetHandleRes.Value : -1;
-            TileSet tileSet = new TileSet(sheetHandle, tileSetConfigResult.Value.Config);
+            TileSet tileSet = new(sheetHandle, tileSetConfigResult.Value.Config);
             _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
             _ecsWorld.Set(_tileMap);
             CurrentTileMap = _tileMap;
@@ -308,7 +308,7 @@ public partial class BattleScene : IDisposable
 
         if (_currentBoss != null)
         {
-            Vec2f playerPos = _player != null ? new Vec2f(_player.X, _player.Y) : Vec2f.Zero;
+            Vec2f playerPos = _player != null ? new(_player.X, _player.Y) : Vec2f.Zero;
             _currentBoss.Update(deltaTime, playerPos, _ecsWorld, _platformQuery);
         }
 
