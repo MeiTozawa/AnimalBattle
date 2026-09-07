@@ -157,7 +157,7 @@ public sealed class Player
         _collisionBox = new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight);
         _hurtbox = new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly);
         _animation = new Animation("Idle", CharacterType.Cat, isPlaying: true);
-        _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 64, 64));
+        _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect(0, 0, 64, 64));
 
         UpdateAnimation(0.0f);
         SyncToEntity();

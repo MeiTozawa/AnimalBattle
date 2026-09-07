@@ -13,14 +13,14 @@ public struct Sprite(
     int graphHandle = -1,
     bool flipX = false,
     bool isVisible = true,
-    Rect<int> srcRect = default,
+    Rect srcRect = default,
     Color? color = null)
 {
     /// <summary>Native グラフィックハンドル</summary>
     public int GraphHandle = graphHandle;
 
     /// <summary>切り出し転送領域</summary>
-    public Rect<int> SrcRect = srcRect;
+    public Rect SrcRect = srcRect;
 
     /// <summary>左右反転フラグ</summary>
     public bool FlipX = flipX;

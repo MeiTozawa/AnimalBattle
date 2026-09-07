@@ -179,7 +179,7 @@ public sealed class BossCharacter
             _hurtbox = new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile);
             _bodyHitbox = new Hitbox(b1Cfg.GetHitboxShape(), damage: b1Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false);
             _collisionBox = default;
-            _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192));
+            _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect(0, 0, 192, 192));
 
             _boss1State = new Boss1BehaviorState(b1Cfg.BaseX, b1Cfg.BaseY);
             _boss2State = new Boss2BehaviorState(0.0f, 0.0f);
@@ -222,7 +222,7 @@ public sealed class BossCharacter
             _collisionBox = new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight);
             _hurtbox = new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile);
             _bodyHitbox = new Hitbox(b2Cfg.GetHitboxShape(), damage: b2Cfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false);
-            _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect<int>(0, 0, 192, 192));
+            _sprite = new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new Rect(0, 0, 192, 192));
 
             _boss1State = new Boss1BehaviorState(0.0f, 0.0f);
             _boss2State = new Boss2BehaviorState(b2Cfg.SpawnX, b2Cfg.SpawnY);

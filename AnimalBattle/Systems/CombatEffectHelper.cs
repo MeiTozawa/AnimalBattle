@@ -298,7 +298,7 @@ public static class CombatEffectHelper
         int slashHandle = !slashRes.IsError ? slashRes.Value : -1;
         int colIndex = 5; // 第 6 列 (0-based: 5)
         int rowIndex = (int)direction;
-        Rect<int> srcRect = Rect<int>.FromWidthHeight(colIndex * 64, rowIndex * 64, 64, 64);
+        Rect srcRect = Rect.FromWidthHeight(colIndex * 64, rowIndex * 64, 64, 64);
         float scale = MathF.Max(width, height) / 28.0f;
 
         // 64x64 セル内の斬撃ピクセル重心偏り（Right: +18px, Left: -18px）を逆補正して視覚中心を (x, y) に一致させる

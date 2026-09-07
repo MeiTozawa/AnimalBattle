@@ -18,7 +18,7 @@ public sealed class TileSet
     private readonly int _leftBlock;
     private readonly int _middleBlock;
     private readonly int _rightBlock;
-    private readonly Rect<int> _collisionRect;
+    private readonly Rect _collisionRect;
 
     /// <summary>Native テクスチャグラフィックハンドル</summary>
     public int GraphHandle => _graphHandle;
@@ -45,7 +45,7 @@ public sealed class TileSet
     public int RightBlock => _rightBlock;
 
     /// <summary>プラットフォームタイルの衝突判定領域矩形</summary>
-    public Rect<int> CollisionRect => _collisionRect;
+    public Rect CollisionRect => _collisionRect;
 
     /// <summary>
     /// 指定されたパラメータで <see cref="TileSet"/> の新しいインスタンスを初期化します。
@@ -69,7 +69,7 @@ public sealed class TileSet
         int leftBlock,
         int middleBlock,
         int rightBlock,
-        Rect<int> collisionRect)
+        Rect collisionRect)
     {
         _graphHandle = graphHandle;
         _tileWidth = tileWidth;
@@ -97,21 +97,21 @@ public sealed class TileSet
             config.LeftBlock,
             config.MiddleBlock,
             config.RightBlock,
-            new Rect<int>(config.CollisionX1, config.CollisionY1, config.CollisionX2, config.CollisionY2))
+            new Rect(config.CollisionX1, config.CollisionY1, config.CollisionX2, config.CollisionY2))
     {
     }
 
     /// <summary>
-    /// 1-based のタイル ID からスプライトシート上の UV 切り出し矩形 (<see cref="Rect{T}"/>) を取得します。
+    /// 1-based のタイル ID からスプライトシート上の UV 切り出し矩形 (<see cref="Rect"/>) を取得します。
     /// ID が 0 以下の場合は空の矩形を返します。
     /// </summary>
     /// <param name="tileId">1-based タイル ID (0 は空白/空気)</param>
     /// <returns>スプライトシート切り出し領域</returns>
-    public Rect<int> GetSourceRect(int tileId)
+    public Rect GetSourceRect(int tileId)
     {
         if (tileId <= 0 || _columns <= 0 || _rows <= 0)
         {
-            return Rect<int>.Zero;
+            return Rect.Zero;
         }
 
         int index = tileId - 1;
@@ -123,7 +123,7 @@ public sealed class TileSet
         int x2 = x1 + _tileWidth;
         int y2 = y1 + _tileHeight;
 
-        return new Rect<int>(x1, y1, x2, y2);
+        return new Rect(x1, y1, x2, y2);
     }
 
     /// <summary>
@@ -142,7 +142,7 @@ public sealed class TileSet
             return;
         }
 
-        Rect<int> src = GetSourceRect(tileId);
+        Rect src = GetSourceRect(tileId);
         if (src.Width <= 0 || src.Height <= 0)
         {
             return;

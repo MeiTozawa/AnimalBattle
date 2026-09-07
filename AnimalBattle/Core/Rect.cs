@@ -1,41 +1,48 @@
 using System;
 
 namespace AnimalBattle.Core;
+
 /// <summary>
-/// 2次元の矩形領域（左、上、右、下 / X1, Y1, X2, Y2）を表す汎用構造体。
+/// 2次元の矩形領域（左、上、右、下 / X1, Y1, X2, Y2）を表す整数構造体。
 /// </summary>
-/// <typeparam name="T">座標成分の数値型（int, float, double など）</typeparam>
-public struct Rect<T> where T : struct
+/// <remarks>
+/// 左、上、右、下の各境界座標を指定して <see cref="Rect"/> の新しいインスタンスを初期化します。
+/// </remarks>
+/// <param name="left">左端 X 座標</param>
+/// <param name="top">上端 Y 座標</param>
+/// <param name="right">右端 X 座標</param>
+/// <param name="bottom">下端 Y 座標</param>
+public struct Rect(int left, int top, int right, int bottom)
 {
     /// <summary>
     /// 全成分が 0 の矩形定数。
     /// </summary>
-    public static readonly Rect<T> Zero = default;
+    public static readonly Rect Zero = default;
 
     /// <summary>
     /// 矩形の左端 X 座標を取得または設定します。
     /// </summary>
-    public T Left { get; set; }
+    public int Left { get; set; } = left;
 
     /// <summary>
     /// 矩形の上端 Y 座標を取得または設定します。
     /// </summary>
-    public T Top { get; set; }
+    public int Top { get; set; } = top;
 
     /// <summary>
     /// 矩形の右端 X 座標を取得または設定します。
     /// </summary>
-    public T Right { get; set; }
+    public int Right { get; set; } = right;
 
     /// <summary>
     /// 矩形の下端 Y 座標を取得または設定します。
     /// </summary>
-    public T Bottom { get; set; }
+    public int Bottom { get; set; } = bottom;
 
     /// <summary>
     /// 左端 X 座標のエイリアスプロパティ。
     /// </summary>
-    public T X1
+    public int X1
     {
         readonly get => Left;
         set => Left = value;
@@ -44,7 +51,7 @@ public struct Rect<T> where T : struct
     /// <summary>
     /// 上端 Y 座標のエイリアスプロパティ。
     /// </summary>
-    public T Y1
+    public int Y1
     {
         readonly get => Top;
         set => Top = value;
@@ -53,7 +60,7 @@ public struct Rect<T> where T : struct
     /// <summary>
     /// 右端 X 座標のエイリアスプロパティ。
     /// </summary>
-    public T X2
+    public int X2
     {
         readonly get => Right;
         set => Right = value;
@@ -62,7 +69,7 @@ public struct Rect<T> where T : struct
     /// <summary>
     /// 下端 Y 座標のエイリアスプロパティ。
     /// </summary>
-    public T Y2
+    public int Y2
     {
         readonly get => Bottom;
         set => Bottom = value;
@@ -71,101 +78,27 @@ public struct Rect<T> where T : struct
     /// <summary>
     /// 矩形の幅 (Right - Left) を取得します。
     /// </summary>
-    public readonly T Width
-    {
-        get
-        {
-            if (typeof(T) == typeof(int))
-            {
-                return (T)(object)(Convert.ToInt32(Right) - Convert.ToInt32(Left));
-            }
-            if (typeof(T) == typeof(float))
-            {
-                return (T)(object)(Convert.ToSingle(Right) - Convert.ToSingle(Left));
-            }
-            return Right;
-        }
-    }
+    public readonly int Width => Right - Left;
 
     /// <summary>
     /// 矩形の高さ (Bottom - Top) を取得します。
     /// </summary>
-    public readonly T Height
-    {
-        get
-        {
-            if (typeof(T) == typeof(int))
-            {
-                return (T)(object)(Convert.ToInt32(Bottom) - Convert.ToInt32(Top));
-            }
-            if (typeof(T) == typeof(float))
-            {
-                return (T)(object)(Convert.ToSingle(Bottom) - Convert.ToSingle(Top));
-            }
-            return Bottom;
-        }
-    }
+    public readonly int Height => Bottom - Top;
 
     /// <summary>
     /// 指定された座標 (x, y) が矩形領域内に含まれるか判定します。
     /// </summary>
-    public readonly bool Contains(T x, T y)
+    public readonly bool Contains(int x, int y)
     {
-        float fx = Convert.ToSingle(x);
-        float fy = Convert.ToSingle(y);
-        return fx >= Convert.ToSingle(Left) && fx <= Convert.ToSingle(Right) &&
-               fy >= Convert.ToSingle(Top) && fy <= Convert.ToSingle(Bottom);
+        return x >= Left && x <= Right &&
+               y >= Top && y <= Bottom;
     }
 
     /// <summary>
-    /// 指定されたポイント座標が矩形領域内に含まれるか判定します。
+    /// 左上座標および幅・高さを指定して <see cref="Rect"/> を生成します。
     /// </summary>
-    public readonly bool Contains(Point<T> point)
+    public static Rect FromWidthHeight(int left, int top, int width, int height)
     {
-        return Contains(point.X, point.Y);
-    }
-
-    /// <summary>
-    /// 指定された別の矩形と交差（オーバーラップ）しているか判定します。
-    /// </summary>
-    /// <param name="other">判定対象の矩形</param>
-    /// <returns>交差している場合は true</returns>
-    public readonly bool Intersects(Rect<float> other)
-    {
-        return Convert.ToSingle(Left) < other.Right &&
-               Convert.ToSingle(Right) > other.Left &&
-               Convert.ToSingle(Top) < other.Bottom &&
-               Convert.ToSingle(Bottom) > other.Top;
-    }
-
-    /// <summary>
-    /// 左、上、右、下の各境界座標を指定して <see cref="Rect{T}"/> の新しいインスタンスを初期化します。
-    /// </summary>
-    /// <param name="left">左端 X 座標</param>
-    /// <param name="top">上端 Y 座標</param>
-    /// <param name="right">右端 X 座標</param>
-    /// <param name="bottom">下端 Y 座標</param>
-    public Rect(T left, T top, T right, T bottom)
-    {
-        Left = left;
-        Top = top;
-        Right = right;
-        Bottom = bottom;
-    }
-
-    /// <summary>
-    /// 左上座標および幅・高さを指定して整数の <see cref="Rect{int}"/> を生成します。
-    /// </summary>
-    public static Rect<int> FromWidthHeight(int left, int top, int width, int height)
-    {
-        return new Rect<int>(left, top, left + width, top + height);
-    }
-
-    /// <summary>
-    /// 左上座標および幅・高さを指定して浮動小数点数の <see cref="Rect{float}"/> を生成します。
-    /// </summary>
-    public static Rect<float> FromWidthHeight(float left, float top, float width, float height)
-    {
-        return new Rect<float>(left, top, left + width, top + height);
+        return new Rect(left, top, left + width, top + height);
     }
 }

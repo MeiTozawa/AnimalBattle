@@ -188,13 +188,13 @@ public sealed class AssetManager : IDisposable
     /// <param name="animTimer">再生経過時間（秒）</param>
     /// <param name="isFinished">非ループ再生が完了したかどうかの出力</param>
     /// <returns>スプライトシート切り出し領域</returns>
-    public static Rect<int> CalculateSrcRect(AnimationConfig config, string clipName, float animTimer, out bool isFinished)
+    public static Rect CalculateSrcRect(AnimationConfig config, string clipName, float animTimer, out bool isFinished)
     {
         isFinished = false;
         AnimationClipConfig? clip = config.Clips.Find(c => string.Equals(c.Name, clipName, StringComparison.OrdinalIgnoreCase));
         if (clip == null)
         {
-            return new Rect<int>(0, 0, config.CellWidth, config.CellHeight);
+            return new Rect(0, 0, config.CellWidth, config.CellHeight);
         }
 
         int totalFrames = clip.EndFrame - clip.StartFrame + 1;
@@ -225,7 +225,7 @@ public sealed class AssetManager : IDisposable
         int x2 = x1 + cellW;
         int y2 = y1 + cellH;
 
-        return new Rect<int>(x1, y1, x2, y2);
+        return new Rect(x1, y1, x2, y2);
     }
 
     /// <summary>
