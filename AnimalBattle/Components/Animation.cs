@@ -1,21 +1,25 @@
-using System;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Components;
 
 /// <summary>
 /// アニメーション再生状態およびキャラクター種別を保持する純粋コンポーネント。
+/// 全フィールドがアンマネージド型で構成され、GC 追跡オーバーヘッドをゼロにします。
 /// </summary>
 /// <remarks>
-/// 指定された初期クリップ名およびキャラクター種別で <see cref="Animation"/> の新しいインスタンスを初期化します。
+/// 指定された初期クリップ識別子およびキャラクター種別で <see cref="Animation"/> の新しいインスタンスを初期化します。
 /// </remarks>
-public struct Animation(string defaultClip = "Idle", CharacterType characterType = CharacterType.Cat, bool isPlaying = true)
+public struct Animation(StringId defaultClip = default, CharacterType characterType = CharacterType.Cat, bool isPlaying = true)
 {
+    /// <summary>デフォルトのアニメーションクリップ識別子 ("Idle")</summary>
+    public static readonly StringId DefaultClip = "Idle";
+
     /// <summary>再生対象のキャラクター種別</summary>
     public CharacterType CharacterType = characterType;
 
-    /// <summary>再生中のアニメーションクリップ名</summary>
-    public string CurrentClip = defaultClip;
+    /// <summary>再生中のアニメーションクリップ識別子</summary>
+    public StringId CurrentClip = defaultClip.IsEmpty ? DefaultClip : defaultClip;
 
     /// <summary>現在のフレームインデックス</summary>
     public int CurrentFrameIndex = 0;
@@ -32,12 +36,12 @@ public struct Animation(string defaultClip = "Idle", CharacterType characterType
     /// <summary>
     /// クリップを変更してアニメーションを再生します。異なるクリップが指定された場合は再生時間を 0 にリセットします。
     /// </summary>
-    /// <param name="clipName">再生するクリップ名</param>
-    public void Play(string clipName)
+    /// <param name="clipId">再生するクリップ識別子</param>
+    public void Play(StringId clipId)
     {
-        if (!string.Equals(CurrentClip, clipName, StringComparison.OrdinalIgnoreCase))
+        if (CurrentClip != clipId)
         {
-            CurrentClip = clipName;
+            CurrentClip = clipId;
             Timer = 0.0f;
             CurrentFrameIndex = 0;
             IsFinished = false;

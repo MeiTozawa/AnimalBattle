@@ -16,6 +16,11 @@ namespace AnimalBattle.Characters;
 /// </summary>
 public sealed class Player
 {
+    private static readonly StringId ClipIdle = "Idle";
+    private static readonly StringId ClipRun = "Run";
+    private static readonly StringId ClipJump = "Jump";
+    private static readonly StringId ClipFall = "Fall";
+
     private readonly Entity _entity;
     private readonly Hurtbox _hurtbox;
     private Animation _animation;
@@ -243,7 +248,7 @@ public sealed class Player
         _scaleX = pCfg.ScaleX;
         _scaleY = pCfg.ScaleY;
 
-        _animation.Play("Idle");
+        _animation.Play(ClipIdle);
         _sprite.FlipX = false;
         _sprite.IsVisible = true;
         UpdateAnimation(0.0f);
@@ -388,20 +393,20 @@ public sealed class Player
         {
             if (_vy < 0.0f)
             {
-                _animation.Play("Jump");
+                _animation.Play(ClipJump);
             }
             else
             {
-                _animation.Play("Fall");
+                _animation.Play(ClipFall);
             }
         }
         else if (Math.Abs(_vx) > 0.1f)
         {
-            _animation.Play("Run");
+            _animation.Play(ClipRun);
         }
         else
         {
-            _animation.Play("Idle");
+            _animation.Play(ClipIdle);
         }
 
         if (_animation.IsPlaying)

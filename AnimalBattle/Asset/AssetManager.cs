@@ -135,18 +135,18 @@ public sealed class AssetManager : IDisposable
     }
 
     /// <summary>
-    /// 指定されたキャラクター種別およびクリップ名に対応するグラフィックハンドルを取得します。
+    /// 指定されたキャラクター種別およびクリップ識別子に対応するグラフィックハンドルを取得します。
     /// クリップ専用のスプライトシートが指定されている場合はそれを返し、未指定の場合はキャラクター標準スプライトを返します。
     /// </summary>
     /// <param name="type">キャラクター種別</param>
-    /// <param name="clipName">再生クリップ名（null の場合は標準スプライトハンドル）</param>
+    /// <param name="clipId">再生クリップ識別子（Empty の場合は標準スプライトハンドル）</param>
     /// <returns>グラフィックハンドルを含む <see cref="ErrorOr.ErrorOr{T}"/></returns>
-    public static ErrorOr.ErrorOr<int> GetCharacterSpriteHandle(CharacterType type = CharacterType.Cat, string? clipName = null)
+    public static ErrorOr.ErrorOr<int> GetCharacterSpriteHandle(CharacterType type = CharacterType.Cat, StringId clipId = default)
     {
-        if (!string.IsNullOrWhiteSpace(clipName) &&
+        if (clipId != StringId.Empty &&
             _characterConfigs.TryGetValue(type, out AnimationConfig? config))
         {
-            AnimationClipConfig? clip = config.Clips.Find(c => string.Equals(c.Name, clipName, StringComparison.OrdinalIgnoreCase));
+            AnimationClipConfig? clip = config.FindClip(clipId);
             if (clip != null && !string.IsNullOrWhiteSpace(clip.SpritePath))
             {
                 ErrorOr.ErrorOr<int> clipResult = GetTexture(clip.SpritePath);
@@ -181,17 +181,17 @@ public sealed class AssetManager : IDisposable
     }
 
     /// <summary>
-    /// アニメーションクリップ名と再生経過時間から、スプライトシート上の切り出し矩形 (UV SrcRect) を計算します。
+    /// アニメーションクリップ識別子と再生経過時間から、スプライトシート上の切り出し矩形 (UV SrcRect) を O(1) で計算します。
     /// </summary>
     /// <param name="config">アニメーション設定</param>
-    /// <param name="clipName">再生対象クリップ名</param>
+    /// <param name="clipId">再生対象クリップ識別子</param>
     /// <param name="animTimer">再生経過時間（秒）</param>
     /// <param name="isFinished">非ループ再生が完了したかどうかの出力</param>
     /// <returns>スプライトシート切り出し領域</returns>
-    public static Rect CalculateSrcRect(AnimationConfig config, string clipName, float animTimer, out bool isFinished)
+    public static Rect CalculateSrcRect(AnimationConfig config, StringId clipId, float animTimer, out bool isFinished)
     {
         isFinished = false;
-        AnimationClipConfig? clip = config.Clips.Find(c => string.Equals(c.Name, clipName, StringComparison.OrdinalIgnoreCase));
+        AnimationClipConfig? clip = config.FindClip(clipId);
         if (clip == null)
         {
             return new Rect(0, 0, config.CellWidth, config.CellHeight);
