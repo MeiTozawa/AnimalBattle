@@ -55,7 +55,7 @@ public enum PhaseTransitionApplyMask
     /// <summary>移動停止です。</summary>
     MovementStop = 2,
 
-    /// <summary>Boss 弾整理です。</summary>
+    /// <summary>Boss 弾整理です。（※Phase 遷移時は弾幕を維持するため通常適用されません）</summary>
     BulletCleanup = 4,
 
     /// <summary>演出です。</summary>

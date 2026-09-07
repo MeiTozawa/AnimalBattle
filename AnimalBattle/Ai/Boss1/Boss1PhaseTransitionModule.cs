@@ -21,7 +21,7 @@ public sealed class Boss1PhaseTransitionModule(IBoss1Configuration configuration
     /// <inheritdoc />
     public BossState HandledState => Boss1State.PhaseTransition;
     /// <inheritdoc />
-    public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "MovementPort", "AttackPort", "EffectPort"];
+    public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss1Configuration", "MovementPort", "EffectPort"];
 
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)
@@ -91,18 +91,6 @@ public sealed class Boss1PhaseTransitionModule(IBoss1Configuration configuration
             else
             {
                 RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.MovementStop, "PhaseTransition の移動停止に失敗しました。");
-            }
-        }
-
-        if (!data.AppliedMask.HasFlag(PhaseTransitionApplyMask.BulletCleanup))
-        {
-            if (!context.Attack.ClearBossBullets().IsError)
-            {
-                data.AppliedMask |= PhaseTransitionApplyMask.BulletCleanup;
-            }
-            else
-            {
-                RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.BulletCleanup, "PhaseTransition の弾整理に失敗しました。");
             }
         }
 

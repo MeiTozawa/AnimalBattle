@@ -5,7 +5,7 @@ using AnimalBattle.Components;
 namespace AnimalBattle.Ai.Boss2;
 
 /// <summary>
-/// Boss2 の PhaseTransition と無敵・停止・弾整理・演出を項目別に処理する State_Module です。
+/// Boss2 の PhaseTransition と無敵・停止・演出を項目別に処理する State_Module です。
 /// </summary>
 /// <param name="configuration">Boss2 設定境界。</param>
 /// <param name="state">Boss2 共有実行時状態。</param>
@@ -18,7 +18,7 @@ public sealed class Boss2PhaseTransitionModule(IBoss2Configuration configuration
     /// <inheritdoc />
     public BossState HandledState => Boss2State.PhaseTransition;
     /// <inheritdoc />
-    public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "AttackPort", "EffectPort"];
+    public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "EffectPort"];
 
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)
@@ -73,18 +73,6 @@ public sealed class Boss2PhaseTransitionModule(IBoss2Configuration configuration
             else
             {
                 RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.MovementStop, "PhaseTransition の移動停止に失敗しました。");
-            }
-        }
-
-        if (!data.AppliedMask.HasFlag(PhaseTransitionApplyMask.BulletCleanup))
-        {
-            if (!context.Attack.ClearBossBullets().IsError)
-            {
-                data.AppliedMask |= PhaseTransitionApplyMask.BulletCleanup;
-            }
-            else
-            {
-                RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.BulletCleanup, "PhaseTransition の弾整理に失敗しました。");
             }
         }
 

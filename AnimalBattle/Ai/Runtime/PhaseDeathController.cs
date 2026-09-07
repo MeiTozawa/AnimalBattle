@@ -132,13 +132,11 @@ public static class PhaseDeathController
         ref BossAiData ai,
         ref BossPhaseTransitionData transition,
         IMovementPort movement,
-        IAttackPort attack,
         IEffectPort effect,
         float effectX,
         float effectY)
     {
         ArgumentNullException.ThrowIfNull(movement);
-        ArgumentNullException.ThrowIfNull(attack);
         ArgumentNullException.ThrowIfNull(effect);
 
         PhaseTransitionApplyMask applied = transition.AppliedMask;
@@ -150,12 +148,6 @@ public static class PhaseDeathController
         {
             if (!movement.Stop().IsError) applied |= PhaseTransitionApplyMask.MovementStop;
             else failed |= PhaseTransitionApplyMask.MovementStop;
-        }
-
-        if (!applied.HasFlag(PhaseTransitionApplyMask.BulletCleanup))
-        {
-            if (!attack.ClearBossBullets().IsError) applied |= PhaseTransitionApplyMask.BulletCleanup;
-            else failed |= PhaseTransitionApplyMask.BulletCleanup;
         }
 
         if (!applied.HasFlag(PhaseTransitionApplyMask.Effect))
