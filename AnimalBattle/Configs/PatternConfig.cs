@@ -25,6 +25,9 @@ public sealed class DiveRamConfig
     /// <summary>後隙（着地硬直・反撃好機）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.65f;
 
+    /// <summary>技能の有効射程距離（ピクセル）</summary>
+    public float EffectiveRange { get; set; } = 650.0f;
+
     /// <summary>突進速度倍率</summary>
     public float DashSpeed { get; set; } = 960.0f;
 
@@ -73,6 +76,9 @@ public sealed class Aimed3ShotConfig
     /// <summary>後隙（リカバリー）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.50f;
 
+    /// <summary>技能の有効射程距離（ピクセル）</summary>
+    public float EffectiveRange { get; set; } = 600.0f;
+
     /// <summary>発射間隔（秒）</summary>
     public float Interval { get; set; } = 0.45f;
 
@@ -118,6 +124,9 @@ public sealed class RingBurstConfig
     /// <summary>後隙（リカバリー）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.70f;
 
+    /// <summary>技能の有効射程距離（ピクセル）</summary>
+    public float EffectiveRange { get; set; } = 700.0f;
+
     /// <summary>発射間隔（秒）</summary>
     public float Interval { get; set; } = 0.50f;
 
@@ -162,6 +171,9 @@ public sealed class DoubleSpiralConfig
 
     /// <summary>後隙（リカバリー）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.60f;
+
+    /// <summary>技能の有効射程距離（ピクセル）</summary>
+    public float EffectiveRange { get; set; } = 800.0f;
 
     /// <summary>弾速</summary>
     public float BulletSpeed { get; set; } = 288.0f;
@@ -211,6 +223,9 @@ public sealed class RainDropConfig
     /// <summary>後隙（リカバリー）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.80f;
 
+    /// <summary>技能の有効射程距離（ピクセル）</summary>
+    public float EffectiveRange { get; set; } = 750.0f;
+
     /// <summary>弾速</summary>
     public float BulletSpeed { get; set; } = 312.0f;
 
@@ -256,6 +271,9 @@ public sealed class CrossChaosConfig
     /// <summary>後隙（リカバリー）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.50f;
 
+    /// <summary>技能の有効射程距離（ピクセル）</summary>
+    public float EffectiveRange { get; set; } = 850.0f;
+
     /// <summary>弾速</summary>
     public float BulletSpeed { get; set; } = 312.0f;
 
@@ -298,6 +316,9 @@ public sealed class FastSniperConfig
     /// <summary>後隙（リカバリー）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.60f;
 
+    /// <summary>技能の有効射程距離（ピクセル）</summary>
+    public float EffectiveRange { get; set; } = 900.0f;
+
     /// <summary>発射間隔（秒）</summary>
     public float Interval { get; set; } = 0.30f;
 
@@ -336,6 +357,9 @@ public sealed class HeavySlashConfig
 
     /// <summary>後隙（振り抜き硬直）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.55f;
+
+    /// <summary>基本冷却時間（秒）</summary>
+    public float DefaultCooldown { get; set; } = 2.0f;
 
     /// <summary>突進速度</summary>
     public float DashSpeed { get; set; } = 360.0f;
@@ -376,6 +400,12 @@ public sealed class GroundStompConfig
     /// <summary>後隙（硬直）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.60f;
 
+    /// <summary>基本冷却時間（秒）</summary>
+    public float DefaultCooldown { get; set; } = 5.0f;
+
+    /// <summary>判定生成オフセット Y（ピクセル）</summary>
+    public float HitboxOffsetY { get; set; } = 35.0f;
+
     /// <summary>衝撃波水平推進速度</summary>
     public float ShockwaveSpeed { get; set; } = 420.0f;
 
@@ -411,6 +441,9 @@ public sealed class LeapSmashConfig
 
     /// <summary>後隙（着地硬直）時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.70f;
+
+    /// <summary>基本冷却時間（秒）</summary>
+    public float DefaultCooldown { get; set; } = 6.0f;
 
     /// <summary>跳躍初速</summary>
     public float JumpForce { get; set; } = 680.0f;
@@ -465,6 +498,12 @@ public sealed class DoubleCleaveConfig
     /// <summary>後隙時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.50f;
 
+    /// <summary>基本冷却時間（秒）</summary>
+    public float DefaultCooldown { get; set; } = 3.0f;
+
+    /// <summary>2 回目の斬撃追加前方オフセット X（ピクセル）</summary>
+    public float SecondSlashOffsetX { get; set; } = 15.0f;
+
     /// <summary>前進突進速度</summary>
     public float DashSpeed { get; set; } = 420.0f;
 
@@ -504,6 +543,9 @@ public sealed class FrenzyChargeConfig
     /// <summary>壁衝突後の後隙硬直時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.75f;
 
+    /// <summary>基本冷却時間（秒）</summary>
+    public float DefaultCooldown { get; set; } = 7.0f;
+
     /// <summary>全画面高速突進速度</summary>
     public float ChargeSpeed { get; set; } = 620.0f;
 
@@ -542,6 +584,9 @@ public sealed class EarthquakeRoarConfig
 
     /// <summary>後隙時間（秒）</summary>
     public float RecoveryTime { get; set; } = 0.90f;
+
+    /// <summary>基本冷却時間（秒）</summary>
+    public float DefaultCooldown { get; set; } = 10.0f;
 
     /// <summary>落石投下間隔（秒）</summary>
     public float Interval { get; set; } = 0.25f;

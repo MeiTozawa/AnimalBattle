@@ -16,6 +16,9 @@ public sealed class Boss2PhaseConfig
     /// <summary>攻撃前の待機巡航時間（秒）</summary>
     public float IdleDuration { get; set; } = 0.8f;
 
+    /// <summary>このフェーズでの巡回移動時間（秒）</summary>
+    public float PatrolDuration { get; set; } = 2.0f;
+
     /// <summary>このフェーズでの地面移動速度</summary>
     public float MoveSpeed { get; set; } = 160.0f;
 
@@ -27,6 +30,9 @@ public sealed class Boss2PhaseConfig
 
     /// <summary>フェーズ突入時の無敵・吼叫演出時間（秒）</summary>
     public float TransitionDuration { get; set; } = 1.0f;
+
+    /// <summary>プレイヤー追跡時に遠隔技へ移行するまでのタイムアウト時間（秒）</summary>
+    public float ChaseTimeout { get; set; } = 3.0f;
 
     /// <summary>このフェーズで実行される技能名リスト（旧仕様との互換用）</summary>
     public List<string> Skills { get; set; } = [];
@@ -151,8 +157,62 @@ public sealed class Boss2Config
     /// <summary>巡回パトロール半径</summary>
     public float PatrolRadius { get; set; } = 250.0f;
 
+    /// <summary>プレイヤー追跡時に遠隔技へ移行するまでの基本タイムアウト時間（秒）</summary>
+    public float ChaseTimeout { get; set; } = 3.0f;
+
     /// <summary>被弾時ホワイトフラッシュ持続時間（秒）</summary>
     public float HitFlashDuration { get; set; } = 0.08f;
+
+    /// <summary>最大落下速度</summary>
+    public float MaxFallSpeed { get; set; } = 850.0f;
+
+    /// <summary>跳躍上昇最大時間（秒）</summary>
+    public float MaxAscentDuration { get; set; } = 0.80f;
+
+    /// <summary>着地硬直時間（秒）</summary>
+    public float LandingRecoveryDuration { get; set; } = 0.10f;
+
+    /// <summary>跳躍離陸点判定距離（ピクセル）</summary>
+    public float TakeoffDistance { get; set; } = 50.0f;
+
+    /// <summary>離陸地点への移動タイムアウト時間（秒）</summary>
+    public float MoveToTakeoffTimeout { get; set; } = 1.5f;
+
+    /// <summary>離陸横速度閾値（ピクセル/秒）</summary>
+    public float TakeoffVelocityThreshold { get; set; } = 5.0f;
+
+    /// <summary>移動判定の最小位置差分閾値（ピクセル）</summary>
+    public float MoveThreshold { get; set; } = 6.0f;
+
+    /// <summary>跳躍クールダウン時間（秒）</summary>
+    public float JumpCooldownDuration { get; set; } = 1.0f;
+
+    /// <summary>壁激突時のスタン気絶時間（秒）</summary>
+    public float WallCrashStunDuration { get; set; } = 1.2f;
+
+    /// <summary>同一足場と判定する垂直許容誤差（ピクセル）</summary>
+    public float SamePlatformToleranceY { get; set; } = 60.0f;
+
+    /// <summary>プレイヤー空中浮遊判定の垂直速度閾値（ピクセル/秒）</summary>
+    public float AirborneVelocityThreshold { get; set; } = 15.0f;
+
+    /// <summary>プレイヤー空中判定の相対高度差閾値（ピクセル）</summary>
+    public float AirborneHeightThreshold { get; set; } = 50.0f;
+
+    /// <summary>近接攻撃発動の横方向判定距離（ピクセル）</summary>
+    public float MeleeTriggerRangeX { get; set; } = 175.0f;
+
+    /// <summary>近接攻撃発動の縦方向判定距离（ピクセル）</summary>
+    public float MeleeTriggerRangeY { get; set; } = 75.0f;
+
+    /// <summary>カイト対策で遠距離技（吼叫）を優先する直線距離閾値（ピクセル）</summary>
+    public float AntiKitingRangedDistance { get; set; } = 450.0f;
+
+    /// <summary>カイト対策で中距離技（泰山圧頂）を優先する直線距離閾値（ピクセル）</summary>
+    public float AntiKitingMidDistance { get; set; } = 120.0f;
+
+    /// <summary>カイト対策で強制技発動を行う追跡タイムアウト倍率</summary>
+    public float AntiKitingEnforceMultiplier { get; set; } = 1.5f;
 
     /// <summary>Phase 1 状態機設定</summary>
     public Boss2PhaseConfig Phase1 { get; set; } = new()
@@ -163,6 +223,7 @@ public sealed class Boss2Config
         JumpForce = 640.0f,
         TelegraphShakeIntensity = 6.0f,
         TransitionDuration = 1.0f,
+        ChaseTimeout = 3.0f,
         Skills = ["HeavySlash", "GroundStomp", "HeavySlash", "LeapSmash"]
     };
 
@@ -175,6 +236,7 @@ public sealed class Boss2Config
         JumpForce = 680.0f,
         TelegraphShakeIntensity = 10.0f,
         TransitionDuration = 1.0f,
+        ChaseTimeout = 3.0f,
         Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "DoubleCleave"]
     };
 
@@ -187,6 +249,7 @@ public sealed class Boss2Config
         JumpForce = 720.0f,
         TelegraphShakeIntensity = 14.0f,
         TransitionDuration = 1.2f,
+        ChaseTimeout = 2.5f,
         Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash"]
     };
 

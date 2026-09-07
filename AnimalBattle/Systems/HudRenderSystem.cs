@@ -216,7 +216,10 @@ public static class HudRenderSystem
         GameEngine.DrawString(barX1, barY1 - hpCfg.HeaderOffsetY, bossTitle, hpCfg.TitleColor);
         GameEngine.DrawString(barX2 - 170, barY1 - hpCfg.HeaderOffsetY, hpText, hpCfg.HpTextColor);
 
-        GameEngine.DrawString(barX1 + hpCfg.StateBadgeOffsetX, barY1 - hpCfg.HeaderOffsetY, $"{stateName} ({stateTimer:F1}s/{stateDuration:F1}s)", stateBadgeColor);
+        string timerText = stateDuration > 0.0f
+            ? $"{stateTimer:F1}s/{stateDuration:F1}s"
+            : $"{stateTimer:F1}s";
+        GameEngine.DrawString(barX1 + hpCfg.StateBadgeOffsetX, barY1 - hpCfg.HeaderOffsetY, $"{stateName} ({timerText})", stateBadgeColor);
 
         // Boss HP バー背景および枠線
         GameEngine.DrawBox(barX1 - hpCfg.BgPadding, barY1 - hpCfg.BgPadding, barX2 + hpCfg.BgPadding, barY2 + hpCfg.BgPadding, hpCfg.BgColor, true);

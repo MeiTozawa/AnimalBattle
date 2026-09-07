@@ -28,20 +28,46 @@ CollisionHeight = 90.0
 SlashSpawnOffsetX = 80.0
 SlashSpawnOffsetY = -10.0
 
-# Ground Physics & Movement
+# 地形物理・基本移動
 MoveSpeed = 160.0
 JumpForce = 640.0
 Gravity = 980.0
 PatrolRadius = 250.0
+ChaseTimeout = 3.0
 
-# Phase 1 State Machine Configuration
+# 足場移動・跳躍物理パラメータ
+MaxFallSpeed = 850.0
+MaxAscentDuration = 0.80
+LandingRecoveryDuration = 0.10
+TakeoffDistance = 50.0
+MoveToTakeoffTimeout = 1.5
+TakeoffVelocityThreshold = 5.0
+MoveThreshold = 6.0
+JumpCooldownDuration = 1.0
+
+# 戦闘・スタン・判定パラメータ
+WallCrashStunDuration = 1.2
+SamePlatformToleranceY = 60.0
+AirborneVelocityThreshold = 15.0
+AirborneHeightThreshold = 50.0
+MeleeTriggerRangeX = 175.0
+MeleeTriggerRangeY = 75.0
+
+# カイト（遠距離逃走）対策パラメータ
+AntiKitingRangedDistance = 450.0
+AntiKitingMidDistance = 120.0
+AntiKitingEnforceMultiplier = 1.5
+
+# Phase 1 状態機械設定
 [Phase1]
 HpThreshold = 1.0
 IdleDuration = 0.8
+PatrolDuration = 2.0
 MoveSpeed = 160.0
 JumpForce = 640.0
 TelegraphShakeIntensity = 6.0
 TransitionDuration = 1.0
+ChaseTimeout = 3.0
 Skills = ["HeavySlash", "GroundStomp", "HeavySlash", "LeapSmash"]
 
 [[Phase1.Rules]]
@@ -68,14 +94,23 @@ MaxDistance = 600.0
 Weight = 80.0
 PreferAirborneBonus = 1.5
 
-# Phase 2 State Machine Configuration
+[[Phase1.Rules]]
+Skill = "EarthquakeRoar"
+Cooldown = 10.0
+MinDistance = 400.0
+MaxDistance = 1200.0
+Weight = 0.0
+
+# Phase 2 状態機械設定
 [Phase2]
 HpThreshold = 0.66
 IdleDuration = 0.5
+PatrolDuration = 1.5
 MoveSpeed = 220.0
 JumpForce = 680.0
 TelegraphShakeIntensity = 10.0
 TransitionDuration = 1.0
+ChaseTimeout = 3.0
 Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "DoubleCleave"]
 
 [[Phase2.Rules]]
@@ -102,14 +137,23 @@ MaxDistance = 650.0
 Weight = 90.0
 PreferAirborneBonus = 1.8
 
-# Phase 3 State Machine Configuration
+[[Phase2.Rules]]
+Skill = "EarthquakeRoar"
+Cooldown = 9.0
+MinDistance = 400.0
+MaxDistance = 1200.0
+Weight = 0.0
+
+# Phase 3 状態機械設定
 [Phase3]
 HpThreshold = 0.33
 IdleDuration = 0.3
+PatrolDuration = 1.0
 MoveSpeed = 280.0
 JumpForce = 720.0
 TelegraphShakeIntensity = 14.0
 TransitionDuration = 1.2
+ChaseTimeout = 2.5
 Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash"]
 
 [[Phase3.Rules]]

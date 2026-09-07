@@ -1,5 +1,6 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Configs;
 
 namespace AnimalBattle.Ai.Boss2;
 
@@ -34,11 +35,10 @@ public sealed class Boss2WallCrashStunModule(Boss2BehaviorState state) : IBossSt
 
         context.Movement.Stop();
         _state.StateElapsed += context.DeltaTime;
-        if (_state.StateElapsed >= 1.2f)
+        if (_state.StateElapsed >= ConfigManager.Boss2.WallCrashStunDuration)
         {
-            _state.RequestTransition(Boss2State.Recovery, new TransitionReason(ReasonKind.TimerElapsed, skill: _state.CurrentSkill));
+            _state.RequestTransition(Boss2State.Recovery, new(ReasonKind.TimerElapsed, skill: _state.CurrentSkill));
         }
-
     }
 
     /// <inheritdoc />

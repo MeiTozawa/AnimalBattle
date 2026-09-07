@@ -283,6 +283,7 @@ public partial class BattleScene : IDisposable
             _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
             _ecsWorld.Set(_tileMap);
             CurrentTileMap = _tileMap;
+            AnimalBattle.Ai.Boss2.Boss2PatrolChaseModule.NavGraphProvider = () => CurrentTileMap?.NavGraph;
 
             _tileMap.BuildPlatformColliders(_ecsWorld);
             Console.WriteLine("[BattleScene] TileMap および TileSet プラットフォームコライダーが正常に初期化されました。");
@@ -376,6 +377,7 @@ public partial class BattleScene : IDisposable
             _effectsQuery.Dispose();
             _platformQuery.Dispose();
             _ecsWorld.Dispose();
+            AnimalBattle.Ai.Boss2.Boss2PatrolChaseModule.NavGraphProvider = null;
             if (Current == this)
             {
                 Current = null;

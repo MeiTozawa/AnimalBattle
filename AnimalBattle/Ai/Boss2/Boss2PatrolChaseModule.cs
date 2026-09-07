@@ -2,9 +2,7 @@ using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Configs;
 using AnimalBattle.Core.Physics;
-using AnimalBattle.Maps;
 using AnimalBattle.Maps.Navigation;
-using AnimalBattle.Scenes;
 
 namespace AnimalBattle.Ai.Boss2;
 
@@ -16,6 +14,11 @@ namespace AnimalBattle.Ai.Boss2;
 public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Boss2BehaviorState state)
     : IBossStateModule, IStateModuleDependencyProvider
 {
+    /// <summary>
+    /// ナビゲーショングラフを取得するためのプロバイダ（テストまたは外部注入用）。
+    /// </summary>
+    public static Func<PlatformNavigationGraph?>? NavGraphProvider { get; set; }
+
     private readonly IBoss2Configuration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     private readonly Boss2BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
 
@@ -52,14 +55,14 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
         float deltaX = context.PlayerObservation.PositionX - _state.CurrentPosition.X;
         float deltaY = context.PlayerObservation.PositionY - _state.CurrentPosition.Y;
 
-        TileMap? tileMap = BattleScene.CurrentTileMap;
+        PlatformNavigationGraph? navGraph = NavGraphProvider?.Invoke();
         NavPlan? plan = null;
 
-        if (tileMap is not null && tileMap.NavGraph.Nodes.Count > 0)
+        if (navGraph is not null && navGraph.Nodes.Count > 0)
         {
             float bossFootY = _state.CurrentPosition.Y + (ConfigManager.Boss2.CollisionHeight / 2.0f);
             float playerFootY = context.PlayerObservation.PositionY + (ConfigManager.Player.HitboxHeight / 2.0f);
-            plan = tileMap.NavGraph.FindPath(
+            plan = navGraph.FindPath(
                 _state.CurrentPosition.X,
                 bossFootY,
                 context.PlayerObservation.PositionX,
@@ -79,7 +82,7 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
                         float jumpVx = plan.RequiredVx;
                         _state.FacingRight = jumpVx >= 0.0f;
                         _state.IsGrounded = false;
-                        _state.JumpCooldown = 1.0f;
+                        _state.JumpCooldown = ConfigManager.Boss2.JumpCooldownDuration;
                         _state.CurrentVelocity = new(jumpVx, jumpVy);
                         context.Movement.SetVelocity(jumpVx, jumpVy);
                         _state.RequestTransition(Boss2State.PlatformTraverse, new(ReasonKind.PlayerObservation));
@@ -97,7 +100,7 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
                 case NavStatus.ExecuteDrop:
                 case NavStatus.InAir:
                     float takeoffVx = plan.RequiredVx;
-                    if (MathF.Abs(takeoffVx) > 5.0f)
+                    if (MathF.Abs(takeoffVx) > ConfigManager.Boss2.TakeoffVelocityThreshold)
                     {
                         _state.FacingRight = takeoffVx > 0.0f;
                     }
@@ -107,11 +110,11 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
 
                 case NavStatus.DirectWalk:
                 default:
-                    if (MathF.Abs(deltaX) > 6.0f)
+                    if (MathF.Abs(deltaX) > ConfigManager.Boss2.MoveThreshold)
                     {
                         _state.FacingRight = deltaX > 0.0f;
                     }
-                    float directVx = MathF.Abs(deltaX) > 6.0f ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
+                    float directVx = MathF.Abs(deltaX) > ConfigManager.Boss2.MoveThreshold ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
                     _state.CurrentVelocity = new(directVx, _state.CurrentVelocity.Y);
                     context.Movement.SetVelocity(directVx, _state.CurrentVelocity.Y);
                     break;
@@ -119,22 +122,24 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
         }
         else
         {
-            if (MathF.Abs(deltaX) > 6.0f)
+            if (MathF.Abs(deltaX) > ConfigManager.Boss2.MoveThreshold)
             {
                 _state.FacingRight = deltaX > 0.0f;
             }
-            float velocityX = MathF.Abs(deltaX) > 6.0f ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
+            float velocityX = MathF.Abs(deltaX) > ConfigManager.Boss2.MoveThreshold ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
             _state.CurrentVelocity = new(velocityX, _state.CurrentVelocity.Y);
             context.Movement.SetVelocity(velocityX, _state.CurrentVelocity.Y);
         }
 
+        _state.StateElapsed += context.DeltaTime;
         _state.CooldownTracker.Update(context.DeltaTime);
 
         if (settings.Rules.Count > 0)
         {
             float distance = MathF.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
-            bool isSamePlatform = MathF.Abs(deltaY) <= 60.0f;
-            bool isPlayerAirborne = MathF.Abs(context.PlayerObservation.VelocityY) > 15.0f || deltaY < -50.0f;
+            bool isSamePlatform = MathF.Abs(deltaY) <= ConfigManager.Boss2.SamePlatformToleranceY;
+            bool isPlayerAirborne = MathF.Abs(context.PlayerObservation.VelocityY) > ConfigManager.Boss2.AirborneVelocityThreshold
+                || deltaY < -ConfigManager.Boss2.AirborneHeightThreshold;
             bool isPlayerGrounded = !isPlayerAirborne;
 
             AttackDecisionContext decisionContext = new(
@@ -148,26 +153,32 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
                 _state.CooldownTracker,
                 in decisionContext);
 
-
             if (chosenAttack != BossSkill.None)
             {
-                // 選択された技能の冷却時間をトリガー
-                for (int index = 0; index < settings.Rules.Count; index++)
-                {
-                    AttackDecisionRule rule = settings.Rules[index];
-                    if (rule.Skill == chosenAttack)
-                    {
-                        _state.CooldownTracker.Trigger(chosenAttack, rule.Cooldown);
-                        break;
-                    }
-                }
-
+                float cooldown = GetSkillCooldown(chosenAttack, settings);
+                _state.CooldownTracker.Trigger(chosenAttack, cooldown);
+                _state.StateElapsed = 0.0f;
                 ExecuteAttack(chosenAttack, ref context, in invocation);
                 return;
             }
+
+            // プレイヤーが長距離・別足場で逃げ続けている場合（追跡タイムアウト）、遠隔・急襲技能を発動
+            if (_state.StateElapsed >= settings.ChaseTimeout)
+            {
+                BossSkill antiKiteSkill = SelectAntiKitingSkill(distance, isSamePlatform, settings);
+                if (antiKiteSkill != BossSkill.None)
+                {
+                    float cooldown = GetSkillCooldown(antiKiteSkill, settings);
+                    _state.CooldownTracker.Trigger(antiKiteSkill, cooldown);
+                    _state.StateElapsed = 0.0f;
+                    ExecuteAttack(antiKiteSkill, ref context, in invocation);
+                    return;
+                }
+            }
         }
-        else if (MathF.Abs(deltaX) <= 175.0f && MathF.Abs(deltaY) <= 75.0f)
+        else if (MathF.Abs(deltaX) <= ConfigManager.Boss2.MeleeTriggerRangeX && MathF.Abs(deltaY) <= ConfigManager.Boss2.MeleeTriggerRangeY)
         {
+            _state.StateElapsed = 0.0f;
             SelectNextLegacyAttack(ref context, in invocation);
         }
     }
@@ -178,6 +189,90 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
         _state.StateElapsed = 0.0f;
     }
 
+    /// <summary>
+    /// 長時間プレイヤーを捕捉できない場合に、距離や足場状況に応じて適切な遠隔または急襲技能を選択します。
+    /// </summary>
+    /// <param name="distance">プレイヤーとの直線距離。</param>
+    /// <param name="isSamePlatform">同一足場上にいるかどうか。</param>
+    /// <param name="settings">現在のフェーズ設定。</param>
+    /// <returns>発動すべき技能。発動可能な技能がない場合は BossSkill.None。</returns>
+    private BossSkill SelectAntiKitingSkill(float distance, bool isSamePlatform, in Boss2PhaseSettings settings)
+    {
+        // 遠距離または別足場の場合：全画面落石（EarthquakeRoar）を最優先、次点に泰山圧頂（LeapSmash）
+        if (!isSamePlatform || distance > ConfigManager.Boss2.AntiKitingRangedDistance)
+        {
+            if (_state.CooldownTracker.IsReady(BossSkill.EarthquakeRoar))
+            {
+                return BossSkill.EarthquakeRoar;
+            }
+
+            if (_state.CooldownTracker.IsReady(BossSkill.LeapSmash))
+            {
+                return BossSkill.LeapSmash;
+            }
+        }
+        else if (distance >= ConfigManager.Boss2.AntiKitingMidDistance)
+        {
+            // 中距離の場合：泰山圧頂（LeapSmash）で急接近・破片弾幕を最優先、次点に全画面落石
+            if (_state.CooldownTracker.IsReady(BossSkill.LeapSmash))
+            {
+                return BossSkill.LeapSmash;
+            }
+
+            if (_state.CooldownTracker.IsReady(BossSkill.EarthquakeRoar))
+            {
+                return BossSkill.EarthquakeRoar;
+            }
+        }
+        else
+        {
+            // 近距離だが通常攻撃が不発（クールダウン等）：利用可能な技能を試行
+            if (_state.CooldownTracker.IsReady(BossSkill.GroundStomp))
+            {
+                return BossSkill.GroundStomp;
+            }
+
+            if (_state.CooldownTracker.IsReady(BossSkill.EarthquakeRoar))
+            {
+                return BossSkill.EarthquakeRoar;
+            }
+        }
+
+        // タイムアウト時間を大幅に超過しても両方クールダウン中の場合の強制発動セーフガード
+        if (_state.StateElapsed >= settings.ChaseTimeout * ConfigManager.Boss2.AntiKitingEnforceMultiplier)
+        {
+            return (!isSamePlatform || distance > ConfigManager.Boss2.AntiKitingRangedDistance)
+                ? BossSkill.EarthquakeRoar
+                : BossSkill.LeapSmash;
+        }
+
+        return BossSkill.None;
+    }
+
+    private static float GetSkillCooldown(BossSkill skill, in Boss2PhaseSettings settings)
+    {
+        for (int index = 0; index < settings.Rules.Count; index++)
+        {
+            AttackDecisionRule rule = settings.Rules[index];
+            if (rule.Skill == skill && rule.Cooldown > 0.0f)
+            {
+                return rule.Cooldown;
+            }
+        }
+
+        PatternConfig pattern = ConfigManager.Pattern;
+        return skill switch
+        {
+            BossSkill.EarthquakeRoar => pattern.EarthquakeRoar.DefaultCooldown,
+            BossSkill.LeapSmash => pattern.LeapSmash.DefaultCooldown,
+            BossSkill.GroundStomp => pattern.GroundStomp.DefaultCooldown,
+            BossSkill.DoubleCleave => pattern.DoubleCleave.DefaultCooldown,
+            BossSkill.HeavySlash => pattern.HeavySlash.DefaultCooldown,
+            BossSkill.FrenzyCharge => pattern.FrenzyCharge.DefaultCooldown,
+            _ => 3.0f
+        };
+    }
+
     private void ExecuteAttack(BossSkill skill, ref StateContext context, in LifecycleInvocation invocation)
     {
         if (!Boss2ModuleSupport.GetPattern(_configuration, skill, in context, in invocation, out Boss2AttackPattern pattern))
@@ -185,7 +280,6 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
             _state.RequestTransition(Boss2State.Idle, new(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
-
 
         _state.CurrentSkill = pattern.Skill;
         _state.AttackStartPosition = _state.CurrentPosition;

@@ -7,93 +7,71 @@ using AnimalBattle.Configs;
 namespace AnimalBattle.Ai.Boss2;
 
 /// <summary>Boss2 の Phase ごとの検証済み移動・攻撃設定です。</summary>
-public readonly struct Boss2PhaseSettings
+/// <remarks>Boss2 Phase 設定を生成します。</remarks>
+public readonly struct Boss2PhaseSettings(
+    float idleDuration,
+    float moveSpeed,
+    float jumpForce,
+    float gravity,
+    float maxFallSpeed,
+    float patrolRadius,
+    float transitionDuration,
+    IReadOnlyList<BossSkill> skills,
+    IReadOnlyList<AttackDecisionRule>? rules = null,
+    float maxAscentDuration = 0.80f,
+    float landingRecoveryDuration = 0.10f,
+    float takeoffDistance = 50.0f,
+    float chaseTimeout = 3.0f)
 {
     /// <summary>攻撃開始までの待機時間です。</summary>
-    public float IdleDuration { get; }
+    public float IdleDuration { get; } = idleDuration;
     /// <summary>地上移動速度です。</summary>
-    public float MoveSpeed { get; }
+    public float MoveSpeed { get; } = moveSpeed;
     /// <summary>跳躍初速の絶対値です。</summary>
-    public float JumpForce { get; }
+    public float JumpForce { get; } = jumpForce;
     /// <summary>重力加速度です。</summary>
-    public float Gravity { get; }
+    public float Gravity { get; } = gravity;
     /// <summary>最大落下速度です。</summary>
-    public float MaxFallSpeed { get; }
+    public float MaxFallSpeed { get; } = maxFallSpeed;
     /// <summary>巡回範囲半径です。</summary>
-    public float PatrolRadius { get; }
+    public float PatrolRadius { get; } = patrolRadius;
     /// <summary>Phase 遷移演出時間です。</summary>
-    public float TransitionDuration { get; }
+    public float TransitionDuration { get; } = transitionDuration;
     /// <summary>この Phase で実行可能な攻撃順序です。</summary>
-    public IReadOnlyList<BossSkill> Skills { get; }
+    public IReadOnlyList<BossSkill> Skills { get; } = skills ?? [];
     /// <summary>この Phase の攻撃順です（互換用）。</summary>
     public IReadOnlyList<BossSkill> AttackOrder => Skills;
     /// <summary>この Phase で評価される攻撃意思決定ルールです。</summary>
-    public IReadOnlyList<AttackDecisionRule> Rules { get; }
+    public IReadOnlyList<AttackDecisionRule> Rules { get; } = rules ?? [];
     /// <summary>跳躍上昇の最大許容時間（秒）です。</summary>
-    public float MaxAscentDuration { get; }
+    public float MaxAscentDuration { get; } = maxAscentDuration;
     /// <summary>着地後の硬直待機時間（秒）です。</summary>
-    public float LandingRecoveryDuration { get; }
+    public float LandingRecoveryDuration { get; } = landingRecoveryDuration;
     /// <summary>足場間跳躍への移行を開始する水平距離閾値（px）です。</summary>
-    public float TakeoffDistance { get; }
-
-    /// <summary>Boss2 Phase 設定を生成します。</summary>
-    public Boss2PhaseSettings(
-        float idleDuration,
-        float moveSpeed,
-        float jumpForce,
-        float gravity,
-        float maxFallSpeed,
-        float patrolRadius,
-        float transitionDuration,
-        IReadOnlyList<BossSkill> skills,
-        IReadOnlyList<AttackDecisionRule>? rules = null,
-        float maxAscentDuration = 0.80f,
-        float landingRecoveryDuration = 0.10f,
-        float takeoffDistance = 50.0f)
-    {
-        IdleDuration = idleDuration;
-        MoveSpeed = moveSpeed;
-        JumpForce = jumpForce;
-        Gravity = gravity;
-        MaxFallSpeed = maxFallSpeed;
-        PatrolRadius = patrolRadius;
-        TransitionDuration = transitionDuration;
-        Skills = skills ?? [];
-        Rules = rules ?? [];
-        MaxAscentDuration = maxAscentDuration;
-        LandingRecoveryDuration = landingRecoveryDuration;
-        TakeoffDistance = takeoffDistance;
-    }
+    public float TakeoffDistance { get; } = takeoffDistance;
+    /// <summary>プレイヤー追跡時に遠隔技へ移行するまでのタイムアウト時間（秒）です。</summary>
+    public float ChaseTimeout { get; } = chaseTimeout;
 }
 
 /// <summary>Boss2 攻撃の定義と固有パラメータです。</summary>
-public sealed class Boss2AttackPattern
+/// <remarks>Boss2 攻撃 pattern を生成します。</remarks>
+public sealed class Boss2AttackPattern(
+    BossSkill skill,
+    AttackDefinition definition,
+    float moveSpeed = 0,
+    float secondHitDelay = 0,
+    float interval = 0)
 {
     /// <summary>技能識別子です。</summary>
-    public BossSkill Skill { get; }
+    public BossSkill Skill { get; } = skill;
     /// <summary>共通 Telegraph/Execute/Recovery 定義です。</summary>
-    public AttackDefinition Definition { get; }
+    public AttackDefinition Definition { get; } = definition;
     /// <summary>移動速度です。</summary>
-    public float MoveSpeed { get; }
+    public float MoveSpeed { get; } = moveSpeed;
     /// <summary>二段目判定の発生遅延です。</summary>
-    public float SecondHitDelay { get; }
+    public float SecondHitDelay { get; } = secondHitDelay;
     /// <summary>多段発射の間隔です。</summary>
-    public float Interval { get; }
-
-    /// <summary>Boss2 攻撃 pattern を生成します。</summary>
-    public Boss2AttackPattern(
-        BossSkill skill,
-        AttackDefinition definition,
-        float moveSpeed = 0,
-        float secondHitDelay = 0,
-        float interval = 0)
-    {
-        Skill = skill;
-        Definition = definition;
-        MoveSpeed = moveSpeed;
-        SecondHitDelay = secondHitDelay;
-        Interval = interval;
-    }
+    public float Interval { get; } = interval;
 
     /// <summary>設定値が実行可能かどうかを取得します。</summary>
     public bool IsValid => Definition.IsValid;
@@ -149,6 +127,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
         float maxAscent = loco.MaxAscentDuration > 0 ? loco.MaxAscentDuration : 0.80f;
         float landingRecovery = loco.LandingRecoveryDuration > 0 ? loco.LandingRecoveryDuration : 0.10f;
         float takeoffDistance = loco.TakeoffDistance > 0 ? loco.TakeoffDistance : 50.0f;
+        float chaseTimeout = phaseCfg.ChaseTimeout > 0 ? phaseCfg.ChaseTimeout : (toml.ChaseTimeout > 0 ? toml.ChaseTimeout : 3.0f);
 
         return new Boss2PhaseSettings(
             idleDuration: phaseCfg.IdleDuration,
@@ -162,7 +141,8 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
             rules: Boss2PipelineDefinition.Pipeline.GetRules(phase),
             maxAscentDuration: maxAscent,
             landingRecoveryDuration: landingRecovery,
-            takeoffDistance: takeoffDistance);
+            takeoffDistance: takeoffDistance,
+            chaseTimeout: chaseTimeout);
     }
 
     /// <inheritdoc />

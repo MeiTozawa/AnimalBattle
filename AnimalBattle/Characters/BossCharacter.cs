@@ -136,10 +136,12 @@ public sealed class BossCharacter
     public Sprite Sprite => _sprite;
 
     /// <summary>現在状態の経過時間（秒）を取得します。</summary>
-    public float StateTimer => _slot.AiData.StateTimer;
+    public float StateTimer => _bossType == BossType.Boss1
+        ? (_boss1State?.StateElapsed ?? 0.0f)
+        : (_boss2State?.StateElapsed ?? 0.0f);
 
     /// <summary>現在状態の目標持続時間（秒）を取得します。</summary>
-    public float StateDuration => _slot.AiData.StateDuration;
+    public float StateDuration => GetCurrentStateDuration();
 
     /// <summary>被弾時白閃演出中であるかを取得します。</summary>
     public bool IsFlashing => _entity.IsAlive() && _entity.Has<HitFlashEffect>();
@@ -341,6 +343,7 @@ public sealed class BossCharacter
             _vy = 0.0f;
             _currentHp = b1Cfg.MaxHp;
             _isGrounded = false;
+            _frameNumber = 0;
 
             if (_boss1State != null)
             {
@@ -351,10 +354,30 @@ public sealed class BossCharacter
                 _boss1State.AngleOffset = 0.0f;
             }
 
-            ErrorOr<Success> initResult = _runtime.Initialize(_slot, BossState.Boss1_Hover);
-            if (initResult.IsError)
+            if (_slot.InitializationComplete && _slot.RuntimeReady)
             {
-                Console.WriteLine($"[BossCharacter] Boss1 リセット失敗: {initResult.FirstError.Description}");
+                if (_slot.CurrentStateId != BossState.Boss1_Hover)
+                {
+                    TransitionRequest request = new(
+                        _slot.CurrentStateId,
+                        BossState.Boss1_Hover,
+                        new(ReasonKind.InitialEntry),
+                        Phase.Phase1,
+                        _slot.EntityId,
+                        0,
+                        BossState.Boss1_Hover);
+                    _runtime.ApplyTransition(_slot, in request);
+                }
+                _slot.PhaseTransitionData = default;
+                _slot.AiData.Phase = Phase.Phase1;
+            }
+            else
+            {
+                ErrorOr<Success> initResult = _runtime.Initialize(_slot, BossState.Boss1_Hover);
+                if (initResult.IsError)
+                {
+                    Console.WriteLine($"[BossCharacter] Boss1 初期化失敗: {initResult.FirstError.Description}");
+                }
             }
         }
         else
@@ -366,6 +389,7 @@ public sealed class BossCharacter
             _vy = 0.0f;
             _currentHp = b2Cfg.MaxHp;
             _isGrounded = false;
+            _frameNumber = 0;
 
             if (_boss2State != null)
             {
@@ -373,12 +397,35 @@ public sealed class BossCharacter
                 _boss2State.CurrentVelocity = Vec2f.Zero;
                 _boss2State.StateElapsed = 0.0f;
                 _boss2State.JumpCooldown = 0.0f;
+                _boss2State.CurrentAttackIndex = 0;
+                _boss2State.IsAttackActive = false;
+                _boss2State.CooldownTracker.Reset();
             }
 
-            ErrorOr<Success> initResult = _runtime.Initialize(_slot, BossState.Boss2_Idle);
-            if (initResult.IsError)
+            if (_slot.InitializationComplete && _slot.RuntimeReady)
             {
-                Console.WriteLine($"[BossCharacter] Boss2 リセット失敗: {initResult.FirstError.Description}");
+                if (_slot.CurrentStateId != BossState.Boss2_Idle)
+                {
+                    TransitionRequest request = new(
+                        _slot.CurrentStateId,
+                        BossState.Boss2_Idle,
+                        new(ReasonKind.InitialEntry),
+                        Phase.Phase1,
+                        _slot.EntityId,
+                        0,
+                        BossState.Boss2_Idle);
+                    _runtime.ApplyTransition(_slot, in request);
+                }
+                _slot.PhaseTransitionData = default;
+                _slot.AiData.Phase = Phase.Phase1;
+            }
+            else
+            {
+                ErrorOr<Success> initResult = _runtime.Initialize(_slot, BossState.Boss2_Idle);
+                if (initResult.IsError)
+                {
+                    Console.WriteLine($"[BossCharacter] Boss2 初期化失敗: {initResult.FirstError.Description}");
+                }
             }
         }
 
@@ -453,12 +500,91 @@ public sealed class BossCharacter
 
         _entity.Set(new BossCombatState(IsInvulnerable, IsVulnerable, Phase));
 
+        _slot.AiData.StateTimer = StateTimer;
+        _slot.AiData.StateDuration = StateDuration;
+
         if (_entity.Has<Sprite>())
         {
             ref Sprite sprite = ref _entity.GetMut<Sprite>();
             sprite.IsVisible = _sprite.IsVisible;
             sprite.FlipX = _bossType != BossType.Boss1 && !_slot.MovementData.FacingRight;
         }
+    }
+
+    private float GetCurrentStateDuration()
+    {
+        return _bossType == BossType.Boss1
+            ? GetBoss1StateDuration()
+            : GetBoss2StateDuration();
+    }
+
+    private float GetBoss1StateDuration()
+    {
+        Boss1Config b1Cfg = ConfigManager.Boss1;
+        return _slot.CurrentStateId.AsBoss1() switch
+        {
+            Boss1State.Hover => Phase switch
+            {
+                Phase.Phase2 => b1Cfg.Phase2.HoverDuration,
+                Phase.Phase3 => b1Cfg.Phase3.HoverDuration,
+                _ => b1Cfg.Phase1.HoverDuration
+            },
+            Boss1State.Telegraph => Boss1PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out AttackDefinition? telegraphDef)
+                ? telegraphDef.TelegraphDuration
+                : 0.0f,
+            Boss1State.Execute => Boss1PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out AttackDefinition? execDef)
+                ? execDef.ExecuteDuration
+                : 0.0f,
+            Boss1State.Recovery => Boss1PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out AttackDefinition? recDef)
+                ? recDef.RecoveryDuration
+                : 0.0f,
+            Boss1State.PhaseTransition => Phase switch
+            {
+                Phase.Phase2 => b1Cfg.Phase2.TransitionDuration,
+                Phase.Phase3 => b1Cfg.Phase3.TransitionDuration,
+                _ => b1Cfg.Phase1.TransitionDuration
+            },
+            _ => 0.0f
+        };
+    }
+
+    private float GetBoss2StateDuration()
+    {
+        Boss2Config b2Cfg = ConfigManager.Boss2;
+        return _slot.CurrentStateId.AsBoss2() switch
+        {
+            Boss2State.Idle => Phase switch
+            {
+                Phase.Phase2 => b2Cfg.Phase2.IdleDuration,
+                Phase.Phase3 => b2Cfg.Phase3.IdleDuration,
+                _ => b2Cfg.Phase1.IdleDuration
+            },
+            Boss2State.PatrolChase => Phase switch
+            {
+                Phase.Phase2 => b2Cfg.Phase2.ChaseTimeout,
+                Phase.Phase3 => b2Cfg.Phase3.ChaseTimeout,
+                _ => b2Cfg.Phase1.ChaseTimeout
+            },
+            Boss2State.MoveToTakeoff => b2Cfg.MoveToTakeoffTimeout,
+            Boss2State.PlatformTraverse => b2Cfg.MaxAscentDuration + b2Cfg.LandingRecoveryDuration,
+            Boss2State.Telegraph => Boss2PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out AttackDefinition? telegraphDef)
+                ? telegraphDef.TelegraphDuration
+                : 0.0f,
+            Boss2State.Execute => Boss2PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out AttackDefinition? execDef)
+                ? execDef.ExecuteDuration
+                : 0.0f,
+            Boss2State.WallCrashStun => b2Cfg.WallCrashStunDuration,
+            Boss2State.Recovery => Boss2PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out AttackDefinition? recDef)
+                ? recDef.RecoveryDuration
+                : 0.0f,
+            Boss2State.PhaseTransition => Phase switch
+            {
+                Phase.Phase2 => b2Cfg.Phase2.TransitionDuration,
+                Phase.Phase3 => b2Cfg.Phase3.TransitionDuration,
+                _ => b2Cfg.Phase1.TransitionDuration
+            },
+            _ => 0.0f
+        };
     }
 
     private static EnumModuleMap CreateCompleteModuleMap(

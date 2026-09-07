@@ -53,6 +53,7 @@ public sealed class Boss2AttackAdapter(IBoss2Configuration configuration, Boss2B
         _state.AttackTargetPosition = new(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
         _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         _state.FacingRight = context.PlayerObservation.PositionX >= _state.CurrentPosition.X;
+        _state.StateElapsed = 0.0f;
     }
 
     /// <inheritdoc />

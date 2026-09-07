@@ -16,6 +16,9 @@ public sealed class Boss1PhaseFsmConfig
     /// <summary>攻撃前の巡航遊弋待機時間（秒）</summary>
     public float HoverDuration { get; set; } = 1.0f;
 
+    /// <summary>このフェーズでの巡回移動時間（秒）</summary>
+    public float PatrolDuration { get; set; } = 2.0f;
+
     /// <summary>浮遊基準 Y 座標</summary>
     public float HoverBaseY { get; set; } = 220.0f;
 

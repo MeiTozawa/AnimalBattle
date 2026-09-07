@@ -18,10 +18,11 @@ BodyHitboxRadius = 50.0
 BodyHitboxOffsetY = 0.0
 BodyContactDamage = 1.0
 
-# Phase 1 State Machine Configuration
+# Phase 1 状態機械設定
 [Phase1]
 HpThreshold = 1.0
 HoverDuration = 0.8
+PatrolDuration = 2.0
 HoverBaseY = 220.0
 HoverSpeedX = 1.6
 HoverAmpX = 240.0
@@ -57,10 +58,11 @@ MinDistance = 0.0
 MaxDistance = 900.0
 Weight = 90.0
 
-# Phase 2 State Machine Configuration
+# Phase 2 状態機械設定
 [Phase2]
 HpThreshold = 0.66
 HoverDuration = 0.6
+PatrolDuration = 1.5
 HoverBaseY = 250.0
 HoverSpeedX = 2.0
 HoverAmpX = 350.0
@@ -96,10 +98,11 @@ MinDistance = 0.0
 MaxDistance = 1000.0
 Weight = 85.0
 
-# Phase 3 State Machine Configuration
+# Phase 3 状態機械設定
 [Phase3]
 HpThreshold = 0.33
 HoverDuration = 0.4
+PatrolDuration = 1.0
 HoverBaseY = 280.0
 HoverSpeedX = 2.6
 HoverAmpX = 420.0

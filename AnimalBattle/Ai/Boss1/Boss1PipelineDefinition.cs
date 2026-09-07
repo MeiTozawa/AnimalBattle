@@ -26,66 +26,66 @@ public static class Boss1PipelineDefinition
             .Phase(Phase.Phase1)
                 .Timing(
                     idleDuration: boss1.Phase1.HoverDuration,
-                    patrolDuration: 2.0f,
+                    patrolDuration: boss1.Phase1.PatrolDuration,
                     transitionDuration: boss1.Phase1.TransitionDuration)
                 .Attack(BossSkill.Aimed3Shot)
                     .Telegraph(pattern.Aimed3Shot.WindUpTime, pattern.Aimed3Shot.TelegraphColor)
-                    .Execute(pattern.Aimed3Shot.CastDuration, range: 600.0f)
+                    .Execute(pattern.Aimed3Shot.CastDuration, range: pattern.Aimed3Shot.EffectiveRange)
                     .Recovery(pattern.Aimed3Shot.RecoveryTime)
                     .Rule(boss1.Phase1.Rules)
                 .Attack(BossSkill.DiveRam)
                     .Telegraph(pattern.DiveRam.WindUpTime, pattern.DiveRam.TelegraphColor)
-                    .Execute(pattern.DiveRam.CastDuration, range: 650.0f)
+                    .Execute(pattern.DiveRam.CastDuration, range: pattern.DiveRam.EffectiveRange)
                         .Action(atTime: 0.0f, act => act.Dash(pattern.DiveRam.DashSpeed).Hitbox(x: 0.0f, y: 0.0f))
                     .Recovery(pattern.DiveRam.RecoveryTime)
                     .Rule(boss1.Phase1.Rules)
                 .Attack(BossSkill.RingBurst)
                     .Telegraph(pattern.RingBurst.WindUpTime, pattern.RingBurst.TelegraphColor)
-                    .Execute(pattern.RingBurst.CastDuration, range: 700.0f)
+                    .Execute(pattern.RingBurst.CastDuration, range: pattern.RingBurst.EffectiveRange)
                     .Recovery(pattern.RingBurst.RecoveryTime)
                     .Rule(boss1.Phase1.Rules)
 
             .Phase(Phase.Phase2)
                 .Timing(
                     idleDuration: boss1.Phase2.HoverDuration,
-                    patrolDuration: 1.5f,
+                    patrolDuration: boss1.Phase2.PatrolDuration,
                     transitionDuration: boss1.Phase2.TransitionDuration)
                 .Attack(BossSkill.DoubleSpiral)
                     .Telegraph(pattern.DoubleSpiral.WindUpTime, pattern.DoubleSpiral.TelegraphColor)
-                    .Execute(pattern.DoubleSpiral.CastDuration, range: 800.0f)
+                    .Execute(pattern.DoubleSpiral.CastDuration, range: pattern.DoubleSpiral.EffectiveRange)
                     .Recovery(pattern.DoubleSpiral.RecoveryTime)
                     .Rule(boss1.Phase2.Rules)
                 .Attack(BossSkill.DiveRam)
                     .Telegraph(pattern.DiveRam.WindUpTime, pattern.DiveRam.TelegraphColor)
-                    .Execute(pattern.DiveRam.CastDuration, range: 650.0f)
+                    .Execute(pattern.DiveRam.CastDuration, range: pattern.DiveRam.EffectiveRange)
                         .Action(atTime: 0.0f, act => act.Dash(pattern.DiveRam.DashSpeed).Hitbox(x: 0.0f, y: 0.0f))
                     .Recovery(pattern.DiveRam.RecoveryTime)
                     .Rule(boss1.Phase2.Rules)
                 .Attack(BossSkill.RainDrop)
                     .Telegraph(pattern.RainDrop.WindUpTime, pattern.RainDrop.TelegraphColor)
-                    .Execute(pattern.RainDrop.CastDuration, range: 1000.0f)
+                    .Execute(pattern.RainDrop.CastDuration, range: pattern.RainDrop.EffectiveRange)
                     .Recovery(pattern.RainDrop.RecoveryTime)
                     .Rule(boss1.Phase2.Rules)
 
             .Phase(Phase.Phase3)
                 .Timing(
                     idleDuration: boss1.Phase3.HoverDuration,
-                    patrolDuration: 1.0f,
+                    patrolDuration: boss1.Phase3.PatrolDuration,
                     transitionDuration: boss1.Phase3.TransitionDuration)
                 .Attack(BossSkill.CrossChaos)
                     .Telegraph(pattern.CrossChaos.WindUpTime, pattern.CrossChaos.TelegraphColor)
-                    .Execute(pattern.CrossChaos.CastDuration, range: 900.0f)
+                    .Execute(pattern.CrossChaos.CastDuration, range: pattern.CrossChaos.EffectiveRange)
                     .Recovery(pattern.CrossChaos.RecoveryTime)
                     .Rule(boss1.Phase3.Rules)
                 .Attack(BossSkill.DiveRam)
                     .Telegraph(pattern.DiveRam.WindUpTime, pattern.DiveRam.TelegraphColor)
-                    .Execute(pattern.DiveRam.CastDuration, range: 650.0f)
+                    .Execute(pattern.DiveRam.CastDuration, range: pattern.DiveRam.EffectiveRange)
                         .Action(atTime: 0.0f, act => act.Dash(pattern.DiveRam.DashSpeed).Hitbox(x: 0.0f, y: 0.0f))
                     .Recovery(pattern.DiveRam.RecoveryTime)
                     .Rule(boss1.Phase3.Rules)
                 .Attack(BossSkill.FastSniper)
                     .Telegraph(pattern.FastSniper.WindUpTime, pattern.FastSniper.TelegraphColor)
-                    .Execute(pattern.FastSniper.CastDuration, range: 1200.0f)
+                    .Execute(pattern.FastSniper.CastDuration, range: pattern.FastSniper.EffectiveRange)
                     .Recovery(pattern.FastSniper.RecoveryTime)
                     .Rule(boss1.Phase3.Rules)
             .Build();

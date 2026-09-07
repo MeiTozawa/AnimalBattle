@@ -34,15 +34,15 @@ public static class Boss2PipelineDefinition
         PhasePipelineBuilder p1 = builder.Phase(Phase.Phase1)
             .Timing(
                 idleDuration: boss2.Phase1.IdleDuration,
-                patrolDuration: 2.0f,
+                patrolDuration: boss2.Phase1.PatrolDuration,
                 transitionDuration: boss2.Phase1.TransitionDuration)
             .PlatformJump(
                 jumpForce: boss2.Phase1.JumpForce,
                 gravity: boss2.Gravity,
-                maxFallSpeed: 850.0f,
-                maxAscentDuration: 0.80f,
-                landingRecoveryDuration: 0.10f,
-                takeoffDistance: 50.0f);
+                maxFallSpeed: boss2.MaxFallSpeed,
+                maxAscentDuration: boss2.MaxAscentDuration,
+                landingRecoveryDuration: boss2.LandingRecoveryDuration,
+                takeoffDistance: boss2.TakeoffDistance);
 
         p1.Attack(BossSkill.HeavySlash)
             .Telegraph(pattern.HeavySlash.WindUpTime, pattern.HeavySlash.TelegraphColor)
@@ -54,56 +54,58 @@ public static class Boss2PipelineDefinition
         p1.Attack(BossSkill.GroundStomp)
             .Telegraph(pattern.GroundStomp.WindUpTime, pattern.GroundStomp.TelegraphColor)
             .Execute(pattern.GroundStomp.CastDuration, range: pattern.GroundStomp.ShockwaveSpeed)
-                .Action(atTime: 0.0f, act => act.Hitbox(x: 0.0f, y: 35.0f))
+                .Action(atTime: 0.0f, act => act.Hitbox(x: 0.0f, y: pattern.GroundStomp.HitboxOffsetY))
             .Recovery(pattern.GroundStomp.RecoveryTime)
             .Rule(boss2.Phase1.Rules);
 
         ConfigureLeapSmash(p1.Attack(BossSkill.LeapSmash), pattern, boss2.Phase1.Rules);
+        ConfigureEarthquakeRoar(p1.Attack(BossSkill.EarthquakeRoar), pattern, boss2.Phase1.Rules);
 
         // Phase 2
         PhasePipelineBuilder p2 = builder.Phase(Phase.Phase2)
             .Timing(
                 idleDuration: boss2.Phase2.IdleDuration,
-                patrolDuration: 1.5f,
+                patrolDuration: boss2.Phase2.PatrolDuration,
                 transitionDuration: boss2.Phase2.TransitionDuration)
             .PlatformJump(
                 jumpForce: boss2.Phase2.JumpForce,
                 gravity: boss2.Gravity,
-                maxFallSpeed: 850.0f,
-                maxAscentDuration: 0.80f,
-                landingRecoveryDuration: 0.10f,
-                takeoffDistance: 50.0f);
+                maxFallSpeed: boss2.MaxFallSpeed,
+                maxAscentDuration: boss2.MaxAscentDuration,
+                landingRecoveryDuration: boss2.LandingRecoveryDuration,
+                takeoffDistance: boss2.TakeoffDistance);
 
         p2.Attack(BossSkill.DoubleCleave)
             .Telegraph(pattern.DoubleCleave.WindUpTime, pattern.DoubleCleave.TelegraphColor)
             .Execute(pattern.DoubleCleave.CastDuration, range: pattern.DoubleCleave.SlashRangeX)
                 .Action(atTime: 0.0f, act => act.Dash(pattern.DoubleCleave.DashSpeed).Slash(offsetX: boss2.SlashSpawnOffsetX, offsetY: boss2.SlashSpawnOffsetY))
-                .Action(atTime: pattern.DoubleCleave.SlashInterval, act => act.Slash(offsetX: boss2.SlashSpawnOffsetX + 15.0f, offsetY: boss2.SlashSpawnOffsetY))
+                .Action(atTime: pattern.DoubleCleave.SlashInterval, act => act.Slash(offsetX: boss2.SlashSpawnOffsetX + pattern.DoubleCleave.SecondSlashOffsetX, offsetY: boss2.SlashSpawnOffsetY))
             .Recovery(pattern.DoubleCleave.RecoveryTime)
             .Rule(boss2.Phase2.Rules);
 
         p2.Attack(BossSkill.GroundStomp)
             .Telegraph(pattern.GroundStomp.WindUpTime, pattern.GroundStomp.TelegraphColor)
             .Execute(pattern.GroundStomp.CastDuration, range: pattern.GroundStomp.ShockwaveSpeed)
-                .Action(atTime: 0.0f, act => act.Hitbox(x: 0.0f, y: 35.0f))
+                .Action(atTime: 0.0f, act => act.Hitbox(x: 0.0f, y: pattern.GroundStomp.HitboxOffsetY))
             .Recovery(pattern.GroundStomp.RecoveryTime)
             .Rule(boss2.Phase2.Rules);
 
         ConfigureLeapSmash(p2.Attack(BossSkill.LeapSmash), pattern, boss2.Phase2.Rules);
+        ConfigureEarthquakeRoar(p2.Attack(BossSkill.EarthquakeRoar), pattern, boss2.Phase2.Rules);
 
         // Phase 3
         PhasePipelineBuilder p3 = builder.Phase(Phase.Phase3)
             .Timing(
                 idleDuration: boss2.Phase3.IdleDuration,
-                patrolDuration: 1.0f,
+                patrolDuration: boss2.Phase3.PatrolDuration,
                 transitionDuration: boss2.Phase3.TransitionDuration)
             .PlatformJump(
                 jumpForce: boss2.Phase3.JumpForce,
                 gravity: boss2.Gravity,
-                maxFallSpeed: 850.0f,
-                maxAscentDuration: 0.80f,
-                landingRecoveryDuration: 0.10f,
-                takeoffDistance: 50.0f);
+                maxFallSpeed: boss2.MaxFallSpeed,
+                maxAscentDuration: boss2.MaxAscentDuration,
+                landingRecoveryDuration: boss2.LandingRecoveryDuration,
+                takeoffDistance: boss2.TakeoffDistance);
 
         AttackPipelineBuilder frenzy = p3.Attack(BossSkill.FrenzyCharge)
             .Telegraph(pattern.FrenzyCharge.WindUpTime, pattern.FrenzyCharge.TelegraphColor)
@@ -116,28 +118,32 @@ public static class Boss2PipelineDefinition
         frenzy.Recovery(pattern.FrenzyCharge.RecoveryTime)
             .Rule(boss2.Phase3.Rules);
 
-        AttackPipelineBuilder roar = p3.Attack(BossSkill.EarthquakeRoar)
-            .Telegraph(pattern.EarthquakeRoar.WindUpTime, pattern.EarthquakeRoar.TelegraphColor)
-            .Execute(pattern.EarthquakeRoar.CastDuration, range: pattern.EarthquakeRoar.MaxX);
-        float roarInterval = pattern.EarthquakeRoar.Interval > 0 ? pattern.EarthquakeRoar.Interval : 0.25f;
-        for (float t = 0.0f; t < pattern.EarthquakeRoar.CastDuration; t += roarInterval)
-        {
-            roar.Action(atTime: t, act => act.Bullet(x: 0.0f, y: pattern.EarthquakeRoar.RockSpeed));
-        }
-        roar.Recovery(pattern.EarthquakeRoar.RecoveryTime)
-            .Rule(boss2.Phase3.Rules);
+        ConfigureEarthquakeRoar(p3.Attack(BossSkill.EarthquakeRoar), pattern, boss2.Phase3.Rules);
 
         p3.Attack(BossSkill.DoubleCleave)
             .Telegraph(pattern.DoubleCleave.WindUpTime, pattern.DoubleCleave.TelegraphColor)
             .Execute(pattern.DoubleCleave.CastDuration, range: pattern.DoubleCleave.SlashRangeX)
                 .Action(atTime: 0.0f, act => act.Dash(pattern.DoubleCleave.DashSpeed).Slash(offsetX: boss2.SlashSpawnOffsetX, offsetY: boss2.SlashSpawnOffsetY))
-                .Action(atTime: pattern.DoubleCleave.SlashInterval, act => act.Slash(offsetX: boss2.SlashSpawnOffsetX + 15.0f, offsetY: boss2.SlashSpawnOffsetY))
+                .Action(atTime: pattern.DoubleCleave.SlashInterval, act => act.Slash(offsetX: boss2.SlashSpawnOffsetX + pattern.DoubleCleave.SecondSlashOffsetX, offsetY: boss2.SlashSpawnOffsetY))
             .Recovery(pattern.DoubleCleave.RecoveryTime)
             .Rule(boss2.Phase3.Rules);
 
         ConfigureLeapSmash(p3.Attack(BossSkill.LeapSmash), pattern, boss2.Phase3.Rules);
 
         return builder.Build();
+    }
+
+    private static void ConfigureEarthquakeRoar(AttackPipelineBuilder builder, PatternConfig pattern, List<AttackRuleConfig>? rules)
+    {
+        builder.Telegraph(pattern.EarthquakeRoar.WindUpTime, pattern.EarthquakeRoar.TelegraphColor)
+            .Execute(pattern.EarthquakeRoar.CastDuration, range: pattern.EarthquakeRoar.MaxX);
+        float roarInterval = pattern.EarthquakeRoar.Interval > 0 ? pattern.EarthquakeRoar.Interval : 0.25f;
+        for (float t = 0.0f; t < pattern.EarthquakeRoar.CastDuration; t += roarInterval)
+        {
+            builder.Action(atTime: t, act => act.Bullet(x: 0.0f, y: pattern.EarthquakeRoar.RockSpeed));
+        }
+        builder.Recovery(pattern.EarthquakeRoar.RecoveryTime)
+            .Rule(rules);
     }
 
     private static void ConfigureLeapSmash(AttackPipelineBuilder builder, PatternConfig pattern, List<AttackRuleConfig>? rules)
