@@ -133,6 +133,23 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
     }
 
     /// <summary>
+    /// TOML 設定のルールリストから、このビルダーの技能識別子 (Skill) に合致するルールを自動検索して適用します。
+    /// </summary>
+    /// <param name="rules">TOML から読み込まれたルール設定リスト。</param>
+    /// <returns>現在の攻撃ビルダー。</returns>
+    public AttackPipelineBuilder Rule(List<AttackRuleConfig>? rules)
+    {
+        if (rules is null)
+        {
+            return this;
+        }
+
+        string skillName = _skill.ToString();
+        AttackRuleConfig? config = rules.Find(r => string.Equals(r.Skill, skillName, StringComparison.OrdinalIgnoreCase));
+        return Rule(config);
+    }
+
+    /// <summary>
     /// 次の攻撃の定義に進みます（親の PhasePipelineBuilder へ戻ります）。
     /// </summary>
     /// <param name="skill">次に定義する技能識別子。</param>

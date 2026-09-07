@@ -49,16 +49,16 @@ public static class Boss2PipelineDefinition
             .Execute(pattern.HeavySlash.CastDuration, range: pattern.HeavySlash.SlashRangeX)
                 .Action(atTime: 0.0f, act => act.Dash(pattern.HeavySlash.DashSpeed).Slash(offsetX: boss2.SlashSpawnOffsetX, offsetY: boss2.SlashSpawnOffsetY))
             .Recovery(pattern.HeavySlash.RecoveryTime)
-            .Rule(FindRule(boss2.Phase1.Rules, "HeavySlash"));
+            .Rule(boss2.Phase1.Rules);
 
         p1.Attack(BossSkill.GroundStomp)
             .Telegraph(pattern.GroundStomp.WindUpTime, pattern.GroundStomp.TelegraphColor)
             .Execute(pattern.GroundStomp.CastDuration, range: pattern.GroundStomp.ShockwaveSpeed)
                 .Action(atTime: 0.0f, act => act.Hitbox(x: 0.0f, y: 35.0f))
             .Recovery(pattern.GroundStomp.RecoveryTime)
-            .Rule(FindRule(boss2.Phase1.Rules, "GroundStomp"));
+            .Rule(boss2.Phase1.Rules);
 
-        ConfigureLeapSmash(p1.Attack(BossSkill.LeapSmash), pattern, FindRule(boss2.Phase1.Rules, "LeapSmash"));
+        ConfigureLeapSmash(p1.Attack(BossSkill.LeapSmash), pattern, boss2.Phase1.Rules);
 
         // Phase 2
         PhasePipelineBuilder p2 = builder.Phase(Phase.Phase2)
@@ -80,16 +80,16 @@ public static class Boss2PipelineDefinition
                 .Action(atTime: 0.0f, act => act.Dash(pattern.DoubleCleave.DashSpeed).Slash(offsetX: boss2.SlashSpawnOffsetX, offsetY: boss2.SlashSpawnOffsetY))
                 .Action(atTime: pattern.DoubleCleave.SlashInterval, act => act.Slash(offsetX: boss2.SlashSpawnOffsetX + 15.0f, offsetY: boss2.SlashSpawnOffsetY))
             .Recovery(pattern.DoubleCleave.RecoveryTime)
-            .Rule(FindRule(boss2.Phase2.Rules, "DoubleCleave"));
+            .Rule(boss2.Phase2.Rules);
 
         p2.Attack(BossSkill.GroundStomp)
             .Telegraph(pattern.GroundStomp.WindUpTime, pattern.GroundStomp.TelegraphColor)
             .Execute(pattern.GroundStomp.CastDuration, range: pattern.GroundStomp.ShockwaveSpeed)
                 .Action(atTime: 0.0f, act => act.Hitbox(x: 0.0f, y: 35.0f))
             .Recovery(pattern.GroundStomp.RecoveryTime)
-            .Rule(FindRule(boss2.Phase2.Rules, "GroundStomp"));
+            .Rule(boss2.Phase2.Rules);
 
-        ConfigureLeapSmash(p2.Attack(BossSkill.LeapSmash), pattern, FindRule(boss2.Phase2.Rules, "LeapSmash"));
+        ConfigureLeapSmash(p2.Attack(BossSkill.LeapSmash), pattern, boss2.Phase2.Rules);
 
         // Phase 3
         PhasePipelineBuilder p3 = builder.Phase(Phase.Phase3)
@@ -114,7 +114,7 @@ public static class Boss2PipelineDefinition
             frenzy.Action(atTime: t, act => act.Hitbox(x: 0.0f, y: 0.0f));
         }
         frenzy.Recovery(pattern.FrenzyCharge.RecoveryTime)
-            .Rule(FindRule(boss2.Phase3.Rules, "FrenzyCharge"));
+            .Rule(boss2.Phase3.Rules);
 
         AttackPipelineBuilder roar = p3.Attack(BossSkill.EarthquakeRoar)
             .Telegraph(pattern.EarthquakeRoar.WindUpTime, pattern.EarthquakeRoar.TelegraphColor)
@@ -125,7 +125,7 @@ public static class Boss2PipelineDefinition
             roar.Action(atTime: t, act => act.Bullet(x: 0.0f, y: pattern.EarthquakeRoar.RockSpeed));
         }
         roar.Recovery(pattern.EarthquakeRoar.RecoveryTime)
-            .Rule(FindRule(boss2.Phase3.Rules, "EarthquakeRoar"));
+            .Rule(boss2.Phase3.Rules);
 
         p3.Attack(BossSkill.DoubleCleave)
             .Telegraph(pattern.DoubleCleave.WindUpTime, pattern.DoubleCleave.TelegraphColor)
@@ -133,14 +133,14 @@ public static class Boss2PipelineDefinition
                 .Action(atTime: 0.0f, act => act.Dash(pattern.DoubleCleave.DashSpeed).Slash(offsetX: boss2.SlashSpawnOffsetX, offsetY: boss2.SlashSpawnOffsetY))
                 .Action(atTime: pattern.DoubleCleave.SlashInterval, act => act.Slash(offsetX: boss2.SlashSpawnOffsetX + 15.0f, offsetY: boss2.SlashSpawnOffsetY))
             .Recovery(pattern.DoubleCleave.RecoveryTime)
-            .Rule(FindRule(boss2.Phase3.Rules, "DoubleCleave"));
+            .Rule(boss2.Phase3.Rules);
 
-        ConfigureLeapSmash(p3.Attack(BossSkill.LeapSmash), pattern, FindRule(boss2.Phase3.Rules, "LeapSmash"));
+        ConfigureLeapSmash(p3.Attack(BossSkill.LeapSmash), pattern, boss2.Phase3.Rules);
 
         return builder.Build();
     }
 
-    private static void ConfigureLeapSmash(AttackPipelineBuilder builder, PatternConfig pattern, AttackRuleConfig? rule)
+    private static void ConfigureLeapSmash(AttackPipelineBuilder builder, PatternConfig pattern, List<AttackRuleConfig>? rules)
     {
         float flyDuration = pattern.LeapSmash.FlyDuration > 0.0f ? pattern.LeapSmash.FlyDuration : 0.45f;
         float peakY = pattern.LeapSmash.PeakAltitudeY > 0.0f ? pattern.LeapSmash.PeakAltitudeY : 130.0f;
@@ -155,11 +155,12 @@ public static class Boss2PipelineDefinition
                 .Action(atTime: diveStartTime, act => act.Dive(descentSpeed))
                 .OnGrounded(act => act.Hitbox(x: 0.0f, y: 45.0f))
             .Recovery(pattern.LeapSmash.RecoveryTime)
-            .Rule(rule);
+            .Rule(rules);
     }
 
-    private static AttackRuleConfig? FindRule(List<AttackRuleConfig>? rules, string skillName)
+    private static AttackRuleConfig? FindRule(List<AttackRuleConfig>? rules, BossSkill skill)
     {
+        string skillName = skill.ToString();
         return rules?.Find(r => string.Equals(r.Skill, skillName, StringComparison.OrdinalIgnoreCase));
     }
 }
