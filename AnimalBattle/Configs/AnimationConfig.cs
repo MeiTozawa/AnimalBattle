@@ -15,10 +15,10 @@ public sealed class AnimationConfig
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>デフォルトのセル幅（ピクセル）</summary>
-    public int CellWidth { get; set; } = 32;
+    public int CellWidth { get; set; }
 
     /// <summary>デフォルトのセル高さ（ピクセル）</summary>
-    public int CellHeight { get; set; } = 32;
+    public int CellHeight { get; set; }
 
     /// <summary>クリップ一覧</summary>
     public List<AnimationClipConfig> Clips { get; set; } = [];

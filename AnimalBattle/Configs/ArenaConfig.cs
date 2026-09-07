@@ -9,22 +9,22 @@ namespace AnimalBattle.Configs;
 public sealed class TileMapConfig
 {
     /// <summary>タイルセットテクスチャの相対パス</summary>
-    public string TileSheet { get; set; } = ResourcePath.Platform.SheetPng;
+    public string TileSheet { get; set; } = string.Empty;
 
     /// <summary>タイルセットメタデータ TOML の相対パス</summary>
-    public string TileConfig { get; set; } = ResourcePath.Platform.SheetToml;
+    public string TileConfig { get; set; } = string.Empty;
 
     /// <summary>描画時のタイル単体幅（ピクセル）</summary>
-    public int RenderTileWidth { get; set; } = 70;
+    public int RenderTileWidth { get; set; }
 
     /// <summary>描画時のタイル単体高さ（ピクセル）</summary>
-    public int RenderTileHeight { get; set; } = 70;
+    public int RenderTileHeight { get; set; }
 
     /// <summary>マップ原点 X 座標（左上）</summary>
-    public float OriginX { get; set; } = -25.0f;
+    public float OriginX { get; set; }
 
     /// <summary>マップ原点 Y 座標（左上）</summary>
-    public float OriginY { get; set; } = 0.0f;
+    public float OriginY { get; set; }
 
     /// <summary>2D タイル ID グリッドデータ（0 = 空白/空気）</summary>
     public List<List<int>> Data { get; set; } = [];
@@ -36,28 +36,28 @@ public sealed class TileMapConfig
 public sealed class ArenaConfig
 {
     /// <summary>デフォルトで生成・交戦する対象 Boss 識別名（"Boss1" または "Boss2"）</summary>
-    public string TargetBoss { get; set; } = "Boss1";
+    public string TargetBoss { get; set; } = string.Empty;
 
     /// <summary>タイルマップ配置設定</summary>
     public TileMapConfig TileMap { get; set; } = new();
 
     /// <summary>プレイヤー移動可能な最小 X 境界</summary>
-    public float BoundaryMinX { get; set; } = 25.0f;
+    public float BoundaryMinX { get; set; }
 
     /// <summary>プレイヤー移動可能な最大 X 境界</summary>
-    public float BoundaryMaxX { get; set; } = 1255.0f;
+    public float BoundaryMaxX { get; set; }
 
     /// <summary>銃弾および弾幕のデスポーン最小 X 座標</summary>
-    public float BulletDespawnMinX { get; set; } = -80.0f;
+    public float BulletDespawnMinX { get; set; }
 
     /// <summary>銃弾および弾幕のデスポーン最大 X 座標</summary>
-    public float BulletDespawnMaxX { get; set; } = 1360.0f;
+    public float BulletDespawnMaxX { get; set; }
 
     /// <summary>銃弾および弾幕のデスポーン最小 Y 座標</summary>
-    public float BulletDespawnMinY { get; set; } = -80.0f;
+    public float BulletDespawnMinY { get; set; }
 
     /// <summary>銃弾および弾幕のデスポーン最大 Y 座標</summary>
-    public float BulletDespawnMaxY { get; set; } = 800.0f;
+    public float BulletDespawnMaxY { get; set; }
 
     /// <summary>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{ArenaConfig}"/> インスタンスを生成します。

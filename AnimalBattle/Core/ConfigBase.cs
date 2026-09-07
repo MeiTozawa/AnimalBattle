@@ -52,7 +52,8 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     public static ErrorOr<ConfigBase<T>> LoadFromFile(string defaultFileName)
     {
 #if !DEBUG
-        return new(new());
+        ConfigBase<T> config = new(new T());
+        return config;
 #else
         ErrorOr<string> pathResult = FindConfigPath(defaultFileName);
         if (pathResult.IsError || string.IsNullOrEmpty(pathResult.Value) || !File.Exists(pathResult.Value))

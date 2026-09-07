@@ -26,8 +26,13 @@
     <PackageReference Include="Tomlyn" Version="2.10.1" />
     <PackageReference Include="Tomlyn.Extensions.Configuration" Version="2.0.0" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\Resource\baked_configs.bin" Link="baked_configs.bin" Condition="Exists('..\Resource\baked_configs.bin')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
   <Target Name="GenerateCodeFromConfigs" BeforeTargets="BeforeBuild">
-    <Exec Command="python ..\scripts\generate_baked_configs.py" StandardOutputImportance="low" ContinueOnError="true" />
+    <Exec Command="python ..\scripts\bake_configs_binary.py" StandardOutputImportance="low" ContinueOnError="true" />
     <Exec Command="python ..\scripts\generate_animation_registry.py" StandardOutputImportance="low" ContinueOnError="true" />
     <Exec Command="python ..\scripts\generate_resource_paths.py" StandardOutputImportance="low" ContinueOnError="true" />
   </Target>

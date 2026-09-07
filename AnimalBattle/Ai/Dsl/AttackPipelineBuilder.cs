@@ -121,8 +121,12 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
             .Cooldown(config.Cooldown)
             .Distance(config.MinDistance, config.MaxDistance)
             .Weight(config.Weight)
-            .RequireSamePlatform(config.RequireSamePlatform)
-            .PreferAirborneBonus(config.PreferAirborneBonus);
+            .RequireSamePlatform(config.RequireSamePlatform);
+
+        if (config.PreferAirborneBonus > 0.0f)
+        {
+            _ruleBuilder.PreferAirborneBonus(config.PreferAirborneBonus);
+        }
 
         if (config.RequirePlayerGrounded.HasValue)
         {

@@ -15,6 +15,13 @@ public struct Animation(StringId defaultClip = default, CharacterType characterT
     /// <summary>デフォルトのアニメーションクリップ識別子 ("Idle")</summary>
     public static readonly StringId DefaultClip = "Idle";
 
+    /// <summary>
+    /// デフォルト設定で <see cref="Animation"/> の新しいインスタンスを初期化します。
+    /// </summary>
+    public Animation() : this(default, CharacterType.Cat, true)
+    {
+    }
+
     /// <summary>再生対象のキャラクター種別</summary>
     public CharacterType CharacterType = characterType;
 

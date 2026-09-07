@@ -8,19 +8,24 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// 各種 TOML 設定ファイル（player.toml, boss1.toml, boss2.toml, patterns.toml, arena.toml, render.toml）を統括管理し、
-/// 自動リロードおよびプロパティ参照を提供する静的設定マネージャークラス。
-/// 全てのファイル読み込み結果を検証し、エラー時は詳細な診断ログを出力します。
+/// 各種設定（player.toml, boss1.toml, boss2.toml, patterns.toml, arena.toml, render.toml, sheet.toml）を統括管理し、
+/// Debug ビルド時の動的自動リロードおよび Release ビルド時のバイナリ高速ロードを提供する静的設定マネージャークラス。
 /// </summary>
-
 public static class ConfigManager
 {
-    private static ConfigBase<PlayerConfig> _playerConfigContainer = new(BakedConfigs.CreatePlayerConfig());
-    private static ConfigBase<Boss1Config> _boss1ConfigContainer = new(BakedConfigs.CreateBoss1Config());
-    private static ConfigBase<Boss2Config> _boss2ConfigContainer = new(BakedConfigs.CreateBoss2Config());
-    private static ConfigBase<PatternConfig> _patternConfigContainer = new(BakedConfigs.CreatePatternConfig());
-    private static ConfigBase<ArenaConfig> _arenaConfigContainer = new(BakedConfigs.CreateArenaConfig());
-    private static ConfigBase<RenderConfig> _renderConfigContainer = new(BakedConfigs.CreateRenderConfig());
+    private static ConfigBase<PlayerConfig> _playerConfigContainer = new(new());
+    private static ConfigBase<Boss1Config> _boss1ConfigContainer = new(new());
+    private static ConfigBase<Boss2Config> _boss2ConfigContainer = new(new());
+    private static ConfigBase<PatternConfig> _patternConfigContainer = new(new());
+    private static ConfigBase<ArenaConfig> _arenaConfigContainer = new(new());
+    private static ConfigBase<RenderConfig> _renderConfigContainer = new(new());
+    private static ConfigBase<TileSetConfig> _tileSetConfigContainer = new(new());
+    private static bool _isInitialized;
+
+    static ConfigManager()
+    {
+        Initialize();
+    }
 
     /// <summary>プレイヤー設定オブジェクトを取得します。</summary>
     public static PlayerConfig Player => _playerConfigContainer.Config;
@@ -40,6 +45,9 @@ public static class ConfigManager
     /// <summary>描画および UI 設定オブジェクトを取得します。</summary>
     public static RenderConfig Render => _renderConfigContainer.Config;
 
+    /// <summary>タイルセット足場設定オブジェクトを取得します。</summary>
+    public static TileSetConfig TileSet => _tileSetConfigContainer.Config;
+
     /// <summary>プレイヤー設定コンテナを取得します。</summary>
     public static ConfigBase<PlayerConfig> PlayerContainer => _playerConfigContainer;
 
@@ -58,13 +66,23 @@ public static class ConfigManager
     /// <summary>描画設定コンテナを取得します。</summary>
     public static ConfigBase<RenderConfig> RenderContainer => _renderConfigContainer;
 
+    /// <summary>タイルセット設定コンテナを取得します。</summary>
+    public static ConfigBase<TileSetConfig> TileSetContainer => _tileSetConfigContainer;
+
     /// <summary>
     /// 全設定を初期化します。
     /// Debug ビルド時は TOML ファイル群を動的ロードしてホットリロード監視を開始します。
-    /// Release ビルド時はコード内にベイクされた初期設定データをそのまま使用し、外部ファイル不要で独立動作します。
+    /// Release ビルド時はコンパイル時にベイクされたバイナリ設定 (baked_configs.bin) をロードします。
     /// </summary>
     public static void Initialize()
     {
+        if (_isInitialized)
+        {
+            return;
+        }
+
+        _isInitialized = true;
+
 #if DEBUG
         TypeDescriptor.AddAttributes(typeof(Color), new TypeConverterAttribute(typeof(FlexibleColorConverter)));
 
@@ -77,19 +95,47 @@ public static class ConfigManager
         LoadConfig(ResourcePath.Config.Patterns, ref _patternConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Arena, ref _arenaConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Render, ref _renderConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Platform.SheetToml, ref _tileSetConfigContainer, ref successCount, ref failureCount);
 
         Debug.Assert(failureCount == 0, "一部の TOML 設定ファイルの読み込みに失敗しました。");
 
         if (failureCount > 0)
         {
-            Console.WriteLine($"[C# 設定警告] TOML 設定読み込み完了 (成功: {successCount}, 失敗: {failureCount})。失敗した設定はデフォルト値を使用します。");
+            Console.WriteLine($"[C# 設定警告] TOML 設定読み込み完了 (成功: {successCount}, 失敗: {failureCount})。");
             return;
         }
 
         Console.WriteLine($"[C# 設定初期化] 全ての TOML 設定ファイル（{successCount} 件）の読み込みが正常に完了しました！");
+
+        _boss1ConfigContainer.OnConfigReloaded += Ai.Boss1.Boss1PipelineDefinition.Reload;
+        _boss2ConfigContainer.OnConfigReloaded += Ai.Boss2.Boss2PipelineDefinition.Reload;
+        _patternConfigContainer.OnConfigReloaded += () =>
+        {
+            Ai.Boss1.Boss1PipelineDefinition.Reload();
+            Ai.Boss2.Boss2PipelineDefinition.Reload();
+        };
 #else
-        Console.WriteLine("[C# 設定初期化] Release 版: 埋め込み (Baked) 設定データを使用して独立起動しました。");
+        var loadResult = BinaryConfigLoader.Load();
+        if (loadResult.IsError)
+        {
+            Console.WriteLine($"[C# 設定エラー] Release 版バイナリ設定 (baked_configs.bin) の読み込みに失敗しました: {loadResult.FirstError.Description}");
+            return;
+        }
+
+        BakedConfigBundle bundle = loadResult.Value;
+        _playerConfigContainer = new(bundle.Player);
+        _boss1ConfigContainer = new(bundle.Boss1);
+        _boss2ConfigContainer = new(bundle.Boss2);
+        _patternConfigContainer = new(bundle.Pattern);
+        _arenaConfigContainer = new(bundle.Arena);
+        _renderConfigContainer = new(bundle.Render);
+        _tileSetConfigContainer = new(bundle.TileSet);
+
+        Console.WriteLine("[C# 設定初期化] Release 版: バイナリ設定データ (baked_configs.bin) を正常にロードして起動しました。");
 #endif
+
+        Ai.Boss1.Boss1PipelineDefinition.Reload();
+        Ai.Boss2.Boss2PipelineDefinition.Reload();
     }
 
 #if DEBUG
@@ -124,5 +170,6 @@ public static class ConfigManager
         _patternConfigContainer.Dispose();
         _arenaConfigContainer.Dispose();
         _renderConfigContainer.Dispose();
+        _tileSetConfigContainer.Dispose();
     }
 }

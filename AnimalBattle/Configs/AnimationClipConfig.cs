@@ -27,8 +27,8 @@ public sealed class AnimationClipConfig
     public int CellHeight { get; set; }
 
     /// <summary>再生速度（フレーム毎秒）</summary>
-    public float Fps { get; set; } = 10.0f;
+    public float Fps { get; set; }
 
     /// <summary>ループ再生するかどうか</summary>
-    public bool IsLooping { get; set; } = true;
+    public bool IsLooping { get; set; }
 }
