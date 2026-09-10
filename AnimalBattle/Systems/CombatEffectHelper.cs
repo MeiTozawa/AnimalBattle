@@ -195,22 +195,6 @@ public static class CombatEffectHelper
     }
 
     /// <summary>
-    /// Boss 技能予兆時のチャージスパークエフェクトを生成します。
-    /// </summary>
-    /// <param name="world">対象の Flecs.NET ワールド</param>
-    /// <param name="x">中心 X 座標</param>
-    /// <param name="y">中心 Y 座標</param>
-    /// <param name="color">予兆カラー</param>
-    public static void SpawnTelegraphSpark(World world, float x, float y, Color color)
-    {
-        world.Entity()
-             .Set(new Transform(x, y))
-             .Set(new Bullet(6.0f, color, ColorPalette.White))
-             .Set(new FadeEffect(0.10f))
-             .Add<EffectTag>();
-    }
-
-    /// <summary>
     /// プレイヤー死亡時の飛散パーティクルを生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>

@@ -109,21 +109,6 @@ public static class BossCommandExecutor
             return;
         }
 
-        ref readonly Transform trans = ref entity.Get<Transform>();
-        PatternConfig patternCfg = ConfigManager.Pattern;
-
-        for (int i = 0; i < slot.EffectCommands.Count; i++)
-        {
-            EffectCommand cmd = slot.EffectCommands[i];
-            if (cmd.Kind == EffectCommandKind.RequestTelegraph)
-            {
-                Color telegraphColor = GetTelegraphColor(slot.AttackData.Skill, patternCfg);
-                float x = cmd.X != 0.0f ? cmd.X : trans.X;
-                float y = cmd.Y != 0.0f ? cmd.Y : trans.Y;
-                CombatEffectHelper.SpawnTelegraphSpark(world, x, y, telegraphColor);
-
-            }
-        }
     }
 
     private static void ExecuteBoss1Movement(
@@ -488,27 +473,6 @@ public static class BossCommandExecutor
         {
             CombatEffectHelper.SpawnShockwave(world, trans.X, trans.Y);
         }
-    }
-
-    private static Color GetTelegraphColor(BossSkill skill, PatternConfig patternCfg)
-    {
-        return skill switch
-        {
-            BossSkill.Aimed3Shot => patternCfg.Aimed3Shot.TelegraphColor,
-            BossSkill.RingBurst => patternCfg.RingBurst.TelegraphColor,
-            BossSkill.DoubleSpiral => patternCfg.DoubleSpiral.TelegraphColor,
-            BossSkill.RainDrop => patternCfg.RainDrop.TelegraphColor,
-            BossSkill.CrossChaos => patternCfg.CrossChaos.TelegraphColor,
-            BossSkill.FastSniper => patternCfg.FastSniper.TelegraphColor,
-            BossSkill.DiveRam => patternCfg.DiveRam.TelegraphColor,
-            BossSkill.HeavySlash => patternCfg.HeavySlash.TelegraphColor,
-            BossSkill.DoubleCleave => patternCfg.DoubleCleave.TelegraphColor,
-            BossSkill.GroundStomp => patternCfg.GroundStomp.TelegraphColor,
-            BossSkill.LeapSmash => patternCfg.LeapSmash.TelegraphColor,
-            BossSkill.FrenzyCharge => patternCfg.FrenzyCharge.TelegraphColor,
-            BossSkill.EarthquakeRoar => patternCfg.EarthquakeRoar.TelegraphColor,
-            _ => ColorPalette.RedOrange
-        };
     }
 }
 
