@@ -476,6 +476,47 @@ public sealed class BossRuntimeSlot
         EffectCommands.Clear();
     }
 
+    /// <summary>
+    /// Runtime スロットの実行状態、コマンドバッファ、終端データおよび内部フレームを初期状態にリセットします。
+    /// </summary>
+    /// <param name="initialState">初期 BossState。</param>
+    /// <param name="initialPhase">初期 Phase（既定値: Phase1）。</param>
+    public void Reset(BossState initialState, Phase initialPhase = Phase.Phase1)
+    {
+        _currentBossState = initialState;
+        _currentTransitionReason = new(ReasonKind.InitialEntry);
+        _stateEntered = false;
+        _moduleStopped = false;
+        _lastUpdatedFrame = -1;
+        _commandFrame = -1;
+        _transitionDepth = 0;
+        _failureActive = false;
+        _terminalData.Reset();
+        _phaseTransitionData = default;
+        _movementData = new(initialState);
+        _attackData = new(BossSkill.None);
+        _aiData = new(BossType, initialState, initialPhase);
+        _pendingConfig = default;
+        _hasPendingConfig = false;
+
+        LastErrorFingerprint = 0;
+        LastHandledFrame = -1;
+        ModuleStopReason = ErrorCode.None;
+        ModuleStoppedFrame = -1;
+        SafetyTransitionAttempted = false;
+        IsFailClosed = false;
+        AppliedSafetyParameters = default;
+        FailedSafetyParameters = default;
+
+        _context.Reset(initialPhase);
+        _context.SetConfigSnapshot(_currentConfig);
+
+        MovementCommands.Reset();
+        AttackCommands.Reset();
+        EffectCommands.Reset();
+        RefreshDebugData();
+    }
+
     internal void SetCurrentState(BossState stateId, TransitionReason reason)
     {
         _currentBossState = stateId;

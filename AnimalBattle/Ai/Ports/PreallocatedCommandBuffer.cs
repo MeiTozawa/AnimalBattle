@@ -143,6 +143,15 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
         _seenOneShotKeyCount = 0;
     }
 
+    /// <summary>バッファの状態および診断情報を初期状態にリセットします。</summary>
+    public void Reset()
+    {
+        Clear();
+        DroppedCount = 0;
+        DiagnosticFailureCount = 0;
+        LastDiagnostic = default;
+    }
+
     /// <summary>格納済み command を index で読み取ります。</summary>
     public ref readonly T this[int index]
     {

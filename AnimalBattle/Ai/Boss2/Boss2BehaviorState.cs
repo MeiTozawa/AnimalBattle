@@ -70,6 +70,35 @@ public sealed class Boss2BehaviorState : IBossBehaviorState
         IsPlayerAlive = true;
     }
 
+    /// <summary>Boss2 の共有実行値を初期スポーン状態にリセットします。</summary>
+    /// <param name="startX">初期 X 座標。</param>
+    /// <param name="startY">初期 Y 座標。</param>
+    public void Reset(float startX, float startY)
+    {
+        CurrentPosition = new(startX, startY);
+        CurrentVelocity = Vec2f.Zero;
+        StateElapsed = 0.0f;
+        AttackSubTimer = 0.0f;
+        CurrentAttackIndex = 0;
+        CurrentSkill = BossSkill.None;
+        AttackStartPosition = CurrentPosition;
+        AttackTargetPosition = CurrentPosition;
+        AttackTargetEntityId = 0;
+        IsGrounded = false;
+        IsPlayerAlive = true;
+        FacingRight = false;
+        IsInvulnerable = false;
+        IsDead = false;
+        IsAttackActive = false;
+        _phaseTransitionData = default;
+        _terminalData.Reset();
+        PhaseTransitionTargetPhase = Phase.Phase1;
+        JumpCooldown = 0.0f;
+        CooldownTracker.Reset();
+        PendingBossState = BossState.Unknown;
+        PendingTransitionReason = TransitionReason.None;
+    }
+
 
     /// <inheritdoc />
     public void SynchronizePosition(float x, float y)

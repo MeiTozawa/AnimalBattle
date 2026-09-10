@@ -63,6 +63,33 @@ public sealed class Boss1BehaviorState : IBossBehaviorState
         PendingTransitionReason = TransitionReason.None;
     }
 
+    /// <summary>Boss1 の共有実行値を初期スポーン状態にリセットします。</summary>
+    /// <param name="startX">初期 X 座標。</param>
+    /// <param name="startY">初期 Y 座標。</param>
+    public void Reset(float startX, float startY)
+    {
+        BaseX = startX;
+        CurrentPosition = new(startX, startY);
+        CurrentVelocity = Vec2f.Zero;
+        FacingRight = false;
+        HoverTimer = 0.0f;
+        StateElapsed = 0.0f;
+        AttackSubTimer = 0.0f;
+        AngleOffset = 0.0f;
+        CurrentSkill = BossSkill.None;
+        CurrentAttackIndex = 0;
+        AttackStartPosition = CurrentPosition;
+        AttackTargetPosition = CurrentPosition;
+        AttackTargetEntityId = 0;
+        PendingBossState = BossState.Unknown;
+        PendingTransitionReason = TransitionReason.None;
+        IsInvulnerable = false;
+        IsDead = false;
+        IsAttackActive = false;
+        _phaseTransitionData = default;
+        _terminalData.Reset();
+    }
+
 
     /// <inheritdoc />
     public void SynchronizePosition(float x, float y)

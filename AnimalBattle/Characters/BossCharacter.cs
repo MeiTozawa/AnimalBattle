@@ -341,43 +341,17 @@ public sealed class BossCharacter
             _y = b1Cfg.SpawnY;
             _vx = 0.0f;
             _vy = 0.0f;
+            _maxHp = b1Cfg.MaxHp;
             _currentHp = b1Cfg.MaxHp;
             _isGrounded = false;
             _frameNumber = 0;
 
-            if (_boss1State != null)
-            {
-                _boss1State.CurrentPosition = new(_x, _y);
-                _boss1State.CurrentVelocity = Vec2f.Zero;
-                _boss1State.HoverTimer = 0.0f;
-                _boss1State.AttackSubTimer = 0.0f;
-                _boss1State.AngleOffset = 0.0f;
-            }
+            _boss1State?.Reset(_x, _y);
 
-            if (_slot.InitializationComplete && _slot.RuntimeReady)
+            ErrorOr<Success> resetResult = _runtime.Reset(_slot, BossState.Boss1_Hover);
+            if (resetResult.IsError)
             {
-                if (_slot.CurrentStateId != BossState.Boss1_Hover)
-                {
-                    TransitionRequest request = new(
-                        _slot.CurrentStateId,
-                        BossState.Boss1_Hover,
-                        new(ReasonKind.InitialEntry),
-                        Phase.Phase1,
-                        _slot.EntityId,
-                        0,
-                        BossState.Boss1_Hover);
-                    _runtime.ApplyTransition(_slot, in request);
-                }
-                _slot.PhaseTransitionData = default;
-                _slot.AiData.Phase = Phase.Phase1;
-            }
-            else
-            {
-                ErrorOr<Success> initResult = _runtime.Initialize(_slot, BossState.Boss1_Hover);
-                if (initResult.IsError)
-                {
-                    Console.WriteLine($"[BossCharacter] Boss1 初期化失敗: {initResult.FirstError.Description}");
-                }
+                Console.WriteLine($"[BossCharacter] Boss1 リセット失敗: {resetResult.FirstError.Description}");
             }
         }
         else
@@ -387,52 +361,33 @@ public sealed class BossCharacter
             _y = b2Cfg.SpawnY;
             _vx = 0.0f;
             _vy = 0.0f;
+            _maxHp = b2Cfg.MaxHp;
             _currentHp = b2Cfg.MaxHp;
             _isGrounded = false;
             _frameNumber = 0;
 
-            if (_boss2State != null)
-            {
-                _boss2State.CurrentPosition = new(_x, _y);
-                _boss2State.CurrentVelocity = Vec2f.Zero;
-                _boss2State.StateElapsed = 0.0f;
-                _boss2State.JumpCooldown = 0.0f;
-                _boss2State.CurrentAttackIndex = 0;
-                _boss2State.IsAttackActive = false;
-                _boss2State.CooldownTracker.Reset();
-            }
+            _boss2State?.Reset(_x, _y);
 
-            if (_slot.InitializationComplete && _slot.RuntimeReady)
+            ErrorOr<Success> resetResult = _runtime.Reset(_slot, BossState.Boss2_Idle);
+            if (resetResult.IsError)
             {
-                if (_slot.CurrentStateId != BossState.Boss2_Idle)
-                {
-                    TransitionRequest request = new(
-                        _slot.CurrentStateId,
-                        BossState.Boss2_Idle,
-                        new(ReasonKind.InitialEntry),
-                        Phase.Phase1,
-                        _slot.EntityId,
-                        0,
-                        BossState.Boss2_Idle);
-                    _runtime.ApplyTransition(_slot, in request);
-                }
-                _slot.PhaseTransitionData = default;
-                _slot.AiData.Phase = Phase.Phase1;
-            }
-            else
-            {
-                ErrorOr<Success> initResult = _runtime.Initialize(_slot, BossState.Boss2_Idle);
-                if (initResult.IsError)
-                {
-                    Console.WriteLine($"[BossCharacter] Boss2 初期化失敗: {initResult.FirstError.Description}");
-                }
+                Console.WriteLine($"[BossCharacter] Boss2 リセット失敗: {resetResult.FirstError.Description}");
             }
         }
 
         _sprite.IsVisible = true;
-        if (_entity.IsAlive() && _entity.Has<HitFlashEffect>())
+        if (_entity.IsAlive())
         {
-            _entity.Remove<HitFlashEffect>();
+            _entity.Set(new Velocity(0.0f, 0.0f));
+            if (_entity.Has<CollisionBox>())
+            {
+                ref CollisionBox col = ref _entity.GetMut<CollisionBox>();
+                col.IsGrounded = false;
+            }
+            if (_entity.Has<HitFlashEffect>())
+            {
+                _entity.Remove<HitFlashEffect>();
+            }
         }
 
         SyncToEntity();

@@ -107,6 +107,57 @@ public sealed class BossAiRuntime
         }
     }
 
+    /// <summary>Runtime と状態 module を初期状態へリセットし、初期状態の Enter を実行します。</summary>
+    /// <param name="runtime">リセット対象のランタイムスロット。</param>
+    /// <param name="initialBossState">リセット後の初期状態。</param>
+    /// <param name="initialPhase">初期 Phase（既定値: Phase1）。</param>
+    /// <returns>正常完了時は Success。</returns>
+    public ErrorOr<Success> Reset(BossRuntimeSlot runtime, BossState initialBossState, Phase initialPhase = Phase.Phase1)
+    {
+        ArgumentNullException.ThrowIfNull(runtime);
+
+        if (!_registry.Get(initialBossState, out IBossStateModule module))
+        {
+            RecordFailure(runtime, ErrorCode.UnregisteredState, "初期 State_Id が固定 map に対応していません。", LifecycleOperation.Enter, initialBossState);
+            return Error.Failure("BossAiRuntime.Reset", "初期 State_Id が固定 map に対応していません。");
+        }
+
+        runtime.Reset(initialBossState, initialPhase);
+        runtime.MarkInitializationComplete();
+        runtime.MarkRuntimeReady(true);
+
+        TransitionReason reason = new(ReasonKind.InitialEntry);
+        runtime.SetCurrentState(initialBossState, reason);
+        ref StateContext context = ref runtime.Context;
+        LifecycleInvocation invocation = new(
+            runtime.BossType,
+            runtime.EntityId,
+            initialBossState,
+            LifecycleOperation.Enter,
+            0,
+            0.0f,
+            initialPhase);
+        try
+        {
+            module.Enter(ref context, in invocation);
+            runtime.MarkStateEntered();
+            RecordLifecycle(runtime, in invocation);
+            ProcessPendingTransitions(runtime, 0);
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            HandleLifecycleFailure(
+                runtime,
+                ErrorCode.ModuleExecutionFailed,
+                "リセット時の初期 State_Module の Enter に失敗しました。",
+                LifecycleOperation.Enter,
+                initialBossState,
+                0);
+            return Error.Failure("BossAiRuntime.Reset", ex.Message);
+        }
+    }
+
     /// <summary>検証済み Frame_Update を開始して現在 module の Update を一回だけ実行します。</summary>
     public ErrorOr<Success> Update(BossRuntimeSlot runtime, long frameUpdateNumber, float deltaTime, Phase phase, in PlayerObservation playerObservation)
     {

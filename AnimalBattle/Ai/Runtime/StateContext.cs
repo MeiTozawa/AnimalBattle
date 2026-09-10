@@ -133,5 +133,15 @@ public struct StateContext
         return ErrorOr.Result.Success;
     }
 
+    /// <summary>フレーム境界の値を初期状態にリセットします。</summary>
+    /// <param name="initialPhase">初期 Phase（既定値: Phase1）。</param>
+    public void Reset(Phase initialPhase = Phase.Phase1)
+    {
+        FrameUpdateNumber = 0;
+        DeltaTime = 0.0f;
+        Phase = initialPhase;
+        _playerObservation = default;
+    }
+
     private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 }
