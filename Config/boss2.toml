@@ -1,6 +1,6 @@
 # Boss 2: Ground Crusher Golem Base Attributes
-BossName = "GROUND CRUSHER"
-MaxHp = 30.0
+BossName = "Boss2"
+MaxHp = 45.0
 SpawnX = 900.0
 SpawnY = 480.0
 ScaleX = 0.65

@@ -144,23 +144,49 @@ public sealed class HudRenderConfig
     /// <summary>
     /// 操作案内テキスト項目のリスト。
     /// </summary>
-    public List<HudTextItem> Text { get; set; } =
-    [
-        new() { Text = "[A/D/Left/Right]: Move (Instant Stop)", Color = ColorPalette.GrayLight },
-        new() { Text = "[Space/K]: Jump & Air Double Jump", Color = ColorPalette.GrayLight },
-        new() { Text = "[J/Z] + Direction: 8-Way Aim & Shoot", Color = ColorPalette.GrayLight },
-        new() { Text = "[R]: Instant Restart (1-Frame Reset)", Color = ColorPalette.RedCoral },
-        new() { Text = "[F1/H]: Toggle Hitbox/Hurtbox Debug", Color = ColorPalette.GrayLight },
-    ];
+    public List<HudTextItem> Text { get; set; } = [];
+
+    /// <summary>Boss 切り替え操作案内テキスト</summary>
+    public string BossSwitchGuideText { get; set; } = "[1] Boss 1 (Aerial Cat)  [2] Boss 2 (Ground Crusher)";
+
+    /// <summary>Boss 切り替え操作案内文字色 (<see cref="Color"/>)</summary>
+    public Color BossSwitchGuideColor { get; set; } = ColorPalette.GoldLight;
+
+    /// <summary>二段ジャンプインジケータ X 座標</summary>
+    public int DoubleJumpX { get; set; } = 20;
 
     /// <summary>二段ジャンプインジケータ Y 座標</summary>
-    public int DoubleJumpY { get; set; }
+    public int DoubleJumpY { get; set; } = 134;
+
+    /// <summary>二段ジャンプ表示ラベル文字列</summary>
+    public string DoubleJumpText { get; set; } = "DOUBLE JUMP:";
 
     /// <summary>二段ジャンプ有効時シンボル色 (<see cref="Color"/>)</summary>
-    public Color DoubleJumpActiveColor { get; set; }
+    public Color DoubleJumpActiveColor { get; set; } = ColorPalette.Cyan;
 
     /// <summary>二段ジャンプ消費時シンボル色 (<see cref="Color"/>)</summary>
-    public Color DoubleJumpInactiveColor { get; set; }
+    public Color DoubleJumpInactiveColor { get; set; } = ColorPalette.Gray;
+
+    /// <summary>プレイヤー HP 表示 X 座標</summary>
+    public int PlayerHpX { get; set; } = 20;
+
+    /// <summary>プレイヤー HP 表示 Y 座標</summary>
+    public int PlayerHpY { get; set; } = 154;
+
+    /// <summary>プレイヤー HP 表示ラベル文字列</summary>
+    public string PlayerHpText { get; set; } = "PLAYER HP:  ";
+
+    /// <summary>プレイヤー HP 高（3以上）文字色 (<see cref="Color"/>)</summary>
+    public Color PlayerHpHighColor { get; set; } = ColorPalette.Green;
+
+    /// <summary>プレイヤー HP 中（2）文字色 (<see cref="Color"/>)</summary>
+    public Color PlayerHpMidColor { get; set; } = ColorPalette.Gold;
+
+    /// <summary>プレイヤー HP 低（1）文字色 (<see cref="Color"/>)</summary>
+    public Color PlayerHpLowColor { get; set; } = ColorPalette.Red;
+
+    /// <summary>プレイヤー HP 死亡（0）文字色 (<see cref="Color"/>)</summary>
+    public Color PlayerHpDeadColor { get; set; } = ColorPalette.Gray;
 }
 
 /// <summary>
@@ -205,16 +231,31 @@ public sealed class BossHpBarRenderConfig
     public Color TopHighlightColor { get; set; }
 
     /// <summary>ヘッダー文字の Y 座標オフセット</summary>
-    public int HeaderOffsetY { get; set; }
+    public int HeaderOffsetY { get; set; } = 22;
+
+    /// <summary>Boss タイトル表示 X 軸オフセット (BarX1 からの相対距離)</summary>
+    public int TitleOffsetX { get; set; } = 0;
+
+    /// <summary>Boss タイトル表示 Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
+    public int TitleOffsetY { get; set; } = 22;
 
     /// <summary>Boss タイトル文字色 (<see cref="Color"/>)</summary>
     public Color TitleColor { get; set; }
 
+    /// <summary>HP 数値テキストの右端 X 軸オフセット (BarX2 から左方向へのオフセット)</summary>
+    public int HpTextOffsetRight { get; set; } = 170;
+
+    /// <summary>HP 数値テキストの Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
+    public int HpTextOffsetY { get; set; } = 22;
+
     /// <summary>HP 数値文字色 (<see cref="Color"/>)</summary>
     public Color HpTextColor { get; set; }
 
-    /// <summary>状態バッジテキストの X 軸オフセット</summary>
-    public int StateBadgeOffsetX { get; set; }
+    /// <summary>状態バッジテキストの X 軸オフセット (BarX1 からの相対距離)</summary>
+    public int StateBadgeOffsetX { get; set; } = 270;
+
+    /// <summary>状態バッジテキストの Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
+    public int StateBadgeOffsetY { get; set; } = 22;
 
     /// <summary>前隙予兆状態バッジ文字色 (<see cref="Color"/>)</summary>
     public Color StateTelegraphingColor { get; set; }

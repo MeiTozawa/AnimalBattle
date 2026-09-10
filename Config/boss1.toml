@@ -1,8 +1,8 @@
 # Boss 1: Ancient Cat Overlord Base Attributes
-BossName = "ANCIENT CAT OVERLORD"
-MaxHp = 30.0
-BaseX = 640.0
-BaseY = 200.0
+BossName = "Boss1"
+MaxHp = 60.0
+SpawnX = 640.0
+SpawnY = 200.0
 ScaleX = 0.6
 ScaleY = 0.6
 HitFlashDuration = 0.08

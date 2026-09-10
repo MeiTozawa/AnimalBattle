@@ -26,7 +26,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     /// <summary>
     /// 管理対象の設定オブジェクトインスタンスを取得します。
     /// </summary>
-    public T Config { get; } = config;
+    public T Config { get; private set; } = config;
 
     /// <summary>
     /// 設定ファイル変更にともない自動リロードが発生した際に発火するイベント。
@@ -89,7 +89,9 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
                 {
                     try
                     {
-                        configRoot.Bind(container.Config);
+                        T reloadedConfig = new();
+                        configRoot.Bind(reloadedConfig);
+                        container.Config = reloadedConfig;
                         Console.WriteLine($"[C# 設定] {typeof(T).Name} がファイル変更に伴い自動リロードされました (reloadOnChange: true): {fullPath}");
                         container.OnConfigReloaded?.Invoke();
                     }

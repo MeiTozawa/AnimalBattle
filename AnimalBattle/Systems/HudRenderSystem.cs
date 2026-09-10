@@ -59,7 +59,7 @@ public static class HudRenderSystem
         }
 
         int switchGuideY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
-        GameEngine.DrawString(hudCfg.TitleX, switchGuideY, "[1] Boss 1 (Aerial Cat)  [2] Boss 2 (Ground Crusher)", ColorPalette.GoldLight);
+        GameEngine.DrawString(hudCfg.TitleX, switchGuideY, hudCfg.BossSwitchGuideText, hudCfg.BossSwitchGuideColor);
     }
 
     private static void DrawPlayerStatus(Player? player, HudRenderConfig hudCfg)
@@ -76,7 +76,7 @@ public static class HudRenderSystem
             _ => "[ ○  ○ ]"
         };
         Color jumpColor = player.RemainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
-        GameEngine.DrawString(hudCfg.TitleX, hudCfg.DoubleJumpY, $"DOUBLE JUMP: {jumpSymbol}", jumpColor);
+        GameEngine.DrawString(hudCfg.DoubleJumpX, hudCfg.DoubleJumpY, $"{hudCfg.DoubleJumpText} {jumpSymbol}", jumpColor);
 
         int currentHp = (int)player.CurrentHp;
         string hpSymbol = currentHp switch
@@ -88,13 +88,13 @@ public static class HudRenderSystem
         };
         Color hpColor = currentHp switch
         {
-            >= 3 => ColorPalette.Green,
-            2 => ColorPalette.Gold,
-            1 => ColorPalette.Red,
-            _ => ColorPalette.Gray
+            >= 3 => hudCfg.PlayerHpHighColor,
+            2 => hudCfg.PlayerHpMidColor,
+            1 => hudCfg.PlayerHpLowColor,
+            _ => hudCfg.PlayerHpDeadColor
         };
         string invBadge = player.InvincibleTimer > 0.0f ? $" [INVINCIBLE {player.InvincibleTimer:F1}s]" : "";
-        GameEngine.DrawString(hudCfg.TitleX, hudCfg.DoubleJumpY + 20, $"PLAYER HP:   {hpSymbol} ({currentHp}/{(int)player.MaxHp}){invBadge}", hpColor);
+        GameEngine.DrawString(hudCfg.PlayerHpX, hudCfg.PlayerHpY, $"{hudCfg.PlayerHpText} {hpSymbol} ({currentHp}/{(int)player.MaxHp}){invBadge}", hpColor);
     }
 
     private static void DrawBossStatus(BossCharacter? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
@@ -213,13 +213,21 @@ public static class HudRenderSystem
 
         // Boss 情報ヘッダー (HP バー上部)
         string hpText = $"HP: {currentHp:F0} / {maxHp:F0}";
-        GameEngine.DrawString(barX1, barY1 - hpCfg.HeaderOffsetY, bossTitle, hpCfg.TitleColor);
-        GameEngine.DrawString(barX2 - 170, barY1 - hpCfg.HeaderOffsetY, hpText, hpCfg.HpTextColor);
+
+        int titleX = barX1 + hpCfg.TitleOffsetX;
+        int titleY = barY1 - (hpCfg.TitleOffsetY != 0 ? hpCfg.TitleOffsetY : hpCfg.HeaderOffsetY);
+        GameEngine.DrawString(titleX, titleY, bossTitle, hpCfg.TitleColor);
+
+        int hpX = barX2 - (hpCfg.HpTextOffsetRight != 0 ? hpCfg.HpTextOffsetRight : 170);
+        int hpY = barY1 - (hpCfg.HpTextOffsetY != 0 ? hpCfg.HpTextOffsetY : hpCfg.HeaderOffsetY);
+        GameEngine.DrawString(hpX, hpY, hpText, hpCfg.HpTextColor);
 
         string timerText = stateDuration > 0.0f
             ? $"{stateTimer:F1}s/{stateDuration:F1}s"
             : $"{stateTimer:F1}s";
-        GameEngine.DrawString(barX1 + hpCfg.StateBadgeOffsetX, barY1 - hpCfg.HeaderOffsetY, $"{stateName} ({timerText})", stateBadgeColor);
+        int badgeX = barX1 + hpCfg.StateBadgeOffsetX;
+        int badgeY = barY1 - (hpCfg.StateBadgeOffsetY != 0 ? hpCfg.StateBadgeOffsetY : hpCfg.HeaderOffsetY);
+        GameEngine.DrawString(badgeX, badgeY, $"{stateName} ({timerText})", stateBadgeColor);
 
         // Boss HP バー背景および枠線
         GameEngine.DrawBox(barX1 - hpCfg.BgPadding, barY1 - hpCfg.BgPadding, barX2 + hpCfg.BgPadding, barY2 + hpCfg.BgPadding, hpCfg.BgColor, true);

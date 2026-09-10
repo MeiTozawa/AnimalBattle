@@ -139,7 +139,7 @@ public partial class BattleScene : IDisposable
         ErrorOr<int> boss1HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
         int boss1Handle = !boss1HandleRes.IsError ? boss1HandleRes.Value : -1;
         _currentBoss = new(bossEntity, BossType.Boss1, boss1Handle);
-        Console.WriteLine($"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {ConfigManager.Boss1.MaxHp}, Pos: {ConfigManager.Boss1.BaseX}, {ConfigManager.Boss1.BaseY})");
+        Console.WriteLine($"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {ConfigManager.Boss1.MaxHp}, Pos: {ConfigManager.Boss1.SpawnX}, {ConfigManager.Boss1.SpawnY})");
     }
 
     private void SpawnBoss2(Entity bossEntity)

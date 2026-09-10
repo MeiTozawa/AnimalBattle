@@ -521,8 +521,8 @@ public sealed class ConfigProvider : IConfigProvider
     private static void ValidateBoss1(Boss1Config config, List<DiagnosticResult> diagnostics)
     {
         ValidatePositive(diagnostics, config.MaxHp, "Boss1.MaxHp");
-        ValidateFinite(diagnostics, config.BaseX, "Boss1.BaseX");
-        ValidateFinite(diagnostics, config.BaseY, "Boss1.BaseY");
+        ValidateFinite(diagnostics, config.SpawnX, "Boss1.SpawnX");
+        ValidateFinite(diagnostics, config.SpawnY, "Boss1.SpawnY");
         ValidatePositive(diagnostics, config.ScaleX, "Boss1.ScaleX");
         ValidatePositive(diagnostics, config.ScaleY, "Boss1.ScaleY");
         ValidateBoss1Phase(config.Phase1, Phase.Phase1, diagnostics);

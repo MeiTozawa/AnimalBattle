@@ -173,8 +173,8 @@ public sealed class BossCharacter
         if (bossType == BossType.Boss1)
         {
             Boss1Config b1Cfg = ConfigManager.Boss1;
-            _x = b1Cfg.BaseX;
-            _y = b1Cfg.BaseY;
+            _x = b1Cfg.SpawnX;
+            _y = b1Cfg.SpawnY;
             _maxHp = b1Cfg.MaxHp;
             _currentHp = b1Cfg.MaxHp;
 
@@ -183,7 +183,7 @@ public sealed class BossCharacter
             _collisionBox = default;
             _sprite = new(spriteHandle, flipX: false, isVisible: true, srcRect: new(0, 0, 192, 192));
 
-            _boss1State = new(b1Cfg.BaseX, b1Cfg.BaseY);
+            _boss1State = new(b1Cfg.SpawnX, b1Cfg.SpawnY);
             _boss2State = new(0.0f, 0.0f);
 
             EnumModuleMap moduleMap = CreateCompleteModuleMap(_boss1State, _boss2State, observation);
@@ -337,8 +337,8 @@ public sealed class BossCharacter
         if (_bossType == BossType.Boss1)
         {
             Boss1Config b1Cfg = ConfigManager.Boss1;
-            _x = b1Cfg.BaseX;
-            _y = b1Cfg.BaseY;
+            _x = b1Cfg.SpawnX;
+            _y = b1Cfg.SpawnY;
             _vx = 0.0f;
             _vy = 0.0f;
             _currentHp = b1Cfg.MaxHp;

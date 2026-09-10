@@ -57,9 +57,22 @@ Text = [
     { Text = "[F1/H]: Toggle Hitbox/Hurtbox Debug", Color = 0xFFCCCCCC },
 ]
 
-DoubleJumpY = 134
+BossSwitchGuideText = "[1] Boss 1   [2] Boss 2"
+BossSwitchGuideColor = 0xFFFFF275
+
+DoubleJumpX = 20
+DoubleJumpY = 154
+DoubleJumpText = "DOUBLE JUMP:"
 DoubleJumpActiveColor = 0xFF00E5FF
 DoubleJumpInactiveColor = 0xFF888888
+
+PlayerHpX = 20
+PlayerHpY = 174
+PlayerHpText = "PLAYER HP:  "
+PlayerHpHighColor = 0xFF00FF88
+PlayerHpMidColor = 0xFFFFD700
+PlayerHpLowColor = 0xFFFF3333
+PlayerHpDeadColor = 0xFF888888
 
 [BossHpBar]
 BarX1 = 240                      
@@ -78,11 +91,19 @@ TopHighlightThickness = 3
 TopHighlightColor = 0xFFFFFFFF  
 
 HeaderOffsetY = 22               
-TitleColor = 0xFFFFD700          
-HpTextColor = 0xFFFFFFFF         
-StateBadgeOffsetX = 270          
 
-# Boss 各种状态对应的徽章高亮颜色
+# Boss Title
+TitleOffsetX = 0
+TitleOffsetY = 22
+TitleColor = 0xFFFFD700          
+
+StateBadgeOffsetX = 250          
+StateBadgeOffsetY = 22
+
+HpTextOffsetRight = 100
+HpTextOffsetY = 22
+HpTextColor = 0xFFFFFFFF         
+
 StateTelegraphingColor = 0xFFFF5555  
 StateCastingColor = 0xFFFFD700       
 StateRecoveringColor = 0xFF00FF88    
@@ -90,7 +111,6 @@ StatePhaseTransitionColor = 0xFFFF88FF
 StateDefaultColor = 0xFF88CCFF       
 
 [Modals]
-# Game Over 弹窗
 GameOverX1 = 360
 GameOverY1 = 260
 GameOverX2 = 920
