@@ -21,12 +21,14 @@ public static class BinaryConfigLoader
     /// 外部ファイルが存在する場合はそれを優先し、存在しない場合は埋め込みリソースから読み込みます。
     /// </summary>
     /// <param name="overridePath">明示的なバイナリファイルパス（省略時は自動探索）。</param>
+    /// <param name="resolver">探索に使用するパスリゾルバー（省略時は標準リゾルバー）。</param>
     /// <returns>読み込み結果を含む <see cref="ErrorOr{BakedConfigBundle}"/></returns>
-    public static ErrorOr<BakedConfigBundle> Load(string? overridePath = null)
+    public static ErrorOr<BakedConfigBundle> Load(string? overridePath = null, IConfigPathResolver? resolver = null)
     {
         try
         {
-            Stream? stream = OpenBinaryStream(overridePath);
+            resolver ??= ConfigPathResolver.Instance;
+            Stream? stream = resolver.OpenBinaryStream(overridePath);
             if (stream == null)
             {
                 return Error.NotFound("Config.BinaryNotFound", "バイナリ設定ファイル (baked_configs.bin) が見つかりません。");
@@ -74,49 +76,5 @@ public static class BinaryConfigLoader
         {
             return Error.Failure("Config.Exception", $"バイナリ設定の読み込み中に例外が発生しました: {ex.Message}");
         }
-    }
-
-    private static Stream? OpenBinaryStream(string? overridePath)
-    {
-        if (!string.IsNullOrEmpty(overridePath) && File.Exists(overridePath))
-        {
-            return File.OpenRead(overridePath);
-        }
-
-        string[] searchPaths =
-        [
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resource", "baked_configs.bin"),
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "baked_configs.bin"),
-            Path.Combine(Environment.CurrentDirectory, "Resource", "baked_configs.bin"),
-            Path.Combine(Environment.CurrentDirectory, "baked_configs.bin"),
-        ];
-
-        foreach (string path in searchPaths)
-        {
-            if (File.Exists(path))
-            {
-                return File.OpenRead(path);
-            }
-        }
-
-        // プロジェクトルートを探索
-        DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
-        while (dir != null)
-        {
-            string candidate = Path.Combine(dir.FullName, "Resource", "baked_configs.bin");
-            if (File.Exists(candidate))
-            {
-                return File.OpenRead(candidate);
-            }
-            dir = dir.Parent;
-        }
-
-        // 埋め込みリソースから探索
-        Assembly assembly = Assembly.GetExecutingAssembly();
-        Stream? resourceStream = assembly.GetManifestResourceStream("baked_configs.bin")
-            ?? assembly.GetManifestResourceStream("AnimalBattle.Resource.baked_configs.bin")
-            ?? assembly.GetManifestResourceStream("AnimalBattle.baked_configs.bin");
-
-        return resourceStream;
     }
 }

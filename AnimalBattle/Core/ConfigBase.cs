@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
+using AnimalBattle.Configs;
 using ErrorOr;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
@@ -47,22 +48,24 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
     /// Release ビルド時は外部ファイルに依存せず、コード内にベイクされたデフォルト設定インスタンスを即座に返却します。
     /// </summary>
     /// <param name="defaultFileName">TOML ファイル名</param>
+    /// <param name="resolver">探索に使用するパスリゾルバー（省略時は標準リゾルバー）。</param>
     /// <returns>成功時は設定コンテナインスタンスを含む <see cref="ErrorOr{T}"/>、失敗時は <see cref="Error"/></returns>
     [UnconditionalSuppressMessage("Microsoft.Configuration.Binder", "SYSLIB1104", Justification = "Generic binder fallback is intentional in config container class.")]
-    public static ErrorOr<ConfigBase<T>> LoadFromFile(string defaultFileName)
+    public static ErrorOr<ConfigBase<T>> LoadFromFile(string defaultFileName, IConfigPathResolver? resolver = null)
     {
 #if !DEBUG
         ConfigBase<T> config = new(new T());
         return config;
 #else
-        ErrorOr<string> pathResult = FindConfigPath(defaultFileName);
-        if (pathResult.IsError || string.IsNullOrEmpty(pathResult.Value) || !File.Exists(pathResult.Value))
+        resolver ??= ConfigPathResolver.Instance;
+        string? resolvedPath = resolver.ResolveConfigPath(defaultFileName);
+        if (string.IsNullOrEmpty(resolvedPath) || !File.Exists(resolvedPath))
         {
             Console.WriteLine($"[C# 設定警告] TOML 設定ファイルが見つかりませんでした: {defaultFileName}");
             return Error.NotFound("Config.NotFound", $"TOML 設定ファイルが見つかりません ({defaultFileName})。");
         }
 
-        string fullPath = pathResult.Value;
+        string fullPath = resolvedPath;
 
         try
         {
@@ -137,64 +140,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
         }
     }
 
-    /// <summary>
-    /// 設定ファイルの検索パスを取得します。
-    /// カレントディレクトリ、出力ディレクトリ、およびプロジェクトルートの Config フォルダを優先的に探索します。
-    /// </summary>
-    /// <param name="fileName">対象ファイル名</param>
-    /// <returns>検索結果を含む <see cref="ErrorOr{T}"/></returns>
-    private static ErrorOr<string> FindConfigPath(string fileName)
-    {
-        try
-        {
-            string[] subDirs = ["Config", "Resource", ""];
 
-            string[] directRoots = [AppDomain.CurrentDomain.BaseDirectory, Environment.CurrentDirectory];
-            foreach (string root in directRoots)
-            {
-                ErrorOr<string> findResult = FindInSubDirectories(root, subDirs, fileName);
-                if (!findResult.IsError)
-                {
-                    return findResult;
-                }
-            }
-
-            DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
-            while (dir != null)
-            {
-                ErrorOr<string> findResult = FindInSubDirectories(dir.FullName, subDirs, fileName);
-                if (!findResult.IsError)
-                {
-                    return findResult;
-                }
-                dir = dir.Parent;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[C# 設定警告] 設定ファイルパス探索中に例外が発生しました ({fileName}): {ex.Message}");
-            return Error.Failure("Config.Exception", ex.Message);
-        }
-
-        return Error.NotFound("Config.NotFound", $"設定ファイルが見つかりません: {fileName}");
-    }
-
-    private static ErrorOr<string> FindInSubDirectories(string rootDir, string[] subDirs, string fileName)
-    {
-        foreach (string subDir in subDirs)
-        {
-            string candidate = string.IsNullOrEmpty(subDir)
-                ? Path.Combine(rootDir, fileName)
-                : Path.Combine(rootDir, subDir, fileName);
-
-            if (File.Exists(candidate))
-            {
-                return Path.GetFullPath(candidate);
-            }
-        }
-
-        return Error.NotFound("Config.DirectoryNotFound", $"ディレクトリ '{rootDir}' 下に対象ファイルが見つかりません: {fileName}");
-    }
 
     private bool _isDisposed;
 
