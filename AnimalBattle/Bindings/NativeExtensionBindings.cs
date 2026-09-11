@@ -1,8 +1,5 @@
 using System.Runtime.InteropServices;
-using AnimalBattle.Components;
 using AnimalBattle.Compute;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Bindings;
 

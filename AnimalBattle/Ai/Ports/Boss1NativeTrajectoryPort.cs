@@ -1,6 +1,4 @@
 using AnimalBattle.Bindings;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Physics;
 using ErrorOr;
 
 namespace AnimalBattle.Ai.Ports;

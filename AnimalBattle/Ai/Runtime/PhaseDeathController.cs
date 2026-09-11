@@ -6,19 +6,13 @@ using ErrorOr;
 namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>HP 閾値、PhaseTransition、死亡終端を allocation-free に判定する共通 policy です。</summary>
-public readonly struct BossPhaseThresholds
+/// <remarks>Phase 閾値を生成します。</remarks>
+public readonly struct BossPhaseThresholds(float phase2, float phase3)
 {
     /// <summary>Phase2 へ移る HP 割合の閾値です。</summary>
-    public float Phase2 { get; }
+    public float Phase2 { get; } = phase2;
     /// <summary>Phase3 へ移る HP 割合の閾値です。</summary>
-    public float Phase3 { get; }
-
-    /// <summary>Phase 閾値を生成します。</summary>
-    public BossPhaseThresholds(float phase2, float phase3)
-    {
-        Phase2 = phase2;
-        Phase3 = phase3;
-    }
+    public float Phase3 { get; } = phase3;
 
     /// <summary>閾値が既存設定の有効範囲にあるかどうかです。</summary>
     public bool IsValid => float.IsFinite(Phase2)

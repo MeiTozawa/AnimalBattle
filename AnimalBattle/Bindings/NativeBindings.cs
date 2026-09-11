@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
-using AnimalBattle.Core.Physics;
+using AnimalBattle.Core;
 using AnimalBattle.Render;
 
 namespace AnimalBattle.Bindings;

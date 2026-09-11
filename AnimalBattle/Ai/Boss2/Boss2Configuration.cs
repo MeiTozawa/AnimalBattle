@@ -77,6 +77,53 @@ public sealed class Boss2AttackPattern(
     public bool IsValid => Definition.IsValid;
 }
 
+/// <summary>Boss2 戦闘判定および追跡・反風筝に関する設定値です。</summary>
+public readonly struct Boss2CombatSettings(
+    float collisionHeight,
+    float jumpCooldownDuration,
+    float takeoffVelocityThreshold,
+    float moveThreshold,
+    float samePlatformToleranceY,
+    float airborneVelocityThreshold,
+    float airborneHeightThreshold,
+    float meleeTriggerRangeX,
+    float meleeTriggerRangeY,
+    float antiKitingRangedDistance,
+    float antiKitingMidDistance,
+    float antiKitingEnforceMultiplier,
+    float wallCrashStunDuration,
+    float playerHitboxHeight)
+{
+    /// <summary>衝突判定の高さ（px）です。</summary>
+    public float CollisionHeight { get; } = collisionHeight;
+    /// <summary>跳躍後の再跳躍冷却時間（秒）です。</summary>
+    public float JumpCooldownDuration { get; } = jumpCooldownDuration;
+    /// <summary>離陸速度閾値（px/s）です。</summary>
+    public float TakeoffVelocityThreshold { get; } = takeoffVelocityThreshold;
+    /// <summary>水平移動判定の閾値（px）です。</summary>
+    public float MoveThreshold { get; } = moveThreshold;
+    /// <summary>同プラットフォーム判定の Y 許容誤差（px）です。</summary>
+    public float SamePlatformToleranceY { get; } = samePlatformToleranceY;
+    /// <summary>プレイヤー滞空判定の Y 速度閾値（px/s）です。</summary>
+    public float AirborneVelocityThreshold { get; } = airborneVelocityThreshold;
+    /// <summary>プレイヤー滞空判定の高度差閾値（px）です。</summary>
+    public float AirborneHeightThreshold { get; } = airborneHeightThreshold;
+    /// <summary>近接技トリガーの X 範囲（px）です。</summary>
+    public float MeleeTriggerRangeX { get; } = meleeTriggerRangeX;
+    /// <summary>近接技トリガーの Y 範囲（px）です。</summary>
+    public float MeleeTriggerRangeY { get; } = meleeTriggerRangeY;
+    /// <summary>反風筝遠距離技の発動距離（px）です。</summary>
+    public float AntiKitingRangedDistance { get; } = antiKitingRangedDistance;
+    /// <summary>反風筝中距離技の発動距離（px）です。</summary>
+    public float AntiKitingMidDistance { get; } = antiKitingMidDistance;
+    /// <summary>反風筝強制発動タイムアウト倍率です。</summary>
+    public float AntiKitingEnforceMultiplier { get; } = antiKitingEnforceMultiplier;
+    /// <summary>壁激突時の気絶時間（秒）です。</summary>
+    public float WallCrashStunDuration { get; } = wallCrashStunDuration;
+    /// <summary>プレイヤーの判定高さ（px）です。</summary>
+    public float PlayerHitboxHeight { get; } = playerHitboxHeight;
+}
+
 /// <summary>Boss2 State_Module が読む設定の注入境界です。</summary>
 public interface IBoss2Configuration
 {
@@ -84,6 +131,10 @@ public interface IBoss2Configuration
     Boss2PhaseSettings GetPhase(Phase phase);
     /// <summary>指定 BossSkill の検証済み pattern を取得します。</summary>
     bool GetAttack(BossSkill skill, out Boss2AttackPattern pattern);
+    /// <summary>Boss2 戦闘判定および反風筝・衝突に関する設定を取得します。</summary>
+    Boss2CombatSettings CombatSettings { get; }
+    /// <summary>技能の既定冷却時間を取得します。</summary>
+    float GetSkillDefaultCooldown(BossSkill skill);
 }
 
 /// <summary>既存 Boss2 設定の検証済み既定 snapshot です。</summary>
@@ -199,6 +250,46 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration
 
         pattern = null!;
         return false;
+    }
+
+    /// <inheritdoc />
+    public Boss2CombatSettings CombatSettings
+    {
+        get
+        {
+            Boss2Config toml = ConfigManager.Boss2;
+            return new Boss2CombatSettings(
+                collisionHeight: toml.CollisionHeight,
+                jumpCooldownDuration: toml.JumpCooldownDuration,
+                takeoffVelocityThreshold: toml.TakeoffVelocityThreshold,
+                moveThreshold: toml.MoveThreshold,
+                samePlatformToleranceY: toml.SamePlatformToleranceY,
+                airborneVelocityThreshold: toml.AirborneVelocityThreshold,
+                airborneHeightThreshold: toml.AirborneHeightThreshold,
+                meleeTriggerRangeX: toml.MeleeTriggerRangeX,
+                meleeTriggerRangeY: toml.MeleeTriggerRangeY,
+                antiKitingRangedDistance: toml.AntiKitingRangedDistance,
+                antiKitingMidDistance: toml.AntiKitingMidDistance,
+                antiKitingEnforceMultiplier: toml.AntiKitingEnforceMultiplier,
+                wallCrashStunDuration: toml.WallCrashStunDuration,
+                playerHitboxHeight: ConfigManager.Player.HitboxHeight);
+        }
+    }
+
+    /// <inheritdoc />
+    public float GetSkillDefaultCooldown(BossSkill skill)
+    {
+        PatternConfig pattern = ConfigManager.Pattern;
+        return skill switch
+        {
+            BossSkill.EarthquakeRoar => pattern.EarthquakeRoar.DefaultCooldown,
+            BossSkill.LeapSmash => pattern.LeapSmash.DefaultCooldown,
+            BossSkill.GroundStomp => pattern.GroundStomp.DefaultCooldown,
+            BossSkill.DoubleCleave => pattern.DoubleCleave.DefaultCooldown,
+            BossSkill.HeavySlash => pattern.HeavySlash.DefaultCooldown,
+            BossSkill.FrenzyCharge => pattern.FrenzyCharge.DefaultCooldown,
+            _ => 3.0f
+        };
     }
 }
 

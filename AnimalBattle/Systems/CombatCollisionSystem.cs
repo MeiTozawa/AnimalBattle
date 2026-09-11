@@ -1,9 +1,7 @@
 using System;
 using System.Drawing;
-using Flecs.NET.Core;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
-using AnimalBattle.Core.Physics;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 

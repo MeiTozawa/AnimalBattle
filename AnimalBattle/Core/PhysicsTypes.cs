@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace AnimalBattle.Core.Physics;
+namespace AnimalBattle.Core;
 
 /// <summary>
 /// 2次元浮動小数点ベクトル構造体（Native C++ の Vec2f とメモリレイアウト完全一致: X: 4byte, Y: 4byte）。

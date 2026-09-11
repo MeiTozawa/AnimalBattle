@@ -1,7 +1,5 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Configs;
-using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Boss2;
 
@@ -37,9 +35,9 @@ public sealed class Boss2MoveToTakeoffModule(IBoss2Configuration configuration, 
 
         Boss2PhaseSettings settings = _configuration.GetPhase(context.Phase);
         float deltaX = context.PlayerObservation.PositionX - _state.CurrentPosition.X;
-        float direction = MathF.Abs(deltaX) > ConfigManager.Boss2.MoveThreshold ? MathF.Sign(deltaX) : 0.0f;
+        float direction = MathF.Abs(deltaX) > _configuration.CombatSettings.MoveThreshold ? MathF.Sign(deltaX) : 0.0f;
         float velocityX = direction * settings.MoveSpeed;
-        if (MathF.Abs(deltaX) > ConfigManager.Boss2.MoveThreshold)
+        if (MathF.Abs(deltaX) > _configuration.CombatSettings.MoveThreshold)
         {
             _state.FacingRight = deltaX > 0.0f;
         }

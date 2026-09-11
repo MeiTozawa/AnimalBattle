@@ -5,10 +5,7 @@ using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Physics;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;

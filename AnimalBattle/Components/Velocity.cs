@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Components;
 

@@ -7,24 +7,17 @@ namespace AnimalBattle.Ai.Ports;
 /// <summary>
 /// 移動要求を表す値型 command です。
 /// </summary>
-public readonly struct MovementCommand
+/// <remarks>移動要求を生成します。</remarks>
+public readonly struct MovementCommand(MovementCommandKind kind, float x, float y)
 {
     /// <summary>移動要求の種別を取得します。</summary>
-    public MovementCommandKind Kind { get; }
+    public MovementCommandKind Kind { get; } = kind;
 
     /// <summary>要求する X 値を取得します。</summary>
-    public float X { get; }
+    public float X { get; } = x;
 
     /// <summary>要求する Y 値を取得します。</summary>
-    public float Y { get; }
-
-    /// <summary>移動要求を生成します。</summary>
-    public MovementCommand(MovementCommandKind kind, float x, float y)
-    {
-        Kind = kind;
-        X = x;
-        Y = y;
-    }
+    public float Y { get; } = y;
 }
 
 /// <summary>移動 command の種別を定義します。</summary>
@@ -41,24 +34,17 @@ public enum MovementCommandKind
 }
 
 /// <summary>攻撃要求を表す値型 command です。</summary>
-public readonly struct AttackCommand
+/// <remarks>攻撃 command を生成します。</remarks>
+public readonly struct AttackCommand(AttackCommandKind kind, BossSkill skill = default, float x = 0, float y = 0)
 {
     /// <summary>攻撃要求の種別を取得します。</summary>
-    public AttackCommandKind Kind { get; }
+    public AttackCommandKind Kind { get; } = kind;
     /// <summary>技能識別子を取得します。</summary>
-    public BossSkill Skill { get; }
+    public BossSkill Skill { get; } = skill;
     /// <summary>command の X 値を取得します。</summary>
-    public float X { get; }
+    public float X { get; } = x;
     /// <summary>command の Y 値を取得します。</summary>
-    public float Y { get; }
-    /// <summary>攻撃 command を生成します。</summary>
-    public AttackCommand(AttackCommandKind kind, BossSkill skill = default, float x = 0, float y = 0)
-    {
-        Kind = kind;
-        Skill = skill;
-        X = x;
-        Y = y;
-    }
+    public float Y { get; } = y;
 }
 
 /// <summary>攻撃 command の種別を定義します。</summary>
@@ -73,21 +59,15 @@ public enum AttackCommandKind
 }
 
 /// <summary>演出要求を表す値型 command です。</summary>
-public readonly struct EffectCommand
+/// <remarks>演出要求を生成します。</remarks>
+public readonly struct EffectCommand(EffectCommandKind kind, float x = 0, float y = 0)
 {
     /// <summary>演出要求の種別を取得します。</summary>
-    public EffectCommandKind Kind { get; }
+    public EffectCommandKind Kind { get; } = kind;
     /// <summary>演出の X 値を取得します。</summary>
-    public float X { get; }
+    public float X { get; } = x;
     /// <summary>演出の Y 値を取得します。</summary>
-    public float Y { get; }
-    /// <summary>演出要求を生成します。</summary>
-    public EffectCommand(EffectCommandKind kind, float x = 0, float y = 0)
-    {
-        Kind = kind;
-        X = x;
-        Y = y;
-    }
+    public float Y { get; } = y;
 }
 
 /// <summary>演出 command の種別を定義します。</summary>

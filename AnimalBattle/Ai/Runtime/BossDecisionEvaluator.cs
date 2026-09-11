@@ -7,38 +7,30 @@ namespace AnimalBattle.Ai.Runtime;
 /// <summary>
 /// 技能判定時に必要な戦闘コンテキストパラメータを保持する軽量構造体です。
 /// </summary>
-public readonly struct AttackDecisionContext
+/// <remarks>
+/// 技能判定コンテキストを生成します。
+/// </remarks>
+/// <param name="distance">Boss とプレイヤー間の距離。</param>
+/// <param name="isSamePlatform">同一足場に存在するかどうか。</param>
+/// <param name="isPlayerGrounded">プレイヤーが接地状態かどうか。</param>
+/// <param name="isPlayerAirborne">プレイヤーが滞空状態かどうか。</param>
+public readonly struct AttackDecisionContext(
+    float distance,
+    bool isSamePlatform,
+    bool isPlayerGrounded,
+    bool isPlayerAirborne)
 {
     /// <summary>Boss とプレイヤー間の直線または水平距離（ピクセル）を取得します。</summary>
-    public float Distance { get; }
+    public float Distance { get; } = distance;
 
     /// <summary>Boss とプレイヤーが同一足場に存在するかどうかを取得します。</summary>
-    public bool IsSamePlatform { get; }
+    public bool IsSamePlatform { get; } = isSamePlatform;
 
     /// <summary>プレイヤーが接地状態かどうかを取得します。</summary>
-    public bool IsPlayerGrounded { get; }
+    public bool IsPlayerGrounded { get; } = isPlayerGrounded;
 
     /// <summary>プレイヤーが滞空状態かどうかを取得します。</summary>
-    public bool IsPlayerAirborne { get; }
-
-    /// <summary>
-    /// 技能判定コンテキストを生成します。
-    /// </summary>
-    /// <param name="distance">Boss とプレイヤー間の距離。</param>
-    /// <param name="isSamePlatform">同一足場に存在するかどうか。</param>
-    /// <param name="isPlayerGrounded">プレイヤーが接地状態かどうか。</param>
-    /// <param name="isPlayerAirborne">プレイヤーが滞空状態かどうか。</param>
-    public AttackDecisionContext(
-        float distance,
-        bool isSamePlatform,
-        bool isPlayerGrounded,
-        bool isPlayerAirborne)
-    {
-        Distance = distance;
-        IsSamePlatform = isSamePlatform;
-        IsPlayerGrounded = isPlayerGrounded;
-        IsPlayerAirborne = isPlayerAirborne;
-    }
+    public bool IsPlayerAirborne { get; } = isPlayerAirborne;
 }
 
 /// <summary>

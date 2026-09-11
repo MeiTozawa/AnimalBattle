@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Configs;
 
@@ -115,7 +116,7 @@ public static class ConfigManager
             Ai.Boss2.Boss2PipelineDefinition.Reload();
         };
 #else
-        var loadResult = BinaryConfigLoader.Load();
+        ErrorOr<BakedConfigBundle> loadResult = BinaryConfigLoader.Load();
         if (loadResult.IsError)
         {
             Console.WriteLine($"[C# 設定エラー] Release 版バイナリ設定 (baked_configs.bin) の読み込みに失敗しました: {loadResult.FirstError.Description}");

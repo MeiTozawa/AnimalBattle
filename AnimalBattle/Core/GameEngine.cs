@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Bindings;
-using AnimalBattle.Core.Physics;
 using AnimalBattle.Render;
 
 namespace AnimalBattle.Core;
@@ -52,7 +51,7 @@ public static class GameEngine
         bool initSuccess = NativeBindings.Engine_Init(IntPtr.Zero, width, height);
         Debug.Assert(initSuccess, "Native エンジンの初期化に失敗しました。");
 
-        Input.InputService.RegisterDefaultActions();
+        InputService.RegisterDefaultActions();
     }
 
     /// <summary>

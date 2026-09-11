@@ -1,4 +1,4 @@
-namespace AnimalBattle.Core.Input;
+namespace AnimalBattle.Core;
 
 /// <summary>
 /// 入力コンテキスト（入力状態の分離スタック用）。

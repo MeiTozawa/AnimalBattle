@@ -5,22 +5,15 @@ using AnimalBattle.Ai.Runtime;
 namespace AnimalBattle.Ai.Boss2;
 
 /// <summary>Boss2 の Execute module に共通する lifecycle 実装です。</summary>
-public abstract class Boss2ExecuteModuleBase : IBossStateModule, IStateModuleDependencyProvider
+/// <remarks>State_Id、Boss2 設定、共有実行値を注入します。</remarks>
+public abstract class Boss2ExecuteModuleBase(BossState stateId, IBoss2Configuration configuration, Boss2BehaviorState state) : IBossStateModule, IStateModuleDependencyProvider
 {
-    private readonly IBoss2Configuration _configuration;
-    private readonly Boss2BehaviorState _state;
+    private readonly IBoss2Configuration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+    private readonly Boss2BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
     private ExecuteGate? _gate;
 
-    /// <summary>State_Id、Boss2 設定、共有実行値を注入します。</summary>
-    protected Boss2ExecuteModuleBase(BossState stateId, IBoss2Configuration configuration, Boss2BehaviorState state)
-    {
-        HandledState = stateId;
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _state = state ?? throw new ArgumentNullException(nameof(state));
-    }
-
     /// <summary>Execute 担当状態です。</summary>
-    public BossState HandledState { get; }
+    public BossState HandledState { get; } = stateId;
     /// <summary>Execute 状態が必要とする依存関係です。</summary>
     public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "AttackPort", "ObservationService"];
     /// <summary>派生 module が参照する Boss2 共有実行値です。</summary>

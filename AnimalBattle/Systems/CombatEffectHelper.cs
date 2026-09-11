@@ -1,10 +1,7 @@
 using System;
 using System.Drawing;
-using Flecs.NET.Core;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Components;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Asset;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
@@ -14,17 +11,12 @@ namespace AnimalBattle.Systems;
 /// </summary>
 public static class CombatEffectHelper
 {
-    private static Query _bossBulletQuery;
-
     /// <summary>
-    /// ヘルパークラスで使用する事前構築クエリを初期化します。
+    /// ヘルパークラスで使用する初期化処理を提供します（後方互換用）。
     /// </summary>
     /// <param name="world">初期化対象の Flecs.NET ワールド</param>
     public static void Initialize(World world)
     {
-        _bossBulletQuery = world.QueryBuilder()
-                                .With<BossBulletTag>()
-                                .Build();
     }
 
     /// <summary>
@@ -149,13 +141,10 @@ public static class CombatEffectHelper
     /// <param name="world">対象の Flecs.NET ワールド</param>
     public static void ClearAllBossBullets(World world)
     {
-        unsafe
-        {
-            if (_bossBulletQuery.Handle != null)
-            {
-                _bossBulletQuery.Each((Entity e) => e.Destruct());
-            }
-        }
+        using Query query = world.QueryBuilder()
+                                 .With<BossBulletTag>()
+                                 .Build();
+        query.Each((Entity e) => e.Destruct());
     }
 
     /// <summary>

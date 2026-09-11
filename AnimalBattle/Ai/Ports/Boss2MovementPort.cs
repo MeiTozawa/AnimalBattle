@@ -1,4 +1,3 @@
-using AnimalBattle.Core.Physics;
 using AnimalBattle.Maps.Navigation;
 using ErrorOr;
 

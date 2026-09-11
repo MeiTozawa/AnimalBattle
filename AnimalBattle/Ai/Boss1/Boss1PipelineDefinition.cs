@@ -96,10 +96,4 @@ public static class Boss1PipelineDefinition
                     .Rule(boss1.Phase3.Rules)
             .Build();
     }
-
-    private static AttackRuleConfig? FindRule(List<AttackRuleConfig>? rules, BossSkill skill)
-    {
-        string skillName = skill.ToString();
-        return rules?.Find(r => string.Equals(r.Skill, skillName, StringComparison.OrdinalIgnoreCase));
-    }
 }

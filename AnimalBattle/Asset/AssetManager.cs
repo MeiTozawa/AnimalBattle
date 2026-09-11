@@ -5,7 +5,7 @@ using System.IO;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 
-namespace AnimalBattle.Core.Asset;
+namespace AnimalBattle.Asset;
 
 /// <summary>
 /// <see cref="AnimationRegistry"/> および <see cref="ResourcePath"/> を参照してキャラクタースプライトや各種テクスチャをロード・管理し、

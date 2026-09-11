@@ -17,45 +17,30 @@ namespace AnimalBattle.Systems;
 /// 領域モデル（<see cref="Player"/> / <see cref="BossCharacter"/>）から直接キャラクターを描画し、
 /// 海量弾幕・パーティクルエフェクトのみを Flecs ECS 高速クエリで一括描画します。
 /// </summary>
-public sealed class WorldRenderSystem : IDisposable
+/// <remarks>
+/// <see cref="WorldRenderSystem"/> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリを構築します。
+/// </remarks>
+/// <param name="world">描画対象の Flecs.NET ワールド。</param>
+public sealed class WorldRenderSystem(World world) : IDisposable
 {
-    private readonly Query<Transform, Velocity> _playerBulletQuery;
-    private readonly Query<Transform, Bullet> _bossBulletQuery;
-    private readonly Query<Transform, Sprite, FadeEffect> _spriteEffectQuery;
-    private readonly Query<Transform, RingEffect, FadeEffect> _ringEffectQuery;
-    private readonly Query<Transform, Bullet, FadeEffect> _particleEffectQuery;
-    private readonly Query<Transform, Sprite, HitFlashEffect> _hitFlashQuery;
-    private bool _isDisposed;
-
-    /// <summary>
-    /// <see cref="WorldRenderSystem"/> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリを構築します。
-    /// </summary>
-    /// <param name="world">描画対象の Flecs.NET ワールド。</param>
-    public WorldRenderSystem(World world)
-    {
-        _playerBulletQuery = world.QueryBuilder<Transform, Velocity>()
+    private readonly Query<Transform, Velocity> _playerBulletQuery = world.QueryBuilder<Transform, Velocity>()
                                   .With<PlayerBulletTag>()
                                   .Build();
-
-        _bossBulletQuery = world.QueryBuilder<Transform, Bullet>()
+    private readonly Query<Transform, Bullet> _bossBulletQuery = world.QueryBuilder<Transform, Bullet>()
                                 .With<BossBulletTag>()
                                 .Build();
-
-        _spriteEffectQuery = world.QueryBuilder<Transform, Sprite, FadeEffect>()
+    private readonly Query<Transform, Sprite, FadeEffect> _spriteEffectQuery = world.QueryBuilder<Transform, Sprite, FadeEffect>()
                                   .With<EffectTag>()
                                   .Build();
-
-        _ringEffectQuery = world.QueryBuilder<Transform, RingEffect, FadeEffect>()
+    private readonly Query<Transform, RingEffect, FadeEffect> _ringEffectQuery = world.QueryBuilder<Transform, RingEffect, FadeEffect>()
                                 .With<EffectTag>()
                                 .Build();
-
-        _particleEffectQuery = world.QueryBuilder<Transform, Bullet, FadeEffect>()
+    private readonly Query<Transform, Bullet, FadeEffect> _particleEffectQuery = world.QueryBuilder<Transform, Bullet, FadeEffect>()
                                     .With<EffectTag>()
                                     .Build();
-
-        _hitFlashQuery = world.QueryBuilder<Transform, Sprite, HitFlashEffect>()
+    private readonly Query<Transform, Sprite, HitFlashEffect> _hitFlashQuery = world.QueryBuilder<Transform, Sprite, HitFlashEffect>()
                               .Build();
-    }
+    private bool _isDisposed;
 
     /// <summary>
     /// 世界の全ゲームオブジェクト（マップ、Boss、自機、弾幕、エフェクト）を描画します。

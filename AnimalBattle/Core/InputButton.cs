@@ -1,4 +1,4 @@
-namespace AnimalBattle.Core.Input;
+namespace AnimalBattle.Core;
 
 /// <summary>
 /// キーボード、マウス、ゲームパッドを統一的に扱うボタン識別子。

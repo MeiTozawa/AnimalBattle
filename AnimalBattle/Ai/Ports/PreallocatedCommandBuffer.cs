@@ -269,11 +269,11 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
 }
 
 /// <summary>移動 command buffer を移動 port として公開します。</summary>
-public sealed class BufferedMovementPort : IMovementPort
+/// <remarks>buffer を指定します。</remarks>
+public sealed class BufferedMovementPort(PreallocatedCommandBuffer<MovementCommand> buffer) : IMovementPort
 {
-    private readonly PreallocatedCommandBuffer<MovementCommand> _buffer;
-    /// <summary>buffer を指定します。</summary>
-    public BufferedMovementPort(PreallocatedCommandBuffer<MovementCommand> buffer) => _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
+    private readonly PreallocatedCommandBuffer<MovementCommand> _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
+
     /// <inheritdoc />
     public ErrorOr<Success> SetVelocity(float x, float y)
     {
@@ -320,11 +320,11 @@ public sealed class BufferedMovementPort : IMovementPort
 }
 
 /// <summary>攻撃 command buffer を攻撃 port として公開します。</summary>
-public sealed class BufferedAttackPort : IAttackPort
+/// <remarks>buffer を指定します。</remarks>
+public sealed class BufferedAttackPort(PreallocatedCommandBuffer<AttackCommand> buffer) : IAttackPort
 {
-    private readonly PreallocatedCommandBuffer<AttackCommand> _buffer;
-    /// <summary>buffer を指定します。</summary>
-    public BufferedAttackPort(PreallocatedCommandBuffer<AttackCommand> buffer) => _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
+    private readonly PreallocatedCommandBuffer<AttackCommand> _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
+
     /// <inheritdoc />
     public ErrorOr<Success> EmitBullet(BossSkill skill, float x, float y)
     {
@@ -361,11 +361,11 @@ public sealed class BufferedAttackPort : IAttackPort
 
 
 /// <summary>演出 command buffer を演出 port として公開します。</summary>
-public sealed class BufferedEffectPort : IEffectPort
+/// <remarks>buffer を指定します。</remarks>
+public sealed class BufferedEffectPort(PreallocatedCommandBuffer<EffectCommand> buffer) : IEffectPort
 {
-    private readonly PreallocatedCommandBuffer<EffectCommand> _buffer;
-    /// <summary>buffer を指定します。</summary>
-    public BufferedEffectPort(PreallocatedCommandBuffer<EffectCommand> buffer) => _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
+    private readonly PreallocatedCommandBuffer<EffectCommand> _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
+
     /// <inheritdoc />
     public ErrorOr<Success> RequestTelegraph(float x, float y)
     {

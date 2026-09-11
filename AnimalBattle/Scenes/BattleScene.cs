@@ -3,15 +3,8 @@ using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Bindings;
 using AnimalBattle.Characters;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Asset;
-using AnimalBattle.Core.Input;
-using AnimalBattle.Core.Physics;
 using AnimalBattle.Maps;
-using AnimalBattle.Modules;
-using AnimalBattle.Systems;
 using ErrorOr;
 using Flecs.NET.Core;
 
@@ -33,8 +26,6 @@ public partial class BattleScene : IDisposable
     private BossCharacter? _currentBoss;
     private Query<Transform, CollisionBox> _platformQuery;
     private TileMap? _tileMap;
-    private bool _prevSelectBoss1;
-    private bool _prevSelectBoss2;
     private bool _isDisposed;
 
     /// <summary>
@@ -146,7 +137,7 @@ public partial class BattleScene : IDisposable
     {
         ErrorOr<int> boss2HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
         int boss2Handle = !boss2HandleRes.IsError ? boss2HandleRes.Value : -1;
-        _currentBoss = new(bossEntity, BossType.Boss2, boss2Handle);
+        _currentBoss = new(bossEntity, BossType.Boss2, boss2Handle, () => _tileMap?.NavGraph);
         Console.WriteLine($"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {ConfigManager.Boss2.MaxHp}, Pos: {ConfigManager.Boss2.SpawnX}, {ConfigManager.Boss2.SpawnY})");
     }
 
@@ -283,7 +274,6 @@ public partial class BattleScene : IDisposable
             _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
             _ecsWorld.Set(_tileMap);
             CurrentTileMap = _tileMap;
-            AnimalBattle.Ai.Boss2.Boss2PatrolChaseModule.NavGraphProvider = () => CurrentTileMap?.NavGraph;
 
             _tileMap.BuildPlatformColliders(_ecsWorld);
             Console.WriteLine("[BattleScene] TileMap および TileSet プラットフォームコライダーが正常に初期化されました。");
@@ -310,7 +300,8 @@ public partial class BattleScene : IDisposable
         if (_currentBoss != null)
         {
             Vec2f playerPos = _player != null ? new(_player.X, _player.Y) : Vec2f.Zero;
-            _currentBoss.Update(deltaTime, playerPos, _ecsWorld, _platformQuery);
+            Vec2f playerVel = _player != null ? new(_player.Vx, _player.Vy) : Vec2f.Zero;
+            _currentBoss.Update(deltaTime, playerPos, playerVel, _ecsWorld, _platformQuery);
         }
 
         _ecsWorld.Progress(deltaTime);
@@ -318,26 +309,17 @@ public partial class BattleScene : IDisposable
 
     private void HandleInput()
     {
-        bool restartJustPressed = InputService.IsPressed(InputAction.Restart);
-        bool key1Down = GameEngine.CheckHitKey(0x02);
-        bool key2Down = GameEngine.CheckHitKey(0x03);
-
-        bool selectBoss1Pressed = key1Down && !_prevSelectBoss1;
-        bool selectBoss2Pressed = key2Down && !_prevSelectBoss2;
-        _prevSelectBoss1 = key1Down;
-        _prevSelectBoss2 = key2Down;
-
-        if (selectBoss1Pressed)
+        if (InputService.IsPressed(InputAction.SelectBoss1))
         {
             SwitchBoss("Boss1");
             ResetCombat();
         }
-        else if (selectBoss2Pressed)
+        else if (InputService.IsPressed(InputAction.SelectBoss2))
         {
             SwitchBoss("Boss2");
             ResetCombat();
         }
-        else if (restartJustPressed)
+        else if (InputService.IsPressed(InputAction.Restart))
         {
             ResetCurrentBoss();
             ResetCombat();
@@ -377,7 +359,6 @@ public partial class BattleScene : IDisposable
             _effectsQuery.Dispose();
             _platformQuery.Dispose();
             _ecsWorld.Dispose();
-            AnimalBattle.Ai.Boss2.Boss2PatrolChaseModule.NavGraphProvider = null;
             if (Current == this)
             {
                 Current = null;

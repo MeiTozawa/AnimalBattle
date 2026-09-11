@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Runtime;
 

@@ -1,4 +1,4 @@
-namespace AnimalBattle.Core.Input;
+namespace AnimalBattle.Core;
 
 /// <summary>
 /// ゲーム内で使用される抽象入力アクション。

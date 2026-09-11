@@ -2,7 +2,7 @@ using System;
 using AnimalBattle.Bindings;
 using AnimalBattle.Components;
 
-namespace AnimalBattle.Core.Physics;
+namespace AnimalBattle.Core;
 
 /// <summary>
 /// C++ Native 物理エンジン (<see cref="NativeBindings"/>) への高効率なアクセスを提供する静的物理サービス。

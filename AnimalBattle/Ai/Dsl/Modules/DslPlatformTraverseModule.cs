@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Dsl.Modules;
 

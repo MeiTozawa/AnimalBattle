@@ -1,7 +1,5 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Components;
-using AnimalBattle.Core.Physics;
 
 namespace AnimalBattle.Ai.Boss2;
 

@@ -4,7 +4,6 @@ using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Dsl;
 using AnimalBattle.Ai.Dsl.Modules;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Core.Physics;
 using ErrorOr;
 
 namespace AnimalBattle.Ai.Boss1;

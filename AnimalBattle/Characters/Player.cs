@@ -1,10 +1,5 @@
 using System;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Asset;
-using AnimalBattle.Core.Input;
-using AnimalBattle.Core.Physics;
 using ErrorOr;
 using Flecs.NET.Core;
 
@@ -12,7 +7,7 @@ namespace AnimalBattle.Characters;
 
 /// <summary>
 /// プレイヤー自機の移動、跳躍、重力、射撃瞄準およびアニメーション状態を一元管理する領域モデルクラスです。
-/// 従来の 8 元組 ECS システムから解耦され、直感的かつ高内聚なオブジェクト設計を提供します。
+/// 实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
 public sealed class Player
 {
@@ -23,70 +18,94 @@ public sealed class Player
 
     private readonly Entity _entity;
     private readonly Hurtbox _hurtbox;
-    private Animation _animation;
-    private CollisionBox _collisionBox;
-    private Sprite _sprite;
 
-    private float _x;
-    private float _y;
-    private float _vx;
-    private float _vy;
-    private float _currentHp;
-    private float _maxHp;
-    private float _invincibleTimer;
     private int _remainingJumps;
     private int _maxJumps;
-    private bool _isGrounded;
     private float _shootCooldown;
-    private float _scaleX;
-    private float _scaleY;
 
     /// <summary>プレイヤーのワールド X 座標を取得または設定します。</summary>
     public float X
     {
-        get => _x;
-        set => _x = value;
+        get => _entity.Has<Transform>() ? _entity.Get<Transform>().X : 0.0f;
+        set
+        {
+            if (_entity.Has<Transform>())
+            {
+                _entity.GetMut<Transform>().X = value;
+            }
+        }
     }
 
     /// <summary>プレイヤーのワールド Y 座標を取得または設定します。</summary>
     public float Y
     {
-        get => _y;
-        set => _y = value;
+        get => _entity.Has<Transform>() ? _entity.Get<Transform>().Y : 0.0f;
+        set
+        {
+            if (_entity.Has<Transform>())
+            {
+                _entity.GetMut<Transform>().Y = value;
+            }
+        }
     }
 
     /// <summary>プレイヤーの X 軸移動速度を取得または設定します。</summary>
     public float Vx
     {
-        get => _vx;
-        set => _vx = value;
+        get => _entity.Has<Velocity>() ? _entity.Get<Velocity>().Vx : 0.0f;
+        set
+        {
+            if (_entity.Has<Velocity>())
+            {
+                _entity.GetMut<Velocity>().Vx = value;
+            }
+        }
     }
 
     /// <summary>プレイヤーの Y 軸移動速度を取得または設定します。</summary>
     public float Vy
     {
-        get => _vy;
-        set => _vy = value;
+        get => _entity.Has<Velocity>() ? _entity.Get<Velocity>().Vy : 0.0f;
+        set
+        {
+            if (_entity.Has<Velocity>())
+            {
+                _entity.GetMut<Velocity>().Vy = value;
+            }
+        }
     }
 
     /// <summary>現在の HP を取得または設定します。</summary>
     public float CurrentHp
     {
-        get => _currentHp;
-        set => _currentHp = Math.Clamp(value, 0.0f, _maxHp);
+        get => _entity.Has<Health>() ? _entity.Get<Health>().Current : 0.0f;
+        set
+        {
+            if (_entity.Has<Health>())
+            {
+                ref Health health = ref _entity.GetMut<Health>();
+                health.Current = Math.Clamp(value, 0.0f, health.Max);
+            }
+        }
     }
 
     /// <summary>最大 HP を取得します。</summary>
-    public float MaxHp => _maxHp;
+    public float MaxHp => _entity.Has<Health>() ? _entity.Get<Health>().Max : 0.0f;
 
     /// <summary>プレイヤーが生存中であるかを取得します。</summary>
-    public bool IsAlive => _currentHp > 0.0f;
+    public bool IsAlive => CurrentHp > 0.0f;
 
     /// <summary>無敵時間の残り秒数を取得または設定します。</summary>
     public float InvincibleTimer
     {
-        get => _invincibleTimer;
-        set => _invincibleTimer = Math.Max(0.0f, value);
+        get => _entity.Has<Health>() ? _entity.Get<Health>().InvincibleTimer : 0.0f;
+        set
+        {
+            if (_entity.Has<Health>())
+            {
+                _entity.GetMut<Health>().InvincibleTimer = Math.Max(0.0f, value);
+            }
+        }
     }
 
     /// <summary>被弾時白閃演出中であるかを取得します。</summary>
@@ -95,8 +114,14 @@ public sealed class Player
     /// <summary>接地状態であるかを取得または設定します。</summary>
     public bool IsGrounded
     {
-        get => _isGrounded;
-        set => _isGrounded = value;
+        get => _entity.Has<CollisionBox>() && _entity.Get<CollisionBox>().IsGrounded;
+        set
+        {
+            if (_entity.Has<CollisionBox>())
+            {
+                _entity.GetMut<CollisionBox>().IsGrounded = value;
+            }
+        }
     }
 
     /// <summary>残り跳躍可能回数を取得または設定します。</summary>
@@ -114,24 +139,24 @@ public sealed class Player
     }
 
     /// <summary>地形衝突判定ボックスを取得します。</summary>
-    public CollisionBox CollisionBox => _collisionBox;
+    public CollisionBox CollisionBox => _entity.Has<CollisionBox>() ? _entity.Get<CollisionBox>() : default;
 
     /// <summary>被弾判定ボックスを取得します。</summary>
     public Hurtbox Hurtbox => _hurtbox;
 
     /// <summary>アニメーション制御インスタンスを取得します。</summary>
-    public Animation Animation => _animation;
+    public Animation Animation => _entity.Has<Animation>() ? _entity.Get<Animation>() : default;
 
     /// <summary>スプライト描画設定インスタンスを取得します。</summary>
-    public Sprite Sprite => _sprite;
+    public Sprite Sprite => _entity.Has<Sprite>() ? _entity.Get<Sprite>() : default;
 
     /// <summary>プレイヤーの描画スケール X を取得します。</summary>
-    public float ScaleX => _scaleX;
+    public float ScaleX => _entity.Has<Transform>() ? _entity.Get<Transform>().ScaleX : 1.0f;
 
     /// <summary>プレイヤーの描画スケール Y を取得します。</summary>
-    public float ScaleY => _scaleY;
+    public float ScaleY => _entity.Has<Transform>() ? _entity.Get<Transform>().ScaleY : 1.0f;
 
-    /// <summary>互換性保持用の Flecs エンティティ句柄を取得します。</summary>
+    /// <summary>対応する Flecs エンティティ句柄を取得します。</summary>
     public Entity Entity => _entity;
 
     /// <summary>
@@ -145,27 +170,21 @@ public sealed class Player
         ArgumentNullException.ThrowIfNull(pCfg);
         _entity = entity;
 
-        _x = pCfg.SpawnX;
-        _y = pCfg.SpawnY;
-        _vx = 0.0f;
-        _vy = 0.0f;
-        _maxHp = pCfg.MaxHp;
-        _currentHp = pCfg.MaxHp;
-        _invincibleTimer = 0.0f;
         _maxJumps = pCfg.MaxJumps;
         _remainingJumps = pCfg.MaxJumps;
-        _isGrounded = false;
         _shootCooldown = 0.0f;
-        _scaleX = pCfg.ScaleX;
-        _scaleY = pCfg.ScaleY;
-
-        _collisionBox = new(pCfg.HitboxWidth, pCfg.HitboxHeight);
         _hurtbox = new(pCfg.GetHurtboxShape(), Faction.Friendly);
-        _animation = new("Idle", CharacterType.Cat, isPlaying: true);
-        _sprite = new(spriteHandle, flipX: false, isVisible: true, srcRect: new(0, 0, 64, 64));
+
+        _entity.Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, scaleX: pCfg.ScaleX, scaleY: pCfg.ScaleY))
+               .Set(new Velocity(0.0f, 0.0f))
+               .Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight))
+               .Set(_hurtbox)
+               .Set(new Health(pCfg.MaxHp))
+               .Set(new Animation("Idle", CharacterType.Cat, isPlaying: true))
+               .Set(new Sprite(spriteHandle, flipX: false, isVisible: true, srcRect: new(0, 0, 64, 64)))
+               .Add<PlayerTag>();
 
         UpdateAnimation(0.0f);
-        SyncToEntity();
     }
 
     /// <summary>
@@ -186,12 +205,13 @@ public sealed class Player
         ArgumentNullException.ThrowIfNull(pCfg);
         ArgumentNullException.ThrowIfNull(arenaCfg);
 
-        // 外部衝突システム（CombatCollisionSystem）による被弾ダメージの反映
-        SyncFromEntity();
-
-        if (_invincibleTimer > 0.0f)
+        if (_entity.Has<Health>())
         {
-            _invincibleTimer = Math.Max(0.0f, _invincibleTimer - dt);
+            ref Health health = ref _entity.GetMut<Health>();
+            if (health.InvincibleTimer > 0.0f)
+            {
+                health.InvincibleTimer = Math.Max(0.0f, health.InvincibleTimer - dt);
+            }
         }
 
         if (_shootCooldown > 0.0f)
@@ -201,9 +221,12 @@ public sealed class Player
 
         if (!IsAlive)
         {
-            _vx = 0.0f;
-            _vy = 0.0f;
-            SyncToEntity();
+            if (_entity.Has<Velocity>())
+            {
+                ref Velocity v = ref _entity.GetMut<Velocity>();
+                v.Vx = 0.0f;
+                v.Vy = 0.0f;
+            }
             return;
         }
 
@@ -221,9 +244,6 @@ public sealed class Player
 
         // 5. 手銃射撃処理
         ProcessShootInput(world, pCfg);
-
-        // 6. 外部システム（描画・AI 観測・被弾判定）への同期
-        SyncToEntity();
     }
 
     /// <summary>
@@ -234,31 +254,60 @@ public sealed class Player
     {
         ArgumentNullException.ThrowIfNull(pCfg);
 
-        _x = pCfg.SpawnX;
-        _y = pCfg.SpawnY;
-        _vx = 0.0f;
-        _vy = 0.0f;
-        _currentHp = pCfg.MaxHp;
-        _maxHp = pCfg.MaxHp;
-        _invincibleTimer = 0.0f;
+        if (_entity.Has<Transform>())
+        {
+            ref Transform t = ref _entity.GetMut<Transform>();
+            t.X = pCfg.SpawnX;
+            t.Y = pCfg.SpawnY;
+            t.ScaleX = pCfg.ScaleX;
+            t.ScaleY = pCfg.ScaleY;
+        }
+
+        if (_entity.Has<Velocity>())
+        {
+            ref Velocity v = ref _entity.GetMut<Velocity>();
+            v.Vx = 0.0f;
+            v.Vy = 0.0f;
+        }
+
+        if (_entity.Has<Health>())
+        {
+            ref Health h = ref _entity.GetMut<Health>();
+            h.Max = pCfg.MaxHp;
+            h.Current = pCfg.MaxHp;
+            h.InvincibleTimer = 0.0f;
+        }
+
+        if (_entity.Has<CollisionBox>())
+        {
+            ref CollisionBox c = ref _entity.GetMut<CollisionBox>();
+            c.IsGrounded = false;
+            c.IsOnWall = false;
+        }
+
         _remainingJumps = pCfg.MaxJumps;
         _maxJumps = pCfg.MaxJumps;
-        _isGrounded = false;
         _shootCooldown = 0.0f;
-        _scaleX = pCfg.ScaleX;
-        _scaleY = pCfg.ScaleY;
 
-        _animation.Play(ClipIdle);
-        _sprite.FlipX = false;
-        _sprite.IsVisible = true;
+        if (_entity.Has<Animation>())
+        {
+            ref Animation anim = ref _entity.GetMut<Animation>();
+            anim.Play(ClipIdle);
+        }
+
+        if (_entity.Has<Sprite>())
+        {
+            ref Sprite spr = ref _entity.GetMut<Sprite>();
+            spr.FlipX = false;
+            spr.IsVisible = true;
+        }
+
         UpdateAnimation(0.0f);
 
         if (_entity.IsAlive() && _entity.Has<HitFlashEffect>())
         {
             _entity.Remove<HitFlashEffect>();
         }
-
-        SyncToEntity();
     }
 
     /// <summary>
@@ -268,19 +317,17 @@ public sealed class Player
     /// <param name="invincibleDuration">付与する無敵時間（秒）。</param>
     public void TakeDamage(float amount, float invincibleDuration)
     {
-        if (_invincibleTimer > 0.0f || !IsAlive)
+        if (InvincibleTimer > 0.0f || !IsAlive)
         {
             return;
         }
 
-        CurrentHp = Math.Max(0.0f, _currentHp - amount);
-        _invincibleTimer = invincibleDuration;
-        if (!IsAlive)
+        CurrentHp = Math.Max(0.0f, CurrentHp - amount);
+        InvincibleTimer = invincibleDuration;
+        if (!IsAlive && _entity.Has<Sprite>())
         {
-            _sprite.IsVisible = false;
+            _entity.GetMut<Sprite>().IsVisible = false;
         }
-
-        SyncToEntity();
     }
 
     private void ProcessHorizontalInput(PlayerConfig pCfg)
@@ -288,19 +335,22 @@ public sealed class Player
         bool isLeft = InputService.IsHolding(InputAction.Left);
         bool isRight = InputService.IsHolding(InputAction.Right);
 
+        ref Velocity vel = ref _entity.GetMut<Velocity>();
+        ref Sprite spr = ref _entity.GetMut<Sprite>();
+
         if (isLeft)
         {
-            _vx = -pCfg.MoveSpeed;
-            _sprite.FlipX = true;
+            vel.Vx = -pCfg.MoveSpeed;
+            spr.FlipX = true;
         }
         else if (isRight)
         {
-            _vx = pCfg.MoveSpeed;
-            _sprite.FlipX = false;
+            vel.Vx = pCfg.MoveSpeed;
+            spr.FlipX = false;
         }
         else
         {
-            _vx = 0.0f;
+            vel.Vx = 0.0f;
         }
     }
 
@@ -312,17 +362,21 @@ public sealed class Player
             return;
         }
 
-        if (_isGrounded)
+        ref Velocity vel = ref _entity.GetMut<Velocity>();
+        ref CollisionBox col = ref _entity.GetMut<CollisionBox>();
+        ref Transform trans = ref _entity.GetMut<Transform>();
+
+        if (col.IsGrounded)
         {
-            _vy = pCfg.FirstJumpVelocity;
-            _isGrounded = false;
+            vel.Vy = pCfg.FirstJumpVelocity;
+            col.IsGrounded = false;
             _remainingJumps = 1;
         }
         else if (_remainingJumps > 0)
         {
-            _vy = pCfg.SecondJumpVelocity;
+            vel.Vy = pCfg.SecondJumpVelocity;
             _remainingJumps--;
-            CombatEffectHelper.SpawnJumpRingEffect(world, _x, _y + _collisionBox.Height / 2.0f);
+            CombatEffectHelper.SpawnJumpRingEffect(world, trans.X, trans.Y + (col.Height / 2.0f));
         }
     }
 
@@ -332,21 +386,25 @@ public sealed class Player
         ArenaConfig arenaCfg,
         float dt)
     {
-        float currentVy = _vy;
-        PhysicsService.ApplyGravity(ref currentVy, pCfg.Gravity, pCfg.MaxFallSpeed, dt);
-        _vy = currentVy;
+        ref Transform trans = ref _entity.GetMut<Transform>();
+        ref Velocity vel = ref _entity.GetMut<Velocity>();
+        ref CollisionBox col = ref _entity.GetMut<CollisionBox>();
 
-        float nextX = _x + _vx * dt;
-        float nextY = _y + _vy * dt;
+        float currentVy = vel.Vy;
+        PhysicsService.ApplyGravity(ref currentVy, pCfg.Gravity, pCfg.MaxFallSpeed, dt);
+        vel.Vy = currentVy;
+
+        float nextX = trans.X + (vel.Vx * dt);
+        float nextY = trans.Y + (vel.Vy * dt);
 
         nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
 
         bool isGrounded = false;
         float adjustedPosY = nextY;
-        float adjustedVy = _vy;
+        float adjustedVy = vel.Vy;
 
-        float currentY = _y;
-        Box2D playerBox = new(nextX, nextY, _collisionBox.Width, _collisionBox.Height);
+        float currentY = trans.Y;
+        Box2D playerBox = new(nextX, nextY, col.Width, col.Height);
 
         platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
         {
@@ -368,7 +426,7 @@ public sealed class Player
             }
         });
 
-        float floorLimitY = 560.0f - _collisionBox.Height / 2.0f;
+        float floorLimitY = 560.0f - (col.Height / 2.0f);
         if (adjustedPosY >= floorLimitY)
         {
             isGrounded = true;
@@ -381,50 +439,60 @@ public sealed class Player
             _remainingJumps = _maxJumps;
         }
 
-        _x = nextX;
-        _y = adjustedPosY;
-        _vy = adjustedVy;
-        _isGrounded = isGrounded;
+        trans.X = nextX;
+        trans.Y = adjustedPosY;
+        vel.Vy = adjustedVy;
+        col.IsGrounded = isGrounded;
     }
 
     private void UpdateAnimation(float dt)
     {
-        if (!_isGrounded)
+        if (!_entity.Has<Animation>())
         {
-            if (_vy < 0.0f)
+            return;
+        }
+
+        ref Animation anim = ref _entity.GetMut<Animation>();
+        ref readonly Velocity vel = ref _entity.Get<Velocity>();
+        ref readonly CollisionBox col = ref _entity.Get<CollisionBox>();
+
+        if (!col.IsGrounded)
+        {
+            if (vel.Vy < 0.0f)
             {
-                _animation.Play(ClipJump);
+                anim.Play(ClipJump);
             }
             else
             {
-                _animation.Play(ClipFall);
+                anim.Play(ClipFall);
             }
         }
-        else if (Math.Abs(_vx) > 0.1f)
+        else if (Math.Abs(vel.Vx) > 0.1f)
         {
-            _animation.Play(ClipRun);
+            anim.Play(ClipRun);
         }
         else
         {
-            _animation.Play(ClipIdle);
+            anim.Play(ClipIdle);
         }
 
-        if (_animation.IsPlaying)
+        if (anim.IsPlaying)
         {
-            _animation.Timer += dt;
+            anim.Timer += dt;
 
-            ErrorOr<AnimationConfig> charConfigRes = AssetManager.GetCharacterConfig(_animation.CharacterType);
+            ErrorOr<AnimationConfig> charConfigRes = AssetManager.GetCharacterConfig(anim.CharacterType);
             if (!charConfigRes.IsError && charConfigRes.Value != null)
             {
                 AnimationConfig charConfig = charConfigRes.Value;
-                ErrorOr<int> handleRes = AssetManager.GetCharacterSpriteHandle(_animation.CharacterType, _animation.CurrentClip);
+                ref Sprite spr = ref _entity.GetMut<Sprite>();
+                ErrorOr<int> handleRes = AssetManager.GetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip);
                 if (!handleRes.IsError && handleRes.Value >= 0)
                 {
-                    _sprite.GraphHandle = handleRes.Value;
+                    spr.GraphHandle = handleRes.Value;
                 }
 
-                _sprite.SrcRect = AssetManager.CalculateSrcRect(charConfig, _animation.CurrentClip, _animation.Timer, out bool isFinished);
-                _animation.IsFinished = isFinished;
+                spr.SrcRect = AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out bool isFinished);
+                anim.IsFinished = isFinished;
             }
         }
     }
@@ -454,85 +522,45 @@ public sealed class Player
 
         if (Math.Abs(inputX) > 0.001f || Math.Abs(inputY) > 0.001f)
         {
-            float length = MathF.Sqrt(inputX * inputX + inputY * inputY);
-            dirX = inputX / length;
-            dirY = inputY / length;
+            float len = MathF.Sqrt((inputX * inputX) + (inputY * inputY));
+            dirX = inputX / len;
+            dirY = inputY / len;
 
-            if (inputX < 0.0f)
+            if (_entity.Has<Sprite>())
             {
-                _sprite.FlipX = true;
-            }
-            else if (inputX > 0.0f)
-            {
-                _sprite.FlipX = false;
+                ref Sprite spr = ref _entity.GetMut<Sprite>();
+                if (inputX < 0.0f)
+                {
+                    spr.FlipX = true;
+                }
+                else if (inputX > 0.0f)
+                {
+                    spr.FlipX = false;
+                }
             }
         }
         else
         {
-            dirX = _sprite.FlipX ? -1.0f : 1.0f;
+            ref readonly Sprite spr = ref _entity.Get<Sprite>();
+            dirX = spr.FlipX ? -1.0f : 1.0f;
             dirY = 0.0f;
         }
     }
 
     private void SpawnBullet(World world, PlayerConfig pCfg, float dirX, float dirY)
     {
-        float spawnX = _x + dirX * pCfg.BulletSpawnOffset;
-        float spawnY = _y + pCfg.BulletSpawnOffsetY + dirY * pCfg.BulletSpawnOffset;
+        ref readonly Transform trans = ref _entity.Get<Transform>();
+
+        float spawnX = trans.X + (dirX * pCfg.BulletSpawnOffset);
+        float spawnY = trans.Y + pCfg.BulletSpawnOffsetY + (dirY * pCfg.BulletSpawnOffset);
+        float vx = dirX * pCfg.BulletSpeed;
+        float vy = dirY * pCfg.BulletSpeed;
 
         world.Entity()
              .Set(new Transform(spawnX, spawnY))
-             .Set(new Velocity(dirX * pCfg.BulletSpeed, dirY * pCfg.BulletSpeed))
+             .Set(new Velocity(vx, vy))
              .Set(new CollisionBox(pCfg.BulletWidth, pCfg.BulletHeight))
              .Set(new Hitbox(pCfg.GetBulletHitboxShape(), damage: pCfg.BulletDamage, faction: Faction.Friendly, destroyOnHit: true))
              .Add<PlayerBulletTag>();
-    }
-
-    private void SyncFromEntity()
-    {
-        if (!_entity.IsAlive())
-        {
-            return;
-        }
-
-        if (_entity.Has<Health>())
-        {
-            ref Health health = ref _entity.GetMut<Health>();
-            _currentHp = health.Current;
-            _invincibleTimer = health.InvincibleTimer;
-        }
-
-        if (_entity.Has<Sprite>())
-        {
-            ref Sprite spr = ref _entity.GetMut<Sprite>();
-            _sprite.IsVisible = spr.IsVisible;
-        }
-    }
-
-    private void SyncToEntity()
-    {
-        if (!_entity.IsAlive())
-        {
-            return;
-        }
-
-        _entity.Set(new Transform(_x, _y, scaleX: _scaleX, scaleY: _scaleY));
-        _entity.Set(new Velocity(_vx, _vy));
-
-        _collisionBox.IsGrounded = _isGrounded;
-        _entity.Set(_collisionBox);
-        _entity.Set(_hurtbox);
-
-        Health health = new(_maxHp);
-        health.Current = _currentHp;
-        health.InvincibleTimer = _invincibleTimer;
-        _entity.Set(health);
-
-        _entity.Set(_sprite);
-        _entity.Set(_animation);
-
-        if (!_entity.Has<PlayerTag>())
-        {
-            _entity.Add<PlayerTag>();
-        }
     }
 }

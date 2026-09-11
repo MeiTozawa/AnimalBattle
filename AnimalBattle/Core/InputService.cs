@@ -1,9 +1,8 @@
 using System;
 using System.Drawing;
 using AnimalBattle.Bindings;
-using AnimalBattle.Core.Physics;
 
-namespace AnimalBattle.Core.Input;
+namespace AnimalBattle.Core;
 
 /// <summary>
 /// Native C++ InputService と連携し、コンテキストスタック・抽象アクション入力判定を提供する高レベルサービスクラス。

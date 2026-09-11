@@ -5,37 +5,27 @@ namespace AnimalBattle.Components;
 /// <summary>
 /// 衝突判定用バウンディングボックスおよび状態を表すコンポーネント。
 /// </summary>
+/// <remarks>
+/// 指定されたサイズとオフセットで <see cref="CollisionBox"/> の新しいインスタンスを初期化します。
+/// </remarks>
 [StructLayout(LayoutKind.Sequential)]
-public struct CollisionBox
+public struct CollisionBox(float width, float height, float offsetX = 0.0f, float offsetY = 0.0f)
 {
     /// <summary>バウンディングボックス幅</summary>
-    public float Width;
+    public float Width = width;
 
     /// <summary>バウンディングボックス高さ</summary>
-    public float Height;
+    public float Height = height;
 
     /// <summary>X 軸オフセット</summary>
-    public float OffsetX;
+    public float OffsetX = offsetX;
 
     /// <summary>Y 軸オフセット</summary>
-    public float OffsetY;
+    public float OffsetY = offsetY;
 
     /// <summary>接地フラグ</summary>
-    public bool IsGrounded;
+    public bool IsGrounded = false;
 
     /// <summary>壁接触フラグ</summary>
-    public bool IsOnWall;
-
-    /// <summary>
-    /// 指定されたサイズとオフセットで <see cref="CollisionBox"/> の新しいインスタンスを初期化します。
-    /// </summary>
-    public CollisionBox(float width, float height, float offsetX = 0.0f, float offsetY = 0.0f)
-    {
-        Width = width;
-        Height = height;
-        OffsetX = offsetX;
-        OffsetY = offsetY;
-        IsGrounded = false;
-        IsOnWall = false;
-    }
+    public bool IsOnWall = false;
 }

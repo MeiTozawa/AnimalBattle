@@ -63,7 +63,7 @@ public sealed class Boss1PipelineDslTests
         Assert.True(dive.IsValid);
         Assert.Equal(0.55f, dive.Definition.TelegraphDuration);
         Assert.Equal(0.45f, dive.Definition.ExecuteDuration);
-        Assert.Equal(1.40f, dive.Definition.RecoveryDuration);
+        Assert.Equal(0.80f, dive.Definition.RecoveryDuration);
         Assert.Equal(960.0f, dive.DashSpeed);
 
         Boss1PhaseSettings phase1 = config.GetPhase(Phase.Phase1);

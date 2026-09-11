@@ -13,25 +13,18 @@ namespace AnimalBattle.Systems;
 /// 衝突・被弾・攻撃判定枠およびナビゲーションメッシュをワイヤーフレーム描画するデバッグ表示システム。
 /// F1 または H キーでリアルタイムに ON / OFF を切り替え可能です。
 /// </summary>
-public sealed class DebugRenderSystem : IDisposable
+/// <remarks>
+/// <see cref="DebugRenderSystem"/> の新しいインスタンスを初期化し、判定枠クエリを構築します。
+/// </remarks>
+/// <param name="world">登録先の Flecs.NET ワールド。</param>
+public sealed class DebugRenderSystem(World world) : IDisposable
 {
     private static bool _prevToggleKey;
-    private readonly Query<Transform, Hurtbox> _hurtboxQuery;
-    private readonly Query<Transform, Hitbox> _hitboxQuery;
-    private bool _isDisposed;
-
-    /// <summary>
-    /// <see cref="DebugRenderSystem"/> の新しいインスタンスを初期化し、判定枠クエリを構築します。
-    /// </summary>
-    /// <param name="world">登録先の Flecs.NET ワールド。</param>
-    public DebugRenderSystem(World world)
-    {
-        _hurtboxQuery = world.QueryBuilder<Transform, Hurtbox>()
+    private readonly Query<Transform, Hurtbox> _hurtboxQuery = world.QueryBuilder<Transform, Hurtbox>()
                              .Build();
-
-        _hitboxQuery = world.QueryBuilder<Transform, Hitbox>()
+    private readonly Query<Transform, Hitbox> _hitboxQuery = world.QueryBuilder<Transform, Hitbox>()
                             .Build();
-    }
+    private bool _isDisposed;
 
     /// <summary>
     /// デバッグ衝突枠およびナビゲーショングラフを描画します。

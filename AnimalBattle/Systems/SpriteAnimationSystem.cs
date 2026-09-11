@@ -1,6 +1,4 @@
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
-using AnimalBattle.Core.Asset;
 using ErrorOr;
 using Flecs.NET.Core;
 

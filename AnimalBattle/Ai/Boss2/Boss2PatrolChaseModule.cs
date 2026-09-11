@@ -1,7 +1,5 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Configs;
-using AnimalBattle.Core.Physics;
 using AnimalBattle.Maps.Navigation;
 
 namespace AnimalBattle.Ai.Boss2;
@@ -11,16 +9,16 @@ namespace AnimalBattle.Ai.Boss2;
 /// </summary>
 /// <param name="configuration">Boss2 設定境界。</param>
 /// <param name="state">Boss2 共有実行時状態。</param>
-public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Boss2BehaviorState state)
+/// <param name="navGraphProvider">ナビゲーショングラフを取得するためのプロバイダ（省略可能）。</param>
+public sealed class Boss2PatrolChaseModule(
+    IBoss2Configuration configuration,
+    Boss2BehaviorState state,
+    Func<PlatformNavigationGraph?>? navGraphProvider = null)
     : IBossStateModule, IStateModuleDependencyProvider
 {
-    /// <summary>
-    /// ナビゲーショングラフを取得するためのプロバイダ（テストまたは外部注入用）。
-    /// </summary>
-    public static Func<PlatformNavigationGraph?>? NavGraphProvider { get; set; }
-
     private readonly IBoss2Configuration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     private readonly Boss2BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
+    private readonly Func<PlatformNavigationGraph?>? _navGraphProvider = navGraphProvider;
 
     /// <inheritdoc />
     public BossState HandledState => Boss2State.PatrolChase;
@@ -55,13 +53,13 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
         float deltaX = context.PlayerObservation.PositionX - _state.CurrentPosition.X;
         float deltaY = context.PlayerObservation.PositionY - _state.CurrentPosition.Y;
 
-        PlatformNavigationGraph? navGraph = NavGraphProvider?.Invoke();
+        PlatformNavigationGraph? navGraph = _navGraphProvider?.Invoke();
         NavPlan? plan = null;
 
         if (navGraph is not null && navGraph.Nodes.Count > 0)
         {
-            float bossFootY = _state.CurrentPosition.Y + (ConfigManager.Boss2.CollisionHeight / 2.0f);
-            float playerFootY = context.PlayerObservation.PositionY + (ConfigManager.Player.HitboxHeight / 2.0f);
+            float bossFootY = _state.CurrentPosition.Y + (_configuration.CombatSettings.CollisionHeight / 2.0f);
+            float playerFootY = context.PlayerObservation.PositionY + (_configuration.CombatSettings.PlayerHitboxHeight / 2.0f);
             plan = navGraph.FindPath(
                 _state.CurrentPosition.X,
                 bossFootY,
@@ -82,7 +80,7 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
                         float jumpVx = plan.RequiredVx;
                         _state.FacingRight = jumpVx >= 0.0f;
                         _state.IsGrounded = false;
-                        _state.JumpCooldown = ConfigManager.Boss2.JumpCooldownDuration;
+                        _state.JumpCooldown = _configuration.CombatSettings.JumpCooldownDuration;
                         _state.CurrentVelocity = new(jumpVx, jumpVy);
                         context.Movement.SetVelocity(jumpVx, jumpVy);
                         _state.RequestTransition(Boss2State.PlatformTraverse, new(ReasonKind.PlayerObservation));
@@ -100,7 +98,7 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
                 case NavStatus.ExecuteDrop:
                 case NavStatus.InAir:
                     float takeoffVx = plan.RequiredVx;
-                    if (MathF.Abs(takeoffVx) > ConfigManager.Boss2.TakeoffVelocityThreshold)
+                    if (MathF.Abs(takeoffVx) > _configuration.CombatSettings.TakeoffVelocityThreshold)
                     {
                         _state.FacingRight = takeoffVx > 0.0f;
                     }
@@ -110,11 +108,11 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
 
                 case NavStatus.DirectWalk:
                 default:
-                    if (MathF.Abs(deltaX) > ConfigManager.Boss2.MoveThreshold)
+                    if (MathF.Abs(deltaX) > _configuration.CombatSettings.MoveThreshold)
                     {
                         _state.FacingRight = deltaX > 0.0f;
                     }
-                    float directVx = MathF.Abs(deltaX) > ConfigManager.Boss2.MoveThreshold ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
+                    float directVx = MathF.Abs(deltaX) > _configuration.CombatSettings.MoveThreshold ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
                     _state.CurrentVelocity = new(directVx, _state.CurrentVelocity.Y);
                     context.Movement.SetVelocity(directVx, _state.CurrentVelocity.Y);
                     break;
@@ -122,11 +120,11 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
         }
         else
         {
-            if (MathF.Abs(deltaX) > ConfigManager.Boss2.MoveThreshold)
+            if (MathF.Abs(deltaX) > _configuration.CombatSettings.MoveThreshold)
             {
                 _state.FacingRight = deltaX > 0.0f;
             }
-            float velocityX = MathF.Abs(deltaX) > ConfigManager.Boss2.MoveThreshold ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
+            float velocityX = MathF.Abs(deltaX) > _configuration.CombatSettings.MoveThreshold ? MathF.Sign(deltaX) * settings.MoveSpeed : 0.0f;
             _state.CurrentVelocity = new(velocityX, _state.CurrentVelocity.Y);
             context.Movement.SetVelocity(velocityX, _state.CurrentVelocity.Y);
         }
@@ -137,9 +135,9 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
         if (settings.Rules.Count > 0)
         {
             float distance = MathF.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
-            bool isSamePlatform = MathF.Abs(deltaY) <= ConfigManager.Boss2.SamePlatformToleranceY;
-            bool isPlayerAirborne = MathF.Abs(context.PlayerObservation.VelocityY) > ConfigManager.Boss2.AirborneVelocityThreshold
-                || deltaY < -ConfigManager.Boss2.AirborneHeightThreshold;
+            bool isSamePlatform = MathF.Abs(deltaY) <= _configuration.CombatSettings.SamePlatformToleranceY;
+            bool isPlayerAirborne = MathF.Abs(context.PlayerObservation.VelocityY) > _configuration.CombatSettings.AirborneVelocityThreshold
+                || deltaY < -_configuration.CombatSettings.AirborneHeightThreshold;
             bool isPlayerGrounded = !isPlayerAirborne;
 
             AttackDecisionContext decisionContext = new(
@@ -176,7 +174,7 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
                 }
             }
         }
-        else if (MathF.Abs(deltaX) <= ConfigManager.Boss2.MeleeTriggerRangeX && MathF.Abs(deltaY) <= ConfigManager.Boss2.MeleeTriggerRangeY)
+        else if (MathF.Abs(deltaX) <= _configuration.CombatSettings.MeleeTriggerRangeX && MathF.Abs(deltaY) <= _configuration.CombatSettings.MeleeTriggerRangeY)
         {
             _state.StateElapsed = 0.0f;
             SelectNextLegacyAttack(ref context, in invocation);
@@ -199,7 +197,7 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
     private BossSkill SelectAntiKitingSkill(float distance, bool isSamePlatform, in Boss2PhaseSettings settings)
     {
         // 遠距離または別足場の場合：全画面落石（EarthquakeRoar）を最優先、次点に泰山圧頂（LeapSmash）
-        if (!isSamePlatform || distance > ConfigManager.Boss2.AntiKitingRangedDistance)
+        if (!isSamePlatform || distance > _configuration.CombatSettings.AntiKitingRangedDistance)
         {
             if (_state.CooldownTracker.IsReady(BossSkill.EarthquakeRoar))
             {
@@ -211,7 +209,7 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
                 return BossSkill.LeapSmash;
             }
         }
-        else if (distance >= ConfigManager.Boss2.AntiKitingMidDistance)
+        else if (distance >= _configuration.CombatSettings.AntiKitingMidDistance)
         {
             // 中距離の場合：泰山圧頂（LeapSmash）で急接近・破片弾幕を最優先、次点に全画面落石
             if (_state.CooldownTracker.IsReady(BossSkill.LeapSmash))
@@ -239,9 +237,9 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
         }
 
         // タイムアウト時間を大幅に超過しても両方クールダウン中の場合の強制発動セーフガード
-        if (_state.StateElapsed >= settings.ChaseTimeout * ConfigManager.Boss2.AntiKitingEnforceMultiplier)
+        if (_state.StateElapsed >= settings.ChaseTimeout * _configuration.CombatSettings.AntiKitingEnforceMultiplier)
         {
-            return (!isSamePlatform || distance > ConfigManager.Boss2.AntiKitingRangedDistance)
+            return (!isSamePlatform || distance > _configuration.CombatSettings.AntiKitingRangedDistance)
                 ? BossSkill.EarthquakeRoar
                 : BossSkill.LeapSmash;
         }
@@ -249,7 +247,7 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
         return BossSkill.None;
     }
 
-    private static float GetSkillCooldown(BossSkill skill, in Boss2PhaseSettings settings)
+    private float GetSkillCooldown(BossSkill skill, in Boss2PhaseSettings settings)
     {
         for (int index = 0; index < settings.Rules.Count; index++)
         {
@@ -260,17 +258,7 @@ public sealed class Boss2PatrolChaseModule(IBoss2Configuration configuration, Bo
             }
         }
 
-        PatternConfig pattern = ConfigManager.Pattern;
-        return skill switch
-        {
-            BossSkill.EarthquakeRoar => pattern.EarthquakeRoar.DefaultCooldown,
-            BossSkill.LeapSmash => pattern.LeapSmash.DefaultCooldown,
-            BossSkill.GroundStomp => pattern.GroundStomp.DefaultCooldown,
-            BossSkill.DoubleCleave => pattern.DoubleCleave.DefaultCooldown,
-            BossSkill.HeavySlash => pattern.HeavySlash.DefaultCooldown,
-            BossSkill.FrenzyCharge => pattern.FrenzyCharge.DefaultCooldown,
-            _ => 3.0f
-        };
+        return _configuration.GetSkillDefaultCooldown(skill);
     }
 
     private void ExecuteAttack(BossSkill skill, ref StateContext context, in LifecycleInvocation invocation)

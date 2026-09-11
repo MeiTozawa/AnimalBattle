@@ -7,119 +7,87 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Ai.Boss1;
 
 /// <summary>Boss1 の移動に必要な Phase 設定の不変 snapshot です。</summary>
-public readonly struct Boss1PhaseSettings
+/// <remarks>Boss1 Phase 設定を生成します。</remarks>
+public readonly struct Boss1PhaseSettings(
+    float hoverDuration,
+    float hoverBaseY,
+    float hoverSpeedX,
+    float hoverAmpX,
+    float hoverSpeedY,
+    float hoverAmpY,
+    float playerPursuitWeight,
+    float hoverLerpSpeed,
+    float telegraphShakeIntensity,
+    float recoverFlybackSpeed,
+    float recoverDelayRatio,
+    float transitionDuration,
+    float transitionFloatSpeed,
+    IReadOnlyList<BossSkill> attackOrder)
 {
     /// <summary>Hover の継続時間です。</summary>
-    public float HoverDuration { get; }
+    public float HoverDuration { get; } = hoverDuration;
     /// <summary>Hover の基準 Y 座標です。</summary>
-    public float HoverBaseY { get; }
+    public float HoverBaseY { get; } = hoverBaseY;
     /// <summary>水平移動の角速度です。</summary>
-    public float HoverSpeedX { get; }
+    public float HoverSpeedX { get; } = hoverSpeedX;
     /// <summary>水平移動の振幅です。</summary>
-    public float HoverAmpX { get; }
+    public float HoverAmpX { get; } = hoverAmpX;
     /// <summary>垂直移動の角速度です。</summary>
-    public float HoverSpeedY { get; }
+    public float HoverSpeedY { get; } = hoverSpeedY;
     /// <summary>垂直移動の振幅です。</summary>
-    public float HoverAmpY { get; }
+    public float HoverAmpY { get; } = hoverAmpY;
     /// <summary>プレイヤーへの追従重みです。</summary>
-    public float PlayerPursuitWeight { get; }
+    public float PlayerPursuitWeight { get; } = playerPursuitWeight;
     /// <summary>座標追従の平滑補間速度です。</summary>
-    public float HoverLerpSpeed { get; }
+    public float HoverLerpSpeed { get; } = hoverLerpSpeed;
     /// <summary>突進予兆の振動量です。</summary>
-    public float TelegraphShakeIntensity { get; }
+    public float TelegraphShakeIntensity { get; } = telegraphShakeIntensity;
     /// <summary>攻撃後の帰還速度です。</summary>
-    public float RecoverFlybackSpeed { get; }
+    public float RecoverFlybackSpeed { get; } = recoverFlybackSpeed;
     /// <summary>帰還開始の Recovery 比率です。</summary>
-    public float RecoverDelayRatio { get; }
+    public float RecoverDelayRatio { get; } = recoverDelayRatio;
     /// <summary>Phase 遷移時間です。</summary>
-    public float TransitionDuration { get; }
+    public float TransitionDuration { get; } = transitionDuration;
     /// <summary>Phase 遷移中の帰還速度です。</summary>
-    public float TransitionFloatSpeed { get; }
+    public float TransitionFloatSpeed { get; } = transitionFloatSpeed;
     /// <summary>この Phase の技能順です。</summary>
-    public IReadOnlyList<BossSkill> AttackOrder { get; }
-
-    /// <summary>Boss1 Phase 設定を生成します。</summary>
-    public Boss1PhaseSettings(
-        float hoverDuration,
-        float hoverBaseY,
-        float hoverSpeedX,
-        float hoverAmpX,
-        float hoverSpeedY,
-        float hoverAmpY,
-        float playerPursuitWeight,
-        float hoverLerpSpeed,
-        float telegraphShakeIntensity,
-        float recoverFlybackSpeed,
-        float recoverDelayRatio,
-        float transitionDuration,
-        float transitionFloatSpeed,
-        IReadOnlyList<BossSkill> attackOrder)
-    {
-        HoverDuration = hoverDuration;
-        HoverBaseY = hoverBaseY;
-        HoverSpeedX = hoverSpeedX;
-        HoverAmpX = hoverAmpX;
-        HoverSpeedY = hoverSpeedY;
-        HoverAmpY = hoverAmpY;
-        PlayerPursuitWeight = playerPursuitWeight;
-        HoverLerpSpeed = hoverLerpSpeed;
-        TelegraphShakeIntensity = telegraphShakeIntensity;
-        RecoverFlybackSpeed = recoverFlybackSpeed;
-        RecoverDelayRatio = recoverDelayRatio;
-        TransitionDuration = transitionDuration;
-        TransitionFloatSpeed = transitionFloatSpeed;
-        AttackOrder = attackOrder ?? throw new ArgumentNullException(nameof(attackOrder));
-    }
+    public IReadOnlyList<BossSkill> AttackOrder { get; } = attackOrder ?? throw new ArgumentNullException(nameof(attackOrder));
 }
 
 /// <summary>Boss1 攻撃の三段階と固有パラメータを不変に保持します。</summary>
-public sealed class Boss1AttackPattern
+/// <remarks>Boss1 攻撃 pattern を生成します。</remarks>
+public sealed class Boss1AttackPattern(
+    BossSkill skill,
+    AttackDefinition definition,
+    float interval = 0,
+    float bulletSpeed = 0,
+    int bulletCount = 0,
+    float angleStep = 0,
+    float minX = 0,
+    float maxX = 0,
+    float dashSpeed = 0,
+    EaseType easeType = EaseType.Linear)
 {
     /// <summary>安定した技能識別子です。</summary>
-    public BossSkill Skill { get; }
+    public BossSkill Skill { get; } = skill;
     /// <summary>共通 Telegraph/Execute/Recovery 定義です。</summary>
-    public AttackDefinition Definition { get; }
+    public AttackDefinition Definition { get; } = definition;
     /// <summary>連射間隔です。</summary>
-    public float Interval { get; }
+    public float Interval { get; } = interval;
     /// <summary>弾速です。</summary>
-    public float BulletSpeed { get; }
+    public float BulletSpeed { get; } = bulletSpeed;
     /// <summary>弾数です。</summary>
-    public int BulletCount { get; }
+    public int BulletCount { get; } = bulletCount;
     /// <summary>角度変化量または拡散角です。</summary>
-    public float AngleStep { get; }
+    public float AngleStep { get; } = angleStep;
     /// <summary>降雨弾の最小 X 座標です。</summary>
-    public float MinX { get; }
+    public float MinX { get; } = minX;
     /// <summary>降雨弾の最大 X 座標です。</summary>
-    public float MaxX { get; }
+    public float MaxX { get; } = maxX;
     /// <summary>突進の設定速度倍率です。</summary>
-    public float DashSpeed { get; }
+    public float DashSpeed { get; } = dashSpeed;
     /// <summary>突進の easing 種別です。</summary>
-    public EaseType EaseType { get; }
-
-    /// <summary>Boss1 攻撃 pattern を生成します。</summary>
-    public Boss1AttackPattern(
-        BossSkill skill,
-        AttackDefinition definition,
-        float interval = 0,
-        float bulletSpeed = 0,
-        int bulletCount = 0,
-        float angleStep = 0,
-        float minX = 0,
-        float maxX = 0,
-        float dashSpeed = 0,
-        EaseType easeType = EaseType.Linear)
-    {
-        Skill = skill;
-        Definition = definition;
-        Interval = interval;
-        BulletSpeed = bulletSpeed;
-        BulletCount = bulletCount;
-        AngleStep = angleStep;
-        MinX = minX;
-        MaxX = maxX;
-        DashSpeed = dashSpeed;
-        EaseType = easeType;
-    }
+    public EaseType EaseType { get; } = easeType;
 
     /// <summary>Boss1 攻撃 pattern を生成します。</summary>
     public Boss1AttackPattern(
