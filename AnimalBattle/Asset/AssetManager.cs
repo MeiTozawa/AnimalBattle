@@ -235,52 +235,7 @@ public sealed class AssetManager : IDisposable
     /// <returns>解決された絶対パス、見つからない場合は入力パス</returns>
     public static string ResolveAssetPath(string relPath)
     {
-        try
-        {
-            string[] directRoots = [AppDomain.CurrentDomain.BaseDirectory, Environment.CurrentDirectory];
-            foreach (string root in directRoots)
-            {
-                ErrorOr.ErrorOr<string> findResult = FindAssetFile(root, relPath);
-                if (!findResult.IsError && !string.IsNullOrEmpty(findResult.Value))
-                {
-                    return findResult.Value;
-                }
-            }
-
-            DirectoryInfo? dir = new(AppDomain.CurrentDomain.BaseDirectory);
-            while (dir != null)
-            {
-                ErrorOr.ErrorOr<string> findResult = FindAssetFile(dir.FullName, relPath);
-                if (!findResult.IsError && !string.IsNullOrEmpty(findResult.Value))
-                {
-                    return findResult.Value;
-                }
-                dir = dir.Parent;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[C# アセット警告] アセットパス探索中に例外が発生しました ({relPath}): {ex.Message}");
-        }
-
-        return relPath;
-    }
-
-    private static ErrorOr.ErrorOr<string> FindAssetFile(string rootDir, string relPath)
-    {
-        string directResource = Path.Combine(rootDir, "Resource", relPath);
-        if (File.Exists(directResource))
-        {
-            return Path.GetFullPath(directResource);
-        }
-
-        string directCandidate = Path.Combine(rootDir, relPath);
-        if (File.Exists(directCandidate))
-        {
-            return Path.GetFullPath(directCandidate);
-        }
-
-        return ErrorOr.Error.NotFound("Asset.NotFound", $"ディレクトリ '{rootDir}' 下にアセットファイルが見つかりません: {relPath}");
+        return AssetPathResolver.Instance.ResolveAssetPath(relPath);
     }
 
     /// <summary>
