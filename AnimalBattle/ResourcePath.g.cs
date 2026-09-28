@@ -65,15 +65,6 @@ public static class ResourcePath
     }
 
     /// <summary>
-    /// Effects リソースのパス定数。
-    /// </summary>
-    public static class Effects
-    {
-        /// <summary>Effects リソースフォルダの相対パス。</summary>
-        public const string Directory = @"Effects";
-    }
-
-    /// <summary>
     /// ゲーム設定 TOML ファイルのリソースパス定数。
     /// </summary>
     public static class Config
