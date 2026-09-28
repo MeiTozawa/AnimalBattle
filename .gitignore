@@ -1,4 +1,4 @@
-﻿# IDE cache/options directory
+# IDE cache/options directory
 .vs/
 .idea/
 .vscode/
@@ -73,13 +73,7 @@ imgui.ini
 /cmake-build-test/
 CMakeUserPresets.json
 build.bat
-scripts/generate_animation_registry.py
 AnimalBattle/*.dll
-tools/
-
-# AnimalBattle.Tests の replay artifact
-/AnimalBattle.Tests
-INTRODUCE.md
 
 #AI agent files
 docs/
