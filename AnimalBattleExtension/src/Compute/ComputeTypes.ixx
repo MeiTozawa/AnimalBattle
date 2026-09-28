@@ -27,12 +27,4 @@ struct SpecialBulletBatchItem {
     float out_radius;        // 4 bytes (C++ 出力先)
 };
 
-/// @brief 統合計算バッチパケット構造体 (連続メモリ配列へのポインタおよび要素数)
-struct BatchComputePacket {
-    EaseBatchItem* ease_items;
-    int32_t ease_count;
-    SpecialBulletBatchItem* bullet_items;
-    int32_t bullet_count;
-};
-
 }  // namespace ab::extension

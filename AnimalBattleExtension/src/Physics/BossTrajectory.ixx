@@ -7,7 +7,6 @@ module;
 export module BossTrajectory;
 
 export import PhysicsTypes;
-import Easing;
 
 namespace ab::extension {
 
@@ -49,28 +48,6 @@ ab::Vec2f CalculateBossHoverPosition(
 
     float next_x = current_pos.x + (target_x - current_pos.x) * lerp_factor;
     float next_y = current_pos.y + (target_y - current_pos.y) * lerp_factor;
-    return ab::Vec2f{next_x, next_y};
-}
-
-/// @brief Boss の急降下突進 (DiveRam) 軌道（指定されたイージング曲線による始点・終点補間）を計算します。
-/// @param start_pos 突進開始座標
-/// @param target_pos ロックオン目標座標
-/// @param state_timer 現在のスキル状態タイマー
-/// @param state_duration スキル突進の合計持続時間
-/// @param ease_type 適用するイージング関数種別
-/// @return 現在フレームの突進補間座標
-ab::Vec2f CalculateBossDiveRamPosition(
-    ab::Vec2f start_pos,
-    ab::Vec2f target_pos,
-    float state_timer,
-    float state_duration,
-    ab::EaseType ease_type = ab::EaseType::InQuad) noexcept {
-    float duration = std::max(0.01f, state_duration);
-    float progress = std::clamp(state_timer / duration, 0.0f, 1.0f);
-    float ease_progress = EvaluateEase(ease_type, progress);
-
-    float next_x = start_pos.x + (target_pos.x - start_pos.x) * ease_progress;
-    float next_y = start_pos.y + (target_pos.y - start_pos.y) * ease_progress;
     return ab::Vec2f{next_x, next_y};
 }
 

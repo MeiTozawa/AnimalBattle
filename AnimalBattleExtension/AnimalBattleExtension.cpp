@@ -3,7 +3,6 @@
 import BatchPhysics;
 import BossTrajectory;
 import ComputeTypes;
-import Easing;
 import SpecialBulletMath;
 import BatchComputeProcessor;
 
@@ -54,26 +53,6 @@ __declspec(dllexport) void Extension_CalculateBossHoverPosition(
     }
 }
 
-__declspec(dllexport) void Extension_CalculateBossDiveRamPosition(
-    const ab::Vec2f* start_pos,
-    const ab::Vec2f* target_pos,
-    float state_timer,
-    float state_duration,
-    ab::EaseType ease_type,
-    ab::Vec2f* out_pos) noexcept {
-    try {
-        if (!start_pos || !target_pos || !out_pos) {
-            return;
-        }
-        *out_pos = CalculateBossDiveRamPosition(
-            *start_pos, *target_pos, state_timer, state_duration, ease_type);
-    } catch (...) {
-        if (start_pos && out_pos) {
-            *out_pos = *start_pos;
-        }
-    }
-}
-
 __declspec(dllexport) void Extension_CalculateBossReturnPosition(
     const ab::Vec2f* current_pos,
     const ab::Vec2f* target_base_pos,
@@ -101,53 +80,6 @@ __declspec(dllexport) void Extension_ProcessBatchCompute(
     try {
         ProcessBatchCompute(ease_items, ease_count, bullet_items, bullet_count);
     } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Extension_ProcessBatchComputePacket(
-    BatchComputePacket* packet) noexcept {
-    try {
-        ProcessBatchComputePacket(packet);
-    } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Extension_ProcessBatchEasing(
-    EaseBatchItem* items,
-    int32_t count) noexcept {
-    try {
-        ProcessBatchEasing(items, count);
-    } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Extension_ProcessBatchSpecialBullets(
-    SpecialBulletBatchItem* items,
-    int32_t count) noexcept {
-    try {
-        ProcessBatchSpecialBullets(items, count);
-    } catch (...) {
-    }
-}
-
-
-__declspec(dllexport) void Extension_CalculateSpecialBulletModifier(
-    int32_t type,
-    float elapsed_timer,
-    float base_vx,
-    float base_vy,
-    float base_radius,
-    float* out_vx,
-    float* out_vy,
-    float* out_radius) noexcept {
-    try {
-        CalculateSpecialBulletModifier(
-            type, elapsed_timer, base_vx, base_vy, base_radius,
-            out_vx, out_vy, out_radius);
-    } catch (...) {
-        if (out_vx) *out_vx = base_vx;
-        if (out_vy) *out_vy = base_vy;
-        if (out_radius) *out_radius = base_radius;
     }
 }
 
