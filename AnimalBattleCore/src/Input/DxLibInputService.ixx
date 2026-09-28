@@ -274,13 +274,6 @@ int GetPadButtonMask(InputButton button) noexcept {
             return Rect<int>{p1, p2}.Contains(current_mouse_pos_);
         }
 
-        Vec2i OnMouseClick(ActionId action) const override {
-            if (IsPressed(action)) {
-                return current_mouse_pos_;
-            }
-            return Vec2i{-1, -1};
-        }
-
         InputDevice GetActiveDevice() const noexcept override {
             return active_device_;
         }

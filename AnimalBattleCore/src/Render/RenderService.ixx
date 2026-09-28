@@ -33,25 +33,11 @@ namespace ab {
         virtual void DrawGraph(Vec2i pos, int handle, bool trans_flag) = 0;
         virtual void DrawRotaGraph(Vec2i center, double ext_rate, double angle, int graph_handle, bool trans_flag) = 0;
         virtual void DrawRectRotaGraph(Vec2i center, Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) = 0;
-        virtual void DrawHollowBox(Rect<int> r, int thickness, uint32_t color) = 0;
-        virtual void DrawRoundRectFrame(Rect<int> r, int corner_radius, int thickness, uint32_t color) = 0;
-        virtual void DrawStringWithBorder(Rect<int> r, const wchar_t* text, BorderShape shape = BorderShape::Null,
-                                          uint32_t text_color = COLOR_WHITE, uint32_t border_color = COLOR_WHITE) = 0;
 
         // --- カメラ・状態設定 ---
         virtual void SetCameraEnabled(bool enabled) = 0;
         virtual void SetCameraState(float x, float y, float scale) = 0;
         virtual void SetDrawBlendMode(BlendMode mode, int pal) = 0;
         virtual void SetDrawBright(int r, int g, int b) = 0;
-        virtual void SetFontTypeNormal() = 0;
-        virtual void ChangeFont(const wchar_t* font_name) = 0;
-        virtual void SetFontSize(int size) = 0;
-        virtual void SetFontThickness(int thickness) = 0;
-        virtual void SetBackgroundColor(int r, int g, int b) = 0;
-        virtual void ExitApplication() = 0;
-
-        // --- 情報取得 ---
-        virtual int GetFontSize() const = 0;
-        virtual int GetDrawStringWidth(const wchar_t* text) const = 0;
     };
 } // namespace ab

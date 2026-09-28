@@ -434,24 +434,6 @@ __declspec(dllexport) bool Input_IsKeyHit(int key_code) noexcept {
     }
 }
 
-__declspec(dllexport) int Input_GetJoypadState(int pad_index) noexcept {
-    try {
-        auto* input_service = ab::GetInputService();
-        if (input_service != nullptr) {
-            return input_service->GetJoypadInputState(pad_index);
-        }
-        return 0;
-    } catch (...) {
-        return 0;
-    }
-}
-
-__declspec(dllexport) void Engine_SetCursorPointer() noexcept {
-}
-
-__declspec(dllexport) void Engine_SetCursorArrow() noexcept {
-}
-
 __declspec(dllexport) bool Engine_CheckHitKey(int key_code) noexcept {
     try {
         auto* input_service = ab::GetInputService();
@@ -500,23 +482,6 @@ __declspec(dllexport) void Engine_GetMousePoint(ab::Vec2i* out_pos) noexcept {
 
 // --- Graph / Texture APIs ---
 
-__declspec(dllexport) int Graph_Load(const char* file_path) noexcept {
-    if (!file_path) {
-        return -1;
-    }
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr) {
-            std::string s(file_path);
-            std::wstring w(s.begin(), s.end());
-            return render_service->LoadGraph(w.c_str());
-        }
-        return -1;
-    } catch (...) {
-        return -1;
-    }
-}
-
 __declspec(dllexport) int Engine_LoadGraph(const wchar_t* file_path) noexcept {
     try {
         auto* render_service = ab::GetRenderService();
@@ -526,16 +491,6 @@ __declspec(dllexport) int Engine_LoadGraph(const wchar_t* file_path) noexcept {
         return -1;
     } catch (...) {
         return -1;
-    }
-}
-
-__declspec(dllexport) void Graph_Delete(int handle) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr && handle >= 0) {
-            render_service->DeleteGraph(handle);
-        }
-    } catch (...) {
     }
 }
 
@@ -551,137 +506,11 @@ __declspec(dllexport) bool Engine_DeleteGraph(int handle) noexcept {
     }
 }
 
-__declspec(dllexport) void Graph_GetSize(int handle, ab::Vec2i* out_size) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr && handle >= 0 && out_size != nullptr) {
-            render_service->GetGraphSize(handle, out_size);
-        }
-    } catch (...) {
-    }
-}
-
 __declspec(dllexport) void Engine_GetGraphSize(int handle, ab::Vec2i* out_size) noexcept {
     try {
         auto* render_service = ab::GetRenderService();
         if (render_service != nullptr && handle >= 0 && out_size != nullptr) {
             render_service->GetGraphSize(handle, out_size);
-        }
-    } catch (...) {
-    }
-}
-
-// --- 2D Drawing APIs ---
-
-__declspec(dllexport) void Draw_Box(ab::Vec2i p1, ab::Vec2i p2, unsigned int color, bool fill) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr) {
-            render_service->DrawBox(p1, p2, color, fill);
-        }
-    } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Draw_Circle(ab::Vec2i center, int radius, unsigned int color, bool fill) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr) {
-            render_service->DrawCircle(center, radius, color, fill);
-        }
-    } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Draw_Line(ab::Vec2i p1, ab::Vec2i p2, unsigned int color, int thickness) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr) {
-            render_service->DrawLine(p1, p2, color, thickness);
-        }
-    } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Draw_String(ab::Vec2i pos, const wchar_t* text, unsigned int color) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr && text != nullptr) {
-            render_service->DrawString(pos, text, color);
-        }
-    } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Draw_Graph(ab::Vec2i pos, int handle, bool trans) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr && handle >= 0) {
-            render_service->DrawGraph(pos, handle, trans);
-        }
-    } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Draw_RectGraph(ab::Vec2i dest_pos, ab::Vec2i src_pos, ab::Vec2i src_size, int handle, bool trans) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr && handle >= 0) {
-            render_service->DrawRectRotaGraph(
-                dest_pos,
-                ab::Rect<int>{src_pos, src_pos + src_size},
-                1.0,
-                0.0,
-                handle,
-                trans,
-                false);
-        }
-    } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Draw_RectRotaGraph(ab::Vec2i center, ab::Vec2i src_pos, ab::Vec2i src_size, double scale, double angle_rad, int handle, bool trans, bool turn_x) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr && handle >= 0) {
-            render_service->DrawRectRotaGraph(
-                center,
-                ab::Rect<int>{src_pos, src_pos + src_size},
-                scale,
-                angle_rad,
-                handle,
-                trans,
-                turn_x);
-        }
-    } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Draw_RotaGraph(ab::Vec2i center, double scale, double angle_rad, int handle, bool trans) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr && handle >= 0) {
-            render_service->DrawRotaGraph(center, scale, angle_rad, handle, trans);
-        }
-    } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Draw_SetBlendMode(int mode, int pal) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr) {
-            render_service->SetDrawBlendMode(static_cast<ab::BlendMode>(mode), pal);
-        }
-    } catch (...) {
-    }
-}
-
-__declspec(dllexport) void Draw_SetDrawBright(int r, int g, int b) noexcept {
-    try {
-        auto* render_service = ab::GetRenderService();
-        if (render_service != nullptr) {
-            render_service->SetDrawBright(r, g, b);
         }
     } catch (...) {
     }
@@ -762,22 +591,6 @@ __declspec(dllexport) bool Physics_CheckPlatformGround(float prev_y, float next_
                 *out_vy = result.adjusted_vy;
             }
             return result.is_grounded;
-        }
-        return false;
-    } catch (...) {
-        return false;
-    }
-}
-
-__declspec(dllexport) bool Physics_CheckPenetrationBoxBox(ab::Box2D b1, ab::Box2D b2,
-                                                          ab::Vec2f* out_normal, float* out_depth) noexcept {
-    try {
-        auto* physics_service = ab::GetPhysicsService();
-        if (physics_service != nullptr) {
-            auto result = physics_service->CheckPenetrationBoxBox(b1, b2);
-            if (out_normal != nullptr) *out_normal = result.normal;
-            if (out_depth != nullptr) *out_depth = result.depth;
-            return result.is_penetrating;
         }
         return false;
     } catch (...) {

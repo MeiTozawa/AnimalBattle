@@ -74,14 +74,6 @@ namespace ab {
         Mul,      ///< 乗算ブレンド（DX_BLENDMODE_MULA）
     };
 
-    export enum class BorderShape {
-        Null,
-        Rectangle,
-        DoubleRectangle,
-        Pill,
-        Underline,
-    };
-
     // --- Render Commands ---
 
     export struct DrawStringCmd {
@@ -108,27 +100,6 @@ namespace ab {
         Vec2i p2;
         uint32_t color;
         int thickness;
-    };
-
-    export struct DrawHollowBoxCmd {
-        Rect<int> r;
-        int thickness;
-        uint32_t color;
-    };
-
-    export struct DrawRoundRectFrameCmd {
-        Rect<int> r;
-        int corner_radius;
-        int thickness;
-        uint32_t color;
-    };
-
-    export struct DrawStringWithBorderCmd {
-        Rect<int> r;
-        std::wstring text;
-        BorderShape shape;
-        uint32_t text_color;
-        uint32_t border_color;
     };
 
     export struct DrawGraphCmd {
@@ -166,28 +137,6 @@ namespace ab {
         int b;
     };
 
-    export struct SetFontTypeNormalCmd {};
-
-    export struct ChangeFontCmd {
-        const wchar_t* font_name;
-    };
-
-    export struct SetFontSizeCmd {
-        int size;
-    };
-
-    export struct SetFontThicknessCmd {
-        int thickness;
-    };
-
-    export struct SetBackgroundColorCmd {
-        int r;
-        int g;
-        int b;
-    };
-
-    export struct ExitApplicationCmd {};
-
     export struct SetCameraEnabledCmd {
         bool enabled;
     };
@@ -204,20 +153,11 @@ namespace ab {
         DrawBoxCmd,
         DrawCircleCmd,
         DrawLineCmd,
-        DrawHollowBoxCmd,
-        DrawRoundRectFrameCmd,
-        DrawStringWithBorderCmd,
         DrawGraphCmd,
         DrawRotaGraphCmd,
         DrawRectRotaGraphCmd,
         SetDrawBlendModeCmd,
         SetDrawBrightCmd,
-        SetFontTypeNormalCmd,
-        ChangeFontCmd,
-        SetFontSizeCmd,
-        SetFontThicknessCmd,
-        SetBackgroundColorCmd,
-        ExitApplicationCmd,
         SetCameraEnabledCmd,
         SetCameraStateCmd
     >;
