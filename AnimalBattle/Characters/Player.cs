@@ -399,12 +399,12 @@ public sealed class Player
 
         nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
 
-        bool isGrounded = false;
-        float adjustedPosY = nextY;
-        float adjustedVy = vel.Vy;
-
         float currentY = trans.Y;
         Box2D playerBox = new(nextX, nextY, col.Width, col.Height);
+
+        bool hitPlatform = false;
+        float platformGroundY = float.MaxValue;
+        float platformVy = 0.0f;
 
         platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
         {
@@ -417,14 +417,18 @@ public sealed class Player
                 out float groundY,
                 out float vy))
             {
-                if (!isGrounded || groundY < adjustedPosY)
+                if (!hitPlatform || groundY < platformGroundY)
                 {
-                    isGrounded = true;
-                    adjustedPosY = groundY;
-                    adjustedVy = vy;
+                    hitPlatform = true;
+                    platformGroundY = groundY;
+                    platformVy = vy;
                 }
             }
         });
+
+        bool isGrounded = hitPlatform;
+        float adjustedPosY = hitPlatform ? platformGroundY : nextY;
+        float adjustedVy = hitPlatform ? platformVy : vel.Vy;
 
         float floorLimitY = 560.0f - (col.Height / 2.0f);
         if (adjustedPosY >= floorLimitY)

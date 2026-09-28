@@ -17,11 +17,11 @@ namespace AnimalBattle.Scenes;
 /// </summary>
 public partial class BattleScene : IDisposable
 {
-    private readonly World _ecsWorld;
+    private World _ecsWorld;
     private readonly WorldRenderSystem _worldRenderer;
     private readonly DebugRenderSystem _debugRenderer;
-    private readonly Query _playerBulletsQuery;
-    private readonly Query _effectsQuery;
+    private Query _playerBulletsQuery;
+    private Query _effectsQuery;
     private Player? _player;
     private BossCharacter? _currentBoss;
     private Query<Transform, CollisionBox> _platformQuery;
@@ -70,7 +70,6 @@ public partial class BattleScene : IDisposable
         CombatEffectHelper.Initialize(_ecsWorld);
 
         PlayerConfig playerCfg = ConfigManager.Player;
-        ArenaConfig arenaCfg = ConfigManager.Arena;
 
         // 1. プレイヤーの生成 (高内聚な領域オブジェクト Player の初期化)
         Entity playerEntity = _ecsWorld.Entity("Player1");
@@ -243,7 +242,7 @@ public partial class BattleScene : IDisposable
         if (playerEntity.IsAlive())
         {
             PlayerConfig pCfg = ConfigManager.Player;
-            playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly));
+            playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
             playerEntity.Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight));
 
             if (playerEntity.Has<Transform>())
@@ -266,7 +265,7 @@ public partial class BattleScene : IDisposable
 
         TileMapConfig tileMapCfg = arenaCfg.TileMap;
         ErrorOr<ConfigBase<TileSetConfig>> tileSetConfigResult = TileSetConfig.LoadFromFile(tileMapCfg.TileConfig);
-        if (!tileSetConfigResult.IsError && tileSetConfigResult.Value != null)
+        if (!tileSetConfigResult.IsError)
         {
             ErrorOr<int> sheetHandleRes = AssetManager.LoadTexture(tileMapCfg.TileSheet);
             int sheetHandle = !sheetHandleRes.IsError ? sheetHandleRes.Value : -1;

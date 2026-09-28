@@ -1,7 +1,4 @@
-using System;
 using System.Drawing;
-using AnimalBattle.Ai.Boss1;
-using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
@@ -105,7 +102,6 @@ public static class BossCommandExecutor
         {
             return;
         }
-
     }
 
     private static void ExecuteBoss1Movement(
@@ -168,7 +164,7 @@ public static class BossCommandExecutor
                     {
                         vel.Vy = cmd.Y;
                     }
-                    break;
+                break;
                 case MovementCommandKind.MoveTo:
                     trans.X = cmd.X;
                     trans.Y = cmd.Y;
@@ -207,19 +203,20 @@ public static class BossCommandExecutor
         float nextY = trans.Y + vel.Vy * dt;
         nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
 
-        bool isGrounded = false;
-        float adjustedPosY = nextY;
-        float adjustedVy = vel.Vy;
         float currentY = trans.Y;
 
         float colWidth = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Width : b2Cfg.CollisionWidth;
         float colHeight = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
         Box2D bossBox = new(nextX, nextY, colWidth, colHeight);
 
+        bool hitPlatform = false;
+        float platformGroundY = float.MaxValue;
+        float platformVy = 0.0f;
+
         bool ignorePlatforms = slot.AttackData.Skill == BossSkill.LeapSmash;
         if (!ignorePlatforms)
         {
-            platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
+            platformQuery.Each((ref platTrans, ref platCol) =>
             {
                 Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
                 if (PhysicsService.CheckPlatformGround(
@@ -230,15 +227,19 @@ public static class BossCommandExecutor
                     out float groundY,
                     out float pVy))
                 {
-                    if (!isGrounded || groundY < adjustedPosY)
+                    if (!hitPlatform || groundY < platformGroundY)
                     {
-                        isGrounded = true;
-                        adjustedPosY = groundY;
-                        adjustedVy = pVy;
+                        hitPlatform = true;
+                        platformGroundY = groundY;
+                        platformVy = pVy;
                     }
                 }
             });
         }
+
+        bool isGrounded = hitPlatform;
+        float adjustedPosY = hitPlatform ? platformGroundY : nextY;
+        float adjustedVy = hitPlatform ? platformVy : vel.Vy;
 
         float floorLimitY = 560.0f - colHeight / 2.0f;
         if (adjustedPosY >= floorLimitY)
