@@ -17,35 +17,6 @@ public enum CharacterType
 }
 
 /// <summary>
-/// TOML 設定から自動生成されたエフェクトの種類。
-/// </summary>
-public enum EffectType
-{
-}
-
-/// <summary>
-/// TOML 設定から自動生成されたキャラクターアニメーションの種類。
-/// </summary>
-public enum CharacterAnimationType
-{
-    /// <summary>Fall アニメーション。</summary>
-    Fall,
-    /// <summary>Idle アニメーション。</summary>
-    Idle,
-    /// <summary>Jump アニメーション。</summary>
-    Jump,
-    /// <summary>Run アニメーション。</summary>
-    Run,
-}
-
-/// <summary>
-/// TOML 設定から自動生成されたエフェクトアニメーションの種類。
-/// </summary>
-public enum EffectAnimationType
-{
-}
-
-/// <summary>
 /// scripts/generate_animation_registry.py によって resource/ 以下の TOML から生成された
 /// アニメーション設定の静的レジストリ。
 /// </summary>
@@ -74,17 +45,5 @@ internal static class AnimationRegistry
                     new() { Name = "Fall", SpritePath = @"Characters\4_Cat_Fall-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 3, Fps = 12.0f, IsLooping = true },
                 ],
             },
-        };
-
-    /// <summary>エフェクトスプライトパス (resource/ からの相対パス)。</summary>
-    internal static readonly IReadOnlyDictionary<EffectType, string> EffectSprites =
-        new Dictionary<EffectType, string>
-        {
-        };
-
-    /// <summary>エフェクトアニメーション設定。</summary>
-    internal static readonly IReadOnlyDictionary<EffectType, AnimationConfig> EffectConfigs =
-        new Dictionary<EffectType, AnimationConfig>
-        {
         };
 }

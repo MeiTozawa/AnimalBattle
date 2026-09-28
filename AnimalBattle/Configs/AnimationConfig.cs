@@ -23,9 +23,6 @@ public sealed class AnimationConfig
     /// <summary>クリップ一覧</summary>
     public List<AnimationClipConfig> Clips { get; set; } = [];
 
-    /// <summary>エフェクト専用クリップ一覧（後方互換プロパティ）</summary>
-    public List<AnimationClipConfig> EffectClips { get; set; } = [];
-
     /// <summary>
     /// <see cref="StringId"/> をキーとしてキャッシュされたクリップ設定を O(1) で検索します。
     /// </summary>

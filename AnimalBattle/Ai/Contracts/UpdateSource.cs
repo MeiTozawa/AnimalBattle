@@ -13,15 +13,5 @@ public enum UpdateSource
     /// <summary>
     /// 新しい Boss AI ランタイムを示します。
     /// </summary>
-    NewRuntime = 1,
-
-    /// <summary>
-    /// 新旧データを変換する Migration Adapter を示します。
-    /// </summary>
-    MigrationAdapter = 2,
-
-    /// <summary>
-    /// 移行期間中の旧コンポーネントを示します。
-    /// </summary>
-    LegacyComponent = 3
+    NewRuntime = 1
 }

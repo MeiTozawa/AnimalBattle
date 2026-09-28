@@ -80,22 +80,6 @@ public sealed class Boss1Config
     /// <summary>Boss の出現 Y 座標</summary>
     public float SpawnY { get; set; } = 200.0f;
 
-    /// <summary>旧 BaseX との互換アクセサ</summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public float BaseX
-    {
-        get => SpawnX;
-        set => SpawnX = value;
-    }
-
-    /// <summary>旧 BaseY との互換アクセサ</summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public float BaseY
-    {
-        get => SpawnY;
-        set => SpawnY = value;
-    }
-
     /// <summary>Boss 描画スケール X</summary>
     public float ScaleX { get; set; }
 
