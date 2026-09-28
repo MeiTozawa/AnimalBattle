@@ -45,9 +45,6 @@ public static class ResourcePath
         /// <summary>4_Cat_Fall-Sheet.png のファイルパス。</summary>
         public const string CatFallSheetPng = @"Characters\4_Cat_Fall-Sheet.png";
 
-        /// <summary>Cat.toml のファイルパス。</summary>
-        public const string CatToml = @"Characters\Cat.toml";
-
         /// <summary>sword &amp; shield effect sprites.png のファイルパス。</summary>
         public const string SwordShieldEffectSpritesPng = @"Characters\sword & shield effect sprites.png";
     }
