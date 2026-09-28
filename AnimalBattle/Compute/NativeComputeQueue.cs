@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AnimalBattle.Bindings;
 using AnimalBattle.Components;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Compute;
 
@@ -19,15 +18,10 @@ public sealed unsafe class NativeComputeQueue : IDisposable
 
     private static readonly SpecialBulletBatchItem _dummyBullet = default;
 
-    private EaseBatchItem* _easeBuffer;
     private SpecialBulletBatchItem* _bulletBuffer;
     private readonly int _capacity;
-    private int _easeCount;
     private int _bulletCount;
     private bool _isDisposed;
-
-    /// <summary>現在キューに蓄積されているイージング計算要求数。</summary>
-    public int EaseCount => _easeCount;
 
     /// <summary>現在キューに蓄積されている特殊弾幕計算要求数。</summary>
     public int BulletCount => _bulletCount;
@@ -37,9 +31,6 @@ public sealed unsafe class NativeComputeQueue : IDisposable
 
     /// <summary>リソースが破棄済みであるか否かを取得します。</summary>
     public bool IsDisposed => _isDisposed;
-
-    /// <summary>イージングバッファの先頭アドレス（アライメント検証用）。</summary>
-    internal void* EaseBufferPtr => _easeBuffer;
 
     /// <summary>特殊弾幕バッファの先頭アドレス（アライメント検証用）。</summary>
     internal void* BulletBufferPtr => _bulletBuffer;
@@ -51,14 +42,11 @@ public sealed unsafe class NativeComputeQueue : IDisposable
     public NativeComputeQueue(int capacity = 4096)
     {
         _capacity = Math.Max(16, capacity);
-        _easeCount = 0;
         _bulletCount = 0;
         _isDisposed = false;
 
-        nuint easeBytes = (nuint)(sizeof(EaseBatchItem) * _capacity);
         nuint bulletBytes = (nuint)(sizeof(SpecialBulletBatchItem) * _capacity);
 
-        _easeBuffer = (EaseBatchItem*)NativeMemory.AlignedAlloc(easeBytes, 64);
         _bulletBuffer = (SpecialBulletBatchItem*)NativeMemory.AlignedAlloc(bulletBytes, 64);
     }
 
@@ -71,25 +59,6 @@ public sealed unsafe class NativeComputeQueue : IDisposable
     }
 
     /// <summary>
-    /// イージング計算要求を非托管バッファへ直接登録し、結果回収用のハンドルインデックスを返します。
-    /// </summary>
-    /// <param name="easeType">イージング関数種別。</param>
-    /// <param name="progress">進捗割合 (0.0f～1.0f)。</param>
-    /// <returns>バッチ結果参照用のインデックスハンドル (容量上限超過時または破棄済み時は -1)。</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int EnqueueEase(EaseType easeType, float progress)
-    {
-        if (_isDisposed || _easeCount >= _capacity)
-        {
-            return -1;
-        }
-
-        int index = _easeCount++;
-        _easeBuffer[index] = new(easeType, progress);
-        return index;
-    }
-
-    /// <summary>
     /// 特殊弾幕変調計算要求を非托管バッファへ直接登録し、結果回収用のハンドルインデックスを返します。
     /// </summary>
     /// <param name="type">特殊弾幕種別。</param>
@@ -97,7 +66,7 @@ public sealed unsafe class NativeComputeQueue : IDisposable
     /// <param name="baseVx">基準 X 速度。</param>
     /// <param name="baseVy">基準 Y 速度。</param>
     /// <param name="baseRadius">基準半径 (px)。</param>
-    /// <returns>バッチ結果参照用のインデックスハンドル (容量上限超過時または破棄済み時は -1)。</returns>
+    /// <returns>バッチ結果参照用のインデックスハンドル (容量上限超過时または破棄済み時は -1)。</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int EnqueueSpecialBullet(BulletType type, float elapsedTimer, float baseVx, float baseVy, float baseRadius)
     {
@@ -109,17 +78,6 @@ public sealed unsafe class NativeComputeQueue : IDisposable
         int index = _bulletCount++;
         _bulletBuffer[index] = new(type, elapsedTimer, baseVx, baseVy, baseRadius);
         return index;
-    }
-
-    /// <summary>
-    /// 指定ハンドルに対応する計算済みイージング補間値を取得します。
-    /// </summary>
-    /// <param name="handle">登録時に返却されたインデックスハンドル。</param>
-    /// <returns>計算後の補間値。</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float GetEaseResult(int handle)
-    {
-        return (!_isDisposed && handle >= 0 && handle < _easeCount) ? _easeBuffer[handle].Result : 0.0f;
     }
 
     /// <summary>
@@ -149,14 +107,14 @@ public sealed unsafe class NativeComputeQueue : IDisposable
             throw new ObjectDisposedException(nameof(NativeComputeQueue));
         }
 
-        if (_easeCount == 0 && _bulletCount == 0)
+        if (_bulletCount == 0)
         {
             return;
         }
 
         NativeExtensionBindings.Extension_ProcessBatchCompute(
-            _easeBuffer,
-            _easeCount,
+            null,
+            0,
             _bulletBuffer,
             _bulletCount);
     }
@@ -167,7 +125,6 @@ public sealed unsafe class NativeComputeQueue : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear()
     {
-        _easeCount = 0;
         _bulletCount = 0;
     }
 
@@ -185,12 +142,6 @@ public sealed unsafe class NativeComputeQueue : IDisposable
         if (_isDisposed)
         {
             return;
-        }
-
-        if (_easeBuffer != null)
-        {
-            NativeMemory.AlignedFree(_easeBuffer);
-            _easeBuffer = null;
         }
 
         if (_bulletBuffer != null)
