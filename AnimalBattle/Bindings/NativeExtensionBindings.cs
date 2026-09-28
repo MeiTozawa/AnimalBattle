@@ -56,13 +56,6 @@ internal static unsafe partial class NativeExtensionBindings
         SpecialBulletBatchItem* bulletItems,
         int bulletCount);
 
-    /// <summary>
-    /// 統合計算バッチパケット（イージング一括評価および特殊弾幕変調一括計算）を C++ 原生拡張へ一括転送し並列計算を実行します。
-    /// </summary>
-    /// <param name="packet">統合計算バッチパケット構造体へのポインタ。</param>
-    [LibraryImport(_dllName, EntryPoint = "Extension_ProcessBatchComputePacket")]
-    [SuppressGCTransition]
-    public static partial void Extension_ProcessBatchComputePacket(BatchComputePacket* packet);
 
     /// <summary>
     /// イージング計算要求配列を C++ 原生拡張へ一括転送し並列計算を実行します。
