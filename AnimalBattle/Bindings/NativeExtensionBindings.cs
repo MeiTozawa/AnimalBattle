@@ -56,39 +56,6 @@ internal static unsafe partial class NativeExtensionBindings
         SpecialBulletBatchItem* bulletItems,
         int bulletCount);
 
-    /// <summary>
-    /// 特殊弾幕変調要求配列を C++ 原生拡張へ一括転送し並列計算を実行します。
-    /// </summary>
-    /// <param name="items">SpecialBulletBatchItem 連続メモリ配列へのポインタ。</param>
-    /// <param name="count">処理対象の要素数。</param>
-    [LibraryImport(_dllName, EntryPoint = "Extension_ProcessBatchSpecialBullets")]
-    [SuppressGCTransition]
-    public static partial void Extension_ProcessBatchSpecialBullets(SpecialBulletBatchItem* items, int count);
-
-
-    /// <summary>
-    /// 単一の特殊弾幕変調値を C++ 原生拡張で同期計算します。
-    /// </summary>
-    /// <param name="type">特殊弾幕種別。</param>
-    /// <param name="elapsedTimer">累積タイマー (秒)。</param>
-    /// <param name="baseVx">基準 X 速度。</param>
-    /// <param name="baseVy">基準 Y 速度。</param>
-    /// <param name="baseRadius">基準半径。</param>
-    /// <param name="outVx">変調後 X 速度出力。</param>
-    /// <param name="outVy">変調後 Y 速度出力。</param>
-    /// <param name="outRadius">変調後半径出力。</param>
-    [LibraryImport(_dllName, EntryPoint = "Extension_CalculateSpecialBulletModifier")]
-    [SuppressGCTransition]
-    public static partial void Extension_CalculateSpecialBulletModifier(
-        BulletType type,
-        float elapsedTimer,
-        float baseVx,
-        float baseVy,
-        float baseRadius,
-        out float outVx,
-        out float outVy,
-        out float outRadius);
-
     #endregion
 
     #region Boss Trajectory Extension
@@ -110,19 +77,6 @@ internal static unsafe partial class NativeExtensionBindings
         float playerPursuitWeight,
         float hoverLerpSpeed,
         float deltaTime,
-        out Vec2f outPos);
-
-    /// <summary>
-    /// Boss の急降下突進 (DiveRam) 軌道（指定されたイージング曲線による始点・終点補間）を計算します。
-    /// </summary>
-    [LibraryImport(_dllName, EntryPoint = "Extension_CalculateBossDiveRamPosition")]
-    [SuppressGCTransition]
-    public static partial void Extension_CalculateBossDiveRamPosition(
-        in Vec2f startPos,
-        in Vec2f targetPos,
-        float stateTimer,
-        float stateDuration,
-        EaseType easeType,
         out Vec2f outPos);
 
     /// <summary>

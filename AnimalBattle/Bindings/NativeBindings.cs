@@ -149,18 +149,6 @@ internal static unsafe partial class NativeBindings
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Input_IsKeyHit(int keyCode);
 
-    [LibraryImport(_dllName, EntryPoint = "Input_GetJoypadState")]
-    [SuppressGCTransition]
-    public static partial int Input_GetJoypadState(int padIndex);
-
-    [LibraryImport(_dllName, EntryPoint = "Engine_SetCursorPointer")]
-    [SuppressGCTransition]
-    public static partial void Engine_SetCursorPointer();
-
-    [LibraryImport(_dllName, EntryPoint = "Engine_SetCursorArrow")]
-    [SuppressGCTransition]
-    public static partial void Engine_SetCursorArrow();
-
     [LibraryImport(_dllName, EntryPoint = "Engine_CheckHitKey")]
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
@@ -196,45 +184,6 @@ internal static unsafe partial class NativeBindings
 
     #endregion
 
-    #region Drawing
-
-    [LibraryImport(_dllName, EntryPoint = "Draw_Circle")]
-    [SuppressGCTransition]
-    public static partial void Draw_Circle(Vec2i center, int radius, uint color, [MarshalAs(UnmanagedType.U1)] bool fill);
-
-    [LibraryImport(_dllName, EntryPoint = "Draw_Box")]
-    [SuppressGCTransition]
-    public static partial void Draw_Box(Vec2i p1, Vec2i p2, uint color, [MarshalAs(UnmanagedType.U1)] bool fill);
-
-    [LibraryImport(_dllName, EntryPoint = "Draw_Line")]
-    [SuppressGCTransition]
-    public static partial void Draw_Line(Vec2i p1, Vec2i p2, uint color, int thickness);
-
-    [LibraryImport(_dllName, EntryPoint = "Draw_String", StringMarshalling = StringMarshalling.Utf16)]
-    public static partial void Draw_String(Vec2i pos, string text, uint color);
-
-    [LibraryImport(_dllName, EntryPoint = "Draw_Graph")]
-    [SuppressGCTransition]
-    public static partial void Draw_Graph(Vec2i pos, int handle, [MarshalAs(UnmanagedType.U1)] bool trans);
-
-    [LibraryImport(_dllName, EntryPoint = "Draw_RotaGraph")]
-    [SuppressGCTransition]
-    public static partial void Draw_RotaGraph(Vec2i center, double scale, double angle, int handle, [MarshalAs(UnmanagedType.U1)] bool trans);
-
-    [LibraryImport(_dllName, EntryPoint = "Draw_RectRotaGraph")]
-    [SuppressGCTransition]
-    public static partial void Draw_RectRotaGraph(Vec2i center, Vec2i srcPos, Vec2i srcSize, double scale, double angle, int handle, [MarshalAs(UnmanagedType.U1)] bool trans, [MarshalAs(UnmanagedType.U1)] bool turnX);
-
-    [LibraryImport(_dllName, EntryPoint = "Draw_SetBlendMode")]
-    [SuppressGCTransition]
-    public static partial void Draw_SetBlendMode(int mode, int pal);
-
-    [LibraryImport(_dllName, EntryPoint = "Draw_SetDrawBright")]
-    [SuppressGCTransition]
-    public static partial void Draw_SetDrawBright(int r, int g, int b);
-
-    #endregion
-
     #region Physics & Mathematics
 
     [LibraryImport(_dllName, EntryPoint = "Physics_IntersectsCircleCircle")]
@@ -266,11 +215,6 @@ internal static unsafe partial class NativeBindings
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Physics_CheckPlatformGround(float prevY, float nextY, Box2D playerBox, Box2D platformBox, float* outGroundY, float* outVy);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_CheckPenetrationBoxBox")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Physics_CheckPenetrationBoxBox(Box2D b1, Box2D b2, Vec2f* outNormal, float* outDepth);
 
     [LibraryImport(_dllName, EntryPoint = "Physics_IntegrateVelocity")]
     [SuppressGCTransition]
