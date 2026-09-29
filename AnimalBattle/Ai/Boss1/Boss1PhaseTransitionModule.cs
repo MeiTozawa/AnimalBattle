@@ -1,6 +1,6 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Bindings;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Boss1;
 
@@ -47,12 +47,11 @@ public sealed class Boss1PhaseTransitionModule(IBoss1Configuration configuration
         _state.StateElapsed = _elapsed;
         Vec2f curPos = _state.CurrentPosition;
         Vec2f targetBase = new(_state.BaseX, settings.HoverBaseY);
-        NativeExtensionBindings.Extension_CalculateBossReturnPosition(
-            in curPos,
-            in targetBase,
+        Vec2f newPos = PhysicsService.CalculateBossReturnPosition(
+            curPos,
+            targetBase,
             settings.TransitionFloatSpeed,
-            context.DeltaTime,
-            out Vec2f newPos);
+            context.DeltaTime);
         _state.CurrentPosition = newPos;
         if (context.Movement.MoveTo(newPos.X, newPos.Y).IsError)
         {

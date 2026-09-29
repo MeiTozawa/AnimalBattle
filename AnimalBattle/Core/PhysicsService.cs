@@ -219,4 +219,47 @@ public static unsafe class PhysicsService
     {
         return a + (b - a) * t;
     }
+
+    /// <summary>
+    /// Boss のホバリング調和軌道（2軸正弦・余弦波動＋プレイヤー追従重み＋平滑 Lerp 補間）をインライン計算します。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vec2f CalculateBossHoverPosition(
+        Vec2f currentPos,
+        Vec2f basePos,
+        Vec2f playerPos,
+        float hoverTimer,
+        float hoverSpeedX,
+        float hoverSpeedY,
+        float hoverAmpX,
+        float hoverAmpY,
+        float playerPursuitWeight,
+        float hoverLerpSpeed,
+        float deltaTime)
+    {
+        float targetX = basePos.X + (MathF.Sin(hoverTimer * hoverSpeedX) * hoverAmpX) +
+                        ((playerPos.X - basePos.X) * playerPursuitWeight);
+        float targetY = basePos.Y + (MathF.Cos(hoverTimer * hoverSpeedY) * hoverAmpY);
+        float lerpFactor = MathF.Min(1.0f, hoverLerpSpeed * deltaTime);
+
+        float nextX = currentPos.X + ((targetX - currentPos.X) * lerpFactor);
+        float nextY = currentPos.Y + ((targetY - currentPos.Y) * lerpFactor);
+        return new Vec2f(nextX, nextY);
+    }
+
+    /// <summary>
+    /// Boss の帰還・初期位置復帰軌道（目標アンカーへの指数平滑補間）をインライン計算します。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vec2f CalculateBossReturnPosition(
+        Vec2f currentPos,
+        Vec2f targetBasePos,
+        float returnSpeed,
+        float deltaTime)
+    {
+        float factor = MathF.Min(1.0f, returnSpeed * deltaTime);
+        float nextX = currentPos.X + ((targetBasePos.X - currentPos.X) * factor);
+        float nextY = currentPos.Y + ((targetBasePos.Y - currentPos.Y) * factor);
+        return new Vec2f(nextX, nextY);
+    }
 }

@@ -57,39 +57,4 @@ internal static unsafe partial class NativeExtensionBindings
         int bulletCount);
 
     #endregion
-
-    #region Boss Trajectory Extension
-
-    /// <summary>
-    /// Boss のホバリング調和軌道（2軸正弦・余弦波動＋プレイヤー追従重み＋平滑 Lerp 補間）を計算します。
-    /// </summary>
-    [LibraryImport(_dllName, EntryPoint = "Extension_CalculateBossHoverPosition")]
-    [SuppressGCTransition]
-    public static partial void Extension_CalculateBossHoverPosition(
-        in Vec2f currentPos,
-        in Vec2f basePos,
-        in Vec2f playerPos,
-        float hoverTimer,
-        float hoverSpeedX,
-        float hoverSpeedY,
-        float hoverAmpX,
-        float hoverAmpY,
-        float playerPursuitWeight,
-        float hoverLerpSpeed,
-        float deltaTime,
-        out Vec2f outPos);
-
-    /// <summary>
-    /// Boss の帰還・初期位置復帰軌道（目標アンカーへの指数平滑補間）を計算します。
-    /// </summary>
-    [LibraryImport(_dllName, EntryPoint = "Extension_CalculateBossReturnPosition")]
-    [SuppressGCTransition]
-    public static partial void Extension_CalculateBossReturnPosition(
-        in Vec2f currentPos,
-        in Vec2f targetBasePos,
-        float returnSpeed,
-        float deltaTime,
-        out Vec2f outPos);
-
-    #endregion
 }

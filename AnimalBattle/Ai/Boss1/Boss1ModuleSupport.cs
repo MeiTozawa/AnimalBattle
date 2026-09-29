@@ -1,6 +1,6 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Bindings;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Boss1;
 
@@ -30,10 +30,10 @@ internal static class Boss1ModuleSupport
         Vec2f basePos = new(state.BaseX, settings.HoverBaseY);
         Vec2f playerPos = new(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
 
-        NativeExtensionBindings.Extension_CalculateBossHoverPosition(
-            in curPos,
-            in basePos,
-            in playerPos,
+        Vec2f newPos = PhysicsService.CalculateBossHoverPosition(
+            curPos,
+            basePos,
+            playerPos,
             state.HoverTimer,
             settings.HoverSpeedX,
             settings.HoverSpeedY,
@@ -41,8 +41,7 @@ internal static class Boss1ModuleSupport
             settings.HoverAmpY,
             settings.PlayerPursuitWeight,
             settings.HoverLerpSpeed,
-            deltaTime,
-            out Vec2f newPos);
+            deltaTime);
 
         state.CurrentPosition = newPos;
         if (context.Movement.MoveTo(newPos.X, newPos.Y).IsError)
