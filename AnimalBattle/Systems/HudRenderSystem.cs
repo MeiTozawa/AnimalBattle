@@ -62,6 +62,33 @@ public static class HudRenderSystem
         GameEngine.DrawString(hudCfg.TitleX, switchGuideY, hudCfg.BossSwitchGuideText, hudCfg.BossSwitchGuideColor);
     }
 
+    private static readonly string[] BossTitles =
+    [
+        "BOSS: Unknown [PHASE 1/3]",
+        "BOSS: Ancient Cat Overlord [PHASE 1/3]",
+        "BOSS: Ancient Cat Overlord [PHASE 2/3]",
+        "BOSS: Ancient Cat Overlord [PHASE 3/3]",
+        "BOSS: Ground Crusher [PHASE 1/3]",
+        "BOSS: Ground Crusher [PHASE 2/3]",
+        "BOSS: Ground Crusher [PHASE 3/3]"
+    ];
+
+    private static readonly string[] PlayerHpSymbols =
+    [
+        "[ ○  ○  ○ ]",
+        "[ ●  ○  ○ ]",
+        "[ ●  ●  ○ ]",
+        "[ ●  ●  ● ]"
+    ];
+
+    private static readonly string[] PlayerHpLut =
+    [
+        "HP: [ ○  ○  ○ ] (0/3)",
+        "HP: [ ●  ○  ○ ] (1/3)",
+        "HP: [ ●  ●  ○ ] (2/3)",
+        "HP: [ ●  ●  ● ] (3/3)"
+    ];
+
     private static void DrawPlayerStatus(Player? player, HudRenderConfig hudCfg)
     {
         if (player == null)
@@ -69,23 +96,16 @@ public static class HudRenderSystem
             return;
         }
 
-        string jumpSymbol = player.RemainingJumps switch
+        string jumpText = player.RemainingJumps switch
         {
-            >= 2 => "[ ●  ● ]",
-            1 => "[ ●  ○ ]",
-            _ => "[ ○  ○ ]"
+            >= 2 => "Double Jump: [ ●  ● ]",
+            1 => "Double Jump: [ ●  ○ ]",
+            _ => "Double Jump: [ ○  ○ ]"
         };
         Color jumpColor = player.RemainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
-        GameEngine.DrawString(hudCfg.DoubleJumpX, hudCfg.DoubleJumpY, $"{hudCfg.DoubleJumpText} {jumpSymbol}", jumpColor);
+        GameEngine.DrawString(hudCfg.DoubleJumpX, hudCfg.DoubleJumpY, jumpText, jumpColor);
 
-        int currentHp = (int)player.CurrentHp;
-        string hpSymbol = currentHp switch
-        {
-            >= 3 => "[ ●  ●  ● ]",
-            2 => "[ ●  ●  ○ ]",
-            1 => "[ ●  ○  ○ ]",
-            _ => "[ ○  ○  ○ ]"
-        };
+        int currentHp = Math.Clamp((int)player.CurrentHp, 0, 3);
         Color hpColor = currentHp switch
         {
             >= 3 => hudCfg.PlayerHpHighColor,
@@ -93,8 +113,10 @@ public static class HudRenderSystem
             1 => hudCfg.PlayerHpLowColor,
             _ => hudCfg.PlayerHpDeadColor
         };
-        string invBadge = player.InvincibleTimer > 0.0f ? $" [INVINCIBLE {player.InvincibleTimer:F1}s]" : "";
-        GameEngine.DrawString(hudCfg.PlayerHpX, hudCfg.PlayerHpY, $"{hudCfg.PlayerHpText} {hpSymbol} ({currentHp}/{(int)player.MaxHp}){invBadge}", hpColor);
+        string hpText = player.InvincibleTimer > 0.0f
+            ? $"HP: {PlayerHpSymbols[currentHp]} ({currentHp}/3) [INVINCIBLE]"
+            : PlayerHpLut[currentHp];
+        GameEngine.DrawString(hudCfg.PlayerHpX, hudCfg.PlayerHpY, hpText, hpColor);
     }
 
     private static void DrawBossStatus(BossCharacter? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
@@ -104,9 +126,24 @@ public static class HudRenderSystem
             return;
         }
 
-        string bossTitle = $"BOSS: {boss.BossName} [PHASE {ToLegacyPhase(boss.Phase)}/3]";
+        int phase = ToLegacyPhase(boss.Phase);
+        string bossTitle = GetBossTitle(boss.BossType, phase);
         GetBossStateInfo(boss.CurrentState, boss.CurrentSkill, hpCfg, out string stateName, out Color stateBadgeColor);
-        DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, boss.CurrentHp, boss.MaxHp, ToLegacyPhase(boss.Phase), boss.StateTimer, boss.StateDuration);
+        DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, boss.CurrentHp, boss.MaxHp, phase, boss.StateTimer, boss.StateDuration);
+    }
+
+    private static string GetBossTitle(BossType bossType, int phase)
+    {
+        int p = Math.Clamp(phase, 1, 3);
+        if (bossType == BossType.Boss1)
+        {
+            return BossTitles[p];
+        }
+        if (bossType == BossType.Boss2)
+        {
+            return BossTitles[3 + p];
+        }
+        return BossTitles[0];
     }
 
     private static void DrawGameOverModal(Player? player, ModalRenderConfig modalCfg)
@@ -139,8 +176,8 @@ public static class HudRenderSystem
             {
                 Boss1State.Hover => "[STATE: HOVERING (IDLE)]",
                 Boss1State.AttackSelection => "[STATE: ATTACK SELECTION]",
-                Boss1State.Telegraph => $"[STATE: TELEGRAPHING (WIND-UP: {skill})]",
-                Boss1State.Execute => $"[STATE: EXECUTING ({skill})]",
+                Boss1State.Telegraph => EnumStringLut.GetBoss1TelegraphBadge(skill),
+                Boss1State.Execute => EnumStringLut.GetBoss1ExecuteBadge(skill),
                 Boss1State.Recovery => "[STATE: RECOVERING (VULNERABLE)]",
                 Boss1State.PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
                 Boss1State.Dead => "[STATE: DEFEATED]",
@@ -149,11 +186,11 @@ public static class HudRenderSystem
             BossType.Boss2 => state.AsBoss2() switch
             {
                 Boss2State.Idle => "[STATE: IDLE / ALERT]",
-                Boss2State.PatrolChase => $"[STATE: CHASE (NEXT: {skill})]",
+                Boss2State.PatrolChase => EnumStringLut.GetBoss2ChaseBadge(skill),
                 Boss2State.MoveToTakeoff => "[STATE: NAVIGATING TO TAKEOFF]",
                 Boss2State.PlatformTraverse => "[STATE: PLATFORM TRAVERSE (AIRBORNE)]",
-                Boss2State.Telegraph => $"[STATE: TELEGRAPHING (WIND-UP: {skill})]",
-                Boss2State.Execute => $"[STATE: EXECUTING ({skill})]",
+                Boss2State.Telegraph => EnumStringLut.GetBoss2TelegraphBadge(skill),
+                Boss2State.Execute => EnumStringLut.GetBoss2ExecuteBadge(skill),
                 Boss2State.WallCrashStun => "[STATE: WALL CRASH STUNNED (VULNERABLE)]",
                 Boss2State.Recovery => "[STATE: RECOVERING (VULNERABLE)]",
                 Boss2State.PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",

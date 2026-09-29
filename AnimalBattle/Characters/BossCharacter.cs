@@ -26,6 +26,7 @@ public sealed class BossCharacter
     private readonly Boss1BehaviorState? _boss1State;
     private readonly Boss2BehaviorState? _boss2State;
     private long _frameNumber;
+    private int _aiErrorLoggedCount;
 
     /// <summary>Boss の種別を取得します。</summary>
     public BossType BossType => _bossType;
@@ -304,7 +305,7 @@ public sealed class BossCharacter
         // 2. AI 状態機の更新（Phase -> 状態遷移 -> コマンド生成）
         _runtime.SynchronizeBossState(_bossType, X, Y, Vx, Vy, IsGrounded, playerObservation.IsAlive);
         ErrorOr<Success> updateResult = _runtime.Update(_slot, _frameNumber++, deltaTime, Phase, in playerObservation, CurrentHp, MaxHp);
-        if (updateResult.IsError && _frameNumber <= 5)
+        if (updateResult.IsError && _aiErrorLoggedCount++ < 3)
         {
             Console.WriteLine($"[BossCharacter] AI 更新エラー (Frame {_frameNumber - 1}): {updateResult.FirstError.Description}");
         }
