@@ -1,4 +1,5 @@
 using System;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using ErrorOr;
 using Flecs.NET.Core;
@@ -9,7 +10,7 @@ namespace AnimalBattle.Characters;
 /// プレイヤー自機の移動、跳躍、重力、射撃瞄準およびアニメーション状態を一元管理する領域モデルクラスです。
 /// 实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
-public sealed class Player
+public sealed class Player : ICombatant
 {
     private static readonly StringId ClipIdle = "Idle";
     private static readonly StringId ClipRun = "Run";
@@ -22,6 +23,39 @@ public sealed class Player
     private int _remainingJumps;
     private int _maxJumps;
     private float _shootCooldown;
+
+    /// <summary>対応する Flecs エンティティ ID を取得します。</summary>
+    public ulong EntityId => _entity.Id;
+
+    /// <summary>プレイヤーの所属陣営（常に味方）を取得します。</summary>
+    public Faction Faction => Faction.Friendly;
+
+    /// <summary>プレイヤーが無敵状態であるかを取得します。</summary>
+    public bool IsInvincible => InvincibleTimer > 0.0f;
+
+    /// <summary>プレイヤーの現在の高レベル動作状態を取得します。</summary>
+    public PlayerState CurrentState
+    {
+        get
+        {
+            if (!IsAlive)
+            {
+                return PlayerState.Dead;
+            }
+
+            if (IsFlashing || InvincibleTimer > 0.0f)
+            {
+                return PlayerState.Hurt;
+            }
+
+            if (IsGrounded)
+            {
+                return PlayerState.Grounded;
+            }
+
+            return PlayerState.Airborne;
+        }
+    }
 
     /// <summary>プレイヤーのワールド X 座標を取得または設定します。</summary>
     public float X
@@ -548,4 +582,43 @@ public sealed class Player
              .Set(new Hitbox(pCfg.GetBulletHitboxShape(), damage: pCfg.BulletDamage, faction: Faction.Friendly, destroyOnHit: true))
              .Add<PlayerBulletTag>();
     }
+
+    /// <summary>
+    /// プレイヤーにダメージを与えます。
+    /// </summary>
+    /// <param name="damage">受けるダメージ量。</param>
+    /// <param name="ignoreInvincible">無敵時間を無視するかどうか。</param>
+    public void TakeDamage(float damage, bool ignoreInvincible = false)
+    {
+        if (damage <= 0.0f || !IsAlive)
+        {
+            return;
+        }
+
+        if (!ignoreInvincible && IsInvincible)
+        {
+            return;
+        }
+
+        CurrentHp -= damage;
+    }
 }
+
+/// <summary>
+/// プレイヤー自機の高レベル動作状態を表す状態マシン列挙型。
+/// </summary>
+public enum PlayerState
+{
+    /// <summary>死亡状態（HP <= 0）。</summary>
+    Dead,
+
+    /// <summary>被弾硬直・無敵点滅状態。</summary>
+    Hurt,
+
+    /// <summary>接地状態（立ち・歩行・射撃など）。</summary>
+    Grounded,
+
+    /// <summary>空中状態（上昇・落下など）。</summary>
+    Airborne,
+}
+

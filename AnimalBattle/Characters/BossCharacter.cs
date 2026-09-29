@@ -6,6 +6,7 @@ using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Dsl;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps.Navigation;
 using ErrorOr;
@@ -17,7 +18,7 @@ namespace AnimalBattle.Characters;
 /// 多 Boss（Boss 1 / Boss 2）の生命周期、状態遷移、物理、弾幕および描画用データ同期を一元管理する領域モデルクラスです。
 /// 实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
-public sealed class BossCharacter
+public sealed class BossCharacter : ICombatant
 {
     private readonly Entity _entity;
     private readonly BossType _bossType;
@@ -27,6 +28,15 @@ public sealed class BossCharacter
     private readonly Boss2BehaviorState? _boss2State;
     private long _frameNumber;
     private int _aiErrorLoggedCount;
+
+    /// <summary>対応する Flecs エンティティ ID を取得します。</summary>
+    public ulong EntityId => _entity.Id;
+
+    /// <summary>Boss の所属陣営（常に敵性）を取得します。</summary>
+    public Faction Faction => Faction.Hostile;
+
+    /// <summary>Boss が無敵状態であるかを取得します。</summary>
+    public bool IsInvincible => IsInvulnerable;
 
     /// <summary>Boss の種別を取得します。</summary>
     public BossType BossType => _bossType;
@@ -165,6 +175,27 @@ public sealed class BossCharacter
 
     /// <summary>対応する Flecs エンティティ句柄を取得します。</summary>
     public Entity Entity => _entity;
+
+    /// <summary>
+    /// Boss にダメージを与えます。易傷状態の場合は被ダメージが 2 倍になります。
+    /// </summary>
+    /// <param name="damage">受けるダメージ量。</param>
+    /// <param name="ignoreInvincible">無敵時間を無視するかどうか。</param>
+    public void TakeDamage(float damage, bool ignoreInvincible = false)
+    {
+        if (damage <= 0.0f || !IsAlive)
+        {
+            return;
+        }
+
+        if (!ignoreInvincible && IsInvulnerable)
+        {
+            return;
+        }
+
+        float finalDamage = IsVulnerable ? damage * 2.0f : damage;
+        CurrentHp -= finalDamage;
+    }
 
     /// <summary>
     /// Boss の Flecs エンティティ、種別およびスプライトハンドルを指定して BossCharacter を初期化します。

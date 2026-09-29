@@ -22,6 +22,17 @@ public static class HudRenderSystem
     /// <param name="boss">現在アクティブな Boss。</param>
     public static void Render(Player? player, BossCharacter? boss)
     {
+        Render((ICombatant?)player, boss, player?.RemainingJumps ?? 0);
+    }
+
+    /// <summary>
+    /// 統一戦闘者契約インターフェースに基づいて HUD および各種ステータス UI を描画します。
+    /// </summary>
+    /// <param name="player">プレイヤー戦闘者。</param>
+    /// <param name="boss">Boss 戦闘者。</param>
+    /// <param name="remainingJumps">プレイヤーの二段ジャンプ残数。</param>
+    public static void Render(ICombatant? player, BossCharacter? boss, int remainingJumps = 0)
+    {
         RenderConfig renderCfg = ConfigManager.Render;
         HudRenderConfig hudCfg = renderCfg.Hud;
         BossHpBarRenderConfig hpCfg = renderCfg.BossHpBar;
@@ -29,7 +40,7 @@ public static class HudRenderSystem
         DebugRenderConfig dbgCfg = renderCfg.Debug;
 
         DrawControlHelp(hudCfg, dbgCfg);
-        DrawPlayerStatus(player, hudCfg);
+        DrawPlayerStatus(player, remainingJumps, hudCfg);
         DrawBossStatus(boss, hpCfg, modalCfg);
         DrawGameOverModal(player, modalCfg);
     }
@@ -89,20 +100,20 @@ public static class HudRenderSystem
         "HP: [ ●  ●  ● ] (3/3)"
     ];
 
-    private static void DrawPlayerStatus(Player? player, HudRenderConfig hudCfg)
+    private static void DrawPlayerStatus(ICombatant? player, int remainingJumps, HudRenderConfig hudCfg)
     {
         if (player == null)
         {
             return;
         }
 
-        string jumpText = player.RemainingJumps switch
+        string jumpText = remainingJumps switch
         {
             >= 2 => "Double Jump: [ ●  ● ]",
             1 => "Double Jump: [ ●  ○ ]",
             _ => "Double Jump: [ ○  ○ ]"
         };
-        Color jumpColor = player.RemainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
+        Color jumpColor = remainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
         GameEngine.DrawString(hudCfg.DoubleJumpX, hudCfg.DoubleJumpY, jumpText, jumpColor);
 
         int currentHp = Math.Clamp((int)player.CurrentHp, 0, 3);
@@ -113,7 +124,7 @@ public static class HudRenderSystem
             1 => hudCfg.PlayerHpLowColor,
             _ => hudCfg.PlayerHpDeadColor
         };
-        string hpText = player.InvincibleTimer > 0.0f
+        string hpText = player.IsInvincible
             ? $"HP: {PlayerHpSymbols[currentHp]} ({currentHp}/3) [INVINCIBLE]"
             : PlayerHpLut[currentHp];
         GameEngine.DrawString(hudCfg.PlayerHpX, hudCfg.PlayerHpY, hpText, hpColor);
@@ -146,7 +157,7 @@ public static class HudRenderSystem
         return BossTitles[0];
     }
 
-    private static void DrawGameOverModal(Player? player, ModalRenderConfig modalCfg)
+    private static void DrawGameOverModal(ICombatant? player, ModalRenderConfig modalCfg)
     {
         if (player != null && !player.IsAlive)
         {
