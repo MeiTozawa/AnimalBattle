@@ -1,10 +1,9 @@
 namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>
-/// 状態遷移の検証とライフサイクル適用を行う境界です。
+///     状態遷移の検証とライフサイクル適用を行う境界です。
 /// </summary>
-public interface ITransitionService
-{
+public interface ITransitionService {
     /// <summary>遷移要求を検証します。</summary>
     TransitionResult Request(in TransitionRequest request);
 

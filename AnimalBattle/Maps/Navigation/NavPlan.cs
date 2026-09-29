@@ -1,10 +1,9 @@
 namespace AnimalBattle.Maps.Navigation;
 
 /// <summary>
-/// ナビゲーション実行状態の分類。
+///     ナビゲーション実行状態の分類。
 /// </summary>
-public enum NavStatus
-{
+public enum NavStatus {
     /// <summary>目標と自身が同一プラットフォーム上に存在し、直接地面を水平歩行追従する状態</summary>
     DirectWalk,
 
@@ -25,11 +24,11 @@ public enum NavStatus
 }
 
 /// <summary>
-/// プラットフォームナビゲーショングラフが出力する単一フレームの意思決定プラン。
-/// AI エンティティが現在実行すべき移動目標、跳躍指示、および運動学的速度を伝達します。
+///     プラットフォームナビゲーショングラフが出力する単一フレームの意思決定プラン。
+///     AI エンティティが現在実行すべき移動目標、跳躍指示、および運動学的速度を伝達します。
 /// </summary>
 /// <remarks>
-/// <see cref="NavPlan"/> の新しいインスタンスを初期化します。
+///     <see cref="NavPlan" /> の新しいインスタンスを初期化します。
 /// </remarks>
 public sealed class NavPlan(
     NavStatus status,
@@ -40,8 +39,7 @@ public sealed class NavPlan(
     float requiredVy,
     PlatformNode? currentNode = null,
     PlatformNode? targetNode = null,
-    PlatformLink? nextLink = null)
-{
+    PlatformLink? nextLink = null) {
     /// <summary>現在のナビゲーション状態</summary>
     public NavStatus Status { get; } = status;
 
@@ -73,34 +71,36 @@ public sealed class NavPlan(
     public PlatformLink? NextLink { get; } = nextLink;
 
     /// <summary>
-    /// 同一プラットフォーム内での直接歩行追従プランを生成します。
+    ///     同一プラットフォーム内での直接歩行追従プランを生成します。
     /// </summary>
-    public static NavPlan CreateDirectWalk(float targetX, float moveSpeed, PlatformNode? currentNode, PlatformNode? targetNode)
+    public static NavPlan CreateDirectWalk(float targetX, float moveSpeed, PlatformNode? currentNode,
+        PlatformNode? targetNode)
     {
         return new NavPlan(
             NavStatus.DirectWalk,
-            targetX: targetX,
-            takeoffX: targetX,
-            landingX: targetX,
-            requiredVx: moveSpeed,
-            requiredVy: 0.0f,
-            currentNode: currentNode,
-            targetNode: targetNode);
+            targetX,
+            targetX,
+            targetX,
+            moveSpeed,
+            0.0f,
+            currentNode,
+            targetNode);
     }
 
     /// <summary>
-    /// 経路が存在しない場合のフォールバックプランを生成します。
+    ///     経路が存在しない場合のフォールバックプランを生成します。
     /// </summary>
-    public static NavPlan CreateNoPath(float targetX, float moveSpeed, PlatformNode? currentNode, PlatformNode? targetNode)
+    public static NavPlan CreateNoPath(float targetX, float moveSpeed, PlatformNode? currentNode,
+        PlatformNode? targetNode)
     {
         return new NavPlan(
             NavStatus.NoPath,
-            targetX: targetX,
-            takeoffX: targetX,
-            landingX: targetX,
-            requiredVx: moveSpeed,
-            requiredVy: 0.0f,
-            currentNode: currentNode,
-            targetNode: targetNode);
+            targetX,
+            targetX,
+            targetX,
+            moveSpeed,
+            0.0f,
+            currentNode,
+            targetNode);
     }
 }

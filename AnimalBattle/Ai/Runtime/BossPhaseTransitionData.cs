@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using AnimalBattle.Ai.Contracts;
 
@@ -7,8 +6,7 @@ namespace AnimalBattle.Ai.Runtime;
 /// <summary>Phase 遷移の項目別適用状況を保持するデータ構造体です。</summary>
 /// <remarks>Phase 遷移データを生成します。</remarks>
 [StructLayout(LayoutKind.Sequential)]
-public struct BossPhaseTransitionData(Phase targetPhase, in TransitionReason reason)
-{
+public struct BossPhaseTransitionData(Phase targetPhase, in TransitionReason reason) {
     /// <summary>遷移先 Phase です。</summary>
     public Phase TargetPhase = targetPhase;
 
@@ -33,8 +31,7 @@ public struct BossPhaseTransitionData(Phase targetPhase, in TransitionReason rea
 
 /// <summary>Phase 遷移で適用する項目を表すビット値です。</summary>
 [Flags]
-public enum PhaseTransitionApplyMask
-{
+public enum PhaseTransitionApplyMask {
     /// <summary>項目なしです。</summary>
     None = 0,
 
@@ -54,5 +51,5 @@ public enum PhaseTransitionApplyMask
     Phase2 = 16,
 
     /// <summary>Phase3 の閾値を一度開始したことを示します。</summary>
-    Phase3 = 32,
+    Phase3 = 32
 }

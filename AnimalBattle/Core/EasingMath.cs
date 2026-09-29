@@ -1,38 +1,39 @@
-using System;
 using System.Runtime.CompilerServices;
 
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// 全 19 種のイージング補間関数を純粋な C# の算術演算で即時評価し、
-/// JIT インライン展開により P/Invoke 互換オーバーヘッドゼロで高速動作する静的数学クラス。
+///     全 19 種のイージング補間関数を純粋な C# の算術演算で即時評価し、
+///     JIT インライン展開により P/Invoke 互換オーバーヘッドゼロで高速動作する静的数学クラス。
 /// </summary>
-public static class EasingMath
-{
+public static class EasingMath {
     private const float _pi = MathF.PI;
 
     /// <summary>
-    /// 指定されたイージング型および進捗割合 <paramref name="progress"/> (0.0f～1.0f) から補間数値を純粋 C# で高速評価します。
+    ///     指定されたイージング型および進捗割合 <paramref name="progress" /> (0.0f～1.0f) から補間数値を純粋 C# で高速評価します。
     /// </summary>
     /// <param name="ease">イージング型。</param>
     /// <param name="progress">進捗率（0.0f～1.0f）。</param>
     /// <returns>イージングが適用された補間値（通常 0.0f～1.0f）。</returns>
-    /// <exception cref="ArgumentOutOfRangeException">未定義の <see cref="EaseType"/> が指定された場合にスローされます。</exception>
+    /// <exception cref="ArgumentOutOfRangeException">未定義の <see cref="EaseType" /> が指定された場合にスローされます。</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Evaluate(EaseType ease, float progress)
     {
-        return ease switch
-        {
+        return ease switch {
             EaseType.Linear => progress,
-            EaseType.InSine => 1.0f - MathF.Cos((progress * _pi) * 0.5f),
-            EaseType.OutSine => MathF.Sin((progress * _pi) * 0.5f),
+            EaseType.InSine => 1.0f - MathF.Cos(progress * _pi * 0.5f),
+            EaseType.OutSine => MathF.Sin(progress * _pi * 0.5f),
             EaseType.InOutSine => -(MathF.Cos(_pi * progress) - 1.0f) * 0.5f,
             EaseType.InQuad => progress * progress,
             EaseType.OutQuad => 1.0f - (1.0f - progress) * (1.0f - progress),
-            EaseType.InOutQuad => progress < 0.5f ? 2.0f * progress * progress : 1.0f - MathF.Pow(-2.0f * progress + 2.0f, 2.0f) * 0.5f,
+            EaseType.InOutQuad => progress < 0.5f
+                ? 2.0f * progress * progress
+                : 1.0f - MathF.Pow(-2.0f * progress + 2.0f, 2.0f) * 0.5f,
             EaseType.InCubic => progress * progress * progress,
             EaseType.OutCubic => 1.0f - MathF.Pow(1.0f - progress, 3.0f),
-            EaseType.InOutCubic => progress < 0.5f ? 4.0f * progress * progress * progress : 1.0f - MathF.Pow(-2.0f * progress + 2.0f, 3.0f) * 0.5f,
+            EaseType.InOutCubic => progress < 0.5f
+                ? 4.0f * progress * progress * progress
+                : 1.0f - MathF.Pow(-2.0f * progress + 2.0f, 3.0f) * 0.5f,
             EaseType.InExpo => progress <= 0.0f ? 0.0f : MathF.Pow(2.0f, 10.0f * progress - 10.0f),
             EaseType.OutExpo => progress >= 1.0f ? 1.0f : 1.0f - MathF.Pow(2.0f, -10.0f * progress),
             EaseType.InOutExpo => EvaluateInOutExpo(progress),
@@ -51,15 +52,9 @@ public static class EasingMath
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float EvaluateInOutExpo(float t)
     {
-        if (t <= 0.0f)
-        {
-            return 0.0f;
-        }
+        if (t <= 0.0f) return 0.0f;
 
-        if (t >= 1.0f)
-        {
-            return 1.0f;
-        }
+        if (t >= 1.0f) return 1.0f;
 
         return t < 0.5f
             ? MathF.Pow(2.0f, 20.0f * t - 10.0f) * 0.5f
@@ -69,54 +64,36 @@ public static class EasingMath
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float EvaluateInElastic(float t)
     {
-        if (t <= 0.0f)
-        {
-            return 0.0f;
-        }
+        if (t <= 0.0f) return 0.0f;
 
-        if (t >= 1.0f)
-        {
-            return 1.0f;
-        }
+        if (t >= 1.0f) return 1.0f;
 
-        const float c4 = (2.0f * _pi) / 3.0f;
+        const float c4 = 2.0f * _pi / 3.0f;
         return -MathF.Pow(2.0f, 10.0f * t - 10.0f) * MathF.Sin((t * 10.0f - 10.75f) * c4);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float EvaluateOutElastic(float t)
     {
-        if (t <= 0.0f)
-        {
-            return 0.0f;
-        }
+        if (t <= 0.0f) return 0.0f;
 
-        if (t >= 1.0f)
-        {
-            return 1.0f;
-        }
+        if (t >= 1.0f) return 1.0f;
 
-        const float c4 = (2.0f * _pi) / 3.0f;
+        const float c4 = 2.0f * _pi / 3.0f;
         return MathF.Pow(2.0f, -10.0f * t) * MathF.Sin((t * 10.0f - 0.75f) * c4) + 1.0f;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float EvaluateInOutElastic(float t)
     {
-        if (t <= 0.0f)
-        {
-            return 0.0f;
-        }
+        if (t <= 0.0f) return 0.0f;
 
-        if (t >= 1.0f)
-        {
-            return 1.0f;
-        }
+        if (t >= 1.0f) return 1.0f;
 
-        const float c5 = (2.0f * _pi) / 4.5f;
+        const float c5 = 2.0f * _pi / 4.5f;
         return t < 0.5f
             ? -(MathF.Pow(2.0f, 20.0f * t - 10.0f) * MathF.Sin((20.0f * t - 11.125f) * c5)) * 0.5f
-            : (MathF.Pow(2.0f, -20.0f * t + 10.0f) * MathF.Sin((20.0f * t - 11.125f) * c5)) * 0.5f + 1.0f;
+            : MathF.Pow(2.0f, -20.0f * t + 10.0f) * MathF.Sin((20.0f * t - 11.125f) * c5) * 0.5f + 1.0f;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -125,10 +102,7 @@ public static class EasingMath
         const float n1 = 7.5625f;
         const float d1 = 2.75f;
 
-        if (x < 1.0f / d1)
-        {
-            return n1 * x * x;
-        }
+        if (x < 1.0f / d1) return n1 * x * x;
 
         if (x < 2.0f / d1)
         {

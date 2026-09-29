@@ -1,12 +1,11 @@
-using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// Resource/Platform/sheet.toml 等から読み込まれるタイルセット設定クラス。
+///     Resource/Platform/sheet.toml 等から読み込まれるタイルセット設定クラス。
 /// </summary>
-public sealed class TileSetConfig
-{
+public sealed class TileSetConfig {
     /// <summary>タイル単体の幅（ピクセル）</summary>
     public int TileWidth { get; set; }
 
@@ -47,12 +46,12 @@ public sealed class TileSetConfig
     public int CollisionHeight => CollisionY2 - CollisionY1;
 
     /// <summary>
-    /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{TileSetConfig}"/> インスタンスを生成します。
-    /// Release ビルド時はバイナリから読み込まれた <see cref="ConfigManager.TileSet"/> を返却します。
+    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{TileSetConfig}" /> インスタンスを生成します。
+    ///     Release ビルド時はバイナリから読み込まれた <see cref="ConfigManager.TileSet" /> を返却します。
     /// </summary>
     /// <param name="path">TOML ファイル名または相対パス</param>
     /// <returns>読み込み結果</returns>
-    public static ErrorOr.ErrorOr<ConfigBase<TileSetConfig>> LoadFromFile(string path = ResourcePath.Platform.SheetToml)
+    public static ErrorOr<ConfigBase<TileSetConfig>> LoadFromFile(string path = ResourcePath.Platform.SheetToml)
     {
 #if DEBUG
         return ConfigBase<TileSetConfig>.LoadFromFile(path);

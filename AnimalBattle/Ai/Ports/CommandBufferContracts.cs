@@ -4,25 +4,28 @@ using ErrorOr;
 namespace AnimalBattle.Ai.Ports;
 
 /// <summary>command 容量不足時の採用優先度です。</summary>
-public enum CommandPriority
-{
+public enum CommandPriority {
     /// <summary>通常の演出・移動要求です。</summary>
     Normal = 0,
+
     /// <summary>通常の攻撃要求です。</summary>
     Attack = 1,
+
     /// <summary>安全値と攻撃判定です。</summary>
     Safety = 2,
+
     /// <summary>エラー診断です。</summary>
     Diagnostic = 3
 }
 
 /// <summary>command を識別する one-shot key の領域です。</summary>
-public enum CommandComponentKind
-{
+public enum CommandComponentKind {
     /// <summary>移動 component です。</summary>
     Movement = 1,
+
     /// <summary>攻撃 component です。</summary>
     Attack = 2,
+
     /// <summary>演出 component です。</summary>
     Effect = 3
 }
@@ -32,32 +35,33 @@ public readonly record struct CommandOneShotKey(
     CommandComponentKind Component,
     BossSkill Skill,
     int ComponentIndex,
-    long FrameUpdateNumber)
-
-{
+    long FrameUpdateNumber) {
     /// <summary>key が発行可能な値かどうかを取得します。</summary>
     /// <remarks>
-    /// Movement / Effect の command は BossSkill を持たないため、攻撃識別子の検証は
-    /// component の値検証とは分離しています。
+    ///     Movement / Effect の command は BossSkill を持たないため、攻撃識別子の検証は
+    ///     component の値検証とは分離しています。
     /// </remarks>
-    public bool IsValid => (Component is CommandComponentKind.Movement
-        or CommandComponentKind.Attack
-        or CommandComponentKind.Effect)
-        && ComponentIndex >= 0
-        && FrameUpdateNumber >= 0;
+    public bool IsValid => Component is CommandComponentKind.Movement
+            or CommandComponentKind.Attack
+            or CommandComponentKind.Effect
+     && ComponentIndex >= 0
+     && FrameUpdateNumber >= 0;
 }
 
 /// <summary>command buffer の拒否理由です。</summary>
-public enum CommandBufferFailureReason
-{
+public enum CommandBufferFailureReason {
     /// <summary>拒否理由がありません。</summary>
     None = 0,
+
     /// <summary>容量不足で低優先度だったことを示します。</summary>
     CapacityExceeded = 1,
+
     /// <summary>同じ one-shot key が既に存在することを示します。</summary>
     DuplicateOneShot = 2,
+
     /// <summary>one-shot key が不正であることを示します。</summary>
     InvalidOneShotKey = 3,
+
     /// <summary>診断記録に失敗したことを示します。</summary>
     DiagnosticFailed = 4
 }
@@ -75,15 +79,13 @@ public readonly record struct CommandWriteResult(
     bool IsAccepted,
     CommandOneShotKey OneShotKey,
     CommandBufferFailureReason FailureReason,
-    ErrorCode ErrorCode)
-{
+    ErrorCode ErrorCode) {
     /// <summary>command が受理されたかどうかを取得します。</summary>
     public bool IsSuccess => IsAccepted;
 }
 
 /// <summary>command buffer の診断を受け取る境界です。</summary>
-public interface ICommandBufferDiagnosticSink
-{
+public interface ICommandBufferDiagnosticSink {
     /// <summary>overflow または重複を記録します。</summary>
     ErrorOr<Success> Record(in CommandBufferDiagnostic diagnostic);
 }

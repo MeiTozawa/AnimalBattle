@@ -3,14 +3,13 @@ using System.Runtime.InteropServices;
 namespace AnimalBattle.Components;
 
 /// <summary>
-/// 衝突判定用バウンディングボックスおよび状態を表すコンポーネント。
+///     衝突判定用バウンディングボックスおよび状態を表すコンポーネント。
 /// </summary>
 /// <remarks>
-/// 指定されたサイズとオフセットで <see cref="CollisionBox"/> の新しいインスタンスを初期化します。
+///     指定されたサイズとオフセットで <see cref="CollisionBox" /> の新しいインスタンスを初期化します。
 /// </remarks>
 [StructLayout(LayoutKind.Sequential)]
-public struct CollisionBox(float width, float height, float offsetX = 0.0f, float offsetY = 0.0f)
-{
+public struct CollisionBox(float width, float height, float offsetX = 0.0f, float offsetY = 0.0f) {
     /// <summary>バウンディングボックス幅</summary>
     public float Width = width;
 
@@ -30,19 +29,24 @@ public struct CollisionBox(float width, float height, float offsetX = 0.0f, floa
     public bool IsOnWall = false;
 
     /// <summary>
-    /// <see cref="CollisionBox"/> を統一幾何形状 <see cref="CollisionShape"/> へ変換します。
+    ///     <see cref="CollisionBox" /> を統一幾何形状 <see cref="CollisionShape" /> へ変換します。
     /// </summary>
-    public readonly CollisionShape ToCollisionShape() => new()
+    public readonly CollisionShape ToCollisionShape()
     {
-        Type = CollisionShapeType.Box,
-        Width = Width,
-        Height = Height,
-        OffsetX = OffsetX,
-        OffsetY = OffsetY
-    };
+        return new CollisionShape {
+            Type = CollisionShapeType.Box,
+            Width = Width,
+            Height = Height,
+            OffsetX = OffsetX,
+            OffsetY = OffsetY
+        };
+    }
 
     /// <summary>
-    /// <see cref="CollisionBox"/> から <see cref="CollisionShape"/> への暗黙変換を提供します。
+    ///     <see cref="CollisionBox" /> から <see cref="CollisionShape" /> への暗黙変換を提供します。
     /// </summary>
-    public static implicit operator CollisionShape(in CollisionBox box) => box.ToCollisionShape();
+    public static implicit operator CollisionShape(in CollisionBox box)
+    {
+        return box.ToCollisionShape();
+    }
 }

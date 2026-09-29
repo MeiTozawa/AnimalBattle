@@ -1,10 +1,9 @@
 namespace AnimalBattle.Components;
 
 /// <summary>
-/// 弾幕の特殊挙動・視覚表現の種別を定義する列挙型。
+///     弾幕の特殊挙動・視覚表現の種別を定義する列挙型。
 /// </summary>
-public enum BulletType : byte
-{
+public enum BulletType : byte {
     /// <summary>標準の直進単一円形弾。</summary>
     Normal = 0,
 

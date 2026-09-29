@@ -1,22 +1,21 @@
 namespace AnimalBattle.Ai.Contracts;
 
 /// <summary>
-/// 状態機ランタイムが扱う Boss の種別を定義します。
+///     状態機ランタイムが扱う Boss の種別を定義します。
 /// </summary>
-public enum BossType
-{
+public enum BossType {
     /// <summary>
-    /// Boss 種別が未指定であることを示します。
+    ///     Boss 種別が未指定であることを示します。
     /// </summary>
     Unknown = 0,
 
     /// <summary>
-    /// Boss 1 を示します。
+    ///     Boss 1 を示します。
     /// </summary>
     Boss1 = 1,
 
     /// <summary>
-    /// Boss 2 を示します。
+    ///     Boss 2 を示します。
     /// </summary>
     Boss2 = 2
 }

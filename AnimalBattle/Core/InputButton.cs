@@ -1,10 +1,9 @@
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// キーボード、マウス、ゲームパッドを統一的に扱うボタン識別子。
+///     キーボード、マウス、ゲームパッドを統一的に扱うボタン識別子。
 /// </summary>
-public enum InputButton
-{
+public enum InputButton {
     None = 0,
 
     // --- キーボード (DxLib DirectInput キーコード互換: 1 ~ 255) ---
@@ -79,5 +78,5 @@ public enum InputButton
     PadL2 = 410,
     PadR2 = 411,
     PadStart = 412,
-    PadSelect = 413,
+    PadSelect = 413
 }

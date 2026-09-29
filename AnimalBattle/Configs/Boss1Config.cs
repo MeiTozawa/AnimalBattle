@@ -1,15 +1,11 @@
-using System;
-using System.Collections.Generic;
-using AnimalBattle.Components;
-using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// Boss 1 (Ancient Cat Overlord) 個別フェーズの FSM 状態機械設定クラス。
+///     Boss 1 (Ancient Cat Overlord) 個別フェーズの FSM 状態機械設定クラス。
 /// </summary>
-public sealed class Boss1PhaseFsmConfig
-{
+public sealed class Boss1PhaseFsmConfig {
     /// <summary>このフェーズが有効となる HP 割合上限</summary>
     public float HpThreshold { get; set; }
 
@@ -63,11 +59,10 @@ public sealed class Boss1PhaseFsmConfig
 }
 
 /// <summary>
-/// Config/boss1.toml から読み込まれる Boss 1 の基本パラメータおよび各フェーズの FSM 設定クラス。
-/// 形状種別、寸法、および局所オフセット (HurtboxOffsetX/Y, BodyHitboxOffsetX/Y) を完全管理します。
+///     Config/boss1.toml から読み込まれる Boss 1 の基本パラメータおよび各フェーズの FSM 設定クラス。
+///     形状種別、寸法、および局所オフセット (HurtboxOffsetX/Y, BodyHitboxOffsetX/Y) を完全管理します。
 /// </summary>
-public sealed class Boss1Config
-{
+public sealed class Boss1Config {
     /// <summary>Boss 表示名</summary>
     public string BossName { get; set; } = string.Empty;
 
@@ -138,29 +133,31 @@ public sealed class Boss1Config
     public Boss1PhaseFsmConfig Phase3 { get; set; } = new();
 
     /// <summary>
-    /// 設定に基づいた Boss 1 被弾判定 (<see cref="CollisionShape"/>) を取得します。
+    ///     設定に基づいた Boss 1 被弾判定 (<see cref="CollisionShape" />) を取得します。
     /// </summary>
     /// <returns>構築された被弾衝突形状バリアント</returns>
     public CollisionShape GetHurtboxShape()
     {
-        return CollisionShapeFactory.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight, HurtboxOffsetX, HurtboxOffsetY);
+        return CollisionShapeFactory.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight,
+            HurtboxOffsetX, HurtboxOffsetY);
     }
 
     /// <summary>
-    /// 設定に基づいた Boss 1 接触・突進攻撃判定 (<see cref="CollisionShape"/>) を取得します。
+    ///     設定に基づいた Boss 1 接触・突進攻撃判定 (<see cref="CollisionShape" />) を取得します。
     /// </summary>
     /// <returns>構築された接触攻撃衝突形状バリアント</returns>
     public CollisionShape GetHitboxShape()
     {
-        return CollisionShapeFactory.CreateWithFallback(HitboxShape, BodyHitboxRadius, BodyHitboxWidth, BodyHitboxHeight, BodyHitboxOffsetX, BodyHitboxOffsetY);
+        return CollisionShapeFactory.CreateWithFallback(HitboxShape, BodyHitboxRadius, BodyHitboxWidth,
+            BodyHitboxHeight, BodyHitboxOffsetX, BodyHitboxOffsetY);
     }
 
     /// <summary>
-    /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{Boss1Config}"/> インスタンスを生成します。
+    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{Boss1Config}" /> インスタンスを生成します。
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static ErrorOr.ErrorOr<ConfigBase<Boss1Config>> LoadFromFile(string path = ResourcePath.Config.Boss1)
+    public static ErrorOr<ConfigBase<Boss1Config>> LoadFromFile(string path = ResourcePath.Config.Boss1)
     {
         return ConfigBase<Boss1Config>.LoadFromFile(path);
     }

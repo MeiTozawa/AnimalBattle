@@ -1,10 +1,9 @@
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// イージング関数の計算タイプを表す列挙型。
+///     イージング関数の計算タイプを表す列挙型。
 /// </summary>
-public enum EaseType
-{
+public enum EaseType {
     /// <summary>線形補間（等速）</summary>
     Linear = 0,
 

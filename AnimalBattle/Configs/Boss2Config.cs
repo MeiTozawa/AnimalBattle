@@ -1,15 +1,11 @@
-using System;
-using System.Collections.Generic;
-using AnimalBattle.Components;
-using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// Boss 2 (Ground Crusher) 個別フェーズの FSM 状態機械設定クラス。
+///     Boss 2 (Ground Crusher) 個別フェーズの FSM 状態機械設定クラス。
 /// </summary>
-public sealed class Boss2PhaseConfig
-{
+public sealed class Boss2PhaseConfig {
     /// <summary>このフェーズが有効となる HP 割合上限</summary>
     public float HpThreshold { get; set; }
 
@@ -42,10 +38,9 @@ public sealed class Boss2PhaseConfig
 }
 
 /// <summary>
-/// Config/boss2.toml または boss1.toml から読み込まれる技能意思決定ルールの設定クラスです。
+///     Config/boss2.toml または boss1.toml から読み込まれる技能意思決定ルールの設定クラスです。
 /// </summary>
-public sealed class AttackRuleConfig
-{
+public sealed class AttackRuleConfig {
     /// <summary>技能識別名（例: "HeavySlash", "DoubleCleave"）</summary>
     public string Skill { get; set; } = string.Empty;
 
@@ -72,10 +67,9 @@ public sealed class AttackRuleConfig
 }
 
 /// <summary>
-/// Config/boss2.toml から読み込まれる Boss 2 (Ground Crusher) の基本パラメータおよび各フェーズの FSM 設定クラス。
+///     Config/boss2.toml から読み込まれる Boss 2 (Ground Crusher) の基本パラメータおよび各フェーズの FSM 設定クラス。
 /// </summary>
-public sealed class Boss2Config
-{
+public sealed class Boss2Config {
     /// <summary>Boss 表示名</summary>
     public string BossName { get; set; } = string.Empty;
 
@@ -224,29 +218,31 @@ public sealed class Boss2Config
     public Boss2PhaseConfig Phase3 { get; set; } = new();
 
     /// <summary>
-    /// 設定に基づいた Boss 2 被弾判定 (<see cref="CollisionShape"/>) を取得します。
+    ///     設定に基づいた Boss 2 被弾判定 (<see cref="CollisionShape" />) を取得します。
     /// </summary>
     /// <returns>構築された被弾衝突形状バリアント</returns>
     public CollisionShape GetHurtboxShape()
     {
-        return CollisionShapeFactory.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight, HurtboxOffsetX, HurtboxOffsetY);
+        return CollisionShapeFactory.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight,
+            HurtboxOffsetX, HurtboxOffsetY);
     }
 
     /// <summary>
-    /// 設定に基づいた Boss 2 接触攻撃判定 (<see cref="CollisionShape"/>) を取得します。
+    ///     設定に基づいた Boss 2 接触攻撃判定 (<see cref="CollisionShape" />) を取得します。
     /// </summary>
     /// <returns>構築された接触攻撃衝突形状バリアント</returns>
     public CollisionShape GetHitboxShape()
     {
-        return CollisionShapeFactory.CreateWithFallback(HitboxShape, BodyHitboxRadius, BodyHitboxWidth, BodyHitboxHeight, BodyHitboxOffsetX, BodyHitboxOffsetY);
+        return CollisionShapeFactory.CreateWithFallback(HitboxShape, BodyHitboxRadius, BodyHitboxWidth,
+            BodyHitboxHeight, BodyHitboxOffsetX, BodyHitboxOffsetY);
     }
 
     /// <summary>
-    /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{Boss2Config}"/> インスタンスを生成します。
+    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{Boss2Config}" /> インスタンスを生成します。
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static ErrorOr.ErrorOr<ConfigBase<Boss2Config>> LoadFromFile(string path = ResourcePath.Config.Boss2)
+    public static ErrorOr<ConfigBase<Boss2Config>> LoadFromFile(string path = ResourcePath.Config.Boss2)
     {
         return ConfigBase<Boss2Config>.LoadFromFile(path);
     }

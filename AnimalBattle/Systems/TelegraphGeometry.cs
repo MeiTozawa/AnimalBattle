@@ -1,14 +1,11 @@
-using System;
-
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// Boss 攻撃予兆（Telegraph）の幾何学的計算（レーザー照準、危険矩形、突進軌道、地表衝撃波、放射光線等）を提供する静的ヘルパークラス。
+///     Boss 攻撃予兆（Telegraph）の幾何学的計算（レーザー照準、危険矩形、突進軌道、地表衝撃波、放射光線等）を提供する静的ヘルパークラス。
 /// </summary>
-public static class TelegraphGeometry
-{
+public static class TelegraphGeometry {
     /// <summary>
-    /// 照準レーザーの終点座標を算出します。
+    ///     照準レーザーの終点座標を算出します。
     /// </summary>
     /// <param name="startX">開始 X 座標</param>
     /// <param name="startY">開始 Y 座標</param>
@@ -28,17 +25,17 @@ public static class TelegraphGeometry
         out float endX,
         out float endY)
     {
-        float dx = targetX - startX;
-        float dy = targetY - startY;
-        float baseAngle = MathF.Atan2(dy, dx);
-        float finalAngle = baseAngle + angleOffset;
+        var dx = targetX - startX;
+        var dy = targetY - startY;
+        var baseAngle = MathF.Atan2(dy, dx);
+        var finalAngle = baseAngle + angleOffset;
 
         endX = startX + MathF.Cos(finalAngle) * maxDistance;
         endY = startY + MathF.Sin(finalAngle) * maxDistance;
     }
 
     /// <summary>
-    /// 近接斬撃判定矩形の境界座標を算出します。
+    ///     近接斬撃判定矩形の境界座標を算出します。
     /// </summary>
     /// <param name="bx">Boss 中心 X 座標</param>
     /// <param name="by">Boss 中心 Y 座標</param>
@@ -76,7 +73,7 @@ public static class TelegraphGeometry
     }
 
     /// <summary>
-    /// 突進軌道矩形の境界座標を算出します。
+    ///     突進軌道矩形の境界座標を算出します。
     /// </summary>
     /// <param name="bx">Boss 中心 X 座標</param>
     /// <param name="by">Boss 中心 Y 座標</param>
@@ -100,7 +97,7 @@ public static class TelegraphGeometry
         out int x2,
         out int y2)
     {
-        float halfHeight = height / 2.0f;
+        var halfHeight = height / 2.0f;
         y1 = (int)(by - halfHeight);
         y2 = (int)(by + halfHeight);
 
@@ -117,7 +114,7 @@ public static class TelegraphGeometry
     }
 
     /// <summary>
-    /// 地表衝撃波レールの境界座標を算出します。
+    ///     地表衝撃波レールの境界座標を算出します。
     /// </summary>
     /// <param name="bx">Boss 中心 X 座標</param>
     /// <param name="groundY">地面 Y 座標</param>
@@ -142,7 +139,7 @@ public static class TelegraphGeometry
     }
 
     /// <summary>
-    /// 放射スパイク光線の始点・終点座標を算出します。
+    ///     放射スパイク光線の始点・終点座標を算出します。
     /// </summary>
     /// <param name="cx">中心 X 座標</param>
     /// <param name="cy">中心 Y 座標</param>

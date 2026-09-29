@@ -1,38 +1,38 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PublishAot>true</PublishAot>
-    <NoWarn>$(NoWarn);SYSLIB1104</NoWarn>
-    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PublishAot>true</PublishAot>
+        <NoWarn>$(NoWarn);SYSLIB1104</NoWarn>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    </PropertyGroup>
 
-  <!-- Automatically copy the built native C++ DLLs and Resources to the output directory -->
-  <ItemGroup>
-    <None Include="..\cmake-build-debug\AnimalBattleCore\AnimalBattleCore.dll" Link="AnimalBattleCore.dll" Condition="Exists('..\cmake-build-debug\AnimalBattleCore\AnimalBattleCore.dll')">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\cmake-build-debug\AnimalBattleExtension\AnimalBattleExtension.dll" Link="AnimalBattleExtension.dll" Condition="Exists('..\cmake-build-debug\AnimalBattleExtension\AnimalBattleExtension.dll')">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="ErrorOr" Version="2.1.1" />
-    <PackageReference Include="Flecs.NET.Release" Version="4.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.10" />
-    <PackageReference Include="Tomlyn" Version="2.10.1" />
-    <PackageReference Include="Tomlyn.Extensions.Configuration" Version="2.0.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="..\Resource\baked_configs.bin" Link="baked_configs.bin" Condition="Exists('..\Resource\baked_configs.bin')">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
-  <Target Name="GenerateCodeFromConfigs" BeforeTargets="BeforeBuild">
-    <Exec Command="python ..\scripts\bake_configs_binary.py" StandardOutputImportance="low" ContinueOnError="true" />
-    <Exec Command="python ..\scripts\generate_resource_paths.py" StandardOutputImportance="low" ContinueOnError="true" />
-  </Target>
+    <!-- Automatically copy the built native C++ DLLs and Resources to the output directory -->
+    <ItemGroup>
+        <None Include="..\cmake-build-debug\AnimalBattleCore\AnimalBattleCore.dll" Link="AnimalBattleCore.dll" Condition="Exists('..\cmake-build-debug\AnimalBattleCore\AnimalBattleCore.dll')">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\cmake-build-debug\AnimalBattleExtension\AnimalBattleExtension.dll" Link="AnimalBattleExtension.dll" Condition="Exists('..\cmake-build-debug\AnimalBattleExtension\AnimalBattleExtension.dll')">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="ErrorOr" Version="2.1.1"/>
+        <PackageReference Include="Flecs.NET.Release" Version="4.0.3"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.10"/>
+        <PackageReference Include="Tomlyn" Version="2.10.1"/>
+        <PackageReference Include="Tomlyn.Extensions.Configuration" Version="2.0.0"/>
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="..\Resource\baked_configs.bin" Link="baked_configs.bin" Condition="Exists('..\Resource\baked_configs.bin')">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </EmbeddedResource>
+    </ItemGroup>
+    <Target Name="GenerateCodeFromConfigs" BeforeTargets="BeforeBuild">
+        <Exec Command="python ..\scripts\bake_configs_binary.py" StandardOutputImportance="low" ContinueOnError="true"/>
+        <Exec Command="python ..\scripts\generate_resource_paths.py" StandardOutputImportance="low" ContinueOnError="true"/>
+    </Target>
 </Project>

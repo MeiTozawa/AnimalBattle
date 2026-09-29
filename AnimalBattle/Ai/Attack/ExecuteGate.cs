@@ -1,34 +1,17 @@
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
 using ErrorOr;
 
 namespace AnimalBattle.Ai.Attack;
 
 /// <summary>攻撃 component を lifecycle 内で一回だけ port へ発行する Execute gate です。</summary>
-public sealed class ExecuteGate
-{
-    private AttackDefinition _definition;
-    private readonly OneShotEventGuard _oneShot;
-    private float _facingDirection;
-    private bool _active;
+public sealed class ExecuteGate {
     private bool _completed;
+    private float _facingDirection;
     private bool _hasLeftGround;
-    private float _elapsed;
+    private float _lockedApexX = float.NaN;
     private float _startX = float.NaN;
     private float _startY = float.NaN;
-    private float _lockedApexX = float.NaN;
-
-    /// <summary>Execute が有効かどうかを取得します。</summary>
-    public bool IsActive => _active;
-    /// <summary>攻撃定義を取得します。</summary>
-    public AttackDefinition Definition => _definition;
-    /// <summary>Execute 完了後かどうかを取得します。</summary>
-    public bool IsComplete => !_active && (_completed || _elapsed > 0);
-    /// <summary>Execute の経過時間を取得します。</summary>
-    public float Elapsed => _elapsed;
-    /// <summary>component 発行を抑止する one-shot guard を取得します。</summary>
-    public OneShotEventGuard OneShot => _oneShot;
 
     /// <summary>攻撃定義と向き、one-shot guard を指定して Execute gate を生成します。</summary>
     /// <param name="definition">攻撃定義。</param>
@@ -37,33 +20,44 @@ public sealed class ExecuteGate
     public ExecuteGate(AttackDefinition definition, float facingDirection = 1.0f, OneShotEventGuard? oneShot = null)
     {
         ArgumentNullException.ThrowIfNull(definition);
-        _definition = definition;
+        Definition = definition;
         _facingDirection = facingDirection >= 0.0f ? 1.0f : -1.0f;
-        _oneShot = oneShot ?? new OneShotEventGuard(Math.Max(1, definition.ComponentCount));
+        OneShot = oneShot ?? new OneShotEventGuard(Math.Max(1, definition.ComponentCount));
     }
+
+    /// <summary>Execute が有効かどうかを取得します。</summary>
+    public bool IsActive { get; private set; }
+
+    /// <summary>攻撃定義を取得します。</summary>
+    public AttackDefinition Definition { get; private set; }
+
+    /// <summary>Execute 完了後かどうかを取得します。</summary>
+    public bool IsComplete => !IsActive && (_completed || Elapsed > 0);
+
+    /// <summary>Execute の経過時間を取得します。</summary>
+    public float Elapsed { get; private set; }
+
+    /// <summary>component 発行を抑止する one-shot guard を取得します。</summary>
+    public OneShotEventGuard OneShot { get; }
 
     /// <summary>Execute を開始し、component 発行 key を新しい lifecycle に切り替えます。</summary>
     public ErrorOr<Success> Start(ref StateContext context, in LifecycleInvocation invocation)
     {
-        if (_active)
-        {
-            return Result.Success;
-        }
+        if (IsActive) return Result.Success;
 
-        if (_completed)
-        {
-            return Error.Failure("ExecuteGate.Start", "既に Execute は完了しています。");
-        }
+        if (_completed) return Error.Failure("ExecuteGate.Start", "既に Execute は完了しています。");
 
-        if (!_definition.IsValid || !invocation.IsValid || _oneShot.Begin(_definition.Skill, invocation.FrameUpdateNumber).IsError)
+        if (!Definition.IsValid || !invocation.IsValid ||
+            OneShot.Begin(Definition.Skill, invocation.FrameUpdateNumber).IsError)
         {
             _completed = true;
-            Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidConfiguration, "攻撃時間が不正なため Execute を開始せず、安全な非攻撃行動へ移行します。", 0, -1);
+            Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidConfiguration,
+                "攻撃時間が不正なため Execute を開始せず、安全な非攻撃行動へ移行します。", 0, -1);
             return Error.Validation("ExecuteGate.Start", "攻撃設定またはフレーム番号が不正です。");
         }
 
-        _elapsed = 0;
-        _active = true;
+        Elapsed = 0;
+        IsActive = true;
         _hasLeftGround = false;
         _startX = float.NaN;
         _startY = float.NaN;
@@ -84,10 +78,7 @@ public sealed class ExecuteGate
         float currentX = float.NaN,
         float currentY = float.NaN)
     {
-        if (!_active && Start(ref context, in invocation).IsError)
-        {
-            return ExecuteResult.Rejected;
-        }
+        if (!IsActive && Start(ref context, in invocation).IsError) return ExecuteResult.Rejected;
 
         if (float.IsNaN(_startX) && !float.IsNaN(currentX))
         {
@@ -95,29 +86,23 @@ public sealed class ExecuteGate
             _startY = currentY;
         }
 
-        if (!isGrounded)
-        {
-            _hasLeftGround = true;
-        }
+        if (!isGrounded) _hasLeftGround = true;
 
-        int emitted = 0;
-        int failed = 0;
-        int suppressed = 0;
-        for (int index = 0; index < _definition.ComponentCount; index++)
+        var emitted = 0;
+        var failed = 0;
+        var suppressed = 0;
+        for (var index = 0; index < Definition.ComponentCount; index++)
         {
-            if (!_definition.GetComponent(index, out AttackComponent component))
-            {
-                continue;
-            }
+            if (!Definition.GetComponent(index, out var component)) continue;
 
             // 接地時イベント駆動コンポーネントの処理
             if (component.Kind == AttackComponentKind.OnGroundedHitbox)
             {
                 // 跳躍前の接地状態による誤発火を防ぐため、一度空中に離脱した後の接地のみ判定
-                float minTime = MathF.Max(component.TriggerTime, 0.05f);
-                if (_hasLeftGround && isGrounded && _elapsed >= minTime)
+                var minTime = MathF.Max(component.TriggerTime, 0.05f);
+                if (_hasLeftGround && isGrounded && Elapsed >= minTime)
                 {
-                    if (_oneShot.Reserve(component.Index).IsError)
+                    if (OneShot.Reserve(component.Index).IsError)
                     {
                         suppressed++;
                         continue;
@@ -137,13 +122,14 @@ public sealed class ExecuteGate
                     {
                         emitted++;
                         // 接地判定が成功したら、即座に Execute を完了して Recovery へ遷移
-                        _active = false;
+                        IsActive = false;
                         _completed = true;
                     }
                     else
                     {
                         failed++;
-                        Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "接地判定 component の実行に失敗しました。", _elapsed, component.Index);
+                        Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed,
+                            "接地判定 component の実行に失敗しました。", Elapsed, component.Index);
                     }
                 }
 
@@ -151,23 +137,19 @@ public sealed class ExecuteGate
             }
 
             // 指定された発動時刻に達していないコンポーネントは保留（浮動小数点の累積誤差を考慮）
-            if (_elapsed + 0.0001f < component.TriggerTime)
-            {
-                continue;
-            }
+            if (Elapsed + 0.0001f < component.TriggerTime) continue;
 
             // 継続的移動コンポーネント（FlyToTarget: 対象頭上へのイージング飛翔）の更新
             if (component.Kind == AttackComponentKind.FlyToTarget)
             {
                 // 後続の急降下（Dive）や移動アクションが既に開始されている場合は MoveTo を停止
-                if (HasLaterMovementStarted(component.TriggerTime))
-                {
-                    continue;
-                }
+                if (HasLaterMovementStarted(component.TriggerTime)) continue;
 
-                float peakY = component.X;
-                float flyDuration = component.Y;
-                float t = flyDuration > 0.0f ? Math.Clamp((_elapsed - component.TriggerTime) / flyDuration, 0.0f, 1.0f) : 1.0f;
+                var peakY = component.X;
+                var flyDuration = component.Y;
+                var t = flyDuration > 0.0f
+                    ? Math.Clamp((Elapsed - component.TriggerTime) / flyDuration, 0.0f, 1.0f)
+                    : 1.0f;
 
                 float curX;
                 float curY;
@@ -176,7 +158,7 @@ public sealed class ExecuteGate
                     // 最高点到達後は滞空（ApexHang）中であるため、X 座標を固定してプレイヤーの回避余地を保証
                     if (float.IsNaN(_lockedApexX))
                     {
-                        float targetX = context.PlayerObservation.PositionX;
+                        var targetX = context.PlayerObservation.PositionX;
                         _lockedApexX = targetX;
                     }
 
@@ -185,10 +167,10 @@ public sealed class ExecuteGate
                 }
                 else
                 {
-                    float easeT = MathF.Sin(t * MathF.PI * 0.5f);
-                    float targetX = context.PlayerObservation.PositionX;
-                    float startX = !float.IsNaN(_startX) ? _startX : targetX;
-                    float startY = !float.IsNaN(_startY) ? _startY : peakY;
+                    var easeT = MathF.Sin(t * MathF.PI * 0.5f);
+                    var targetX = context.PlayerObservation.PositionX;
+                    var startX = !float.IsNaN(_startX) ? _startX : targetX;
+                    var startY = !float.IsNaN(_startY) ? _startY : peakY;
                     curX = startX + (targetX - startX) * easeT;
                     curY = startY + (peakY - startY) * easeT;
                 }
@@ -200,12 +182,12 @@ public sealed class ExecuteGate
             // 継続的移動コンポーネント（Dive: 垂直急降下）の更新
             if (component.Kind == AttackComponentKind.Dive)
             {
-                float descentSpeed = component.Y;
+                var descentSpeed = component.Y;
                 context.Movement.SetVelocity(0.0f, descentSpeed);
                 continue;
             }
 
-            if (_oneShot.Reserve(component.Index).IsError)
+            if (OneShot.Reserve(component.Index).IsError)
             {
                 suppressed++;
                 continue;
@@ -220,6 +202,7 @@ public sealed class ExecuteGate
             {
                 acceptedOneShot = false;
             }
+
             if (acceptedOneShot)
             {
                 emitted++;
@@ -227,62 +210,65 @@ public sealed class ExecuteGate
             else
             {
                 failed++;
-                Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "攻撃 component の実行に失敗しました。再発動は行いません。", _elapsed, component.Index);
+                Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed,
+                    "攻撃 component の実行に失敗しました。再発動は行いません。", Elapsed, component.Index);
             }
         }
 
-        if (_active)
+        if (IsActive)
         {
-            _elapsed = MathF.Min(_definition.ExecuteDuration, _elapsed + context.DeltaTime);
-            if (_elapsed >= _definition.ExecuteDuration)
+            Elapsed = MathF.Min(Definition.ExecuteDuration, Elapsed + context.DeltaTime);
+            if (Elapsed >= Definition.ExecuteDuration)
             {
-                _active = false;
+                IsActive = false;
                 _completed = true;
             }
         }
 
-        return new ExecuteResult(true, _active, emitted, failed, suppressed);
+        return new ExecuteResult(true, IsActive, emitted, failed, suppressed);
     }
 
     /// <summary>Execute の別名として lifecycle update から呼び出します。</summary>
     public ExecuteResult Update(ref StateContext context, in LifecycleInvocation invocation)
-        => Execute(ref context, in invocation);
+    {
+        return Execute(ref context, in invocation);
+    }
 
     /// <summary>Execute を終了し、次の攻撃の one-shot key を受け付けられる状態にします。</summary>
     public void Reset()
     {
-        _active = false;
+        IsActive = false;
         _completed = false;
         _hasLeftGround = false;
-        _elapsed = 0;
+        Elapsed = 0;
         _startX = float.NaN;
         _startY = float.NaN;
         _lockedApexX = float.NaN;
-        _oneShot.Reset();
+        OneShot.Reset();
     }
 
     /// <summary>新しい攻撃定義と向きを指定して Execute gate をリセットし再利用します。</summary>
     public void Reset(AttackDefinition definition, float forwardDir = 1.0f)
     {
         ArgumentNullException.ThrowIfNull(definition);
-        _definition = definition;
+        Definition = definition;
         _facingDirection = forwardDir >= 0.0f ? 1.0f : -1.0f;
-        _active = false;
+        IsActive = false;
         _completed = false;
         _hasLeftGround = false;
-        _elapsed = 0;
+        Elapsed = 0;
         _startX = float.NaN;
         _startY = float.NaN;
         _lockedApexX = float.NaN;
-        _oneShot.Reset();
+        OneShot.Reset();
     }
 
     private ErrorOr<Success> Emit(ref StateContext context, in AttackComponent component)
     {
-        return component.Kind switch
-        {
-            AttackComponentKind.Bullet => context.Attack.EmitBullet(_definition.Skill, component.X, component.Y),
-            AttackComponentKind.Hitbox or AttackComponentKind.OnGroundedHitbox => context.Attack.CreateHitbox(_definition.Skill, component.X, component.Y),
+        return component.Kind switch {
+            AttackComponentKind.Bullet => context.Attack.EmitBullet(Definition.Skill, component.X, component.Y),
+            AttackComponentKind.Hitbox or AttackComponentKind.OnGroundedHitbox => context.Attack.CreateHitbox(
+                Definition.Skill, component.X, component.Y),
             AttackComponentKind.Movement => context.Movement.SetVelocity(component.X * _facingDirection, component.Y),
             _ => Error.Validation("ExecuteGate.Emit", "未知の AttackComponentKind です。")
         };
@@ -305,17 +291,17 @@ public sealed class ExecuteGate
             invocation.Operation,
             context.FrameUpdateNumber,
             context.DeltaTime,
-            _definition.Skill,
+            Definition.Skill,
             AttackStage.Execute,
             new TransitionReason(
                 ReasonKind.AttackCompleted,
-                skill: _definition.Skill,
+                skill: Definition.Skill,
                 errorCode: errorCode,
                 originalInput: componentIndex),
             severity,
             errorCode,
             message,
-            configuredDuration: _definition.ExecuteDuration,
+            configuredDuration: Definition.ExecuteDuration,
             realDuration: realDuration);
 
         try
@@ -330,18 +316,12 @@ public sealed class ExecuteGate
 
     private bool HasLaterMovementStarted(float currentTriggerTime)
     {
-        for (int i = 0; i < _definition.ComponentCount; i++)
-        {
-            if (_definition.GetComponent(i, out AttackComponent comp))
-            {
+        for (var i = 0; i < Definition.ComponentCount; i++)
+            if (Definition.GetComponent(i, out var comp))
                 if ((comp.Kind == AttackComponentKind.Dive || comp.Kind == AttackComponentKind.Movement)
-                    && comp.TriggerTime > currentTriggerTime
-                    && _elapsed + 0.0001f >= comp.TriggerTime)
-                {
+                 && comp.TriggerTime > currentTriggerTime
+                 && Elapsed + 0.0001f >= comp.TriggerTime)
                     return true;
-                }
-            }
-        }
 
         return false;
     }
@@ -353,12 +333,13 @@ public readonly record struct ExecuteResult(
     bool IsRunning,
     int EmittedCount,
     int FailedCount,
-    int SuppressedCount)
-{
+    int SuppressedCount) {
     /// <summary>開始できなかった結果です。</summary>
     public static ExecuteResult Rejected => new(false, false, 0, 0, 0);
+
     /// <summary>component 実行失敗があったかどうかを取得します。</summary>
     public bool HasFailure => FailedCount > 0;
+
     /// <summary>Execute が完了したかどうかを取得します。</summary>
     public bool IsComplete => Started && !IsRunning;
 }

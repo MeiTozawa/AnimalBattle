@@ -4,16 +4,15 @@ using AnimalBattle.Compute;
 namespace AnimalBattle.Bindings;
 
 /// <summary>
-/// GDExtension 形式の C++ 原生拡張ライブラリ (AnimalBattleExtension.dll) との P/Invoke バインディングを提供する静的クラス。
+///     GDExtension 形式の C++ 原生拡張ライブラリ (AnimalBattleExtension.dll) との P/Invoke バインディングを提供する静的クラス。
 /// </summary>
-internal static unsafe partial class NativeExtensionBindings
-{
+internal static unsafe partial class NativeExtensionBindings {
     private const string _dllName = "AnimalBattleExtension.dll";
 
     #region Batch SIMD Physics Extension
 
     /// <summary>
-    /// 大量の弾丸 Transform および Velocity 配列に対して、SIMD / OpenMP 並列による一括物理移動と画面外境界判定を実行します。
+    ///     大量の弾丸 Transform および Velocity 配列に対して、SIMD / OpenMP 並列による一括物理移動と画面外境界判定を実行します。
     /// </summary>
     /// <param name="transforms">Transform 連続メモリ配列へのポインタ</param>
     /// <param name="velocities">Velocity 連続メモリ配列へのポインタ</param>
@@ -42,7 +41,7 @@ internal static unsafe partial class NativeExtensionBindings
     #region Batch Compute Extension
 
     /// <summary>
-    /// 特殊弾幕変調一括計算を C++ 原生拡張で同期並列実行します（完全無状態純粋計算核）。
+    ///     特殊弾幕変調一括計算を C++ 原生拡張で同期並列実行します（完全無状態純粋計算核）。
     /// </summary>
     /// <param name="bulletItems">SpecialBulletBatchItem 連続メモリ配列へのポインタ。</param>
     /// <param name="bulletCount">処理対象の特殊弾幕要素数。</param>

@@ -1,21 +1,19 @@
 using System.Drawing;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Components;
 
 /// <summary>
-/// 2D スプライト描画用データを保持する純粋コンポーネント。
+///     2D スプライト描画用データを保持する純粋コンポーネント。
 /// </summary>
 /// <remarks>
-/// 指定された設定値で <see cref="Sprite"/> の新しいインスタンスを初期化します。
+///     指定された設定値で <see cref="Sprite" /> の新しいインスタンスを初期化します。
 /// </remarks>
 public struct Sprite(
     int graphHandle = -1,
     bool flipX = false,
     bool isVisible = true,
     Rect srcRect = default,
-    Color? color = null)
-{
+    Color? color = null) {
     /// <summary>Native グラフィックハンドル</summary>
     public int GraphHandle = graphHandle;
 

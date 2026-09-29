@@ -1,22 +1,19 @@
-using System;
 using System.Drawing;
-using AnimalBattle.Components;
-using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// 俯衝突進・メテオダイブ技能の設定クラス。
+///     俯衝突進・メテオダイブ技能の設定クラス。
 /// </summary>
-public sealed class DiveRamConfig
-{
+public sealed class DiveRamConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（予兆ロックオン）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動（突進突撃）持続時間（秒）</summary>
@@ -43,13 +40,13 @@ public sealed class DiveRamConfig
     /// <summary>着地炸裂弾半径</summary>
     public float ImpactBulletRadius { get; set; }
 
-    /// <summary>着地炸裂弾塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>着地炸裂弾塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color ImpactFillColor { get; set; }
 
-    /// <summary>着地炸裂弾外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>着地炸裂弾外枠カラー (<see cref="Color" />)</summary>
     public Color ImpactOutlineColor { get; set; }
 
-    /// <summary>突進残影トレイルカラー (<see cref="Color"/>)</summary>
+    /// <summary>突進残影トレイルカラー (<see cref="Color" />)</summary>
     public Color TrailColor { get; set; }
 
     /// <summary>突進補間に使用するイージング種別</summary>
@@ -57,17 +54,16 @@ public sealed class DiveRamConfig
 }
 
 /// <summary>
-/// 自機狙い 3 連射技能の設定クラス。
+///     自機狙い 3 連射技能の設定クラス。
 /// </summary>
-public sealed class Aimed3ShotConfig
-{
+public sealed class Aimed3ShotConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
@@ -94,10 +90,10 @@ public sealed class Aimed3ShotConfig
     /// <summary>弾数</summary>
     public int BulletCount { get; set; }
 
-    /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>弾の塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color FillColor { get; set; }
 
-    /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>弾の外枠カラー (<see cref="Color" />)</summary>
     public Color OutlineColor { get; set; }
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
@@ -105,17 +101,16 @@ public sealed class Aimed3ShotConfig
 }
 
 /// <summary>
-/// 16 方向全方位リング弾幕技能の設定クラス。
+///     16 方向全方位リング弾幕技能の設定クラス。
 /// </summary>
-public sealed class RingBurstConfig
-{
+public sealed class RingBurstConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
@@ -142,10 +137,10 @@ public sealed class RingBurstConfig
     /// <summary>弾数</summary>
     public int BulletCount { get; set; }
 
-    /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>弾の塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color FillColor { get; set; }
 
-    /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>弾の外枠カラー (<see cref="Color" />)</summary>
     public Color OutlineColor { get; set; }
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
@@ -153,17 +148,16 @@ public sealed class RingBurstConfig
 }
 
 /// <summary>
-/// 双螺旋回転弾幕技能の設定クラス。
+///     双螺旋回転弾幕技能の設定クラス。
 /// </summary>
-public sealed class DoubleSpiralConfig
-{
+public sealed class DoubleSpiralConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
@@ -187,16 +181,16 @@ public sealed class DoubleSpiralConfig
     /// <summary>弾の半径</summary>
     public float BulletRadius { get; set; }
 
-    /// <summary>第 1 弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>第 1 弾の塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color FillColor1 { get; set; }
 
-    /// <summary>第 1 弾の外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>第 1 弾の外枠カラー (<see cref="Color" />)</summary>
     public Color OutlineColor1 { get; set; }
 
-    /// <summary>第 2 弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>第 2 弾の塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color FillColor2 { get; set; }
 
-    /// <summary>第 2 弾の外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>第 2 弾の外枠カラー (<see cref="Color" />)</summary>
     public Color OutlineColor2 { get; set; }
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
@@ -204,17 +198,16 @@ public sealed class DoubleSpiralConfig
 }
 
 /// <summary>
-/// 降雨弾幕技能の設定クラス。
+///     降雨弾幕技能の設定クラス。
 /// </summary>
-public sealed class RainDropConfig
-{
+public sealed class RainDropConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
@@ -241,10 +234,10 @@ public sealed class RainDropConfig
     /// <summary>弾生成の最大 X 座標</summary>
     public float MaxX { get; set; }
 
-    /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>弾の塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color FillColor { get; set; }
 
-    /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>弾の外枠カラー (<see cref="Color" />)</summary>
     public Color OutlineColor { get; set; }
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
@@ -252,17 +245,16 @@ public sealed class RainDropConfig
 }
 
 /// <summary>
-/// 全方位交差波弾幕技能の設定クラス。
+///     全方位交差波弾幕技能の設定クラス。
 /// </summary>
-public sealed class CrossChaosConfig
-{
+public sealed class CrossChaosConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
@@ -286,10 +278,10 @@ public sealed class CrossChaosConfig
     /// <summary>弾の半径</summary>
     public float BulletRadius { get; set; }
 
-    /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>弾の塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color FillColor { get; set; }
 
-    /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>弾の外枠カラー (<see cref="Color" />)</summary>
     public Color OutlineColor { get; set; }
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
@@ -297,17 +289,16 @@ public sealed class CrossChaosConfig
 }
 
 /// <summary>
-/// 高速レーザースナイパー弾幕技能の設定クラス。
+///     高速レーザースナイパー弾幕技能の設定クラス。
 /// </summary>
-public sealed class FastSniperConfig
-{
+public sealed class FastSniperConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動（キャスト）持続時間（秒）</summary>
@@ -328,10 +319,10 @@ public sealed class FastSniperConfig
     /// <summary>弾の半径</summary>
     public float BulletRadius { get; set; }
 
-    /// <summary>弾の塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>弾の塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color FillColor { get; set; }
 
-    /// <summary>弾の外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>弾の外枠カラー (<see cref="Color" />)</summary>
     public Color OutlineColor { get; set; }
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
@@ -339,17 +330,16 @@ public sealed class FastSniperConfig
 }
 
 /// <summary>
-/// Boss 2: 重劈斬撃（近接大ダメージ）技能の設定クラス。
+///     Boss 2: 重劈斬撃（近接大ダメージ）技能の設定クラス。
 /// </summary>
-public sealed class HeavySlashConfig
-{
+public sealed class HeavySlashConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（蓄力予兆）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動（突進揮撃）持続時間（秒）</summary>
@@ -376,22 +366,21 @@ public sealed class HeavySlashConfig
     /// <summary>斬撃命中ダメージ</summary>
     public float SlashDamage { get; set; }
 
-    /// <summary>斬撃エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>斬撃エフェクトカラー (<see cref="Color" />)</summary>
     public Color SlashColor { get; set; }
 }
 
 /// <summary>
-/// Boss 2: 撼地踏撃・貼地衝撃波技能の設定クラス。
+///     Boss 2: 撼地踏撃・貼地衝撃波技能の設定クラス。
 /// </summary>
-public sealed class GroundStompConfig
-{
+public sealed class GroundStompConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（持ち上げ予兆）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動（踏みつけ）持続時間（秒）</summary>
@@ -415,25 +404,24 @@ public sealed class GroundStompConfig
     /// <summary>衝撃波ダメージ</summary>
     public float ShockwaveDamage { get; set; }
 
-    /// <summary>衝撃波塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>衝撃波塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color FillColor { get; set; }
 
-    /// <summary>衝撃波外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>衝撃波外枠カラー (<see cref="Color" />)</summary>
     public Color OutlineColor { get; set; }
 }
 
 /// <summary>
-/// Boss 2: 泰山圧頂・巨力飛撲技能の設定クラス。
+///     Boss 2: 泰山圧頂・巨力飛撲技能の設定クラス。
 /// </summary>
-public sealed class LeapSmashConfig
-{
+public sealed class LeapSmashConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（かがみ込み予兆）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動（跳躍・滞空・落下）持続時間（秒）</summary>
@@ -464,32 +452,30 @@ public sealed class LeapSmashConfig
     public int ShrapnelCount { get; set; }
 
 
-
     /// <summary>破片飛散速度</summary>
     public float ShrapnelSpeed { get; set; }
 
     /// <summary>破片弾半径</summary>
     public float ShrapnelRadius { get; set; }
 
-    /// <summary>破片塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>破片塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color ShrapnelFillColor { get; set; }
 
-    /// <summary>破片外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>破片外枠カラー (<see cref="Color" />)</summary>
     public Color ShrapnelOutlineColor { get; set; }
 }
 
 /// <summary>
-/// Boss 2: 二連重斬技能の設定クラス。
+///     Boss 2: 二連重斬技能の設定クラス。
 /// </summary>
-public sealed class DoubleCleaveConfig
-{
+public sealed class DoubleCleaveConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（予兆）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動持続時間（秒）</summary>
@@ -519,22 +505,21 @@ public sealed class DoubleCleaveConfig
     /// <summary>斬撃ダメージ</summary>
     public float SlashDamage { get; set; }
 
-    /// <summary>斬撃エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>斬撃エフェクトカラー (<see cref="Color" />)</summary>
     public Color SlashColor { get; set; }
 }
 
 /// <summary>
-/// Boss 2: 狂暴横衝直撞技能の設定クラス。
+///     Boss 2: 狂暴横衝直撞技能の設定クラス。
 /// </summary>
-public sealed class FrenzyChargeConfig
-{
+public sealed class FrenzyChargeConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（咆哮構え予兆）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>突進持続時間（秒）</summary>
@@ -558,25 +543,24 @@ public sealed class FrenzyChargeConfig
     /// <summary>破片半径</summary>
     public float ShrapnelRadius { get; set; }
 
-    /// <summary>破片塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>破片塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color ShrapnelFillColor { get; set; }
 
-    /// <summary>破片外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>破片外枠カラー (<see cref="Color" />)</summary>
     public Color ShrapnelOutlineColor { get; set; }
 }
 
 /// <summary>
-/// Boss 2: 滅地狂吼・落石技能の設定クラス。
+///     Boss 2: 滅地狂吼・落石技能の設定クラス。
 /// </summary>
-public sealed class EarthquakeRoarConfig
-{
+public sealed class EarthquakeRoarConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙（聚気咆哮）時間（秒）</summary>
     public float WindUpTime { get; set; }
 
-    /// <summary>予兆エフェクトカラー (<see cref="Color"/>)</summary>
+    /// <summary>予兆エフェクトカラー (<see cref="Color" />)</summary>
     public Color TelegraphColor { get; set; }
 
     /// <summary>発動持続時間（秒）</summary>
@@ -606,18 +590,17 @@ public sealed class EarthquakeRoarConfig
     /// <summary>落石半径</summary>
     public float RockRadius { get; set; }
 
-    /// <summary>落石塗りつぶしカラー (<see cref="Color"/>)</summary>
+    /// <summary>落石塗りつぶしカラー (<see cref="Color" />)</summary>
     public Color RockFillColor { get; set; }
 
-    /// <summary>落石外枠カラー (<see cref="Color"/>)</summary>
+    /// <summary>落石外枠カラー (<see cref="Color" />)</summary>
     public Color RockOutlineColor { get; set; }
 }
 
 /// <summary>
-/// Config/patterns.toml から読み込まれる各技能の FSM アクション設定クラス。
+///     Config/patterns.toml から読み込まれる各技能の FSM アクション設定クラス。
 /// </summary>
-public sealed class PatternConfig
-{
+public sealed class PatternConfig {
     /// <summary>俯衝突進・メテオダイブ技能設定</summary>
     public DiveRamConfig DiveRam { get; set; } = new();
 
@@ -658,26 +641,23 @@ public sealed class PatternConfig
     public EarthquakeRoarConfig EarthquakeRoar { get; set; } = new();
 
     /// <summary>
-    /// 文字列で指定された弾幕種別を <see cref="BulletType"/> 列挙型へパースします。
+    ///     文字列で指定された弾幕種別を <see cref="BulletType" /> 列挙型へパースします。
     /// </summary>
     /// <param name="typeStr">弾幕種別文字列。</param>
     /// <param name="defaultType">パース失敗時のデフォルト種別。</param>
-    /// <returns>パースされた <see cref="BulletType"/>。</returns>
+    /// <returns>パースされた <see cref="BulletType" />。</returns>
     public static BulletType ParseBulletType(string? typeStr, BulletType defaultType = BulletType.Normal)
     {
-        if (!string.IsNullOrWhiteSpace(typeStr) && Enum.TryParse<BulletType>(typeStr, true, out BulletType result))
-        {
-            return result;
-        }
+        if (!string.IsNullOrWhiteSpace(typeStr) && Enum.TryParse(typeStr, true, out BulletType result)) return result;
         return defaultType;
     }
 
     /// <summary>
-    /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{PatternConfig}"/> インスタンスを生成します。
+    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{PatternConfig}" /> インスタンスを生成します。
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static ErrorOr.ErrorOr<ConfigBase<PatternConfig>> LoadFromFile(string path = ResourcePath.Config.Patterns)
+    public static ErrorOr<ConfigBase<PatternConfig>> LoadFromFile(string path = ResourcePath.Config.Patterns)
     {
         return ConfigBase<PatternConfig>.LoadFromFile(path);
     }

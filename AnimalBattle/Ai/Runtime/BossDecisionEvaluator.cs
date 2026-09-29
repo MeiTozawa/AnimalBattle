@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
 using AnimalBattle.Ai.Contracts;
 
 namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>
-/// 技能判定時に必要な戦闘コンテキストパラメータを保持する軽量構造体です。
+///     技能判定時に必要な戦闘コンテキストパラメータを保持する軽量構造体です。
 /// </summary>
 /// <remarks>
-/// 技能判定コンテキストを生成します。
+///     技能判定コンテキストを生成します。
 /// </remarks>
 /// <param name="distance">Boss とプレイヤー間の距離。</param>
 /// <param name="isSamePlatform">同一足場に存在するかどうか。</param>
@@ -18,8 +16,7 @@ public readonly struct AttackDecisionContext(
     float distance,
     bool isSamePlatform,
     bool isPlayerGrounded,
-    bool isPlayerAirborne)
-{
+    bool isPlayerAirborne) {
     /// <summary>Boss とプレイヤー間の直線または水平距離（ピクセル）を取得します。</summary>
     public float Distance { get; } = distance;
 
@@ -34,12 +31,11 @@ public readonly struct AttackDecisionContext(
 }
 
 /// <summary>
-/// 技能意思決定ルールリストと現在の戦闘コンテキストを評価し、最適な出招技能を選択する評価器です。
+///     技能意思決定ルールリストと現在の戦闘コンテキストを評価し、最適な出招技能を選択する評価器です。
 /// </summary>
-public static class BossDecisionEvaluator
-{
+public static class BossDecisionEvaluator {
     /// <summary>
-    /// 候補ルールの中で最もスコアが高い技能を決定論的に選択します。
+    ///     候補ルールの中で最もスコアが高い技能を決定論的に選択します。
     /// </summary>
     /// <param name="rules">判定対象の技能意思決定ルール一覧。</param>
     /// <param name="cooldownTracker">冷却時間追跡器。</param>
@@ -53,16 +49,13 @@ public static class BossDecisionEvaluator
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(cooldownTracker);
 
-        BossSkill bestSkill = BossSkill.None;
-        float bestScore = -1.0f;
+        var bestSkill = BossSkill.None;
+        var bestScore = -1.0f;
 
-        for (int index = 0; index < rules.Count; index++)
+        for (var index = 0; index < rules.Count; index++)
         {
-            AttackDecisionRule rule = rules[index];
-            if (!IsRuleEligible(rule, cooldownTracker, in context, out float score))
-            {
-                continue;
-            }
+            var rule = rules[index];
+            if (!IsRuleEligible(rule, cooldownTracker, in context, out var score)) continue;
 
             if (score > bestScore)
             {
@@ -75,7 +68,7 @@ public static class BossDecisionEvaluator
     }
 
     /// <summary>
-    /// 候補ルールの中からスコアに応じた加重ランダム抽選で技能を選択します。
+    ///     候補ルールの中からスコアに応じた加重ランダム抽選で技能を選択します。
     /// </summary>
     /// <param name="rules">判定対象の技能意思決定ルール一覧。</param>
     /// <param name="cooldownTracker">冷却時間追跡器。</param>
@@ -93,16 +86,13 @@ public static class BossDecisionEvaluator
 
         Span<BossSkill> candidateSkills = stackalloc BossSkill[rules.Count];
         Span<float> candidateScores = stackalloc float[rules.Count];
-        int count = 0;
-        float totalScore = 0.0f;
+        var count = 0;
+        var totalScore = 0.0f;
 
-        for (int index = 0; index < rules.Count; index++)
+        for (var index = 0; index < rules.Count; index++)
         {
-            AttackDecisionRule rule = rules[index];
-            if (!IsRuleEligible(rule, cooldownTracker, in context, out float score))
-            {
-                continue;
-            }
+            var rule = rules[index];
+            if (!IsRuleEligible(rule, cooldownTracker, in context, out var score)) continue;
 
             candidateSkills[count] = rule.Skill;
             candidateScores[count] = score;
@@ -110,27 +100,18 @@ public static class BossDecisionEvaluator
             count++;
         }
 
-        if (count == 0 || totalScore <= 0.0f)
-        {
-            return BossSkill.None;
-        }
+        if (count == 0 || totalScore <= 0.0f) return BossSkill.None;
 
-        if (count == 1)
-        {
-            return candidateSkills[0];
-        }
+        if (count == 1) return candidateSkills[0];
 
         random ??= Random.Shared;
-        float roll = (float)random.NextDouble() * totalScore;
-        float cumulative = 0.0f;
+        var roll = (float)random.NextDouble() * totalScore;
+        var cumulative = 0.0f;
 
-        for (int index = 0; index < count; index++)
+        for (var index = 0; index < count; index++)
         {
             cumulative += candidateScores[index];
-            if (roll <= cumulative)
-            {
-                return candidateSkills[index];
-            }
+            if (roll <= cumulative) return candidateSkills[index];
         }
 
         return candidateSkills[count - 1];
@@ -144,43 +125,25 @@ public static class BossDecisionEvaluator
     {
         score = 0.0f;
 
-        if (!rule.IsValid)
-        {
-            return false;
-        }
+        if (!rule.IsValid) return false;
 
         // 1. 冷却時間フィルタ
-        if (!cooldownTracker.IsReady(rule.Skill))
-        {
-            return false;
-        }
+        if (!cooldownTracker.IsReady(rule.Skill)) return false;
 
         // 2. 距離フィルタ
-        if (context.Distance < rule.MinDistance || context.Distance > rule.MaxDistance)
-        {
-            return false;
-        }
+        if (context.Distance < rule.MinDistance || context.Distance > rule.MaxDistance) return false;
 
         // 3. 足場制約フィルタ
-        if (rule.RequireSamePlatform && !context.IsSamePlatform)
-        {
-            return false;
-        }
+        if (rule.RequireSamePlatform && !context.IsSamePlatform) return false;
 
         // 4. 接地制約フィルタ
-        if (rule.RequirePlayerGrounded.HasValue && rule.RequirePlayerGrounded.Value != context.IsPlayerGrounded)
-        {
-            return false;
-        }
+        if (rule.RequirePlayerGrounded.HasValue &&
+            rule.RequirePlayerGrounded.Value != context.IsPlayerGrounded) return false;
 
         // 5. スコア計算
         score = rule.Weight;
-        if (context.IsPlayerAirborne && rule.PreferAirborneBonus > 0.0f)
-        {
-            score *= rule.PreferAirborneBonus;
-        }
+        if (context.IsPlayerAirborne && rule.PreferAirborneBonus > 0.0f) score *= rule.PreferAirborneBonus;
 
         return score > 0.0f;
     }
-
 }

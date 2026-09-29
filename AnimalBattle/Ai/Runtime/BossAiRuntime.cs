@@ -1,21 +1,19 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
-using AnimalBattle.Components;
 using ErrorOr;
 
 namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>
-/// 初期化 gate、State_Module lifecycle、Frame_Update 境界を管理する共通 runtime です。
+///     初期化 gate、State_Module lifecycle、Frame_Update 境界を管理する共通 runtime です。
 /// </summary>
-public sealed class BossAiRuntime
-{
-    private readonly IEnumModuleMap _registry;
-    private readonly ITransitionService _transitionService;
-    private readonly IObservationService _observation;
+public sealed class BossAiRuntime {
     private readonly Func<BossType, IBossBehaviorState?>? _behaviorStateProvider;
     private readonly IEntityComponentValidator? _componentValidator;
+    private readonly IObservationService _observation;
+    private readonly IEnumModuleMap _registry;
     private readonly BossState _safeBossState;
+    private readonly ITransitionService _transitionService;
 
     /// <summary>共通 runtime を生成します。</summary>
     public BossAiRuntime(
@@ -42,13 +40,11 @@ public sealed class BossAiRuntime
     {
         ArgumentNullException.ThrowIfNull(runtime);
         if (runtime.InitializationComplete && runtime.RuntimeReady)
-        {
             return runtime.CurrentStateId == initialBossState
                 ? Result.Success
                 : Error.Validation("BossAiRuntime.Initialize", "初期状態が既存の状態と一致しません。");
-        }
 
-        EnumCompletenessResult registryValidation = _registry.ValidateComplete();
+        var registryValidation = _registry.ValidateComplete();
         if (registryValidation.IsFailure)
         {
             RecordFailure(runtime, registryValidation.ErrorCode, registryValidation.Message, LifecycleOperation.Enter);
@@ -57,19 +53,22 @@ public sealed class BossAiRuntime
 
         if (!runtime.Context.IsReady)
         {
-            RecordFailure(runtime, ErrorCode.MissingDependency, "State_Context の必須依存関係が未検証です。", LifecycleOperation.Enter);
+            RecordFailure(runtime, ErrorCode.MissingDependency, "State_Context の必須依存関係が未検証です。",
+                LifecycleOperation.Enter);
             return Error.Failure("BossAiRuntime.Initialize", "State_Context の必須依存関係が未検証です。");
         }
 
-        if (_componentValidator is not null && !_componentValidator.Validate(runtime, out string missingComponent))
+        if (_componentValidator is not null && !_componentValidator.Validate(runtime, out var missingComponent))
         {
-            RecordFailure(runtime, ErrorCode.MissingDependency, $"Entity component が不足しています: {missingComponent}", LifecycleOperation.Enter);
+            RecordFailure(runtime, ErrorCode.MissingDependency, $"Entity component が不足しています: {missingComponent}",
+                LifecycleOperation.Enter);
             return Error.Failure("BossAiRuntime.Initialize", $"Entity component が不足しています: {missingComponent}");
         }
 
-        if (!_registry.Get(initialBossState, out IBossStateModule module))
+        if (!_registry.Get(initialBossState, out var module))
         {
-            RecordFailure(runtime, ErrorCode.UnregisteredState, "初期 State_Id が固定 map に対応していません。", LifecycleOperation.Enter, initialBossState);
+            RecordFailure(runtime, ErrorCode.UnregisteredState, "初期 State_Id が固定 map に対応していません。",
+                LifecycleOperation.Enter, initialBossState);
             return Error.Failure("BossAiRuntime.Initialize", "初期 State_Id が固定 map に対応していません。");
         }
 
@@ -77,7 +76,7 @@ public sealed class BossAiRuntime
         runtime.MarkRuntimeReady(true);
         TransitionReason reason = new(ReasonKind.InitialEntry);
         runtime.SetCurrentState(initialBossState, reason);
-        ref StateContext context = ref runtime.Context;
+        ref var context = ref runtime.Context;
         LifecycleInvocation invocation = new(
             runtime.BossType,
             runtime.EntityId,
@@ -112,13 +111,15 @@ public sealed class BossAiRuntime
     /// <param name="initialBossState">リセット後の初期状態。</param>
     /// <param name="initialPhase">初期 Phase（既定値: Phase1）。</param>
     /// <returns>正常完了時は Success。</returns>
-    public ErrorOr<Success> Reset(BossRuntimeSlot runtime, BossState initialBossState, Phase initialPhase = Phase.Phase1)
+    public ErrorOr<Success> Reset(BossRuntimeSlot runtime, BossState initialBossState,
+        Phase initialPhase = Phase.Phase1)
     {
         ArgumentNullException.ThrowIfNull(runtime);
 
-        if (!_registry.Get(initialBossState, out IBossStateModule module))
+        if (!_registry.Get(initialBossState, out var module))
         {
-            RecordFailure(runtime, ErrorCode.UnregisteredState, "初期 State_Id が固定 map に対応していません。", LifecycleOperation.Enter, initialBossState);
+            RecordFailure(runtime, ErrorCode.UnregisteredState, "初期 State_Id が固定 map に対応していません。",
+                LifecycleOperation.Enter, initialBossState);
             return Error.Failure("BossAiRuntime.Reset", "初期 State_Id が固定 map に対応していません。");
         }
 
@@ -128,7 +129,7 @@ public sealed class BossAiRuntime
 
         TransitionReason reason = new(ReasonKind.InitialEntry);
         runtime.SetCurrentState(initialBossState, reason);
-        ref StateContext context = ref runtime.Context;
+        ref var context = ref runtime.Context;
         LifecycleInvocation invocation = new(
             runtime.BossType,
             runtime.EntityId,
@@ -159,7 +160,8 @@ public sealed class BossAiRuntime
     }
 
     /// <summary>検証済み Frame_Update を開始して現在 module の Update を一回だけ実行します。</summary>
-    public ErrorOr<Success> Update(BossRuntimeSlot runtime, long frameUpdateNumber, float deltaTime, Phase phase, in PlayerObservation playerObservation)
+    public ErrorOr<Success> Update(BossRuntimeSlot runtime, long frameUpdateNumber, float deltaTime, Phase phase,
+        in PlayerObservation playerObservation)
     {
         ArgumentNullException.ThrowIfNull(runtime);
         if (!runtime.InitializationComplete || !runtime.RuntimeReady)
@@ -170,11 +172,12 @@ public sealed class BossAiRuntime
 
         if (runtime.LastUpdatedFrame >= 0 && frameUpdateNumber <= runtime.LastUpdatedFrame)
         {
-            RecordFailure(runtime, ErrorCode.LifecycleViolation, "Frame_Update 番号が後退または重複しています。", LifecycleOperation.Update);
+            RecordFailure(runtime, ErrorCode.LifecycleViolation, "Frame_Update 番号が後退または重複しています。",
+                LifecycleOperation.Update);
             return Error.Failure("BossAiRuntime.Update", "Frame_Update 番号が後退または重複しています。");
         }
 
-        ErrorOr<Success> beginResult = runtime.BeginFrame(frameUpdateNumber, deltaTime, phase, in playerObservation);
+        var beginResult = runtime.BeginFrame(frameUpdateNumber, deltaTime, phase, in playerObservation);
         if (beginResult.IsError)
         {
             RecordFailure(runtime, ErrorCode.InvalidTimer, "Frame_Update の入力値が不正です。", LifecycleOperation.Update);
@@ -204,11 +207,12 @@ public sealed class BossAiRuntime
 
         if (runtime.LastUpdatedFrame >= 0 && frameUpdateNumber <= runtime.LastUpdatedFrame)
         {
-            RecordFailure(runtime, ErrorCode.LifecycleViolation, "Frame_Update 番号が後退または重複しています。", LifecycleOperation.Update);
+            RecordFailure(runtime, ErrorCode.LifecycleViolation, "Frame_Update 番号が後退または重複しています。",
+                LifecycleOperation.Update);
             return Error.Failure("BossAiRuntime.Update", "Frame_Update 番号が後退または重複しています。");
         }
 
-        ErrorOr<Success> beginResult = runtime.BeginFrame(frameUpdateNumber, deltaTime, phase, in playerObservation);
+        var beginResult = runtime.BeginFrame(frameUpdateNumber, deltaTime, phase, in playerObservation);
         if (beginResult.IsError)
         {
             RecordFailure(runtime, ErrorCode.InvalidTimer, "Frame_Update の入力値が不正です。", LifecycleOperation.Update);
@@ -216,7 +220,6 @@ public sealed class BossAiRuntime
         }
 
         if (!float.IsFinite(currentHp) || !float.IsFinite(maxHp) || maxHp <= 0.0f)
-        {
             return HandleLifecycleFailure(
                 runtime,
                 ErrorCode.InvalidConfiguration,
@@ -224,29 +227,26 @@ public sealed class BossAiRuntime
                 LifecycleOperation.Update,
                 runtime.CurrentStateId,
                 frameUpdateNumber);
-        }
 
         runtime.ClearCommands();
         if (runtime.TerminalData.IsTerminal)
         {
-            PhaseDeathController.ApplyDeathStop(ref runtime.TerminalData, runtime.Context.Movement, runtime.Context.Attack);
+            PhaseDeathController.ApplyDeathStop(ref runtime.TerminalData, runtime.Context.Movement,
+                runtime.Context.Attack);
             runtime.RefreshDebugData();
             runtime.MarkUpdated(frameUpdateNumber);
             return Result.Success;
         }
 
-        if (currentHp <= 0.0f)
-        {
-            return ApplyDeathInCurrentFrame(runtime, currentHp, frameUpdateNumber);
-        }
+        if (currentHp <= 0.0f) return ApplyDeathInCurrentFrame(runtime, currentHp, frameUpdateNumber);
 
-        if (thresholds.GetNextPhase(phase, currentHp / maxHp, out Phase nextPhase, out float threshold)
-            && !runtime.PhaseTransitionData.IsActive
-            && !runtime.CurrentStateId.IsPhaseTransition
-            && !runtime.CurrentStateId.IsDead)
+        if (thresholds.GetNextPhase(phase, currentHp / maxHp, out var nextPhase, out var threshold)
+         && !runtime.PhaseTransitionData.IsActive
+         && !runtime.CurrentStateId.IsPhaseTransition
+         && !runtime.CurrentStateId.IsDead)
         {
-            TransitionReason reason = new(ReasonKind.PhaseThreshold, threshold: threshold);
-            BossState transitionState = PhaseDeathController.GetPhaseTransitionState(runtime.BossType);
+            TransitionReason reason = new(ReasonKind.PhaseThreshold, threshold);
+            var transitionState = PhaseDeathController.GetPhaseTransitionState(runtime.BossType);
             TransitionRequest request = new(
                 runtime.CurrentStateId,
                 transitionState,
@@ -256,11 +256,10 @@ public sealed class BossAiRuntime
                 frameUpdateNumber,
                 transitionState);
             runtime.Context.SetPhaseForTransition(nextPhase);
-            TransitionResult result = _transitionService.Apply(ref runtime, in request);
+            var result = _transitionService.Apply(ref runtime, in request);
             if (result.IsAccepted)
             {
-                runtime.PhaseTransitionData = new(nextPhase, in reason)
-                {
+                runtime.PhaseTransitionData = new BossPhaseTransitionData(nextPhase, in reason) {
                     IsActive = true,
                     TriggeredPhaseMask = nextPhase == Phase.Phase2
                         ? PhaseTransitionApplyMask.Phase2
@@ -289,12 +288,15 @@ public sealed class BossAiRuntime
         in PlayerObservation playerObservation,
         float currentHp,
         float maxHp)
-        => Update(runtime, frameUpdateNumber, deltaTime, phase, in playerObservation, currentHp, maxHp, BossPhaseThresholds.Default);
+    {
+        return Update(runtime, frameUpdateNumber, deltaTime, phase, in playerObservation, currentHp, maxHp,
+            BossPhaseThresholds.Default);
+    }
 
     private ErrorOr<Success> ApplyDeathInCurrentFrame(BossRuntimeSlot runtime, float currentHp, long frameUpdateNumber)
     {
-        BossState deadState = PhaseDeathController.GetDeadState(runtime.BossType);
-        TransitionReason reason = PhaseDeathController.CreateDeathReason(currentHp);
+        var deadState = PhaseDeathController.GetDeadState(runtime.BossType);
+        var reason = PhaseDeathController.CreateDeathReason(currentHp);
         if (!runtime.AiData.IsDead)
         {
             runtime.AiData.Phase = runtime.Context.Phase;
@@ -323,15 +325,17 @@ public sealed class BossAiRuntime
             runtime.EntityId,
             frameUpdateNumber,
             deadState);
-        TransitionResult result = _transitionService.Apply(ref runtime, in request);
+        var result = _transitionService.Apply(ref runtime, in request);
         runtime.RefreshDebugData();
         runtime.MarkUpdated(frameUpdateNumber);
-        return result.IsAccepted ? Result.Success : Error.Failure("BossAiRuntime.DeathTransitionRejected", result.Message);
+        return result.IsAccepted
+            ? Result.Success
+            : Error.Failure("BossAiRuntime.DeathTransitionRejected", result.Message);
     }
 
 
     /// <summary>
-    /// ランタイムスロットのフレーム更新処理を実行します。
+    ///     ランタイムスロットのフレーム更新処理を実行します。
     /// </summary>
     /// <param name="runtime">更新対象のランタイムスロット</param>
     /// <returns>正常更新時は Success</returns>
@@ -346,7 +350,8 @@ public sealed class BossAiRuntime
 
         if (runtime.LastUpdatedFrame >= 0 && runtime.FrameUpdateNumber <= runtime.LastUpdatedFrame)
         {
-            RecordFailure(runtime, ErrorCode.LifecycleViolation, "Frame_Update 番号が後退または重複しています。", LifecycleOperation.Update);
+            RecordFailure(runtime, ErrorCode.LifecycleViolation, "Frame_Update 番号が後退または重複しています。",
+                LifecycleOperation.Update);
             return Error.Failure("BossAiRuntime.Update", "Frame_Update 番号が後退または重複しています。");
         }
 
@@ -359,14 +364,14 @@ public sealed class BossAiRuntime
         ArgumentNullException.ThrowIfNull(runtime);
         if (!runtime.InitializationComplete || !runtime.RuntimeReady)
         {
-            TransitionResult rejected = TransitionResult.Rejected(in request, runtime.CurrentStateId, ErrorCode.MissingDependency, "初期化 gate 前の遷移を拒否しました。");
+            var rejected = TransitionResult.Rejected(in request, runtime.CurrentStateId, ErrorCode.MissingDependency,
+                "初期化 gate 前の遷移を拒否しました。");
             RecordTransition(runtime, in request, in rejected);
             return rejected;
         }
 
-        TransitionResult result = _transitionService.Apply(ref runtime, in request);
+        var result = _transitionService.Apply(ref runtime, in request);
         if (result.IsRejected && result.ErrorCode == ErrorCode.ModuleExecutionFailed)
-        {
             HandleLifecycleFailure(
                 runtime,
                 ErrorCode.ModuleExecutionFailed,
@@ -374,7 +379,6 @@ public sealed class BossAiRuntime
                 LifecycleOperation.Update,
                 result.CurrentStateId,
                 request.FrameUpdateNumber);
-        }
 
         return result;
     }
@@ -390,9 +394,7 @@ public sealed class BossAiRuntime
         if (runtime.ModuleStopped)
         {
             if (!runtime.RevalidateStoppedModule().IsError)
-            {
                 return Error.Failure("BossAiRuntime.ModuleStopped", "停止済み State_Module を再開しました。");
-            }
 
             RecordFailure(runtime, runtime.ModuleStopReason == ErrorCode.None
                 ? ErrorCode.ModuleExecutionFailed
@@ -401,8 +403,8 @@ public sealed class BossAiRuntime
             return Error.Failure("BossAiRuntime.ModuleStopped", "停止済み State_Module は再実行しません。");
         }
 
-        if (!runtime.CurrentStateId.IsValid() || !runtime.StateEntered || !_registry.Get(runtime.CurrentStateId, out IBossStateModule module))
-        {
+        if (!runtime.CurrentStateId.IsValid() || !runtime.StateEntered ||
+            !_registry.Get(runtime.CurrentStateId, out var module))
             return HandleLifecycleFailure(
                 runtime,
                 ErrorCode.UnregisteredState,
@@ -410,10 +412,9 @@ public sealed class BossAiRuntime
                 LifecycleOperation.Update,
                 runtime.CurrentStateId,
                 frameUpdateNumber);
-        }
 
         runtime.ClearCommands();
-        ref StateContext context = ref runtime.Context;
+        ref var context = ref runtime.Context;
         LifecycleInvocation invocation = new(
             runtime.BossType,
             runtime.EntityId,
@@ -426,7 +427,7 @@ public sealed class BossAiRuntime
         {
             module.Update(ref context, in invocation);
 
-            IBossBehaviorState? behaviorState = _behaviorStateProvider?.Invoke(runtime.BossType);
+            var behaviorState = _behaviorStateProvider?.Invoke(runtime.BossType);
             if (behaviorState is not null)
             {
                 runtime.MovementData.FacingRight = behaviorState.FacingRight;
@@ -469,7 +470,7 @@ public sealed class BossAiRuntime
     /// <param name="y">Boss の Y 座標。</param>
     public void SynchronizeBossPosition(BossType bossType, float x, float y)
     {
-        IBossBehaviorState? state = _behaviorStateProvider?.Invoke(bossType);
+        var state = _behaviorStateProvider?.Invoke(bossType);
         state?.SynchronizePosition(x, y);
     }
 
@@ -481,37 +482,26 @@ public sealed class BossAiRuntime
     /// <param name="vy">Boss の Y 速度。</param>
     /// <param name="isGrounded">Boss が接地しているかどうか。</param>
     /// <param name="isPlayerAlive">プレイヤーが生存しているかどうか。</param>
-    public void SynchronizeBossState(BossType bossType, float x, float y, float vx, float vy, bool isGrounded, bool isPlayerAlive)
+    public void SynchronizeBossState(BossType bossType, float x, float y, float vx, float vy, bool isGrounded,
+        bool isPlayerAlive)
     {
-        IBossBehaviorState? state = _behaviorStateProvider?.Invoke(bossType);
+        var state = _behaviorStateProvider?.Invoke(bossType);
         state?.SynchronizeState(x, y, vx, vy, isGrounded, isPlayerAlive);
     }
 
     private void ProcessPendingTransitions(BossRuntimeSlot runtime, long frameUpdateNumber)
     {
-        if (_behaviorStateProvider is null)
-        {
-            return;
-        }
+        if (_behaviorStateProvider is null) return;
 
-        IBossBehaviorState? behaviorState = _behaviorStateProvider(runtime.BossType);
-        if (behaviorState is null)
-        {
-            return;
-        }
+        var behaviorState = _behaviorStateProvider(runtime.BossType);
+        if (behaviorState is null) return;
 
-        int maxTransitions = 4;
+        var maxTransitions = 4;
         while (maxTransitions-- > 0)
         {
-            if (!behaviorState.ConsumeTransition(out BossState nextStateId, out TransitionReason reason))
-            {
-                break;
-            }
+            if (!behaviorState.ConsumeTransition(out var nextStateId, out var reason)) break;
 
-            if (!nextStateId.IsValid())
-            {
-                break;
-            }
+            if (!nextStateId.IsValid()) break;
 
             TransitionRequest request = new(
                 runtime.CurrentStateId,
@@ -522,11 +512,8 @@ public sealed class BossAiRuntime
                 frameUpdateNumber,
                 nextStateId);
 
-            TransitionResult result = _transitionService.Apply(ref runtime, in request);
-            if (!result.IsAccepted)
-            {
-                break;
-            }
+            var result = _transitionService.Apply(ref runtime, in request);
+            if (!result.IsAccepted) break;
         }
     }
 
@@ -545,9 +532,9 @@ public sealed class BossAiRuntime
         }
 
         runtime.MarkModuleStopped(errorCode);
-        SafetyParameterApplicationResult safety = runtime.ApplySafetyParameters(SafetyParameter.Default);
+        var safety = runtime.ApplySafetyParameters(SafetyParameter.Default);
         RecordSafetyFailures(runtime, in safety, frameUpdateNumber);
-        ErrorOr<Success> recovered = SafetyTransition(runtime, frameUpdateNumber);
+        var recovered = SafetyTransition(runtime, frameUpdateNumber);
         if (recovered.IsError)
         {
             TransitionReason reason = new(
@@ -556,7 +543,8 @@ public sealed class BossAiRuntime
                 originalInput: (long)runtime.CurrentStateId,
                 supplementaryValue: frameUpdateNumber);
             runtime.FailClosed(PhaseDeathController.GetDeadState(runtime.BossType), in reason, frameUpdateNumber);
-            RecordFailureObservation(runtime, ErrorCode.SafetyRecoveryFailed, "安全復帰先を使用できないため停止しました。", LifecycleOperation.Update, runtime.CurrentStateId);
+            RecordFailureObservation(runtime, ErrorCode.SafetyRecoveryFailed, "安全復帰先を使用できないため停止しました。",
+                LifecycleOperation.Update, runtime.CurrentStateId);
         }
 
         runtime.MarkUpdated(frameUpdateNumber);
@@ -566,21 +554,16 @@ public sealed class BossAiRuntime
     private ErrorOr<Success> SafetyTransition(BossRuntimeSlot runtime, long frameUpdateNumber)
     {
         if (runtime.BeginSafetyTransition().IsError)
-        {
             return Error.Failure("BossAiRuntime.SafetyTransition", "安全遷移は既に試行済みです。");
-        }
 
-        BossState safeState = _safeBossState.IsValid
+        var safeState = _safeBossState.IsValid
             ? _safeBossState
-            : runtime.BossType switch
-            {
+            : runtime.BossType switch {
                 BossType.Boss2 => BossState.Boss2_Idle,
                 _ => BossState.Boss1_Hover
             };
         if (!safeState.IsValid() || runtime.CurrentStateId == safeState || !_registry.Get(safeState, out _))
-        {
             return Error.Failure("BossAiRuntime.SafetyTransition", "安全復帰先が無効です。");
-        }
 
         TransitionReason reason = new(
             ReasonKind.ErrorRecovery,
@@ -595,7 +578,7 @@ public sealed class BossAiRuntime
             runtime.EntityId,
             frameUpdateNumber,
             safeState);
-        TransitionResult result = _transitionService.Apply(ref runtime, in request);
+        var result = _transitionService.Apply(ref runtime, in request);
         if (result.IsRejected)
         {
             runtime.MarkModuleStopped(ErrorCode.SafetyRecoveryFailed);
@@ -611,10 +594,7 @@ public sealed class BossAiRuntime
         in SafetyParameterApplicationResult result,
         long frameUpdateNumber)
     {
-        if (!result.HasFailure)
-        {
-            return;
-        }
+        if (!result.HasFailure) return;
 
         ObservationEvent observation = new(
             runtime.EntityId,
@@ -658,13 +638,10 @@ public sealed class BossAiRuntime
         BossState stateId = default,
         long frameUpdateNumber = long.MinValue)
     {
-        BossState effectiveBossState = stateId.IsValid() ? stateId : runtime.CurrentStateId;
-        long effectiveFrame = frameUpdateNumber == long.MinValue ? runtime.FrameUpdateNumber : frameUpdateNumber;
-        ulong fingerprint = ComputeFailureFingerprint(errorCode, effectiveBossState, operation);
-        if (!runtime.HandleFailure(fingerprint, effectiveFrame))
-        {
-            return false;
-        }
+        var effectiveBossState = stateId.IsValid() ? stateId : runtime.CurrentStateId;
+        var effectiveFrame = frameUpdateNumber == long.MinValue ? runtime.FrameUpdateNumber : frameUpdateNumber;
+        var fingerprint = ComputeFailureFingerprint(errorCode, effectiveBossState, operation);
+        if (!runtime.HandleFailure(fingerprint, effectiveFrame)) return false;
 
         RecordFailureObservation(runtime, errorCode, message, operation, effectiveBossState);
         return true;
@@ -697,7 +674,7 @@ public sealed class BossAiRuntime
     private static ulong ComputeFailureFingerprint(ErrorCode errorCode, BossState stateId, LifecycleOperation operation)
     {
         // 実行中に変化しない FNV-1a で、同じ無効入力を frame を跨いで同一視します。
-        ulong hash = 14695981039346656037UL;
+        var hash = 14695981039346656037UL;
         hash ^= (byte)errorCode;
         hash *= 1099511628211UL;
         hash ^= (byte)operation;
@@ -720,7 +697,6 @@ public sealed class BossAiRuntime
             request.Reason.Skill,
             default,
             request.Reason,
-
             DiagnosticSeverity.TransitionRejected,
             result.ErrorCode,
             result.Message,
@@ -743,8 +719,7 @@ public sealed class BossAiRuntime
 
     private static string GetLifecycleMessage(LifecycleOperation operation)
     {
-        return operation switch
-        {
+        return operation switch {
             LifecycleOperation.Enter => "状態へ入場しました。",
             LifecycleOperation.Update => "状態を更新しました。",
             LifecycleOperation.Exit => "状態から退場しました。",
@@ -754,8 +729,7 @@ public sealed class BossAiRuntime
 }
 
 /// <summary>Entity に必要な ECS component の検証境界です。</summary>
-public interface IEntityComponentValidator
-{
+public interface IEntityComponentValidator {
     /// <summary>runtime が必要とする component を検証します。</summary>
     bool Validate(BossRuntimeSlot runtime, out string missingComponent);
 }

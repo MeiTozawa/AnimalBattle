@@ -1,13 +1,12 @@
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// 入力コンテキスト（入力状態の分離スタック用）。
+///     入力コンテキスト（入力状態の分離スタック用）。
 /// </summary>
-public enum InputContext
-{
+public enum InputContext {
     InGame = 0,
     Menu = 1,
     Cutscene = 2,
     Pause = 3,
-    VolumeControl = 4,
+    VolumeControl = 4
 }

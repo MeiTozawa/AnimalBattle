@@ -6,8 +6,7 @@ namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>Dead 状態で HUD、衝突、勝利演出、再起動経路が参照する終端データ構造体です。</summary>
 [StructLayout(LayoutKind.Sequential)]
-public struct BossTerminalData
-{
+public struct BossTerminalData {
     /// <summary>終端データが確定しているかどうかです。</summary>
     public bool IsTerminal;
 
@@ -54,10 +53,7 @@ public struct BossTerminalData
         AttackStage attackStage,
         float hp)
     {
-        if (IsTerminal)
-        {
-            return Error.Validation("BossTerminalData.Capture", "既に終端データが確定しています。");
-        }
+        if (IsTerminal) return Error.Validation("BossTerminalData.Capture", "既に終端データが確定しています。");
 
         IsTerminal = true;
         DeadState = deadState;

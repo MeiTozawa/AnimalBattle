@@ -1,15 +1,12 @@
-using System;
-using AnimalBattle.Components;
-using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// Config/player.toml から読み込まれるプレイヤー動作・物理・判定パラメータの設定クラス。
-/// 形状種別、寸法、および局所オフセット (HurtboxOffsetX/Y, BulletHitboxOffsetX/Y) を完全管理します。
+///     Config/player.toml から読み込まれるプレイヤー動作・物理・判定パラメータの設定クラス。
+///     形状種別、寸法、および局所オフセット (HurtboxOffsetX/Y, BulletHitboxOffsetX/Y) を完全管理します。
 /// </summary>
-public sealed class PlayerConfig
-{
+public sealed class PlayerConfig {
     /// <summary>プレイヤーの最大 HP</summary>
     public int MaxHp { get; set; }
 
@@ -110,29 +107,31 @@ public sealed class PlayerConfig
     public float VulnerableDamageMultiplier { get; set; }
 
     /// <summary>
-    /// 設定に基づいたプレイヤー被弾判定 (<see cref="CollisionShape"/>) を取得します。
+    ///     設定に基づいたプレイヤー被弾判定 (<see cref="CollisionShape" />) を取得します。
     /// </summary>
     /// <returns>構築された被弾衝突形状バリアント</returns>
     public CollisionShape GetHurtboxShape()
     {
-        return CollisionShapeFactory.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight, HurtboxOffsetX, HurtboxOffsetY);
+        return CollisionShapeFactory.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight,
+            HurtboxOffsetX, HurtboxOffsetY);
     }
 
     /// <summary>
-    /// 設定に基づいたプレイヤー銃弾攻撃判定 (<see cref="CollisionShape"/>) を取得します。
+    ///     設定に基づいたプレイヤー銃弾攻撃判定 (<see cref="CollisionShape" />) を取得します。
     /// </summary>
     /// <returns>構築された銃弾攻撃衝突形状バリアント</returns>
     public CollisionShape GetBulletHitboxShape()
     {
-        return CollisionShapeFactory.CreateWithFallback(BulletHitboxShape, BulletRadius, BulletWidth, BulletHeight, BulletHitboxOffsetX, BulletHitboxOffsetY);
+        return CollisionShapeFactory.CreateWithFallback(BulletHitboxShape, BulletRadius, BulletWidth, BulletHeight,
+            BulletHitboxOffsetX, BulletHitboxOffsetY);
     }
 
     /// <summary>
-    /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{PlayerConfig}"/> インスタンスを生成します。
+    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{PlayerConfig}" /> インスタンスを生成します。
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static ErrorOr.ErrorOr<ConfigBase<PlayerConfig>> LoadFromFile(string path = ResourcePath.Config.Player)
+    public static ErrorOr<ConfigBase<PlayerConfig>> LoadFromFile(string path = ResourcePath.Config.Player)
     {
         return ConfigBase<PlayerConfig>.LoadFromFile(path);
     }

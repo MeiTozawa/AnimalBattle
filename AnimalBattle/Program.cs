@@ -1,14 +1,12 @@
-using System;
 using System.Diagnostics;
-using AnimalBattle.Core;
 using AnimalBattle.Scenes;
 
 namespace AnimalBattle;
+
 /// <summary>
-/// アプリケーションのエントリポイントおよびメインループを管理するクラス。
+///     アプリケーションのエントリポイントおよびメインループを管理するクラス。
 /// </summary>
-internal static class Program
-{
+internal static class Program {
     private static void Main(string[] args)
     {
         try
@@ -17,18 +15,18 @@ internal static class Program
             const int height = 720;
 
             Console.WriteLine("C++ DxLib ネイティブエンジンを初期化中...");
-            GameEngine.Initialize(width, height, true);
+            GameEngine.Initialize(width, height);
 
             Console.WriteLine("Flecs.NET ワールドおよびバトルシーンを初期化中...");
             using BattleScene battleScene = new();
             battleScene.Initialize();
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            long lastTime = stopwatch.ElapsedTicks;
-            double tickFrequency = (double)Stopwatch.Frequency;
+            var stopwatch = Stopwatch.StartNew();
+            var lastTime = stopwatch.ElapsedTicks;
+            var tickFrequency = (double)Stopwatch.Frequency;
 
             Console.WriteLine("メインゲームループを開始します...");
-            int frameCount = 0;
+            var frameCount = 0;
             while (true)
             {
                 if (!GameEngine.ProcessMessage())
@@ -43,12 +41,12 @@ internal static class Program
                     break;
                 }
 
-                long currentTime = stopwatch.ElapsedTicks;
-                float rawDeltaTime = (float)((currentTime - lastTime) / tickFrequency);
+                var currentTime = stopwatch.ElapsedTicks;
+                var rawDeltaTime = (float)((currentTime - lastTime) / tickFrequency);
                 lastTime = currentTime;
 
                 // 産業級メインループ防トンネル保護：最大単一ステップを 50ms (20 FPS 相当) に制限し、ウィンドウドラッグやフレーム落ちによる壁抜けを防止
-                float deltaTime = Math.Clamp(rawDeltaTime, 0.0f, 0.05f);
+                var deltaTime = Math.Clamp(rawDeltaTime, 0.0f, 0.05f);
 
                 GameEngine.BeginFrame();
 

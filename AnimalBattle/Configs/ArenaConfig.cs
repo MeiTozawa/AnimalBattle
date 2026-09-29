@@ -1,13 +1,11 @@
-using System.Collections.Generic;
-using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// タイルマップの描画・配置設定クラス。
+///     タイルマップの描画・配置設定クラス。
 /// </summary>
-public sealed class TileMapConfig
-{
+public sealed class TileMapConfig {
     /// <summary>タイルセットテクスチャの相対パス</summary>
     public string TileSheet { get; set; } = string.Empty;
 
@@ -31,10 +29,9 @@ public sealed class TileMapConfig
 }
 
 /// <summary>
-/// Config/arena.toml から読み込まれる戦闘アリーナ境界およびタイルマップ設定クラス。
+///     Config/arena.toml から読み込まれる戦闘アリーナ境界およびタイルマップ設定クラス。
 /// </summary>
-public sealed class ArenaConfig
-{
+public sealed class ArenaConfig {
     /// <summary>デフォルトで生成・交戦する対象 Boss 識別名（"Boss1" または "Boss2"）</summary>
     public string TargetBoss { get; set; } = string.Empty;
 
@@ -63,11 +60,11 @@ public sealed class ArenaConfig
     public float FloorLimitY { get; set; } = 560.0f;
 
     /// <summary>
-    /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{ArenaConfig}"/> インスタンスを生成します。
+    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{ArenaConfig}" /> インスタンスを生成します。
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static ErrorOr.ErrorOr<ConfigBase<ArenaConfig>> LoadFromFile(string path = ResourcePath.Config.Arena)
+    public static ErrorOr<ConfigBase<ArenaConfig>> LoadFromFile(string path = ResourcePath.Config.Arena)
     {
         return ConfigBase<ArenaConfig>.LoadFromFile(path);
     }

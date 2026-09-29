@@ -1,13 +1,11 @@
-using System;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// プール内エンティティの貸出状態および所属プールを追跡する内部コンポーネント。
+///     プール内エンティティの貸出状態および所属プールを追跡する内部コンポーネント。
 /// </summary>
-public struct PoolLeaseState
-{
+public struct PoolLeaseState {
     /// <summary>所属するプールの固有識別子。</summary>
     public ulong PoolId;
 
@@ -16,10 +14,9 @@ public struct PoolLeaseState
 }
 
 /// <summary>
-/// エンティティオブジェクトプールの運用テレメトリおよび健全性メトリクス。
+///     エンティティオブジェクトプールの運用テレメトリおよび健全性メトリクス。
 /// </summary>
-public sealed class EntityPoolMetrics
-{
+public sealed class EntityPoolMetrics {
     /// <summary>過去最大の同時貸出使用量（ピーク使用量）。</summary>
     public int PeakUsage { get; internal set; }
 
@@ -34,42 +31,21 @@ public sealed class EntityPoolMetrics
 }
 
 /// <summary>
-/// 高頻度・短命エンティティ（弾幕・パーティクル・衝撃波など）向けの高性能事前確保エンティティプール。
-/// 実行時の <see cref="World.Entity()"/> によるメモリ再確保および <see cref="Entity.Destruct()"/> による Archetype 変動を廃し、
-/// <see cref="Entity.Enable()"/> と <see cref="Entity.Disable()"/> によるゼロ GC・安定した Archetype 運用を提供します。
+///     高頻度・短命エンティティ（弾幕・パーティクル・衝撃波など）向けの高性能事前確保エンティティプール。
+///     実行時の <see cref="World.Entity()" /> によるメモリ再確保および <see cref="Entity.Destruct()" /> による Archetype 変動を廃し、
+///     <see cref="Entity.Enable()" /> と <see cref="Entity.Disable()" /> によるゼロ GC・安定した Archetype 運用を提供します。
 /// </summary>
-public sealed class EntityPool : IDisposable
-{
+public sealed class EntityPool : IDisposable {
     private static ulong _nextPoolId = 1;
-    private readonly ulong _poolId = System.Threading.Interlocked.Increment(ref _nextPoolId);
-    private readonly World _world;
     private readonly Action<Entity>? _onInit;
     private readonly Action<Entity>? _onReset;
-    private readonly int _maxCapacity;
-    private readonly EntityPoolMetrics _metrics = new();
-    private Entity[] _pool;
+    private readonly World _world;
     private Entity[] _allAllocated;
-    private int _top;
-    private int _totalAllocated;
     private bool _isDisposed;
-
-    /// <summary>プール固有の識別子を取得します。</summary>
-    public ulong PoolId => _poolId;
-
-    /// <summary>プールの運用メトリクス統計を取得します。</summary>
-    public EntityPoolMetrics Metrics => _metrics;
-
-    /// <summary>プールの最大許容エンティティ容量を取得します。</summary>
-    public int MaxCapacity => _maxCapacity;
-
-    /// <summary>プール内の現在利用可能なエンティティ総数を取得します。</summary>
-    public int AvailableCount => _top;
-
-    /// <summary>現在確保済みのエンティティ総数（貸出中＋空き）を取得します。</summary>
-    public int TotalAllocated => _totalAllocated;
+    private Entity[] _pool;
 
     /// <summary>
-    /// エンティティオブジェクトプールを初期化し、指定数のエンティティを事前確保します。
+    ///     エンティティオブジェクトプールを初期化し、指定数のエンティティを事前確保します。
     /// </summary>
     /// <param name="world">エンティティが所属する Flecs.NET ワールド。</param>
     /// <param name="initialCapacity">初期事前確保エンティティ容量。</param>
@@ -87,27 +63,59 @@ public sealed class EntityPool : IDisposable
         _onInit = onInit;
         _onReset = onReset;
         initialCapacity = Math.Max(1, initialCapacity);
-        _maxCapacity = Math.Max(initialCapacity, maxCapacity);
+        MaxCapacity = Math.Max(initialCapacity, maxCapacity);
 
         _pool = new Entity[initialCapacity];
         _allAllocated = new Entity[initialCapacity];
-        _top = 0;
-        _totalAllocated = 0;
+        AvailableCount = 0;
+        TotalAllocated = 0;
 
         Preallocate(initialCapacity);
     }
 
+    /// <summary>プール固有の識別子を取得します。</summary>
+    public ulong PoolId { get; } = Interlocked.Increment(ref _nextPoolId);
+
+    /// <summary>プールの運用メトリクス統計を取得します。</summary>
+    public EntityPoolMetrics Metrics { get; } = new();
+
+    /// <summary>プールの最大許容エンティティ容量を取得します。</summary>
+    public int MaxCapacity { get; }
+
+    /// <summary>プール内の現在利用可能なエンティティ総数を取得します。</summary>
+    public int AvailableCount { get; private set; }
+
+    /// <summary>現在確保済みのエンティティ総数（貸出中＋空き）を取得します。</summary>
+    public int TotalAllocated { get; private set; }
+
+    /// <summary>
+    ///     プール内の全エンティティ（空きおよび貸出中）を破棄し、リソースを解放します。
+    /// </summary>
+    public void Dispose()
+    {
+        if (!_isDisposed)
+        {
+            for (var i = 0; i < TotalAllocated; i++)
+                if (_allAllocated[i].IsAlive())
+                    _allAllocated[i].Destruct();
+
+            AvailableCount = 0;
+            TotalAllocated = 0;
+            _isDisposed = true;
+        }
+    }
+
     private void Preallocate(int count)
     {
-        EnsureArrayCapacity(_totalAllocated + count);
-        for (int i = 0; i < count; i++)
+        EnsureArrayCapacity(TotalAllocated + count);
+        for (var i = 0; i < count; i++)
         {
-            Entity e = _world.Entity();
-            e.Set(new PoolLeaseState { PoolId = _poolId, IsRented = false });
+            var e = _world.Entity();
+            e.Set(new PoolLeaseState { PoolId = PoolId, IsRented = false });
             e.Disable();
             _onInit?.Invoke(e);
-            _pool[_top++] = e;
-            _allAllocated[_totalAllocated++] = e;
+            _pool[AvailableCount++] = e;
+            _allAllocated[TotalAllocated++] = e;
         }
     }
 
@@ -115,46 +123,40 @@ public sealed class EntityPool : IDisposable
     {
         if (_pool.Length < required)
         {
-            int newCap = Math.Max(_pool.Length * 2, required);
+            var newCap = Math.Max(_pool.Length * 2, required);
             Array.Resize(ref _pool, newCap);
             Array.Resize(ref _allAllocated, newCap);
         }
     }
 
     /// <summary>
-    /// プールからエンティティを貸し出し、クリーンアップ（onReset）と有効化（Enable）を実行します。
-    /// 上限に達した場合は OOM 防止のため空エンティティを返却します。
+    ///     プールからエンティティを貸し出し、クリーンアップ（onReset）と有効化（Enable）を実行します。
+    ///     上限に達した場合は OOM 防止のため空エンティティを返却します。
     /// </summary>
     /// <returns>有効化されたエンティティ（上限到達時は無効な空エンティティ）。</returns>
     public Entity Rent()
     {
         ObjectDisposedException.ThrowIf(_isDisposed, this);
 
-        if (_top == 0)
+        if (AvailableCount == 0)
         {
-            if (_totalAllocated >= _maxCapacity)
+            if (TotalAllocated >= MaxCapacity)
             {
                 // 最大容量上限に到達：OOM 防止のため熔断（サーキットブレーカー発動）
-                _metrics.OverflowCount++;
+                Metrics.OverflowCount++;
                 return default;
             }
 
-            int toAllocate = Math.Min(Math.Max(16, _totalAllocated), _maxCapacity - _totalAllocated);
+            var toAllocate = Math.Min(Math.Max(16, TotalAllocated), MaxCapacity - TotalAllocated);
             Preallocate(toAllocate);
-            _metrics.ExpansionCount++;
+            Metrics.ExpansionCount++;
         }
 
-        Entity e = _pool[--_top];
-        if (e.Has<PoolLeaseState>())
-        {
-            e.GetMut<PoolLeaseState>().IsRented = true;
-        }
+        var e = _pool[--AvailableCount];
+        if (e.Has<PoolLeaseState>()) e.GetMut<PoolLeaseState>().IsRented = true;
 
-        _metrics.ActiveRentals++;
-        if (_metrics.ActiveRentals > _metrics.PeakUsage)
-        {
-            _metrics.PeakUsage = _metrics.ActiveRentals;
-        }
+        Metrics.ActiveRentals++;
+        if (Metrics.ActiveRentals > Metrics.PeakUsage) Metrics.PeakUsage = Metrics.ActiveRentals;
 
         _onReset?.Invoke(e);
         e.Enable();
@@ -162,17 +164,14 @@ public sealed class EntityPool : IDisposable
     }
 
     /// <summary>
-    /// 使用済みのエンティティをプールへ返却し、無効化（Disable）します。
-    /// プール破棄後に返却されたエンティティは孤児化を防ぐため安全に Destruct されます。
-    /// 既に返却済みのエンティティが渡された場合は多重プッシュを防ぐため無視されます。
+    ///     使用済みのエンティティをプールへ返却し、無効化（Disable）します。
+    ///     プール破棄後に返却されたエンティティは孤児化を防ぐため安全に Destruct されます。
+    ///     既に返却済みのエンティティが渡された場合は多重プッシュを防ぐため無視されます。
     /// </summary>
     /// <param name="entity">返却するエンティティ。</param>
     public void Return(Entity entity)
     {
-        if (!entity.IsAlive())
-        {
-            return;
-        }
+        if (!entity.IsAlive()) return;
 
         if (_isDisposed)
         {
@@ -182,39 +181,17 @@ public sealed class EntityPool : IDisposable
 
         if (entity.Has<PoolLeaseState>())
         {
-            ref PoolLeaseState state = ref entity.GetMut<PoolLeaseState>();
-            if (state.PoolId != _poolId || !state.IsRented)
-            {
+            ref var state = ref entity.GetMut<PoolLeaseState>();
+            if (state.PoolId != PoolId || !state.IsRented)
                 // 別プールのエンティティ、または既にプール内に返却済みの二重返却を安全に無視
                 return;
-            }
             state.IsRented = false;
         }
 
-        _metrics.ActiveRentals = Math.Max(0, _metrics.ActiveRentals - 1);
+        Metrics.ActiveRentals = Math.Max(0, Metrics.ActiveRentals - 1);
 
         entity.Disable();
-        EnsureArrayCapacity(_top + 1);
-        _pool[_top++] = entity;
-    }
-
-    /// <summary>
-    /// プール内の全エンティティ（空きおよび貸出中）を破棄し、リソースを解放します。
-    /// </summary>
-    public void Dispose()
-    {
-        if (!_isDisposed)
-        {
-            for (int i = 0; i < _totalAllocated; i++)
-            {
-                if (_allAllocated[i].IsAlive())
-                {
-                    _allAllocated[i].Destruct();
-                }
-            }
-            _top = 0;
-            _totalAllocated = 0;
-            _isDisposed = true;
-        }
+        EnsureArrayCapacity(AvailableCount + 1);
+        _pool[AvailableCount++] = entity;
     }
 }

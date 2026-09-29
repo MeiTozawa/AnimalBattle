@@ -1,13 +1,13 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Boss1;
 
-internal static class Boss1ModuleSupport
-{
+internal static class Boss1ModuleSupport {
     internal static bool IsBoss1(in StateContext context, in LifecycleInvocation invocation)
-        => context.BossType == BossType.Boss1 && invocation.BossType == BossType.Boss1;
+    {
+        return context.BossType == BossType.Boss1 && invocation.BossType == BossType.Boss1;
+    }
 
     internal static void ApplyHoverMovement(
         ref StateContext context,
@@ -17,20 +17,17 @@ internal static class Boss1ModuleSupport
         BossSkill skill = default,
         AttackStage stage = AttackStage.None)
     {
-        if (context.Phase is not (Phase.Phase1 or Phase.Phase2 or Phase.Phase3))
-        {
-            return;
-        }
+        if (context.Phase is not (Phase.Phase1 or Phase.Phase2 or Phase.Phase3)) return;
 
-        Boss1PhaseSettings settings = configuration.GetPhase(context.Phase);
-        float deltaTime = context.DeltaTime;
+        var settings = configuration.GetPhase(context.Phase);
+        var deltaTime = context.DeltaTime;
         state.HoverTimer += deltaTime;
 
-        Vec2f curPos = state.CurrentPosition;
+        var curPos = state.CurrentPosition;
         Vec2f basePos = new(state.BaseX, settings.HoverBaseY);
         Vec2f playerPos = new(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
 
-        Vec2f newPos = PhysicsService.CalculateBossHoverPosition(
+        var newPos = PhysicsService.CalculateBossHoverPosition(
             curPos,
             basePos,
             playerPos,
@@ -45,9 +42,8 @@ internal static class Boss1ModuleSupport
 
         state.CurrentPosition = newPos;
         if (context.Movement.MoveTo(newPos.X, newPos.Y).IsError)
-        {
-            Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "Boss1 の浮遊移動 command を発行できませんでした。", skill, stage);
-        }
+            Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed,
+                "Boss1 の浮遊移動 command を発行できませんでした。", skill, stage);
     }
 
     internal static void Record(
@@ -76,7 +72,6 @@ internal static class Boss1ModuleSupport
         try
         {
             context.Observation.Record(in observation);
-
         }
         catch
         {
@@ -84,10 +79,13 @@ internal static class Boss1ModuleSupport
         }
     }
 
-    internal static float Clamp01(float value) => MathF.Max(0.0f, MathF.Min(1.0f, value));
-
-    internal static float Ease(float progress, Core.EaseType easeType)
+    internal static float Clamp01(float value)
     {
-        return Core.EasingMath.Evaluate(easeType, progress);
+        return MathF.Max(0.0f, MathF.Min(1.0f, value));
+    }
+
+    internal static float Ease(float progress, EaseType easeType)
+    {
+        return EasingMath.Evaluate(easeType, progress);
     }
 }

@@ -1,12 +1,10 @@
-using System;
-
 namespace AnimalBattle.Ai.Contracts;
 
 /// <summary>
-/// 技能の意思決定・出招判定条件を定義する検証済みルール構造体です。
+///     技能の意思決定・出招判定条件を定義する検証済みルール構造体です。
 /// </summary>
 /// <remarks>
-/// 技能意思決定ルールを初期化します。
+///     技能意思決定ルールを初期化します。
 /// </remarks>
 /// <param name="skill">技能識別子。</param>
 /// <param name="cooldown">基本冷却時間（秒）。</param>
@@ -24,8 +22,7 @@ public readonly struct AttackDecisionRule(
     float weight = 100.0f,
     bool requireSamePlatform = false,
     bool? requirePlayerGrounded = null,
-    float preferAirborneBonus = 1.0f)
-{
+    float preferAirborneBonus = 1.0f) {
     /// <summary>対象の技能識別子を取得します。</summary>
     public BossSkill Skill { get; } = skill;
 
@@ -52,14 +49,14 @@ public readonly struct AttackDecisionRule(
 
     /// <summary>ルール設定が有効かどうかを取得します。</summary>
     public bool IsValid => Skill.IsValid()
-        && Cooldown >= 0.0f
-        && MinDistance >= 0.0f
-        && MaxDistance >= MinDistance
-        && Weight > 0.0f
-        && PreferAirborneBonus > 0.0f
-        && !float.IsNaN(Cooldown)
-        && !float.IsNaN(MinDistance)
-        && !float.IsNaN(MaxDistance)
-        && !float.IsNaN(Weight)
-        && !float.IsNaN(PreferAirborneBonus);
+     && Cooldown >= 0.0f
+     && MinDistance >= 0.0f
+     && MaxDistance >= MinDistance
+     && Weight > 0.0f
+     && PreferAirborneBonus > 0.0f
+     && !float.IsNaN(Cooldown)
+     && !float.IsNaN(MinDistance)
+     && !float.IsNaN(MaxDistance)
+     && !float.IsNaN(Weight)
+     && !float.IsNaN(PreferAirborneBonus);
 }

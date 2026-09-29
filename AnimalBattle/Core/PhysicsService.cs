@@ -1,19 +1,16 @@
-using System;
 using System.Runtime.CompilerServices;
 using AnimalBattle.Bindings;
-using AnimalBattle.Components;
 
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// C++ Native 物理エンジン (<see cref="NativeBindings"/>) への高効率なアクセスを提供する静的物理サービス。
+///     C++ Native 物理エンジン (<see cref="NativeBindings" />) への高効率なアクセスを提供する静的物理サービス。
 /// </summary>
-public static unsafe class PhysicsService
-{
+public static unsafe class PhysicsService {
     // --- 2D 幾何形状交差判定 ---
 
     /// <summary>
-    /// 2 つの Transform と CollisionShape 間の幾何学的交差（衝突）判定をパターンマッチングで網羅的に判定します。
+    ///     2 つの Transform と CollisionShape 間の幾何学的交差（衝突）判定をパターンマッチングで網羅的に判定します。
     /// </summary>
     /// <param name="t1">第 1 エンティティの位置</param>
     /// <param name="s1">第 1 エンティティの形状バリアント</param>
@@ -25,13 +22,13 @@ public static unsafe class PhysicsService
         Vec2f p1 = new(t1.X + s1.OffsetX, t1.Y + s1.OffsetY);
         Vec2f p2 = new(t2.X + s2.OffsetX, t2.Y + s2.OffsetY);
 
-        return (s1.Type, s2.Type) switch
-        {
+        return (s1.Type, s2.Type) switch {
             (CollisionShapeType.Circle, CollisionShapeType.Circle) =>
                 Intersects(new Circle2D(p1, s1.Radius), new Circle2D(p2, s2.Radius)),
 
             (CollisionShapeType.Box, CollisionShapeType.Box) =>
-                Intersects(new Box2D(p1, new Vec2f(s1.Width, s1.Height)), new Box2D(p2, new Vec2f(s2.Width, s2.Height))),
+                Intersects(new Box2D(p1, new Vec2f(s1.Width, s1.Height)),
+                    new Box2D(p2, new Vec2f(s2.Width, s2.Height))),
 
             (CollisionShapeType.Circle, CollisionShapeType.Box) =>
                 Intersects(new Circle2D(p1, s1.Radius), new Box2D(p2, new Vec2f(s2.Width, s2.Height))),
@@ -59,43 +56,43 @@ public static unsafe class PhysicsService
     }
 
     /// <summary>
-    /// 2 つの円形衝突形状の交差を判定します。
+    ///     2 つの円形衝突形状の交差を判定します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Circle2D c1, Circle2D c2)
     {
-        Vec2f diff = c1.Center - c2.Center;
-        float combinedRadius = c1.Radius + c2.Radius;
-        return diff.LengthSquared() <= (combinedRadius * combinedRadius);
+        var diff = c1.Center - c2.Center;
+        var combinedRadius = c1.Radius + c2.Radius;
+        return diff.LengthSquared() <= combinedRadius * combinedRadius;
     }
 
     /// <summary>
-    /// 2 つの軸平行矩形 (AABB) 衝突形状の交差を判定します。
+    ///     2 つの軸平行矩形 (AABB) 衝突形状の交差を判定します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Box2D b1, Box2D b2)
     {
-        Vec2f diff = b1.Center - b2.Center;
-        float dx = MathF.Abs(diff.X);
-        float dy = MathF.Abs(diff.Y);
+        var diff = b1.Center - b2.Center;
+        var dx = MathF.Abs(diff.X);
+        var dy = MathF.Abs(diff.Y);
         return dx <= (b1.Size.X + b2.Size.X) * 0.5f && dy <= (b1.Size.Y + b2.Size.Y) * 0.5f;
     }
 
     /// <summary>
-    /// 円形と軸平行矩形 (AABB) 衝突形状の交差を判定します。
+    ///     円形と軸平行矩形 (AABB) 衝突形状の交差を判定します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Circle2D circle, Box2D box)
     {
-        float closestX = Math.Clamp(circle.Center.X, box.Left, box.Right);
-        float closestY = Math.Clamp(circle.Center.Y, box.Top, box.Bottom);
+        var closestX = Math.Clamp(circle.Center.X, box.Left, box.Right);
+        var closestY = Math.Clamp(circle.Center.Y, box.Top, box.Bottom);
 
         Vec2f diff = new(circle.Center.X - closestX, circle.Center.Y - closestY);
-        return diff.LengthSquared() <= (circle.Radius * circle.Radius);
+        return diff.LengthSquared() <= circle.Radius * circle.Radius;
     }
 
     /// <summary>
-    /// 軸平行矩形 (AABB) と円形衝突形状の交差を判定します。
+    ///     軸平行矩形 (AABB) と円形衝突形状の交差を判定します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Box2D box, Circle2D circle)
@@ -104,29 +101,29 @@ public static unsafe class PhysicsService
     }
 
     /// <summary>
-    /// 点と円形衝突形状の交差を判定します。
+    ///     点と円形衝突形状の交差を判定します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Vec2f point, Circle2D circle)
     {
-        Vec2f diff = point - circle.Center;
-        return diff.LengthSquared() <= (circle.Radius * circle.Radius);
+        var diff = point - circle.Center;
+        return diff.LengthSquared() <= circle.Radius * circle.Radius;
     }
 
     /// <summary>
-    /// 点と軸平行矩形 (AABB) 衝突形状の交差を判定します。
+    ///     点と軸平行矩形 (AABB) 衝突形状の交差を判定します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Vec2f point, Box2D box)
     {
         return point.X >= box.Left && point.X <= box.Right &&
-               point.Y >= box.Top && point.Y <= box.Bottom;
+            point.Y >= box.Top && point.Y <= box.Bottom;
     }
 
     // --- 地形・足場判定 ---
 
     /// <summary>
-    /// ワンウェイ足場（すり抜け床）との着地判定および補正 Y 座標の計算を行います。
+    ///     ワンウェイ足場（すり抜け床）との着地判定および補正 Y 座標の計算を行います。
     /// </summary>
     public static bool CheckPlatformGround(
         float prevY,
@@ -136,9 +133,9 @@ public static unsafe class PhysicsService
         out float adjustedPosY,
         out float adjustedVy)
     {
-        float groundY = nextY;
-        float vy = 0.0f;
-        bool isGrounded = NativeBindings.Physics_CheckPlatformGround(
+        var groundY = nextY;
+        var vy = 0.0f;
+        var isGrounded = NativeBindings.Physics_CheckPlatformGround(
             prevY,
             nextY,
             playerBox,
@@ -152,7 +149,7 @@ public static unsafe class PhysicsService
     }
 
     /// <summary>
-    /// 統一幾何形状 <see cref="CollisionShape"/> を用いたワンウェイ足場（すり抜け床）着地判定を行います。
+    ///     統一幾何形状 <see cref="CollisionShape" /> を用いたワンウェイ足場（すり抜け床）着地判定を行います。
     /// </summary>
     public static bool CheckPlatformGround(
         float prevY,
@@ -164,13 +161,20 @@ public static unsafe class PhysicsService
         out float adjustedPosY,
         out float adjustedVy)
     {
-        float pWidth = playerShape.Type == CollisionShapeType.Box ? playerShape.Width : playerShape.Radius * 2.0f;
-        float pHeight = playerShape.Type == CollisionShapeType.Box ? playerShape.Height : playerShape.Radius * 2.0f;
-        float platWidth = platformShape.Type == CollisionShapeType.Box ? platformShape.Width : platformShape.Radius * 2.0f;
-        float platHeight = platformShape.Type == CollisionShapeType.Box ? platformShape.Height : platformShape.Radius * 2.0f;
+        var pWidth = playerShape.Type == CollisionShapeType.Box ? playerShape.Width : playerShape.Radius * 2.0f;
+        var pHeight = playerShape.Type == CollisionShapeType.Box ? playerShape.Height : playerShape.Radius * 2.0f;
+        var platWidth = platformShape.Type == CollisionShapeType.Box
+            ? platformShape.Width
+            : platformShape.Radius * 2.0f;
+        var platHeight = platformShape.Type == CollisionShapeType.Box
+            ? platformShape.Height
+            : platformShape.Radius * 2.0f;
 
-        Box2D playerBox = new(new Vec2f(playerTrans.X + playerShape.OffsetX, nextY + playerShape.OffsetY), new Vec2f(pWidth, pHeight));
-        Box2D platformBox = new(new Vec2f(platformTrans.X + platformShape.OffsetX, platformTrans.Y + platformShape.OffsetY), new Vec2f(platWidth, platHeight));
+        Box2D playerBox = new(new Vec2f(playerTrans.X + playerShape.OffsetX, nextY + playerShape.OffsetY),
+            new Vec2f(pWidth, pHeight));
+        Box2D platformBox =
+            new(new Vec2f(platformTrans.X + platformShape.OffsetX, platformTrans.Y + platformShape.OffsetY),
+                new Vec2f(platWidth, platHeight));
 
         return CheckPlatformGround(prevY, nextY, playerBox, platformBox, out adjustedPosY, out adjustedVy);
     }
@@ -178,7 +182,7 @@ public static unsafe class PhysicsService
     // --- 運動積分およびベクトル数学 ---
 
     /// <summary>
-    /// 速度ベクトルを位置座標へ積分加算します。
+    ///     速度ベクトルを位置座標へ積分加算します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vec2f IntegrateVelocity(Vec2f position, Vec2f velocity, float deltaTime = 1.0f)
@@ -187,20 +191,17 @@ public static unsafe class PhysicsService
     }
 
     /// <summary>
-    /// 垂直速度へ重力を加算し、最大落下速度でクランプします。
+    ///     垂直速度へ重力を加算し、最大落下速度でクランプします。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ApplyGravity(ref float vy, float gravity, float maxFallSpeed, float deltaTime = 1.0f)
     {
         vy += gravity * deltaTime;
-        if (vy > maxFallSpeed)
-        {
-            vy = maxFallSpeed;
-        }
+        if (vy > maxFallSpeed) vy = maxFallSpeed;
     }
 
     /// <summary>
-    /// 2 点間のユークリッド距離を計算します。
+    ///     2 点間のユークリッド距離を計算します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float CalculateDistance(Vec2f a, Vec2f b)
@@ -209,7 +210,7 @@ public static unsafe class PhysicsService
     }
 
     /// <summary>
-    /// 2 点間のラジアン角度を計算します。
+    ///     2 点間のラジアン角度を計算します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float CalculateAngle(Vec2f from, Vec2f to)
@@ -218,16 +219,16 @@ public static unsafe class PhysicsService
     }
 
     /// <summary>
-    /// 角度と移動速度から速度ベクトル (Vec2f) を算出します。
+    ///     角度と移動速度から速度ベクトル (Vec2f) を算出します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vec2f DirectionToVector(float angleRad, float speed)
     {
-        return new(MathF.Cos(angleRad) * speed, MathF.Sin(angleRad) * speed);
+        return new Vec2f(MathF.Cos(angleRad) * speed, MathF.Sin(angleRad) * speed);
     }
 
     /// <summary>
-    /// 値を指定した最小値・最大値の範囲内にクランプします。
+    ///     値を指定した最小値・最大値の範囲内にクランプします。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Clamp(float value, float minVal, float maxVal)
@@ -236,7 +237,7 @@ public static unsafe class PhysicsService
     }
 
     /// <summary>
-    /// 2 値間を線形補間 (Lerp) します。
+    ///     2 値間を線形補間 (Lerp) します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Lerp(float a, float b, float t)
@@ -245,7 +246,7 @@ public static unsafe class PhysicsService
     }
 
     /// <summary>
-    /// Boss のホバリング調和軌道（2軸正弦・余弦波動＋プレイヤー追従重み＋平滑 Lerp 補間）をインライン計算します。
+    ///     Boss のホバリング調和軌道（2軸正弦・余弦波動＋プレイヤー追従重み＋平滑 Lerp 補間）をインライン計算します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vec2f CalculateBossHoverPosition(
@@ -261,18 +262,18 @@ public static unsafe class PhysicsService
         float hoverLerpSpeed,
         float deltaTime)
     {
-        float targetX = basePos.X + (MathF.Sin(hoverTimer * hoverSpeedX) * hoverAmpX) +
-                        ((playerPos.X - basePos.X) * playerPursuitWeight);
-        float targetY = basePos.Y + (MathF.Cos(hoverTimer * hoverSpeedY) * hoverAmpY);
-        float lerpFactor = MathF.Min(1.0f, hoverLerpSpeed * deltaTime);
+        var targetX = basePos.X + MathF.Sin(hoverTimer * hoverSpeedX) * hoverAmpX +
+            (playerPos.X - basePos.X) * playerPursuitWeight;
+        var targetY = basePos.Y + MathF.Cos(hoverTimer * hoverSpeedY) * hoverAmpY;
+        var lerpFactor = MathF.Min(1.0f, hoverLerpSpeed * deltaTime);
 
-        float nextX = currentPos.X + ((targetX - currentPos.X) * lerpFactor);
-        float nextY = currentPos.Y + ((targetY - currentPos.Y) * lerpFactor);
+        var nextX = currentPos.X + (targetX - currentPos.X) * lerpFactor;
+        var nextY = currentPos.Y + (targetY - currentPos.Y) * lerpFactor;
         return new Vec2f(nextX, nextY);
     }
 
     /// <summary>
-    /// Boss の帰還・初期位置復帰軌道（目標アンカーへの指数平滑補間）をインライン計算します。
+    ///     Boss の帰還・初期位置復帰軌道（目標アンカーへの指数平滑補間）をインライン計算します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vec2f CalculateBossReturnPosition(
@@ -281,9 +282,9 @@ public static unsafe class PhysicsService
         float returnSpeed,
         float deltaTime)
     {
-        float factor = MathF.Min(1.0f, returnSpeed * deltaTime);
-        float nextX = currentPos.X + ((targetBasePos.X - currentPos.X) * factor);
-        float nextY = currentPos.Y + ((targetBasePos.Y - currentPos.Y) * factor);
+        var factor = MathF.Min(1.0f, returnSpeed * deltaTime);
+        var nextX = currentPos.X + (targetBasePos.X - currentPos.X) * factor;
+        var nextY = currentPos.Y + (targetBasePos.Y - currentPos.Y) * factor;
         return new Vec2f(nextX, nextY);
     }
 }

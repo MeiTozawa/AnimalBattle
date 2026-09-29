@@ -1,11 +1,7 @@
-using System;
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Bindings;
 using AnimalBattle.Characters;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
 using AnimalBattle.Maps;
 using AnimalBattle.Scenes;
 using Flecs.NET.Core;
@@ -13,77 +9,91 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// アリーナ足場・タイルマップ、Boss 1 / Boss 2 (オーラ・無敵シールド・予兆リング・スプライト・被弾フラッシュ・突進残影)、
-/// プレイヤー自機 (スプライト・無敵点滅)、および 8 方向プレイヤー弾・Boss 弾幕・近接斬撃エフェクトを描画する世界描画システム。
-/// 領域モデル（<see cref="Player"/> / <see cref="BossCharacter"/>）から直接キャラクターを描画し、
-/// 海量弾幕・パーティクルエフェクトのみを Flecs ECS 高速クエリで一括描画します。
+///     アリーナ足場・タイルマップ、Boss 1 / Boss 2 (オーラ・無敵シールド・予兆リング・スプライト・被弾フラッシュ・突進残影)、
+///     プレイヤー自機 (スプライト・無敵点滅)、および 8 方向プレイヤー弾・Boss 弾幕・近接斬撃エフェクトを描画する世界描画システム。
+///     領域モデル（<see cref="Player" /> / <see cref="BossCharacter" />）から直接キャラクターを描画し、
+///     海量弾幕・パーティクルエフェクトのみを Flecs ECS 高速クエリで一括描画します。
 /// </summary>
 /// <remarks>
-/// <see cref="WorldRenderSystem"/> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリを構築します。
+///     <see cref="WorldRenderSystem" /> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリを構築します。
 /// </remarks>
 /// <param name="world">描画対象の Flecs.NET ワールド。</param>
-public sealed class WorldRenderSystem : IDisposable
-{
-    private readonly Query<Transform, Velocity> _playerBulletQuery;
-    private readonly Query<Transform, Bullet> _bossBulletQuery;
-    private readonly Query<Transform, Sprite, FadeEffect> _spriteEffectQuery;
-    private readonly Query<Transform, RingEffect, FadeEffect> _ringEffectQuery;
-    private readonly Query<Transform, Bullet, FadeEffect> _particleEffectQuery;
-    private readonly Query<Transform, Sprite, HitFlashEffect> _hitFlashQuery;
-    private bool _isDisposed;
+public sealed class WorldRenderSystem : IDisposable {
+    private readonly Ecs.IterFieldCallback<Transform, Bullet> _drawBossBulletsCallback;
 
     // 毎フレームの Iter コールバックでのクロージャ割り当てを完全に排除するための事前確保デリゲート
     private readonly Ecs.IterFieldCallback<Transform, Velocity> _drawPlayerBulletsCallback;
-    private readonly Ecs.IterFieldCallback<Transform, Bullet> _drawBossBulletsCallback;
+    private Color _bCoreColor;
+    private int _bCoreMinRadius;
+    private float _bCoreRadiusRatio;
+    private Query<Transform, Bullet> _bossBulletQuery;
+
+    private int _bOutlinePadding;
+    private int _bulletClipMaxX;
+    private int _bulletClipMaxY;
 
     // 描画コンテキストパラメータキャッシュ（ゼロ GC 描画用）
     private int _bulletClipMinX;
-    private int _bulletClipMaxX;
     private int _bulletClipMinY;
-    private int _bulletClipMaxY;
+    private Query<Transform, Sprite, HitFlashEffect> _hitFlashQuery;
+    private bool _isDisposed;
+    private Query<Transform, Bullet, FadeEffect> _particleEffectQuery;
+    private Color _pInnerColor;
+    private int _pInnerRadius;
+    private Query<Transform, Velocity> _playerBulletQuery;
+    private Color _pOuterColor;
 
     private int _pOuterRadius;
-    private Color _pOuterColor;
-    private int _pInnerRadius;
-    private Color _pInnerColor;
     private int _pTrailOffset;
-
-    private int _bOutlinePadding;
-    private float _bCoreRadiusRatio;
-    private int _bCoreMinRadius;
-    private Color _bCoreColor;
+    private Query<Transform, RingEffect, FadeEffect> _ringEffectQuery;
+    private Query<Transform, Sprite, FadeEffect> _spriteEffectQuery;
 
     /// <summary>
-    /// <see cref="WorldRenderSystem"/> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリと不変デリゲートを構築します。
+    ///     <see cref="WorldRenderSystem" /> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリと不変デリゲートを構築します。
     /// </summary>
     /// <param name="world">描画対象の Flecs.NET ワールド。</param>
     public WorldRenderSystem(World world)
     {
         _playerBulletQuery = world.QueryBuilder<Transform, Velocity>()
-                                  .With<PlayerBulletTag>()
-                                  .Build();
+           .With<PlayerBulletTag>()
+           .Build();
         _bossBulletQuery = world.QueryBuilder<Transform, Bullet>()
-                                .With<BossBulletTag>()
-                                .Build();
+           .With<BossBulletTag>()
+           .Build();
         _spriteEffectQuery = world.QueryBuilder<Transform, Sprite, FadeEffect>()
-                                  .With<EffectTag>()
-                                  .Build();
+           .With<EffectTag>()
+           .Build();
         _ringEffectQuery = world.QueryBuilder<Transform, RingEffect, FadeEffect>()
-                                .With<EffectTag>()
-                                .Build();
+           .With<EffectTag>()
+           .Build();
         _particleEffectQuery = world.QueryBuilder<Transform, Bullet, FadeEffect>()
-                                    .With<EffectTag>()
-                                    .Build();
+           .With<EffectTag>()
+           .Build();
         _hitFlashQuery = world.QueryBuilder<Transform, Sprite, HitFlashEffect>()
-                              .Build();
+           .Build();
 
         _drawPlayerBulletsCallback = DrawPlayerBulletsBatch;
         _drawBossBulletsCallback = DrawBossBulletsBatch;
     }
 
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (!_isDisposed)
+        {
+            _playerBulletQuery.Dispose();
+            _bossBulletQuery.Dispose();
+            _spriteEffectQuery.Dispose();
+            _ringEffectQuery.Dispose();
+            _particleEffectQuery.Dispose();
+            _hitFlashQuery.Dispose();
+            _isDisposed = true;
+        }
+    }
+
     /// <summary>
-    /// 世界の全ゲームオブジェクト（マップ、足場、キャラクター、弾幕、エフェクト）を描画します。
-    /// 統一レンダリングパイプラインとして、直接シーン状態または ECS クエリから描画対象を解決します。
+    ///     世界の全ゲームオブジェクト（マップ、足場、キャラクター、弾幕、エフェクト）を描画します。
+    ///     統一レンダリングパイプラインとして、直接シーン状態または ECS クエリから描画対象を解決します。
     /// </summary>
     /// <param name="tileMap">現在のアリーナタイルマップ。</param>
     /// <param name="platformQuery">プラットフォーム足場検索クエリ。</param>
@@ -93,7 +103,7 @@ public sealed class WorldRenderSystem : IDisposable
     }
 
     /// <summary>
-    /// 世界の全ゲームオブジェクト（マップ、Boss、自機、弾幕、エフェクト）を描画します。
+    ///     世界の全ゲームオブジェクト（マップ、Boss、自機、弾幕、エフェクト）を描画します。
     /// </summary>
     /// <param name="tileMap">現在のアリーナタイルマップ。</param>
     /// <param name="platformQuery">プラットフォーム足場検索クエリ。</param>
@@ -105,13 +115,13 @@ public sealed class WorldRenderSystem : IDisposable
         Player? player,
         BossCharacter? boss)
     {
-        RenderConfig renderCfg = ConfigManager.Render;
-        BossEffectsRenderConfig bossFx = renderCfg.BossEffects;
-        BulletRenderConfig bulletCfg = renderCfg.Bullets;
-        ArenaConfig arenaCfg = ConfigManager.Arena;
+        var renderCfg = ConfigManager.Render;
+        var bossFx = renderCfg.BossEffects;
+        var bulletCfg = renderCfg.Bullets;
+        var arenaCfg = ConfigManager.Arena;
 
-        float playerX = player != null ? player.X : ConfigManager.Player.SpawnX;
-        float playerY = player != null ? player.Y : ConfigManager.Player.SpawnY;
+        var playerX = player?.X ?? ConfigManager.Player.SpawnX;
+        var playerY = player?.Y ?? ConfigManager.Player.SpawnY;
 
         DrawPlatforms(tileMap, platformQuery);
         DrawBoss(boss, bossFx, playerX, playerY);
@@ -130,43 +140,37 @@ public sealed class WorldRenderSystem : IDisposable
     private static void DrawPlatforms(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery)
     {
         if (tileMap != null)
-        {
             tileMap.Draw();
-        }
         else
-        {
-            platformQuery.Each((ref Transform trans, ref CollisionBox col) =>
+            platformQuery.Each((ref trans, ref col) =>
             {
-                int x1 = (int)(trans.X - col.Width / 2.0f);
-                int y1 = (int)(trans.Y - col.Height / 2.0f);
-                int x2 = (int)(trans.X + col.Width / 2.0f);
-                int y2 = (int)(trans.Y + col.Height / 2.0f);
+                var x1 = (int)(trans.X - col.Width / 2.0f);
+                var y1 = (int)(trans.Y - col.Height / 2.0f);
+                var x2 = (int)(trans.X + col.Width / 2.0f);
+                var y2 = (int)(trans.Y + col.Height / 2.0f);
 
                 GameEngine.DrawBox(x1, y1, x2, y2, ColorPalette.DarkBg, true);
                 GameEngine.DrawBox(x1, y1, x2, y2, ColorPalette.Cyan, false);
             });
-        }
     }
 
     private static void DrawBoss(BossCharacter? boss, BossEffectsRenderConfig bossFx, float playerX, float playerY)
     {
-        if (boss == null || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0)
-        {
-            return;
-        }
+        if (boss == null || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
 
-        int bx = (int)boss.X;
-        int by = (int)boss.Y;
+        var bx = (int)boss.X;
+        var by = (int)boss.Y;
 
         if (boss.BossType == BossType.Boss1)
         {
             if (boss.CurrentState == BossState.Boss1_Telegraph)
             {
-                float progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
-                DrawBoss1Telegraph(boss.X, boss.Y, boss.CurrentSkill, boss.TargetX, boss.TargetY, playerX, playerY, progress, boss.StateTimer);
+                var progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
+                DrawBoss1Telegraph(boss.X, boss.Y, boss.CurrentSkill, boss.TargetX, boss.TargetY, playerX, playerY,
+                    progress, boss.StateTimer);
             }
 
-            double bossAngle = MathF.Sin(boss.HoverTimer * bossFx.BossHoverAngleSpeed) * bossFx.BossHoverAngleAmp;
+            var bossAngle = MathF.Sin(boss.HoverTimer * bossFx.BossHoverAngleSpeed) * bossFx.BossHoverAngleAmp;
             GameEngine.DrawRectRotaGraph(
                 bx,
                 by,
@@ -182,7 +186,6 @@ public sealed class WorldRenderSystem : IDisposable
 
             // 隙あり（Vulnerable）時の直接変色・脈動発光 & 攻撃チャンスマーカー
             if (boss.IsVulnerable)
-            {
                 DrawBossVulnerableEffects(
                     bx,
                     by,
@@ -193,17 +196,17 @@ public sealed class WorldRenderSystem : IDisposable
                     false,
                     boss.StateTimer,
                     bossFx);
-            }
         }
         else
         {
             if (boss.CurrentState == BossState.Boss2_Telegraph)
             {
-                float progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
-                DrawBoss2Telegraph(boss.X, boss.Y, boss.CurrentSkill, boss.TargetX, boss.TargetY, playerX, playerY, boss.FacingRight, progress);
+                var progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
+                DrawBoss2Telegraph(boss.X, boss.Y, boss.CurrentSkill, boss.TargetX, boss.TargetY, playerX, playerY,
+                    boss.FacingRight, progress);
             }
 
-            bool flipX = !boss.FacingRight;
+            var flipX = !boss.FacingRight;
             GameEngine.DrawRectRotaGraph(
                 bx,
                 by,
@@ -219,7 +222,6 @@ public sealed class WorldRenderSystem : IDisposable
 
             // 隙あり（Vulnerable）時の直接変色・脈動発光 & 攻撃チャンスマーカー
             if (boss.IsVulnerable)
-            {
                 DrawBossVulnerableEffects(
                     bx,
                     by,
@@ -230,7 +232,6 @@ public sealed class WorldRenderSystem : IDisposable
                     flipX,
                     boss.StateTimer,
                     bossFx);
-            }
         }
     }
 
@@ -245,8 +246,8 @@ public sealed class WorldRenderSystem : IDisposable
         float stateTimer,
         BossEffectsRenderConfig bossFx)
     {
-        float pulse = 0.5f + 0.5f * MathF.Sin(stateTimer * 10.0f);
-        int vulnAlpha = (int)(130 + 110 * pulse);
+        var pulse = 0.5f + 0.5f * MathF.Sin(stateTimer * 10.0f);
+        var vulnAlpha = (int)(130 + 110 * pulse);
         GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
         GameEngine.DrawRectRotaGraph(
             bx,
@@ -262,10 +263,10 @@ public sealed class WorldRenderSystem : IDisposable
             flipX);
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
 
-        float bobbing = MathF.Sin(stateTimer * 8.0f) * 4.0f;
-        int textWidth = bossFx.ChanceMarkerText.Length * 7;
-        int textX = bx - textWidth / 2;
-        int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
+        var bobbing = MathF.Sin(stateTimer * 8.0f) * 4.0f;
+        var textWidth = bossFx.ChanceMarkerText.Length * 7;
+        var textX = bx - textWidth / 2;
+        var textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
         GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
     }
 
@@ -280,9 +281,9 @@ public sealed class WorldRenderSystem : IDisposable
         float progress,
         float stateTimer)
     {
-        PatternConfig patternCfg = ConfigManager.Pattern;
-        float finalTargetX = (targetX != 0.0f || targetY != 0.0f) ? targetX : playerX;
-        float finalTargetY = (targetX != 0.0f || targetY != 0.0f) ? targetY : playerY;
+        var patternCfg = ConfigManager.Pattern;
+        var finalTargetX = targetX != 0.0f || targetY != 0.0f ? targetX : playerX;
+        var finalTargetY = targetX != 0.0f || targetY != 0.0f ? targetY : playerY;
 
         switch (skill)
         {
@@ -295,9 +296,8 @@ public sealed class WorldRenderSystem : IDisposable
                     patternCfg.Aimed3Shot.SpreadAngle,
                     patternCfg.Aimed3Shot.BulletCount,
                     progress,
-                    patternCfg.Aimed3Shot.TelegraphColor,
-                    false);
-                break;
+                    patternCfg.Aimed3Shot.TelegraphColor);
+            break;
 
             case BossSkill.FastSniper:
                 TelegraphRenderHelper.DrawAimingLasers(
@@ -310,7 +310,7 @@ public sealed class WorldRenderSystem : IDisposable
                     progress,
                     patternCfg.FastSniper.TelegraphColor,
                     true);
-                break;
+            break;
 
             case BossSkill.DiveRam:
                 TelegraphRenderHelper.DrawDiveRamTelegraph(
@@ -321,7 +321,7 @@ public sealed class WorldRenderSystem : IDisposable
                     patternCfg.DiveRam.ImpactRadius,
                     progress,
                     patternCfg.DiveRam.TelegraphColor);
-                break;
+            break;
 
             case BossSkill.RingBurst:
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
@@ -332,10 +332,10 @@ public sealed class WorldRenderSystem : IDisposable
                     75.0f,
                     progress,
                     patternCfg.RingBurst.TelegraphColor);
-                break;
+            break;
 
             case BossSkill.DoubleSpiral:
-                float spiralAngle = stateTimer * 4.0f;
+                var spiralAngle = stateTimer * 4.0f;
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
                     bx,
                     by,
@@ -344,7 +344,7 @@ public sealed class WorldRenderSystem : IDisposable
                     90.0f,
                     progress,
                     patternCfg.DoubleSpiral.TelegraphColor);
-                break;
+            break;
 
             case BossSkill.RainDrop:
                 TelegraphRenderHelper.DrawSkyfallColumns(
@@ -355,10 +355,10 @@ public sealed class WorldRenderSystem : IDisposable
                     progress,
                     patternCfg.RainDrop.TelegraphColor,
                     "▼ RAIN ▼");
-                break;
+            break;
 
             case BossSkill.CrossChaos:
-                float crossAngle = stateTimer * 2.5f;
+                var crossAngle = stateTimer * 2.5f;
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
                     bx,
                     by,
@@ -367,7 +367,7 @@ public sealed class WorldRenderSystem : IDisposable
                     110.0f,
                     progress,
                     patternCfg.CrossChaos.TelegraphColor);
-                break;
+            break;
 
             default:
                 TelegraphRenderHelper.DrawAimingLasers(
@@ -378,9 +378,8 @@ public sealed class WorldRenderSystem : IDisposable
                     patternCfg.Aimed3Shot.SpreadAngle,
                     patternCfg.Aimed3Shot.BulletCount,
                     progress,
-                    patternCfg.Aimed3Shot.TelegraphColor,
-                    false);
-                break;
+                    patternCfg.Aimed3Shot.TelegraphColor);
+            break;
         }
     }
 
@@ -395,17 +394,18 @@ public sealed class WorldRenderSystem : IDisposable
         bool facingRight,
         float progress)
     {
-        Boss2Config b2Cfg = ConfigManager.Boss2;
-        PatternConfig patternCfg = ConfigManager.Pattern;
-        float finalTargetX = (targetX != 0.0f || targetY != 0.0f) ? targetX : playerX;
-        float finalTargetY = (targetX != 0.0f || targetY != 0.0f) ? targetY : playerY;
+        var b2Cfg = ConfigManager.Boss2;
+        var patternCfg = ConfigManager.Pattern;
+        var finalTargetX = targetX != 0.0f || targetY != 0.0f ? targetX : playerX;
+        var finalTargetY = targetX != 0.0f || targetY != 0.0f ? targetY : playerY;
 
         switch (skill)
         {
             case BossSkill.GroundStomp:
-                float groundY = by + b2Cfg.CollisionHeight / 2.0f;
-                TelegraphRenderHelper.DrawGroundShockwaveRails((int)bx, groundY, progress, patternCfg.GroundStomp.TelegraphColor);
-                break;
+                var groundY = by + b2Cfg.CollisionHeight / 2.0f;
+                TelegraphRenderHelper.DrawGroundShockwaveRails((int)bx, groundY, progress,
+                    patternCfg.GroundStomp.TelegraphColor);
+            break;
 
             case BossSkill.LeapSmash:
                 TelegraphRenderHelper.DrawLeapSmashTelegraph(
@@ -413,7 +413,7 @@ public sealed class WorldRenderSystem : IDisposable
                     finalTargetY,
                     progress,
                     patternCfg.LeapSmash.TelegraphColor);
-                break;
+            break;
 
             case BossSkill.EarthquakeRoar:
                 TelegraphRenderHelper.DrawSkyfallColumns(
@@ -424,7 +424,7 @@ public sealed class WorldRenderSystem : IDisposable
                     progress,
                     patternCfg.EarthquakeRoar.TelegraphColor,
                     "▼ ROCK ▼");
-                break;
+            break;
 
             case BossSkill.FrenzyCharge:
                 TelegraphRenderHelper.DrawChargeDangerTrack(
@@ -434,7 +434,7 @@ public sealed class WorldRenderSystem : IDisposable
                     facingRight,
                     progress,
                     patternCfg.FrenzyCharge.TelegraphColor);
-                break;
+            break;
 
             case BossSkill.DoubleCleave:
                 TelegraphRenderHelper.DrawMeleeDangerBox(
@@ -445,7 +445,7 @@ public sealed class WorldRenderSystem : IDisposable
                     facingRight,
                     progress,
                     patternCfg.DoubleCleave.TelegraphColor);
-                break;
+            break;
 
             case BossSkill.HeavySlash:
             default:
@@ -457,22 +457,19 @@ public sealed class WorldRenderSystem : IDisposable
                     facingRight,
                     progress,
                     patternCfg.HeavySlash.TelegraphColor);
-                break;
+            break;
         }
     }
 
     private static void DrawPlayer(Player? player)
     {
-        if (player == null || !player.IsAlive || !player.Sprite.IsVisible || player.Sprite.GraphHandle < 0)
-        {
-            return;
-        }
+        if (player == null || !player.IsAlive || !player.Sprite.IsVisible || player.Sprite.GraphHandle < 0) return;
 
-        bool isFlashing = player.IsFlashing;
-        bool isInvincibleBlinking = !isFlashing && player.InvincibleTimer > 0.0f && ((int)(player.InvincibleTimer * 30.0f) % 2 != 0);
+        var isFlashing = player.IsFlashing;
+        var isInvincibleBlinking = !isFlashing && player.InvincibleTimer > 0.0f &&
+            (int)(player.InvincibleTimer * 30.0f) % 2 != 0;
 
         if (!isInvincibleBlinking)
-        {
             GameEngine.DrawRectRotaGraph(
                 (int)player.X,
                 (int)player.Y,
@@ -485,7 +482,6 @@ public sealed class WorldRenderSystem : IDisposable
                 player.Sprite.GraphHandle,
                 true,
                 player.Sprite.FlipX);
-        }
     }
 
     private void UpdateBulletRenderContext(BulletRenderConfig bulletCfg, ArenaConfig arenaCfg)
@@ -509,27 +505,24 @@ public sealed class WorldRenderSystem : IDisposable
 
     private void DrawPlayerBulletsBatch(Iter it, Field<Transform> trans, Field<Velocity> vel)
     {
-        int count = it.Count();
-        for (int i = 0; i < count; ++i)
+        var count = it.Count();
+        for (var i = 0; i < count; ++i)
         {
-            int px = (int)trans[i].X;
-            int py = (int)trans[i].Y;
-            if (px < _bulletClipMinX || px > _bulletClipMaxX || py < _bulletClipMinY || py > _bulletClipMaxY)
-            {
-                continue;
-            }
+            var px = (int)trans[i].X;
+            var py = (int)trans[i].Y;
+            if (px < _bulletClipMinX || px > _bulletClipMaxX || py < _bulletClipMinY || py > _bulletClipMaxY) continue;
 
-            float vx = vel[i].Vx;
-            float vy = vel[i].Vy;
-            float speedSq = vx * vx + vy * vy;
+            var vx = vel[i].Vx;
+            var vy = vel[i].Vy;
+            var speedSq = vx * vx + vy * vy;
             if (speedSq > 1.0f)
             {
-                float invSpeed = 1.0f / MathF.Sqrt(speedSq);
-                float dirX = vx * invSpeed;
-                float dirY = vy * invSpeed;
+                var invSpeed = 1.0f / MathF.Sqrt(speedSq);
+                var dirX = vx * invSpeed;
+                var dirY = vy * invSpeed;
 
-                int trailX = (int)(px - dirX * _pTrailOffset);
-                int trailY = (int)(py - dirY * _pTrailOffset);
+                var trailX = (int)(px - dirX * _pTrailOffset);
+                var trailY = (int)(py - dirY * _pTrailOffset);
                 GameEngine.DrawCircle(trailX, trailY, _pInnerRadius, _pOuterColor, true);
             }
 
@@ -540,26 +533,24 @@ public sealed class WorldRenderSystem : IDisposable
 
     private void DrawBossBulletsBatch(Iter it, Field<Transform> trans, Field<Bullet> bullet)
     {
-        int count = it.Count();
-        for (int i = 0; i < count; ++i)
+        var count = it.Count();
+        for (var i = 0; i < count; ++i)
         {
-            int bx = (int)trans[i].X;
-            int by = (int)trans[i].Y;
-            if (bx < _bulletClipMinX || bx > _bulletClipMaxX || by < _bulletClipMinY || by > _bulletClipMaxY)
-            {
-                continue;
-            }
+            var bx = (int)trans[i].X;
+            var by = (int)trans[i].Y;
+            if (bx < _bulletClipMinX || bx > _bulletClipMaxX || by < _bulletClipMinY || by > _bulletClipMaxY) continue;
 
-            Bullet b = bullet[i];
-            int radius = (int)b.Radius;
-            int outlineRadius = radius + _bOutlinePadding;
-            int coreRadius = Math.Max(_bCoreMinRadius, (int)(radius * _bCoreRadiusRatio));
+            var b = bullet[i];
+            var radius = (int)b.Radius;
+            var outlineRadius = radius + _bOutlinePadding;
+            var coreRadius = Math.Max(_bCoreMinRadius, (int)(radius * _bCoreRadiusRatio));
 
-            Entity e = it.Entity(i);
+            var e = it.Entity(i);
             if (e.Has<BulletModifier>())
             {
-                ref readonly BulletModifier mod = ref e.Get<BulletModifier>();
-                DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, _bOutlinePadding, _bCoreRadiusRatio, _bCoreColor);
+                ref readonly var mod = ref e.Get<BulletModifier>();
+                DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, _bOutlinePadding,
+                    _bCoreRadiusRatio, _bCoreColor);
             }
             else
             {
@@ -584,99 +575,88 @@ public sealed class WorldRenderSystem : IDisposable
     {
         switch (mod.Type)
         {
-            case BulletType.Magenta:
-                {
-                    // 品紅色：周期的に明滅・脈動する外周半透明オーラ輪
-                    float pulseAura = radius * (1.35f + 0.15f * MathF.Sin(mod.ElapsedTimer * 6.0f));
-                    Color auraColor = Color.FromArgb(65, b.FillColor.R, b.FillColor.G, b.FillColor.B);
-                    GameEngine.DrawCircle(bx, by, (int)pulseAura, auraColor, false);
-                    GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                    GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                    GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
-                    break;
-                }
+            case BulletType.Magenta: {
+                // 品紅色：周期的に明滅・脈動する外周半透明オーラ輪
+                var pulseAura = radius * (1.35f + 0.15f * MathF.Sin(mod.ElapsedTimer * 6.0f));
+                var auraColor = Color.FromArgb(65, b.FillColor.R, b.FillColor.G, b.FillColor.B);
+                GameEngine.DrawCircle(bx, by, (int)pulseAura, auraColor, false);
+                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                break;
+            }
 
-            case BulletType.Yellow:
-                {
-                    // 黄色：主円と衛星小円の二重円構成（自転・公転）
-                    float orbitDist = radius * 1.5f;
-                    float angle = mod.ElapsedTimer * 6.0f;
-                    int satX = (int)(bx + MathF.Cos(angle) * orbitDist);
-                    int satY = (int)(by + MathF.Sin(angle) * orbitDist);
-                    int satRadius = Math.Max(3, (int)(radius * 0.55f));
-                    int satOutline = satRadius + outlinePadding;
-                    int satCore = Math.Max(2, (int)(satRadius * coreRadiusRatio));
+            case BulletType.Yellow: {
+                // 黄色：主円と衛星小円の二重円構成（自転・公転）
+                var orbitDist = radius * 1.5f;
+                var angle = mod.ElapsedTimer * 6.0f;
+                var satX = (int)(bx + MathF.Cos(angle) * orbitDist);
+                var satY = (int)(by + MathF.Sin(angle) * orbitDist);
+                var satRadius = Math.Max(3, (int)(radius * 0.55f));
+                var satOutline = satRadius + outlinePadding;
+                var satCore = Math.Max(2, (int)(satRadius * coreRadiusRatio));
 
-                    // 衛星小円の描画
-                    GameEngine.DrawCircle(satX, satY, satOutline, b.OutlineColor, true);
-                    GameEngine.DrawCircle(satX, satY, satRadius, b.FillColor, true);
-                    GameEngine.DrawCircle(satX, satY, satCore, coreColor, true);
+                // 衛星小円の描画
+                GameEngine.DrawCircle(satX, satY, satOutline, b.OutlineColor, true);
+                GameEngine.DrawCircle(satX, satY, satRadius, b.FillColor, true);
+                GameEngine.DrawCircle(satX, satY, satCore, coreColor, true);
 
-                    // 主円の描画
-                    GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                    GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                    GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
-                    break;
-                }
+                // 主円の描画
+                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                break;
+            }
 
-            case BulletType.Cyan:
-                {
-                    // 青色：電光シアンの輪郭とエフェクトリング
-                    GameEngine.DrawCircle(bx, by, outlineRadius + 2, Color.FromArgb(50, 0, 240, 255), false);
-                    GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                    GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                    GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
-                    break;
-                }
+            case BulletType.Cyan: {
+                // 青色：電光シアンの輪郭とエフェクトリング
+                GameEngine.DrawCircle(bx, by, outlineRadius + 2, Color.FromArgb(50, 0, 240, 255), false);
+                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                break;
+            }
 
-            case BulletType.Black:
-                {
-                    // 黑色：全 3 種特効統合（呼吸拡縮オーラ + 自転二重円 + 虚空暗黒芯）
-                    float pulseAura = radius * (1.4f + 0.2f * MathF.Sin(mod.ElapsedTimer * 6.0f));
-                    GameEngine.DrawCircle(bx, by, (int)pulseAura, Color.FromArgb(90, 220, 20, 80), false);
+            case BulletType.Black: {
+                // 黑色：全 3 種特効統合（呼吸拡縮オーラ + 自転二重円 + 虚空暗黒芯）
+                var pulseAura = radius * (1.4f + 0.2f * MathF.Sin(mod.ElapsedTimer * 6.0f));
+                GameEngine.DrawCircle(bx, by, (int)pulseAura, Color.FromArgb(90, 220, 20, 80), false);
 
-                    // 衛星小円（黒核・赤枠）
-                    float orbitDist = radius * 1.55f;
-                    float angle = mod.ElapsedTimer * 6.0f;
-                    int satX = (int)(bx + MathF.Cos(angle) * orbitDist);
-                    int satY = (int)(by + MathF.Sin(angle) * orbitDist);
-                    int satRadius = Math.Max(3, (int)(radius * 0.55f));
-                    int satOutline = satRadius + outlinePadding;
+                // 衛星小円（黒核・赤枠）
+                var orbitDist = radius * 1.55f;
+                var angle = mod.ElapsedTimer * 6.0f;
+                var satX = (int)(bx + MathF.Cos(angle) * orbitDist);
+                var satY = (int)(by + MathF.Sin(angle) * orbitDist);
+                var satRadius = Math.Max(3, (int)(radius * 0.55f));
+                var satOutline = satRadius + outlinePadding;
 
-                    GameEngine.DrawCircle(satX, satY, satOutline, b.OutlineColor, true);
-                    GameEngine.DrawCircle(satX, satY, satRadius, b.FillColor, true);
+                GameEngine.DrawCircle(satX, satY, satOutline, b.OutlineColor, true);
+                GameEngine.DrawCircle(satX, satY, satRadius, b.FillColor, true);
 
-                    // 主円（深黒コア + ネオン発光輪郭 + 微小ホワイト核）
-                    GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                    GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                    GameEngine.DrawCircle(bx, by, Math.Max(2, coreRadius / 2), Color.FromArgb(255, 255, 180, 200), true);
-                    break;
-                }
+                // 主円（深黒コア + ネオン発光輪郭 + 微小ホワイト核）
+                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bx, by, Math.Max(2, coreRadius / 2), Color.FromArgb(255, 255, 180, 200), true);
+                break;
+            }
 
-            default:
-                {
-                    GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                    GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                    GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
-                    break;
-                }
+            default: {
+                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                break;
+            }
         }
     }
 
     private static void DrawHitFlashEffects(Query<Transform, Sprite, HitFlashEffect> hitFlashQuery)
     {
-        hitFlashQuery.Each((ref Transform trans, ref Sprite sprite, ref HitFlashEffect flash) =>
+        hitFlashQuery.Each((ref trans, ref sprite, ref flash) =>
         {
-            if (!sprite.IsVisible || sprite.GraphHandle < 0)
-            {
-                return;
-            }
+            if (!sprite.IsVisible || sprite.GraphHandle < 0) return;
 
-            int alpha = (int)(255 * flash.Intensity);
-            if (alpha <= 0)
-            {
-                return;
-            }
+            var alpha = (int)(255 * flash.Intensity);
+            if (alpha <= 0) return;
 
             GameEngine.SetDrawBright(flash.FlashColor.R, flash.FlashColor.G, flash.FlashColor.B);
             GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
@@ -699,13 +679,10 @@ public sealed class WorldRenderSystem : IDisposable
 
     private static void DrawSpriteEffects(Query<Transform, Sprite, FadeEffect> spriteEffectQuery)
     {
-        spriteEffectQuery.Each((ref Transform trans, ref Sprite sprite, ref FadeEffect fade) =>
+        spriteEffectQuery.Each((ref trans, ref sprite, ref fade) =>
         {
-            int alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
-            if (alpha <= 0 || !sprite.IsVisible || sprite.GraphHandle < 0)
-            {
-                return;
-            }
+            var alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
+            if (alpha <= 0 || !sprite.IsVisible || sprite.GraphHandle < 0) return;
 
             GameEngine.SetDrawBright(sprite.Color.R, sprite.Color.G, sprite.Color.B);
             GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
@@ -728,16 +705,13 @@ public sealed class WorldRenderSystem : IDisposable
 
     private static void DrawRingEffects(Query<Transform, RingEffect, FadeEffect> ringEffectQuery)
     {
-        ringEffectQuery.Each((ref Transform trans, ref RingEffect ring, ref FadeEffect fade) =>
+        ringEffectQuery.Each((ref trans, ref ring, ref fade) =>
         {
-            int alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
-            if (alpha <= 0)
-            {
-                return;
-            }
+            var alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
+            if (alpha <= 0) return;
 
-            float progress = Math.Clamp(fade.ElapsedTimer / Math.Max(0.001f, fade.Duration), 0.0f, 1.0f);
-            float currentRadius = ring.StartRadius + (ring.EndRadius - ring.StartRadius) * progress;
+            var progress = Math.Clamp(fade.ElapsedTimer / Math.Max(0.001f, fade.Duration), 0.0f, 1.0f);
+            var currentRadius = ring.StartRadius + (ring.EndRadius - ring.StartRadius) * progress;
 
             GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
             GameEngine.DrawCircle((int)trans.X, (int)trans.Y, (int)currentRadius, ring.Color, ring.IsFilled);
@@ -747,37 +721,19 @@ public sealed class WorldRenderSystem : IDisposable
 
     private static void DrawParticleEffects(Query<Transform, Bullet, FadeEffect> particleEffectQuery)
     {
-        particleEffectQuery.Each((ref Transform trans, ref Bullet b, ref FadeEffect fade) =>
+        particleEffectQuery.Each((ref trans, ref b, ref fade) =>
         {
-            int alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
-            if (alpha <= 0)
-            {
-                return;
-            }
+            var alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
+            if (alpha <= 0) return;
 
-            int px = (int)trans.X;
-            int py = (int)trans.Y;
-            int radius = (int)b.Radius;
+            var px = (int)trans.X;
+            var py = (int)trans.Y;
+            var radius = (int)b.Radius;
 
             GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
             GameEngine.DrawCircle(px, py, radius + 1, b.OutlineColor, true);
             GameEngine.DrawCircle(px, py, radius, b.FillColor, true);
             GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
         });
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        if (!_isDisposed)
-        {
-            _playerBulletQuery.Dispose();
-            _bossBulletQuery.Dispose();
-            _spriteEffectQuery.Dispose();
-            _ringEffectQuery.Dispose();
-            _particleEffectQuery.Dispose();
-            _hitFlashQuery.Dispose();
-            _isDisposed = true;
-        }
     }
 }

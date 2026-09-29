@@ -4,11 +4,10 @@ namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>固定 enum と State_Module の対応を取得する初期化境界です。</summary>
 /// <remarks>
-/// この契約には登録、削除、差し替え、世代管理の API を定義しません。
-/// 実装は初期化時に完全性を検査し、検査に成功した対応だけを実行中に公開します。
+///     この契約には登録、削除、差し替え、世代管理の API を定義しません。
+///     実装は初期化時に完全性を検査し、検査に成功した対応だけを実行中に公開します。
 /// </remarks>
-public interface IEnumModuleMap
-{
+public interface IEnumModuleMap {
     /// <summary>固定 BossState 集合の完全性を検証した結果を取得します。</summary>
     EnumCompletenessResult ValidateComplete();
 
@@ -22,8 +21,7 @@ public readonly record struct EnumCompletenessResult(
     bool IsSuccess,
     ErrorCode ErrorCode,
     string Message,
-    BossState State)
-{
+    BossState State) {
     /// <summary>検査が成功したかどうかを取得します。</summary>
     public bool IsValid => IsSuccess;
 
@@ -32,12 +30,16 @@ public readonly record struct EnumCompletenessResult(
 
     /// <summary>成功結果を生成します。</summary>
     public static EnumCompletenessResult Success(string message = "固定 BossState の対応は完全です。")
-        => new(true, ErrorCode.None, message, BossState.Unknown);
+    {
+        return new EnumCompletenessResult(true, ErrorCode.None, message, BossState.Unknown);
+    }
 
     /// <summary>失敗結果を生成します。</summary>
     public static EnumCompletenessResult Failure(
         ErrorCode errorCode,
         string message,
         BossState state = default)
-        => new(false, errorCode, message, state);
+    {
+        return new EnumCompletenessResult(false, errorCode, message, state);
+    }
 }

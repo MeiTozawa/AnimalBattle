@@ -6,8 +6,7 @@ namespace AnimalBattle.Ai.Runtime;
 /// <summary>Boss AI の共通実行状態を保持するデータ構造体です。</summary>
 /// <remarks>共通 Boss AI データを生成します。</remarks>
 [StructLayout(LayoutKind.Sequential)]
-public struct BossAiData(BossType bossType, BossState stateId, Phase phase)
-{
+public struct BossAiData(BossType bossType, BossState stateId, Phase phase) {
     /// <summary>Boss 種別です。</summary>
     public BossType BossType = bossType;
 

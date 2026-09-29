@@ -1,13 +1,10 @@
-using AnimalBattle.Components;
-
 namespace AnimalBattle.Characters;
 
 /// <summary>
-/// 戦闘空間に存在するすべてのキャラクター（自機・Bossなど）に共通する統一戦闘者契約インターフェース。
-/// ECS エンティティのコンポーネントを唯一の真実の源としてカプセル化し、一貫したアクセスを提供します。
+///     戦闘空間に存在するすべてのキャラクター（自機・Bossなど）に共通する統一戦闘者契約インターフェース。
+///     ECS エンティティのコンポーネントを唯一の真実の源としてカプセル化し、一貫したアクセスを提供します。
 /// </summary>
-public interface ICombatant
-{
+public interface ICombatant {
     /// <summary>エンティティ ID を取得します。</summary>
     ulong EntityId { get; }
 
@@ -39,7 +36,7 @@ public interface ICombatant
     bool IsInvincible { get; }
 
     /// <summary>
-    /// ダメージを受けます。
+    ///     ダメージを受けます。
     /// </summary>
     /// <param name="damage">受けるダメージ量。</param>
     /// <param name="ignoreInvincible">無敵時間を無視するかどうか。</param>

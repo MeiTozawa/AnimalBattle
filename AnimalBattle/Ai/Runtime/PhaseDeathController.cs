@@ -1,26 +1,25 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
-using AnimalBattle.Components;
 using ErrorOr;
 
 namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>HP 閾値、PhaseTransition、死亡終端を allocation-free に判定する共通 policy です。</summary>
 /// <remarks>Phase 閾値を生成します。</remarks>
-public readonly struct BossPhaseThresholds(float phase2, float phase3)
-{
+public readonly struct BossPhaseThresholds(float phase2, float phase3) {
     /// <summary>Phase2 へ移る HP 割合の閾値です。</summary>
     public float Phase2 { get; } = phase2;
+
     /// <summary>Phase3 へ移る HP 割合の閾値です。</summary>
     public float Phase3 { get; } = phase3;
 
     /// <summary>閾値が既存設定の有効範囲にあるかどうかです。</summary>
     public bool IsValid => float.IsFinite(Phase2)
-        && float.IsFinite(Phase3)
-        && Phase2 >= 0.0f
-        && Phase2 <= 1.0f
-        && Phase3 >= 0.0f
-        && Phase3 <= Phase2;
+     && float.IsFinite(Phase3)
+     && Phase2 >= 0.0f
+     && Phase2 <= 1.0f
+     && Phase3 >= 0.0f
+     && Phase3 <= Phase2;
 
     /// <summary>既存 Boss 設定の Phase 閾値です。</summary>
     public static BossPhaseThresholds Default => new(0.66f, 0.33f);
@@ -28,7 +27,7 @@ public readonly struct BossPhaseThresholds(float phase2, float phase3)
     /// <summary>HP 割合から単調に進められる Phase を取得します。</summary>
     public Phase GetPhase(float hpRatio)
     {
-        float ratio = float.IsFinite(hpRatio) ? Math.Clamp(hpRatio, 0.0f, 1.0f) : 0.0f;
+        var ratio = float.IsFinite(hpRatio) ? Math.Clamp(hpRatio, 0.0f, 1.0f) : 0.0f;
         return ratio > Phase2 ? Phase.Phase1 : ratio > Phase3 ? Phase.Phase2 : Phase.Phase3;
     }
 
@@ -37,16 +36,10 @@ public readonly struct BossPhaseThresholds(float phase2, float phase3)
     {
         next = current;
         threshold = 0.0f;
-        if (!IsValid || current is not (Phase.Phase1 or Phase.Phase2 or Phase.Phase3))
-        {
-            return false;
-        }
+        if (!IsValid || current is not (Phase.Phase1 or Phase.Phase2 or Phase.Phase3)) return false;
 
-        Phase target = GetPhase(hpRatio);
-        if ((int)target <= (int)current)
-        {
-            return false;
-        }
+        var target = GetPhase(hpRatio);
+        if ((int)target <= (int)current) return false;
 
         next = target;
         threshold = target == Phase.Phase2 ? Phase2 : Phase3;
@@ -58,27 +51,29 @@ public readonly struct BossPhaseThresholds(float phase2, float phase3)
 public readonly record struct PhaseTransitionApplicationResult(
     PhaseTransitionApplyMask AppliedMask,
     PhaseTransitionApplyMask FailedMask,
-    bool IsComplete)
-{
+    bool IsComplete) {
     /// <summary>失敗した適用項目があるかどうかです。</summary>
     public bool HasFailure => FailedMask != PhaseTransitionApplyMask.None;
 }
 
 /// <summary>HP 閾値と終端処理の共通判定を提供します。</summary>
-public static class PhaseDeathController
-{
+public static class PhaseDeathController {
     /// <summary>Boss1 の固定 PhaseTransition state を取得します。</summary>
     public static BossState GetPhaseTransitionState(BossType bossType)
-        => bossType == BossType.Boss2 ? BossState.Boss2_PhaseTransition : BossState.Boss1_PhaseTransition;
+    {
+        return bossType == BossType.Boss2 ? BossState.Boss2_PhaseTransition : BossState.Boss1_PhaseTransition;
+    }
 
     /// <summary>Boss 種別に対応する固定 Dead state を取得します。</summary>
     public static BossState GetDeadState(BossType bossType)
-        => bossType == BossType.Boss2 ? BossState.Boss2_Dead : BossState.Boss1_Dead;
+    {
+        return bossType == BossType.Boss2 ? BossState.Boss2_Dead : BossState.Boss1_Dead;
+    }
 
     /// <summary>HP がゼロ以下なら死亡理由を作成します。</summary>
     public static TransitionReason CreateDeathReason(float hp)
     {
-        long input = float.IsFinite(hp) ? (long)MathF.Truncate(hp) : 0;
+        var input = float.IsFinite(hp) ? (long)MathF.Truncate(hp) : 0;
         return new TransitionReason(ReasonKind.Death, originalInput: input);
     }
 
@@ -92,26 +87,19 @@ public static class PhaseDeathController
         in TransitionReason reason)
     {
         if (transition.IsActive || ai.IsDead || maxHp <= 0.0f || !float.IsFinite(maxHp))
-        {
             return Error.Validation("PhaseDeathController.BeginPhaseTransition", "PhaseTransition 開始条件を満たしていません。");
-        }
 
-        float ratio = float.IsFinite(currentHp) ? currentHp / maxHp : 0.0f;
-        if (!thresholds.GetNextPhase(ai.Phase, ratio, out Phase target, out float threshold))
-        {
+        var ratio = float.IsFinite(currentHp) ? currentHp / maxHp : 0.0f;
+        if (!thresholds.GetNextPhase(ai.Phase, ratio, out var target, out var threshold))
             return Error.Validation("PhaseDeathController.BeginPhaseTransition", "次 Phase への遷移閾値に達していません。");
-        }
 
         if (transition.TriggeredPhaseMask.HasFlag(target.ToTransitionMask()))
-        {
             return Error.Validation("PhaseDeathController.BeginPhaseTransition", "該当 Phase への遷移は既に実行済みです。");
-        }
 
-        TransitionReason effectiveReason = reason.Kind == ReasonKind.Unknown
-            ? new(ReasonKind.PhaseThreshold, threshold: threshold)
+        var effectiveReason = reason.Kind == ReasonKind.Unknown
+            ? new TransitionReason(ReasonKind.PhaseThreshold, threshold)
             : reason;
-        transition = new(target, in effectiveReason)
-        {
+        transition = new BossPhaseTransitionData(target, in effectiveReason) {
             IsActive = true,
             TriggeredPhaseMask = transition.TriggeredPhaseMask | target.ToTransitionMask()
         };
@@ -133,8 +121,8 @@ public static class PhaseDeathController
         ArgumentNullException.ThrowIfNull(movement);
         ArgumentNullException.ThrowIfNull(effect);
 
-        PhaseTransitionApplyMask applied = transition.AppliedMask;
-        PhaseTransitionApplyMask failed = transition.FailedMask;
+        var applied = transition.AppliedMask;
+        var failed = transition.FailedMask;
         applied |= PhaseTransitionApplyMask.Invulnerability;
         ai.IsInvulnerable = true;
 
@@ -172,25 +160,19 @@ public static class PhaseDeathController
         long frameUpdateNumber)
     {
         if (terminal.IsTerminal || ai.IsDead || !float.IsFinite(currentHp) || currentHp > 0.0f)
-        {
             return Error.Validation("PhaseDeathController.CaptureDeath", "死亡確定条件を満たしていません。");
-        }
 
-        TransitionReason reason = CreateDeathReason(currentHp);
-        BossState deadState = GetDeadState(ai.BossType);
-        ErrorOr<Success> captured = terminal.Capture(
+        var reason = CreateDeathReason(currentHp);
+        var deadState = GetDeadState(ai.BossType);
+        var captured = terminal.Capture(
             deadState,
             ai.Phase,
             in reason,
             frameUpdateNumber,
             attack.Skill,
             attack.Stage,
-
             currentHp);
-        if (captured.IsError)
-        {
-            return captured;
-        }
+        if (captured.IsError) return captured;
 
         ai.IsDead = true;
         ai.IsInvulnerable = false;
@@ -215,10 +197,11 @@ public static class PhaseDeathController
     }
 
     private static PhaseTransitionApplyMask ToTransitionMask(this Phase phase)
-        => phase switch
-        {
+    {
+        return phase switch {
             Phase.Phase2 => PhaseTransitionApplyMask.Phase2,
             Phase.Phase3 => PhaseTransitionApplyMask.Phase3,
             _ => PhaseTransitionApplyMask.None
         };
+    }
 }

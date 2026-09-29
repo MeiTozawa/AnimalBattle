@@ -1,21 +1,22 @@
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Ai.Ports;
-using AnimalBattle.Components;
 
 namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>エラー復帰時に適用する安全値の項目を表す bit mask です。</summary>
 [Flags]
-public enum SafetyParameterApplyMask
-{
+public enum SafetyParameterApplyMask {
     /// <summary>適用項目がありません。</summary>
     None = 0,
+
     /// <summary>移動速度を安全値へ変更します。</summary>
     MovementSpeed = 1,
+
     /// <summary>攻撃判定と攻撃生成を停止します。</summary>
     AttackHitbox = 2,
+
     /// <summary>無敵状態を安全値へ変更します。</summary>
     Invulnerability = 4,
+
     /// <summary>状態および攻撃タイマーを安全値へ変更します。</summary>
     Timer = 8
 }
@@ -27,25 +28,23 @@ public readonly record struct SafetyParameter(
     bool DisableAttackHitbox,
     bool IsInvulnerable,
     float StateTimer,
-    float StateDuration)
-{
+    float StateDuration) {
     /// <summary>攻撃を停止し、移動とタイマーをゼロにする既定の安全値です。</summary>
     public static SafetyParameter Default => new(0.0f, 0.0f, true, true, 0.0f, 0.0f);
 
     /// <summary>安全値の数値が有限値かどうかを取得します。</summary>
     public bool IsValid => float.IsFinite(MovementSpeedX)
-        && float.IsFinite(MovementSpeedY)
-        && float.IsFinite(StateTimer)
-        && float.IsFinite(StateDuration)
-        && StateTimer >= 0.0f
-        && StateDuration >= 0.0f;
+     && float.IsFinite(MovementSpeedY)
+     && float.IsFinite(StateTimer)
+     && float.IsFinite(StateDuration)
+     && StateTimer >= 0.0f
+     && StateDuration >= 0.0f;
 }
 
 /// <summary>安全値の項目別適用結果です。</summary>
 public readonly record struct SafetyParameterApplicationResult(
     SafetyParameterApplyMask AppliedMask,
-    SafetyParameterApplyMask FailedMask)
-{
+    SafetyParameterApplyMask FailedMask) {
     /// <summary>失敗した項目があるかどうかを取得します。</summary>
     public bool HasFailure => FailedMask != SafetyParameterApplyMask.None;
 
@@ -54,8 +53,7 @@ public readonly record struct SafetyParameterApplicationResult(
 }
 
 /// <summary>runtime slot に安全値を適用する処理をまとめた helper です。</summary>
-internal static class SafetyParameterApplier
-{
+internal static class SafetyParameterApplier {
     /// <summary>指定した安全値を成功項目を保持しながら適用します。</summary>
     public static SafetyParameterApplicationResult Apply(
         BossRuntimeSlot runtime,
@@ -65,14 +63,12 @@ internal static class SafetyParameterApplier
     {
         ArgumentNullException.ThrowIfNull(runtime);
         if (!parameter.IsValid)
-        {
             return new SafetyParameterApplicationResult(applied, failed | SafetyParameterApplyMask.Timer);
-        }
 
         runtime.ClearCommands();
         if (!applied.HasFlag(SafetyParameterApplyMask.MovementSpeed))
         {
-            bool success = parameter.MovementSpeedX == 0.0f && parameter.MovementSpeedY == 0.0f
+            var success = parameter.MovementSpeedX == 0.0f && parameter.MovementSpeedY == 0.0f
                 ? !runtime.Context.Movement.Stop().IsError
                 : !runtime.Context.Movement.SetVelocity(parameter.MovementSpeedX, parameter.MovementSpeedY).IsError;
             if (success)
@@ -92,7 +88,7 @@ internal static class SafetyParameterApplier
             runtime.AiData.AttackGenerationEnabled = !parameter.DisableAttackHitbox;
             runtime.AttackData.Stage = AttackStage.None;
             runtime.AttackData.OneShotEmissionMask = 0;
-            bool success = !parameter.DisableAttackHitbox || !runtime.Context.Attack.ClearBossBullets().IsError;
+            var success = !parameter.DisableAttackHitbox || !runtime.Context.Attack.ClearBossBullets().IsError;
             if (success)
             {
                 applied |= SafetyParameterApplyMask.AttackHitbox;

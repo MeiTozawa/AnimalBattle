@@ -3,11 +3,10 @@ using System.Drawing;
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// ゲーム全体（UI・弾幕・エフェクト・ステージ背景・状態バッジ等）で使用される共通カラーパレットを定義する静的クラス。
-/// すべての常用カラーを <see cref="Color"/> 定数として一元管理します。
+///     ゲーム全体（UI・弾幕・エフェクト・ステージ背景・状態バッジ等）で使用される共通カラーパレットを定義する静的クラス。
+///     すべての常用カラーを <see cref="Color" /> 定数として一元管理します。
 /// </summary>
-public static class ColorPalette
-{
+public static class ColorPalette {
     // ==========================================
     // 基本色・無彩色 (Monochrome & Basics)
     // ==========================================

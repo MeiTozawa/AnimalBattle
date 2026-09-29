@@ -1,12 +1,9 @@
-using System;
-
 namespace AnimalBattle.Maps.Navigation;
 
 /// <summary>
-/// プラットフォーム間遷移ナビゲーションアクション種別。
+///     プラットフォーム間遷移ナビゲーションアクション種別。
 /// </summary>
-public enum NavActionType
-{
+public enum NavActionType {
     /// <summary>同一プラットフォーム内での水平歩行追従</summary>
     Walk,
 
@@ -18,15 +15,15 @@ public enum NavActionType
 }
 
 /// <summary>
-/// 2D プラットフォームナビゲーショングラフにおける有向遷移リンク辺（あるプラットフォームから別のプラットフォームへの跳躍/下落）。
-/// 離陸・起跳点座標、着地点座標、物理放物線に必要な初速および経路コストを保持します。
+///     2D プラットフォームナビゲーショングラフにおける有向遷移リンク辺（あるプラットフォームから別のプラットフォームへの跳躍/下落）。
+///     離陸・起跳点座標、着地点座標、物理放物線に必要な初速および経路コストを保持します。
 /// </summary>
 /// <remarks>
-/// <see cref="PlatformLink"/> の新しいインスタンスを初期化します。
+///     <see cref="PlatformLink" /> の新しいインスタンスを初期化します。
 /// </remarks>
 /// <param name="fromNode">起点プラットフォーム</param>
 /// <param name="toNode">終点プラットフォーム</param>
-/// <param name="action">動作種別 (<see cref="NavActionType"/>)</param>
+/// <param name="action">動作種別 (<see cref="NavActionType" />)</param>
 /// <param name="takeoffX">離脱・起跳 X 座標</param>
 /// <param name="landingX">着地 X 座標</param>
 /// <param name="requiredJumpVy">垂直初速度</param>
@@ -40,8 +37,7 @@ public sealed class PlatformLink(
     float landingX,
     float requiredJumpVy,
     float requiredJumpVx,
-    float cost)
-{
+    float cost) {
     /// <summary>起点平台节点</summary>
     public PlatformNode FromNode { get; } = fromNode;
 
@@ -67,10 +63,11 @@ public sealed class PlatformLink(
     public float Cost { get; } = cost;
 
     /// <summary>
-    /// リンクの文字列表現を取得します。
+    ///     リンクの文字列表現を取得します。
     /// </summary>
     public override string ToString()
     {
-        return $"Link #{FromNode.Id} -> #{ToNode.Id} [{Action}] Takeoff: {TakeoffX:F0} -> Landing: {LandingX:F0} (Cost: {Cost:F1})";
+        return
+            $"Link #{FromNode.Id} -> #{ToNode.Id} [{Action}] Takeoff: {TakeoffX:F0} -> Landing: {LandingX:F0} (Cost: {Cost:F1})";
     }
 }

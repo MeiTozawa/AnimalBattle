@@ -1,24 +1,25 @@
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Components;
 
 /// <summary>
-/// アニメーション再生状態およびキャラクター種別を保持する純粋コンポーネント。
-/// 全フィールドがアンマネージド型で構成され、GC 追跡オーバーヘッドをゼロにします。
+///     アニメーション再生状態およびキャラクター種別を保持する純粋コンポーネント。
+///     全フィールドがアンマネージド型で構成され、GC 追跡オーバーヘッドをゼロにします。
 /// </summary>
 /// <remarks>
-/// 指定された初期クリップ識別子およびキャラクター種別で <see cref="Animation"/> の新しいインスタンスを初期化します。
+///     指定された初期クリップ識別子およびキャラクター種別で <see cref="Animation" /> の新しいインスタンスを初期化します。
 /// </remarks>
-public struct Animation(StringId defaultClip = default, CharacterType characterType = CharacterType.Cat, bool isPlaying = true)
-{
+public struct Animation(
+    StringId defaultClip = default,
+    CharacterType characterType = CharacterType.Cat,
+    bool isPlaying = true) {
     /// <summary>デフォルトのアニメーションクリップ識別子 ("Idle")</summary>
     public static readonly StringId DefaultClip = "Idle";
 
     /// <summary>
-    /// デフォルト設定で <see cref="Animation"/> の新しいインスタンスを初期化します。
+    ///     デフォルト設定で <see cref="Animation" /> の新しいインスタンスを初期化します。
     /// </summary>
-    public Animation() : this(default, CharacterType.Cat, true)
+    public Animation() : this(default)
     {
     }
 
@@ -41,7 +42,7 @@ public struct Animation(StringId defaultClip = default, CharacterType characterT
     public bool IsFinished = false;
 
     /// <summary>
-    /// クリップを変更してアニメーションを再生します。異なるクリップが指定された場合は再生時間を 0 にリセットします。
+    ///     クリップを変更してアニメーションを再生します。異なるクリップが指定された場合は再生時間を 0 にリセットします。
     /// </summary>
     /// <param name="clipId">再生するクリップ識別子</param>
     public void Play(StringId clipId)

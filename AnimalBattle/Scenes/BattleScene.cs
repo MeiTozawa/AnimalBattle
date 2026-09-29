@@ -1,156 +1,156 @@
-using System;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Bindings;
 using AnimalBattle.Characters;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
 using AnimalBattle.Maps;
-using ErrorOr;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Scenes;
 
 /// <summary>
-/// Flecs.NET ワールドおよび多 Boss (Boss 1 / Boss 2) 戦パイプラインを統括するバトルシーンクラス。
-/// TOML 設定ファイル（player.toml, boss1.toml, boss2.toml, arena.toml）から初期パラメータをロードし、
-/// プレイヤー、Boss、プラットフォームへ Bevy スタイルの Hitbox / Hurtbox を付与します。
+///     Flecs.NET ワールドおよび多 Boss (Boss 1 / Boss 2) 戦パイプラインを統括するバトルシーンクラス。
+///     TOML 設定ファイル（player.toml, boss1.toml, boss2.toml, arena.toml）から初期パラメータをロードし、
+///     プレイヤー、Boss、プラットフォームへ Bevy スタイルの Hitbox / Hurtbox を付与します。
 /// </summary>
-public partial class BattleScene : IDisposable
-{
-    private World _ecsWorld;
-    private readonly WorldRenderSystem _worldRenderer;
+public class BattleScene : IDisposable {
     private readonly DebugRenderSystem _debugRenderer;
-    private Query _playerBulletsQuery;
+    private readonly WorldRenderSystem _worldRenderer;
+    private World _ecsWorld;
     private Query _effectsQuery;
-    private Player? _player;
-    private BossCharacter? _currentBoss;
-    private Query<Transform, CollisionBox> _platformQuery;
-    private TileMap? _tileMap;
     private bool _isDisposed;
+    private Query<Transform, CollisionBox> _platformQuery;
+    private Query _playerBulletsQuery;
+    private TileMap? _tileMap;
 
     /// <summary>
-    /// 現在アクティブな BattleScene インスタンスを取得します。
-    /// </summary>
-    public static BattleScene? Current { get; private set; }
-
-    /// <summary>
-    /// 現在アクティブなタイルマップインスタンスを取得します。
-    /// </summary>
-    public static TileMap? CurrentTileMap { get; private set; }
-
-    /// <summary>
-    /// 現在アクティブなプレイヤー自機インスタンスを取得します。
-    /// </summary>
-    public Player? Player => _player;
-
-    /// <summary>
-    /// 現在アクティブな Boss インスタンスを取得します。
-    /// </summary>
-    public BossCharacter? Boss => _currentBoss;
-
-    /// <summary>
-    /// <see cref="BattleScene"/> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
+    ///     <see cref="BattleScene" /> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
     /// </summary>
     public BattleScene()
     {
         _ecsWorld = World.Create();
         Current = this;
 
-        // 0. 基本設定 & アセットのロード
         ConfigManager.Initialize();
         AssetManager.Initialize();
 
-        ErrorOr<int> playerHandleRes = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle");
-        int playerHandle = !playerHandleRes.IsError ? playerHandleRes.Value : -1;
+        var playerHandleRes = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle");
+        var playerHandle = !playerHandleRes.IsError ? playerHandleRes.Value : -1;
 
         _ecsWorld.Import<ComponentRequirementsModule>();
         _ecsWorld.Import<EffectModule>();
         _ecsWorld.Import<BulletModule>();
 
-        PlayerConfig playerCfg = ConfigManager.Player;
+        var playerCfg = ConfigManager.Player;
 
-        // 1. プレイヤーの生成 (高内聚な領域オブジェクト Player の初期化)
-        Entity playerEntity = _ecsWorld.Entity("Player1");
-        _player = new(playerEntity, playerCfg, playerHandle);
+        var playerEntity = _ecsWorld.Entity("Player1");
+        Player = new Player(playerEntity, playerCfg, playerHandle);
 
-        // 2. タイルマップとプラットフォームの生成
         SetupArena();
 
         _platformQuery = _ecsWorld.QueryBuilder<Transform, CollisionBox>()
-            .With<PlatformTag>()
-            .Build();
+           .With<PlatformTag>()
+           .Build();
 
-        _worldRenderer = new(_ecsWorld);
-        _debugRenderer = new(_ecsWorld);
+        _worldRenderer = new WorldRenderSystem(_ecsWorld);
+        _debugRenderer = new DebugRenderSystem(_ecsWorld);
         _playerBulletsQuery = _ecsWorld.QueryBuilder()
-                                       .With<PlayerBulletTag>()
-                                       .Build();
+           .With<PlayerBulletTag>()
+           .Build();
         _effectsQuery = _ecsWorld.QueryBuilder()
-                                 .With<EffectTag>()
-                                 .Build();
+           .With<EffectTag>()
+           .Build();
 
         // 3. アクティブな Boss (デフォルト: Boss 1) の生成
         SpawnBoss(CurrentBossType);
     }
 
     /// <summary>
-    /// 指定された種類の Boss エンティティを生成またはリセットします。
+    ///     現在アクティブな BattleScene インスタンスを取得します。
     /// </summary>
-    /// <param name="bossType">生成する Boss の種別 (<see cref="BossType.Boss1"/> または <see cref="BossType.Boss2"/>)</param>
-    /// <returns>生成または再初期化された Flecs エンティティ</returns>
-    public Entity SpawnBoss(BossType bossType)
-    {
-        string otherBossName = bossType == BossType.Boss1 ? "Boss2" : "Boss1";
-        Entity otherBoss = _ecsWorld.Lookup(otherBossName);
-        if (otherBoss.IsAlive())
-        {
-            otherBoss.Destruct();
-        }
+    public static BattleScene? Current { get; private set; }
 
-        string entityName = bossType == BossType.Boss1 ? "Boss1" : "Boss2";
-        Entity bossEntity = _ecsWorld.Entity(entityName);
+    /// <summary>
+    ///     現在アクティブなプレイヤー自機インスタンスを取得します。
+    /// </summary>
+    public Player? Player { get; }
+
+    /// <summary>
+    ///     現在アクティブな Boss インスタンスを取得します。
+    /// </summary>
+    public BossCharacter? Boss { get; private set; }
+
+    /// <summary>
+    ///     現在アクティブな Boss の種別を取得または設定します。
+    /// </summary>
+    private BossType CurrentBossType { get; set; } = BossType.Boss1;
+
+    /// <summary>
+    ///     現在アクティブな Boss の識別名を取得します。
+    /// </summary>
+    private string CurrentBossId => CurrentBossType == BossType.Boss1 ? "Boss1" : "Boss2";
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (!_isDisposed)
+        {
+            ConfigManager.Boss1Container.OnConfigReloaded -= OnBoss1ConfigReloaded;
+            ConfigManager.Boss2Container.OnConfigReloaded -= OnBoss2ConfigReloaded;
+            ConfigManager.PlayerContainer.OnConfigReloaded -= OnPlayerConfigReloaded;
+
+            if (_ecsWorld.Has<CombatEntityPoolComponent>()) _ecsWorld.Get<CombatEntityPoolComponent>().Dispose();
+
+            _worldRenderer.Dispose();
+            _debugRenderer.Dispose();
+            _playerBulletsQuery.Dispose();
+            _effectsQuery.Dispose();
+            _platformQuery.Dispose();
+            _ecsWorld.Dispose();
+            AssetManager.Shutdown();
+            if (Current == this) Current = null;
+            _isDisposed = true;
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    /// <summary>
+    ///     指定された種類の Boss エンティティを生成またはリセットします。
+    /// </summary>
+    /// <param name="bossType">生成する Boss の種別 (<see cref="BossType.Boss1" /> または <see cref="BossType.Boss2" />)</param>
+    /// <returns>生成または再初期化された Flecs エンティティ</returns>
+    private void SpawnBoss(BossType bossType)
+    {
+        var otherBossName = bossType == BossType.Boss1 ? "Boss2" : "Boss1";
+        var otherBoss = _ecsWorld.Lookup(otherBossName);
+        if (otherBoss.IsAlive()) otherBoss.Destruct();
+
+        var entityName = bossType == BossType.Boss1 ? "Boss1" : "Boss2";
+        var bossEntity = _ecsWorld.Entity(entityName);
 
         if (bossType == BossType.Boss1)
-        {
             SpawnBoss1(bossEntity);
-        }
-        else if (bossType == BossType.Boss2)
-        {
-            SpawnBoss2(bossEntity);
-        }
-
-        return bossEntity;
+        else if (bossType == BossType.Boss2) SpawnBoss2(bossEntity);
     }
 
     private void SpawnBoss1(Entity bossEntity)
     {
-        ErrorOr<int> boss1HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
-        int boss1Handle = !boss1HandleRes.IsError ? boss1HandleRes.Value : -1;
-        _currentBoss = new(bossEntity, BossType.Boss1, boss1Handle);
-        Console.WriteLine($"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {ConfigManager.Boss1.MaxHp}, Pos: {ConfigManager.Boss1.SpawnX}, {ConfigManager.Boss1.SpawnY})");
+        var boss1HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
+        var boss1Handle = !boss1HandleRes.IsError ? boss1HandleRes.Value : -1;
+        Boss = new BossCharacter(bossEntity, BossType.Boss1, boss1Handle);
+        Console.WriteLine(
+            $"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {ConfigManager.Boss1.MaxHp}, Pos: {ConfigManager.Boss1.SpawnX}, {ConfigManager.Boss1.SpawnY})");
     }
 
     private void SpawnBoss2(Entity bossEntity)
     {
-        ErrorOr<int> boss2HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
-        int boss2Handle = !boss2HandleRes.IsError ? boss2HandleRes.Value : -1;
-        _currentBoss = new(bossEntity, BossType.Boss2, boss2Handle, () => _tileMap?.NavGraph);
-        Console.WriteLine($"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {ConfigManager.Boss2.MaxHp}, Pos: {ConfigManager.Boss2.SpawnX}, {ConfigManager.Boss2.SpawnY})");
+        var boss2HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
+        var boss2Handle = !boss2HandleRes.IsError ? boss2HandleRes.Value : -1;
+        Boss = new BossCharacter(bossEntity, BossType.Boss2, boss2Handle, () => _tileMap?.NavGraph);
+        Console.WriteLine(
+            $"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {ConfigManager.Boss2.MaxHp}, Pos: {ConfigManager.Boss2.SpawnX}, {ConfigManager.Boss2.SpawnY})");
     }
 
     /// <summary>
-    /// 現在アクティブな Boss の種別を取得または設定します。
-    /// </summary>
-    public BossType CurrentBossType { get; private set; } = BossType.Boss1;
-
-    /// <summary>
-    /// 現在アクティブな Boss の識別名を取得します。
-    /// </summary>
-    public string CurrentBossId => CurrentBossType == BossType.Boss1 ? "Boss1" : "Boss2";
-
-    /// <summary>
-    /// シーンの追加初期化処理（設定ホットリロードフックの登録等）を行います。
+    ///     シーンの追加初期化処理（設定ホットリロードフックの登録等）を行います。
     /// </summary>
     public void Initialize()
     {
@@ -158,20 +158,20 @@ public partial class BattleScene : IDisposable
     }
 
     /// <summary>
-    /// 現在の Boss を初期状態にリセットして再生成します。
+    ///     現在の Boss を初期状態にリセットして再生成します。
     /// </summary>
-    public void ResetCurrentBoss()
+    private void ResetCurrentBoss()
     {
-        _currentBoss?.Reset();
+        Boss?.Reset();
     }
 
     /// <summary>
-    /// 対象の Boss へ切り替えます。
+    ///     対象の Boss へ切り替えます。
     /// </summary>
     /// <param name="bossId">切り替え先の Boss 識別名 ("Boss1" または "Boss2")</param>
-    public void SwitchBoss(string bossId)
+    private void SwitchBoss(string bossId)
     {
-        BossType targetType = bossId.Equals("Boss2", StringComparison.OrdinalIgnoreCase)
+        var targetType = bossId.Equals("Boss2", StringComparison.OrdinalIgnoreCase)
             ? BossType.Boss2
             : BossType.Boss1;
         CurrentBossType = targetType;
@@ -179,7 +179,7 @@ public partial class BattleScene : IDisposable
     }
 
     /// <summary>
-    /// TOML 設定ファイル変更時のホットリロードコールバックを登録し、Entity の衝突判定・スケールを即時再同期します。
+    ///     TOML 設定ファイル変更時のホットリロードコールバックを登録し、Entity の衝突判定・スケールを即時再同期します。
     /// </summary>
     private void RegisterConfigReloadHooks()
     {
@@ -192,21 +192,21 @@ public partial class BattleScene : IDisposable
     {
         if (CurrentBossId.Equals("Boss1", StringComparison.OrdinalIgnoreCase))
         {
-            Entity bossEntity = _ecsWorld.Lookup("Boss1");
+            var bossEntity = _ecsWorld.Lookup("Boss1");
             if (bossEntity.IsAlive() && bossEntity.Has<Boss1Tag>())
             {
-                Boss1Config bCfg = ConfigManager.Boss1;
+                var bCfg = ConfigManager.Boss1;
                 bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
-                bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), damage: bCfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false));
+                bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), bCfg.BodyContactDamage, Faction.Hostile, false));
 
                 if (bossEntity.Has<Transform>())
                 {
-                    ref Transform t = ref bossEntity.GetMut<Transform>();
+                    ref var t = ref bossEntity.GetMut<Transform>();
                     t.ScaleX = bCfg.ScaleX;
                     t.ScaleY = bCfg.ScaleY;
                 }
 
-                Console.WriteLine($"[BattleScene] Boss 1 の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
+                Console.WriteLine("[BattleScene] Boss 1 の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
             }
         }
     }
@@ -215,63 +215,63 @@ public partial class BattleScene : IDisposable
     {
         if (CurrentBossId.Equals("Boss2", StringComparison.OrdinalIgnoreCase))
         {
-            Entity bossEntity = _ecsWorld.Lookup("Boss2");
+            var bossEntity = _ecsWorld.Lookup("Boss2");
             if (bossEntity.IsAlive() && bossEntity.Has<Boss2Tag>())
             {
-                Boss2Config bCfg = ConfigManager.Boss2;
+                var bCfg = ConfigManager.Boss2;
                 bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
-                bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), damage: bCfg.BodyContactDamage, faction: Faction.Hostile, destroyOnHit: false));
+                bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), bCfg.BodyContactDamage, Faction.Hostile, false));
                 bossEntity.Set(new CollisionBox(bCfg.CollisionWidth, bCfg.CollisionHeight));
 
                 if (bossEntity.Has<Transform>())
                 {
-                    ref Transform t = ref bossEntity.GetMut<Transform>();
+                    ref var t = ref bossEntity.GetMut<Transform>();
                     t.ScaleX = bCfg.ScaleX;
                     t.ScaleY = bCfg.ScaleY;
                 }
 
-                Console.WriteLine($"[BattleScene] Boss 2 の Hurtbox / Hitbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
+                Console.WriteLine(
+                    "[BattleScene] Boss 2 の Hurtbox / Hitbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
             }
         }
     }
 
     private void OnPlayerConfigReloaded()
     {
-        Entity playerEntity = _ecsWorld.Lookup("Player1");
+        var playerEntity = _ecsWorld.Lookup("Player1");
         if (playerEntity.IsAlive())
         {
-            PlayerConfig pCfg = ConfigManager.Player;
+            var pCfg = ConfigManager.Player;
             playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
             playerEntity.Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight));
 
             if (playerEntity.Has<Transform>())
             {
-                ref Transform t = ref playerEntity.GetMut<Transform>();
+                ref var t = ref playerEntity.GetMut<Transform>();
                 t.ScaleX = pCfg.ScaleX;
                 t.ScaleY = pCfg.ScaleY;
             }
 
-            Console.WriteLine($"[BattleScene] Player の Hurtbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
+            Console.WriteLine("[BattleScene] Player の Hurtbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
         }
     }
 
     /// <summary>
-    /// arena.toml の TileMap 設定および TileSet の衝突領域に基づいてプラットフォームコライダーを生成します。
+    ///     arena.toml の TileMap 設定および TileSet の衝突領域に基づいてプラットフォームコライダーを生成します。
     /// </summary>
     private void SetupArena()
     {
-        ArenaConfig arenaCfg = ConfigManager.Arena;
+        var arenaCfg = ConfigManager.Arena;
 
-        TileMapConfig tileMapCfg = arenaCfg.TileMap;
-        ErrorOr<ConfigBase<TileSetConfig>> tileSetConfigResult = TileSetConfig.LoadFromFile(tileMapCfg.TileConfig);
+        var tileMapCfg = arenaCfg.TileMap;
+        var tileSetConfigResult = TileSetConfig.LoadFromFile(tileMapCfg.TileConfig);
         if (!tileSetConfigResult.IsError)
         {
-            ErrorOr<int> sheetHandleRes = AssetManager.LoadTexture(tileMapCfg.TileSheet);
-            int sheetHandle = !sheetHandleRes.IsError ? sheetHandleRes.Value : -1;
+            var sheetHandleRes = AssetManager.LoadTexture(tileMapCfg.TileSheet);
+            var sheetHandle = !sheetHandleRes.IsError ? sheetHandleRes.Value : -1;
             TileSet tileSet = new(sheetHandle, tileSetConfigResult.Value.Config);
             _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
             _ecsWorld.Set(_tileMap);
-            CurrentTileMap = _tileMap;
 
             _tileMap.BuildPlatformColliders(_ecsWorld);
             Console.WriteLine("[BattleScene] TileMap および TileSet プラットフォームコライダーが正常に初期化されました。");
@@ -283,23 +283,21 @@ public partial class BattleScene : IDisposable
     }
 
     /// <summary>
-    /// シーンのフレーム更新処理を行います。
+    ///     シーンのフレーム更新処理を行います。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過時間（秒）</param>
     public void Update(float deltaTime)
     {
         HandleInput();
 
-        if (_player != null)
-        {
-            _player.Update(deltaTime, ConfigManager.Player, ConfigManager.Arena, _platformQuery, _ecsWorld);
-        }
+        if (Player != null)
+            Player.Update(deltaTime, ConfigManager.Player, ConfigManager.Arena, _platformQuery, _ecsWorld);
 
-        if (_currentBoss != null)
+        if (Boss != null)
         {
-            Vec2f playerPos = _player != null ? new(_player.X, _player.Y) : Vec2f.Zero;
-            Vec2f playerVel = _player != null ? new(_player.Vx, _player.Vy) : Vec2f.Zero;
-            _currentBoss.Update(deltaTime, playerPos, playerVel, _ecsWorld, _platformQuery);
+            var playerPos = Player != null ? new Vec2f(Player.X, Player.Y) : Vec2f.Zero;
+            var playerVel = Player != null ? new Vec2f(Player.Vx, Player.Vy) : Vec2f.Zero;
+            Boss.Update(deltaTime, playerPos, playerVel, _ecsWorld, _platformQuery);
         }
 
         _ecsWorld.Progress(deltaTime);
@@ -329,46 +327,16 @@ public partial class BattleScene : IDisposable
         CombatEffectHelper.ClearAllBossBullets(_ecsWorld);
         _playerBulletsQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
         _effectsQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
-        _player?.Reset(ConfigManager.Player);
+        Player?.Reset(ConfigManager.Player);
     }
 
     /// <summary>
-    /// シーンの描画処理を行います。
+    ///     シーンの描画処理を行います。
     /// </summary>
     public void Render()
     {
         _worldRenderer.Render(_tileMap, _platformQuery);
-        HudRenderSystem.Render(_player, _currentBoss);
+        HudRenderSystem.Render(Player, Boss);
         _debugRenderer.Render(_platformQuery, _tileMap);
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        if (!_isDisposed)
-        {
-            ConfigManager.Boss1Container.OnConfigReloaded -= OnBoss1ConfigReloaded;
-            ConfigManager.Boss2Container.OnConfigReloaded -= OnBoss2ConfigReloaded;
-            ConfigManager.PlayerContainer.OnConfigReloaded -= OnPlayerConfigReloaded;
-
-            if (_ecsWorld.Has<CombatEntityPoolComponent>())
-            {
-                _ecsWorld.Get<CombatEntityPoolComponent>().Dispose();
-            }
-
-            _worldRenderer.Dispose();
-            _debugRenderer.Dispose();
-            _playerBulletsQuery.Dispose();
-            _effectsQuery.Dispose();
-            _platformQuery.Dispose();
-            _ecsWorld.Dispose();
-            AssetManager.Shutdown();
-            if (Current == this)
-            {
-                Current = null;
-            }
-            _isDisposed = true;
-            GC.SuppressFinalize(this);
-        }
     }
 }

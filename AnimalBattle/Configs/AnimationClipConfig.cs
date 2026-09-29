@@ -1,10 +1,9 @@
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// 個別のアニメーションクリップ（行・フレーム範囲・FPS・ループ有無等）の定義クラス。
+///     個別のアニメーションクリップ（行・フレーム範囲・FPS・ループ有無等）の定義クラス。
 /// </summary>
-public sealed class AnimationClipConfig
-{
+public sealed class AnimationClipConfig {
     /// <summary>アニメーション名（例: "Idle", "Run", "Jump"）</summary>
     public string Name { get; set; } = string.Empty;
 

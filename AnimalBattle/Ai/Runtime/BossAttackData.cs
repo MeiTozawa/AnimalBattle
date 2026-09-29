@@ -6,8 +6,7 @@ namespace AnimalBattle.Ai.Runtime;
 /// <summary>Boss の攻撃・技能状態を表すデータ構造体です。</summary>
 /// <remarks>攻撃・技能データを生成します。</remarks>
 [StructLayout(LayoutKind.Sequential)]
-public struct BossAttackData(BossSkill skill, AttackStage stage = AttackStage.None)
-{
+public struct BossAttackData(BossSkill skill, AttackStage stage = AttackStage.None) {
     /// <summary>現在の技能識別子です。</summary>
     public BossSkill Skill = skill;
 

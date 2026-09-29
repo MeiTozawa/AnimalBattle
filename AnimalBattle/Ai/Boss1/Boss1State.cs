@@ -1,10 +1,9 @@
 namespace AnimalBattle.Ai.Boss1;
 
 /// <summary>
-/// Boss1（Ancient Cat Overlord）の固有の行動状態を表す純粋な列挙体です。
+///     Boss1（Ancient Cat Overlord）の固有の行動状態を表す純粋な列挙体です。
 /// </summary>
-public enum Boss1State : byte
-{
+public enum Boss1State : byte {
     /// <summary>安全な未指定状態です。</summary>
     None = 0,
 

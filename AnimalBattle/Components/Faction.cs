@@ -1,11 +1,10 @@
 namespace AnimalBattle.Components;
 
 /// <summary>
-/// 判定盒 (Hitbox/Hurtbox) の所属陣営（味方・敵・中立）を識別する列挙型。
-/// 異なる陣営間でのみ戦闘ダメージ判定が発生します。
+///     判定盒 (Hitbox/Hurtbox) の所属陣営（味方・敵・中立）を識別する列挙型。
+///     異なる陣営間でのみ戦闘ダメージ判定が発生します。
 /// </summary>
-public enum Faction
-{
+public enum Faction {
     /// <summary>プレイヤー・味方陣営</summary>
     Friendly,
 

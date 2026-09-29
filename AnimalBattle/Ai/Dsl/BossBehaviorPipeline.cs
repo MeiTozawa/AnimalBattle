@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Collections.Frozen;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
@@ -6,7 +5,7 @@ using AnimalBattle.Ai.Contracts;
 namespace AnimalBattle.Ai.Dsl;
 
 /// <summary>
-/// 宣言的 DSL から一括構築された不変の Boss 振る舞い・技能パイプラインです。
+///     宣言的 DSL から一括構築された不変の Boss 振る舞い・技能パイプラインです。
 /// </summary>
 /// <param name="bossType">Boss の種別。</param>
 /// <param name="name">パイプラインの識別名。</param>
@@ -18,37 +17,38 @@ public sealed class BossBehaviorPipeline(
     string name,
     Dictionary<Phase, IReadOnlyList<AttackDecisionRule>> rulesByPhase,
     Dictionary<BossSkill, AttackDefinition> attacks,
-    Dictionary<Phase, PhaseLocomotionSettings>? locomotionByPhase = null)
-{
-    private readonly BossType _bossType = bossType;
-    private readonly string _name = name;
-    private readonly FrozenDictionary<Phase, IReadOnlyList<AttackDecisionRule>> _rulesByPhase = rulesByPhase.ToFrozenDictionary();
+    Dictionary<Phase, PhaseLocomotionSettings>? locomotionByPhase = null) {
     private readonly FrozenDictionary<BossSkill, AttackDefinition> _attacks = attacks.ToFrozenDictionary();
-    private readonly FrozenDictionary<Phase, PhaseLocomotionSettings> _locomotionByPhase = (locomotionByPhase ?? []).ToFrozenDictionary();
+
+    private readonly FrozenDictionary<Phase, PhaseLocomotionSettings> _locomotionByPhase =
+        (locomotionByPhase ?? []).ToFrozenDictionary();
+
+    private readonly FrozenDictionary<Phase, IReadOnlyList<AttackDecisionRule>> _rulesByPhase =
+        rulesByPhase.ToFrozenDictionary();
 
     /// <summary>Boss の種別を取得します。</summary>
-    public BossType BossType => _bossType;
+    public BossType BossType { get; } = bossType;
 
     /// <summary>パイプラインの識別名を取得します。</summary>
-    public string Name => _name;
+    public string Name { get; } = name;
 
     /// <summary>全攻撃の検証済み AttackDefinition マップを取得します。</summary>
     public IReadOnlyDictionary<BossSkill, AttackDefinition> Attacks => _attacks;
 
     /// <summary>
-    /// 指定 Phase の攻撃意思決定ルール一覧を取得します。
+    ///     指定 Phase の攻撃意思決定ルール一覧を取得します。
     /// </summary>
     /// <param name="phase">対象の Phase。</param>
     /// <returns>意思決定ルールの読み取り専用リスト。</returns>
     public IReadOnlyList<AttackDecisionRule> GetRules(Phase phase)
     {
-        return _rulesByPhase.TryGetValue(phase, out IReadOnlyList<AttackDecisionRule>? rules)
+        return _rulesByPhase.TryGetValue(phase, out var rules)
             ? rules
             : [];
     }
 
     /// <summary>
-    /// 指定された BossSkill の AttackDefinition を取得します。
+    ///     指定された BossSkill の AttackDefinition を取得します。
     /// </summary>
     /// <param name="skill">技能識別子。</param>
     /// <param name="definition">見つかった攻撃定義。</param>
@@ -59,7 +59,7 @@ public sealed class BossBehaviorPipeline(
     }
 
     /// <summary>
-    /// 指定 Phase の足場間跳躍・落下・着地機動パラメータを取得します。
+    ///     指定 Phase の足場間跳躍・落下・着地機動パラメータを取得します。
     /// </summary>
     /// <param name="phase">対象の Phase。</param>
     /// <param name="settings">見つかった機動パラメータ。</param>
@@ -68,5 +68,4 @@ public sealed class BossBehaviorPipeline(
     {
         return _locomotionByPhase.TryGetValue(phase, out settings);
     }
-
 }

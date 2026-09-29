@@ -5,27 +5,26 @@ using AnimalBattle.Ai.Contracts;
 namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>
-/// 固定 BossState と具体的な State_Module ファイルの対応を表します。
+///     固定 BossState と具体的な State_Module ファイルの対応を表します。
 /// </summary>
 public readonly record struct FixedBossStateModule(
     BossState State,
     BossType BossType,
     string ModuleFileName,
-    Type ModuleType)
-{
+    Type ModuleType) {
     /// <summary>固定状態と module ファイルの記述が有効かどうかを取得します。</summary>
     public bool IsValid => State.IsValid()
-        && BossType != BossType.Unknown
-        && !string.IsNullOrWhiteSpace(ModuleFileName)
-        && ModuleType is not null;
+     && BossType != BossType.Unknown
+     && !string.IsNullOrWhiteSpace(ModuleFileName)
+     && ModuleType is not null;
 }
 
 /// <summary>
-/// 初期化時にだけ参照する固定 BossState/module 集合です。
+///     初期化時にだけ参照する固定 BossState/module 集合です。
 /// </summary>
-public static class FixedBossStateModuleCatalog
-{
-    private static readonly IReadOnlyList<FixedBossStateModule> _entries = Array.AsReadOnly(
+public static class FixedBossStateModuleCatalog {
+    /// <summary>Unknown を除く固定状態の全対応を取得します。</summary>
+    public static IReadOnlyList<FixedBossStateModule> Entries { get; } = Array.AsReadOnly(
     [
         Entry(BossState.Boss1_Hover, BossType.Boss1, nameof(HoverMovementModule)),
         Entry(BossState.Boss1_AttackSelection, BossType.Boss1, nameof(Boss1AttackSelectionModule)),
@@ -47,32 +46,23 @@ public static class FixedBossStateModuleCatalog
         Entry(BossState.Boss2_Dead, BossType.Boss2, nameof(Boss2DeadModule))
     ]);
 
-    /// <summary>Unknown を除く固定状態の全対応を取得します。</summary>
-    public static IReadOnlyList<FixedBossStateModule> Entries => _entries;
-
     /// <summary>指定された BossType に属する固定状態の対応を取得します。</summary>
     public static IEnumerable<FixedBossStateModule> GetEntriesFor(BossType bossType)
     {
-        for (int index = 0; index < _entries.Count; index++)
-        {
-            if (_entries[index].BossType == bossType)
-            {
-                yield return _entries[index];
-            }
-        }
+        for (var index = 0; index < Entries.Count; index++)
+            if (Entries[index].BossType == bossType)
+                yield return Entries[index];
     }
 
     /// <summary>固定状態に対応する module 記述を取得します。</summary>
     public static bool Get(BossState state, out FixedBossStateModule entry)
     {
-        for (int index = 0; index < _entries.Count; index++)
-        {
-            if (_entries[index].State == state)
+        for (var index = 0; index < Entries.Count; index++)
+            if (Entries[index].State == state)
             {
-                entry = _entries[index];
+                entry = Entries[index];
                 return true;
             }
-        }
 
         entry = default;
         return false;
@@ -81,30 +71,28 @@ public static class FixedBossStateModuleCatalog
     /// <summary>固定集合の完全性と一対一対応を検査します。</summary>
     public static bool IsComplete(out string diagnostic)
     {
-        int expectedCount = (Enum.GetValues<Boss1State>().Length - 1) + (Enum.GetValues<Boss2State>().Length - 1);
-        if (_entries.Count != expectedCount)
+        var expectedCount = Enum.GetValues<Boss1State>().Length - 1 + (Enum.GetValues<Boss2State>().Length - 1);
+        if (Entries.Count != expectedCount)
         {
             diagnostic = "固定 BossState の対応数が一致しません。";
             return false;
         }
 
-        for (int index = 0; index < _entries.Count; index++)
+        for (var index = 0; index < Entries.Count; index++)
         {
-            FixedBossStateModule entry = _entries[index];
+            var entry = Entries[index];
             if (!entry.IsValid)
             {
                 diagnostic = $"固定 BossState の module 記述が不正です: {entry.State}";
                 return false;
             }
 
-            for (int other = index + 1; other < _entries.Count; other++)
-            {
-                if (_entries[other].State == entry.State)
+            for (var other = index + 1; other < Entries.Count; other++)
+                if (Entries[other].State == entry.State)
                 {
                     diagnostic = $"固定 BossState が重複しています: {entry.State}";
                     return false;
                 }
-            }
         }
 
         diagnostic = "固定 BossState と State_Module の対応は完全です。";
@@ -118,10 +106,8 @@ public static class FixedBossStateModuleCatalog
 
     private static Type ResolveType(BossState state)
     {
-        return state.BossType switch
-        {
-            BossType.Boss1 => state.AsBoss1() switch
-            {
+        return state.BossType switch {
+            BossType.Boss1 => state.AsBoss1() switch {
                 Boss1State.Hover => typeof(HoverMovementModule),
                 Boss1State.AttackSelection => typeof(Boss1AttackSelectionModule),
                 Boss1State.Telegraph => typeof(Boss1TelegraphModule),
@@ -131,8 +117,7 @@ public static class FixedBossStateModuleCatalog
                 Boss1State.Dead => typeof(Boss1DeadModule),
                 _ => typeof(object)
             },
-            BossType.Boss2 => state.AsBoss2() switch
-            {
+            BossType.Boss2 => state.AsBoss2() switch {
                 Boss2State.Idle => typeof(Boss2IdleModule),
                 Boss2State.PatrolChase => typeof(Boss2PatrolChaseModule),
                 Boss2State.MoveToTakeoff => typeof(Boss2MoveToTakeoffModule),

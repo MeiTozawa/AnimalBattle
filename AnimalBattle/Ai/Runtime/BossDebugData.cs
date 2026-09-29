@@ -5,8 +5,7 @@ namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>Debug 表示が有効なときだけ生成する診断データ構造体です。</summary>
 [StructLayout(LayoutKind.Sequential)]
-public struct BossDebugData
-{
+public struct BossDebugData {
     /// <summary>現在の State_Id です。</summary>
     public BossState BossState;
 

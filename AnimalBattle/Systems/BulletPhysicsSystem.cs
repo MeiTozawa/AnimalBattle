@@ -1,57 +1,51 @@
-using System;
 using System.Buffers;
 using AnimalBattle.Bindings;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// プレイヤー弾および Boss 弾幕の等速直線運動および画面外デスポーン（消滅）境界判定を一括制御する ECS System。
-/// Flecs.NET の Iter から連続コンポーネント配列を取得し、C++ SIMD バッチ物理計算を一括実行します。
+///     プレイヤー弾および Boss 弾幕の等速直線運動および画面外デスポーン（消滅）境界判定を一括制御する ECS System。
+///     Flecs.NET の Iter から連続コンポーネント配列を取得し、C++ SIMD バッチ物理計算を一括実行します。
 /// </summary>
-public static class BulletPhysicsSystem
-{
+public static class BulletPhysicsSystem {
     /// <summary>
-    /// 弾物理システムを Flecs.NET ワールドへ登録します。
+    ///     弾物理システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddBulletPhysicsSystem(this World world)
     {
         world.System<Transform, Velocity>("PlayerBulletMovementSystem")
-             .With<PlayerBulletTag>()
-             .Kind(Ecs.OnUpdate)
-             .Iter(RunBatchBulletMovement);
+           .With<PlayerBulletTag>()
+           .Kind(Ecs.OnUpdate)
+           .Iter(RunBatchBulletMovement);
 
         world.System<Transform, Velocity>("BossBulletMovementSystem")
-             .With<BossBulletTag>()
-             .Kind(Ecs.OnUpdate)
-             .Iter(RunBatchBulletMovement);
+           .With<BossBulletTag>()
+           .Kind(Ecs.OnUpdate)
+           .Iter(RunBatchBulletMovement);
 
         return world;
     }
 
     private static void RunBatchBulletMovement(Iter it, Field<Transform> trans, Field<Velocity> vel)
     {
-        int count = it.Count();
-        if (count <= 0)
-        {
-            return;
-        }
+        var count = it.Count();
+        if (count <= 0) return;
 
-        ArenaConfig arenaCfg = ConfigManager.Arena;
+        var arenaCfg = ConfigManager.Arena;
         const int stackallocThreshold = 1024;
-        byte[]? rentedArray = count > stackallocThreshold ? ArrayPool<byte>.Shared.Rent(count) : null;
-        Span<byte> despawnFlags = rentedArray != null ? rentedArray.AsSpan(0, count) : stackalloc byte[count];
+        var rentedArray = count > stackallocThreshold ? ArrayPool<byte>.Shared.Rent(count) : null;
+        var despawnFlags = rentedArray != null ? rentedArray.AsSpan(0, count) : stackalloc byte[count];
 
         try
         {
             unsafe
             {
-                Transform* pTrans = (Transform*)trans.Data;
-                Velocity* pVel = (Velocity*)vel.Data;
+                var pTrans = (Transform*)trans.Data;
+                var pVel = (Velocity*)vel.Data;
 
                 fixed (byte* pFlags = despawnFlags)
                 {
@@ -68,21 +62,14 @@ public static class BulletPhysicsSystem
                 }
             }
 
-            World w = it.World();
-            for (int i = 0; i < count; ++i)
-            {
+            var w = it.World();
+            for (var i = 0; i < count; ++i)
                 if (despawnFlags[i] != 0)
-                {
                     CombatEntityPoolHelper.Recycle(w, it.Entity(i));
-                }
-            }
         }
         finally
         {
-            if (rentedArray != null)
-            {
-                ArrayPool<byte>.Shared.Return(rentedArray);
-            }
+            if (rentedArray != null) ArrayPool<byte>.Shared.Return(rentedArray);
         }
     }
 }

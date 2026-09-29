@@ -1,20 +1,16 @@
-using System;
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Core;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// 戦闘演出（被弾スパーク・ジャンプエフェクト・衝撃波・撃破爆発等）および弾幕生成の補助メソッド群を提供する静的ヘルパークラス。
-/// 生成する敵弾に <see cref="Hitbox"/>（敵性陣営・円形判定）を付与します。
+///     戦闘演出（被弾スパーク・ジャンプエフェクト・衝撃波・撃破爆発等）および弾幕生成の補助メソッド群を提供する静的ヘルパークラス。
+///     生成する敵弾に <see cref="Hitbox" />（敵性陣営・円形判定）を付与します。
 /// </summary>
-public static class CombatEffectHelper
-{
-
+public static class CombatEffectHelper {
     /// <summary>
-    /// 指定座標に Boss 弾幕エンティティを生成します。
+    ///     指定座標に Boss 弾幕エンティティを生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="x">出現 X 座標</param>
@@ -24,13 +20,14 @@ public static class CombatEffectHelper
     /// <param name="radius">判定半径</param>
     /// <param name="fillColor">塗りつぶし色</param>
     /// <param name="outlineColor">外枠発光色</param>
-    public static void SpawnBossBullet(World world, float x, float y, float vx, float vy, float radius, Color fillColor, Color outlineColor)
+    public static void SpawnBossBullet(World world, float x, float y, float vx, float vy, float radius, Color fillColor,
+        Color outlineColor)
     {
         SpawnBossSpecialBullet(world, x, y, vx, vy, radius, BulletType.Normal, fillColor, outlineColor);
     }
 
     /// <summary>
-    /// 指定座標に特殊挙動（品紅・黄・青・黒）を持つ Boss 弾幕エンティティを生成します。
+    ///     指定座標に特殊挙動（品紅・黄・青・黒）を持つ Boss 弾幕エンティティを生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド。</param>
     /// <param name="x">出現 X 座標。</param>
@@ -52,29 +49,24 @@ public static class CombatEffectHelper
         Color? fillColor = null,
         Color? outlineColor = null)
     {
-        Color fill = fillColor ?? GetDefaultFillColor(type);
-        Color outline = outlineColor ?? GetDefaultOutlineColor(type);
+        var fill = fillColor ?? GetDefaultFillColor(type);
+        var outline = outlineColor ?? GetDefaultOutlineColor(type);
 
         // 事前確保されたエンティティプールから Boss 弾幕エンティティを貸し出し
-        Entity entity = CombatEntityPoolHelper.RentBossBullet(world)
-             .Set(new Transform(x, y))
-             .Set(new Velocity(vx, vy))
-             .Set(new Bullet(radius, fill, outline))
-             .Set(new Hitbox(new CollisionShape.Circle(radius), damage: 1.0f, faction: Faction.Hostile, destroyOnHit: true))
-             .Add<BossBulletTag>();
+        var entity = CombatEntityPoolHelper.RentBossBullet(world)
+           .Set(new Transform(x, y))
+           .Set(new Velocity(vx, vy))
+           .Set(new Bullet(radius, fill, outline))
+           .Set(new Hitbox(new CollisionShape.Circle(radius), 1.0f, Faction.Hostile))
+           .Add<BossBulletTag>();
 
         if (type != BulletType.Normal)
-        {
             entity.Set(new BulletModifier(type, radius, vx, vy));
-        }
-        else if (entity.Has<BulletModifier>())
-        {
-            entity.Remove<BulletModifier>();
-        }
+        else if (entity.Has<BulletModifier>()) entity.Remove<BulletModifier>();
     }
 
     /// <summary>
-    /// Boss 被弾時に、現在の Phase に応じた数量の黑色弾幕を全方位ランダムに発射します。
+    ///     Boss 被弾時に、現在の Phase に応じた数量の黑色弾幕を全方位ランダムに発射します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド。</param>
     /// <param name="bossX">Boss の中心 X 座標。</param>
@@ -82,8 +74,7 @@ public static class CombatEffectHelper
     /// <param name="phase">現在の戦闘 Phase（Phase 1: 1枚, Phase 2: 2枚, Phase 3: 3枚）。</param>
     public static void SpawnBossCounterAttack(World world, float bossX, float bossY, Phase phase)
     {
-        int bulletCount = phase switch
-        {
+        var bulletCount = phase switch {
             Phase.Phase1 => 1,
             Phase.Phase2 => 2,
             Phase.Phase3 => 3,
@@ -93,11 +84,11 @@ public static class CombatEffectHelper
         const float counterBulletSpeed = 160.0f;
         const float counterBulletRadius = 8.0f;
 
-        for (int i = 0; i < bulletCount; i++)
+        for (var i = 0; i < bulletCount; i++)
         {
-            float angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
-            float vx = MathF.Cos(angle) * counterBulletSpeed;
-            float vy = MathF.Sin(angle) * counterBulletSpeed;
+            var angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
+            var vx = MathF.Cos(angle) * counterBulletSpeed;
+            var vy = MathF.Sin(angle) * counterBulletSpeed;
 
             SpawnBossSpecialBullet(
                 world,
@@ -112,8 +103,7 @@ public static class CombatEffectHelper
 
     private static Color GetDefaultFillColor(BulletType type)
     {
-        return type switch
-        {
+        return type switch {
             BulletType.Magenta => Color.FromArgb(255, 255, 20, 147),
             BulletType.Yellow => Color.FromArgb(255, 255, 215, 0),
             BulletType.Cyan => Color.FromArgb(255, 0, 240, 255),
@@ -124,8 +114,7 @@ public static class CombatEffectHelper
 
     private static Color GetDefaultOutlineColor(BulletType type)
     {
-        return type switch
-        {
+        return type switch {
             BulletType.Magenta => Color.FromArgb(255, 255, 255, 255),
             BulletType.Yellow => Color.FromArgb(255, 255, 255, 190),
             BulletType.Cyan => Color.FromArgb(255, 255, 255, 255),
@@ -135,19 +124,19 @@ public static class CombatEffectHelper
     }
 
     /// <summary>
-    /// フィールド上に存在するすべての Boss 弾幕を一括消去します。
+    ///     フィールド上に存在するすべての Boss 弾幕を一括消去します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     public static void ClearAllBossBullets(World world)
     {
-        using Query query = world.QueryBuilder()
-                                 .With<BossBulletTag>()
-                                 .Build();
-        query.Each((Entity e) => CombatEntityPoolHelper.Recycle(world, e));
+        using var query = world.QueryBuilder()
+           .With<BossBulletTag>()
+           .Build();
+        query.Each(e => CombatEntityPoolHelper.Recycle(world, e));
     }
 
     /// <summary>
-    /// 二段ジャンプ時の空気リングエフェクトを生成します。
+    ///     二段ジャンプ時の空気リングエフェクトを生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="x">中心 X 座標</param>
@@ -155,53 +144,53 @@ public static class CombatEffectHelper
     public static void SpawnJumpRingEffect(World world, float x, float y)
     {
         CombatEntityPoolHelper.RentRingEffect(world)
-             .Set(new Transform(x, y))
-             .Set(new RingEffect(8.0f, 32.0f, ColorPalette.White, isFilled: false))
-             .Set(new FadeEffect(0.18f));
+           .Set(new Transform(x, y))
+           .Set(new RingEffect(8.0f, 32.0f, ColorPalette.White))
+           .Set(new FadeEffect(0.18f));
     }
 
     /// <summary>
-    /// 被弾時のヒットスパークエフェクトを生成します。
+    ///     被弾時のヒットスパークエフェクトを生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="x">中心 X 座標</param>
     /// <param name="y">中心 Y 座標</param>
     public static void SpawnHitSparkEffect(World world, float x, float y)
     {
-        for (int i = 0; i < 3; i++)
+        for (var i = 0; i < 3; i++)
         {
-            float angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
-            float speed = 60.0f + Random.Shared.NextSingle() * 120.0f;
+            var angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
+            var speed = 60.0f + Random.Shared.NextSingle() * 120.0f;
             CombatEntityPoolHelper.RentSparkEffect(world)
-                 .Set(new Transform(x, y))
-                 .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
-                 .Set(new Bullet(3.5f, ColorPalette.SparkYellow, ColorPalette.White))
-                 .Set(new FadeEffect(0.12f));
+               .Set(new Transform(x, y))
+               .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
+               .Set(new Bullet(3.5f, ColorPalette.SparkYellow, ColorPalette.White))
+               .Set(new FadeEffect(0.12f));
         }
     }
 
     /// <summary>
-    /// プレイヤー死亡時の飛散パーティクルを生成します。
+    ///     プレイヤー死亡時の飛散パーティクルを生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="x">中心 X 座標</param>
     /// <param name="y">中心 Y 座標</param>
     public static void SpawnPlayerDeathParticles(World world, float x, float y)
     {
-        for (int i = 0; i < 16; i++)
+        for (var i = 0; i < 16; i++)
         {
-            float angle = (i / 16.0f) * MathF.PI * 2.0f;
-            float speed = 4.0f + (i % 3) * 2.0f;
+            var angle = i / 16.0f * MathF.PI * 2.0f;
+            var speed = 4.0f + i % 3 * 2.0f;
             CombatEntityPoolHelper.RentSparkEffect(world)
-                 .Set(new Transform(x, y))
-                 .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
-                 .Set(new Bullet(5.0f, ColorPalette.Red, ColorPalette.White))
-                 .Set(new FadeEffect(0.60f));
+               .Set(new Transform(x, y))
+               .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
+               .Set(new Bullet(5.0f, ColorPalette.Red, ColorPalette.White))
+               .Set(new FadeEffect(0.60f));
         }
     }
 
     /// <summary>
-    /// Phase 遷移時の清屏衝撃波エフェクトを生成します。
+    ///     Phase 遷移時の清屏衝撃波エフェクトを生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="x">中心 X 座標</param>
@@ -209,33 +198,33 @@ public static class CombatEffectHelper
     public static void SpawnShockwave(World world, float x, float y)
     {
         CombatEntityPoolHelper.RentRingEffect(world)
-             .Set(new Transform(x, y))
-             .Set(new RingEffect(20.0f, 150.0f, ColorPalette.Cyan, isFilled: false))
-             .Set(new FadeEffect(0.40f));
+           .Set(new Transform(x, y))
+           .Set(new RingEffect(20.0f, 150.0f, ColorPalette.Cyan))
+           .Set(new FadeEffect(0.40f));
     }
 
     /// <summary>
-    /// Boss 撃破勝利時の祝賀爆発パーティクルを生成します。
+    ///     Boss 撃破勝利時の祝賀爆発パーティクルを生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="x">中心 X 座標</param>
     /// <param name="y">中心 Y 座標</param>
     public static void SpawnVictoryExplosions(World world, float x, float y)
     {
-        for (int i = 0; i < 32; i++)
+        for (var i = 0; i < 32; i++)
         {
-            float angle = (i / 32.0f) * MathF.PI * 2.0f;
-            float speed = 3.0f + (i % 5) * 2.5f;
+            var angle = i / 32.0f * MathF.PI * 2.0f;
+            var speed = 3.0f + i % 5 * 2.5f;
             CombatEntityPoolHelper.RentSparkEffect(world)
-                 .Set(new Transform(x, y))
-                 .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
-                 .Set(new Bullet(6.0f, ColorPalette.Gold, ColorPalette.GoldLight))
-                 .Set(new FadeEffect(0.90f));
+               .Set(new Transform(x, y))
+               .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
+               .Set(new Bullet(6.0f, ColorPalette.Gold, ColorPalette.GoldLight))
+               .Set(new FadeEffect(0.90f));
         }
     }
 
     /// <summary>
-    /// 近接斬撃判定（矩形 Hitbox ＋ 斬撃スプライト視覚エフェクト）を生成します。
+    ///     近接斬撃判定（矩形 Hitbox ＋ 斬撃スプライト視覚エフェクト）を生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="x">判定中心 X 座標</param>
@@ -261,37 +250,35 @@ public static class CombatEffectHelper
         Color color,
         SlashDirection direction = SlashDirection.Right)
     {
-        ErrorOr.ErrorOr<int> slashRes = AssetManager.GetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng);
-        int slashHandle = !slashRes.IsError ? slashRes.Value : -1;
-        int colIndex = 5; // 第 6 列 (0-based: 5)
-        int rowIndex = (int)direction;
-        Rect srcRect = Rect.FromWidthHeight(colIndex * 64, rowIndex * 64, 64, 64);
-        float scale = MathF.Max(width, height) / 28.0f;
+        var slashRes = AssetManager.GetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng);
+        var slashHandle = !slashRes.IsError ? slashRes.Value : -1;
+        var colIndex = 5; // 第 6 列 (0-based: 5)
+        var rowIndex = (int)direction;
+        var srcRect = Rect.FromWidthHeight(colIndex * 64, rowIndex * 64, 64, 64);
+        var scale = MathF.Max(width, height) / 28.0f;
 
         // 64x64 セル内の斬撃ピクセル重心偏り（Right: +18px, Left: -18px）を逆補正して視覚中心を (x, y) に一致させる
-        float offsetX = direction switch
-        {
+        var offsetX = direction switch {
             SlashDirection.Right => -18.0f * scale,
             SlashDirection.Left => 18.0f * scale,
             _ => 0.0f
         };
-        float offsetY = direction switch
-        {
+        var offsetY = direction switch {
             SlashDirection.Down => -18.0f * scale,
             SlashDirection.Up => 18.0f * scale,
             _ => 0.0f
         };
 
         CombatEntityPoolHelper.RentAreaEffect(world)
-             .Set(new Transform(x + offsetX, y + offsetY, scaleX: scale, scaleY: scale))
-             .Set(new Velocity(vx, vy))
-             .Set(new Hitbox(new CollisionShape.Box(width, height, OffsetX: -offsetX, OffsetY: -offsetY), damage: damage, faction: Faction.Hostile, destroyOnHit: false))
-             .Set(new Sprite(slashHandle, flipX: false, isVisible: true, srcRect: srcRect, color: color))
-             .Set(new FadeEffect(lifetime));
+           .Set(new Transform(x + offsetX, y + offsetY, scale, scale))
+           .Set(new Velocity(vx, vy))
+           .Set(new Hitbox(new CollisionShape.Box(width, height, -offsetX, -offsetY), damage, Faction.Hostile, false))
+           .Set(new Sprite(slashHandle, false, true, srcRect, color))
+           .Set(new FadeEffect(lifetime));
     }
 
     /// <summary>
-    /// 地面を這う衝撃波弾幕エンティティを生成します。
+    ///     地面を這う衝撃波弾幕エンティティを生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="x">出現 X 座標</param>
@@ -301,13 +288,14 @@ public static class CombatEffectHelper
     /// <param name="damage">与ダメージ量</param>
     /// <param name="fillColor">塗りつぶし色</param>
     /// <param name="outlineColor">外枠発光色</param>
-    public static void SpawnGroundShockwave(World world, float x, float y, float vx, float radius, float damage, Color fillColor, Color outlineColor)
+    public static void SpawnGroundShockwave(World world, float x, float y, float vx, float radius, float damage,
+        Color fillColor, Color outlineColor)
     {
         CombatEntityPoolHelper.RentBossBullet(world)
-             .Set(new Transform(x, y))
-             .Set(new Velocity(vx, 0.0f))
-             .Set(new Bullet(radius, fillColor, outlineColor))
-             .Set(new Hitbox(new CollisionShape.Circle(radius), damage: damage, faction: Faction.Hostile, destroyOnHit: true))
-             .Add<BossBulletTag>();
+           .Set(new Transform(x, y))
+           .Set(new Velocity(vx))
+           .Set(new Bullet(radius, fillColor, outlineColor))
+           .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile))
+           .Add<BossBulletTag>();
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
@@ -6,36 +5,32 @@ using AnimalBattle.Ai.Contracts;
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// グローバルな列挙体文字列事前生成ルックアップテーブル（LUT）。
-/// ホットパスにおける <see cref="Enum.ToString()"/> のリフレクション辞書検索とヒープ文字列割り当てを完全に排除します。
+///     グローバルな列挙体文字列事前生成ルックアップテーブル（LUT）。
+///     ホットパスにおける <see cref="Enum.ToString()" /> のリフレクション辞書検索とヒープ文字列割り当てを完全に排除します。
 /// </summary>
-public static class EnumStringLut
-{
-    private static readonly string[] Boss1SkillNames =
-    [
+public static class EnumStringLut {
+    private static readonly string[] Boss1SkillNames = [
         "None",
-        "Aimed3Shot",   // 101 -> index 1
-        "RingBurst",    // 102 -> index 2
+        "Aimed3Shot", // 101 -> index 1
+        "RingBurst", // 102 -> index 2
         "DoubleSpiral", // 103 -> index 3
-        "RainDrop",     // 104 -> index 4
-        "CrossChaos",   // 105 -> index 5
-        "FastSniper",   // 106 -> index 6
-        "DiveRam"       // 107 -> index 7
+        "RainDrop", // 104 -> index 4
+        "CrossChaos", // 105 -> index 5
+        "FastSniper", // 106 -> index 6
+        "DiveRam" // 107 -> index 7
     ];
 
-    private static readonly string[] Boss2SkillNames =
-    [
+    private static readonly string[] Boss2SkillNames = [
         "None",
-        "HeavySlash",    // 201 -> index 1
-        "DoubleCleave",  // 202 -> index 2
-        "GroundStomp",   // 203 -> index 3
-        "LeapSmash",     // 204 -> index 4
-        "FrenzyCharge",  // 205 -> index 5
+        "HeavySlash", // 201 -> index 1
+        "DoubleCleave", // 202 -> index 2
+        "GroundStomp", // 203 -> index 3
+        "LeapSmash", // 204 -> index 4
+        "FrenzyCharge", // 205 -> index 5
         "EarthquakeRoar" // 206 -> index 6
     ];
 
-    private static readonly string[] Boss1StateNames =
-    [
+    private static readonly string[] Boss1StateNames = [
         "None",
         "Hover",
         "AttackSelection",
@@ -46,8 +41,7 @@ public static class EnumStringLut
         "Dead"
     ];
 
-    private static readonly string[] Boss2StateNames =
-    [
+    private static readonly string[] Boss2StateNames = [
         "None",
         "Idle",
         "PatrolChase",
@@ -61,8 +55,7 @@ public static class EnumStringLut
         "Dead"
     ];
 
-    private static readonly string[] PhaseNames =
-    [
+    private static readonly string[] PhaseNames = [
         "Unknown",
         "Phase 1",
         "Phase 2",
@@ -72,8 +65,7 @@ public static class EnumStringLut
     ];
 
     // フレーム内文字列補間をゼロ化するための事前生成 HUD 状態バッジ文字列
-    private static readonly string[] Boss1TelegraphBadges =
-    [
+    private static readonly string[] Boss1TelegraphBadges = [
         "[STATE: TELEGRAPHING (WIND-UP: None)]",
         "[STATE: TELEGRAPHING (WIND-UP: Aimed3Shot)]",
         "[STATE: TELEGRAPHING (WIND-UP: RingBurst)]",
@@ -84,8 +76,7 @@ public static class EnumStringLut
         "[STATE: TELEGRAPHING (WIND-UP: DiveRam)]"
     ];
 
-    private static readonly string[] Boss1ExecuteBadges =
-    [
+    private static readonly string[] Boss1ExecuteBadges = [
         "[STATE: EXECUTING (None)]",
         "[STATE: EXECUTING (Aimed3Shot)]",
         "[STATE: EXECUTING (RingBurst)]",
@@ -96,8 +87,7 @@ public static class EnumStringLut
         "[STATE: EXECUTING (DiveRam)]"
     ];
 
-    private static readonly string[] Boss2TelegraphBadges =
-    [
+    private static readonly string[] Boss2TelegraphBadges = [
         "[STATE: TELEGRAPHING (WIND-UP: None)]",
         "[STATE: TELEGRAPHING (WIND-UP: HeavySlash)]",
         "[STATE: TELEGRAPHING (WIND-UP: DoubleCleave)]",
@@ -107,8 +97,7 @@ public static class EnumStringLut
         "[STATE: TELEGRAPHING (WIND-UP: EarthquakeRoar)]"
     ];
 
-    private static readonly string[] Boss2ExecuteBadges =
-    [
+    private static readonly string[] Boss2ExecuteBadges = [
         "[STATE: EXECUTING (None)]",
         "[STATE: EXECUTING (HeavySlash)]",
         "[STATE: EXECUTING (DoubleCleave)]",
@@ -118,8 +107,7 @@ public static class EnumStringLut
         "[STATE: EXECUTING (EarthquakeRoar)]"
     ];
 
-    private static readonly string[] Boss2ChaseBadges =
-    [
+    private static readonly string[] Boss2ChaseBadges = [
         "[STATE: CHASE (NEXT: None)]",
         "[STATE: CHASE (NEXT: HeavySlash)]",
         "[STATE: CHASE (NEXT: DoubleCleave)]",
@@ -131,68 +119,62 @@ public static class EnumStringLut
 
     public static string Get(BossSkill skill)
     {
-        ushort val = (ushort)skill;
-        if (val >= 101 && val <= 107)
-        {
-            return Boss1SkillNames[val - 100];
-        }
-        if (val >= 201 && val <= 206)
-        {
-            return Boss2SkillNames[val - 200];
-        }
+        var val = (ushort)skill;
+        if (val >= 101 && val <= 107) return Boss1SkillNames[val - 100];
+        if (val >= 201 && val <= 206) return Boss2SkillNames[val - 200];
         return "None";
     }
 
     public static string Get(Boss1State state)
     {
-        int idx = (int)state;
-        return (idx >= 0 && idx < Boss1StateNames.Length) ? Boss1StateNames[idx] : "Unknown";
+        var idx = (int)state;
+        return idx >= 0 && idx < Boss1StateNames.Length ? Boss1StateNames[idx] : "Unknown";
     }
 
     public static string Get(Boss2State state)
     {
-        int idx = (int)state;
-        return (idx >= 0 && idx < Boss2StateNames.Length) ? Boss2StateNames[idx] : "Unknown";
+        var idx = (int)state;
+        return idx >= 0 && idx < Boss2StateNames.Length ? Boss2StateNames[idx] : "Unknown";
     }
 
     public static string Get(Phase phase)
     {
-        int idx = (int)phase;
-        return (idx >= 0 && idx < PhaseNames.Length) ? PhaseNames[idx] : "Unknown";
+        var idx = (int)phase;
+        return idx >= 0 && idx < PhaseNames.Length ? PhaseNames[idx] : "Unknown";
     }
 
     public static string GetBoss1TelegraphBadge(BossSkill skill)
     {
-        ushort val = (ushort)skill;
-        int idx = (val >= 101 && val <= 107) ? val - 100 : 0;
+        var val = (ushort)skill;
+        var idx = val >= 101 && val <= 107 ? val - 100 : 0;
         return Boss1TelegraphBadges[idx];
     }
 
     public static string GetBoss1ExecuteBadge(BossSkill skill)
     {
-        ushort val = (ushort)skill;
-        int idx = (val >= 101 && val <= 107) ? val - 100 : 0;
+        var val = (ushort)skill;
+        var idx = val >= 101 && val <= 107 ? val - 100 : 0;
         return Boss1ExecuteBadges[idx];
     }
 
     public static string GetBoss2TelegraphBadge(BossSkill skill)
     {
-        ushort val = (ushort)skill;
-        int idx = (val >= 201 && val <= 206) ? val - 200 : 0;
+        var val = (ushort)skill;
+        var idx = val >= 201 && val <= 206 ? val - 200 : 0;
         return Boss2TelegraphBadges[idx];
     }
 
     public static string GetBoss2ExecuteBadge(BossSkill skill)
     {
-        ushort val = (ushort)skill;
-        int idx = (val >= 201 && val <= 206) ? val - 200 : 0;
+        var val = (ushort)skill;
+        var idx = val >= 201 && val <= 206 ? val - 200 : 0;
         return Boss2ExecuteBadges[idx];
     }
 
     public static string GetBoss2ChaseBadge(BossSkill skill)
     {
-        ushort val = (ushort)skill;
-        int idx = (val >= 201 && val <= 206) ? val - 200 : 0;
+        var val = (ushort)skill;
+        var idx = val >= 201 && val <= 206 ? val - 200 : 0;
         return Boss2ChaseBadges[idx];
     }
 }

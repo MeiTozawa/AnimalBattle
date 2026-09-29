@@ -1,13 +1,12 @@
 using System.Drawing;
-using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Configs;
 
 /// <summary>
-/// Boss の攻撃予兆・無敵シールド等の描画エフェクト設定クラス。
+///     Boss の攻撃予兆・無敵シールド等の描画エフェクト設定クラス。
 /// </summary>
-public sealed class BossEffectsRenderConfig
-{
+public sealed class BossEffectsRenderConfig {
     /// <summary>危険判定矩形 (Danger Box) の半透明アルファ値 (0～255)</summary>
     public int DangerBoxAlpha { get; set; }
 
@@ -17,7 +16,7 @@ public sealed class BossEffectsRenderConfig
     /// <summary>突進軌道レーン (Charge Track) の半透明アルファ値 (0～255)</summary>
     public int ChargeTrackAlpha { get; set; }
 
-    /// <summary>警告テキスト・マーカー表示色 (<see cref="Color"/>)</summary>
+    /// <summary>警告テキスト・マーカー表示色 (<see cref="Color" />)</summary>
     public Color WarningTextColor { get; set; }
 
     /// <summary>照準レーザー線の太さ (px)</summary>
@@ -53,7 +52,7 @@ public sealed class BossEffectsRenderConfig
     /// <summary>易傷時の醒目攻撃チャンス表示 Y 軸オフセット (px)</summary>
     public float ChanceMarkerOffsetY { get; set; }
 
-    /// <summary>易傷時の醒目攻撃チャンス表示色 (<see cref="Color"/>)</summary>
+    /// <summary>易傷時の醒目攻撃チャンス表示色 (<see cref="Color" />)</summary>
     public Color ChanceMarkerColor { get; set; }
 
     /// <summary>Boss 浮遊時の揺れ角度振幅</summary>
@@ -65,20 +64,19 @@ public sealed class BossEffectsRenderConfig
 }
 
 /// <summary>
-/// 銃弾および弾幕の描画設定クラス。
+///     銃弾および弾幕の描画設定クラス。
 /// </summary>
-public sealed class BulletRenderConfig
-{
+public sealed class BulletRenderConfig {
     /// <summary>プレイヤー弾外層グロー半径</summary>
     public float PlayerBulletOuterRadius { get; set; }
 
-    /// <summary>プレイヤー弾外層グロー色 (<see cref="Color"/>)</summary>
+    /// <summary>プレイヤー弾外層グロー色 (<see cref="Color" />)</summary>
     public Color PlayerBulletOuterColor { get; set; }
 
     /// <summary>プレイヤー弾内層コア半径</summary>
     public float PlayerBulletInnerRadius { get; set; }
 
-    /// <summary>プレイヤー弾内層コア色 (<see cref="Color"/>)</summary>
+    /// <summary>プレイヤー弾内層コア色 (<see cref="Color" />)</summary>
     public Color PlayerBulletInnerColor { get; set; }
 
     /// <summary>プレイヤー弾ビームトレイル半幅</summary>
@@ -87,7 +85,7 @@ public sealed class BulletRenderConfig
     /// <summary>プレイヤー弾ビームトレイル半高</summary>
     public int PlayerBulletTrailHalfHeight { get; set; }
 
-    /// <summary>プレイヤー弾ビームトレイル色 (<see cref="Color"/>)</summary>
+    /// <summary>プレイヤー弾ビームトレイル色 (<see cref="Color" />)</summary>
     public Color PlayerBulletTrailColor { get; set; }
 
     /// <summary>Boss 弾内層ホワイトコア半径比率</summary>
@@ -96,7 +94,7 @@ public sealed class BulletRenderConfig
     /// <summary>Boss 弾内層ホワイトコア最小ピクセル半径</summary>
     public int BossBulletCoreMinRadius { get; set; }
 
-    /// <summary>Boss 弾内層ホワイトコア色 (<see cref="Color"/>)</summary>
+    /// <summary>Boss 弾内層ホワイトコア色 (<see cref="Color" />)</summary>
     public Color BossBulletCoreColor { get; set; }
 
     /// <summary>Boss 弾外枠付加ピクセル半径</summary>
@@ -110,29 +108,27 @@ public sealed class BulletRenderConfig
 }
 
 /// <summary>
-/// 左上 HUD 操作案内テキストの 1 行（テキストと色）を表す設定クラス。
+///     左上 HUD 操作案内テキストの 1 行（テキストと色）を表す設定クラス。
 /// </summary>
-public sealed class HudTextItem
-{
+public sealed class HudTextItem {
     /// <summary>案内テキスト文字列</summary>
     public string Text { get; set; } = string.Empty;
 
-    /// <summary>文字色 (<see cref="Color"/>)</summary>
+    /// <summary>文字色 (<see cref="Color" />)</summary>
     public Color Color { get; set; }
 }
 
 /// <summary>
-/// 左上 HUD 操作案内表示の設定クラス。
+///     左上 HUD 操作案内表示の設定クラス。
 /// </summary>
-public sealed class HudRenderConfig
-{
+public sealed class HudRenderConfig {
     /// <summary>タイトル X 座標</summary>
     public int TitleX { get; set; }
 
     /// <summary>タイトル Y 座標</summary>
     public int TitleY { get; set; }
 
-    /// <summary>タイトル文字色 (<see cref="Color"/>)</summary>
+    /// <summary>タイトル文字色 (<see cref="Color" />)</summary>
     public Color TitleColor { get; set; }
 
     /// <summary>タイトル文字列</summary>
@@ -142,14 +138,14 @@ public sealed class HudRenderConfig
     public int LineSpacing { get; set; }
 
     /// <summary>
-    /// 操作案内テキスト項目のリスト。
+    ///     操作案内テキスト項目のリスト。
     /// </summary>
     public List<HudTextItem> Text { get; set; } = [];
 
     /// <summary>Boss 切り替え操作案内テキスト</summary>
     public string BossSwitchGuideText { get; set; } = "[1] Boss 1 (Aerial Cat)  [2] Boss 2 (Ground Crusher)";
 
-    /// <summary>Boss 切り替え操作案内文字色 (<see cref="Color"/>)</summary>
+    /// <summary>Boss 切り替え操作案内文字色 (<see cref="Color" />)</summary>
     public Color BossSwitchGuideColor { get; set; } = ColorPalette.GoldLight;
 
     /// <summary>二段ジャンプインジケータ X 座標</summary>
@@ -161,10 +157,10 @@ public sealed class HudRenderConfig
     /// <summary>二段ジャンプ表示ラベル文字列</summary>
     public string DoubleJumpText { get; set; } = "DOUBLE JUMP:";
 
-    /// <summary>二段ジャンプ有効時シンボル色 (<see cref="Color"/>)</summary>
+    /// <summary>二段ジャンプ有効時シンボル色 (<see cref="Color" />)</summary>
     public Color DoubleJumpActiveColor { get; set; } = ColorPalette.Cyan;
 
-    /// <summary>二段ジャンプ消費時シンボル色 (<see cref="Color"/>)</summary>
+    /// <summary>二段ジャンプ消費時シンボル色 (<see cref="Color" />)</summary>
     public Color DoubleJumpInactiveColor { get; set; } = ColorPalette.Gray;
 
     /// <summary>プレイヤー HP 表示 X 座標</summary>
@@ -176,24 +172,23 @@ public sealed class HudRenderConfig
     /// <summary>プレイヤー HP 表示ラベル文字列</summary>
     public string PlayerHpText { get; set; } = "PLAYER HP:  ";
 
-    /// <summary>プレイヤー HP 高（3以上）文字色 (<see cref="Color"/>)</summary>
+    /// <summary>プレイヤー HP 高（3以上）文字色 (<see cref="Color" />)</summary>
     public Color PlayerHpHighColor { get; set; } = ColorPalette.Green;
 
-    /// <summary>プレイヤー HP 中（2）文字色 (<see cref="Color"/>)</summary>
+    /// <summary>プレイヤー HP 中（2）文字色 (<see cref="Color" />)</summary>
     public Color PlayerHpMidColor { get; set; } = ColorPalette.Gold;
 
-    /// <summary>プレイヤー HP 低（1）文字色 (<see cref="Color"/>)</summary>
+    /// <summary>プレイヤー HP 低（1）文字色 (<see cref="Color" />)</summary>
     public Color PlayerHpLowColor { get; set; } = ColorPalette.Red;
 
-    /// <summary>プレイヤー HP 死亡（0）文字色 (<see cref="Color"/>)</summary>
+    /// <summary>プレイヤー HP 死亡（0）文字色 (<see cref="Color" />)</summary>
     public Color PlayerHpDeadColor { get; set; } = ColorPalette.Gray;
 }
 
 /// <summary>
-/// 画面下部 Boss HP バーおよび状態表示の設定クラス。
+///     画面下部 Boss HP バーおよび状態表示の設定クラス。
 /// </summary>
-public sealed class BossHpBarRenderConfig
-{
+public sealed class BossHpBarRenderConfig {
     /// <summary>HP バー左上 X 座標</summary>
     public int BarX1 { get; set; }
 
@@ -206,28 +201,28 @@ public sealed class BossHpBarRenderConfig
     /// <summary>HP バー右下 Y 座標</summary>
     public int BarY2 { get; set; }
 
-    /// <summary>Phase 1 HP ゲージ色 (<see cref="Color"/>)</summary>
+    /// <summary>Phase 1 HP ゲージ色 (<see cref="Color" />)</summary>
     public Color Phase1Color { get; set; }
 
-    /// <summary>Phase 2 HP ゲージ色 (<see cref="Color"/>)</summary>
+    /// <summary>Phase 2 HP ゲージ色 (<see cref="Color" />)</summary>
     public Color Phase2Color { get; set; }
 
-    /// <summary>Phase 3 HP ゲージ色 (<see cref="Color"/>)</summary>
+    /// <summary>Phase 3 HP ゲージ色 (<see cref="Color" />)</summary>
     public Color Phase3Color { get; set; }
 
     /// <summary>HP バー背景外枠パディング</summary>
     public int BgPadding { get; set; }
 
-    /// <summary>HP バー暗色背景色 (<see cref="Color"/>)</summary>
+    /// <summary>HP バー暗色背景色 (<see cref="Color" />)</summary>
     public Color BgColor { get; set; }
 
-    /// <summary>HP バー外枠線色 (<see cref="Color"/>)</summary>
+    /// <summary>HP バー外枠線色 (<see cref="Color" />)</summary>
     public Color BorderColor { get; set; }
 
     /// <summary>HP バー上面ハイライト厚み</summary>
     public int TopHighlightThickness { get; set; }
 
-    /// <summary>HP バー上面ハイライト色 (<see cref="Color"/>)</summary>
+    /// <summary>HP バー上面ハイライト色 (<see cref="Color" />)</summary>
     public Color TopHighlightColor { get; set; }
 
     /// <summary>ヘッダー文字の Y 座標オフセット</summary>
@@ -239,7 +234,7 @@ public sealed class BossHpBarRenderConfig
     /// <summary>Boss タイトル表示 Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
     public int TitleOffsetY { get; set; } = 22;
 
-    /// <summary>Boss タイトル文字色 (<see cref="Color"/>)</summary>
+    /// <summary>Boss タイトル文字色 (<see cref="Color" />)</summary>
     public Color TitleColor { get; set; }
 
     /// <summary>HP 数値テキストの右端 X 軸オフセット (BarX2 から左方向へのオフセット)</summary>
@@ -248,7 +243,7 @@ public sealed class BossHpBarRenderConfig
     /// <summary>HP 数値テキストの Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
     public int HpTextOffsetY { get; set; } = 22;
 
-    /// <summary>HP 数値文字色 (<see cref="Color"/>)</summary>
+    /// <summary>HP 数値文字色 (<see cref="Color" />)</summary>
     public Color HpTextColor { get; set; }
 
     /// <summary>状態バッジテキストの X 軸オフセット (BarX1 からの相対距離)</summary>
@@ -257,27 +252,26 @@ public sealed class BossHpBarRenderConfig
     /// <summary>状態バッジテキストの Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
     public int StateBadgeOffsetY { get; set; } = 22;
 
-    /// <summary>前隙予兆状態バッジ文字色 (<see cref="Color"/>)</summary>
+    /// <summary>前隙予兆状態バッジ文字色 (<see cref="Color" />)</summary>
     public Color StateTelegraphingColor { get; set; }
 
-    /// <summary>発動中状態バッジ文字色 (<see cref="Color"/>)</summary>
+    /// <summary>発動中状態バッジ文字色 (<see cref="Color" />)</summary>
     public Color StateCastingColor { get; set; }
 
-    /// <summary>隙あり虚弱状態バッジ文字色 (<see cref="Color"/>)</summary>
+    /// <summary>隙あり虚弱状態バッジ文字色 (<see cref="Color" />)</summary>
     public Color StateRecoveringColor { get; set; }
 
-    /// <summary>フェーズ遷移演出状態バッジ文字色 (<see cref="Color"/>)</summary>
+    /// <summary>フェーズ遷移演出状態バッジ文字色 (<see cref="Color" />)</summary>
     public Color StatePhaseTransitionColor { get; set; }
 
-    /// <summary>通常巡航状態バッジ文字色 (<see cref="Color"/>)</summary>
+    /// <summary>通常巡航状態バッジ文字色 (<see cref="Color" />)</summary>
     public Color StateDefaultColor { get; set; }
 }
 
 /// <summary>
-/// 敗北 (Game Over) および勝利 (Victory) モーダルダイアログの描画設定クラス。
+///     敗北 (Game Over) および勝利 (Victory) モーダルダイアログの描画設定クラス。
 /// </summary>
-public sealed class ModalRenderConfig
-{
+public sealed class ModalRenderConfig {
     /// <summary>Game Over 矩形左上 X 座標</summary>
     public int GameOverX1 { get; set; }
 
@@ -290,13 +284,13 @@ public sealed class ModalRenderConfig
     /// <summary>Game Over 矩形右下 Y 座標</summary>
     public int GameOverY2 { get; set; }
 
-    /// <summary>Game Over 背景色 (<see cref="Color"/>)</summary>
+    /// <summary>Game Over 背景色 (<see cref="Color" />)</summary>
     public Color GameOverBgColor { get; set; }
 
-    /// <summary>Game Over 外枠線色 (<see cref="Color"/>)</summary>
+    /// <summary>Game Over 外枠線色 (<see cref="Color" />)</summary>
     public Color GameOverOuterBorderColor { get; set; }
 
-    /// <summary>Game Over 内枠線色 (<see cref="Color"/>)</summary>
+    /// <summary>Game Over 内枠線色 (<see cref="Color" />)</summary>
     public Color GameOverInnerBorderColor { get; set; }
 
     /// <summary>Game Over タイトル X 座標</summary>
@@ -305,7 +299,7 @@ public sealed class ModalRenderConfig
     /// <summary>Game Over タイトル Y 座標</summary>
     public int GameOverTitleY { get; set; }
 
-    /// <summary>Game Over タイトル文字色 (<see cref="Color"/>)</summary>
+    /// <summary>Game Over タイトル文字色 (<see cref="Color" />)</summary>
     public Color GameOverTitleColor { get; set; }
 
     /// <summary>Game Over タイトル文字列</summary>
@@ -317,7 +311,7 @@ public sealed class ModalRenderConfig
     /// <summary>Game Over リトライテキスト Y 座標</summary>
     public int GameOverRetryY { get; set; }
 
-    /// <summary>Game Over リトライ文字色 (<see cref="Color"/>)</summary>
+    /// <summary>Game Over リトライ文字色 (<see cref="Color" />)</summary>
     public Color GameOverRetryColor { get; set; }
 
     /// <summary>Game Over リトライ案内文字列</summary>
@@ -335,13 +329,13 @@ public sealed class ModalRenderConfig
     /// <summary>Victory 矩形右下 Y 座標</summary>
     public int VictoryY2 { get; set; }
 
-    /// <summary>Victory 背景色 (<see cref="Color"/>)</summary>
+    /// <summary>Victory 背景色 (<see cref="Color" />)</summary>
     public Color VictoryBgColor { get; set; }
 
-    /// <summary>Victory 外枠線色 (<see cref="Color"/>)</summary>
+    /// <summary>Victory 外枠線色 (<see cref="Color" />)</summary>
     public Color VictoryOuterBorderColor { get; set; }
 
-    /// <summary>Victory 内枠線色 (<see cref="Color"/>)</summary>
+    /// <summary>Victory 内枠線色 (<see cref="Color" />)</summary>
     public Color VictoryInnerBorderColor { get; set; }
 
     /// <summary>Victory タイトル X 座標</summary>
@@ -350,7 +344,7 @@ public sealed class ModalRenderConfig
     /// <summary>Victory タイトル Y 座標</summary>
     public int VictoryTitleY { get; set; }
 
-    /// <summary>Victory タイトル文字色 (<see cref="Color"/>)</summary>
+    /// <summary>Victory タイトル文字色 (<see cref="Color" />)</summary>
     public Color VictoryTitleColor { get; set; }
 
     /// <summary>Victory タイトル文字列</summary>
@@ -362,7 +356,7 @@ public sealed class ModalRenderConfig
     /// <summary>Victory リトライテキスト Y 座標</summary>
     public int VictoryRetryY { get; set; }
 
-    /// <summary>Victory リトライ文字色 (<see cref="Color"/>)</summary>
+    /// <summary>Victory リトライ文字色 (<see cref="Color" />)</summary>
     public Color VictoryRetryColor { get; set; }
 
     /// <summary>Victory リトライ案内文字列</summary>
@@ -370,40 +364,38 @@ public sealed class ModalRenderConfig
 }
 
 /// <summary>
-/// Hitbox / Hurtbox / 衝突境界線デバッグ可視化描画の設定クラス。
+///     Hitbox / Hurtbox / 衝突境界線デバッグ可視化描画の設定クラス。
 /// </summary>
-public sealed class DebugRenderConfig
-{
+public sealed class DebugRenderConfig {
     /// <summary>起動時にデバッグ描画を有効にするか</summary>
     public bool Enabled { get; set; }
 
-    /// <summary>プレイヤー地形衝突ボックス枠色 (<see cref="Color"/>)</summary>
+    /// <summary>プレイヤー地形衝突ボックス枠色 (<see cref="Color" />)</summary>
     public Color PlayerTerrainBoxColor { get; set; }
 
-    /// <summary>プレイヤー被弾判定円色 (<see cref="Color"/>)</summary>
+    /// <summary>プレイヤー被弾判定円色 (<see cref="Color" />)</summary>
     public Color PlayerHurtboxColor { get; set; }
 
-    /// <summary>Boss 攻撃・被弾衝突ボックス枠色 (<see cref="Color"/>)</summary>
+    /// <summary>Boss 攻撃・被弾衝突ボックス枠色 (<see cref="Color" />)</summary>
     public Color BossHitboxColor { get; set; }
 
-    /// <summary>Boss 弾幕判定円枠色 (<see cref="Color"/>)</summary>
+    /// <summary>Boss 弾幕判定円枠色 (<see cref="Color" />)</summary>
     public Color BossBulletHitboxColor { get; set; }
 
-    /// <summary>プレイヤー銃弾判定ボックス枠色 (<see cref="Color"/>)</summary>
+    /// <summary>プレイヤー銃弾判定ボックス枠色 (<see cref="Color" />)</summary>
     public Color PlayerBulletHitboxColor { get; set; }
 
-    /// <summary>足場衝突境界枠色 (<see cref="Color"/>)</summary>
+    /// <summary>足場衝突境界枠色 (<see cref="Color" />)</summary>
     public Color PlatformHitboxColor { get; set; }
 
-    /// <summary>デバッグ状態インジケータ文字色 (<see cref="Color"/>)</summary>
+    /// <summary>デバッグ状態インジケータ文字色 (<see cref="Color" />)</summary>
     public Color IndicatorColor { get; set; }
 }
 
 /// <summary>
-/// Config/render.toml から読み込まれる全体の描画および UI 設定クラス。
+///     Config/render.toml から読み込まれる全体の描画および UI 設定クラス。
 /// </summary>
-public sealed class RenderConfig
-{
+public sealed class RenderConfig {
     /// <summary>Boss 描画エフェクト設定</summary>
     public BossEffectsRenderConfig BossEffects { get; set; } = new();
 
@@ -423,11 +415,11 @@ public sealed class RenderConfig
     public DebugRenderConfig Debug { get; set; } = new();
 
     /// <summary>
-    /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{RenderConfig}"/> インスタンスを生成します。
+    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{RenderConfig}" /> インスタンスを生成します。
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static ErrorOr.ErrorOr<ConfigBase<RenderConfig>> LoadFromFile(string path = ResourcePath.Config.Render)
+    public static ErrorOr<ConfigBase<RenderConfig>> LoadFromFile(string path = ResourcePath.Config.Render)
     {
         return ConfigBase<RenderConfig>.LoadFromFile(path);
     }

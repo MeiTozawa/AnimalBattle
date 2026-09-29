@@ -1,10 +1,9 @@
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// ゲーム内で使用される抽象入力アクション。
+///     ゲーム内で使用される抽象入力アクション。
 /// </summary>
-public enum InputAction
-{
+public enum InputAction {
     Up = 0,
     Down = 1,
     Left = 2,
@@ -18,5 +17,5 @@ public enum InputAction
     MouseClick = 10,
     Restart = 11,
     SelectBoss1 = 12,
-    SelectBoss2 = 13,
+    SelectBoss2 = 13
 }

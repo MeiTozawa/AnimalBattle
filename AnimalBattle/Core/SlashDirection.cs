@@ -1,11 +1,10 @@
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// 斬撃エフェクトの展開方向（朝下、朝上、朝右、朝左）。
-/// スプライトシート行（Row 0: Down, Row 1: Up, Row 2: Right, Row 3: Left）に対応します。
+///     斬撃エフェクトの展開方向（朝下、朝上、朝右、朝左）。
+///     スプライトシート行（Row 0: Down, Row 1: Up, Row 2: Right, Row 3: Left）に対応します。
 /// </summary>
-public enum SlashDirection
-{
+public enum SlashDirection {
     /// <summary>朝下劈砍 (Row 0)</summary>
     Down = 0,
 
@@ -16,5 +15,5 @@ public enum SlashDirection
     Right = 2,
 
     /// <summary>朝左横斬 (Row 3)</summary>
-    Left = 3,
+    Left = 3
 }

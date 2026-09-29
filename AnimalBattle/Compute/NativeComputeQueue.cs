@@ -1,42 +1,74 @@
-using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AnimalBattle.Bindings;
-using AnimalBattle.Components;
 
 namespace AnimalBattle.Compute;
 
 /// <summary>
-/// <see cref="NativeMemory.AlignedAlloc"/> により 64 バイト Cache Line 境界に整列された非托管連続メモリを C# 側で自律管理し、
-/// C++ 原生拡張 (AnimalBattleExtension.dll) の純粋無状態計算核へ一括並列同期ディスパッチを行うバッチ計算キュー。
-/// fixed ピン留め不要・GC アロケーションゼロで動作し、<see cref="IDisposable"/> による厳格な RAII 寿命管理を提供します。
+///     <see cref="NativeMemory.AlignedAlloc" /> により 64 バイト Cache Line 境界に整列された非托管連続メモリを C# 側で自律管理し、
+///     C++ 原生拡張 (AnimalBattleExtension.dll) の純粋無状態計算核へ一括並列同期ディスパッチを行うバッチ計算キュー。
+///     fixed ピン留め不要・GC アロケーションゼロで動作し、<see cref="IDisposable" /> による厳格な RAII 寿命管理を提供します。
 /// </summary>
-public sealed unsafe class NativeComputeQueue : IDisposable
-{
+public sealed unsafe class NativeComputeQueue : IDisposable {
     private static NativeComputeQueue? _shared;
-    private static readonly object _syncLock = new();
+    private static readonly Lock _syncLock = new();
+
+    private static readonly SpecialBulletBatchItem _dummyBullet = default;
+
+    private SpecialBulletBatchItem* _bulletBuffer;
+
+    /// <summary>
+    ///     指定された容量で 64 バイト物理対齐の非托管メモリを確保し、バッチ計算キューを初期化します。
+    /// </summary>
+    /// <param name="capacity">収容可能な最大要素数（既定値: 4096）。</param>
+    public NativeComputeQueue(int capacity = 4096)
+    {
+        Capacity = Math.Max(16, capacity);
+        BulletCount = 0;
+        IsDisposed = false;
+
+        var bulletBytes = (nuint)(sizeof(SpecialBulletBatchItem) * Capacity);
+
+        _bulletBuffer = (SpecialBulletBatchItem*)NativeMemory.AlignedAlloc(bulletBytes, 64);
+    }
 
     /// <summary>全システム間で共有可能な既定のバッチ計算キューインスタンス。</summary>
-    public static NativeComputeQueue Shared
-    {
+    public static NativeComputeQueue Shared {
         get
         {
             if (_shared == null || _shared.IsDisposed)
-            {
                 lock (_syncLock)
                 {
-                    if (_shared == null || _shared.IsDisposed)
-                    {
-                        _shared = new NativeComputeQueue();
-                    }
+                    if (_shared == null || _shared.IsDisposed) _shared = new NativeComputeQueue();
                 }
-            }
+
             return _shared;
         }
     }
 
+    /// <summary>現在キューに蓄積されている特殊弾幕計算要求数。</summary>
+    public int BulletCount { get; private set; }
+
+    /// <summary>固定バッファの最大収容要素数。</summary>
+    public int Capacity { get; }
+
+    /// <summary>リソースが破棄済みであるか否かを取得します。</summary>
+    public bool IsDisposed { get; private set; }
+
+    /// <summary>特殊弾幕バッファの先頭アドレス（アライメント検証用）。</summary>
+    internal void* BulletBufferPtr => _bulletBuffer;
+
     /// <summary>
-    /// 共有バッチ計算キューの物理メモリを直ちに破棄し、ライフサイクルを終了します。
+    ///     確保された 64 バイト物理対齐の非托管メモリを直ちに解放します。
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    ///     共有バッチ計算キューの物理メモリを直ちに破棄し、ライフサイクルを終了します。
     /// </summary>
     public static void ShutdownShared()
     {
@@ -50,42 +82,8 @@ public sealed unsafe class NativeComputeQueue : IDisposable
         }
     }
 
-    private static readonly SpecialBulletBatchItem _dummyBullet = default;
-
-    private SpecialBulletBatchItem* _bulletBuffer;
-    private readonly int _capacity;
-    private int _bulletCount;
-    private bool _isDisposed;
-
-    /// <summary>現在キューに蓄積されている特殊弾幕計算要求数。</summary>
-    public int BulletCount => _bulletCount;
-
-    /// <summary>固定バッファの最大収容要素数。</summary>
-    public int Capacity => _capacity;
-
-    /// <summary>リソースが破棄済みであるか否かを取得します。</summary>
-    public bool IsDisposed => _isDisposed;
-
-    /// <summary>特殊弾幕バッファの先頭アドレス（アライメント検証用）。</summary>
-    internal void* BulletBufferPtr => _bulletBuffer;
-
     /// <summary>
-    /// 指定された容量で 64 バイト物理対齐の非托管メモリを確保し、バッチ計算キューを初期化します。
-    /// </summary>
-    /// <param name="capacity">収容可能な最大要素数（既定値: 4096）。</param>
-    public NativeComputeQueue(int capacity = 4096)
-    {
-        _capacity = Math.Max(16, capacity);
-        _bulletCount = 0;
-        _isDisposed = false;
-
-        nuint bulletBytes = (nuint)(sizeof(SpecialBulletBatchItem) * _capacity);
-
-        _bulletBuffer = (SpecialBulletBatchItem*)NativeMemory.AlignedAlloc(bulletBytes, 64);
-    }
-
-    /// <summary>
-    /// アンマネージドリソースの解放漏れを防ぐファイナライザ。
+    ///     アンマネージドリソースの解放漏れを防ぐファイナライザ。
     /// </summary>
     ~NativeComputeQueue()
     {
@@ -93,7 +91,7 @@ public sealed unsafe class NativeComputeQueue : IDisposable
     }
 
     /// <summary>
-    /// 特殊弾幕変調計算要求を非托管バッファへ直接登録し、結果回収用のハンドルインデックスを返します。
+    ///     特殊弾幕変調計算要求を非托管バッファへ直接登録し、結果回収用のハンドルインデックスを返します。
     /// </summary>
     /// <param name="type">特殊弾幕種別。</param>
     /// <param name="elapsedTimer">累積タイマー (秒)。</param>
@@ -104,77 +102,53 @@ public sealed unsafe class NativeComputeQueue : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int EnqueueSpecialBullet(BulletType type, float elapsedTimer, float baseVx, float baseVy, float baseRadius)
     {
-        if (_isDisposed || _bulletCount >= _capacity)
-        {
-            return -1;
-        }
+        if (IsDisposed || BulletCount >= Capacity) return -1;
 
-        int index = _bulletCount++;
-        _bulletBuffer[index] = new(type, elapsedTimer, baseVx, baseVy, baseRadius);
+        var index = BulletCount++;
+        _bulletBuffer[index] = new SpecialBulletBatchItem(type, elapsedTimer, baseVx, baseVy, baseRadius);
         return index;
     }
 
     /// <summary>
-    /// 指定ハンドルに対応する計算済み特殊弾幕変調結果を取得します。
+    ///     指定ハンドルに対応する計算済み特殊弾幕変調結果を取得します。
     /// </summary>
     /// <param name="handle">登録時に返却されたインデックスハンドル。</param>
     /// <returns>計算後の変調結果への読み取り専用参照。</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly SpecialBulletBatchItem GetBulletResult(int handle)
     {
-        if (!_isDisposed && handle >= 0 && handle < _bulletCount)
-        {
-            return ref _bulletBuffer[handle];
-        }
+        if (!IsDisposed && handle >= 0 && handle < BulletCount) return ref _bulletBuffer[handle];
 
         return ref _dummyBullet;
     }
 
     /// <summary>
-    /// バッファに蓄積された全計算要求を 1 回の P/Invoke で C++ 原生拡張へ引き渡し、一括同期並列実行します。
+    ///     バッファに蓄積された全計算要求を 1 回の P/Invoke で C++ 原生拡張へ引き渡し、一括同期並列実行します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Dispatch()
     {
-        if (_isDisposed)
-        {
-            throw new ObjectDisposedException(nameof(NativeComputeQueue));
-        }
+        if (IsDisposed) throw new ObjectDisposedException(nameof(NativeComputeQueue));
 
-        if (_bulletCount == 0)
-        {
-            return;
-        }
+        if (BulletCount == 0) return;
 
         NativeExtensionBindings.Extension_ProcessBatchCompute(
             _bulletBuffer,
-            _bulletCount);
+            BulletCount);
     }
 
     /// <summary>
-    /// バッファメモリを解放することなく、蓄積要素数を 0 にリセットします。
+    ///     バッファメモリを解放することなく、蓄積要素数を 0 にリセットします。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear()
     {
-        _bulletCount = 0;
-    }
-
-    /// <summary>
-    /// 確保された 64 バイト物理対齐の非托管メモリを直ちに解放します。
-    /// </summary>
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        BulletCount = 0;
     }
 
     private void Dispose(bool disposing)
     {
-        if (_isDisposed)
-        {
-            return;
-        }
+        if (IsDisposed) return;
 
         if (_bulletBuffer != null)
         {
@@ -182,6 +156,6 @@ public sealed unsafe class NativeComputeQueue : IDisposable
             _bulletBuffer = null;
         }
 
-        _isDisposed = true;
+        IsDisposed = true;
     }
 }

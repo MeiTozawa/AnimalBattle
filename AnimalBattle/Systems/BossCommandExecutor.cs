@@ -8,13 +8,12 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-/// BossAiRuntime が発行した Movement / Attack / Effect の各コマンドを
-/// Flecs.NET ECS ワールド上の Entity（Transform, Velocity, 弾幕, 近接判定, 視覚効果）へ反映する実行器クラス。
+///     BossAiRuntime が発行した Movement / Attack / Effect の各コマンドを
+///     Flecs.NET ECS ワールド上の Entity（Transform, Velocity, 弾幕, 近接判定, 視覚効果）へ反映する実行器クラス。
 /// </summary>
-public static class BossCommandExecutor
-{
+public static class BossCommandExecutor {
     /// <summary>
-    /// Boss の移動コマンドおよび物理・地形判定を ECS Entity へ適用します。
+    ///     Boss の移動コマンドおよび物理・地形判定を ECS Entity へ適用します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="entity">対象の Boss Entity</param>
@@ -28,26 +27,19 @@ public static class BossCommandExecutor
         float dt,
         Query<Transform, CollisionBox> platformQuery)
     {
-        if (!entity.Has<Transform>() || !entity.Has<Velocity>())
-        {
-            return;
-        }
+        if (!entity.Has<Transform>() || !entity.Has<Velocity>()) return;
 
-        ref Transform trans = ref entity.GetMut<Transform>();
-        ref Velocity vel = ref entity.GetMut<Velocity>();
+        ref var trans = ref entity.GetMut<Transform>();
+        ref var vel = ref entity.GetMut<Velocity>();
 
         if (slot.BossType == BossType.Boss1)
-        {
             ExecuteBoss1Movement(slot, dt, ref trans, ref vel);
-        }
         else if (slot.BossType == BossType.Boss2)
-        {
             ExecuteBoss2Movement(slot, dt, ref trans, ref vel, entity, platformQuery);
-        }
     }
 
     /// <summary>
-    /// Boss の攻撃コマンド（弾幕発射、近接 Hitbox 生成、弾幕消去）を ECS ワールドへ生成します。
+    ///     Boss の攻撃コマンド（弾幕発射、近接 Hitbox 生成、弾幕消去）を ECS ワールドへ生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="entity">対象の Boss Entity</param>
@@ -57,38 +49,35 @@ public static class BossCommandExecutor
         Entity entity,
         BossRuntimeSlot slot)
     {
-        if (slot.AttackCommands.Count == 0 || !entity.Has<Transform>())
-        {
-            return;
-        }
+        if (slot.AttackCommands.Count == 0 || !entity.Has<Transform>()) return;
 
-        PatternConfig patternCfg = ConfigManager.Pattern;
-        Boss2Config b2Cfg = ConfigManager.Boss2;
-        ref readonly Transform trans = ref entity.Get<Transform>();
-        ref readonly Velocity vel = ref entity.Get<Velocity>();
+        var patternCfg = ConfigManager.Pattern;
+        var b2Cfg = ConfigManager.Boss2;
+        ref readonly var trans = ref entity.Get<Transform>();
+        ref readonly var vel = ref entity.Get<Velocity>();
 
-        for (int i = 0; i < slot.AttackCommands.Count; i++)
+        for (var i = 0; i < slot.AttackCommands.Count; i++)
         {
-            AttackCommand cmd = slot.AttackCommands[i];
+            var cmd = slot.AttackCommands[i];
             switch (cmd.Kind)
             {
                 case AttackCommandKind.ClearBossBullets:
                     CombatEffectHelper.ClearAllBossBullets(world);
-                    break;
+                break;
 
                 case AttackCommandKind.EmitBullet:
                     ExecuteEmitBullet(world, in trans, in cmd, patternCfg);
-                    break;
+                break;
 
                 case AttackCommandKind.CreateHitbox:
                     ExecuteCreateHitbox(world, entity, in trans, in vel, in cmd, patternCfg, b2Cfg, slot);
-                    break;
+                break;
             }
         }
     }
 
     /// <summary>
-    /// Boss の演出コマンド（予兆スパーク、衝撃波、死亡爆発等）を ECS ワールドへ生成します。
+    ///     Boss の演出コマンド（予兆スパーク、衝撃波、死亡爆発等）を ECS ワールドへ生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="entity">対象の Boss Entity</param>
@@ -100,7 +89,6 @@ public static class BossCommandExecutor
     {
         if (!entity.Has<Transform>())
         {
-            return;
         }
     }
 
@@ -110,25 +98,25 @@ public static class BossCommandExecutor
         ref Transform trans,
         ref Velocity vel)
     {
-        bool hasMoveTo = false;
-        for (int i = 0; i < slot.MovementCommands.Count; i++)
+        var hasMoveTo = false;
+        for (var i = 0; i < slot.MovementCommands.Count; i++)
         {
-            MovementCommand cmd = slot.MovementCommands[i];
+            var cmd = slot.MovementCommands[i];
             switch (cmd.Kind)
             {
                 case MovementCommandKind.MoveTo:
                     trans.X = cmd.X;
                     trans.Y = cmd.Y;
                     hasMoveTo = true;
-                    break;
+                break;
                 case MovementCommandKind.SetVelocity:
                     vel.Vx = cmd.X;
                     vel.Vy = cmd.Y;
-                    break;
+                break;
                 case MovementCommandKind.Stop:
                     vel.Vx = 0.0f;
                     vel.Vy = 0.0f;
-                    break;
+                break;
             }
         }
 
@@ -147,38 +135,35 @@ public static class BossCommandExecutor
         Entity entity,
         Query<Transform, CollisionBox> platformQuery)
     {
-        Boss2Config b2Cfg = ConfigManager.Boss2;
-        ArenaConfig arenaCfg = ConfigManager.Arena;
+        var b2Cfg = ConfigManager.Boss2;
+        var arenaCfg = ConfigManager.Arena;
 
-        bool gravityHandled = false;
-        bool hasMoveTo = false;
+        var gravityHandled = false;
+        var hasMoveTo = false;
 
-        for (int i = 0; i < slot.MovementCommands.Count; i++)
+        for (var i = 0; i < slot.MovementCommands.Count; i++)
         {
-            MovementCommand cmd = slot.MovementCommands[i];
+            var cmd = slot.MovementCommands[i];
             switch (cmd.Kind)
             {
                 case MovementCommandKind.SetVelocity:
                     vel.Vx = cmd.X;
-                    if (cmd.Y != 0.0f)
-                    {
-                        vel.Vy = cmd.Y;
-                    }
+                    if (cmd.Y != 0.0f) vel.Vy = cmd.Y;
                 break;
                 case MovementCommandKind.MoveTo:
                     trans.X = cmd.X;
                     trans.Y = cmd.Y;
                     hasMoveTo = true;
-                    break;
+                break;
                 case MovementCommandKind.ApplyGravity:
-                    float gVy = vel.Vy;
+                    var gVy = vel.Vy;
                     PhysicsService.ApplyGravity(ref gVy, cmd.X, cmd.Y, dt);
                     vel.Vy = gVy;
                     gravityHandled = true;
-                    break;
+                break;
                 case MovementCommandKind.Stop:
                     vel.Vx = 0.0f;
-                    break;
+                break;
             }
         }
 
@@ -186,36 +171,36 @@ public static class BossCommandExecutor
         {
             if (entity.Has<CollisionBox>())
             {
-                ref CollisionBox col = ref entity.GetMut<CollisionBox>();
+                ref var col = ref entity.GetMut<CollisionBox>();
                 col.IsGrounded = false;
             }
+
             return;
         }
 
         if (!gravityHandled)
         {
-            float curVy = vel.Vy;
+            var curVy = vel.Vy;
             PhysicsService.ApplyGravity(ref curVy, b2Cfg.Gravity, 850.0f, dt);
             vel.Vy = curVy;
         }
 
-        float nextX = trans.X + vel.Vx * dt;
-        float nextY = trans.Y + vel.Vy * dt;
+        var nextX = trans.X + vel.Vx * dt;
+        var nextY = trans.Y + vel.Vy * dt;
         nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
 
-        float currentY = trans.Y;
+        var currentY = trans.Y;
 
-        float colWidth = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Width : b2Cfg.CollisionWidth;
-        float colHeight = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
+        var colWidth = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Width : b2Cfg.CollisionWidth;
+        var colHeight = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
         Box2D bossBox = new(nextX, nextY, colWidth, colHeight);
 
-        bool hitPlatform = false;
-        float platformGroundY = float.MaxValue;
-        float platformVy = 0.0f;
+        var hitPlatform = false;
+        var platformGroundY = float.MaxValue;
+        var platformVy = 0.0f;
 
-        bool ignorePlatforms = slot.AttackData.Skill == BossSkill.LeapSmash;
+        var ignorePlatforms = slot.AttackData.Skill == BossSkill.LeapSmash;
         if (!ignorePlatforms)
-        {
             platformQuery.Each((ref platTrans, ref platCol) =>
             {
                 Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
@@ -224,24 +209,21 @@ public static class BossCommandExecutor
                     nextY,
                     bossBox,
                     platformBox,
-                    out float groundY,
-                    out float pVy))
-                {
+                    out var groundY,
+                    out var pVy))
                     if (!hitPlatform || groundY < platformGroundY)
                     {
                         hitPlatform = true;
                         platformGroundY = groundY;
                         platformVy = pVy;
                     }
-                }
             });
-        }
 
-        bool isGrounded = hitPlatform;
-        float adjustedPosY = hitPlatform ? platformGroundY : nextY;
-        float adjustedVy = hitPlatform ? platformVy : vel.Vy;
+        var isGrounded = hitPlatform;
+        var adjustedPosY = hitPlatform ? platformGroundY : nextY;
+        var adjustedVy = hitPlatform ? platformVy : vel.Vy;
 
-        float floorLimitY = ConfigManager.Arena.FloorLimitY - colHeight / 2.0f;
+        var floorLimitY = ConfigManager.Arena.FloorLimitY - colHeight / 2.0f;
         if (adjustedPosY >= floorLimitY)
         {
             isGrounded = true;
@@ -255,13 +237,13 @@ public static class BossCommandExecutor
 
         if (entity.Has<CollisionBox>())
         {
-            ref CollisionBox col = ref entity.GetMut<CollisionBox>();
+            ref var col = ref entity.GetMut<CollisionBox>();
             col.IsGrounded = isGrounded;
         }
 
         if (entity.Has<Sprite>())
         {
-            ref Sprite sprite = ref entity.GetMut<Sprite>();
+            ref var sprite = ref entity.GetMut<Sprite>();
             sprite.FlipX = !slot.MovementData.FacingRight;
         }
     }
@@ -274,7 +256,7 @@ public static class BossCommandExecutor
     {
         if (cmd.Skill == BossSkill.RainDrop)
         {
-            BulletType bType = PatternConfig.ParseBulletType(patternCfg.RainDrop.BulletType, BulletType.Cyan);
+            var bType = PatternConfig.ParseBulletType(patternCfg.RainDrop.BulletType, BulletType.Cyan);
             CombatEffectHelper.SpawnBossSpecialBullet(
                 world,
                 cmd.X,
@@ -290,7 +272,7 @@ public static class BossCommandExecutor
 
         if (cmd.Skill == BossSkill.EarthquakeRoar)
         {
-            Random rand = Random.Shared;
+            var rand = Random.Shared;
             float rx = rand.Next((int)patternCfg.EarthquakeRoar.MinX, (int)patternCfg.EarthquakeRoar.MaxX);
             CombatEffectHelper.SpawnBossSpecialBullet(
                 world,
@@ -308,7 +290,7 @@ public static class BossCommandExecutor
         float radius;
         Color fill;
         Color outline;
-        BulletType type = BulletType.Normal;
+        var type = BulletType.Normal;
 
         if (cmd.Skill == BossSkill.Aimed3Shot)
         {
@@ -365,16 +347,16 @@ public static class BossCommandExecutor
         Boss2Config b2Cfg,
         BossRuntimeSlot slot)
     {
-        float forwardDir = slot.MovementData.FacingRight ? 1.0f : -1.0f;
-        SlashDirection dir = slot.MovementData.FacingRight ? SlashDirection.Right : SlashDirection.Left;
+        var forwardDir = slot.MovementData.FacingRight ? 1.0f : -1.0f;
+        var dir = slot.MovementData.FacingRight ? SlashDirection.Right : SlashDirection.Left;
 
 
         if (cmd.Skill == BossSkill.HeavySlash)
         {
-            float offsetX = cmd.X != 0.0f ? cmd.X : b2Cfg.SlashSpawnOffsetX;
-            float offsetY = cmd.Y != 0.0f ? cmd.Y : b2Cfg.SlashSpawnOffsetY;
-            float hitX = trans.X + forwardDir * offsetX;
-            float hitY = trans.Y + offsetY;
+            var offsetX = cmd.X != 0.0f ? cmd.X : b2Cfg.SlashSpawnOffsetX;
+            var offsetY = cmd.Y != 0.0f ? cmd.Y : b2Cfg.SlashSpawnOffsetY;
+            var hitX = trans.X + forwardDir * offsetX;
+            var hitY = trans.Y + offsetY;
             CombatEffectHelper.SpawnMeleeSlashHitbox(
                 world,
                 hitX,
@@ -390,10 +372,10 @@ public static class BossCommandExecutor
         }
         else if (cmd.Skill == BossSkill.DoubleCleave)
         {
-            float offsetX = cmd.X != 0.0f ? cmd.X : b2Cfg.SlashSpawnOffsetX;
-            float offsetY = cmd.Y != 0.0f ? cmd.Y : b2Cfg.SlashSpawnOffsetY;
-            float hitX = trans.X + forwardDir * offsetX;
-            float hitY = trans.Y + offsetY;
+            var offsetX = cmd.X != 0.0f ? cmd.X : b2Cfg.SlashSpawnOffsetX;
+            var offsetY = cmd.Y != 0.0f ? cmd.Y : b2Cfg.SlashSpawnOffsetY;
+            var hitX = trans.X + forwardDir * offsetX;
+            var hitY = trans.Y + offsetY;
             CombatEffectHelper.SpawnMeleeSlashHitbox(
                 world,
                 hitX,
@@ -409,8 +391,8 @@ public static class BossCommandExecutor
         }
         else if (cmd.Skill == BossSkill.GroundStomp)
         {
-            float colHeight = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
-            float groundY = trans.Y + colHeight / 2.0f - 10.0f;
+            var colHeight = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
+            var groundY = trans.Y + colHeight / 2.0f - 10.0f;
             CombatEffectHelper.SpawnShockwave(world, trans.X, groundY);
             CombatEffectHelper.SpawnGroundShockwave(
                 world,
@@ -433,14 +415,14 @@ public static class BossCommandExecutor
         }
         else if (cmd.Skill == BossSkill.LeapSmash)
         {
-            float colHeight = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
-            float groundY = trans.Y + colHeight / 2.0f;
+            var colHeight = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
+            var groundY = trans.Y + colHeight / 2.0f;
             CombatEffectHelper.SpawnShockwave(world, trans.X, groundY);
 
-            LeapSmashConfig leapCfg = patternCfg.LeapSmash;
-            for (int k = 0; k < leapCfg.ShrapnelCount; k++)
+            var leapCfg = patternCfg.LeapSmash;
+            for (var k = 0; k < leapCfg.ShrapnelCount; k++)
             {
-                float angle = -MathF.PI * (0.15f + 0.7f * (k / (float)(leapCfg.ShrapnelCount - 1)));
+                var angle = -MathF.PI * (0.15f + 0.7f * (k / (float)(leapCfg.ShrapnelCount - 1)));
                 CombatEffectHelper.SpawnBossBullet(
                     world,
                     trans.X,
@@ -473,5 +455,3 @@ public static class BossCommandExecutor
         }
     }
 }
-
-

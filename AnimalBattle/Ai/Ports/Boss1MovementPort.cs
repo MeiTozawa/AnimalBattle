@@ -3,13 +3,12 @@ using ErrorOr;
 namespace AnimalBattle.Ai.Ports;
 
 /// <summary>
-/// Boss1 用の移動 command port です。
+///     Boss1 用の移動 command port です。
 /// </summary>
 /// <remarks>Boss1 の移動 command port を生成します。</remarks>
 /// <param name="buffer">Entity 用に事前確保された移動 command buffer。</param>
 public sealed class Boss1MovementPort(
-    PreallocatedCommandBuffer<MovementCommand> buffer) : IMovementPort
-{
+    PreallocatedCommandBuffer<MovementCommand> buffer) : IMovementPort {
     private readonly BufferedMovementPort _buffered = new(buffer);
 
     /// <inheritdoc />

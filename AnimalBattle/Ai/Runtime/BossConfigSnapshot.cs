@@ -5,12 +5,12 @@ using AnimalBattle.Ai.Contracts;
 namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>
-/// 初期化時または設定更新時に検証済みとして公開する Boss AI 設定 snapshot です。
+///     初期化時または設定更新時に検証済みとして公開する Boss AI 設定 snapshot です。
 /// </summary>
-public readonly struct BossConfigSnapshot
-{
+public readonly struct BossConfigSnapshot {
     private static readonly FrozenDictionary<BossPhaseKey, BossPhaseSnapshot> _emptyPhases =
         new Dictionary<BossPhaseKey, BossPhaseSnapshot>().ToFrozenDictionary();
+
     private static readonly FrozenDictionary<BossSkill, AttackDefinition> _emptyAttacks =
         new Dictionary<BossSkill, AttackDefinition>().ToFrozenDictionary();
 
@@ -36,7 +36,7 @@ public readonly struct BossConfigSnapshot
     public IReadOnlyDictionary<BossSkill, AttackDefinition> Attacks => _attacks ?? _emptyAttacks;
 
     /// <summary>
-    /// 互換用の空の攻撃定義を持つ snapshot を生成します。
+    ///     互換用の空の攻撃定義を持つ snapshot を生成します。
     /// </summary>
     /// <param name="version">設定 version。0 以上である必要があります。</param>
     /// <param name="sourceName">設定を識別する不変の名前。</param>
@@ -83,12 +83,9 @@ public readonly struct BossConfigSnapshot
     public bool GetPhase(Phase phase, out BossPhaseSnapshot snapshot)
     {
         BossPhaseSnapshot? found = null;
-        foreach (KeyValuePair<BossPhaseKey, BossPhaseSnapshot> item in Phases)
+        foreach (var item in Phases)
         {
-            if (item.Key.Phase != phase)
-            {
-                continue;
-            }
+            if (item.Key.Phase != phase) continue;
 
             if (found.HasValue)
             {
@@ -113,7 +110,7 @@ public readonly struct BossConfigSnapshot
     }
 
     /// <summary>
-    /// 検証済みの設定値を凍結した snapshot を生成します。
+    ///     検証済みの設定値を凍結した snapshot を生成します。
     /// </summary>
     /// <param name="version">設定 version。</param>
     /// <param name="sourceName">設定の入力元。</param>
@@ -130,16 +127,10 @@ public readonly struct BossConfigSnapshot
         ArgumentNullException.ThrowIfNull(attacks);
 
         Dictionary<BossPhaseKey, BossPhaseSnapshot> phaseMap = new();
-        foreach (BossPhaseSnapshot phase in phases)
-        {
-            phaseMap.Add(new BossPhaseKey(phase.BossType, phase.Phase), phase);
-        }
+        foreach (var phase in phases) phaseMap.Add(new BossPhaseKey(phase.BossType, phase.Phase), phase);
 
         Dictionary<BossSkill, AttackDefinition> attackMap = new();
-        foreach (AttackDefinition attack in attacks)
-        {
-            attackMap.Add(attack.Skill, attack);
-        }
+        foreach (var attack in attacks) attackMap.Add(attack.Skill, attack);
 
         return new BossConfigSnapshot(
             version,
@@ -148,14 +139,12 @@ public readonly struct BossConfigSnapshot
             phaseMap.ToFrozenDictionary(),
             attackMap.ToFrozenDictionary());
     }
-
 }
 
 /// <summary>
-/// State_Module が参照する検証済み設定 snapshot の提供境界です。
+///     State_Module が参照する検証済み設定 snapshot の提供境界です。
 /// </summary>
-public interface IConfigProvider
-{
+public interface IConfigProvider {
     /// <summary>現在有効な設定 snapshot を取得します。</summary>
     BossConfigSnapshot Current { get; }
 }

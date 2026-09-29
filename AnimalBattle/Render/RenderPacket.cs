@@ -3,10 +3,9 @@ using System.Runtime.InteropServices;
 namespace AnimalBattle.Render;
 
 /// <summary>
-/// レンダリングコマンド種別を表す列挙型。
+///     レンダリングコマンド種別を表す列挙型。
 /// </summary>
-public enum RenderPacketType : ushort
-{
+public enum RenderPacketType : ushort {
     /// <summary>無効なコマンド</summary>
     None = 0,
 
@@ -35,15 +34,14 @@ public enum RenderPacketType : ushort
     SetDrawBlendMode = 8,
 
     /// <summary>描画輝度設定</summary>
-    SetDrawBright = 9,
+    SetDrawBright = 9
 }
 
 /// <summary>
-/// 矩形描画コマンドデータ。
+///     矩形描画コマンドデータ。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct DrawBoxPacket
-{
+public struct DrawBoxPacket {
     /// <summary>矩形左上 X 座標</summary>
     public int X1;
 
@@ -68,11 +66,10 @@ public struct DrawBoxPacket
 }
 
 /// <summary>
-/// 円描画コマンドデータ。
+///     円描画コマンドデータ。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct DrawCirclePacket
-{
+public struct DrawCirclePacket {
     /// <summary>円中心 X 座標</summary>
     public int CenterX;
 
@@ -94,11 +91,10 @@ public struct DrawCirclePacket
 }
 
 /// <summary>
-/// 線分描画コマンドデータ。
+///     線分描画コマンドデータ。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct DrawLinePacket
-{
+public struct DrawLinePacket {
     /// <summary>線分始点 X 座標</summary>
     public int X1;
 
@@ -119,11 +115,10 @@ public struct DrawLinePacket
 }
 
 /// <summary>
-/// 単純画像描画コマンドデータ。
+///     単純画像描画コマンドデータ。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct DrawGraphPacket
-{
+public struct DrawGraphPacket {
     /// <summary>画像描画先 X 座標</summary>
     public int X;
 
@@ -142,11 +137,10 @@ public struct DrawGraphPacket
 }
 
 /// <summary>
-/// 回転拡縮画像描画コマンドデータ。
+///     回転拡縮画像描画コマンドデータ。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct DrawRotaGraphPacket
-{
+public struct DrawRotaGraphPacket {
     /// <summary>回転描画中心 X 座標</summary>
     public int CenterX;
 
@@ -171,11 +165,10 @@ public struct DrawRotaGraphPacket
 }
 
 /// <summary>
-/// 矩形切り出し回転拡縮画像描画コマンドデータ。
+///     矩形切り出し回転拡縮画像描画コマンドデータ。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct DrawRectRotaGraphPacket
-{
+public struct DrawRectRotaGraphPacket {
     /// <summary>矩形切り出し回転描画中心 X 座標</summary>
     public int CenterX;
 
@@ -214,11 +207,10 @@ public struct DrawRectRotaGraphPacket
 }
 
 /// <summary>
-/// 文字列描画コマンドデータ（文字列実体は一括テキストバッファを参照）。
+///     文字列描画コマンドデータ（文字列実体は一括テキストバッファを参照）。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct DrawStringPacket
-{
+public struct DrawStringPacket {
     /// <summary>文字列描画 X 座標</summary>
     public int X;
 
@@ -236,11 +228,10 @@ public struct DrawStringPacket
 }
 
 /// <summary>
-/// 描画ブレンドモード設定コマンドデータ。
+///     描画ブレンドモード設定コマンドデータ。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct SetBlendModePacket
-{
+public struct SetBlendModePacket {
     /// <summary>ブレンドモード値</summary>
     public int Mode;
 
@@ -249,11 +240,10 @@ public struct SetBlendModePacket
 }
 
 /// <summary>
-/// 描画輝度設定コマンドデータ。
+///     描画輝度設定コマンドデータ。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct SetBrightPacket
-{
+public struct SetBrightPacket {
     /// <summary>赤輝度 (0～255)</summary>
     public int R;
 
@@ -265,53 +255,41 @@ public struct SetBrightPacket
 }
 
 /// <summary>
-/// C# - C++ 間で一括転送される 48 バイト固定長の Blittable 描画コマンドパケット。
-/// 各種描画コマンドデータは共用体（Explicit Layout Union）として同一オフセットに配置されます。
+///     C# - C++ 間で一括転送される 48 バイト固定長の Blittable 描画コマンドパケット。
+///     各種描画コマンドデータは共用体（Explicit Layout Union）として同一オフセットに配置されます。
 /// </summary>
 [StructLayout(LayoutKind.Explicit, Size = 48)]
-public struct RenderPacket
-{
+public struct RenderPacket {
     /// <summary>コマンド種別</summary>
-    [FieldOffset(0)]
-    public RenderPacketType Type;
+    [FieldOffset(0)] public RenderPacketType Type;
 
     /// <summary>予約領域（アライメント用）</summary>
-    [FieldOffset(2)]
-    public ushort Reserved;
+    [FieldOffset(2)] public ushort Reserved;
 
     /// <summary>矩形描画コマンドデータ</summary>
-    [FieldOffset(4)]
-    public DrawBoxPacket Box;
+    [FieldOffset(4)] public DrawBoxPacket Box;
 
     /// <summary>円描画コマンドデータ</summary>
-    [FieldOffset(4)]
-    public DrawCirclePacket Circle;
+    [FieldOffset(4)] public DrawCirclePacket Circle;
 
     /// <summary>線分描画コマンドデータ</summary>
-    [FieldOffset(4)]
-    public DrawLinePacket Line;
+    [FieldOffset(4)] public DrawLinePacket Line;
 
     /// <summary>単純画像描画コマンドデータ</summary>
-    [FieldOffset(4)]
-    public DrawGraphPacket Graph;
+    [FieldOffset(4)] public DrawGraphPacket Graph;
 
     /// <summary>回転拡縮画像描画コマンドデータ</summary>
-    [FieldOffset(4)]
-    public DrawRotaGraphPacket RotaGraph;
+    [FieldOffset(4)] public DrawRotaGraphPacket RotaGraph;
 
     /// <summary>矩形切り出し回転拡縮画像描画コマンドデータ</summary>
-    [FieldOffset(4)]
-    public DrawRectRotaGraphPacket RectRotaGraph;
+    [FieldOffset(4)] public DrawRectRotaGraphPacket RectRotaGraph;
 
     /// <summary>文字列描画コマンドデータ</summary>
-    [FieldOffset(4)]
-    public DrawStringPacket StringData;
+    [FieldOffset(4)] public DrawStringPacket StringData;
 
     /// <summary>描画ブレンドモード設定コマンドデータ</summary>
-    [FieldOffset(4)]
-    public SetBlendModePacket Blend;
+    [FieldOffset(4)] public SetBlendModePacket Blend;
 
     /// <summary>描画輝度設定コマンドデータ</summary>
-    [FieldOffset(4)]
-    public SetBrightPacket Bright;
+    [FieldOffset(4)] public SetBrightPacket Bright;
 }

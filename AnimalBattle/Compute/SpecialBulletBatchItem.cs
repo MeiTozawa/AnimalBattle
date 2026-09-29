@@ -1,13 +1,12 @@
 using System.Runtime.InteropServices;
-using AnimalBattle.Components;
 
 namespace AnimalBattle.Compute;
 
 /// <summary>
-/// C++ 原生拡張 (AnimalBattleExtension.dll) とバイナリ互換な特殊弾幕変調一括計算バッチ要素構造体 (32 bytes, AVX2 SIMD 整合)。
+///     C++ 原生拡張 (AnimalBattleExtension.dll) とバイナリ互換な特殊弾幕変調一括計算バッチ要素構造体 (32 bytes, AVX2 SIMD 整合)。
 /// </summary>
 /// <remarks>
-/// 特殊弾幕変調計算バッチ要素を初期化します。
+///     特殊弾幕変調計算バッチ要素を初期化します。
 /// </remarks>
 /// <param name="type">特殊弾幕種別。</param>
 /// <param name="elapsedTimer">累積タイマー (秒)。</param>
@@ -15,8 +14,12 @@ namespace AnimalBattle.Compute;
 /// <param name="baseVy">基準 Y 速度。</param>
 /// <param name="baseRadius">基準半径。</param>
 [StructLayout(LayoutKind.Sequential)]
-public struct SpecialBulletBatchItem(BulletType type, float elapsedTimer, float baseVx, float baseVy, float baseRadius)
-{
+public struct SpecialBulletBatchItem(
+    BulletType type,
+    float elapsedTimer,
+    float baseVx,
+    float baseVy,
+    float baseRadius) {
     /// <summary>特殊弾幕種別 (0:Normal, 1:Magenta, 2:Yellow, 3:Cyan, 4:Black)。</summary>
     public BulletType Type = type;
 

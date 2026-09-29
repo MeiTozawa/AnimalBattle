@@ -1,9 +1,7 @@
-using System;
-
 namespace AnimalBattle.Ai.Dsl;
 
 /// <summary>
-/// Phase ごとの足場間跳躍・落下・着地硬直など、非戦闘機動（Locomotion）の検証済みパラメータを保持する純粋データ構造体です。
+///     Phase ごとの足場間跳躍・落下・着地硬直など、非戦闘機動（Locomotion）の検証済みパラメータを保持する純粋データ構造体です。
 /// </summary>
 /// <param name="JumpForce">跳躍の初速絶対値（px/s）。</param>
 /// <param name="Gravity">適用される重力加速度（px/s^2）。</param>

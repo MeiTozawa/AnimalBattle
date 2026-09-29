@@ -4,10 +4,9 @@ using AnimalBattle.Ai.Contracts;
 namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>
-/// 一つの Boss と Phase に対する検証済み設定を表します。
+///     一つの Boss と Phase に対する検証済み設定を表します。
 /// </summary>
-public readonly struct BossPhaseSnapshot
-{
+public readonly struct BossPhaseSnapshot {
     /// <summary>対象 Boss 種別を取得します。</summary>
     public BossType BossType { get; }
 
@@ -36,7 +35,7 @@ public readonly struct BossPhaseSnapshot
     public IReadOnlyList<BossSkill> AttackSequence { get; }
 
     /// <summary>
-    /// 検証済み Phase 設定を生成します。
+    ///     検証済み Phase 設定を生成します。
     /// </summary>
     /// <param name="bossType">対象 Boss 種別。</param>
     /// <param name="phase">対象 Phase。</param>
@@ -70,7 +69,6 @@ public readonly struct BossPhaseSnapshot
         TransitionDuration = transitionDuration;
         AttackSequence = new ReadOnlyCollection<BossSkill>(attackSequence.ToArray());
     }
-
 }
 
 /// <summary>Boss 種別と Phase の組を表す snapshot のキーです。</summary>

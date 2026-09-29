@@ -1,13 +1,16 @@
-using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
 
 namespace AnimalBattle.Ai.Boss2;
 
-internal static class Boss2ModuleSupport
-{
+internal static class Boss2ModuleSupport {
+    internal static BossState SafeMovementState => Boss2State.Idle;
+    internal static BossState SafeAttackState => Boss2State.Idle;
+
     internal static bool IsBoss2(in StateContext context, in LifecycleInvocation invocation)
-        => context.BossType == BossType.Boss2 && invocation.BossType == BossType.Boss2;
+    {
+        return context.BossType == BossType.Boss2 && invocation.BossType == BossType.Boss2;
+    }
 
     internal static void Record(
         in StateContext context,
@@ -49,17 +52,11 @@ internal static class Boss2ModuleSupport
         in LifecycleInvocation invocation,
         out Boss2AttackPattern pattern)
     {
-        if (configuration.GetAttack(skill, out pattern) && pattern.IsValid)
-        {
-            return true;
-        }
+        if (configuration.GetAttack(skill, out pattern) && pattern.IsValid) return true;
 
-        Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss2 の攻撃設定が不正です。", skill);
+        Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss2 の攻撃設定が不正です。",
+            skill);
         pattern = null!;
         return false;
     }
-
-    internal static BossState SafeMovementState => Boss2State.Idle;
-    internal static BossState SafeAttackState => Boss2State.Idle;
 }
-

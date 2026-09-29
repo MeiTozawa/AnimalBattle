@@ -6,69 +6,66 @@ namespace AnimalBattle.Ai.Boss2;
 
 /// <summary>Boss2 の Execute module に共通する lifecycle 実装です。</summary>
 /// <remarks>State_Id、Boss2 設定、共有実行値を注入します。</remarks>
-public abstract class Boss2ExecuteModuleBase(BossState stateId, IBoss2Configuration configuration, Boss2BehaviorState state) : IBossStateModule, IStateModuleDependencyProvider
-{
-    private readonly IBoss2Configuration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-    private readonly Boss2BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
-    private ExecuteGate? _gate;
+public abstract class Boss2ExecuteModuleBase(
+    BossState stateId,
+    IBoss2Configuration configuration,
+    Boss2BehaviorState state) : IBossStateModule, IStateModuleDependencyProvider {
+    /// <summary>派生 module が参照する Boss2 共有実行値です。</summary>
+    protected Boss2BehaviorState State { get; } = state ?? throw new ArgumentNullException(nameof(state));
+
+    /// <summary>派生 module が参照する Boss2 設定です。</summary>
+    protected IBoss2Configuration Configuration { get; } =
+        configuration ?? throw new ArgumentNullException(nameof(configuration));
+
+    /// <summary>現在の共通 Execute gate です。</summary>
+    protected ExecuteGate? Gate { get; private set; }
 
     /// <summary>Execute 担当状態です。</summary>
     public BossState HandledState { get; } = stateId;
-    /// <summary>Execute 状態が必要とする依存関係です。</summary>
-    public IReadOnlyList<string> RequiredDependencies { get; } = ["Boss2Configuration", "MovementPort", "AttackPort", "ObservationService"];
-    /// <summary>派生 module が参照する Boss2 共有実行値です。</summary>
-    protected Boss2BehaviorState State => _state;
-    /// <summary>派生 module が参照する Boss2 設定です。</summary>
-    protected IBoss2Configuration Configuration => _configuration;
-    /// <summary>現在の共通 Execute gate です。</summary>
-    protected ExecuteGate? Gate => _gate;
 
     /// <summary>Execute 状態へ入場します。</summary>
     public virtual void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
-        if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentSkill, in context, in invocation, out Boss2AttackPattern pattern))
+        if (!Boss2ModuleSupport.GetPattern(Configuration, State.CurrentSkill, in context, in invocation,
+            out var pattern))
         {
-            _gate?.Reset();
-            _state.RequestTransition(Boss2State.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
+            Gate?.Reset();
+            State.RequestTransition(Boss2State.Idle,
+                new TransitionReason(ReasonKind.SafetyFallback, skill: State.CurrentSkill,
+                    errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
-        float forwardDir = _state.FacingRight ? 1.0f : -1.0f;
-        if (_gate is null)
-        {
-            _gate = new(pattern.Definition, forwardDir);
-        }
+        var forwardDir = State.FacingRight ? 1.0f : -1.0f;
+        if (Gate is null)
+            Gate = new ExecuteGate(pattern.Definition, forwardDir);
         else
-        {
-            _gate.Reset(pattern.Definition, forwardDir);
-        }
+            Gate.Reset(pattern.Definition, forwardDir);
 
-        _state.StateElapsed = 0.0f;
-        _state.AttackSubTimer = 0.0f;
-        _state.IsAttackActive = true;
-        _state.IsGrounded = false;
-        _gate.Start(ref context, in invocation);
+        State.StateElapsed = 0.0f;
+        State.AttackSubTimer = 0.0f;
+        State.IsAttackActive = true;
+        State.IsGrounded = false;
+        Gate.Start(ref context, in invocation);
     }
 
     /// <summary>Execute 状態を一回更新します。</summary>
     public virtual void Update(ref StateContext context, in LifecycleInvocation invocation)
     {
-        if (_gate is null)
-        {
-            return;
-        }
+        if (Gate is null) return;
 
-        ExecuteResult result = _gate.Execute(
+        var result = Gate.Execute(
             ref context,
             in invocation,
-            _state.IsGrounded,
-            _state.CurrentPosition.X,
-            _state.CurrentPosition.Y);
-        _state.StateElapsed = _gate.Elapsed;
+            State.IsGrounded,
+            State.CurrentPosition.X,
+            State.CurrentPosition.Y);
+        State.StateElapsed = Gate.Elapsed;
         if (result.IsComplete)
         {
-            _state.IsAttackActive = false;
-            _state.RequestTransition(Boss2State.Recovery, new TransitionReason(ReasonKind.AttackCompleted, skill: _state.CurrentSkill));
+            State.IsAttackActive = false;
+            State.RequestTransition(Boss2State.Recovery,
+                new TransitionReason(ReasonKind.AttackCompleted, skill: State.CurrentSkill));
         }
     }
 
@@ -76,7 +73,11 @@ public abstract class Boss2ExecuteModuleBase(BossState stateId, IBoss2Configurat
     /// <summary>Execute 状態から退場します。</summary>
     public virtual void Exit(ref StateContext context, in LifecycleInvocation invocation)
     {
-        _gate?.Reset();
-        _state.StateElapsed = 0.0f;
+        Gate?.Reset();
+        State.StateElapsed = 0.0f;
     }
+
+    /// <summary>Execute 状態が必要とする依存関係です。</summary>
+    public IReadOnlyList<string> RequiredDependencies { get; } =
+        ["Boss2Configuration", "MovementPort", "AttackPort", "ObservationService"];
 }

@@ -5,28 +5,12 @@ using ErrorOr;
 namespace AnimalBattle.Ai.Runtime;
 
 /// <summary>
-/// 重大度を考慮して観測を保持する bounded ring buffer です。
+///     重大度を考慮して観測を保持する bounded ring buffer です。
 /// </summary>
-public sealed class ObservationService : IObservationService
-{
+public sealed class ObservationService : IObservationService {
     private readonly ObservationEvent[] _events;
     private readonly Action<ObservationEvent>? _logger;
     private int _head;
-    private int _count;
-    private long _droppedInformationCount;
-    private long _recordFailureCount;
-
-    /// <summary>現在保持している観測数を取得します。</summary>
-    public int Count => _count;
-
-    /// <summary>観測容量を取得します。</summary>
-    public int Capacity => _events.Length;
-
-    /// <summary>容量不足で破棄した通常情報の件数を取得します。</summary>
-    public long DroppedInformationCount => _droppedInformationCount;
-
-    /// <summary>記録処理の失敗件数を取得します。</summary>
-    public long RecordFailureCount => _recordFailureCount;
 
     /// <summary>観測サービスを生成します。</summary>
     /// <param name="capacity">保持する最大観測数。</param>
@@ -39,26 +23,32 @@ public sealed class ObservationService : IObservationService
         _logger = logger;
     }
 
+    /// <summary>現在保持している観測数を取得します。</summary>
+    public int Count { get; private set; }
+
+    /// <summary>観測容量を取得します。</summary>
+    public int Capacity => _events.Length;
+
+    /// <summary>容量不足で破棄した通常情報の件数を取得します。</summary>
+    public long DroppedInformationCount { get; private set; }
+
+    /// <summary>記録処理の失敗件数を取得します。</summary>
+    public long RecordFailureCount { get; private set; }
+
     /// <summary>観測を ring buffer へ記録します。</summary>
     public ErrorOr<Success> Record(in ObservationEvent observation)
     {
         try
         {
-            if (!Store(in observation))
-            {
-                return Result.Success;
-            }
+            if (!Store(in observation)) return Result.Success;
 
-            if (_logger is not null)
-            {
-                _logger(observation);
-            }
+            if (_logger is not null) _logger(observation);
 
             return Result.Success;
         }
         catch (Exception ex)
         {
-            _recordFailureCount++;
+            RecordFailureCount++;
             return Error.Failure("Observation.RecordFailed", ex.Message);
         }
     }
@@ -79,7 +69,6 @@ public sealed class ObservationService : IObservationService
             0,
             diagnostic.Skill,
             AttackStage.None,
-
             default,
             diagnostic.Severity,
             diagnostic.ErrorCode,
@@ -90,13 +79,13 @@ public sealed class ObservationService : IObservationService
     /// <summary>保存済み観測を古い順に読み取ります。</summary>
     public bool Get(int index, out ObservationEvent observation)
     {
-        if ((uint)index >= (uint)_count)
+        if ((uint)index >= (uint)Count)
         {
             observation = default;
             return false;
         }
 
-        int actualIndex = (_head + index) % _events.Length;
+        var actualIndex = (_head + index) % _events.Length;
         observation = _events[actualIndex];
         return true;
     }
@@ -105,30 +94,30 @@ public sealed class ObservationService : IObservationService
     public void Clear()
     {
         _head = 0;
-        _count = 0;
+        Count = 0;
     }
 
     private bool Store(in ObservationEvent observation)
     {
-        if (_count < _events.Length)
+        if (Count < _events.Length)
         {
-            int appendIndex = (_head + _count) % _events.Length;
+            var appendIndex = (_head + Count) % _events.Length;
             _events[appendIndex] = observation;
-            _count++;
+            Count++;
             return true;
         }
 
         if (observation.Severity == DiagnosticSeverity.Information)
         {
-            _droppedInformationCount++;
+            DroppedInformationCount++;
             return false;
         }
 
-        int informationIndex = FindOldestInformationIndex();
+        var informationIndex = FindOldestInformationIndex();
         if (informationIndex >= 0)
         {
             _events[informationIndex] = observation;
-            _droppedInformationCount++;
+            DroppedInformationCount++;
             return true;
         }
 
@@ -139,13 +128,10 @@ public sealed class ObservationService : IObservationService
 
     private int FindOldestInformationIndex()
     {
-        for (int offset = 0; offset < _count; offset++)
+        for (var offset = 0; offset < Count; offset++)
         {
-            int index = (_head + offset) % _events.Length;
-            if (_events[index].Severity == DiagnosticSeverity.Information)
-            {
-                return index;
-            }
+            var index = (_head + offset) % _events.Length;
+            if (_events[index].Severity == DiagnosticSeverity.Information) return index;
         }
 
         return -1;

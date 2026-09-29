@@ -6,8 +6,7 @@ namespace AnimalBattle.Ai.Runtime;
 /// <summary>Boss の移動状態を表すデータ構造体です。</summary>
 /// <remarks>移動データを生成します。</remarks>
 [StructLayout(LayoutKind.Sequential)]
-public struct BossMovementData(BossState stateId)
-{
+public struct BossMovementData(BossState stateId) {
     /// <summary>移動先の位置です。</summary>
     public Vec2f TargetPosition = Vec2f.Zero;
 

@@ -1,16 +1,23 @@
-using System;
 using System.Runtime.InteropServices;
-using AnimalBattle.Core;
 using AnimalBattle.Render;
 
 namespace AnimalBattle.Bindings;
 
 /// <summary>
-/// Native C++ コアライブラリ (AnimalBattleCore.dll) との P/Invoke バインディングを提供する静的クラス。
+///     Native C++ コアライブラリ (AnimalBattleCore.dll) との P/Invoke バインディングを提供する静的クラス。
 /// </summary>
-internal static unsafe partial class NativeBindings
-{
+internal static unsafe partial class NativeBindings {
     private const string _dllName = "AnimalBattleCore.dll";
+
+    #region Physics & Mathematics
+
+    [LibraryImport(_dllName, EntryPoint = "Physics_CheckPlatformGround")]
+    [SuppressGCTransition]
+    [return: MarshalAs(UnmanagedType.U1)]
+    public static partial bool Physics_CheckPlatformGround(float prevY, float nextY, Box2D playerBox, Box2D platformBox,
+        float* outGroundY, float* outVy);
+
+    #endregion
 
     #region Engine Control
 
@@ -176,15 +183,6 @@ internal static unsafe partial class NativeBindings
     [LibraryImport(_dllName, EntryPoint = "Engine_GetGraphSize")]
     [SuppressGCTransition]
     public static partial void Engine_GetGraphSize(int handle, Vec2i* outSize);
-
-    #endregion
-
-    #region Physics & Mathematics
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_CheckPlatformGround")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Physics_CheckPlatformGround(float prevY, float nextY, Box2D playerBox, Box2D platformBox, float* outGroundY, float* outVy);
 
     #endregion
 }

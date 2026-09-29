@@ -1,10 +1,9 @@
 namespace AnimalBattle.Ai.Boss2;
 
 /// <summary>
-/// Boss2（Ground Crusher）の固有の行動状態を表す純粋な列挙体です。
+///     Boss2（Ground Crusher）の固有の行動状態を表す純粋な列挙体です。
 /// </summary>
-public enum Boss2State : byte
-{
+public enum Boss2State : byte {
     /// <summary>安全な未指定状態です。</summary>
     None = 0,
 
