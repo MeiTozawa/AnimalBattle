@@ -7,6 +7,7 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Maps;
+using AnimalBattle.Scenes;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -41,6 +42,17 @@ public sealed class WorldRenderSystem(World world) : IDisposable
     private readonly Query<Transform, Sprite, HitFlashEffect> _hitFlashQuery = world.QueryBuilder<Transform, Sprite, HitFlashEffect>()
                               .Build();
     private bool _isDisposed;
+
+    /// <summary>
+    /// 世界の全ゲームオブジェクト（マップ、足場、キャラクター、弾幕、エフェクト）を描画します。
+    /// 統一レンダリングパイプラインとして、直接シーン状態または ECS クエリから描画対象を解決します。
+    /// </summary>
+    /// <param name="tileMap">現在のアリーナタイルマップ。</param>
+    /// <param name="platformQuery">プラットフォーム足場検索クエリ。</param>
+    public void Render(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery)
+    {
+        Render(tileMap, platformQuery, BattleScene.Current?.Player, BattleScene.Current?.Boss);
+    }
 
     /// <summary>
     /// 世界の全ゲームオブジェクト（マップ、Boss、自機、弾幕、エフェクト）を描画します。

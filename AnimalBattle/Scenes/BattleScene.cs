@@ -338,7 +338,7 @@ public partial class BattleScene : IDisposable
     /// </summary>
     public void Render()
     {
-        _worldRenderer.Render(_tileMap, _platformQuery, _player, _currentBoss);
+        _worldRenderer.Render(_tileMap, _platformQuery);
         HudRenderSystem.Render(_player, _currentBoss);
         _debugRenderer.Render(_platformQuery, _tileMap);
     }
