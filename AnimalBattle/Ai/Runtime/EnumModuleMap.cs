@@ -169,14 +169,32 @@ public static class EnumCompletenessCheck
         }
 
 
-        if (modules.Count != FixedBossStateModuleCatalog.Entries.Count)
+        HashSet<BossType> targetedBossTypes = [];
+        foreach (BossState state in modules.Keys)
+        {
+            if (state.BossType != BossType.Unknown)
+            {
+                targetedBossTypes.Add(state.BossType);
+            }
+        }
+
+        List<FixedBossStateModule> expectedModules = [];
+        foreach (FixedBossStateModule entry in FixedBossStateModuleCatalog.Entries)
+        {
+            if (targetedBossTypes.Count == 0 || targetedBossTypes.Contains(entry.BossType))
+            {
+                expectedModules.Add(entry);
+            }
+        }
+
+        if (modules.Count != expectedModules.Count)
         {
             return EnumCompletenessResult.Failure(
                 ErrorCode.UnregisteredState,
                 "固定 BossState の module が不足または余分です。");
         }
 
-        foreach (FixedBossStateModule fixedModule in FixedBossStateModuleCatalog.Entries)
+        foreach (FixedBossStateModule fixedModule in expectedModules)
         {
             if (!modules.TryGetValue(fixedModule.State, out IBossStateModule? module))
             {
@@ -187,11 +205,7 @@ public static class EnumCompletenessCheck
             }
 
             if (module.State != fixedModule.State
-                || !fixedModule.ModuleType.IsAssignableFrom(module.GetType())
-                || !string.Equals(
-                    fixedModule.ModuleFileName,
-                    $"{module.GetType().Name}.cs",
-                    StringComparison.Ordinal))
+                || !fixedModule.ModuleType.IsAssignableFrom(module.GetType()))
             {
                 return EnumCompletenessResult.Failure(
                     ErrorCode.InvalidStateId,

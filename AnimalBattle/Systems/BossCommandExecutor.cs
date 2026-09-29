@@ -241,7 +241,7 @@ public static class BossCommandExecutor
         float adjustedPosY = hitPlatform ? platformGroundY : nextY;
         float adjustedVy = hitPlatform ? platformVy : vel.Vy;
 
-        float floorLimitY = 560.0f - colHeight / 2.0f;
+        float floorLimitY = ConfigManager.Arena.FloorLimitY - colHeight / 2.0f;
         if (adjustedPosY >= floorLimitY)
         {
             isGrounded = true;

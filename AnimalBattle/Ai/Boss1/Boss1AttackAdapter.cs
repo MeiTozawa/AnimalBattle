@@ -74,7 +74,7 @@ public sealed class Boss1AttackAdapter(IBoss1Configuration configuration, Boss1B
         }
         else
         {
-            DslBoss1Support.ApplyHoverMovement(ref context, in invocation, _configuration, _state, _state.CurrentSkill, AttackStage.Recovery);
+            Boss1ModuleSupport.ApplyHoverMovement(ref context, in invocation, _configuration, _state, _state.CurrentSkill, AttackStage.Recovery);
             _state.AttackStartPosition = _state.CurrentPosition;
         }
     }

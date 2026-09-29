@@ -60,16 +60,16 @@ public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Bos
             _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         }
 
-        if (!DslBoss1Support.IsBoss1(in context, in invocation) || _pattern.Skill != skill)
+        if (!Boss1ModuleSupport.IsBoss1(in context, in invocation) || _pattern.Skill != skill)
         {
-            DslBoss1Support.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss1 の Execute 対象が現在攻撃と一致しません。", skill, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill, "Boss1 の Execute 対象が現在攻撃と一致しません。", skill, AttackStage.Execute);
         }
     }
 
     /// <inheritdoc />
     public void Update(ref StateContext context, in LifecycleInvocation invocation)
     {
-        if (!DslBoss1Support.IsBoss1(in context, in invocation) || _state.IsDead)
+        if (!Boss1ModuleSupport.IsBoss1(in context, in invocation) || _state.IsDead)
         {
             return;
         }
@@ -121,7 +121,7 @@ public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Bos
         _state.CurrentPosition = position;
         if (context.Movement.MoveTo(position.X, position.Y).IsError)
         {
-            DslBoss1Support.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の移動 command を発行できませんでした。", pattern.Skill, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DiveRam の移動 command を発行できませんでした。", pattern.Skill, AttackStage.Execute);
         }
 
         _elapsed = MathF.Min(duration, _elapsed + context.DeltaTime);
@@ -134,7 +134,7 @@ public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Bos
 
     private void UpdateBarrage(ref StateContext context, in LifecycleInvocation invocation, Boss1AttackPattern pattern, in ExecuteResult result)
     {
-        DslBoss1Support.ApplyHoverMovement(ref context, in invocation, _configuration, _state, pattern.Skill, AttackStage.Execute);
+        Boss1ModuleSupport.ApplyHoverMovement(ref context, in invocation, _configuration, _state, pattern.Skill, AttackStage.Execute);
         _state.AttackStartPosition = _state.CurrentPosition;
 
         float duration = pattern.Definition.ExecuteDuration;
@@ -200,7 +200,7 @@ public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Bos
             float angle = baseAngle + (index * pattern.AngleStep);
             if (context.Attack.EmitBullet(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed, MathF.Sin(angle) * pattern.BulletSpeed).IsError)
             {
-                DslBoss1Support.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "Aimed3Shot の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
+                Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "Aimed3Shot の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
             }
         }
     }
@@ -213,7 +213,7 @@ public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Bos
             float angle = ((index / (float)count) * MathF.Tau) + _state.AngleOffset;
             if (context.Attack.EmitBullet(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed, MathF.Sin(angle) * pattern.BulletSpeed).IsError)
             {
-                DslBoss1Support.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "RingBurst の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
+                Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "RingBurst の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
             }
         }
 
@@ -227,7 +227,7 @@ public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Bos
         if (context.Attack.EmitBullet(pattern.Skill, MathF.Cos(first) * pattern.BulletSpeed, MathF.Sin(first) * pattern.BulletSpeed).IsError
             || context.Attack.EmitBullet(pattern.Skill, MathF.Cos(second) * pattern.BulletSpeed, MathF.Sin(second) * pattern.BulletSpeed).IsError)
         {
-            DslBoss1Support.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DoubleSpiral の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "DoubleSpiral の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
         }
 
         _state.AngleOffset += pattern.AngleStep;
@@ -242,7 +242,7 @@ public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Bos
         bool secondError = context.Attack.EmitBullet(pattern.Skill, secondX, pattern.BulletSpeed).IsError;
         if (firstError || secondError)
         {
-            DslBoss1Support.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "RainDrop の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "RainDrop の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
         }
     }
 
@@ -260,7 +260,7 @@ public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Bos
 
         if (hasError)
         {
-            DslBoss1Support.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "CrossChaos の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "CrossChaos の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
         }
 
         _state.AngleOffset += pattern.AngleStep;
@@ -273,7 +273,7 @@ public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Bos
         float angle = MathF.Atan2(dy, dx);
         if (context.Attack.EmitBullet(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed, MathF.Sin(angle) * pattern.BulletSpeed).IsError)
         {
-            DslBoss1Support.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "FastSniper の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
+            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed, "FastSniper の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
         }
     }
 }

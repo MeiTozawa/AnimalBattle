@@ -59,6 +59,9 @@ public sealed class ArenaConfig
     /// <summary>銃弾および弾幕のデスポーン最大 Y 座標</summary>
     public float BulletDespawnMaxY { get; set; }
 
+    /// <summary>地上キャラクター（プレイヤー・Boss）の床面下限 Y 座標</summary>
+    public float FloorLimitY { get; set; } = 560.0f;
+
     /// <summary>
     /// 指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{ArenaConfig}"/> インスタンスを生成します。
     /// </summary>

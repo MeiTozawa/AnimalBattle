@@ -51,6 +51,18 @@ public static class FixedBossStateModuleCatalog
     /// <summary>Unknown を除く固定状態の全対応を取得します。</summary>
     public static IReadOnlyList<FixedBossStateModule> Entries => _entries;
 
+    /// <summary>指定された BossType に属する固定状態の対応を取得します。</summary>
+    public static IEnumerable<FixedBossStateModule> GetEntriesFor(BossType bossType)
+    {
+        for (int index = 0; index < _entries.Count; index++)
+        {
+            if (_entries[index].BossType == bossType)
+            {
+                yield return _entries[index];
+            }
+        }
+    }
+
     /// <summary>固定状態に対応する module 記述を取得します。</summary>
     public static bool Get(BossState state, out FixedBossStateModule entry)
     {

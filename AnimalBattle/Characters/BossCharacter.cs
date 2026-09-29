@@ -190,9 +190,9 @@ public sealed class BossCharacter
             Boss1Config b1Cfg = ConfigManager.Boss1;
 
             _boss1State = new(b1Cfg.SpawnX, b1Cfg.SpawnY);
-            _boss2State = new(0.0f, 0.0f);
+            _boss2State = null;
 
-            EnumModuleMap moduleMap = CreateCompleteModuleMap(_boss1State, _boss2State, observation, navGraphProvider);
+            EnumModuleMap moduleMap = CreateBoss1ModuleMap(_boss1State, observation);
             TransitionService transitionService = new(moduleMap, observation);
             _runtime = new(moduleMap, transitionService, observation, type => _boss1State);
 
@@ -231,10 +231,10 @@ public sealed class BossCharacter
         {
             Boss2Config b2Cfg = ConfigManager.Boss2;
 
-            _boss1State = new(0.0f, 0.0f);
+            _boss1State = null;
             _boss2State = new(b2Cfg.SpawnX, b2Cfg.SpawnY);
 
-            EnumModuleMap moduleMap = CreateCompleteModuleMap(_boss1State, _boss2State, observation, navGraphProvider);
+            EnumModuleMap moduleMap = CreateBoss2ModuleMap(_boss2State, observation, navGraphProvider);
             TransitionService transitionService = new(moduleMap, observation);
             _runtime = new(moduleMap, transitionService, observation, type => _boss2State);
 
@@ -520,16 +520,12 @@ public sealed class BossCharacter
         };
     }
 
-    private static EnumModuleMap CreateCompleteModuleMap(
+    private static EnumModuleMap CreateBoss1ModuleMap(
         Boss1BehaviorState boss1State,
-        Boss2BehaviorState boss2State,
-        ObservationService observation,
-        Func<PlatformNavigationGraph?>? navGraphProvider = null)
+        ObservationService observation)
     {
         Boss1DefaultConfiguration boss1Config = new();
-        Boss2DefaultConfiguration boss2Config = new();
         Boss1AttackAdapter adapter1 = new(boss1Config, boss1State);
-        Boss2AttackAdapter adapter2 = new(boss2Config, boss2State);
 
         IBossStateModule[] modules =
         [
@@ -539,8 +535,33 @@ public sealed class BossCharacter
             new DslBoss1ExecuteModule(boss1Config, boss1State),
             new DslRecoveryModule(adapter1),
             new Boss1PhaseTransitionModule(boss1Config, boss1State),
-            new Boss1DeadModule(boss1State),
+            new Boss1DeadModule(boss1State)
+        ];
 
+        string[] dependencies =
+        [
+            "AttackPort",
+            "Boss1Configuration",
+            "EffectPort",
+            "MovementPort",
+            "ObservationService",
+            "PlayerObservation",
+            "RandomSource"
+        ];
+
+        return new EnumModuleMap(modules, dependencies, observation);
+    }
+
+    private static EnumModuleMap CreateBoss2ModuleMap(
+        Boss2BehaviorState boss2State,
+        ObservationService observation,
+        Func<PlatformNavigationGraph?>? navGraphProvider = null)
+    {
+        Boss2DefaultConfiguration boss2Config = new();
+        Boss2AttackAdapter adapter2 = new(boss2Config, boss2State);
+
+        IBossStateModule[] modules =
+        [
             new Boss2IdleModule(boss2State),
             new Boss2PatrolChaseModule(boss2Config, boss2State, navGraphProvider),
             new Boss2MoveToTakeoffModule(boss2Config, boss2State),
@@ -556,7 +577,6 @@ public sealed class BossCharacter
         string[] dependencies =
         [
             "AttackPort",
-            "Boss1Configuration",
             "Boss2Configuration",
             "EffectPort",
             "MovementPort",

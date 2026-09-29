@@ -310,26 +310,6 @@ public sealed class Player
         }
     }
 
-    /// <summary>
-    /// 被弾ダメージを適用し、無敵時間を設定します。
-    /// </summary>
-    /// <param name="amount">ダメージ量。</param>
-    /// <param name="invincibleDuration">付与する無敵時間（秒）。</param>
-    public void TakeDamage(float amount, float invincibleDuration)
-    {
-        if (InvincibleTimer > 0.0f || !IsAlive)
-        {
-            return;
-        }
-
-        CurrentHp = Math.Max(0.0f, CurrentHp - amount);
-        InvincibleTimer = invincibleDuration;
-        if (!IsAlive && _entity.Has<Sprite>())
-        {
-            _entity.GetMut<Sprite>().IsVisible = false;
-        }
-    }
-
     private void ProcessHorizontalInput(PlayerConfig pCfg)
     {
         bool isLeft = InputService.IsHolding(InputAction.Left);
@@ -430,7 +410,7 @@ public sealed class Player
         float adjustedPosY = hitPlatform ? platformGroundY : nextY;
         float adjustedVy = hitPlatform ? platformVy : vel.Vy;
 
-        float floorLimitY = 560.0f - (col.Height / 2.0f);
+        float floorLimitY = ConfigManager.Arena.FloorLimitY - (col.Height / 2.0f);
         if (adjustedPosY >= floorLimitY)
         {
             isGrounded = true;
