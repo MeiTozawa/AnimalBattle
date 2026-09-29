@@ -60,6 +60,7 @@ public static class GameEngine
     public static void Shutdown()
     {
         _commandBuffer.Dispose();
+        Compute.NativeComputeQueue.ShutdownShared();
         NativeBindings.Engine_Shutdown();
     }
 

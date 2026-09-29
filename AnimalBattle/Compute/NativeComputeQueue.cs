@@ -13,8 +13,42 @@ namespace AnimalBattle.Compute;
 /// </summary>
 public sealed unsafe class NativeComputeQueue : IDisposable
 {
+    private static NativeComputeQueue? _shared;
+    private static readonly object _syncLock = new();
+
     /// <summary>全システム間で共有可能な既定のバッチ計算キューインスタンス。</summary>
-    public static readonly NativeComputeQueue Shared = new();
+    public static NativeComputeQueue Shared
+    {
+        get
+        {
+            if (_shared == null || _shared.IsDisposed)
+            {
+                lock (_syncLock)
+                {
+                    if (_shared == null || _shared.IsDisposed)
+                    {
+                        _shared = new NativeComputeQueue();
+                    }
+                }
+            }
+            return _shared;
+        }
+    }
+
+    /// <summary>
+    /// 共有バッチ計算キューの物理メモリを直ちに破棄し、ライフサイクルを終了します。
+    /// </summary>
+    public static void ShutdownShared()
+    {
+        lock (_syncLock)
+        {
+            if (_shared != null && !_shared.IsDisposed)
+            {
+                _shared.Dispose();
+                _shared = null;
+            }
+        }
+    }
 
     private static readonly SpecialBulletBatchItem _dummyBullet = default;
 

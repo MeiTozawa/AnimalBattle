@@ -16,6 +16,10 @@ __declspec(dllexport) void Extension_BatchBulletMovement(
     float delta_time,
     float min_x, float max_x, float min_y, float max_y,
     uint8_t* out_despawn_flags) noexcept {
+    if (!transforms || !velocities || !out_despawn_flags || count <= 0) {
+        return;
+    }
+
     try {
         BatchBulletMovement(
             transforms, velocities, count, delta_time,
@@ -29,6 +33,10 @@ __declspec(dllexport) void Extension_ProcessBatchCompute(
     int32_t ease_count,
     SpecialBulletBatchItem* bullet_items,
     int32_t bullet_count) noexcept {
+    if (!bullet_items || bullet_count <= 0) {
+        return;
+    }
+
     try {
         ProcessBatchCompute(ease_items, ease_count, bullet_items, bullet_count);
     } catch (...) {
