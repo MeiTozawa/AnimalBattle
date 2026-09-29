@@ -8,9 +8,9 @@ namespace AnimalBattle.Ai.Attack;
 /// <summary>攻撃 component を lifecycle 内で一回だけ port へ発行する Execute gate です。</summary>
 public sealed class ExecuteGate
 {
-    private readonly AttackDefinition _definition;
+    private AttackDefinition _definition;
     private readonly OneShotEventGuard _oneShot;
-    private readonly float _facingDirection;
+    private float _facingDirection;
     private bool _active;
     private bool _completed;
     private bool _hasLeftGround;
@@ -251,6 +251,22 @@ public sealed class ExecuteGate
     /// <summary>Execute を終了し、次の攻撃の one-shot key を受け付けられる状態にします。</summary>
     public void Reset()
     {
+        _active = false;
+        _completed = false;
+        _hasLeftGround = false;
+        _elapsed = 0;
+        _startX = float.NaN;
+        _startY = float.NaN;
+        _lockedApexX = float.NaN;
+        _oneShot.Reset();
+    }
+
+    /// <summary>新しい攻撃定義と向きを指定して Execute gate をリセットし再利用します。</summary>
+    public void Reset(AttackDefinition definition, float forwardDir = 1.0f)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        _definition = definition;
+        _facingDirection = forwardDir >= 0.0f ? 1.0f : -1.0f;
         _active = false;
         _completed = false;
         _hasLeftGround = false;

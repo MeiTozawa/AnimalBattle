@@ -29,10 +29,10 @@ public sealed class DslTelegraphModule(IBossAttackAdapter adapter) : IBossStateM
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
-        _activeTelegraph = null;
         BossSkill skill = _adapter.CurrentSkill;
         if (!skill.IsValid())
         {
+            _activeTelegraph?.Exit(ref context, in invocation);
             _adapter.RequestTransition(_adapter.DefaultState, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
@@ -40,11 +40,20 @@ public sealed class DslTelegraphModule(IBossAttackAdapter adapter) : IBossStateM
         ErrorOr<AttackDefinition> definitionResult = _adapter.GetAttackDefinition(skill);
         if (definitionResult.IsError)
         {
+            _activeTelegraph?.Exit(ref context, in invocation);
             _adapter.RequestTransition(_adapter.DefaultState, new(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
             return;
         }
 
-        _activeTelegraph = new(_adapter.TelegraphState, definitionResult.Value);
+        if (_activeTelegraph is null)
+        {
+            _activeTelegraph = new(_adapter.TelegraphState, definitionResult.Value);
+        }
+        else
+        {
+            _activeTelegraph.Reset(_adapter.TelegraphState, definitionResult.Value);
+        }
+
         _adapter.OnTelegraphEnter(ref context, in invocation);
         _activeTelegraph.Enter(ref context, in invocation);
 
@@ -82,6 +91,5 @@ public sealed class DslTelegraphModule(IBossAttackAdapter adapter) : IBossStateM
     public void Exit(ref StateContext context, in LifecycleInvocation invocation)
     {
         _activeTelegraph?.Exit(ref context, in invocation);
-        _activeTelegraph = null;
     }
 }

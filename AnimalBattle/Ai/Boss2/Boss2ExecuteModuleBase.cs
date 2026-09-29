@@ -26,16 +26,23 @@ public abstract class Boss2ExecuteModuleBase(BossState stateId, IBoss2Configurat
     /// <summary>Execute 状態へ入場します。</summary>
     public virtual void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
-        _gate = null;
         if (!Boss2ModuleSupport.GetPattern(_configuration, _state.CurrentSkill, in context, in invocation, out Boss2AttackPattern pattern))
         {
+            _gate?.Reset();
             _state.RequestTransition(Boss2State.Idle, new TransitionReason(ReasonKind.SafetyFallback, skill: _state.CurrentSkill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
 
-
         float forwardDir = _state.FacingRight ? 1.0f : -1.0f;
-        _gate = new(pattern.Definition, forwardDir);
+        if (_gate is null)
+        {
+            _gate = new(pattern.Definition, forwardDir);
+        }
+        else
+        {
+            _gate.Reset(pattern.Definition, forwardDir);
+        }
+
         _state.StateElapsed = 0.0f;
         _state.AttackSubTimer = 0.0f;
         _state.IsAttackActive = true;
@@ -69,7 +76,7 @@ public abstract class Boss2ExecuteModuleBase(BossState stateId, IBoss2Configurat
     /// <summary>Execute 状態から退場します。</summary>
     public virtual void Exit(ref StateContext context, in LifecycleInvocation invocation)
     {
-        _gate = null;
+        _gate?.Reset();
         _state.StateElapsed = 0.0f;
     }
 }

@@ -7,12 +7,12 @@ namespace AnimalBattle.Ai.Attack;
 /// <summary>攻撃生成と次遷移評価を終了条件まで抑止する共通 Recovery State_Module です。</summary>
 public sealed class RecoveryModule : IBossStateModule
 {
-    private readonly AttackDefinition _definition;
+    private AttackDefinition _definition;
     private bool _active;
     private float _elapsed;
 
     /// <summary>Recovery の担当状態を取得します。</summary>
-    public BossState HandledState { get; }
+    public BossState HandledState { get; private set; }
     /// <summary>現在の技能識別子を取得します。</summary>
     public BossSkill Skill => _definition.Skill;
 
@@ -32,6 +32,19 @@ public sealed class RecoveryModule : IBossStateModule
         ArgumentNullException.ThrowIfNull(definition);
         HandledState = stateId;
         _definition = definition;
+    }
+
+    /// <summary>
+    /// 既存インスタンスを再利用するために、状態識別子と攻撃定義を就地リセットします。
+    /// </summary>
+    public void Reset(BossState stateId, AttackDefinition definition)
+    {
+        if (!stateId.IsValid) throw new ArgumentOutOfRangeException(nameof(stateId));
+        ArgumentNullException.ThrowIfNull(definition);
+        HandledState = stateId;
+        _definition = definition;
+        _active = false;
+        _elapsed = 0;
     }
 
     /// <summary>Recovery を開始します。開始に失敗した場合は安全な非攻撃行動を選択します。</summary>

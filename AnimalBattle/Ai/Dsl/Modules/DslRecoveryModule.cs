@@ -29,12 +29,12 @@ public sealed class DslRecoveryModule(IBossAttackAdapter adapter) : IBossStateMo
     /// <inheritdoc />
     public void Enter(ref StateContext context, in LifecycleInvocation invocation)
     {
-        _activeRecovery = null;
         _adapter.OnRecoveryEnter(ref context, in invocation);
 
         BossSkill skill = _adapter.CurrentSkill;
         if (!skill.IsValid())
         {
+            _activeRecovery?.Exit(ref context, in invocation);
             _adapter.RequestTransition(_adapter.DefaultState, new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
             return;
         }
@@ -42,11 +42,20 @@ public sealed class DslRecoveryModule(IBossAttackAdapter adapter) : IBossStateMo
         ErrorOr<AttackDefinition> definitionResult = _adapter.GetAttackDefinition(skill);
         if (definitionResult.IsError)
         {
+            _activeRecovery?.Exit(ref context, in invocation);
             _adapter.RequestTransition(_adapter.DefaultState, new(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidConfiguration));
             return;
         }
 
-        _activeRecovery = new(_adapter.RecoveryState, definitionResult.Value);
+        if (_activeRecovery is null)
+        {
+            _activeRecovery = new(_adapter.RecoveryState, definitionResult.Value);
+        }
+        else
+        {
+            _activeRecovery.Reset(_adapter.RecoveryState, definitionResult.Value);
+        }
+
         _activeRecovery.Enter(ref context, in invocation);
 
         if (!_activeRecovery.IsActive && !_activeRecovery.CanEvaluateNextTransition)
@@ -76,7 +85,6 @@ public sealed class DslRecoveryModule(IBossAttackAdapter adapter) : IBossStateMo
     public void Exit(ref StateContext context, in LifecycleInvocation invocation)
     {
         _activeRecovery?.Exit(ref context, in invocation);
-        _activeRecovery = null;
         _adapter.SetStateElapsed(0.0f);
     }
 }

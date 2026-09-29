@@ -44,8 +44,14 @@ public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Bos
             _pattern = new(skill, 0, 0, 0);
         }
 
-        _gate = new(_pattern.Definition);
-        _gate.Reset();
+        if (_gate is null)
+        {
+            _gate = new(_pattern.Definition);
+        }
+        else
+        {
+            _gate.Reset(_pattern.Definition);
+        }
 
         if (skill == BossSkill.DiveRam)
         {

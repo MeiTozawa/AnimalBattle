@@ -7,14 +7,14 @@ namespace AnimalBattle.Ai.Attack;
 /// <summary>攻撃対象と範囲を表示・観測する共通 Telegraph State_Module です。</summary>
 public sealed class TelegraphModule : IBossStateModule
 {
-    private readonly AttackDefinition _definition;
+    private AttackDefinition _definition;
     private bool _active;
     private float _elapsed;
     private float _startTime;
     private PlayerObservation _target;
 
     /// <summary>Telegraph の担当状態を取得します。</summary>
-    public BossState HandledState { get; }
+    public BossState HandledState { get; private set; }
     /// <summary>現在の技能識別子を取得します。</summary>
     public BossSkill Skill => _definition.Skill;
 
@@ -42,6 +42,21 @@ public sealed class TelegraphModule : IBossStateModule
         ArgumentNullException.ThrowIfNull(definition);
         HandledState = stateId;
         _definition = definition;
+    }
+
+    /// <summary>
+    /// 既存インスタンスを再利用するために、状態識別子と攻撃定義を就地リセットします。
+    /// </summary>
+    public void Reset(BossState stateId, AttackDefinition definition)
+    {
+        if (!stateId.IsValid) throw new ArgumentOutOfRangeException(nameof(stateId));
+        ArgumentNullException.ThrowIfNull(definition);
+        HandledState = stateId;
+        _definition = definition;
+        _active = false;
+        _elapsed = 0;
+        _startTime = 0;
+        _target = default;
     }
 
     /// <summary>Telegraph を開始し、開始時点の対象を固定します。</summary>
