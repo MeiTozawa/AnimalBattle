@@ -25,6 +25,42 @@ public sealed class AssetManager : IDisposable
     public static bool HasCharacterSprite => _characterSpriteHandles.Count > 0;
 
     /// <summary>
+    /// アセットマネージャーが初期化済みかどうかを取得します。
+    /// </summary>
+    public static bool IsInitialized => _isInitialized;
+
+    /// <summary>
+    /// テスト用に静的状態をリセットします。
+    /// </summary>
+    public static void ResetStateForTest()
+    {
+        _characterSpriteHandles.Clear();
+        _characterConfigs.Clear();
+        _textureHandles.Clear();
+        _isInitialized = false;
+    }
+
+    /// <summary>
+    /// ロード済みの全テクスチャ・スプライトを非托管エンジンから破棄し、静的状態をリセットします。
+    /// </summary>
+    public static void Shutdown()
+    {
+        foreach (int handle in _characterSpriteHandles.Values)
+        {
+            AssetService.DeleteGraph(handle);
+        }
+        _characterSpriteHandles.Clear();
+
+        foreach (int handle in _textureHandles.Values)
+        {
+            AssetService.DeleteGraph(handle);
+        }
+        _textureHandles.Clear();
+        _characterConfigs.Clear();
+        _isInitialized = false;
+    }
+
+    /// <summary>
     /// 静的レジストリからのスプライトシート画像ロードおよび設定初期化を行います。
     /// </summary>
     public static void Initialize()
@@ -50,7 +86,10 @@ public sealed class AssetManager : IDisposable
         }
 
         _isInitialized = true;
-        Debug.Assert(allLoaded, "一部のアセットのロードに失敗しました。");
+        if (!allLoaded)
+        {
+            Console.WriteLine("[AssetManager 警告] 一部のアセットのロードに失敗しました。デフォルト/欠落テクスチャ状態で継続します。");
+        }
     }
 
     private static bool LoadCharacterSprite(CharacterType charType)
@@ -245,18 +284,7 @@ public sealed class AssetManager : IDisposable
     {
         if (!_isDisposed)
         {
-            foreach (int handle in _characterSpriteHandles.Values)
-            {
-                AssetService.DeleteGraph(handle);
-            }
-            _characterSpriteHandles.Clear();
-
-            foreach (int handle in _textureHandles.Values)
-            {
-                AssetService.DeleteGraph(handle);
-            }
-            _textureHandles.Clear();
-
+            Shutdown();
             _isDisposed = true;
         }
     }

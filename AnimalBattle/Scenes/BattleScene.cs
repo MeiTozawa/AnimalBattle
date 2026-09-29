@@ -358,6 +358,7 @@ public partial class BattleScene : IDisposable
             _effectsQuery.Dispose();
             _platformQuery.Dispose();
             _ecsWorld.Dispose();
+            AssetManager.Shutdown();
             if (Current == this)
             {
                 Current = null;

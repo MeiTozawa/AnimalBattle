@@ -44,8 +44,11 @@ internal static class Program
                 }
 
                 long currentTime = stopwatch.ElapsedTicks;
-                float deltaTime = (float)((currentTime - lastTime) / tickFrequency);
+                float rawDeltaTime = (float)((currentTime - lastTime) / tickFrequency);
                 lastTime = currentTime;
+
+                // 産業級メインループ防トンネル保護：最大単一ステップを 50ms (20 FPS 相当) に制限し、ウィンドウドラッグやフレーム落ちによる壁抜けを防止
+                float deltaTime = Math.Clamp(rawDeltaTime, 0.0f, 0.05f);
 
                 GameEngine.BeginFrame();
 
