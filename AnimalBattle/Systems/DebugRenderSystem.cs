@@ -132,29 +132,29 @@ public sealed class DebugRenderSystem(World world) : IDisposable
 
     private static void DrawCollisionShape(CollisionShape shape, float worldCenterX, float worldCenterY, Color color)
     {
-        switch (shape)
+        switch (shape.Type)
         {
-            case CollisionShape.Circle circle:
+            case CollisionShapeType.Circle:
                 int cx = (int)worldCenterX;
                 int cy = (int)worldCenterY;
-                int r = (int)circle.Radius;
+                int r = (int)shape.Radius;
                 GameEngine.DrawCircle(cx, cy, r, color, false);
                 break;
 
-            case CollisionShape.Box box:
-                int x1 = (int)(worldCenterX - box.Width / 2.0f);
-                int y1 = (int)(worldCenterY - box.Height / 2.0f);
-                int x2 = (int)(worldCenterX + box.Width / 2.0f);
-                int y2 = (int)(worldCenterY + box.Height / 2.0f);
+            case CollisionShapeType.Box:
+                int x1 = (int)(worldCenterX - shape.Width / 2.0f);
+                int y1 = (int)(worldCenterY - shape.Height / 2.0f);
+                int x2 = (int)(worldCenterX + shape.Width / 2.0f);
+                int y2 = (int)(worldCenterY + shape.Height / 2.0f);
                 GameEngine.DrawBox(x1, y1, x2, y2, color, false);
                 break;
 
-            case CollisionShape.Point:
+            case CollisionShapeType.Point:
                 GameEngine.DrawCircle((int)worldCenterX, (int)worldCenterY, 2, color, false);
                 break;
 
             default:
-                Console.WriteLine($"[DebugRender 警告] 未知の CollisionShape 型です: {shape?.GetType().Name}");
+                Console.WriteLine($"[DebugRender 警告] 未知の CollisionShape 型です: {shape.Type}");
                 break;
         }
     }

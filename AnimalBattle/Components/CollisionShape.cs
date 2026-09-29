@@ -1,46 +1,72 @@
 namespace AnimalBattle.Components;
 
 /// <summary>
-/// 2D 幾何衝突形状を表す代数的データ型 (Discriminated Union / 代数变体) の抽象基底レコード。
-/// 外部派生を防ぐためコンストラクタを private に封鎖し、型安全なパターンマッチングを提供します。
+/// 2D 幾何衝突形状種別。
 /// </summary>
-public abstract record CollisionShape
+public enum CollisionShapeType : byte
 {
+    Circle = 0,
+    Box = 1,
+    Point = 2
+}
+
+/// <summary>
+/// 2D 幾何衝突形状を表す完全値型 (readonly record struct) の判別共用体。
+/// GC アロケーションゼロで動作し、Blittable なメモリレイアウトを提供します。
+/// </summary>
+public readonly record struct CollisionShape
+{
+    /// <summary>形状種別</summary>
+    public CollisionShapeType Type { get; init; }
+
+    /// <summary>円の半径（ピクセル）</summary>
+    public float Radius { get; init; }
+
+    /// <summary>矩形の全幅（ピクセル）</summary>
+    public float Width { get; init; }
+
+    /// <summary>矩形の全高（ピクセル）</summary>
+    public float Height { get; init; }
+
     /// <summary>エンティティ中心座標 (Transform.X) からの X 軸局所オフセット</summary>
     public float OffsetX { get; init; }
 
     /// <summary>エンティティ中心座標 (Transform.Y) からの Y 軸局所オフセット</summary>
     public float OffsetY { get; init; }
 
-    // 外部からの不正派生を防止し、閉じた判別共用体 (Discriminated Union) を構築
-    private CollisionShape(float offsetX, float offsetY)
+    /// <summary>
+    /// 円形衝突形状ヘルパー構造体（暗黙変換により CollisionShape として代入可能）。
+    /// </summary>
+    public readonly record struct Circle(float Radius, float OffsetX = 0.0f, float OffsetY = 0.0f)
     {
-        OffsetX = offsetX;
-        OffsetY = offsetY;
+        public static implicit operator CollisionShape(Circle c) =>
+            new() { Type = CollisionShapeType.Circle, Radius = c.Radius, OffsetX = c.OffsetX, OffsetY = c.OffsetY };
+
+        public static implicit operator ErrorOr.ErrorOr<CollisionShape>(Circle c) =>
+            (CollisionShape)c;
     }
 
     /// <summary>
-    /// 円形衝突判定レコード（弾幕、擦弾点、コア等）。
+    /// 矩形 (AABB) 衝突形状ヘルパー構造体（暗黙変換により CollisionShape として代入可能）。
     /// </summary>
-    /// <param name="Radius">円の半径（ピクセル）</param>
-    /// <param name="OffsetX">X 軸局所オフセット（初期値: 0）</param>
-    /// <param name="OffsetY">Y 軸局所オフセット（初期値: 0）</param>
-    public sealed record Circle(float Radius, float OffsetX = 0.0f, float OffsetY = 0.0f) : CollisionShape(OffsetX, OffsetY);
+    public readonly record struct Box(float Width, float Height, float OffsetX = 0.0f, float OffsetY = 0.0f)
+    {
+        public static implicit operator CollisionShape(Box b) =>
+            new() { Type = CollisionShapeType.Box, Width = b.Width, Height = b.Height, OffsetX = b.OffsetX, OffsetY = b.OffsetY };
+
+        public static implicit operator ErrorOr.ErrorOr<CollisionShape>(Box b) =>
+            (CollisionShape)b;
+    }
 
     /// <summary>
-    /// 軸平行矩形 (AABB) 衝突判定レコード（地形、キャラクター胴体等）。
+    /// 点 (Point) 衝突形状ヘルパー構造体（暗黙変換により CollisionShape として代入可能）。
     /// </summary>
-    /// <param name="Width">矩形の全幅（ピクセル）</param>
-    /// <param name="Height">矩形の全高（ピクセル）</param>
-    /// <param name="OffsetX">X 軸局所オフセット（初期値: 0）</param>
-    /// <param name="OffsetY">Y 軸局所オフセット（初期値: 0）</param>
-    public sealed record Box(float Width, float Height, float OffsetX = 0.0f, float OffsetY = 0.0f) : CollisionShape(OffsetX, OffsetY);
+    public readonly record struct Point(float OffsetX = 0.0f, float OffsetY = 0.0f)
+    {
+        public static implicit operator CollisionShape(Point p) =>
+            new() { Type = CollisionShapeType.Point, OffsetX = p.OffsetX, OffsetY = p.OffsetY };
 
-    /// <summary>
-    /// 点 (Point) 衝突判定レコード（精密な極小判定等）。
-    /// </summary>
-    /// <param name="OffsetX">X 軸局所オフセット（初期値: 0）</param>
-    /// <param name="OffsetY">Y 軸局所オフセット（初期値: 0）</param>
-    public sealed record Point(float OffsetX = 0.0f, float OffsetY = 0.0f) : CollisionShape(OffsetX, OffsetY);
+        public static implicit operator ErrorOr.ErrorOr<CollisionShape>(Point p) =>
+            (CollisionShape)p;
+    }
 }
-

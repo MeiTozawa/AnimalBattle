@@ -14,6 +14,11 @@ public sealed class PlatformNavigationGraph
     private readonly List<PlatformLink> _links = new();
     private readonly Dictionary<int, List<PlatformLink>> _adjacency = new();
 
+    // A* 経路探索用の一時バッファ（毎フレームの GC 堆割り当てを完全に防止）
+    private readonly Dictionary<PlatformLink, float> _aStarGScore = new();
+    private readonly Dictionary<PlatformLink, PlatformLink?> _aStarCameFrom = new();
+    private readonly PriorityQueue<PlatformLink, float> _aStarOpenSet = new();
+
     /// <summary>すべての登録済みプラットフォームノード</summary>
     public IReadOnlyList<PlatformNode> Nodes => _nodes;
 
@@ -258,9 +263,9 @@ public sealed class PlatformNavigationGraph
         }
 
         // 各リンクごとの最小到達累積コスト G(link)
-        Dictionary<PlatformLink, float> gScore = new();
-        Dictionary<PlatformLink, PlatformLink?> cameFrom = new();
-        PriorityQueue<PlatformLink, float> openSet = new();
+        _aStarGScore.Clear();
+        _aStarCameFrom.Clear();
+        _aStarOpenSet.Clear();
 
         // 終端目標地点（goal, targetX）への最良到達解
         PlatformLink? bestGoalLink = null;
@@ -271,8 +276,8 @@ public sealed class PlatformNavigationGraph
         {
             float walkToTakeoff = MathF.Abs(startX - link.TakeoffX);
             float g = walkToTakeoff + link.Cost;
-            gScore[link] = g;
-            cameFrom[link] = null;
+            _aStarGScore[link] = g;
+            _aStarCameFrom[link] = null;
 
             if (link.ToNode.Id == goal.Id)
             {
@@ -285,13 +290,13 @@ public sealed class PlatformNavigationGraph
             }
 
             float h = Heuristic(link.LandingX, link.ToNode.TopY, targetX, goal.TopY);
-            openSet.Enqueue(link, g + h);
+            _aStarOpenSet.Enqueue(link, g + h);
         }
 
         // 2. A* / 最短経路探索ループ
-        while (openSet.TryDequeue(out PlatformLink? currentLink, out float priority))
+        while (_aStarOpenSet.TryDequeue(out PlatformLink? currentLink, out float priority))
         {
-            float currentG = gScore[currentLink];
+            float currentG = _aStarGScore[currentLink];
             float currentH = Heuristic(currentLink.LandingX, currentLink.ToNode.TopY, targetX, goal.TopY);
 
             // 既に目標への確定コストを下回ることが不可能な場合、またはキュー内の古い項目はスキップ
@@ -317,10 +322,10 @@ public sealed class PlatformNavigationGraph
                 float intermediateWalk = MathF.Abs(currentLink.LandingX - nextLink.TakeoffX);
                 float tentativeG = currentG + intermediateWalk + nextLink.Cost;
 
-                if (!gScore.TryGetValue(nextLink, out float existingG) || tentativeG < existingG)
+                if (!_aStarGScore.TryGetValue(nextLink, out float existingG) || tentativeG < existingG)
                 {
-                    gScore[nextLink] = tentativeG;
-                    cameFrom[nextLink] = currentLink;
+                    _aStarGScore[nextLink] = tentativeG;
+                    _aStarCameFrom[nextLink] = currentLink;
 
                     if (nextLink.ToNode.Id == goal.Id)
                     {
@@ -335,7 +340,7 @@ public sealed class PlatformNavigationGraph
                     float nextH = Heuristic(nextLink.LandingX, nextLink.ToNode.TopY, targetX, goal.TopY);
                     if (tentativeG + nextH < bestGoalCost)
                     {
-                        openSet.Enqueue(nextLink, tentativeG + nextH);
+                        _aStarOpenSet.Enqueue(nextLink, tentativeG + nextH);
                     }
                 }
             }
@@ -352,7 +357,7 @@ public sealed class PlatformNavigationGraph
         while (curr != null)
         {
             path.Add(curr);
-            curr = cameFrom[curr];
+            curr = _aStarCameFrom[curr];
         }
 
         path.Reverse();

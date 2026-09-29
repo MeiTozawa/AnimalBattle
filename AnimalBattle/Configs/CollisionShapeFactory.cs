@@ -84,7 +84,7 @@ public static class CollisionShapeFactory
         float offsetY = 0.0f)
     {
         ErrorOr<CollisionShape> result = Create(shapeKind, radius, width, height, offsetX, offsetY);
-        if (!result.IsError && result.Value is not null)
+        if (!result.IsError)
         {
             return result.Value;
         }

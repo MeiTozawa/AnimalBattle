@@ -24,33 +24,33 @@ public static unsafe class PhysicsService
         Vec2f p1 = new(t1.X + s1.OffsetX, t1.Y + s1.OffsetY);
         Vec2f p2 = new(t2.X + s2.OffsetX, t2.Y + s2.OffsetY);
 
-        return (s1, s2) switch
+        return (s1.Type, s2.Type) switch
         {
-            (CollisionShape.Circle c1, CollisionShape.Circle c2) =>
-                Intersects(new Circle2D(p1, c1.Radius), new Circle2D(p2, c2.Radius)),
+            (CollisionShapeType.Circle, CollisionShapeType.Circle) =>
+                Intersects(new Circle2D(p1, s1.Radius), new Circle2D(p2, s2.Radius)),
 
-            (CollisionShape.Box b1, CollisionShape.Box b2) =>
-                Intersects(new Box2D(p1, new Vec2f(b1.Width, b1.Height)), new Box2D(p2, new Vec2f(b2.Width, b2.Height))),
+            (CollisionShapeType.Box, CollisionShapeType.Box) =>
+                Intersects(new Box2D(p1, new Vec2f(s1.Width, s1.Height)), new Box2D(p2, new Vec2f(s2.Width, s2.Height))),
 
-            (CollisionShape.Circle c, CollisionShape.Box b) =>
-                Intersects(new Circle2D(p1, c.Radius), new Box2D(p2, new Vec2f(b.Width, b.Height))),
+            (CollisionShapeType.Circle, CollisionShapeType.Box) =>
+                Intersects(new Circle2D(p1, s1.Radius), new Box2D(p2, new Vec2f(s2.Width, s2.Height))),
 
-            (CollisionShape.Box b, CollisionShape.Circle c) =>
-                Intersects(new Box2D(p1, new Vec2f(b.Width, b.Height)), new Circle2D(p2, c.Radius)),
+            (CollisionShapeType.Box, CollisionShapeType.Circle) =>
+                Intersects(new Box2D(p1, new Vec2f(s1.Width, s1.Height)), new Circle2D(p2, s2.Radius)),
 
-            (CollisionShape.Point, CollisionShape.Circle c) =>
-                Intersects(p1, new Circle2D(p2, c.Radius)),
+            (CollisionShapeType.Point, CollisionShapeType.Circle) =>
+                Intersects(p1, new Circle2D(p2, s2.Radius)),
 
-            (CollisionShape.Circle c, CollisionShape.Point) =>
-                Intersects(p2, new Circle2D(p1, c.Radius)),
+            (CollisionShapeType.Circle, CollisionShapeType.Point) =>
+                Intersects(p2, new Circle2D(p1, s1.Radius)),
 
-            (CollisionShape.Point, CollisionShape.Box b) =>
-                Intersects(p1, new Box2D(p2, new Vec2f(b.Width, b.Height))),
+            (CollisionShapeType.Point, CollisionShapeType.Box) =>
+                Intersects(p1, new Box2D(p2, new Vec2f(s2.Width, s2.Height))),
 
-            (CollisionShape.Box b, CollisionShape.Point) =>
-                Intersects(p2, new Box2D(p1, new Vec2f(b.Width, b.Height))),
+            (CollisionShapeType.Box, CollisionShapeType.Point) =>
+                Intersects(p2, new Box2D(p1, new Vec2f(s1.Width, s1.Height))),
 
-            (CollisionShape.Point, CollisionShape.Point) =>
+            (CollisionShapeType.Point, CollisionShapeType.Point) =>
                 MathF.Abs(p1.X - p2.X) < 0.001f && MathF.Abs(p1.Y - p2.Y) < 0.001f,
 
             _ => false
