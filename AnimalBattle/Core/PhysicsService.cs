@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using AnimalBattle.Bindings;
 using AnimalBattle.Components;
 
@@ -60,49 +61,66 @@ public static unsafe class PhysicsService
     /// <summary>
     /// 2 つの円形衝突形状の交差を判定します。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Circle2D c1, Circle2D c2)
     {
-        return NativeBindings.Physics_IntersectsCircleCircle(c1, c2);
+        Vec2f diff = c1.Center - c2.Center;
+        float combinedRadius = c1.Radius + c2.Radius;
+        return diff.LengthSquared() <= (combinedRadius * combinedRadius);
     }
 
     /// <summary>
     /// 2 つの軸平行矩形 (AABB) 衝突形状の交差を判定します。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Box2D b1, Box2D b2)
     {
-        return NativeBindings.Physics_IntersectsBoxBox(b1, b2);
+        Vec2f diff = b1.Center - b2.Center;
+        float dx = MathF.Abs(diff.X);
+        float dy = MathF.Abs(diff.Y);
+        return dx <= (b1.Size.X + b2.Size.X) * 0.5f && dy <= (b1.Size.Y + b2.Size.Y) * 0.5f;
     }
 
     /// <summary>
     /// 円形と軸平行矩形 (AABB) 衝突形状の交差を判定します。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Circle2D circle, Box2D box)
     {
-        return NativeBindings.Physics_IntersectsCircleBox(circle, box);
+        float closestX = Math.Clamp(circle.Center.X, box.Left, box.Right);
+        float closestY = Math.Clamp(circle.Center.Y, box.Top, box.Bottom);
+
+        Vec2f diff = new(circle.Center.X - closestX, circle.Center.Y - closestY);
+        return diff.LengthSquared() <= (circle.Radius * circle.Radius);
     }
 
     /// <summary>
     /// 軸平行矩形 (AABB) と円形衝突形状の交差を判定します。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Box2D box, Circle2D circle)
     {
-        return NativeBindings.Physics_IntersectsCircleBox(circle, box);
+        return Intersects(circle, box);
     }
 
     /// <summary>
     /// 点と円形衝突形状の交差を判定します。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Vec2f point, Circle2D circle)
     {
-        return NativeBindings.Physics_IntersectsPointCircle(point, circle);
+        Vec2f diff = point - circle.Center;
+        return diff.LengthSquared() <= (circle.Radius * circle.Radius);
     }
 
     /// <summary>
     /// 点と軸平行矩形 (AABB) 衝突形状の交差を判定します。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Vec2f point, Box2D box)
     {
-        return NativeBindings.Physics_IntersectsPointBox(point, box);
+        return point.X >= box.Left && point.X <= box.Right &&
+               point.Y >= box.Top && point.Y <= box.Bottom;
     }
 
     // --- 地形・足場判定 ---
@@ -138,59 +156,67 @@ public static unsafe class PhysicsService
     /// <summary>
     /// 速度ベクトルを位置座標へ積分加算します。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vec2f IntegrateVelocity(Vec2f position, Vec2f velocity, float deltaTime = 1.0f)
     {
-        return NativeBindings.Physics_IntegrateVelocity(position, velocity, deltaTime);
+        return position + velocity * deltaTime;
     }
 
     /// <summary>
     /// 垂直速度へ重力を加算し、最大落下速度でクランプします。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ApplyGravity(ref float vy, float gravity, float maxFallSpeed, float deltaTime = 1.0f)
     {
-        fixed (float* pVy = &vy)
+        vy += gravity * deltaTime;
+        if (vy > maxFallSpeed)
         {
-            NativeBindings.Physics_ApplyGravity(pVy, gravity, maxFallSpeed, deltaTime);
+            vy = maxFallSpeed;
         }
     }
 
     /// <summary>
     /// 2 点間のユークリッド距離を計算します。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float CalculateDistance(Vec2f a, Vec2f b)
     {
-        return NativeBindings.Physics_CalculateDistance(a, b);
+        return (a - b).Length();
     }
 
     /// <summary>
     /// 2 点間のラジアン角度を計算します。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float CalculateAngle(Vec2f from, Vec2f to)
     {
-        return NativeBindings.Physics_CalculateAngle(from, to);
+        return MathF.Atan2(to.Y - from.Y, to.X - from.X);
     }
 
     /// <summary>
     /// 角度と移動速度から速度ベクトル (Vec2f) を算出します。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vec2f DirectionToVector(float angleRad, float speed)
     {
-        return NativeBindings.Physics_DirectionToVector(angleRad, speed);
+        return new(MathF.Cos(angleRad) * speed, MathF.Sin(angleRad) * speed);
     }
 
     /// <summary>
     /// 値を指定した最小値・最大値の範囲内にクランプします。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Clamp(float value, float minVal, float maxVal)
     {
-        return NativeBindings.Physics_Clamp(value, minVal, maxVal);
+        return Math.Clamp(value, minVal, maxVal);
     }
 
     /// <summary>
     /// 2 値間を線形補間 (Lerp) します。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Lerp(float a, float b, float t)
     {
-        return NativeBindings.Physics_Lerp(a, b, t);
+        return a + (b - a) * t;
     }
 }

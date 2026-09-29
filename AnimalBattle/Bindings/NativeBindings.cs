@@ -186,63 +186,10 @@ internal static unsafe partial class NativeBindings
 
     #region Physics & Mathematics
 
-    [LibraryImport(_dllName, EntryPoint = "Physics_IntersectsCircleCircle")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Physics_IntersectsCircleCircle(Circle2D c1, Circle2D c2);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_IntersectsBoxBox")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Physics_IntersectsBoxBox(Box2D b1, Box2D b2);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_IntersectsCircleBox")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Physics_IntersectsCircleBox(Circle2D circle, Box2D box);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_IntersectsPointCircle")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Physics_IntersectsPointCircle(Vec2f point, Circle2D circle);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_IntersectsPointBox")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Physics_IntersectsPointBox(Vec2f point, Box2D box);
-
     [LibraryImport(_dllName, EntryPoint = "Physics_CheckPlatformGround")]
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Physics_CheckPlatformGround(float prevY, float nextY, Box2D playerBox, Box2D platformBox, float* outGroundY, float* outVy);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_IntegrateVelocity")]
-    [SuppressGCTransition]
-    public static partial Vec2f Physics_IntegrateVelocity(Vec2f position, Vec2f velocity, float deltaTime);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_ApplyGravity")]
-    [SuppressGCTransition]
-    public static partial void Physics_ApplyGravity(float* inOutVy, float gravity, float maxFallSpeed, float deltaTime);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_CalculateDistance")]
-    [SuppressGCTransition]
-    public static partial float Physics_CalculateDistance(Vec2f a, Vec2f b);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_CalculateAngle")]
-    [SuppressGCTransition]
-    public static partial float Physics_CalculateAngle(Vec2f from, Vec2f to);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_DirectionToVector")]
-    [SuppressGCTransition]
-    public static partial Vec2f Physics_DirectionToVector(float angleRad, float speed);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_Clamp")]
-    [SuppressGCTransition]
-    public static partial float Physics_Clamp(float value, float minVal, float maxVal);
-
-    [LibraryImport(_dllName, EntryPoint = "Physics_Lerp")]
-    [SuppressGCTransition]
-    public static partial float Physics_Lerp(float a, float b, float t);
 
     #endregion
 }

@@ -72,6 +72,18 @@ public readonly record struct Box2D(Vec2f Center, Vec2f Size)
 
     /// <summary>全高（ピクセル）</summary>
     public float Height => Size.Y;
+
+    /// <summary>矩形の左端 X 座標</summary>
+    public float Left => Center.X - Size.X * 0.5f;
+
+    /// <summary>矩形の右端 X 座標</summary>
+    public float Right => Center.X + Size.X * 0.5f;
+
+    /// <summary>矩形の上端 Y 座標</summary>
+    public float Top => Center.Y - Size.Y * 0.5f;
+
+    /// <summary>矩形の下端 Y 座標</summary>
+    public float Bottom => Center.Y + Size.Y * 0.5f;
 }
 
 /// <summary>
