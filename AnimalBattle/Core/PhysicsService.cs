@@ -151,6 +151,30 @@ public static unsafe class PhysicsService
         return isGrounded;
     }
 
+    /// <summary>
+    /// 統一幾何形状 <see cref="CollisionShape"/> を用いたワンウェイ足場（すり抜け床）着地判定を行います。
+    /// </summary>
+    public static bool CheckPlatformGround(
+        float prevY,
+        float nextY,
+        in Transform playerTrans,
+        CollisionShape playerShape,
+        in Transform platformTrans,
+        CollisionShape platformShape,
+        out float adjustedPosY,
+        out float adjustedVy)
+    {
+        float pWidth = playerShape.Type == CollisionShapeType.Box ? playerShape.Width : playerShape.Radius * 2.0f;
+        float pHeight = playerShape.Type == CollisionShapeType.Box ? playerShape.Height : playerShape.Radius * 2.0f;
+        float platWidth = platformShape.Type == CollisionShapeType.Box ? platformShape.Width : platformShape.Radius * 2.0f;
+        float platHeight = platformShape.Type == CollisionShapeType.Box ? platformShape.Height : platformShape.Radius * 2.0f;
+
+        Box2D playerBox = new(new Vec2f(playerTrans.X + playerShape.OffsetX, nextY + playerShape.OffsetY), new Vec2f(pWidth, pHeight));
+        Box2D platformBox = new(new Vec2f(platformTrans.X + platformShape.OffsetX, platformTrans.Y + platformShape.OffsetY), new Vec2f(platWidth, platHeight));
+
+        return CheckPlatformGround(prevY, nextY, playerBox, platformBox, out adjustedPosY, out adjustedVy);
+    }
+
     // --- 運動積分およびベクトル数学 ---
 
     /// <summary>
