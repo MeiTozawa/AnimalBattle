@@ -1,18 +1,17 @@
 using System;
 using System.Collections.Generic;
 using AnimalBattle.Ai.Attack;
-using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
 
-namespace AnimalBattle.Ai.Dsl.Modules;
+namespace AnimalBattle.Ai.Boss1;
 
 /// <summary>
-/// Boss1 のすべての攻撃技能（各種弾幕および俯衝突進 DiveRam）の Execute ライフサイクルを宣言的定義に基づいて一元処理する汎用実行モジュールです。
+/// Boss1 のすべての攻撃技能（各種弾幕および俯衝突進 DiveRam）の Execute ライフサイクルを一元処理する実行モジュールです。
 /// </summary>
 /// <param name="configuration">Boss1 設定境界。</param>
 /// <param name="state">Boss1 実行時状態。</param>
-public sealed class DslBoss1ExecuteModule(IBoss1Configuration configuration, Boss1BehaviorState state)
+public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1BehaviorState state)
     : IBossStateModule, IStateModuleDependencyProvider
 {
     private readonly IBoss1Configuration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));

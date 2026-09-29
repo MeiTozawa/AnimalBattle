@@ -4,7 +4,6 @@ using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Dsl;
-using AnimalBattle.Ai.Dsl.Modules;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Configs;
@@ -525,15 +524,14 @@ public sealed class BossCharacter
         ObservationService observation)
     {
         Boss1DefaultConfiguration boss1Config = new();
-        Boss1AttackAdapter adapter1 = new(boss1Config, boss1State);
 
         IBossStateModule[] modules =
         [
             new HoverMovementModule(boss1Config, boss1State),
             new Boss1AttackSelectionModule(boss1Config, boss1State),
-            new DslTelegraphModule(adapter1),
-            new DslBoss1ExecuteModule(boss1Config, boss1State),
-            new DslRecoveryModule(adapter1),
+            new Boss1TelegraphModule(boss1Config, boss1State),
+            new Boss1ExecuteModule(boss1Config, boss1State),
+            new Boss1RecoveryModule(boss1Config, boss1State),
             new Boss1PhaseTransitionModule(boss1Config, boss1State),
             new Boss1DeadModule(boss1State)
         ];
@@ -558,18 +556,17 @@ public sealed class BossCharacter
         Func<PlatformNavigationGraph?>? navGraphProvider = null)
     {
         Boss2DefaultConfiguration boss2Config = new();
-        Boss2AttackAdapter adapter2 = new(boss2Config, boss2State);
 
         IBossStateModule[] modules =
         [
             new Boss2IdleModule(boss2State),
             new Boss2PatrolChaseModule(boss2Config, boss2State, navGraphProvider),
             new Boss2MoveToTakeoffModule(boss2Config, boss2State),
-            new DslPlatformTraverseModule(BossState.Boss2_PlatformTraverse, TraverseMode.Jump, boss2Config, boss2State),
-            new DslTelegraphModule(adapter2),
-            new DslBoss2ExecuteModule(boss2Config, boss2State),
+            new Boss2PlatformTraverseModule(BossState.Boss2_PlatformTraverse, TraverseMode.Jump, boss2Config, boss2State),
+            new Boss2TelegraphModule(boss2Config, boss2State),
+            new Boss2ExecuteModule(boss2Config, boss2State),
             new Boss2WallCrashStunModule(boss2Config, boss2State),
-            new DslRecoveryModule(adapter2),
+            new Boss2RecoveryModule(boss2Config, boss2State),
             new Boss2PhaseTransitionModule(boss2Config, boss2State),
             new Boss2DeadModule(boss2State)
         ];

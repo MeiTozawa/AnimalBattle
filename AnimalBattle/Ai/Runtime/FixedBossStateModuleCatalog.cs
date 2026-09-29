@@ -1,7 +1,6 @@
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Ai.Dsl.Modules;
 
 namespace AnimalBattle.Ai.Runtime;
 
@@ -30,20 +29,20 @@ public static class FixedBossStateModuleCatalog
     [
         Entry(BossState.Boss1_Hover, BossType.Boss1, nameof(HoverMovementModule)),
         Entry(BossState.Boss1_AttackSelection, BossType.Boss1, nameof(Boss1AttackSelectionModule)),
-        Entry(BossState.Boss1_Telegraph, BossType.Boss1, nameof(DslTelegraphModule)),
-        Entry(BossState.Boss1_Execute, BossType.Boss1, nameof(DslBoss1ExecuteModule)),
-        Entry(BossState.Boss1_Recovery, BossType.Boss1, nameof(DslRecoveryModule)),
+        Entry(BossState.Boss1_Telegraph, BossType.Boss1, nameof(Boss1TelegraphModule)),
+        Entry(BossState.Boss1_Execute, BossType.Boss1, nameof(Boss1ExecuteModule)),
+        Entry(BossState.Boss1_Recovery, BossType.Boss1, nameof(Boss1RecoveryModule)),
         Entry(BossState.Boss1_PhaseTransition, BossType.Boss1, nameof(Boss1PhaseTransitionModule)),
         Entry(BossState.Boss1_Dead, BossType.Boss1, nameof(Boss1DeadModule)),
 
         Entry(BossState.Boss2_Idle, BossType.Boss2, nameof(Boss2IdleModule)),
         Entry(BossState.Boss2_PatrolChase, BossType.Boss2, nameof(Boss2PatrolChaseModule)),
         Entry(BossState.Boss2_MoveToTakeoff, BossType.Boss2, nameof(Boss2MoveToTakeoffModule)),
-        Entry(BossState.Boss2_PlatformTraverse, BossType.Boss2, nameof(DslPlatformTraverseModule)),
-        Entry(BossState.Boss2_Telegraph, BossType.Boss2, nameof(DslTelegraphModule)),
-        Entry(BossState.Boss2_Execute, BossType.Boss2, nameof(DslBoss2ExecuteModule)),
+        Entry(BossState.Boss2_PlatformTraverse, BossType.Boss2, nameof(Boss2PlatformTraverseModule)),
+        Entry(BossState.Boss2_Telegraph, BossType.Boss2, nameof(Boss2TelegraphModule)),
+        Entry(BossState.Boss2_Execute, BossType.Boss2, nameof(Boss2ExecuteModule)),
         Entry(BossState.Boss2_WallCrashStun, BossType.Boss2, nameof(Boss2WallCrashStunModule)),
-        Entry(BossState.Boss2_Recovery, BossType.Boss2, nameof(DslRecoveryModule)),
+        Entry(BossState.Boss2_Recovery, BossType.Boss2, nameof(Boss2RecoveryModule)),
         Entry(BossState.Boss2_PhaseTransition, BossType.Boss2, nameof(Boss2PhaseTransitionModule)),
         Entry(BossState.Boss2_Dead, BossType.Boss2, nameof(Boss2DeadModule))
     ]);
@@ -125,9 +124,9 @@ public static class FixedBossStateModuleCatalog
             {
                 Boss1State.Hover => typeof(HoverMovementModule),
                 Boss1State.AttackSelection => typeof(Boss1AttackSelectionModule),
-                Boss1State.Telegraph => typeof(DslTelegraphModule),
-                Boss1State.Execute => typeof(DslBoss1ExecuteModule),
-                Boss1State.Recovery => typeof(DslRecoveryModule),
+                Boss1State.Telegraph => typeof(Boss1TelegraphModule),
+                Boss1State.Execute => typeof(Boss1ExecuteModule),
+                Boss1State.Recovery => typeof(Boss1RecoveryModule),
                 Boss1State.PhaseTransition => typeof(Boss1PhaseTransitionModule),
                 Boss1State.Dead => typeof(Boss1DeadModule),
                 _ => typeof(object)
@@ -137,11 +136,11 @@ public static class FixedBossStateModuleCatalog
                 Boss2State.Idle => typeof(Boss2IdleModule),
                 Boss2State.PatrolChase => typeof(Boss2PatrolChaseModule),
                 Boss2State.MoveToTakeoff => typeof(Boss2MoveToTakeoffModule),
-                Boss2State.PlatformTraverse => typeof(DslPlatformTraverseModule),
-                Boss2State.Telegraph => typeof(DslTelegraphModule),
-                Boss2State.Execute => typeof(DslBoss2ExecuteModule),
+                Boss2State.PlatformTraverse => typeof(Boss2PlatformTraverseModule),
+                Boss2State.Telegraph => typeof(Boss2TelegraphModule),
+                Boss2State.Execute => typeof(Boss2ExecuteModule),
                 Boss2State.WallCrashStun => typeof(Boss2WallCrashStunModule),
-                Boss2State.Recovery => typeof(DslRecoveryModule),
+                Boss2State.Recovery => typeof(Boss2RecoveryModule),
                 Boss2State.PhaseTransition => typeof(Boss2PhaseTransitionModule),
                 Boss2State.Dead => typeof(Boss2DeadModule),
                 _ => typeof(object)

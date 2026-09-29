@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
 
-namespace AnimalBattle.Ai.Dsl.Modules;
+namespace AnimalBattle.Ai.Boss2;
 
 /// <summary>足場跨ぎ機動の初期進入モードです。</summary>
 public enum TraverseMode
@@ -29,13 +28,13 @@ public enum TraverseStage
 }
 
 /// <summary>
-/// Boss2 の足場間跳躍、空中落下、および着地硬直の生命周期を一元処理する汎用 DSL 機動モジュールです。
+/// Boss2 の足場間跳躍、空中落下、および着地硬直の生命周期を一元処理する機動モジュールです。
 /// </summary>
 /// <param name="stateId">対象ステート。</param>
 /// <param name="initialMode">初期モード。</param>
 /// <param name="configuration">設定境界。</param>
 /// <param name="state">共有状態。</param>
-public sealed class DslPlatformTraverseModule(
+public sealed class Boss2PlatformTraverseModule(
     BossState stateId,
     TraverseMode initialMode,
     IBoss2Configuration configuration,
