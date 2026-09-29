@@ -6,8 +6,8 @@ using AnimalBattle.Ai.Contracts;
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// 全局枚举字符串预烘焙查找表（LUT）。
-/// 彻底废黜热路径中的 Enum.ToString()、反射字典查找与堆字符串分配。
+/// グローバルな列挙体文字列事前生成ルックアップテーブル（LUT）。
+/// ホットパスにおける <see cref="Enum.ToString()"/> のリフレクション辞書検索とヒープ文字列割り当てを完全に排除します。
 /// </summary>
 public static class EnumStringLut
 {
@@ -71,7 +71,7 @@ public static class EnumStringLut
         "Dead"
     ];
 
-    // 预烘焙 HUD 完整徽章文本，避免任何帧内插值
+    // フレーム内文字列補間をゼロ化するための事前生成 HUD 状態バッジ文字列
     private static readonly string[] Boss1TelegraphBadges =
     [
         "[STATE: TELEGRAPHING (WIND-UP: None)]",

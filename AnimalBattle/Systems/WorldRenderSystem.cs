@@ -32,11 +32,11 @@ public sealed class WorldRenderSystem : IDisposable
     private readonly Query<Transform, Sprite, HitFlashEffect> _hitFlashQuery;
     private bool _isDisposed;
 
-    // 预分配委托，彻底切除每帧 Iter 回调中的闭包分配
+    // 毎フレームの Iter コールバックでのクロージャ割り当てを完全に排除するための事前確保デリゲート
     private readonly Ecs.IterFieldCallback<Transform, Velocity> _drawPlayerBulletsCallback;
     private readonly Ecs.IterFieldCallback<Transform, Bullet> _drawBossBulletsCallback;
 
-    // 渲染上下文参数缓存
+    // 描画コンテキストパラメータキャッシュ（ゼロ GC 描画用）
     private int _bulletClipMinX;
     private int _bulletClipMaxX;
     private int _bulletClipMinY;

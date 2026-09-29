@@ -134,7 +134,7 @@ public static class CombatCollisionSystem
                              continue;
                          }
 
-                         // AABB Broadphase 剪枝（空间粗筛）
+                         // AABB Broadphase 枝刈り（空間粗判定による早期リターン）
                          if (MathF.Abs(aCenterX - target.CenterX) > (aHalfW + target.HalfW) ||
                              MathF.Abs(aCenterY - target.CenterY) > (aHalfH + target.HalfH))
                          {

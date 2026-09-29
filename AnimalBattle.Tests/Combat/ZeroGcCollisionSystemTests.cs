@@ -19,7 +19,7 @@ public class ZeroGcCollisionSystemTests
             .Set(new Hurtbox(new CollisionShape.Box(40.0f, 40.0f), Faction.Hostile))
             .Set(new Health(100.0f));
 
-        // 添加多个攻击者模拟真实弹幕环境
+        // 実戦の弾幕環境をシミュレートするために複数の攻撃エンティティを追加
         for (int i = 0; i < 10; i++)
         {
             world.Entity($"Attacker_{i}")
@@ -27,7 +27,7 @@ public class ZeroGcCollisionSystemTests
                 .Set(new Hitbox(new CollisionShape.Circle(10.0f), damage: 10.0f, faction: Faction.Friendly));
         }
 
-        // 预热 JIT 与 ECS 表结构
+        // JIT と ECS テーブル構造をウォームアップ
         world.Progress(0.016f);
 
         long bytesBefore = GC.GetAllocatedBytesForCurrentThread();
@@ -37,7 +37,7 @@ public class ZeroGcCollisionSystemTests
         }
         long bytesAllocated = GC.GetAllocatedBytesForCurrentThread() - bytesBefore;
 
-        // 验证 100 帧循环中堆分配控制在 1KB 以内（理想为 0 闭包分配）
+        // 100 フレームのループ内でクロージャ生成によるヒープ割り当てがゼロ（1KB 未満）であることを検証
         Assert.True(bytesAllocated < 1024, $"Allocated {bytesAllocated} bytes during 100 frames with 10 attackers!");
     }
 }
