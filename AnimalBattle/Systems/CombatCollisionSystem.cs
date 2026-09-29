@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -167,7 +168,7 @@ public static class CombatCollisionSystem
 
                      if (shouldDestroyAttacker)
                      {
-                         atkEntity.Destruct();
+                         CombatEntityPoolHelper.Recycle(world, atkEntity);
                      }
                  }
              });

@@ -4,6 +4,7 @@ using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Bindings;
 using AnimalBattle.Characters;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using AnimalBattle.Maps;
 using ErrorOr;
 using Flecs.NET.Core;
@@ -328,8 +329,8 @@ public partial class BattleScene : IDisposable
     private void ResetCombat()
     {
         CombatEffectHelper.ClearAllBossBullets(_ecsWorld);
-        _playerBulletsQuery.Each(e => e.Destruct());
-        _effectsQuery.Each(e => e.Destruct());
+        _playerBulletsQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
+        _effectsQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
         _player?.Reset(ConfigManager.Player);
     }
 
@@ -351,6 +352,11 @@ public partial class BattleScene : IDisposable
             ConfigManager.Boss1Container.OnConfigReloaded -= OnBoss1ConfigReloaded;
             ConfigManager.Boss2Container.OnConfigReloaded -= OnBoss2ConfigReloaded;
             ConfigManager.PlayerContainer.OnConfigReloaded -= OnPlayerConfigReloaded;
+
+            if (_ecsWorld.Has<CombatEntityPoolComponent>())
+            {
+                _ecsWorld.Get<CombatEntityPoolComponent>().Dispose();
+            }
 
             _worldRenderer.Dispose();
             _debugRenderer.Dispose();

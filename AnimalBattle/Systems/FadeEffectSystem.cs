@@ -34,7 +34,7 @@ public static class FadeEffectSystem
                      fade[i].ElapsedTimer += dt;
                      if (fade[i].ElapsedTimer >= fade[i].Duration)
                      {
-                         it.Entity(i).Destruct();
+                         CombatEntityPoolHelper.Recycle(it.World(), it.Entity(i));
                          continue;
                      }
 

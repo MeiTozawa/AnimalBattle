@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Core;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -61,7 +62,8 @@ public static class CombatEffectHelper
         Color fill = fillColor ?? GetDefaultFillColor(type);
         Color outline = outlineColor ?? GetDefaultOutlineColor(type);
 
-        Entity entity = world.Entity()
+        // 事前確保されたエンティティプールから Boss 弾幕エンティティを貸し出し
+        Entity entity = CombatEntityPoolHelper.RentBossBullet(world)
              .Set(new Transform(x, y))
              .Set(new Velocity(vx, vy))
              .Set(new Bullet(radius, fill, outline))
@@ -71,6 +73,10 @@ public static class CombatEffectHelper
         if (type != BulletType.Normal)
         {
             entity.Set(new BulletModifier(type, radius, vx, vy));
+        }
+        else if (entity.Has<BulletModifier>())
+        {
+            entity.Remove<BulletModifier>();
         }
     }
 
@@ -144,7 +150,7 @@ public static class CombatEffectHelper
         using Query query = world.QueryBuilder()
                                  .With<BossBulletTag>()
                                  .Build();
-        query.Each((Entity e) => e.Destruct());
+        query.Each((Entity e) => CombatEntityPoolHelper.Recycle(world, e));
     }
 
     /// <summary>
@@ -155,7 +161,7 @@ public static class CombatEffectHelper
     /// <param name="y">中心 Y 座標</param>
     public static void SpawnJumpRingEffect(World world, float x, float y)
     {
-        world.Entity()
+        CombatEntityPoolHelper.RentEffect(world)
              .Set(new Transform(x, y))
              .Set(new RingEffect(8.0f, 32.0f, ColorPalette.White, isFilled: false))
              .Set(new FadeEffect(0.18f))
@@ -174,7 +180,7 @@ public static class CombatEffectHelper
         {
             float angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
             float speed = 60.0f + Random.Shared.NextSingle() * 120.0f;
-            world.Entity()
+            CombatEntityPoolHelper.RentEffect(world)
                  .Set(new Transform(x, y))
                  .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
                  .Set(new Bullet(3.5f, ColorPalette.SparkYellow, ColorPalette.White))
@@ -195,7 +201,7 @@ public static class CombatEffectHelper
         {
             float angle = (i / 16.0f) * MathF.PI * 2.0f;
             float speed = 4.0f + (i % 3) * 2.0f;
-            world.Entity()
+            CombatEntityPoolHelper.RentEffect(world)
                  .Set(new Transform(x, y))
                  .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
                  .Set(new Bullet(5.0f, ColorPalette.Red, ColorPalette.White))
@@ -212,7 +218,7 @@ public static class CombatEffectHelper
     /// <param name="y">中心 Y 座標</param>
     public static void SpawnShockwave(World world, float x, float y)
     {
-        world.Entity()
+        CombatEntityPoolHelper.RentEffect(world)
              .Set(new Transform(x, y))
              .Set(new RingEffect(20.0f, 150.0f, ColorPalette.Cyan, isFilled: false))
              .Set(new FadeEffect(0.40f))
@@ -231,7 +237,7 @@ public static class CombatEffectHelper
         {
             float angle = (i / 32.0f) * MathF.PI * 2.0f;
             float speed = 3.0f + (i % 5) * 2.5f;
-            world.Entity()
+            CombatEntityPoolHelper.RentEffect(world)
                  .Set(new Transform(x, y))
                  .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
                  .Set(new Bullet(6.0f, ColorPalette.Gold, ColorPalette.GoldLight))
@@ -288,7 +294,7 @@ public static class CombatEffectHelper
             _ => 0.0f
         };
 
-        world.Entity()
+        CombatEntityPoolHelper.RentEffect(world)
              .Set(new Transform(x + offsetX, y + offsetY, scaleX: scale, scaleY: scale))
              .Set(new Velocity(vx, vy))
              .Set(new Hitbox(new CollisionShape.Box(width, height, OffsetX: -offsetX, OffsetY: -offsetY), damage: damage, faction: Faction.Hostile, destroyOnHit: false))
@@ -310,7 +316,7 @@ public static class CombatEffectHelper
     /// <param name="outlineColor">外枠発光色</param>
     public static void SpawnGroundShockwave(World world, float x, float y, float vx, float radius, float damage, Color fillColor, Color outlineColor)
     {
-        world.Entity()
+        CombatEntityPoolHelper.RentBossBullet(world)
              .Set(new Transform(x, y))
              .Set(new Velocity(vx, 0.0f))
              .Set(new Bullet(radius, fillColor, outlineColor))

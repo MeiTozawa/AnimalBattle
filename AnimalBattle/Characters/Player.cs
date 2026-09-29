@@ -540,7 +540,8 @@ public sealed class Player
         float vx = dirX * pCfg.BulletSpeed;
         float vy = dirY * pCfg.BulletSpeed;
 
-        world.Entity()
+        // 事前確保されたエンティティプールから通常弾を貸し出し
+        CombatEntityPoolHelper.RentPlayerBullet(world)
              .Set(new Transform(spawnX, spawnY))
              .Set(new Velocity(vx, vy))
              .Set(new CollisionBox(pCfg.BulletWidth, pCfg.BulletHeight))

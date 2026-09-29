@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using AnimalBattle.Bindings;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -67,11 +68,12 @@ public static class BulletPhysicsSystem
                 }
             }
 
+            World w = it.World();
             for (int i = 0; i < count; ++i)
             {
                 if (despawnFlags[i] != 0)
                 {
-                    it.Entity(i).Destruct();
+                    CombatEntityPoolHelper.Recycle(w, it.Entity(i));
                 }
             }
         }
