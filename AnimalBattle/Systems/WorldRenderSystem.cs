@@ -110,7 +110,7 @@ public sealed class WorldRenderSystem(World world) : IDisposable
             if (boss.CurrentState == BossState.Boss1_Telegraph)
             {
                 float progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
-                DrawBoss1Telegraph(boss.X, boss.Y, boss.SkillName, boss.TargetX, boss.TargetY, playerX, playerY, progress, boss.StateTimer);
+                DrawBoss1Telegraph(boss.X, boss.Y, boss.CurrentSkill, boss.TargetX, boss.TargetY, playerX, playerY, progress, boss.StateTimer);
             }
 
             double bossAngle = MathF.Sin(boss.HoverTimer * bossFx.BossHoverAngleSpeed) * bossFx.BossHoverAngleAmp;
@@ -130,28 +130,16 @@ public sealed class WorldRenderSystem(World world) : IDisposable
             // 隙あり（Vulnerable）時の直接変色・脈動発光 & 攻撃チャンスマーカー
             if (boss.IsVulnerable)
             {
-                float pulse = 0.5f + 0.5f * MathF.Sin(boss.StateTimer * 10.0f);
-                int vulnAlpha = (int)(130 + 110 * pulse);
-                GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
-                GameEngine.DrawRectRotaGraph(
+                DrawBossVulnerableEffects(
                     bx,
                     by,
-                    boss.Sprite.SrcRect.X1,
-                    boss.Sprite.SrcRect.Y1,
-                    boss.Sprite.SrcRect.Width,
-                    boss.Sprite.SrcRect.Height,
-                    boss.ScaleX * 1.04f,
+                    boss.Sprite.SrcRect,
+                    boss.ScaleX,
                     bossAngle,
                     boss.Sprite.GraphHandle,
-                    true,
-                    false);
-                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-
-                float bobbing = MathF.Sin(boss.StateTimer * 8.0f) * 4.0f;
-                int textWidth = bossFx.ChanceMarkerText.Length * 7;
-                int textX = bx - textWidth / 2;
-                int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
-                GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
+                    false,
+                    boss.StateTimer,
+                    bossFx);
             }
         }
         else
@@ -179,36 +167,59 @@ public sealed class WorldRenderSystem(World world) : IDisposable
             // 隙あり（Vulnerable）時の直接変色・脈動発光 & 攻撃チャンスマーカー
             if (boss.IsVulnerable)
             {
-                float pulse = 0.5f + 0.5f * MathF.Sin(boss.StateTimer * 10.0f);
-                int vulnAlpha = (int)(130 + 110 * pulse);
-                GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
-                GameEngine.DrawRectRotaGraph(
+                DrawBossVulnerableEffects(
                     bx,
                     by,
-                    boss.Sprite.SrcRect.X1,
-                    boss.Sprite.SrcRect.Y1,
-                    boss.Sprite.SrcRect.Width,
-                    boss.Sprite.SrcRect.Height,
-                    boss.ScaleX * 1.04f,
+                    boss.Sprite.SrcRect,
+                    boss.ScaleX,
                     0.0,
                     boss.Sprite.GraphHandle,
-                    true,
-                    flipX);
-                GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-
-                float bobbing = MathF.Sin(boss.StateTimer * 8.0f) * 4.0f;
-                int textWidth = bossFx.ChanceMarkerText.Length * 7;
-                int textX = bx - textWidth / 2;
-                int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
-                GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
+                    flipX,
+                    boss.StateTimer,
+                    bossFx);
             }
         }
+    }
+
+    private static void DrawBossVulnerableEffects(
+        int bx,
+        int by,
+        in Rect srcRect,
+        float scaleX,
+        double angle,
+        int graphHandle,
+        bool flipX,
+        float stateTimer,
+        BossEffectsRenderConfig bossFx)
+    {
+        float pulse = 0.5f + 0.5f * MathF.Sin(stateTimer * 10.0f);
+        int vulnAlpha = (int)(130 + 110 * pulse);
+        GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
+        GameEngine.DrawRectRotaGraph(
+            bx,
+            by,
+            srcRect.X1,
+            srcRect.Y1,
+            srcRect.Width,
+            srcRect.Height,
+            scaleX * 1.04f,
+            angle,
+            graphHandle,
+            true,
+            flipX);
+        GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+
+        float bobbing = MathF.Sin(stateTimer * 8.0f) * 4.0f;
+        int textWidth = bossFx.ChanceMarkerText.Length * 7;
+        int textX = bx - textWidth / 2;
+        int textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
+        GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
     }
 
     private static void DrawBoss1Telegraph(
         float bx,
         float by,
-        string skillName,
+        BossSkill skill,
         float targetX,
         float targetY,
         float playerX,
@@ -220,9 +231,9 @@ public sealed class WorldRenderSystem(World world) : IDisposable
         float finalTargetX = (targetX != 0.0f || targetY != 0.0f) ? targetX : playerX;
         float finalTargetY = (targetX != 0.0f || targetY != 0.0f) ? targetY : playerY;
 
-        switch (skillName)
+        switch (skill)
         {
-            case "Aimed3Shot":
+            case BossSkill.Aimed3Shot:
                 TelegraphRenderHelper.DrawAimingLasers(
                     bx,
                     by,
@@ -235,7 +246,7 @@ public sealed class WorldRenderSystem(World world) : IDisposable
                     false);
                 break;
 
-            case "FastSniper":
+            case BossSkill.FastSniper:
                 TelegraphRenderHelper.DrawAimingLasers(
                     bx,
                     by,
@@ -248,7 +259,7 @@ public sealed class WorldRenderSystem(World world) : IDisposable
                     true);
                 break;
 
-            case "DiveRam":
+            case BossSkill.DiveRam:
                 TelegraphRenderHelper.DrawDiveRamTelegraph(
                     bx,
                     by,
@@ -259,7 +270,7 @@ public sealed class WorldRenderSystem(World world) : IDisposable
                     patternCfg.DiveRam.TelegraphColor);
                 break;
 
-            case "RingBurst":
+            case BossSkill.RingBurst:
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
                     bx,
                     by,
@@ -270,7 +281,7 @@ public sealed class WorldRenderSystem(World world) : IDisposable
                     patternCfg.RingBurst.TelegraphColor);
                 break;
 
-            case "DoubleSpiral":
+            case BossSkill.DoubleSpiral:
                 float spiralAngle = stateTimer * 4.0f;
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
                     bx,
@@ -282,7 +293,7 @@ public sealed class WorldRenderSystem(World world) : IDisposable
                     patternCfg.DoubleSpiral.TelegraphColor);
                 break;
 
-            case "RainDrop":
+            case BossSkill.RainDrop:
                 TelegraphRenderHelper.DrawSkyfallColumns(
                     patternCfg.RainDrop.MinX,
                     patternCfg.RainDrop.MaxX,
@@ -293,7 +304,7 @@ public sealed class WorldRenderSystem(World world) : IDisposable
                     "▼ RAIN ▼");
                 break;
 
-            case "CrossChaos":
+            case BossSkill.CrossChaos:
                 float crossAngle = stateTimer * 2.5f;
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
                     bx,
