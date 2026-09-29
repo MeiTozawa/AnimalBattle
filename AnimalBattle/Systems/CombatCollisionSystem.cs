@@ -38,6 +38,11 @@ public static class CombatCollisionSystem
 
                  bool shouldDestroyAttacker = false;
 
+                 float aCenterX = localAtkTrans.X + localHitbox.Shape.OffsetX;
+                 float aCenterY = localAtkTrans.Y + localHitbox.Shape.OffsetY;
+                 float aHalfW = localHitbox.Shape.Type == CollisionShapeType.Box ? localHitbox.Shape.Width * 0.5f : localHitbox.Shape.Radius;
+                 float aHalfH = localHitbox.Shape.Type == CollisionShapeType.Box ? localHitbox.Shape.Height * 0.5f : localHitbox.Shape.Radius;
+
                  hurtboxQuery.Each((Entity vicEntity, ref Transform vicTrans, ref Hurtbox hurtbox, ref Health vicHealth) =>
                  {
                      if (shouldDestroyAttacker)
@@ -46,6 +51,18 @@ public static class CombatCollisionSystem
                      }
 
                      if (localHitbox.Faction == hurtbox.Faction || !vicHealth.IsAlive || IsTargetInvulnerable(vicEntity, in vicHealth))
+                     {
+                         return;
+                     }
+
+                     float vCenterX = vicTrans.X + hurtbox.Shape.OffsetX;
+                     float vCenterY = vicTrans.Y + hurtbox.Shape.OffsetY;
+                     float vHalfW = hurtbox.Shape.Type == CollisionShapeType.Box ? hurtbox.Shape.Width * 0.5f : hurtbox.Shape.Radius;
+                     float vHalfH = hurtbox.Shape.Type == CollisionShapeType.Box ? hurtbox.Shape.Height * 0.5f : hurtbox.Shape.Radius;
+
+                     // 空间碰撞粗筛（AABB Broadphase 剪枝）：相距甚远时提前短路，避免昂贵的狭义几何判定
+                     if (MathF.Abs(aCenterX - vCenterX) > (aHalfW + vHalfW) ||
+                         MathF.Abs(aCenterY - vCenterY) > (aHalfH + vHalfH))
                      {
                          return;
                      }
