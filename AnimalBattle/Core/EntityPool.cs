@@ -13,6 +13,7 @@ public sealed class EntityPool : IDisposable
     private readonly World _world;
     private readonly Action<Entity>? _onInit;
     private Entity[] _pool;
+    private Entity[] _allAllocated;
     private int _top;
     private int _totalAllocated;
     private bool _isDisposed;
@@ -36,6 +37,7 @@ public sealed class EntityPool : IDisposable
         initialCapacity = Math.Max(1, initialCapacity);
 
         _pool = new Entity[initialCapacity];
+        _allAllocated = new Entity[initialCapacity];
         _top = 0;
         _totalAllocated = 0;
 
@@ -51,7 +53,7 @@ public sealed class EntityPool : IDisposable
             e.Disable();
             _onInit?.Invoke(e);
             _pool[_top++] = e;
-            _totalAllocated++;
+            _allAllocated[_totalAllocated++] = e;
         }
     }
 
@@ -61,6 +63,7 @@ public sealed class EntityPool : IDisposable
         {
             int newCap = Math.Max(_pool.Length * 2, required);
             Array.Resize(ref _pool, newCap);
+            Array.Resize(ref _allAllocated, newCap);
         }
     }
 
@@ -84,12 +87,19 @@ public sealed class EntityPool : IDisposable
 
     /// <summary>
     /// 使用済みのエンティティをプールへ返却し、無効化（Disable）します。
+    /// プール破棄後に返却されたエンティティは孤児化を防ぐため安全に Destruct されます。
     /// </summary>
     /// <param name="entity">返却するエンティティ。</param>
     public void Return(Entity entity)
     {
-        if (_isDisposed || !entity.IsAlive())
+        if (!entity.IsAlive())
         {
+            return;
+        }
+
+        if (_isDisposed)
+        {
+            entity.Destruct();
             return;
         }
 
@@ -99,17 +109,17 @@ public sealed class EntityPool : IDisposable
     }
 
     /// <summary>
-    /// プール内の全エンティティを破棄し、リソースを解放します。
+    /// プール内の全エンティティ（空きおよび貸出中）を破棄し、リソースを解放します。
     /// </summary>
     public void Dispose()
     {
         if (!_isDisposed)
         {
-            for (int i = 0; i < _top; i++)
+            for (int i = 0; i < _totalAllocated; i++)
             {
-                if (_pool[i].IsAlive())
+                if (_allAllocated[i].IsAlive())
                 {
-                    _pool[i].Destruct();
+                    _allAllocated[i].Destruct();
                 }
             }
             _top = 0;
