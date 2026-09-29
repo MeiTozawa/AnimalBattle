@@ -1,12 +1,16 @@
 module;
 
 #include <cstdint>
+#include "RenderPacket.h"
 
 export module RenderService;
 
 export import RenderTypes;
 
 namespace ab {
+    export using ab::RenderPacket;
+    export using ab::RenderPacketType;
+
     /// @brief バックエンド非依存のレンダリングサービス抽象インターフェース
     export class IRenderService {
     public:
@@ -17,6 +21,9 @@ namespace ab {
         virtual bool ScreenFlip() = 0;
         virtual void ClearCommands() = 0;
         virtual void FlushCommands() = 0;
+
+        // --- バッチ描画コマンド受付 ---
+        virtual void SubmitPackets(const RenderPacket* packets, int packet_count, const wchar_t* text_buffer, int text_length) = 0;
 
         // --- テクスチャ・アセット管理 ---
         virtual int LoadGraph(const wchar_t* file_path) = 0;

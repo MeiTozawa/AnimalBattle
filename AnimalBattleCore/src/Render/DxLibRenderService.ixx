@@ -3,11 +3,8 @@ module;
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <mutex>
 #include <string>
 #include <utility>
-#include <variant>
-#include <vector>
 #include <DxLib.h>
 
 #ifdef GetObject
@@ -21,7 +18,7 @@ export import RenderService;
 extern "C" bool g_is_exit_requested;
 
 namespace ab {
-    /// @brief DxLib を使用して描画・カメラ変換・ダブルバッファリングを提供する具象レンダリングサービス
+    /// @brief DxLib を使用してダイレクトバッチ描画・カメラ変換を提供する具象レンダリングサービス
     export class DxLibRenderService : public IRenderService {
     private:
         int viewport_width_ = 0;
@@ -31,101 +28,12 @@ namespace ab {
         float camera_y_ = 360.0f;
         float camera_scale_ = 1.0f;
 
-        std::vector<RenderCommand> write_queue_;
-        std::vector<RenderCommand> render_queue_;
-        mutable std::mutex queue_mutex_;
-
-        void ExecuteCommand(const RenderCommand& cmd) {
-            std::visit(Overloaded{
-                [this](const DrawStringCmd& c) {
-                    Vec2i p_draw = c.pos;
-                    if (camera_enabled_) {
-                        p_draw.x = static_cast<int>((c.pos.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p_draw.y = static_cast<int>((c.pos.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                    }
-                    ::DrawString(p_draw.x, p_draw.y, c.text.c_str(), c.color);
-                },
-                [this](const DrawBoxCmd& c) {
-                    Rect<int> r_draw = c.r;
-                    if (camera_enabled_) {
-                        r_draw.p1.x = static_cast<int>((c.r.p1.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        r_draw.p1.y = static_cast<int>((c.r.p1.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                        r_draw.p2.x = static_cast<int>((c.r.p2.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        r_draw.p2.y = static_cast<int>((c.r.p2.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                    }
-                    ::DrawBox(r_draw.p1.x, r_draw.p1.y, r_draw.p2.x, r_draw.p2.y, c.color, c.fill_flag ? TRUE : FALSE);
-                },
-                [this](const DrawCircleCmd& c) {
-                    Vec2i p_draw = c.center;
-                    int radius_draw = c.radius;
-                    if (camera_enabled_) {
-                        p_draw.x = static_cast<int>((c.center.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p_draw.y = static_cast<int>((c.center.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                        radius_draw = static_cast<int>(c.radius * camera_scale_);
-                    }
-                    ::DrawCircle(p_draw.x, p_draw.y, radius_draw, c.color, c.fill_flag ? TRUE : FALSE);
-                },
-                [this](const DrawLineCmd& c) {
-                    Vec2i p1_draw = c.p1;
-                    Vec2i p2_draw = c.p2;
-                    int thickness_draw = c.thickness;
-                    if (camera_enabled_) {
-                        p1_draw.x = static_cast<int>((c.p1.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p1_draw.y = static_cast<int>((c.p1.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                        p2_draw.x = static_cast<int>((c.p2.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p2_draw.y = static_cast<int>((c.p2.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                        thickness_draw = static_cast<int>(c.thickness * camera_scale_);
-                        if (thickness_draw < 1 && c.thickness > 0) thickness_draw = 1;
-                    }
-                    ::DrawLine(p1_draw.x, p1_draw.y, p2_draw.x, p2_draw.y, c.color, thickness_draw);
-                },
-                [this](const DrawGraphCmd& c) {
-                    Vec2i p_draw = c.pos;
-                    if (camera_enabled_) {
-                        p_draw.x = static_cast<int>((c.pos.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p_draw.y = static_cast<int>((c.pos.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                    }
-                    ::DrawGraph(p_draw.x, p_draw.y, c.handle, c.trans_flag ? TRUE : FALSE);
-                },
-                [this](const DrawRotaGraphCmd& c) {
-                    Vec2i p_draw = c.center;
-                    double scale_draw = c.ext_rate;
-                    if (camera_enabled_) {
-                        p_draw.x = static_cast<int>((c.center.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p_draw.y = static_cast<int>((c.center.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                        scale_draw = c.ext_rate * camera_scale_;
-                    }
-                    ::DrawRotaGraph(p_draw.x, p_draw.y, scale_draw, c.angle, c.graph_handle, c.trans_flag ? TRUE : FALSE);
-                },
-                [this](const DrawRectRotaGraphCmd& c) {
-                    Vec2i p_draw = c.center;
-                    double scale_draw = c.ext_rate;
-                    if (camera_enabled_) {
-                        p_draw.x = static_cast<int>((c.center.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f);
-                        p_draw.y = static_cast<int>((c.center.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f);
-                        scale_draw = c.ext_rate * camera_scale_;
-                    }
-                    int src_w = c.src.Width();
-                    int src_h = c.src.Height();
-                    ::DrawRectRotaGraph(p_draw.x, p_draw.y, c.src.p1.x, c.src.p1.y, src_w, src_h,
-                                        scale_draw, c.angle, c.graph_handle,
-                                        c.trans_flag ? TRUE : FALSE, c.turn_flag ? TRUE : FALSE);
-                },
-                [](const SetDrawBlendModeCmd& c) {
-                    int dx_mode = DX_BLENDMODE_NOBLEND;
-                    switch (c.mode) {
-                    case BlendMode::Alpha: dx_mode = DX_BLENDMODE_ALPHA; break;
-                    case BlendMode::Add:   dx_mode = DX_BLENDMODE_ADD; break;
-                    case BlendMode::Sub:   dx_mode = DX_BLENDMODE_SUB; break;
-                    case BlendMode::Mul:   dx_mode = DX_BLENDMODE_MULA; break;
-                    default:               dx_mode = DX_BLENDMODE_NOBLEND; break;
-                    }
-                    ::SetDrawBlendMode(dx_mode, c.pal);
-                },
-                [](const SetDrawBrightCmd& c) { ::SetDrawBright(c.r, c.g, c.b); },
-                [this](const SetCameraEnabledCmd& c) { camera_enabled_ = c.enabled; },
-                [this](const SetCameraStateCmd& c) { camera_x_ = c.x; camera_y_ = c.y; camera_scale_ = c.scale; }
-            }, cmd);
+        [[nodiscard]] Vec2i ApplyCamera(Vec2i pos) const noexcept {
+            if (!camera_enabled_) return pos;
+            return Vec2i{
+                static_cast<int>((pos.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f),
+                static_cast<int>((pos.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f)
+            };
         }
 
     public:
@@ -135,19 +43,76 @@ namespace ab {
         // --- 画面・フレーム制御 ---
         bool ClearScreen() override { return ::ClearDrawScreen() == 0; }
         bool ScreenFlip() override { return ::ScreenFlip() == 0; }
-        void ClearCommands() override {
-            std::lock_guard<std::mutex> lock(queue_mutex_);
-            write_queue_.clear();
-        }
-        void FlushCommands() override {
-            {
-                std::lock_guard<std::mutex> lock(queue_mutex_);
-                render_queue_.swap(write_queue_);
+        void ClearCommands() override {}
+        void FlushCommands() override {}
+
+        // --- バッチ描画コマンドダイレクトディスパッチ ---
+        void SubmitPackets(const RenderPacket* packets, int packet_count, const wchar_t* text_buffer, int text_length) override {
+            if (!packets || packet_count <= 0) return;
+
+            for (int i = 0; i < packet_count; ++i) {
+                const auto& p = packets[i];
+                switch (p.type) {
+                case RenderPacketType::DrawBox:
+                    DrawBox(Rect<int>{Vec2i{p.box.x1, p.box.y1}, Vec2i{p.box.x2, p.box.y2}},
+                            p.box.color,
+                            p.box.fill != 0);
+                    break;
+                case RenderPacketType::DrawCircle:
+                    DrawCircle(Vec2i{p.circle.center_x, p.circle.center_y},
+                               p.circle.radius,
+                               p.circle.color,
+                               p.circle.fill != 0);
+                    break;
+                case RenderPacketType::DrawLine:
+                    DrawLine(Vec2i{p.line.x1, p.line.y1},
+                             Vec2i{p.line.x2, p.line.y2},
+                             p.line.color,
+                             p.line.thickness);
+                    break;
+                case RenderPacketType::DrawGraph:
+                    DrawGraph(Vec2i{p.graph.x, p.graph.y},
+                              p.graph.handle,
+                              p.graph.trans != 0);
+                    break;
+                case RenderPacketType::DrawRotaGraph:
+                    DrawRotaGraph(Vec2i{p.rota_graph.center_x, p.rota_graph.center_y},
+                                  static_cast<double>(p.rota_graph.scale),
+                                  static_cast<double>(p.rota_graph.angle),
+                                  p.rota_graph.handle,
+                                  p.rota_graph.trans != 0);
+                    break;
+                case RenderPacketType::DrawRectRotaGraph:
+                    DrawRectRotaGraph(Vec2i{p.rect_rota_graph.center_x, p.rect_rota_graph.center_y},
+                                      Rect<int>{
+                                          Vec2i{p.rect_rota_graph.src_x, p.rect_rota_graph.src_y},
+                                          Vec2i{p.rect_rota_graph.src_x + p.rect_rota_graph.src_w,
+                                                p.rect_rota_graph.src_y + p.rect_rota_graph.src_h}},
+                                      static_cast<double>(p.rect_rota_graph.scale),
+                                      static_cast<double>(p.rect_rota_graph.angle),
+                                      p.rect_rota_graph.handle,
+                                      p.rect_rota_graph.trans != 0,
+                                      p.rect_rota_graph.turn_x != 0);
+                    break;
+                case RenderPacketType::DrawString:
+                    if (text_buffer != nullptr && p.string_data.text_offset >= 0 &&
+                        p.string_data.text_offset < text_length) {
+                        const wchar_t* str = text_buffer + p.string_data.text_offset;
+                        DrawString(Vec2i{p.string_data.x, p.string_data.y},
+                                   str,
+                                   p.string_data.color);
+                    }
+                    break;
+                case RenderPacketType::SetDrawBlendMode:
+                    SetDrawBlendMode(static_cast<BlendMode>(p.blend.mode), p.blend.pal);
+                    break;
+                case RenderPacketType::SetDrawBright:
+                    SetDrawBright(p.bright.r, p.bright.g, p.bright.b);
+                    break;
+                default:
+                    break;
+                }
             }
-            for (const auto& cmd : render_queue_) {
-                ExecuteCommand(cmd);
-            }
-            render_queue_.clear();
         }
 
         // --- テクスチャ・アセット管理 ---
@@ -174,39 +139,70 @@ namespace ab {
 
         // --- 2D プリミティブ・テキスト描画 ---
         void DrawBox(Rect<int> r, uint32_t color, bool fill_flag) override {
-            PushCommand(DrawBoxCmd{r, color, fill_flag});
+            Vec2i p1 = ApplyCamera(r.p1);
+            Vec2i p2 = ApplyCamera(r.p2);
+            ::DrawBox(p1.x, p1.y, p2.x, p2.y, color, fill_flag ? TRUE : FALSE);
         }
         void DrawBox(Vec2i p1, Vec2i p2, uint32_t color, bool fill_flag) override {
-            PushCommand(DrawBoxCmd{Rect<int>{p1, p2}, color, fill_flag});
+            Vec2i dp1 = ApplyCamera(p1);
+            Vec2i dp2 = ApplyCamera(p2);
+            ::DrawBox(dp1.x, dp1.y, dp2.x, dp2.y, color, fill_flag ? TRUE : FALSE);
         }
         void DrawCircle(Vec2i center, int radius, uint32_t color, bool fill_flag) override {
-            PushCommand(DrawCircleCmd{center, radius, color, fill_flag});
+            Vec2i p = ApplyCamera(center);
+            int r = camera_enabled_ ? static_cast<int>(radius * camera_scale_) : radius;
+            ::DrawCircle(p.x, p.y, r, color, fill_flag ? TRUE : FALSE);
         }
         void DrawLine(Vec2i p1, Vec2i p2, uint32_t color, int thickness) override {
-            PushCommand(DrawLineCmd{p1, p2, color, thickness});
+            Vec2i dp1 = ApplyCamera(p1);
+            Vec2i dp2 = ApplyCamera(p2);
+            int th = thickness;
+            if (camera_enabled_) {
+                th = static_cast<int>(thickness * camera_scale_);
+                if (th < 1 && thickness > 0) th = 1;
+            }
+            ::DrawLine(dp1.x, dp1.y, dp2.x, dp2.y, color, th);
         }
         void DrawString(Vec2i pos, const wchar_t* text, uint32_t color) override {
-            PushCommand(DrawStringCmd{pos, text ? text : L"", color});
+            if (!text) return;
+            Vec2i p = ApplyCamera(pos);
+            ::DrawString(p.x, p.y, text, color);
         }
         void DrawGraph(Vec2i pos, int handle, bool trans_flag) override {
-            PushCommand(DrawGraphCmd{pos, handle, trans_flag});
+            Vec2i p = ApplyCamera(pos);
+            ::DrawGraph(p.x, p.y, handle, trans_flag ? TRUE : FALSE);
         }
         void DrawRotaGraph(Vec2i center, double ext_rate, double angle, int graph_handle, bool trans_flag) override {
-            PushCommand(DrawRotaGraphCmd{center, ext_rate, angle, graph_handle, trans_flag});
+            Vec2i p = ApplyCamera(center);
+            double scale = camera_enabled_ ? (ext_rate * camera_scale_) : ext_rate;
+            ::DrawRotaGraph(p.x, p.y, scale, angle, graph_handle, trans_flag ? TRUE : FALSE);
         }
         void DrawRectRotaGraph(Vec2i center, Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) override {
-            PushCommand(DrawRectRotaGraphCmd{center, src, ext_rate, angle, graph_handle, trans_flag, turn_flag});
+            Vec2i p = ApplyCamera(center);
+            double scale = camera_enabled_ ? (ext_rate * camera_scale_) : ext_rate;
+            int src_w = src.Width();
+            int src_h = src.Height();
+            ::DrawRectRotaGraph(p.x, p.y, src.p1.x, src.p1.y, src_w, src_h,
+                                scale, angle, graph_handle,
+                                trans_flag ? TRUE : FALSE, turn_flag ? TRUE : FALSE);
         }
-        // --- カメラ・状態設定 ---
-        void SetCameraEnabled(bool enabled) override { PushCommand(SetCameraEnabledCmd{enabled}); }
-        void SetCameraState(float x, float y, float scale) override { PushCommand(SetCameraStateCmd{x, y, scale}); }
-        void SetDrawBlendMode(BlendMode mode, int pal) override { PushCommand(SetDrawBlendModeCmd{mode, pal}); }
-        void SetDrawBright(int r, int g, int b) override { PushCommand(SetDrawBrightCmd{r, g, b}); }
 
-        // --- コマンドキューイング ---
-        void PushCommand(RenderCommand cmd) {
-            std::lock_guard<std::mutex> lock(queue_mutex_);
-            write_queue_.push_back(std::move(cmd));
+        // --- カメラ・状態設定 ---
+        void SetCameraEnabled(bool enabled) override { camera_enabled_ = enabled; }
+        void SetCameraState(float x, float y, float scale) override { camera_x_ = x; camera_y_ = y; camera_scale_ = scale; }
+        void SetDrawBlendMode(BlendMode mode, int pal) override {
+            int dx_mode = DX_BLENDMODE_NOBLEND;
+            switch (mode) {
+            case BlendMode::Alpha: dx_mode = DX_BLENDMODE_ALPHA; break;
+            case BlendMode::Add:   dx_mode = DX_BLENDMODE_ADD; break;
+            case BlendMode::Sub:   dx_mode = DX_BLENDMODE_SUB; break;
+            case BlendMode::Mul:   dx_mode = DX_BLENDMODE_MULA; break;
+            default:               dx_mode = DX_BLENDMODE_NOBLEND; break;
+            }
+            ::SetDrawBlendMode(dx_mode, pal);
+        }
+        void SetDrawBright(int r, int g, int b) override {
+            ::SetDrawBright(r, g, b);
         }
     };
 } // namespace ab
