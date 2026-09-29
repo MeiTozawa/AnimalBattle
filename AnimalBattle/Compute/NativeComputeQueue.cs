@@ -147,8 +147,6 @@ public sealed unsafe class NativeComputeQueue : IDisposable
         }
 
         NativeExtensionBindings.Extension_ProcessBatchCompute(
-            null,
-            0,
             _bulletBuffer,
             _bulletCount);
     }

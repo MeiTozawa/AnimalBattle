@@ -29,8 +29,6 @@ __declspec(dllexport) void Extension_BatchBulletMovement(
 }
 
 __declspec(dllexport) void Extension_ProcessBatchCompute(
-    EaseBatchItem* ease_items,
-    int32_t ease_count,
     SpecialBulletBatchItem* bullet_items,
     int32_t bullet_count) noexcept {
     if (!bullet_items || bullet_count <= 0) {
@@ -38,7 +36,7 @@ __declspec(dllexport) void Extension_ProcessBatchCompute(
     }
 
     try {
-        ProcessBatchCompute(ease_items, ease_count, bullet_items, bullet_count);
+        ProcessBatchCompute(bullet_items, bullet_count);
     } catch (...) {
     }
 }

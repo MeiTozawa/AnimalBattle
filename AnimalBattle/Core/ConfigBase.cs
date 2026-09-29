@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Reflection;
 using AnimalBattle.Configs;
 using ErrorOr;
 using Microsoft.Extensions.Configuration;
@@ -112,32 +111,6 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
             return Error.Failure("Config.Exception", ex.Message);
         }
 #endif
-    }
-
-    /// <summary>
-    /// 辞書データから設定プロパティを読み込み、数値を反映します。
-    /// </summary>
-    /// <param name="values">設定項目キーと数値のマップ</param>
-    public void LoadFromDictionary(IDictionary<string, float> values)
-    {
-        PropertyInfo[] properties = typeof(T).GetProperties();
-        foreach (PropertyInfo prop in properties)
-        {
-            if (prop.PropertyType != typeof(float) || !prop.CanWrite)
-            {
-                continue;
-            }
-
-            string name = prop.Name;
-            string camelCase = char.ToLowerInvariant(name[0]) + name[1..];
-
-            if (values.TryGetValue(camelCase, out float val) ||
-                values.TryGetValue(name, out val) ||
-                values.TryGetValue(name.ToLowerInvariant(), out val))
-            {
-                prop.SetValue(Config, val);
-            }
-        }
     }
 
 

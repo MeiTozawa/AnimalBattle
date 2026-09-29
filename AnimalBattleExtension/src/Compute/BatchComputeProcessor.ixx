@@ -35,8 +35,6 @@ void ProcessBatchSpecialBullets(SpecialBulletBatchItem* items, int32_t count) no
 
 /// @brief 特殊弾幕変調の一括計算を同期並列実行します（完全無状態純粋計算核）。
 void ProcessBatchCompute(
-    EaseBatchItem* /*ease_items*/,
-    int32_t /*ease_count*/,
     SpecialBulletBatchItem* bullet_items,
     int32_t bullet_count) noexcept {
     if (bullet_items && bullet_count > 0) {

@@ -42,17 +42,13 @@ internal static unsafe partial class NativeExtensionBindings
     #region Batch Compute Extension
 
     /// <summary>
-    /// イージング一括評価および特殊弾幕変調一括計算を C++ 原生拡張で同期並列実行します（完全無状態純粋計算核）。
+    /// 特殊弾幕変調一括計算を C++ 原生拡張で同期並列実行します（完全無状態純粋計算核）。
     /// </summary>
-    /// <param name="easeItems">EaseBatchItem 連続メモリ配列へのポインタ（未指定時は null）。</param>
-    /// <param name="easeCount">処理対象のイージング要素数。</param>
     /// <param name="bulletItems">SpecialBulletBatchItem 連続メモリ配列へのポインタ。</param>
     /// <param name="bulletCount">処理対象の特殊弾幕要素数。</param>
     [LibraryImport(_dllName, EntryPoint = "Extension_ProcessBatchCompute")]
     [SuppressGCTransition]
     public static partial void Extension_ProcessBatchCompute(
-        void* easeItems,
-        int easeCount,
         SpecialBulletBatchItem* bulletItems,
         int bulletCount);
 

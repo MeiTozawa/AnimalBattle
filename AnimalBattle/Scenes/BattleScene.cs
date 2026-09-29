@@ -68,8 +68,6 @@ public partial class BattleScene : IDisposable
         _ecsWorld.Import<EffectModule>();
         _ecsWorld.Import<BulletModule>();
 
-        CombatEffectHelper.Initialize(_ecsWorld);
-
         PlayerConfig playerCfg = ConfigManager.Player;
 
         // 1. プレイヤーの生成 (高内聚な領域オブジェクト Player の初期化)

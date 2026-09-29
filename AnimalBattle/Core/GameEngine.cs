@@ -15,31 +15,6 @@ public static class GameEngine
 {
     private static readonly RenderCommandBuffer _commandBuffer = new();
 
-    /// <summary>ジョイパッド入力: 方向キー下。</summary>
-    public const int PadInputDown = 0x0001;
-    /// <summary>ジョイパッド入力: 方向キー左。</summary>
-    public const int PadInputLeft = 0x0002;
-    /// <summary>ジョイパッド入力: 方向キー右。</summary>
-    public const int PadInputRight = 0x0004;
-    /// <summary>ジョイパッド入力: 方向キー上。</summary>
-    public const int PadInputUp = 0x0008;
-    /// <summary>ジョイパッド入力: ボタン 1。</summary>
-    public const int PadInputButton1 = 0x0010;
-    /// <summary>ジョイパッド入力: ボタン 2。</summary>
-    public const int PadInputButton2 = 0x0020;
-    /// <summary>ジョイパッド入力: ボタン 3。</summary>
-    public const int PadInputButton3 = 0x0040;
-    /// <summary>ジョイパッド入力: ボタン 4。</summary>
-    public const int PadInputButton4 = 0x0080;
-    /// <summary>ジョイパッド入力: ボタン 5。</summary>
-    public const int PadInputButton5 = 0x0100;
-    /// <summary>ジョイパッド入力: ボタン 6。</summary>
-    public const int PadInputButton6 = 0x0200;
-    /// <summary>ジョイパッド入力: ボタン 7。</summary>
-    public const int PadInputButton7 = 0x0400;
-    /// <summary>ジョイパッド入力: ボタン 8。</summary>
-    public const int PadInputButton8 = 0x0800;
-
     /// <summary>
     /// ウィンドウサイズとモードを指定してネイティブエンジンを初期化します。
     /// </summary>
@@ -109,16 +84,6 @@ public static class GameEngine
     public static bool IsExitRequested()
     {
         return NativeBindings.Engine_IsExitRequested();
-    }
-
-    /// <summary>
-    /// 指定されたキーコードのキーが押されているか判定します。
-    /// </summary>
-    /// <param name="keyCode">DirectInput キーコード</param>
-    /// <returns>押されている場合は true</returns>
-    public static bool IsKeyHit(int keyCode)
-    {
-        return NativeBindings.Input_IsKeyHit(keyCode);
     }
 
     /// <summary>

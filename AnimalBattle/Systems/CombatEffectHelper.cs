@@ -12,13 +12,6 @@ namespace AnimalBattle.Systems;
 /// </summary>
 public static class CombatEffectHelper
 {
-    /// <summary>
-    /// ヘルパークラスで使用する初期化処理を提供します（後方互換用）。
-    /// </summary>
-    /// <param name="world">初期化対象の Flecs.NET ワールド</param>
-    public static void Initialize(World world)
-    {
-    }
 
     /// <summary>
     /// 指定座標に Boss 弾幕エンティティを生成します。

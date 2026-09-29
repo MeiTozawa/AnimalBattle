@@ -144,11 +144,6 @@ internal static unsafe partial class NativeBindings
 
     #region Input Legacy & Low-level APIs
 
-    [LibraryImport(_dllName, EntryPoint = "Input_IsKeyHit")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Input_IsKeyHit(int keyCode);
-
     [LibraryImport(_dllName, EntryPoint = "Engine_CheckHitKey")]
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
