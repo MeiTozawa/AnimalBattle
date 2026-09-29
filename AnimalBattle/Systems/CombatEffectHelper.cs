@@ -161,11 +161,10 @@ public static class CombatEffectHelper
     /// <param name="y">中心 Y 座標</param>
     public static void SpawnJumpRingEffect(World world, float x, float y)
     {
-        CombatEntityPoolHelper.RentEffect(world)
+        CombatEntityPoolHelper.RentRingEffect(world)
              .Set(new Transform(x, y))
              .Set(new RingEffect(8.0f, 32.0f, ColorPalette.White, isFilled: false))
-             .Set(new FadeEffect(0.18f))
-             .Add<EffectTag>();
+             .Set(new FadeEffect(0.18f));
     }
 
     /// <summary>
@@ -180,12 +179,11 @@ public static class CombatEffectHelper
         {
             float angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
             float speed = 60.0f + Random.Shared.NextSingle() * 120.0f;
-            CombatEntityPoolHelper.RentEffect(world)
+            CombatEntityPoolHelper.RentSparkEffect(world)
                  .Set(new Transform(x, y))
                  .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
                  .Set(new Bullet(3.5f, ColorPalette.SparkYellow, ColorPalette.White))
-                 .Set(new FadeEffect(0.12f))
-                 .Add<EffectTag>();
+                 .Set(new FadeEffect(0.12f));
         }
     }
 
@@ -201,12 +199,11 @@ public static class CombatEffectHelper
         {
             float angle = (i / 16.0f) * MathF.PI * 2.0f;
             float speed = 4.0f + (i % 3) * 2.0f;
-            CombatEntityPoolHelper.RentEffect(world)
+            CombatEntityPoolHelper.RentSparkEffect(world)
                  .Set(new Transform(x, y))
                  .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
                  .Set(new Bullet(5.0f, ColorPalette.Red, ColorPalette.White))
-                 .Set(new FadeEffect(0.60f))
-                 .Add<EffectTag>();
+                 .Set(new FadeEffect(0.60f));
         }
     }
 
@@ -218,11 +215,10 @@ public static class CombatEffectHelper
     /// <param name="y">中心 Y 座標</param>
     public static void SpawnShockwave(World world, float x, float y)
     {
-        CombatEntityPoolHelper.RentEffect(world)
+        CombatEntityPoolHelper.RentRingEffect(world)
              .Set(new Transform(x, y))
              .Set(new RingEffect(20.0f, 150.0f, ColorPalette.Cyan, isFilled: false))
-             .Set(new FadeEffect(0.40f))
-             .Add<EffectTag>();
+             .Set(new FadeEffect(0.40f));
     }
 
     /// <summary>
@@ -237,12 +233,11 @@ public static class CombatEffectHelper
         {
             float angle = (i / 32.0f) * MathF.PI * 2.0f;
             float speed = 3.0f + (i % 5) * 2.5f;
-            CombatEntityPoolHelper.RentEffect(world)
+            CombatEntityPoolHelper.RentSparkEffect(world)
                  .Set(new Transform(x, y))
                  .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
                  .Set(new Bullet(6.0f, ColorPalette.Gold, ColorPalette.GoldLight))
-                 .Set(new FadeEffect(0.90f))
-                 .Add<EffectTag>();
+                 .Set(new FadeEffect(0.90f));
         }
     }
 
@@ -294,13 +289,12 @@ public static class CombatEffectHelper
             _ => 0.0f
         };
 
-        CombatEntityPoolHelper.RentEffect(world)
+        CombatEntityPoolHelper.RentAreaEffect(world)
              .Set(new Transform(x + offsetX, y + offsetY, scaleX: scale, scaleY: scale))
              .Set(new Velocity(vx, vy))
              .Set(new Hitbox(new CollisionShape.Box(width, height, OffsetX: -offsetX, OffsetY: -offsetY), damage: damage, faction: Faction.Hostile, destroyOnHit: false))
              .Set(new Sprite(slashHandle, flipX: false, isVisible: true, srcRect: srcRect, color: color))
-             .Set(new FadeEffect(lifetime))
-             .Add<EffectTag>();
+             .Set(new FadeEffect(lifetime));
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using AnimalBattle.Components;
 using Flecs.NET.Core;
 
@@ -15,8 +16,14 @@ public enum PooledEntityType : byte
     /// <summary>Boss 弾幕。</summary>
     BossBullet = 1,
 
-    /// <summary>パーティクル・火花・衝撃波などの演出エフェクト。</summary>
-    Effect = 2
+    /// <summary>スパーク・微小爆発などの点粒子エフェクト。</summary>
+    SparkEffect = 2,
+
+    /// <summary>ジャンプリングや衝撃波などの円環エフェクト。</summary>
+    RingEffect = 3,
+
+    /// <summary>近接斬撃や判定を伴うエリアエフェクト。</summary>
+    AreaEffect = 4
 }
 
 /// <summary>
@@ -27,6 +34,7 @@ public readonly record struct PooledEntity(PooledEntityType PoolType);
 
 /// <summary>
 /// 弾幕・エフェクト用の共有エンティティプールを保持する ECS シングルトンコンポーネント。
+/// 同構（Homogeneous）な Archetype ごとに専用プールを分離し、実行時の Archetype Table 移行を根絶します。
 /// </summary>
 public sealed class CombatEntityPoolComponent : IDisposable
 {
@@ -36,11 +44,17 @@ public sealed class CombatEntityPoolComponent : IDisposable
     /// <summary>Boss 弾幕用エンティティプールを取得します。</summary>
     public EntityPool BossBullets { get; }
 
-    /// <summary>パーティクル・演出エフェクト用エンティティプールを取得します。</summary>
-    public EntityPool Effects { get; }
+    /// <summary>点粒子スパーク用エンティティプールを取得します。</summary>
+    public EntityPool SparkEffects { get; }
+
+    /// <summary>リング演出用エンティティプールを取得します。</summary>
+    public EntityPool RingEffects { get; }
+
+    /// <summary>判定付与エリア演出用エンティティプールを取得します。</summary>
+    public EntityPool AreaEffects { get; }
 
     /// <summary>
-    /// <see cref="CombatEntityPoolComponent"/> の新しいインスタンスを初期化し、各種エンティティを事前確保します。
+    /// <see cref="CombatEntityPoolComponent"/> の新しいインスタンスを初期化し、各種同構エンティティを事前確保します。
     /// </summary>
     /// <param name="world">エンティティが所属する Flecs.NET ワールド。</param>
     public CombatEntityPoolComponent(World world)
@@ -48,21 +62,67 @@ public sealed class CombatEntityPoolComponent : IDisposable
         PlayerBullets = new EntityPool(
             world,
             initialCapacity: 128,
-            onInit: e => e.Set(new PooledEntity(PooledEntityType.PlayerBullet)),
+            onInit: e => e.Set(new PooledEntity(PooledEntityType.PlayerBullet))
+                          .Set(new Transform(0, 0))
+                          .Set(new Velocity(0, 0))
+                          .Set(new CollisionBox(0, 0))
+                          .Set(new Hitbox(default, 0, Faction.Friendly, true))
+                          .Add<PlayerBulletTag>(),
             onReset: ResetBulletEntity);
 
         BossBullets = new EntityPool(
             world,
             initialCapacity: 256,
-            onInit: e => e.Set(new PooledEntity(PooledEntityType.BossBullet)),
+            onInit: e => e.Set(new PooledEntity(PooledEntityType.BossBullet))
+                          .Set(new Transform(0, 0))
+                          .Set(new Velocity(0, 0))
+                          .Set(new Bullet(0, Color.Empty, Color.Empty))
+                          .Set(new Hitbox(default, 0, Faction.Hostile, true))
+                          .Add<BossBulletTag>(),
             onReset: ResetBulletEntity);
 
-        Effects = new EntityPool(
+        SparkEffects = new EntityPool(
             world,
             initialCapacity: 256,
-            onInit: e => e.Set(new PooledEntity(PooledEntityType.Effect)),
+            onInit: e => e.Set(new PooledEntity(PooledEntityType.SparkEffect))
+                          .Set(new Transform(0, 0))
+                          .Set(new Velocity(0, 0))
+                          .Set(new Bullet(0, Color.Empty, Color.Empty))
+                          .Set(new FadeEffect(1.0f))
+                          .Add<EffectTag>(),
+            onReset: ResetEffectEntity);
+
+        RingEffects = new EntityPool(
+            world,
+            initialCapacity: 64,
+            onInit: e => e.Set(new PooledEntity(PooledEntityType.RingEffect))
+                          .Set(new Transform(0, 0))
+                          .Set(new RingEffect(0, 0, Color.Empty, false))
+                          .Set(new FadeEffect(1.0f))
+                          .Add<EffectTag>(),
+            onReset: ResetEffectEntity);
+
+        AreaEffects = new EntityPool(
+            world,
+            initialCapacity: 32,
+            onInit: e => e.Set(new PooledEntity(PooledEntityType.AreaEffect))
+                          .Set(new Transform(0, 0))
+                          .Set(new Velocity(0, 0))
+                          .Set(new Hitbox(default, 0, Faction.Hostile, false))
+                          .Set(new Sprite(-1, false, true, default))
+                          .Set(new FadeEffect(1.0f))
+                          .Add<EffectTag>(),
             onReset: ResetEffectEntity);
     }
+
+    /// <summary>スパークエフェクト用エンティティを貸し出します。</summary>
+    public Entity RentSparkEffect() => SparkEffects.Rent();
+
+    /// <summary>リングエフェクト用エンティティを貸し出します。</summary>
+    public Entity RentRingEffect() => RingEffects.Rent();
+
+    /// <summary>エリアエフェクト用エンティティを貸し出します。</summary>
+    public Entity RentAreaEffect() => AreaEffects.Rent();
 
     private static void ResetBulletEntity(Entity e)
     {
@@ -74,9 +134,9 @@ public sealed class CombatEntityPoolComponent : IDisposable
 
     private static void ResetEffectEntity(Entity e)
     {
-        if (e.Has<FadeEffect>())
+        if (e.Has<HitFlashEffect>())
         {
-            e.Remove<FadeEffect>();
+            e.Remove<HitFlashEffect>();
         }
     }
 
@@ -85,7 +145,9 @@ public sealed class CombatEntityPoolComponent : IDisposable
     {
         PlayerBullets.Dispose();
         BossBullets.Dispose();
-        Effects.Dispose();
+        SparkEffects.Dispose();
+        RingEffects.Dispose();
+        AreaEffects.Dispose();
     }
 }
 
@@ -128,11 +190,27 @@ public static class CombatEntityPoolHelper
     }
 
     /// <summary>
-    /// 演出エフェクトエンティティをプールから借出します。
+    /// スパーク演出用エンティティをプールから借出します。
     /// </summary>
-    public static Entity RentEffect(World world)
+    public static Entity RentSparkEffect(World world)
     {
-        return world.GetCombatEntityPool().Effects.Rent();
+        return world.GetCombatEntityPool().SparkEffects.Rent();
+    }
+
+    /// <summary>
+    /// リング演出用エンティティをプールから借出します。
+    /// </summary>
+    public static Entity RentRingEffect(World world)
+    {
+        return world.GetCombatEntityPool().RingEffects.Rent();
+    }
+
+    /// <summary>
+    /// エリア演出用エンティティをプールから借出します。
+    /// </summary>
+    public static Entity RentAreaEffect(World world)
+    {
+        return world.GetCombatEntityPool().AreaEffects.Rent();
     }
 
     /// <summary>
@@ -159,8 +237,14 @@ public static class CombatEntityPoolHelper
                 case PooledEntityType.BossBullet:
                     poolComp.BossBullets.Return(entity);
                     return;
-                case PooledEntityType.Effect:
-                    poolComp.Effects.Return(entity);
+                case PooledEntityType.SparkEffect:
+                    poolComp.SparkEffects.Return(entity);
+                    return;
+                case PooledEntityType.RingEffect:
+                    poolComp.RingEffects.Return(entity);
+                    return;
+                case PooledEntityType.AreaEffect:
+                    poolComp.AreaEffects.Return(entity);
                     return;
             }
         }
