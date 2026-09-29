@@ -1,4 +1,5 @@
 using System;
+using AnimalBattle.Components;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Core;
@@ -44,9 +45,39 @@ public sealed class CombatEntityPoolComponent : IDisposable
     /// <param name="world">エンティティが所属する Flecs.NET ワールド。</param>
     public CombatEntityPoolComponent(World world)
     {
-        PlayerBullets = new EntityPool(world, initialCapacity: 128, e => e.Set(new PooledEntity(PooledEntityType.PlayerBullet)));
-        BossBullets = new EntityPool(world, initialCapacity: 256, e => e.Set(new PooledEntity(PooledEntityType.BossBullet)));
-        Effects = new EntityPool(world, initialCapacity: 256, e => e.Set(new PooledEntity(PooledEntityType.Effect)));
+        PlayerBullets = new EntityPool(
+            world,
+            initialCapacity: 128,
+            onInit: e => e.Set(new PooledEntity(PooledEntityType.PlayerBullet)),
+            onReset: ResetBulletEntity);
+
+        BossBullets = new EntityPool(
+            world,
+            initialCapacity: 256,
+            onInit: e => e.Set(new PooledEntity(PooledEntityType.BossBullet)),
+            onReset: ResetBulletEntity);
+
+        Effects = new EntityPool(
+            world,
+            initialCapacity: 256,
+            onInit: e => e.Set(new PooledEntity(PooledEntityType.Effect)),
+            onReset: ResetEffectEntity);
+    }
+
+    private static void ResetBulletEntity(Entity e)
+    {
+        if (e.Has<HitFlashEffect>())
+        {
+            e.Remove<HitFlashEffect>();
+        }
+    }
+
+    private static void ResetEffectEntity(Entity e)
+    {
+        if (e.Has<FadeEffect>())
+        {
+            e.Remove<FadeEffect>();
+        }
     }
 
     /// <inheritdoc/>

@@ -26,6 +26,7 @@ public sealed class EntityPool : IDisposable
     private readonly ulong _poolId = System.Threading.Interlocked.Increment(ref _nextPoolId);
     private readonly World _world;
     private readonly Action<Entity>? _onInit;
+    private readonly Action<Entity>? _onReset;
     private Entity[] _pool;
     private Entity[] _allAllocated;
     private int _top;
@@ -47,10 +48,12 @@ public sealed class EntityPool : IDisposable
     /// <param name="world">エンティティが所属する Flecs.NET ワールド。</param>
     /// <param name="initialCapacity">初期事前確保エンティティ容量。</param>
     /// <param name="onInit">エンティティ生成時の初期化デリゲート（デフォルトコンポーネント付与など）。</param>
-    public EntityPool(World world, int initialCapacity = 64, Action<Entity>? onInit = null)
+    /// <param name="onReset">エンティティ貸出時の状態リセット・クリーンアップデリゲート。</param>
+    public EntityPool(World world, int initialCapacity = 64, Action<Entity>? onInit = null, Action<Entity>? onReset = null)
     {
         _world = world;
         _onInit = onInit;
+        _onReset = onReset;
         initialCapacity = Math.Max(1, initialCapacity);
 
         _pool = new Entity[initialCapacity];
@@ -86,7 +89,7 @@ public sealed class EntityPool : IDisposable
     }
 
     /// <summary>
-    /// プールからエンティティを貸し出し、有効化（Enable）します。
+    /// プールからエンティティを貸し出し、クリーンアップ（onReset）と有効化（Enable）を実行します。
     /// </summary>
     /// <returns>有効化されたエンティティ。</returns>
     public Entity Rent()
@@ -103,6 +106,7 @@ public sealed class EntityPool : IDisposable
         {
             e.GetMut<PoolLeaseState>().IsRented = true;
         }
+        _onReset?.Invoke(e);
         e.Enable();
         return e;
     }
