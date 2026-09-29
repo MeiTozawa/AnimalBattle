@@ -22,26 +22,64 @@ namespace AnimalBattle.Systems;
 /// <see cref="WorldRenderSystem"/> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリを構築します。
 /// </remarks>
 /// <param name="world">描画対象の Flecs.NET ワールド。</param>
-public sealed class WorldRenderSystem(World world) : IDisposable
+public sealed class WorldRenderSystem : IDisposable
 {
-    private readonly Query<Transform, Velocity> _playerBulletQuery = world.QueryBuilder<Transform, Velocity>()
+    private readonly Query<Transform, Velocity> _playerBulletQuery;
+    private readonly Query<Transform, Bullet> _bossBulletQuery;
+    private readonly Query<Transform, Sprite, FadeEffect> _spriteEffectQuery;
+    private readonly Query<Transform, RingEffect, FadeEffect> _ringEffectQuery;
+    private readonly Query<Transform, Bullet, FadeEffect> _particleEffectQuery;
+    private readonly Query<Transform, Sprite, HitFlashEffect> _hitFlashQuery;
+    private bool _isDisposed;
+
+    // 预分配委托，彻底切除每帧 Iter 回调中的闭包分配
+    private readonly Ecs.IterFieldCallback<Transform, Velocity> _drawPlayerBulletsCallback;
+    private readonly Ecs.IterFieldCallback<Transform, Bullet> _drawBossBulletsCallback;
+
+    // 渲染上下文参数缓存
+    private int _bulletClipMinX;
+    private int _bulletClipMaxX;
+    private int _bulletClipMinY;
+    private int _bulletClipMaxY;
+
+    private int _pOuterRadius;
+    private Color _pOuterColor;
+    private int _pInnerRadius;
+    private Color _pInnerColor;
+    private int _pTrailOffset;
+
+    private int _bOutlinePadding;
+    private float _bCoreRadiusRatio;
+    private int _bCoreMinRadius;
+    private Color _bCoreColor;
+
+    /// <summary>
+    /// <see cref="WorldRenderSystem"/> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリと不変デリゲートを構築します。
+    /// </summary>
+    /// <param name="world">描画対象の Flecs.NET ワールド。</param>
+    public WorldRenderSystem(World world)
+    {
+        _playerBulletQuery = world.QueryBuilder<Transform, Velocity>()
                                   .With<PlayerBulletTag>()
                                   .Build();
-    private readonly Query<Transform, Bullet> _bossBulletQuery = world.QueryBuilder<Transform, Bullet>()
+        _bossBulletQuery = world.QueryBuilder<Transform, Bullet>()
                                 .With<BossBulletTag>()
                                 .Build();
-    private readonly Query<Transform, Sprite, FadeEffect> _spriteEffectQuery = world.QueryBuilder<Transform, Sprite, FadeEffect>()
+        _spriteEffectQuery = world.QueryBuilder<Transform, Sprite, FadeEffect>()
                                   .With<EffectTag>()
                                   .Build();
-    private readonly Query<Transform, RingEffect, FadeEffect> _ringEffectQuery = world.QueryBuilder<Transform, RingEffect, FadeEffect>()
+        _ringEffectQuery = world.QueryBuilder<Transform, RingEffect, FadeEffect>()
                                 .With<EffectTag>()
                                 .Build();
-    private readonly Query<Transform, Bullet, FadeEffect> _particleEffectQuery = world.QueryBuilder<Transform, Bullet, FadeEffect>()
+        _particleEffectQuery = world.QueryBuilder<Transform, Bullet, FadeEffect>()
                                     .With<EffectTag>()
                                     .Build();
-    private readonly Query<Transform, Sprite, HitFlashEffect> _hitFlashQuery = world.QueryBuilder<Transform, Sprite, HitFlashEffect>()
+        _hitFlashQuery = world.QueryBuilder<Transform, Sprite, HitFlashEffect>()
                               .Build();
-    private bool _isDisposed;
+
+        _drawPlayerBulletsCallback = DrawPlayerBulletsBatch;
+        _drawBossBulletsCallback = DrawBossBulletsBatch;
+    }
 
     /// <summary>
     /// 世界の全ゲームオブジェクト（マップ、足場、キャラクター、弾幕、エフェクト）を描画します。
@@ -79,8 +117,11 @@ public sealed class WorldRenderSystem(World world) : IDisposable
         DrawBoss(boss, bossFx, playerX, playerY);
         DrawPlayer(player);
         DrawHitFlashEffects(_hitFlashQuery);
-        DrawPlayerBullets(_playerBulletQuery, bulletCfg, arenaCfg);
-        DrawBossBullets(_bossBulletQuery, bulletCfg, arenaCfg);
+
+        UpdateBulletRenderContext(bulletCfg, arenaCfg);
+        _playerBulletQuery.Iter(_drawPlayerBulletsCallback);
+        _bossBulletQuery.Iter(_drawBossBulletsCallback);
+
         DrawSpriteEffects(_spriteEffectQuery);
         DrawRingEffects(_ringEffectQuery);
         DrawParticleEffects(_particleEffectQuery);
@@ -447,94 +488,86 @@ public sealed class WorldRenderSystem(World world) : IDisposable
         }
     }
 
-    private static void DrawPlayerBullets(Query<Transform, Velocity> playerBulletQuery, BulletRenderConfig bulletCfg, ArenaConfig arenaCfg)
+    private void UpdateBulletRenderContext(BulletRenderConfig bulletCfg, ArenaConfig arenaCfg)
     {
-        int clipMinX = (int)arenaCfg.BulletDespawnMinX - bulletCfg.ViewportCullingMarginX;
-        int clipMaxX = (int)arenaCfg.BulletDespawnMaxX + bulletCfg.ViewportCullingMarginX;
-        int clipMinY = (int)arenaCfg.BulletDespawnMinY - bulletCfg.ViewportCullingMarginY;
-        int clipMaxY = (int)arenaCfg.BulletDespawnMaxY + bulletCfg.ViewportCullingMarginY;
+        _bulletClipMinX = (int)arenaCfg.BulletDespawnMinX - bulletCfg.ViewportCullingMarginX;
+        _bulletClipMaxX = (int)arenaCfg.BulletDespawnMaxX + bulletCfg.ViewportCullingMarginX;
+        _bulletClipMinY = (int)arenaCfg.BulletDespawnMinY - bulletCfg.ViewportCullingMarginY;
+        _bulletClipMaxY = (int)arenaCfg.BulletDespawnMaxY + bulletCfg.ViewportCullingMarginY;
 
-        int pOuterRadius = (int)bulletCfg.PlayerBulletOuterRadius;
-        Color pOuterColor = bulletCfg.PlayerBulletOuterColor;
-        int pInnerRadius = (int)bulletCfg.PlayerBulletInnerRadius;
-        Color pInnerColor = bulletCfg.PlayerBulletInnerColor;
-        int pTrailOffset = bulletCfg.PlayerBulletTrailHalfWidth;
+        _pOuterRadius = (int)bulletCfg.PlayerBulletOuterRadius;
+        _pOuterColor = bulletCfg.PlayerBulletOuterColor;
+        _pInnerRadius = (int)bulletCfg.PlayerBulletInnerRadius;
+        _pInnerColor = bulletCfg.PlayerBulletInnerColor;
+        _pTrailOffset = bulletCfg.PlayerBulletTrailHalfWidth;
 
-        playerBulletQuery.Iter((Iter it, Field<Transform> trans, Field<Velocity> vel) =>
-        {
-            int count = it.Count();
-            for (int i = 0; i < count; ++i)
-            {
-                int px = (int)trans[i].X;
-                int py = (int)trans[i].Y;
-                if (px < clipMinX || px > clipMaxX || py < clipMinY || py > clipMaxY)
-                {
-                    continue;
-                }
-
-                float vx = vel[i].Vx;
-                float vy = vel[i].Vy;
-                float speedSq = vx * vx + vy * vy;
-                if (speedSq > 1.0f)
-                {
-                    float invSpeed = 1.0f / MathF.Sqrt(speedSq);
-                    float dirX = vx * invSpeed;
-                    float dirY = vy * invSpeed;
-
-                    int trailX = (int)(px - dirX * pTrailOffset);
-                    int trailY = (int)(py - dirY * pTrailOffset);
-                    GameEngine.DrawCircle(trailX, trailY, pInnerRadius, pOuterColor, true);
-                }
-
-                GameEngine.DrawCircle(px, py, pOuterRadius, pOuterColor, true);
-                GameEngine.DrawCircle(px, py, pInnerRadius, pInnerColor, true);
-            }
-        });
+        _bOutlinePadding = bulletCfg.BossBulletOutlinePadding;
+        _bCoreRadiusRatio = bulletCfg.BossBulletCoreRadiusRatio;
+        _bCoreMinRadius = bulletCfg.BossBulletCoreMinRadius;
+        _bCoreColor = bulletCfg.BossBulletCoreColor;
     }
 
-    private static void DrawBossBullets(Query<Transform, Bullet> bossBulletQuery, BulletRenderConfig bulletCfg, ArenaConfig arenaCfg)
+    private void DrawPlayerBulletsBatch(Iter it, Field<Transform> trans, Field<Velocity> vel)
     {
-        int clipMinX = (int)arenaCfg.BulletDespawnMinX - bulletCfg.ViewportCullingMarginX;
-        int clipMaxX = (int)arenaCfg.BulletDespawnMaxX + bulletCfg.ViewportCullingMarginX;
-        int clipMinY = (int)arenaCfg.BulletDespawnMinY - bulletCfg.ViewportCullingMarginY;
-        int clipMaxY = (int)arenaCfg.BulletDespawnMaxY + bulletCfg.ViewportCullingMarginY;
-
-        int outlinePadding = bulletCfg.BossBulletOutlinePadding;
-        float coreRadiusRatio = bulletCfg.BossBulletCoreRadiusRatio;
-        int coreMinRadius = bulletCfg.BossBulletCoreMinRadius;
-        Color coreColor = bulletCfg.BossBulletCoreColor;
-
-        bossBulletQuery.Iter((Iter it, Field<Transform> trans, Field<Bullet> bullet) =>
+        int count = it.Count();
+        for (int i = 0; i < count; ++i)
         {
-            int count = it.Count();
-            for (int i = 0; i < count; ++i)
+            int px = (int)trans[i].X;
+            int py = (int)trans[i].Y;
+            if (px < _bulletClipMinX || px > _bulletClipMaxX || py < _bulletClipMinY || py > _bulletClipMaxY)
             {
-                int bx = (int)trans[i].X;
-                int by = (int)trans[i].Y;
-                if (bx < clipMinX || bx > clipMaxX || by < clipMinY || by > clipMaxY)
-                {
-                    continue;
-                }
-
-                Bullet b = bullet[i];
-                int radius = (int)b.Radius;
-                int outlineRadius = radius + outlinePadding;
-                int coreRadius = Math.Max(coreMinRadius, (int)(radius * coreRadiusRatio));
-
-                Entity e = it.Entity(i);
-                if (e.Has<BulletModifier>())
-                {
-                    ref readonly BulletModifier mod = ref e.Get<BulletModifier>();
-                    DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, outlinePadding, coreRadiusRatio, coreColor);
-                }
-                else
-                {
-                    GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                    GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                    GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
-                }
+                continue;
             }
-        });
+
+            float vx = vel[i].Vx;
+            float vy = vel[i].Vy;
+            float speedSq = vx * vx + vy * vy;
+            if (speedSq > 1.0f)
+            {
+                float invSpeed = 1.0f / MathF.Sqrt(speedSq);
+                float dirX = vx * invSpeed;
+                float dirY = vy * invSpeed;
+
+                int trailX = (int)(px - dirX * _pTrailOffset);
+                int trailY = (int)(py - dirY * _pTrailOffset);
+                GameEngine.DrawCircle(trailX, trailY, _pInnerRadius, _pOuterColor, true);
+            }
+
+            GameEngine.DrawCircle(px, py, _pOuterRadius, _pOuterColor, true);
+            GameEngine.DrawCircle(px, py, _pInnerRadius, _pInnerColor, true);
+        }
+    }
+
+    private void DrawBossBulletsBatch(Iter it, Field<Transform> trans, Field<Bullet> bullet)
+    {
+        int count = it.Count();
+        for (int i = 0; i < count; ++i)
+        {
+            int bx = (int)trans[i].X;
+            int by = (int)trans[i].Y;
+            if (bx < _bulletClipMinX || bx > _bulletClipMaxX || by < _bulletClipMinY || by > _bulletClipMaxY)
+            {
+                continue;
+            }
+
+            Bullet b = bullet[i];
+            int radius = (int)b.Radius;
+            int outlineRadius = radius + _bOutlinePadding;
+            int coreRadius = Math.Max(_bCoreMinRadius, (int)(radius * _bCoreRadiusRatio));
+
+            Entity e = it.Entity(i);
+            if (e.Has<BulletModifier>())
+            {
+                ref readonly BulletModifier mod = ref e.Get<BulletModifier>();
+                DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, _bOutlinePadding, _bCoreRadiusRatio, _bCoreColor);
+            }
+            else
+            {
+                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bx, by, coreRadius, _bCoreColor, true);
+            }
+        }
     }
 
     private static void DrawSpecialBossBullet(

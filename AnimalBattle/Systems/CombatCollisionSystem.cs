@@ -12,6 +12,80 @@ namespace AnimalBattle.Systems;
 /// </summary>
 public static class CombatCollisionSystem
 {
+    private struct HurtboxTarget
+    {
+        public Entity Entity;
+        public float CenterX;
+        public float CenterY;
+        public float HalfW;
+        public float HalfH;
+        public Faction Faction;
+        public CollisionShape Shape;
+    }
+
+    private sealed class CollisionContext
+    {
+        public readonly HurtboxTarget[] Targets = new HurtboxTarget[32];
+        public int TargetCount;
+        public readonly Query<Transform, Hurtbox, Health> HurtboxQuery;
+        private readonly Ecs.IterFieldCallback<Transform, Hurtbox, Health> _collectIter;
+
+        public CollisionContext(World world)
+        {
+            HurtboxQuery = world.QueryBuilder<Transform, Hurtbox, Health>().Build();
+            _collectIter = CollectTargets;
+        }
+
+        public void Refresh()
+        {
+            TargetCount = 0;
+            HurtboxQuery.Iter(_collectIter);
+        }
+
+        private void CollectTargets(Iter it, Field<Transform> trans, Field<Hurtbox> hurtboxes, Field<Health> healths)
+        {
+            int count = it.Count();
+            for (int i = 0; i < count; i++)
+            {
+                if (TargetCount >= Targets.Length)
+                {
+                    break;
+                }
+
+                ref readonly Health hp = ref healths[i];
+                if (!hp.IsAlive)
+                {
+                    continue;
+                }
+
+                Entity vicEntity = it.Entity(i);
+                if (IsTargetInvulnerable(vicEntity, in hp))
+                {
+                    continue;
+                }
+
+                ref readonly Transform t = ref trans[i];
+                ref readonly Hurtbox hb = ref hurtboxes[i];
+
+                float cX = t.X + hb.Shape.OffsetX;
+                float cY = t.Y + hb.Shape.OffsetY;
+                float halfW = hb.Shape.Type == CollisionShapeType.Box ? hb.Shape.Width * 0.5f : hb.Shape.Radius;
+                float halfH = hb.Shape.Type == CollisionShapeType.Box ? hb.Shape.Height * 0.5f : hb.Shape.Radius;
+
+                Targets[TargetCount++] = new HurtboxTarget
+                {
+                    Entity = vicEntity,
+                    CenterX = cX,
+                    CenterY = cY,
+                    HalfW = halfW,
+                    HalfH = halfH,
+                    Faction = hb.Faction,
+                    Shape = hb.Shape
+                };
+            }
+        }
+    }
+
     /// <summary>
     /// 戦闘衝突判定システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -19,63 +93,82 @@ public static class CombatCollisionSystem
     /// <returns>メソッドチェーン用の <see cref="World"/></returns>
     public static World AddCombatCollisionSystem(this World world)
     {
-        Query<Transform, Hurtbox, Health> hurtboxQuery =
-            world.QueryBuilder<Transform, Hurtbox, Health>()
-                 .Build();
+        CollisionContext context = new(world);
 
         world.System<Transform, Hitbox>("CombatCollisionSystem")
              .Kind(Ecs.OnUpdate)
-             .Each((Entity atkEntity, ref Transform atkTrans, ref Hitbox hitbox) =>
+             .Iter((Iter it, Field<Transform> atkTrans, Field<Hitbox> hitboxes) =>
              {
-                 PlayerConfig pCfg = ConfigManager.Player;
-                 Transform localAtkTrans = atkTrans;
-                 Hitbox localHitbox = hitbox;
-
-                 if (!localHitbox.IsActive)
+                 context.Refresh();
+                 if (context.TargetCount == 0)
                  {
                      return;
                  }
 
-                 bool shouldDestroyAttacker = false;
+                 PlayerConfig pCfg = ConfigManager.Player;
+                 int count = it.Count();
 
-                 float aCenterX = localAtkTrans.X + localHitbox.Shape.OffsetX;
-                 float aCenterY = localAtkTrans.Y + localHitbox.Shape.OffsetY;
-                 float aHalfW = localHitbox.Shape.Type == CollisionShapeType.Box ? localHitbox.Shape.Width * 0.5f : localHitbox.Shape.Radius;
-                 float aHalfH = localHitbox.Shape.Type == CollisionShapeType.Box ? localHitbox.Shape.Height * 0.5f : localHitbox.Shape.Radius;
-
-                 hurtboxQuery.Each((Entity vicEntity, ref Transform vicTrans, ref Hurtbox hurtbox, ref Health vicHealth) =>
+                 for (int i = 0; i < count; i++)
                  {
+                     ref Hitbox hitbox = ref hitboxes[i];
+                     if (!hitbox.IsActive)
+                     {
+                         continue;
+                     }
+
+                     ref Transform trans = ref atkTrans[i];
+                     Entity atkEntity = it.Entity(i);
+                     bool shouldDestroyAttacker = false;
+
+                     float aCenterX = trans.X + hitbox.Shape.OffsetX;
+                     float aCenterY = trans.Y + hitbox.Shape.OffsetY;
+                     float aHalfW = hitbox.Shape.Type == CollisionShapeType.Box ? hitbox.Shape.Width * 0.5f : hitbox.Shape.Radius;
+                     float aHalfH = hitbox.Shape.Type == CollisionShapeType.Box ? hitbox.Shape.Height * 0.5f : hitbox.Shape.Radius;
+
+                     for (int tIdx = 0; tIdx < context.TargetCount; tIdx++)
+                     {
+                         ref readonly HurtboxTarget target = ref context.Targets[tIdx];
+
+                         if (hitbox.Faction == target.Faction)
+                         {
+                             continue;
+                         }
+
+                         // AABB Broadphase 剪枝（空间粗筛）
+                         if (MathF.Abs(aCenterX - target.CenterX) > (aHalfW + target.HalfW) ||
+                             MathF.Abs(aCenterY - target.CenterY) > (aHalfH + target.HalfH))
+                         {
+                             continue;
+                         }
+
+                         if (!target.Entity.IsAlive() || !target.Entity.Has<Health>())
+                         {
+                             continue;
+                         }
+
+                         ref Health vicHealth = ref target.Entity.GetMut<Health>();
+                         if (!vicHealth.IsAlive || IsTargetInvulnerable(target.Entity, in vicHealth))
+                         {
+                             continue;
+                         }
+
+                         ref Transform vicTrans = ref target.Entity.GetMut<Transform>();
+                         ref Hurtbox hurtbox = ref target.Entity.GetMut<Hurtbox>();
+
+                         if (PhysicsService.Intersects(trans, hitbox.Shape, vicTrans, hurtbox.Shape))
+                         {
+                             ApplyDamageAndEffects(world, target.Entity, ref vicTrans, ref hurtbox, ref vicHealth, in hitbox, pCfg, ref shouldDestroyAttacker);
+                             if (shouldDestroyAttacker)
+                             {
+                                 break;
+                             }
+                         }
+                     }
+
                      if (shouldDestroyAttacker)
                      {
-                         return;
+                         atkEntity.Destruct();
                      }
-
-                     if (localHitbox.Faction == hurtbox.Faction || !vicHealth.IsAlive || IsTargetInvulnerable(vicEntity, in vicHealth))
-                     {
-                         return;
-                     }
-
-                     float vCenterX = vicTrans.X + hurtbox.Shape.OffsetX;
-                     float vCenterY = vicTrans.Y + hurtbox.Shape.OffsetY;
-                     float vHalfW = hurtbox.Shape.Type == CollisionShapeType.Box ? hurtbox.Shape.Width * 0.5f : hurtbox.Shape.Radius;
-                     float vHalfH = hurtbox.Shape.Type == CollisionShapeType.Box ? hurtbox.Shape.Height * 0.5f : hurtbox.Shape.Radius;
-
-                     // 空间碰撞粗筛（AABB Broadphase 剪枝）：相距甚远时提前短路，避免昂贵的狭义几何判定
-                     if (MathF.Abs(aCenterX - vCenterX) > (aHalfW + vHalfW) ||
-                         MathF.Abs(aCenterY - vCenterY) > (aHalfH + vHalfH))
-                     {
-                         return;
-                     }
-
-                     if (PhysicsService.Intersects(localAtkTrans, localHitbox.Shape, vicTrans, hurtbox.Shape))
-                     {
-                         ApplyDamageAndEffects(world, vicEntity, ref vicTrans, ref hurtbox, ref vicHealth, in localHitbox, pCfg, ref shouldDestroyAttacker);
-                     }
-                 });
-
-                 if (shouldDestroyAttacker)
-                 {
-                     atkEntity.Destruct();
                  }
              });
 
