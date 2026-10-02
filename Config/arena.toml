@@ -9,8 +9,8 @@ BulletDespawnMaxY = 800.0
 
 # 2D Grid TileMap Configuration
 [TileMap]
-TileSheet = "Platform\\sheet.png"
-TileConfig = "Platform\\sheet.toml"
+TileSheetPath = "Platform\\sheet.png"
+TileConfigPath = "Platform\\sheet.toml"
 RenderTileWidth = 70
 RenderTileHeight = 70
 OriginX = -25.0
