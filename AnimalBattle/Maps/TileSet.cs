@@ -71,6 +71,30 @@ public sealed class TileSet(
     /// <summary>プラットフォームタイルの衝突判定領域矩形</summary>
     public Rect CollisionRect { get; } = collisionRect;
 
+    private readonly Dictionary<int, TileCollisionType> _collisionTypes = new();
+
+    /// <summary>
+    ///     特定のタイル ID に対する衝突セマンティクス種別を登録します。
+    /// </summary>
+    /// <param name="tileId">1-based タイル ID</param>
+    /// <param name="type">衝突種別</param>
+    public void SetCollisionType(int tileId, TileCollisionType type)
+    {
+        if (tileId > 0) _collisionTypes[tileId] = type;
+    }
+
+    /// <summary>
+    ///     特定のタイル ID の衝突セマンティクス種別を取得します。
+    ///     明示設定されていない場合は、デフォルトで <see cref="TileCollisionType.OneWayPlatform" /> を返却します。
+    /// </summary>
+    /// <param name="tileId">1-based タイル ID</param>
+    /// <returns>衝突種別</returns>
+    public TileCollisionType GetCollisionType(int tileId)
+    {
+        if (tileId <= 0) return TileCollisionType.None;
+        return _collisionTypes.TryGetValue(tileId, out var type) ? type : TileCollisionType.OneWayPlatform;
+    }
+
     /// <summary>
     ///     1-based のタイル ID からスプライトシート上の UV 切り出し矩形 (<see cref="Rect" />) を取得します。
     ///     ID が 0 以下の場合は空の矩形を返します。

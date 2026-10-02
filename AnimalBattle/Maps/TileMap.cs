@@ -154,14 +154,21 @@ public sealed class TileMap(
             var c = 0;
             while (c < Columns)
             {
-                if (grid[r, c] <= 0)
+                var tileType = TileSet.GetCollisionType(grid[r, c]);
+                if (tileType != TileCollisionType.OneWayPlatform && tileType != TileCollisionType.Solid)
                 {
                     c++;
                     continue;
                 }
 
                 var startCol = c;
-                while (c < Columns && grid[r, c] > 0) c++;
+                while (c < Columns)
+                {
+                    var nextType = TileSet.GetCollisionType(grid[r, c]);
+                    if (nextType != TileCollisionType.OneWayPlatform && nextType != TileCollisionType.Solid)
+                        break;
+                    c++;
+                }
 
                 var tileCount = c - startCol;
                 RegisterPlatformNodeAndEntity(world, nodes, ref nodeId, r, startCol, tileCount, colOffsetX, colOffsetY,
