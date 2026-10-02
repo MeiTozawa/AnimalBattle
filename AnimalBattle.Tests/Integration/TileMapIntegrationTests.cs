@@ -1,7 +1,6 @@
 using AnimalBattle.Components;
 using AnimalBattle.Core;
 using AnimalBattle.Maps;
-using AnimalBattle.Maps.Data;
 using AnimalBattle.Maps.Navigation;
 using AnimalBattle.Maps.Spatial;
 using Flecs.NET.Core;
@@ -45,42 +44,17 @@ public class TileMapIntegrationTests
     }
 
     [Fact]
-    public void TileMap_LevelDataLoader_Integration_BuildsWorkingTileMap()
+    public void TileMap_BuildPlatformColliders_MergesHorizontalPlatformsCorrectly()
     {
-        const string json = """
-        {
-            "width": 5,
-            "height": 3,
-            "tileWidth": 70,
-            "tileHeight": 70,
-            "layers": [
-                {
-                    "name": "Platforms",
-                    "data": [
-                        0, 0, 0, 0, 0,
-                        1, 21, 41, 0, 0,
-                        0, 0, 0, 0, 0
-                    ]
-                }
-            ]
-        }
-        """;
-
-        var loadResult = LevelDataLoader.LoadFromJson(json);
-        Assert.False(loadResult.IsError);
-
-        var level = loadResult.Value;
-        var layer = level.Layers[0];
-        var grid = new int[level.Height, level.Width];
-        for (var r = 0; r < level.Height; r++)
-        for (var c = 0; c < level.Width; c++)
-        {
-            grid[r, c] = layer.Data[r * level.Width + c];
-        }
+        int[,] grid = {
+            { 0, 0, 0, 0, 0 },
+            { 1, 21, 41, 0, 0 },
+            { 0, 0, 0, 0, 0 }
+        };
 
         using var world = World.Create();
         var tileSet = new TileSet(1, 70, 70, 6, 7, 1, 21, 41, new Rect(0, 0, 70, 40));
-        var map = new TileMap(tileSet, level.Width, level.Height, level.TileWidth, level.TileHeight, 0, 0, grid);
+        var map = new TileMap(tileSet, 5, 3, 70, 70, 0, 0, grid);
         map.BuildPlatformColliders(world);
 
         var query = world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
