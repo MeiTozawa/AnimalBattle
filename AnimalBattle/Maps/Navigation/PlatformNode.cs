@@ -32,7 +32,7 @@ public sealed class PlatformNode(int id, float leftX, float rightX, float topY, 
     public float CenterX => (LeftX + RightX) * 0.5f;
 
     /// <summary>プラットフォームの横幅</summary>
-    public float Width => RightX - LeftX;
+    private float Width => RightX - LeftX;
 
     /// <summary>
     ///     指定された X 座標がプラットフォームの水平範囲内に含まれているかを判定します。

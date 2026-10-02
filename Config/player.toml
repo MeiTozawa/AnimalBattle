@@ -2,6 +2,7 @@
 MaxHp = 3
 InvincibleDuration = 0.5
 MoveSpeed = 288.0
+WalkAnimVelocityThreshold = 0.1
 FirstJumpVelocity = -672.0
 SecondJumpVelocity = -552.0
 Gravity = 1620.0

@@ -181,7 +181,7 @@ public static class BossCommandExecutor {
         if (!gravityHandled)
         {
             var curVy = vel.Vy;
-            PhysicsService.ApplyGravity(ref curVy, b2Cfg.Gravity, 850.0f, dt);
+            PhysicsService.ApplyGravity(ref curVy, b2Cfg.Gravity, b2Cfg.MaxFallSpeed > 0.0f ? b2Cfg.MaxFallSpeed : 850.0f, dt);
             vel.Vy = curVy;
         }
 
@@ -366,7 +366,7 @@ public static class BossCommandExecutor {
                 patternCfg.HeavySlash.SlashRangeX,
                 patternCfg.HeavySlash.SlashRangeY,
                 patternCfg.HeavySlash.SlashDamage,
-                0.28f,
+                patternCfg.HeavySlash.HitboxDuration,
                 patternCfg.HeavySlash.SlashColor,
                 dir);
         }
@@ -385,18 +385,18 @@ public static class BossCommandExecutor {
                 patternCfg.DoubleCleave.SlashRangeX,
                 patternCfg.DoubleCleave.SlashRangeY,
                 patternCfg.DoubleCleave.SlashDamage,
-                0.24f,
+                patternCfg.DoubleCleave.HitboxDuration,
                 patternCfg.DoubleCleave.SlashColor,
                 dir);
         }
         else if (cmd.Skill == BossSkill.GroundStomp)
         {
             var colHeight = entity.Has<CollisionBox>() ? entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
-            var groundY = trans.Y + colHeight / 2.0f - 10.0f;
+            var groundY = trans.Y + colHeight / 2.0f - patternCfg.GroundStomp.GroundOffsetY;
             CombatEffectHelper.SpawnShockwave(world, trans.X, groundY);
             CombatEffectHelper.SpawnGroundShockwave(
                 world,
-                trans.X - 30.0f,
+                trans.X - patternCfg.GroundStomp.ShockwaveOffsetX,
                 groundY,
                 -patternCfg.GroundStomp.ShockwaveSpeed,
                 patternCfg.GroundStomp.ShockwaveRadius,
@@ -405,7 +405,7 @@ public static class BossCommandExecutor {
                 patternCfg.GroundStomp.OutlineColor);
             CombatEffectHelper.SpawnGroundShockwave(
                 world,
-                trans.X + 30.0f,
+                trans.X + patternCfg.GroundStomp.ShockwaveOffsetX,
                 groundY,
                 patternCfg.GroundStomp.ShockwaveSpeed,
                 patternCfg.GroundStomp.ShockwaveRadius,
@@ -422,11 +422,11 @@ public static class BossCommandExecutor {
             var leapCfg = patternCfg.LeapSmash;
             for (var k = 0; k < leapCfg.ShrapnelCount; k++)
             {
-                var angle = -MathF.PI * (0.15f + 0.7f * (k / (float)(leapCfg.ShrapnelCount - 1)));
+                var angle = -MathF.PI * (leapCfg.ShrapnelAngleStartRatio + leapCfg.ShrapnelAngleSpanRatio * (k / (float)(leapCfg.ShrapnelCount - 1)));
                 CombatEffectHelper.SpawnBossBullet(
                     world,
                     trans.X,
-                    groundY - 15.0f,
+                    groundY - leapCfg.ShrapnelOffsetY,
                     MathF.Cos(angle) * leapCfg.ShrapnelSpeed,
                     MathF.Sin(angle) * leapCfg.ShrapnelSpeed,
                     leapCfg.ShrapnelRadius,
@@ -442,11 +442,11 @@ public static class BossCommandExecutor {
                 trans.Y,
                 vel.Vx,
                 0.0f,
-                100.0f,
-                60.0f,
+                patternCfg.FrenzyCharge.HitboxWidth,
+                patternCfg.FrenzyCharge.HitboxHeight,
                 b2Cfg.BodyContactDamage,
-                0.25f,
-                ColorPalette.RedBright,
+                patternCfg.FrenzyCharge.HitboxDuration,
+                patternCfg.FrenzyCharge.HitboxColor,
                 dir);
         }
         else if (cmd.Skill == BossSkill.DiveRam)

@@ -393,9 +393,29 @@ public sealed class DebugRenderConfig {
 }
 
 /// <summary>
+///     描画視口およびカメラカリング領域設定クラス。
+/// </summary>
+public sealed class ViewportRenderConfig {
+    /// <summary>ビューポート左上 X 座標（ピクセル）</summary>
+    public float X { get; set; } = 0.0f;
+
+    /// <summary>ビューポート左上 Y 座標（ピクセル）</summary>
+    public float Y { get; set; } = 0.0f;
+
+    /// <summary>ビューポート幅（ピクセル）</summary>
+    public float Width { get; set; } = 1280.0f;
+
+    /// <summary>ビューポート高さ（ピクセル）</summary>
+    public float Height { get; set; } = 720.0f;
+}
+
+/// <summary>
 ///     Config/render.toml から読み込まれる全体の描画および UI 設定クラス。
 /// </summary>
 public sealed class RenderConfig {
+    /// <summary>ビューポートおよびカリング領域設定</summary>
+    public ViewportRenderConfig Viewport { get; set; } = new();
+
     /// <summary>Boss 描画エフェクト設定</summary>
     public BossEffectsRenderConfig BossEffects { get; set; } = new();
 

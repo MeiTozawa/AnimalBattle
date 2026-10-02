@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using AnimalBattle.Configs;
 using ErrorOr;
 
 namespace AnimalBattle.Maps.Navigation;
@@ -8,7 +9,16 @@ namespace AnimalBattle.Maps.Navigation;
 ///     TileMap のプラットフォーム群から空間接続関係（跳躍/下落リンク）を自動構築し、
 ///     Boss AI にリアルタイムのプラットフォーム間追従・跳躍ナビゲーションプランを提供します。
 /// </summary>
-public sealed class PlatformNavigationGraph {
+public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null) {
+    private NavigationGraphConfig _config = config ?? new NavigationGraphConfig();
+
+    /// <summary>ナビゲーショングラフ探索・幾何パラメータ設定</summary>
+    public NavigationGraphConfig Config
+    {
+        get => _config;
+        set => _config = value ?? new NavigationGraphConfig();
+    }
+
     private readonly Dictionary<int, List<PlatformLink>> _adjacency = new();
     private readonly Dictionary<PlatformLink, PlatformLink?> _aStarCameFrom = new();
 
@@ -31,8 +41,15 @@ public sealed class PlatformNavigationGraph {
     /// <param name="jumpForce">Boss の基準ジャンプ初速度 (正数、例: 600.0f)</param>
     /// <param name="gravity">ワールド重力加速度 (正数、例: 980.0f)</param>
     /// <param name="moveSpeed">地上巡航移動速度 (例: 220.0f)</param>
-    public void Build(IReadOnlyList<PlatformNode> nodes, float jumpForce, float gravity, float moveSpeed)
+    /// <param name="config">オプションのナビゲーショングラフ設定</param>
+    public void Build(
+        IReadOnlyList<PlatformNode> nodes,
+        float jumpForce,
+        float gravity,
+        float moveSpeed,
+        NavigationGraphConfig? config = null)
     {
+        if (config != null) _config = config;
         _nodes.Clear();
         _links.Clear();
         _adjacency.Clear();
@@ -68,20 +85,24 @@ public sealed class PlatformNavigationGraph {
     /// <param name="jumpForce">Boss の基準ジャンプ初速度</param>
     /// <param name="gravity">ワールド重力加速度</param>
     /// <param name="moveSpeed">地上巡航移動速度</param>
-    /// <param name="sampleSteps">放物線軌道の離散サンプリング分割数</param>
+    /// <param name="sampleSteps">放物線軌道の離散サンプリング分割数 (0 の場合は設定値を採用)</param>
+    /// <param name="config">オプションのナビゲーショングラフ設定</param>
     public void BuildWithObstacles(
         IReadOnlyList<PlatformNode> nodes,
         IReadOnlyList<Box2D> obstacles,
         float jumpForce,
         float gravity,
         float moveSpeed,
-        int sampleSteps = DefaultTrajectoryRaycastSampleSteps)
+        int sampleSteps = 0,
+        NavigationGraphConfig? config = null)
     {
-        Build(nodes, jumpForce, gravity, moveSpeed);
+        if (config != null) _config = config;
+        Build(nodes, jumpForce, gravity, moveSpeed, config);
 
         if (obstacles.Count == 0 || _links.Count == 0) return;
 
-        var steps = Math.Max(2, sampleSteps);
+        var steps = sampleSteps > 0 ? sampleSteps : _config.TrajectorySampleSteps;
+        steps = Math.Max(2, steps);
         for (var i = _links.Count - 1; i >= 0; i--)
         {
             var link = _links[i];
@@ -129,19 +150,21 @@ public sealed class PlatformNavigationGraph {
     /// </summary>
     /// <param name="x">中心 X 座標</param>
     /// <param name="footY">足元 Y 座標</param>
-    /// <param name="toleranceY">垂直許容誤差</param>
-    /// <param name="marginX">水平許容マージン（半身はみ出し許容用）</param>
+    /// <param name="toleranceY">垂直許容誤差（省略時は設定値を採用）</param>
+    /// <param name="marginX">水平許容マージン（半身はみ出し許容用、省略時は設定値を採用）</param>
     /// <returns>該当するプラットフォーム、存在しない場合は null</returns>
-    public PlatformNode? FindNodeAt(float x, float footY, float toleranceY = 35.0f, float marginX = 55.0f)
+    public PlatformNode? FindNodeAt(float x, float footY, float? toleranceY = null, float? marginX = null)
     {
+        var tolY = toleranceY ?? _config.BossNodeToleranceY;
+        var marX = marginX ?? _config.BossNodeMarginX;
         PlatformNode? bestNode = null;
         var bestDistY = float.MaxValue;
 
         foreach (var node in _nodes)
-            if (node.ContainsX(x, marginX))
+            if (node.ContainsX(x, marX))
             {
                 var dy = MathF.Abs(footY - node.TopY);
-                if (dy <= toleranceY && dy < bestDistY)
+                if (dy <= tolY && dy < bestDistY)
                 {
                     bestDistY = dy;
                     bestNode = node;
@@ -169,8 +192,8 @@ public sealed class PlatformNavigationGraph {
         bool isGrounded,
         float moveSpeed)
     {
-        var currentNode = FindNodeAt(currentX, currentFootY);
-        var targetNode = FindNodeAt(targetX, targetFootY, 45.0f, 35.0f);
+        var currentNode = FindNodeAt(currentX, currentFootY, _config.BossNodeToleranceY, _config.BossNodeMarginX);
+        var targetNode = FindNodeAt(targetX, targetFootY, _config.TargetToleranceY, _config.TargetMarginX);
 
         // 1. 同一プラットフォーム上にいる場合は直接歩行追従
         if (currentNode != null && targetNode != null && currentNode.Id == targetNode.Id)
@@ -182,7 +205,7 @@ public sealed class PlatformNavigationGraph {
 
         // 3. A* 経路探索 (Boss の現在 X 座標および目標 X 座標を考慮して最短総合到達経路を選択)
         var pathResult = SearchAStar(currentNode, targetNode, currentX, targetX);
-        if (pathResult.IsError || pathResult.Value == null || pathResult.Value.Count == 0)
+        if (pathResult.IsError || pathResult.Value.Count == 0)
             return NavPlan.CreateNoPath(targetX, moveSpeed, currentNode, targetNode);
 
         var path = pathResult.Value;
@@ -205,7 +228,7 @@ public sealed class PlatformNavigationGraph {
         if (firstLink.Action == NavActionType.Jump)
         {
             var distToTakeoff = MathF.Abs(currentX - firstLink.TakeoffX);
-            if (distToTakeoff <= 22.0f)
+            if (distToTakeoff <= _config.TakeoffTriggerDistance)
                 return new NavPlan(
                     NavStatus.ExecuteJump,
                     firstLink.LandingX,
@@ -235,7 +258,7 @@ public sealed class PlatformNavigationGraph {
         if (isDroppingLeft)
         {
             // 左端から下落：TakeoffX より右側にいるときは左へ走る、TakeoffX 以左に到達したら下落完了まで左へ走り抜ける
-            if (currentX > firstLink.TakeoffX + 16.0f)
+            if (currentX > firstLink.TakeoffX + _config.DropTriggerDistance)
                 return new NavPlan(
                     NavStatus.MoveToTakeoff,
                     firstLink.TakeoffX,
@@ -261,7 +284,7 @@ public sealed class PlatformNavigationGraph {
 
         // isDroppingRight
         // 右端から下落：TakeoffX より左側にいるときは右へ走る、TakeoffX 以右に到達したら下落完了まで右へ走り抜ける
-        if (currentX < firstLink.TakeoffX - 16.0f)
+        if (currentX < firstLink.TakeoffX - _config.DropTriggerDistance)
             return new NavPlan(
                 NavStatus.MoveToTakeoff,
                 firstLink.TakeoffX,
@@ -410,7 +433,7 @@ public sealed class PlatformNavigationGraph {
         var deltaY = a.TopY - b.TopY;
 
         // 1. 上方跳躍 (nodeB が nodeA より高い位置にある)
-        if (deltaY > 15.0f && deltaY <= maxJumpHeight)
+        if (deltaY > _config.MinJumpDeltaY && deltaY <= maxJumpHeight)
         {
             // 上昇時間 t_rise: y(t) = v0*t - 0.5*g*t^2 = deltaY
             // g*t^2 - 2*v0*t + 2*deltaY = 0 -> t = (v0 - sqrt(v0^2 - 2*g*deltaY)) / g
@@ -419,47 +442,47 @@ public sealed class PlatformNavigationGraph {
             {
                 var tRise = (jumpForce - MathF.Sqrt(discriminant)) / gravity;
                 var tApex = jumpForce / gravity;
-                var tWindow = tApex * 1.5f;
+                var tWindow = tApex * _config.JumpWindowTimeMultiplier;
                 var maxReachDist = moveSpeed * tWindow;
 
                 // 水平重なり判定
                 var overlapLeft = MathF.Max(a.LeftX, b.LeftX);
                 var overlapRight = MathF.Min(a.RightX, b.RightX);
 
-                if (overlapRight >= overlapLeft + 20.0f)
+                if (overlapRight >= overlapLeft + _config.PlatformOverlapThreshold)
                 {
                     // 左側アプローチ斜め跳躍
-                    var leftTakeoffX = Math.Clamp(overlapLeft - 25.0f, a.LeftX + 15.0f, a.RightX - 15.0f);
-                    var leftLandingX = Math.Clamp(overlapLeft + 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
+                    var leftTakeoffX = Math.Clamp(overlapLeft - _config.OverlapTakeoffOffsetX, a.LeftX + _config.PlatformEdgeMargin, a.RightX - _config.PlatformEdgeMargin);
+                    var leftLandingX = Math.Clamp(overlapLeft + _config.OverlapLandingOffsetX, b.LeftX + _config.PlatformEdgeMargin, b.RightX - _config.PlatformEdgeMargin);
                     AddLink(new PlatformLink(
                         a, b, NavActionType.Jump,
                         leftTakeoffX,
                         leftLandingX,
                         -jumpForce,
                         moveSpeed,
-                        deltaY + 40.0f));
+                        deltaY + _config.JumpCostBase));
 
                     // 右側アプローチ斜め跳躍
-                    var rightTakeoffX = Math.Clamp(overlapRight + 25.0f, a.LeftX + 15.0f, a.RightX - 15.0f);
-                    var rightLandingX = Math.Clamp(overlapRight - 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
+                    var rightTakeoffX = Math.Clamp(overlapRight + _config.OverlapTakeoffOffsetX, a.LeftX + _config.PlatformEdgeMargin, a.RightX - _config.PlatformEdgeMargin);
+                    var rightLandingX = Math.Clamp(overlapRight - _config.OverlapLandingOffsetX, b.LeftX + _config.PlatformEdgeMargin, b.RightX - _config.PlatformEdgeMargin);
                     AddLink(new PlatformLink(
                         a, b, NavActionType.Jump,
                         rightTakeoffX,
                         rightLandingX,
                         -jumpForce,
                         -moveSpeed,
-                        deltaY + 40.0f));
+                        deltaY + _config.JumpCostBase));
                 }
                 else if (b.LeftX > a.RightX) // B は A の右側
                 {
                     var gap = b.LeftX - a.RightX;
                     if (gap <= maxReachDist)
                     {
-                        var takeoffX = Math.Clamp(a.RightX - 15.0f, a.LeftX, a.RightX);
-                        var landingX = Math.Clamp(b.LeftX + 30.0f, b.LeftX, b.RightX);
+                        var takeoffX = Math.Clamp(a.RightX - _config.PlatformEdgeMargin, a.LeftX, a.RightX);
+                        var landingX = Math.Clamp(b.LeftX + 2.0f * _config.PlatformEdgeMargin, b.LeftX, b.RightX);
                         var flightDist = landingX - takeoffX;
-                        var reqVx = Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * 0.8f,
-                            moveSpeed * 1.5f);
+                        var reqVx = Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * _config.MinJumpVxRatio,
+                            moveSpeed * _config.MaxJumpVxRatio);
 
                         AddLink(new PlatformLink(
                             a, b, NavActionType.Jump,
@@ -467,7 +490,7 @@ public sealed class PlatformNavigationGraph {
                             landingX,
                             -jumpForce,
                             reqVx,
-                            deltaY + gap + 60.0f));
+                            deltaY + gap + _config.CrossGapJumpCostBase));
                     }
                 }
                 else if (b.RightX < a.LeftX) // B は A の左側
@@ -475,11 +498,11 @@ public sealed class PlatformNavigationGraph {
                     var gap = a.LeftX - b.RightX;
                     if (gap <= maxReachDist)
                     {
-                        var takeoffX = Math.Clamp(a.LeftX + 15.0f, a.LeftX, a.RightX);
-                        var landingX = Math.Clamp(b.RightX - 30.0f, b.LeftX, b.RightX);
+                        var takeoffX = Math.Clamp(a.LeftX + _config.PlatformEdgeMargin, a.LeftX, a.RightX);
+                        var landingX = Math.Clamp(b.RightX - 2.0f * _config.PlatformEdgeMargin, b.LeftX, b.RightX);
                         var flightDist = takeoffX - landingX;
-                        var reqVx = -Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * 0.8f,
-                            moveSpeed * 1.5f);
+                        var reqVx = -Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * _config.MinJumpVxRatio,
+                            moveSpeed * _config.MaxJumpVxRatio);
 
                         AddLink(new PlatformLink(
                             a, b, NavActionType.Jump,
@@ -487,23 +510,23 @@ public sealed class PlatformNavigationGraph {
                             landingX,
                             -jumpForce,
                             reqVx,
-                            deltaY + gap + 60.0f));
+                            deltaY + gap + _config.CrossGapJumpCostBase));
                     }
                 }
             }
         }
         // 2. 下方落下 (nodeB が nodeA より低い位置にある)
-        else if (deltaY < -20.0f)
+        else if (deltaY < _config.MinDropDeltaY)
         {
             var dropHeight = -deltaY;
             var tFall = MathF.Sqrt(2.0f * dropHeight / gravity);
             var maxDropSpan = moveSpeed * tFall;
 
             // A の左端から下落
-            if (b.ContainsX(a.LeftX - 15.0f, maxDropSpan))
+            if (b.ContainsX(a.LeftX - _config.PlatformEdgeMargin, maxDropSpan))
             {
-                var takeoffX = Math.Clamp(a.LeftX + 15.0f, a.LeftX, a.RightX);
-                var landingX = Math.Clamp(a.LeftX - 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
+                var takeoffX = Math.Clamp(a.LeftX + _config.PlatformEdgeMargin, a.LeftX, a.RightX);
+                var landingX = Math.Clamp(a.LeftX - _config.DropLandingOffsetX, b.LeftX + _config.PlatformEdgeMargin, b.RightX - _config.PlatformEdgeMargin);
 
                 AddLink(new PlatformLink(
                     a, b, NavActionType.Drop,
@@ -511,14 +534,14 @@ public sealed class PlatformNavigationGraph {
                     landingX,
                     0.0f,
                     -moveSpeed,
-                    dropHeight * 0.6f + 30.0f));
+                    dropHeight * _config.DropCostHeightMultiplier + _config.DropCostBase));
             }
 
             // A の右端から下落
-            if (b.ContainsX(a.RightX + 15.0f, maxDropSpan))
+            if (b.ContainsX(a.RightX + _config.PlatformEdgeMargin, maxDropSpan))
             {
-                var takeoffX = Math.Clamp(a.RightX - 15.0f, a.LeftX, a.RightX);
-                var landingX = Math.Clamp(a.RightX + 35.0f, b.LeftX + 15.0f, b.RightX - 15.0f);
+                var takeoffX = Math.Clamp(a.RightX - _config.PlatformEdgeMargin, a.LeftX, a.RightX);
+                var landingX = Math.Clamp(a.RightX + _config.DropLandingOffsetX, b.LeftX + _config.PlatformEdgeMargin, b.RightX - _config.PlatformEdgeMargin);
 
                 AddLink(new PlatformLink(
                     a, b, NavActionType.Drop,
@@ -526,7 +549,7 @@ public sealed class PlatformNavigationGraph {
                     landingX,
                     0.0f,
                     moveSpeed,
-                    dropHeight * 0.6f + 30.0f));
+                    dropHeight * _config.DropCostHeightMultiplier + _config.DropCostBase));
             }
         }
     }

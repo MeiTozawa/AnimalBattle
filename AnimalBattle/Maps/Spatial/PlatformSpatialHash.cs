@@ -69,9 +69,8 @@ public sealed class PlatformSpatialHash(float cellSize = 256.0f)
             var key = GetKey(x, y);
             if (_grid.TryGetValue(key, out var list))
             {
-                for (var i = 0; i < list.Count; i++)
+                foreach (var id in list)
                 {
-                    var id = list[i];
                     if (!outCandidates.Contains(id)) outCandidates.Add(id);
                 }
             }

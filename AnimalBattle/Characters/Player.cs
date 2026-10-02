@@ -427,7 +427,7 @@ public sealed class Player : ICombatant {
         {
             anim.Play(vel.Vy < 0.0f ? ClipJump : ClipFall);
         }
-        else if (Math.Abs(vel.Vx) > 0.1f)
+        else if (Math.Abs(vel.Vx) > ConfigManager.Player.WalkAnimVelocityThreshold)
         {
             anim.Play(ClipRun);
         }

@@ -123,7 +123,7 @@ public sealed class WorldRenderSystem : IDisposable {
         var playerX = player?.X ?? ConfigManager.Player.SpawnX;
         var playerY = player?.Y ?? ConfigManager.Player.SpawnY;
 
-        DrawPlatforms(tileMap, platformQuery);
+        DrawPlatforms(tileMap, platformQuery, renderCfg.Viewport);
         DrawBoss(boss, bossFx, playerX, playerY);
         DrawPlayer(player);
         DrawHitFlashEffects(_hitFlashQuery);
@@ -137,10 +137,10 @@ public sealed class WorldRenderSystem : IDisposable {
         DrawParticleEffects(_particleEffectQuery);
     }
 
-    private static void DrawPlatforms(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery)
+    private static void DrawPlatforms(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery, ViewportRenderConfig viewport)
     {
         if (tileMap != null)
-            tileMap.DrawCulled(0.0f, 0.0f, 1280.0f, 720.0f);
+            tileMap.DrawCulled(viewport.X, viewport.Y, viewport.Width, viewport.Height);
         else
             platformQuery.Each((ref trans, ref col) =>
             {

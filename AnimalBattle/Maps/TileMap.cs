@@ -165,7 +165,8 @@ public sealed class TileMap(
         }
 
         var b2Cfg = ConfigManager.Boss2;
-        NavGraph.Build(nodes, b2Cfg.JumpForce, b2Cfg.Gravity, b2Cfg.MoveSpeed);
+        var arenaCfg = ConfigManager.Arena;
+        NavGraph.Build(nodes, b2Cfg.JumpForce, b2Cfg.Gravity, b2Cfg.MoveSpeed, arenaCfg.NavigationGraph);
         Console.WriteLine(
             $"[TileMap ナビゲーション] プラットフォームナビゲーショングラフを正常に構築しました: {NavGraph.Nodes.Count} ノード, {NavGraph.Links.Count} リンク (跳躍/落下遷移)");
     }
@@ -199,7 +200,7 @@ public sealed class TileMap(
         var clampedLeft = MathF.Max(leftBoundX, arenaCfg.BoundaryMinX);
         var clampedRight = MathF.Min(rightBoundX, arenaCfg.BoundaryMaxX);
 
-        if (topSurfaceY <= 720.0f && clampedRight > clampedLeft + 10.0f)
+        if (topSurfaceY <= arenaCfg.TileMap.MaxPlatformY && clampedRight > clampedLeft + arenaCfg.TileMap.MinPlatformWidth)
             nodes.Add(new PlatformNode(nodeId++, clampedLeft, clampedRight, topSurfaceY, platformHeight));
 
         world.Entity($"Platform_{row}_{startCol}")

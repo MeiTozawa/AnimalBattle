@@ -6,6 +6,36 @@ BulletDespawnMinX = -80.0
 BulletDespawnMaxX = 1360.0
 BulletDespawnMinY = -80.0
 BulletDespawnMaxY = 800.0
+FloorLimitY = 560.0
+MaxDeltaTime = 0.05
+
+# 2D 空間ハッシュグリッド設定
+[SpatialHash]
+CellSize = 256.0
+
+# 2D プラットフォーム跳躍・下落ナビゲーションおよび A* 探索設定
+[NavigationGraph]
+TrajectorySampleSteps = 16
+BossNodeToleranceY = 35.0
+BossNodeMarginX = 55.0
+TargetToleranceY = 45.0
+TargetMarginX = 35.0
+TakeoffTriggerDistance = 22.0
+DropTriggerDistance = 16.0
+MinJumpDeltaY = 15.0
+MinDropDeltaY = -20.0
+PlatformOverlapThreshold = 20.0
+PlatformEdgeMargin = 15.0
+OverlapTakeoffOffsetX = 25.0
+OverlapLandingOffsetX = 35.0
+DropLandingOffsetX = 35.0
+JumpWindowTimeMultiplier = 1.5
+MinJumpVxRatio = 0.8
+MaxJumpVxRatio = 1.5
+JumpCostBase = 40.0
+CrossGapJumpCostBase = 60.0
+DropCostBase = 30.0
+DropCostHeightMultiplier = 0.6
 
 # 2D Grid TileMap Configuration
 [TileMap]
@@ -14,6 +44,8 @@ RenderTileWidth = 70
 RenderTileHeight = 70
 OriginX = -25.0
 OriginY = 0.0
+MaxPlatformY = 720.0
+MinPlatformWidth = 10.0
 Data = [
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
