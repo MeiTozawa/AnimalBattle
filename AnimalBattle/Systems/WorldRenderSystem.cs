@@ -140,7 +140,7 @@ public sealed class WorldRenderSystem : IDisposable {
     private static void DrawPlatforms(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery)
     {
         if (tileMap != null)
-            tileMap.Draw();
+            tileMap.DrawCulled(0.0f, 0.0f, 1280.0f, 720.0f);
         else
             platformQuery.Each((ref trans, ref col) =>
             {

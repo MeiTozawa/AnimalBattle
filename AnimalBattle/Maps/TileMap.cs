@@ -129,6 +129,18 @@ public sealed class TileMap(
     }
 
     /// <summary>
+    ///     指定されたカメラ視口（Viewport）に基づいてカリングを行い、画面内タイルのみを描画します。
+    /// </summary>
+    /// <param name="viewX">視口 左端 X</param>
+    /// <param name="viewY">視口 上端 Y</param>
+    /// <param name="viewW">視口 幅</param>
+    /// <param name="viewH">視口 高さ</param>
+    public void DrawCulled(float viewX, float viewY, float viewW, float viewH)
+    {
+        TileBatchRenderer.DrawCulled(this, viewX, viewY, viewW, viewH);
+    }
+
+    /// <summary>
     ///     タイルマップのグリッドデータおよびタイルセットの衝突領域（CollisionRect）に基づいて、
     ///     水平方向に連続するブロックを結合したプラットフォームコライダーエンティティ群を生成し、
     ///     ナビゲーショングラフ (<see cref="PlatformNavigationGraph" />) を自動構築します。
