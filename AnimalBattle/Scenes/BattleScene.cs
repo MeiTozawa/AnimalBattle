@@ -261,25 +261,17 @@ public class BattleScene : IDisposable {
     private void SetupArena()
     {
         var arenaCfg = ConfigManager.Arena;
-
         var tileMapCfg = arenaCfg.TileMap;
-        var tileSetConfigResult = TileSetConfig.LoadFromFile(tileMapCfg.TileConfigPath);
-        if (!tileSetConfigResult.IsError)
-        {
-            var sheetHandleRes = AssetManager.LoadTexture(tileMapCfg.TileSheetPath);
-            Debug.Assert(!sheetHandleRes.IsError, $"[BattleScene 警告] {tileMapCfg.TileSheetPath}の画像は読み取りできませんでした。");
-            var sheetHandle = sheetHandleRes.Value;
-            TileSet tileSet = new(sheetHandle, tileSetConfigResult.Value.Config);
-            _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
-            _ecsWorld.Set(_tileMap);
 
-            _tileMap.BuildPlatformColliders(_ecsWorld);
-            Console.WriteLine("[BattleScene] TileMap および TileSet プラットフォームコライダーが正常に初期化されました。");
-        }
-        else
-        {
-            Console.WriteLine($"[BattleScene 警告] TileSet 設定のロードに失敗しました: {tileSetConfigResult.FirstError.Description}");
-        }
+        var sheetHandleRes = AssetManager.LoadTexture(tileMapCfg.TileSheetPath);
+        Debug.Assert(!sheetHandleRes.IsError, $"[BattleScene 警告] {tileMapCfg.TileSheetPath}の画像は読み取りできませんでした。");
+        var sheetHandle = sheetHandleRes.Value;
+        TileSet tileSet = new(sheetHandle, ConfigManager.TileSet);
+        _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
+        _ecsWorld.Set(_tileMap);
+
+        _tileMap.BuildPlatformColliders(_ecsWorld);
+        Console.WriteLine("[BattleScene] TileMap および TileSet プラットフォームコライダーが正常に初期化されました。");
     }
 
     /// <summary>

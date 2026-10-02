@@ -105,30 +105,6 @@ public sealed class TileMap(
     }
 
     /// <summary>
-    ///     マップ全体の可視タイルを順次描画します。
-    /// </summary>
-    public void Draw()
-    {
-        if (TileSet.TileWidth <= 0 || TileSet.TileHeight <= 0) return;
-
-        var scaleX = (double)RenderTileWidth / TileSet.TileWidth;
-        var scaleY = (double)RenderTileHeight / TileSet.TileHeight;
-        var scale = (scaleX + scaleY) / 2.0;
-
-        for (var r = 0; r < Rows; r++)
-        for (var c = 0; c < Columns; c++)
-        {
-            var tileId = grid[r, c];
-            if (tileId <= 0) continue;
-
-            var centerX = (int)(OriginX + c * RenderTileWidth + RenderTileWidth / 2.0f);
-            var centerY = (int)(OriginY + r * RenderTileHeight + RenderTileHeight / 2.0f);
-
-            TileSet.DrawTile(tileId, centerX, centerY, scale, 0.0, false);
-        }
-    }
-
-    /// <summary>
     ///     指定されたカメラ視口（Viewport）に基づいてカリングを行い、画面内タイルのみを描画します。
     /// </summary>
     /// <param name="viewX">視口 左端 X</param>
