@@ -13,7 +13,7 @@ namespace AnimalBattle.Characters;
 ///     多 Boss（Boss 1 / Boss 2）の生命周期、状態遷移、物理、弾幕および描画用データ同期を一元管理する領域モデルクラスです。
 ///     实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
-public sealed class BossCharacter : ICombatant {
+public sealed class BossCharacter : ICharacter {
     private readonly Boss1BehaviorState? _boss1State;
     private readonly Boss2BehaviorState? _boss2State;
     private readonly Entity _entity;

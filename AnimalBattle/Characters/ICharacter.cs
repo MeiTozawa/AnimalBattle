@@ -4,7 +4,7 @@ namespace AnimalBattle.Characters;
 ///     戦闘空間に存在するすべてのキャラクター（自機・Bossなど）に共通する統一戦闘者契約インターフェース。
 ///     ECS エンティティのコンポーネントを唯一の真実の源としてカプセル化し、一貫したアクセスを提供します。
 /// </summary>
-public interface ICombatant {
+public interface ICharacter {
     /// <summary>エンティティ ID を取得します。</summary>
     ulong EntityId { get; }
 

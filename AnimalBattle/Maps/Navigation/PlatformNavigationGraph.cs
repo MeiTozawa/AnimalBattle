@@ -10,14 +10,8 @@ namespace AnimalBattle.Maps.Navigation;
 ///     Boss AI にリアルタイムのプラットフォーム間追従・跳躍ナビゲーションプランを提供します。
 /// </summary>
 public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null) {
-    private NavigationGraphConfig _config = config ?? new NavigationGraphConfig();
-
     /// <summary>ナビゲーショングラフ探索・幾何パラメータ設定</summary>
-    public NavigationGraphConfig Config
-    {
-        get => _config;
-        set => _config = value ?? new NavigationGraphConfig();
-    }
+    private NavigationGraphConfig Config { get; set; } = config ?? new NavigationGraphConfig();
 
     private readonly Dictionary<int, List<PlatformLink>> _adjacency = new();
     private readonly Dictionary<PlatformLink, PlatformLink?> _aStarCameFrom = new();
@@ -49,7 +43,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         float moveSpeed,
         NavigationGraphConfig? config = null)
     {
-        if (config != null) _config = config;
+        if (config != null) Config = config;
         _nodes.Clear();
         _links.Clear();
         _adjacency.Clear();
@@ -96,12 +90,12 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         int sampleSteps = 0,
         NavigationGraphConfig? config = null)
     {
-        if (config != null) _config = config;
+        if (config != null) Config = config;
         Build(nodes, jumpForce, gravity, moveSpeed, config);
 
         if (obstacles.Count == 0 || _links.Count == 0) return;
 
-        var steps = sampleSteps > 0 ? sampleSteps : _config.TrajectorySampleSteps;
+        var steps = sampleSteps > 0 ? sampleSteps : Config.TrajectorySampleSteps;
         steps = Math.Max(2, steps);
         for (var i = _links.Count - 1; i >= 0; i--)
         {
@@ -135,10 +129,9 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
             var sampleY = link.FromNode.TopY + (link.RequiredJumpVy * t + 0.5f * gravity * t * t);
             Vec2f samplePoint = new(sampleX, sampleY);
 
-            for (var j = 0; j < obstacles.Count; j++)
+            if (obstacles.Any(t1 => PhysicsService.Intersects(samplePoint, t1)))
             {
-                if (PhysicsService.Intersects(samplePoint, obstacles[j]))
-                    return true;
+                return true;
             }
         }
 
@@ -153,10 +146,10 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     /// <param name="toleranceY">垂直許容誤差（省略時は設定値を採用）</param>
     /// <param name="marginX">水平許容マージン（半身はみ出し許容用、省略時は設定値を採用）</param>
     /// <returns>該当するプラットフォーム、存在しない場合は null</returns>
-    public PlatformNode? FindNodeAt(float x, float footY, float? toleranceY = null, float? marginX = null)
+    private PlatformNode? FindNodeAt(float x, float footY, float? toleranceY = null, float? marginX = null)
     {
-        var tolY = toleranceY ?? _config.BossNodeToleranceY;
-        var marX = marginX ?? _config.BossNodeMarginX;
+        var tolY = toleranceY ?? Config.BossNodeToleranceY;
+        var marX = marginX ?? Config.BossNodeMarginX;
         PlatformNode? bestNode = null;
         var bestDistY = float.MaxValue;
 
@@ -192,8 +185,8 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         bool isGrounded,
         float moveSpeed)
     {
-        var currentNode = FindNodeAt(currentX, currentFootY, _config.BossNodeToleranceY, _config.BossNodeMarginX);
-        var targetNode = FindNodeAt(targetX, targetFootY, _config.TargetToleranceY, _config.TargetMarginX);
+        var currentNode = FindNodeAt(currentX, currentFootY, Config.BossNodeToleranceY, Config.BossNodeMarginX);
+        var targetNode = FindNodeAt(targetX, targetFootY, Config.TargetToleranceY, Config.TargetMarginX);
 
         // 1. 同一プラットフォーム上にいる場合は直接歩行追従
         if (currentNode != null && targetNode != null && currentNode.Id == targetNode.Id)
@@ -228,7 +221,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         if (firstLink.Action == NavActionType.Jump)
         {
             var distToTakeoff = MathF.Abs(currentX - firstLink.TakeoffX);
-            if (distToTakeoff <= _config.TakeoffTriggerDistance)
+            if (distToTakeoff <= Config.TakeoffTriggerDistance)
                 return new NavPlan(
                     NavStatus.ExecuteJump,
                     firstLink.LandingX,
@@ -258,7 +251,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         if (isDroppingLeft)
         {
             // 左端から下落：TakeoffX より右側にいるときは左へ走る、TakeoffX 以左に到達したら下落完了まで左へ走り抜ける
-            if (currentX > firstLink.TakeoffX + _config.DropTriggerDistance)
+            if (currentX > firstLink.TakeoffX + Config.DropTriggerDistance)
                 return new NavPlan(
                     NavStatus.MoveToTakeoff,
                     firstLink.TakeoffX,
@@ -284,7 +277,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
 
         // isDroppingRight
         // 右端から下落：TakeoffX より左側にいるときは右へ走る、TakeoffX 以右に到達したら下落完了まで右へ走り抜ける
-        if (currentX < firstLink.TakeoffX - _config.DropTriggerDistance)
+        if (currentX < firstLink.TakeoffX - Config.DropTriggerDistance)
             return new NavPlan(
                 NavStatus.MoveToTakeoff,
                 firstLink.TakeoffX,
@@ -372,24 +365,22 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                 var intermediateWalk = MathF.Abs(currentLink.LandingX - nextLink.TakeoffX);
                 var tentativeG = currentG + intermediateWalk + nextLink.Cost;
 
-                if (!_aStarGScore.TryGetValue(nextLink, out var existingG) || tentativeG < existingG)
+                if (_aStarGScore.TryGetValue(nextLink, out var existingG) && !(tentativeG < existingG)) continue;
+                _aStarGScore[nextLink] = tentativeG;
+                _aStarCameFrom[nextLink] = currentLink;
+
+                if (nextLink.ToNode.Id == goal.Id)
                 {
-                    _aStarGScore[nextLink] = tentativeG;
-                    _aStarCameFrom[nextLink] = currentLink;
-
-                    if (nextLink.ToNode.Id == goal.Id)
+                    var totalCostToGoal = tentativeG + MathF.Abs(nextLink.LandingX - targetX);
+                    if (totalCostToGoal < bestGoalCost)
                     {
-                        var totalCostToGoal = tentativeG + MathF.Abs(nextLink.LandingX - targetX);
-                        if (totalCostToGoal < bestGoalCost)
-                        {
-                            bestGoalCost = totalCostToGoal;
-                            bestGoalLink = nextLink;
-                        }
+                        bestGoalCost = totalCostToGoal;
+                        bestGoalLink = nextLink;
                     }
-
-                    var nextH = Heuristic(nextLink.LandingX, nextLink.ToNode.TopY, targetX, goal.TopY);
-                    if (tentativeG + nextH < bestGoalCost) _aStarOpenSet.Enqueue(nextLink, tentativeG + nextH);
                 }
+
+                var nextH = Heuristic(nextLink.LandingX, nextLink.ToNode.TopY, targetX, goal.TopY);
+                if (tentativeG + nextH < bestGoalCost) _aStarOpenSet.Enqueue(nextLink, tentativeG + nextH);
             }
         }
 
@@ -433,100 +424,97 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         var deltaY = a.TopY - b.TopY;
 
         // 1. 上方跳躍 (nodeB が nodeA より高い位置にある)
-        if (deltaY > _config.MinJumpDeltaY && deltaY <= maxJumpHeight)
+        if (deltaY > Config.MinJumpDeltaY && deltaY <= maxJumpHeight)
         {
             // 上昇時間 t_rise: y(t) = v0*t - 0.5*g*t^2 = deltaY
             // g*t^2 - 2*v0*t + 2*deltaY = 0 -> t = (v0 - sqrt(v0^2 - 2*g*deltaY)) / g
             var discriminant = jumpForce * jumpForce - 2.0f * gravity * deltaY;
-            if (discriminant >= 0.0f)
+            if (!(discriminant >= 0.0f)) return;
+            var tApex = jumpForce / gravity;
+            var tWindow = tApex * Config.JumpWindowTimeMultiplier;
+            var maxReachDist = moveSpeed * tWindow;
+
+            // 水平重なり判定
+            var overlapLeft = MathF.Max(a.LeftX, b.LeftX);
+            var overlapRight = MathF.Min(a.RightX, b.RightX);
+
+            if (overlapRight >= overlapLeft + Config.PlatformOverlapThreshold)
             {
-                var tRise = (jumpForce - MathF.Sqrt(discriminant)) / gravity;
-                var tApex = jumpForce / gravity;
-                var tWindow = tApex * _config.JumpWindowTimeMultiplier;
-                var maxReachDist = moveSpeed * tWindow;
+                // 左側アプローチ斜め跳躍
+                var leftTakeoffX = Math.Clamp(overlapLeft - Config.OverlapTakeoffOffsetX, a.LeftX + Config.PlatformEdgeMargin, a.RightX - Config.PlatformEdgeMargin);
+                var leftLandingX = Math.Clamp(overlapLeft + Config.OverlapLandingOffsetX, b.LeftX + Config.PlatformEdgeMargin, b.RightX - Config.PlatformEdgeMargin);
+                AddLink(new PlatformLink(
+                    a, b, NavActionType.Jump,
+                    leftTakeoffX,
+                    leftLandingX,
+                    -jumpForce,
+                    moveSpeed,
+                    deltaY + Config.JumpCostBase));
 
-                // 水平重なり判定
-                var overlapLeft = MathF.Max(a.LeftX, b.LeftX);
-                var overlapRight = MathF.Min(a.RightX, b.RightX);
-
-                if (overlapRight >= overlapLeft + _config.PlatformOverlapThreshold)
+                // 右側アプローチ斜め跳躍
+                var rightTakeoffX = Math.Clamp(overlapRight + Config.OverlapTakeoffOffsetX, a.LeftX + Config.PlatformEdgeMargin, a.RightX - Config.PlatformEdgeMargin);
+                var rightLandingX = Math.Clamp(overlapRight - Config.OverlapLandingOffsetX, b.LeftX + Config.PlatformEdgeMargin, b.RightX - Config.PlatformEdgeMargin);
+                AddLink(new PlatformLink(
+                    a, b, NavActionType.Jump,
+                    rightTakeoffX,
+                    rightLandingX,
+                    -jumpForce,
+                    -moveSpeed,
+                    deltaY + Config.JumpCostBase));
+            }
+            else if (b.LeftX > a.RightX) // B は A の右側
+            {
+                var gap = b.LeftX - a.RightX;
+                if (gap <= maxReachDist)
                 {
-                    // 左側アプローチ斜め跳躍
-                    var leftTakeoffX = Math.Clamp(overlapLeft - _config.OverlapTakeoffOffsetX, a.LeftX + _config.PlatformEdgeMargin, a.RightX - _config.PlatformEdgeMargin);
-                    var leftLandingX = Math.Clamp(overlapLeft + _config.OverlapLandingOffsetX, b.LeftX + _config.PlatformEdgeMargin, b.RightX - _config.PlatformEdgeMargin);
+                    var takeoffX = Math.Clamp(a.RightX - Config.PlatformEdgeMargin, a.LeftX, a.RightX);
+                    var landingX = Math.Clamp(b.LeftX + 2.0f * Config.PlatformEdgeMargin, b.LeftX, b.RightX);
+                    var flightDist = landingX - takeoffX;
+                    var reqVx = Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * Config.MinJumpVxRatio,
+                        moveSpeed * Config.MaxJumpVxRatio);
+
                     AddLink(new PlatformLink(
                         a, b, NavActionType.Jump,
-                        leftTakeoffX,
-                        leftLandingX,
+                        takeoffX,
+                        landingX,
                         -jumpForce,
-                        moveSpeed,
-                        deltaY + _config.JumpCostBase));
+                        reqVx,
+                        deltaY + gap + Config.CrossGapJumpCostBase));
+                }
+            }
+            else if (b.RightX < a.LeftX) // B は A の左側
+            {
+                var gap = a.LeftX - b.RightX;
+                if (gap <= maxReachDist)
+                {
+                    var takeoffX = Math.Clamp(a.LeftX + Config.PlatformEdgeMargin, a.LeftX, a.RightX);
+                    var landingX = Math.Clamp(b.RightX - 2.0f * Config.PlatformEdgeMargin, b.LeftX, b.RightX);
+                    var flightDist = takeoffX - landingX;
+                    var reqVx = -Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * Config.MinJumpVxRatio,
+                        moveSpeed * Config.MaxJumpVxRatio);
 
-                    // 右側アプローチ斜め跳躍
-                    var rightTakeoffX = Math.Clamp(overlapRight + _config.OverlapTakeoffOffsetX, a.LeftX + _config.PlatformEdgeMargin, a.RightX - _config.PlatformEdgeMargin);
-                    var rightLandingX = Math.Clamp(overlapRight - _config.OverlapLandingOffsetX, b.LeftX + _config.PlatformEdgeMargin, b.RightX - _config.PlatformEdgeMargin);
                     AddLink(new PlatformLink(
                         a, b, NavActionType.Jump,
-                        rightTakeoffX,
-                        rightLandingX,
+                        takeoffX,
+                        landingX,
                         -jumpForce,
-                        -moveSpeed,
-                        deltaY + _config.JumpCostBase));
-                }
-                else if (b.LeftX > a.RightX) // B は A の右側
-                {
-                    var gap = b.LeftX - a.RightX;
-                    if (gap <= maxReachDist)
-                    {
-                        var takeoffX = Math.Clamp(a.RightX - _config.PlatformEdgeMargin, a.LeftX, a.RightX);
-                        var landingX = Math.Clamp(b.LeftX + 2.0f * _config.PlatformEdgeMargin, b.LeftX, b.RightX);
-                        var flightDist = landingX - takeoffX;
-                        var reqVx = Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * _config.MinJumpVxRatio,
-                            moveSpeed * _config.MaxJumpVxRatio);
-
-                        AddLink(new PlatformLink(
-                            a, b, NavActionType.Jump,
-                            takeoffX,
-                            landingX,
-                            -jumpForce,
-                            reqVx,
-                            deltaY + gap + _config.CrossGapJumpCostBase));
-                    }
-                }
-                else if (b.RightX < a.LeftX) // B は A の左側
-                {
-                    var gap = a.LeftX - b.RightX;
-                    if (gap <= maxReachDist)
-                    {
-                        var takeoffX = Math.Clamp(a.LeftX + _config.PlatformEdgeMargin, a.LeftX, a.RightX);
-                        var landingX = Math.Clamp(b.RightX - 2.0f * _config.PlatformEdgeMargin, b.LeftX, b.RightX);
-                        var flightDist = takeoffX - landingX;
-                        var reqVx = -Math.Clamp(flightDist / MathF.Max(0.1f, tWindow), moveSpeed * _config.MinJumpVxRatio,
-                            moveSpeed * _config.MaxJumpVxRatio);
-
-                        AddLink(new PlatformLink(
-                            a, b, NavActionType.Jump,
-                            takeoffX,
-                            landingX,
-                            -jumpForce,
-                            reqVx,
-                            deltaY + gap + _config.CrossGapJumpCostBase));
-                    }
+                        reqVx,
+                        deltaY + gap + Config.CrossGapJumpCostBase));
                 }
             }
         }
         // 2. 下方落下 (nodeB が nodeA より低い位置にある)
-        else if (deltaY < _config.MinDropDeltaY)
+        else if (deltaY < Config.MinDropDeltaY)
         {
             var dropHeight = -deltaY;
             var tFall = MathF.Sqrt(2.0f * dropHeight / gravity);
             var maxDropSpan = moveSpeed * tFall;
 
             // A の左端から下落
-            if (b.ContainsX(a.LeftX - _config.PlatformEdgeMargin, maxDropSpan))
+            if (b.ContainsX(a.LeftX - Config.PlatformEdgeMargin, maxDropSpan))
             {
-                var takeoffX = Math.Clamp(a.LeftX + _config.PlatformEdgeMargin, a.LeftX, a.RightX);
-                var landingX = Math.Clamp(a.LeftX - _config.DropLandingOffsetX, b.LeftX + _config.PlatformEdgeMargin, b.RightX - _config.PlatformEdgeMargin);
+                var takeoffX = Math.Clamp(a.LeftX + Config.PlatformEdgeMargin, a.LeftX, a.RightX);
+                var landingX = Math.Clamp(a.LeftX - Config.DropLandingOffsetX, b.LeftX + Config.PlatformEdgeMargin, b.RightX - Config.PlatformEdgeMargin);
 
                 AddLink(new PlatformLink(
                     a, b, NavActionType.Drop,
@@ -534,14 +522,14 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                     landingX,
                     0.0f,
                     -moveSpeed,
-                    dropHeight * _config.DropCostHeightMultiplier + _config.DropCostBase));
+                    dropHeight * Config.DropCostHeightMultiplier + Config.DropCostBase));
             }
 
             // A の右端から下落
-            if (b.ContainsX(a.RightX + _config.PlatformEdgeMargin, maxDropSpan))
+            if (b.ContainsX(a.RightX + Config.PlatformEdgeMargin, maxDropSpan))
             {
-                var takeoffX = Math.Clamp(a.RightX - _config.PlatformEdgeMargin, a.LeftX, a.RightX);
-                var landingX = Math.Clamp(a.RightX + _config.DropLandingOffsetX, b.LeftX + _config.PlatformEdgeMargin, b.RightX - _config.PlatformEdgeMargin);
+                var takeoffX = Math.Clamp(a.RightX - Config.PlatformEdgeMargin, a.LeftX, a.RightX);
+                var landingX = Math.Clamp(a.RightX + Config.DropLandingOffsetX, b.LeftX + Config.PlatformEdgeMargin, b.RightX - Config.PlatformEdgeMargin);
 
                 AddLink(new PlatformLink(
                     a, b, NavActionType.Drop,
@@ -549,7 +537,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                     landingX,
                     0.0f,
                     moveSpeed,
-                    dropHeight * _config.DropCostHeightMultiplier + _config.DropCostBase));
+                    dropHeight * Config.DropCostHeightMultiplier + Config.DropCostBase));
             }
         }
     }

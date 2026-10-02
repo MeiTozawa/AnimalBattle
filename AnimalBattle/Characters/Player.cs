@@ -7,7 +7,7 @@ namespace AnimalBattle.Characters;
 ///     プレイヤー自機の移動、跳躍、重力、射撃瞄準およびアニメーション状態を一元管理する領域モデルクラスです。
 ///     实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
-public sealed class Player : ICombatant {
+public sealed class Player : ICharacter {
     private static readonly StringId ClipIdle = "Idle";
     private static readonly StringId ClipRun = "Run";
     private static readonly StringId ClipJump = "Jump";

@@ -52,7 +52,7 @@ public static class HudRenderSystem {
     /// <param name="player">プレイヤー戦闘者。</param>
     /// <param name="boss">Boss 戦闘者。</param>
     /// <param name="remainingJumps">プレイヤーの二段ジャンプ残数。</param>
-    public static void Render(ICombatant? player, BossCharacter? boss, int remainingJumps = 0)
+    public static void Render(ICharacter? player, BossCharacter? boss, int remainingJumps = 0)
     {
         var renderCfg = ConfigManager.Render;
         var hudCfg = renderCfg.Hud;
@@ -94,7 +94,7 @@ public static class HudRenderSystem {
         GameEngine.DrawString(hudCfg.TitleX, switchGuideY, hudCfg.BossSwitchGuideText, hudCfg.BossSwitchGuideColor);
     }
 
-    private static void DrawPlayerStatus(ICombatant? player, int remainingJumps, HudRenderConfig hudCfg)
+    private static void DrawPlayerStatus(ICharacter? player, int remainingJumps, HudRenderConfig hudCfg)
     {
         if (player == null) return;
 
@@ -138,7 +138,7 @@ public static class HudRenderSystem {
         return BossTitles[0];
     }
 
-    private static void DrawGameOverModal(ICombatant? player, ModalRenderConfig modalCfg)
+    private static void DrawGameOverModal(ICharacter? player, ModalRenderConfig modalCfg)
     {
         if (player != null && !player.IsAlive)
         {
