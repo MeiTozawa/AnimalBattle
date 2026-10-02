@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Characters;
 using AnimalBattle.Configs;
@@ -239,21 +240,19 @@ public class BattleScene : IDisposable {
     private void OnPlayerConfigReloaded()
     {
         var playerEntity = _ecsWorld.Lookup("Player1");
-        if (playerEntity.IsAlive())
+        if (!playerEntity.IsAlive()) return;
+        var pCfg = ConfigManager.Player;
+        playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
+        playerEntity.Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight));
+
+        if (playerEntity.Has<Transform>())
         {
-            var pCfg = ConfigManager.Player;
-            playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
-            playerEntity.Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight));
-
-            if (playerEntity.Has<Transform>())
-            {
-                ref var t = ref playerEntity.GetMut<Transform>();
-                t.ScaleX = pCfg.ScaleX;
-                t.ScaleY = pCfg.ScaleY;
-            }
-
-            Console.WriteLine("[BattleScene] Player の Hurtbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
+            ref var t = ref playerEntity.GetMut<Transform>();
+            t.ScaleX = pCfg.ScaleX;
+            t.ScaleY = pCfg.ScaleY;
         }
+
+        Console.WriteLine("[BattleScene] Player の Hurtbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
     }
 
     /// <summary>
@@ -264,11 +263,12 @@ public class BattleScene : IDisposable {
         var arenaCfg = ConfigManager.Arena;
 
         var tileMapCfg = arenaCfg.TileMap;
-        var tileSetConfigResult = TileSetConfig.LoadFromFile(tileMapCfg.TileConfig);
+        var tileSetConfigResult = TileSetConfig.LoadFromFile(tileMapCfg.TileConfigPath);
         if (!tileSetConfigResult.IsError)
         {
-            var sheetHandleRes = AssetManager.LoadTexture(tileMapCfg.TileSheet);
-            var sheetHandle = !sheetHandleRes.IsError ? sheetHandleRes.Value : -1;
+            var sheetHandleRes = AssetManager.LoadTexture(tileMapCfg.TileSheetPath);
+            Debug.Assert(!sheetHandleRes.IsError, $"[BattleScene 警告] {tileMapCfg.TileSheetPath}の画像は読み取りできませんでした。");
+            var sheetHandle = sheetHandleRes.Value;
             TileSet tileSet = new(sheetHandle, tileSetConfigResult.Value.Config);
             _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
             _ecsWorld.Set(_tileMap);

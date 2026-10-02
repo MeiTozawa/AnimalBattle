@@ -229,7 +229,7 @@ public sealed class BossHpBarRenderConfig {
     public int HeaderOffsetY { get; set; } = 22;
 
     /// <summary>Boss タイトル表示 X 軸オフセット (BarX1 からの相対距離)</summary>
-    public int TitleOffsetX { get; set; } = 0;
+    public int TitleOffsetX { get; set; }
 
     /// <summary>Boss タイトル表示 Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
     public int TitleOffsetY { get; set; } = 22;

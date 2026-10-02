@@ -7,10 +7,10 @@ namespace AnimalBattle.Configs;
 /// </summary>
 public sealed class TileMapConfig {
     /// <summary>タイルセットテクスチャの相対パス</summary>
-    public string TileSheet { get; set; } = string.Empty;
+    public string TileSheetPath { get; set; } = string.Empty;
 
     /// <summary>タイルセットメタデータ TOML の相対パス</summary>
-    public string TileConfig { get; set; } = string.Empty;
+    public string TileConfigPath { get; set; } = string.Empty;
 
     /// <summary>描画時のタイル単体幅（ピクセル）</summary>
     public int RenderTileWidth { get; set; }

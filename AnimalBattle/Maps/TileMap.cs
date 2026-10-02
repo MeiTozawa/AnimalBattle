@@ -24,8 +24,6 @@ public sealed class TileMap(
     float originX,
     float originY,
     int[,] grid) {
-    private readonly int[,] _grid = grid;
-
     /// <summary>関連付けられたタイルセット</summary>
     public TileSet TileSet { get; } = tileSet;
 
@@ -92,7 +90,7 @@ public sealed class TileMap(
     {
         if (col < 0 || col >= Columns || row < 0 || row >= Rows) return 0;
 
-        return _grid[row, col];
+        return grid[row, col];
     }
 
     /// <summary>
@@ -103,7 +101,7 @@ public sealed class TileMap(
     /// <param name="tileId">設定するタイル ID</param>
     public void SetTile(int col, int row, int tileId)
     {
-        if (col >= 0 && col < Columns && row >= 0 && row < Rows) _grid[row, col] = tileId;
+        if (col >= 0 && col < Columns && row >= 0 && row < Rows) grid[row, col] = tileId;
     }
 
     /// <summary>
@@ -120,7 +118,7 @@ public sealed class TileMap(
         for (var r = 0; r < Rows; r++)
         for (var c = 0; c < Columns; c++)
         {
-            var tileId = _grid[r, c];
+            var tileId = grid[r, c];
             if (tileId <= 0) continue;
 
             var centerX = (int)(OriginX + c * RenderTileWidth + RenderTileWidth / 2.0f);
@@ -148,7 +146,7 @@ public sealed class TileMap(
         var colWidth = TileSet.CollisionRect.Width * scaleX;
         var colHeight = TileSet.CollisionRect.Height * scaleY;
 
-        List<PlatformNode> nodes = new();
+        List<PlatformNode> nodes = [];
         var nodeId = 0;
 
         for (var r = 0; r < Rows; r++)
@@ -156,14 +154,14 @@ public sealed class TileMap(
             var c = 0;
             while (c < Columns)
             {
-                if (_grid[r, c] <= 0)
+                if (grid[r, c] <= 0)
                 {
                     c++;
                     continue;
                 }
 
                 var startCol = c;
-                while (c < Columns && _grid[r, c] > 0) c++;
+                while (c < Columns && grid[r, c] > 0) c++;
 
                 var tileCount = c - startCol;
                 RegisterPlatformNodeAndEntity(world, nodes, ref nodeId, r, startCol, tileCount, colOffsetX, colOffsetY,

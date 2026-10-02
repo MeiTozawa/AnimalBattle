@@ -13,7 +13,7 @@ public sealed class Player : ICombatant {
     private static readonly StringId ClipJump = "Jump";
     private static readonly StringId ClipFall = "Fall";
 
-    private readonly Entity _entity;
+    private Entity _entity;
     private int _maxJumps;
 
     private float _shootCooldown;
@@ -82,7 +82,7 @@ public sealed class Player : ICombatant {
     }
 
     /// <summary>残り跳躍可能回数を取得または設定します。</summary>
-    public int RemainingJumps { get; set; }
+    public int RemainingJumps { get; private set; }
 
     /// <summary>射撃クールダウンの残り秒数を取得または設定します。</summary>
     public float ShootCooldown {
@@ -94,7 +94,7 @@ public sealed class Player : ICombatant {
     public CollisionBox CollisionBox => _entity.Has<CollisionBox>() ? _entity.Get<CollisionBox>() : default;
 
     /// <summary>被弾判定ボックスを取得します。</summary>
-    public Hurtbox Hurtbox { get; }
+    private Hurtbox Hurtbox { get; }
 
     /// <summary>アニメーション制御インスタンスを取得します。</summary>
     public Animation Animation => _entity.Has<Animation>() ? _entity.Get<Animation>() : default;
@@ -425,10 +425,7 @@ public sealed class Player : ICombatant {
 
         if (!col.IsGrounded)
         {
-            if (vel.Vy < 0.0f)
-                anim.Play(ClipJump);
-            else
-                anim.Play(ClipFall);
+            anim.Play(vel.Vy < 0.0f ? ClipJump : ClipFall);
         }
         else if (Math.Abs(vel.Vx) > 0.1f)
         {
@@ -439,22 +436,20 @@ public sealed class Player : ICombatant {
             anim.Play(ClipIdle);
         }
 
-        if (anim.IsPlaying)
+        if (!anim.IsPlaying) return;
+        anim.Timer += dt;
+
+        var charConfigRes = AssetManager.GetCharacterConfig(anim.CharacterType);
+        if (!charConfigRes.IsError)
         {
-            anim.Timer += dt;
+            var charConfig = charConfigRes.Value;
+            ref var spr = ref _entity.GetMut<Sprite>();
+            var handleRes = AssetManager.GetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip);
+            if (handleRes is { IsError: false, Value: >= 0 }) spr.GraphHandle = handleRes.Value;
 
-            var charConfigRes = AssetManager.GetCharacterConfig(anim.CharacterType);
-            if (!charConfigRes.IsError && charConfigRes.Value != null)
-            {
-                var charConfig = charConfigRes.Value;
-                ref var spr = ref _entity.GetMut<Sprite>();
-                var handleRes = AssetManager.GetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip);
-                if (!handleRes.IsError && handleRes.Value >= 0) spr.GraphHandle = handleRes.Value;
-
-                spr.SrcRect =
-                    AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out var isFinished);
-                anim.IsFinished = isFinished;
-            }
+            spr.SrcRect =
+                AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out var isFinished);
+            anim.IsFinished = isFinished;
         }
     }
 
@@ -524,7 +519,8 @@ public sealed class Player : ICombatant {
 /// </summary>
 public enum PlayerState {
     /// <summary>
-    ///     死亡状態（HP <= 0）。</summary>
+    ///     死亡状態（HPは0以下）
+    /// </summary>
     Dead,
 
     /// <summary>被弾硬直・無敵点滅状態。</summary>
