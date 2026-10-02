@@ -56,6 +56,75 @@ public sealed class PlatformNavigationGraph {
     }
 
     /// <summary>
+    ///     跳躍放物線軌道の障害物遮断サンプリングにおける標準分割数。
+    /// </summary>
+    public const int DefaultTrajectoryRaycastSampleSteps = 16;
+
+    /// <summary>
+    ///     障害物矩形群を考慮し、障害物と交差する跳躍・下落リンクを除外したナビゲーショングラフを構築します。
+    /// </summary>
+    /// <param name="nodes">プラットフォームノード一覧</param>
+    /// <param name="obstacles">障害物矩形一覧</param>
+    /// <param name="jumpForce">Boss の基準ジャンプ初速度</param>
+    /// <param name="gravity">ワールド重力加速度</param>
+    /// <param name="moveSpeed">地上巡航移動速度</param>
+    /// <param name="sampleSteps">放物線軌道の離散サンプリング分割数</param>
+    public void BuildWithObstacles(
+        IReadOnlyList<PlatformNode> nodes,
+        IReadOnlyList<Box2D> obstacles,
+        float jumpForce,
+        float gravity,
+        float moveSpeed,
+        int sampleSteps = DefaultTrajectoryRaycastSampleSteps)
+    {
+        Build(nodes, jumpForce, gravity, moveSpeed);
+
+        if (obstacles.Count == 0 || _links.Count == 0) return;
+
+        var steps = Math.Max(2, sampleSteps);
+        for (var i = _links.Count - 1; i >= 0; i--)
+        {
+            var link = _links[i];
+            if (IsTrajectoryBlocked(link, obstacles, gravity, steps))
+            {
+                _adjacency[link.FromNode.Id].Remove(link);
+                _links.RemoveAt(i);
+            }
+        }
+    }
+
+    private static bool IsTrajectoryBlocked(PlatformLink link, IReadOnlyList<Box2D> obstacles, float gravity, int sampleSteps)
+    {
+        const float velocityEpsilon = 0.001f;
+        const float flightTimeEpsilon = 0.001f;
+
+        var flightDist = link.LandingX - link.TakeoffX;
+        var tFlight = MathF.Abs(link.RequiredJumpVx) > velocityEpsilon
+            ? MathF.Abs(flightDist / link.RequiredJumpVx)
+            : 1.0f;
+
+        if (tFlight <= flightTimeEpsilon) return false;
+
+        var dt = tFlight / sampleSteps;
+
+        for (var step = 1; step < sampleSteps; step++)
+        {
+            var t = step * dt;
+            var sampleX = link.TakeoffX + link.RequiredJumpVx * t;
+            var sampleY = link.FromNode.TopY + (link.RequiredJumpVy * t + 0.5f * gravity * t * t);
+            Vec2f samplePoint = new(sampleX, sampleY);
+
+            for (var j = 0; j < obstacles.Count; j++)
+            {
+                if (PhysicsService.Intersects(samplePoint, obstacles[j]))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     ///     指定された足元座標 (x, footY) が位置するプラットフォームノードを検索します。
     /// </summary>
     /// <param name="x">中心 X 座標</param>
