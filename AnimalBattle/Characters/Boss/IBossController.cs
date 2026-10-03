@@ -15,6 +15,15 @@ public interface IBossController : IDisposable
     /// <summary>関連する受控キャラクター領域エンティティ契約を取得します。</summary>
     ICharacter Character { get; }
 
+    /// <summary>現在の HP を取得します。</summary>
+    float CurrentHp => Character.CurrentHp;
+
+    /// <summary>最大 HP を取得します。</summary>
+    float MaxHp => Character.MaxHp;
+
+    /// <summary>生存中かどうかを取得します。</summary>
+    bool IsAlive => Character.IsAlive;
+
     /// <summary>対応する Flecs エンティティ句柄を取得します。</summary>
     Entity Entity { get; }
 
@@ -23,6 +32,9 @@ public interface IBossController : IDisposable
 
     /// <summary>現在の Boss 状態を取得します。</summary>
     BossState CurrentState { get; }
+
+    /// <summary>現在選択されている攻撃技能種別を取得します。</summary>
+    BossSkill CurrentSkill { get; }
 
     /// <summary>現在選択されている攻撃技能名を取得します。</summary>
     string SkillName { get; }

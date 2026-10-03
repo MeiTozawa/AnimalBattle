@@ -38,6 +38,9 @@ public sealed class Boss1Controller : IBossController
     public BossState CurrentState => _boss.CurrentState;
 
     /// <inheritdoc />
+    public BossSkill CurrentSkill => _boss.CurrentSkill;
+
+    /// <inheritdoc />
     public string SkillName => _boss.SkillName;
 
     /// <inheritdoc />

@@ -44,6 +44,7 @@ public class BattleScene : IDisposable {
 
         var playerEntity = _ecsWorld.Entity("Player1");
         Player = new Player(playerEntity, playerCfg, playerHandle);
+        PlayerController = new PlayerController(Player);
 
         SetupArena();
 
@@ -73,6 +74,11 @@ public class BattleScene : IDisposable {
     ///     現在アクティブなプレイヤー自機インスタンスを取得します。
     /// </summary>
     public Player? Player { get; }
+
+    /// <summary>
+    ///     現在アクティブなプレイヤーコントローラーを取得します。
+    /// </summary>
+    public PlayerController PlayerController { get; }
 
     /// <summary>
     ///     現在アクティブな Boss インスタンスを取得します。
@@ -281,6 +287,8 @@ public class BattleScene : IDisposable {
     public void Update(float deltaTime)
     {
         HandleInput();
+
+        PlayerController.PollAndProcessInput();
 
         if (Player != null)
             Player.Update(deltaTime, ConfigManager.Player, ConfigManager.Arena, _platformQuery, _ecsWorld);

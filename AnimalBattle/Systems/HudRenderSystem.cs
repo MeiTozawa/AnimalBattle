@@ -3,6 +3,7 @@ using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Characters;
+using AnimalBattle.Characters.Boss;
 using AnimalBattle.Configs;
 
 namespace AnimalBattle.Systems;
@@ -50,9 +51,9 @@ public static class HudRenderSystem {
     ///     統一戦闘者契約インターフェースに基づいて HUD および各種ステータス UI を描画します。
     /// </summary>
     /// <param name="player">プレイヤー戦闘者。</param>
-    /// <param name="boss">Boss 戦闘者。</param>
+    /// <param name="boss">Boss コントローラー。</param>
     /// <param name="remainingJumps">プレイヤーの二段ジャンプ残数。</param>
-    public static void Render(ICharacter? player, BossCharacter? boss, int remainingJumps = 0)
+    public static void Render(ICharacter? player, IBossController? boss, int remainingJumps = 0)
     {
         var renderCfg = ConfigManager.Render;
         var hudCfg = renderCfg.Hud;
@@ -119,7 +120,7 @@ public static class HudRenderSystem {
         GameEngine.DrawString(hudCfg.PlayerHpX, hudCfg.PlayerHpY, hpText, hpColor);
     }
 
-    private static void DrawBossStatus(BossCharacter? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
+    private static void DrawBossStatus(IBossController? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
     {
         if (boss == null) return;
 
