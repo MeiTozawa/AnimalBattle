@@ -8,19 +8,19 @@ using Xunit;
 namespace AnimalBattle.Tests.Characters;
 
 /// <summary>
-/// 統合戦闘者インターフェース <see cref="ICombatant"/> の実装および契約遵守を検証するテスト。
+///     統一戦闘者インターフェース <see cref="ICharacter"/> の実装および契約遵守を検証するテスト。
 /// </summary>
 public class CombatantContractTests
 {
     [Fact]
-    public void Player_ImplementsICombatant_And_StateMachineWorks()
+    public void Player_ImplementsICharacter_And_StateMachineWorks()
     {
         using World world = World.Create();
         Entity pEnt = world.Entity("P");
         Player player = new(pEnt, new PlayerConfig { MaxHp = 3, SpawnX = 100, SpawnY = 200 }, -1);
 
-        // 契约検証
-        ICombatant combatant = player;
+        // 契約検証
+        ICharacter combatant = player;
         Assert.Equal((ulong)pEnt.Id, combatant.EntityId);
         Assert.Equal(Faction.Friendly, combatant.Faction);
         Assert.True(combatant.IsAlive);
@@ -53,14 +53,14 @@ public class CombatantContractTests
     }
 
     [Fact]
-    public void BossCharacter_ImplementsICombatant_And_DamageContractWorks()
+    public void BossCharacter_ImplementsICharacter_And_DamageContractWorks()
     {
         using World world = World.Create();
         Entity bEnt = world.Entity("Boss");
         BossCharacter boss = new(bEnt, BossType.Boss1, -1);
 
-        // 契约検証
-        ICombatant combatant = boss;
+        // 契約検証
+        ICharacter combatant = boss;
         Assert.Equal((ulong)bEnt.Id, combatant.EntityId);
         Assert.Equal(Faction.Hostile, combatant.Faction);
         Assert.True(combatant.IsAlive);
@@ -73,4 +73,3 @@ public class CombatantContractTests
         Assert.Equal(initialHp - 10.0f, combatant.CurrentHp);
     }
 }
-

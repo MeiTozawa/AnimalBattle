@@ -146,7 +146,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     /// <param name="toleranceY">垂直許容誤差（省略時は設定値を採用）</param>
     /// <param name="marginX">水平許容マージン（半身はみ出し許容用、省略時は設定値を採用）</param>
     /// <returns>該当するプラットフォーム、存在しない場合は null</returns>
-    private PlatformNode? FindNodeAt(float x, float footY, float? toleranceY = null, float? marginX = null)
+    public PlatformNode? FindNodeAt(float x, float footY, float? toleranceY = null, float? marginX = null)
     {
         var tolY = toleranceY ?? Config.BossNodeToleranceY;
         var marX = marginX ?? Config.BossNodeMarginX;
