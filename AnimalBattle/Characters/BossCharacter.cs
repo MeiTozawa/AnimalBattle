@@ -3,6 +3,7 @@ using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Characters.Boss;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps.Navigation;
 using Flecs.NET.Core;
@@ -13,7 +14,7 @@ namespace AnimalBattle.Characters;
 ///     多 Boss（Boss 1 / Boss 2）の生命周期、状態遷移、物理、弾幕および描画用データ同期を一元管理する領域モデルクラスです。
 ///     实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
-public sealed class BossCharacter : ICharacter {
+public sealed class BossCharacter : ICharacter, IBossController {
     private readonly Boss1BehaviorState? _boss1State;
     private readonly Boss2BehaviorState? _boss2State;
     private readonly Entity _entity;
@@ -190,6 +191,9 @@ public sealed class BossCharacter : ICharacter {
 
     /// <summary>対応する Flecs エンティティ句柄を取得します。</summary>
     public Entity Entity => _entity;
+
+    /// <summary>受控キャラクター契約インターフェースを取得します。</summary>
+    public ICharacter Character => this;
 
     /// <summary>対応する Flecs エンティティ ID を取得します。</summary>
     public ulong EntityId => _entity.Id;
@@ -578,5 +582,11 @@ public sealed class BossCharacter : ICharacter {
         {
             return _random.NextSingle();
         }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        // マネージドリソースの追加解放なし
     }
 }
