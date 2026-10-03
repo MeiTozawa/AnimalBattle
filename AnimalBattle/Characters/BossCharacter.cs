@@ -6,6 +6,7 @@ using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Characters.Boss;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps.Navigation;
+using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters;
@@ -14,7 +15,7 @@ namespace AnimalBattle.Characters;
 ///     多 Boss（Boss 1 / Boss 2）の生命周期、状態遷移、物理、弾幕および描画用データ同期を一元管理する領域モデルクラスです。
 ///     实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
-public sealed class BossCharacter : ICharacter, IBossController {
+public sealed class BossCharacter : IBossController {
     private readonly Boss1BehaviorState? _boss1State;
     private readonly Boss2BehaviorState? _boss2State;
     private readonly Entity _entity;
@@ -192,9 +193,6 @@ public sealed class BossCharacter : ICharacter, IBossController {
     /// <summary>対応する Flecs エンティティ句柄を取得します。</summary>
     public Entity Entity => _entity;
 
-    /// <summary>受控キャラクター契約インターフェースを取得します。</summary>
-    public ICharacter Character => this;
-
     /// <summary>対応する Flecs エンティティ ID を取得します。</summary>
     public ulong EntityId => _entity.Id;
 
@@ -266,12 +264,7 @@ public sealed class BossCharacter : ICharacter, IBossController {
     /// <param name="ignoreInvincible">無敵時間を無視するかどうか。</param>
     public void TakeDamage(float damage, bool ignoreInvincible = false)
     {
-        if (damage <= 0.0f || !IsAlive) return;
-
-        if (!ignoreInvincible && IsInvulnerable) return;
-
-        var finalDamage = IsVulnerable ? damage * 2.0f : damage;
-        CurrentHp -= finalDamage;
+        DamageSystem.ApplyDamage(_entity, damage, ignoreInvincible);
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using AnimalBattle.Configs;
+using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters;
@@ -7,7 +8,7 @@ namespace AnimalBattle.Characters;
 ///     プレイヤー自機の移動、跳躍、重力、射撃瞄準およびアニメーション状態を一元管理する領域モデルクラスです。
 ///     实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
-public sealed class Player : ICharacter {
+public sealed class Player {
     private static readonly StringId ClipIdle = "Idle";
     private static readonly StringId ClipRun = "Run";
     private static readonly StringId ClipJump = "Jump";
@@ -164,6 +165,9 @@ public sealed class Player : ICharacter {
         }
     }
 
+    /// <summary>ECS Health コンポーネントへの参照を取得します。</summary>
+    public ref readonly Health Health => ref _entity.Get<Health>();
+
     /// <summary>現在の HP を取得または設定します。</summary>
     public float CurrentHp {
         get => _entity.Has<Health>() ? _entity.Get<Health>().Current : 0.0f;
@@ -183,6 +187,7 @@ public sealed class Player : ICharacter {
     /// <summary>プレイヤーが生存中であるかを取得します。</summary>
     public bool IsAlive => CurrentHp > 0.0f;
 
+
     /// <summary>
     ///     プレイヤーにダメージを与えます。
     /// </summary>
@@ -190,11 +195,7 @@ public sealed class Player : ICharacter {
     /// <param name="ignoreInvincible">無敵時間を無視するかどうか。</param>
     public void TakeDamage(float damage, bool ignoreInvincible = false)
     {
-        if (damage <= 0.0f || !IsAlive) return;
-
-        if (!ignoreInvincible && IsInvincible) return;
-
-        CurrentHp -= damage;
+        DamageSystem.ApplyDamage(_entity, damage, ignoreInvincible);
     }
 
     /// <summary>

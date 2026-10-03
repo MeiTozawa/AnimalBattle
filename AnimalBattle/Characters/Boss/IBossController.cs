@@ -12,17 +12,14 @@ public interface IBossController : IDisposable
     /// <summary>Boss の種別を取得します。</summary>
     BossType BossType { get; }
 
-    /// <summary>関連する受控キャラクター領域エンティティ契約を取得します。</summary>
-    ICharacter Character { get; }
-
     /// <summary>現在の HP を取得します。</summary>
-    float CurrentHp => Character.CurrentHp;
+    float CurrentHp { get; }
 
     /// <summary>最大 HP を取得します。</summary>
-    float MaxHp => Character.MaxHp;
+    float MaxHp { get; }
 
     /// <summary>生存中かどうかを取得します。</summary>
-    bool IsAlive => Character.IsAlive;
+    bool IsAlive { get; }
 
     /// <summary>対応する Flecs エンティティ句柄を取得します。</summary>
     Entity Entity { get; }
