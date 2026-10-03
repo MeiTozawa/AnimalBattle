@@ -87,7 +87,7 @@ public sealed class DebugRenderSystem(World world) : IDisposable {
     {
         hurtboxQuery.Each((e, ref trans, ref hurtbox) =>
         {
-            if (hurtbox.Owner != null && !hurtbox.Owner.Health.IsAlive) return;
+            if (e.Has<Health>() && e.Get<Health>().Current <= 0.0f) return;
 
             var hurtColor = hurtbox.Faction switch {
                 Faction.Friendly => dbgCfg.PlayerHurtboxColor,

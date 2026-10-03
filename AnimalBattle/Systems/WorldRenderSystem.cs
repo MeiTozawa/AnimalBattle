@@ -1,6 +1,7 @@
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Characters;
+using AnimalBattle.Characters.Boss;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps;
 using AnimalBattle.Scenes;
@@ -112,8 +113,8 @@ public sealed class WorldRenderSystem : IDisposable {
     public void Render(
         TileMap? tileMap,
         Query<Transform, CollisionBox> platformQuery,
-        Player? player,
-        BossCharacter? boss)
+        ICharacter? player,
+        IBossController? boss)
     {
         var renderCfg = ConfigManager.Render;
         var bossFx = renderCfg.BossEffects;
@@ -154,9 +155,9 @@ public sealed class WorldRenderSystem : IDisposable {
             });
     }
 
-    private static void DrawBoss(BossCharacter? boss, BossEffectsRenderConfig bossFx, float playerX, float playerY)
+    private static void DrawBoss(IBossController? boss, BossEffectsRenderConfig bossFx, float playerX, float playerY)
     {
-        if (boss == null || !boss.Health.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
+        if (boss == null || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
 
         var bx = (int)boss.X;
         var by = (int)boss.Y;
@@ -461,13 +462,14 @@ public sealed class WorldRenderSystem : IDisposable {
         }
     }
 
-    private static void DrawPlayer(Player? player)
+    private static void DrawPlayer(ICharacter? player)
     {
-        if (player == null || !player.Health.IsAlive || !player.Sprite.IsVisible || player.Sprite.GraphHandle < 0) return;
+        if (player == null || !player.IsAlive || !player.Sprite.IsVisible || player.Sprite.GraphHandle < 0) return;
 
         var isFlashing = player.IsFlashing;
-        var isInvincibleBlinking = !isFlashing && player.Health.InvincibleTimer > 0.0f &&
-            (int)(player.Health.InvincibleTimer * 30.0f) % 2 != 0;
+        var invTimer = player.Entity.Get<Health>().InvincibleTimer;
+        var isInvincibleBlinking = !isFlashing && invTimer > 0.0f &&
+            (int)(invTimer * 30.0f) % 2 != 0;
 
         if (!isInvincibleBlinking)
             GameEngine.DrawRectRotaGraph(

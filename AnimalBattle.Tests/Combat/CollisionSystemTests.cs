@@ -1,4 +1,3 @@
-using AnimalBattle.Characters;
 using AnimalBattle.Components;
 using AnimalBattle.Systems;
 using Flecs.NET.Core;
@@ -8,20 +7,16 @@ namespace AnimalBattle.Tests.Combat;
 
 public class CollisionSystemTests
 {
-    private sealed class DummyDamageable(float maxHp) : IDamageable {
-        public Health Health { get; } = new(maxHp);
-    }
-
     [Fact]
     public void CombatCollisionSystem_DisjointAabb_PrunesWithoutDamage()
     {
         using World world = World.Create();
         world.AddCombatCollisionSystem();
 
-        var victimCombatant = new DummyDamageable(100.0f);
         Entity victim = world.Entity("Victim")
             .Set(new Transform(800.0f, 600.0f))
-            .Set(new Hurtbox(new CollisionShape.Box(40.0f, 40.0f), Faction.Hostile, victimCombatant));
+            .Set(new Health(100.0f))
+            .Set(new Hurtbox(new CollisionShape.Box(40.0f, 40.0f), Faction.Hostile));
 
         Entity attacker = world.Entity("Attacker")
             .Set(new Transform(100.0f, 100.0f))
@@ -29,7 +24,7 @@ public class CollisionSystemTests
 
         world.Progress(0.016f);
 
-        Assert.Equal(100.0f, victimCombatant.Health.Current);
+        Assert.Equal(100.0f, victim.Get<Health>().Current);
         Assert.True(attacker.IsAlive());
     }
 
@@ -39,10 +34,10 @@ public class CollisionSystemTests
         using World world = World.Create();
         world.AddCombatCollisionSystem();
 
-        var victimCombatant = new DummyDamageable(100.0f);
         Entity victim = world.Entity("Victim")
             .Set(new Transform(200.0f, 200.0f))
-            .Set(new Hurtbox(new CollisionShape.Box(40.0f, 40.0f), Faction.Hostile, victimCombatant));
+            .Set(new Health(100.0f))
+            .Set(new Hurtbox(new CollisionShape.Box(40.0f, 40.0f), Faction.Hostile));
 
         Entity attacker = world.Entity("Attacker")
             .Set(new Transform(205.0f, 200.0f))
@@ -50,7 +45,7 @@ public class CollisionSystemTests
 
         world.Progress(0.016f);
 
-        Assert.True(victimCombatant.Health.Current < 100.0f);
+        Assert.True(victim.Get<Health>().Current < 100.0f);
         Assert.False(attacker.IsAlive());
     }
 }

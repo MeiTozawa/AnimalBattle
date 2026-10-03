@@ -9,13 +9,13 @@ namespace AnimalBattle.Characters;
 /// </summary>
 public sealed class PlayerController
 {
-    private readonly Player _player;
+    private readonly ICharacter _player;
 
     /// <summary>
     ///     制御対象の自機プレイヤー（Pawn）を指定してコントローラーを初期化します。
     /// </summary>
     /// <param name="player">制御対象のプレイヤーインスタンス。</param>
-    public PlayerController(Player player)
+    public PlayerController(ICharacter player)
     {
         System.Diagnostics.Debug.Assert(player != null, "Player インスタンスは null であってはなりません。");
         _player = player!;
@@ -26,7 +26,7 @@ public sealed class PlayerController
     /// </summary>
     public void PollAndProcessInput()
     {
-        if (!_player.Health.IsAlive) return;
+        if (!_player.IsAlive) return;
 
         var isLeft = InputService.IsHolding(InputAction.Left);
         var isRight = InputService.IsHolding(InputAction.Right);
@@ -52,7 +52,7 @@ public sealed class PlayerController
         }
         else
         {
-            dirX = _player.Sprite.FlipX ? -1.0f : 1.0f;
+            dirX = _player.Entity.Get<Sprite>().FlipX ? -1.0f : 1.0f;
             dirY = 0.0f;
         }
 
@@ -79,28 +79,19 @@ public sealed class PlayerController
         var entity = _player.Entity;
         if (!entity.IsAlive()) return;
 
-        if (entity.Has<CharacterMovementIntent>())
-        {
-            ref var moveIntent = ref entity.GetMut<CharacterMovementIntent>();
-            moveIntent.MoveX = moveX;
-            moveIntent.JumpTriggered = jumpPressed;
-            moveIntent.JumpHolding = jumpHolding;
-        }
+        ref var moveIntent = ref entity.GetMut<CharacterMovementIntent>();
+        moveIntent.MoveX = moveX;
+        moveIntent.JumpTriggered = jumpPressed;
+        moveIntent.JumpHolding = jumpHolding;
 
-        if (entity.Has<CharacterWeaponIntent>())
-        {
-            ref var weaponIntent = ref entity.GetMut<CharacterWeaponIntent>();
-            weaponIntent.ShootTriggered = shootPressed;
-            weaponIntent.AimDirectionX = aimDirX ?? (_player.Sprite.FlipX ? -1.0f : 1.0f);
-            weaponIntent.AimDirectionY = aimDirY ?? 0.0f;
-        }
+        ref var weaponIntent = ref entity.GetMut<CharacterWeaponIntent>();
+        weaponIntent.ShootTriggered = shootPressed;
+        weaponIntent.AimDirectionX = aimDirX ?? (entity.Get<Sprite>().FlipX ? -1.0f : 1.0f);
+        weaponIntent.AimDirectionY = aimDirY ?? 0.0f;
 
         // 移動入力に応じた描画スプライトの左右反転同期
-        if (entity.Has<Sprite>())
-        {
-            ref var spr = ref entity.GetMut<Sprite>();
-            if (moveX < -0.01f) spr.FlipX = true;
-            else if (moveX > 0.01f) spr.FlipX = false;
-        }
+        ref var spr = ref entity.GetMut<Sprite>();
+        if (moveX < -0.01f) spr.FlipX = true;
+        else if (moveX > 0.01f) spr.FlipX = false;
     }
 }

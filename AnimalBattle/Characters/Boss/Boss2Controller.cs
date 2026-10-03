@@ -30,8 +30,6 @@ public sealed class Boss2Controller : IBossController
     /// <inheritdoc />
     public BossType BossType => _boss.BossType;
 
-    /// <inheritdoc />
-    public Health Health => _boss.Health;
 
     /// <inheritdoc />
     public Entity Entity => _boss.Entity;
@@ -58,10 +56,17 @@ public sealed class Boss2Controller : IBossController
     public float HoverTimer => _boss.HoverTimer;
 
     /// <inheritdoc />
-    public bool FacingRight => _boss.FacingRight;
+    public float TargetX => _boss.TargetX;
 
     /// <inheritdoc />
-    public bool IsFlashing => _boss.IsFlashing;
+    public float TargetY => _boss.TargetY;
+
+    /// <inheritdoc />
+    public bool IsVulnerable => _boss.IsVulnerable;
+
+    /// <inheritdoc />
+    public bool FacingRight => _boss.FacingRight;
+
 
     /// <inheritdoc />
     public void Update(

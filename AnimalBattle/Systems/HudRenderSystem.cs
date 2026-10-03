@@ -43,7 +43,7 @@ public static class HudRenderSystem {
     /// <param name="player">現在アクティブなプレイヤー自機。</param>
     /// <param name="boss">Boss コントローラー。</param>
     /// <param name="remainingJumps">プレイヤーの二段ジャンプ残数。</param>
-    public static void Render(Player? player, IBossController? boss, int remainingJumps = 0)
+    public static void Render(ICharacter? player, IBossController? boss, int remainingJumps = 0)
     {
         var renderCfg = ConfigManager.Render;
         var hudCfg = renderCfg.Hud;
@@ -85,7 +85,7 @@ public static class HudRenderSystem {
         GameEngine.DrawString(hudCfg.TitleX, switchGuideY, hudCfg.BossSwitchGuideText, hudCfg.BossSwitchGuideColor);
     }
 
-    private static void DrawPlayerStatus(Player? player, int remainingJumps, HudRenderConfig hudCfg)
+    private static void DrawPlayerStatus(ICharacter? player, int remainingJumps, HudRenderConfig hudCfg)
     {
         if (player == null) return;
 
@@ -97,14 +97,14 @@ public static class HudRenderSystem {
         var jumpColor = remainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
         GameEngine.DrawString(hudCfg.DoubleJumpX, hudCfg.DoubleJumpY, jumpText, jumpColor);
 
-        var currentHp = Math.Clamp((int)player.Health.Current, 0, 3);
+        var currentHp = Math.Clamp((int)player.CurrentHp, 0, 3);
         var hpColor = currentHp switch {
             >= 3 => hudCfg.PlayerHpHighColor,
             2 => hudCfg.PlayerHpMidColor,
             1 => hudCfg.PlayerHpLowColor,
             _ => hudCfg.PlayerHpDeadColor
         };
-        var hpText = player.Health.IsInvincible
+        var hpText = player.IsInvincible
             ? $"HP: {PlayerHpSymbols[currentHp]} ({currentHp}/3) [INVINCIBLE]"
             : PlayerHpLut[currentHp];
         GameEngine.DrawString(hudCfg.PlayerHpX, hudCfg.PlayerHpY, hpText, hpColor);
@@ -117,7 +117,7 @@ public static class HudRenderSystem {
         var phase = ToLegacyPhase(boss.Phase);
         var bossTitle = GetBossTitle(boss.BossType, phase);
         GetBossStateInfo(boss.CurrentState, boss.CurrentSkill, hpCfg, out var stateName, out var stateBadgeColor);
-        DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, boss.Health.Current, boss.Health.Max, phase,
+        DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, boss.CurrentHp, boss.MaxHp, phase,
             boss.StateTimer, boss.StateDuration);
     }
 
@@ -129,9 +129,9 @@ public static class HudRenderSystem {
         return BossTitles[0];
     }
 
-    private static void DrawGameOverModal(Player? player, ModalRenderConfig modalCfg)
+    private static void DrawGameOverModal(ICharacter? player, ModalRenderConfig modalCfg)
     {
-        if (player != null && !player.Health.IsAlive)
+        if (player != null && !player.IsAlive)
         {
             GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2,
                 modalCfg.GameOverBgColor, true);

@@ -13,11 +13,14 @@ public sealed class PlayerConfig {
     /// <summary>被弾後の無敵時間（秒）</summary>
     public float InvincibleDuration { get; set; }
 
+    /// <summary>被弾時ホワイトフラッシュ持続時間（秒）</summary>
+    public float HitFlashDuration { get; set; }
+
     /// <summary>プレイヤーの左右移動速度（ピクセル/秒基準）</summary>
     public float MoveSpeed { get; set; }
 
     /// <summary>移動・歩行アニメーション切り替え判定の速度閾値（ピクセル/秒）</summary>
-    public float WalkAnimVelocityThreshold { get; set; } = 0.1f;
+    public float WalkAnimVelocityThreshold { get; set; }
 
     /// <summary>地上初段ジャンプの初速度（上向き負値）</summary>
     public float FirstJumpVelocity { get; set; }

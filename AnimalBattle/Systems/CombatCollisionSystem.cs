@@ -61,14 +61,18 @@ public static class CombatCollisionSystem {
                             continue;
 
                         if (!target.Entity.IsAlive()) continue;
-                        if (target.Owner != null && (!target.Owner.Health.IsAlive || target.Owner.IsInvulnerable || target.Owner.Health.IsInvincible)) continue;
+                        if (target.Entity.Has<Health>())
+                        {
+                            ref readonly var hp = ref target.Entity.Get<Health>();
+                            if (hp.Current <= 0.0f || hp.InvincibleTimer > 0.0f) continue;
+                        }
 
                         ref var vicTrans = ref target.Entity.GetMut<Transform>();
                         ref var hurtbox = ref target.Entity.GetMut<Hurtbox>();
 
                         if (PhysicsService.Intersects(trans, hitbox.Shape, vicTrans, hurtbox.Shape))
                         {
-                            ApplyDamageAndEffects(world, target.Entity, ref vicTrans, ref hurtbox, target.Owner,
+                            ApplyDamageAndEffects(world, target.Entity, ref vicTrans, ref hurtbox,
                                 in hitbox, ref shouldDestroyAttacker);
                             if (shouldDestroyAttacker) break;
                         }
@@ -86,14 +90,32 @@ public static class CombatCollisionSystem {
         Entity vicEntity,
         ref Transform vicTrans,
         ref Hurtbox hurtbox,
-        IDamageable? owner,
         in Hitbox localHitbox,
         ref bool shouldDestroyAttacker)
     {
         var damage = localHitbox.Damage;
-        var isVulnerable = owner != null && owner.DamageMultiplier > 1.0f;
+        var isVulnerable = false;
+        if (vicEntity.Has<BossCombatState>())
+        {
+            ref readonly var combat = ref vicEntity.Get<BossCombatState>();
+            isVulnerable = combat.IsVulnerable;
+        }
 
-        owner?.TakeDamage(damage);
+        if (isVulnerable)
+        {
+            damage *= ConfigManager.Player.VulnerableDamageMultiplier;
+        }
+
+        if (vicEntity.Has<Health>())
+        {
+            ref var hp = ref vicEntity.GetMut<Health>();
+            hp.Current = MathF.Max(0.0f, hp.Current - damage);
+
+            if (vicEntity.Has<InvincibleOnHit>())
+            {
+                hp.InvincibleTimer = vicEntity.Get<InvincibleOnHit>().Duration;
+            }
+        }
 
         CombatEffectHelper.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX,
             vicTrans.Y + hurtbox.Shape.OffsetY);
@@ -108,13 +130,16 @@ public static class CombatCollisionSystem {
         }
 
         // 受撃白閃演出を付与（Ease-Out 減衰）
-        vicEntity.Set(new HitFlashEffect(0.08f, Color.White));
+        var flashDuration = vicEntity.Has<HitFlashConfig>() ? vicEntity.Get<HitFlashConfig>().Duration : 0.08f;
+        var flashColor = vicEntity.Has<HitFlashConfig>() ? vicEntity.Get<HitFlashConfig>().Color : Color.White;
+        vicEntity.Set(new HitFlashEffect(flashDuration, flashColor));
 
-        var isAlive = owner?.Health.IsAlive ?? true;
+        var isAlive = vicEntity.Has<Health>() ? vicEntity.Get<Health>().Current > 0.0f : true;
         if (vicEntity.Has<PlayerTag>())
         {
             if (!isAlive)
             {
+                vicEntity.Add<DeadTag>();
                 if (vicEntity.Has<Sprite>())
                 {
                     ref var spr = ref vicEntity.GetMut<Sprite>();
@@ -128,6 +153,7 @@ public static class CombatCollisionSystem {
         {
             if (!isAlive)
             {
+                vicEntity.Add<DeadTag>();
                 if (vicEntity.Has<Sprite>())
                 {
                     ref var spr = ref vicEntity.GetMut<Sprite>();
@@ -156,7 +182,6 @@ public static class CombatCollisionSystem {
         public float HalfH;
         public Faction Faction;
         public CollisionShape Shape;
-        public IDamageable? Owner;
     }
 
     private sealed class CollisionContext {
@@ -184,15 +209,15 @@ public static class CombatCollisionSystem {
             {
                 if (TargetCount >= Targets.Length) break;
 
-                ref readonly var hb = ref hurtboxes[i];
-                var owner = hb.Owner;
-                if (owner != null)
+                var vicEntity = it.Entity(i);
+                if (vicEntity.Has<Health>())
                 {
-                    if (!owner.Health.IsAlive || owner.IsInvulnerable || owner.Health.IsInvincible)
+                    ref readonly var hp = ref vicEntity.Get<Health>();
+                    if (hp.Current <= 0.0f || hp.InvincibleTimer > 0.0f)
                         continue;
                 }
 
-                var vicEntity = it.Entity(i);
+                ref readonly var hb = ref hurtboxes[i];
                 ref readonly var t = ref trans[i];
 
                 var cX = t.X + hb.Shape.OffsetX;
@@ -207,8 +232,7 @@ public static class CombatCollisionSystem {
                     HalfW = halfW,
                     HalfH = halfH,
                     Faction = hb.Faction,
-                    Shape = hb.Shape,
-                    Owner = owner
+                    Shape = hb.Shape
                 };
             }
         }

@@ -7,13 +7,10 @@ namespace AnimalBattle.Characters.Boss;
 ///     多態 Boss 領域コントローラーの統一抽象契約。
 ///     高レベル AI 状態遷移、行動評価、および指令適用ライフサイクルを統括します。
 /// </summary>
-public interface IBossController : IDamageable, IDisposable
+public interface IBossController : ICharacter, IDisposable
 {
     /// <summary>Boss の種別を取得します。</summary>
     BossType BossType { get; }
-
-    /// <summary>対応する Flecs エンティティ句柄を取得します。</summary>
-    Entity Entity { get; }
 
     /// <summary>現在の Phase を取得します。</summary>
     Phase Phase { get; }
@@ -36,11 +33,17 @@ public interface IBossController : IDamageable, IDisposable
     /// <summary>Boss 1 の浮遊タイマー値を取得します。</summary>
     float HoverTimer { get; }
 
+    /// <summary>AI 目標地点 X 座標を取得します。</summary>
+    float TargetX { get; }
+
+    /// <summary>AI 目標地点 Y 座標を取得します。</summary>
+    float TargetY { get; }
+
+    /// <summary>Boss が後隙による易傷（被ダメージ倍加）状態であるかを取得します。</summary>
+    bool IsVulnerable { get; }
+
     /// <summary>Boss が右向きであるかを取得します。</summary>
     bool FacingRight { get; }
-
-    /// <summary>被弾時白閃演出中であるかを取得します。</summary>
-    bool IsFlashing { get; }
 
     /// <summary>
     ///     フレームごとの Boss AI 評価、移動・弾幕・演出コマンド適用を実行します。

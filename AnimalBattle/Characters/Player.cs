@@ -2,22 +2,24 @@ using AnimalBattle.Configs;
 using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
+using System.Drawing;
+
 namespace AnimalBattle.Characters;
 
 /// <summary>
 ///     プレイヤー自機の移動、跳躍、重力、射撃瞄準およびアニメーション状態を一元管理する領域モデルクラスです。
 ///     实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
-public sealed class Player : IDamageable {
+public sealed class Player : ICharacter {
     private static readonly StringId ClipIdle = "Idle";
     private static readonly StringId ClipRun = "Run";
     private static readonly StringId ClipJump = "Jump";
     private static readonly StringId ClipFall = "Fall";
 
-    private Entity _entity;
+    private readonly Entity _entity;
 
     /// <summary>プレイヤーのヘルス情報を取得します。</summary>
-    public Health Health { get; }
+    public ref readonly Health Health => ref _entity.Get<Health>();
 
     /// <summary>
     ///     設定情報と Flecs エンティティ句柄を指定して、プレイヤー自機を初期化します。
@@ -29,12 +31,14 @@ public sealed class Player : IDamageable {
     {
         System.Diagnostics.Debug.Assert(pCfg != null, "PlayerConfig は null であってはなりません。");
         _entity = entity;
-        Health = new Health(pCfg.MaxHp);
 
-        _entity.Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
+        _entity.Set(new Health(pCfg.MaxHp))
+           .Set(new InvincibleOnHit(pCfg.InvincibleDuration))
+           .Set(new HitFlashConfig(pCfg.HitFlashDuration, Color.White))
+           .Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
            .Set(new Velocity(0.0f))
            .Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight))
-           .Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly, this))
+           .Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly))
            .Set(new Animation("Idle"))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 64, 64)))
            .Set(new CharacterMovementIntent())
@@ -50,9 +54,10 @@ public sealed class Player : IDamageable {
     public PlayerState CurrentState {
         get
         {
-            if (!Health.IsAlive) return PlayerState.Dead;
+            ref readonly var hp = ref _entity.Get<Health>();
+            if (hp.Current <= 0.0f) return PlayerState.Dead;
 
-            if (IsFlashing || Health.IsInvincible) return PlayerState.Hurt;
+            if (hp.InvincibleTimer > 0.0f) return PlayerState.Hurt;
 
             if (IsGrounded) return PlayerState.Grounded;
 
@@ -60,100 +65,52 @@ public sealed class Player : IDamageable {
         }
     }
 
-    /// <summary>被弾時白閃演出中であるかを取得します。</summary>
-    public bool IsFlashing => _entity.IsAlive() && _entity.Has<HitFlashEffect>();
-
     /// <summary>接地状態であるかを取得または設定します。</summary>
     public bool IsGrounded {
-        get => _entity.Has<CollisionBox>() && _entity.Get<CollisionBox>().IsGrounded;
-        set
-        {
-            if (_entity.Has<CollisionBox>()) _entity.GetMut<CollisionBox>().IsGrounded = value;
-        }
+        get => _entity.Get<CollisionBox>().IsGrounded;
+        set => _entity.GetMut<CollisionBox>().IsGrounded = value;
     }
 
     /// <summary>残り跳躍可能回数を取得または設定します。</summary>
     public int RemainingJumps {
-        get => _entity.Has<JumpCapability>() ? _entity.Get<JumpCapability>().RemainingJumps : 0;
-        set
-        {
-            if (_entity.Has<JumpCapability>())
-            {
-                _entity.GetMut<JumpCapability>().RemainingJumps = value;
-            }
-        }
+        get => _entity.Get<JumpCapability>().RemainingJumps;
+        set => _entity.GetMut<JumpCapability>().RemainingJumps = value;
     }
 
     /// <summary>射撃クールダウンの残り秒数を取得または設定します。</summary>
     public float ShootCooldown {
-        get => _entity.Has<WeaponState>() ? _entity.Get<WeaponState>().CooldownRemaining : 0.0f;
-        set
-        {
-            if (_entity.Has<WeaponState>())
-            {
-                _entity.GetMut<WeaponState>().CooldownRemaining = Math.Max(0.0f, value);
-            }
-        }
+        get => _entity.Get<WeaponState>().CooldownRemaining;
+        set => _entity.GetMut<WeaponState>().CooldownRemaining = Math.Max(0.0f, value);
     }
 
     /// <summary>地形衝突判定ボックスを取得します。</summary>
-    public CollisionBox CollisionBox => _entity.Has<CollisionBox>() ? _entity.Get<CollisionBox>() : default;
-
-    /// <summary>アニメーション制御インスタンスを取得します。</summary>
-    public Animation Animation => _entity.Has<Animation>() ? _entity.Get<Animation>() : default;
-
-    /// <summary>スプライト描画設定インスタンスを取得します。</summary>
-    public Sprite Sprite => _entity.Has<Sprite>() ? _entity.Get<Sprite>() : default;
-
-    /// <summary>プレイヤーの描画スケール X を取得します。</summary>
-    public float ScaleX => _entity.Has<Transform>() ? _entity.Get<Transform>().ScaleX : 1.0f;
-
-    /// <summary>プレイヤーの描画スケール Y を取得します。</summary>
-    public float ScaleY => _entity.Has<Transform>() ? _entity.Get<Transform>().ScaleY : 1.0f;
+    public CollisionBox CollisionBox => _entity.Get<CollisionBox>();
 
     /// <summary>対応する Flecs エンティティ句柄を取得します。</summary>
     public Entity Entity => _entity;
 
-    /// <summary>対応する Flecs エンティティ ID を取得します。</summary>
-    public ulong EntityId => _entity.Id;
-
-    /// <summary>プレイヤーの所属陣営（常に味方）を取得します。</summary>
-    public Faction Faction => Faction.Friendly;
-
     /// <summary>プレイヤーのワールド X 座標を取得または設定します。</summary>
     public float X {
-        get => _entity.Has<Transform>() ? _entity.Get<Transform>().X : 0.0f;
-        set
-        {
-            if (_entity.Has<Transform>()) _entity.GetMut<Transform>().X = value;
-        }
+        get => _entity.Get<Transform>().X;
+        set => _entity.GetMut<Transform>().X = value;
     }
 
     /// <summary>プレイヤーのワールド Y 座標を取得または設定します。</summary>
     public float Y {
-        get => _entity.Has<Transform>() ? _entity.Get<Transform>().Y : 0.0f;
-        set
-        {
-            if (_entity.Has<Transform>()) _entity.GetMut<Transform>().Y = value;
-        }
+        get => _entity.Get<Transform>().Y;
+        set => _entity.GetMut<Transform>().Y = value;
     }
 
     /// <summary>プレイヤーの X 軸移動速度を取得または設定します。</summary>
     public float Vx {
-        get => _entity.Has<Velocity>() ? _entity.Get<Velocity>().Vx : 0.0f;
-        set
-        {
-            if (_entity.Has<Velocity>()) _entity.GetMut<Velocity>().Vx = value;
-        }
+        get => _entity.Get<Velocity>().Vx;
+        set => _entity.GetMut<Velocity>().Vx = value;
     }
 
     /// <summary>プレイヤーの Y 軸移動速度を取得または設定します。</summary>
     public float Vy {
-        get => _entity.Has<Velocity>() ? _entity.Get<Velocity>().Vy : 0.0f;
-        set
-        {
-            if (_entity.Has<Velocity>()) _entity.GetMut<Velocity>().Vy = value;
-        }
+        get => _entity.Get<Velocity>().Vy;
+        set => _entity.GetMut<Velocity>().Vy = value;
     }
 
     /// <summary>
@@ -162,7 +119,7 @@ public sealed class Player : IDamageable {
     /// <param name="actualDamage">実際に適用されたダメージ量。</param>
     public void OnDamaged(float actualDamage)
     {
-        Health.InvincibleTimer = ConfigManager.Player.InvincibleDuration;
+        _entity.GetMut<Health>().InvincibleTimer = ConfigManager.Player.InvincibleDuration;
     }
 
     /// <summary>
@@ -180,17 +137,17 @@ public sealed class Player : IDamageable {
     {
         System.Diagnostics.Debug.Assert(arenaCfg != null, "ArenaConfig は null であってはなりません。");
 
-        Health.UpdateInvincibility(dt);
-
-        if (!Health.IsAlive)
+        ref var h = ref _entity.GetMut<Health>();
+        if (h.InvincibleTimer > 0.0f)
         {
-            if (_entity.Has<Velocity>())
-            {
-                ref var v = ref _entity.GetMut<Velocity>();
-                v.Vx = 0.0f;
-                v.Vy = 0.0f;
-            }
+            h.InvincibleTimer = Math.Max(0.0f, h.InvincibleTimer - dt);
+        }
 
+        if (h.Current <= 0.0f)
+        {
+            ref var v = ref _entity.GetMut<Velocity>();
+            v.Vx = 0.0f;
+            v.Vy = 0.0f;
             return;
         }
 
@@ -212,75 +169,44 @@ public sealed class Player : IDamageable {
     {
         System.Diagnostics.Debug.Assert(pCfg != null, "PlayerConfig は null であってはなりません。");
 
-        if (_entity.Has<Transform>())
-        {
-            ref var t = ref _entity.GetMut<Transform>();
-            t.X = pCfg.SpawnX;
-            t.Y = pCfg.SpawnY;
-            t.ScaleX = pCfg.ScaleX;
-            t.ScaleY = pCfg.ScaleY;
-        }
+        ref var t = ref _entity.GetMut<Transform>();
+        t.X = pCfg.SpawnX;
+        t.Y = pCfg.SpawnY;
+        t.ScaleX = pCfg.ScaleX;
+        t.ScaleY = pCfg.ScaleY;
 
-        if (_entity.Has<Velocity>())
-        {
-            ref var v = ref _entity.GetMut<Velocity>();
-            v.Vx = 0.0f;
-            v.Vy = 0.0f;
-        }
+        ref var v = ref _entity.GetMut<Velocity>();
+        v.Vx = 0.0f;
+        v.Vy = 0.0f;
 
-        Health.Max = pCfg.MaxHp;
-        Health.Current = pCfg.MaxHp;
-        Health.InvincibleTimer = 0.0f;
+        ref var h = ref _entity.GetMut<Health>();
+        h.Max = pCfg.MaxHp;
+        h.Current = pCfg.MaxHp;
+        h.InvincibleTimer = 0.0f;
 
-        if (_entity.Has<CollisionBox>())
-        {
-            ref var c = ref _entity.GetMut<CollisionBox>();
-            c.IsGrounded = false;
-            c.IsOnWall = false;
-        }
+        ref var c = ref _entity.GetMut<CollisionBox>();
+        c.IsGrounded = false;
+        c.IsOnWall = false;
 
-        if (_entity.Has<JumpCapability>())
-        {
-            _entity.Set(JumpCapability.FromPlayerConfig(pCfg));
-        }
+        _entity.Set(JumpCapability.FromPlayerConfig(pCfg));
+        _entity.Set(WeaponState.FromPlayerConfig(pCfg));
+        _entity.GetMut<CharacterMovementIntent>().Reset();
+        _entity.GetMut<CharacterWeaponIntent>().Reset();
 
-        if (_entity.Has<WeaponState>())
-        {
-            _entity.Set(WeaponState.FromPlayerConfig(pCfg));
-        }
+        ref var anim = ref _entity.GetMut<Animation>();
+        anim.Play(ClipIdle);
 
-        if (_entity.Has<CharacterMovementIntent>())
-        {
-            _entity.GetMut<CharacterMovementIntent>().Reset();
-        }
-
-        if (_entity.Has<CharacterWeaponIntent>())
-        {
-            _entity.GetMut<CharacterWeaponIntent>().Reset();
-        }
-
-        if (_entity.Has<Animation>())
-        {
-            ref var anim = ref _entity.GetMut<Animation>();
-            anim.Play(ClipIdle);
-        }
-
-        if (_entity.Has<Sprite>())
-        {
-            ref var spr = ref _entity.GetMut<Sprite>();
-            spr.FlipX = false;
-            spr.IsVisible = true;
-        }
+        ref var spr = ref _entity.GetMut<Sprite>();
+        spr.FlipX = false;
+        spr.IsVisible = true;
 
         UpdateAnimation(0.0f);
 
-        if (_entity.IsAlive() && _entity.Has<HitFlashEffect>()) _entity.Remove<HitFlashEffect>();
+        if (_entity.IsAlive()) _entity.Remove<HitFlashEffect>();
     }
 
     private void UpdateAnimation(float dt)
     {
-        if (!_entity.Has<Animation>()) return;
-
         ref var anim = ref _entity.GetMut<Animation>();
         ref readonly var vel = ref _entity.Get<Velocity>();
         ref readonly var col = ref _entity.Get<CollisionBox>();
