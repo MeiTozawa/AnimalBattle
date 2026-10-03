@@ -201,7 +201,7 @@ public class BattleScene : IDisposable {
             if (bossEntity.IsAlive() && bossEntity.Has<Boss1Tag>())
             {
                 var bCfg = ConfigManager.Boss1;
-                bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
+                bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile, Boss));
                 bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), bCfg.BodyContactDamage, Faction.Hostile, false));
 
                 if (bossEntity.Has<Transform>())
@@ -224,7 +224,7 @@ public class BattleScene : IDisposable {
             if (bossEntity.IsAlive() && bossEntity.Has<Boss2Tag>())
             {
                 var bCfg = ConfigManager.Boss2;
-                bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
+                bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile, Boss));
                 bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), bCfg.BodyContactDamage, Faction.Hostile, false));
                 bossEntity.Set(new CollisionBox(bCfg.CollisionWidth, bCfg.CollisionHeight));
 
@@ -246,7 +246,7 @@ public class BattleScene : IDisposable {
         var playerEntity = _ecsWorld.Lookup("Player1");
         if (!playerEntity.IsAlive()) return;
         var pCfg = ConfigManager.Player;
-        playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
+        playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly, Player));
         playerEntity.Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight));
 
         if (playerEntity.Has<Transform>())

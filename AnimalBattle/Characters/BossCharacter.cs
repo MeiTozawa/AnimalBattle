@@ -4,6 +4,7 @@ using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Characters.Boss;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps.Navigation;
 using AnimalBattle.Systems;
@@ -15,7 +16,7 @@ namespace AnimalBattle.Characters;
 ///     多 Boss（Boss 1 / Boss 2）の生命周期、状態遷移、物理、弾幕および描画用データ同期を一元管理する領域モデルクラスです。
 ///     实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
-public sealed class BossCharacter : IBossController {
+public sealed class BossCharacter : IBossController, IDamageable {
     private readonly Boss1BehaviorState? _boss1State;
     private readonly Boss2BehaviorState? _boss2State;
     private readonly Entity _entity;
@@ -23,6 +24,9 @@ public sealed class BossCharacter : IBossController {
     private readonly BossRuntimeSlot _slot;
     private int _aiErrorLoggedCount;
     private long _frameNumber;
+
+    /// <summary>Boss のヘルス情報を取得します。</summary>
+    public Health Health { get; }
 
     /// <summary>
     ///     Boss の Flecs エンティティ、種別およびスプライトハンドルを指定して BossCharacter を初期化します。
@@ -74,11 +78,12 @@ public sealed class BossCharacter : IBossController {
             if (initResult.IsError)
                 Console.WriteLine($"[BossCharacter] Boss1 初期化失敗: {initResult.FirstError.Description}");
 
+            Health = new Health(b1Cfg.MaxHp);
+
             _entity.Set(new Transform(b1Cfg.SpawnX, b1Cfg.SpawnY, b1Cfg.ScaleX, b1Cfg.ScaleY))
                .Set(new Velocity(0.0f))
-               .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
+               .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile, this))
                .Set(new Hitbox(b1Cfg.GetHitboxShape(), b1Cfg.BodyContactDamage, Faction.Hostile, false))
-               .Set(new Health(b1Cfg.MaxHp))
                .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
                .Set(new BossCombatState(IsInvulnerable, IsVulnerable, Phase))
                .Add<BossTag>()
@@ -114,17 +119,20 @@ public sealed class BossCharacter : IBossController {
             if (initResult.IsError)
                 Console.WriteLine($"[BossCharacter] Boss2 初期化失敗: {initResult.FirstError.Description}");
 
+            Health = new Health(b2Cfg.MaxHp);
+
             _entity.Set(new Transform(b2Cfg.SpawnX, b2Cfg.SpawnY, b2Cfg.ScaleX, b2Cfg.ScaleY))
                .Set(new Velocity(0.0f))
                .Set(new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight))
-               .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
+               .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile, this))
                .Set(new Hitbox(b2Cfg.GetHitboxShape(), b2Cfg.BodyContactDamage, Faction.Hostile, false))
-               .Set(new Health(b2Cfg.MaxHp))
                .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
                .Set(new BossCombatState(IsInvulnerable, IsVulnerable, Phase))
                .Add<BossTag>()
                .Add<Boss2Tag>();
         }
+
+        UpdateCombatStateComponents();
     }
 
     /// <summary>Boss の種別を取得します。</summary>
@@ -199,9 +207,6 @@ public sealed class BossCharacter : IBossController {
     /// <summary>Boss の所属陣営（常に敵性）を取得します。</summary>
     public Faction Faction => Faction.Hostile;
 
-    /// <summary>Boss が無敵状態であるかを取得します。</summary>
-    public bool IsInvincible => IsInvulnerable;
-
     /// <summary>ワールド X 座標を取得または設定します。</summary>
     public float X {
         get => _entity.Has<Transform>() ? _entity.Get<Transform>().X : 0.0f;
@@ -238,34 +243,8 @@ public sealed class BossCharacter : IBossController {
         }
     }
 
-    /// <summary>現在の HP を取得または設定します。</summary>
-    public float CurrentHp {
-        get => _entity.Has<Health>() ? _entity.Get<Health>().Current : 0.0f;
-        set
-        {
-            if (_entity.Has<Health>())
-            {
-                ref var health = ref _entity.GetMut<Health>();
-                health.Current = Math.Clamp(value, 0.0f, health.Max);
-            }
-        }
-    }
-
-    /// <summary>最大 HP を取得します。</summary>
-    public float MaxHp => _entity.Has<Health>() ? _entity.Get<Health>().Max : 0.0f;
-
-    /// <summary>Boss が生存中であるかを取得します。</summary>
-    public bool IsAlive => CurrentHp > 0.0f;
-
-    /// <summary>
-    ///     Boss にダメージを与えます。易傷状態の場合は被ダメージが 2 倍になります。
-    /// </summary>
-    /// <param name="damage">受けるダメージ量。</param>
-    /// <param name="ignoreInvincible">無敵時間を無視するかどうか。</param>
-    public void TakeDamage(float damage, bool ignoreInvincible = false)
-    {
-        DamageSystem.ApplyDamage(_entity, damage, ignoreInvincible);
-    }
+    /// <summary>被ダメージ倍率を取得します（易傷状態時は倍加）。</summary>
+    public float DamageMultiplier => IsVulnerable ? ConfigManager.Player.VulnerableDamageMultiplier : 1.0f;
 
     /// <summary>
     ///     フレームごとの Boss AI 評価、移動・弾幕・演出コマンド適用を実行します。
@@ -282,7 +261,8 @@ public sealed class BossCharacter : IBossController {
         World world,
         Query<Transform, CollisionBox> platformQuery)
     {
-        if (!IsAlive) return;
+        Health.UpdateInvincibility(deltaTime);
+        if (!Health.IsAlive) return;
 
         // 1. プレイヤー観測データの構築
         PlayerObservation playerObservation = new(
@@ -297,7 +277,7 @@ public sealed class BossCharacter : IBossController {
         // 2. AI 状態機の更新（Phase -> 状態遷移 -> コマンド生成）
         _runtime.SynchronizeBossState(BossType, X, Y, Vx, Vy, IsGrounded, playerObservation.IsAlive);
         var updateResult =
-            _runtime.Update(_slot, _frameNumber++, deltaTime, Phase, in playerObservation, CurrentHp, MaxHp);
+            _runtime.Update(_slot, _frameNumber++, deltaTime, Phase, in playerObservation, Health.Current, Health.Max);
         if (updateResult.IsError && _aiErrorLoggedCount++ < 3)
             Console.WriteLine(
                 $"[BossCharacter] AI 更新エラー (Frame {_frameNumber - 1}): {updateResult.FirstError.Description}");
@@ -316,7 +296,7 @@ public sealed class BossCharacter : IBossController {
                     ConfigManager.Render.BossEffects.BossHoverAngleAmp);
         }
 
-        _entity.Set(new BossCombatState(IsInvulnerable, IsVulnerable, Phase));
+        UpdateCombatStateComponents();
         _slot.AiData.StateTimer = StateTimer;
         _slot.AiData.StateDuration = StateDuration;
 
@@ -360,13 +340,9 @@ public sealed class BossCharacter : IBossController {
                 t.Rotation = 0.0f;
             }
 
-            if (_entity.Has<Health>())
-            {
-                ref var h = ref _entity.GetMut<Health>();
-                h.Max = b1Cfg.MaxHp;
-                h.Current = b1Cfg.MaxHp;
-                h.InvincibleTimer = 0.0f;
-            }
+            Health.Max = b1Cfg.MaxHp;
+            Health.Current = b1Cfg.MaxHp;
+            Health.InvincibleTimer = 0.0f;
 
             _boss1State?.Reset(b1Cfg.SpawnX, b1Cfg.SpawnY);
 
@@ -388,13 +364,9 @@ public sealed class BossCharacter : IBossController {
                 t.Rotation = 0.0f;
             }
 
-            if (_entity.Has<Health>())
-            {
-                ref var h = ref _entity.GetMut<Health>();
-                h.Max = b2Cfg.MaxHp;
-                h.Current = b2Cfg.MaxHp;
-                h.InvincibleTimer = 0.0f;
-            }
+            Health.Max = b2Cfg.MaxHp;
+            Health.Current = b2Cfg.MaxHp;
+            Health.InvincibleTimer = 0.0f;
 
             if (_entity.Has<CollisionBox>())
             {
@@ -426,9 +398,14 @@ public sealed class BossCharacter : IBossController {
 
         if (_entity.IsAlive() && _entity.Has<HitFlashEffect>()) _entity.Remove<HitFlashEffect>();
 
-        _entity.Set(new BossCombatState(IsInvulnerable, IsVulnerable, Phase));
+        UpdateCombatStateComponents();
         _slot.AiData.StateTimer = StateTimer;
         _slot.AiData.StateDuration = StateDuration;
+    }
+
+    private void UpdateCombatStateComponents()
+    {
+        _entity.Set(new BossCombatState(IsInvulnerable, IsVulnerable, Phase));
     }
 
     private float GetCurrentStateDuration()

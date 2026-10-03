@@ -31,13 +31,7 @@ public sealed class Boss2Controller : IBossController
     public BossType BossType => _boss.BossType;
 
     /// <inheritdoc />
-    public float CurrentHp => _boss.CurrentHp;
-
-    /// <inheritdoc />
-    public float MaxHp => _boss.MaxHp;
-
-    /// <inheritdoc />
-    public bool IsAlive => _boss.IsAlive;
+    public Health Health => _boss.Health;
 
     /// <inheritdoc />
     public Entity Entity => _boss.Entity;

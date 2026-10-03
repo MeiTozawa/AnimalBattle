@@ -13,42 +13,63 @@ namespace AnimalBattle.Tests.Characters;
 /// </summary>
 public class CombatantContractTests
 {
-    [Fact]
-    public void DamageSystem_ApplyDamage_ReducesHp_RespectingInvincible()
-    {
-        using var world = World.Create();
-        var entity = world.Entity("Victim")
-            .Set(new Health(100.0f));
-
-        Assert.Equal(100.0f, entity.Get<Health>().Current);
-
-        var applied = DamageSystem.ApplyDamage(entity, 30.0f);
-        Assert.True(applied);
-        Assert.Equal(70.0f, entity.Get<Health>().Current);
-
-        entity.GetMut<Health>().InvincibleTimer = 1.0f;
-        applied = DamageSystem.ApplyDamage(entity, 20.0f, ignoreInvincible: false);
-        Assert.False(applied);
-        Assert.Equal(70.0f, entity.Get<Health>().Current);
-
-        applied = DamageSystem.ApplyDamage(entity, 20.0f, ignoreInvincible: true);
-        Assert.True(applied);
-        Assert.Equal(50.0f, entity.Get<Health>().Current);
+    private sealed class DummyDamageable(float maxHp, float multiplier = 1.0f, bool isInvulnerable = false) : IDamageable {
+        public Health Health { get; } = new(maxHp);
+        public float DamageMultiplier { get; set; } = multiplier;
+        public bool IsInvulnerable { get; set; } = isInvulnerable;
     }
 
     [Fact]
-    public void Player_FacadeReflectsHealth_And_StateMachineWorks()
+    public void IDamageable_TakeDamage_ReducesHp_RespectingInvincibleAndVulnerable()
+    {
+        var dummy = new DummyDamageable(100.0f);
+        IDamageable target = dummy;
+        Assert.Equal(100.0f, target.Health.Current);
+
+        // 1. 通常ダメージ適用
+        var applied = target.TakeDamage(30.0f);
+        Assert.True(applied);
+        Assert.Equal(70.0f, target.Health.Current);
+
+        // 2. Health.IsInvincible による無敵保護
+        target.Health.InvincibleTimer = 1.0f;
+        applied = target.TakeDamage(20.0f);
+        Assert.False(applied);
+        Assert.Equal(70.0f, target.Health.Current);
+
+        // 無敵時間解除
+        target.Health.InvincibleTimer = 0.0f;
+
+        // 3. IsInvulnerable による無敵保護
+        dummy.IsInvulnerable = true;
+        applied = target.TakeDamage(20.0f);
+        Assert.False(applied);
+        Assert.Equal(70.0f, target.Health.Current);
+
+        // IsInvulnerable 解除
+        dummy.IsInvulnerable = false;
+
+        // 4. DamageMultiplier による易傷（2倍ダメージ）適用
+        dummy.DamageMultiplier = 2.0f;
+        applied = target.TakeDamage(20.0f);
+        Assert.True(applied);
+        Assert.Equal(30.0f, target.Health.Current); // 70 - (20 * 2) = 30
+    }
+
+    [Fact]
+    public void Player_ImplementsIDamageable_And_StateMachineWorks()
     {
         using World world = World.Create();
         Entity pEnt = world.Entity("P");
         Player player = new(pEnt, new PlayerConfig { MaxHp = 3, SpawnX = 100, SpawnY = 200 }, -1);
 
-        // 契約検証
+        // 契約検証 (IDamageable)
+        IDamageable damageable = player;
         Assert.Equal((ulong)pEnt.Id, player.EntityId);
         Assert.Equal(Faction.Friendly, player.Faction);
-        Assert.True(player.IsAlive);
-        Assert.False(player.IsInvincible);
-        Assert.Equal(3.0f, player.Health.Current);
+        Assert.True(damageable.Health.IsAlive);
+        Assert.False(damageable.IsInvulnerable);
+        Assert.Equal(3.0f, damageable.Health.Current);
 
         // 状態マシン検証（初期接地なし）
         Assert.Equal(PlayerState.Airborne, player.CurrentState);
@@ -57,42 +78,43 @@ public class CombatantContractTests
         Assert.Equal(PlayerState.Grounded, player.CurrentState);
 
         // ダメージ契約検証
-        player.TakeDamage(1.0f);
-        Assert.Equal(2.0f, player.CurrentHp);
+        damageable.TakeDamage(1.0f);
+        Assert.Equal(2.0f, player.Health.Current);
 
         // 無敵時間付与と状態遷移
-        player.InvincibleTimer = 1.0f;
-        Assert.True(player.IsInvincible);
+        Assert.True(player.Health.IsInvincible);
         Assert.Equal(PlayerState.Hurt, player.CurrentState);
 
-        // 無敵時の通常ダメージ無効化
-        player.TakeDamage(1.0f, ignoreInvincible: false);
-        Assert.Equal(2.0f, player.CurrentHp);
+        // 無敵時のダメージ無効化
+        damageable.TakeDamage(1.0f);
+        Assert.Equal(2.0f, player.Health.Current);
 
-        // 無敵無視ダメージ適用
-        player.TakeDamage(2.0f, ignoreInvincible: true);
-        Assert.Equal(0.0f, player.CurrentHp);
-        Assert.False(player.IsAlive);
+        // 無敵時間終了後の致命傷ダメージ適用
+        player.Health.InvincibleTimer = 0.0f;
+        damageable.TakeDamage(2.0f);
+        Assert.Equal(0.0f, player.Health.Current);
+        Assert.False(player.Health.IsAlive);
         Assert.Equal(PlayerState.Dead, player.CurrentState);
     }
 
     [Fact]
-    public void BossCharacter_FacadeReflectsHealth_And_DamageContractWorks()
+    public void BossCharacter_ImplementsIDamageable_And_DamageContractWorks()
     {
         using World world = World.Create();
         Entity bEnt = world.Entity("Boss");
         BossCharacter boss = new(bEnt, BossType.Boss1, -1);
 
-        // 契約検証
+        // 契約検証 (IDamageable)
+        IDamageable damageable = boss;
         Assert.Equal((ulong)bEnt.Id, boss.EntityId);
         Assert.Equal(Faction.Hostile, boss.Faction);
-        Assert.True(boss.IsAlive);
+        Assert.True(damageable.Health.IsAlive);
 
-        float initialHp = boss.CurrentHp;
+        float initialHp = boss.Health.Current;
         Assert.True(initialHp > 0.0f);
 
         // ダメージ契約検証
-        boss.TakeDamage(10.0f);
-        Assert.Equal(initialHp - 10.0f, boss.CurrentHp);
+        damageable.TakeDamage(10.0f);
+        Assert.Equal(initialHp - 10.0f, boss.Health.Current);
     }
 }

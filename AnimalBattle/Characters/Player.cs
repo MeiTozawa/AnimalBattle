@@ -8,13 +8,16 @@ namespace AnimalBattle.Characters;
 ///     プレイヤー自機の移動、跳躍、重力、射撃瞄準およびアニメーション状態を一元管理する領域モデルクラスです。
 ///     实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
-public sealed class Player {
+public sealed class Player : IDamageable {
     private static readonly StringId ClipIdle = "Idle";
     private static readonly StringId ClipRun = "Run";
     private static readonly StringId ClipJump = "Jump";
     private static readonly StringId ClipFall = "Fall";
 
     private Entity _entity;
+
+    /// <summary>プレイヤーのヘルス情報を取得します。</summary>
+    public Health Health { get; }
 
     /// <summary>
     ///     設定情報と Flecs エンティティ句柄を指定して、プレイヤー自機を初期化します。
@@ -26,12 +29,12 @@ public sealed class Player {
     {
         System.Diagnostics.Debug.Assert(pCfg != null, "PlayerConfig は null であってはなりません。");
         _entity = entity;
+        Health = new Health(pCfg.MaxHp);
 
         _entity.Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
            .Set(new Velocity(0.0f))
            .Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight))
-           .Set(new Hurtbox(pCfg.GetHurtboxShape()))
-           .Set(new Health(pCfg.MaxHp))
+           .Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly, this))
            .Set(new Animation("Idle"))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 64, 64)))
            .Set(new CharacterMovementIntent())
@@ -47,22 +50,13 @@ public sealed class Player {
     public PlayerState CurrentState {
         get
         {
-            if (!IsAlive) return PlayerState.Dead;
+            if (!Health.IsAlive) return PlayerState.Dead;
 
-            if (IsFlashing || InvincibleTimer > 0.0f) return PlayerState.Hurt;
+            if (IsFlashing || Health.IsInvincible) return PlayerState.Hurt;
 
             if (IsGrounded) return PlayerState.Grounded;
 
             return PlayerState.Airborne;
-        }
-    }
-
-    /// <summary>無敵時間の残り秒数を取得または設定します。</summary>
-    public float InvincibleTimer {
-        get => _entity.Has<Health>() ? _entity.Get<Health>().InvincibleTimer : 0.0f;
-        set
-        {
-            if (_entity.Has<Health>()) _entity.GetMut<Health>().InvincibleTimer = Math.Max(0.0f, value);
         }
     }
 
@@ -126,9 +120,6 @@ public sealed class Player {
     /// <summary>プレイヤーの所属陣営（常に味方）を取得します。</summary>
     public Faction Faction => Faction.Friendly;
 
-    /// <summary>プレイヤーが無敵状態であるかを取得します。</summary>
-    public bool IsInvincible => InvincibleTimer > 0.0f;
-
     /// <summary>プレイヤーのワールド X 座標を取得または設定します。</summary>
     public float X {
         get => _entity.Has<Transform>() ? _entity.Get<Transform>().X : 0.0f;
@@ -165,37 +156,13 @@ public sealed class Player {
         }
     }
 
-    /// <summary>ECS Health コンポーネントへの参照を取得します。</summary>
-    public ref readonly Health Health => ref _entity.Get<Health>();
-
-    /// <summary>現在の HP を取得または設定します。</summary>
-    public float CurrentHp {
-        get => _entity.Has<Health>() ? _entity.Get<Health>().Current : 0.0f;
-        set
-        {
-            if (_entity.Has<Health>())
-            {
-                ref var health = ref _entity.GetMut<Health>();
-                health.Current = Math.Clamp(value, 0.0f, health.Max);
-            }
-        }
-    }
-
-    /// <summary>最大 HP を取得します。</summary>
-    public float MaxHp => _entity.Has<Health>() ? _entity.Get<Health>().Max : 0.0f;
-
-    /// <summary>プレイヤーが生存中であるかを取得します。</summary>
-    public bool IsAlive => CurrentHp > 0.0f;
-
-
     /// <summary>
-    ///     プレイヤーにダメージを与えます。
+    ///     被弾成功時フック。設定された無敵時間をプレイヤーの体力状態に付与します。
     /// </summary>
-    /// <param name="damage">受けるダメージ量。</param>
-    /// <param name="ignoreInvincible">無敵時間を無視するかどうか。</param>
-    public void TakeDamage(float damage, bool ignoreInvincible = false)
+    /// <param name="actualDamage">実際に適用されたダメージ量。</param>
+    public void OnDamaged(float actualDamage)
     {
-        DamageSystem.ApplyDamage(_entity, damage, ignoreInvincible);
+        Health.InvincibleTimer = ConfigManager.Player.InvincibleDuration;
     }
 
     /// <summary>
@@ -213,13 +180,9 @@ public sealed class Player {
     {
         System.Diagnostics.Debug.Assert(arenaCfg != null, "ArenaConfig は null であってはなりません。");
 
-        if (_entity.Has<Health>())
-        {
-            ref var health = ref _entity.GetMut<Health>();
-            if (health.InvincibleTimer > 0.0f) health.InvincibleTimer = Math.Max(0.0f, health.InvincibleTimer - dt);
-        }
+        Health.UpdateInvincibility(dt);
 
-        if (!IsAlive)
+        if (!Health.IsAlive)
         {
             if (_entity.Has<Velocity>())
             {
@@ -265,13 +228,9 @@ public sealed class Player {
             v.Vy = 0.0f;
         }
 
-        if (_entity.Has<Health>())
-        {
-            ref var h = ref _entity.GetMut<Health>();
-            h.Max = pCfg.MaxHp;
-            h.Current = pCfg.MaxHp;
-            h.InvincibleTimer = 0.0f;
-        }
+        Health.Max = pCfg.MaxHp;
+        Health.Current = pCfg.MaxHp;
+        Health.InvincibleTimer = 0.0f;
 
         if (_entity.Has<CollisionBox>())
         {

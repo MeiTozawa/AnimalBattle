@@ -1,4 +1,6 @@
 using System.Drawing;
+using AnimalBattle.Characters;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
@@ -58,18 +60,16 @@ public static class CombatCollisionSystem {
                             MathF.Abs(aCenterY - target.CenterY) > aHalfH + target.HalfH)
                             continue;
 
-                        if (!target.Entity.IsAlive() || !target.Entity.Has<Health>()) continue;
-
-                        ref var vicHealth = ref target.Entity.GetMut<Health>();
-                        if (!vicHealth.IsAlive || IsTargetInvulnerable(target.Entity, in vicHealth)) continue;
+                        if (!target.Entity.IsAlive()) continue;
+                        if (target.Owner != null && (!target.Owner.Health.IsAlive || target.Owner.IsInvulnerable || target.Owner.Health.IsInvincible)) continue;
 
                         ref var vicTrans = ref target.Entity.GetMut<Transform>();
                         ref var hurtbox = ref target.Entity.GetMut<Hurtbox>();
 
                         if (PhysicsService.Intersects(trans, hitbox.Shape, vicTrans, hurtbox.Shape))
                         {
-                            ApplyDamageAndEffects(world, target.Entity, ref vicTrans, ref hurtbox, ref vicHealth,
-                                in hitbox, pCfg, ref shouldDestroyAttacker);
+                            ApplyDamageAndEffects(world, target.Entity, ref vicTrans, ref hurtbox, target.Owner,
+                                in hitbox, ref shouldDestroyAttacker);
                             if (shouldDestroyAttacker) break;
                         }
                     }
@@ -81,45 +81,20 @@ public static class CombatCollisionSystem {
         return world;
     }
 
-    private static bool IsTargetInvulnerable(Entity vicEntity, in Health vicHealth)
-    {
-        if (vicHealth.IsInvincible) return true;
-
-        if (vicEntity.Has<BossCombatState>())
-        {
-            ref readonly var combat = ref vicEntity.Get<BossCombatState>();
-            return combat.IsInvulnerable;
-        }
-
-        return false;
-    }
-
-    private static bool IsTargetVulnerable(Entity vicEntity)
-    {
-        if (vicEntity.Has<BossCombatState>())
-        {
-            ref readonly var combat = ref vicEntity.Get<BossCombatState>();
-            return combat.IsVulnerable;
-        }
-
-        return false;
-    }
-
     private static void ApplyDamageAndEffects(
         World world,
         Entity vicEntity,
         ref Transform vicTrans,
         ref Hurtbox hurtbox,
-        ref Health vicHealth,
+        IDamageable? owner,
         in Hitbox localHitbox,
-        PlayerConfig pCfg,
         ref bool shouldDestroyAttacker)
     {
         var damage = localHitbox.Damage;
-        var isVulnerable = IsTargetVulnerable(vicEntity);
-        if (isVulnerable) damage *= pCfg.VulnerableDamageMultiplier;
+        var isVulnerable = owner != null && owner.DamageMultiplier > 1.0f;
 
-        vicHealth.Current -= damage;
+        owner?.TakeDamage(damage);
+
         CombatEffectHelper.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX,
             vicTrans.Y + hurtbox.Shape.OffsetY);
 
@@ -135,12 +110,11 @@ public static class CombatCollisionSystem {
         // 受撃白閃演出を付与（Ease-Out 減衰）
         vicEntity.Set(new HitFlashEffect(0.08f, Color.White));
 
+        var isAlive = owner?.Health.IsAlive ?? true;
         if (vicEntity.Has<PlayerTag>())
         {
-            vicHealth.InvincibleTimer = pCfg.InvincibleDuration;
-            if (!vicHealth.IsAlive)
+            if (!isAlive)
             {
-                vicHealth.Current = 0.0f;
                 if (vicEntity.Has<Sprite>())
                 {
                     ref var spr = ref vicEntity.GetMut<Sprite>();
@@ -150,13 +124,10 @@ public static class CombatCollisionSystem {
                 CombatEffectHelper.SpawnPlayerDeathParticles(world, vicTrans.X, vicTrans.Y);
             }
         }
-        else if (vicEntity.Has<BossCombatState>())
+        else if (vicEntity.Has<BossTag>())
         {
-            ref readonly var combat = ref vicEntity.Get<BossCombatState>();
-
-            if (!vicHealth.IsAlive)
+            if (!isAlive)
             {
-                vicHealth.Current = 0.0f;
                 if (vicEntity.Has<Sprite>())
                 {
                     ref var spr = ref vicEntity.GetMut<Sprite>();
@@ -166,8 +137,9 @@ public static class CombatCollisionSystem {
                 CombatEffectHelper.ClearAllBossBullets(world);
                 CombatEffectHelper.SpawnVictoryExplosions(world, vicTrans.X, vicTrans.Y);
             }
-            else
+            else if (vicEntity.Has<BossCombatState>())
             {
+                ref readonly var combat = ref vicEntity.Get<BossCombatState>();
                 // Boss 被弾反撃：現在の Phase に応じた数量（P1: 1枚, P2: 2枚, P3: 3枚）の黑色弾幕を全方位ランダムに発射
                 CombatEffectHelper.SpawnBossCounterAttack(world, vicTrans.X, vicTrans.Y, combat.Phase);
             }
@@ -184,17 +156,18 @@ public static class CombatCollisionSystem {
         public float HalfH;
         public Faction Faction;
         public CollisionShape Shape;
+        public IDamageable? Owner;
     }
 
     private sealed class CollisionContext {
-        private readonly Ecs.IterFieldCallback<Transform, Hurtbox, Health> _collectIter;
-        public readonly Query<Transform, Hurtbox, Health> HurtboxQuery;
+        private readonly Ecs.IterFieldCallback<Transform, Hurtbox> _collectIter;
+        public readonly Query<Transform, Hurtbox> HurtboxQuery;
         public readonly HurtboxTarget[] Targets = new HurtboxTarget[32];
         public int TargetCount;
 
         public CollisionContext(World world)
         {
-            HurtboxQuery = world.QueryBuilder<Transform, Hurtbox, Health>().Build();
+            HurtboxQuery = world.QueryBuilder<Transform, Hurtbox>().Build();
             _collectIter = CollectTargets;
         }
 
@@ -204,21 +177,23 @@ public static class CombatCollisionSystem {
             HurtboxQuery.Iter(_collectIter);
         }
 
-        private void CollectTargets(Iter it, Field<Transform> trans, Field<Hurtbox> hurtboxes, Field<Health> healths)
+        private void CollectTargets(Iter it, Field<Transform> trans, Field<Hurtbox> hurtboxes)
         {
             var count = it.Count();
             for (var i = 0; i < count; i++)
             {
                 if (TargetCount >= Targets.Length) break;
 
-                ref readonly var hp = ref healths[i];
-                if (!hp.IsAlive) continue;
+                ref readonly var hb = ref hurtboxes[i];
+                var owner = hb.Owner;
+                if (owner != null)
+                {
+                    if (!owner.Health.IsAlive || owner.IsInvulnerable || owner.Health.IsInvincible)
+                        continue;
+                }
 
                 var vicEntity = it.Entity(i);
-                if (IsTargetInvulnerable(vicEntity, in hp)) continue;
-
                 ref readonly var t = ref trans[i];
-                ref readonly var hb = ref hurtboxes[i];
 
                 var cX = t.X + hb.Shape.OffsetX;
                 var cY = t.Y + hb.Shape.OffsetY;
@@ -232,7 +207,8 @@ public static class CombatCollisionSystem {
                     HalfW = halfW,
                     HalfH = halfH,
                     Faction = hb.Faction,
-                    Shape = hb.Shape
+                    Shape = hb.Shape,
+                    Owner = owner
                 };
             }
         }

@@ -21,12 +21,12 @@ public class BossPolymorphismTests
         using IBossController controller = new Boss1Controller(entity, -1);
 
         Assert.Equal(BossType.Boss1, controller.BossType);
-        Assert.True(controller.IsAlive);
+        Assert.True(controller.Health.IsAlive);
 
         var platformQuery = world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
         controller.Update(0.016f, Vec2f.Zero, Vec2f.Zero, world, platformQuery);
 
-        Assert.True(controller.IsAlive);
+        Assert.True(controller.Health.IsAlive);
     }
 
     [Fact]
@@ -37,11 +37,11 @@ public class BossPolymorphismTests
         using IBossController controller = new Boss2Controller(entity, -1);
 
         Assert.Equal(BossType.Boss2, controller.BossType);
-        Assert.True(controller.IsAlive);
+        Assert.True(controller.Health.IsAlive);
 
         var platformQuery = world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
         controller.Update(0.016f, Vec2f.Zero, Vec2f.Zero, world, platformQuery);
 
-        Assert.True(controller.IsAlive);
+        Assert.True(controller.Health.IsAlive);
     }
 }

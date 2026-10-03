@@ -7,19 +7,10 @@ namespace AnimalBattle.Characters.Boss;
 ///     多態 Boss 領域コントローラーの統一抽象契約。
 ///     高レベル AI 状態遷移、行動評価、および指令適用ライフサイクルを統括します。
 /// </summary>
-public interface IBossController : IDisposable
+public interface IBossController : IDamageable, IDisposable
 {
     /// <summary>Boss の種別を取得します。</summary>
     BossType BossType { get; }
-
-    /// <summary>現在の HP を取得します。</summary>
-    float CurrentHp { get; }
-
-    /// <summary>最大 HP を取得します。</summary>
-    float MaxHp { get; }
-
-    /// <summary>生存中かどうかを取得します。</summary>
-    bool IsAlive { get; }
 
     /// <summary>対応する Flecs エンティティ句柄を取得します。</summary>
     Entity Entity { get; }

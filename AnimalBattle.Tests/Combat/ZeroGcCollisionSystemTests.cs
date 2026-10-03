@@ -16,8 +16,7 @@ public class ZeroGcCollisionSystemTests
 
         world.Entity("Victim")
             .Set(new Transform(200.0f, 200.0f))
-            .Set(new Hurtbox(new CollisionShape.Box(40.0f, 40.0f), Faction.Hostile))
-            .Set(new Health(100.0f));
+            .Set(new Hurtbox(new CollisionShape.Box(40.0f, 40.0f), Faction.Hostile));
 
         // 実戦の弾幕環境をシミュレートするために複数の攻撃エンティティを追加
         for (int i = 0; i < 10; i++)

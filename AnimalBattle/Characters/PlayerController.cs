@@ -26,7 +26,7 @@ public sealed class PlayerController
     /// </summary>
     public void PollAndProcessInput()
     {
-        if (!_player.IsAlive) return;
+        if (!_player.Health.IsAlive) return;
 
         var isLeft = InputService.IsHolding(InputAction.Left);
         var isRight = InputService.IsHolding(InputAction.Right);

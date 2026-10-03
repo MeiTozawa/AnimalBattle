@@ -156,7 +156,7 @@ public sealed class WorldRenderSystem : IDisposable {
 
     private static void DrawBoss(BossCharacter? boss, BossEffectsRenderConfig bossFx, float playerX, float playerY)
     {
-        if (boss == null || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
+        if (boss == null || !boss.Health.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
 
         var bx = (int)boss.X;
         var by = (int)boss.Y;
@@ -463,11 +463,11 @@ public sealed class WorldRenderSystem : IDisposable {
 
     private static void DrawPlayer(Player? player)
     {
-        if (player == null || !player.IsAlive || !player.Sprite.IsVisible || player.Sprite.GraphHandle < 0) return;
+        if (player == null || !player.Health.IsAlive || !player.Sprite.IsVisible || player.Sprite.GraphHandle < 0) return;
 
         var isFlashing = player.IsFlashing;
-        var isInvincibleBlinking = !isFlashing && player.InvincibleTimer > 0.0f &&
-            (int)(player.InvincibleTimer * 30.0f) % 2 != 0;
+        var isInvincibleBlinking = !isFlashing && player.Health.InvincibleTimer > 0.0f &&
+            (int)(player.Health.InvincibleTimer * 30.0f) % 2 != 0;
 
         if (!isInvincibleBlinking)
             GameEngine.DrawRectRotaGraph(

@@ -97,14 +97,14 @@ public static class HudRenderSystem {
         var jumpColor = remainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
         GameEngine.DrawString(hudCfg.DoubleJumpX, hudCfg.DoubleJumpY, jumpText, jumpColor);
 
-        var currentHp = Math.Clamp((int)player.CurrentHp, 0, 3);
+        var currentHp = Math.Clamp((int)player.Health.Current, 0, 3);
         var hpColor = currentHp switch {
             >= 3 => hudCfg.PlayerHpHighColor,
             2 => hudCfg.PlayerHpMidColor,
             1 => hudCfg.PlayerHpLowColor,
             _ => hudCfg.PlayerHpDeadColor
         };
-        var hpText = player.IsInvincible
+        var hpText = player.Health.IsInvincible
             ? $"HP: {PlayerHpSymbols[currentHp]} ({currentHp}/3) [INVINCIBLE]"
             : PlayerHpLut[currentHp];
         GameEngine.DrawString(hudCfg.PlayerHpX, hudCfg.PlayerHpY, hpText, hpColor);
@@ -117,7 +117,7 @@ public static class HudRenderSystem {
         var phase = ToLegacyPhase(boss.Phase);
         var bossTitle = GetBossTitle(boss.BossType, phase);
         GetBossStateInfo(boss.CurrentState, boss.CurrentSkill, hpCfg, out var stateName, out var stateBadgeColor);
-        DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, boss.CurrentHp, boss.MaxHp, phase,
+        DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, boss.Health.Current, boss.Health.Max, phase,
             boss.StateTimer, boss.StateDuration);
     }
 
@@ -131,7 +131,7 @@ public static class HudRenderSystem {
 
     private static void DrawGameOverModal(Player? player, ModalRenderConfig modalCfg)
     {
-        if (player != null && !player.IsAlive)
+        if (player != null && !player.Health.IsAlive)
         {
             GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2,
                 modalCfg.GameOverBgColor, true);
