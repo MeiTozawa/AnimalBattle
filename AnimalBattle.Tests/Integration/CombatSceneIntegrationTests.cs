@@ -42,4 +42,24 @@ public class CombatSceneIntegrationTests
         world.QueryBuilder<Transform, Velocity>().With<PlayerBulletTag>().Build().Each((ref Transform _, ref Velocity _) => bulletFound = true);
         Assert.True(bulletFound);
     }
+
+    [Fact]
+    public void Player_Update_ExecutesKinematicMovementAndWeapon_ConsumingIntents()
+    {
+        using var world = World.Create();
+        world.Import<BulletModule>();
+
+        var pEnt = world.Entity("P2");
+        var player = new Player(pEnt, new PlayerConfig { MaxHp = 3, MaxJumps = 2, MoveSpeed = 200.0f, BulletSpeed = 400.0f }, -1);
+        var controller = new PlayerController(player);
+        var platformQuery = world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
+
+        controller.SubmitInput(moveX: 1.0f, jumpPressed: false, jumpHolding: false, shootPressed: true);
+        player.Update(0.1f, new ArenaConfig { FloorLimitY = 600.0f, BoundaryMinX = 0.0f, BoundaryMaxX = 1000.0f }, platformQuery, world);
+
+        Assert.True(player.X > 0.0f);
+        var bulletFound = false;
+        world.QueryBuilder<Transform, Velocity>().With<PlayerBulletTag>().Build().Each((ref Transform _, ref Velocity _) => bulletFound = true);
+        Assert.True(bulletFound);
+    }
 }

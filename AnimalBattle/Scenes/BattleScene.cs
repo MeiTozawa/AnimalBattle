@@ -73,7 +73,7 @@ public class BattleScene : IDisposable {
     /// <summary>
     ///     現在アクティブなプレイヤー自機インスタンスを取得します。
     /// </summary>
-    public Player? Player { get; }
+    public Player Player { get; }
 
     /// <summary>
     ///     現在アクティブなプレイヤーコントローラーを取得します。
@@ -83,7 +83,7 @@ public class BattleScene : IDisposable {
     /// <summary>
     ///     現在アクティブな Boss インスタンスを取得します。
     /// </summary>
-    public BossCharacter? Boss { get; private set; }
+    public BossCharacter Boss { get; private set; } = null!;
 
     /// <summary>
     ///     現在アクティブな Boss の種別を取得または設定します。
@@ -98,25 +98,23 @@ public class BattleScene : IDisposable {
     /// <inheritdoc />
     public void Dispose()
     {
-        if (!_isDisposed)
-        {
-            ConfigManager.Boss1Container.OnConfigReloaded -= OnBoss1ConfigReloaded;
-            ConfigManager.Boss2Container.OnConfigReloaded -= OnBoss2ConfigReloaded;
-            ConfigManager.PlayerContainer.OnConfigReloaded -= OnPlayerConfigReloaded;
+        if (_isDisposed) return;
+        ConfigManager.Boss1Container.OnConfigReloaded -= OnBoss1ConfigReloaded;
+        ConfigManager.Boss2Container.OnConfigReloaded -= OnBoss2ConfigReloaded;
+        ConfigManager.PlayerContainer.OnConfigReloaded -= OnPlayerConfigReloaded;
 
-            if (_ecsWorld.Has<CombatEntityPoolComponent>()) _ecsWorld.Get<CombatEntityPoolComponent>().Dispose();
+        if (_ecsWorld.Has<CombatEntityPoolComponent>()) _ecsWorld.Get<CombatEntityPoolComponent>().Dispose();
 
-            _worldRenderer.Dispose();
-            _debugRenderer.Dispose();
-            _playerBulletsQuery.Dispose();
-            _effectsQuery.Dispose();
-            _platformQuery.Dispose();
-            _ecsWorld.Dispose();
-            AssetManager.Shutdown();
-            if (Current == this) Current = null;
-            _isDisposed = true;
-            GC.SuppressFinalize(this);
-        }
+        _worldRenderer.Dispose();
+        _debugRenderer.Dispose();
+        _playerBulletsQuery.Dispose();
+        _effectsQuery.Dispose();
+        _platformQuery.Dispose();
+        _ecsWorld.Dispose();
+        AssetManager.Shutdown();
+        if (Current == this) Current = null;
+        _isDisposed = true;
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
@@ -169,7 +167,7 @@ public class BattleScene : IDisposable {
     /// </summary>
     private void ResetCurrentBoss()
     {
-        Boss?.Reset();
+        Boss.Reset();
     }
 
     /// <summary>
@@ -290,15 +288,13 @@ public class BattleScene : IDisposable {
 
         PlayerController.PollAndProcessInput();
 
-        if (Player != null)
-            Player.Update(deltaTime, ConfigManager.Player, ConfigManager.Arena, _platformQuery, _ecsWorld);
 
-        if (Boss != null)
-        {
-            var playerPos = Player != null ? new Vec2f(Player.X, Player.Y) : Vec2f.Zero;
-            var playerVel = Player != null ? new Vec2f(Player.Vx, Player.Vy) : Vec2f.Zero;
-            Boss.Update(deltaTime, playerPos, playerVel, _ecsWorld, _platformQuery);
-        }
+       Player.Update(deltaTime, ConfigManager.Arena, _platformQuery, _ecsWorld);
+
+       var playerPos = new Vec2f(Player.X, Player.Y);
+       var playerVel = new Vec2f(Player.Vx, Player.Vy);
+       Boss.Update(deltaTime, playerPos, playerVel, _ecsWorld, _platformQuery);
+        
 
         _ecsWorld.Progress(deltaTime);
     }
@@ -327,7 +323,7 @@ public class BattleScene : IDisposable {
         CombatEffectHelper.ClearAllBossBullets(_ecsWorld);
         _playerBulletsQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
         _effectsQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
-        Player?.Reset(ConfigManager.Player);
+        Player.Reset(ConfigManager.Player);
     }
 
     /// <summary>
@@ -336,7 +332,7 @@ public class BattleScene : IDisposable {
     public void Render()
     {
         _worldRenderer.Render(_tileMap, _platformQuery);
-        HudRenderSystem.Render(Player, Boss);
+        HudRenderSystem.Render(Player, Boss, Player.RemainingJumps);
         _debugRenderer.Render(_platformQuery, _tileMap);
     }
 }

@@ -38,7 +38,25 @@ public sealed class PlayerController
         var jumpHolding = InputService.IsHolding(InputAction.Jump);
         var shootPressed = InputService.IsPressed(InputAction.Attack) || InputService.IsHolding(InputAction.Attack);
 
-        SubmitInput(moveX, jumpPressed, jumpHolding, shootPressed);
+        var isUp = InputService.IsHolding(InputAction.Up);
+        var isDown = InputService.IsHolding(InputAction.Down);
+        var inputX = (isRight ? 1.0f : 0.0f) - (isLeft ? 1.0f : 0.0f);
+        var inputY = (isDown ? 1.0f : 0.0f) - (isUp ? 1.0f : 0.0f);
+
+        float dirX, dirY;
+        if (Math.Abs(inputX) > 0.001f || Math.Abs(inputY) > 0.001f)
+        {
+            var len = MathF.Sqrt(inputX * inputX + inputY * inputY);
+            dirX = inputX / len;
+            dirY = inputY / len;
+        }
+        else
+        {
+            dirX = _player.Sprite.FlipX ? -1.0f : 1.0f;
+            dirY = 0.0f;
+        }
+
+        SubmitInput(moveX, jumpPressed, jumpHolding, shootPressed, dirX, dirY);
     }
 
     /// <summary>
@@ -48,7 +66,15 @@ public sealed class PlayerController
     /// <param name="jumpPressed">跳躍キー押下フラグ。</param>
     /// <param name="jumpHolding">跳躍キー保持フラグ。</param>
     /// <param name="shootPressed">射撃キー押下フラグ。</param>
-    public void SubmitInput(float moveX, bool jumpPressed, bool jumpHolding, bool shootPressed)
+    /// <param name="aimDirX">射撃水平瞄準ベクトル（省略時はスプライト向き）。</param>
+    /// <param name="aimDirY">射撃垂直瞄準ベクトル（省略時は 0.0f）。</param>
+    public void SubmitInput(
+        float moveX,
+        bool jumpPressed,
+        bool jumpHolding,
+        bool shootPressed,
+        float? aimDirX = null,
+        float? aimDirY = null)
     {
         var entity = _player.Entity;
         if (!entity.IsAlive()) return;
@@ -65,8 +91,8 @@ public sealed class PlayerController
         {
             ref var weaponIntent = ref entity.GetMut<CharacterWeaponIntent>();
             weaponIntent.ShootTriggered = shootPressed;
-            weaponIntent.AimDirectionX = _player.Sprite.FlipX ? -1.0f : 1.0f;
-            weaponIntent.AimDirectionY = 0.0f;
+            weaponIntent.AimDirectionX = aimDirX ?? (_player.Sprite.FlipX ? -1.0f : 1.0f);
+            weaponIntent.AimDirectionY = aimDirY ?? 0.0f;
         }
 
         // 移動入力に応じた描画スプライトの左右反転同期

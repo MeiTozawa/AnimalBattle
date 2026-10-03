@@ -38,16 +38,6 @@ public static class HudRenderSystem {
     ];
 
     /// <summary>
-    ///     HUD および各種ステータス UI を描画します。
-    /// </summary>
-    /// <param name="player">現在アクティブなプレイヤー自機。</param>
-    /// <param name="boss">現在アクティブな Boss。</param>
-    public static void Render(Player? player, BossCharacter? boss)
-    {
-        Render(player, boss, player?.RemainingJumps ?? 0);
-    }
-
-    /// <summary>
     ///     統一戦闘者契約インターフェースに基づいて HUD および各種ステータス UI を描画します。
     /// </summary>
     /// <param name="player">プレイヤー戦闘者。</param>

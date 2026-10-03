@@ -14,9 +14,6 @@ public sealed class Player : ICharacter {
     private static readonly StringId ClipFall = "Fall";
 
     private Entity _entity;
-    private int _maxJumps;
-
-    private float _shootCooldown;
 
     /// <summary>
     ///     設定情報と Flecs エンティティ句柄を指定して、プレイヤー自機を初期化します。
@@ -26,18 +23,13 @@ public sealed class Player : ICharacter {
     /// <param name="spriteHandle">プレイヤースプライトの画像ハンドル。</param>
     public Player(Entity entity, PlayerConfig pCfg, int spriteHandle)
     {
-        ArgumentNullException.ThrowIfNull(pCfg);
+        System.Diagnostics.Debug.Assert(pCfg != null, "PlayerConfig は null であってはなりません。");
         _entity = entity;
-
-        _maxJumps = pCfg.MaxJumps;
-        RemainingJumps = pCfg.MaxJumps;
-        _shootCooldown = 0.0f;
-        Hurtbox = new Hurtbox(pCfg.GetHurtboxShape());
 
         _entity.Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
            .Set(new Velocity(0.0f))
            .Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight))
-           .Set(Hurtbox)
+           .Set(new Hurtbox(pCfg.GetHurtboxShape()))
            .Set(new Health(pCfg.MaxHp))
            .Set(new Animation("Idle"))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 64, 64)))
@@ -87,24 +79,21 @@ public sealed class Player : ICharacter {
 
     /// <summary>残り跳躍可能回数を取得または設定します。</summary>
     public int RemainingJumps {
-        get => _entity.Has<JumpCapability>() ? _entity.Get<JumpCapability>().RemainingJumps : _remainingJumps;
+        get => _entity.Has<JumpCapability>() ? _entity.Get<JumpCapability>().RemainingJumps : 0;
         set
         {
-            _remainingJumps = value;
             if (_entity.Has<JumpCapability>())
             {
                 _entity.GetMut<JumpCapability>().RemainingJumps = value;
             }
         }
     }
-    private int _remainingJumps;
 
     /// <summary>射撃クールダウンの残り秒数を取得または設定します。</summary>
     public float ShootCooldown {
-        get => _entity.Has<WeaponState>() ? _entity.Get<WeaponState>().CooldownRemaining : _shootCooldown;
+        get => _entity.Has<WeaponState>() ? _entity.Get<WeaponState>().CooldownRemaining : 0.0f;
         set
         {
-            _shootCooldown = Math.Max(0.0f, value);
             if (_entity.Has<WeaponState>())
             {
                 _entity.GetMut<WeaponState>().CooldownRemaining = Math.Max(0.0f, value);
@@ -114,9 +103,6 @@ public sealed class Player : ICharacter {
 
     /// <summary>地形衝突判定ボックスを取得します。</summary>
     public CollisionBox CollisionBox => _entity.Has<CollisionBox>() ? _entity.Get<CollisionBox>() : default;
-
-    /// <summary>被弾判定ボックスを取得します。</summary>
-    private Hurtbox Hurtbox { get; }
 
     /// <summary>アニメーション制御インスタンスを取得します。</summary>
     public Animation Animation => _entity.Has<Animation>() ? _entity.Get<Animation>() : default;
@@ -212,30 +198,25 @@ public sealed class Player : ICharacter {
     }
 
     /// <summary>
-    ///     フレームごとの入力、物理移動、跳躍、射撃、およびアニメーション更新を実行します。
+    ///     フレームごとの物理移動、跳躍、射撃、およびアニメーション更新を実行します。
     /// </summary>
     /// <param name="dt">デルタタイム（秒）。</param>
-    /// <param name="pCfg">プレイヤー設定。</param>
     /// <param name="arenaCfg">アリーナ設定。</param>
     /// <param name="platformQuery">プラットフォーム検索クエリ。</param>
     /// <param name="world">エフェクト・弾丸生成用の Flecs ワールド。</param>
     public void Update(
         float dt,
-        PlayerConfig pCfg,
         ArenaConfig arenaCfg,
         Query<Transform, CollisionBox> platformQuery,
         World world)
     {
-        ArgumentNullException.ThrowIfNull(pCfg);
-        ArgumentNullException.ThrowIfNull(arenaCfg);
+        System.Diagnostics.Debug.Assert(arenaCfg != null, "ArenaConfig は null であってはなりません。");
 
         if (_entity.Has<Health>())
         {
             ref var health = ref _entity.GetMut<Health>();
             if (health.InvincibleTimer > 0.0f) health.InvincibleTimer = Math.Max(0.0f, health.InvincibleTimer - dt);
         }
-
-        if (_shootCooldown > 0.0f) _shootCooldown = Math.Max(0.0f, _shootCooldown - dt);
 
         if (!IsAlive)
         {
@@ -249,20 +230,14 @@ public sealed class Player : ICharacter {
             return;
         }
 
-        // 1. 水平移動入力処理
-        ProcessHorizontalInput(pCfg);
+        // 1. 物理・地形衝突処理（意図コンポーネントを消費）
+        KinematicMovementSystem.UpdateEntity(_entity, dt, platformQuery, arenaCfg, world);
 
-        // 2. 跳躍入力処理
-        ProcessJumpInput(world, pCfg);
-
-        // 3. 物理・地形衝突処理
-        ApplyPhysicsAndCollisions(platformQuery, pCfg, arenaCfg, dt, world);
-
-        // 4. アニメーション状態更新
+        // 2. アニメーション状態更新
         UpdateAnimation(dt);
 
-        // 5. 手銃射撃処理
-        ProcessShootInput(world, pCfg, dt);
+        // 3. 武器射撃処理（意図コンポーネントを消費）
+        CharacterWeaponSystem.UpdateEntity(_entity, dt, world);
     }
 
     /// <summary>
@@ -271,7 +246,7 @@ public sealed class Player : ICharacter {
     /// <param name="pCfg">プレイヤー設定。</param>
     public void Reset(PlayerConfig pCfg)
     {
-        ArgumentNullException.ThrowIfNull(pCfg);
+        System.Diagnostics.Debug.Assert(pCfg != null, "PlayerConfig は null であってはなりません。");
 
         if (_entity.Has<Transform>())
         {
@@ -303,10 +278,6 @@ public sealed class Player : ICharacter {
             c.IsGrounded = false;
             c.IsOnWall = false;
         }
-
-        RemainingJumps = pCfg.MaxJumps;
-        _maxJumps = pCfg.MaxJumps;
-        _shootCooldown = 0.0f;
 
         if (_entity.Has<JumpCapability>())
         {
@@ -346,63 +317,6 @@ public sealed class Player : ICharacter {
         if (_entity.IsAlive() && _entity.Has<HitFlashEffect>()) _entity.Remove<HitFlashEffect>();
     }
 
-    private void ProcessHorizontalInput(PlayerConfig pCfg)
-    {
-        var isLeft = InputService.IsHolding(InputAction.Left);
-        var isRight = InputService.IsHolding(InputAction.Right);
-
-        var moveX = 0.0f;
-        if (isLeft) moveX = -1.0f;
-        else if (isRight) moveX = 1.0f;
-
-        if (_entity.Has<CharacterMovementIntent>())
-        {
-            ref var intent = ref _entity.GetMut<CharacterMovementIntent>();
-            intent.MoveX = moveX;
-        }
-
-        ref var vel = ref _entity.GetMut<Velocity>();
-        ref var spr = ref _entity.GetMut<Sprite>();
-
-        if (isLeft)
-        {
-            vel.Vx = -pCfg.MoveSpeed;
-            spr.FlipX = true;
-        }
-        else if (isRight)
-        {
-            vel.Vx = pCfg.MoveSpeed;
-            spr.FlipX = false;
-        }
-        else
-        {
-            vel.Vx = 0.0f;
-        }
-    }
-
-    private void ProcessJumpInput(World world, PlayerConfig pCfg)
-    {
-        var jumpJustPressed = InputService.IsPressed(InputAction.Jump);
-        var jumpHolding = InputService.IsHolding(InputAction.Jump);
-
-        if (_entity.Has<CharacterMovementIntent>())
-        {
-            ref var intent = ref _entity.GetMut<CharacterMovementIntent>();
-            intent.JumpTriggered = jumpJustPressed;
-            intent.JumpHolding = jumpHolding;
-        }
-    }
-
-    private void ApplyPhysicsAndCollisions(
-        Query<Transform, CollisionBox> platformQuery,
-        PlayerConfig pCfg,
-        ArenaConfig arenaCfg,
-        float dt,
-        World world)
-    {
-        KinematicMovementSystem.UpdateEntity(_entity, dt, platformQuery, arenaCfg, world);
-    }
-
     private void UpdateAnimation(float dt)
     {
         if (!_entity.Has<Animation>()) return;
@@ -440,70 +354,4 @@ public sealed class Player : ICharacter {
             anim.IsFinished = isFinished;
         }
     }
-
-    private void ProcessShootInput(World world, PlayerConfig pCfg, float dt)
-    {
-        var shootJustPressed = InputService.IsPressed(InputAction.Attack);
-        if (shootJustPressed && _entity.Has<CharacterWeaponIntent>())
-        {
-            ref var weaponIntent = ref _entity.GetMut<CharacterWeaponIntent>();
-            weaponIntent.ShootTriggered = true;
-            CalculateAimDirection(out var dirX, out var dirY);
-            weaponIntent.AimDirectionX = dirX;
-            weaponIntent.AimDirectionY = dirY;
-        }
-
-        CharacterWeaponSystem.UpdateEntity(_entity, dt, world);
-    }
-
-    private void CalculateAimDirection(out float dirX, out float dirY)
-    {
-        var isLeft = InputService.IsHolding(InputAction.Left);
-        var isRight = InputService.IsHolding(InputAction.Right);
-        var isUp = InputService.IsHolding(InputAction.Up);
-        var isDown = InputService.IsHolding(InputAction.Down);
-
-        var inputX = (isRight ? 1.0f : 0.0f) - (isLeft ? 1.0f : 0.0f);
-        var inputY = (isDown ? 1.0f : 0.0f) - (isUp ? 1.0f : 0.0f);
-
-        if (Math.Abs(inputX) > 0.001f || Math.Abs(inputY) > 0.001f)
-        {
-            var len = MathF.Sqrt(inputX * inputX + inputY * inputY);
-            dirX = inputX / len;
-            dirY = inputY / len;
-
-            if (_entity.Has<Sprite>())
-            {
-                ref var spr = ref _entity.GetMut<Sprite>();
-                if (inputX < 0.0f)
-                    spr.FlipX = true;
-                else if (inputX > 0.0f) spr.FlipX = false;
-            }
-        }
-        else
-        {
-            ref readonly var spr = ref _entity.Get<Sprite>();
-            dirX = spr.FlipX ? -1.0f : 1.0f;
-            dirY = 0.0f;
-        }
-    }
-}
-
-/// <summary>
-///     プレイヤー自機の高レベル動作状態を表す状態マシン列挙型。
-/// </summary>
-public enum PlayerState {
-    /// <summary>
-    ///     死亡状態（HPは0以下）
-    /// </summary>
-    Dead,
-
-    /// <summary>被弾硬直・無敵点滅状態。</summary>
-    Hurt,
-
-    /// <summary>接地状態（立ち・歩行・射撃など）。</summary>
-    Grounded,
-
-    /// <summary>空中状態（上昇・落下など）。</summary>
-    Airborne
 }
