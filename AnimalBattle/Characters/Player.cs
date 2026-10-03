@@ -114,15 +114,6 @@ public sealed class Player : ICharacter {
     }
 
     /// <summary>
-    ///     被弾成功時フック。設定された無敵時間をプレイヤーの体力状態に付与します。
-    /// </summary>
-    /// <param name="actualDamage">実際に適用されたダメージ量。</param>
-    public void OnDamaged(float actualDamage)
-    {
-        _entity.GetMut<Health>().InvincibleTimer = ConfigManager.Player.InvincibleDuration;
-    }
-
-    /// <summary>
     ///     フレームごとの物理移動、跳躍、射撃、およびアニメーション更新を実行します。
     /// </summary>
     /// <param name="dt">デルタタイム（秒）。</param>
@@ -138,11 +129,6 @@ public sealed class Player : ICharacter {
         System.Diagnostics.Debug.Assert(arenaCfg != null, "ArenaConfig は null であってはなりません。");
 
         ref var h = ref _entity.GetMut<Health>();
-        if (h.InvincibleTimer > 0.0f)
-        {
-            h.InvincibleTimer = Math.Max(0.0f, h.InvincibleTimer - dt);
-        }
-
         if (h.Current <= 0.0f)
         {
             ref var v = ref _entity.GetMut<Velocity>();

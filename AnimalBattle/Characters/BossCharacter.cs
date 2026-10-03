@@ -240,10 +240,6 @@ public sealed class BossCharacter : IBossController, ICharacter {
         {
             health.InvincibleTimer = MathF.Max(health.InvincibleTimer, 0.1f);
         }
-        else if (health.InvincibleTimer > 0.0f)
-        {
-            health.InvincibleTimer = MathF.Max(0.0f, health.InvincibleTimer - deltaTime);
-        }
 
         if (health.Current <= 0.0f) return;
 
