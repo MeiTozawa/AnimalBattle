@@ -44,6 +44,7 @@ public sealed class Player : ICharacter {
            .Set(new CharacterMovementIntent())
            .Set(new CharacterWeaponIntent())
            .Set(JumpCapability.FromPlayerConfig(pCfg))
+           .Set(WeaponState.FromPlayerConfig(pCfg))
            .Add<PlayerTag>();
 
         UpdateAnimation(0.0f);
@@ -100,8 +101,15 @@ public sealed class Player : ICharacter {
 
     /// <summary>射撃クールダウンの残り秒数を取得または設定します。</summary>
     public float ShootCooldown {
-        get => _shootCooldown;
-        set => _shootCooldown = Math.Max(0.0f, value);
+        get => _entity.Has<WeaponState>() ? _entity.Get<WeaponState>().CooldownRemaining : _shootCooldown;
+        set
+        {
+            _shootCooldown = Math.Max(0.0f, value);
+            if (_entity.Has<WeaponState>())
+            {
+                _entity.GetMut<WeaponState>().CooldownRemaining = Math.Max(0.0f, value);
+            }
+        }
     }
 
     /// <summary>地形衝突判定ボックスを取得します。</summary>
@@ -254,7 +262,7 @@ public sealed class Player : ICharacter {
         UpdateAnimation(dt);
 
         // 5. 手銃射撃処理
-        ProcessShootInput(world, pCfg);
+        ProcessShootInput(world, pCfg, dt);
     }
 
     /// <summary>
@@ -303,6 +311,11 @@ public sealed class Player : ICharacter {
         if (_entity.Has<JumpCapability>())
         {
             _entity.Set(JumpCapability.FromPlayerConfig(pCfg));
+        }
+
+        if (_entity.Has<WeaponState>())
+        {
+            _entity.Set(WeaponState.FromPlayerConfig(pCfg));
         }
 
         if (_entity.Has<CharacterMovementIntent>())
@@ -428,14 +441,19 @@ public sealed class Player : ICharacter {
         }
     }
 
-    private void ProcessShootInput(World world, PlayerConfig pCfg)
+    private void ProcessShootInput(World world, PlayerConfig pCfg, float dt)
     {
         var shootJustPressed = InputService.IsPressed(InputAction.Attack);
-        if (!shootJustPressed || _shootCooldown > 0.0f) return;
+        if (shootJustPressed && _entity.Has<CharacterWeaponIntent>())
+        {
+            ref var weaponIntent = ref _entity.GetMut<CharacterWeaponIntent>();
+            weaponIntent.ShootTriggered = true;
+            CalculateAimDirection(out var dirX, out var dirY);
+            weaponIntent.AimDirectionX = dirX;
+            weaponIntent.AimDirectionY = dirY;
+        }
 
-        CalculateAimDirection(out var dirX, out var dirY);
-        SpawnBullet(world, pCfg, dirX, dirY);
-        _shootCooldown = pCfg.ShootCooldown;
+        CharacterWeaponSystem.UpdateEntity(_entity, dt, world);
     }
 
     private void CalculateAimDirection(out float dirX, out float dirY)
@@ -468,24 +486,6 @@ public sealed class Player : ICharacter {
             dirX = spr.FlipX ? -1.0f : 1.0f;
             dirY = 0.0f;
         }
-    }
-
-    private void SpawnBullet(World world, PlayerConfig pCfg, float dirX, float dirY)
-    {
-        ref readonly var trans = ref _entity.Get<Transform>();
-
-        var spawnX = trans.X + dirX * pCfg.BulletSpawnOffset;
-        var spawnY = trans.Y + pCfg.BulletSpawnOffsetY + dirY * pCfg.BulletSpawnOffset;
-        var vx = dirX * pCfg.BulletSpeed;
-        var vy = dirY * pCfg.BulletSpeed;
-
-        // 事前確保されたエンティティプールから通常弾を貸し出し
-        CombatEntityPoolHelper.RentPlayerBullet(world)
-           .Set(new Transform(spawnX, spawnY))
-           .Set(new Velocity(vx, vy))
-           .Set(new CollisionBox(pCfg.BulletWidth, pCfg.BulletHeight))
-           .Set(new Hitbox(pCfg.GetBulletHitboxShape(), pCfg.BulletDamage))
-           .Add<PlayerBulletTag>();
     }
 }
 
