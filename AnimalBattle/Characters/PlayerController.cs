@@ -1,0 +1,80 @@
+using AnimalBattle.Components;
+using AnimalBattle.Configs;
+
+namespace AnimalBattle.Characters;
+
+/// <summary>
+///     自機プレイヤーコントローラー（OOP 領域モデル）。
+///     ユーザーハードウェア入力を収集し、意図コンポーネント（CharacterMovementIntent / CharacterWeaponIntent）に変換して Entity へ適用します。
+/// </summary>
+public sealed class PlayerController
+{
+    private readonly Player _player;
+
+    /// <summary>
+    ///     制御対象の自機プレイヤー（Pawn）を指定してコントローラーを初期化します。
+    /// </summary>
+    /// <param name="player">制御対象のプレイヤーインスタンス。</param>
+    public PlayerController(Player player)
+    {
+        System.Diagnostics.Debug.Assert(player != null, "Player インスタンスは null であってはなりません。");
+        _player = player!;
+    }
+
+    /// <summary>
+    ///     グローバル入力サービスからハードウェア入力をポーリングし、エンティティへ意図を反映します。
+    /// </summary>
+    public void PollAndProcessInput()
+    {
+        if (!_player.IsAlive) return;
+
+        var isLeft = InputService.IsHolding(InputAction.Left);
+        var isRight = InputService.IsHolding(InputAction.Right);
+        var moveX = 0.0f;
+        if (isLeft) moveX = -1.0f;
+        else if (isRight) moveX = 1.0f;
+
+        var jumpPressed = InputService.IsPressed(InputAction.Jump);
+        var jumpHolding = InputService.IsHolding(InputAction.Jump);
+        var shootPressed = InputService.IsPressed(InputAction.Attack) || InputService.IsHolding(InputAction.Attack);
+
+        SubmitInput(moveX, jumpPressed, jumpHolding, shootPressed);
+    }
+
+    /// <summary>
+    ///     指定された移動・跳躍・射撃入力をエンティティの意図コンポーネントへ注入します（テスト・AI操作・リプレイ対応）。
+    /// </summary>
+    /// <param name="moveX">水平移動入力値（-1.0f: 左, 1.0f: 右, 0.0f: 静止）。</param>
+    /// <param name="jumpPressed">跳躍キー押下フラグ。</param>
+    /// <param name="jumpHolding">跳躍キー保持フラグ。</param>
+    /// <param name="shootPressed">射撃キー押下フラグ。</param>
+    public void SubmitInput(float moveX, bool jumpPressed, bool jumpHolding, bool shootPressed)
+    {
+        var entity = _player.Entity;
+        if (!entity.IsAlive()) return;
+
+        if (entity.Has<CharacterMovementIntent>())
+        {
+            ref var moveIntent = ref entity.GetMut<CharacterMovementIntent>();
+            moveIntent.MoveX = moveX;
+            moveIntent.JumpTriggered = jumpPressed;
+            moveIntent.JumpHolding = jumpHolding;
+        }
+
+        if (entity.Has<CharacterWeaponIntent>())
+        {
+            ref var weaponIntent = ref entity.GetMut<CharacterWeaponIntent>();
+            weaponIntent.ShootTriggered = shootPressed;
+            weaponIntent.AimDirectionX = _player.Sprite.FlipX ? -1.0f : 1.0f;
+            weaponIntent.AimDirectionY = 0.0f;
+        }
+
+        // 移動入力に応じた描画スプライトの左右反転同期
+        if (entity.Has<Sprite>())
+        {
+            ref var spr = ref entity.GetMut<Sprite>();
+            if (moveX < -0.01f) spr.FlipX = true;
+            else if (moveX > 0.01f) spr.FlipX = false;
+        }
+    }
+}

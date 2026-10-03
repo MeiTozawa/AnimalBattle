@@ -34,7 +34,7 @@ public struct JumpCapability
     /// <returns>構築された JumpCapability インスタンス。</returns>
     public static JumpCapability FromPlayerConfig(Configs.PlayerConfig cfg)
     {
-        ArgumentNullException.ThrowIfNull(cfg);
+        System.Diagnostics.Debug.Assert(cfg != null, "PlayerConfig は null であってはなりません。");
         return new JumpCapability
         {
             MoveSpeed = cfg.MoveSpeed,

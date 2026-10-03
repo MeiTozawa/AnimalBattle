@@ -41,6 +41,9 @@ public sealed class Player : ICharacter {
            .Set(new Health(pCfg.MaxHp))
            .Set(new Animation("Idle"))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 64, 64)))
+           .Set(new CharacterMovementIntent())
+           .Set(new CharacterWeaponIntent())
+           .Set(JumpCapability.FromPlayerConfig(pCfg))
            .Add<PlayerTag>();
 
         UpdateAnimation(0.0f);
@@ -82,7 +85,18 @@ public sealed class Player : ICharacter {
     }
 
     /// <summary>残り跳躍可能回数を取得または設定します。</summary>
-    public int RemainingJumps { get; private set; }
+    public int RemainingJumps {
+        get => _entity.Has<JumpCapability>() ? _entity.Get<JumpCapability>().RemainingJumps : _remainingJumps;
+        set
+        {
+            _remainingJumps = value;
+            if (_entity.Has<JumpCapability>())
+            {
+                _entity.GetMut<JumpCapability>().RemainingJumps = value;
+            }
+        }
+    }
+    private int _remainingJumps;
 
     /// <summary>射撃クールダウンの残り秒数を取得または設定します。</summary>
     public float ShootCooldown {
@@ -234,7 +248,7 @@ public sealed class Player : ICharacter {
         ProcessJumpInput(world, pCfg);
 
         // 3. 物理・地形衝突処理
-        ApplyPhysicsAndCollisions(platformQuery, pCfg, arenaCfg, dt);
+        ApplyPhysicsAndCollisions(platformQuery, pCfg, arenaCfg, dt, world);
 
         // 4. アニメーション状態更新
         UpdateAnimation(dt);
@@ -286,6 +300,21 @@ public sealed class Player : ICharacter {
         _maxJumps = pCfg.MaxJumps;
         _shootCooldown = 0.0f;
 
+        if (_entity.Has<JumpCapability>())
+        {
+            _entity.Set(JumpCapability.FromPlayerConfig(pCfg));
+        }
+
+        if (_entity.Has<CharacterMovementIntent>())
+        {
+            _entity.GetMut<CharacterMovementIntent>().Reset();
+        }
+
+        if (_entity.Has<CharacterWeaponIntent>())
+        {
+            _entity.GetMut<CharacterWeaponIntent>().Reset();
+        }
+
         if (_entity.Has<Animation>())
         {
             ref var anim = ref _entity.GetMut<Animation>();
@@ -309,6 +338,16 @@ public sealed class Player : ICharacter {
         var isLeft = InputService.IsHolding(InputAction.Left);
         var isRight = InputService.IsHolding(InputAction.Right);
 
+        var moveX = 0.0f;
+        if (isLeft) moveX = -1.0f;
+        else if (isRight) moveX = 1.0f;
+
+        if (_entity.Has<CharacterMovementIntent>())
+        {
+            ref var intent = ref _entity.GetMut<CharacterMovementIntent>();
+            intent.MoveX = moveX;
+        }
+
         ref var vel = ref _entity.GetMut<Velocity>();
         ref var spr = ref _entity.GetMut<Sprite>();
 
@@ -331,23 +370,13 @@ public sealed class Player : ICharacter {
     private void ProcessJumpInput(World world, PlayerConfig pCfg)
     {
         var jumpJustPressed = InputService.IsPressed(InputAction.Jump);
-        if (!jumpJustPressed) return;
+        var jumpHolding = InputService.IsHolding(InputAction.Jump);
 
-        ref var vel = ref _entity.GetMut<Velocity>();
-        ref var col = ref _entity.GetMut<CollisionBox>();
-        ref var trans = ref _entity.GetMut<Transform>();
-
-        if (col.IsGrounded)
+        if (_entity.Has<CharacterMovementIntent>())
         {
-            vel.Vy = pCfg.FirstJumpVelocity;
-            col.IsGrounded = false;
-            RemainingJumps = 1;
-        }
-        else if (RemainingJumps > 0)
-        {
-            vel.Vy = pCfg.SecondJumpVelocity;
-            RemainingJumps--;
-            CombatEffectHelper.SpawnJumpRingEffect(world, trans.X, trans.Y + col.Height / 2.0f);
+            ref var intent = ref _entity.GetMut<CharacterMovementIntent>();
+            intent.JumpTriggered = jumpJustPressed;
+            intent.JumpHolding = jumpHolding;
         }
     }
 
@@ -355,64 +384,10 @@ public sealed class Player : ICharacter {
         Query<Transform, CollisionBox> platformQuery,
         PlayerConfig pCfg,
         ArenaConfig arenaCfg,
-        float dt)
+        float dt,
+        World world)
     {
-        ref var trans = ref _entity.GetMut<Transform>();
-        ref var vel = ref _entity.GetMut<Velocity>();
-        ref var col = ref _entity.GetMut<CollisionBox>();
-
-        var currentVy = vel.Vy;
-        PhysicsService.ApplyGravity(ref currentVy, pCfg.Gravity, pCfg.MaxFallSpeed, dt);
-        vel.Vy = currentVy;
-
-        var nextX = trans.X + vel.Vx * dt;
-        var nextY = trans.Y + vel.Vy * dt;
-
-        nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
-
-        var currentY = trans.Y;
-        Box2D playerBox = new(nextX, nextY, col.Width, col.Height);
-
-        var hitPlatform = false;
-        var platformGroundY = float.MaxValue;
-        var platformVy = 0.0f;
-
-        platformQuery.Each((ref platTrans, ref platCol) =>
-        {
-            Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
-            if (PhysicsService.CheckPlatformGround(
-                currentY,
-                nextY,
-                playerBox,
-                platformBox,
-                out var groundY,
-                out var vy))
-                if (!hitPlatform || groundY < platformGroundY)
-                {
-                    hitPlatform = true;
-                    platformGroundY = groundY;
-                    platformVy = vy;
-                }
-        });
-
-        var isGrounded = hitPlatform;
-        var adjustedPosY = hitPlatform ? platformGroundY : nextY;
-        var adjustedVy = hitPlatform ? platformVy : vel.Vy;
-
-        var floorLimitY = ConfigManager.Arena.FloorLimitY - col.Height / 2.0f;
-        if (adjustedPosY >= floorLimitY)
-        {
-            isGrounded = true;
-            adjustedPosY = floorLimitY;
-            adjustedVy = 0.0f;
-        }
-
-        if (isGrounded) RemainingJumps = _maxJumps;
-
-        trans.X = nextX;
-        trans.Y = adjustedPosY;
-        vel.Vy = adjustedVy;
-        col.IsGrounded = isGrounded;
+        KinematicMovementSystem.UpdateEntity(_entity, dt, platformQuery, arenaCfg, world);
     }
 
     private void UpdateAnimation(float dt)
