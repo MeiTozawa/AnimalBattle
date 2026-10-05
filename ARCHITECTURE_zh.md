@@ -39,14 +39,12 @@ flowchart TD
     subgraph Layer2["领域实体与自治代理层 (Pawn & Autonomous Agent)"]
         RootPawn["Pawn 战斗实体基类 (Zero-Has, Transform, Health, Sprite)"]
         PlayerPawn["PlayerPawn 自机躯体 (Pawn)"]
-        IBoss["IBossAgent 首领自治契约"]
-        BaseBoss["BaseBossAgent 首领代理基类 (Pawn, IBossAgent)"]
+        BaseBoss["BaseBossAgent 首领代理基类 (Pawn)"]
         Boss1["Boss1Agent 首领一自治代理"]
         Boss2["Boss2Agent 首领二自治代理"]
 
         RootPawn --> PlayerPawn
         RootPawn --> BaseBoss
-        IBoss --> BaseBoss
         BaseBoss --> Boss1
         BaseBoss --> Boss2
         PlayerCtrl -.组合.-> PlayerPawn
@@ -100,7 +98,7 @@ flowchart TD
 在早期架构中，Player 组合了 `ICharacter` 接口，而 Boss 控制器却实现了 `ICharacter` 接口，继承与组合关系极其混乱且类名缺乏自解释性。本次重构将其彻底正规化为 **Pawn - Controller - Agent** 工业级体系：
 * **Pawn 统一基类沉淀**：定义 `abstract class Pawn`，全量汇聚自机与首领高度通用的空间（`X/Y/Scale`）、物理（`Vx/Vy/SetVelocity`）、生命（`CurrentHp/MaxHp/ResetHealth`）、碰撞（`IsGrounded`）与视觉（`Sprite/FlipX/ClearTransientEffects`）能力，彻底消除了自机与各 Boss 子类的重复样板。
 * **自机采用 Controller - Pawn 组合模式**：`PlayerPawn` 仅专注于自机特有的二段跳（`RemainingJumps`）、射击冷却（`ShootCooldown`）与高层动作枚举（`CurrentState`）；`PlayerController` 独立负责硬件输入采集并向 `PlayerPawn` 注入移动与武器意图。
-* **首领采用 Autonomous Agent 继承模式**：首领不同于由硬件驱动的自机，其决策核心（AI 状态机）与受控躯体是高度不可分割的。因此首领采用 `Boss1Agent / Boss2Agent` 继承 `BaseBossAgent : Pawn, IBossAgent`，实现自主驱动（身脑合一），外部表现层仅需通过 `IBossAgent` 契约或 `Pawn` 门面进行观察。
+* **首领采用 Autonomous Agent 继承模式**：首领不同于由硬件驱动的自机，其决策核心（AI 状态机）与受控躯体是高度不可分割的。因此首领采用 `Boss1Agent / Boss2Agent` 继承 `BaseBossAgent : Pawn`，实现自主驱动（身脑合一），外部表现层仅需通过 `BaseBossAgent` 抽象基类或 `Pawn` 门面进行观察。
 
 ---
 
@@ -113,8 +111,7 @@ flowchart TD
 * `PlayerPawn.cs`：玩家自机受控躯体（Pawn）。继承 `Pawn`，负责在 ECS 中初始化装配生命、速度、无敌配置、跳跃能力与武器状态组件，并对外提供二段跳残数与射击冷却查询。
 * `PlayerController.cs`：自机输入控制器。独立组合 `PlayerPawn`，帧初轮询 `InputService` 物理按键，计算移动矢量、跳跃请求与 8 轴瞄准方向，直接注入 `CharacterMovementIntent` 与 `CharacterWeaponIntent`。
 * `PlayerState.cs`：自机高层动作状态枚举（Grounded, Airborne, Hurt, Dead）。
-* `Boss/IBossAgent.cs`：首领自治代理抽象契约。规范 Boss 型号、阶段、AI 行为状态、当前技能、易伤状态、朝向与 `Update(dt)` / `Reset()` 接口。
-* `Boss/BaseBossAgent.cs`：首领自治代理基类。继承 `Pawn` 并实现 `IBossAgent`，统一管理 AI 运行时插槽、观测服务、帧步进时钟以及战斗状态同步，消除了重复的坐标与生命代理。
+* `Boss/BaseBossAgent.cs`：首领自治代理基类。继承 `Pawn` 并实现 `IDisposable`，统一管理 AI 运行时插槽、观测服务、帧步进时钟以及战斗状态同步，消除了重复的坐标与生命代理。
 * `Boss/Boss1Agent.cs`：第一首领（古代猫霸主・机械飞龙）自治代理。继承 `BaseBossAgent`，装配 Boss 1 属性，驱动浮游高度控制与多阶段技能弹幕决策。
 * `Boss/Boss2Agent.cs`：第二首领（碎地巨兽）自治代理。继承 `BaseBossAgent`，集成 `PlatformNavigationGraph` 平台拓扑寻路、近战连击斩、地震波跳砸与地面贴附逻辑。
 * `BattleScene.cs`：战斗主场景控制器。构建 Flecs 核心世界，预分配实体池，装配 `PlayerPawn`、`PlayerController` 与多态 `BaseBossAgent`，调度帧三阶段流水线，提供 Boss 切换与即时重置能力。

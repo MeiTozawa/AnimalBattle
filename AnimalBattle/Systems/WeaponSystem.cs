@@ -15,7 +15,7 @@ public static class WeaponSystem
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
     /// <returns>メソッドチェーン用の <see cref="World"/></returns>
-    public static World AddCharacterWeaponSystem(this World world)
+    public static World AddWeaponSystem(this World world)
     {
         world.System<Transform, WeaponIntent, WeaponState>("WeaponSystem")
             .Kind(Ecs.OnUpdate)

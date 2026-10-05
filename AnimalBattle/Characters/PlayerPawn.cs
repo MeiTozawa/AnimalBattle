@@ -1,9 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters;
@@ -30,7 +27,7 @@ public sealed class PlayerPawn : Pawn
            .Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
            .Set(new Velocity(0.0f))
            .Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight))
-           .Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly))
+           .Set(new Hurtbox(pCfg.GetHurtboxShape()))
            .Set(new Animation("Idle"))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 64, 64)))
            .Set(new MovementIntent())
@@ -38,18 +35,6 @@ public sealed class PlayerPawn : Pawn
            .Set(JumpCapability.FromPlayerConfig(pCfg))
            .Set(WeaponState.FromPlayerConfig(pCfg))
            .Add<PlayerTag>();
-    }
-
-    /// <summary>プレイヤーの現在の高レベル動作状態を取得します。</summary>
-    public PlayerState CurrentState
-    {
-        get
-        {
-            if (CurrentHp <= 0.0f) return PlayerState.Dead;
-            if (IsInvincible) return PlayerState.Hurt;
-            if (IsGrounded) return PlayerState.Grounded;
-            return PlayerState.Airborne;
-        }
     }
 
     /// <summary>残り二段ジャンプ回数を取得または設定します。</summary>

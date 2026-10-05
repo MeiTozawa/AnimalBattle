@@ -23,8 +23,8 @@ public class PlayerControllerTests
 
         controller.SubmitInput(moveX: -1.0f, jumpPressed: true, jumpHolding: true, shootPressed: true);
 
-        ref readonly var moveIntent = ref entity.Get<CharacterMovementIntent>();
-        ref readonly var weaponIntent = ref entity.Get<CharacterWeaponIntent>();
+        ref readonly var moveIntent = ref entity.Get<MovementIntent>();
+        ref readonly var weaponIntent = ref entity.Get<WeaponIntent>();
 
         Assert.Equal(-1.0f, moveIntent.MoveX);
         Assert.True(moveIntent.JumpTriggered);
@@ -42,7 +42,7 @@ public class PlayerControllerTests
 
         controller.SubmitInput(moveX: 0.0f, jumpPressed: false, jumpHolding: false, shootPressed: true, aimDirX: 0.0f, aimDirY: -1.0f);
 
-        ref readonly var weaponIntent = ref entity.Get<CharacterWeaponIntent>();
+        ref readonly var weaponIntent = ref entity.Get<WeaponIntent>();
         Assert.True(weaponIntent.ShootTriggered);
         Assert.Equal(0.0f, weaponIntent.AimDirectionX);
         Assert.Equal(-1.0f, weaponIntent.AimDirectionY);

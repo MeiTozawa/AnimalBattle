@@ -4,14 +4,14 @@ using Xunit;
 namespace AnimalBattle.Tests.Characters;
 
 /// <summary>
-///     キャラクター制御意図コンポーネント（CharacterMovementIntent / CharacterWeaponIntent）のテスト。
+///     キャラクター制御意図コンポーネント（MovementIntent / WeaponIntent）のテスト。
 /// </summary>
 public class CharacterIntentTests
 {
     [Fact]
-    public void CharacterMovementIntent_Reset_ClearsAllInputs()
+    public void MovementIntent_Reset_ClearsAllInputs()
     {
-        var intent = new CharacterMovementIntent
+        var intent = new MovementIntent
         {
             MoveX = 1.0f,
             JumpTriggered = true,
@@ -26,9 +26,9 @@ public class CharacterIntentTests
     }
 
     [Fact]
-    public void CharacterWeaponIntent_Reset_ClearsFireState()
+    public void WeaponIntent_Reset_ClearsFireState()
     {
-        var intent = new CharacterWeaponIntent
+        var intent = new WeaponIntent
         {
             ShootTriggered = true,
             AimDirectionX = 1.0f,

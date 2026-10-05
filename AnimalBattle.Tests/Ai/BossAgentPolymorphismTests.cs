@@ -13,7 +13,7 @@ namespace AnimalBattle.Tests.Ai;
 public sealed class BossAgentPolymorphismTests
 {
     [Fact]
-    public void BossAgents_InheritFromPawn_AndImplementIBossAgent()
+    public void BossAgents_InheritFromPawn_AndBaseBossAgent()
     {
         using var world = World.Create();
         world.Import<AnimalBattle.Modules.ComponentRequirementsModule>();
@@ -26,11 +26,11 @@ public sealed class BossAgentPolymorphismTests
         using var boss2 = new Boss2Agent(b2Entity, 2, () => null);
 
         Assert.True(boss1 is Pawn);
-        Assert.True(boss1 is IBossAgent);
+        Assert.True(boss1 is BaseBossAgent);
         Assert.Equal(BossType.Boss1, boss1.BossType);
 
         Assert.True(boss2 is Pawn);
-        Assert.True(boss2 is IBossAgent);
+        Assert.True(boss2 is BaseBossAgent);
         Assert.Equal(BossType.Boss2, boss2.BossType);
 
         // Pawn 基底クラスからの血量アクセサ検証

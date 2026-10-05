@@ -21,8 +21,8 @@ public readonly struct BulletModule : IFlecsModule {
            .AddPlayerAnimationStateSystem()
            .AddBulletPhysicsSystem()
            .AddSpecialBulletSystem()
-           .AddKinematicMovementSystem()
-           .AddCharacterWeaponSystem()
+           .AddMovementSystem()
+           .AddWeaponSystem()
            .AddCombatCollisionSystem()
            .AddDamageResolutionSystem();
     }

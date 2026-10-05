@@ -7,7 +7,7 @@ using Xunit;
 namespace AnimalBattle.Tests.Physics;
 
 /// <summary>
-///     汎用キネマティック運動物理システム <see cref="KinematicMovementSystem"/> の動作検証テスト。
+///     汎用キネマティック運動物理システム <see cref="MovementSystem"/> の動作検証テスト。
 /// </summary>
 public class KinematicMovementSystemTests
 {
@@ -19,12 +19,12 @@ public class KinematicMovementSystemTests
             .Set(new Transform(100.0f, 100.0f, 1.0f, 1.0f))
             .Set(new Velocity(0.0f, 0.0f))
             .Set(new CollisionBox(32.0f, 32.0f))
-            .Set(new CharacterMovementIntent { MoveX = 1.0f })
+            .Set(new MovementIntent { MoveX = 1.0f })
             .Set(new JumpCapability { MaxJumps = 2, RemainingJumps = 2, MoveSpeed = 200.0f, Gravity = 1000.0f, MaxFallSpeed = 500.0f });
 
         var platformQuery = world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
 
-        KinematicMovementSystem.UpdateEntity(entity, 0.1f, platformQuery);
+        MovementSystem.UpdateEntity(entity, 0.1f, platformQuery);
 
         ref readonly var vel = ref entity.Get<Velocity>();
         Assert.Equal(200.0f, vel.Vx);
@@ -39,7 +39,7 @@ public class KinematicMovementSystemTests
             .Set(new Transform(100.0f, 100.0f, 1.0f, 1.0f))
             .Set(new Velocity(0.0f, 0.0f))
             .Set(new CollisionBox(32.0f, 32.0f) { IsGrounded = true })
-            .Set(new CharacterMovementIntent { JumpTriggered = true })
+            .Set(new MovementIntent { JumpTriggered = true })
             .Set(new JumpCapability { 
                 MaxJumps = 2, 
                 RemainingJumps = 2, 
@@ -50,7 +50,7 @@ public class KinematicMovementSystemTests
 
         var platformQuery = world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
 
-        KinematicMovementSystem.UpdateEntity(entity, 0.016f, platformQuery);
+        MovementSystem.UpdateEntity(entity, 0.016f, platformQuery);
 
         ref readonly var vel = ref entity.Get<Velocity>();
         ref readonly var jump = ref entity.Get<JumpCapability>();
@@ -63,13 +63,13 @@ public class KinematicMovementSystemTests
     {
         using var world = World.Create();
         var platformQuery = world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
-        world.AddKinematicMovementSystem(platformQuery);
+        world.AddMovementSystem(platformQuery);
 
         var entity = world.Entity("Pawn")
             .Set(new Transform(100.0f, 100.0f, 1.0f, 1.0f))
             .Set(new Velocity(0.0f, 0.0f))
             .Set(new CollisionBox(32.0f, 32.0f))
-            .Set(new CharacterMovementIntent { MoveX = 1.0f })
+            .Set(new MovementIntent { MoveX = 1.0f })
             .Set(new JumpCapability { MoveSpeed = 200.0f, Gravity = 0.0f, MaxFallSpeed = 500.0f });
 
         world.Progress(0.1f);

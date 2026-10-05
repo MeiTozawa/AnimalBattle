@@ -1,6 +1,3 @@
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-
 namespace AnimalBattle.Characters;
 
 /// <summary>
@@ -18,7 +15,7 @@ public sealed class PlayerController
     public PlayerController(PlayerPawn pawn)
     {
         System.Diagnostics.Debug.Assert(pawn != null, "PlayerPawn インスタンスは null であってはなりません。");
-        _pawn = pawn!;
+        _pawn = pawn;
     }
 
     /// <summary>制御対象の PlayerPawn を取得します。</summary>
@@ -92,8 +89,11 @@ public sealed class PlayerController
         weaponIntent.AimDirectionX = aimDirX ?? (_pawn.FlipX ? -1.0f : 1.0f);
         weaponIntent.AimDirectionY = aimDirY ?? 0.0f;
 
-        // 移動入力に応じた描画スプライトの左右反転同期
-        if (moveX < -0.01f) _pawn.FlipX = true;
-        else if (moveX > 0.01f) _pawn.FlipX = false;
+        _pawn.FlipX = moveX switch {
+            // 移動入力に応じた描画スプライトの左右反転同期
+            < -0.01f => true,
+            > 0.01f => false,
+            _ => _pawn.FlipX
+        };
     }
 }

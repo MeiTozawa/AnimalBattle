@@ -33,8 +33,8 @@ public class CombatSceneIntegrationTests
         controller.SubmitInput(moveX: 1.0f, jumpPressed: false, jumpHolding: false, shootPressed: true);
 
         // 3. パイプラインの実行
-        KinematicMovementSystem.UpdateEntity(pEnt, 0.1f, platformQuery);
-        CharacterWeaponSystem.UpdateEntity(pEnt, 0.1f, world);
+        MovementSystem.UpdateEntity(pEnt, 0.1f, platformQuery);
+        WeaponSystem.UpdateEntity(pEnt, 0.1f, world);
 
         // 4. 座標前進および弾丸生成の検証
         Assert.True(player.X > 0.0f);
@@ -55,8 +55,8 @@ public class CombatSceneIntegrationTests
         var platformQuery = world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
 
         controller.SubmitInput(moveX: 1.0f, jumpPressed: false, jumpHolding: false, shootPressed: true);
-        KinematicMovementSystem.UpdateEntity(pEnt, 0.1f, platformQuery);
-        CharacterWeaponSystem.UpdateEntity(pEnt, 0.1f, world);
+        MovementSystem.UpdateEntity(pEnt, 0.1f, platformQuery);
+        WeaponSystem.UpdateEntity(pEnt, 0.1f, world);
         world.Progress(0.1f);
 
         Assert.True(player.X > 0.0f);
@@ -96,7 +96,7 @@ public class CombatSceneIntegrationTests
         var pController = new PlayerController(player);
 
         var bEnt = world.Entity("B1");
-        using IBossAgent boss = new Boss1Agent(bEnt, -1);
+        using BaseBossAgent boss = new Boss1Agent(bEnt, -1);
 
         // 2. コントローラー意思決定フェーズ（意図注入）
         pController.SubmitInput(moveX: 1.0f, jumpPressed: false, jumpHolding: false, shootPressed: true);

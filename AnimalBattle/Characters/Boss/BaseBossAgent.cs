@@ -1,9 +1,6 @@
-using System;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
-using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters.Boss;
@@ -12,9 +9,9 @@ namespace AnimalBattle.Characters.Boss;
 ///     多態 Boss 自治エージェント共通の基底抽象クラス。
 ///     <see cref="Pawn" /> を継承し、AI 状態機械の更新、コマンド適用、および戦闘状態同期ライフサイクルを一元管理します。
 /// </summary>
-public abstract class BaseBossAgent : Pawn, IBossAgent
+public abstract class BaseBossAgent : Pawn, IDisposable
 {
-    /// <inheritdoc />
+    /// <summary>Boss の種別を取得します。</summary>
     public BossType BossType => Slot.AiData.BossType;
 
     /// <summary>Boss AI ランタイムを取得します。</summary>
@@ -29,37 +26,37 @@ public abstract class BaseBossAgent : Pawn, IBossAgent
     /// <summary>現在の実行フレーム数を取得または設定します。</summary>
     protected long FrameNumber { get; set; }
 
-    /// <inheritdoc />
+    /// <summary>現在の Phase を取得します。</summary>
     public Phase Phase => Slot.Phase;
 
-    /// <inheritdoc />
+    /// <summary>現在の Boss 状態を取得します。</summary>
     public BossState CurrentState => Slot.CurrentStateId;
 
-    /// <inheritdoc />
+    /// <summary>現在選択されている攻撃技能種別を取得します。</summary>
     public abstract BossSkill CurrentSkill { get; }
 
-    /// <inheritdoc />
+    /// <summary>現在選択されている攻撃技能名を取得します。</summary>
     public string SkillName => CurrentSkill != BossSkill.None ? CurrentSkill.ToString() : string.Empty;
 
-    /// <inheritdoc />
+    /// <summary>現在状態の経過時間（秒）を取得します。</summary>
     public abstract float StateTimer { get; }
 
-    /// <inheritdoc />
+    /// <summary>現在状態の目標持続時間（秒）を取得します。</summary>
     public float StateDuration => GetCurrentStateDuration();
 
-    /// <inheritdoc />
+    /// <summary>Boss 1 の浮遊タイマー値を取得します。</summary>
     public virtual float HoverTimer => 0.0f;
 
-    /// <inheritdoc />
+    /// <summary>AI 目標地点 X 座標を取得します。</summary>
     public float TargetX => Slot.TargetPositionX;
 
-    /// <inheritdoc />
+    /// <summary>AI 目標地点 Y 座標を取得します。</summary>
     public float TargetY => Slot.TargetPositionY;
 
-    /// <inheritdoc />
+    /// <summary>Boss が後隙による易傷状態であるかを取得します。</summary>
     public abstract bool IsVulnerable { get; }
 
-    /// <inheritdoc />
+    /// <summary>Boss が右向きであるかを取得します。</summary>
     public virtual bool FacingRight => Slot.MovementData.FacingRight;
 
     /// <summary>被ダメージ倍率を取得します（易傷状態時は倍加）。</summary>
@@ -83,7 +80,14 @@ public abstract class BaseBossAgent : Pawn, IBossAgent
         Observation = observation;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     フレームごとの Boss AI 評価、移動・弾幕・演出コマンド適用を実行します。
+    /// </summary>
+    /// <param name="deltaTime">前フレームからの経過時間（秒）。</param>
+    /// <param name="playerPosition">プレイヤー自機の現在座標。</param>
+    /// <param name="playerVelocity">プレイヤー自機の現在速度。</param>
+    /// <param name="world">Flecs ECS ワールド。</param>
+    /// <param name="platformQuery">足場・地形判定用クエリ。</param>
     public void Update(
         float deltaTime,
         Vec2f playerPosition,
@@ -138,7 +142,9 @@ public abstract class BaseBossAgent : Pawn, IBossAgent
         Update(deltaTime, playerPosition, Vec2f.Zero, world, platformQuery);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Boss の状態を初期位置および初期パラメータへリセットします。
+    /// </summary>
     public virtual void Reset()
     {
         FrameNumber = 0;
@@ -164,7 +170,9 @@ public abstract class BaseBossAgent : Pawn, IBossAgent
     /// <summary>リセット時のサブクラス固有の座標・体力・状態復元を実行します。</summary>
     protected abstract void OnReset();
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Boss エージェントのリソースを解放します。
+    /// </summary>
     public virtual void Dispose()
     {
         GC.SuppressFinalize(this);

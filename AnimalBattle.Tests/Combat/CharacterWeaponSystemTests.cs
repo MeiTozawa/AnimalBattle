@@ -7,7 +7,7 @@ using Xunit;
 namespace AnimalBattle.Tests.Combat;
 
 /// <summary>
-///     汎用武器射撃システム <see cref="CharacterWeaponSystem"/> の冷却および弾丸生成テスト。
+///     汎用武器射撃システム <see cref="WeaponSystem"/> の冷却および弾丸生成テスト。
 /// </summary>
 public class CharacterWeaponSystemTests
 {
@@ -18,7 +18,7 @@ public class CharacterWeaponSystemTests
 
         var entity = world.Entity("Shooter")
             .Set(new Transform(100.0f, 100.0f, 1.0f, 1.0f))
-            .Set(new CharacterWeaponIntent { ShootTriggered = true, AimDirectionX = 1.0f, AimDirectionY = 0.0f })
+            .Set(new WeaponIntent { ShootTriggered = true, AimDirectionX = 1.0f, AimDirectionY = 0.0f })
             .Set(new WeaponState
             {
                 CooldownRemaining = 0.0f,
@@ -31,7 +31,7 @@ public class CharacterWeaponSystemTests
                 BulletSpawnOffsetY = 0.0f
             });
 
-        CharacterWeaponSystem.UpdateEntity(entity, 0.016f, world);
+        WeaponSystem.UpdateEntity(entity, 0.016f, world);
 
         ref readonly var weapon = ref entity.Get<WeaponState>();
         Assert.Equal(0.2f, weapon.CooldownRemaining);
@@ -49,7 +49,7 @@ public class CharacterWeaponSystemTests
 
         var entity = world.Entity("Shooter")
             .Set(new Transform(100.0f, 100.0f, 1.0f, 1.0f))
-            .Set(new CharacterWeaponIntent { ShootTriggered = true, AimDirectionX = 1.0f, AimDirectionY = 0.0f })
+            .Set(new WeaponIntent { ShootTriggered = true, AimDirectionX = 1.0f, AimDirectionY = 0.0f })
             .Set(new WeaponState
             {
                 CooldownRemaining = 0.15f,
@@ -58,7 +58,7 @@ public class CharacterWeaponSystemTests
                 BulletDamage = 1.0f
             });
 
-        CharacterWeaponSystem.UpdateEntity(entity, 0.05f, world);
+        WeaponSystem.UpdateEntity(entity, 0.05f, world);
 
         ref readonly var weapon = ref entity.Get<WeaponState>();
         Assert.True(weapon.CooldownRemaining > 0.0f);
@@ -73,11 +73,11 @@ public class CharacterWeaponSystemTests
     public void CharacterWeaponSystem_ExecutesInWorldProgress_Automatically()
     {
         using var world = World.Create();
-        world.AddCharacterWeaponSystem();
+        world.AddWeaponSystem();
 
         var entity = world.Entity("Shooter")
             .Set(new Transform(100.0f, 100.0f, 1.0f, 1.0f))
-            .Set(new CharacterWeaponIntent { ShootTriggered = true, AimDirectionX = 1.0f, AimDirectionY = 0.0f })
+            .Set(new WeaponIntent { ShootTriggered = true, AimDirectionX = 1.0f, AimDirectionY = 0.0f })
             .Set(new WeaponState
             {
                 CooldownRemaining = 0.0f,
