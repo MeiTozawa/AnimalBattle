@@ -291,11 +291,13 @@ public static class CombatEffectHelper {
     public static void SpawnGroundShockwave(World world, float x, float y, float vx, float radius, float damage,
         Color fillColor, Color outlineColor)
     {
-        CombatEntityPoolHelper.RentBossBullet(world)
+        var entity = CombatEntityPoolHelper.RentBossBullet(world)
            .Set(new Transform(x, y))
-           .Set(new Velocity(vx))
+           .Set(new Velocity(vx, 0.0f))
            .Set(new Bullet(radius, fillColor, outlineColor))
            .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile))
            .Add<BossBulletTag>();
+
+        if (entity.Has<BulletModifier>()) entity.Remove<BulletModifier>();
     }
 }
