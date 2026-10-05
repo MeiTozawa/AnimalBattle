@@ -4,9 +4,6 @@ using AnimalBattle.Ai.Runtime;
 namespace AnimalBattle.Ai.Boss2;
 
 internal static class Boss2ModuleSupport {
-    internal static BossState SafeMovementState => Boss2State.Idle;
-    internal static BossState SafeAttackState => Boss2State.Idle;
-
     internal static bool IsBoss2(in StateContext context, in LifecycleInvocation invocation)
     {
         return context.BossType == BossType.Boss2 && invocation.BossType == BossType.Boss2;

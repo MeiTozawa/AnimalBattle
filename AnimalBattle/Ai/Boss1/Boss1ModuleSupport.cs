@@ -79,11 +79,6 @@ internal static class Boss1ModuleSupport {
         }
     }
 
-    internal static float Clamp01(float value)
-    {
-        return MathF.Max(0.0f, MathF.Min(1.0f, value));
-    }
-
     internal static float Ease(float progress, EaseType easeType)
     {
         return EasingMath.Evaluate(easeType, progress);

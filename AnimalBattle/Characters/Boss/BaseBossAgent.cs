@@ -35,9 +35,6 @@ public abstract class BaseBossAgent : Pawn, IDisposable
     /// <summary>現在選択されている攻撃技能種別を取得します。</summary>
     public abstract BossSkill CurrentSkill { get; }
 
-    /// <summary>現在選択されている攻撃技能名を取得します。</summary>
-    public string SkillName => CurrentSkill != BossSkill.None ? CurrentSkill.ToString() : string.Empty;
-
     /// <summary>現在状態の経過時間（秒）を取得します。</summary>
     public abstract float StateTimer { get; }
 
@@ -58,9 +55,6 @@ public abstract class BaseBossAgent : Pawn, IDisposable
 
     /// <summary>Boss が右向きであるかを取得します。</summary>
     public virtual bool FacingRight => Slot.MovementData.FacingRight;
-
-    /// <summary>被ダメージ倍率を取得します（易傷状態時は倍加）。</summary>
-    public float DamageMultiplier => IsVulnerable ? ConfigManager.Player.VulnerableDamageMultiplier : 1.0f;
 
     /// <summary>
     ///     対象の Flecs エンティティと AI 定義を指定して基底クラスを初期化します。

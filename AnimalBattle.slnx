@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AnimalBattle.Tests/AnimalBattle.Tests.csproj" />
+  <Project Path="AnimalBattle/AnimalBattle.csproj" />
+</Solution>

@@ -137,7 +137,7 @@ public static class Boss2PipelineDefinition {
     {
         builder.Telegraph(pattern.EarthquakeRoar.WindUpTime, pattern.EarthquakeRoar.TelegraphColor)
            .Execute(pattern.EarthquakeRoar.CastDuration, pattern.EarthquakeRoar.MaxX);
-        var roarInterval = pattern.EarthquakeRoar.Interval > 0 ? pattern.EarthquakeRoar.Interval : 0.25f;
+        var roarInterval = pattern.EarthquakeRoar.Interval;
         for (var t = 0.0f; t < pattern.EarthquakeRoar.CastDuration; t += roarInterval)
             builder.Action(t, act => act.Bullet(0.0f, pattern.EarthquakeRoar.RockSpeed));
         builder.Recovery(pattern.EarthquakeRoar.RecoveryTime)
@@ -147,10 +147,10 @@ public static class Boss2PipelineDefinition {
     private static void ConfigureLeapSmash(AttackPipelineBuilder builder, PatternConfig pattern,
         List<AttackRuleConfig>? rules)
     {
-        var flyDuration = pattern.LeapSmash.FlyDuration > 0.0f ? pattern.LeapSmash.FlyDuration : 0.45f;
-        var peakY = pattern.LeapSmash.PeakAltitudeY > 0.0f ? pattern.LeapSmash.PeakAltitudeY : 130.0f;
-        var hangDuration = pattern.LeapSmash.ApexHangDuration > 0.0f ? pattern.LeapSmash.ApexHangDuration : 0.50f;
-        var descentSpeed = pattern.LeapSmash.DescentSpeed > 0.0f ? pattern.LeapSmash.DescentSpeed : 1200.0f;
+        var flyDuration = pattern.LeapSmash.FlyDuration;
+        var peakY = pattern.LeapSmash.PeakAltitudeY;
+        var hangDuration = pattern.LeapSmash.ApexHangDuration;
+        var descentSpeed = pattern.LeapSmash.DescentSpeed;
         var diveStartTime = flyDuration + hangDuration;
         var maxExecuteDuration = MathF.Max(pattern.LeapSmash.CastDuration, diveStartTime + 1.5f);
 
@@ -161,11 +161,5 @@ public static class Boss2PipelineDefinition {
            .OnGrounded(act => act.Hitbox(0.0f, 45.0f))
            .Recovery(pattern.LeapSmash.RecoveryTime)
            .Rule(rules);
-    }
-
-    private static AttackRuleConfig? FindRule(List<AttackRuleConfig>? rules, BossSkill skill)
-    {
-        var skillName = skill.ToString();
-        return rules?.Find(r => string.Equals(r.Skill, skillName, StringComparison.OrdinalIgnoreCase));
     }
 }
