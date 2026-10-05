@@ -13,12 +13,8 @@ flowchart TD
     subgraph Layer5["表现与控制器层 (Controller & Presentation)"]
         BattleScene["BattleScene 场景主循环控制器"]
         PlayerCtrl["PlayerController 玩家输入控制器"]
-        Boss1Ctrl["Boss1Controller 首领一多态控制器"]
-        Boss2Ctrl["Boss2Controller 首领二多态控制器"]
         HudSystem["HudRenderSystem HUD 状态渲染"]
         BattleScene --> PlayerCtrl
-        BattleScene --> Boss1Ctrl
-        BattleScene --> Boss2Ctrl
         BattleScene --> HudSystem
     end
 
@@ -28,8 +24,6 @@ flowchart TD
         CmdBuffer["PreallocatedCommandBuffer 首领指令队列"]
         PlayerCtrl --> MoveIntent
         PlayerCtrl --> WeaponIntent
-        Boss1Ctrl --> CmdBuffer
-        Boss2Ctrl --> CmdBuffer
     end
 
     subgraph Layer3["ECS 纯数据管线层 (Pure-ECS Pipeline)"]
@@ -42,13 +36,26 @@ flowchart TD
         FlecsWorld --> Modules
     end
 
-    subgraph Layer2["领域门面与只读视图层 (Domain Pawn & Readonly View)"]
-        IChar["ICharacter 只读领域观察契约 (Zero-Has)"]
-        PlayerPawn["Player 角色实体门面 (Pawn)"]
-        BossPawn["BaseBossController 首领实体门面 (Pawn)"]
-        PlayerPawn -.实现.-> IChar
-        BossPawn -.实现.-> IChar
-        HudSystem -.观察.-> IChar
+    subgraph Layer2["领域实体与自治代理层 (Pawn & Autonomous Agent)"]
+        RootPawn["Pawn 战斗实体基类 (Zero-Has, Transform, Health, Sprite)"]
+        PlayerPawn["PlayerPawn 自机躯体 (Pawn)"]
+        IBoss["IBossAgent 首领自治契约"]
+        BaseBoss["BaseBossAgent 首领代理基类 (Pawn, IBossAgent)"]
+        Boss1["Boss1Agent 首领一自治代理"]
+        Boss2["Boss2Agent 首领二自治代理"]
+
+        RootPawn --> PlayerPawn
+        RootPawn --> BaseBoss
+        IBoss --> BaseBoss
+        BaseBoss --> Boss1
+        BaseBoss --> Boss2
+        PlayerCtrl -.组合.-> PlayerPawn
+        BattleScene --> Boss1
+        BattleScene --> Boss2
+        Boss1 --> CmdBuffer
+        Boss2 --> CmdBuffer
+        HudSystem -.观察.-> RootPawn
+        HudSystem -.观察.-> BaseBoss
     end
 
     subgraph Layer1["基础设施与非托管内存层"]
@@ -71,8 +78,7 @@ flowchart TD
     WeaponIntent --> Systems
     CmdBuffer --> Systems
     Systems --> Components
-    Components --> PlayerPawn
-    Components --> BossPawn
+    Components --> RootPawn
 ```
 
 ### 1.1 为什么必须实现 100% ECS 纯数据伤害管线
@@ -85,14 +91,16 @@ flowchart TD
 
 ### 1.2 彻底消除热路径中的 `Entity.Has<T>()` 反模式（Zero-Has Hot Path Principle）
 在 Flecs.NET 中，`Entity.Has<T>()` 会触发原生 ID 查找与跨语言边界开销，在高频热循环（Hot Path）中属于严重的性能反模式。
-本项目通过以下两项关键设计根治此问题：
+本项目通过以下三项关键设计根治此问题：
 1. **构造期组件拓扑依赖保证**：通过 `ComponentRequirementsModule` 的 `Ecs.With` 关系，保证挂载 `PlayerTag`、`BossTag` 的实体必含有齐备的组件集合（`Transform`、`Velocity`、`Health`、`Hurtbox` 等），从架构上杜绝运行时防御性检查。
-2. **只读角色领域视图（ICharacter Zero-Overhead Default Implementations）**：`ICharacter` 接口作为只读领域视图，彻底移除 `TakeDamage()` 等变异方法，仅保留 `Entity` 句柄。其属性访问器采用 C# 8.0+ 接口默认实现直接获取组件引用（`Entity.Get<T>()`），在 HUD 渲染与状态观察中达成零 `Has<T>`、零样板代码、纳秒级直接解引用。
+2. **富功能 Pawn 实体基类直接解引用**：`abstract class Pawn` 作为所有战斗实体的根基类，内部持唯一 `Entity` 句柄，其属性访问器直接解引用组件（`Entity.Get<Transform>().X`、`Entity.Get<Health>().Current` 等），在 HUD 渲染与状态观察中达成零 `Has<T>`、零冗余重载、纳秒级直接解引用。
 3. **系统查询签名直接注入**：各 ECS 物理与战斗系统全部通过参数签名获取连续组件数组（`world.System<Transform, Velocity, ...>()`），消除了在循环体内部进行任何组件探查的需要。
 
-### 1.3 为什么解耦为 PlayerController 与多态 BossController
-* **Player 角色解耦**：`Player` 从原本兼顾物理移动、跳跃扫引、按键轮询、武器发射的大单体退化为纯粹的 **Pawn / 实体装配门面**。硬件输入采集收敛至 `PlayerController`，转换为 `CharacterMovementIntent` 与 `CharacterWeaponIntent` 意图组件；物理运动由 `KinematicMovementSystem` 统一积分；射击冷却与子弹生成由 `CharacterWeaponSystem` 驱动。
-* **Boss 彻底拆解**：原先包含大量 `if (bossType == BossType.Boss1)` 伪多态分支的 560+ 行 `BossCharacter` 大单体被彻底废除（仅保留用于后方兼容的过时外壳）。通过提取抽象基类 `BaseBossController`，派生出 `Boss1Controller`（机械飞龙浮游飞行与弹幕散射）与 `Boss2Controller`（重装碎地者平台寻路、近战劈砍与冲击波跳砸），实现了真正的面向对象多态封装。
+### 1.3 为什么重构为清晰的 Pawn - Controller - Agent 架构体系
+在早期架构中，Player 组合了 `ICharacter` 接口，而 Boss 控制器却实现了 `ICharacter` 接口，继承与组合关系极其混乱且类名缺乏自解释性。本次重构将其彻底正规化为 **Pawn - Controller - Agent** 工业级体系：
+* **Pawn 统一基类沉淀**：定义 `abstract class Pawn`，全量汇聚自机与首领高度通用的空间（`X/Y/Scale`）、物理（`Vx/Vy/SetVelocity`）、生命（`CurrentHp/MaxHp/ResetHealth`）、碰撞（`IsGrounded`）与视觉（`Sprite/FlipX/ClearTransientEffects`）能力，彻底消除了自机与各 Boss 子类的重复样板。
+* **自机采用 Controller - Pawn 组合模式**：`PlayerPawn` 仅专注于自机特有的二段跳（`RemainingJumps`）、射击冷却（`ShootCooldown`）与高层动作枚举（`CurrentState`）；`PlayerController` 独立负责硬件输入采集并向 `PlayerPawn` 注入移动与武器意图。
+* **首领采用 Autonomous Agent 继承模式**：首领不同于由硬件驱动的自机，其决策核心（AI 状态机）与受控躯体是高度不可分割的。因此首领采用 `Boss1Agent / Boss2Agent` 继承 `BaseBossAgent : Pawn, IBossAgent`，实现自主驱动（身脑合一），外部表现层仅需通过 `IBossAgent` 契约或 `Pawn` 门面进行观察。
 
 ---
 
@@ -101,16 +109,15 @@ flowchart TD
 ### 表现与角色领域层
 位于 `AnimalBattle/Characters/` 与 `AnimalBattle/Scenes/`。
 
-* `ICharacter.cs`：统一受控角色只读领域视图契约。采用 C# 默认接口实现，零 `Has<T>` 检查直接透传访问底层 ECS 实体的 `Transform`、`Velocity`、`Health`、`Hurtbox` 与 `Sprite`。
-* `Player.cs`：玩家自机实体装配门面（Pawn）。负责在 ECS 中初始化装配生命、速度、无敌配置、跳跃能力与武器状态组件，并对外提供高层动作状态查询。
-* `PlayerController.cs`：自机输入控制器。帧初轮询 `InputService` 物理按键，计算移动矢量、跳跃请求与 8 轴瞄准方向，注入 `CharacterMovementIntent` 与 `CharacterWeaponIntent`。
+* `Pawn.cs`：战斗空间全量受控实体（自机与首领）的通用抽象基类。内部持有唯一真理源 `Entity` 句柄，提供零 `Has<T>` 的空间坐标、线速度、生命值、碰撞判定、精灵与动画的快捷存取和重置方法。
+* `PlayerPawn.cs`：玩家自机受控躯体（Pawn）。继承 `Pawn`，负责在 ECS 中初始化装配生命、速度、无敌配置、跳跃能力与武器状态组件，并对外提供二段跳残数与射击冷却查询。
+* `PlayerController.cs`：自机输入控制器。独立组合 `PlayerPawn`，帧初轮询 `InputService` 物理按键，计算移动矢量、跳跃请求与 8 轴瞄准方向，直接注入 `CharacterMovementIntent` 与 `CharacterWeaponIntent`。
 * `PlayerState.cs`：自机高层动作状态枚举（Grounded, Airborne, Hurt, Dead）。
-* `Boss/IBossController.cs`：多态首领领域控制器抽象契约。规范 Boss 型号、阶段、AI 行为状态、当前技能、易伤状态、朝向与 `Update(dt)` / `Reset()` 接口。
-* `Boss/BaseBossController.cs`：首领控制器抽象基类。管理共有的 Flecs 实体句柄、AI 运行时插槽、观测服务、帧步进时钟以及战斗状态同步。
-* `Boss/Boss1Controller.cs`：第一首领（古代猫霸主）具体控制器。装配 Boss 1 属性，驱动浮游高度控制与多阶段技能弹幕决策。
-* `Boss/Boss2Controller.cs`：第二首领（碎地巨兽）具体控制器。集成 `PlatformNavigationGraph` 平台拓扑寻路、近战连击斩、地震波跳砸与地面贴附逻辑。
-* `BossCharacter.cs`：标记为 `[Obsolete]` 的后向兼容门面，统一转调多态 Boss 控制器。
-* `BattleScene.cs`：战斗主场景控制器。构建 Flecs 核心世界，预分配实体池，构建地图足场碰撞体，调度帧三阶段流水线，提供 Boss 切换与即时重置能力。
+* `Boss/IBossAgent.cs`：首领自治代理抽象契约。规范 Boss 型号、阶段、AI 行为状态、当前技能、易伤状态、朝向与 `Update(dt)` / `Reset()` 接口。
+* `Boss/BaseBossAgent.cs`：首领自治代理基类。继承 `Pawn` 并实现 `IBossAgent`，统一管理 AI 运行时插槽、观测服务、帧步进时钟以及战斗状态同步，消除了重复的坐标与生命代理。
+* `Boss/Boss1Agent.cs`：第一首领（古代猫霸主・机械飞龙）自治代理。继承 `BaseBossAgent`，装配 Boss 1 属性，驱动浮游高度控制与多阶段技能弹幕决策。
+* `Boss/Boss2Agent.cs`：第二首领（碎地巨兽）自治代理。继承 `BaseBossAgent`，集成 `PlatformNavigationGraph` 平台拓扑寻路、近战连击斩、地震波跳砸与地面贴附逻辑。
+* `BattleScene.cs`：战斗主场景控制器。构建 Flecs 核心世界，预分配实体池，装配 `PlayerPawn`、`PlayerController` 与多态 `BaseBossAgent`，调度帧三阶段流水线，提供 Boss 切换与即时重置能力。
 
 ### 核心引擎与基础设施层
 位于 `AnimalBattle/Core/`。

@@ -12,7 +12,7 @@ namespace AnimalBattle.Systems;
 /// <summary>
 ///     アリーナ足場・タイルマップ、Boss 1 / Boss 2 (オーラ・無敵シールド・予兆リング・スプライト・被弾フラッシュ・突進残影)、
 ///     プレイヤー自機 (スプライト・無敵点滅)、および 8 方向プレイヤー弾・Boss 弾幕・近接斬撃エフェクトを描画する世界描画システム。
-///     領域モデル（<see cref="Player" /> / <see cref="BossCharacter" />）から直接キャラクターを描画し、
+///     領域モデル（<see cref="Pawn" /> / <see cref="Characters.Boss.BaseBossAgent" />）から直接キャラクターを描画し、
 ///     海量弾幕・パーティクルエフェクトのみを Flecs ECS 高速クエリで一括描画します。
 /// </summary>
 /// <remarks>

@@ -78,7 +78,7 @@ public class CombatSceneIntegrationTests
             .Set(new CollisionBox(500.0f, 32.0f))
             .Add<PlatformTag>();
 
-        // 1. Player と Boss1Controller を初期化
+        // 1. PlayerPawn と Boss1Agent を初期化
         var pEnt = world.Entity("P1");
         var player = new PlayerPawn(pEnt, new PlayerConfig
         {

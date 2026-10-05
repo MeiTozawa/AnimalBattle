@@ -10,7 +10,7 @@ namespace AnimalBattle.Systems;
 
 /// <summary>
 ///     画面上部操作ヘルプ、自機 HP・二段ジャンプ残数、および画面下部 Boss 大 HP バー・行動状態バッジを描画する HUD 描画システム。
-///     領域モデル（<see cref="Player" /> / <see cref="BossCharacter" />）から直接状態を読み取って描画します。
+///     領域モデル（<see cref="Pawn" /> / <see cref="Characters.Boss.BaseBossAgent" />）から直接状態を読み取って描画します。
 /// </summary>
 public static class HudRenderSystem {
     private static readonly string[] BossTitles = [
