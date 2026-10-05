@@ -43,6 +43,9 @@ public class CharacterContractTests
         // 派生クラスで ICharacter のデフォルト実装プロパティを再定義（重複定義）していないことを検証
         var playerProps = typeof(Player).GetProperties(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
         var bossProps = typeof(BossCharacter).GetProperties(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+        var baseBossProps = typeof(AnimalBattle.Characters.Boss.BaseBossController).GetProperties(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+        var b1Props = typeof(AnimalBattle.Characters.Boss.Boss1Controller).GetProperties(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+        var b2Props = typeof(AnimalBattle.Characters.Boss.Boss2Controller).GetProperties(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
 
         string[] duplicateCandidates = ["Sprite", "ScaleX", "ScaleY", "Animation", "IsFlashing", "EntityId", "Faction", "CurrentHp", "MaxHp", "IsAlive", "IsInvincible"];
 
@@ -50,6 +53,9 @@ public class CharacterContractTests
         {
             Assert.DoesNotContain(playerProps, p => p.Name == name);
             Assert.DoesNotContain(bossProps, p => p.Name == name);
+            Assert.DoesNotContain(baseBossProps, p => p.Name == name);
+            Assert.DoesNotContain(b1Props, p => p.Name == name);
+            Assert.DoesNotContain(b2Props, p => p.Name == name);
         }
     }
 }

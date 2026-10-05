@@ -44,4 +44,27 @@ public class BossPolymorphismTests
 
         Assert.True(controller.IsAlive);
     }
+
+    [Fact]
+    public void BossControllers_AreIndependentlyConstructed_WithoutBossCharacterMonolith()
+    {
+        using var world = World.Create();
+
+        // 1. Boss1Controller の独立初期化とコンポーネント構成を検証
+        var b1Ent = world.Entity("B1");
+        using IBossController boss1 = new Boss1Controller(b1Ent, -1);
+        Assert.Equal(BossType.Boss1, boss1.BossType);
+        Assert.True(b1Ent.Has<Boss1Tag>());
+        Assert.False(b1Ent.Has<Boss2Tag>());
+        Assert.True(b1Ent.Has<Health>());
+
+        // 2. Boss2Controller の独立初期化とコンポーネント構成を検証
+        var b2Ent = world.Entity("B2");
+        using IBossController boss2 = new Boss2Controller(b2Ent, -1);
+        Assert.Equal(BossType.Boss2, boss2.BossType);
+        Assert.True(b2Ent.Has<Boss2Tag>());
+        Assert.False(b2Ent.Has<Boss1Tag>());
+        Assert.True(b2Ent.Has<CollisionBox>()); // Boss2 特有の地形衝突コンポーネント
+    }
 }
+
