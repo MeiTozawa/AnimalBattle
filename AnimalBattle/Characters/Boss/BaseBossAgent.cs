@@ -12,7 +12,7 @@ namespace AnimalBattle.Characters.Boss;
 ///     多態 Boss 自治エージェント共通の基底抽象クラス。
 ///     <see cref="Pawn" /> を継承し、AI 状態機械の更新、コマンド適用、および戦闘状態同期ライフサイクルを一元管理します。
 /// </summary>
-public abstract class BaseBossAgent : Pawn, IBossAgent, IBossController
+public abstract class BaseBossAgent : Pawn, IBossAgent
 {
     /// <inheritdoc />
     public BossType BossType => Slot.AiData.BossType;

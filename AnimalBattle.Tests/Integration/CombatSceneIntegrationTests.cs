@@ -96,7 +96,7 @@ public class CombatSceneIntegrationTests
         var pController = new PlayerController(player);
 
         var bEnt = world.Entity("B1");
-        using IBossController boss = new Boss1Controller(bEnt, -1);
+        using IBossAgent boss = new Boss1Agent(bEnt, -1);
 
         // 2. コントローラー意思決定フェーズ（意図注入）
         pController.SubmitInput(moveX: 1.0f, jumpPressed: false, jumpHolding: false, shootPressed: true);
@@ -118,7 +118,7 @@ public class CombatSceneIntegrationTests
         world.Progress(0.016f);
 
         // 衝突判定 -> ダメージ裁定 -> HP 減少、無敵時間、被弾フラッシュの自動付与を検証
-        ICharacter playerChar = player;
+        Pawn playerChar = player;
         Assert.Equal(2.0f, playerChar.CurrentHp);
         Assert.True(playerChar.IsInvincible);
         Assert.True(playerChar.IsFlashing);

@@ -113,8 +113,8 @@ public sealed class WorldRenderSystem : IDisposable {
     public void Render(
         TileMap? tileMap,
         Query<Transform, CollisionBox> platformQuery,
-        ICharacter? player,
-        IBossController? boss)
+        Pawn? player,
+        BaseBossAgent? boss)
     {
         var renderCfg = ConfigManager.Render;
         var bossFx = renderCfg.BossEffects;
@@ -155,7 +155,7 @@ public sealed class WorldRenderSystem : IDisposable {
             });
     }
 
-    private static void DrawBoss(IBossController? boss, BossEffectsRenderConfig bossFx, float playerX, float playerY)
+    private static void DrawBoss(BaseBossAgent? boss, BossEffectsRenderConfig bossFx, float playerX, float playerY)
     {
         if (boss == null || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
 
@@ -462,7 +462,7 @@ public sealed class WorldRenderSystem : IDisposable {
         }
     }
 
-    private static void DrawPlayer(ICharacter? player)
+    private static void DrawPlayer(Pawn? player)
     {
         if (player == null || !player.IsAlive || !player.Sprite.IsVisible || player.Sprite.GraphHandle < 0) return;
 

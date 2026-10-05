@@ -84,7 +84,7 @@ public class BattleScene : IDisposable {
     /// <summary>
     ///     現在アクティブな Boss インスタンスを取得します。
     /// </summary>
-    public IBossController Boss { get; private set; } = null!;
+    public BaseBossAgent Boss { get; private set; } = null!;
 
     /// <summary>
     ///     現在アクティブな Boss の種別を取得または設定します。
@@ -141,7 +141,7 @@ public class BattleScene : IDisposable {
     {
         var boss1HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
         var boss1Handle = !boss1HandleRes.IsError ? boss1HandleRes.Value : -1;
-        Boss = new Boss1Controller(bossEntity, boss1Handle);
+        Boss = new Boss1Agent(bossEntity, boss1Handle);
         Console.WriteLine(
             $"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {ConfigManager.Boss1.MaxHp}, Pos: {ConfigManager.Boss1.SpawnX}, {ConfigManager.Boss1.SpawnY})");
     }
@@ -150,7 +150,7 @@ public class BattleScene : IDisposable {
     {
         var boss2HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
         var boss2Handle = !boss2HandleRes.IsError ? boss2HandleRes.Value : -1;
-        Boss = new Boss2Controller(bossEntity, boss2Handle, () => _tileMap?.NavGraph);
+        Boss = new Boss2Agent(bossEntity, boss2Handle, () => _tileMap?.NavGraph);
         Console.WriteLine(
             $"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {ConfigManager.Boss2.MaxHp}, Pos: {ConfigManager.Boss2.SpawnX}, {ConfigManager.Boss2.SpawnY})");
     }

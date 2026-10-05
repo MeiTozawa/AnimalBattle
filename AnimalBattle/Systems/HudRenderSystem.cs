@@ -40,10 +40,10 @@ public static class HudRenderSystem {
     /// <summary>
     ///     HUD および各種ステータス UI を描画します。
     /// </summary>
-    /// <param name="player">現在アクティブなプレイヤー自機。</param>
-    /// <param name="boss">Boss コントローラー。</param>
+    /// <param name="player">現在アクティブな自機 Pawn。</param>
+    /// <param name="boss">現在アクティブな首領 Agent。</param>
     /// <param name="remainingJumps">プレイヤーの二段ジャンプ残数。</param>
-    public static void Render(ICharacter? player, IBossController? boss, int remainingJumps = 0)
+    public static void Render(Pawn? player, BaseBossAgent? boss, int remainingJumps = 0)
     {
         var renderCfg = ConfigManager.Render;
         var hudCfg = renderCfg.Hud;
@@ -85,7 +85,7 @@ public static class HudRenderSystem {
         GameEngine.DrawString(hudCfg.TitleX, switchGuideY, hudCfg.BossSwitchGuideText, hudCfg.BossSwitchGuideColor);
     }
 
-    private static void DrawPlayerStatus(ICharacter? player, int remainingJumps, HudRenderConfig hudCfg)
+    private static void DrawPlayerStatus(Pawn? player, int remainingJumps, HudRenderConfig hudCfg)
     {
         if (player == null) return;
 
@@ -110,7 +110,7 @@ public static class HudRenderSystem {
         GameEngine.DrawString(hudCfg.PlayerHpX, hudCfg.PlayerHpY, hpText, hpColor);
     }
 
-    private static void DrawBossStatus(IBossController? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
+    private static void DrawBossStatus(BaseBossAgent? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
     {
         if (boss == null) return;
 
@@ -129,7 +129,7 @@ public static class HudRenderSystem {
         return BossTitles[0];
     }
 
-    private static void DrawGameOverModal(ICharacter? player, ModalRenderConfig modalCfg)
+    private static void DrawGameOverModal(Pawn? player, ModalRenderConfig modalCfg)
     {
         if (player != null && !player.IsAlive)
         {

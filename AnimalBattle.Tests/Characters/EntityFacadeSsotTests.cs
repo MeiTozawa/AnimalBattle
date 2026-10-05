@@ -35,7 +35,7 @@ public class EntityFacadeSsotTests
     {
         using World world = World.Create();
         Entity entity = world.Entity("TestBoss");
-        using Boss1Controller boss = new(entity, -1);
+        using Boss1Agent boss = new(entity, -1);
 
         // 验证 Boss Facade 的坐标直接读写底层 ECS Transform
         boss.X = 600.0f;
