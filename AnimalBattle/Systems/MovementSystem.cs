@@ -6,9 +6,9 @@ namespace AnimalBattle.Systems;
 
 /// <summary>
 ///     汎用キネマティック運動物理システム。
-///     <see cref="CharacterMovementIntent"/> を消費し、重力、跳躍インパルス、足場衝突および画面境界を統一的に処理します。
+///     <see cref="MovementIntent"/> を消費し、重力、跳躍インパルス、足場衝突および画面境界を統一的に処理します。
 /// </summary>
-public static class KinematicMovementSystem
+public static class MovementSystem
 {
     /// <summary>
     ///     キネマティック運動物理システムを Flecs.NET ワールドへ登録します。
@@ -24,14 +24,14 @@ public static class KinematicMovementSystem
     {
         var pQuery = platformQuery ?? world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
 
-        world.System<Transform, Velocity, CollisionBox, CharacterMovementIntent, JumpCapability>("KinematicMovementSystem")
+        world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability>("MovementSystem")
             .Kind(Ecs.OnUpdate)
             .Without<DeadTag>()
             .Iter((Iter it,
                    Field<Transform> transforms,
                    Field<Velocity> velocities,
                    Field<CollisionBox> collisionBoxes,
-                   Field<CharacterMovementIntent> intents,
+                   Field<MovementIntent> intents,
                    Field<JumpCapability> jumps) =>
             {
                 var dt = it.DeltaTime();
@@ -53,37 +53,11 @@ public static class KinematicMovementSystem
         return world;
     }
 
-    /// <summary>
-    ///     単一エンティティのキネマティック運動物理を 1 フレーム分更新します（テストおよび直接呼び出し互換用）。
-    /// </summary>
-    /// <param name="entity">対象 Flecs エンティティ句柄。</param>
-    /// <param name="dt">デルタタイム（秒）。</param>
-    /// <param name="platformQuery">足場プラットフォーム検索クエリ。</param>
-    /// <param name="arenaCfg">アリーナ境界設定（省略可能）。</param>
-    /// <param name="effectWorld">エフェクト生成用の Flecs ワールド（省略可能）。</param>
-    public static void UpdateEntity(
-        Entity entity,
-        float dt,
-        Query<Transform, CollisionBox> platformQuery,
-        ArenaConfig? arenaCfg = null,
-        World? effectWorld = null)
-    {
-        if (!entity.IsAlive()) return;
-
-        ref var trans = ref entity.GetMut<Transform>();
-        ref var vel = ref entity.GetMut<Velocity>();
-        ref var col = ref entity.GetMut<CollisionBox>();
-        ref var intent = ref entity.GetMut<CharacterMovementIntent>();
-        ref var jump = ref entity.GetMut<JumpCapability>();
-
-        ExecuteKinematics(ref trans, ref vel, ref col, in intent, ref jump, dt, platformQuery, arenaCfg, effectWorld);
-    }
-
     private static void ExecuteKinematics(
         ref Transform trans,
         ref Velocity vel,
         ref CollisionBox col,
-        in CharacterMovementIntent intent,
+        in MovementIntent intent,
         ref JumpCapability jump,
         float dt,
         Query<Transform, CollisionBox> platformQuery,

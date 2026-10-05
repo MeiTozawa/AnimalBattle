@@ -2,9 +2,9 @@ namespace AnimalBattle.Components;
 
 /// <summary>
 ///     キャラクターの移動制御意図。
-///     コントローラーが書き込み、KinematicMovementSystem が消費します。
+///     コントローラーが書き込み、MovementSystem が消費します。
 /// </summary>
-public struct CharacterMovementIntent
+public struct MovementIntent
 {
     /// <summary>水平移動入力値（-1.0f: 左, 1.0f: 右, 0.0f: 静止）。</summary>
     public float MoveX;

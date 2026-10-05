@@ -33,8 +33,8 @@ public sealed class PlayerPawn : Pawn
            .Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly))
            .Set(new Animation("Idle"))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 64, 64)))
-           .Set(new CharacterMovementIntent())
-           .Set(new CharacterWeaponIntent())
+           .Set(new MovementIntent())
+           .Set(new WeaponIntent())
            .Set(JumpCapability.FromPlayerConfig(pCfg))
            .Set(WeaponState.FromPlayerConfig(pCfg))
            .Add<PlayerTag>();
@@ -84,8 +84,8 @@ public sealed class PlayerPawn : Pawn
 
         Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
         Entity.Set(WeaponState.FromPlayerConfig(pCfg));
-        Entity.GetMut<CharacterMovementIntent>().Reset();
-        Entity.GetMut<CharacterWeaponIntent>().Reset();
+        Entity.GetMut<MovementIntent>().Reset();
+        Entity.GetMut<WeaponIntent>().Reset();
 
         PlayAnimation("Idle");
         FlipX = false;

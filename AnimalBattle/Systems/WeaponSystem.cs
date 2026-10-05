@@ -6,9 +6,9 @@ namespace AnimalBattle.Systems;
 
 /// <summary>
 ///     汎用武器射撃システム。
-///     <see cref="CharacterWeaponIntent"/> を消費し、射撃クールダウンの管理および弾丸エンティティの射出を行います。
+///     <see cref="WeaponIntent"/> を消費し、射撃クールダウンの管理および弾丸エンティティの射出を行います。
 /// </summary>
-public static class CharacterWeaponSystem
+public static class WeaponSystem
 {
     /// <summary>
     ///     武器射撃システムを Flecs.NET ワールドへ登録します。
@@ -17,12 +17,12 @@ public static class CharacterWeaponSystem
     /// <returns>メソッドチェーン用の <see cref="World"/></returns>
     public static World AddCharacterWeaponSystem(this World world)
     {
-        world.System<Transform, CharacterWeaponIntent, WeaponState>("CharacterWeaponSystem")
+        world.System<Transform, WeaponIntent, WeaponState>("WeaponSystem")
             .Kind(Ecs.OnUpdate)
             .Without<DeadTag>()
             .Iter((Iter it,
                    Field<Transform> transforms,
-                   Field<CharacterWeaponIntent> intents,
+                   Field<WeaponIntent> intents,
                    Field<WeaponState> weapons) =>
             {
                 var dt = it.DeltaTime();
@@ -52,7 +52,7 @@ public static class CharacterWeaponSystem
         if (!entity.IsAlive()) return;
 
         ref readonly var trans = ref entity.Get<Transform>();
-        ref var intent = ref entity.GetMut<CharacterWeaponIntent>();
+        ref var intent = ref entity.GetMut<WeaponIntent>();
         ref var weapon = ref entity.GetMut<WeaponState>();
 
         ExecuteWeapon(in trans, ref intent, ref weapon, dt, world);
@@ -60,7 +60,7 @@ public static class CharacterWeaponSystem
 
     private static void ExecuteWeapon(
         in Transform trans,
-        ref CharacterWeaponIntent intent,
+        ref WeaponIntent intent,
         ref WeaponState weapon,
         float dt,
         World world)

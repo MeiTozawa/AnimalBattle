@@ -2,7 +2,7 @@ namespace AnimalBattle.Components;
 
 /// <summary>
 ///     キャラクターの跳躍性能および運動学パラメータ定義。
-///     KinematicMovementSystem による重力・跳躍計算に使用されます。
+///     MovementSystem による重力・跳躍計算に使用されます。
 /// </summary>
 public struct JumpCapability
 {

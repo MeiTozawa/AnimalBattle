@@ -82,12 +82,12 @@ public sealed class PlayerController
         var entity = _pawn.Entity;
         if (!entity.IsAlive()) return;
 
-        ref var moveIntent = ref entity.GetMut<CharacterMovementIntent>();
+        ref var moveIntent = ref entity.GetMut<MovementIntent>();
         moveIntent.MoveX = moveX;
         moveIntent.JumpTriggered = jumpPressed;
         moveIntent.JumpHolding = jumpHolding;
 
-        ref var weaponIntent = ref entity.GetMut<CharacterWeaponIntent>();
+        ref var weaponIntent = ref entity.GetMut<WeaponIntent>();
         weaponIntent.ShootTriggered = shootPressed;
         weaponIntent.AimDirectionX = aimDirX ?? (_pawn.FlipX ? -1.0f : 1.0f);
         weaponIntent.AimDirectionY = aimDirY ?? 0.0f;

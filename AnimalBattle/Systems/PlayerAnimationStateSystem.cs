@@ -26,7 +26,7 @@ public static class PlayerAnimationStateSystem
             .With<PlayerTag>()
             .Without<DeadTag>()
             .Kind(Ecs.PreUpdate)
-            .Each((ref Velocity vel, ref CollisionBox col, ref Health hp, ref Animation anim) =>
+            .Each((ref vel, ref col, ref hp, ref anim) =>
             {
                 if (hp.Current <= 0.0f) return;
 
@@ -36,18 +36,11 @@ public static class PlayerAnimationStateSystem
                 }
                 else
                 {
-                    var threshold = ConfigManager.Player != null && ConfigManager.Player.WalkAnimVelocityThreshold > 0.0f
+                    var threshold = ConfigManager.Player.WalkAnimVelocityThreshold > 0.0f
                         ? ConfigManager.Player.WalkAnimVelocityThreshold
                         : 0.1f;
 
-                    if (MathF.Abs(vel.Vx) > threshold)
-                    {
-                        anim.Play(ClipRun);
-                    }
-                    else
-                    {
-                        anim.Play(ClipIdle);
-                    }
+                    anim.Play(MathF.Abs(vel.Vx) > threshold ? ClipRun : ClipIdle);
                 }
             });
 

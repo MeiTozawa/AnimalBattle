@@ -15,12 +15,12 @@ namespace AnimalBattle.Systems;
 public static class HudRenderSystem {
     private static readonly string[] BossTitles = [
         "BOSS: Unknown [PHASE 1/3]",
-        "BOSS: Ancient Cat Overlord [PHASE 1/3]",
-        "BOSS: Ancient Cat Overlord [PHASE 2/3]",
-        "BOSS: Ancient Cat Overlord [PHASE 3/3]",
-        "BOSS: Ground Crusher [PHASE 1/3]",
-        "BOSS: Ground Crusher [PHASE 2/3]",
-        "BOSS: Ground Crusher [PHASE 3/3]"
+        "BOSS: Boss1 [PHASE 1/3]",
+        "BOSS: Boss1 [PHASE 2/3]",
+        "BOSS: Boss1 [PHASE 3/3]",
+        "BOSS: Boss2 [PHASE 1/3]",
+        "BOSS: Boss2 [PHASE 2/3]",
+        "BOSS: Boss2 [PHASE 3/3]"
     ];
 
     private static readonly string[] PlayerHpSymbols = [
@@ -131,19 +131,17 @@ public static class HudRenderSystem {
 
     private static void DrawGameOverModal(Pawn? player, ModalRenderConfig modalCfg)
     {
-        if (player != null && !player.IsAlive)
-        {
-            GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2,
-                modalCfg.GameOverBgColor, true);
-            GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2,
-                modalCfg.GameOverOuterBorderColor, false);
-            GameEngine.DrawBox(modalCfg.GameOverX1 + 2, modalCfg.GameOverY1 + 2, modalCfg.GameOverX2 - 2,
-                modalCfg.GameOverY2 - 2, modalCfg.GameOverInnerBorderColor, false);
-            GameEngine.DrawString(modalCfg.GameOverTitleX, modalCfg.GameOverTitleY, modalCfg.GameOverTitleText,
-                modalCfg.GameOverTitleColor);
-            GameEngine.DrawString(modalCfg.GameOverRetryX, modalCfg.GameOverRetryY, modalCfg.GameOverRetryText,
-                modalCfg.GameOverRetryColor);
-        }
+        if (player is not { IsAlive: false }) return;
+        GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2,
+            modalCfg.GameOverBgColor, true);
+        GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2,
+            modalCfg.GameOverOuterBorderColor, false);
+        GameEngine.DrawBox(modalCfg.GameOverX1 + 2, modalCfg.GameOverY1 + 2, modalCfg.GameOverX2 - 2,
+            modalCfg.GameOverY2 - 2, modalCfg.GameOverInnerBorderColor, false);
+        GameEngine.DrawString(modalCfg.GameOverTitleX, modalCfg.GameOverTitleY, modalCfg.GameOverTitleText,
+            modalCfg.GameOverTitleColor);
+        GameEngine.DrawString(modalCfg.GameOverRetryX, modalCfg.GameOverRetryY, modalCfg.GameOverRetryText,
+            modalCfg.GameOverRetryColor);
     }
 
     private static int ToLegacyPhase(Phase phase)
@@ -164,8 +162,8 @@ public static class HudRenderSystem {
                 Boss1State.AttackSelection => "[STATE: ATTACK SELECTION]",
                 Boss1State.Telegraph => EnumStringLut.GetBoss1TelegraphBadge(skill),
                 Boss1State.Execute => EnumStringLut.GetBoss1ExecuteBadge(skill),
-                Boss1State.Recovery => "[STATE: RECOVERING (VULNERABLE)]",
-                Boss1State.PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
+                Boss1State.Recovery => "[STATE: RECOVERING]",
+                Boss1State.PhaseTransition => "[STATE: PHASE TRANSITION]",
                 Boss1State.Dead => "[STATE: DEFEATED]",
                 _ => "[STATE: UNKNOWN]"
             },
@@ -176,9 +174,9 @@ public static class HudRenderSystem {
                 Boss2State.PlatformTraverse => "[STATE: PLATFORM TRAVERSE (AIRBORNE)]",
                 Boss2State.Telegraph => EnumStringLut.GetBoss2TelegraphBadge(skill),
                 Boss2State.Execute => EnumStringLut.GetBoss2ExecuteBadge(skill),
-                Boss2State.WallCrashStun => "[STATE: WALL CRASH STUNNED (VULNERABLE)]",
-                Boss2State.Recovery => "[STATE: RECOVERING (VULNERABLE)]",
-                Boss2State.PhaseTransition => "[STATE: PHASE TRANSITION (INVULNERABLE)]",
+                Boss2State.WallCrashStun => "[STATE: WALL CRASH STUNNED]",
+                Boss2State.Recovery => "[STATE: RECOVERING ]",
+                Boss2State.PhaseTransition => "[STATE: PHASE TRANSITION ]",
                 Boss2State.Dead => "[STATE: DEFEATED]",
                 _ => "[STATE: UNKNOWN]"
             },

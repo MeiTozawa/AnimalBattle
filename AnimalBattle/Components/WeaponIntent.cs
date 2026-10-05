@@ -2,9 +2,9 @@ namespace AnimalBattle.Components;
 
 /// <summary>
 ///     キャラクターの射撃・攻撃制御意図。
-///     コントローラーが書き込み、CharacterWeaponSystem が消費します。
+///     コントローラーが書き込み、WeaponSystem が消費します。
 /// </summary>
-public struct CharacterWeaponIntent
+public struct WeaponIntent
 {
     /// <summary>今フレームで射撃トリガーが引かれたかどうか。</summary>
     public bool ShootTriggered;
