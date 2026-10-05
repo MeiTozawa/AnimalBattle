@@ -11,11 +11,6 @@ namespace AnimalBattle.Characters;
 ///     实体 Facade 原則に従い、ECS エンティティのコンポーネントを唯一の真実の源として直接操作します。
 /// </summary>
 public sealed class Player : ICharacter {
-    private static readonly StringId ClipIdle = "Idle";
-    private static readonly StringId ClipRun = "Run";
-    private static readonly StringId ClipJump = "Jump";
-    private static readonly StringId ClipFall = "Fall";
-
     private readonly Entity _entity;
 
     /// <summary>プレイヤーのヘルス情報を取得します。</summary>
@@ -46,8 +41,6 @@ public sealed class Player : ICharacter {
            .Set(JumpCapability.FromPlayerConfig(pCfg))
            .Set(WeaponState.FromPlayerConfig(pCfg))
            .Add<PlayerTag>();
-
-        UpdateAnimation(0.0f);
     }
 
     /// <summary>プレイヤーの現在の高レベル動作状態を取得します。</summary>
@@ -136,8 +129,6 @@ public sealed class Player : ICharacter {
             v.Vy = 0.0f;
             return;
         }
-
-        UpdateAnimation(dt);
     }
 
     /// <summary>
@@ -173,50 +164,12 @@ public sealed class Player : ICharacter {
         _entity.GetMut<CharacterWeaponIntent>().Reset();
 
         ref var anim = ref _entity.GetMut<Animation>();
-        anim.Play(ClipIdle);
+        anim.Play("Idle");
 
         ref var spr = ref _entity.GetMut<Sprite>();
         spr.FlipX = false;
         spr.IsVisible = true;
 
-        UpdateAnimation(0.0f);
-
         if (_entity.IsAlive()) _entity.Remove<HitFlashEffect>();
-    }
-
-    private void UpdateAnimation(float dt)
-    {
-        ref var anim = ref _entity.GetMut<Animation>();
-        ref readonly var vel = ref _entity.Get<Velocity>();
-        ref readonly var col = ref _entity.Get<CollisionBox>();
-
-        if (!col.IsGrounded)
-        {
-            anim.Play(vel.Vy < 0.0f ? ClipJump : ClipFall);
-        }
-        else if (Math.Abs(vel.Vx) > ConfigManager.Player.WalkAnimVelocityThreshold)
-        {
-            anim.Play(ClipRun);
-        }
-        else
-        {
-            anim.Play(ClipIdle);
-        }
-
-        if (!anim.IsPlaying) return;
-        anim.Timer += dt;
-
-        var charConfigRes = AssetManager.GetCharacterConfig(anim.CharacterType);
-        if (!charConfigRes.IsError)
-        {
-            var charConfig = charConfigRes.Value;
-            ref var spr = ref _entity.GetMut<Sprite>();
-            var handleRes = AssetManager.GetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip);
-            if (handleRes is { IsError: false, Value: >= 0 }) spr.GraphHandle = handleRes.Value;
-
-            spr.SrcRect =
-                AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out var isFinished);
-            anim.IsFinished = isFinished;
-        }
     }
 }

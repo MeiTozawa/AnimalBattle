@@ -15,7 +15,6 @@ public static class SpriteAnimationSystem {
     public static World AddSpriteAnimationSystem(this World world)
     {
         world.System<Animation, Sprite>("SpriteAnimationSystem")
-           .Without<PlayerTag>()
            .Kind(Ecs.OnUpdate)
            .Each((it, i, ref anim, ref sprite) =>
             {

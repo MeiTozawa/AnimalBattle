@@ -18,6 +18,7 @@ public readonly struct BulletModule : IFlecsModule {
         world.Module<BulletModule>();
 
         world.AddSpriteAnimationSystem()
+           .AddPlayerAnimationStateSystem()
            .AddBulletPhysicsSystem()
            .AddSpecialBulletSystem()
            .AddKinematicMovementSystem()
