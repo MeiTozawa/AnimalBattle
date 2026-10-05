@@ -44,7 +44,7 @@ public class BattleScene : IDisposable {
         var playerCfg = ConfigManager.Player;
 
         var playerEntity = _ecsWorld.Entity("Player1");
-        Player = new Player(playerEntity, playerCfg, playerHandle);
+        Player = new PlayerPawn(playerEntity, playerCfg, playerHandle);
         PlayerController = new PlayerController(Player);
 
         SetupArena();
@@ -74,7 +74,7 @@ public class BattleScene : IDisposable {
     /// <summary>
     ///     現在アクティブなプレイヤー自機インスタンスを取得します。
     /// </summary>
-    public Player Player { get; }
+    public PlayerPawn Player { get; }
 
     /// <summary>
     ///     現在アクティブなプレイヤーコントローラーを取得します。

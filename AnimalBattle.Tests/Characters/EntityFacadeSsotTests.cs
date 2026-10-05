@@ -16,7 +16,7 @@ public class EntityFacadeSsotTests
         using World world = World.Create();
         Entity entity = world.Entity("TestPlayer");
         PlayerConfig cfg = new() { SpawnX = 100.0f, SpawnY = 200.0f };
-        Player player = new(entity, cfg, -1);
+        PlayerPawn player = new(entity, cfg, -1);
 
         Assert.Equal(100.0f, player.X);
         Assert.Equal(200.0f, player.Y);

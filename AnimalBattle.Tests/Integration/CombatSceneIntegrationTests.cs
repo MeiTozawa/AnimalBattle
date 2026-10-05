@@ -24,7 +24,7 @@ public class CombatSceneIntegrationTests
 
         // 1. Player Pawn と Controller の初期化
         var pEnt = world.Entity("P");
-        var player = new Player(pEnt, new PlayerConfig { MaxHp = 3, MaxJumps = 2, MoveSpeed = 200.0f, BulletSpeed = 400.0f }, -1);
+        var player = new PlayerPawn(pEnt, new PlayerConfig { MaxHp = 3, MaxJumps = 2, MoveSpeed = 200.0f, BulletSpeed = 400.0f }, -1);
         var controller = new PlayerController(player);
 
         var platformQuery = world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
@@ -50,12 +50,13 @@ public class CombatSceneIntegrationTests
         world.Import<BulletModule>();
 
         var pEnt = world.Entity("P2");
-        var player = new Player(pEnt, new PlayerConfig { MaxHp = 3, MaxJumps = 2, MoveSpeed = 200.0f, BulletSpeed = 400.0f }, -1);
+        var player = new PlayerPawn(pEnt, new PlayerConfig { MaxHp = 3, MaxJumps = 2, MoveSpeed = 200.0f, BulletSpeed = 400.0f }, -1);
         var controller = new PlayerController(player);
         var platformQuery = world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
 
         controller.SubmitInput(moveX: 1.0f, jumpPressed: false, jumpHolding: false, shootPressed: true);
-        player.Update(0.1f, new ArenaConfig { FloorLimitY = 600.0f, BoundaryMinX = 0.0f, BoundaryMaxX = 1000.0f }, platformQuery, world);
+        KinematicMovementSystem.UpdateEntity(pEnt, 0.1f, platformQuery);
+        CharacterWeaponSystem.UpdateEntity(pEnt, 0.1f, world);
         world.Progress(0.1f);
 
         Assert.True(player.X > 0.0f);
@@ -79,7 +80,7 @@ public class CombatSceneIntegrationTests
 
         // 1. Player と Boss1Controller を初期化
         var pEnt = world.Entity("P1");
-        var player = new Player(pEnt, new PlayerConfig
+        var player = new PlayerPawn(pEnt, new PlayerConfig
         {
             SpawnX = 100.0f,
             SpawnY = 100.0f,

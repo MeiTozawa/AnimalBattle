@@ -4,29 +4,32 @@ using AnimalBattle.Configs;
 namespace AnimalBattle.Characters;
 
 /// <summary>
-///     自機プレイヤーコントローラー（OOP 領域モデル）。
-///     ユーザーハードウェア入力を収集し、意図コンポーネント（CharacterMovementIntent / CharacterWeaponIntent）に変換して Entity へ適用します。
+///     自機プレイヤーコントローラー（入力解釈器）。
+///     ユーザーハードウェア入力を収集し、意図コンポーネント（CharacterMovementIntent / CharacterWeaponIntent）に変換して PlayerPawn へ注入します。
 /// </summary>
 public sealed class PlayerController
 {
-    private readonly ICharacter _player;
+    private readonly PlayerPawn _pawn;
 
     /// <summary>
-    ///     制御対象の自機プレイヤー（Pawn）を指定してコントローラーを初期化します。
+    ///     制御対象の自機躯体（PlayerPawn）を指定してコントローラーを初期化します。
     /// </summary>
-    /// <param name="player">制御対象のプレイヤーインスタンス。</param>
-    public PlayerController(ICharacter player)
+    /// <param name="pawn">制御対象の PlayerPawn インスタンス。</param>
+    public PlayerController(PlayerPawn pawn)
     {
-        System.Diagnostics.Debug.Assert(player != null, "Player インスタンスは null であってはなりません。");
-        _player = player!;
+        System.Diagnostics.Debug.Assert(pawn != null, "PlayerPawn インスタンスは null であってはなりません。");
+        _pawn = pawn!;
     }
+
+    /// <summary>制御対象の PlayerPawn を取得します。</summary>
+    public PlayerPawn Pawn => _pawn;
 
     /// <summary>
     ///     グローバル入力サービスからハードウェア入力をポーリングし、エンティティへ意図を反映します。
     /// </summary>
     public void PollAndProcessInput()
     {
-        if (!_player.IsAlive) return;
+        if (!_pawn.IsAlive) return;
 
         var isLeft = InputService.IsHolding(InputAction.Left);
         var isRight = InputService.IsHolding(InputAction.Right);
@@ -52,7 +55,7 @@ public sealed class PlayerController
         }
         else
         {
-            dirX = _player.Entity.Get<Sprite>().FlipX ? -1.0f : 1.0f;
+            dirX = _pawn.FlipX ? -1.0f : 1.0f;
             dirY = 0.0f;
         }
 
@@ -76,7 +79,7 @@ public sealed class PlayerController
         float? aimDirX = null,
         float? aimDirY = null)
     {
-        var entity = _player.Entity;
+        var entity = _pawn.Entity;
         if (!entity.IsAlive()) return;
 
         ref var moveIntent = ref entity.GetMut<CharacterMovementIntent>();
@@ -86,12 +89,11 @@ public sealed class PlayerController
 
         ref var weaponIntent = ref entity.GetMut<CharacterWeaponIntent>();
         weaponIntent.ShootTriggered = shootPressed;
-        weaponIntent.AimDirectionX = aimDirX ?? (entity.Get<Sprite>().FlipX ? -1.0f : 1.0f);
+        weaponIntent.AimDirectionX = aimDirX ?? (_pawn.FlipX ? -1.0f : 1.0f);
         weaponIntent.AimDirectionY = aimDirY ?? 0.0f;
 
         // 移動入力に応じた描画スプライトの左右反転同期
-        ref var spr = ref entity.GetMut<Sprite>();
-        if (moveX < -0.01f) spr.FlipX = true;
-        else if (moveX > 0.01f) spr.FlipX = false;
+        if (moveX < -0.01f) _pawn.FlipX = true;
+        else if (moveX > 0.01f) _pawn.FlipX = false;
     }
 }

@@ -16,8 +16,10 @@ public class PlayerControllerTests
     {
         using var world = World.Create();
         var entity = world.Entity("PlayerTest");
-        var player = new Player(entity, new PlayerConfig { MaxHp = 3, MaxJumps = 2 }, -1);
+        var player = new PlayerPawn(entity, new PlayerConfig { MaxHp = 3, MaxJumps = 2 }, -1);
         var controller = new PlayerController(player);
+
+        Assert.Same(player, controller.Pawn);
 
         controller.SubmitInput(moveX: -1.0f, jumpPressed: true, jumpHolding: true, shootPressed: true);
 
@@ -35,7 +37,7 @@ public class PlayerControllerTests
     {
         using var world = World.Create();
         var entity = world.Entity("PlayerAimTest");
-        var player = new Player(entity, new PlayerConfig { MaxHp = 3, MaxJumps = 2 }, -1);
+        var player = new PlayerPawn(entity, new PlayerConfig { MaxHp = 3, MaxJumps = 2 }, -1);
         var controller = new PlayerController(player);
 
         controller.SubmitInput(moveX: 0.0f, jumpPressed: false, jumpHolding: false, shootPressed: true, aimDirX: 0.0f, aimDirY: -1.0f);

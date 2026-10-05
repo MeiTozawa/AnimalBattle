@@ -8,7 +8,7 @@ namespace AnimalBattle.Characters;
 ///     唯一の真実の源である Flecs エンティティ句柄を保持し、
 ///     空間座標、線速度、生命値、衝突判定、スプライトおよびアニメーションの共通操作を一元的に提供します。
 /// </summary>
-public abstract class Pawn
+public abstract class Pawn : ICharacter
 {
     /// <summary>対応する Flecs エンティティ句柄を取得します。</summary>
     public Entity Entity { get; }
