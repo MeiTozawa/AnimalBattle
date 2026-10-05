@@ -1,5 +1,6 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Characters;
+using AnimalBattle.Characters.Boss;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using Flecs.NET.Core;
@@ -34,7 +35,7 @@ public class EntityFacadeSsotTests
     {
         using World world = World.Create();
         Entity entity = world.Entity("TestBoss");
-        BossCharacter boss = new(entity, BossType.Boss1, -1);
+        using Boss1Controller boss = new(entity, -1);
 
         // 验证 Boss Facade 的坐标直接读写底层 ECS Transform
         boss.X = 600.0f;

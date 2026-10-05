@@ -42,7 +42,9 @@ public class CharacterContractTests
     {
         // 派生クラスで ICharacter のデフォルト実装プロパティを再定義（重複定義）していないことを検証
         var playerProps = typeof(Player).GetProperties(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+#pragma warning disable CS0618
         var bossProps = typeof(BossCharacter).GetProperties(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+#pragma warning restore CS0618
         var baseBossProps = typeof(AnimalBattle.Characters.Boss.BaseBossController).GetProperties(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
         var b1Props = typeof(AnimalBattle.Characters.Boss.Boss1Controller).GetProperties(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
         var b2Props = typeof(AnimalBattle.Characters.Boss.Boss2Controller).GetProperties(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
