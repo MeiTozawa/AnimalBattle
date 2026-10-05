@@ -1,107 +1,129 @@
 # AnimalBattle 核心架构与代码全景说明书
 
-本项目是一个基于 C# 10 与 C++23 双引擎混合构建的高性能 2D 动作游戏，底层图形运行于 DxLib 与 DirectX 9 驱动之上。本文档面向系统架构师与技术面试官，深度解析全工程每一个源码文件的职责、ECS 数据驱动体系与面向对象设计的边界划分，以及毫秒级确定性主循环的调度脉络。
+本项目是一个基于 C# 10 / .NET 10 与 C++23 双引擎混合构建的高性能 2D 动作游戏，底层图形运行于 DxLib 与 DirectX 9 驱动之上。本文档面向系统架构师与技术面试官，深度解析全工程每一个源码文件的职责、ECS 数据驱动体系与面向对象设计的正交边界划分，以及毫秒级确定性主循环的调度脉络。
 
 ---
 
 ## 1. 软件架构哲学：DOD 与 OOP 的边界界定
 
-在游戏工业级开发中，纯粹教条式的单一范式往往会导致性能劣化或代码失控。本项目采用数据导向设计（DOD）与面向对象设计（OOP）深度融合的正交混合架构：
+在工业级游戏开发中，纯粹教条式的单一范式往往会导致性能劣化或业务代码失控。本项目采用**数据导向设计（DOD）**与**面向对象设计（OOP）**深度融合的正交混合架构，确立了工业级的 **“Controller（控制器） - Intent（意图） - ECS Pipeline（模拟管线） - Pawn（实体门面）”** 四层闭环：
 
 ```mermaid
 flowchart TD
-    subgraph Layer5["表现与角色领域层"]
-        BattleScene["BattleScene 场景控制器"]
-        ICombatant["ICombatant 统一角色契约"]
-        Player["Player 角色门面与状态机"]
-        Boss["BossCharacter 首领门面与宿主"]
-        Player -.实现.-> ICombatant
-        Boss -.实现.-> ICombatant
-        BattleScene --> Player
-        BattleScene --> Boss
+    subgraph Layer5["表现与控制器层 (Controller & Presentation)"]
+        BattleScene["BattleScene 场景主循环控制器"]
+        PlayerCtrl["PlayerController 玩家输入控制器"]
+        Boss1Ctrl["Boss1Controller 首领一多态控制器"]
+        Boss2Ctrl["Boss2Controller 首领二多态控制器"]
+        HudSystem["HudRenderSystem HUD 状态渲染"]
+        BattleScene --> PlayerCtrl
+        BattleScene --> Boss1Ctrl
+        BattleScene --> Boss2Ctrl
+        BattleScene --> HudSystem
     end
 
-    subgraph Layer4["领域逻辑与 AI 决策层"]
-        AISystem["Boss AI 状态机与决策树"]
-        CmdBuffer["PreallocatedCommandBuffer 指令缓冲"]
-        Executor["BossCommandExecutor 动作执行器"]
-        AISystem --> CmdBuffer --> Executor
-        Boss --> AISystem
+    subgraph Layer4["纯数据意图与指令缓冲层 (Intent & Command Buffers)"]
+        MoveIntent["CharacterMovementIntent 移动意图"]
+        WeaponIntent["CharacterWeaponIntent 射击意图"]
+        CmdBuffer["PreallocatedCommandBuffer 首领指令队列"]
+        PlayerCtrl --> MoveIntent
+        PlayerCtrl --> WeaponIntent
+        Boss1Ctrl --> CmdBuffer
+        Boss2Ctrl --> CmdBuffer
     end
 
-    subgraph Layer3["ECS 数据与系统管线层"]
+    subgraph Layer3["ECS 纯数据管线层 (Pure-ECS Pipeline)"]
         FlecsWorld["Flecs.NET ECS 核心世界"]
-        Components["25 个纯数据组件连续数组"]
-        Systems["14 个无状态纯逻辑系统管线"]
-        Modules["声明式依赖装配模块"]
+        Components["33 个纯数据组件连续数组 (POD Structs)"]
+        Systems["18 个无状态逻辑与物理计算系统"]
+        Modules["ComponentRequirementsModule 声明式拓扑依赖"]
         FlecsWorld --> Components
         FlecsWorld --> Systems
         FlecsWorld --> Modules
     end
 
-    subgraph Layer2["基础设施与对象池层"]
-        EntityPools["CombatEntityPool 5大同构实体池"]
-        RenderBuffer["RenderCommandBuffer 渲染指令队列"]
-        InputService["InputService 抽象动作输入服务"]
-        ConfigMgr["ConfigManager 二进制 AOT 配置中枢"]
-        Systems --> EntityPools
-        Systems --> RenderBuffer
+    subgraph Layer2["领域门面与只读视图层 (Domain Pawn & Readonly View)"]
+        IChar["ICharacter 只读领域观察契约 (Zero-Has)"]
+        PlayerPawn["Player 角色实体门面 (Pawn)"]
+        BossPawn["BaseBossController 首领实体门面 (Pawn)"]
+        PlayerPawn -.实现.-> IChar
+        BossPawn -.实现.-> IChar
+        HudSystem -.观察.-> IChar
     end
 
-    subgraph Layer1["非托管内存与互操作层"]
-        NativeQueue["NativeComputeQueue 64字节物理对齐内存"]
-        Bindings["NativeBindings 极速互操作绑定"]
+    subgraph Layer1["基础设施与非托管内存层"]
+        EntityPools["CombatEntityPool 5大同构实体池"]
+        NativeQueue["NativeComputeQueue 64字节对齐内存"]
+        RenderBuffer["RenderCommandBuffer 渲染指令缓冲"]
+        Systems --> EntityPools
         Systems --> NativeQueue
-        RenderBuffer --> Bindings
+        Systems --> RenderBuffer
     end
 
     subgraph Layer0["C++23 原生扩展与驱动层"]
         CoreDll["AnimalBattleCore.dll 窗口渲染与输入驱动"]
         ExtDll["AnimalBattleExtension.dll AVX2 SIMD 算核"]
-        Bindings --> CoreDll
+        RenderBuffer --> CoreDll
         NativeQueue --> ExtDll
     end
 
-    Player --> FlecsWorld
-    Boss --> FlecsWorld
-    Executor --> Systems
+    MoveIntent --> Systems
+    WeaponIntent --> Systems
+    CmdBuffer --> Systems
+    Systems --> Components
+    Components --> PlayerPawn
+    Components --> BossPawn
 ```
 
-### 为什么在 ECS 之上构建 OOP 角色门面
-在纯 ECS 中，系统直接操作实体 ID 与裸组件，缺乏统一的领域聚合根，容易导致业务逻辑散乱在各个系统中。
-本项目引入 `ICombatant` 接口，并由 `Player` 与 `BossCharacter` 充当领域门面类。门面类内部不存储任何坐标、生命值或速度私有字段，所有属性的读取与修改直接透传给底层 ECS 实体内部组件。
-外部子系统（例如 HUD 渲染、伤害结算、胜负判定）通过强类型的面向对象接口与角色交互，而底层计算管线依然享受 ECS 数据在 CPU 缓存中的连续紧凑排布。
+### 1.1 为什么必须实现 100% ECS 纯数据伤害管线
+在早期的混合架构中，伤害结算往往在 OOP 角色类中通过 `TakeDamage(float damage)` 方法穿透执行。这种做法直接摧毁了 ECS 的封装性，引入了托管对象引用并导致时序混乱。
+重构后，**生命值与伤害结算 100% 下沉到 ECS 组件与系统**：
+* `Health` 退化为无方法的纯数据 POD 结构体（`Current`, `Max`, `InvincibleTimer`），不承载任何业务逻辑。
+* **无敌判定唯一由 `Health.InvincibleTimer > 0` 裁决**，彻底删除了旧架构中分散且冗余的 `BossCombatState.IsInvulnerable`，消除了双重事实源（Single Source of Truth）。
+* 引入遵循单一职责原则（SRP）的细粒度数据组件：`IncomingDamage`（伤害意图）、`InvincibleOnHit`（受击无敌配置）、`HitFlashConfig`（受击高光配置）与 `DeadTag`（死亡标签）。
+* 碰撞系统 `CombatCollisionSystem` 仅负责几何相交并附加 `IncomingDamage`；伤害裁决系统 `DamageResolutionSystem` 集中判定易伤乘区、扣减血量、注入白闪与死亡标记。面向对象层不再拥有扣血契约。
 
-### 为什么 AI 决策与指令缓冲采用 OOP 模式
-首领的攻击决策树与技能状态机属于高层复杂逻辑，其最大痛点在于与底层物理和渲染逻辑耦合，导致难以进行纯净的单元测试。
-本项目将 AI 划分为面向对象的契约、端口与指令缓冲。AI 决策过程不直接修改任何 ECS 实体，仅将不可变的纯数据指令压入预分配的命令缓冲。这使得 AI 模块能够彻底脱离图形驱动与 ECS 容器，在纯内存环境下运行秒级单元测试。
+### 1.2 彻底消除热路径中的 `Entity.Has<T>()` 反模式（Zero-Has Hot Path Principle）
+在 Flecs.NET 中，`Entity.Has<T>()` 会触发原生 ID 查找与跨语言边界开销，在高频热循环（Hot Path）中属于严重的性能反模式。
+本项目通过以下两项关键设计根治此问题：
+1. **构造期组件拓扑依赖保证**：通过 `ComponentRequirementsModule` 的 `Ecs.With` 关系，保证挂载 `PlayerTag`、`BossTag` 的实体必含有齐备的组件集合（`Transform`、`Velocity`、`Health`、`Hurtbox` 等），从架构上杜绝运行时防御性检查。
+2. **只读角色领域视图（ICharacter Zero-Overhead Default Implementations）**：`ICharacter` 接口作为只读领域视图，彻底移除 `TakeDamage()` 等变异方法，仅保留 `Entity` 句柄。其属性访问器采用 C# 8.0+ 接口默认实现直接获取组件引用（`Entity.Get<T>()`），在 HUD 渲染与状态观察中达成零 `Has<T>`、零样板代码、纳秒级直接解引用。
+3. **系统查询签名直接注入**：各 ECS 物理与战斗系统全部通过参数签名获取连续组件数组（`world.System<Transform, Velocity, ...>()`），消除了在循环体内部进行任何组件探查的需要。
+
+### 1.3 为什么解耦为 PlayerController 与多态 BossController
+* **Player 角色解耦**：`Player` 从原本兼顾物理移动、跳跃扫引、按键轮询、武器发射的大单体退化为纯粹的 **Pawn / 实体装配门面**。硬件输入采集收敛至 `PlayerController`，转换为 `CharacterMovementIntent` 与 `CharacterWeaponIntent` 意图组件；物理运动由 `KinematicMovementSystem` 统一积分；射击冷却与子弹生成由 `CharacterWeaponSystem` 驱动。
+* **Boss 彻底拆解**：原先包含大量 `if (bossType == BossType.Boss1)` 伪多态分支的 560+ 行 `BossCharacter` 大单体被彻底废除（仅保留用于后方兼容的过时外壳）。通过提取抽象基类 `BaseBossController`，派生出 `Boss1Controller`（机械飞龙浮游飞行与弹幕散射）与 `Boss2Controller`（重装碎地者平台寻路、近战劈砍与冲击波跳砸），实现了真正的面向对象多态封装。
 
 ---
 
 ## 2. 全工程物理文件与子模块详尽映射
 
-以下为全工程所有物理文件按照架构分层的逐一职能映射。
-
 ### 表现与角色领域层
 位于 `AnimalBattle/Characters/` 与 `AnimalBattle/Scenes/`。
 
-* `ICombatant.cs`：统一战斗者抽象契约接口。规范了实体全局唯一标识符、二维世界坐标、二维线速度、当前生命值、最大生命值、所属阵营、无敌状态以及统一扣血契约。
-* `Player.cs`：玩家角色面向对象门面类。内部封装基于输入的轻量状态机（地面、滞空、受击、死亡），维护跳跃次数、土狼时间（Coyote Time）与跳跃缓冲倒计时，统一代理物理扫引检测并向对象池申请玩家子弹实体。
-* `BossCharacter.cs`：首领角色面向对象门面类。封装首领状态机，维护阶段迁移时钟、霸体受击判定与 AI 运行宿主，驱动 Boss1 与 Boss2 的行为决策。
-* `BattleScene.cs`：战斗主场景控制器。负责整个 Flecs 世界的构建、实体池预分配预热、瓷砖地图实例化、静态查询通道缓存以及场景销毁时的内存清空。
+* `ICharacter.cs`：统一受控角色只读领域视图契约。采用 C# 默认接口实现，零 `Has<T>` 检查直接透传访问底层 ECS 实体的 `Transform`、`Velocity`、`Health`、`Hurtbox` 与 `Sprite`。
+* `Player.cs`：玩家自机实体装配门面（Pawn）。负责在 ECS 中初始化装配生命、速度、无敌配置、跳跃能力与武器状态组件，并对外提供高层动作状态查询。
+* `PlayerController.cs`：自机输入控制器。帧初轮询 `InputService` 物理按键，计算移动矢量、跳跃请求与 8 轴瞄准方向，注入 `CharacterMovementIntent` 与 `CharacterWeaponIntent`。
+* `PlayerState.cs`：自机高层动作状态枚举（Grounded, Airborne, Hurt, Dead）。
+* `Boss/IBossController.cs`：多态首领领域控制器抽象契约。规范 Boss 型号、阶段、AI 行为状态、当前技能、易伤状态、朝向与 `Update(dt)` / `Reset()` 接口。
+* `Boss/BaseBossController.cs`：首领控制器抽象基类。管理共有的 Flecs 实体句柄、AI 运行时插槽、观测服务、帧步进时钟以及战斗状态同步。
+* `Boss/Boss1Controller.cs`：第一首领（古代猫霸主）具体控制器。装配 Boss 1 属性，驱动浮游高度控制与多阶段技能弹幕决策。
+* `Boss/Boss2Controller.cs`：第二首领（碎地巨兽）具体控制器。集成 `PlatformNavigationGraph` 平台拓扑寻路、近战连击斩、地震波跳砸与地面贴附逻辑。
+* `BossCharacter.cs`：标记为 `[Obsolete]` 的后向兼容门面，统一转调多态 Boss 控制器。
+* `BattleScene.cs`：战斗主场景控制器。构建 Flecs 核心世界，预分配实体池，构建地图足场碰撞体，调度帧三阶段流水线，提供 Boss 切换与即时重置能力。
 
 ### 核心引擎与基础设施层
 位于 `AnimalBattle/Core/`。
 
-* `GameEngine.cs`：引擎顶层静态门面。封装底层窗体初始化、窗口消息泵调度、帧起止生命周期、DxLib 渲染提交与原生键盘状态查询。
-* `InputService.cs`：动作驱动的高层输入服务。维护输入上下文栈，支持上下文推入弹出，向业务层提供按键刚按下、持续按住、刚释放的高层动作抽象。
+* `GameEngine.cs`：引擎顶层静态门面。封装窗体初始化、窗口消息泵调度、帧起止生命周期、DxLib 渲染提交与原生键盘状态查询。
+* `InputService.cs`：动作驱动的高层输入服务。维护输入上下文栈，向业务层提供刚按下、持续按住、刚释放的高层动作抽象。
 * `InputButton.cs`：统一按钮枚举。对齐键盘键码、鼠标按钮与手柄物理按键。
-* `InputAction.cs`：逻辑动作枚举。解耦物理按键与业务动作，包括移动、跳跃、普通攻击、暂停与调试控制。
+* `InputAction.cs`：逻辑动作枚举。解耦物理按键与业务动作（移动、跳跃、射击、重置、调试等）。
 * `InputContext.cs`：输入上下文枚举。用于区分常规游戏状态、菜单状态或对话状态。
 * `InputDevice.cs`：输入设备类型枚举。标识当前处于活动状态的操作设备。
-* `CombatEntityPool.cs`：战斗实体池管理组件与静态辅助器。管理玩家子弹、首领子弹、受击火花、冲击波圆环、近战判定 5 大同构实体池。
-* `EntityPool.cs`：通用同构实体池引擎。实现基于预分配空闲栈的高速借出与回收，内建借出状态位守卫、在途实体全生命周期追溯、数据擦除委托回调以及容量上限熔断器。
-* `PhysicsService.cs`：几何相交与连续碰撞服务。提供盒子对盒子、圆形对圆形的交差算法，以及针对地面高速下落的射线扫引检测。
+* `CombatEntityPool.cs`：战斗实体池管理组件与静态辅助器。管理玩家子弹、首领子弹、受击火花、冲击波圆环、近战判定 5 大同构实体池，并在回收/借出重置时严格清理 `HitFlashEffect` 与 `BulletModifier` 防御污染。
+* `EntityPool.cs`：通用同构实体池引擎。实现基于预分配空闲栈的高速借出与回收，内建借出状态位守卫、在途实体全生命周期追溯、数据擦除回调与容量熔断器。
+* `PhysicsService.cs`：几何相交与连续碰撞服务。提供盒子对盒子、圆形对圆形的交差算法，以及针对足场平台的下落射线扫引检测。
 * `PhysicsTypes.cs`：基础几何与物理结构体。包含二维整数向量、二维浮点向量以及对齐 C++ 内存布局的二维物理包围盒。
 * `Rect.cs`：矩形范围数据结构。提供点包含判定、矩形相交判定以及从宽高构造的辅助方法。
 * `SlashDirection.cs`：近战斩击朝向枚举。对应朝下、朝上、朝右、朝左的渲染旋转角度与击飞向量。
@@ -116,20 +138,28 @@ flowchart TD
 * `AssetService.cs`：纹理与媒体资源管理服务。集中加载图片资源，缓存底层图形句柄，防止图形资源重复加载。
 
 ### ECS 纯数据组件集合
-位于 `AnimalBattle/Components/`，全量 25 个组件均为不包含堆引用的非托管纯数据结构体。
+位于 `AnimalBattle/Components/`，全量 33 个组件全部遵循 SRP 单一职责原则分文件存放，均为非托管纯数据 POD 结构体。
 
-* 空间变换与速度：
+* 空间变换与运动学：
   * `Transform.cs`：记录实体在二维世界中的 X 坐标、Y 坐标、水平缩放比与垂直缩放比。
-  * `Velocity.cs`：记录实体在 X 轴与 Y 轴方向上的线速度分量。
+  * `Velocity.cs`：记录实体移动线速度分量与受击击退向量（`Vec2f Value`, `Vec2f Knockback`）。
+  * `CharacterMovementIntent.cs`：自机水平移动与跳跃输入意图组件。
+  * `CharacterWeaponIntent.cs`：自机武器开火触发与 8 方向瞄准意图组件。
+  * `WeaponState.cs`：自机武器冷却计时器与弹丸发射规格组件。
+  * `JumpCapability.cs`：自机二段跳、土狼时间与跳跃缓冲计时组件。
 * 碰撞几何体与判定：
   * `CollisionShape.cs`：统一几何代数直和结构体。整合盒子、圆形、线段与扇形，消除多分支派发。
-  * `CollisionBox.cs`：静态轴对齐矩形包围盒，用于足场平台与角色基本身位。
+  * `CollisionBox.cs`：静态轴对齐矩形包围盒，维护接地状态（`IsGrounded`）。
   * `Hitbox.cs`：攻击判定盒。携带伤害数值、所属阵营、击退力度以及命中即消亡标志。
-  * `Hurtbox.cs`：受击判定盒。携带受击几何体、所属阵营以及无敌帧过滤标志。
-* 状态与数值：
-  * `Health.cs`：生命值组件。记录当前生命值、最大生命值以及伤害吸收逻辑。
-  * `Faction.cs`：阵营枚举。区分为友好方、敌对双方或中立方。
-  * `BossCombatState.cs`：首领战斗专属计时组件。记录霸体倒计时、硬直倒计时与闪烁周期。
+  * `Hurtbox.cs`：受击判定盒。仅携带受击几何形状与所属阵营，**彻底剔除了托管所有者引用**。
+* 生命与伤害管线：
+  * `Health.cs`：纯数据生命值组件（`float Current`, `float Max`, `float InvincibleTimer`），无任何行为方法。
+  * `IncomingDamage.cs`：单帧伤害结算意图组件（`float Amount`, `Faction SourceFaction`）。
+  * `InvincibleOnHit.cs`：受击无敌时间配置组件（`float Duration`）。
+  * `HitFlashConfig.cs`：受击白闪参数配置组件（`float Duration`, `Color Color`），默认强类型白色。
+  * `DeadTag.cs`：生命值耗尽死亡零大小标签。
+  * `Faction.cs`：阵营枚举。区分为友好方（Friendly）、敌对方（Hostile）或中立方。
+  * `BossCombatState.cs`：首领战斗状态追踪组件（阶段、易伤标志、受击计数），**已彻底移除 `IsInvulnerable`**。
 * 弹幕特征与变调：
   * `Bullet.cs`：常规弹幕组件。存储判定半径、填充颜色与外框发光颜色。
   * `BulletType.cs`：特殊弹幕枚举。区分为普通弹、品红波浪弹、黄跟踪弹、青蓝变速弹与黑洞反击弹。
@@ -151,29 +181,38 @@ flowchart TD
   * `EffectTag.cs`：标记瞬态视觉特效粒子实体。
 
 ### ECS 系统与管线调度层
-位于 `AnimalBattle/Systems/`。
+位于 `AnimalBattle/Systems/`，共 18 个无状态逻辑与物理计算系统。
 
-* `BulletPhysicsSystem.cs`：弹幕运动物理系统。批量抓取连续内存指针，单次 P/Invoke 调用 C++ SIMD 批量更新位置并标记出界消亡。
-* `SpecialBulletSystem.cs`：特殊弹幕变调系统。收集变调弹幕参数并派发至原生批处理算核。
-* `CombatCollisionSystem.cs`：受击碰撞检测系统。纯静态上下文遍历，无闭包捕获，完成受击扣血、白闪触发与火花粒子生成。
-* `SpriteAnimationSystem.cs`：精灵帧动画更新系统。依据经过时间步进剪辑帧索引并刷新显示图块。
-* `EffectMovementSystem.cs`：视效移动系统。处理纯视觉粒子按照速度方向行进的位置变更。
-* `FadeEffectSystem.cs`：透明度渐变系统。计算当前透明度通道数值，并在生存期满时自动将实体归还至实体池。
-* `HitFlashEffectSystem.cs`：受击高光倒计时系统。逐帧递减受击闪白时长，归零时移除白闪状态。
-* `BossCommandExecutor.cs`：首领动作执行器。负责消费 AI 缓冲区中的指令，触发突进、跳砸、全屏散射与激光前摇。
-* `CombatEffectHelper.cs`：特效与弹幕生成辅助静态门面。向业务层提供一行代码租借并初始化火花、圆环、近战判定盒的静态接口。
-* `WorldRenderSystem.cs`：世界图元渲染录制系统。按绘制层级向渲染指令队列写入平台、角色、粒子与常规弹幕的绘制封包。
-* `TelegraphGeometry.cs`：预警区域几何模型。定义危险长方体、扇形预警区与充能激光线的几何参数及进度因子。
-* `TelegraphRenderHelper.cs`：预警区域渲染录制辅助器。结合透明度缓动与正弦脉冲高光，生成具有呼吸感的前摇光柱与警戒红框。
-* `HudRenderSystem.cs`：抬头显示器渲染系统。绘制玩家血量槽、剩余跳跃次数、Boss 阶段状态条与胜负结算界面。
-* `DebugRenderSystem.cs`：调试信息渲染系统。按需绘制绿色碰撞外框、黄色受击盒、红色攻击盒以及性能指标。
+* 角色运动与武器：
+  * `KinematicMovementSystem.cs`：角色运动学系统。消费 `CharacterMovementIntent`，处理水平加速度、重力积分、跳跃切断、土狼时间以及足场碰撞。
+  * `CharacterWeaponSystem.cs`：角色武器系统。消费 `CharacterWeaponIntent`，递减冷却时间，向实体池申请并发射自机弹丸。
+  * `PlayerAnimationStateSystem.cs`：自机动画状态解析系统。依据速度、接地状态与移动意图，映射并切换动画剪辑（Idle, Run, Jump, Fall, Land）。
+* 战斗碰撞与伤害裁决：
+  * `CombatCollisionSystem.cs`：纯静态相交碰撞检测系统。对比 `Hitbox` 与 `Hurtbox`，命中时生成 `IncomingDamage` 意图并生成受击火花粒子。
+  * `DamageResolutionSystem.cs`：伤害集中裁决系统。统一处理无敌帧拦截、易伤乘区倍率计算、生命值扣减、白闪特效注入、反击弹幕发射与死亡标签标记。
+* 弹幕运动与物理变调：
+  * `BulletPhysicsSystem.cs`：弹幕运动物理系统。批量抓取连续内存指针，单次 P/Invoke 调用 C++ SIMD 批量更新位置并标记出界消亡。
+  * `SpecialBulletSystem.cs`：特殊弹幕变调系统。收集变调弹幕参数并派发至原生批处理算核。
+* 视效粒子与动画：
+  * `SpriteAnimationSystem.cs`：精灵帧动画步进系统。根据经过时间递增帧计时器并刷新 `Sprite` 源图块。
+  * `EffectMovementSystem.cs`：视效移动系统。处理纯视觉粒子按照速度方向行进的位置变更。
+  * `FadeEffectSystem.cs`：透明度渐变系统。计算当前透明度通道数值，并在生存期满时自动将实体归还至实体池。
+  * `HitFlashEffectSystem.cs`：受击高光倒计时系统。逐帧递减受击闪白时长，归零时移除白闪状态。
+* 首领指令消费与渲染准备：
+  * `BossCommandExecutor.cs`：首领动作执行器。消费 AI 缓冲区中的指令，执行突进位移、斩击 Hitbox、地面冲击波与激光前摇。
+  * `CombatEffectHelper.cs`：特效与弹幕生成辅助静态门面。向业务层提供一行代码租借并初始化火花、圆环、近战判定盒、地面冲击波与反击黑弹的接口。
+  * `WorldRenderSystem.cs`：世界图元渲染录制系统。按绘制层级向渲染指令队列写入平台、角色、粒子与常规弹幕的绘制封包。
+  * `TelegraphGeometry.cs`：预警区域几何模型。定义危险长方体、扇形预警区与充能激光线的几何参数及进度因子。
+  * `TelegraphRenderHelper.cs`：预警区域渲染录制辅助器。结合透明度缓动与正弦脉冲高光，生成前摇光柱与警戒红框。
+  * `HudRenderSystem.cs`：抬头显示器渲染系统。解耦具体角色类，直接消费 `ICharacter` 接口绘制玩家血量、剩余跳跃次数、Boss 阶段状态条与胜负结算界面。
+  * `DebugRenderSystem.cs`：调试信息渲染系统。按需绘制绿色碰撞外框、黄色受击盒、红色攻击盒以及性能指标。
 
 ### ECS 声明式依赖装配模块
 位于 `AnimalBattle/Modules/`。
 
 * `BulletModule.cs`：实现 `IFlecsModule` 接口，一键注册弹幕物理、特殊变调与战斗碰撞三大核心系统。
 * `EffectModule.cs`：实现 `IFlecsModule` 接口，一键注册特效移动、淡出回收与受击高光系统。
-* `ComponentRequirementsModule.cs`：利用 Flecs 原生 `Ecs.With` 拓扑关系声明组件依赖约束。例如声明挂载 `PlayerTag` 的实体必须具备 `Transform`、`Velocity`、`CollisionBox`、`Health`、`Sprite` 与 `Animation`，彻底消除漏挂组件导致的空引用异常。
+* `ComponentRequirementsModule.cs`：利用 Flecs 原生 `Ecs.With` 拓扑关系声明组件依赖约束。声明挂载 `PlayerTag` 的实体必须具备 `Transform`、`Velocity`、`CollisionBox`、`Hurtbox`、`Health`、`InvincibleOnHit`、`HitFlashConfig`、`Sprite` 与 `Animation`，从架构层面保证组件必然存在，**为零 Has 热路径提供绝对理论保证**。
 
 ### 批量计算与非托管内存队列
 位于 `AnimalBattle/Compute/`。
@@ -184,8 +223,8 @@ flowchart TD
 ### 渲染指令缓冲与数据封包
 位于 `AnimalBattle/Render/`。
 
-* `RenderCommandBuffer.cs`：单向平坦渲染指令缓冲池。负责接收上层系统写入的绘制请求，聚合字符缓冲区，在帧末通过单个指针统一提交给底层的 DxLib 引擎。
-* `RenderPacket.cs`：64 字节显式内存布局联合体封包。涵盖包类型、绘制层级以及图形、线条、文字或着色状态参数，尺寸严格匹配单根 CPU 缓存行。
+* `RenderCommandBuffer.cs`：单向平坦渲染指令缓冲池。接收上层系统写入的绘制请求，聚合字符缓冲区，在帧末通过单个指针统一提交给底层的 DxLib 引擎。
+* `RenderPacket.cs`：64 字节显式内存布局联合体封包。尺寸严格匹配单根 CPU 缓存行。
 
 ### P/Invoke 跨语言互操作绑定
 位于 `AnimalBattle/Bindings/`。
@@ -202,7 +241,7 @@ flowchart TD
 * `BinaryConfigLoader.cs`：二进制静态配置加载器。在发布环境下从压缩二进制文件还原全量配置，杜绝启动期 IO 碎片。
 * `CollisionShapeFactory.cs`：碰撞几何体工厂。根据 TOML 配置数据快速组装带偏移量的统一碰撞几何体。
 * 各具体配置 POCO 类：
-  * `PlayerConfig.cs`：玩家移动速度、跳跃高度、重力加速度、射击 CD 与尺寸配置。
+  * `PlayerConfig.cs`：玩家移动速度、跳跃高度、重力加速度、射击 CD 与受击无敌/白闪时长配置。
   * `Boss1Config.cs`：机械飞龙血量、悬浮高度、俯冲突刺速度与弹幕散射角配置。
   * `Boss2Config.cs`：碎地者护甲、巡逻速度、跳砸前摇时长、地震波速度配置。
   * `ArenaConfig.cs`：竞技场边界、重力常数与弹幕销毁世界边界。
@@ -216,13 +255,13 @@ flowchart TD
 位于 `AnimalBattle/Ai/`。
 
 * 契约定义层 `Contracts/`：
-  * `BossSkill.cs`：首领技能种类枚举，包括俯冲突刺、环形弹幕、激光扫射、地震砸地。
+  * `BossSkill.cs`：首领技能种类枚举，包括俯冲突刺、环形弹幕、激光扫射、地面冲击波、巨兽跳砸、狂怒突进与天崩地裂。
   * `BossState.cs`：首领高层行为状态枚举，包括巡逻、追踪、前摇蓄力、施法中、僵直恢复。
   * `BossType.cs`：首领型号枚举。
-  * `Phase.cs`：战斗阶段枚举，支持阶段一至阶段三的狂暴推进。
+  * `Phase.cs`：战斗阶段枚举，支持阶段一至阶段三的推进。
   * `AttackStage.cs`：单技能内部阶段枚举，包括蓄力、施放、后摇。
   * `AttackDecisionRule.cs`：条件触发规则模型。
-  * `TransitionReason.cs` 与 `ReasonKind.cs`：状态机流转原因追踪器，用于诊断非法状态跳转。
+  * `TransitionReason.cs` 与 `ReasonKind.cs`：状态机流转原因追踪器。
   * `DiagnosticResult.cs` 与 `DiagnosticSeverity.cs`：AI 执行诊断报告与严重性分级。
   * `ErrorCode.cs`：状态机错误代码枚举。
   * `LifecycleInvocation.cs` 与 `LifecycleOperation.cs`：生命周期拦截记录器。
@@ -237,10 +276,11 @@ flowchart TD
   * `Boss2/`：碎地者的配置映射、近战攻击模块、跳跃落地策略与状态机定义。
   * `Attack/`、`Dsl/`、`Runtime/`：攻击流水线调度器、条件判断领域特定语法与 AI 运行时调度上下文。
 
-### 场景地图与地形构建
+### 场景地图与导航拓扑
 位于 `AnimalBattle/Maps/`。
 
-* `TileMap.cs`：地图解析与足场碰撞构建器。读取切片配置，向 Flecs 世界批量生成带有 `PlatformTag`、`Transform` 与 `CollisionBox` 的足场实体，并执行图块批次拼接。
+* `TileMap.cs`：地图解析与足场碰撞构建器。读取切片配置，向 Flecs 世界批量生成带有 `PlatformTag`、`Transform` 与 `CollisionBox` 的足场实体，并构建寻路网格。
+* `Navigation/PlatformNavigationGraph.cs`：足场跳跃与下落导航拓扑图。计算不同足场之间的跳跃可达弧、起跳点与下落轨迹，为 Boss 2 的智能追击提供 A* 路径规划。
 
 ### C++ 原生底层引擎与算核
 位于 `AnimalBattleCore/` 与 `AnimalBattleExtension/`。
@@ -248,93 +288,133 @@ flowchart TD
 * `AnimalBattleCore/AnimalBattleCore.cpp`：原生动态库导出接口。封装基于 DxLib 的窗体注册、DirectX 9 初始化、双缓冲呈现、键盘手柄原始状态采集与声音播放。
 * `AnimalBattleCore/src/`：底层渲染服务与输入服务的抽象定义及 DxLib 适配实现。
 * `AnimalBattleExtension/AnimalBattleExtension.cpp`：纯计算扩展库导出接口。提供异常安全屏障与 C 格式 ABI 导出。
-* `AnimalBattleExtension/src/Physics/BatchPhysics.ixx`：弹幕并发物理算核。基于 C++23 模块构建，使用 `#pragma loop(ivdep)` 指令指导 MSVC 生成 AVX2 向量化机器码，并在 Linux/GCC 环境自动回退至 OpenMP 并行。
+* `AnimalBattleExtension/src/Physics/BatchPhysics.ixx`：弹幕并发物理算核。基于 C++23 模块构建，使用 `#pragma loop(ivdep)` 指令指导 MSVC 生成 AVX2 向量化机器码。
 * `AnimalBattleExtension/src/Compute/BatchComputeProcessor.ixx` 与 `SpecialBulletMath.ixx`：特殊弹幕变调数学计算核。在原生层直接计算三角函数波形与向心速度扰动。
 
 ---
 
 ## 3. ECS 数据流与架构设计深度解析
 
-### 为什么选择 Archetype-Based ECS
-在面向对象设计中，一万发子弹意味着一万个包含虚函数表指针（vptr）的堆对象，其物理内存在托管堆中离散分布。CPU 访问下一个子弹时几乎必然引发 L1/L2 缓存缺失（Cache Miss）。
-Flecs ECS 采用 Archetype 存储模型：具有完全相同组件类型的实体被集中紧凑地存储在同一个数据表（Table）中。
-当 `BulletPhysicsSystem` 遍历弹幕时，内存表现为连续密闭的 `Transform` 数组与 `Velocity` 数组。CPU 硬件预取器（Hardware Prefetcher）能以最高效率将后续数据拉入缓存，使单核每秒能够轻松更新数十万次碰撞与位移。
+### 3.1 纯数据伤害管线闭环机制
+在全新架构中，角色受击与扣血的生命周期完全在 ECS 系统内部自洽闭环：
 
-### 声明式依赖注入与装配架构
-为了规避组件漏挂导致的防御性空值校验，本项目使用 Flecs 的声明式模块：
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Hitbox as "Attacker Hitbox"
+    participant Hurtbox as "Victim Hurtbox"
+    participant CollSys as "CombatCollisionSystem"
+    participant IncDmg as "IncomingDamage (Component)"
+    participant DmgSys as "DamageResolutionSystem"
+    participant HealthComp as "Health (POD Component)"
+    participant Effect as "CombatEffectHelper / Pool"
 
-```csharp
-// ComponentRequirementsModule.cs
-world.Component<PlayerTag>().Entity
-     .Add(Ecs.With, world.Component<Transform>().Entity)
-     .Add(Ecs.With, world.Component<Velocity>().Entity)
-     .Add(Ecs.With, world.Component<CollisionBox>().Entity)
-     .Add(Ecs.With, world.Component<Health>().Entity)
-     .Add(Ecs.With, world.Component<Sprite>().Entity)
-     .Add(Ecs.With, world.Component<Animation>().Entity);
+    Hitbox->>Hurtbox: 空间相交检测 Intersects() == true
+    CollSys->>IncDmg: target.Set(new IncomingDamage(damage, faction))
+    CollSys->>Effect: SpawnHitSparkEffect() 生成受击火花粒子
+    Note over IncDmg,DmgSys: 帧内管线时序推进至 DamageResolutionSystem
+    DmgSys->>HealthComp: 检查 hp.InvincibleTimer > 0 (无敌拦截过滤)
+    opt 未处于无敌保护
+        DmgSys->>DmgSys: 计算易伤倍率 (BossCombatState.IsVulnerable ? multiplier : 1.0)
+        DmgSys->>HealthComp: hp.Current = Math.Max(0, hp.Current - finalDamage)
+        DmgSys->>HealthComp: hp.InvincibleTimer = invCfg.Duration (注入受击无敌)
+        DmgSys->>Effect: target.Set(new HitFlashEffect(flashCfg.Duration, flashCfg.Color))
+        alt 生命值归零 (hp.Current <= 0)
+            DmgSys->>target: target.Add<DeadTag>() 标记死亡
+            DmgSys->>Effect: 播放死亡粒子 / 胜利爆破
+        else 存活且受击
+            opt 受到攻击的实体为 Boss
+                DmgSys->>Effect: SpawnBossCounterAttack() 发射反击黑弹
+            end
+        end
+    end
+    DmgSys->>target: target.Remove<IncomingDamage>() 清理意图
 ```
 
-当代码中执行 `world.Entity().Add<PlayerTag>()` 时，Flecs 引擎会在底层自动补全其余六个关联组件，在编译期与装配期建立起组件拓扑完整性。
+### 3.2 零 Has 极速热路径与 Flecs Archetype
+当执行 `Entity.Has<T>()` 时，需要计算组件类型 ID 并检索实体的 Archetype Record。在每秒 60 帧、每帧数千次调用（如 HUD 渲染、角色状态查询、连续碰撞测试）的热路径中，这种开销会产生可测量的微秒级累积。
+1. **拓扑构建防破损**：`ComponentRequirementsModule` 在应用启动时建立组件拓扑契约。任何拥有 `PlayerTag` 的实体必然具备完整的状态与数据组件。
+2. **直接解引用**：`ICharacter.X` 直接调用 `Entity.Get<Transform>().X`，省略了防御性的 `if (Entity.Has<Transform>())`。
+3. **系统查询零分支**：`DamageResolutionSystem` 的系统查询声明为：
+   ```csharp
+   world.System<IncomingDamage, Transform, Health, InvincibleOnHit, HitFlashConfig>()
+        .Kind(Ecs.OnUpdate)
+        .Iter(...);
+   ```
+   只有完全匹配全部 5 个组件的实体才会被传入批量迭代器。进入迭代器内部时，所有组件均为已经通过连续内存指针拿到的强类型引用，内部彻底杜绝二次组件查询。
 
-### 同构实体池彻底消灭 Table Move
-当开发者随意对实体执行 `.Add<T>()` 或 `.Remove<T>()` 时，Flecs 必须在底层将该实体从旧数据表逐字节拷贝至新数据表，这被称为原型漂移（Archetype Churn）。
-本项目的 `CombatEntityPool` 为五种不同生命周期特点的战斗体分别创建独立的 `EntityPool`。
-在池初始化时，实体就已挂载齐全所需的全部数据组件。借出与归还过程中，代码只使用引用覆写组件内部数值，**严禁改变组件类型结构**。这使得高频战斗期间 ECS 数据表迁移次数恒定为零。
+### 3.3 表现动画管线的两阶统一解耦
+过去 `Player` 自行步进动画时钟，导致动画与主物理循环时钟割裂。重构后的两阶动画管线如下：
+1. **第一阶：状态解释（PlayerAnimationStateSystem）**：
+   在 `Ecs.OnUpdate` 阶段，该系统根据当前角色的 `Velocity`、`CollisionBox.IsGrounded`、以及玩家的移动输入意图，评估出当前最优动画状态（Idle, Run, Jump, Fall, Land），并更新 `Animation.ClipName`。
+2. **第二阶：切片推进（SpriteAnimationSystem）**：
+   统一由 `SpriteAnimationSystem` 消费所有挂载 `Animation` 与 `Sprite` 的实体，按照 `deltaTime` 步进帧时钟，计算当前帧索引，并从图集配置中更新 `Sprite.SourceRect`。动画系统与具体角色业务逻辑 100% 解耦。
+
+### 3.4 同构实体池防污染与零原型漂移（Zero Table Move）
+在 `CombatEntityPoolComponent` 中：
+* 弹幕实体在预分配时就已经固化了 `Transform`, `Velocity`, `Bullet`, `Hitbox`, `BossBulletTag` 的同构结构。
+* **防御性组件回收与重置**：当特殊弹幕（如携带 `BulletModifier` 的黑弹、品红波浪弹）被回收至池中、或通过 `SpawnGroundShockwave` 重新借出为地面冲击波时，`ResetBulletEntity` 与 `SpawnGroundShockwave` 均会执行 `e.Remove<BulletModifier>()` 彻底重置组件。这彻底杜绝了回收实体将旧技能的特殊变调参数泄漏给新技能的“弹幕污染”缺陷。
 
 ---
 
 ## 4. 运行时帧调度时序与生命周期
 
-在 `BattleScene.Update` 与 `BattleScene.Render` 的驱动下，每一帧的数据流向如下：
+在 `BattleScene.Update` 与 `BattleScene.Render` 的驱动下，每一帧的数据流划分为严格的三大阶段：
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Engine as "GameEngine / BattleScene"
+    participant Engine as "BattleScene"
     participant Input as "InputService"
-    participant ECS as "Flecs ECS World"
+    participant Controller as "PlayerController / BossController"
+    participant ECS as "Flecs ECS Pipeline"
     participant NativeCPP as "C++23 AVX2 算核"
-    participant Pools as "CombatEntityPool"
-    participant Facades as "Player / Boss 领域门面"
-    participant AI as "PreallocatedCommandBuffer"
     participant Render as "World / Telegraph / HUD"
     participant Buffer as "RenderCommandBuffer"
     participant DxLib as "Native DxLib 驱动"
 
-    Note over Engine,DxLib: 阶段一：帧起始与输入状态更新
-    Engine->>Buffer: Reset() 清空上一帧渲染指令
-    Engine->>DxLib: Engine_BeginDraw() 准备后备缓冲并清屏
-    Engine->>Input: Update() 采样物理按键并映射逻辑动作
+    Note over Engine,Controller: 阶段一：控制器决策与意图注入 (Controller -> Intent)
+    Engine->>Input: 采集物理按键状态
+    Engine->>Controller: PlayerController.PollAndProcessInput()
+    Controller->>ECS: 写入 CharacterMovementIntent 与 CharacterWeaponIntent
+    Engine->>Controller: BossController.Update() 推进 AI 状态机
+    Controller->>ECS: 评估决策树，向 PreallocatedCommandBuffer 写入移动/攻击命令
 
-    Note over Engine,Pools: 阶段二：ECS 密集数据管线步进 world.Progress(deltaTime)
-    Engine->>ECS: world.Progress(dt) 启动管线调度
-    ECS->>NativeCPP: Extension_BatchBulletMovement 批量派发弹幕物理
-    NativeCPP-->>ECS: 返回出界标记数组 (AVX2 并发计算)
-    ECS->>Pools: 回收出界弹幕至专用同构池
-    ECS->>ECS: CombatCollisionSystem 静态上下文相交检测
-    ECS->>Pools: 命中时申请受击火花与扣减血量
-    ECS->>Pools: FadeEffectSystem 自动回收寿命耗尽特效
+    Note over Engine,NativeCPP: 阶段二：ECS 全量物理与战斗管线模拟 (world.Progress)
+    Engine->>ECS: _ecsWorld.Progress(deltaTime)
+    ECS->>ECS: KinematicMovementSystem 消费移动意图，执行重力积分与足场碰撞
+    ECS->>ECS: CharacterWeaponSystem 消费武器意图，冷却计时并生成自机子弹
+    ECS->>ECS: BossCommandExecutor 消费首领指令，派发突进、近战斩击与地面冲击波
+    ECS->>NativeCPP: BulletPhysicsSystem 批量派发子弹物理 (SIMD 批处理)
+    NativeCPP-->>ECS: 回传出界标记，自动归还出界弹幕至实体池
+    ECS->>ECS: SpecialBulletSystem 收集变调数据并同步原生算核
+    ECS->>ECS: CombatCollisionSystem 静态上下文相交检测 -> 写入 IncomingDamage
+    ECS->>ECS: DamageResolutionSystem 集中结算扣血、易伤、无敌帧与受击白闪
+    ECS->>ECS: PlayerAnimationStateSystem 解析动作状态并切换 ClipName
+    ECS->>ECS: SpriteAnimationSystem 统一推进帧时钟并刷新 Sprite 矩形切片
+    ECS->>ECS: FadeEffectSystem / HitFlashEffectSystem 递减时钟，回收超期特效
 
-    Note over Engine,AI: 阶段三：面向对象领域角色与 AI 意图判定
-    Engine->>Facades: Player.Update() 地面扫引判定与状态机推进
-    Engine->>Facades: BossCharacter.Update() 推进 AI 状态机
-    Facades->>AI: 评估行为树，写入不可变动作意图
-    Facades->>Facades: BossCommandExecutor 消费意图，生成预警几何与弹幕
-
-    Note over Engine,DxLib: 阶段四：表现层指令录制与单指针批量呈现
-    Engine->>Render: 调度世界图元、预警光柱与 HUD
-    Render->>Buffer: Push* 写入 64 字节缓存行对齐的 RenderPacket
-    Engine->>Buffer: Submit() 聚合指令包
-    Buffer->>DxLib: Engine_SubmitRenderCommands(packets, count) 单指针批量提交
-    Engine->>DxLib: Engine_EndDraw() 翻转后备缓冲区完成渲染
+    Note over Engine,DxLib: 阶段三：表现层录制与单指针批量呈现 (Render -> Present)
+    Engine->>Render: 调度 WorldRenderer, HudRenderSystem, DebugRenderSystem
+    Render->>Buffer: Push* 写入 64 字节对齐的 RenderPacket
+    Engine->>Buffer: Submit() 聚合单帧指令包
+    Buffer->>DxLib: Engine_SubmitRenderCommands() 单指针批量递交
+    Engine->>DxLib: Engine_EndDraw() 翻转后备缓冲区完成渲染呈现
 ```
 
 ---
 
 ## 5. 质量防护体系与关键工程指标
 
-本项目的代码质量由全套自动化测试矩阵与工业级编译规约共同守护：
+本项目的代码质量由完备的自动化测试矩阵、严格的面向对象原则与工业级构建规约共同守护：
 
-1. **绝对零编译器警告**：全解决方案开启严格分析器，保持 0 警告与 0 错误。
-2. **测试金字塔与全域覆盖**：工程包含 59 项自动化单元与集成测试，覆盖非托管内存安全释放、实体池防重归还与状态机幂等性、同构原型表稳定性、连续碰撞检测穿透防护、Boss 阶段状态流转以及 AOT 二进制配置解码。
-3. **硬实时内存预算**：在同屏数千发弹幕碰撞与大量视效迸发的极端负载下，Hot Path 堆内存分配量恒定为 0 字节，杜绝 GC 带来的微秒级帧骤降。
+1. **单一职责原则（SRP）与代码规范**：
+   * 严守“一个文件一个结构/类”的原则，所有组件、系统与测试类均保持高度专注与解耦。
+   * 全量公共接口与组件标注简洁明了的日文 XML Doc 文档注释。
+2. **测试金字塔与全域覆盖**：
+   * 工程全量包含 **94 项自动化单元与集成测试**，保持 100% 绿色通过。
+   * 覆盖非托管内存安全释放、实体池防重归还与防污染、同构原型表稳定性、纯 ECS 伤害管线时序判定、ICharacter 零 Has 契约、多态 Boss 状态流转、平台导航寻路拓扑以及 AOT 二进制配置编解码。
+3. **版本管理与变更追溯**：
+   * 采用现代分布式版本控制系统 **Jujutsu (jj)**，保障每次提交的原子性与清晰的线性演进历史。
+4. **硬实时零 GC 内存预算**：
+   * 在同屏数百发弹幕密集碰撞、特殊变调粒子并发与频繁受击的极限压力测试下，Hot Path 堆内存分配恒定为 0 字节，消除一切由 GC 垃圾回收引发的微秒级卡顿。
