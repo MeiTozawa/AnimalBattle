@@ -56,6 +56,7 @@ public class CombatSceneIntegrationTests
 
         controller.SubmitInput(moveX: 1.0f, jumpPressed: false, jumpHolding: false, shootPressed: true);
         player.Update(0.1f, new ArenaConfig { FloorLimitY = 600.0f, BoundaryMinX = 0.0f, BoundaryMaxX = 1000.0f }, platformQuery, world);
+        world.Progress(0.1f);
 
         Assert.True(player.X > 0.0f);
         var bulletFound = false;

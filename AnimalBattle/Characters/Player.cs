@@ -137,14 +137,7 @@ public sealed class Player : ICharacter {
             return;
         }
 
-        // 1. 物理・地形衝突処理（意図コンポーネントを消費）
-        KinematicMovementSystem.UpdateEntity(_entity, dt, platformQuery, arenaCfg, world);
-
-        // 2. アニメーション状態更新
         UpdateAnimation(dt);
-
-        // 3. 武器射撃処理（意図コンポーネントを消費）
-        CharacterWeaponSystem.UpdateEntity(_entity, dt, world);
     }
 
     /// <summary>

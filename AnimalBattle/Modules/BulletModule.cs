@@ -1,3 +1,4 @@
+using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Modules;
@@ -19,6 +20,8 @@ public readonly struct BulletModule : IFlecsModule {
         world.AddSpriteAnimationSystem()
            .AddBulletPhysicsSystem()
            .AddSpecialBulletSystem()
+           .AddKinematicMovementSystem()
+           .AddCharacterWeaponSystem()
            .AddCombatCollisionSystem()
            .AddDamageResolutionSystem();
     }

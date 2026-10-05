@@ -11,7 +11,50 @@ namespace AnimalBattle.Systems;
 public static class KinematicMovementSystem
 {
     /// <summary>
-    ///     単一エンティティのキネマティック運動物理を 1 フレーム分更新します。
+    ///     キネマティック運動物理システムを Flecs.NET ワールドへ登録します。
+    /// </summary>
+    /// <param name="world">登録先の Flecs.NET ワールド</param>
+    /// <param name="platformQuery">足場プラットフォーム検索クエリ（省略時は内部生成）</param>
+    /// <param name="arenaCfg">アリーナ境界設定（省略時は ConfigManager.Arena）</param>
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
+    public static World AddKinematicMovementSystem(
+        this World world,
+        Query<Transform, CollisionBox>? platformQuery = null,
+        ArenaConfig? arenaCfg = null)
+    {
+        var pQuery = platformQuery ?? world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
+
+        world.System<Transform, Velocity, CollisionBox, CharacterMovementIntent, JumpCapability>("KinematicMovementSystem")
+            .Kind(Ecs.OnUpdate)
+            .Without<DeadTag>()
+            .Iter((Iter it,
+                   Field<Transform> transforms,
+                   Field<Velocity> velocities,
+                   Field<CollisionBox> collisionBoxes,
+                   Field<CharacterMovementIntent> intents,
+                   Field<JumpCapability> jumps) =>
+            {
+                var dt = it.DeltaTime();
+                var count = it.Count();
+                var cfg = arenaCfg ?? ConfigManager.Arena;
+
+                for (var i = 0; i < count; i++)
+                {
+                    ref var trans = ref transforms[i];
+                    ref var vel = ref velocities[i];
+                    ref var col = ref collisionBoxes[i];
+                    ref var intent = ref intents[i];
+                    ref var jump = ref jumps[i];
+
+                    ExecuteKinematics(ref trans, ref vel, ref col, in intent, ref jump, dt, pQuery, cfg, world);
+                }
+            });
+
+        return world;
+    }
+
+    /// <summary>
+    ///     単一エンティティのキネマティック運動物理を 1 フレーム分更新します（テストおよび直接呼び出し互換用）。
     /// </summary>
     /// <param name="entity">対象 Flecs エンティティ句柄。</param>
     /// <param name="dt">デルタタイム（秒）。</param>
@@ -25,13 +68,7 @@ public static class KinematicMovementSystem
         ArenaConfig? arenaCfg = null,
         World? effectWorld = null)
     {
-        if (!entity.IsAlive() ||
-            !entity.Has<Transform>() ||
-            !entity.Has<Velocity>() ||
-            !entity.Has<CollisionBox>() ||
-            !entity.Has<CharacterMovementIntent>() ||
-            !entity.Has<JumpCapability>())
-            return;
+        if (!entity.IsAlive()) return;
 
         ref var trans = ref entity.GetMut<Transform>();
         ref var vel = ref entity.GetMut<Velocity>();
@@ -39,6 +76,20 @@ public static class KinematicMovementSystem
         ref var intent = ref entity.GetMut<CharacterMovementIntent>();
         ref var jump = ref entity.GetMut<JumpCapability>();
 
+        ExecuteKinematics(ref trans, ref vel, ref col, in intent, ref jump, dt, platformQuery, arenaCfg, effectWorld);
+    }
+
+    private static void ExecuteKinematics(
+        ref Transform trans,
+        ref Velocity vel,
+        ref CollisionBox col,
+        in CharacterMovementIntent intent,
+        ref JumpCapability jump,
+        float dt,
+        Query<Transform, CollisionBox> platformQuery,
+        ArenaConfig? arenaCfg,
+        World? effectWorld)
+    {
         // 1. 水平移動意図の適用
         vel.Vx = intent.MoveX * jump.MoveSpeed;
 

@@ -57,4 +57,26 @@ public class KinematicMovementSystemTests
         Assert.Equal(-400.0f, vel.Vy);
         Assert.Equal(1, jump.RemainingJumps);
     }
+
+    [Fact]
+    public void KinematicMovementSystem_ExecutesInWorldProgress_Automatically()
+    {
+        using var world = World.Create();
+        var platformQuery = world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
+        world.AddKinematicMovementSystem(platformQuery);
+
+        var entity = world.Entity("Pawn")
+            .Set(new Transform(100.0f, 100.0f, 1.0f, 1.0f))
+            .Set(new Velocity(0.0f, 0.0f))
+            .Set(new CollisionBox(32.0f, 32.0f))
+            .Set(new CharacterMovementIntent { MoveX = 1.0f })
+            .Set(new JumpCapability { MoveSpeed = 200.0f, Gravity = 0.0f, MaxFallSpeed = 500.0f });
+
+        world.Progress(0.1f);
+
+        ref readonly var trans = ref entity.Get<Transform>();
+        ref readonly var vel = ref entity.Get<Velocity>();
+        Assert.Equal(200.0f, vel.Vx);
+        Assert.Equal(120.0f, trans.X); // 100 + 200 * 0.1s
+    }
 }
