@@ -139,14 +139,14 @@ public sealed class ExecuteGate {
             // 指定された発動時刻に達していないコンポーネントは保留（浮動小数点の累積誤差を考慮）
             if (Elapsed + 0.0001f < component.TriggerTime) continue;
 
-            // 継続的移動コンポーネント（FlyToTarget: 対象頭上へのイージング飛翔）の更新
-            if (component.Kind == AttackComponentKind.FlyToTarget)
+            // 継続的移動コンポーネント（EasingMovement: 対象位置へのイージング平滑移動および滞空）の更新
+            if (component.Kind == AttackComponentKind.EasingMovement)
             {
-                // 後続の急降下（Dive）や移動アクションが既に開始されている場合は MoveTo を停止
+                // 後続の急降下（VelocityDive）や移動アクションが既に開始されている場合は MoveTo を停止
                 if (HasLaterMovementStarted(component.TriggerTime)) continue;
 
-                var peakY = component.X;
-                var flyDuration = component.Y;
+                var peakY = component.Param0;
+                var flyDuration = component.Param1;
                 var t = flyDuration > 0.0f
                     ? Math.Clamp((Elapsed - component.TriggerTime) / flyDuration, 0.0f, 1.0f)
                     : 1.0f;
@@ -179,10 +179,10 @@ public sealed class ExecuteGate {
                 continue;
             }
 
-            // 継続的移動コンポーネント（Dive: 垂直急降下）の更新
-            if (component.Kind == AttackComponentKind.Dive)
+            // 継続的移動コンポーネント（VelocityDive: 垂直・方向急降下等速運動）の更新
+            if (component.Kind == AttackComponentKind.VelocityDive)
             {
-                var descentSpeed = component.Y;
+                var descentSpeed = component.Param1;
                 context.Movement.SetVelocity(0.0f, descentSpeed);
                 continue;
             }
@@ -318,7 +318,7 @@ public sealed class ExecuteGate {
     {
         for (var i = 0; i < Definition.ComponentCount; i++)
             if (Definition.GetComponent(i, out var comp))
-                if ((comp.Kind == AttackComponentKind.Dive || comp.Kind == AttackComponentKind.Movement)
+                if ((comp.Kind == AttackComponentKind.VelocityDive || comp.Kind == AttackComponentKind.Movement)
                  && comp.TriggerTime > currentTriggerTime
                  && Elapsed + 0.0001f >= comp.TriggerTime)
                     return true;

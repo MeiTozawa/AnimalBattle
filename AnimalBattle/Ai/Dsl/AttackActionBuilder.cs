@@ -12,10 +12,6 @@ public sealed class AttackActionBuilder(
     float triggerTime,
     List<AttackComponent> components,
     bool isOnGrounded = false) {
-    private readonly List<AttackComponent> _components = components;
-    private readonly bool _isOnGrounded = isOnGrounded;
-    private readonly float _triggerTime = triggerTime;
-
     /// <summary>
     ///     突進・移動アクションを追加します。
     /// </summary>
@@ -24,8 +20,8 @@ public sealed class AttackActionBuilder(
     /// <returns>現在のビルダーインスタンス。</returns>
     public AttackActionBuilder Dash(float speedX, float speedY = 0.0f)
     {
-        var index = _components.Count;
-        _components.Add(new AttackComponent(AttackComponentKind.Movement, index, speedX, speedY, _triggerTime));
+        var index = components.Count;
+        components.Add(new AttackComponent(AttackComponentKind.Movement, index, speedX, speedY, triggerTime));
         return this;
     }
 
@@ -37,9 +33,9 @@ public sealed class AttackActionBuilder(
     /// <returns>現在のビルダーインスタンス。</returns>
     public AttackActionBuilder Slash(float offsetX = 80.0f, float offsetY = -10.0f)
     {
-        var index = _components.Count;
-        var kind = _isOnGrounded ? AttackComponentKind.OnGroundedHitbox : AttackComponentKind.Hitbox;
-        _components.Add(new AttackComponent(kind, index, offsetX, offsetY, _triggerTime));
+        var index = components.Count;
+        var kind = isOnGrounded ? AttackComponentKind.OnGroundedHitbox : AttackComponentKind.Hitbox;
+        components.Add(new AttackComponent(kind, index, offsetX, offsetY, triggerTime));
         return this;
     }
 
@@ -51,9 +47,9 @@ public sealed class AttackActionBuilder(
     /// <returns>現在のビルダーインスタンス。</returns>
     public AttackActionBuilder Hitbox(float x = 0.0f, float y = 0.0f)
     {
-        var index = _components.Count;
-        var kind = _isOnGrounded ? AttackComponentKind.OnGroundedHitbox : AttackComponentKind.Hitbox;
-        _components.Add(new AttackComponent(kind, index, x, y, _triggerTime));
+        var index = components.Count;
+        var kind = isOnGrounded ? AttackComponentKind.OnGroundedHitbox : AttackComponentKind.Hitbox;
+        components.Add(new AttackComponent(kind, index, x, y, triggerTime));
         return this;
     }
 
@@ -65,8 +61,8 @@ public sealed class AttackActionBuilder(
     /// <returns>現在のビルダーインスタンス。</returns>
     public AttackActionBuilder Bullet(float x = 0.0f, float y = 0.0f)
     {
-        var index = _components.Count;
-        _components.Add(new AttackComponent(AttackComponentKind.Bullet, index, x, y, _triggerTime));
+        var index = components.Count;
+        components.Add(new AttackComponent(AttackComponentKind.Bullet, index, x, y, triggerTime));
         return this;
     }
 
@@ -78,9 +74,9 @@ public sealed class AttackActionBuilder(
     /// <returns>現在のビルダーインスタンス。</returns>
     public AttackActionBuilder FlyToTarget(float peakAltitudeY = 130.0f, float flyDuration = 0.45f)
     {
-        var index = _components.Count;
-        _components.Add(new AttackComponent(AttackComponentKind.FlyToTarget, index, peakAltitudeY, flyDuration,
-            _triggerTime));
+        var index = components.Count;
+        components.Add(new AttackComponent(AttackComponentKind.EasingMovement, index, peakAltitudeY, flyDuration, 0.0f,
+            triggerTime));
         return this;
     }
 
@@ -91,8 +87,8 @@ public sealed class AttackActionBuilder(
     /// <returns>現在のビルダーインスタンス。</returns>
     public AttackActionBuilder Dive(float descentSpeed = 1200.0f)
     {
-        var index = _components.Count;
-        _components.Add(new AttackComponent(AttackComponentKind.Dive, index, 0.0f, descentSpeed, _triggerTime));
+        var index = components.Count;
+        components.Add(new AttackComponent(AttackComponentKind.VelocityDive, index, 0.0f, descentSpeed, 0.0f, triggerTime));
         return this;
     }
 }

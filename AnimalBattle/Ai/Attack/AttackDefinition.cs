@@ -10,26 +10,33 @@ public enum AttackComponentKind {
     /// <summary>攻撃判定を生成する component です。</summary>
     Hitbox = 2,
 
-    /// <summary>攻撃に伴う速度を設定する component です。</summary>
+    /// <summary>攻撃に伴う基本速度を設定する component です。</summary>
     Movement = 3,
 
-    /// <summary>対象頭上へイージング飛翔・滞空する component です。</summary>
-    FlyToTarget = 4,
+    /// <summary>対象位置へのイージング平滑移動および滞空を行う汎用運動 component です。</summary>
+    EasingMovement = 4,
 
-    /// <summary>真下へ高速急降下する component です。</summary>
-    Dive = 5,
+    /// <summary>高速急降下・突進を行う汎用等速運動 component です。</summary>
+    VelocityDive = 5,
 
     /// <summary>接地時に判定を生成するイベント駆動 component です。</summary>
-    OnGroundedHitbox = 6
+    OnGroundedHitbox = 6,
+
+    /// <summary>音効 Cue を発行する表現層 component です。</summary>
+    AudioCue = 7,
+
+    /// <summary>画面振動をトリガーする表現層 component です。</summary>
+    ScreenShake = 8
 }
 
-/// <summary>設定から解決済みの攻撃 component を表す初期化時データです。</summary>
+/// <summary>設定から解決済みの攻撃 component を表す検証済み初期化データです。</summary>
 /// <remarks>攻撃 component を生成します。</remarks>
 public readonly struct AttackComponent(
     AttackComponentKind kind,
     int index,
-    float x = 0,
-    float y = 0,
+    float param0 = 0.0f,
+    float param1 = 0.0f,
+    float param2 = 0.0f,
     float triggerTime = 0.0f) {
     /// <summary>component の種類を取得します。</summary>
     public AttackComponentKind Kind { get; } = kind;
@@ -37,25 +44,30 @@ public readonly struct AttackComponent(
     /// <summary>攻撃内で一意な component index を取得します。</summary>
     public int Index { get; } = index;
 
-    /// <summary>component に渡す X 値を取得します。</summary>
-    public float X { get; } = x;
+    /// <summary>主要パラメータ 0（X座標オフセット / 目標高度 / 弾速 等）を取得します。</summary>
+    public float Param0 { get; } = param0;
 
-    /// <summary>component に渡す Y 値を取得します。</summary>
-    public float Y { get; } = y;
+    /// <summary>主要パラメータ 1（Y座標オフセット / 所要時間 / 弾数 等）を取得します。</summary>
+    public float Param1 { get; } = param1;
+
+    /// <summary>補助パラメータ 2（滞空時間 / 拡散角度 / 振動強度 等）を取得します。</summary>
+    public float Param2 { get; } = param2;
 
     /// <summary>Execute 開始からの発動遅延時間（秒）を取得します。</summary>
     public float TriggerTime { get; } = triggerTime;
 
+    /// <summary>X 座標オフセットまたは Param0 へのエイリアスです。</summary>
+    public float X => Param0;
+
+    /// <summary>Y 座標オフセットまたは Param1 へのエイリアスです。</summary>
+    public float Y => Param1;
+
     /// <summary>component の設定値が実行可能かどうかを取得します。</summary>
-    public bool IsValid => Kind is AttackComponentKind.Bullet
-            or AttackComponentKind.Hitbox
-            or AttackComponentKind.Movement
-            or AttackComponentKind.FlyToTarget
-            or AttackComponentKind.Dive
-            or AttackComponentKind.OnGroundedHitbox
+    public bool IsValid => (int)Kind >= 1 && (int)Kind <= 8
      && Index >= 0
-     && IsFinite(X)
-     && IsFinite(Y)
+     && IsFinite(Param0)
+     && IsFinite(Param1)
+     && IsFinite(Param2)
      && TriggerTime >= 0.0f
      && IsFinite(TriggerTime);
 

@@ -10,8 +10,8 @@ namespace AnimalBattle.Render;
 ///     fixed ピン留め不要・GC アロケーションゼロで動作し、<see cref="IDisposable" /> による厳格な RAII 寿命管理を提供します。
 /// </summary>
 public sealed unsafe class RenderCommandBuffer : IDisposable {
-    private const int _defaultPacketCapacity = 4096;
-    private const int _defaultTextCapacity = 4096;
+    private const int DefaultPacketCapacity = 4096;
+    private const int DefaultTextCapacity = 4096;
 
     private RenderPacket* _packetBuffer;
 
@@ -22,8 +22,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// </summary>
     /// <param name="initialPacketCapacity">初期コマンドバッファ容量。</param>
     /// <param name="initialTextCapacity">初期テキストバッファ容量。</param>
-    public RenderCommandBuffer(int initialPacketCapacity = _defaultPacketCapacity,
-        int initialTextCapacity = _defaultTextCapacity)
+    public RenderCommandBuffer(int initialPacketCapacity = DefaultPacketCapacity,
+        int initialTextCapacity = DefaultTextCapacity)
     {
         PacketCapacity = Math.Max(64, initialPacketCapacity);
         TextCapacity = Math.Max(64, initialTextCapacity);
@@ -41,27 +41,27 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     現在バッファに格納されている描画コマンド数。
     /// </summary>
-    public int PacketCount { get; private set; }
+    private int PacketCount { get; set; }
 
     /// <summary>
     ///     現在バッファに格納されている文字列バッファの文字数。
     /// </summary>
-    public int TextLength { get; private set; }
+    private int TextLength { get; set; }
 
     /// <summary>
     ///     描画コマンドバッファの最大収容可能要素数。
     /// </summary>
-    public int PacketCapacity { get; private set; }
+    private int PacketCapacity { get; set; }
 
     /// <summary>
     ///     文字列バッファの最大収容可能文字数。
     /// </summary>
-    public int TextCapacity { get; private set; }
+    private int TextCapacity { get; set; }
 
     /// <summary>
     ///     リソースが破棄済みであるか否かを取得します。
     /// </summary>
-    public bool IsDisposed { get; private set; }
+    private bool IsDisposed { get; set; }
 
     /// <summary>
     ///     描画コマンドバッファの先頭物理アドレス（アライメント検証用）。
@@ -362,13 +362,11 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
         var required = PacketCount + extraCount;
-        if (required > PacketCapacity)
-        {
-            var newCapacity = Math.Max(PacketCapacity * 2, required);
-            var byteCount = (nuint)(sizeof(RenderPacket) * newCapacity);
-            _packetBuffer = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer, byteCount, 64);
-            PacketCapacity = newCapacity;
-        }
+        if (required <= PacketCapacity) return;
+        var newCapacity = Math.Max(PacketCapacity * 2, required);
+        var byteCount = (nuint)(sizeof(RenderPacket) * newCapacity);
+        _packetBuffer = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer, byteCount, 64);
+        PacketCapacity = newCapacity;
     }
 
     private void EnsureTextCapacity(int extraLength)
