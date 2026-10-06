@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Bindings;
-using AnimalBattle.Compute;
 using AnimalBattle.Render;
 
 namespace AnimalBattle.Core;
@@ -34,7 +33,6 @@ public static class GameEngine {
     public static void Shutdown()
     {
         _commandBuffer.Dispose();
-        NativeComputeQueue.ShutdownShared();
         NativeBindings.Engine_Shutdown();
     }
 

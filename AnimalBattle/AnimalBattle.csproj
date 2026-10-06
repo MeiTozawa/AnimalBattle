@@ -15,9 +15,6 @@
         <None Include="..\cmake-build-debug\AnimalBattleCore\AnimalBattleCore.dll" Link="AnimalBattleCore.dll" Condition="Exists('..\cmake-build-debug\AnimalBattleCore\AnimalBattleCore.dll')">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Include="..\cmake-build-debug\AnimalBattleExtension\AnimalBattleExtension.dll" Link="AnimalBattleExtension.dll" Condition="Exists('..\cmake-build-debug\AnimalBattleExtension\AnimalBattleExtension.dll')">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="ErrorOr" Version="2.1.1"/>
