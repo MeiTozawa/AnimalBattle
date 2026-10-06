@@ -51,7 +51,7 @@ public readonly struct AttackComponent(
     public float Param1 { get; } = param1;
 
     /// <summary>補助パラメータ 2（滞空時間 / 拡散角度 / 振動強度 等）を取得します。</summary>
-    public float Param2 { get; } = param2;
+    private float Param2 { get; } = param2;
 
     /// <summary>Execute 開始からの発動遅延時間（秒）を取得します。</summary>
     public float TriggerTime { get; } = triggerTime;

@@ -279,7 +279,7 @@ public sealed class Boss1Brain {
         }
 
         // 技能タイムラインを更新
-        _skillRunner.Update(dt, false, (comp, dir) => ExecuteComponent(comp, pattern));
+        _skillRunner.Update(dt, false, (comp, _) => ExecuteComponent(comp, pattern));
 
         // 技能固有の機体運動
         if (CurrentSkill == BossSkill.DiveRam)

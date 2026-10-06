@@ -194,7 +194,7 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
                 _ => ConfigManager.Boss1.Phase1
             };
 
-            if (tomlPhase is not null && tomlPhase.HoverDuration > 0.0f)
+            if (tomlPhase.HoverDuration > 0.0f)
             {
                 var order = tomlPhase.Skills.Count > 0
                     ? tomlPhase.Skills.Select(ResolveBossSkill).Where(id => id.IsValid()).ToArray()
@@ -233,51 +233,48 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
         try
         {
             var toml = ConfigManager.Pattern;
-            if (toml is not null)
+            Boss1AttackPattern? configuredPattern = skill switch {
+                BossSkill.Aimed3Shot =>
+                    new Boss1AttackPattern(skill, toml.Aimed3Shot.WindUpTime, toml.Aimed3Shot.CastDuration,
+                        toml.Aimed3Shot.RecoveryTime, toml.Aimed3Shot.Interval, toml.Aimed3Shot.BulletSpeed,
+                        toml.Aimed3Shot.BulletCount, toml.Aimed3Shot.SpreadAngle),
+
+                BossSkill.RingBurst =>
+                    new Boss1AttackPattern(skill, toml.RingBurst.WindUpTime, toml.RingBurst.CastDuration,
+                        toml.RingBurst.RecoveryTime, toml.RingBurst.Interval, toml.RingBurst.BulletSpeed,
+                        toml.RingBurst.BulletCount, toml.RingBurst.AngleStep),
+
+                BossSkill.DoubleSpiral =>
+                    new Boss1AttackPattern(skill, toml.DoubleSpiral.WindUpTime, toml.DoubleSpiral.CastDuration,
+                        toml.DoubleSpiral.RecoveryTime, toml.DoubleSpiral.Interval, toml.DoubleSpiral.BulletSpeed,
+                        2, toml.DoubleSpiral.AngleStep),
+
+                BossSkill.RainDrop =>
+                    new Boss1AttackPattern(skill, toml.RainDrop.WindUpTime, toml.RainDrop.CastDuration,
+                        toml.RainDrop.RecoveryTime, toml.RainDrop.Interval, toml.RainDrop.BulletSpeed, 2, 0.0f,
+                        toml.RainDrop.MinX, toml.RainDrop.MaxX),
+
+                BossSkill.CrossChaos =>
+                    new Boss1AttackPattern(skill, toml.CrossChaos.WindUpTime, toml.CrossChaos.CastDuration,
+                        toml.CrossChaos.RecoveryTime, toml.CrossChaos.Interval, toml.CrossChaos.BulletSpeed, 4,
+                        toml.CrossChaos.AngleStep),
+
+                BossSkill.FastSniper =>
+                    new Boss1AttackPattern(skill, toml.FastSniper.WindUpTime, toml.FastSniper.CastDuration,
+                        toml.FastSniper.RecoveryTime, toml.FastSniper.Interval, toml.FastSniper.BulletSpeed, 1),
+
+                BossSkill.DiveRam =>
+                    new Boss1AttackPattern(skill, toml.DiveRam.WindUpTime, toml.DiveRam.CastDuration,
+                        toml.DiveRam.RecoveryTime, dashSpeed: toml.DiveRam.DashSpeed,
+                        easeType: toml.DiveRam.EaseType),
+
+                _ => null
+            };
+
+            if (configuredPattern is { IsValid: true })
             {
-                Boss1AttackPattern? configuredPattern = skill switch {
-                    BossSkill.Aimed3Shot =>
-                        new Boss1AttackPattern(skill, toml.Aimed3Shot.WindUpTime, toml.Aimed3Shot.CastDuration,
-                            toml.Aimed3Shot.RecoveryTime, toml.Aimed3Shot.Interval, toml.Aimed3Shot.BulletSpeed,
-                            toml.Aimed3Shot.BulletCount, toml.Aimed3Shot.SpreadAngle),
-
-                    BossSkill.RingBurst =>
-                        new Boss1AttackPattern(skill, toml.RingBurst.WindUpTime, toml.RingBurst.CastDuration,
-                            toml.RingBurst.RecoveryTime, toml.RingBurst.Interval, toml.RingBurst.BulletSpeed,
-                            toml.RingBurst.BulletCount, toml.RingBurst.AngleStep),
-
-                    BossSkill.DoubleSpiral =>
-                        new Boss1AttackPattern(skill, toml.DoubleSpiral.WindUpTime, toml.DoubleSpiral.CastDuration,
-                            toml.DoubleSpiral.RecoveryTime, toml.DoubleSpiral.Interval, toml.DoubleSpiral.BulletSpeed,
-                            2, toml.DoubleSpiral.AngleStep),
-
-                    BossSkill.RainDrop =>
-                        new Boss1AttackPattern(skill, toml.RainDrop.WindUpTime, toml.RainDrop.CastDuration,
-                            toml.RainDrop.RecoveryTime, toml.RainDrop.Interval, toml.RainDrop.BulletSpeed, 2, 0.0f,
-                            toml.RainDrop.MinX, toml.RainDrop.MaxX),
-
-                    BossSkill.CrossChaos =>
-                        new Boss1AttackPattern(skill, toml.CrossChaos.WindUpTime, toml.CrossChaos.CastDuration,
-                            toml.CrossChaos.RecoveryTime, toml.CrossChaos.Interval, toml.CrossChaos.BulletSpeed, 4,
-                            toml.CrossChaos.AngleStep),
-
-                    BossSkill.FastSniper =>
-                        new Boss1AttackPattern(skill, toml.FastSniper.WindUpTime, toml.FastSniper.CastDuration,
-                            toml.FastSniper.RecoveryTime, toml.FastSniper.Interval, toml.FastSniper.BulletSpeed, 1),
-
-                    BossSkill.DiveRam =>
-                        new Boss1AttackPattern(skill, toml.DiveRam.WindUpTime, toml.DiveRam.CastDuration,
-                            toml.DiveRam.RecoveryTime, dashSpeed: toml.DiveRam.DashSpeed,
-                            easeType: toml.DiveRam.EaseType),
-
-                    _ => null
-                };
-
-                if (configuredPattern is { IsValid: true })
-                {
-                    pattern = configuredPattern;
-                    return true;
-                }
+                pattern = configuredPattern;
+                return true;
             }
         }
         catch (Exception ex)

@@ -163,7 +163,7 @@ public sealed class Boss2Agent : BaseBossAgent
         var ignorePlatforms = _brain.CurrentSkill == BossSkill.LeapSmash;
         if (!ignorePlatforms)
         {
-            platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
+            platformQuery.Each((ref platTrans, ref platCol) =>
             {
                 Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
                 if (PhysicsService.CheckPlatformGround(currentY, nextY, bossBox, platformBox, out var groundY, out var pVy))
