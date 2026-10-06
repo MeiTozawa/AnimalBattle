@@ -38,7 +38,7 @@ public sealed class ExecuteGate {
     public float Elapsed { get; private set; }
 
     /// <summary>component 発行を抑止する one-shot guard を取得します。</summary>
-    public OneShotEventGuard OneShot { get; }
+    private OneShotEventGuard OneShot { get; }
 
     /// <summary>Execute を開始し、component 発行 key を新しい lifecycle に切り替えます。</summary>
     public ErrorOr<Success> Start(ref StateContext context, in LifecycleInvocation invocation)

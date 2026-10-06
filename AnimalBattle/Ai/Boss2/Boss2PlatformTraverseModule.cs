@@ -15,18 +15,6 @@ public enum TraverseMode {
     Landing
 }
 
-/// <summary>機動モジュール内部の進行段階です。</summary>
-public enum TraverseStage {
-    /// <summary>上昇段階です。</summary>
-    Ascent,
-
-    /// <summary>下降段階です。</summary>
-    Descent,
-
-    /// <summary>着地後の硬直段階です。</summary>
-    Landing
-}
-
 /// <summary>
 ///     Boss2 の足場間跳躍、空中落下、および着地硬直の生命周期を一元処理する機動モジュールです。
 /// </summary>
@@ -39,6 +27,18 @@ public sealed class Boss2PlatformTraverseModule(
     TraverseMode initialMode,
     IBoss2Configuration configuration,
     Boss2BehaviorState state) : IBossStateModule, IStateModuleDependencyProvider {
+    /// <summary>機動モジュール内部の進行段階です。</summary>
+    private enum TraverseStage {
+        /// <summary>上昇段階です。</summary>
+        Ascent,
+
+        /// <summary>下降段階です。</summary>
+        Descent,
+
+        /// <summary>着地後の硬直段階です。</summary>
+        Landing
+    }
+
     private readonly IBoss2Configuration _configuration =
         configuration ?? throw new ArgumentNullException(nameof(configuration));
 
@@ -47,7 +47,7 @@ public sealed class Boss2PlatformTraverseModule(
     private float _stageElapsed;
 
     /// <summary>現在の内部進行段階を取得します。</summary>
-    public TraverseStage CurrentStage { get; private set; }
+    private TraverseStage CurrentStage { get; set; }
 
     /// <inheritdoc />
     public BossState HandledState { get; } = stateId;

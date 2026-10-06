@@ -207,7 +207,7 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
         return index;
     }
 
-    private CommandWriteResult Accepted(CommandOneShotKey key)
+    private static CommandWriteResult Accepted(CommandOneShotKey key)
     {
         return new CommandWriteResult(true, key, CommandBufferFailureReason.None, ErrorCode.None);
     }

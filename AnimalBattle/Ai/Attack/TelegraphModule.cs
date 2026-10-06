@@ -23,14 +23,7 @@ public sealed class TelegraphModule : IBossStateModule {
     /// <summary>攻撃定義を取得します。</summary>
     public AttackDefinition Definition { get; private set; }
 
-    /// <summary>Telegraph の攻撃範囲を取得します。</summary>
-    public float AttackRange => Definition.Range;
-
-    /// <summary>Telegraph 開始時点の実時間を取得します。</summary>
-    public float AttackStartTime { get; private set; }
-
-    /// <summary>Telegraph 開始時に固定した対象 Entity を取得します。</summary>
-    public ulong TargetEntityId => _target.EntityId;
+    private float AttackStartTime { get; set; }
 
     /// <summary>Telegraph が現在アクティブかどうかを取得します。</summary>
     public bool IsActive { get; private set; }
@@ -40,9 +33,6 @@ public sealed class TelegraphModule : IBossStateModule {
 
     /// <summary>Telegraph の経過時間を取得します。</summary>
     public float Elapsed { get; private set; }
-
-    /// <summary>Telegraph 開始時に固定した対象観測を取得します。</summary>
-    public PlayerObservation Target => _target;
 
     /// <summary>Telegraph の担当状態を取得します。</summary>
     public BossState HandledState { get; private set; }

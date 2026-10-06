@@ -7,7 +7,6 @@ namespace AnimalBattle.Ai.Runtime;
 ///     遷移検証、即時循環防止、ライフサイクル適用を一元管理します。
 /// </summary>
 public sealed class TransitionService : ITransitionService {
-    private readonly BossState _deadStateId;
     private readonly BossState _defaultSafeRecoveryStateId;
     private readonly Func<BossState, BossState, bool>? _isAllowed;
     private readonly IObservationService? _observation;
@@ -18,15 +17,13 @@ public sealed class TransitionService : ITransitionService {
         IEnumModuleMap registry,
         IObservationService? observation = null,
         Func<BossState, BossState, bool>? isAllowed = null,
-        BossState defaultSafeRecoveryStateId = default,
-        BossState deadStateId = default)
+        BossState defaultSafeRecoveryStateId = default)
     {
         ArgumentNullException.ThrowIfNull(registry);
         _registry = registry;
         _observation = observation;
         _isAllowed = isAllowed;
         _defaultSafeRecoveryStateId = defaultSafeRecoveryStateId;
-        _deadStateId = deadStateId.IsValid() ? deadStateId : BossState.Boss1_Dead;
     }
 
     /// <summary>検証順序に従って遷移要求を検証します。</summary>

@@ -17,7 +17,6 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
     private float _range = 200.0f;
     private float _recoveryDuration = 0.50f;
     private DecisionRuleBuilder? _ruleBuilder;
-    private Color _telegraphColor = ColorPalette.Red;
     private float _telegraphDuration = 0.40f;
 
     /// <summary>対象の技能識別子を取得します。</summary>
@@ -27,12 +26,12 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
     ///     攻撃の前摇（Telegraph）時間と予兆色を設定します。
     /// </summary>
     /// <param name="duration">前摇時間（秒）。</param>
-    /// <param name="color">予兆カラー。</param>
+    /// <param name="color">予兆カラー（省略可能）。</param>
     /// <returns>現在の攻撃ビルダー。</returns>
-    public AttackPipelineBuilder Telegraph(float duration, Color color)
+    public AttackPipelineBuilder Telegraph(float duration, Color color = default)
     {
         _telegraphDuration = duration;
-        _telegraphColor = color;
+        _ = color;
         return this;
     }
 
@@ -87,25 +86,7 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
         return this;
     }
 
-    /// <summary>
-    ///     この攻撃の意思決定ルール（AI 発動条件・クールダウン等）を定義します。
-    /// </summary>
-    /// <param name="configure">意思決定ルールビルダーの設定デリゲート。</param>
-    /// <returns>現在の攻撃ビルダー。</returns>
-    public AttackPipelineBuilder Rule(Action<DecisionRuleBuilder> configure)
-    {
-        ArgumentNullException.ThrowIfNull(configure);
-        _ruleBuilder = new DecisionRuleBuilder();
-        configure(_ruleBuilder);
-        return this;
-    }
-
-    /// <summary>
-    ///     TOML 設定オブジェクトから意思決定ルール（AI 発動条件・クールダウン等）を適用します。
-    /// </summary>
-    /// <param name="config">TOML から読み込まれたルール設定オブジェクト。</param>
-    /// <returns>現在の攻撃ビルダー。</returns>
-    public AttackPipelineBuilder Rule(AttackRuleConfig? config)
+    private AttackPipelineBuilder Rule(AttackRuleConfig? config)
     {
         if (config is null) return this;
 

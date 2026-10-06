@@ -188,7 +188,7 @@ public static class TelegraphRenderHelper {
     {
         var bossFx = ConfigManager.Render.BossEffects;
         var playerCfg = ConfigManager.Player;
-        var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
+        _ = progress;
 
         // Boss から着地地点へのダイブ軌道線
         GameEngine.SetDrawBlendMode(BlendMode.Alpha, bossFx.LaserAlpha);

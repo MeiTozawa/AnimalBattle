@@ -16,7 +16,6 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
 
     private readonly Boss1BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
     private float _elapsed;
-    private int _emissionIndex;
     private ExecuteGate? _gate;
     private float _nextEmission;
     private Boss1AttackPattern? _pattern;
@@ -29,7 +28,6 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
     {
         _elapsed = 0.0f;
         _nextEmission = 0.0f;
-        _emissionIndex = 0;
         _state.StateElapsed = 0.0f;
         _state.AttackSubTimer = 0.0f;
 
@@ -129,7 +127,6 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
         {
             EmitBarrageWave(ref context, in invocation, pattern);
             _nextEmission += interval;
-            _emissionIndex++;
         }
 
         _elapsed = MathF.Min(duration, _elapsed + context.DeltaTime);
@@ -219,7 +216,7 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
         _state.AngleOffset += pattern.AngleStep;
     }
 
-    private void EmitRainDrop(ref StateContext context, in LifecycleInvocation invocation, Boss1AttackPattern pattern)
+    private static void EmitRainDrop(ref StateContext context, in LifecycleInvocation invocation, Boss1AttackPattern pattern)
     {
         var range = pattern.MaxX - pattern.MinX;
         var firstX = pattern.MinX + context.Random.NextSingle() * range;

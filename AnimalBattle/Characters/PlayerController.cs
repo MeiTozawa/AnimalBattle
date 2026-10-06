@@ -68,7 +68,7 @@ public sealed class PlayerController
     /// <param name="shootPressed">射撃キー押下フラグ。</param>
     /// <param name="aimDirX">射撃水平瞄準ベクトル（省略時はスプライト向き）。</param>
     /// <param name="aimDirY">射撃垂直瞄準ベクトル（省略時は 0.0f）。</param>
-    public void SubmitInput(
+    private void SubmitInput(
         float moveX,
         bool jumpPressed,
         bool jumpHolding,

@@ -14,7 +14,7 @@ public readonly struct Boss2PhaseSettings(
     float maxFallSpeed,
     float patrolRadius,
     float transitionDuration,
-    IReadOnlyList<BossSkill> skills,
+    IReadOnlyList<BossSkill> attackOrder,
     IReadOnlyList<AttackDecisionRule>? rules = null,
     float maxAscentDuration = 0.80f,
     float landingRecoveryDuration = 0.10f,
@@ -42,10 +42,7 @@ public readonly struct Boss2PhaseSettings(
     public float TransitionDuration { get; } = transitionDuration;
 
     /// <summary>この Phase で実行可能な攻撃順序です。</summary>
-    public IReadOnlyList<BossSkill> Skills { get; } = skills ?? [];
-
-    /// <summary>この Phase の攻撃順です（互換用）。</summary>
-    public IReadOnlyList<BossSkill> AttackOrder => Skills;
+    public IReadOnlyList<BossSkill> AttackOrder { get; } = attackOrder ?? [];
 
     /// <summary>この Phase で評価される攻撃意思決定ルールです。</summary>
     public IReadOnlyList<AttackDecisionRule> Rules { get; } = rules ?? [];
@@ -65,26 +62,12 @@ public readonly struct Boss2PhaseSettings(
 
 /// <summary>Boss2 攻撃の定義と固有パラメータです。</summary>
 /// <remarks>Boss2 攻撃 pattern を生成します。</remarks>
-public sealed class Boss2AttackPattern(
-    BossSkill skill,
-    AttackDefinition definition,
-    float moveSpeed = 0,
-    float secondHitDelay = 0,
-    float interval = 0) {
+public sealed class Boss2AttackPattern(BossSkill skill, AttackDefinition definition) {
     /// <summary>技能識別子です。</summary>
     public BossSkill Skill { get; } = skill;
 
     /// <summary>共通 Telegraph/Execute/Recovery 定義です。</summary>
     public AttackDefinition Definition { get; } = definition;
-
-    /// <summary>移動速度です。</summary>
-    public float MoveSpeed { get; } = moveSpeed;
-
-    /// <summary>二段目判定の発生遅延です。</summary>
-    public float SecondHitDelay { get; } = secondHitDelay;
-
-    /// <summary>多段発射の間隔です。</summary>
-    public float Interval { get; } = interval;
 
     /// <summary>設定値が実行可能かどうかを取得します。</summary>
     public bool IsValid => Definition.IsValid;
@@ -167,13 +150,12 @@ public interface IBoss2Configuration {
 /// <summary>既存 Boss2 設定の検証済み既定 snapshot です。</summary>
 public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     private readonly Boss2AttackPattern[] _attacks = [
-        new(BossSkill.HeavySlash, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.HeavySlash], 360.0f),
-        new(BossSkill.DoubleCleave, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.DoubleCleave], 420.0f, 0.30f),
+        new(BossSkill.HeavySlash, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.HeavySlash]),
+        new(BossSkill.DoubleCleave, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.DoubleCleave]),
         new(BossSkill.GroundStomp, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.GroundStomp]),
-        new(BossSkill.LeapSmash, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.LeapSmash], 680.0f),
-        new(BossSkill.FrenzyCharge, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.FrenzyCharge], 620.0f),
-        new(BossSkill.EarthquakeRoar, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.EarthquakeRoar],
-            interval: 0.25f)
+        new(BossSkill.LeapSmash, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.LeapSmash]),
+        new(BossSkill.FrenzyCharge, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.FrenzyCharge]),
+        new(BossSkill.EarthquakeRoar, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.EarthquakeRoar])
     ];
 
     /// <inheritdoc />
@@ -228,37 +210,10 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     {
         try
         {
-            var toml = ConfigManager.Pattern;
-            if (toml is not null && Boss2PipelineDefinition.Pipeline.TryGetAttack(skill, out var definition))
+            if (Boss2PipelineDefinition.Pipeline.TryGetAttack(skill, out var definition))
             {
-                Boss2AttackPattern? configuredPattern = skill switch {
-                    BossSkill.HeavySlash =>
-                        new Boss2AttackPattern(skill, definition, toml.HeavySlash.DashSpeed),
-
-                    BossSkill.DoubleCleave =>
-                        new Boss2AttackPattern(skill, definition, toml.DoubleCleave.DashSpeed,
-                            toml.DoubleCleave.SlashInterval),
-
-                    BossSkill.GroundStomp =>
-                        new Boss2AttackPattern(skill, definition),
-
-                    BossSkill.LeapSmash =>
-                        new Boss2AttackPattern(skill, definition, toml.LeapSmash.JumpForce),
-
-                    BossSkill.FrenzyCharge =>
-                        new Boss2AttackPattern(skill, definition, toml.FrenzyCharge.ChargeSpeed),
-
-                    BossSkill.EarthquakeRoar =>
-                        new Boss2AttackPattern(skill, definition, interval: toml.EarthquakeRoar.Interval),
-
-                    _ => null
-                };
-
-                if (configuredPattern is { IsValid: true })
-                {
-                    pattern = configuredPattern;
-                    return true;
-                }
+                pattern = new Boss2AttackPattern(skill, definition);
+                return true;
             }
         }
         catch

@@ -11,11 +11,6 @@ namespace AnimalBattle.Ai.Dsl;
 public sealed class BossPipelineBuilder(BossType bossType, string name) {
     private readonly List<PhasePipelineBuilder> _phaseBuilders = [];
 
-    /// <summary>Boss 種別を取得します。</summary>
-    public BossType BossType { get; } = bossType;
-
-    /// <summary>識別名を取得します。</summary>
-    public string Name { get; } = name;
 
     /// <summary>
     ///     新しい Phase の定義を開始します。
@@ -55,6 +50,6 @@ public sealed class BossPipelineBuilder(BossType bossType, string name) {
             rulesByPhase[phaseBuilder.CurrentPhase] = phaseRules.AsReadOnly();
         }
 
-        return new BossBehaviorPipeline(BossType, Name, rulesByPhase, attacks, locomotionByPhase);
+        return new BossBehaviorPipeline(bossType, name, rulesByPhase, attacks, locomotionByPhase);
     }
 }

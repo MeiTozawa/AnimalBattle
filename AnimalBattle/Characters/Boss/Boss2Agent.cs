@@ -1,10 +1,8 @@
-using System;
 using System.Drawing;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps.Navigation;
 using Flecs.NET.Core;
@@ -18,7 +16,6 @@ namespace AnimalBattle.Characters.Boss;
 public sealed class Boss2Agent : BaseBossAgent
 {
     private readonly Boss2BehaviorState _boss2State;
-    private readonly Func<PlatformNavigationGraph?>? _navGraphProvider;
 
     /// <summary>
     ///     Boss 2 の Flecs エンティティ、テクスチャハンドル、およびナビゲーショングラフプロバイダーを指定して初期化します。
@@ -39,7 +36,7 @@ public sealed class Boss2Agent : BaseBossAgent
         int spriteHandle,
         ObservationService observation,
         Func<PlatformNavigationGraph?>? navGraphProvider)
-        : this(entity, spriteHandle, observation, CreateRuntimeAndSlot(entity.Id, observation, navGraphProvider), navGraphProvider)
+        : this(entity, spriteHandle, observation, CreateRuntimeAndSlot(entity.Id, observation, navGraphProvider))
     {
     }
 
@@ -47,12 +44,10 @@ public sealed class Boss2Agent : BaseBossAgent
         Entity entity,
         int spriteHandle,
         ObservationService observation,
-        (BossAiRuntime Runtime, BossRuntimeSlot Slot, Boss2BehaviorState State) bundle,
-        Func<PlatformNavigationGraph?>? navGraphProvider)
+        (BossAiRuntime Runtime, BossRuntimeSlot Slot, Boss2BehaviorState State) bundle)
         : base(entity, bundle.Runtime, bundle.Slot, observation)
     {
         _boss2State = bundle.State;
-        _navGraphProvider = navGraphProvider;
         InitializeComponents(entity, spriteHandle);
     }
 
@@ -159,7 +154,7 @@ public sealed class Boss2Agent : BaseBossAgent
         var boss2State = new Boss2BehaviorState(b2Cfg.SpawnX, b2Cfg.SpawnY);
         var moduleMap = CreateBoss2ModuleMap(boss2State, observation, navGraphProvider);
         TransitionService transitionService = new(moduleMap, observation);
-        var runtime = new BossAiRuntime(moduleMap, transitionService, observation, type => boss2State);
+        var runtime = new BossAiRuntime(moduleMap, transitionService, observation, _ => boss2State);
 
         var configProvider = ConfigProvider.FromConfigManager(observation: observation);
         var movementCommands = new PreallocatedCommandBuffer<MovementCommand>(32);

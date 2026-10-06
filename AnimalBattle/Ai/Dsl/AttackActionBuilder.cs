@@ -95,17 +95,4 @@ public sealed class AttackActionBuilder(
         _components.Add(new AttackComponent(AttackComponentKind.Dive, index, 0.0f, descentSpeed, _triggerTime));
         return this;
     }
-
-    /// <summary>
-    ///     接地時（着地時）に発火する判定アクションを追加します。
-    /// </summary>
-    /// <param name="x">X 座標オフセット。</param>
-    /// <param name="y">Y 座標オフセット。</param>
-    /// <returns>現在のビルダーインスタンス。</returns>
-    public AttackActionBuilder OnGroundedHitbox(float x = 0.0f, float y = 0.0f)
-    {
-        var index = _components.Count;
-        _components.Add(new AttackComponent(AttackComponentKind.OnGroundedHitbox, index, x, y, _triggerTime));
-        return this;
-    }
 }

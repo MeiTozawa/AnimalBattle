@@ -65,8 +65,6 @@ public sealed class Boss2BehaviorState : IBossBehaviorState {
     /// <summary>Dead 状態で保持する終端 data です。</summary>
     public ref BossTerminalData TerminalData => ref _terminalData;
 
-    /// <summary>直近の PhaseTransition target を取得します。</summary>
-    public Phase PhaseTransitionTargetPhase { get; set; }
 
     /// <summary>跳躍のクールダウンタイマーです。</summary>
     public float JumpCooldown { get; set; }
@@ -134,8 +132,8 @@ public sealed class Boss2BehaviorState : IBossBehaviorState {
         IsAttackActive = false;
         _phaseTransitionData = default;
         _terminalData.Reset();
-        PhaseTransitionTargetPhase = Phase.Phase1;
         JumpCooldown = 0.0f;
+
         CooldownTracker.Reset();
         PendingBossState = BossState.Unknown;
         PendingTransitionReason = TransitionReason.None;
@@ -150,9 +148,4 @@ public sealed class Boss2BehaviorState : IBossBehaviorState {
         PendingTransitionReason = reason;
     }
 
-    /// <summary>現在状態の経過時間を初期化します。</summary>
-    public void ResetStateTimer()
-    {
-        StateElapsed = 0.0f;
-    }
 }

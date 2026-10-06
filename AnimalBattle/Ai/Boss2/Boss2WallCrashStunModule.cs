@@ -15,11 +15,6 @@ public sealed class Boss2WallCrashStunModule(IBoss2Configuration configuration, 
 
     private readonly Boss2BehaviorState _state = state ?? throw new ArgumentNullException(nameof(state));
 
-    /// <summary>互換用コンストラクター。</summary>
-    public Boss2WallCrashStunModule(Boss2BehaviorState state) : this(new Boss2DefaultConfiguration(), state)
-    {
-    }
-
     /// <inheritdoc />
     public BossState HandledState => Boss2State.WallCrashStun;
 

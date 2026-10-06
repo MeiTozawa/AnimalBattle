@@ -1,4 +1,3 @@
-using AnimalBattle.Components;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters;
@@ -78,7 +77,7 @@ public abstract class Pawn
     }
 
     /// <summary>移動速度を一括設定します。</summary>
-    public void SetVelocity(float vx, float vy)
+    protected void SetVelocity(float vx, float vy)
     {
         ref var v = ref Entity.GetMut<Velocity>();
         v.Vx = vx;
@@ -86,7 +85,7 @@ public abstract class Pawn
     }
 
     /// <summary>空間変換パラメータ（座標・スケール）を一括設定します。</summary>
-    public void SetTransform(float x, float y, float scaleX = 1.0f, float scaleY = 1.0f)
+    protected void SetTransform(float x, float y, float scaleX = 1.0f, float scaleY = 1.0f)
     {
         Entity.Set(new Transform(x, y, scaleX, scaleY));
     }
@@ -117,7 +116,7 @@ public abstract class Pawn
     public Hurtbox Hurtbox => Entity.Get<Hurtbox>();
 
     /// <summary>ヘルスを全回復・再初期化します。</summary>
-    public void ResetHealth(float maxHp)
+    protected void ResetHealth(float maxHp)
     {
         Entity.Set(new Health(maxHp));
     }
@@ -168,14 +167,14 @@ public abstract class Pawn
     public string CurrentAnimation => Entity.Has<Animation>() ? Entity.Get<Animation>().CurrentClip.ToString() : string.Empty;
 
     /// <summary>指定されたアニメーションクリップを再生します。</summary>
-    public void PlayAnimation(string clipName)
+    protected void PlayAnimation(string clipName)
     {
         if (Entity.Has<Animation>())
             Entity.GetMut<Animation>().Play(clipName);
     }
 
     /// <summary>白閃や死亡タグなどの瞬態エフェクト・状態フラグをクリアします。</summary>
-    public void ClearTransientEffects()
+    protected void ClearTransientEffects()
     {
         if (Entity.IsAlive())
         {

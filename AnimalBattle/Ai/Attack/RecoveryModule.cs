@@ -87,13 +87,6 @@ public sealed class RecoveryModule : IBossStateModule {
         return Result.Success;
     }
 
-    /// <summary>Recovery 完了後だけ next transition evaluator を実行します。</summary>
-    public bool EvaluateNextTransition(Func<bool> transitionEvaluator)
-    {
-        ArgumentNullException.ThrowIfNull(transitionEvaluator);
-        return CanEvaluateNextTransition && transitionEvaluator();
-    }
-
     private void Record(
         in StateContext context,
         in LifecycleInvocation invocation,

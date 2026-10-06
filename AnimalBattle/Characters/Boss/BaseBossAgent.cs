@@ -1,6 +1,5 @@
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
-using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters.Boss;
@@ -24,7 +23,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable
     protected ObservationService Observation { get; }
 
     /// <summary>現在の実行フレーム数を取得または設定します。</summary>
-    protected long FrameNumber { get; set; }
+    private long FrameNumber { get; set; }
 
     /// <summary>現在の Phase を取得します。</summary>
     public Phase Phase => Slot.Phase;
