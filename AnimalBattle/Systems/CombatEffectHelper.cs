@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
 using Flecs.NET.Core;
@@ -74,12 +75,23 @@ public static class CombatEffectHelper {
     /// <param name="phase">現在の戦闘 Phase（Phase 1: 1枚, Phase 2: 2枚, Phase 3: 3枚）。</param>
     public static void SpawnBossCounterAttack(World world, float bossX, float bossY, Phase phase)
     {
-        var bulletCount = phase switch {
-            Phase.Phase1 => 1,
-            Phase.Phase2 => 2,
-            Phase.Phase3 => 3,
-            _ => 1
-        };
+        int bulletCount;
+        switch (phase)
+        {
+            case Phase.Phase1:
+                bulletCount = 1;
+                break;
+            case Phase.Phase2:
+                bulletCount = 2;
+                break;
+            case Phase.Phase3:
+                bulletCount = 3;
+                break;
+            default:
+                Debug.Fail($"[CombatEffectHelper 警告] 未知のフェーズ: {phase}");
+                bulletCount = 1;
+                break;
+        }
 
         const float counterBulletSpeed = 160.0f;
         const float counterBulletRadius = 8.0f;

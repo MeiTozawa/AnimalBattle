@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
+using ErrorOr;
 
 namespace AnimalBattle.Configs;
 

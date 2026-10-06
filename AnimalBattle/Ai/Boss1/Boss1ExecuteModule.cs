@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
@@ -47,10 +48,6 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
                 new Vec2f(context.PlayerObservation.PositionX, context.PlayerObservation.PositionY);
             _state.AttackTargetEntityId = context.PlayerObservation.EntityId;
         }
-
-        if (!Boss1ModuleSupport.IsBoss1(in context, in invocation) || _pattern.Skill != skill)
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill,
-                "Boss1 の Execute 対象が現在攻撃と一致しません。", skill, AttackStage.Execute);
     }
 
     /// <inheritdoc />
@@ -103,9 +100,7 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
         Vec2f position = new(nextX, nextY);
 
         _state.CurrentPosition = position;
-        if (context.Movement.MoveTo(position.X, position.Y).IsError)
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError,
-                ErrorCode.ExecutionFailed, "DiveRam の移動 command を発行できませんでした。", pattern.Skill, AttackStage.Execute);
+        context.Movement.MoveTo(position.X, position.Y);
 
         _elapsed = MathF.Min(duration, _elapsed + context.DeltaTime);
         _state.StateElapsed = _elapsed;
@@ -161,6 +156,9 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
             case BossSkill.FastSniper:
                 EmitFastSniper(ref context, in invocation, pattern);
             break;
+            default:
+                Debug.Fail($"[Boss1ExecuteModule 警告] 未知または未対応の Barrage スキル: {pattern.Skill}");
+            break;
         }
     }
 
@@ -179,10 +177,8 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
         for (var index = -1; index <= 1; index++)
         {
             var angle = baseAngle + index * pattern.AngleStep;
-            if (context.Attack.EmitBullet(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed,
-                MathF.Sin(angle) * pattern.BulletSpeed).IsError)
-                Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError,
-                    ErrorCode.ExecutionFailed, "Aimed3Shot の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
+            context.Attack.EmitBullet(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed,
+                MathF.Sin(angle) * pattern.BulletSpeed);
         }
     }
 
@@ -192,10 +188,8 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
         for (var index = 0; index < count; index++)
         {
             var angle = index / (float)count * MathF.Tau + _state.AngleOffset;
-            if (context.Attack.EmitBullet(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed,
-                MathF.Sin(angle) * pattern.BulletSpeed).IsError)
-                Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError,
-                    ErrorCode.ExecutionFailed, "RingBurst の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
+            context.Attack.EmitBullet(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed,
+                MathF.Sin(angle) * pattern.BulletSpeed);
         }
 
         _state.AngleOffset += pattern.AngleStep;
@@ -206,12 +200,10 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
     {
         var first = _state.AngleOffset;
         var second = first + MathF.PI;
-        if (context.Attack.EmitBullet(pattern.Skill, MathF.Cos(first) * pattern.BulletSpeed,
-                MathF.Sin(first) * pattern.BulletSpeed).IsError
-         || context.Attack.EmitBullet(pattern.Skill, MathF.Cos(second) * pattern.BulletSpeed,
-                MathF.Sin(second) * pattern.BulletSpeed).IsError)
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError,
-                ErrorCode.ExecutionFailed, "DoubleSpiral の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
+        context.Attack.EmitBullet(pattern.Skill, MathF.Cos(first) * pattern.BulletSpeed,
+            MathF.Sin(first) * pattern.BulletSpeed);
+        context.Attack.EmitBullet(pattern.Skill, MathF.Cos(second) * pattern.BulletSpeed,
+            MathF.Sin(second) * pattern.BulletSpeed);
 
         _state.AngleOffset += pattern.AngleStep;
     }
@@ -221,26 +213,18 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
         var range = pattern.MaxX - pattern.MinX;
         var firstX = pattern.MinX + context.Random.NextSingle() * range;
         var secondX = pattern.MinX + context.Random.NextSingle() * range;
-        var firstError = context.Attack.EmitBullet(pattern.Skill, firstX, pattern.BulletSpeed).IsError;
-        var secondError = context.Attack.EmitBullet(pattern.Skill, secondX, pattern.BulletSpeed).IsError;
-        if (firstError || secondError)
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError,
-                ErrorCode.ExecutionFailed, "RainDrop の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
+        context.Attack.EmitBullet(pattern.Skill, firstX, pattern.BulletSpeed);
+        context.Attack.EmitBullet(pattern.Skill, secondX, pattern.BulletSpeed);
     }
 
     private void EmitCrossChaos(ref StateContext context, in LifecycleInvocation invocation, Boss1AttackPattern pattern)
     {
-        var hasError = false;
         for (var index = 0; index < 4; index++)
         {
             var angle = _state.AngleOffset + index * (MathF.PI / 2.0f);
-            if (context.Attack.EmitBullet(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed,
-                MathF.Sin(angle) * pattern.BulletSpeed).IsError) hasError = true;
+            context.Attack.EmitBullet(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed,
+                MathF.Sin(angle) * pattern.BulletSpeed);
         }
-
-        if (hasError)
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError,
-                ErrorCode.ExecutionFailed, "CrossChaos の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
 
         _state.AngleOffset += pattern.AngleStep;
     }
@@ -250,9 +234,7 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
         var dx = context.PlayerObservation.PositionX - _state.AttackStartPosition.X;
         var dy = context.PlayerObservation.PositionY - _state.AttackStartPosition.Y;
         var angle = MathF.Atan2(dy, dx);
-        if (context.Attack.EmitBullet(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed,
-            MathF.Sin(angle) * pattern.BulletSpeed).IsError)
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError,
-                ErrorCode.ExecutionFailed, "FastSniper の弾発行に失敗しました。", pattern.Skill, AttackStage.Execute);
+        context.Attack.EmitBullet(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed,
+            MathF.Sin(angle) * pattern.BulletSpeed);
     }
 }

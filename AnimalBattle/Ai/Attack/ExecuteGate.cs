@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
 using ErrorOr;
@@ -57,8 +58,6 @@ public sealed class ExecuteGate {
             OneShot.Begin(Definition.Skill, invocation.FrameUpdateNumber).IsError)
         {
             _completed = true;
-            Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidConfiguration,
-                "攻撃時間が不正なため Execute を開始せず、安全な非攻撃行動へ移行します。", 0, -1);
             return Error.Validation("ExecuteGate.Start", "攻撃設定またはフレーム番号が不正です。");
         }
 
@@ -119,8 +118,9 @@ public sealed class ExecuteGate {
                     {
                         accepted = !Emit(ref context, in component).IsError;
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Debug.WriteLine($"[ExecuteGate 警告] 接地判定 component の Emit 中に例外が発生しました: {ex.Message}");
                         accepted = false;
                     }
 
@@ -134,8 +134,6 @@ public sealed class ExecuteGate {
                     else
                     {
                         failed++;
-                        Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed,
-                            "接地判定 component の実行に失敗しました。", Elapsed, component.Index);
                     }
                 }
 
@@ -204,8 +202,9 @@ public sealed class ExecuteGate {
             {
                 acceptedOneShot = !Emit(ref context, in component).IsError;
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine($"[ExecuteGate 警告] 単発攻撃 component の Emit 中に例外が発生しました: {ex.Message}");
                 acceptedOneShot = false;
             }
 
@@ -216,8 +215,6 @@ public sealed class ExecuteGate {
             else
             {
                 failed++;
-                Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed,
-                    "攻撃 component の実行に失敗しました。再発動は行いません。", Elapsed, component.Index);
             }
         }
 
@@ -327,45 +324,6 @@ public sealed class ExecuteGate {
         return allOk ? Result.Success : Error.Failure("ExecuteGate.EmitBullet", "弾幕生成に失敗しました。");
     }
 
-    private void Record(
-        in StateContext context,
-        in LifecycleInvocation invocation,
-        DiagnosticSeverity severity,
-        ErrorCode errorCode,
-        string message,
-        float realDuration,
-        int componentIndex)
-    {
-        ObservationEvent observation = new(
-            context.EntityId,
-            context.BossType,
-            invocation.State,
-            context.Phase,
-            invocation.Operation,
-            context.FrameUpdateNumber,
-            context.DeltaTime,
-            Definition.Skill,
-            AttackStage.Execute,
-            new TransitionReason(
-                ReasonKind.AttackCompleted,
-                skill: Definition.Skill,
-                errorCode: errorCode,
-                originalInput: componentIndex),
-            severity,
-            errorCode,
-            message,
-            configuredDuration: Definition.ExecuteDuration,
-            realDuration: realDuration);
-
-        try
-        {
-            context.Observation.Record(in observation);
-        }
-        catch
-        {
-            // 観測失敗だけを理由に Execute の残り component を停止しません。
-        }
-    }
 
     private bool HasLaterMovementStarted(float currentTriggerTime)
     {

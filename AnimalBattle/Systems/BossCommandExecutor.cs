@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
@@ -36,6 +37,8 @@ public static class BossCommandExecutor {
             ExecuteBoss1Movement(slot, dt, ref trans, ref vel);
         else if (slot.BossType == BossType.Boss2)
             ExecuteBoss2Movement(slot, dt, ref trans, ref vel, entity, platformQuery);
+        else
+            Debug.Fail($"[BossCommandExecutor 警告] 未知の BossType: {slot.BossType}");
     }
 
     /// <summary>
@@ -71,6 +74,10 @@ public static class BossCommandExecutor {
 
                 case AttackCommandKind.CreateHitbox:
                     ExecuteCreateHitbox(world, entity, in trans, in vel, in cmd, patternCfg, b2Cfg, slot);
+                break;
+
+                default:
+                    Debug.Fail($"[BossCommandExecutor 警告] 未知の AttackCommandKind: {cmd.Kind}");
                 break;
             }
         }
@@ -116,6 +123,10 @@ public static class BossCommandExecutor {
                 case MovementCommandKind.Stop:
                     vel.Vx = 0.0f;
                     vel.Vy = 0.0f;
+                break;
+
+                default:
+                    Debug.Fail($"[BossCommandExecutor 警告] 未知の MovementCommandKind: {cmd.Kind}");
                 break;
             }
         }
@@ -163,6 +174,10 @@ public static class BossCommandExecutor {
                 break;
                 case MovementCommandKind.Stop:
                     vel.Vx = 0.0f;
+                break;
+
+                default:
+                    Debug.Fail($"[BossCommandExecutor 警告] 未知の MovementCommandKind: {cmd.Kind}");
                 break;
             }
         }

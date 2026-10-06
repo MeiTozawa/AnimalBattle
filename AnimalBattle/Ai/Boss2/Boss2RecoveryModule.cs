@@ -83,5 +83,5 @@ public sealed class Boss2RecoveryModule(IBoss2Configuration configuration, Boss2
 
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } =
-        ["Boss2Configuration", "MovementPort", "ObservationService"];
+        ["Boss2Configuration", "MovementPort"];
 }

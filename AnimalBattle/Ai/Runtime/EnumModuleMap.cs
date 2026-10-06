@@ -1,4 +1,5 @@
 using System.Collections.Frozen;
+using System.Diagnostics;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
@@ -25,8 +26,7 @@ public sealed class EnumModuleMap : IEnumModuleMap {
     /// <param name="observation">検査結果を記録する任意の観測サービス。</param>
     public EnumModuleMap(
         IEnumerable<IBossStateModule> modules,
-        IEnumerable<string>? availableDependencies = null,
-        IObservationService? observation = null)
+        IEnumerable<string>? availableDependencies = null)
     {
         ArgumentNullException.ThrowIfNull(modules);
 
@@ -65,7 +65,6 @@ public sealed class EnumModuleMap : IEnumModuleMap {
         var validation = constructionResult.IsFailure
             ? constructionResult
             : EnumCompletenessCheck.Validate(candidate, dependencies);
-        validation = RecordFailureIfNeeded(validation, observation);
 
         _validation = validation;
         _modules = validation.IsSuccess
@@ -74,9 +73,8 @@ public sealed class EnumModuleMap : IEnumModuleMap {
     }
 
     /// <summary>固定 map を検査済みの空集合として生成します。</summary>
-    /// <remarks>診断やテストで不完全 map を明示的に扱う場合に使用します。</remarks>
-    public EnumModuleMap(IObservationService observation)
-        : this(Array.Empty<IBossStateModule>(), null, observation)
+    public EnumModuleMap()
+        : this(Array.Empty<IBossStateModule>(), null)
     {
     }
 
@@ -102,38 +100,6 @@ public sealed class EnumModuleMap : IEnumModuleMap {
         }
 
         return _modules.TryGetValue(state, out module!);
-    }
-
-    private static EnumCompletenessResult RecordFailureIfNeeded(
-        EnumCompletenessResult validation,
-        IObservationService? observation)
-    {
-        if (validation.IsSuccess || observation is null) return validation;
-
-        ObservationEvent diagnostic = new(
-            0,
-            BossType.Unknown,
-            validation.State,
-            Phase.Unknown,
-            LifecycleOperation.Enter,
-            0,
-            0,
-            severity: DiagnosticSeverity.ExecutionError,
-            errorCode: validation.ErrorCode,
-            message: validation.Message);
-        try
-        {
-            if (!observation.Record(in diagnostic).IsError) return validation;
-        }
-        catch
-        {
-            // 診断記録の例外は map の公開を成功扱いにしません。
-        }
-
-        return EnumCompletenessResult.Failure(
-            ErrorCode.ObservationFailed,
-            "固定 module 検査の診断記録に失敗しました。",
-            validation.State);
     }
 }
 

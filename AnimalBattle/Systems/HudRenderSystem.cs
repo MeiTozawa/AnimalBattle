@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
@@ -146,11 +147,18 @@ public static class HudRenderSystem {
 
     private static int ToLegacyPhase(Phase phase)
     {
-        return phase switch {
-            Phase.Phase2 => 2,
-            Phase.Phase3 => 3,
-            _ => 1
-        };
+        switch (phase)
+        {
+            case Phase.Phase1:
+                return 1;
+            case Phase.Phase2:
+                return 2;
+            case Phase.Phase3:
+                return 3;
+            default:
+                Debug.Fail("[HUD 警告] 未知のフェーズ");
+                return 1;
+        }
     }
 
     private static void GetBossStateInfo(BossState state, BossSkill skill, BossHpBarRenderConfig hpCfg,
@@ -165,7 +173,7 @@ public static class HudRenderSystem {
                 Boss1State.Recovery => "[STATE: RECOVERING]",
                 Boss1State.PhaseTransition => "[STATE: PHASE TRANSITION]",
                 Boss1State.Dead => "[STATE: DEFEATED]",
-                _ => "[STATE: UNKNOWN]"
+                _ => FailUnknownState()
             },
             BossType.Boss2 => state.AsBoss2() switch {
                 Boss2State.Idle => "[STATE: IDLE / ALERT]",
@@ -178,9 +186,9 @@ public static class HudRenderSystem {
                 Boss2State.Recovery => "[STATE: RECOVERING ]",
                 Boss2State.PhaseTransition => "[STATE: PHASE TRANSITION ]",
                 Boss2State.Dead => "[STATE: DEFEATED]",
-                _ => "[STATE: UNKNOWN]"
+                _ => FailUnknownState()
             },
-            _ => "[STATE: UNKNOWN]"
+            _ => FailUnknownState()
         };
 
         if (state.IsDead)
@@ -197,6 +205,12 @@ public static class HudRenderSystem {
             badgeColor = hpCfg.StateCastingColor;
         else
             badgeColor = hpCfg.StateDefaultColor;
+    }
+
+    private static string FailUnknownState()
+    {
+        Debug.Fail("[HUD 警告] 未知のステート");
+        return "[STATE: UNKNOWN]";
     }
 
     private static void DrawBossHpBar(
@@ -242,12 +256,23 @@ public static class HudRenderSystem {
             barY2 + hpCfg.BgPadding, hpCfg.BorderColor, false);
 
         // Boss HP ゲージ塗りつぶし
-        var hpFillColor = phase switch {
-            1 => hpCfg.Phase1Color,
-            2 => hpCfg.Phase2Color,
-            3 => hpCfg.Phase3Color,
-            _ => hpCfg.Phase1Color
-        };
+        Color hpFillColor;
+        switch (phase)
+        {
+            case 1:
+                hpFillColor = hpCfg.Phase1Color;
+            break;
+            case 2:
+                hpFillColor = hpCfg.Phase2Color;
+            break;
+            case 3:
+                hpFillColor = hpCfg.Phase3Color;
+            break;
+            default:
+                Debug.Fail("[HUD 警告] 未知のフェーズ");
+                hpFillColor = hpCfg.Phase1Color;
+            break;
+        }
 
         var hpRatio = maxHp > 0.0f ? Math.Clamp(currentHp / maxHp, 0.0f, 1.0f) : 0.0f;
         var fillWidth = (int)(totalWidth * hpRatio);
@@ -265,18 +290,16 @@ public static class HudRenderSystem {
         GameEngine.DrawBox(p2Split - 1, barY1, p2Split + 1, barY2, hpCfg.BorderColor, true);
 
         // 勝利バナー
-        if (currentHp <= 0.0f)
-        {
-            GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2,
-                modalCfg.VictoryBgColor, true);
-            GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2,
-                modalCfg.VictoryOuterBorderColor, false);
-            GameEngine.DrawBox(modalCfg.VictoryX1 + 2, modalCfg.VictoryY1 + 2, modalCfg.VictoryX2 - 2,
-                modalCfg.VictoryY2 - 2, modalCfg.VictoryInnerBorderColor, false);
-            GameEngine.DrawString(modalCfg.VictoryTitleX, modalCfg.VictoryTitleY, modalCfg.VictoryTitleText,
-                modalCfg.VictoryTitleColor);
-            GameEngine.DrawString(modalCfg.VictoryRetryX, modalCfg.VictoryRetryY, modalCfg.VictoryRetryText,
-                modalCfg.VictoryRetryColor);
-        }
+        if (currentHp > 0.0f) return;
+        GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2,
+            modalCfg.VictoryBgColor, true);
+        GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2,
+            modalCfg.VictoryOuterBorderColor, false);
+        GameEngine.DrawBox(modalCfg.VictoryX1 + 2, modalCfg.VictoryY1 + 2, modalCfg.VictoryX2 - 2,
+            modalCfg.VictoryY2 - 2, modalCfg.VictoryInnerBorderColor, false);
+        GameEngine.DrawString(modalCfg.VictoryTitleX, modalCfg.VictoryTitleY, modalCfg.VictoryTitleText,
+            modalCfg.VictoryTitleColor);
+        GameEngine.DrawString(modalCfg.VictoryRetryX, modalCfg.VictoryRetryY, modalCfg.VictoryRetryText,
+            modalCfg.VictoryRetryColor);
     }
 }

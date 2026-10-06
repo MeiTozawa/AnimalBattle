@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using AnimalBattle.Configs;
 using ErrorOr;
@@ -113,7 +114,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[C# 設定] {typeof(T).Name} のリロード中にエラーが発生しました: {ex.Message}");
+                        Debug.WriteLine($"[ConfigBase 警告] {typeof(T).Name} のリロード中にエラーが発生しました: {ex.Message}");
                     }
                 });
 
@@ -122,6 +123,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
         }
         catch (Exception ex)
         {
+            Debug.WriteLine($"[ConfigBase 警告] 設定ファイルの読み込み中に例外が発生しました: {ex.Message}");
             return Error.Failure("Config.Exception", ex.Message);
         }
 #endif

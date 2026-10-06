@@ -257,12 +257,7 @@ public sealed class Boss2PatrolChaseModule(
     private void SelectNextLegacyAttack(ref StateContext context, in LifecycleInvocation invocation)
     {
         var settings = _configuration.GetPhase(context.Phase);
-        if (settings.AttackOrder.Count == 0)
-        {
-            Boss2ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning,
-                ErrorCode.InvalidConfiguration, "Boss2 の攻撃順が空です。");
-            return;
-        }
+        if (settings.AttackOrder.Count == 0) return;
 
         var index = _state.CurrentAttackIndex % settings.AttackOrder.Count;
         _state.CurrentAttackIndex++;

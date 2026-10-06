@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace AnimalBattle.Asset;
 
 /// <summary>
@@ -37,7 +39,7 @@ public sealed class AssetPathResolver(string? baseDirectory = null) : IAssetPath
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[C# アセット警告] アセットパス探索中に例外が発生しました ({relativePath}): {ex.Message}");
+            Debug.WriteLine($"[AssetPathResolver 警告] アセットパス探索中に例外が発生しました ({relativePath}): {ex.Message}");
         }
 
         return relativePath;

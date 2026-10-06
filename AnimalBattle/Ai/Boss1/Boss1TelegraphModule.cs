@@ -80,5 +80,5 @@ public sealed class Boss1TelegraphModule(IBoss1Configuration configuration, Boss
 
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } =
-        ["Boss1Configuration", "EffectPort", "MovementPort", "ObservationService"];
+        ["Boss1Configuration", "EffectPort", "MovementPort"];
 }

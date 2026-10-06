@@ -30,7 +30,6 @@ public sealed class BossRuntimeSlot {
         IMovementPort movement,
         IAttackPort attack,
         IEffectPort effect,
-        IObservationService observation,
         IRandomSource random,
         int movementCommandCapacity = 32,
         int attackCommandCapacity = 32,
@@ -67,7 +66,6 @@ public sealed class BossRuntimeSlot {
             movement,
             attack,
             effect,
-            observation,
             random);
         DebugEnabled = debugEnabled;
         RefreshDebugData();

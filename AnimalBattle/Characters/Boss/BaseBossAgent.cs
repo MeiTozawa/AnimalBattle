@@ -19,9 +19,6 @@ public abstract class BaseBossAgent : Pawn, IDisposable
     /// <summary>Boss 実行時データスロットを取得します。</summary>
     protected BossRuntimeSlot Slot { get; }
 
-    /// <summary>観測サービスを取得します。</summary>
-    protected ObservationService Observation { get; }
-
     /// <summary>現在の実行フレーム数を取得または設定します。</summary>
     private long FrameNumber { get; set; }
 
@@ -61,16 +58,13 @@ public abstract class BaseBossAgent : Pawn, IDisposable
     /// <param name="entity">Flecs エンティティ句柄。</param>
     /// <param name="runtime">Boss AI ランタイム。</param>
     /// <param name="slot">Boss 実行時スロット。</param>
-    /// <param name="observation">観測サービス。</param>
     protected BaseBossAgent(
         Entity entity,
         BossAiRuntime runtime,
-        BossRuntimeSlot slot,
-        ObservationService observation) : base(entity)
+        BossRuntimeSlot slot) : base(entity)
     {
         Runtime = runtime;
         Slot = slot;
-        Observation = observation;
     }
 
     /// <summary>

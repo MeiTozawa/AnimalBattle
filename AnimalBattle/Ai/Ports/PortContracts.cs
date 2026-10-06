@@ -154,12 +154,6 @@ public interface IEffectPort {
     ErrorOr<Success> PlaySoundCue(int soundId, float volume);
 }
 
-/// <summary>状態モジュールが読む観測・診断記録の境界です。</summary>
-public interface IObservationService {
-    /// <summary>構造化された観測イベントを事前確保領域へ記録します。</summary>
-    ErrorOr<Success> Record(in ObservationEvent observation);
-}
-
 /// <summary>明示的に注入される決定的な乱数源です。</summary>
 public interface IRandomSource {
     /// <summary>指定範囲の整数乱数を取得します。</summary>

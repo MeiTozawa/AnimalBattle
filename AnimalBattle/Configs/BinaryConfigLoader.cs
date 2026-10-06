@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
@@ -63,6 +64,7 @@ public static class BinaryConfigLoader {
         }
         catch (Exception ex)
         {
+            Debug.WriteLine($"[BinaryConfigLoader 警告] バイナリ設定の読み込み中に例外が発生しました: {ex.Message}");
             return Error.Failure("Config.Exception", $"バイナリ設定の読み込み中に例外が発生しました: {ex.Message}");
         }
     }

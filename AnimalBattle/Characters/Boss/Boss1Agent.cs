@@ -24,21 +24,15 @@ public sealed class Boss1Agent : BaseBossAgent
     /// <param name="entity">対応する Flecs エンティティ句柄。</param>
     /// <param name="spriteHandle">テクスチャハンドル。</param>
     public Boss1Agent(Entity entity, int spriteHandle)
-        : this(entity, spriteHandle, new ObservationService())
-    {
-    }
-
-    private Boss1Agent(Entity entity, int spriteHandle, ObservationService observation)
-        : this(entity, spriteHandle, observation, CreateRuntimeAndSlot(entity.Id, observation))
+        : this(entity, spriteHandle, CreateRuntimeAndSlot(entity.Id))
     {
     }
 
     private Boss1Agent(
         Entity entity,
         int spriteHandle,
-        ObservationService observation,
         (BossAiRuntime Runtime, BossRuntimeSlot Slot, Boss1BehaviorState State) bundle)
-        : base(entity, bundle.Runtime, bundle.Slot, observation)
+        : base(entity, bundle.Runtime, bundle.Slot)
     {
         _boss1State = bundle.State;
         InitializeComponents(entity, spriteHandle);
@@ -132,16 +126,15 @@ public sealed class Boss1Agent : BaseBossAgent
     }
 
     private static (BossAiRuntime Runtime, BossRuntimeSlot Slot, Boss1BehaviorState State) CreateRuntimeAndSlot(
-        ulong entityId,
-        ObservationService observation)
+        ulong entityId)
     {
         var b1Cfg = ConfigManager.Boss1;
         var boss1State = new Boss1BehaviorState(b1Cfg.SpawnX, b1Cfg.SpawnY);
-        var moduleMap = CreateBoss1ModuleMap(boss1State, observation);
-        TransitionService transitionService = new(moduleMap, observation);
-        var runtime = new BossAiRuntime(moduleMap, transitionService, observation, type => boss1State);
+        var moduleMap = CreateBoss1ModuleMap(boss1State);
+        TransitionService transitionService = new(moduleMap);
+        var runtime = new BossAiRuntime(moduleMap, transitionService, type => boss1State);
 
-        var configProvider = ConfigProvider.FromConfigManager(observation: observation);
+        var configProvider = ConfigProvider.FromConfigManager();
         var movementCommands = new PreallocatedCommandBuffer<MovementCommand>(32);
         var attackCommands = new PreallocatedCommandBuffer<AttackCommand>(32);
         var effectCommands = new PreallocatedCommandBuffer<EffectCommand>(16);
@@ -154,7 +147,6 @@ public sealed class Boss1Agent : BaseBossAgent
             movement,
             new BufferedAttackPort(attackCommands),
             new BufferedEffectPort(effectCommands),
-            observation,
             new SystemRandomSource(),
             debugEnabled: ConfigManager.Render.Debug.Enabled,
             movementCommandBuffer: movementCommands,
@@ -169,8 +161,7 @@ public sealed class Boss1Agent : BaseBossAgent
     }
 
     private static EnumModuleMap CreateBoss1ModuleMap(
-        Boss1BehaviorState boss1State,
-        ObservationService observation)
+        Boss1BehaviorState boss1State)
     {
         Boss1DefaultConfiguration boss1Config = new();
 
@@ -189,11 +180,10 @@ public sealed class Boss1Agent : BaseBossAgent
             "Boss1Configuration",
             "EffectPort",
             "MovementPort",
-            "ObservationService",
             "PlayerObservation",
             "RandomSource"
         ];
 
-        return new EnumModuleMap(modules, dependencies, observation);
+        return new EnumModuleMap(modules, dependencies);
     }
 }

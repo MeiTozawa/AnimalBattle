@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
 
@@ -9,19 +10,16 @@ namespace AnimalBattle.Ai.Runtime;
 public sealed class TransitionService : ITransitionService {
     private readonly BossState _defaultSafeRecoveryStateId;
     private readonly Func<BossState, BossState, bool>? _isAllowed;
-    private readonly IObservationService? _observation;
     private readonly IEnumModuleMap _registry;
 
     /// <summary>遷移サービスを生成します。</summary>
     public TransitionService(
         IEnumModuleMap registry,
-        IObservationService? observation = null,
         Func<BossState, BossState, bool>? isAllowed = null,
         BossState defaultSafeRecoveryStateId = default)
     {
         ArgumentNullException.ThrowIfNull(registry);
         _registry = registry;
-        _observation = observation;
         _isAllowed = isAllowed;
         _defaultSafeRecoveryStateId = defaultSafeRecoveryStateId;
     }
@@ -29,44 +27,34 @@ public sealed class TransitionService : ITransitionService {
     /// <summary>検証順序に従って遷移要求を検証します。</summary>
     public TransitionResult Request(in TransitionRequest request)
     {
-        var result = ValidateRequest(in request, request.FromStateId, true);
-        if (result.IsAccepted) RecordTransition(in request, result, BossType.Unknown);
-
-        return result;
+        return ValidateRequest(in request, request.FromStateId);
     }
 
     /// <summary>合法な要求を Exit、data commit、Enter の順に適用します。</summary>
     public TransitionResult Apply(ref BossRuntimeSlot runtime, in TransitionRequest request)
     {
-        var validation = ValidateRequest(in request, runtime.CurrentStateId, false);
+        var validation = ValidateRequest(in request, runtime.CurrentStateId);
         if (validation.IsRejected)
         {
-            RecordTransition(in request, validation, runtime.BossType);
             return validation;
         }
 
         if (runtime.CurrentStateId != request.FromStateId)
         {
-            var stateMismatch = Reject(in request, runtime.CurrentStateId, ErrorCode.TransitionNotAllowed,
-                "現在状態と遷移要求の State_Id が一致しません。", false);
-            RecordTransition(in request, stateMismatch, runtime.BossType);
-            return stateMismatch;
+            return Reject(in request, runtime.CurrentStateId, ErrorCode.TransitionNotAllowed,
+                "現在状態と遷移要求の State_Id が一致しません。");
         }
 
         if (request.EntityId != runtime.EntityId || request.FrameUpdateNumber != runtime.FrameUpdateNumber ||
             request.Phase != runtime.Phase)
         {
-            var frameMismatch = Reject(in request, runtime.CurrentStateId, ErrorCode.TransitionNotAllowed,
-                "遷移要求の Entity または Frame_Update が一致しません。", false);
-            RecordTransition(in request, frameMismatch, runtime.BossType);
-            return frameMismatch;
+            return Reject(in request, runtime.CurrentStateId, ErrorCode.TransitionNotAllowed,
+                "遷移要求の Entity または Frame_Update が一致しません。");
         }
 
         if (runtime.EnterTransition().IsError)
         {
-            var cycle = Reject(in request, runtime.CurrentStateId, ErrorCode.TransitionCycle, "即時遷移の再帰を拒否しました。", false);
-            RecordTransition(in request, cycle, runtime.BossType);
-            return cycle;
+            return Reject(in request, runtime.CurrentStateId, ErrorCode.TransitionCycle, "即時遷移の再帰を拒否しました。");
         }
 
         try
@@ -74,10 +62,8 @@ public sealed class TransitionService : ITransitionService {
             if (!_registry.Get(request.FromStateId, out var currentModule)
              || !_registry.Get(request.ToStateId, out var nextModule))
             {
-                var unregistered = Reject(in request, runtime.CurrentStateId, ErrorCode.UnregisteredState,
-                    "固定 map に対応する State_Module がありません。", false);
-                RecordTransition(in request, unregistered, runtime.BossType);
-                return unregistered;
+                return Reject(in request, runtime.CurrentStateId, ErrorCode.UnregisteredState,
+                    "固定 map に対応する State_Module がありません。");
             }
 
             ref var context = ref runtime.Context;
@@ -89,13 +75,12 @@ public sealed class TransitionService : ITransitionService {
                 {
                     currentModule.Exit(ref context, in exitInvocation);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Debug.WriteLine($"[TransitionService 警告] 現在 State_Module の Exit に失敗しました: {ex.Message}");
                     runtime.MarkModuleStopped();
-                    var exitFailure = TransitionResult.Rejected(in request, runtime.CurrentStateId,
+                    return TransitionResult.Rejected(in request, runtime.CurrentStateId,
                         ErrorCode.ModuleExecutionFailed, "現在 State_Module の Exit に失敗しました。");
-                    RecordTransition(in request, exitFailure, runtime.BossType);
-                    return exitFailure;
                 }
             }
 
@@ -113,19 +98,16 @@ public sealed class TransitionService : ITransitionService {
                 nextModule.Enter(ref context, in enterInvocation);
                 runtime.MarkStateEntered();
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine($"[TransitionService 警告] 遷移先 State_Module の Enter に失敗しました: {ex.Message}");
                 runtime.SetCurrentState(request.FromStateId, previousReason);
                 runtime.MarkModuleStopped();
-                var enterFailure = TransitionResult.Rejected(in request, runtime.CurrentStateId,
+                return TransitionResult.Rejected(in request, runtime.CurrentStateId,
                     ErrorCode.ModuleExecutionFailed, "遷移先 State_Module の Enter に失敗しました。");
-                RecordTransition(in request, enterFailure, runtime.BossType);
-                return enterFailure;
             }
 
-            var accepted = TransitionResult.Accepted(in request, runtime.CurrentStateId);
-            RecordTransition(in request, accepted, runtime.BossType);
-            return accepted;
+            return TransitionResult.Accepted(in request, runtime.CurrentStateId);
         }
         finally
         {
@@ -133,41 +115,38 @@ public sealed class TransitionService : ITransitionService {
         }
     }
 
-    private TransitionResult ValidateRequest(in TransitionRequest request, BossState currentBossState, bool record)
+    private TransitionResult ValidateRequest(in TransitionRequest request, BossState currentBossState)
     {
         if (!request.FromStateId.IsValid() || !request.ToStateId.IsValid())
-            return Reject(in request, currentBossState, ErrorCode.InvalidStateId, "State_Id の形式が不正です。", record);
+            return Reject(in request, currentBossState, ErrorCode.InvalidStateId, "State_Id の形式が不正です。");
 
         if (request.EntityId == 0 || request.FrameUpdateNumber < 0 || request.Phase == Phase.Unknown ||
             request.Reason.Kind == ReasonKind.Unknown || !request.Reason.HasValidThreshold)
-            return Reject(in request, currentBossState, ErrorCode.InvalidConfiguration, "遷移要求の必須値が不正です。", record);
+            return Reject(in request, currentBossState, ErrorCode.InvalidConfiguration, "遷移要求の必須値が不正です。");
 
         var fromRegistered = _registry.Get(request.FromStateId, out _);
         var toRegistered = _registry.Get(request.ToStateId, out _);
         if (!fromRegistered || !toRegistered)
-            return Reject(in request, currentBossState, ErrorCode.UnregisteredState, "固定 map に対応する State_Id がありません。",
-                record);
+            return Reject(in request, currentBossState, ErrorCode.UnregisteredState, "固定 map に対応する State_Id がありません。");
 
         if (IsDeadState(request.FromStateId) && request.ToStateId != request.FromStateId)
-            return Reject(in request, currentBossState, ErrorCode.TerminalStateViolation, "Dead 状態からの復帰を拒否しました。",
-                record);
+            return Reject(in request, currentBossState, ErrorCode.TerminalStateViolation, "Dead 状態からの復帰を拒否しました。");
 
         if (_isAllowed is not null && !_isAllowed(request.FromStateId, request.ToStateId))
-            return Reject(in request, currentBossState, ErrorCode.TransitionNotAllowed, "許可されていない状態遷移です。", record);
+            return Reject(in request, currentBossState, ErrorCode.TransitionNotAllowed, "許可されていない状態遷移です。");
 
         if (request.FromStateId == request.ToStateId)
-            return Reject(in request, currentBossState, ErrorCode.TransitionCycle, "同一状態への即時循環を拒否しました。", record);
+            return Reject(in request, currentBossState, ErrorCode.TransitionCycle, "同一状態への即時循環を拒否しました。");
 
         var registryValidation = _registry.ValidateComplete();
         if (registryValidation.IsFailure)
-            return Reject(in request, currentBossState, registryValidation.ErrorCode, registryValidation.Message,
-                record);
+            return Reject(in request, currentBossState, registryValidation.ErrorCode, registryValidation.Message);
 
         return TransitionResult.Accepted(in request, currentBossState, "遷移を検証しました。");
     }
 
     private TransitionResult Reject(in TransitionRequest request, BossState currentBossState, ErrorCode errorCode,
-        string message, bool record)
+        string message)
     {
         var safeRecoveryBossState = request.SafeRecoveryStateId.IsValid()
             ? request.SafeRecoveryStateId
@@ -180,48 +159,12 @@ public sealed class TransitionService : ITransitionService {
             request.EntityId,
             request.FrameUpdateNumber,
             safeRecoveryBossState);
-        var result = TransitionResult.Rejected(in effectiveRequest, currentBossState, errorCode, message);
-        if (record) RecordTransition(in request, result, BossType.Unknown);
-
-        return result;
+        return TransitionResult.Rejected(in effectiveRequest, currentBossState, errorCode, message);
     }
 
     private static bool IsDeadState(BossState state)
     {
         return state.IsDead;
-    }
-
-    private void RecordTransition(in TransitionRequest request, TransitionResult result, BossType bossType)
-    {
-        if (_observation is null) return;
-
-        var severity = result.IsAccepted
-            ? DiagnosticSeverity.Information
-            : DiagnosticSeverity.TransitionRejected;
-        ObservationEvent observation = new(
-            request.EntityId,
-            bossType,
-            result.CurrentStateId,
-            request.Phase,
-            LifecycleOperation.Update,
-            request.FrameUpdateNumber,
-            0,
-            request.Reason.Skill,
-            AttackStage.None,
-            request.Reason,
-            severity,
-            result.ErrorCode,
-            result.Message,
-            request.FromStateId,
-            request.ToStateId);
-        try
-        {
-            _observation.Record(in observation);
-        }
-        catch
-        {
-            // 観測失敗は状態処理を停止させません。
-        }
     }
 
     private static LifecycleInvocation CreateInvocation(BossRuntimeSlot runtime, BossState stateId,

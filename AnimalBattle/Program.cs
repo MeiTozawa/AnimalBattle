@@ -59,6 +59,7 @@ internal static class Program {
         }
         catch (Exception ex)
         {
+            Debug.WriteLine($"[致命的クラッシュ例外]:\n{ex}");
             Console.WriteLine($"[致命的クラッシュ例外]:\n{ex}");
         }
         finally

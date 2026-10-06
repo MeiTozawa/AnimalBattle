@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
 using ErrorOr;
@@ -81,8 +82,6 @@ public sealed class TelegraphModule : IBossStateModule {
 
         if (!Definition.IsValid || !invocation.IsValid)
         {
-            Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidConfiguration,
-                "攻撃時間が不正なため Telegraph を開始せず、安全な非攻撃行動へ移行します。", 0);
             return Error.Validation("TelegraphModule.Start", "攻撃定義またはフレーム呼び出しが不正です。");
         }
 
@@ -96,60 +95,13 @@ public sealed class TelegraphModule : IBossStateModule {
 
     private void EmitTelegraph(ref StateContext context, in LifecycleInvocation invocation)
     {
-        bool displayed;
         try
         {
-            displayed = !context.Effect.RequestTelegraph(_target.PositionX, _target.PositionY).IsError;
+            context.Effect.RequestTelegraph(_target.PositionX, _target.PositionY);
         }
-        catch
+        catch (Exception ex)
         {
-            displayed = false;
-        }
-
-        if (!displayed)
-        {
-            Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed,
-                "攻撃予告の表示に失敗しました。", Elapsed);
-            return;
-        }
-
-        Record(in context, in invocation, DiagnosticSeverity.Information, ErrorCode.None, "攻撃予告を表示しました。", Elapsed);
-    }
-
-    private void Record(
-        in StateContext context,
-        in LifecycleInvocation invocation,
-        DiagnosticSeverity severity,
-        ErrorCode errorCode,
-        string message,
-        float realDuration)
-    {
-        ObservationEvent observation = new(
-            context.EntityId,
-            context.BossType,
-            invocation.State,
-            context.Phase,
-            invocation.Operation,
-            context.FrameUpdateNumber,
-            context.DeltaTime,
-            Definition.Skill,
-            AttackStage.Telegraph,
-            new TransitionReason(ReasonKind.AttackCompleted, skill: Definition.Skill),
-            severity,
-            errorCode,
-            message,
-            configuredDuration: Definition.TelegraphDuration,
-            realDuration: realDuration,
-            targetEntityId: _target.EntityId,
-            attackRange: Definition.Range,
-            attackStartTime: AttackStartTime);
-        try
-        {
-            context.Observation.Record(in observation);
-        }
-        catch
-        {
-            // 観測失敗だけを理由に Telegraph の正常処理を停止しません。
+            Debug.WriteLine($"[TelegraphModule 警告] 攻撃予告の要求中に例外が発生しました: {ex.Message}");
         }
     }
 }

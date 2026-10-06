@@ -46,5 +46,5 @@ public sealed class Boss2WallCrashStunModule(IBoss2Configuration configuration, 
 
     /// <inheritdoc />
     public IReadOnlyList<string> RequiredDependencies { get; } =
-        ["Boss2Configuration", "MovementPort", "ObservationService"];
+        ["Boss2Configuration", "MovementPort"];
 }

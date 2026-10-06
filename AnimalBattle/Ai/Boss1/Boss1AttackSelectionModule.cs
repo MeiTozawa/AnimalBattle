@@ -29,8 +29,6 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
         var settings = _configuration.GetPhase(context.Phase);
         if (settings.AttackOrder.Count == 0)
         {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning,
-                ErrorCode.InvalidConfiguration, "Boss1 の攻撃順が空のため Hover へ復帰します。");
             _state.RequestTransition(Boss1State.Hover,
                 new TransitionReason(ReasonKind.SafetyFallback, errorCode: ErrorCode.InvalidConfiguration));
             return;
@@ -41,8 +39,6 @@ public sealed class Boss1AttackSelectionModule(IBoss1Configuration configuration
         var skill = settings.AttackOrder[nextIndex];
         if (!_configuration.GetAttack(skill, out var pattern) || !pattern.IsValid)
         {
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Warning, ErrorCode.InvalidBossSkill,
-                "Boss1 の攻撃設定が不正なため Hover へ復帰します。", skill);
             _state.RequestTransition(Boss1State.Hover,
                 new TransitionReason(ReasonKind.SafetyFallback, skill: skill, errorCode: ErrorCode.InvalidBossSkill));
             return;

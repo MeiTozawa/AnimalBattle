@@ -67,8 +67,7 @@ public sealed class Boss2PhaseTransitionModule(IBoss2Configuration configuration
             if (!context.Movement.Stop().IsError)
                 data.AppliedMask |= PhaseTransitionApplyMask.MovementStop;
             else
-                RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.MovementStop,
-                    "PhaseTransition の移動停止に失敗しました。");
+                RecordFailure(PhaseTransitionApplyMask.MovementStop);
         }
 
         if (!data.AppliedMask.HasFlag(PhaseTransitionApplyMask.Effect))
@@ -76,18 +75,14 @@ public sealed class Boss2PhaseTransitionModule(IBoss2Configuration configuration
             if (!context.Effect.RequestTelegraph(_state.CurrentPosition.X, _state.CurrentPosition.Y).IsError)
                 data.AppliedMask |= PhaseTransitionApplyMask.Effect;
             else
-                RecordFailure(ref context, in invocation, PhaseTransitionApplyMask.Effect,
-                    "PhaseTransition の演出 command を発行できませんでした。");
+                RecordFailure(PhaseTransitionApplyMask.Effect);
         }
     }
 
-    private void RecordFailure(ref StateContext context, in LifecycleInvocation invocation,
-        PhaseTransitionApplyMask item, string message)
+    private void RecordFailure(PhaseTransitionApplyMask item)
     {
         if (_state.PhaseTransitionData.FailedMask.HasFlag(item)) return;
 
         _state.PhaseTransitionData.FailedMask |= item;
-        Boss2ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError,
-            ErrorCode.ExecutionFailed, message);
     }
 }

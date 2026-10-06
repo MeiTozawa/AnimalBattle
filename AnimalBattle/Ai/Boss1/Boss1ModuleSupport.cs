@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
 
@@ -41,42 +42,7 @@ internal static class Boss1ModuleSupport {
             deltaTime);
 
         state.CurrentPosition = newPos;
-        if (context.Movement.MoveTo(newPos.X, newPos.Y).IsError)
-            Record(in context, in invocation, DiagnosticSeverity.ExecutionError, ErrorCode.ExecutionFailed,
-                "Boss1 の浮遊移動 command を発行できませんでした。", skill, stage);
-    }
-
-    internal static void Record(
-        in StateContext context,
-        in LifecycleInvocation invocation,
-        DiagnosticSeverity severity,
-        ErrorCode errorCode,
-        string message,
-        BossSkill skill = default,
-        AttackStage stage = AttackStage.None)
-    {
-        ObservationEvent observation = new(
-            context.EntityId,
-            context.BossType,
-            invocation.State,
-            context.Phase,
-            invocation.Operation,
-            context.FrameUpdateNumber,
-            context.DeltaTime,
-            skill,
-            stage,
-            new TransitionReason(ReasonKind.Configuration, skill: skill, errorCode: errorCode),
-            severity,
-            errorCode,
-            message);
-        try
-        {
-            context.Observation.Record(in observation);
-        }
-        catch
-        {
-            // 診断失敗だけで Boss1 の正常 lifecycle を停止しません。
-        }
+        context.Movement.MoveTo(newPos.X, newPos.Y);
     }
 
     internal static float Ease(float progress, EaseType easeType)

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Characters;
@@ -371,6 +372,7 @@ public sealed class WorldRenderSystem : IDisposable {
             break;
 
             default:
+                Debug.Fail($"[WorldRender 警告] 未知の Boss1 スキル予兆: {skill}");
                 TelegraphRenderHelper.DrawAimingLasers(
                     bx,
                     by,
@@ -449,7 +451,18 @@ public sealed class WorldRenderSystem : IDisposable {
             break;
 
             case BossSkill.HeavySlash:
+                TelegraphRenderHelper.DrawMeleeDangerBox(
+                    (int)bx,
+                    (int)by,
+                    patternCfg.HeavySlash.SlashRangeX,
+                    patternCfg.HeavySlash.SlashRangeY,
+                    facingRight,
+                    progress,
+                    patternCfg.HeavySlash.TelegraphColor);
+            break;
+
             default:
+                Debug.Fail($"[WorldRender 警告] 未知の Boss2 スキル予兆: {skill}");
                 TelegraphRenderHelper.DrawMeleeDangerBox(
                     (int)bx,
                     (int)by,

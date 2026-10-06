@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AnimalBattle.Ai.Contracts;
 using ErrorOr;
 
@@ -240,8 +241,9 @@ public sealed class PreallocatedCommandBuffer<T> : ICommandBuffer<T> where T : s
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine($"[PreallocatedCommandBuffer 警告] 診断シンクへの記録中に例外が発生しました: {ex.Message}");
             DiagnosticFailureCount++;
             return false;
         }

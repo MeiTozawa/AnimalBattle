@@ -79,5 +79,5 @@ public abstract class Boss2ExecuteModuleBase(
 
     /// <summary>Execute 状態が必要とする依存関係です。</summary>
     public IReadOnlyList<string> RequiredDependencies { get; } =
-        ["Boss2Configuration", "MovementPort", "AttackPort", "ObservationService"];
+        ["Boss2Configuration", "MovementPort", "AttackPort"];
 }

@@ -13,7 +13,6 @@ public struct StateContext {
     private readonly IMovementPort? _movement;
     private readonly IAttackPort? _attack;
     private readonly IEffectPort? _effect;
-    private readonly IObservationService? _observation;
     private readonly IRandomSource? _random;
 
     /// <summary>Boss Entity の識別子を取得します。</summary>
@@ -49,9 +48,6 @@ public struct StateContext {
     /// <summary>演出 command port を取得します。</summary>
     public IEffectPort Effect => _effect!;
 
-    /// <summary>観測サービスを取得します。</summary>
-    public IObservationService Observation => _observation!;
-
     /// <summary>明示的に注入された乱数源を取得します。</summary>
     public IRandomSource Random => _random!;
 
@@ -67,7 +63,6 @@ public struct StateContext {
      && _movement is not null
      && _attack is not null
      && _effect is not null
-     && _observation is not null
      && _random is not null;
 
     /// <summary>StateContext を初期化時の依存関係で生成します。</summary>
@@ -79,7 +74,6 @@ public struct StateContext {
         IMovementPort movement,
         IAttackPort attack,
         IEffectPort effect,
-        IObservationService observation,
         IRandomSource random)
     {
         if (entityId == 0) throw new ArgumentOutOfRangeException(nameof(entityId));
@@ -89,7 +83,6 @@ public struct StateContext {
         ArgumentNullException.ThrowIfNull(movement);
         ArgumentNullException.ThrowIfNull(attack);
         ArgumentNullException.ThrowIfNull(effect);
-        ArgumentNullException.ThrowIfNull(observation);
         ArgumentNullException.ThrowIfNull(random);
 
         EntityId = entityId;
@@ -102,7 +95,6 @@ public struct StateContext {
         _movement = movement;
         _attack = attack;
         _effect = effect;
-        _observation = observation;
         _random = random;
         PlayerObservation = default;
     }

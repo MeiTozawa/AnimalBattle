@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
@@ -217,9 +218,10 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
                     order.Length > 0 ? order : _phases[index].AttackOrder);
             }
         }
-        catch
+        catch (Exception ex)
         {
             // TOML 未ロード環境（単体テスト等）はデフォルト設定を返却
+            Debug.WriteLine($"[Boss1Configuration 警告] フェーズ設定の取得中に例外が発生しました（デフォルトを返却します）: {ex.Message}");
         }
 
         return _phases[index];
@@ -278,9 +280,10 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
             // TOML 未ロード環境はフォールバック
+            Debug.WriteLine($"[Boss1Configuration 警告] 攻撃パターンの取得中に例外が発生しました（フォールバックします）: {ex.Message}");
         }
 
         for (var index = 0; index < _attacks.Length; index++)

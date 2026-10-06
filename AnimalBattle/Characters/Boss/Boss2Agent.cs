@@ -27,25 +27,15 @@ public sealed class Boss2Agent : BaseBossAgent
         Entity entity,
         int spriteHandle,
         Func<PlatformNavigationGraph?>? navGraphProvider = null)
-        : this(entity, spriteHandle, new ObservationService(), navGraphProvider)
+        : this(entity, spriteHandle, CreateRuntimeAndSlot(entity.Id, navGraphProvider))
     {
     }
 
     private Boss2Agent(
         Entity entity,
         int spriteHandle,
-        ObservationService observation,
-        Func<PlatformNavigationGraph?>? navGraphProvider)
-        : this(entity, spriteHandle, observation, CreateRuntimeAndSlot(entity.Id, observation, navGraphProvider))
-    {
-    }
-
-    private Boss2Agent(
-        Entity entity,
-        int spriteHandle,
-        ObservationService observation,
         (BossAiRuntime Runtime, BossRuntimeSlot Slot, Boss2BehaviorState State) bundle)
-        : base(entity, bundle.Runtime, bundle.Slot, observation)
+        : base(entity, bundle.Runtime, bundle.Slot)
     {
         _boss2State = bundle.State;
         InitializeComponents(entity, spriteHandle);
@@ -147,16 +137,15 @@ public sealed class Boss2Agent : BaseBossAgent
 
     private static (BossAiRuntime Runtime, BossRuntimeSlot Slot, Boss2BehaviorState State) CreateRuntimeAndSlot(
         ulong entityId,
-        ObservationService observation,
         Func<PlatformNavigationGraph?>? navGraphProvider)
     {
         var b2Cfg = ConfigManager.Boss2;
         var boss2State = new Boss2BehaviorState(b2Cfg.SpawnX, b2Cfg.SpawnY);
-        var moduleMap = CreateBoss2ModuleMap(boss2State, observation, navGraphProvider);
-        TransitionService transitionService = new(moduleMap, observation);
-        var runtime = new BossAiRuntime(moduleMap, transitionService, observation, _ => boss2State);
+        var moduleMap = CreateBoss2ModuleMap(boss2State, navGraphProvider);
+        TransitionService transitionService = new(moduleMap);
+        var runtime = new BossAiRuntime(moduleMap, transitionService, _ => boss2State);
 
-        var configProvider = ConfigProvider.FromConfigManager(observation: observation);
+        var configProvider = ConfigProvider.FromConfigManager();
         var movementCommands = new PreallocatedCommandBuffer<MovementCommand>(32);
         var attackCommands = new PreallocatedCommandBuffer<AttackCommand>(32);
         var effectCommands = new PreallocatedCommandBuffer<EffectCommand>(16);
@@ -169,7 +158,6 @@ public sealed class Boss2Agent : BaseBossAgent
             movement,
             new BufferedAttackPort(attackCommands),
             new BufferedEffectPort(effectCommands),
-            observation,
             new SystemRandomSource(),
             debugEnabled: ConfigManager.Render.Debug.Enabled,
             movementCommandBuffer: movementCommands,
@@ -185,7 +173,6 @@ public sealed class Boss2Agent : BaseBossAgent
 
     private static EnumModuleMap CreateBoss2ModuleMap(
         Boss2BehaviorState boss2State,
-        ObservationService observation,
         Func<PlatformNavigationGraph?>? navGraphProvider = null)
     {
         Boss2DefaultConfiguration boss2Config = new();
@@ -209,11 +196,10 @@ public sealed class Boss2Agent : BaseBossAgent
             "Boss2Configuration",
             "EffectPort",
             "MovementPort",
-            "ObservationService",
             "PlayerObservation",
             "RandomSource"
         ];
 
-        return new EnumModuleMap(modules, dependencies, observation);
+        return new EnumModuleMap(modules, dependencies);
     }
 }

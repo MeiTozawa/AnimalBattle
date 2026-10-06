@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Runtime;
 
@@ -36,15 +37,11 @@ public sealed class Boss1DeadModule(Boss1BehaviorState state) : IBossStateModule
             _state.TerminalData.AttackGenerationStopped = true;
             context.Attack.ClearBossBullets();
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine($"[Boss1DeadModule 警告] Boss1 の死亡停止処理中に例外が発生しました: {ex.Message}");
             _state.TerminalData.AttackGenerationStopped = true;
-            Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.ExecutionError,
-                ErrorCode.ExecutionFailed, "Boss1 の死亡停止処理に失敗しました。", stage: AttackStage.None);
         }
-
-        Boss1ModuleSupport.Record(in context, in invocation, DiagnosticSeverity.Information, ErrorCode.None,
-            "Boss1 は Dead 終端状態へ移行しました。", stage: AttackStage.None);
     }
 
     /// <inheritdoc />

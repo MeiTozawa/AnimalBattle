@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using Flecs.NET.Core;
 
@@ -242,6 +243,9 @@ public static class CombatEntityPoolHelper {
                 case PooledEntityType.AreaEffect:
                     poolComp.AreaEffects.Return(entity);
                     return;
+                default:
+                    Debug.Fail($"[CombatEntityPool 警告] 未知の PooledEntityType: {type}");
+                break;
             }
         }
 

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Ports;
@@ -14,7 +15,6 @@ namespace AnimalBattle.Ai.Runtime;
 ///     検証済み snapshot だけを公開し、検証に失敗した入力は現在の snapshot を変更しません。
 /// </remarks>
 public sealed class ConfigProvider : IConfigProvider {
-    private readonly IObservationService? _observation;
     private ConfigProviderResult _lastResult;
 
     /// <summary>ConfigManager の現在値を検証する provider を生成します。</summary>
@@ -31,19 +31,16 @@ public sealed class ConfigProvider : IConfigProvider {
     /// <param name="pattern">攻撃パターン設定。</param>
     /// <param name="version">snapshot version。</param>
     /// <param name="sourceName">設定の入力元。</param>
-    /// <param name="observation">設定診断を記録する任意の観測サービス。</param>
     public ConfigProvider(
         Boss1Config boss1,
         Boss2Config boss2,
         PatternConfig pattern,
         long version = 0,
-        string? sourceName = null,
-        IObservationService? observation = null)
+        string? sourceName = null)
     {
         ArgumentNullException.ThrowIfNull(boss1);
         ArgumentNullException.ThrowIfNull(boss2);
         ArgumentNullException.ThrowIfNull(pattern);
-        _observation = observation;
         Current = BossConfigSnapshot.Empty;
         _lastResult = BuildSnapshot(
             boss1,
@@ -51,7 +48,6 @@ public sealed class ConfigProvider : IConfigProvider {
             pattern,
             version,
             sourceName,
-            observation,
             out var snapshot);
         if (_lastResult.IsSuccess) Current = snapshot;
     }
@@ -71,16 +67,14 @@ public sealed class ConfigProvider : IConfigProvider {
     /// <returns>検証結果を保持する provider。</returns>
     public static ConfigProvider FromConfigManager(
         long version = 0,
-        string? sourceName = null,
-        IObservationService? observation = null)
+        string? sourceName = null)
     {
         return new ConfigProvider(
             ConfigManager.Boss1,
             ConfigManager.Boss2,
             ConfigManager.Pattern,
             version,
-            sourceName,
-            observation);
+            sourceName);
     }
 
     /// <summary>
@@ -105,7 +99,6 @@ public sealed class ConfigProvider : IConfigProvider {
             pattern,
             version,
             sourceName,
-            _observation,
             out var snapshot);
         _lastResult = result;
         if (!result.IsSuccess) return false;
@@ -126,7 +119,7 @@ public sealed class ConfigProvider : IConfigProvider {
         PatternConfig? pattern,
         out BossConfigSnapshot snapshot)
     {
-        return BuildSnapshot(boss1, boss2, pattern, 0, null, null, out snapshot);
+        return BuildSnapshot(boss1, boss2, pattern, 0, null, out snapshot);
     }
 
     /// <summary>
@@ -146,7 +139,6 @@ public sealed class ConfigProvider : IConfigProvider {
         PatternConfig? pattern,
         long version,
         string? sourceName,
-        IObservationService? observation,
         out BossConfigSnapshot snapshot)
     {
         snapshot = BossConfigSnapshot.Empty;
@@ -160,7 +152,7 @@ public sealed class ConfigProvider : IConfigProvider {
 
         if (pattern is null) AddFailure(diagnostics, ErrorCode.InvalidConfiguration, "攻撃パターン設定がありません。");
 
-        if (diagnostics.Count > 0) return FailureResult(diagnostics, observation);
+        if (diagnostics.Count > 0) return FailureResult(diagnostics);
 
         ValidateBoss1(boss1!, diagnostics);
         ValidateBoss2(boss2!, diagnostics);
@@ -169,10 +161,10 @@ public sealed class ConfigProvider : IConfigProvider {
         ValidateFixedAttackMappings(diagnostics);
         ValidateRequiredDefinitions(attacks, diagnostics);
 
-        if (diagnostics.Count > 0) return FailureResult(diagnostics, observation);
+        if (diagnostics.Count > 0) return FailureResult(diagnostics);
 
         var phases = BuildPhaseSnapshots(boss1!, boss2!, diagnostics);
-        if (diagnostics.Count > 0) return FailureResult(diagnostics, observation);
+        if (diagnostics.Count > 0) return FailureResult(diagnostics);
 
         snapshot = BossConfigSnapshot.CreateValidated(version, sourceName, phases, attacks);
         return ConfigProviderResult.Success(snapshot);
@@ -628,36 +620,8 @@ public sealed class ConfigProvider : IConfigProvider {
             AddFailure(diagnostics, ErrorCode.InvalidConfiguration, $"{name} が有効範囲外です。", phase: phase);
     }
 
-    private static ConfigProviderResult FailureResult(
-        List<DiagnosticResult> diagnostics,
-        IObservationService? observation)
+    private static ConfigProviderResult FailureResult(List<DiagnosticResult> diagnostics)
     {
-        if (observation is not null)
-            for (var index = 0; index < diagnostics.Count; index++)
-            {
-                var diagnostic = diagnostics[index];
-                try
-                {
-                    ObservationEvent observationEvent = new(
-                        diagnostic.EntityId,
-                        BossType.Unknown,
-                        diagnostic.State,
-                        diagnostic.Phase,
-                        LifecycleOperation.Update,
-                        diagnostic.FrameUpdateNumber,
-                        0,
-                        diagnostic.Skill,
-                        severity: diagnostic.Severity,
-                        errorCode: diagnostic.ErrorCode,
-                        message: diagnostic.Message);
-                    observation.Record(in observationEvent);
-                }
-                catch
-                {
-                    // 診断記録の失敗で設定検証の結果を成功に変えません。
-                }
-            }
-
         return ConfigProviderResult.Failure(diagnostics);
     }
 

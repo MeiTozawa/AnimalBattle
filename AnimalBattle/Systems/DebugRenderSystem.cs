@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps;
@@ -145,7 +146,7 @@ public sealed class DebugRenderSystem(World world) : IDisposable {
             break;
 
             default:
-                Console.WriteLine($"[DebugRender 警告] 未知の CollisionShape 型です: {shape.Type}");
+                Debug.Fail($"[DebugRender 警告] 未知の CollisionShape 型です: {shape.Type}");
             break;
         }
     }

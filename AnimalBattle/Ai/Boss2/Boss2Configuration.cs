@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
@@ -216,9 +217,10 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
                 return true;
             }
         }
-        catch
+        catch (Exception ex)
         {
             // TOML 未ロード環境はフォールバック
+            Debug.WriteLine($"[Boss2Configuration 警告] 攻撃パターンの取得中に例外が発生しました（フォールバックします）: {ex.Message}");
         }
 
         for (var index = 0; index < _attacks.Length; index++)
