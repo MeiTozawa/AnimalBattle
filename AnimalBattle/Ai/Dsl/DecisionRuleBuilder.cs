@@ -3,7 +3,7 @@ using AnimalBattle.Ai.Contracts;
 namespace AnimalBattle.Ai.Dsl;
 
 /// <summary>
-///     攻撃の意思決定ルール（AttackDecisionRule）を流暢に構築するビルダーです。
+///     攻撃の意思決定ルールを流暢に構築するビルダーです。
 /// </summary>
 public sealed class DecisionRuleBuilder {
     private float _cooldown;
@@ -13,11 +13,13 @@ public sealed class DecisionRuleBuilder {
     private bool? _requirePlayerGrounded;
     private bool _requireSamePlatform;
     private float _weight = 100.0f;
+    private int _maxConsecutiveUses = 2;
+    private float _consecutiveDecay = 0.5f;
 
     /// <summary>
     ///     スキルのクールダウン秒数を設定します。
     /// </summary>
-    /// <param name="seconds">クールダウン時間（秒）。</param>
+    /// <param name="seconds">クールダウン秒数。</param>
     /// <returns>現在のビルダーインスタンス。</returns>
     public DecisionRuleBuilder Cooldown(float seconds)
     {
@@ -28,8 +30,8 @@ public sealed class DecisionRuleBuilder {
     /// <summary>
     ///     プレイヤーとの有効距離範囲を設定します。
     /// </summary>
-    /// <param name="minDistance">最小有効距離（px）。</param>
-    /// <param name="maxDistance">最大有効距離（px）。</param>
+    /// <param name="minDistance">最小有効距離。</param>
+    /// <param name="maxDistance">最大有効距離。</param>
     /// <returns>現在のビルダーインスタンス。</returns>
     public DecisionRuleBuilder Distance(float minDistance, float maxDistance)
     {
@@ -41,7 +43,7 @@ public sealed class DecisionRuleBuilder {
     /// <summary>
     ///     発動の基礎抽選重みを設定します。
     /// </summary>
-    /// <param name="weight">抽選重み（正の値）。</param>
+    /// <param name="weight">抽選重み。正の値を指定します。</param>
     /// <returns>現在のビルダーインスタンス。</returns>
     public DecisionRuleBuilder Weight(float weight)
     {
@@ -83,6 +85,19 @@ public sealed class DecisionRuleBuilder {
     }
 
     /// <summary>
+    ///     連続発動可能な最大回数および減衰比率を設定します。
+    /// </summary>
+    /// <param name="maxUses">最大連続回数。既定値は 2 です。</param>
+    /// <param name="decay">加重減衰比率。既定値は 0.5 です。</param>
+    /// <returns>現在のビルダーインスタンス。</returns>
+    public DecisionRuleBuilder MaxConsecutive(int maxUses, float decay = 0.5f)
+    {
+        _maxConsecutiveUses = Math.Max(1, maxUses);
+        _consecutiveDecay = Math.Clamp(decay, 0.0f, 1.0f);
+        return this;
+    }
+
+    /// <summary>
     ///     設定されたパラメータから不変の AttackDecisionRule を構築します。
     /// </summary>
     /// <param name="skill">対象の技能識別子。</param>
@@ -97,6 +112,8 @@ public sealed class DecisionRuleBuilder {
             _weight,
             _requireSamePlatform,
             _requirePlayerGrounded,
-            _preferAirborneBonus);
+            _preferAirborneBonus,
+            _maxConsecutiveUses,
+            _consecutiveDecay);
     }
 }
