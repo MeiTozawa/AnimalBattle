@@ -34,6 +34,12 @@ public sealed class ExecuteGate {
     /// <summary>Execute 完了後かどうかを取得します。</summary>
     public bool IsComplete => !IsActive && (_completed || Elapsed > 0);
 
+    /// <summary>現在実行中の攻撃が持つアーマー種別を取得します。</summary>
+    public ArmorType CurrentArmor => IsActive ? Definition.Armor : ArmorType.None;
+
+    /// <summary>現在実行中の攻撃の靭性閾値を取得します。</summary>
+    public float PoiseThreshold => IsActive ? Definition.PoiseThreshold : 0.0f;
+
     /// <summary>Execute の経過時間を取得します。</summary>
     public float Elapsed { get; private set; }
 

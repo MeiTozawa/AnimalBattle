@@ -88,13 +88,17 @@ public sealed class AttackDefinition {
         float executeDuration,
         float recoveryDuration,
         float range,
-        IReadOnlyList<AttackComponent>? components = null)
+        IReadOnlyList<AttackComponent>? components = null,
+        ArmorType armor = ArmorType.None,
+        float poiseThreshold = 0.0f)
     {
         Skill = skill;
         TelegraphDuration = telegraphDuration;
         ExecuteDuration = executeDuration;
         RecoveryDuration = recoveryDuration;
         Range = range;
+        Armor = armor;
+        PoiseThreshold = poiseThreshold;
 
         var componentCount = components?.Count ?? 0;
         _components = new AttackComponent[componentCount];
@@ -118,6 +122,12 @@ public sealed class AttackDefinition {
     /// <summary>攻撃範囲を取得します。</summary>
     public float Range { get; }
 
+    /// <summary>出招実行時のアーマー・耐性種別を取得します。</summary>
+    public ArmorType Armor { get; }
+
+    /// <summary>破防に必要な靭性ダメージ閾値を取得します。</summary>
+    public float PoiseThreshold { get; }
+
     /// <summary>設定 component 数を取得します。</summary>
     public int ComponentCount => _components.Length;
 
@@ -128,6 +138,8 @@ public sealed class AttackDefinition {
      && IsPositiveFinite(RecoveryDuration)
      && IsFinite(Range)
      && Range >= 0
+     && PoiseThreshold >= 0.0f
+     && IsFinite(PoiseThreshold)
      && AllComponentsValid();
 
     /// <summary>指定 index の component を取得します。</summary>

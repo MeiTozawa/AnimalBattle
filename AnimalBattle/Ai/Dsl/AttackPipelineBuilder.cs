@@ -16,11 +16,26 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
     private float _executeDuration = 0.50f;
     private float _range = 200.0f;
     private float _recoveryDuration = 0.50f;
+    private ArmorType _armor = ArmorType.None;
+    private float _poiseThreshold = 0.0f;
     private DecisionRuleBuilder? _ruleBuilder;
     private float _telegraphDuration = 0.40f;
 
     /// <summary>対象の技能識別子を取得します。</summary>
     public BossSkill Skill { get; } = skill;
+
+    /// <summary>
+    ///     この攻撃のスーパーアーマー種別および破防靭性値を設定します。
+    /// </summary>
+    /// <param name="armor">アーマー種別。</param>
+    /// <param name="poise">破防靭性値（既定値: 0.0f）。</param>
+    /// <returns>現在の攻撃ビルダー。</returns>
+    public AttackPipelineBuilder Armor(ArmorType armor, float poise = 0.0f)
+    {
+        _armor = armor;
+        _poiseThreshold = poise;
+        return this;
+    }
 
     /// <summary>
     ///     攻撃の前摇（Telegraph）時間と予兆色を設定します。
@@ -159,7 +174,9 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
             _executeDuration,
             _recoveryDuration,
             _range,
-            _components.ToArray());
+            _components.ToArray(),
+            _armor,
+            _poiseThreshold);
     }
 
     /// <summary>
