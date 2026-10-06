@@ -1,18 +1,16 @@
-using AnimalBattle.Compute;
+using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
-///     特殊弾幕（品紅・黄・青・黒）の周期アニメーション、法線正弦波揺動、および動的拡縮判定を
-///     <see cref="NativeComputeQueue" /> による C++ 原生拡張一括同期バッチ処理で制御する ECS System。
+///     特殊弾幕の周期アニメーションと動的変調を制御する ECS System。
 /// </summary>
 public static class SpecialBulletSystem {
     /// <summary>
     ///     特殊弾幕変調システムを Flecs.NET ワールドへ登録します。
     /// </summary>
-    /// <param name="world">登録先の Flecs.NET ワールド。</param>
-    /// <returns>メソッドチェーン用の <see cref="World" />。</returns>
     public static World AddSpecialBulletSystem(this World world)
     {
         world.System<Velocity, BulletModifier, Bullet, Hitbox>("SpecialBulletSystem")
@@ -25,39 +23,50 @@ public static class SpecialBulletSystem {
                 if (count <= 0) return;
 
                 var dt = it.DeltaTime();
-                var queue = NativeComputeQueue.Shared;
-                queue.Clear();
+                var cfg = ConfigManager.Pattern.SpecialBullet;
+                var cyanAmp = cfg.CyanWaveAmplitude;
+                var cyanFreq = cfg.CyanWaveFrequency;
+                var magentaAmp = cfg.MagentaPulseAmplitude;
+                var magentaFreq = cfg.MagentaPulseFrequency;
 
-                // 1. 全弾幕の変調要求を一括して計算キューへ登録
                 for (var i = 0; i < count; ++i)
                 {
-                    modifier[i].ElapsedTimer += dt;
-                    queue.EnqueueSpecialBullet(
-                        modifier[i].Type,
-                        modifier[i].ElapsedTimer,
-                        modifier[i].BaseVx,
-                        modifier[i].BaseVy,
-                        modifier[i].BaseRadius);
-                }
+                    ref var mod = ref modifier[i];
+                    mod.ElapsedTimer += dt;
 
-                // 2. 1 回の P/Invoke で C++ 原生拡張へ一括転送・並列 SIMD 実行
-                queue.Dispatch();
+                    var type = mod.Type;
+                    var vx = mod.BaseVx;
+                    var vy = mod.BaseVy;
 
-                // 3. 計算結果（変調速度および脈動判定半径）を Entity コンポーネントへ一括反映
-                for (var i = 0; i < count; ++i)
-                {
-                    ref readonly var res = ref queue.GetBulletResult(i);
-                    vel[i].Vx = res.OutVx;
-                    vel[i].Vy = res.OutVy;
-
-                    if (modifier[i].Type == BulletType.Magenta || modifier[i].Type == BulletType.Black)
+                    // 青弾と黒弾の法线正弦波揺動
+                    if (type is BulletType.Cyan or BulletType.Black)
                     {
-                        bullet[i].Radius = res.OutRadius;
-                        hitbox[i].Shape = new CollisionShape.Circle(res.OutRadius);
+                        var speedSq = mod.BaseVx * mod.BaseVx + mod.BaseVy * mod.BaseVy;
+                        if (speedSq > 1.0f)
+                        {
+                            var invSpeed = 1.0f / MathF.Sqrt(speedSq);
+                            var nx = -mod.BaseVy * invSpeed;
+                            var ny = mod.BaseVx * invSpeed;
+
+                            var waveVelocity = cyanAmp * cyanFreq * MathF.Cos(mod.ElapsedTimer * cyanFreq);
+                            vx = mod.BaseVx + nx * waveVelocity;
+                            vy = mod.BaseVy + ny * waveVelocity;
+                        }
+                    }
+
+                    ref var v = ref vel[i];
+                    v.Value = new Vec2f(vx, vy);
+
+                    // 品紅弾と黒弾の拡縮脈動
+                    if (type is BulletType.Magenta or BulletType.Black)
+                    {
+                        var scale = 1.0f + magentaAmp * MathF.Sin(mod.ElapsedTimer * magentaFreq);
+                        var radius = MathF.Max(2.0f, mod.BaseRadius * scale);
+
+                        bullet[i].Radius = radius;
+                        hitbox[i].Shape = new CollisionShape.Circle(radius);
                     }
                 }
-
-                queue.Clear();
             });
 
         return world;

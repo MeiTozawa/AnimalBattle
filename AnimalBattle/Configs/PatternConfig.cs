@@ -630,9 +630,29 @@ public sealed class EarthquakeRoarConfig {
 }
 
 /// <summary>
+///     特殊弾幕変調パラメータ設定クラス。
+/// </summary>
+public sealed class SpecialBulletConfig {
+    /// <summary>青弾および黒弾の法線正弦波揺動振幅</summary>
+    public float CyanWaveAmplitude { get; set; }
+
+    /// <summary>青弾および黒弾の法線正弦波揺動周波数</summary>
+    public float CyanWaveFrequency { get; set; }
+
+    /// <summary>品紅弾および黒弾の呼吸拡縮脈動振幅</summary>
+    public float MagentaPulseAmplitude { get; set; }
+
+    /// <summary>品紅弾および黒弾の呼吸拡縮脈動周波数</summary>
+    public float MagentaPulseFrequency { get; set; }
+}
+
+/// <summary>
 ///     Config/patterns.toml から読み込まれる各技能の FSM アクション設定クラス。
 /// </summary>
 public sealed class PatternConfig {
+    /// <summary>特殊弾幕変調パラメータ設定</summary>
+    public SpecialBulletConfig SpecialBullet { get; set; } = new();
+
     /// <summary>俯衝突進・メテオダイブ技能設定</summary>
     public DiveRamConfig DiveRam { get; set; } = new();
 

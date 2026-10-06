@@ -78,6 +78,7 @@ public sealed class BakedConfigBundle {
 [JsonSerializable(typeof(Boss2Config))]
 [JsonSerializable(typeof(Boss2PhaseConfig))]
 [JsonSerializable(typeof(PatternConfig))]
+[JsonSerializable(typeof(SpecialBulletConfig))]
 [JsonSerializable(typeof(ArenaConfig))]
 [JsonSerializable(typeof(TileMapConfig))]
 [JsonSerializable(typeof(RenderConfig))]
