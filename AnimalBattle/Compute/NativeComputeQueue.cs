@@ -9,11 +9,12 @@ namespace AnimalBattle.Compute;
 ///     C++ 原生拡張 (AnimalBattleExtension.dll) の純粋無状態計算核へ一括並列同期ディスパッチを行うバッチ計算キュー。
 ///     fixed ピン留め不要・GC アロケーションゼロで動作し、<see cref="IDisposable" /> による厳格な RAII 寿命管理を提供します。
 /// </summary>
-public sealed unsafe class NativeComputeQueue : IDisposable {
+public sealed unsafe class NativeComputeQueue : IDisposable
+{
     private static NativeComputeQueue? _shared;
-    private static readonly Lock _syncLock = new();
+    private static readonly Lock SyncLock = new();
 
-    private static readonly SpecialBulletBatchItem _dummyBullet = default;
+    private static readonly SpecialBulletBatchItem DummyBullet = default;
 
     private SpecialBulletBatchItem* _bulletBuffer;
 
@@ -21,7 +22,7 @@ public sealed unsafe class NativeComputeQueue : IDisposable {
     ///     指定された容量で 64 バイト物理対齐の非托管メモリを確保し、バッチ計算キューを初期化します。
     /// </summary>
     /// <param name="capacity">収容可能な最大要素数（既定値: 4096）。</param>
-    public NativeComputeQueue(int capacity = 4096)
+    private NativeComputeQueue(int capacity = 4096)
     {
         Capacity = Math.Max(16, capacity);
         BulletCount = 0;
@@ -33,27 +34,30 @@ public sealed unsafe class NativeComputeQueue : IDisposable {
     }
 
     /// <summary>全システム間で共有可能な既定のバッチ計算キューインスタンス。</summary>
-    public static NativeComputeQueue Shared {
+    public static NativeComputeQueue Shared
+    {
         get
         {
-            if (_shared == null || _shared.IsDisposed)
-                lock (_syncLock)
+            lock (SyncLock)
+            {
+                if (_shared == null || _shared.IsDisposed)
                 {
-                    if (_shared == null || _shared.IsDisposed) _shared = new NativeComputeQueue();
+                    _shared = new NativeComputeQueue();
                 }
 
-            return _shared;
+                return _shared;
+            }
         }
     }
 
     /// <summary>現在キューに蓄積されている特殊弾幕計算要求数。</summary>
-    public int BulletCount { get; private set; }
+    private int BulletCount { get; set; }
 
     /// <summary>固定バッファの最大収容要素数。</summary>
-    public int Capacity { get; }
+    private int Capacity { get; }
 
     /// <summary>リソースが破棄済みであるか否かを取得します。</summary>
-    public bool IsDisposed { get; private set; }
+    private bool IsDisposed { get; set; }
 
     /// <summary>特殊弾幕バッファの先頭アドレス（アライメント検証用）。</summary>
     internal void* BulletBufferPtr => _bulletBuffer;
@@ -72,13 +76,11 @@ public sealed unsafe class NativeComputeQueue : IDisposable {
     /// </summary>
     public static void ShutdownShared()
     {
-        lock (_syncLock)
+        lock (SyncLock)
         {
-            if (_shared != null && !_shared.IsDisposed)
-            {
-                _shared.Dispose();
-                _shared = null;
-            }
+            if (_shared is not { IsDisposed: false }) return;
+            _shared.Dispose();
+            _shared = null;
         }
     }
 
@@ -119,7 +121,7 @@ public sealed unsafe class NativeComputeQueue : IDisposable {
     {
         if (!IsDisposed && handle >= 0 && handle < BulletCount) return ref _bulletBuffer[handle];
 
-        return ref _dummyBullet;
+        return ref DummyBullet;
     }
 
     /// <summary>

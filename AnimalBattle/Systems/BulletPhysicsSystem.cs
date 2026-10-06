@@ -1,20 +1,16 @@
-using System.Buffers;
-using AnimalBattle.Bindings;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
-///     プレイヤー弾および Boss 弾幕の等速直線運動および画面外デスポーン（消滅）境界判定を一括制御する ECS System。
-///     Flecs.NET の Iter から連続コンポーネント配列を取得し、C++ SIMD バッチ物理計算を一括実行します。
+///     弾の等速直線移動および画面外消滅判定を一括制御する ECS System。
 /// </summary>
 public static class BulletPhysicsSystem {
     /// <summary>
     ///     弾物理システムを Flecs.NET ワールドへ登録します。
     /// </summary>
-    /// <param name="world">登録先の Flecs.NET ワールド</param>
-    /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddBulletPhysicsSystem(this World world)
     {
         world.System<Transform, Velocity>("PlayerBulletMovementSystem")
@@ -35,41 +31,30 @@ public static class BulletPhysicsSystem {
         var count = it.Count();
         if (count <= 0) return;
 
+        var dt = it.DeltaTime();
         var arenaCfg = ConfigManager.Arena;
-        const int stackallocThreshold = 1024;
-        var rentedArray = count > stackallocThreshold ? ArrayPool<byte>.Shared.Rent(count) : null;
-        var despawnFlags = rentedArray != null ? rentedArray.AsSpan(0, count) : stackalloc byte[count];
+        var minX = arenaCfg.BulletDespawnMinX;
+        var maxX = arenaCfg.BulletDespawnMaxX;
+        var minY = arenaCfg.BulletDespawnMinY;
+        var maxY = arenaCfg.BulletDespawnMaxY;
 
-        try
+        var w = it.World();
+
+        // 原地移動と画面外判定を一括処理
+        for (var i = 0; i < count; ++i)
         {
-            unsafe
+            ref var t = ref trans[i];
+            ref readonly var v = ref vel[i];
+
+            var nextX = t.Position.X + v.Vx * dt;
+            var nextY = t.Position.Y + v.Vy * dt;
+            t.Position = new Vec2f(nextX, nextY);
+
+            if (nextX < minX || nextX > maxX ||
+                nextY < minY || nextY > maxY)
             {
-                var pTrans = (Transform*)trans.Data;
-                var pVel = (Velocity*)vel.Data;
-
-                fixed (byte* pFlags = despawnFlags)
-                {
-                    NativeExtensionBindings.Extension_BatchBulletMovement(
-                        pTrans,
-                        pVel,
-                        count,
-                        it.DeltaTime(),
-                        arenaCfg.BulletDespawnMinX,
-                        arenaCfg.BulletDespawnMaxX,
-                        arenaCfg.BulletDespawnMinY,
-                        arenaCfg.BulletDespawnMaxY,
-                        pFlags);
-                }
+                CombatEntityPoolHelper.Recycle(w, it.Entity(i));
             }
-
-            var w = it.World();
-            for (var i = 0; i < count; ++i)
-                if (despawnFlags[i] != 0)
-                    CombatEntityPoolHelper.Recycle(w, it.Entity(i));
-        }
-        finally
-        {
-            if (rentedArray != null) ArrayPool<byte>.Shared.Return(rentedArray);
         }
     }
 }
