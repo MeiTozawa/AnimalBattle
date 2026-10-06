@@ -266,12 +266,57 @@ public sealed class ExecuteGate {
     private ErrorOr<Success> Emit(ref StateContext context, in AttackComponent component)
     {
         return component.Kind switch {
-            AttackComponentKind.Bullet => context.Attack.EmitBullet(Definition.Skill, component.X, component.Y),
+            AttackComponentKind.Bullet => EmitBullet(ref context, in component),
             AttackComponentKind.Hitbox or AttackComponentKind.OnGroundedHitbox => context.Attack.CreateHitbox(
                 Definition.Skill, component.X, component.Y),
             AttackComponentKind.Movement => context.Movement.SetVelocity(component.X * _facingDirection, component.Y),
             _ => Error.Validation("ExecuteGate.Emit", "未知の AttackComponentKind です。")
         };
+    }
+
+    private ErrorOr<Success> EmitBullet(ref StateContext context, in AttackComponent component)
+    {
+        var speed = component.Param0;
+        var count = (int)component.Param1;
+        var spread = component.Param2;
+
+        if (count <= 1)
+            return context.Attack.EmitBullet(Definition.Skill, component.Param0, component.Param1);
+
+        if (Definition.Skill == BossSkill.RingBurst)
+        {
+            var success = true;
+            for (var i = 0; i < count; i++)
+            {
+                var angle = i / (float)count * MathF.Tau;
+                if (context.Attack.EmitBullet(Definition.Skill, MathF.Cos(angle) * speed, MathF.Sin(angle) * speed).IsError)
+                    success = false;
+            }
+
+            return success ? Result.Success : Error.Failure("ExecuteGate.EmitBullet", "RingBurst 弾丸生成に失敗しました。");
+        }
+
+        var originX = !float.IsNaN(_startX) ? _startX : context.PlayerObservation.PositionX - 100.0f;
+        var originY = !float.IsNaN(_startY) ? _startY : context.PlayerObservation.PositionY;
+        var dx = context.PlayerObservation.PositionX - originX;
+        var dy = context.PlayerObservation.PositionY - originY;
+        if (MathF.Sqrt(dx * dx + dy * dy) <= 0.0001f)
+        {
+            dx = _facingDirection;
+            dy = 0.0f;
+        }
+
+        var baseAngle = MathF.Atan2(dy, dx);
+        var halfSpread = spread * (count - 1) * 0.5f;
+        var allOk = true;
+        for (var i = 0; i < count; i++)
+        {
+            var angle = count == 1 ? baseAngle : baseAngle - halfSpread + i * spread;
+            if (context.Attack.EmitBullet(Definition.Skill, MathF.Cos(angle) * speed, MathF.Sin(angle) * speed).IsError)
+                allOk = false;
+        }
+
+        return allOk ? Result.Success : Error.Failure("ExecuteGate.EmitBullet", "弾幕生成に失敗しました。");
     }
 
     private void Record(

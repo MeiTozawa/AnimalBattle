@@ -62,7 +62,7 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
         var pattern = _pattern;
         if (gate is null || pattern is null) return;
 
-        var result = gate.Execute(ref context, in invocation);
+        var result = gate.Execute(ref context, in invocation, false, _state.CurrentPosition.X, _state.CurrentPosition.Y);
         if (!result.Started)
         {
             _state.RequestTransition(Boss1State.Recovery,
@@ -123,7 +123,7 @@ public sealed class Boss1ExecuteModule(IBoss1Configuration configuration, Boss1B
 
         var duration = pattern.Definition.ExecuteDuration;
         var interval = pattern.Interval;
-        if (interval > 0.0f && _elapsed >= _nextEmission && _elapsed <= duration)
+        if (pattern.Definition.ComponentCount == 0 && interval > 0.0f && _elapsed >= _nextEmission && _elapsed <= duration)
         {
             EmitBarrageWave(ref context, in invocation, pattern);
             _nextEmission += interval;

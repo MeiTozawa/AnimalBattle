@@ -62,7 +62,22 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder Bullet(float x = 0.0f, float y = 0.0f)
     {
         var index = components.Count;
-        components.Add(new AttackComponent(AttackComponentKind.Bullet, index, x, y, triggerTime));
+        components.Add(new AttackComponent(AttackComponentKind.Bullet, index, x, y, 0.0f, triggerTime));
+        return this;
+    }
+
+    /// <summary>
+    ///     弾幕一斉発射または拡散弾アクションを追加します。
+    /// </summary>
+    /// <param name="bulletSpeed">弾丸初速（px/s）。</param>
+    /// <param name="bulletCount">発射弾数。</param>
+    /// <param name="spreadAngle">拡散角度（ラジアン）。</param>
+    /// <returns>現在のビルダーインスタンス。</returns>
+    public AttackActionBuilder Barrage(float bulletSpeed, float bulletCount = 1.0f, float spreadAngle = 0.0f)
+    {
+        var index = components.Count;
+        components.Add(new AttackComponent(AttackComponentKind.Bullet, index, bulletSpeed, bulletCount, spreadAngle,
+            triggerTime));
         return this;
     }
 
