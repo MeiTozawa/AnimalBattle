@@ -276,6 +276,8 @@ public sealed class ExecuteGate {
             AttackComponentKind.Hitbox or AttackComponentKind.OnGroundedHitbox => context.Attack.CreateHitbox(
                 Definition.Skill, component.X, component.Y),
             AttackComponentKind.Movement => context.Movement.SetVelocity(component.X * _facingDirection, component.Y),
+            AttackComponentKind.ScreenShake => context.Effect.TriggerScreenShake(component.Param0, component.Param1),
+            AttackComponentKind.AudioCue => context.Effect.PlaySoundCue((int)component.Param0, component.Param1),
             _ => Error.Validation("ExecuteGate.Emit", "未知の AttackComponentKind です。")
         };
     }

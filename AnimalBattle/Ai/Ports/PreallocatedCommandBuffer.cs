@@ -341,4 +341,22 @@ public sealed class BufferedEffectPort(PreallocatedCommandBuffer<EffectCommand> 
 
         return _buffer.Add(new EffectCommand(EffectCommandKind.RequestTelegraph, x, y), CommandPriority.Normal);
     }
+
+    /// <inheritdoc />
+    public ErrorOr<Success> TriggerScreenShake(float intensity, float duration)
+    {
+        if (!float.IsFinite(intensity) || !float.IsFinite(duration))
+            return Error.Validation("BufferedEffectPort.TriggerScreenShake", "振動パラメータが有限値ではありません。");
+
+        return _buffer.Add(new EffectCommand(EffectCommandKind.ScreenShake, intensity, duration), CommandPriority.Normal);
+    }
+
+    /// <inheritdoc />
+    public ErrorOr<Success> PlaySoundCue(int soundId, float volume)
+    {
+        if (!float.IsFinite(volume))
+            return Error.Validation("BufferedEffectPort.PlaySoundCue", "音量パラメータが有限値ではありません。");
+
+        return _buffer.Add(new EffectCommand(EffectCommandKind.AudioCue, soundId, volume), CommandPriority.Normal);
+    }
 }

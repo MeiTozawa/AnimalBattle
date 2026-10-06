@@ -78,7 +78,13 @@ public readonly struct EffectCommand(EffectCommandKind kind, float x = 0, float 
 /// <summary>演出 command の種別を定義します。</summary>
 public enum EffectCommandKind {
     /// <summary>攻撃予告を表示します。</summary>
-    RequestTelegraph = 1
+    RequestTelegraph = 1,
+
+    /// <summary>画面振動を要求します。</summary>
+    ScreenShake = 2,
+
+    /// <summary>音効再生を要求します。</summary>
+    AudioCue = 3
 }
 
 /// <summary>事前確保済み command buffer の共通 read/write 境界です。</summary>
@@ -140,6 +146,12 @@ public interface IAttackPort {
 public interface IEffectPort {
     /// <summary>攻撃予告 command を積みます。</summary>
     ErrorOr<Success> RequestTelegraph(float x, float y);
+
+    /// <summary>画面振動 command を積みます。</summary>
+    ErrorOr<Success> TriggerScreenShake(float intensity, float duration);
+
+    /// <summary>効果音再生 command を積みます。</summary>
+    ErrorOr<Success> PlaySoundCue(int soundId, float volume);
 }
 
 /// <summary>状態モジュールが読む観測・診断記録の境界です。</summary>

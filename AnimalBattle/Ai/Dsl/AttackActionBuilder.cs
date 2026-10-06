@@ -106,4 +106,30 @@ public sealed class AttackActionBuilder(
         components.Add(new AttackComponent(AttackComponentKind.VelocityDive, index, 0.0f, descentSpeed, 0.0f, triggerTime));
         return this;
     }
+
+    /// <summary>
+    ///     指定された効果音 Cue 再生アクションを追加します。
+    /// </summary>
+    /// <param name="soundId">音響リソースID。</param>
+    /// <param name="volume">音量倍率（0.0f - 1.0f）。</param>
+    /// <returns>現在のビルダーインスタンス。</returns>
+    public AttackActionBuilder Sound(int soundId, float volume = 1.0f)
+    {
+        var index = components.Count;
+        components.Add(new AttackComponent(AttackComponentKind.AudioCue, index, soundId, volume, 0.0f, triggerTime));
+        return this;
+    }
+
+    /// <summary>
+    ///     画面振動（Camera Shake）アクションを追加します。
+    /// </summary>
+    /// <param name="intensity">振動振幅強度（px）。</param>
+    /// <param name="duration">振動継続時間（秒）。</param>
+    /// <returns>現在のビルダーインスタンス。</returns>
+    public AttackActionBuilder CameraShake(float intensity = 5.0f, float duration = 0.2f)
+    {
+        var index = components.Count;
+        components.Add(new AttackComponent(AttackComponentKind.ScreenShake, index, intensity, duration, 0.0f, triggerTime));
+        return this;
+    }
 }
