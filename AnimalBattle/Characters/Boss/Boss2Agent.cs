@@ -2,11 +2,8 @@ using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
 using AnimalBattle.Maps.Navigation;
-using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters.Boss;
