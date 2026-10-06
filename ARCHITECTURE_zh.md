@@ -414,3 +414,82 @@ sequenceDiagram
    * 采用现代分布式版本控制系统 **Jujutsu (jj)**，保障每次提交的原子性与清晰的线性演进历史。
 4. **硬实时零 GC 内存预算**：
    * 在同屏数百发弹幕密集碰撞、特殊变调粒子并发与频繁受击的极限压力测试下，Hot Path 堆内存分配恒定为 0 字节，消除一切由 GC 垃圾回收引发的微秒级卡顿。
+
+---
+
+## 6. AI 行为编排与领域特定语言（AI DSL）企业级演进
+
+首领（Boss）的行为编排与招式执行是动作游戏的核心生命线。在传统开发模式下，Boss 技能往往退化为充斥着魔数与硬编码定时器的面条代码，或者采用庞大臃肿的行为树引擎导致高额运行时开销与状态难追踪。
+本项目构建了一套**构建期声明式 Fluent DSL + 运行期不可变只读管线（Zero-GC Immutable Pipeline）**的企业级 AI 架构，彻底消除了两代 Boss 的实现割裂，达成了确定性回放与毫秒级执行性能：
+
+```mermaid
+flowchart TD
+    subgraph BuildPhase["构建期 (Static Fluent DSL)"]
+        Builder["AttackPipelineBuilder 流畅构建器"]
+        DSLAction["AttackActionBuilder (Barrage / Easing / Shake / Sound)"]
+        DSLRule["DecisionRuleBuilder (Weight / Distance / AntiSpam)"]
+        Builder --> DSLAction
+        Builder --> DSLRule
+    end
+
+    subgraph RuntimeModel["不可变运行时领域模型 (Zero-GC Frozen Pipeline)"]
+        FrozenDict["AttackPipelineSet.Skills (FrozenDictionary<BossSkill, AttackDefinition>)"]
+        Def["AttackDefinition (readonly struct, 0-GC)"]
+        Comps["AttackComponent[] 动作组件连续切片"]
+        Armor["ArmorType (None / SuperArmor / Invincible) + PoiseThreshold"]
+        FrozenDict --> Def
+        Def --> Comps
+        Def --> Armor
+    end
+
+    subgraph DecisionCore["决策大脑 (Utility AI & Anti-Spam)"]
+        Evaluator["BossDecisionEvaluator (EvaluateWeighted / EvaluateBest)"]
+        Tracker["BossCooldownTracker (CD 冷却 + 連続使用履歴)"]
+        Rng["IRandomSource 确定性随机数接口"]
+        Evaluator --> Tracker
+        Evaluator --> Rng
+    end
+
+    subgraph ExecutionGate["统一执行网关 (Unified ExecuteGate)"]
+        Gate["ExecuteGate (统一管理 Boss1 & Boss2 状态、位移与发射)"]
+        Motion["通用运动学解释器 (EasingMovement / VelocityDive)"]
+        Emit["通用发射解释器 (EmitBullet / AreaAttack / Shockwave)"]
+        Presentation["表现指令派发 (TriggerScreenShake / PlaySoundCue)"]
+        Gate --> Motion
+        Gate --> Emit
+        Gate --> Presentation
+    end
+
+    BuildPhase -- "Build() 编译为不可变模型" --> RuntimeModel
+    DecisionCore -- "输出最优 BossSkill" --> ExecutionGate
+    RuntimeModel -- "驱动执行时钟与组件管线" --> ExecutionGate
+```
+
+### 6.1 声明式 DSL 语法与不可变运行时语义
+* **构建期 vs 运行期正交解耦**：在系统启动或初始化阶段，通过 Fluent API（[AttackPipelineBuilder.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Dsl/AttackPipelineBuilder.cs)、[AttackActionBuilder.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Dsl/AttackActionBuilder.cs) 和 [DecisionRuleBuilder.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Dsl/DecisionRuleBuilder.cs)）以接近自然语言的声明式语法配置招式时间轴、伤害判定盒、前摇/后摇、霸体属性与表现层反馈。
+* **Zero-GC 冻结**：构建完成后，全量管线被固化为只读的 `FrozenDictionary<BossSkill, AttackDefinition>`。内部数据载体 [AttackDefinition.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Attack/AttackDefinition.cs) 为 `readonly struct`，包含固定长度的 `AttackComponent[]` 扁平数组。运行期每帧的 Tick 推进绝不分配任何托管堆对象，满足 Native AOT 与零 GC 预算。
+
+### 6.2 通用运动学原语与消除字段语义超载
+* **废除特化枚举**：早期架构中包含针对特定 Boss 的 `FlyToTarget` 与 `Dive` 专属枚举，严重破坏了开闭原则（OCP）。重构后将其升华为通用运动学原语：
+  * `EasingMovement`：泛化缓动位移（支持平滑插值起飞、追击悬停、滑步位移）。
+  * `VelocityDive`：带定向初速度的物理俯冲与突进。
+* **参数布局统一（Param0, Param1, Param2）**：彻底消除旧实现中借用 `X/Y` 存储飞行高度与耗时的语义超载反模式，提供纯粹的数学原语解释通道。
+
+### 6.3 统一 Boss 执行管线与消灭双轨制
+* **两代 Boss 双轨制消亡**：旧版架构中 Boss1 仅在 DSL 中声明占位时间，其弹幕发射完全硬编码在 `Boss1ExecuteModule.EmitBarrageWave` 中；而 Boss2 则通过组件式驱动，形成两套割裂的执行逻辑。
+* **弹幕波次下沉 DSL 时间轴**：通过扩展 `.Barrage(bulletSpeed, bulletCount, spreadAngle)`，Boss1 的各波次扇形弹幕与多段齐射被显式声明在时间轴的关键帧上。
+* **ExecuteGate 统一调度**：[ExecuteGate.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Attack/ExecuteGate.cs) 原生集成 `EmitBullet`，统一负责两代 Boss 的子弹产生、近战判定盒、位移更新与前摇后摇流转，彻底收拢执行逻辑至单一事实源。
+
+### 6.4 战斗深度契约：霸体（ArmorType）与破防韧性（Poise）
+* **霸体模型**：引入 [ArmorType.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Contracts/ArmorType.cs) 枚举（`None`、`SuperArmor`、`Invincible`）。
+* **韧性阈值（PoiseThreshold）**：在 [AttackPipelineBuilder.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Dsl/AttackPipelineBuilder.cs) 中通过 `.Armor(ArmorType, poiseThreshold)` 为每一个技能声明专属霸体与受击失衡阈值。受击时仅当累计失衡值突破阈值才允许打断招式，赋予动作系统工业级的对弈深度。
+
+### 6.5 视听表现轨道整合与解耦
+* **解耦视听与战斗逻辑**：通过扩展 [PortContracts.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Ports/PortContracts.cs) 中的 `IEffectPort` 与 `EffectCommandKind`（增加 `ScreenShake` 与 `AudioCue`），音效播放与屏幕震动被作为一等公民挂载在 DSL 动作时间线上：
+  * `.Sound("boss1_roar", volume: 1.0f)`
+  * `.CameraShake(duration: 0.35f, intensity: 8.0f)`
+* **单指针批量派发**：所有表现指令在 `ExecuteGate` 帧时钟触发时下发至预分配的 [PreallocatedCommandBuffer.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Ports/PreallocatedCommandBuffer.cs)，完全不阻断核心战斗逻辑。
+
+### 6.6 Utility AI 决策模型与防复读记忆衰减
+* **防复读（Anti-Spam）记忆**：[BossCooldownTracker.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Runtime/BossCooldownTracker.cs) 实时维护 `LastExecutedSkill` 与 `ConsecutiveUseCount`。[AttackDecisionRule.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Contracts/AttackDecisionRule.cs) 支持 `.MaxConsecutive(maxUses, decay)`，当 Boss 连续释放同一招式时触发加权衰减计算（$W' = W \times \text{decay}^k$），超过上限则硬性剔除，彻底避免 AI 行为死板复读。
+* **确定性随机（IRandomSource）**：[BossDecisionEvaluator.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Runtime/BossDecisionEvaluator.cs) 的 `EvaluateWeighted` 原生支持注入 [IRandomSource.cs](file:///c:/Projects/Dxlib/AnimalBattle/AnimalBattle/Ai/Ports/PortContracts.cs)，实现游戏对局的 100% 确定性录制与战斗回放。
