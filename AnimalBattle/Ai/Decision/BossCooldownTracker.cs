@@ -1,6 +1,6 @@
 using AnimalBattle.Ai.Contracts;
 
-namespace AnimalBattle.Ai.Runtime;
+namespace AnimalBattle.Ai.Decision;
 
 /// <summary>
 ///     Boss の技能ごとの残り冷却時間を管理および追跡するクラスです。
@@ -73,7 +73,6 @@ public sealed class BossCooldownTracker {
 
         return remaining;
     }
-
 
     /// <summary>
     ///     すべての技能の冷却時間と連続使用履歴をリセットします。

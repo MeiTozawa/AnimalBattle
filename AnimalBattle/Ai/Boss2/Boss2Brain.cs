@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Ai.Decision;
 using AnimalBattle.Ai.Skills;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps.Navigation;

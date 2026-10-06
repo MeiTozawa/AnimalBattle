@@ -1,7 +1,6 @@
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Ai.Ports;
 
-namespace AnimalBattle.Ai.Runtime;
+namespace AnimalBattle.Ai.Decision;
 
 /// <summary>
 ///     技能判定時に必要な戦闘コンテキストパラメータを保持する軽量構造体です。
@@ -66,55 +65,6 @@ public static class BossDecisionEvaluator {
         }
 
         return bestSkill;
-    }
-
-    /// <summary>
-    ///     候補ルールの中から決定的な乱数源を用いてスコアに応じた加重ランダム抽選で技能を選択します。
-    /// </summary>
-    /// <param name="rules">判定対象の技能意思決定ルール一覧。</param>
-    /// <param name="cooldownTracker">冷却時間追跡器。</param>
-    /// <param name="context">現在の戦闘判定コンテキスト。</param>
-    /// <param name="randomSource">決定的な乱数源。</param>
-    /// <returns>選択された技能識別子。合致する技能がない場合は BossSkill.None。</returns>
-    public static BossSkill EvaluateWeighted(
-        IReadOnlyList<AttackDecisionRule> rules,
-        BossCooldownTracker cooldownTracker,
-        in AttackDecisionContext context,
-        IRandomSource randomSource)
-    {
-        ArgumentNullException.ThrowIfNull(rules);
-        ArgumentNullException.ThrowIfNull(cooldownTracker);
-        ArgumentNullException.ThrowIfNull(randomSource);
-
-        Span<BossSkill> candidateSkills = stackalloc BossSkill[rules.Count];
-        Span<float> candidateScores = stackalloc float[rules.Count];
-        var count = 0;
-        var totalScore = 0.0f;
-
-        for (var index = 0; index < rules.Count; index++)
-        {
-            var rule = rules[index];
-            if (!IsRuleEligible(rule, cooldownTracker, in context, out var score)) continue;
-
-            candidateSkills[count] = rule.Skill;
-            candidateScores[count] = score;
-            totalScore += score;
-            count++;
-        }
-
-        if (count == 0 || totalScore <= 0.0f) return BossSkill.None;
-        if (count == 1) return candidateSkills[0];
-
-        var roll = randomSource.NextSingle() * totalScore;
-        var cumulative = 0.0f;
-
-        for (var index = 0; index < count; index++)
-        {
-            cumulative += candidateScores[index];
-            if (roll <= cumulative) return candidateSkills[index];
-        }
-
-        return candidateSkills[count - 1];
     }
 
     /// <summary>
