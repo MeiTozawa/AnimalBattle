@@ -58,18 +58,14 @@ flowchart TD
 
     subgraph Layer1["基础设施与非托管内存层"]
         EntityPools["CombatEntityPool 5大同构实体池"]
-        NativeQueue["NativeComputeQueue 64字节对齐内存"]
         RenderBuffer["RenderCommandBuffer 渲染指令缓冲"]
         Systems --> EntityPools
-        Systems --> NativeQueue
         Systems --> RenderBuffer
     end
 
-    subgraph Layer0["C++23 原生扩展与驱动层"]
+    subgraph Layer0["C++23 原生底层与驱动层"]
         CoreDll["AnimalBattleCore.dll 窗口渲染与输入驱动"]
-        ExtDll["AnimalBattleExtension.dll AVX2 SIMD 算核"]
         RenderBuffer --> CoreDll
-        NativeQueue --> ExtDll
     end
 
     MoveIntent --> Systems
@@ -218,11 +214,11 @@ flowchart TD
 * `EffectModule.cs`：实现 `IFlecsModule` 接口，一键注册特效移动、淡出回收与受击高光系统。
 * `ComponentRequirementsModule.cs`：利用 Flecs 原生 `Ecs.With` 拓扑关系声明组件依赖约束。声明挂载 `PlayerTag` 的实体必须具备 `Transform`、`Velocity`、`CollisionBox`、`Hurtbox`、`Health`、`InvincibleOnHit`、`HitFlashConfig`、`Sprite` 与 `Animation`，从架构层面保证组件必然存在，**为零 Has 热路径提供绝对理论保证**。
 
-### 批量计算与非托管内存队列
-位于 `AnimalBattle/Compute/`。
+### 纯 C# 原地批处理计算管线
+位于 `AnimalBattle/Systems/`。
 
-* `NativeComputeQueue.cs`：高吞吐非托管批处理计算队列。调用 `.NET 10` 的 `NativeMemory.AlignedAlloc` 在非托管堆上分配 64 字节缓存行对齐的物理内存，实现固定开销零拷贝的跨语言批量调度。
-* `SpecialBulletBatchItem.cs`：非托管特殊弹幕数据包。精确按 32 字节结构体对齐，供 AVX2 向量寄存器并发写入。
+* `BulletPhysicsSystem.cs`：纯 C# 原地单趟等速直线物理更新系统。直接遍历 Flecs.NET 的连续组件列，原地累加位移，出界即时回收，实现零堆内存分配与零中转拷贝。
+* `SpecialBulletSystem.cs`：纯 C# 特殊弹幕周期变调与呼吸脉冲计算系统。基于配置驱动的参数就地计算正弦法线摇摆与半径缩放，消除了跨语言 P/Invoke 往返开销。
 
 ### 渲染指令缓冲与数据封包
 位于 `AnimalBattle/Render/`。
@@ -234,7 +230,6 @@ flowchart TD
 位于 `AnimalBattle/Bindings/`。
 
 * `NativeBindings.cs`：核心动态库 `AnimalBattleCore.dll` 的极速 P/Invoke 接口声明。全部标注 `[SuppressGCTransition]` 属性，绕过托管运行时上下文切换，调度窗口、输入与底层绘制。
-* `NativeExtensionBindings.cs`：原生扩展库 `AnimalBattleExtension.dll` 的批处理接口声明。调度 OpenMP 与 SIMD 并发计算核。
 
 ### 配置与资产数据驱动管线
 位于 `AnimalBattle/Configs/`。
@@ -286,14 +281,11 @@ flowchart TD
 * `TileMap.cs`：地图解析与足场碰撞构建器。读取切片配置，向 Flecs 世界批量生成带有 `PlatformTag`、`Transform` 与 `CollisionBox` 的足场实体，并构建寻路网格。
 * `Navigation/PlatformNavigationGraph.cs`：足场跳跃与下落导航拓扑图。计算不同足场之间的跳跃可达弧、起跳点与下落轨迹，为 Boss 2 的智能追击提供 A* 路径规划。
 
-### C++ 原生底层引擎与算核
-位于 `AnimalBattleCore/` 与 `AnimalBattleExtension/`。
+### C++ 原生底层引擎与驱动
+位于 `AnimalBattleCore/`。
 
 * `AnimalBattleCore/AnimalBattleCore.cpp`：原生动态库导出接口。封装基于 DxLib 的窗体注册、DirectX 9 初始化、双缓冲呈现、键盘手柄原始状态采集与声音播放。
 * `AnimalBattleCore/src/`：底层渲染服务与输入服务的抽象定义及 DxLib 适配实现。
-* `AnimalBattleExtension/AnimalBattleExtension.cpp`：纯计算扩展库导出接口。提供异常安全屏障与 C 格式 ABI 导出。
-* `AnimalBattleExtension/src/Physics/BatchPhysics.ixx`：弹幕并发物理算核。基于 C++23 模块构建，使用 `#pragma loop(ivdep)` 指令指导 MSVC 生成 AVX2 向量化机器码。
-* `AnimalBattleExtension/src/Compute/BatchComputeProcessor.ixx` 与 `SpecialBulletMath.ixx`：特殊弹幕变调数学计算核。在原生层直接计算三角函数波形与向心速度扰动。
 
 ---
 
