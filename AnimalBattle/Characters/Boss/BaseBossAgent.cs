@@ -1,32 +1,23 @@
+using System.Diagnostics;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Ai.Runtime;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters.Boss;
 
 /// <summary>
 ///     多態 Boss 自治エージェント共通の基底抽象クラス。
-///     <see cref="Pawn" /> を継承し、AI 状態機械の更新、コマンド適用、および戦闘状態同期ライフサイクルを一元管理します。
+///     <see cref="Pawn" /> を継承し、AI 意思決定ブレインと ECS Entity 間の同期ライフサイクルを一元管理します。
 /// </summary>
 public abstract class BaseBossAgent : Pawn, IDisposable
 {
     /// <summary>Boss の種別を取得します。</summary>
-    public BossType BossType => Slot.AiData.BossType;
+    public abstract BossType BossType { get; }
 
-    /// <summary>Boss AI ランタイムを取得します。</summary>
-    protected BossAiRuntime Runtime { get; }
-
-    /// <summary>Boss 実行時データスロットを取得します。</summary>
-    protected BossRuntimeSlot Slot { get; }
-
-    /// <summary>現在の実行フレーム数を取得または設定します。</summary>
-    private long FrameNumber { get; set; }
-
-    /// <summary>現在の Phase を取得します。</summary>
-    public Phase Phase => Slot.Phase;
+    /// <summary>現在の戦闘 Phase を取得します。</summary>
+    public abstract Phase Phase { get; }
 
     /// <summary>現在の Boss 状態を取得します。</summary>
-    public BossState CurrentState => Slot.CurrentStateId;
+    public abstract BossState CurrentState { get; }
 
     /// <summary>現在選択されている攻撃技能種別を取得します。</summary>
     public abstract BossSkill CurrentSkill { get; }
@@ -35,87 +26,45 @@ public abstract class BaseBossAgent : Pawn, IDisposable
     public abstract float StateTimer { get; }
 
     /// <summary>現在状態の目標持続時間（秒）を取得します。</summary>
-    public float StateDuration => GetCurrentStateDuration();
+    public abstract float StateDuration { get; }
 
     /// <summary>Boss 1 の浮遊タイマー値を取得します。</summary>
     public virtual float HoverTimer => 0.0f;
 
     /// <summary>AI 目標地点 X 座標を取得します。</summary>
-    public float TargetX => Slot.TargetPositionX;
+    public virtual float TargetX => X;
 
     /// <summary>AI 目標地点 Y 座標を取得します。</summary>
-    public float TargetY => Slot.TargetPositionY;
+    public virtual float TargetY => Y;
 
     /// <summary>Boss が後隙による易傷状態であるかを取得します。</summary>
     public abstract bool IsVulnerable { get; }
 
     /// <summary>Boss が右向きであるかを取得します。</summary>
-    public virtual bool FacingRight => Slot.MovementData.FacingRight;
+    public virtual bool FacingRight => true;
 
     /// <summary>
-    ///     対象の Flecs エンティティと AI 定義を指定して基底クラスを初期化します。
+    ///     対象の Flecs エンティティを指定して基底クラスを初期化します。
     /// </summary>
     /// <param name="entity">Flecs エンティティ句柄。</param>
-    /// <param name="runtime">Boss AI ランタイム。</param>
-    /// <param name="slot">Boss 実行時スロット。</param>
-    protected BaseBossAgent(
-        Entity entity,
-        BossAiRuntime runtime,
-        BossRuntimeSlot slot) : base(entity)
+    protected BaseBossAgent(Entity entity) : base(entity)
     {
-        Runtime = runtime;
-        Slot = slot;
     }
 
     /// <summary>
-    ///     フレームごとの Boss AI 評価、移動・弾幕・演出コマンド適用を実行します。
+    ///     フレームごとの Boss AI 評価、移動・弾幕・判定更新を実行します。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過時間（秒）。</param>
     /// <param name="playerPosition">プレイヤー自機の現在座標。</param>
     /// <param name="playerVelocity">プレイヤー自機の現在速度。</param>
     /// <param name="world">Flecs ECS ワールド。</param>
     /// <param name="platformQuery">足場・地形判定用クエリ。</param>
-    public void Update(
+    public abstract void Update(
         float deltaTime,
         Vec2f playerPosition,
         Vec2f playerVelocity,
         World world,
-        Query<Transform, CollisionBox> platformQuery)
-    {
-        ref var health = ref Entity.GetMut<Health>();
-        if (Slot.AiData.IsInvulnerable)
-        {
-            health.InvincibleTimer = MathF.Max(health.InvincibleTimer, 0.1f);
-        }
-
-        if (health.Current <= 0.0f) return;
-
-        PlayerObservation playerObservation = new(
-            1,
-            true,
-            playerPosition.X,
-            playerPosition.Y,
-            playerVelocity.X,
-            playerVelocity.Y,
-            FrameNumber);
-
-        Runtime.SynchronizeBossState(BossType, X, Y, Vx, Vy, IsGrounded, playerObservation.IsAlive);
-        var updateResult =
-            Runtime.Update(Slot, FrameNumber++, deltaTime, Phase, in playerObservation, health.Current, health.Max);
-        if (updateResult.IsError)
-            Console.WriteLine(
-                $"[{GetType().Name}] AI 更新エラー (Frame {FrameNumber - 1}): {updateResult.FirstError.Description}");
-
-        BossCommandExecutor.ExecuteMovement(world, Entity, Slot, deltaTime, platformQuery);
-        BossCommandExecutor.ExecuteAttack(world, Entity, Slot);
-        BossCommandExecutor.ExecuteEffects(world, Entity, Slot);
-
-        OnPostUpdate(deltaTime, world);
-
-        Entity.Set(new BossCombatState(IsVulnerable, Phase));
-        Slot.AiData.StateTimer = StateTimer;
-        Slot.AiData.StateDuration = StateDuration;
-    }
+        Query<Transform, CollisionBox> platformQuery);
 
     /// <summary>
     ///     プレイヤー移動速度を省略した互換用更新メソッド。
@@ -134,22 +83,20 @@ public abstract class BaseBossAgent : Pawn, IDisposable
     /// </summary>
     public virtual void Reset()
     {
-        FrameNumber = 0;
-
-        OnReset();
-
-        SetVelocity(0.0f, 0.0f);
-        FlipX = false;
-        IsVisible = true;
-        ClearTransientEffects();
-
-        Entity.Set(new BossCombatState(IsVulnerable, Phase));
-        Slot.AiData.StateTimer = StateTimer;
-        Slot.AiData.StateDuration = StateDuration;
+        try
+        {
+            OnReset();
+            SetVelocity(0.0f, 0.0f);
+            FlipX = false;
+            IsVisible = true;
+            ClearTransientEffects();
+            Entity.Set(new Components.BossCombatState(IsVulnerable, Phase));
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[BaseBossAgent 警告] Reset 処理中に例外が発生しました: {ex.Message}");
+        }
     }
-
-    /// <summary>サブクラス固有の状態目標持続時間（秒）を算出します。</summary>
-    protected abstract float GetCurrentStateDuration();
 
     /// <summary>フレーム末尾におけるサブクラス固有の演出・描画同期を実行します。</summary>
     protected abstract void OnPostUpdate(float deltaTime, World world);

@@ -1,21 +1,24 @@
+using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Ai.Ports;
-using AnimalBattle.Ai.Runtime;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using AnimalBattle.Maps.Navigation;
+using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters.Boss;
 
 /// <summary>
 ///     Boss 2（Ground Crusher）専用自治エージェント（Pawn）。
-///     地上巡回追跡、足場間自律跳躍、および壁激突気絶ライフサイクルを管理します。
+///     地上巡回追跡、足場間自律跳躍、および近接攻撃・気絶を Boss2Brain と直接連携して管理します。
 /// </summary>
 public sealed class Boss2Agent : BaseBossAgent
 {
-    private readonly Boss2BehaviorState _boss2State;
+    private readonly Boss2Brain _brain;
+    private World _currentWorld;
 
     /// <summary>
     ///     Boss 2 の Flecs エンティティ、テクスチャハンドル、およびナビゲーショングラフプロバイダーを指定して初期化します。
@@ -27,97 +30,184 @@ public sealed class Boss2Agent : BaseBossAgent
         Entity entity,
         int spriteHandle,
         Func<PlatformNavigationGraph?>? navGraphProvider = null)
-        : this(entity, spriteHandle, CreateRuntimeAndSlot(entity.Id, navGraphProvider))
+        : base(entity)
     {
-    }
+        var b2Cfg = ConfigManager.Boss2;
+        _brain = new Boss2Brain(b2Cfg.SpawnX, b2Cfg.SpawnY, null, navGraphProvider);
 
-    private Boss2Agent(
-        Entity entity,
-        int spriteHandle,
-        (BossAiRuntime Runtime, BossRuntimeSlot Slot, Boss2BehaviorState State) bundle)
-        : base(entity, bundle.Runtime, bundle.Slot)
-    {
-        _boss2State = bundle.State;
+        _brain.OnCreateHitbox += HandleCreateHitbox;
+        _brain.OnEmitBullet += HandleEmitBullet;
+        _brain.OnClearBullets += HandleClearBullets;
+
         InitializeComponents(entity, spriteHandle);
     }
+
+    /// <inheritdoc />
+    public override BossType BossType => BossType.Boss2;
+
+    /// <inheritdoc />
+    public override Phase Phase => _brain.Phase;
+
+    /// <inheritdoc />
+    public override BossState CurrentState => BossState.From(_brain.State);
+
+    /// <inheritdoc />
+    public override BossSkill CurrentSkill => _brain.CurrentSkill;
+
+    /// <inheritdoc />
+    public override float StateTimer => _brain.StateTimer;
+
+    /// <inheritdoc />
+    public override float StateDuration => _brain.StateDuration;
+
+    /// <inheritdoc />
+    public override bool IsVulnerable => _brain.IsVulnerable;
+
+    /// <inheritdoc />
+    public override bool FacingRight => _brain.FacingRight;
 
     private void InitializeComponents(Entity entity, int spriteHandle)
     {
         var b2Cfg = ConfigManager.Boss2;
         entity.Set(new Health(b2Cfg.MaxHp))
-           .Set(new InvincibleOnHit(0.0f))
-           .Set(new HitFlashConfig(0.08f, Color.White))
-           .Set(new Transform(b2Cfg.SpawnX, b2Cfg.SpawnY, b2Cfg.ScaleX, b2Cfg.ScaleY))
-           .Set(new Velocity(0.0f))
-           .Set(new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight))
-           .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
-           .Set(new Hitbox(b2Cfg.GetHitboxShape(), b2Cfg.BodyContactDamage, Faction.Hostile, false))
-           .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
-           .Set(new BossCombatState(IsVulnerable, Phase))
-           .Add<BossTag>()
-           .Add<Boss2Tag>();
+            .Set(new InvincibleOnHit(0.0f))
+            .Set(new HitFlashConfig(0.08f, Color.White))
+            .Set(new Transform(b2Cfg.SpawnX, b2Cfg.SpawnY, b2Cfg.ScaleX, b2Cfg.ScaleY))
+            .Set(new Velocity(0.0f))
+            .Set(new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight))
+            .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
+            .Set(new Hitbox(b2Cfg.GetHitboxShape(), b2Cfg.BodyContactDamage, Faction.Hostile, false))
+            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
+            .Set(new BossCombatState(IsVulnerable, Phase))
+            .Add<BossTag>()
+            .Add<Boss2Tag>();
     }
 
     /// <inheritdoc />
-    public override BossSkill CurrentSkill => _boss2State.CurrentSkill != BossSkill.None
-        ? _boss2State.CurrentSkill
-        : Slot.AttackData.Skill;
+    public override void Update(
+        float deltaTime,
+        Vec2f playerPosition,
+        Vec2f playerVelocity,
+        World world,
+        Query<Transform, CollisionBox> platformQuery)
+    {
+        _currentWorld = world;
 
-    /// <inheritdoc />
-    public override float StateTimer => _boss2State.StateElapsed;
+        ref var health = ref Entity.GetMut<Health>();
+        if (health.Current <= 0.0f)
+        {
+            if (!_brain.IsDead) _brain.Kill();
+            return;
+        }
 
-    /// <inheritdoc />
-    public override bool IsVulnerable =>
-        Slot.CurrentStateId == BossState.Boss2_Recovery && CurrentSkill == BossSkill.LeapSmash;
+        try
+        {
+            ref var col = ref Entity.GetMut<CollisionBox>();
+            var isGrounded = col.IsGrounded;
+            var isOnWall = col.IsOnWall;
 
-    /// <inheritdoc />
-    protected override float GetCurrentStateDuration()
+            _brain.Update(
+                deltaTime,
+                playerPosition,
+                playerVelocity,
+                true,
+                isGrounded,
+                isOnWall,
+                health.Current,
+                health.Max);
+
+            ref var trans = ref Entity.GetMut<Transform>();
+            ref var vel = ref Entity.GetMut<Velocity>();
+
+            vel.Vx = _brain.Velocity.X;
+            vel.Vy = _brain.Velocity.Y;
+
+            UpdateMovementAndCollision(ref trans, ref vel, ref col, deltaTime, platformQuery);
+
+            if (Entity.Has<Sprite>())
+            {
+                ref var sprite = ref Entity.GetMut<Sprite>();
+                sprite.FlipX = !_brain.FacingRight;
+            }
+
+            OnPostUpdate(deltaTime, world);
+
+            Entity.Set(new BossCombatState(IsVulnerable, Phase));
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Boss2Agent 警告] Update 処理中に例外が発生しました: {ex.Message}");
+        }
+    }
+
+    private void UpdateMovementAndCollision(
+        ref Transform trans,
+        ref Velocity vel,
+        ref CollisionBox col,
+        float dt,
+        Query<Transform, CollisionBox> platformQuery)
     {
         var b2Cfg = ConfigManager.Boss2;
-        return Slot.CurrentStateId.AsBoss2() switch {
-            Boss2State.Idle => Phase switch {
-                Phase.Phase2 => b2Cfg.Phase2.IdleDuration,
-                Phase.Phase3 => b2Cfg.Phase3.IdleDuration,
-                _ => b2Cfg.Phase1.IdleDuration
-            },
-            Boss2State.PatrolChase => Phase switch {
-                Phase.Phase2 => b2Cfg.Phase2.ChaseTimeout,
-                Phase.Phase3 => b2Cfg.Phase3.ChaseTimeout,
-                _ => b2Cfg.Phase1.ChaseTimeout
-            },
-            Boss2State.MoveToTakeoff => b2Cfg.MoveToTakeoffTimeout,
-            Boss2State.PlatformTraverse => b2Cfg.MaxAscentDuration + b2Cfg.LandingRecoveryDuration,
-            Boss2State.Telegraph => Boss2PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out var telegraphDef)
-                ? telegraphDef.TelegraphDuration
-                : 0.0f,
-            Boss2State.Execute => Boss2PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out var execDef)
-                ? execDef.ExecuteDuration
-                : 0.0f,
-            Boss2State.WallCrashStun => b2Cfg.WallCrashStunDuration,
-            Boss2State.Recovery => Boss2PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out var recDef)
-                ? recDef.RecoveryDuration
-                : 0.0f,
-            Boss2State.PhaseTransition => Phase switch {
-                Phase.Phase2 => b2Cfg.Phase2.TransitionDuration,
-                Phase.Phase3 => b2Cfg.Phase3.TransitionDuration,
-                _ => b2Cfg.Phase1.TransitionDuration
-            },
-            _ => 0.0f
-        };
+        var arenaCfg = ConfigManager.Arena;
+
+        var nextX = trans.X + vel.Vx * dt;
+        var nextY = trans.Y + vel.Vy * dt;
+        nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
+
+        var currentY = trans.Y;
+        var colWidth = col.Width > 0 ? col.Width : b2Cfg.CollisionWidth;
+        var colHeight = col.Height > 0 ? col.Height : b2Cfg.CollisionHeight;
+        Box2D bossBox = new(nextX, nextY, colWidth, colHeight);
+
+        var hitPlatform = false;
+        var platformGroundY = float.MaxValue;
+        var platformVy = 0.0f;
+
+        var ignorePlatforms = _brain.CurrentSkill == BossSkill.LeapSmash;
+        if (!ignorePlatforms)
+        {
+            platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
+            {
+                Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
+                if (PhysicsService.CheckPlatformGround(currentY, nextY, bossBox, platformBox, out var groundY, out var pVy))
+                {
+                    if (!hitPlatform || groundY < platformGroundY)
+                    {
+                        hitPlatform = true;
+                        platformGroundY = groundY;
+                        platformVy = pVy;
+                    }
+                }
+            });
+        }
+
+        var isGrounded = hitPlatform;
+        var adjustedPosY = hitPlatform ? platformGroundY : nextY;
+        var adjustedVy = hitPlatform ? platformVy : vel.Vy;
+
+        var floorLimitY = arenaCfg.FloorLimitY - colHeight / 2.0f;
+        if (adjustedPosY >= floorLimitY)
+        {
+            isGrounded = true;
+            adjustedPosY = floorLimitY;
+            adjustedVy = 0.0f;
+        }
+
+        trans.X = nextX;
+        trans.Y = adjustedPosY;
+        vel.Vy = adjustedVy;
+        col.IsGrounded = isGrounded;
     }
 
     /// <inheritdoc />
     protected override void OnPostUpdate(float deltaTime, World world)
     {
-        ref var sprite = ref Entity.GetMut<Sprite>();
-        sprite.FlipX = !Slot.MovementData.FacingRight;
     }
 
     /// <inheritdoc />
     protected override void OnReset()
     {
         var b2Cfg = ConfigManager.Boss2;
-
         SetTransform(b2Cfg.SpawnX, b2Cfg.SpawnY, b2Cfg.ScaleX, b2Cfg.ScaleY);
         ref var t = ref Entity.GetMut<Transform>();
         t.Rotation = 0.0f;
@@ -128,78 +218,129 @@ public sealed class Boss2Agent : BaseBossAgent
         col.IsGrounded = false;
         col.IsOnWall = false;
 
-        _boss2State.Reset(b2Cfg.SpawnX, b2Cfg.SpawnY);
-
-        var resetResult = Runtime.Reset(Slot, BossState.Boss2_Idle);
-        if (resetResult.IsError)
-            Console.WriteLine($"[Boss2Agent] Boss2 リセット失敗: {resetResult.FirstError.Description}");
+        _brain.Reset(b2Cfg.SpawnX, b2Cfg.SpawnY);
     }
 
-    private static (BossAiRuntime Runtime, BossRuntimeSlot Slot, Boss2BehaviorState State) CreateRuntimeAndSlot(
-        ulong entityId,
-        Func<PlatformNavigationGraph?>? navGraphProvider)
+    private void HandleCreateHitbox(BossSkill skill, float offsetX, float offsetY)
     {
+        if (_currentWorld == default) return;
+
+        var patternCfg = ConfigManager.Pattern;
         var b2Cfg = ConfigManager.Boss2;
-        var boss2State = new Boss2BehaviorState(b2Cfg.SpawnX, b2Cfg.SpawnY);
-        var moduleMap = CreateBoss2ModuleMap(boss2State, navGraphProvider);
-        TransitionService transitionService = new(moduleMap);
-        var runtime = new BossAiRuntime(moduleMap, transitionService, _ => boss2State);
+        ref readonly var trans = ref Entity.Get<Transform>();
+        ref readonly var vel = ref Entity.Get<Velocity>();
 
-        var configProvider = ConfigProvider.FromConfigManager();
-        var movementCommands = new PreallocatedCommandBuffer<MovementCommand>(32);
-        var attackCommands = new PreallocatedCommandBuffer<AttackCommand>(32);
-        var effectCommands = new PreallocatedCommandBuffer<EffectCommand>(16);
+        var forwardDir = _brain.FacingRight ? 1.0f : -1.0f;
+        var dir = _brain.FacingRight ? SlashDirection.Right : SlashDirection.Left;
 
-        IMovementPort movement = new Boss2MovementPort(movementCommands);
-        var slot = new BossRuntimeSlot(
-            entityId,
-            BossType.Boss2,
-            configProvider,
-            movement,
-            new BufferedAttackPort(attackCommands),
-            new BufferedEffectPort(effectCommands),
-            new SystemRandomSource(),
-            debugEnabled: ConfigManager.Render.Debug.Enabled,
-            movementCommandBuffer: movementCommands,
-            attackCommandBuffer: attackCommands,
-            effectCommandBuffer: effectCommands);
+        if (skill == BossSkill.HeavySlash)
+        {
+            var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
+            var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
+            CombatEffectHelper.SpawnMeleeSlashHitbox(
+                _currentWorld,
+                trans.X + offX,
+                trans.Y + offY,
+                vel.Vx,
+                0.0f,
+                patternCfg.HeavySlash.SlashRangeX,
+                patternCfg.HeavySlash.SlashRangeY,
+                patternCfg.HeavySlash.SlashDamage,
+                patternCfg.HeavySlash.HitboxDuration,
+                patternCfg.HeavySlash.SlashColor,
+                dir);
+        }
+        else if (skill == BossSkill.DoubleCleave)
+        {
+            var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
+            var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
+            CombatEffectHelper.SpawnMeleeSlashHitbox(
+                _currentWorld,
+                trans.X + offX,
+                trans.Y + offY,
+                vel.Vx,
+                0.0f,
+                patternCfg.DoubleCleave.SlashRangeX,
+                patternCfg.DoubleCleave.SlashRangeY,
+                patternCfg.DoubleCleave.SlashDamage,
+                patternCfg.DoubleCleave.HitboxDuration,
+                patternCfg.DoubleCleave.SlashColor,
+                dir);
+        }
+        else if (skill == BossSkill.GroundStomp)
+        {
+            var colHeight = Entity.Has<CollisionBox>() ? Entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
+            var groundY = trans.Y + colHeight / 2.0f - patternCfg.GroundStomp.GroundOffsetY;
+            CombatEffectHelper.SpawnShockwave(_currentWorld, trans.X, groundY);
+            CombatEffectHelper.SpawnGroundShockwave(
+                _currentWorld,
+                trans.X - patternCfg.GroundStomp.ShockwaveOffsetX,
+                groundY,
+                -patternCfg.GroundStomp.ShockwaveSpeed,
+                patternCfg.GroundStomp.ShockwaveRadius,
+                patternCfg.GroundStomp.ShockwaveDamage,
+                patternCfg.GroundStomp.FillColor,
+                patternCfg.GroundStomp.OutlineColor);
+            CombatEffectHelper.SpawnGroundShockwave(
+                _currentWorld,
+                trans.X + patternCfg.GroundStomp.ShockwaveOffsetX,
+                groundY,
+                patternCfg.GroundStomp.ShockwaveSpeed,
+                patternCfg.GroundStomp.ShockwaveRadius,
+                patternCfg.GroundStomp.ShockwaveDamage,
+                patternCfg.GroundStomp.FillColor,
+                patternCfg.GroundStomp.OutlineColor);
+        }
+        else if (skill == BossSkill.LeapSmash)
+        {
+            var colHeight = Entity.Has<CollisionBox>() ? Entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
+            var groundY = trans.Y + colHeight / 2.0f;
+            CombatEffectHelper.SpawnShockwave(_currentWorld, trans.X, groundY);
 
-        var initResult = runtime.Initialize(slot, BossState.Boss2_Idle);
-        if (initResult.IsError)
-            Console.WriteLine($"[Boss2Agent] Boss2 初期化失敗: {initResult.FirstError.Description}");
-
-        return (runtime, slot, boss2State);
+            var leapCfg = patternCfg.LeapSmash;
+            for (var k = 0; k < leapCfg.ShrapnelCount; k++)
+            {
+                var angle = -MathF.PI * (leapCfg.ShrapnelAngleStartRatio + leapCfg.ShrapnelAngleSpanRatio * (k / (float)(leapCfg.ShrapnelCount - 1)));
+                CombatEffectHelper.SpawnBossBullet(
+                    _currentWorld,
+                    trans.X,
+                    groundY - leapCfg.ShrapnelOffsetY,
+                    MathF.Cos(angle) * leapCfg.ShrapnelSpeed,
+                    MathF.Sin(angle) * leapCfg.ShrapnelSpeed,
+                    leapCfg.ShrapnelRadius,
+                    leapCfg.ShrapnelFillColor,
+                    leapCfg.ShrapnelOutlineColor);
+            }
+        }
     }
 
-    private static EnumModuleMap CreateBoss2ModuleMap(
-        Boss2BehaviorState boss2State,
-        Func<PlatformNavigationGraph?>? navGraphProvider = null)
+    private void HandleEmitBullet(BossSkill skill, float vx, float vy)
     {
-        Boss2DefaultConfiguration boss2Config = new();
+        if (_currentWorld == default) return;
+        var patternCfg = ConfigManager.Pattern;
 
-        IBossStateModule[] modules = [
-            new Boss2IdleModule(boss2State),
-            new Boss2PatrolChaseModule(boss2Config, boss2State, navGraphProvider),
-            new Boss2MoveToTakeoffModule(boss2Config, boss2State),
-            new Boss2PlatformTraverseModule(BossState.Boss2_PlatformTraverse, TraverseMode.Jump, boss2Config,
-                boss2State),
-            new Boss2TelegraphModule(boss2Config, boss2State),
-            new Boss2ExecuteModule(boss2Config, boss2State),
-            new Boss2WallCrashStunModule(boss2Config, boss2State),
-            new Boss2RecoveryModule(boss2Config, boss2State),
-            new Boss2PhaseTransitionModule(boss2Config, boss2State),
-            new Boss2DeadModule(boss2State)
-        ];
+        if (skill == BossSkill.EarthquakeRoar)
+        {
+            var rand = Random.Shared;
+            float rx = rand.Next((int)patternCfg.EarthquakeRoar.MinX, (int)patternCfg.EarthquakeRoar.MaxX);
+            CombatEffectHelper.SpawnBossSpecialBullet(
+                _currentWorld,
+                rx,
+                0.0f,
+                0.0f,
+                vy,
+                patternCfg.EarthquakeRoar.RockRadius,
+                BulletType.Normal,
+                patternCfg.EarthquakeRoar.RockFillColor,
+                patternCfg.EarthquakeRoar.RockOutlineColor);
+        }
+    }
 
-        string[] dependencies = [
-            "AttackPort",
-            "Boss2Configuration",
-            "EffectPort",
-            "MovementPort",
-            "PlayerObservation",
-            "RandomSource"
-        ];
-
-        return new EnumModuleMap(modules, dependencies);
+    private void HandleClearBullets()
+    {
+        if (_currentWorld != default)
+        {
+            CombatEffectHelper.ClearAllBossBullets(_currentWorld);
+        }
     }
 }

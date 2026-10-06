@@ -1,189 +1,211 @@
-using System;
+using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Ai.Ports;
-using AnimalBattle.Ai.Runtime;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters.Boss;
 
 /// <summary>
 ///     Boss 1（Ancient Cat Overlord）専用自治エージェント（Pawn）。
-///     空中浮遊機動、全方位弾幕、および急降下攻撃ライフサイクルを管理します。
+///     空中浮遊機動、全方位弾幕、および急降下攻撃を Boss1Brain と直接連携して管理します。
 /// </summary>
 public sealed class Boss1Agent : BaseBossAgent
 {
-    private readonly Boss1BehaviorState _boss1State;
+    private readonly Boss1Brain _brain;
+    private World _currentWorld;
 
     /// <summary>
     ///     Boss 1 の Flecs エンティティおよびテクスチャハンドルを指定してエージェントを初期化します。
     /// </summary>
     /// <param name="entity">対応する Flecs エンティティ句柄。</param>
     /// <param name="spriteHandle">テクスチャハンドル。</param>
-    public Boss1Agent(Entity entity, int spriteHandle)
-        : this(entity, spriteHandle, CreateRuntimeAndSlot(entity.Id))
+    public Boss1Agent(Entity entity, int spriteHandle) : base(entity)
     {
-    }
+        var b1Cfg = ConfigManager.Boss1;
+        _brain = new Boss1Brain(b1Cfg.SpawnX, b1Cfg.SpawnY);
 
-    private Boss1Agent(
-        Entity entity,
-        int spriteHandle,
-        (BossAiRuntime Runtime, BossRuntimeSlot Slot, Boss1BehaviorState State) bundle)
-        : base(entity, bundle.Runtime, bundle.Slot)
-    {
-        _boss1State = bundle.State;
+        _brain.OnEmitBullet += HandleEmitBullet;
+        _brain.OnClearBullets += HandleClearBullets;
+
         InitializeComponents(entity, spriteHandle);
     }
+
+    /// <inheritdoc />
+    public override BossType BossType => BossType.Boss1;
+
+    /// <inheritdoc />
+    public override Phase Phase => _brain.Phase;
+
+    /// <inheritdoc />
+    public override BossState CurrentState => BossState.From(_brain.State);
+
+    /// <inheritdoc />
+    public override BossSkill CurrentSkill => _brain.CurrentSkill;
+
+    /// <inheritdoc />
+    public override float StateTimer => _brain.StateTimer;
+
+    /// <inheritdoc />
+    public override float StateDuration => _brain.StateDuration;
+
+    /// <inheritdoc />
+    public override float HoverTimer => _brain.HoverTimer;
+
+    /// <inheritdoc />
+    public override bool IsVulnerable => _brain.IsVulnerable;
 
     private void InitializeComponents(Entity entity, int spriteHandle)
     {
         var b1Cfg = ConfigManager.Boss1;
         entity.Set(new Health(b1Cfg.MaxHp))
-           .Set(new InvincibleOnHit(0.0f))
-           .Set(new HitFlashConfig(0.08f, Color.White))
-           .Set(new Transform(b1Cfg.SpawnX, b1Cfg.SpawnY, b1Cfg.ScaleX, b1Cfg.ScaleY))
-           .Set(new Velocity(0.0f))
-           .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
-           .Set(new Hitbox(b1Cfg.GetHitboxShape(), b1Cfg.BodyContactDamage, Faction.Hostile, false))
-           .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
-           .Set(new BossCombatState(IsVulnerable, Phase))
-           .Add<BossTag>()
-           .Add<Boss1Tag>();
+            .Set(new InvincibleOnHit(0.0f))
+            .Set(new HitFlashConfig(0.08f, Color.White))
+            .Set(new Transform(b1Cfg.SpawnX, b1Cfg.SpawnY, b1Cfg.ScaleX, b1Cfg.ScaleY))
+            .Set(new Velocity(0.0f))
+            .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
+            .Set(new Hitbox(b1Cfg.GetHitboxShape(), b1Cfg.BodyContactDamage, Faction.Hostile, false))
+            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
+            .Set(new BossCombatState(IsVulnerable, Phase))
+            .Add<BossTag>()
+            .Add<Boss1Tag>();
     }
 
-
     /// <inheritdoc />
-    public override BossSkill CurrentSkill => _boss1State.CurrentSkill != BossSkill.None
-        ? _boss1State.CurrentSkill
-        : Slot.AttackData.Skill;
-
-    /// <inheritdoc />
-    public override float StateTimer => _boss1State.StateElapsed;
-
-    /// <inheritdoc />
-    public override float HoverTimer => _boss1State.HoverTimer;
-
-    /// <inheritdoc />
-    public override bool IsVulnerable =>
-        Slot.CurrentStateId == BossState.Boss1_Recovery && CurrentSkill == BossSkill.DiveRam;
-
-    /// <inheritdoc />
-    protected override float GetCurrentStateDuration()
+    public override void Update(
+        float deltaTime,
+        Vec2f playerPosition,
+        Vec2f playerVelocity,
+        World world,
+        Query<Transform, CollisionBox> platformQuery)
     {
-        var b1Cfg = ConfigManager.Boss1;
-        return Slot.CurrentStateId.AsBoss1() switch {
-            Boss1State.Hover => Phase switch {
-                Phase.Phase2 => b1Cfg.Phase2.HoverDuration,
-                Phase.Phase3 => b1Cfg.Phase3.HoverDuration,
-                _ => b1Cfg.Phase1.HoverDuration
-            },
-            Boss1State.Telegraph => Boss1PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out var telegraphDef)
-                ? telegraphDef.TelegraphDuration
-                : 0.0f,
-            Boss1State.Execute => Boss1PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out var execDef)
-                ? execDef.ExecuteDuration
-                : 0.0f,
-            Boss1State.Recovery => Boss1PipelineDefinition.Pipeline.TryGetAttack(CurrentSkill, out var recDef)
-                ? recDef.RecoveryDuration
-                : 0.0f,
-            Boss1State.PhaseTransition => Phase switch {
-                Phase.Phase2 => b1Cfg.Phase2.TransitionDuration,
-                Phase.Phase3 => b1Cfg.Phase3.TransitionDuration,
-                _ => b1Cfg.Phase1.TransitionDuration
-            },
-            _ => 0.0f
-        };
+        _currentWorld = world;
+
+        ref var health = ref Entity.GetMut<Health>();
+        if (health.Current <= 0.0f)
+        {
+            if (!_brain.IsDead) _brain.Kill();
+            return;
+        }
+
+        try
+        {
+            _brain.Update(deltaTime, playerPosition, 1, true, health.Current, health.Max);
+
+            ref var trans = ref Entity.GetMut<Transform>();
+            trans.X = _brain.Position.X;
+            trans.Y = _brain.Position.Y;
+
+            OnPostUpdate(deltaTime, world);
+
+            Entity.Set(new BossCombatState(IsVulnerable, Phase));
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Boss1Agent 警告] Update 処理中に例外が発生しました: {ex.Message}");
+        }
     }
 
     /// <inheritdoc />
     protected override void OnPostUpdate(float deltaTime, World world)
     {
         ref var t = ref Entity.GetMut<Transform>();
-        t.Rotation =
-            (float)(MathF.Sin(_boss1State.HoverTimer * ConfigManager.Render.BossEffects.BossHoverAngleSpeed) *
-                ConfigManager.Render.BossEffects.BossHoverAngleAmp);
+        t.Rotation = (float)(MathF.Sin(_brain.HoverTimer * ConfigManager.Render.BossEffects.BossHoverAngleSpeed)
+            * ConfigManager.Render.BossEffects.BossHoverAngleAmp);
     }
 
     /// <inheritdoc />
     protected override void OnReset()
     {
         var b1Cfg = ConfigManager.Boss1;
-
         SetTransform(b1Cfg.SpawnX, b1Cfg.SpawnY, b1Cfg.ScaleX, b1Cfg.ScaleY);
         ref var t = ref Entity.GetMut<Transform>();
         t.Rotation = 0.0f;
-
         ResetHealth(b1Cfg.MaxHp);
 
-        _boss1State.Reset(b1Cfg.SpawnX, b1Cfg.SpawnY);
-
-        var resetResult = Runtime.Reset(Slot, BossState.Boss1_Hover);
-        if (resetResult.IsError)
-            Console.WriteLine($"[Boss1Agent] Boss1 リセット失敗: {resetResult.FirstError.Description}");
+        _brain.Reset(b1Cfg.SpawnX, b1Cfg.SpawnY);
     }
 
-    private static (BossAiRuntime Runtime, BossRuntimeSlot Slot, Boss1BehaviorState State) CreateRuntimeAndSlot(
-        ulong entityId)
+    private void HandleEmitBullet(BossSkill skill, float vx, float vy)
     {
-        var b1Cfg = ConfigManager.Boss1;
-        var boss1State = new Boss1BehaviorState(b1Cfg.SpawnX, b1Cfg.SpawnY);
-        var moduleMap = CreateBoss1ModuleMap(boss1State);
-        TransitionService transitionService = new(moduleMap);
-        var runtime = new BossAiRuntime(moduleMap, transitionService, type => boss1State);
+        if (_currentWorld == default) return;
+        var patternCfg = ConfigManager.Pattern;
+        ref readonly var trans = ref Entity.Get<Transform>();
 
-        var configProvider = ConfigProvider.FromConfigManager();
-        var movementCommands = new PreallocatedCommandBuffer<MovementCommand>(32);
-        var attackCommands = new PreallocatedCommandBuffer<AttackCommand>(32);
-        var effectCommands = new PreallocatedCommandBuffer<EffectCommand>(16);
+        if (skill == BossSkill.RainDrop)
+        {
+            var bType = PatternConfig.ParseBulletType(patternCfg.RainDrop.BulletType, BulletType.Cyan);
+            CombatEffectHelper.SpawnBossSpecialBullet(
+                _currentWorld,
+                vx,
+                0.0f,
+                0.0f,
+                vy,
+                patternCfg.RainDrop.BulletRadius,
+                bType,
+                patternCfg.RainDrop.FillColor,
+                patternCfg.RainDrop.OutlineColor);
+            return;
+        }
 
-        IMovementPort movement = new Boss1MovementPort(movementCommands);
-        var slot = new BossRuntimeSlot(
-            entityId,
-            BossType.Boss1,
-            configProvider,
-            movement,
-            new BufferedAttackPort(attackCommands),
-            new BufferedEffectPort(effectCommands),
-            new SystemRandomSource(),
-            debugEnabled: ConfigManager.Render.Debug.Enabled,
-            movementCommandBuffer: movementCommands,
-            attackCommandBuffer: attackCommands,
-            effectCommandBuffer: effectCommands);
+        float radius;
+        Color fill;
+        Color outline;
+        var type = BulletType.Normal;
 
-        var initResult = runtime.Initialize(slot, BossState.Boss1_Hover);
-        if (initResult.IsError)
-            Console.WriteLine($"[Boss1Agent] Boss1 初期化失敗: {initResult.FirstError.Description}");
+        if (skill == BossSkill.Aimed3Shot)
+        {
+            radius = patternCfg.Aimed3Shot.BulletRadius;
+            fill = patternCfg.Aimed3Shot.FillColor;
+            outline = patternCfg.Aimed3Shot.OutlineColor;
+            type = PatternConfig.ParseBulletType(patternCfg.Aimed3Shot.BulletType, BulletType.Cyan);
+        }
+        else if (skill == BossSkill.RingBurst)
+        {
+            radius = patternCfg.RingBurst.BulletRadius;
+            fill = patternCfg.RingBurst.FillColor;
+            outline = patternCfg.RingBurst.OutlineColor;
+            type = PatternConfig.ParseBulletType(patternCfg.RingBurst.BulletType, BulletType.Magenta);
+        }
+        else if (skill == BossSkill.DoubleSpiral)
+        {
+            radius = patternCfg.DoubleSpiral.BulletRadius;
+            fill = patternCfg.DoubleSpiral.FillColor1;
+            outline = patternCfg.DoubleSpiral.OutlineColor1;
+            type = PatternConfig.ParseBulletType(patternCfg.DoubleSpiral.BulletType, BulletType.Yellow);
+        }
+        else if (skill == BossSkill.CrossChaos)
+        {
+            radius = patternCfg.CrossChaos.BulletRadius;
+            fill = patternCfg.CrossChaos.FillColor;
+            outline = patternCfg.CrossChaos.OutlineColor;
+            type = PatternConfig.ParseBulletType(patternCfg.CrossChaos.BulletType, BulletType.Magenta);
+        }
+        else if (skill == BossSkill.FastSniper)
+        {
+            radius = patternCfg.FastSniper.BulletRadius;
+            fill = patternCfg.FastSniper.FillColor;
+            outline = patternCfg.FastSniper.OutlineColor;
+            type = PatternConfig.ParseBulletType(patternCfg.FastSniper.BulletType, BulletType.Black);
+        }
+        else
+        {
+            radius = 6.0f;
+            fill = ColorPalette.RedBright;
+            outline = ColorPalette.White;
+        }
 
-        return (runtime, slot, boss1State);
+        CombatEffectHelper.SpawnBossSpecialBullet(_currentWorld, trans.X, trans.Y, vx, vy, radius, type, fill, outline);
     }
 
-    private static EnumModuleMap CreateBoss1ModuleMap(
-        Boss1BehaviorState boss1State)
+    private void HandleClearBullets()
     {
-        Boss1DefaultConfiguration boss1Config = new();
-
-        IBossStateModule[] modules = [
-            new HoverMovementModule(boss1Config, boss1State),
-            new Boss1AttackSelectionModule(boss1Config, boss1State),
-            new Boss1TelegraphModule(boss1Config, boss1State),
-            new Boss1ExecuteModule(boss1Config, boss1State),
-            new Boss1RecoveryModule(boss1Config, boss1State),
-            new Boss1PhaseTransitionModule(boss1Config, boss1State),
-            new Boss1DeadModule(boss1State)
-        ];
-
-        string[] dependencies = [
-            "AttackPort",
-            "Boss1Configuration",
-            "EffectPort",
-            "MovementPort",
-            "PlayerObservation",
-            "RandomSource"
-        ];
-
-        return new EnumModuleMap(modules, dependencies);
+        if (_currentWorld != default)
+        {
+            CombatEffectHelper.ClearAllBossBullets(_currentWorld);
+        }
     }
 }
