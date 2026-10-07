@@ -20,6 +20,7 @@ public static class BulletPhysicsSystem {
 
         world.System<Transform, Velocity>("BossBulletMovementSystem")
            .With<BossBulletTag>()
+           .Without<OrbitSatellite>()
            .Kind(Ecs.OnUpdate)
            .Iter(RunBatchBulletMovement);
 

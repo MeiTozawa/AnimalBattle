@@ -71,6 +71,50 @@ public static class SpecialBulletSystem {
                 }
             });
 
+        world.System<Transform, Velocity, OrbitSatellite, BulletModifier>("OrbitSatelliteMovementSystem")
+           .With<BossBulletTag>()
+           .Kind(Ecs.OnUpdate)
+           .Iter((Iter it, Field<Transform> trans, Field<Velocity> vel, Field<OrbitSatellite> satellites,
+                Field<BulletModifier> modifiers) =>
+            {
+                var count = it.Count();
+                if (count <= 0) return;
+
+                var dt = it.DeltaTime();
+                var cfg = ConfigManager.SpecialBullets;
+                var orbitSpeed = cfg.YellowOrbitSpeed;
+                var w = it.World();
+
+                for (var i = 0; i < count; ++i)
+                {
+                    ref var sat = ref satellites[i];
+                    if (!sat.Parent.IsAlive() || !sat.Parent.Has<BossBulletTag>())
+                    {
+                        CombatEntityPoolHelper.Recycle(w, it.Entity(i));
+                        continue;
+                    }
+
+                    ref var mod = ref modifiers[i];
+                    mod.ElapsedTimer += dt;
+
+                    ref readonly var parentTrans = ref sat.Parent.Get<Transform>();
+                    var angle = sat.InitialAngle + mod.ElapsedTimer * orbitSpeed;
+                    var cos = MathF.Cos(angle);
+                    var sin = MathF.Sin(angle);
+
+                    var satX = parentTrans.X + cos * sat.OrbitDistance;
+                    var satY = parentTrans.Y + sin * sat.OrbitDistance;
+
+                    ref var t = ref trans[i];
+                    t.Position = new Vec2f(satX, satY);
+
+                    ref readonly var parentVel = ref sat.Parent.Get<Velocity>();
+                    var tangentSpeed = sat.OrbitDistance * orbitSpeed;
+                    ref var v = ref vel[i];
+                    v.Value = new Vec2f(parentVel.Vx - sin * tangentSpeed, parentVel.Vy + cos * tangentSpeed);
+                }
+            });
+
         return world;
     }
 }
