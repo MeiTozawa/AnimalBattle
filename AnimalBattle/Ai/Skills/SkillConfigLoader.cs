@@ -8,19 +8,18 @@ namespace AnimalBattle.Ai.Skills;
 
 /// <summary>
 ///     TOML 設定から検証済みの <see cref="AttackDefinition" /> を構築するデータローダーです。
-///     3段階エラー処理（致命的不防御 / 不正値は Debug.Assert + フォールバック / 業務エラーは ErrorOr）に厳格に準拠します。
 /// </summary>
 public static class SkillConfigLoader {
     /// <summary>
     ///     パラメータ群およびキーフレームイベント一覧から不変時序定義をビルドします。
     /// </summary>
     /// <param name="skill">技能識別子。</param>
-    /// <param name="windUpTime">前隙予兆時間（秒）。</param>
-    /// <param name="castDuration">発動持続時間（秒）。</param>
-    /// <param name="recoveryTime">後隙硬直時間（秒）。</param>
-    /// <param name="effectiveRange">有効射程（ピクセル）。</param>
+    /// <param name="windUpTime">前隙予兆時間。</param>
+    /// <param name="castDuration">発動持続時間。</param>
+    /// <param name="recoveryTime">後隙硬直時間。</param>
+    /// <param name="effectiveRange">有効射程。</param>
     /// <param name="events">TOML キーフレームイベント一覧。</param>
-    /// <param name="defaultInterval">周期弾幕の生成間隔（秒）。0以下の場合はスキップ。</param>
+    /// <param name="defaultInterval">周期弾幕の生成間隔。</param>
     /// <param name="defaultSpeed">周期弾幕の弾速。</param>
     /// <param name="defaultCount">周期弾幕の弾数。</param>
     /// <param name="defaultSpread">周期弾幕の拡散角度。</param>
@@ -41,12 +40,12 @@ public static class SkillConfigLoader {
         ArmorType armor = ArmorType.None,
         float poiseThreshold = 0.0f)
     {
-        // Tier 3: 業務バリデーション（持続時間が正数でない場合は業務エラーとして報告）
+        // 業務バリデーション
         if (castDuration <= 0.0f || windUpTime <= 0.0f || recoveryTime <= 0.0f)
         {
             return Error.Validation(
                 "Skill.InvalidDuration",
-                $"技能 '{skill}' の時間設定が不正です (WindUp: {windUpTime}, Cast: {castDuration}, Recovery: {recoveryTime})。");
+                $"技能 '{skill}' の時間設定が不正です。");
         }
 
         if (effectiveRange < 0.0f)
@@ -103,7 +102,7 @@ public static class SkillConfigLoader {
     /// </summary>
     public static ErrorOr<AttackDefinition> BuildFromBoss1(BossSkill skill, Boss1PatternConfig config)
     {
-        ArgumentNullException.ThrowIfNull(config); // Tier 1: 致命的不正引数
+        ArgumentNullException.ThrowIfNull(config);
 
         return skill switch {
             BossSkill.DiveRam => BuildAttackDefinition(
@@ -196,7 +195,7 @@ public static class SkillConfigLoader {
     /// </summary>
     public static ErrorOr<AttackDefinition> BuildFromBoss2(BossSkill skill, Boss2PatternConfig config)
     {
-        ArgumentNullException.ThrowIfNull(config); // Tier 1: 致命的不正引数
+        ArgumentNullException.ThrowIfNull(config);
 
         return skill switch {
             BossSkill.HeavySlash => BuildAttackDefinition(
@@ -280,7 +279,6 @@ public static class SkillConfigLoader {
 
     private static AttackComponentKind FallbackUnknownType(string typeName)
     {
-        // Tier 2: 開発時はアサートで即座に警告、実行時は安全に Bullet へフォールバック
         Debug.Assert(false, $"[SkillConfigLoader] 未知のイベント種別です: '{typeName}'。Bullet としてフォールバックします。");
         return AttackComponentKind.Bullet;
     }
