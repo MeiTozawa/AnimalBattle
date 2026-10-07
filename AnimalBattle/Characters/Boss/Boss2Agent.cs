@@ -9,7 +9,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Characters.Boss;
 
 /// <summary>
-///     Boss 2（Ground Crusher）専用自治エージェント（Pawn）。
+///     Boss 2 専用自治エージェントです。
 ///     地上巡回追跡、足場間自律跳躍、および近接攻撃・気絶を Boss2Brain と直接連携して管理します。
 /// </summary>
 public sealed class Boss2Agent : BaseBossAgent
@@ -22,7 +22,7 @@ public sealed class Boss2Agent : BaseBossAgent
     /// </summary>
     /// <param name="entity">対応する Flecs エンティティ句柄。</param>
     /// <param name="spriteHandle">テクスチャハンドル。</param>
-    /// <param name="navGraphProvider">足場尋路用ナビゲーショングラフプロバイダー（省略可能）。</param>
+    /// <param name="navGraphProvider">足場尋路用ナビゲーショングラフプロバイダー。</param>
     public Boss2Agent(
         Entity entity,
         int spriteHandle,
@@ -97,44 +97,37 @@ public sealed class Boss2Agent : BaseBossAgent
             return;
         }
 
-        try
+        ref var col = ref Entity.GetMut<CollisionBox>();
+        var isGrounded = col.IsGrounded;
+        var isOnWall = col.IsOnWall;
+
+        _brain.Update(
+            deltaTime,
+            playerPosition,
+            playerVelocity,
+            true,
+            isGrounded,
+            isOnWall,
+            health.Current,
+            health.Max);
+
+        ref var trans = ref Entity.GetMut<Transform>();
+        ref var vel = ref Entity.GetMut<Velocity>();
+
+        vel.Vx = _brain.Velocity.X;
+        vel.Vy = _brain.Velocity.Y;
+
+        UpdateMovementAndCollision(ref trans, ref vel, ref col, deltaTime, platformQuery);
+
+        if (Entity.Has<Sprite>())
         {
-            ref var col = ref Entity.GetMut<CollisionBox>();
-            var isGrounded = col.IsGrounded;
-            var isOnWall = col.IsOnWall;
-
-            _brain.Update(
-                deltaTime,
-                playerPosition,
-                playerVelocity,
-                true,
-                isGrounded,
-                isOnWall,
-                health.Current,
-                health.Max);
-
-            ref var trans = ref Entity.GetMut<Transform>();
-            ref var vel = ref Entity.GetMut<Velocity>();
-
-            vel.Vx = _brain.Velocity.X;
-            vel.Vy = _brain.Velocity.Y;
-
-            UpdateMovementAndCollision(ref trans, ref vel, ref col, deltaTime, platformQuery);
-
-            if (Entity.Has<Sprite>())
-            {
-                ref var sprite = ref Entity.GetMut<Sprite>();
-                sprite.FlipX = !_brain.FacingRight;
-            }
-
-            OnPostUpdate(deltaTime, world);
-
-            Entity.Set(new BossCombatState(IsVulnerable, Phase));
+            ref var sprite = ref Entity.GetMut<Sprite>();
+            sprite.FlipX = !_brain.FacingRight;
         }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[Boss2Agent 警告] Update 処理中に例外が発生しました: {ex.Message}");
-        }
+
+        OnPostUpdate(deltaTime, world);
+
+        Entity.Set(new BossCombatState(IsVulnerable, Phase));
     }
 
     private void UpdateMovementAndCollision(

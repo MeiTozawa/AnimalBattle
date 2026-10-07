@@ -30,6 +30,9 @@ public sealed class AbilitySystemComponent {
     /// <summary>現在何らかの技能を発動中かどうかを取得します。</summary>
     public bool IsCasting => CurrentAbility != null && !_skillRunner.IsComplete;
 
+    /// <summary>移動速度適用イベント。</summary>
+    public event Action<float, float>? OnExecuteMovement;
+
     /// <summary>弾幕発射イベント。</summary>
     public event Action<BossSkill, float, float>? OnEmitBullet;
 
@@ -72,9 +75,11 @@ public sealed class AbilitySystemComponent {
 
     /// <summary>
     ///     指定技能の発動を試行します。
-    ///     発動失敗時は <see cref="ErrorOr{T}" /> で返します。
+    ///     発動失敗時は ErrorOr で返します。
     /// </summary>
-    public ErrorOr<Success> TryActivateAbility(BossSkill skill)
+    /// <param name="skill">発動対象技能。</param>
+    /// <param name="direction">向き係数。</param>
+    public ErrorOr<Success> TryActivateAbility(BossSkill skill, float direction = 1.0f)
     {
         // 1. 未登録チェック
         if (!_abilities.TryGetValue(skill, out var ability))
@@ -109,7 +114,7 @@ public sealed class AbilitySystemComponent {
         CurrentAbility = ability;
         ActiveTags |= ability.GrantedTags;
         _cooldownTracker.Trigger(skill, ability.Cooldown);
-        _skillRunner.Start(ability.Timeline);
+        _skillRunner.Start(ability.Timeline, direction);
 
         return Result.Success;
     }
@@ -130,13 +135,15 @@ public sealed class AbilitySystemComponent {
     /// <summary>
     ///     毎フレームの技能時序推進と冷却時間更新を実行します。
     /// </summary>
-    public void Update(float dt)
+    /// <param name="dt">デルタ時間。</param>
+    /// <param name="isGrounded">接地状態フラグ。</param>
+    public void Update(float dt, bool isGrounded = false)
     {
         _cooldownTracker.Update(dt);
 
         if (CurrentAbility is null) return;
 
-        _skillRunner.Update(dt, false, (comp, _) => ExecuteComponent(comp));
+        _skillRunner.Update(dt, isGrounded, (comp, dir) => ExecuteComponent(comp, dir));
         UpdatePhaseTags(_skillRunner.CurrentPhase);
 
         if (_skillRunner.IsComplete)
@@ -169,17 +176,22 @@ public sealed class AbilitySystemComponent {
         }
     }
 
-    private void ExecuteComponent(AttackComponent comp)
+    private void ExecuteComponent(AttackComponent comp, float dir)
     {
         if (CurrentAbility is null) return;
 
         switch (comp.Kind)
         {
+            case AttackComponentKind.Movement:
+            case AttackComponentKind.VelocityDive:
+                OnExecuteMovement?.Invoke(comp.Param0 * dir, comp.Param1);
+                break;
             case AttackComponentKind.Bullet:
-                OnEmitBullet?.Invoke(CurrentAbility.SkillId, comp.Param0, comp.Param1);
+                OnEmitBullet?.Invoke(CurrentAbility.SkillId, comp.Param0 * dir, comp.Param1);
                 break;
             case AttackComponentKind.Hitbox:
-                OnCreateHitbox?.Invoke(CurrentAbility.SkillId, comp.Param0, comp.Param1);
+            case AttackComponentKind.OnGroundedHitbox:
+                OnCreateHitbox?.Invoke(CurrentAbility.SkillId, comp.Param0 * dir, comp.Param1);
                 break;
             case AttackComponentKind.AudioCue:
                 OnPlayAudio?.Invoke((int)comp.Param0, comp.Param1);

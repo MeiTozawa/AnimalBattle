@@ -1,27 +1,33 @@
 using System.Diagnostics;
+using AnimalBattle.Ai.Abilities;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Decision;
+using AnimalBattle.Ai.Hfsm;
 using AnimalBattle.Ai.Skills;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using AnimalBattle.Maps.Navigation;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Boss2;
 
 /// <summary>
-///     Boss2（Ground Crusher）の統合意思決定・行動制御ブレインです。
-///     足場巡回追跡、高低差跳躍・着地、近接斬撃・下砸・咆哮、および気絶硬直を一元管理します。
+///     Boss 2 の統合意思決定および行動制御ブレインです。
+///     HFSM および AbilitySystemComponent を通じて足場移動、近接攻撃、気絶、状態遷移を一元管理します。
 /// </summary>
 public sealed class Boss2Brain {
-    private enum MacroState : byte {
-        Idle,
-        PatrolChase,
-        PlatformTraverse,
-        Casting,
-        WallCrashStun,
-        PhaseTransition,
-        Dead
-    }
+    private static readonly StringId StateRoot = "Root";
+    private static readonly StringId StateCombat = "Combat";
+    private static readonly StringId StateIdle = "Idle";
+    private static readonly StringId StatePatrolChase = "PatrolChase";
+    private static readonly StringId StatePlatformTraverse = "PlatformTraverse";
+    private static readonly StringId StateAbility = "Ability";
+
+    private static readonly StringId StateReaction = "Reaction";
+    private static readonly StringId StateWallCrashStun = "WallCrashStun";
+    private static readonly StringId StatePhaseTransition = "PhaseTransition";
+    private static readonly StringId StateDead = "Dead";
 
     private enum TraverseStage : byte {
         Ascent,
@@ -31,24 +37,38 @@ public sealed class Boss2Brain {
 
     private readonly IBoss2Configuration _configuration;
     private readonly Func<PlatformNavigationGraph?>? _navGraphProvider;
-    private readonly SkillRunner _skillRunner = new();
-    private readonly BossCooldownTracker _cooldownTracker = new();
+    private readonly AbilitySystemComponent _asc = new();
 
-    private MacroState _macroState = MacroState.Idle;
+    private readonly StateMachine _rootMachine = new(StateRoot);
+    private readonly StateMachine _combatMachine = new(StateCombat);
+    private readonly StateMachine _reactionMachine = new(StateReaction);
+
+    private State _idleState = null!;
+    private State _patrolChaseState = null!;
+    private State _platformTraverseState = null!;
+    private State _abilityState = null!;
+
+    private State _wallCrashStunState = null!;
+    private State _phaseTransitionState = null!;
+    private State _deadState = null!;
+
     private TraverseStage _traverseStage = TraverseStage.Ascent;
-
     private float _stateTimer;
     private float _traverseTimer;
     private float _jumpCooldown;
+
+    private bool _isDead;
+    private bool _isWallStunned;
+    private Phase? _pendingPhaseTransition;
 
     private Vec2f _currentPosition;
     private Vec2f _currentVelocity;
     private bool _facingRight = true;
 
-    /// <summary>Boss2 ブレインを初期化します。</summary>
+    /// <summary>Boss 2 ブレインを初期化します。</summary>
     /// <param name="spawnX">スポーン X 座標。</param>
     /// <param name="spawnY">スポーン Y 座標。</param>
-    /// <param name="configuration">設定プロバイダ（省略時は既定）。</param>
+    /// <param name="configuration">設定プロバイダ。</param>
     /// <param name="navGraphProvider">ナビゲーショングラフプロバイダ。</param>
     public Boss2Brain(
         float spawnX,
@@ -60,6 +80,9 @@ public sealed class Boss2Brain {
         _navGraphProvider = navGraphProvider;
         _currentPosition = new Vec2f(spawnX, spawnY);
         Phase = Phase.Phase1;
+
+        InitializeAbilities();
+        InitializeStateMachine();
         Reset(spawnX, spawnY);
     }
 
@@ -75,41 +98,65 @@ public sealed class Boss2Brain {
     /// <summary>現在の戦闘フェーズを取得します。</summary>
     public Phase Phase { get; private set; }
 
+    /// <summary>現在アクティブな能力システムコンポーネントを取得します。</summary>
+    public AbilitySystemComponent AbilitySystem => _asc;
+
     /// <summary>現在のマクロ・ミクロ統合状態を取得します。</summary>
-    public Boss2State State => _macroState switch {
-        MacroState.Casting => _skillRunner.CurrentPhase switch {
-            SkillPhase.Telegraph => Boss2State.Telegraph,
-            SkillPhase.Active => Boss2State.Execute,
-            SkillPhase.Recovery => Boss2State.Recovery,
-            _ => Boss2State.Idle
-        },
-        MacroState.Idle => Boss2State.Idle,
-        MacroState.PatrolChase => Boss2State.PatrolChase,
-        MacroState.PlatformTraverse => Boss2State.PlatformTraverse,
-        MacroState.WallCrashStun => Boss2State.WallCrashStun,
-        MacroState.PhaseTransition => Boss2State.PhaseTransition,
-        MacroState.Dead => Boss2State.Dead,
-        _ => Boss2State.Idle
-    };
+    public Boss2State State {
+        get {
+            if (_rootMachine.CurrentState == _reactionMachine)
+            {
+                if (_reactionMachine.CurrentState == _deadState) return Boss2State.Dead;
+                if (_reactionMachine.CurrentState == _phaseTransitionState) return Boss2State.PhaseTransition;
+                if (_reactionMachine.CurrentState == _wallCrashStunState) return Boss2State.WallCrashStun;
+            }
 
-    /// <summary>現在選択中の技能を取得します。</summary>
-    public BossSkill CurrentSkill { get; private set; } = BossSkill.None;
+            if (_combatMachine.CurrentState == _abilityState && _asc.CurrentAbility != null)
+            {
+                return _asc.SkillRunner.CurrentPhase switch {
+                    SkillPhase.Telegraph => Boss2State.Telegraph,
+                    SkillPhase.Active => Boss2State.Execute,
+                    SkillPhase.Recovery => Boss2State.Recovery,
+                    _ => Boss2State.Idle
+                };
+            }
 
-    /// <summary>現在状態の経過時間（秒）を取得します。</summary>
-    public float StateTimer => _macroState == MacroState.Casting ? _skillRunner.PhaseElapsed : _stateTimer;
+            if (_combatMachine.CurrentState == _idleState) return Boss2State.Idle;
+            if (_combatMachine.CurrentState == _patrolChaseState) return Boss2State.PatrolChase;
+            if (_combatMachine.CurrentState == _platformTraverseState) return Boss2State.PlatformTraverse;
 
-    /// <summary>現在状態の目標持続時間（秒）を取得します。</summary>
+            return Boss2State.Idle;
+        }
+    }
+
+    /// <summary>現在発動中の技能を取得します。</summary>
+    public BossSkill CurrentSkill => _asc.CurrentAbility?.SkillId ?? BossSkill.None;
+
+    /// <summary>現在状態の経過時間を取得します。</summary>
+    public float StateTimer => _asc.IsCasting ? _asc.SkillRunner.PhaseElapsed : _stateTimer;
+
+    /// <summary>現在状態の目標持続時間を取得します。</summary>
     public float StateDuration {
         get {
             var phaseCfg = _configuration.GetPhase(Phase);
-            return _macroState switch {
-                MacroState.Idle => phaseCfg.IdleDuration,
-                MacroState.PatrolChase => phaseCfg.ChaseTimeout,
-                MacroState.PhaseTransition => phaseCfg.TransitionDuration,
-                MacroState.WallCrashStun => _configuration.CombatSettings.WallCrashStunDuration,
-                MacroState.Casting => _skillRunner.PhaseDuration,
-                _ => 0.0f
-            };
+            if (_rootMachine.CurrentState == _reactionMachine)
+            {
+                if (_reactionMachine.CurrentState == _wallCrashStunState)
+                    return _configuration.CombatSettings.WallCrashStunDuration;
+                if (_reactionMachine.CurrentState == _phaseTransitionState)
+                    return phaseCfg.TransitionDuration;
+                return 0.0f;
+            }
+
+            if (_combatMachine.CurrentState == _abilityState && _asc.CurrentAbility != null)
+            {
+                return _asc.SkillRunner.PhaseDuration;
+            }
+
+            if (_combatMachine.CurrentState == _idleState) return phaseCfg.IdleDuration;
+            if (_combatMachine.CurrentState == _patrolChaseState) return phaseCfg.ChaseTimeout;
+
+            return 0.0f;
         }
     }
 
@@ -117,22 +164,135 @@ public sealed class Boss2Brain {
     public bool IsVulnerable => State is Boss2State.Recovery or Boss2State.WallCrashStun;
 
     /// <summary>死亡状態かどうかを取得します。</summary>
-    public bool IsDead => _macroState == MacroState.Dead;
+    public bool IsDead => _isDead;
 
-    /// <summary>近接攻撃判定生成イベント（技能種別, オフセットX, オフセットY）。</summary>
+    /// <summary>近接攻撃判定生成イベント。</summary>
     public event Action<BossSkill, float, float>? OnCreateHitbox;
 
-    /// <summary>弾幕・衝撃波発射イベント（技能種別, 速度X, 速度Y）。</summary>
+    /// <summary>弾幕・衝撃波発射イベント。</summary>
     public event Action<BossSkill, float, float>? OnEmitBullet;
 
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;
 
-    /// <summary>音効再生イベント（音効ID, 音量）。</summary>
+    /// <summary>音効再生イベント。</summary>
     public event Action<int, float>? OnPlayAudio;
 
-    /// <summary>画面振動イベント（振動強度, 持続時間）。</summary>
+    /// <summary>画面振動イベント。</summary>
     public event Action<float, float>? OnScreenShake;
+
+    private void InitializeAbilities()
+    {
+        var patternCfg = ConfigManager.Boss2Patterns;
+
+        RegisterSkill(BossSkill.HeavySlash, patternCfg);
+        RegisterSkill(BossSkill.GroundStomp, patternCfg);
+        RegisterSkill(BossSkill.LeapSmash, patternCfg);
+        RegisterSkill(BossSkill.DoubleCleave, patternCfg);
+        RegisterSkill(BossSkill.FrenzyCharge, patternCfg);
+        RegisterSkill(BossSkill.EarthquakeRoar, patternCfg);
+
+        _asc.OnExecuteMovement += (vx, vy) => _currentVelocity = new Vec2f(vx, vy);
+        _asc.OnEmitBullet += (skill, vx, vy) => OnEmitBullet?.Invoke(skill, vx, vy);
+        _asc.OnCreateHitbox += (skill, ox, oy) => OnCreateHitbox?.Invoke(skill, ox, oy);
+        _asc.OnPlayAudio += (cue, vol) => OnPlayAudio?.Invoke(cue, vol);
+        _asc.OnScreenShake += (str, dur) => OnScreenShake?.Invoke(str, dur);
+        _asc.OnSkillCompleted += _ => OnAbilityCompleted();
+    }
+
+    private void RegisterSkill(BossSkill skill, Boss2PatternConfig config)
+    {
+        var buildResult = SkillConfigLoader.BuildFromBoss2(skill, config);
+        if (buildResult.IsError)
+        {
+            Debug.Assert(false, $"Boss 2 技能時序の構築に失敗しました: {skill}");
+            return;
+        }
+
+        var cooldown = _configuration.GetSkillDefaultCooldown(skill);
+
+        var ability = new GameplayAbility {
+            SkillId = skill,
+            Cooldown = cooldown,
+            Timeline = buildResult.Value,
+            GrantedTags = GameplayTag.Casting
+        };
+
+        _asc.RegisterAbility(ability);
+    }
+
+    private void SyncPhaseAbilitiesCooldown(Boss2PhaseSettings phaseCfg)
+    {
+        foreach (var rule in phaseCfg.Rules)
+        {
+            if (rule.Cooldown > 0.0f && _asc.TryGetAbility(rule.Skill, out var ability) && ability is not null)
+            {
+                ability.Cooldown = rule.Cooldown;
+            }
+        }
+    }
+
+    private void InitializeStateMachine()
+    {
+        _idleState = new State(StateIdle, onEnter: () => {
+            _stateTimer = 0.0f;
+            _currentVelocity = Vec2f.Zero;
+        });
+
+        _patrolChaseState = new State(StatePatrolChase, onEnter: () => {
+            _stateTimer = 0.0f;
+        });
+
+        _platformTraverseState = new State(StatePlatformTraverse);
+
+        _abilityState = new State(StateAbility, onEnter: () => {
+            _stateTimer = 0.0f;
+            _currentVelocity = Vec2f.Zero;
+        });
+
+        _combatMachine.AddSubState(_idleState);
+        _combatMachine.AddSubState(_patrolChaseState);
+        _combatMachine.AddSubState(_platformTraverseState);
+        _combatMachine.AddSubState(_abilityState);
+        _combatMachine.SetInitialState(_idleState);
+
+        _wallCrashStunState = new State(StateWallCrashStun, onEnter: () => {
+            _stateTimer = 0.0f;
+            _currentVelocity = Vec2f.Zero;
+            _asc.InterruptCurrentAbility();
+        });
+
+        _phaseTransitionState = new State(StatePhaseTransition, onEnter: () => {
+            _stateTimer = 0.0f;
+            _currentVelocity = Vec2f.Zero;
+            _asc.InterruptCurrentAbility();
+            OnClearBullets?.Invoke();
+            if (_pendingPhaseTransition.HasValue)
+            {
+                Phase = _pendingPhaseTransition.Value;
+                _pendingPhaseTransition = null;
+                SyncPhaseAbilitiesCooldown(_configuration.GetPhase(Phase));
+            }
+        });
+
+        _deadState = new State(StateDead, onEnter: () => {
+            _currentVelocity = Vec2f.Zero;
+            _asc.InterruptCurrentAbility();
+            OnClearBullets?.Invoke();
+        });
+
+        _reactionMachine.AddSubState(_wallCrashStunState);
+        _reactionMachine.AddSubState(_phaseTransitionState);
+        _reactionMachine.AddSubState(_deadState);
+
+        _rootMachine.AddSubState(_combatMachine);
+        _rootMachine.AddSubState(_reactionMachine);
+        _rootMachine.SetInitialState(_combatMachine);
+
+        _rootMachine.AddGlobalTransition(() => _isDead, _reactionMachine);
+        _rootMachine.AddGlobalTransition(() => _pendingPhaseTransition.HasValue, _reactionMachine);
+        _rootMachine.AddGlobalTransition(() => _isWallStunned, _reactionMachine);
+    }
 
     /// <summary>
     ///     ブレインの内部状態を初期位置へリセットします。
@@ -142,14 +302,18 @@ public sealed class Boss2Brain {
         _currentPosition = new Vec2f(x, y);
         _currentVelocity = Vec2f.Zero;
         _facingRight = true;
-        _macroState = MacroState.Idle;
         _stateTimer = 0.0f;
         _traverseTimer = 0.0f;
         _jumpCooldown = 0.0f;
+        _isDead = false;
+        _isWallStunned = false;
+        _pendingPhaseTransition = null;
         Phase = Phase.Phase1;
-        CurrentSkill = BossSkill.None;
-        _cooldownTracker.Reset();
-        _skillRunner.Reset();
+
+        _asc.InterruptCurrentAbility();
+        SyncPhaseAbilitiesCooldown(_configuration.GetPhase(Phase));
+        _combatMachine.ChangeState(_idleState);
+        _rootMachine.ChangeState(_combatMachine);
     }
 
     /// <summary>
@@ -157,10 +321,9 @@ public sealed class Boss2Brain {
     /// </summary>
     public void Kill()
     {
-        _macroState = MacroState.Dead;
-        _currentVelocity = Vec2f.Zero;
-        _skillRunner.Reset();
-        CurrentSkill = BossSkill.None;
+        _isDead = true;
+        _reactionMachine.ChangeState(_deadState);
+        _rootMachine.ChangeState(_reactionMachine);
     }
 
     /// <summary>
@@ -176,75 +339,65 @@ public sealed class Boss2Brain {
         float currentHp,
         float maxHp)
     {
-        if (_macroState == MacroState.Dead || dt <= 0.0f) return;
+        if (_isDead || dt <= 0.0f) return;
 
-        try
+        if (_jumpCooldown > 0.0f) _jumpCooldown = MathF.Max(0.0f, _jumpCooldown - dt);
+
+        EvaluatePhaseTransition(currentHp, maxHp);
+
+        _asc.Update(dt, isGrounded);
+        _rootMachine.Update(dt);
+
+        if (_rootMachine.CurrentState == _combatMachine)
         {
-            // クールダウン減算
-            if (_jumpCooldown > 0.0f) _jumpCooldown = MathF.Max(0.0f, _jumpCooldown - dt);
-            _cooldownTracker.Update(dt);
-
-            // フェーズ遷移評価（HP 割合判定）
-            EvaluatePhaseTransition(currentHp, maxHp);
-
-            switch (_macroState)
+            if (_combatMachine.CurrentState == _idleState)
             {
-                case MacroState.Idle:
-                    UpdateIdle(dt, playerPosition, isPlayerAlive, isGrounded);
-                    break;
-
-                case MacroState.PatrolChase:
-                    UpdatePatrolChase(dt, playerPosition, playerVelocity, isPlayerAlive, isGrounded);
-                    break;
-
-                case MacroState.PlatformTraverse:
-                    UpdatePlatformTraverse(dt, isGrounded);
-                    break;
-
-                case MacroState.Casting:
-                    UpdateCasting(dt, isGrounded, isOnWall);
-                    break;
-
-                case MacroState.WallCrashStun:
-                    UpdateWallCrashStun(dt);
-                    break;
-
-                case MacroState.PhaseTransition:
-                    UpdatePhaseTransition(dt);
-                    break;
+                UpdateIdle(dt, playerPosition, isPlayerAlive, isGrounded);
+            }
+            else if (_combatMachine.CurrentState == _patrolChaseState)
+            {
+                UpdatePatrolChase(dt, playerPosition, playerVelocity, isPlayerAlive, isGrounded);
+            }
+            else if (_combatMachine.CurrentState == _platformTraverseState)
+            {
+                UpdatePlatformTraverse(dt, isGrounded);
+            }
+            else if (_combatMachine.CurrentState == _abilityState)
+            {
+                UpdateAbility(isOnWall);
             }
         }
-        catch (Exception ex)
+        else if (_rootMachine.CurrentState == _reactionMachine)
         {
-            Debug.WriteLine($"[Boss2Brain 警告] Update 処理中に例外が発生しました: {ex.Message}");
+            if (_reactionMachine.CurrentState == _wallCrashStunState)
+            {
+                UpdateWallCrashStun(dt);
+            }
+            else if (_reactionMachine.CurrentState == _phaseTransitionState)
+            {
+                UpdatePhaseTransition(dt);
+            }
         }
     }
 
     private void EvaluatePhaseTransition(float currentHp, float maxHp)
     {
-        if (maxHp <= 0.0f || _macroState == MacroState.PhaseTransition) return;
+        if (maxHp <= 0.0f || _pendingPhaseTransition.HasValue) return;
+        if (_rootMachine.CurrentState == _reactionMachine) return;
 
         var hpRatio = currentHp / maxHp;
         var b2Cfg = ConfigManager.Boss2;
 
         if (Phase == Phase.Phase1 && hpRatio <= b2Cfg.Phase2.HpThreshold)
         {
-            StartPhaseTransition(Phase.Phase2);
+            _pendingPhaseTransition = Phase.Phase2;
+            _reactionMachine.ChangeState(_phaseTransitionState);
         }
         else if (Phase == Phase.Phase2 && hpRatio <= b2Cfg.Phase3.HpThreshold)
         {
-            StartPhaseTransition(Phase.Phase3);
+            _pendingPhaseTransition = Phase.Phase3;
+            _reactionMachine.ChangeState(_phaseTransitionState);
         }
-    }
-
-    private void StartPhaseTransition(Phase nextPhase)
-    {
-        Phase = nextPhase;
-        _macroState = MacroState.PhaseTransition;
-        _stateTimer = 0.0f;
-        _currentVelocity = Vec2f.Zero;
-        _skillRunner.Reset();
-        OnClearBullets?.Invoke();
     }
 
     private void UpdatePhaseTransition(float dt)
@@ -255,7 +408,8 @@ public sealed class Boss2Brain {
 
         if (_stateTimer >= phaseCfg.TransitionDuration)
         {
-            _macroState = MacroState.Idle;
+            _combatMachine.ChangeState(_idleState);
+            _rootMachine.ChangeState(_combatMachine);
             _stateTimer = 0.0f;
         }
     }
@@ -274,7 +428,7 @@ public sealed class Boss2Brain {
         var phaseCfg = _configuration.GetPhase(Phase);
         if (_stateTimer >= phaseCfg.IdleDuration && isPlayerAlive && isGrounded)
         {
-            _macroState = MacroState.PatrolChase;
+            _combatMachine.ChangeState(_patrolChaseState);
             _stateTimer = 0.0f;
         }
     }
@@ -288,8 +442,7 @@ public sealed class Boss2Brain {
     {
         if (!isGrounded)
         {
-            // 足場から踏み外した場合は落下機動へ遷移
-            _macroState = MacroState.PlatformTraverse;
+            _combatMachine.ChangeState(_platformTraverseState);
             _traverseStage = TraverseStage.Descent;
             _traverseTimer = 0.0f;
             return;
@@ -300,7 +453,6 @@ public sealed class Boss2Brain {
         var dx = playerPos.X - _currentPosition.X;
         var dy = playerPos.Y - _currentPosition.Y;
 
-        // ナビゲーショングラフによる経路探索
         var navGraph = _navGraphProvider?.Invoke();
         NavPlan? plan = null;
         if (navGraph is not null && navGraph.Nodes.Count > 0)
@@ -312,19 +464,17 @@ public sealed class Boss2Brain {
 
         if (plan is not null && plan.Status == NavStatus.ExecuteJump && _jumpCooldown <= 0.0f)
         {
-            // 跳躍機動へ移行
             var jumpVy = plan.RequiredVy != 0.0f ? plan.RequiredVy : -phaseCfg.JumpForce;
             var jumpVx = plan.RequiredVx;
             _facingRight = jumpVx >= 0.0f;
             _currentVelocity = new Vec2f(jumpVx, jumpVy);
             _jumpCooldown = _configuration.CombatSettings.JumpCooldownDuration;
-            _macroState = MacroState.PlatformTraverse;
+            _combatMachine.ChangeState(_platformTraverseState);
             _traverseStage = TraverseStage.Ascent;
             _traverseTimer = 0.0f;
             return;
         }
 
-        // 地上移動速度の算出
         float walkVx;
         if (plan is not null)
         {
@@ -342,14 +492,13 @@ public sealed class Boss2Brain {
         }
         _currentVelocity = new Vec2f(walkVx, _currentVelocity.Y);
 
-        // 技能発動評価
         if (isPlayerAlive && phaseCfg.Rules.Count > 0)
         {
-            EvaluateSkillExecution(dx, dy, playerVel, phaseCfg);
+            CastNextAbility(dx, dy, playerVel, phaseCfg);
         }
     }
 
-    private void EvaluateSkillExecution(float dx, float dy, Vec2f playerVel, Boss2PhaseSettings phaseCfg)
+    private void CastNextAbility(float dx, float dy, Vec2f playerVel, Boss2PhaseSettings phaseCfg)
     {
         var distance = MathF.Sqrt(dx * dx + dy * dy);
         var isSamePlatform = MathF.Abs(dy) <= _configuration.CombatSettings.SamePlatformToleranceY;
@@ -358,53 +507,31 @@ public sealed class Boss2Brain {
         var isPlayerGrounded = !isPlayerAirborne;
 
         AttackDecisionContext decisionContext = new(distance, isSamePlatform, isPlayerGrounded, isPlayerAirborne);
-        var chosenSkill = BossDecisionEvaluator.EvaluateWeighted(phaseCfg.Rules, _cooldownTracker, in decisionContext);
+        var chosenSkill = BossDecisionEvaluator.EvaluateWeighted(phaseCfg.Rules, _asc.CooldownTracker, in decisionContext);
+
+        var dir = _facingRight ? 1.0f : -1.0f;
 
         if (chosenSkill != BossSkill.None)
         {
-            StartSkill(chosenSkill, phaseCfg);
-            return;
+            var result = _asc.TryActivateAbility(chosenSkill, dir);
+            if (!result.IsError)
+            {
+                _currentVelocity = Vec2f.Zero;
+                _combatMachine.ChangeState(_abilityState);
+                return;
+            }
         }
 
-        // 追跡タイムアウト時の急襲/遠隔技能選択
         if (_stateTimer >= phaseCfg.ChaseTimeout)
         {
             var antiKiteSkill = isSamePlatform ? BossSkill.GroundStomp : BossSkill.LeapSmash;
-            if (Boss2PipelineDefinition.Pipeline.TryGetAttack(antiKiteSkill, out _))
+            var result = _asc.TryActivateAbility(antiKiteSkill, dir);
+            if (!result.IsError)
             {
-                StartSkill(antiKiteSkill, phaseCfg);
+                _currentVelocity = Vec2f.Zero;
+                _combatMachine.ChangeState(_abilityState);
             }
         }
-    }
-
-    private void StartSkill(BossSkill skill, Boss2PhaseSettings phaseCfg)
-    {
-        if (!Boss2PipelineDefinition.Pipeline.TryGetAttack(skill, out var def))
-        {
-            Debug.Fail($"[Boss2Brain 警告] Boss2 技能定義が見つかりません: {skill}");
-            return;
-        }
-
-        var cooldown = GetSkillCooldown(skill, phaseCfg);
-        _cooldownTracker.Trigger(skill, cooldown);
-
-        CurrentSkill = skill;
-        _macroState = MacroState.Casting;
-        _stateTimer = 0.0f;
-        _currentVelocity = Vec2f.Zero;
-
-        _skillRunner.Start(def, _facingRight ? 1.0f : -1.0f);
-    }
-
-    private float GetSkillCooldown(BossSkill skill, in Boss2PhaseSettings settings)
-    {
-        for (var index = 0; index < settings.Rules.Count; index++)
-        {
-            var rule = settings.Rules[index];
-            if (rule.Skill == skill && rule.Cooldown > 0.0f) return rule.Cooldown;
-        }
-
-        return _configuration.GetSkillDefaultCooldown(skill);
     }
 
     private void UpdatePlatformTraverse(float dt, bool isGrounded)
@@ -416,7 +543,6 @@ public sealed class Boss2Brain {
         switch (_traverseStage)
         {
             case TraverseStage.Ascent:
-                // 重力適用
                 var newVy = MathF.Min(phaseCfg.MaxFallSpeed, _currentVelocity.Y + phaseCfg.Gravity * dt);
                 _currentVelocity = new Vec2f(_currentVelocity.X, newVy);
 
@@ -428,7 +554,6 @@ public sealed class Boss2Brain {
                 break;
 
             case TraverseStage.Descent:
-                // 落下重力適用
                 var fallVy = MathF.Min(phaseCfg.MaxFallSpeed, _currentVelocity.Y + phaseCfg.Gravity * dt);
                 _currentVelocity = new Vec2f(_currentVelocity.X, fallVy);
 
@@ -445,37 +570,24 @@ public sealed class Boss2Brain {
                 _currentVelocity = Vec2f.Zero;
                 if (_traverseTimer >= phaseCfg.LandingRecoveryDuration)
                 {
-                    _macroState = MacroState.PatrolChase;
+                    _combatMachine.ChangeState(_patrolChaseState);
                     _stateTimer = 0.0f;
                 }
                 break;
         }
     }
 
-    private void UpdateCasting(float dt, bool isGrounded, bool isOnWall)
+    private void UpdateAbility(bool isOnWall)
     {
-        // 技能タイムライン更新
-        _skillRunner.Update(dt, isGrounded, (comp, dir) => ExecuteComponent(comp, dir));
-
-        // 突進中の壁激突判定
-        if (_skillRunner.CurrentPhase == SkillPhase.Active && isOnWall && MathF.Abs(_currentVelocity.X) > 10.0f)
+        if (CurrentSkill == BossSkill.FrenzyCharge &&
+            _asc.SkillRunner.CurrentPhase == SkillPhase.Active &&
+            isOnWall &&
+            MathF.Abs(_currentVelocity.X) > 10.0f)
         {
-            _macroState = MacroState.WallCrashStun;
-            _stateTimer = 0.0f;
-            _currentVelocity = Vec2f.Zero;
-            _skillRunner.Reset();
+            _isWallStunned = true;
+            _reactionMachine.ChangeState(_wallCrashStunState);
+            _rootMachine.ChangeState(_reactionMachine);
             OnScreenShake?.Invoke(8.0f, 0.4f);
-            return;
-        }
-
-        // 技能完了評価
-        if (_skillRunner.IsComplete)
-        {
-            _macroState = MacroState.Idle;
-            _stateTimer = 0.0f;
-            CurrentSkill = BossSkill.None;
-            _currentVelocity = Vec2f.Zero;
-            _skillRunner.Reset();
         }
     }
 
@@ -486,37 +598,17 @@ public sealed class Boss2Brain {
 
         if (_stateTimer >= _configuration.CombatSettings.WallCrashStunDuration)
         {
-            _macroState = MacroState.Idle;
+            _isWallStunned = false;
+            _combatMachine.ChangeState(_idleState);
+            _rootMachine.ChangeState(_combatMachine);
             _stateTimer = 0.0f;
-            CurrentSkill = BossSkill.None;
         }
     }
 
-    private void ExecuteComponent(AttackComponent comp, float dir)
+    private void OnAbilityCompleted()
     {
-        switch (comp.Kind)
-        {
-            case AttackComponentKind.Movement:
-            case AttackComponentKind.VelocityDive:
-                _currentVelocity = new Vec2f(comp.Param0 * dir, comp.Param1);
-                break;
-
-            case AttackComponentKind.Hitbox:
-            case AttackComponentKind.OnGroundedHitbox:
-                OnCreateHitbox?.Invoke(CurrentSkill, comp.Param0 * dir, comp.Param1);
-                break;
-
-            case AttackComponentKind.Bullet:
-                OnEmitBullet?.Invoke(CurrentSkill, comp.Param0 * dir, comp.Param1);
-                break;
-
-            case AttackComponentKind.AudioCue:
-                OnPlayAudio?.Invoke((int)comp.Param0, comp.Param1);
-                break;
-
-            case AttackComponentKind.ScreenShake:
-                OnScreenShake?.Invoke(comp.Param0, comp.Param1);
-                break;
-        }
+        _stateTimer = 0.0f;
+        _currentVelocity = Vec2f.Zero;
+        _combatMachine.ChangeState(_idleState);
     }
 }
