@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -62,8 +63,29 @@ public static class CombatEffectHelper {
            .Add<BossBulletTag>();
 
         if (type != BulletType.Normal)
+        {
             entity.Set(new BulletModifier(type, radius, vx, vy));
-        else if (entity.Has<BulletModifier>()) entity.Remove<BulletModifier>();
+
+            if (type == BulletType.Yellow)
+            {
+                var cfg = ConfigManager.SpecialBullets;
+                var satRadius = MathF.Max(3.0f, radius * cfg.YellowSatelliteRadiusMultiplier);
+                var orbitDist = radius * cfg.YellowOrbitDistanceMultiplier;
+
+                CombatEntityPoolHelper.RentBossBullet(world)
+                   .Set(new Transform(x + orbitDist, y))
+                   .Set(new Velocity(vx, vy))
+                   .Set(new Bullet(satRadius, fill, outline))
+                   .Set(new Hitbox(new CollisionShape.Circle(satRadius), cfg.YellowSatelliteDamage, Faction.Hostile))
+                   .Set(new BulletModifier(BulletType.Yellow, satRadius, vx, vy))
+                   .Set(new OrbitSatellite(entity, orbitDist))
+                   .Add<BossBulletTag>();
+            }
+        }
+        else if (entity.Has<BulletModifier>())
+        {
+            entity.Remove<BulletModifier>();
+        }
     }
 
     /// <summary>

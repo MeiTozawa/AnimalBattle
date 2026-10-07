@@ -144,6 +144,7 @@ public sealed class CombatEntityPoolComponent : IDisposable {
     {
         if (e.Has<HitFlashEffect>()) e.Remove<HitFlashEffect>();
         if (e.Has<BulletModifier>()) e.Remove<BulletModifier>();
+        if (e.Has<OrbitSatellite>()) e.Remove<OrbitSatellite>();
     }
 
     private static void ResetEffectEntity(Entity e)
