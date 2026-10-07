@@ -63,8 +63,10 @@ public static class SpecialBulletSystem {
                         var scale = 1.0f + magentaAmp * MathF.Sin(mod.ElapsedTimer * magentaFreq);
                         var radius = MathF.Max(2.0f, mod.BaseRadius * scale);
 
-                        bullet[i].Radius = radius;
-                        hitbox[i].Shape = new CollisionShape.Circle(radius);
+                        ref var b = ref bullet[i];
+                        b.Radius = radius;
+                        ref var h = ref hitbox[i];
+                        h.Shape = new CollisionShape.Circle(radius);
                     }
                 }
             });

@@ -1,6 +1,4 @@
 # Special Bullet Modulation Configuration
-
-[SpecialBullet]
 CyanWaveAmplitude = 28.0
 CyanWaveFrequency = 7.0
 MagentaPulseAmplitude = 0.35

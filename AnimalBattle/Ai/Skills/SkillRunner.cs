@@ -33,7 +33,8 @@ public sealed class SkillRunner {
 
     /// <summary>現在フェーズの目標持続時間（秒）を取得します。</summary>
     public float PhaseDuration {
-        get {
+        get
+        {
             if (Definition is null) return 0.0f;
             return CurrentPhase switch {
                 SkillPhase.Telegraph => Definition.TelegraphDuration,
@@ -59,11 +60,7 @@ public sealed class SkillRunner {
     /// <param name="facingDirection">キャラの向き（正: 右向き、負: 左向き）。</param>
     public void Start(AttackDefinition definition, float facingDirection = 1.0f)
     {
-        if (definition is null)
-        {
-            Debug.Fail("[SkillRunner 警告] null の攻撃定義で Start が呼び出されました。");
-            return;
-        }
+        Debug.Assert(definition is not null, "[SkillRunner 警告] null の攻撃定義で Start が呼び出されました。");
 
         if (!definition.IsValid)
         {
@@ -111,46 +108,44 @@ public sealed class SkillRunner {
 
         var def = Definition;
 
-        try
+        // フェーズ遷移評価
+        switch (CurrentPhase)
         {
-            // フェーズ遷移評価
-            switch (CurrentPhase)
-            {
-                case SkillPhase.Telegraph:
-                    if (PhaseElapsed >= def.TelegraphDuration)
-                    {
-                        CurrentPhase = SkillPhase.Active;
-                        PhaseElapsed -= def.TelegraphDuration;
-                    }
-                    break;
+            case SkillPhase.Telegraph:
+                if (PhaseElapsed >= def.TelegraphDuration)
+                {
+                    CurrentPhase = SkillPhase.Active;
+                    PhaseElapsed -= def.TelegraphDuration;
+                }
 
-                case SkillPhase.Active:
-                    // Active 中のコンポーネント発火判定
-                    ProcessActiveComponents(def, isGrounded, onTrigger);
+            break;
 
-                    if (PhaseElapsed >= def.ExecuteDuration)
-                    {
-                        CurrentPhase = SkillPhase.Recovery;
-                        PhaseElapsed -= def.ExecuteDuration;
-                    }
-                    break;
+            case SkillPhase.Active:
+                // Active 中のコンポーネント発火判定
+                ProcessActiveComponents(def, isGrounded, onTrigger);
 
-                case SkillPhase.Recovery:
-                    if (PhaseElapsed >= def.RecoveryDuration)
-                    {
-                        CurrentPhase = SkillPhase.Completed;
-                        PhaseElapsed = 0.0f;
-                    }
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[SkillRunner 警告] 技能更新中に例外が発生しました (Skill: {def.Skill}): {ex.Message}");
+                if (PhaseElapsed >= def.ExecuteDuration)
+                {
+                    CurrentPhase = SkillPhase.Recovery;
+                    PhaseElapsed -= def.ExecuteDuration;
+                }
+
+            break;
+
+            case SkillPhase.Recovery:
+                if (PhaseElapsed >= def.RecoveryDuration)
+                {
+                    CurrentPhase = SkillPhase.Completed;
+                    PhaseElapsed = 0.0f;
+                }
+
+            break;
         }
     }
 
-    private void ProcessActiveComponents(AttackDefinition def, bool isGrounded, Action<AttackComponent, float>? onTrigger)
+
+    private void ProcessActiveComponents(AttackDefinition def, bool isGrounded,
+        Action<AttackComponent, float>? onTrigger)
     {
         var count = Math.Min(def.ComponentCount, 64);
         for (var i = 0; i < count; i++)
@@ -158,7 +153,7 @@ public sealed class SkillRunner {
             var mask = 1UL << i;
             if ((_triggeredMask & mask) != 0) continue;
 
-            if (!def.GetComponent(i, out var comp)) continue;
+            if (!def.TryGetComponent(i, out var comp)) continue;
 
             // 接地イベント駆動判定
             if (comp.Kind == AttackComponentKind.OnGroundedHitbox)
@@ -167,13 +162,14 @@ public sealed class SkillRunner {
                 if (_hasLeftGround && isGrounded && PhaseElapsed >= minTime)
                 {
                     _triggeredMask |= mask;
-                    SafeInvokeTrigger(onTrigger, comp, _facingDirection);
+                    onTrigger?.Invoke(comp, _facingDirection);
 
                     // 接地判定成功時は即座に Active を終了して Recovery へ
                     CurrentPhase = SkillPhase.Recovery;
                     PhaseElapsed = 0.0f;
                     return;
                 }
+
                 continue;
             }
 
@@ -181,21 +177,8 @@ public sealed class SkillRunner {
             if (PhaseElapsed + 0.0001f >= comp.TriggerTime)
             {
                 _triggeredMask |= mask;
-                SafeInvokeTrigger(onTrigger, comp, _facingDirection);
+                onTrigger?.Invoke(comp, _facingDirection);
             }
-        }
-    }
-
-    private static void SafeInvokeTrigger(Action<AttackComponent, float>? onTrigger, AttackComponent comp, float facingDir)
-    {
-        if (onTrigger is null) return;
-        try
-        {
-            onTrigger.Invoke(comp, facingDir);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[SkillRunner 警告] コンポーネント発火コールバックで例外が発生しました (Kind: {comp.Kind}): {ex.Message}");
         }
     }
 }

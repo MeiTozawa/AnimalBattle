@@ -142,7 +142,7 @@ public class BattleScene : IDisposable {
         var hasBoss1Handle = AssetManager.TryGetTexture(ResourcePath.Characters.Character031_3Png, out var boss1Handle);
         Debug.Assert(hasBoss1Handle, $"Boss 1 テクスチャがロードされていません: {ResourcePath.Characters.Character031_3Png}");
         Boss = new Boss1Agent(bossEntity, boss1Handle);
-        Console.WriteLine(
+        Debug.WriteLine(
             $"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {ConfigManager.Boss1.MaxHp}, Pos: {ConfigManager.Boss1.SpawnX}, {ConfigManager.Boss1.SpawnY})");
     }
 
@@ -151,7 +151,7 @@ public class BattleScene : IDisposable {
         var hasBoss2Handle = AssetManager.TryGetTexture(ResourcePath.Characters.Character027_3Png, out var boss2Handle);
         Debug.Assert(hasBoss2Handle, $"Boss 2 テクスチャがロードされていません: {ResourcePath.Characters.Character027_3Png}");
         Boss = new Boss2Agent(bossEntity, boss2Handle, () => _tileMap?.NavGraph);
-        Console.WriteLine(
+        Debug.WriteLine(
             $"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {ConfigManager.Boss2.MaxHp}, Pos: {ConfigManager.Boss2.SpawnX}, {ConfigManager.Boss2.SpawnY})");
     }
 
@@ -212,7 +212,7 @@ public class BattleScene : IDisposable {
                     t.ScaleY = bCfg.ScaleY;
                 }
 
-                Console.WriteLine("[BattleScene] Boss 1 の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
+                Debug.WriteLine("[BattleScene] Boss 1 の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
             }
         }
     }
@@ -236,7 +236,7 @@ public class BattleScene : IDisposable {
                     t.ScaleY = bCfg.ScaleY;
                 }
 
-                Console.WriteLine(
+                Debug.WriteLine(
                     "[BattleScene] Boss 2 の Hurtbox / Hitbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
             }
         }
@@ -257,7 +257,7 @@ public class BattleScene : IDisposable {
             t.ScaleY = pCfg.ScaleY;
         }
 
-        Console.WriteLine("[BattleScene] Player の Hurtbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
+        Debug.WriteLine("[BattleScene] Player の Hurtbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
     }
 
     /// <summary>
@@ -276,18 +276,18 @@ public class BattleScene : IDisposable {
         _ecsWorld.Set(_tileMap);
 
         _tileMap.BuildPlatformColliders(_ecsWorld);
-        Console.WriteLine("[BattleScene] TileMap および TileSet プラットフォームコライダーが正常に初期化されました。");
+        Debug.WriteLine("[BattleScene] TileMap および TileSet プラットフォームコライダーが正常に初期化されました。");
     }
 
     /// <summary>
     ///     シーンのフレーム更新処理を行います。
     /// </summary>
-    /// <param name="deltaTime">前フレームからの経過時間（秒）</param>
+    /// <param name="deltaTime">前フレームからの経過時間秒数</param>
     public void Update(float deltaTime)
     {
         HandleInput();
 
-        // 1. コントローラー意思決定フェーズ（ハードウェア入力および AI 状態機を解釈し、Intent / Commands を注入）
+        // 1. コントローラー意思決定フェーズ: ハードウェア入力および AI 状態機を解釈し Intent と Commands を注入
         PlayerController.PollAndProcessInput();
         Boss.Update(deltaTime, new Vec2f(Player.X, Player.Y), new Vec2f(Player.Vx, Player.Vy), _ecsWorld, _platformQuery);
 

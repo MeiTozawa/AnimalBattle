@@ -76,8 +76,25 @@ public sealed class AssetManager : IDisposable {
             if (!LoadCharacterClips(charType, config)) allLoaded = false;
         }
 
+        ReadOnlySpan<string> commonTextures =
+        [
+            ResourcePath.Characters.Character031_3Png,
+            ResourcePath.Characters.Character027_3Png,
+            ResourcePath.Characters.SwordShieldEffectSpritesPng,
+            ResourcePath.Platform.SheetPng
+        ];
+
+        foreach (var texPath in commonTextures)
+        {
+            var loadResult = LoadTexture(texPath);
+            if (loadResult.IsError)
+            {
+                allLoaded = false;
+            }
+        }
+
         IsInitialized = true;
-        if (!allLoaded) Console.WriteLine("[AssetManager 警告] 一部のアセットのロードに失敗しました。デフォルト/欠落テクスチャ状態で継続します。");
+        if (!allLoaded) Debug.WriteLine("[AssetManager 警告] 一部のアセットのロードに失敗しました。デフォルト/欠落テクスチャ状態で継続します。");
     }
 
     private static bool LoadCharacterSprite(CharacterType charType)
@@ -90,12 +107,12 @@ public sealed class AssetManager : IDisposable {
         {
             _characterSpriteHandles[charType] = loadResult.Value;
             _textureHandles[relPath] = loadResult.Value;
-            Console.WriteLine(
+            Debug.WriteLine(
                 $"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {loadResult.Value})");
             return true;
         }
 
-        Console.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {loadResult.FirstError.Description}");
+        Debug.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {loadResult.FirstError.Description}");
         return false;
     }
 
@@ -108,7 +125,7 @@ public sealed class AssetManager : IDisposable {
                 var loadResult = LoadTexture(clip.SpritePath);
                 if (loadResult.IsError)
                 {
-                    Console.WriteLine(
+                    Debug.WriteLine(
                         $"[C# アニメーション警告] クリップスプライトのロードに失敗しました ({charType} / {clip.Name}): {clip.SpritePath}");
                     allClipsLoaded = false;
                 }
@@ -121,8 +138,8 @@ public sealed class AssetManager : IDisposable {
     ///     指定された相対パスまたは絶対パスのテクスチャ画像をロードし、ハンドルをキャッシュして返します。
     ///     既にロード済みの場合はキャッシュされたハンドルを返します。
     /// </summary>
-    /// <param name="relativePath">リソース相対パス（例: <see cref="ResourcePath.Platform.SheetPng" />）</param>
-    /// <returns>グラフィックハンドルを含む <see cref="ErrorOr.ErrorOr{T}" /></returns>
+    /// <param name="relativePath">リソース相対パス。</param>
+    /// <returns>グラフィックハンドルを含む ErrorOr 結果。</returns>
     public static ErrorOr<int> LoadTexture(string relativePath)
     {
         if (string.IsNullOrWhiteSpace(relativePath)) return Error.Validation("Asset.EmptyPath", "相対パスが null または空です。");
@@ -134,19 +151,14 @@ public sealed class AssetManager : IDisposable {
         if (!loadResult.IsError)
         {
             _textureHandles[relativePath] = loadResult.Value;
-            Console.WriteLine($"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {loadResult.Value})");
+            Debug.WriteLine($"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {loadResult.Value})");
             return loadResult;
         }
 
-        Console.WriteLine($"[C# アセット警告] テクスチャのロードに失敗しました ({relativePath}): {loadResult.FirstError.Description}");
+        Debug.WriteLine($"[C# アセット警告] テクスチャのロードに失敗しました ({relativePath}): {loadResult.FirstError.Description}");
         return loadResult;
     }
 
-    /// <summary>
-    ///     ロード済みのテクスチャハンドルを取得します。未ロードの場合はロードを試行します。
-    /// </summary>
-    /// <param name="relativePath">リソース相対パス（例: <see cref="ResourcePath.Platform.SheetPng" />）</param>
-    /// <returns>グラフィックハンドルを含む <see cref="ErrorOr.ErrorOr{T}" /></returns>
     /// <summary>
     ///     キャッシュ済みのテクスチャハンドルの取得を試行します。
     /// </summary>
@@ -211,11 +223,11 @@ public sealed class AssetManager : IDisposable {
     }
 
     /// <summary>
-    ///     アニメーションクリップ識別子と再生経過時間から、スプライトシート上の切り出し矩形 (UV SrcRect) を O(1) で計算します。
+    ///     アニメーションクリップ識別子と再生経過時間からスプライトシート上の切り出し矩形 UV SrcRect を定数時間で計算します。
     /// </summary>
     /// <param name="config">アニメーション設定</param>
     /// <param name="clipId">再生対象クリップ識別子</param>
-    /// <param name="animTimer">再生経過時間（秒）</param>
+    /// <param name="animTimer">再生経過時間秒数</param>
     /// <param name="isFinished">非ループ再生が完了したかどうかの出力</param>
     /// <returns>スプライトシート切り出し領域</returns>
     public static Rect CalculateSrcRect(AnimationConfig config, StringId clipId, float animTimer, out bool isFinished)

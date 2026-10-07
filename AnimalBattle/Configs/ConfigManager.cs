@@ -114,11 +114,13 @@ public static class ConfigManager {
 
         if (failureCount > 0)
         {
-            Console.WriteLine($"[C# 設定警告] TOML 設定読み込み完了 (成功: {successCount}, 失敗: {failureCount})。");
+            Debug.WriteLine($"[C# 設定警告] TOML 設定読み込み完了 (成功: {successCount}, 失敗: {failureCount})。");
             return;
         }
 
-        Console.WriteLine($"[C# 設定初期化] 全ての TOML 設定ファイル（{successCount} 件）の読み込みが正常に完了しました！");
+        Debug.WriteLine($"[C# 設定初期化] 全ての TOML 設定ファイル（{successCount} 件）の読み込みが正常に完了しました！");
+        Debug.Assert(SpecialBullets.CyanWaveAmplitude > 0.0f && SpecialBullets.MagentaPulseAmplitude > 0.0f, "特殊弾幕変調パラメータが正常に読み込まれていません。");
+        Debug.WriteLine($"[C# 特殊弾幕設定] Cyan Amp={SpecialBullets.CyanWaveAmplitude} Freq={SpecialBullets.CyanWaveFrequency} | Magenta Amp={SpecialBullets.MagentaPulseAmplitude} Freq={SpecialBullets.MagentaPulseFrequency}");
 
         _boss1ConfigContainer.OnConfigReloaded += Boss1PipelineDefinition.Reload;
         _boss2ConfigContainer.OnConfigReloaded += Boss2PipelineDefinition.Reload;
@@ -128,7 +130,7 @@ public static class ConfigManager {
         ErrorOr<BakedConfigBundle> loadResult = BinaryConfigLoader.Load();
         if (loadResult.IsError)
         {
-            Console.WriteLine($"[C# 設定エラー] Release 版バイナリ設定 (baked_configs.bin) の読み込みに失敗しました: {loadResult.FirstError.Description}");
+            Debug.WriteLine($"[C# 設定エラー] Release 版バイナリ設定 (baked_configs.bin) の読み込みに失敗しました: {loadResult.FirstError.Description}");
             return;
         }
 
@@ -143,7 +145,7 @@ public static class ConfigManager {
         _renderConfigContainer = new(bundle.Render);
         _tileSetConfigContainer = new(bundle.TileSet);
 
-        Console.WriteLine("[C# 設定初期化] Release 版: バイナリ設定データ (baked_configs.bin) を正常にロードして起動しました。");
+        Debug.WriteLine("[C# 設定初期化] Release 版: バイナリ設定データ (baked_configs.bin) を正常にロードして起動しました。");
 #endif
 
         Boss1PipelineDefinition.Reload();
@@ -165,7 +167,7 @@ public static class ConfigManager {
         }
         else
         {
-            Console.WriteLine(
+            Debug.WriteLine(
                 $"[C# 設定警告] {configPath} の読み込みに失敗しました ({res.FirstError.Type}): {res.FirstError.Description}");
             failureCount++;
         }

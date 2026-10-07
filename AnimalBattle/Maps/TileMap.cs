@@ -167,7 +167,7 @@ public sealed class TileMap(
         var b2Cfg = ConfigManager.Boss2;
         var arenaCfg = ConfigManager.Arena;
         NavGraph.Build(nodes, b2Cfg.JumpForce, b2Cfg.Gravity, b2Cfg.MoveSpeed, arenaCfg.NavigationGraph);
-        Console.WriteLine(
+        Debug.WriteLine(
             $"[TileMap ナビゲーション] プラットフォームナビゲーショングラフを正常に構築しました: {NavGraph.Nodes.Count} ノード, {NavGraph.Links.Count} リンク (跳躍/落下遷移)");
     }
 

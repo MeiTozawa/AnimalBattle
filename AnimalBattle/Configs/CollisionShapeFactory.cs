@@ -77,7 +77,7 @@ public static class CollisionShapeFactory {
         var result = Create(shapeKind, radius, width, height, offsetX, offsetY);
         if (!result.IsError) return result.Value;
 
-        Console.WriteLine(
+        Debug.WriteLine(
             $"[警告] 衝突形状の生成に失敗しました ({result.FirstError.Type}): {result.FirstError.Description}。安全なフォールバック (Circle 8px) を使用します。");
         return new CollisionShape.Circle(radius > 0.0f ? radius : 8.0f, offsetX, offsetY);
     }

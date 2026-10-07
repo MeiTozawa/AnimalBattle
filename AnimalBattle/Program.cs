@@ -14,10 +14,10 @@ internal static class Program {
             const int width = 1280;
             const int height = 720;
 
-            Console.WriteLine("C++ DxLib ネイティブエンジンを初期化中...");
+            Debug.WriteLine("C++ DxLib ネイティブエンジンを初期化中...");
             GameEngine.Initialize(width, height);
 
-            Console.WriteLine("Flecs.NET ワールドおよびバトルシーンを初期化中...");
+            Debug.WriteLine("Flecs.NET ワールドおよびバトルシーンを初期化中...");
             using BattleScene battleScene = new();
             battleScene.Initialize();
 
@@ -25,19 +25,19 @@ internal static class Program {
             var lastTime = stopwatch.ElapsedTicks;
             var tickFrequency = (double)Stopwatch.Frequency;
 
-            Console.WriteLine("メインゲームループを開始します...");
+            Debug.WriteLine("メインゲームループを開始します...");
             var frameCount = 0;
             while (true)
             {
                 if (!GameEngine.ProcessMessage())
                 {
-                    Console.WriteLine($"[終了] ウィンドウメッセージ処理が終了を返しました (フレーム数: {frameCount})");
+                    Debug.WriteLine($"[終了] ウィンドウメッセージ処理が終了を返しました (フレーム数: {frameCount})");
                     break;
                 }
 
                 if (GameEngine.IsExitRequested())
                 {
-                    Console.WriteLine($"[終了] アプリケーション終了要求を受信しました (フレーム数: {frameCount})");
+                    Debug.WriteLine($"[終了] アプリケーション終了要求を受信しました (フレーム数: {frameCount})");
                     break;
                 }
 
@@ -60,11 +60,10 @@ internal static class Program {
         catch (Exception ex)
         {
             Debug.WriteLine($"[致命的クラッシュ例外]:\n{ex}");
-            Console.WriteLine($"[致命的クラッシュ例外]:\n{ex}");
         }
         finally
         {
-            Console.WriteLine("ネイティブエンジンを終了中...");
+            Debug.WriteLine("ネイティブエンジンを終了中...");
             GameEngine.Shutdown();
         }
 
