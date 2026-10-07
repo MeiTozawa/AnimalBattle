@@ -3,6 +3,7 @@ using System.Drawing;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
+using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters.Boss;
@@ -15,6 +16,7 @@ public sealed class Boss1Agent : BaseBossAgent
 {
     private readonly Boss1Brain _brain;
     private World _currentWorld;
+    private float _emitterAngleOffset;
 
     /// <summary>
     ///     Boss 1 の Flecs エンティティおよびテクスチャハンドルを指定してエージェントを初期化します。
@@ -26,7 +28,7 @@ public sealed class Boss1Agent : BaseBossAgent
         var b1Cfg = ConfigManager.Boss1;
         _brain = new Boss1Brain(b1Cfg.SpawnX, b1Cfg.SpawnY);
 
-        _brain.OnEmitBullet += HandleEmitBullet;
+        _brain.OnEmitBarrageWave += HandleEmitBarrageWave;
         _brain.OnClearBullets += HandleClearBullets;
 
         InitializeComponents(entity, spriteHandle);
@@ -121,81 +123,16 @@ public sealed class Boss1Agent : BaseBossAgent
         SetTransform(b1Cfg.SpawnX, b1Cfg.SpawnY, b1Cfg.ScaleX, b1Cfg.ScaleY);
         ref var t = ref Entity.GetMut<Transform>();
         t.Rotation = 0.0f;
+        _emitterAngleOffset = 0.0f;
         ResetHealth(b1Cfg.MaxHp);
 
         _brain.Reset(b1Cfg.SpawnX, b1Cfg.SpawnY);
     }
 
-    private void HandleEmitBullet(BossSkill skill, float vx, float vy)
+    private void HandleEmitBarrageWave(BossSkill skill, Vec2f origin, Vec2f target)
     {
         if (_currentWorld == default) return;
-        var patternCfg = ConfigManager.Boss1Patterns;
-        ref readonly var trans = ref Entity.Get<Transform>();
-
-        if (skill == BossSkill.RainDrop)
-        {
-            var bType = Boss1PatternConfig.ParseBulletType(patternCfg.RainDrop.BulletType, BulletType.Cyan);
-            CombatEffectHelper.SpawnBossSpecialBullet(
-                _currentWorld,
-                vx,
-                0.0f,
-                0.0f,
-                vy,
-                patternCfg.RainDrop.BulletRadius,
-                bType,
-                patternCfg.RainDrop.FillColor,
-                patternCfg.RainDrop.OutlineColor);
-            return;
-        }
-
-        float radius;
-        Color fill;
-        Color outline;
-        var type = BulletType.Normal;
-
-        if (skill == BossSkill.Aimed3Shot)
-        {
-            radius = patternCfg.Aimed3Shot.BulletRadius;
-            fill = patternCfg.Aimed3Shot.FillColor;
-            outline = patternCfg.Aimed3Shot.OutlineColor;
-            type = Boss1PatternConfig.ParseBulletType(patternCfg.Aimed3Shot.BulletType, BulletType.Cyan);
-        }
-        else if (skill == BossSkill.RingBurst)
-        {
-            radius = patternCfg.RingBurst.BulletRadius;
-            fill = patternCfg.RingBurst.FillColor;
-            outline = patternCfg.RingBurst.OutlineColor;
-            type = Boss1PatternConfig.ParseBulletType(patternCfg.RingBurst.BulletType, BulletType.Magenta);
-        }
-        else if (skill == BossSkill.DoubleSpiral)
-        {
-            radius = patternCfg.DoubleSpiral.BulletRadius;
-            fill = patternCfg.DoubleSpiral.FillColor1;
-            outline = patternCfg.DoubleSpiral.OutlineColor1;
-            type = Boss1PatternConfig.ParseBulletType(patternCfg.DoubleSpiral.BulletType, BulletType.Yellow);
-        }
-        else if (skill == BossSkill.CrossChaos)
-        {
-            radius = patternCfg.CrossChaos.BulletRadius;
-            fill = patternCfg.CrossChaos.FillColor;
-            outline = patternCfg.CrossChaos.OutlineColor;
-            type = Boss1PatternConfig.ParseBulletType(patternCfg.CrossChaos.BulletType, BulletType.Magenta);
-        }
-        else if (skill == BossSkill.FastSniper)
-        {
-            radius = patternCfg.FastSniper.BulletRadius;
-            fill = patternCfg.FastSniper.FillColor;
-            outline = patternCfg.FastSniper.OutlineColor;
-            type = Boss1PatternConfig.ParseBulletType(patternCfg.FastSniper.BulletType, BulletType.Black);
-        }
-        else
-        {
-            radius = 6.0f;
-            fill = ColorPalette.RedBright;
-            outline = ColorPalette.White;
-        }
-
-        CombatEffectHelper.SpawnBossSpecialBullet(_currentWorld, trans.X, trans.Y, vx, vy, radius, type, fill, outline);
+        BarrageEmitter.EmitBoss1(_currentWorld, skill, origin, target, ref _emitterAngleOffset);
     }
 
     private void HandleClearBullets()

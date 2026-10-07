@@ -140,8 +140,8 @@ public sealed class Boss1Brain {
     /// <summary>死亡状態かどうかを取得します。</summary>
     public bool IsDead => _isDead;
 
-    /// <summary>弾幕発射イベント。</summary>
-    public event Action<BossSkill, float, float>? OnEmitBullet;
+    /// <summary>弾幕波次発射イベント。</summary>
+    public event Action<BossSkill, Vec2f, Vec2f>? OnEmitBarrageWave;
 
     /// <summary>近接攻撃判定生成イベント。</summary>
     public event Action<BossSkill, float, float>? OnCreateHitbox;
@@ -167,7 +167,7 @@ public sealed class Boss1Brain {
         RegisterSkill(BossSkill.CrossChaos, patternCfg);
         RegisterSkill(BossSkill.FastSniper, patternCfg);
 
-        _asc.OnEmitBullet += (skill, vx, vy) => OnEmitBullet?.Invoke(skill, vx, vy);
+        _asc.OnEmitBullet += (skill, _, _) => OnEmitBarrageWave?.Invoke(skill, _currentPosition, _targetPosition);
         _asc.OnCreateHitbox += (skill, ox, oy) => OnCreateHitbox?.Invoke(skill, ox, oy);
         _asc.OnPlayAudio += (cue, vol) => OnPlayAudio?.Invoke(cue, vol);
         _asc.OnScreenShake += (str, dur) => OnScreenShake?.Invoke(str, dur);
