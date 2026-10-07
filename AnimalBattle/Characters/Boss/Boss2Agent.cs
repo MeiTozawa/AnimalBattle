@@ -61,6 +61,12 @@ public sealed class Boss2Agent : BaseBossAgent
     public override bool IsVulnerable => _brain.IsVulnerable;
 
     /// <inheritdoc />
+    public override float TargetX => _brain.TargetX;
+
+    /// <inheritdoc />
+    public override float TargetY => _brain.TargetY;
+
+    /// <inheritdoc />
     public override bool FacingRight => _brain.FacingRight;
 
     private void InitializeComponents(Entity entity, int spriteHandle)

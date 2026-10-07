@@ -54,6 +54,8 @@ public sealed class Boss1Brain {
         _configuration = configuration ?? new Boss1DefaultConfiguration();
         BaseX = spawnX;
         _currentPosition = new Vec2f(spawnX, spawnY);
+        _startPosition = new Vec2f(spawnX, spawnY);
+        _targetPosition = new Vec2f(spawnX, spawnY);
         Phase = Phase.Phase1;
 
         InitializeAbilities();
@@ -66,6 +68,15 @@ public sealed class Boss1Brain {
 
     /// <summary>現在の Boss 座標を取得します。</summary>
     public Vec2f Position => _currentPosition;
+
+    /// <summary>AI 目標地点座標を取得します。</summary>
+    public Vec2f TargetPosition => _targetPosition;
+
+    /// <summary>AI 目標地点 X 座標を取得します。</summary>
+    public float TargetX => _targetPosition.X;
+
+    /// <summary>AI 目標地点 Y 座標を取得します。</summary>
+    public float TargetY => _targetPosition.Y;
 
     /// <summary>現在の戦闘フェーズを取得します。</summary>
     public Phase Phase { get; private set; }
@@ -234,6 +245,8 @@ public sealed class Boss1Brain {
     public void Reset(float x, float y)
     {
         _currentPosition = new Vec2f(x, y);
+        _startPosition = new Vec2f(x, y);
+        _targetPosition = new Vec2f(x, y);
         _stateTimer = 0.0f;
         _hoverTimer = 0.0f;
         _attackIndex = 0;
@@ -337,6 +350,7 @@ public sealed class Boss1Brain {
     {
         _stateTimer += dt;
         _hoverTimer += dt;
+        _targetPosition = playerPos;
 
         var phaseCfg = _configuration.GetPhase(Phase);
         Vec2f basePos = new(BaseX, phaseCfg.HoverBaseY);

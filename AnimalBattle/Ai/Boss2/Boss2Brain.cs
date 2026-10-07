@@ -63,6 +63,7 @@ public sealed class Boss2Brain {
 
     private Vec2f _currentPosition;
     private Vec2f _currentVelocity;
+    private Vec2f _targetPosition;
     private bool _facingRight = true;
 
     /// <summary>Boss 2 ブレインを初期化します。</summary>
@@ -79,6 +80,7 @@ public sealed class Boss2Brain {
         _configuration = configuration ?? new Boss2DefaultConfiguration();
         _navGraphProvider = navGraphProvider;
         _currentPosition = new Vec2f(spawnX, spawnY);
+        _targetPosition = new Vec2f(spawnX, spawnY);
         Phase = Phase.Phase1;
 
         InitializeAbilities();
@@ -88,6 +90,15 @@ public sealed class Boss2Brain {
 
     /// <summary>現在の Boss 座標を取得します。</summary>
     public Vec2f Position => _currentPosition;
+
+    /// <summary>AI 目標地点座標を取得します。</summary>
+    public Vec2f TargetPosition => _targetPosition;
+
+    /// <summary>AI 目標地点 X 座標を取得します。</summary>
+    public float TargetX => _targetPosition.X;
+
+    /// <summary>AI 目標地点 Y 座標を取得します。</summary>
+    public float TargetY => _targetPosition.Y;
 
     /// <summary>現在の Boss 移動速度を取得します。</summary>
     public Vec2f Velocity => _currentVelocity;
@@ -300,6 +311,7 @@ public sealed class Boss2Brain {
     public void Reset(float x, float y)
     {
         _currentPosition = new Vec2f(x, y);
+        _targetPosition = new Vec2f(x, y);
         _currentVelocity = Vec2f.Zero;
         _facingRight = true;
         _stateTimer = 0.0f;
@@ -418,6 +430,7 @@ public sealed class Boss2Brain {
     {
         _stateTimer += dt;
         _currentVelocity = Vec2f.Zero;
+        _targetPosition = playerPos;
 
         var dx = playerPos.X - _currentPosition.X;
         if (MathF.Abs(dx) > _configuration.CombatSettings.MoveThreshold)
@@ -449,6 +462,7 @@ public sealed class Boss2Brain {
         }
 
         _stateTimer += dt;
+        _targetPosition = playerPos;
         var phaseCfg = _configuration.GetPhase(Phase);
         var dx = playerPos.X - _currentPosition.X;
         var dy = playerPos.Y - _currentPosition.Y;
@@ -516,6 +530,7 @@ public sealed class Boss2Brain {
             var result = _asc.TryActivateAbility(chosenSkill, dir);
             if (!result.IsError)
             {
+                _targetPosition = new Vec2f(_currentPosition.X + dx, _currentPosition.Y + dy);
                 _currentVelocity = Vec2f.Zero;
                 _combatMachine.ChangeState(_abilityState);
                 return;

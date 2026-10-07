@@ -54,6 +54,12 @@ public sealed class Boss1Agent : BaseBossAgent
     public override float HoverTimer => _brain.HoverTimer;
 
     /// <inheritdoc />
+    public override float TargetX => _brain.TargetX;
+
+    /// <inheritdoc />
+    public override float TargetY => _brain.TargetY;
+
+    /// <inheritdoc />
     public override bool IsVulnerable => _brain.IsVulnerable;
 
     private void InitializeComponents(Entity entity, int spriteHandle)
