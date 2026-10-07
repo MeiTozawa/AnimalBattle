@@ -165,17 +165,6 @@ public abstract class BaseBossAgent : Pawn, IDisposable
         World world,
         Query<Transform, CollisionBox> platformQuery);
 
-    /// <summary>
-    ///     プレイヤー移動速度を省略した互換用更新メソッド。
-    /// </summary>
-    public void Update(
-        float deltaTime,
-        Vec2f playerPosition,
-        World world,
-        Query<Transform, CollisionBox> platformQuery)
-    {
-        Update(deltaTime, playerPosition, Vec2f.Zero, world, platformQuery);
-    }
 
     /// <summary>
     ///     Boss の状態を初期位置および初期パラメータへリセットします。

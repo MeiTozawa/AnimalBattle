@@ -3,7 +3,6 @@ using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Decision;
 using AnimalBattle.Ai.Skills;
-using ErrorOr;
 
 namespace AnimalBattle.Ai.Abilities;
 
@@ -75,39 +74,35 @@ public sealed class AbilitySystemComponent {
 
     /// <summary>
     ///     指定技能の発動を試行します。
-    ///     発動失敗時は ErrorOr で返します。
     /// </summary>
     /// <param name="skill">発動対象技能。</param>
     /// <param name="direction">向き係数。</param>
-    public ErrorOr<Success> TryActivateAbility(BossSkill skill, float direction = 1.0f)
+    /// <returns>発動に成功した場合は true、失敗時は false。</returns>
+    public bool TryActivateAbility(BossSkill skill, float direction = 1.0f)
     {
         // 1. 未登録チェック
         if (!_abilities.TryGetValue(skill, out var ability))
         {
             Debug.Assert(false, $"[ASC] 未登録の技能を発動しようとしました: {skill}");
-            return Error.NotFound("Ability.NotRegistered", $"技能 '{skill}' は登録されていません。");
+            return false;
         }
 
         // 2. 冷却時間判定
         if (!_cooldownTracker.IsReady(skill))
         {
-            return Error.Conflict("Ability.Cooldown", $"技能 '{skill}' は冷却時間中です。");
+            return false;
         }
 
         // 3. 排他タグ判定
         if ((ActiveTags & ability.BlockedTags) != 0)
         {
-            return Error.Validation(
-                "Ability.Blocked",
-                $"排他タグ 0x{(ulong)(ActiveTags & ability.BlockedTags):X} により技能 '{skill}' の発動が阻止されました。");
+            return false;
         }
 
         // 4. 必須タグ判定
         if (ability.RequiredTags != GameplayTag.None && (ActiveTags & ability.RequiredTags) != ability.RequiredTags)
         {
-            return Error.Validation(
-                "Ability.MissingRequiredTag",
-                $"技能 '{skill}' の発動に必要なタグを満たしていません。");
+            return false;
         }
 
         // 5. 発動成功
@@ -116,7 +111,7 @@ public sealed class AbilitySystemComponent {
         _cooldownTracker.Trigger(skill, ability.Cooldown);
         _skillRunner.Start(ability.Timeline, direction);
 
-        return Result.Success;
+        return true;
     }
 
     /// <summary>

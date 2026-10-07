@@ -262,8 +262,8 @@ public static class CombatEffectHelper {
         Color color,
         SlashDirection direction = SlashDirection.Right)
     {
-        var slashRes = AssetManager.GetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng);
-        var slashHandle = !slashRes.IsError ? slashRes.Value : -1;
+        var hasTexture = AssetManager.TryGetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng, out var slashHandle);
+        Debug.Assert(hasTexture, $"近接斬撃エフェクトテクスチャがロードされていません: {ResourcePath.Characters.SwordShieldEffectSpritesPng}");
         var colIndex = 5; // 第 6 列 (0-based: 5)
         var rowIndex = (int)direction;
         var srcRect = Rect.FromWidthHeight(colIndex * 64, rowIndex * 64, 64, 64);

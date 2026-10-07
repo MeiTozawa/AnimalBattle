@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -22,16 +23,17 @@ public static class SpriteAnimationSystem {
 
                 anim.Timer += it.DeltaTime();
 
-                var charConfigRes = AssetManager.GetCharacterConfig(anim.CharacterType);
-                if (!charConfigRes.IsError && charConfigRes.Value != null)
+                if (!AssetManager.TryGetCharacterConfig(anim.CharacterType, out var charConfig))
                 {
-                    var charConfig = charConfigRes.Value;
-                    var handleRes = AssetManager.GetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip);
-                    sprite.GraphHandle = !handleRes.IsError ? handleRes.Value : -1;
-                    sprite.SrcRect =
-                        AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out var isFinished);
-                    anim.IsFinished = isFinished;
+                    Debug.Assert(false, $"キャラクターのアニメーション設定が登録されていません: {anim.CharacterType}");
+                    return;
                 }
+
+                AssetManager.TryGetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip, out var handle);
+                sprite.GraphHandle = handle;
+                sprite.SrcRect =
+                    AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out var isFinished);
+                anim.IsFinished = isFinished;
             });
 
         return world;

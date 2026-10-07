@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using AnimalBattle.Configs;
-using ErrorOr;
 
 namespace AnimalBattle.Maps.Navigation;
 
@@ -196,12 +195,10 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         if (currentNode == null || targetNode == null)
             return NavPlan.CreateNoPath(targetX, moveSpeed, currentNode, targetNode);
 
-        // 3. A* 経路探索 (Boss の現在 X 座標および目標 X 座標を考慮して最短総合到達経路を選択)
-        var pathResult = SearchAStar(currentNode, targetNode, currentX, targetX);
-        if (pathResult.IsError || pathResult.Value.Count == 0)
+        // 3. A* 経路探索
+        if (!TrySearchAStar(currentNode, targetNode, currentX, targetX, out var path) || path.Count == 0)
             return NavPlan.CreateNoPath(targetX, moveSpeed, currentNode, targetNode);
 
-        var path = pathResult.Value;
         var firstLink = path[0];
 
         // 4. 空中滞空中の場合：着地目標地点に向かって水平推力を維持
@@ -302,17 +299,20 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     }
 
     /// <summary>
-    ///     A* 最短経路探索を実行し、現在位置 (startX) から目標位置 (targetX) までの最適な遷移リンク列を計算します。
-    ///     各リンクの離陸点・着地点、空中移動コスト、および中間・終端プラットフォーム上での歩行距離を厳密に考慮します。
+    ///     A* 最短経路探索を実行し、最適な遷移リンク列の計算を試行します。
     /// </summary>
-    private ErrorOr<List<PlatformLink>> SearchAStar(
+    private bool TrySearchAStar(
         PlatformNode start,
         PlatformNode goal,
         float startX,
-        float targetX)
+        float targetX,
+        out List<PlatformLink> path)
     {
         if (!_adjacency.TryGetValue(start.Id, out var startLinks) || startLinks.Count == 0)
-            return Error.NotFound("Nav.NoPath", $"ノード {start.Id} から出る移動リンクが存在しません。");
+        {
+            path = [];
+            return false;
+        }
 
         // 各リンクごとの最小到達累積コスト G(link)
         _aStarGScore.Clear();
@@ -385,10 +385,13 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         }
 
         if (bestGoalLink == null)
-            return Error.NotFound("Nav.NoPath", $"ノード {start.Id} から {goal.Id} への移動経路が見つかりませんでした。");
+        {
+            path = [];
+            return false;
+        }
 
         // 3. 最良終端リンクから始点リンクまでバックトラックして経路を復元
-        List<PlatformLink> path = new();
+        path = new List<PlatformLink>();
         var curr = bestGoalLink;
         while (curr != null)
         {
@@ -397,7 +400,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         }
 
         path.Reverse();
-        return path;
+        return true;
     }
 
     /// <summary>

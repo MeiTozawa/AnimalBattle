@@ -147,47 +147,67 @@ public sealed class AssetManager : IDisposable {
     /// </summary>
     /// <param name="relativePath">リソース相対パス（例: <see cref="ResourcePath.Platform.SheetPng" />）</param>
     /// <returns>グラフィックハンドルを含む <see cref="ErrorOr.ErrorOr{T}" /></returns>
-    public static ErrorOr<int> GetTexture(string relativePath)
+    /// <summary>
+    ///     キャッシュ済みのテクスチャハンドルの取得を試行します。
+    /// </summary>
+    /// <param name="relativePath">リソース相対パス。</param>
+    /// <param name="handle">グラフィックハンドル。</param>
+    /// <returns>取得成功時は true、未キャッシュ時は false。</returns>
+    public static bool TryGetTexture(string relativePath, out int handle)
     {
-        return LoadTexture(relativePath);
+        if (!string.IsNullOrWhiteSpace(relativePath) && _textureHandles.TryGetValue(relativePath, out handle))
+        {
+            return true;
+        }
+
+        handle = -1;
+        return false;
     }
 
+
     /// <summary>
-    ///     指定されたキャラクター種別およびクリップ識別子に対応するグラフィックハンドルを取得します。
-    ///     クリップ専用のスプライトシートが指定されている場合はそれを返し、未指定の場合はキャラクター標準スプライトを返します。
+    ///     キャッシュ済みのキャラクタースプライトハンドルの取得を試行します。
     /// </summary>
-    /// <param name="type">キャラクター種別</param>
-    /// <param name="clipId">再生クリップ識別子（Empty の場合は標準スプライトハンドル）</param>
-    /// <returns>グラフィックハンドルを含む <see cref="ErrorOr.ErrorOr{T}" /></returns>
-    public static ErrorOr<int> GetCharacterSpriteHandle(CharacterType type = CharacterType.Cat,
-        StringId clipId = default)
+    /// <param name="type">キャラクター種別。</param>
+    /// <param name="clipId">クリップ識別子。</param>
+    /// <param name="handle">グラフィックハンドル。</param>
+    /// <returns>取得成功時は true、失敗時は false。</returns>
+    public static bool TryGetCharacterSpriteHandle(CharacterType type, StringId clipId, out int handle)
     {
-        if (clipId != StringId.Empty &&
-            _characterConfigs.TryGetValue(type, out var config))
+        if (clipId != StringId.Empty && _characterConfigs.TryGetValue(type, out var config) && config != null)
         {
             var clip = config.FindClip(clipId);
-            if (clip != null && !string.IsNullOrWhiteSpace(clip.SpritePath))
+            if (clip != null && !string.IsNullOrWhiteSpace(clip.SpritePath) && TryGetTexture(clip.SpritePath, out handle))
             {
-                var clipResult = GetTexture(clip.SpritePath);
-                if (!clipResult.IsError) return clipResult;
+                return true;
             }
         }
 
-        if (_characterSpriteHandles.TryGetValue(type, out var handle)) return handle;
+        if (_characterSpriteHandles.TryGetValue(type, out handle))
+        {
+            return true;
+        }
 
-        return Error.NotFound("Asset.SpriteNotFound", $"キャラクター '{type}' のスプライトハンドルが見つかりません。");
+        handle = -1;
+        return false;
     }
 
     /// <summary>
-    ///     指定されたキャラクター設定を取得します。
+    ///     キャッシュ済みのキャラクターアニメーション設定の取得を試行します。
     /// </summary>
-    /// <param name="type">キャラクター種別</param>
-    /// <returns>アニメーション設定を含む <see cref="ErrorOr.ErrorOr{T}" /></returns>
-    public static ErrorOr<AnimationConfig> GetCharacterConfig(CharacterType type = CharacterType.Cat)
+    /// <param name="type">キャラクター種別。</param>
+    /// <param name="config">取得された設定。</param>
+    /// <returns>取得成功時は true、未登録時は false。</returns>
+    public static bool TryGetCharacterConfig(CharacterType type, out AnimationConfig config)
     {
-        if (_characterConfigs.TryGetValue(type, out var config) && config != null) return config;
+        if (_characterConfigs.TryGetValue(type, out var found) && found != null)
+        {
+            config = found;
+            return true;
+        }
 
-        return Error.NotFound("Asset.ConfigNotFound", $"キャラクター '{type}' のアニメーション設定が見つかりません。");
+        config = null!;
+        return false;
     }
 
     /// <summary>

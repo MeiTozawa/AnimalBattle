@@ -5,7 +5,6 @@ using AnimalBattle.Ai.Hfsm;
 using AnimalBattle.Ai.Skills;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
-using ErrorOr;
 
 namespace AnimalBattle.Ai.Boss1;
 
@@ -375,8 +374,7 @@ public sealed class Boss1Brain : IBossBrain {
             _attackIndex = (_attackIndex + 1) % phaseCfg.AttackOrder.Count;
             var candidateSkill = phaseCfg.AttackOrder[_attackIndex];
 
-            var result = _asc.TryActivateAbility(candidateSkill);
-            if (!result.IsError)
+            if (_asc.TryActivateAbility(candidateSkill))
             {
                 _startPosition = _currentPosition;
                 _targetPosition = playerPos;

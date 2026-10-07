@@ -7,7 +7,6 @@ using AnimalBattle.Ai.Skills;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Maps.Navigation;
-using ErrorOr;
 
 namespace AnimalBattle.Ai.Boss2;
 
@@ -522,8 +521,7 @@ public sealed class Boss2Brain : IBossBrain {
 
         if (chosenSkill != BossSkill.None)
         {
-            var result = _asc.TryActivateAbility(chosenSkill, dir);
-            if (!result.IsError)
+            if (_asc.TryActivateAbility(chosenSkill, dir))
             {
                 _targetPosition = new Vec2f(_currentPosition.X + dx, _currentPosition.Y + dy);
                 _currentVelocity = Vec2f.Zero;
@@ -535,8 +533,7 @@ public sealed class Boss2Brain : IBossBrain {
         if (_stateTimer >= phaseCfg.ChaseTimeout)
         {
             var antiKiteSkill = isSamePlatform ? BossSkill.GroundStomp : BossSkill.LeapSmash;
-            var result = _asc.TryActivateAbility(antiKiteSkill, dir);
-            if (!result.IsError)
+            if (_asc.TryActivateAbility(antiKiteSkill, dir))
             {
                 _currentVelocity = Vec2f.Zero;
                 _combatMachine.ChangeState(_abilityState);

@@ -34,8 +34,8 @@ public class BattleScene : IDisposable {
         ConfigManager.Initialize();
         AssetManager.Initialize();
 
-        var playerHandleRes = AssetManager.GetCharacterSpriteHandle(CharacterType.Cat, "Idle");
-        var playerHandle = !playerHandleRes.IsError ? playerHandleRes.Value : -1;
+        var hasPlayerHandle = AssetManager.TryGetCharacterSpriteHandle(CharacterType.Cat, "Idle", out var playerHandle);
+        Debug.Assert(hasPlayerHandle, "プレイヤーの初期スプライトハンドルが見つかりません。");
 
         _ecsWorld.Import<ComponentRequirementsModule>();
         _ecsWorld.Import<EffectModule>();
@@ -139,8 +139,8 @@ public class BattleScene : IDisposable {
 
     private void SpawnBoss1(Entity bossEntity)
     {
-        var boss1HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character031_3Png);
-        var boss1Handle = !boss1HandleRes.IsError ? boss1HandleRes.Value : -1;
+        var hasBoss1Handle = AssetManager.TryGetTexture(ResourcePath.Characters.Character031_3Png, out var boss1Handle);
+        Debug.Assert(hasBoss1Handle, $"Boss 1 テクスチャがロードされていません: {ResourcePath.Characters.Character031_3Png}");
         Boss = new Boss1Agent(bossEntity, boss1Handle);
         Console.WriteLine(
             $"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {ConfigManager.Boss1.MaxHp}, Pos: {ConfigManager.Boss1.SpawnX}, {ConfigManager.Boss1.SpawnY})");
@@ -148,8 +148,8 @@ public class BattleScene : IDisposable {
 
     private void SpawnBoss2(Entity bossEntity)
     {
-        var boss2HandleRes = AssetManager.GetTexture(ResourcePath.Characters.Character027_3Png);
-        var boss2Handle = !boss2HandleRes.IsError ? boss2HandleRes.Value : -1;
+        var hasBoss2Handle = AssetManager.TryGetTexture(ResourcePath.Characters.Character027_3Png, out var boss2Handle);
+        Debug.Assert(hasBoss2Handle, $"Boss 2 テクスチャがロードされていません: {ResourcePath.Characters.Character027_3Png}");
         Boss = new Boss2Agent(bossEntity, boss2Handle, () => _tileMap?.NavGraph);
         Console.WriteLine(
             $"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {ConfigManager.Boss2.MaxHp}, Pos: {ConfigManager.Boss2.SpawnX}, {ConfigManager.Boss2.SpawnY})");
