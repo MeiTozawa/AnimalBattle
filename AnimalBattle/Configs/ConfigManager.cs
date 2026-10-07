@@ -9,7 +9,7 @@ using ErrorOr;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-///     各種設定（player.toml, boss1.toml, boss2.toml, boss1_patterns.toml, boss2_patterns.toml, special_bullets.toml, arena.toml, render.toml, sheet.toml）を統括管理し、
+///     各種設定を統括管理し、
 ///     Debug ビルド時の動的自動リロードおよび Release ビルド時のバイナリ高速ロードを提供する静的設定マネージャークラス。
 /// </summary>
 public static class ConfigManager {

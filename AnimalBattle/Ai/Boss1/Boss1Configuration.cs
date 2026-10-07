@@ -152,7 +152,7 @@ public interface IBoss1Configuration {
     bool GetAttack(BossSkill skill, out Boss1AttackPattern pattern);
 }
 
-/// <summary>既存 boss1.toml と patterns.toml の既定値を保持する Boss1 設定です。</summary>
+/// <summary>既定値を保持する Boss1 設定です。</summary>
 public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     private readonly Boss1AttackPattern[] _attacks = [
         new(BossSkill.Aimed3Shot, Boss1PipelineDefinition.Pipeline.Attacks[BossSkill.Aimed3Shot], 0.45f, 372.0f, 3,
