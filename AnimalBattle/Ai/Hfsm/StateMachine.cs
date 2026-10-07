@@ -1,0 +1,106 @@
+using System.Diagnostics;
+using AnimalBattle.Core;
+
+namespace AnimalBattle.Ai.Hfsm;
+
+/// <summary>
+///     親状態と子状態の階層更新およびグローバル優先遷移を管理する階層状態マシンです。
+/// </summary>
+public class StateMachine : State {
+    private readonly List<IState> _subStates = [];
+    private readonly List<(Func<bool> Condition, IState TargetState)> _globalTransitions = [];
+    private IState? _currentState;
+
+    /// <summary>現在アクティブな子状態を取得します。</summary>
+    public IState? CurrentState => _currentState;
+
+    /// <summary>
+    ///     状態マシンインスタンスを生成します。
+    /// </summary>
+    public StateMachine(StringId id) : base(id) { }
+
+    /// <summary>子状態を追加します。</summary>
+    public void AddSubState(IState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        state.Parent = this;
+        _subStates.Add(state);
+        _currentState ??= state;
+    }
+
+    /// <summary>初期状態を明示的に設定します。</summary>
+    public void SetInitialState(IState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        Debug.Assert(_subStates.Contains(state), $"未登録の状態を初期状態に設定しようとしました: {state.Id}");
+        _currentState = state;
+    }
+
+    /// <summary>最優先評価されるグローバル遷移条件を追加します。</summary>
+    public void AddGlobalTransition(Func<bool> condition, IState targetState)
+    {
+        ArgumentNullException.ThrowIfNull(condition);
+        ArgumentNullException.ThrowIfNull(targetState);
+        _globalTransitions.Add((condition, targetState));
+    }
+
+    /// <summary>指定子状態へ切り替えます。</summary>
+    public void ChangeState(IState targetState)
+    {
+        ArgumentNullException.ThrowIfNull(targetState);
+
+        if (_currentState == targetState) return;
+
+        _currentState?.Exit();
+        _currentState = targetState;
+        _currentState.Enter();
+    }
+
+    /// <summary>識別子を指定して子状態を検索します。</summary>
+    public bool TryGetSubState(StringId id, out IState? state)
+    {
+        for (var i = 0; i < _subStates.Count; i++)
+        {
+            if (_subStates[i].Id == id)
+            {
+                state = _subStates[i];
+                return true;
+            }
+        }
+
+        state = null;
+        return false;
+    }
+
+    /// <inheritdoc />
+    public override void Enter()
+    {
+        base.Enter();
+        _currentState?.Enter();
+    }
+
+    /// <inheritdoc />
+    public override void Update(float dt)
+    {
+        base.Update(dt);
+
+        for (var i = 0; i < _globalTransitions.Count; i++)
+        {
+            var (condition, target) = _globalTransitions[i];
+            if (condition() && _currentState != target)
+            {
+                ChangeState(target);
+                return;
+            }
+        }
+
+        _currentState?.Update(dt);
+    }
+
+    /// <inheritdoc />
+    public override void Exit()
+    {
+        _currentState?.Exit();
+        base.Exit();
+    }
+}
