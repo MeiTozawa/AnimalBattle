@@ -4,6 +4,29 @@ using ErrorOr;
 namespace AnimalBattle.Configs;
 
 /// <summary>
+///     TOML で定義される単一キーフレームイベント設定クラス。
+/// </summary>
+public sealed class SkillEventConfig {
+    /// <summary>発動遅延時間（秒）。</summary>
+    public float Time { get; set; }
+
+    /// <summary>イベント種別（bullet, hitbox, movement, sound, shake など）。</summary>
+    public string Type { get; set; } = string.Empty;
+
+    /// <summary>パラメータ 0（弾速、オフセットX、音量、振動強度など）。</summary>
+    public float Param0 { get; set; }
+
+    /// <summary>パラメータ 1（弾数、オフセットY、所要時間など）。</summary>
+    public float Param1 { get; set; }
+
+    /// <summary>パラメータ 2（拡散角、振動減衰など）。</summary>
+    public float Param2 { get; set; }
+
+    /// <summary>文字パラメータ（音効Cue名、イージング名など）。</summary>
+    public string StrParam { get; set; } = string.Empty;
+}
+
+/// <summary>
 ///     俯衝突進・メテオダイブ技能の設定クラス。
 /// </summary>
 public sealed class DiveRamConfig {
@@ -51,6 +74,9 @@ public sealed class DiveRamConfig {
 
     /// <summary>突進補間に使用するイージング種別</summary>
     public EaseType EaseType { get; set; }
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -98,6 +124,9 @@ public sealed class Aimed3ShotConfig {
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
     public string BulletType { get; set; } = string.Empty;
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -145,6 +174,9 @@ public sealed class RingBurstConfig {
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
     public string BulletType { get; set; } = string.Empty;
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -195,6 +227,9 @@ public sealed class DoubleSpiralConfig {
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
     public string BulletType { get; set; } = string.Empty;
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -242,6 +277,9 @@ public sealed class RainDropConfig {
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
     public string BulletType { get; set; } = string.Empty;
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -286,6 +324,9 @@ public sealed class CrossChaosConfig {
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
     public string BulletType { get; set; } = string.Empty;
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -327,6 +368,9 @@ public sealed class FastSniperConfig {
 
     /// <summary>弾幕種別（"Normal", "Magenta", "Yellow", "Cyan", "Black"）</summary>
     public string BulletType { get; set; } = string.Empty;
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -371,6 +415,9 @@ public sealed class HeavySlashConfig {
 
     /// <summary>斬撃エフェクトカラー (<see cref="Color" />)</summary>
     public Color SlashColor { get; set; }
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -418,6 +465,9 @@ public sealed class GroundStompConfig {
 
     /// <summary>衝撃波外枠カラー (<see cref="Color" />)</summary>
     public Color OutlineColor { get; set; }
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -480,6 +530,9 @@ public sealed class LeapSmashConfig {
 
     /// <summary>破片外枠カラー (<see cref="Color" />)</summary>
     public Color ShrapnelOutlineColor { get; set; }
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -527,6 +580,9 @@ public sealed class DoubleCleaveConfig {
 
     /// <summary>斬撃エフェクトカラー (<see cref="Color" />)</summary>
     public Color SlashColor { get; set; }
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -580,6 +636,9 @@ public sealed class FrenzyChargeConfig {
 
     /// <summary>破片外枠カラー (<see cref="Color" />)</summary>
     public Color ShrapnelOutlineColor { get; set; }
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -627,6 +686,9 @@ public sealed class EarthquakeRoarConfig {
 
     /// <summary>落石外枠カラー (<see cref="Color" />)</summary>
     public Color RockOutlineColor { get; set; }
+
+    /// <summary>時序キーフレームイベント一覧</summary>
+    public List<SkillEventConfig> Events { get; set; } = [];
 }
 
 /// <summary>
@@ -644,15 +706,20 @@ public sealed class SpecialBulletConfig {
 
     /// <summary>品紅弾および黒弾の呼吸拡縮脈動周波数</summary>
     public float MagentaPulseFrequency { get; set; }
+
+    /// <summary>
+    ///     指定された TOML ファイルから特殊弾幕変調設定を読み込みます。
+    /// </summary>
+    public static ErrorOr<ConfigBase<SpecialBulletConfig>> LoadFromFile(string path = ResourcePath.Config.SpecialBullets)
+    {
+        return ConfigBase<SpecialBulletConfig>.LoadFromFile(path);
+    }
 }
 
 /// <summary>
-///     Config/patterns.toml から読み込まれる各技能の FSM アクション設定クラス。
+///     Boss 1 (Ancient Cat Overlord) 専用の技能・弾幕パターン設定クラス。
 /// </summary>
-public sealed class PatternConfig {
-    /// <summary>特殊弾幕変調パラメータ設定</summary>
-    public SpecialBulletConfig SpecialBullet { get; set; } = new();
-
+public sealed class Boss1PatternConfig {
     /// <summary>俯衝突進・メテオダイブ技能設定</summary>
     public DiveRamConfig DiveRam { get; set; } = new();
 
@@ -674,6 +741,28 @@ public sealed class PatternConfig {
     /// <summary>高速レーザースナイパー弾幕技能設定</summary>
     public FastSniperConfig FastSniper { get; set; } = new();
 
+    /// <summary>
+    ///     文字列で指定された弾幕種別を <see cref="BulletType" /> 列挙型へパースします。
+    /// </summary>
+    public static BulletType ParseBulletType(string? typeStr, BulletType defaultType = BulletType.Normal)
+    {
+        if (!string.IsNullOrWhiteSpace(typeStr) && Enum.TryParse(typeStr, true, out BulletType result)) return result;
+        return defaultType;
+    }
+
+    /// <summary>
+    ///     指定された TOML ファイルから Boss 1 パターン設定を読み込みます。
+    /// </summary>
+    public static ErrorOr<ConfigBase<Boss1PatternConfig>> LoadFromFile(string path = ResourcePath.Config.Boss1Patterns)
+    {
+        return ConfigBase<Boss1PatternConfig>.LoadFromFile(path);
+    }
+}
+
+/// <summary>
+///     Boss 2 (Ground Crusher Golem) 専用の近接・広域技能パターン設定クラス。
+/// </summary>
+public sealed class Boss2PatternConfig {
     /// <summary>Boss 2 重劈斬撃技能設定</summary>
     public HeavySlashConfig HeavySlash { get; set; } = new();
 
@@ -693,24 +782,10 @@ public sealed class PatternConfig {
     public EarthquakeRoarConfig EarthquakeRoar { get; set; } = new();
 
     /// <summary>
-    ///     文字列で指定された弾幕種別を <see cref="BulletType" /> 列挙型へパースします。
+    ///     指定された TOML ファイルから Boss 2 パターン設定を読み込みます。
     /// </summary>
-    /// <param name="typeStr">弾幕種別文字列。</param>
-    /// <param name="defaultType">パース失敗時のデフォルト種別。</param>
-    /// <returns>パースされた <see cref="BulletType" />。</returns>
-    public static BulletType ParseBulletType(string? typeStr, BulletType defaultType = BulletType.Normal)
+    public static ErrorOr<ConfigBase<Boss2PatternConfig>> LoadFromFile(string path = ResourcePath.Config.Boss2Patterns)
     {
-        if (!string.IsNullOrWhiteSpace(typeStr) && Enum.TryParse(typeStr, true, out BulletType result)) return result;
-        return defaultType;
-    }
-
-    /// <summary>
-    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{PatternConfig}" /> インスタンスを生成します。
-    /// </summary>
-    /// <param name="path">TOML ファイル名</param>
-    /// <returns>読み込み結果</returns>
-    public static ErrorOr<ConfigBase<PatternConfig>> LoadFromFile(string path = ResourcePath.Config.Patterns)
-    {
-        return ConfigBase<PatternConfig>.LoadFromFile(path);
+        return ConfigBase<Boss2PatternConfig>.LoadFromFile(path);
     }
 }

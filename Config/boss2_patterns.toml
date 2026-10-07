@@ -1,0 +1,182 @@
+# Boss 2 (Ground Crusher Golem) Skills & Melee Patterns Configuration
+
+[HeavySlash]
+SkillName = "Heavy Cleave Slash"
+WindUpTime = 0.45
+TelegraphColor = 0xFFFF5722
+CastDuration = 0.35
+RecoveryTime = 0.50
+DefaultCooldown = 2.0
+DashSpeed = 360.0
+SlashRangeX = 100.0
+SlashRangeY = 75.0
+SlashRadius = 55.0
+SlashDamage = 1.0
+HitboxDuration = 0.28
+SlashColor = 0xFFFF7043
+
+[[HeavySlash.Events]]
+Time = 0.0
+Type = "movement"
+Param0 = 360.0
+Param1 = 0.2
+Param2 = 0.0
+StrParam = ""
+
+[[HeavySlash.Events]]
+Time = 0.05
+Type = "hitbox"
+Param0 = 0.0
+Param1 = 0.0
+Param2 = 1.0
+StrParam = "Slash"
+
+[[HeavySlash.Events]]
+Time = 0.05
+Type = "shake"
+Param0 = 5.0
+Param1 = 0.2
+Param2 = 0.0
+StrParam = ""
+
+[GroundStomp]
+SkillName = "Ground Stomp Shockwave"
+WindUpTime = 0.50
+TelegraphColor = 0xFFFFC107
+CastDuration = 0.40
+RecoveryTime = 0.50
+DefaultCooldown = 5.0
+HitboxOffsetY = 35.0
+GroundOffsetY = 10.0
+ShockwaveOffsetX = 30.0
+ShockwaveSpeed = 420.0
+ShockwaveRadius = 13.0
+ShockwaveDamage = 1.0
+FillColor = 0xFFFF9800
+OutlineColor = 0xFFFFE082
+
+[[GroundStomp.Events]]
+Time = 0.0
+Type = "hitbox"
+Param0 = 30.0
+Param1 = 0.0
+Param2 = 1.0
+StrParam = "Shockwave"
+
+[[GroundStomp.Events]]
+Time = 0.0
+Type = "shake"
+Param0 = 7.0
+Param1 = 0.25
+Param2 = 0.0
+StrParam = ""
+
+[LeapSmash]
+SkillName = "Titan Leap Smash"
+WindUpTime = 0.40
+TelegraphColor = 0xFFFF3D00
+CastDuration = 0.75
+RecoveryTime = 0.80
+DefaultCooldown = 6.0
+JumpForce = 680.0
+FlyDuration = 0.45
+PeakAltitudeY = 130.0
+ApexHangDuration = 0.5
+DescentSpeed = 1200.0
+ShrapnelCount = 6
+ShrapnelAngleStartRatio = 0.15
+ShrapnelAngleSpanRatio = 0.70
+ShrapnelOffsetY = 15.0
+ShrapnelSpeed = 260.0
+ShrapnelRadius = 7.5
+ShrapnelFillColor = 0xFFFF6D00
+ShrapnelOutlineColor = 0xFFFFD180
+
+[[LeapSmash.Events]]
+Time = 0.45
+Type = "hitbox"
+Param0 = 0.0
+Param1 = 0.0
+Param2 = 1.0
+StrParam = "SmashImpact"
+
+[[LeapSmash.Events]]
+Time = 0.45
+Type = "shake"
+Param0 = 10.0
+Param1 = 0.35
+Param2 = 0.0
+StrParam = ""
+
+[DoubleCleave]
+SkillName = "Twin Cleave Fury"
+WindUpTime = 0.35
+TelegraphColor = 0xFFFF1744
+CastDuration = 0.70
+RecoveryTime = 0.55
+DefaultCooldown = 3.0
+SecondSlashOffsetX = 15.0
+DashSpeed = 420.0
+SlashInterval = 0.30
+SlashRangeX = 105.0
+SlashRangeY = 80.0
+SlashDamage = 1.0
+HitboxDuration = 0.24
+SlashColor = 0xFFFF1744
+
+[[DoubleCleave.Events]]
+Time = 0.0
+Type = "hitbox"
+Param0 = 0.0
+Param1 = 0.0
+Param2 = 1.0
+StrParam = "Slash1"
+
+[[DoubleCleave.Events]]
+Time = 0.30
+Type = "hitbox"
+Param0 = 15.0
+Param1 = 0.0
+Param2 = 1.0
+StrParam = "Slash2"
+
+[FrenzyCharge]
+SkillName = "Frenzy Rampage Charge"
+WindUpTime = 0.55
+TelegraphColor = 0xFFD50000
+CastDuration = 1.30
+RecoveryTime = 0.60
+DefaultCooldown = 7.0
+ChargeSpeed = 620.0
+HitboxWidth = 100.0
+HitboxHeight = 60.0
+HitboxDuration = 0.25
+HitboxColor = 0xFFFF1744
+ShrapnelCount = 8
+ShrapnelSpeed = 240.0
+ShrapnelRadius = 8.0
+ShrapnelFillColor = 0xFFFF5252
+ShrapnelOutlineColor = 0xFFFF8A80
+
+[[FrenzyCharge.Events]]
+Time = 0.0
+Type = "movement"
+Param0 = 620.0
+Param1 = 1.3
+Param2 = 0.0
+StrParam = ""
+
+[EarthquakeRoar]
+SkillName = "Cataclysm Earthquake Roar"
+WindUpTime = 0.60
+TelegraphColor = 0xFF795548
+CastDuration = 1.80
+RecoveryTime = 0.60
+DefaultCooldown = 10.0
+Interval = 0.25
+MinX = 80.0
+MaxX = 1200.0
+RockSpeed = 360.0
+RockRadius = 9.0
+RockFillColor = 0xFF8D6E63
+RockOutlineColor = 0xFFD7CCC8

@@ -221,8 +221,7 @@ public sealed class Boss2Agent : BaseBossAgent
     private void HandleCreateHitbox(BossSkill skill, float offsetX, float offsetY)
     {
         if (_currentWorld == default) return;
-
-        var patternCfg = ConfigManager.Pattern;
+        var patternCfg = ConfigManager.Boss2Patterns;
         var b2Cfg = ConfigManager.Boss2;
         ref readonly var trans = ref Entity.Get<Transform>();
         ref readonly var vel = ref Entity.Get<Velocity>();
@@ -314,7 +313,7 @@ public sealed class Boss2Agent : BaseBossAgent
     private void HandleEmitBullet(BossSkill skill, float vx, float vy)
     {
         if (_currentWorld == default) return;
-        var patternCfg = ConfigManager.Pattern;
+        var patternCfg = ConfigManager.Boss2Patterns;
 
         if (skill == BossSkill.EarthquakeRoar)
         {

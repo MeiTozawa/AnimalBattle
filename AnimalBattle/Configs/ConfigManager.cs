@@ -9,14 +9,16 @@ using ErrorOr;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-///     各種設定（player.toml, boss1.toml, boss2.toml, patterns.toml, arena.toml, render.toml, sheet.toml）を統括管理し、
+///     各種設定（player.toml, boss1.toml, boss2.toml, boss1_patterns.toml, boss2_patterns.toml, special_bullets.toml, arena.toml, render.toml, sheet.toml）を統括管理し、
 ///     Debug ビルド時の動的自動リロードおよび Release ビルド時のバイナリ高速ロードを提供する静的設定マネージャークラス。
 /// </summary>
 public static class ConfigManager {
     private static ConfigBase<PlayerConfig> _playerConfigContainer = new(new PlayerConfig());
     private static ConfigBase<Boss1Config> _boss1ConfigContainer = new(new Boss1Config());
     private static ConfigBase<Boss2Config> _boss2ConfigContainer = new(new Boss2Config());
-    private static ConfigBase<PatternConfig> _patternConfigContainer = new(new PatternConfig());
+    private static ConfigBase<Boss1PatternConfig> _boss1PatternsContainer = new(new Boss1PatternConfig());
+    private static ConfigBase<Boss2PatternConfig> _boss2PatternsContainer = new(new Boss2PatternConfig());
+    private static ConfigBase<SpecialBulletConfig> _specialBulletsContainer = new(new SpecialBulletConfig());
     private static ConfigBase<ArenaConfig> _arenaConfigContainer = new(new ArenaConfig());
     private static ConfigBase<RenderConfig> _renderConfigContainer = new(new RenderConfig());
     private static ConfigBase<TileSetConfig> _tileSetConfigContainer = new(new TileSetConfig());
@@ -36,8 +38,14 @@ public static class ConfigManager {
     /// <summary>Boss 2 (Ground Crusher) 設定オブジェクトを取得します。</summary>
     public static Boss2Config Boss2 => _boss2ConfigContainer.Config;
 
-    /// <summary>弾幕・技能パターン設定オブジェクトを取得します。</summary>
-    public static PatternConfig Pattern => _patternConfigContainer.Config;
+    /// <summary>Boss 1 弾幕・技能パターン設定オブジェクトを取得します。</summary>
+    public static Boss1PatternConfig Boss1Patterns => _boss1PatternsContainer.Config;
+
+    /// <summary>Boss 2 近接・技能パターン設定オブジェクトを取得します。</summary>
+    public static Boss2PatternConfig Boss2Patterns => _boss2PatternsContainer.Config;
+
+    /// <summary>特殊弾幕変調設定オブジェクトを取得します。</summary>
+    public static SpecialBulletConfig SpecialBullets => _specialBulletsContainer.Config;
 
     /// <summary>アリーナ足場設定オブジェクトを取得します。</summary>
     public static ArenaConfig Arena => _arenaConfigContainer.Config;
@@ -57,8 +65,14 @@ public static class ConfigManager {
     /// <summary>Boss 2 設定コンテナを取得します。</summary>
     public static ConfigBase<Boss2Config> Boss2Container => _boss2ConfigContainer;
 
-    /// <summary>弾幕・技能パターン設定コンテナを取得します。</summary>
-    public static ConfigBase<PatternConfig> PatternContainer => _patternConfigContainer;
+    /// <summary>Boss 1 パターン設定コンテナを取得します。</summary>
+    public static ConfigBase<Boss1PatternConfig> Boss1PatternsContainer => _boss1PatternsContainer;
+
+    /// <summary>Boss 2 パターン設定コンテナを取得します。</summary>
+    public static ConfigBase<Boss2PatternConfig> Boss2PatternsContainer => _boss2PatternsContainer;
+
+    /// <summary>特殊弾幕設定コンテナを取得します。</summary>
+    public static ConfigBase<SpecialBulletConfig> SpecialBulletsContainer => _specialBulletsContainer;
 
     /// <summary>アリーナ足場設定コンテナを取得します。</summary>
     public static ConfigBase<ArenaConfig> ArenaContainer => _arenaConfigContainer;
@@ -89,7 +103,9 @@ public static class ConfigManager {
         LoadConfig(ResourcePath.Config.Player, ref _playerConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Boss1, ref _boss1ConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Boss2, ref _boss2ConfigContainer, ref successCount, ref failureCount);
-        LoadConfig(ResourcePath.Config.Patterns, ref _patternConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Boss1Patterns, ref _boss1PatternsContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Boss2Patterns, ref _boss2PatternsContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.SpecialBullets, ref _specialBulletsContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Arena, ref _arenaConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Render, ref _renderConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Platform.SheetToml, ref _tileSetConfigContainer, ref successCount, ref failureCount);
@@ -106,11 +122,8 @@ public static class ConfigManager {
 
         _boss1ConfigContainer.OnConfigReloaded += Boss1PipelineDefinition.Reload;
         _boss2ConfigContainer.OnConfigReloaded += Boss2PipelineDefinition.Reload;
-        _patternConfigContainer.OnConfigReloaded += () =>
-        {
-            Boss1PipelineDefinition.Reload();
-            Boss2PipelineDefinition.Reload();
-        };
+        _boss1PatternsContainer.OnConfigReloaded += Boss1PipelineDefinition.Reload;
+        _boss2PatternsContainer.OnConfigReloaded += Boss2PipelineDefinition.Reload;
 #else
         ErrorOr<BakedConfigBundle> loadResult = BinaryConfigLoader.Load();
         if (loadResult.IsError)
@@ -123,7 +136,9 @@ public static class ConfigManager {
         _playerConfigContainer = new(bundle.Player);
         _boss1ConfigContainer = new(bundle.Boss1);
         _boss2ConfigContainer = new(bundle.Boss2);
-        _patternConfigContainer = new(bundle.Pattern);
+        _boss1PatternsContainer = new(bundle.Boss1Pattern);
+        _boss2PatternsContainer = new(bundle.Boss2Pattern);
+        _specialBulletsContainer = new(bundle.SpecialBullet);
         _arenaConfigContainer = new(bundle.Arena);
         _renderConfigContainer = new(bundle.Render);
         _tileSetConfigContainer = new(bundle.TileSet);
@@ -165,7 +180,9 @@ public static class ConfigManager {
         _playerConfigContainer.Dispose();
         _boss1ConfigContainer.Dispose();
         _boss2ConfigContainer.Dispose();
-        _patternConfigContainer.Dispose();
+        _boss1PatternsContainer.Dispose();
+        _boss2PatternsContainer.Dispose();
+        _specialBulletsContainer.Dispose();
         _arenaConfigContainer.Dispose();
         _renderConfigContainer.Dispose();
         _tileSetConfigContainer.Dispose();

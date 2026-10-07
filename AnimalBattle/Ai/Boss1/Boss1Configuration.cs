@@ -232,7 +232,7 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     {
         try
         {
-            var toml = ConfigManager.Pattern;
+            var toml = ConfigManager.Boss1Patterns;
             Boss1AttackPattern? configuredPattern = skill switch {
                 BossSkill.Aimed3Shot =>
                     new Boss1AttackPattern(skill, toml.Aimed3Shot.WindUpTime, toml.Aimed3Shot.CastDuration,

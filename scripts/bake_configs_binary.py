@@ -44,12 +44,13 @@ _CONFIG_MAP = {
     "Player": _CONFIG_DIR / "player.toml",
     "Boss1": _CONFIG_DIR / "boss1.toml",
     "Boss2": _CONFIG_DIR / "boss2.toml",
-    "Pattern": _CONFIG_DIR / "patterns.toml",
+    "Boss1Pattern": _CONFIG_DIR / "boss1_patterns.toml",
+    "Boss2Pattern": _CONFIG_DIR / "boss2_patterns.toml",
+    "SpecialBullet": _CONFIG_DIR / "special_bullets.toml",
     "Arena": _CONFIG_DIR / "arena.toml",
     "Render": _CONFIG_DIR / "render.toml",
     "TileSet": _RESOURCE_DIR / "Platform" / "sheet.toml",
 }
-
 
 def load_toml(path: Path) -> dict:
     if not path.exists():

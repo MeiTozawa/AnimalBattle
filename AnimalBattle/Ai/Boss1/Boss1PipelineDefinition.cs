@@ -20,7 +20,7 @@ public static class Boss1PipelineDefinition {
 
     private static BossBehaviorPipeline BuildPipeline()
     {
-        var pattern = ConfigManager.Pattern;
+        var pattern = ConfigManager.Boss1Patterns;
         var boss1 = ConfigManager.Boss1;
 
         var builder = BossPipeline.Define(BossType.Boss1, boss1.BossName);

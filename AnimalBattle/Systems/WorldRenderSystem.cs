@@ -283,7 +283,7 @@ public sealed class WorldRenderSystem : IDisposable {
         float progress,
         float stateTimer)
     {
-        var patternCfg = ConfigManager.Pattern;
+        var patternCfg = ConfigManager.Boss1Patterns;
         var finalTargetX = targetX != 0.0f || targetY != 0.0f ? targetX : playerX;
         var finalTargetY = targetX != 0.0f || targetY != 0.0f ? targetY : playerY;
 
@@ -398,7 +398,7 @@ public sealed class WorldRenderSystem : IDisposable {
         float progress)
     {
         var b2Cfg = ConfigManager.Boss2;
-        var patternCfg = ConfigManager.Pattern;
+        var patternCfg = ConfigManager.Boss2Patterns;
         var finalTargetX = targetX != 0.0f || targetY != 0.0f ? targetX : playerX;
         var finalTargetY = targetX != 0.0f || targetY != 0.0f ? targetY : playerY;
 

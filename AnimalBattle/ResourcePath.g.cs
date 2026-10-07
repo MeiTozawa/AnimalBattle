@@ -78,11 +78,14 @@ public static class ResourcePath
         /// <summary>boss1.toml 設定ファイル名。</summary>
         public const string Boss1 = "boss1.toml";
 
+        /// <summary>boss1_patterns.toml 設定ファイル名。</summary>
+        public const string Boss1Patterns = "boss1_patterns.toml";
+
         /// <summary>boss2.toml 設定ファイル名。</summary>
         public const string Boss2 = "boss2.toml";
 
-        /// <summary>patterns.toml 設定ファイル名。</summary>
-        public const string Patterns = "patterns.toml";
+        /// <summary>boss2_patterns.toml 設定ファイル名。</summary>
+        public const string Boss2Patterns = "boss2_patterns.toml";
 
         /// <summary>player.toml 設定ファイル名。</summary>
         public const string Player = "player.toml";
@@ -90,23 +93,32 @@ public static class ResourcePath
         /// <summary>render.toml 設定ファイル名。</summary>
         public const string Render = "render.toml";
 
+        /// <summary>special_bullets.toml 設定ファイル名。</summary>
+        public const string SpecialBullets = "special_bullets.toml";
+
         /// <summary>arena.toml の相対パス。</summary>
         public const string ArenaToml = @"Config\arena.toml";
 
         /// <summary>boss1.toml の相対パス。</summary>
         public const string Boss1Toml = @"Config\boss1.toml";
 
+        /// <summary>boss1_patterns.toml の相対パス。</summary>
+        public const string Boss1PatternsToml = @"Config\boss1_patterns.toml";
+
         /// <summary>boss2.toml の相対パス。</summary>
         public const string Boss2Toml = @"Config\boss2.toml";
 
-        /// <summary>patterns.toml の相対パス。</summary>
-        public const string PatternsToml = @"Config\patterns.toml";
+        /// <summary>boss2_patterns.toml の相対パス。</summary>
+        public const string Boss2PatternsToml = @"Config\boss2_patterns.toml";
 
         /// <summary>player.toml の相対パス。</summary>
         public const string PlayerToml = @"Config\player.toml";
 
         /// <summary>render.toml の相対パス。</summary>
         public const string RenderToml = @"Config\render.toml";
+
+        /// <summary>special_bullets.toml の相対パス。</summary>
+        public const string SpecialBulletsToml = @"Config\special_bullets.toml";
     }
 
     /// <summary>リソースルートディレクトリ名。</summary>

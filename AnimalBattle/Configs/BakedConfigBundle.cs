@@ -49,8 +49,14 @@ public sealed class BakedConfigBundle {
     /// <summary>Boss 2 設定</summary>
     public Boss2Config Boss2 { get; set; } = new();
 
-    /// <summary>弾幕・技能パターン設定</summary>
-    public PatternConfig Pattern { get; set; } = new();
+    /// <summary>Boss 1 弾幕・技能パターン設定</summary>
+    public Boss1PatternConfig Boss1Pattern { get; set; } = new();
+
+    /// <summary>Boss 2 近接・技能パターン設定</summary>
+    public Boss2PatternConfig Boss2Pattern { get; set; } = new();
+
+    /// <summary>特殊弾幕変調設定</summary>
+    public SpecialBulletConfig SpecialBullet { get; set; } = new();
 
     /// <summary>アリーナ足場設定</summary>
     public ArenaConfig Arena { get; set; } = new();
@@ -77,9 +83,13 @@ public sealed class BakedConfigBundle {
 [JsonSerializable(typeof(AttackRuleConfig))]
 [JsonSerializable(typeof(Boss2Config))]
 [JsonSerializable(typeof(Boss2PhaseConfig))]
-[JsonSerializable(typeof(PatternConfig))]
+[JsonSerializable(typeof(Boss1PatternConfig))]
+
+[JsonSerializable(typeof(Boss2PatternConfig))]
+[JsonSerializable(typeof(SkillEventConfig))]
 [JsonSerializable(typeof(SpecialBulletConfig))]
 [JsonSerializable(typeof(ArenaConfig))]
+
 [JsonSerializable(typeof(TileMapConfig))]
 [JsonSerializable(typeof(RenderConfig))]
 [JsonSerializable(typeof(TileSetConfig))]

@@ -20,7 +20,7 @@ public static class Boss2PipelineDefinition {
 
     private static BossBehaviorPipeline BuildPipeline()
     {
-        var pattern = ConfigManager.Pattern;
+        var pattern = ConfigManager.Boss2Patterns;
         var boss2 = ConfigManager.Boss2;
 
         var builder = BossPipeline.Define(BossType.Boss2, boss2.BossName);
@@ -132,7 +132,7 @@ public static class Boss2PipelineDefinition {
         return builder.Build();
     }
 
-    private static void ConfigureEarthquakeRoar(AttackPipelineBuilder builder, PatternConfig pattern,
+    private static void ConfigureEarthquakeRoar(AttackPipelineBuilder builder, Boss2PatternConfig pattern,
         List<AttackRuleConfig>? rules)
     {
         builder.Telegraph(pattern.EarthquakeRoar.WindUpTime, pattern.EarthquakeRoar.TelegraphColor)
@@ -144,7 +144,7 @@ public static class Boss2PipelineDefinition {
            .Rule(rules);
     }
 
-    private static void ConfigureLeapSmash(AttackPipelineBuilder builder, PatternConfig pattern,
+    private static void ConfigureLeapSmash(AttackPipelineBuilder builder, Boss2PatternConfig pattern,
         List<AttackRuleConfig>? rules)
     {
         var flyDuration = pattern.LeapSmash.FlyDuration;

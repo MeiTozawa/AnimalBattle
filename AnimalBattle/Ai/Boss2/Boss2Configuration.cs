@@ -260,7 +260,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     /// <inheritdoc />
     public float GetSkillDefaultCooldown(BossSkill skill)
     {
-        var pattern = ConfigManager.Pattern;
+        var pattern = ConfigManager.Boss2Patterns;
         return skill switch {
             BossSkill.EarthquakeRoar => pattern.EarthquakeRoar.DefaultCooldown,
             BossSkill.LeapSmash => pattern.LeapSmash.DefaultCooldown,

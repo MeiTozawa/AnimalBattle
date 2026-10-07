@@ -130,12 +130,12 @@ public sealed class Boss1Agent : BaseBossAgent
     private void HandleEmitBullet(BossSkill skill, float vx, float vy)
     {
         if (_currentWorld == default) return;
-        var patternCfg = ConfigManager.Pattern;
+        var patternCfg = ConfigManager.Boss1Patterns;
         ref readonly var trans = ref Entity.Get<Transform>();
 
         if (skill == BossSkill.RainDrop)
         {
-            var bType = PatternConfig.ParseBulletType(patternCfg.RainDrop.BulletType, BulletType.Cyan);
+            var bType = Boss1PatternConfig.ParseBulletType(patternCfg.RainDrop.BulletType, BulletType.Cyan);
             CombatEffectHelper.SpawnBossSpecialBullet(
                 _currentWorld,
                 vx,
@@ -159,35 +159,35 @@ public sealed class Boss1Agent : BaseBossAgent
             radius = patternCfg.Aimed3Shot.BulletRadius;
             fill = patternCfg.Aimed3Shot.FillColor;
             outline = patternCfg.Aimed3Shot.OutlineColor;
-            type = PatternConfig.ParseBulletType(patternCfg.Aimed3Shot.BulletType, BulletType.Cyan);
+            type = Boss1PatternConfig.ParseBulletType(patternCfg.Aimed3Shot.BulletType, BulletType.Cyan);
         }
         else if (skill == BossSkill.RingBurst)
         {
             radius = patternCfg.RingBurst.BulletRadius;
             fill = patternCfg.RingBurst.FillColor;
             outline = patternCfg.RingBurst.OutlineColor;
-            type = PatternConfig.ParseBulletType(patternCfg.RingBurst.BulletType, BulletType.Magenta);
+            type = Boss1PatternConfig.ParseBulletType(patternCfg.RingBurst.BulletType, BulletType.Magenta);
         }
         else if (skill == BossSkill.DoubleSpiral)
         {
             radius = patternCfg.DoubleSpiral.BulletRadius;
             fill = patternCfg.DoubleSpiral.FillColor1;
             outline = patternCfg.DoubleSpiral.OutlineColor1;
-            type = PatternConfig.ParseBulletType(patternCfg.DoubleSpiral.BulletType, BulletType.Yellow);
+            type = Boss1PatternConfig.ParseBulletType(patternCfg.DoubleSpiral.BulletType, BulletType.Yellow);
         }
         else if (skill == BossSkill.CrossChaos)
         {
             radius = patternCfg.CrossChaos.BulletRadius;
             fill = patternCfg.CrossChaos.FillColor;
             outline = patternCfg.CrossChaos.OutlineColor;
-            type = PatternConfig.ParseBulletType(patternCfg.CrossChaos.BulletType, BulletType.Magenta);
+            type = Boss1PatternConfig.ParseBulletType(patternCfg.CrossChaos.BulletType, BulletType.Magenta);
         }
         else if (skill == BossSkill.FastSniper)
         {
             radius = patternCfg.FastSniper.BulletRadius;
             fill = patternCfg.FastSniper.FillColor;
             outline = patternCfg.FastSniper.OutlineColor;
-            type = PatternConfig.ParseBulletType(patternCfg.FastSniper.BulletType, BulletType.Black);
+            type = Boss1PatternConfig.ParseBulletType(patternCfg.FastSniper.BulletType, BulletType.Black);
         }
         else
         {

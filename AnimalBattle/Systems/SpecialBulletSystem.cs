@@ -23,7 +23,7 @@ public static class SpecialBulletSystem {
                 if (count <= 0) return;
 
                 var dt = it.DeltaTime();
-                var cfg = ConfigManager.Pattern.SpecialBullet;
+                var cfg = ConfigManager.SpecialBullets;
                 var cyanAmp = cfg.CyanWaveAmplitude;
                 var cyanFreq = cfg.CyanWaveFrequency;
                 var magentaAmp = cfg.MagentaPulseAmplitude;
