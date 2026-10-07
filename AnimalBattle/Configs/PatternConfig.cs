@@ -707,6 +707,18 @@ public sealed class SpecialBulletConfig {
     /// <summary>品紅弾および黒弾の呼吸拡縮脈動周波数</summary>
     public float MagentaPulseFrequency { get; set; }
 
+    /// <summary>黄弾公転衛星の回転角速度ラジアン毎秒</summary>
+    public float YellowOrbitSpeed { get; set; }
+
+    /// <summary>黄弾公転衛星の軌道半径倍率</summary>
+    public float YellowOrbitDistanceMultiplier { get; set; }
+
+    /// <summary>黄弾公転衛星の半径倍率</summary>
+    public float YellowSatelliteRadiusMultiplier { get; set; }
+
+    /// <summary>黄弾公転衛星の接触ダメージ</summary>
+    public float YellowSatelliteDamage { get; set; }
+
     /// <summary>
     ///     指定された TOML ファイルから特殊弾幕変調設定を読み込みます。
     /// </summary>

@@ -3,3 +3,7 @@ CyanWaveAmplitude = 28.0
 CyanWaveFrequency = 7.0
 MagentaPulseAmplitude = 0.35
 MagentaPulseFrequency = 6.0
+YellowOrbitSpeed = 6.0
+YellowOrbitDistanceMultiplier = 1.5
+YellowSatelliteRadiusMultiplier = 0.55
+YellowSatelliteDamage = 1.0

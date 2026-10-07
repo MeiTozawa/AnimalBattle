@@ -119,8 +119,12 @@ public static class ConfigManager {
         }
 
         Debug.WriteLine($"[C# 設定初期化] 全ての TOML 設定ファイル（{successCount} 件）の読み込みが正常に完了しました！");
-        Debug.Assert(SpecialBullets.CyanWaveAmplitude > 0.0f && SpecialBullets.MagentaPulseAmplitude > 0.0f, "特殊弾幕変調パラメータが正常に読み込まれていません。");
-        Debug.WriteLine($"[C# 特殊弾幕設定] Cyan Amp={SpecialBullets.CyanWaveAmplitude} Freq={SpecialBullets.CyanWaveFrequency} | Magenta Amp={SpecialBullets.MagentaPulseAmplitude} Freq={SpecialBullets.MagentaPulseFrequency}");
+        Debug.Assert(
+            SpecialBullets.CyanWaveAmplitude > 0.0f &&
+            SpecialBullets.MagentaPulseAmplitude > 0.0f &&
+            SpecialBullets.YellowOrbitSpeed > 0.0f,
+            "特殊弾幕変調パラメータが正常に読み込まれていません。");
+        Debug.WriteLine($"[C# 特殊弾幕設定] Cyan Amp={SpecialBullets.CyanWaveAmplitude} | Magenta Amp={SpecialBullets.MagentaPulseAmplitude} | Yellow Speed={SpecialBullets.YellowOrbitSpeed}");
 
         _boss1ConfigContainer.OnConfigReloaded += Boss1PipelineDefinition.Reload;
         _boss2ConfigContainer.OnConfigReloaded += Boss2PipelineDefinition.Reload;
