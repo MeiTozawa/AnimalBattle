@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Drawing;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
@@ -15,8 +13,6 @@ namespace AnimalBattle.Characters.Boss;
 public sealed class Boss1Agent : BaseBossAgent
 {
     private readonly Boss1Brain _brain;
-    private World _currentWorld;
-    private float _emitterAngleOffset;
 
     /// <summary>
     ///     Boss 1 の Flecs エンティティおよびテクスチャハンドルを指定してエージェントを初期化します。
@@ -28,56 +24,35 @@ public sealed class Boss1Agent : BaseBossAgent
         var b1Cfg = ConfigManager.Boss1;
         _brain = new Boss1Brain(b1Cfg.SpawnX, b1Cfg.SpawnY);
 
-        _brain.OnEmitBarrageWave += HandleEmitBarrageWave;
-        _brain.OnClearBullets += HandleClearBullets;
-
+        BindBrainEvents(_brain);
         InitializeComponents(entity, spriteHandle);
     }
+
+    /// <inheritdoc />
+    public override IBossBrain Brain => _brain;
 
     /// <inheritdoc />
     public override BossType BossType => BossType.Boss1;
 
     /// <inheritdoc />
-    public override Phase Phase => _brain.Phase;
-
-    /// <inheritdoc />
-    public override BossState CurrentState => BossState.From(_brain.State);
-
-    /// <inheritdoc />
-    public override BossSkill CurrentSkill => _brain.CurrentSkill;
-
-    /// <inheritdoc />
-    public override float StateTimer => _brain.StateTimer;
-
-    /// <inheritdoc />
-    public override float StateDuration => _brain.StateDuration;
-
-    /// <inheritdoc />
     public override float HoverTimer => _brain.HoverTimer;
-
-    /// <inheritdoc />
-    public override float TargetX => _brain.TargetX;
-
-    /// <inheritdoc />
-    public override float TargetY => _brain.TargetY;
-
-    /// <inheritdoc />
-    public override bool IsVulnerable => _brain.IsVulnerable;
 
     private void InitializeComponents(Entity entity, int spriteHandle)
     {
         var b1Cfg = ConfigManager.Boss1;
-        entity.Set(new Health(b1Cfg.MaxHp))
-            .Set(new InvincibleOnHit(0.0f))
-            .Set(new HitFlashConfig(0.08f, Color.White))
-            .Set(new Transform(b1Cfg.SpawnX, b1Cfg.SpawnY, b1Cfg.ScaleX, b1Cfg.ScaleY))
-            .Set(new Velocity(0.0f))
-            .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
-            .Set(new Hitbox(b1Cfg.GetHitboxShape(), b1Cfg.BodyContactDamage, Faction.Hostile, false))
-            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
-            .Set(new BossCombatState(IsVulnerable, Phase))
-            .Add<BossTag>()
-            .Add<Boss1Tag>();
+        InitializeCommonComponents(
+            entity,
+            spriteHandle,
+            b1Cfg.MaxHp,
+            b1Cfg.SpawnX,
+            b1Cfg.SpawnY,
+            b1Cfg.ScaleX,
+            b1Cfg.ScaleY,
+            b1Cfg.GetHurtboxShape(),
+            b1Cfg.GetHitboxShape(),
+            b1Cfg.BodyContactDamage);
+
+        entity.Add<Boss1Tag>();
     }
 
     /// <inheritdoc />
@@ -88,15 +63,11 @@ public sealed class Boss1Agent : BaseBossAgent
         World world,
         Query<Transform, CollisionBox> platformQuery)
     {
-        _currentWorld = world;
+        SetCurrentWorld(world);
 
-        ref var health = ref Entity.GetMut<Health>();
-        if (health.Current <= 0.0f)
-        {
-            if (!_brain.IsDead) _brain.Kill();
-            return;
-        }
+        if (CheckAndHandleDeath()) return;
 
+        ref readonly var health = ref Entity.Get<Health>();
         _brain.Update(deltaTime, playerPosition, 1, true, health.Current, health.Max);
 
         ref var trans = ref Entity.GetMut<Transform>();
@@ -104,8 +75,7 @@ public sealed class Boss1Agent : BaseBossAgent
         trans.Y = _brain.Position.Y;
 
         OnPostUpdate(deltaTime, world);
-
-        Entity.Set(new BossCombatState(IsVulnerable, Phase));
+        SyncCombatState();
     }
 
     /// <inheritdoc />
@@ -123,23 +93,15 @@ public sealed class Boss1Agent : BaseBossAgent
         SetTransform(b1Cfg.SpawnX, b1Cfg.SpawnY, b1Cfg.ScaleX, b1Cfg.ScaleY);
         ref var t = ref Entity.GetMut<Transform>();
         t.Rotation = 0.0f;
-        _emitterAngleOffset = 0.0f;
         ResetHealth(b1Cfg.MaxHp);
 
         _brain.Reset(b1Cfg.SpawnX, b1Cfg.SpawnY);
     }
 
-    private void HandleEmitBarrageWave(BossSkill skill, Vec2f origin, Vec2f target)
+    /// <inheritdoc />
+    protected override void HandleEmitBarrageWave(BossSkill skill, Vec2f origin, Vec2f target)
     {
-        if (_currentWorld == default) return;
-        BarrageEmitter.EmitBoss1(_currentWorld, skill, origin, target, ref _emitterAngleOffset);
-    }
-
-    private void HandleClearBullets()
-    {
-        if (_currentWorld != default)
-        {
-            CombatEffectHelper.ClearAllBossBullets(_currentWorld);
-        }
+        if (CurrentWorld == default) return;
+        BarrageEmitter.EmitBoss1(CurrentWorld, skill, origin, target, ref EmitterAngleOffset);
     }
 }

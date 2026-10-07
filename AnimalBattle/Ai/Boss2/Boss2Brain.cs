@@ -16,7 +16,7 @@ namespace AnimalBattle.Ai.Boss2;
 ///     Boss 2 の統合意思決定および行動制御ブレインです。
 ///     HFSM および AbilitySystemComponent を通じて足場移動、近接攻撃、気絶、状態遷移を一元管理します。
 /// </summary>
-public sealed class Boss2Brain {
+public sealed class Boss2Brain : IBossBrain {
     private static readonly StringId StateRoot = "Root";
     private static readonly StringId StateCombat = "Combat";
     private static readonly StringId StateIdle = "Idle";
@@ -140,6 +140,9 @@ public sealed class Boss2Brain {
         }
     }
 
+    /// <summary>現在の Boss 統一マクロ状態を取得します。</summary>
+    public BossState CurrentState => BossState.From(State);
+
     /// <summary>現在発動中の技能を取得します。</summary>
     public BossSkill CurrentSkill => _asc.CurrentAbility?.SkillId ?? BossSkill.None;
 
@@ -180,8 +183,8 @@ public sealed class Boss2Brain {
     /// <summary>近接攻撃判定生成イベント。</summary>
     public event Action<BossSkill, float, float>? OnCreateHitbox;
 
-    /// <summary>弾幕・衝撃波発射イベント。</summary>
-    public event Action<BossSkill, float, float>? OnEmitBullet;
+    /// <summary>弾幕波次発射イベント。</summary>
+    public event Action<BossSkill, Vec2f, Vec2f>? OnEmitBarrageWave;
 
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;
@@ -204,7 +207,7 @@ public sealed class Boss2Brain {
         RegisterSkill(BossSkill.EarthquakeRoar, patternCfg);
 
         _asc.OnExecuteMovement += (vx, vy) => _currentVelocity = new Vec2f(vx, vy);
-        _asc.OnEmitBullet += (skill, vx, vy) => OnEmitBullet?.Invoke(skill, vx, vy);
+        _asc.OnEmitBullet += (skill, _, _) => OnEmitBarrageWave?.Invoke(skill, _currentPosition, _targetPosition);
         _asc.OnCreateHitbox += (skill, ox, oy) => OnCreateHitbox?.Invoke(skill, ox, oy);
         _asc.OnPlayAudio += (cue, vol) => OnPlayAudio?.Invoke(cue, vol);
         _asc.OnScreenShake += (str, dur) => OnScreenShake?.Invoke(str, dur);

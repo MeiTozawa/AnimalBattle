@@ -14,7 +14,7 @@ namespace AnimalBattle.Ai.Boss1;
 ///     Boss 1 の統合意思決定・行動制御ブレインです。
 ///     HFSM および AbilitySystemComponent を通じて時序・判定・状態遷移を一元管理します。
 /// </summary>
-public sealed class Boss1Brain {
+public sealed class Boss1Brain : IBossBrain {
     private static readonly StringId StateRoot = "Root";
     private static readonly StringId StateCombat = "Combat";
     private static readonly StringId StateHover = "Hover";
@@ -107,8 +107,14 @@ public sealed class Boss1Brain {
         }
     }
 
+    /// <summary>現在の Boss 統一マクロ状態を取得します。</summary>
+    public BossState CurrentState => BossState.From(State);
+
     /// <summary>現在発動中の技能を取得します。</summary>
     public BossSkill CurrentSkill => _asc.CurrentAbility?.SkillId ?? BossSkill.None;
+
+    /// <summary>Boss が右向きであるかを取得します。</summary>
+    public bool FacingRight => true;
 
     /// <summary>現在状態の経過時間を取得します。</summary>
     public float StateTimer => _asc.IsCasting ? _asc.SkillRunner.PhaseElapsed : _stateTimer;
