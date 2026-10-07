@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Drawing;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;

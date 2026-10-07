@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using AnimalBattle.Ai.Abilities;
-using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Decision;
 using AnimalBattle.Ai.Hfsm;
@@ -189,11 +188,6 @@ public sealed class Boss2Brain : IBossBrain {
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;
 
-    /// <summary>音効再生イベント。</summary>
-    public event Action<int, float>? OnPlayAudio;
-
-    /// <summary>画面振動イベント。</summary>
-    public event Action<float, float>? OnScreenShake;
 
     private void InitializeAbilities()
     {
@@ -209,8 +203,6 @@ public sealed class Boss2Brain : IBossBrain {
         _asc.OnExecuteMovement += (vx, vy) => _currentVelocity = new Vec2f(vx, vy);
         _asc.OnEmitBullet += (skill, _, _) => OnEmitBarrageWave?.Invoke(skill, _currentPosition, _targetPosition);
         _asc.OnCreateHitbox += (skill, ox, oy) => OnCreateHitbox?.Invoke(skill, ox, oy);
-        _asc.OnPlayAudio += (cue, vol) => OnPlayAudio?.Invoke(cue, vol);
-        _asc.OnScreenShake += (str, dur) => OnScreenShake?.Invoke(str, dur);
         _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
 
@@ -580,7 +572,6 @@ public sealed class Boss2Brain : IBossBrain {
                     _traverseStage = TraverseStage.Landing;
                     _traverseTimer = 0.0f;
                     _currentVelocity = Vec2f.Zero;
-                    OnScreenShake?.Invoke(2.0f, 0.15f);
                 }
                 break;
 
@@ -605,7 +596,6 @@ public sealed class Boss2Brain : IBossBrain {
             _isWallStunned = true;
             _reactionMachine.ChangeState(_wallCrashStunState);
             _rootMachine.ChangeState(_reactionMachine);
-            OnScreenShake?.Invoke(8.0f, 0.4f);
         }
     }
 

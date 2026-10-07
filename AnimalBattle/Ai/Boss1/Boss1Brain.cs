@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using AnimalBattle.Ai.Abilities;
-using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Hfsm;
 using AnimalBattle.Ai.Skills;
@@ -28,8 +27,6 @@ public sealed class Boss1Brain : IBossBrain {
     private readonly StateMachine _rootMachine = new(StateRoot);
     private readonly StateMachine _combatMachine = new(StateCombat);
     private readonly StateMachine _reactionMachine = new(StateReaction);
-    private readonly Random _random = new();
-
     private State _hoverState = null!;
     private State _abilityState = null!;
     private State _phaseTransitionState = null!;
@@ -149,17 +146,8 @@ public sealed class Boss1Brain : IBossBrain {
     /// <summary>弾幕波次発射イベント。</summary>
     public event Action<BossSkill, Vec2f, Vec2f>? OnEmitBarrageWave;
 
-    /// <summary>近接攻撃判定生成イベント。</summary>
-    public event Action<BossSkill, float, float>? OnCreateHitbox;
-
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;
-
-    /// <summary>音効再生イベント。</summary>
-    public event Action<int, float>? OnPlayAudio;
-
-    /// <summary>画面振動イベント。</summary>
-    public event Action<float, float>? OnScreenShake;
 
     private void InitializeAbilities()
     {
@@ -174,9 +162,6 @@ public sealed class Boss1Brain : IBossBrain {
         RegisterSkill(BossSkill.FastSniper, patternCfg);
 
         _asc.OnEmitBullet += (skill, _, _) => OnEmitBarrageWave?.Invoke(skill, _currentPosition, _targetPosition);
-        _asc.OnCreateHitbox += (skill, ox, oy) => OnCreateHitbox?.Invoke(skill, ox, oy);
-        _asc.OnPlayAudio += (cue, vol) => OnPlayAudio?.Invoke(cue, vol);
-        _asc.OnScreenShake += (str, dur) => OnScreenShake?.Invoke(str, dur);
         _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
 
