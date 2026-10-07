@@ -1,47 +1,63 @@
 using System.Diagnostics;
+using AnimalBattle.Ai.Abilities;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai.Hfsm;
 using AnimalBattle.Ai.Skills;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Ai.Boss1;
 
 /// <summary>
-///     Boss1（Ancient Cat Overlord）の統合意思決定・行動制御ブレインです。
-///     浮遊移動、弾幕生成、急降下突進、およびフェーズ遷移を一元管理します。
+///     Boss 1 の統合意思決定・行動制御ブレインです。
+///     HFSM および AbilitySystemComponent を通じて時序・判定・状態遷移を一元管理します。
 /// </summary>
 public sealed class Boss1Brain {
-    private enum MacroState : byte {
-        Hover,
-        Casting,
-        PhaseTransition,
-        Dead
-    }
+    private static readonly StringId StateRoot = "Root";
+    private static readonly StringId StateCombat = "Combat";
+    private static readonly StringId StateHover = "Hover";
+    private static readonly StringId StateAbility = "Ability";
+    private static readonly StringId StateReaction = "Reaction";
+    private static readonly StringId StatePhaseTransition = "PhaseTransition";
+    private static readonly StringId StateDead = "Dead";
 
     private readonly IBoss1Configuration _configuration;
-    private readonly SkillRunner _skillRunner = new();
+    private readonly AbilitySystemComponent _asc = new();
+    private readonly StateMachine _rootMachine = new(StateRoot);
+    private readonly StateMachine _combatMachine = new(StateCombat);
+    private readonly StateMachine _reactionMachine = new(StateReaction);
     private readonly Random _random = new();
 
-    private MacroState _macroState = MacroState.Hover;
+    private State _hoverState = null!;
+    private State _abilityState = null!;
+    private State _phaseTransitionState = null!;
+    private State _deadState = null!;
+
     private float _stateTimer;
     private float _hoverTimer;
-    private float _angleOffset;
     private int _attackIndex;
+    private bool _isDead;
+    private Phase? _pendingPhaseTransition;
 
     private Vec2f _currentPosition;
     private Vec2f _startPosition;
     private Vec2f _targetPosition;
 
-    /// <summary>Boss1 ブレインを初期化します。</summary>
+    /// <summary>Boss 1 ブレインを初期化します。</summary>
     /// <param name="spawnX">スポーン X 座標。</param>
     /// <param name="spawnY">スポーン Y 座標。</param>
-    /// <param name="configuration">設定プロバイダ（省略時は既定）。</param>
+    /// <param name="configuration">設定プロバイダ。</param>
     public Boss1Brain(float spawnX, float spawnY, IBoss1Configuration? configuration = null)
     {
         _configuration = configuration ?? new Boss1DefaultConfiguration();
         BaseX = spawnX;
         _currentPosition = new Vec2f(spawnX, spawnY);
         Phase = Phase.Phase1;
+
+        InitializeAbilities();
+        InitializeStateMachine();
         Reset(spawnX, spawnY);
     }
 
@@ -54,62 +70,163 @@ public sealed class Boss1Brain {
     /// <summary>現在の戦闘フェーズを取得します。</summary>
     public Phase Phase { get; private set; }
 
+    /// <summary>現在アクティブな能力システムコンポーネントを取得します。</summary>
+    public AbilitySystemComponent AbilitySystem => _asc;
+
     /// <summary>現在のマクロ・ミクロ統合状態を取得します。</summary>
-    public Boss1State State => _macroState switch {
-        MacroState.Casting => _skillRunner.CurrentPhase switch {
-            SkillPhase.Telegraph => Boss1State.Telegraph,
-            SkillPhase.Active => Boss1State.Execute,
-            SkillPhase.Recovery => Boss1State.Recovery,
-            _ => Boss1State.Hover
-        },
-        MacroState.Hover => Boss1State.Hover,
-        MacroState.PhaseTransition => Boss1State.PhaseTransition,
-        MacroState.Dead => Boss1State.Dead,
-        _ => Boss1State.Hover
-    };
-
-    /// <summary>現在選択中の技能を取得します。</summary>
-    public BossSkill CurrentSkill { get; private set; } = BossSkill.None;
-
-    /// <summary>現在状態の経過時間（秒）を取得します。</summary>
-    public float StateTimer => _macroState == MacroState.Casting ? _skillRunner.PhaseElapsed : _stateTimer;
-
-    /// <summary>現在状態の目標持続時間（秒）を取得します。</summary>
-    public float StateDuration {
+    public Boss1State State {
         get {
-            var phaseCfg = _configuration.GetPhase(Phase);
-            return _macroState switch {
-                MacroState.Hover => phaseCfg.HoverDuration,
-                MacroState.PhaseTransition => phaseCfg.TransitionDuration,
-                MacroState.Casting => _skillRunner.PhaseDuration,
-                _ => 0.0f
-            };
+            if (_rootMachine.CurrentState == _reactionMachine)
+            {
+                if (_reactionMachine.CurrentState == _deadState) return Boss1State.Dead;
+                if (_reactionMachine.CurrentState == _phaseTransitionState) return Boss1State.PhaseTransition;
+            }
+
+            if (_combatMachine.CurrentState == _abilityState && _asc.CurrentAbility != null)
+            {
+                return _asc.SkillRunner.CurrentPhase switch {
+                    SkillPhase.Telegraph => Boss1State.Telegraph,
+                    SkillPhase.Active => Boss1State.Execute,
+                    SkillPhase.Recovery => Boss1State.Recovery,
+                    _ => Boss1State.Hover
+                };
+            }
+
+            return Boss1State.Hover;
         }
     }
 
-    /// <summary>浮遊アニメーション用の累積タイマー（秒）を取得します。</summary>
+    /// <summary>現在発動中の技能を取得します。</summary>
+    public BossSkill CurrentSkill => _asc.CurrentAbility?.SkillId ?? BossSkill.None;
+
+    /// <summary>現在状態の経過時間を取得します。</summary>
+    public float StateTimer => _asc.IsCasting ? _asc.SkillRunner.PhaseElapsed : _stateTimer;
+
+    /// <summary>現在状態の目標持続時間を取得します。</summary>
+    public float StateDuration {
+        get {
+            var phaseCfg = _configuration.GetPhase(Phase);
+            if (_rootMachine.CurrentState == _reactionMachine)
+            {
+                return phaseCfg.TransitionDuration;
+            }
+
+            if (_combatMachine.CurrentState == _abilityState && _asc.CurrentAbility != null)
+            {
+                return _asc.SkillRunner.PhaseDuration;
+            }
+
+            return phaseCfg.HoverDuration;
+        }
+    }
+
+    /// <summary>浮遊アニメーション用の累積タイマーを取得します。</summary>
     public float HoverTimer => _hoverTimer;
 
     /// <summary>急降下突進の後隙による易傷状態かどうかを取得します。</summary>
     public bool IsVulnerable => State == Boss1State.Recovery && CurrentSkill == BossSkill.DiveRam;
 
     /// <summary>死亡状態かどうかを取得します。</summary>
-    public bool IsDead => _macroState == MacroState.Dead;
+    public bool IsDead => _isDead;
 
-    /// <summary>弾幕発射イベント（技能種別, 速度X, 速度Y）。</summary>
+    /// <summary>弾幕発射イベント。</summary>
     public event Action<BossSkill, float, float>? OnEmitBullet;
 
-    /// <summary>近接攻撃判定生成イベント（技能種別, オフセットX, オフセットY）。</summary>
+    /// <summary>近接攻撃判定生成イベント。</summary>
     public event Action<BossSkill, float, float>? OnCreateHitbox;
 
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;
 
-    /// <summary>音効再生イベント（音効ID, 音量）。</summary>
+    /// <summary>音効再生イベント。</summary>
     public event Action<int, float>? OnPlayAudio;
 
-    /// <summary>画面振動イベント（振動強度, 持続時間）。</summary>
+    /// <summary>画面振動イベント。</summary>
     public event Action<float, float>? OnScreenShake;
+
+    private void InitializeAbilities()
+    {
+        var patternCfg = ConfigManager.Boss1Patterns;
+
+        RegisterSkill(BossSkill.DiveRam, patternCfg);
+        RegisterSkill(BossSkill.Aimed3Shot, patternCfg);
+        RegisterSkill(BossSkill.RingBurst, patternCfg);
+        RegisterSkill(BossSkill.DoubleSpiral, patternCfg);
+        RegisterSkill(BossSkill.RainDrop, patternCfg);
+        RegisterSkill(BossSkill.CrossChaos, patternCfg);
+        RegisterSkill(BossSkill.FastSniper, patternCfg);
+
+        _asc.OnEmitBullet += (skill, vx, vy) => OnEmitBullet?.Invoke(skill, vx, vy);
+        _asc.OnCreateHitbox += (skill, ox, oy) => OnCreateHitbox?.Invoke(skill, ox, oy);
+        _asc.OnPlayAudio += (cue, vol) => OnPlayAudio?.Invoke(cue, vol);
+        _asc.OnScreenShake += (str, dur) => OnScreenShake?.Invoke(str, dur);
+        _asc.OnSkillCompleted += _ => OnAbilityCompleted();
+    }
+
+    private void RegisterSkill(BossSkill skill, Boss1PatternConfig config)
+    {
+        var buildResult = SkillConfigLoader.BuildFromBoss1(skill, config);
+        if (buildResult.IsError)
+        {
+            Debug.Assert(false, $"Boss 1 技能時序の構築に失敗しました: {skill}");
+            return;
+        }
+
+        var cooldown = skill switch {
+            BossSkill.DiveRam => 5.0f,
+            BossSkill.Aimed3Shot => 3.0f,
+            BossSkill.RingBurst => 4.0f,
+            BossSkill.DoubleSpiral => 4.5f,
+            BossSkill.RainDrop => 6.0f,
+            BossSkill.CrossChaos => 5.0f,
+            BossSkill.FastSniper => 3.5f,
+            _ => 2.0f
+        };
+
+        var ability = new GameplayAbility {
+            SkillId = skill,
+            Cooldown = cooldown,
+            Timeline = buildResult.Value,
+            GrantedTags = GameplayTag.Casting
+        };
+
+        _asc.RegisterAbility(ability);
+    }
+
+    private void InitializeStateMachine()
+    {
+        _hoverState = new State(StateHover, onEnter: () => _stateTimer = 0.0f);
+        _abilityState = new State(StateAbility);
+        _combatMachine.AddSubState(_hoverState);
+        _combatMachine.AddSubState(_abilityState);
+        _combatMachine.SetInitialState(_hoverState);
+
+        _phaseTransitionState = new State(StatePhaseTransition, onEnter: () => {
+            _stateTimer = 0.0f;
+            _asc.InterruptCurrentAbility();
+            OnClearBullets?.Invoke();
+            if (_pendingPhaseTransition.HasValue)
+            {
+                Phase = _pendingPhaseTransition.Value;
+                _pendingPhaseTransition = null;
+            }
+        });
+
+        _deadState = new State(StateDead, onEnter: () => {
+            _asc.InterruptCurrentAbility();
+            OnClearBullets?.Invoke();
+        });
+
+        _reactionMachine.AddSubState(_phaseTransitionState);
+        _reactionMachine.AddSubState(_deadState);
+
+        _rootMachine.AddSubState(_combatMachine);
+        _rootMachine.AddSubState(_reactionMachine);
+        _rootMachine.SetInitialState(_combatMachine);
+
+        _rootMachine.AddGlobalTransition(() => _isDead, _reactionMachine);
+        _rootMachine.AddGlobalTransition(() => _pendingPhaseTransition.HasValue, _reactionMachine);
+    }
 
     /// <summary>
     ///     ブレインの内部状態を初期位置へリセットします。
@@ -117,14 +234,17 @@ public sealed class Boss1Brain {
     public void Reset(float x, float y)
     {
         _currentPosition = new Vec2f(x, y);
-        _macroState = MacroState.Hover;
         _stateTimer = 0.0f;
         _hoverTimer = 0.0f;
-        _angleOffset = 0.0f;
         _attackIndex = 0;
+        _isDead = false;
+        _pendingPhaseTransition = null;
         Phase = Phase.Phase1;
-        CurrentSkill = BossSkill.None;
-        _skillRunner.Reset();
+
+        _asc.InterruptCurrentAbility();
+        _reactionMachine.ChangeState(_phaseTransitionState);
+        _combatMachine.ChangeState(_hoverState);
+        _rootMachine.ChangeState(_combatMachine);
     }
 
     /// <summary>
@@ -132,9 +252,9 @@ public sealed class Boss1Brain {
     /// </summary>
     public void Kill()
     {
-        _macroState = MacroState.Dead;
-        _skillRunner.Reset();
-        CurrentSkill = BossSkill.None;
+        _isDead = true;
+        _reactionMachine.ChangeState(_deadState);
+        _rootMachine.ChangeState(_reactionMachine);
     }
 
     /// <summary>
@@ -148,66 +268,58 @@ public sealed class Boss1Brain {
         float currentHp,
         float maxHp)
     {
-        if (_macroState == MacroState.Dead || dt <= 0.0f) return;
+        if (_isDead || dt <= 0.0f) return;
 
-        try
+        EvaluatePhaseTransition(currentHp, maxHp);
+
+        _asc.Update(dt);
+        _rootMachine.Update(dt);
+
+        if (_rootMachine.CurrentState == _combatMachine)
         {
-            // フェーズ遷移評価（HP 割合判定）
-            EvaluatePhaseTransition(currentHp, maxHp);
-
-            switch (_macroState)
+            if (_combatMachine.CurrentState == _hoverState)
             {
-                case MacroState.Hover:
-                    UpdateHover(dt, playerPosition, isPlayerAlive);
-                    break;
-
-                case MacroState.Casting:
-                    UpdateCasting(dt, playerPosition);
-                    break;
-
-                case MacroState.PhaseTransition:
-                    UpdatePhaseTransition(dt);
-                    break;
+                UpdateHoverMotion(dt, playerPosition, isPlayerAlive);
+            }
+            else if (_combatMachine.CurrentState == _abilityState)
+            {
+                UpdateAbilityMotion(dt, playerPosition);
             }
         }
-        catch (Exception ex)
+        else if (_rootMachine.CurrentState == _reactionMachine)
         {
-            Debug.WriteLine($"[Boss1Brain 警告] Update 処理中に例外が発生しました: {ex.Message}");
+            if (_reactionMachine.CurrentState == _phaseTransitionState)
+            {
+                UpdatePhaseTransitionMotion(dt);
+            }
         }
     }
 
     private void EvaluatePhaseTransition(float currentHp, float maxHp)
     {
-        if (maxHp <= 0.0f || _macroState == MacroState.PhaseTransition) return;
+        if (maxHp <= 0.0f || _pendingPhaseTransition.HasValue) return;
+        if (_rootMachine.CurrentState == _reactionMachine) return;
 
         var hpRatio = currentHp / maxHp;
         var b1Cfg = ConfigManager.Boss1;
 
         if (Phase == Phase.Phase1 && hpRatio <= b1Cfg.Phase2.HpThreshold)
         {
-            StartPhaseTransition(Phase.Phase2);
+            _pendingPhaseTransition = Phase.Phase2;
+            _reactionMachine.ChangeState(_phaseTransitionState);
         }
         else if (Phase == Phase.Phase2 && hpRatio <= b1Cfg.Phase3.HpThreshold)
         {
-            StartPhaseTransition(Phase.Phase3);
+            _pendingPhaseTransition = Phase.Phase3;
+            _reactionMachine.ChangeState(_phaseTransitionState);
         }
     }
 
-    private void StartPhaseTransition(Phase nextPhase)
-    {
-        Phase = nextPhase;
-        _macroState = MacroState.PhaseTransition;
-        _stateTimer = 0.0f;
-        _skillRunner.Reset();
-        OnClearBullets?.Invoke();
-    }
-
-    private void UpdatePhaseTransition(float dt)
+    private void UpdatePhaseTransitionMotion(float dt)
     {
         _stateTimer += dt;
         var phaseCfg = _configuration.GetPhase(Phase);
 
-        // 基準高度へ滑らかに帰還
         var targetY = phaseCfg.HoverBaseY;
         _currentPosition = new Vec2f(
             _currentPosition.X,
@@ -215,12 +327,13 @@ public sealed class Boss1Brain {
 
         if (_stateTimer >= phaseCfg.TransitionDuration)
         {
-            _macroState = MacroState.Hover;
+            _combatMachine.ChangeState(_hoverState);
+            _rootMachine.ChangeState(_combatMachine);
             _stateTimer = 0.0f;
         }
     }
 
-    private void UpdateHover(float dt, Vec2f playerPos, bool isPlayerAlive)
+    private void UpdateHoverMotion(float dt, Vec2f playerPos, bool isPlayerAlive)
     {
         _stateTimer += dt;
         _hoverTimer += dt;
@@ -243,208 +356,70 @@ public sealed class Boss1Brain {
 
         if (_stateTimer >= phaseCfg.HoverDuration && isPlayerAlive && phaseCfg.AttackOrder.Count > 0)
         {
-            SelectNextAttack(playerPos);
+            CastNextAbility(playerPos);
         }
     }
 
-    private void SelectNextAttack(Vec2f playerPos)
+    private void CastNextAbility(Vec2f playerPos)
     {
         var phaseCfg = _configuration.GetPhase(Phase);
-        _attackIndex = (_attackIndex + 1) % phaseCfg.AttackOrder.Count;
-        var skill = phaseCfg.AttackOrder[_attackIndex];
+        var attempts = phaseCfg.AttackOrder.Count;
 
-        if (!Boss1PipelineDefinition.Pipeline.TryGetAttack(skill, out var def))
+        for (var i = 0; i < attempts; i++)
         {
-            Debug.Fail($"[Boss1Brain 警告] 技能定義が見つかりません: {skill}");
-            return;
+            _attackIndex = (_attackIndex + 1) % phaseCfg.AttackOrder.Count;
+            var candidateSkill = phaseCfg.AttackOrder[_attackIndex];
+
+            var result = _asc.TryActivateAbility(candidateSkill);
+            if (!result.IsError)
+            {
+                _startPosition = _currentPosition;
+                _targetPosition = playerPos;
+                _combatMachine.ChangeState(_abilityState);
+                return;
+            }
         }
-
-        CurrentSkill = skill;
-        _macroState = MacroState.Casting;
-        _startPosition = _currentPosition;
-        _targetPosition = playerPos;
-        _angleOffset = 0.0f;
-
-        _skillRunner.Start(def);
     }
 
-    private void UpdateCasting(float dt, Vec2f playerPos)
+    private void UpdateAbilityMotion(float dt, Vec2f playerPos)
     {
-        if (!_configuration.GetAttack(CurrentSkill, out var pattern))
-        {
-            Debug.WriteLine($"[Boss1Brain 警告] 攻撃パターン未定義: {CurrentSkill}");
-            _macroState = MacroState.Hover;
-            _stateTimer = 0.0f;
-            return;
-        }
-
-        // 技能タイムラインを更新
-        _skillRunner.Update(dt, false, (comp, _) => ExecuteComponent(comp, pattern));
-
-        // 技能固有の機体運動
         if (CurrentSkill == BossSkill.DiveRam)
         {
-            UpdateDiveRamMotion(pattern);
+            if (_asc.SkillRunner.CurrentPhase == SkillPhase.Active)
+            {
+                var duration = Math.Max(0.01f, _asc.SkillRunner.PhaseDuration);
+                var progress = Math.Clamp(_asc.SkillRunner.PhaseElapsed / duration, 0.0f, 1.0f);
+                var easeProgress = EasingMath.Evaluate(EaseType.InQuad, progress);
+
+                _currentPosition = new Vec2f(
+                    _startPosition.X + (_targetPosition.X - _startPosition.X) * easeProgress,
+                    _startPosition.Y + (_targetPosition.Y - _startPosition.Y) * easeProgress);
+            }
         }
         else
         {
-            // 弾幕詠唱中の浮遊運動維持
-            UpdateBarrageHoverMotion(dt, playerPos);
-        }
+            _hoverTimer += dt;
+            var phaseCfg = _configuration.GetPhase(Phase);
+            Vec2f basePos = new(BaseX, phaseCfg.HoverBaseY);
 
-        // 技能完了評価
-        if (_skillRunner.IsComplete)
-        {
-            _macroState = MacroState.Hover;
-            _stateTimer = 0.0f;
-            CurrentSkill = BossSkill.None;
-            _skillRunner.Reset();
-        }
-    }
-
-    private void UpdateDiveRamMotion(Boss1AttackPattern pattern)
-    {
-        var phase = _skillRunner.CurrentPhase;
-        if (phase == SkillPhase.Active)
-        {
-            var duration = Math.Max(0.01f, pattern.Definition.ExecuteDuration);
-            var progress = Math.Clamp(_skillRunner.PhaseElapsed / duration, 0.0f, 1.0f);
-            var easeProgress = EasingMath.Evaluate(pattern.EaseType, progress);
-
-            _currentPosition = new Vec2f(
-                _startPosition.X + (_targetPosition.X - _startPosition.X) * easeProgress,
-                _startPosition.Y + (_targetPosition.Y - _startPosition.Y) * easeProgress);
+            _currentPosition = PhysicsService.CalculateBossHoverPosition(
+                _currentPosition,
+                basePos,
+                playerPos,
+                _hoverTimer,
+                phaseCfg.HoverSpeedX,
+                phaseCfg.HoverSpeedY,
+                phaseCfg.HoverAmpX,
+                phaseCfg.HoverAmpY,
+                phaseCfg.PlayerPursuitWeight,
+                phaseCfg.HoverLerpSpeed,
+                dt);
         }
     }
 
-    private void UpdateBarrageHoverMotion(float dt, Vec2f playerPos)
+    private void OnAbilityCompleted()
     {
-        _hoverTimer += dt;
-        var phaseCfg = _configuration.GetPhase(Phase);
-        Vec2f basePos = new(BaseX, phaseCfg.HoverBaseY);
-
-        _currentPosition = PhysicsService.CalculateBossHoverPosition(
-            _currentPosition,
-            basePos,
-            playerPos,
-            _hoverTimer,
-            phaseCfg.HoverSpeedX,
-            phaseCfg.HoverSpeedY,
-            phaseCfg.HoverAmpX,
-            phaseCfg.HoverAmpY,
-            phaseCfg.PlayerPursuitWeight,
-            phaseCfg.HoverLerpSpeed,
-            dt);
-    }
-
-    private void ExecuteComponent(AttackComponent comp, Boss1AttackPattern pattern)
-    {
-        switch (comp.Kind)
-        {
-            case AttackComponentKind.Bullet:
-                EmitBarrageWave(pattern);
-                break;
-
-            case AttackComponentKind.Hitbox:
-                OnCreateHitbox?.Invoke(pattern.Skill, comp.Param0, comp.Param1);
-                break;
-
-            case AttackComponentKind.AudioCue:
-                OnPlayAudio?.Invoke((int)comp.Param0, comp.Param1);
-                break;
-
-            case AttackComponentKind.ScreenShake:
-                OnScreenShake?.Invoke(comp.Param0, comp.Param1);
-                break;
-        }
-    }
-
-    private void EmitBarrageWave(Boss1AttackPattern pattern)
-    {
-        switch (pattern.Skill)
-        {
-            case BossSkill.Aimed3Shot:
-                EmitAimed3Shot(pattern);
-                break;
-            case BossSkill.RingBurst:
-                EmitRingBurst(pattern);
-                break;
-            case BossSkill.DoubleSpiral:
-                EmitDoubleSpiral(pattern);
-                break;
-            case BossSkill.RainDrop:
-                EmitRainDrop(pattern);
-                break;
-            case BossSkill.CrossChaos:
-                EmitCrossChaos(pattern);
-                break;
-            case BossSkill.FastSniper:
-                EmitFastSniper(pattern);
-                break;
-            default:
-                Debug.WriteLine($"[Boss1Brain 警告] 未知の弾幕スキル: {pattern.Skill}");
-                break;
-        }
-    }
-
-    private void EmitAimed3Shot(Boss1AttackPattern pattern)
-    {
-        var dx = _targetPosition.X - _currentPosition.X;
-        var dy = _targetPosition.Y - _currentPosition.Y;
-        var len = MathF.Sqrt(dx * dx + dy * dy);
-        var baseAngle = len > 0.0001f ? MathF.Atan2(dy, dx) : 0.0f;
-
-        for (var i = -1; i <= 1; i++)
-        {
-            var angle = baseAngle + i * pattern.AngleStep;
-            OnEmitBullet?.Invoke(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed, MathF.Sin(angle) * pattern.BulletSpeed);
-        }
-    }
-
-    private void EmitRingBurst(Boss1AttackPattern pattern)
-    {
-        var count = Math.Max(4, pattern.BulletCount);
-        for (var i = 0; i < count; i++)
-        {
-            var angle = i / (float)count * MathF.Tau + _angleOffset;
-            OnEmitBullet?.Invoke(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed, MathF.Sin(angle) * pattern.BulletSpeed);
-        }
-        _angleOffset += pattern.AngleStep;
-    }
-
-    private void EmitDoubleSpiral(Boss1AttackPattern pattern)
-    {
-        var a1 = _angleOffset;
-        var a2 = a1 + MathF.PI;
-        OnEmitBullet?.Invoke(pattern.Skill, MathF.Cos(a1) * pattern.BulletSpeed, MathF.Sin(a1) * pattern.BulletSpeed);
-        OnEmitBullet?.Invoke(pattern.Skill, MathF.Cos(a2) * pattern.BulletSpeed, MathF.Sin(a2) * pattern.BulletSpeed);
-        _angleOffset += pattern.AngleStep;
-    }
-
-    private void EmitRainDrop(Boss1AttackPattern pattern)
-    {
-        var range = pattern.MaxX - pattern.MinX;
-        var x1 = pattern.MinX + _random.NextSingle() * range;
-        var x2 = pattern.MinX + _random.NextSingle() * range;
-        OnEmitBullet?.Invoke(pattern.Skill, x1, pattern.BulletSpeed);
-        OnEmitBullet?.Invoke(pattern.Skill, x2, pattern.BulletSpeed);
-    }
-
-    private void EmitCrossChaos(Boss1AttackPattern pattern)
-    {
-        for (var i = 0; i < 4; i++)
-        {
-            var angle = _angleOffset + i * (MathF.PI / 2.0f);
-            OnEmitBullet?.Invoke(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed, MathF.Sin(angle) * pattern.BulletSpeed);
-        }
-        _angleOffset += pattern.AngleStep;
-    }
-
-    private void EmitFastSniper(Boss1AttackPattern pattern)
-    {
-        var dx = _targetPosition.X - _currentPosition.X;
-        var dy = _targetPosition.Y - _currentPosition.Y;
-        var angle = MathF.Atan2(dy, dx);
-        OnEmitBullet?.Invoke(pattern.Skill, MathF.Cos(angle) * pattern.BulletSpeed, MathF.Sin(angle) * pattern.BulletSpeed);
+        _stateTimer = 0.0f;
+        _combatMachine.ChangeState(_hoverState);
     }
 }

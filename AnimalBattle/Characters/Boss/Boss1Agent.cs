@@ -8,7 +8,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Characters.Boss;
 
 /// <summary>
-///     Boss 1（Ancient Cat Overlord）専用自治エージェント（Pawn）。
+///     Boss 1 専用自治エージェントです。
 ///     空中浮遊機動、全方位弾幕、および急降下攻撃を Boss1Brain と直接連携して管理します。
 /// </summary>
 public sealed class Boss1Agent : BaseBossAgent
@@ -89,22 +89,15 @@ public sealed class Boss1Agent : BaseBossAgent
             return;
         }
 
-        try
-        {
-            _brain.Update(deltaTime, playerPosition, 1, true, health.Current, health.Max);
+        _brain.Update(deltaTime, playerPosition, 1, true, health.Current, health.Max);
 
-            ref var trans = ref Entity.GetMut<Transform>();
-            trans.X = _brain.Position.X;
-            trans.Y = _brain.Position.Y;
+        ref var trans = ref Entity.GetMut<Transform>();
+        trans.X = _brain.Position.X;
+        trans.Y = _brain.Position.Y;
 
-            OnPostUpdate(deltaTime, world);
+        OnPostUpdate(deltaTime, world);
 
-            Entity.Set(new BossCombatState(IsVulnerable, Phase));
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[Boss1Agent 警告] Update 処理中に例外が発生しました: {ex.Message}");
-        }
+        Entity.Set(new BossCombatState(IsVulnerable, Phase));
     }
 
     /// <inheritdoc />
