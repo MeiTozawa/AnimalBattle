@@ -602,21 +602,6 @@ public sealed class WorldRenderSystem : IDisposable {
             }
 
             case BulletType.Yellow: {
-                // 黄色：主円と衛星小円の二重円構成（自転・公転）
-                var orbitDist = radius * 1.5f;
-                var angle = mod.ElapsedTimer * 6.0f;
-                var satX = (int)(bx + MathF.Cos(angle) * orbitDist);
-                var satY = (int)(by + MathF.Sin(angle) * orbitDist);
-                var satRadius = Math.Max(3, (int)(radius * 0.55f));
-                var satOutline = satRadius + outlinePadding;
-                var satCore = Math.Max(2, (int)(satRadius * coreRadiusRatio));
-
-                // 衛星小円の描画
-                GameEngine.DrawCircle(satX, satY, satOutline, b.OutlineColor, true);
-                GameEngine.DrawCircle(satX, satY, satRadius, b.FillColor, true);
-                GameEngine.DrawCircle(satX, satY, satCore, coreColor, true);
-
-                // 主円の描画
                 GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
                 GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
                 GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
