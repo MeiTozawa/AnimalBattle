@@ -10,12 +10,19 @@ namespace AnimalBattle.Render;
 ///     fixed ピン留め不要・GC アロケーションゼロで動作し、<see cref="IDisposable" /> による厳格な RAII 寿命管理を提供します。
 /// </summary>
 public sealed unsafe class RenderCommandBuffer : IDisposable {
-    private const int DefaultPacketCapacity = 4096;
-    private const int DefaultTextCapacity = 4096;
+    private const int DefaultPacketCapacity = 8192;
+    private const int DefaultTextCapacity = 8192;
 
+    // 前・後台ダブルバッファの物理ポインタ
+    private RenderPacket* _packetBuffer0;
+    private RenderPacket* _packetBuffer1;
+    private char* _textBuffer0;
+    private char* _textBuffer1;
+
+    // 現在のフレームで書き込み対象となっているアクティブバッファへのポインタ
     private RenderPacket* _packetBuffer;
-
     private char* _textBuffer;
+    private int _writeIndex;
 
     // 描画パイプライン状態シャドウキャッシュ（冗長な状態設定コマンドを排除し、GPU パイプラインストールを防止）
     private const int DefaultBlendMode = 0;
@@ -31,7 +38,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private int _activeBrightB = DefaultBrightB;
 
     /// <summary>
-    ///     指定された初期容量で 64 バイト物理整列の非托管メモリを確保し、描画コマンドバッファを初期化します。
+    ///     指定された初期容量で 64 バイト物理整列のダブルバッファ非托管メモリを確保し、描画コマンドバッファを初期化します。
     /// </summary>
     /// <param name="initialPacketCapacity">初期コマンドバッファ容量。</param>
     /// <param name="initialTextCapacity">初期テキストバッファ容量。</param>
@@ -43,12 +50,18 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         PacketCount = 0;
         TextLength = 0;
         IsDisposed = false;
+        _writeIndex = 0;
 
         var packetBytes = (nuint)(sizeof(RenderPacket) * PacketCapacity);
         var textBytes = (nuint)(sizeof(char) * TextCapacity);
 
-        _packetBuffer = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes, 64);
-        _textBuffer = (char*)NativeMemory.AlignedAlloc(textBytes, 64);
+        _packetBuffer0 = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes, 64);
+        _packetBuffer1 = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes, 64);
+        _textBuffer0 = (char*)NativeMemory.AlignedAlloc(textBytes, 64);
+        _textBuffer1 = (char*)NativeMemory.AlignedAlloc(textBytes, 64);
+
+        _packetBuffer = _packetBuffer0;
+        _textBuffer = _textBuffer0;
     }
 
     /// <summary>
@@ -353,12 +366,20 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     描画バッファのカウンターおよびパイプラインシャドウ状態をリセットし、次フレームの記録に備えます（GC 発生なし）。
+    ///     ダブルバッファの書き込み対象インデックス (0 または 1)。
+    /// </summary>
+    public int WriteIndex => _writeIndex;
+
+    /// <summary>
+    ///     前・後台バッファを乒乓（Ping-Pong）切り替えし、次フレームの記録バッファを準備します（GC 発生なし）。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Reset()
+    public void Swap()
     {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
+        _writeIndex ^= 1;
+        _packetBuffer = _writeIndex == 0 ? _packetBuffer0 : _packetBuffer1;
+        _textBuffer = _writeIndex == 0 ? _textBuffer0 : _textBuffer1;
         PacketCount = 0;
         TextLength = 0;
         _activeBlendMode = DefaultBlendMode;
@@ -368,21 +389,45 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         _activeBrightB = DefaultBrightB;
     }
 
+    /// <summary>
+    ///     描画バッファのカウンターおよびパイプラインシャドウ状態をリセットし、次フレームの記録に備えます（GC 発生なし）。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Reset()
+    {
+        Swap();
+    }
+
     private void Dispose(bool disposing)
     {
         if (IsDisposed) return;
 
-        if (_packetBuffer != null)
+        if (_packetBuffer0 != null)
         {
-            NativeMemory.AlignedFree(_packetBuffer);
-            _packetBuffer = null;
+            NativeMemory.AlignedFree(_packetBuffer0);
+            _packetBuffer0 = null;
         }
 
-        if (_textBuffer != null)
+        if (_packetBuffer1 != null)
         {
-            NativeMemory.AlignedFree(_textBuffer);
-            _textBuffer = null;
+            NativeMemory.AlignedFree(_packetBuffer1);
+            _packetBuffer1 = null;
         }
+
+        if (_textBuffer0 != null)
+        {
+            NativeMemory.AlignedFree(_textBuffer0);
+            _textBuffer0 = null;
+        }
+
+        if (_textBuffer1 != null)
+        {
+            NativeMemory.AlignedFree(_textBuffer1);
+            _textBuffer1 = null;
+        }
+
+        _packetBuffer = null;
+        _textBuffer = null;
 
         IsDisposed = true;
     }
@@ -394,7 +439,9 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         if (required <= PacketCapacity) return;
         var newCapacity = Math.Max(PacketCapacity * 2, required);
         var byteCount = (nuint)(sizeof(RenderPacket) * newCapacity);
-        _packetBuffer = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer, byteCount, 64);
+        _packetBuffer0 = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer0, byteCount, 64);
+        _packetBuffer1 = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer1, byteCount, 64);
+        _packetBuffer = _writeIndex == 0 ? _packetBuffer0 : _packetBuffer1;
         PacketCapacity = newCapacity;
     }
 
@@ -406,7 +453,9 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         {
             var newCapacity = Math.Max(TextCapacity * 2, required);
             var byteCount = (nuint)(sizeof(char) * newCapacity);
-            _textBuffer = (char*)NativeMemory.AlignedRealloc(_textBuffer, byteCount, 64);
+            _textBuffer0 = (char*)NativeMemory.AlignedRealloc(_textBuffer0, byteCount, 64);
+            _textBuffer1 = (char*)NativeMemory.AlignedRealloc(_textBuffer1, byteCount, 64);
+            _textBuffer = _writeIndex == 0 ? _textBuffer0 : _textBuffer1;
             TextCapacity = newCapacity;
         }
     }
