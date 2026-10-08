@@ -61,13 +61,13 @@ public sealed class WorldRenderSystem : IDisposable {
            .With<BossBulletTag>()
            .Build();
         _spriteEffectQuery = world.QueryBuilder<Transform, Sprite, FadeEffect>()
-           .With<EffectTag>()
+           .With<VfxTag>()
            .Build();
         _ringEffectQuery = world.QueryBuilder<Transform, RingEffect, FadeEffect>()
-           .With<EffectTag>()
+           .With<VfxTag>()
            .Build();
         _particleEffectQuery = world.QueryBuilder<Transform, Bullet, FadeEffect>()
-           .With<EffectTag>()
+           .With<VfxTag>()
            .Build();
         _hitFlashQuery = world.QueryBuilder<Transform, Sprite, HitFlashEffect>()
            .Build();

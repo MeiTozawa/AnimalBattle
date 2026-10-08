@@ -3,7 +3,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-///     視覚演出エンティティ（EffectTag）の等速直線運動（位置更新）を一括処理する ECS System。
+///     視覚演出エンティティ（VfxTag）の等速直線運動（位置更新）を一括処理する ECS System。
 /// </summary>
 public static class EffectMovementSystem {
     /// <summary>
@@ -14,7 +14,7 @@ public static class EffectMovementSystem {
     public static World AddEffectMovementSystem(this World world)
     {
         world.System<Transform, Velocity>("EffectMovementSystem")
-           .With<EffectTag>()
+           .With<VfxTag>()
            .Kind(Ecs.OnUpdate)
            .Each((it, i, ref trans, ref vel) =>
             {

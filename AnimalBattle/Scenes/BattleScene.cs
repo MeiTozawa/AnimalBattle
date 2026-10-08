@@ -19,7 +19,7 @@ public class BattleScene : IDisposable {
     private const string Boss1Name =  "Boss1";
     private const string Boss2Name =  "Boss2";
     private World _ecsWorld;
-    private Query _effectsQuery;
+    private Query _vfxQuery;
     private bool _isDisposed;
     private Query<Transform, CollisionBox> _platformQuery;
     private Query _playerBulletsQuery;
@@ -60,8 +60,8 @@ public class BattleScene : IDisposable {
         _playerBulletsQuery = _ecsWorld.QueryBuilder()
            .With<PlayerBulletTag>()
            .Build();
-        _effectsQuery = _ecsWorld.QueryBuilder()
-           .With<EffectTag>()
+        _vfxQuery = _ecsWorld.QueryBuilder()
+           .With<VfxTag>()
            .Build();
 
         // 3. アクティブな Boss (デフォルト: Boss 1) の生成
@@ -115,7 +115,7 @@ public class BattleScene : IDisposable {
         _worldRenderer.Dispose();
         _debugRenderer.Dispose();
         _playerBulletsQuery.Dispose();
-        _effectsQuery.Dispose();
+        _vfxQuery.Dispose();
         _platformQuery.Dispose();
         _ecsWorld.Dispose();
         AssetManager.Shutdown();
@@ -302,7 +302,7 @@ public class BattleScene : IDisposable {
     {
         CombatEffectHelper.ClearAllBossBullets(_ecsWorld);
         _playerBulletsQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
-        _effectsQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
+        _vfxQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
         Player.Reset(ConfigManager.Player);
     }
 

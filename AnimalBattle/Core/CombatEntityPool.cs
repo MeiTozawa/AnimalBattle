@@ -71,7 +71,7 @@ public sealed class CombatEntityPoolComponent : IDisposable {
                .Set(new Velocity(0))
                .Set(new Bullet(0, Color.Empty, Color.Empty))
                .Set(new FadeEffect(1.0f))
-               .Add<EffectTag>(),
+               .Add<VfxTag>(),
             ResetEffectEntity);
 
         RingEffects = new EntityPool(
@@ -81,7 +81,7 @@ public sealed class CombatEntityPoolComponent : IDisposable {
                .Set(new Transform(0, 0))
                .Set(new RingEffect(0, 0, Color.Empty))
                .Set(new FadeEffect(1.0f))
-               .Add<EffectTag>(),
+               .Add<VfxTag>(),
             ResetEffectEntity);
 
         AreaEffects = new EntityPool(
@@ -93,7 +93,7 @@ public sealed class CombatEntityPoolComponent : IDisposable {
                .Set(new Hitbox(default, 0, Faction.Hostile, false))
                .Set(new Sprite(-1))
                .Set(new FadeEffect(1.0f))
-               .Add<EffectTag>(),
+               .Add<VfxTag>(),
             ResetEffectEntity);
     }
 
