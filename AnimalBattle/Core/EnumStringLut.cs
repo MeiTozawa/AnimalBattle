@@ -5,176 +5,114 @@ using AnimalBattle.Ai.Contracts;
 namespace AnimalBattle.Core;
 
 /// <summary>
-///     グローバルな列挙体文字列事前生成ルックアップテーブル（LUT）。
+///     グローバルな列挙体文字列ルックアップテーブル（LUT）。
 ///     ホットパスにおける <see cref="Enum.ToString()" /> のリフレクション辞書検索とヒープ文字列割り当てを完全に排除します。
 /// </summary>
 public static class EnumStringLut {
-    private static readonly string[] Boss1SkillNames = [
-        "None",
-        "Aimed3Shot", // 101 -> index 1
-        "RingBurst", // 102 -> index 2
-        "DoubleSpiral", // 103 -> index 3
-        "RainDrop", // 104 -> index 4
-        "CrossChaos", // 105 -> index 5
-        "FastSniper", // 106 -> index 6
-        "DiveRam" // 107 -> index 7
-    ];
+    /// <summary>Boss 技能の識別文字列を取得します。</summary>
+    public static string Get(BossSkill skill) => skill switch {
+        BossSkill.Aimed3Shot => nameof(BossSkill.Aimed3Shot),
+        BossSkill.RingBurst => nameof(BossSkill.RingBurst),
+        BossSkill.DoubleSpiral => nameof(BossSkill.DoubleSpiral),
+        BossSkill.RainDrop => nameof(BossSkill.RainDrop),
+        BossSkill.CrossChaos => nameof(BossSkill.CrossChaos),
+        BossSkill.FastSniper => nameof(BossSkill.FastSniper),
+        BossSkill.DiveRam => nameof(BossSkill.DiveRam),
+        BossSkill.HeavySlash => nameof(BossSkill.HeavySlash),
+        BossSkill.DoubleCleave => nameof(BossSkill.DoubleCleave),
+        BossSkill.GroundStomp => nameof(BossSkill.GroundStomp),
+        BossSkill.LeapSmash => nameof(BossSkill.LeapSmash),
+        BossSkill.FrenzyCharge => nameof(BossSkill.FrenzyCharge),
+        BossSkill.EarthquakeRoar => nameof(BossSkill.EarthquakeRoar),
+        _ => "None"
+    };
 
-    private static readonly string[] Boss2SkillNames = [
-        "None",
-        "HeavySlash", // 201 -> index 1
-        "DoubleCleave", // 202 -> index 2
-        "GroundStomp", // 203 -> index 3
-        "LeapSmash", // 204 -> index 4
-        "FrenzyCharge", // 205 -> index 5
-        "EarthquakeRoar" // 206 -> index 6
-    ];
+    /// <summary>Boss 1 状態の識別文字列を取得します。</summary>
+    public static string Get(Boss1State state) => state switch {
+        Boss1State.Hover => nameof(Boss1State.Hover),
+        Boss1State.AttackSelection => nameof(Boss1State.AttackSelection),
+        Boss1State.Telegraph => nameof(Boss1State.Telegraph),
+        Boss1State.Execute => nameof(Boss1State.Execute),
+        Boss1State.Recovery => nameof(Boss1State.Recovery),
+        Boss1State.PhaseTransition => nameof(Boss1State.PhaseTransition),
+        Boss1State.Dead => nameof(Boss1State.Dead),
+        Boss1State.None => nameof(Boss1State.None),
+        _ => "Unknown"
+    };
 
-    private static readonly string[] Boss1StateNames = [
-        "None",
-        "Hover",
-        "AttackSelection",
-        "Telegraph",
-        "Execute",
-        "Recovery",
-        "PhaseTransition",
-        "Dead"
-    ];
+    /// <summary>Boss 2 状態の識別文字列を取得します。</summary>
+    public static string Get(Boss2State state) => state switch {
+        Boss2State.Idle => nameof(Boss2State.Idle),
+        Boss2State.PatrolChase => nameof(Boss2State.PatrolChase),
+        Boss2State.MoveToTakeoff => nameof(Boss2State.MoveToTakeoff),
+        Boss2State.PlatformTraverse => nameof(Boss2State.PlatformTraverse),
+        Boss2State.Telegraph => nameof(Boss2State.Telegraph),
+        Boss2State.Execute => nameof(Boss2State.Execute),
+        Boss2State.WallCrashStun => nameof(Boss2State.WallCrashStun),
+        Boss2State.Recovery => nameof(Boss2State.Recovery),
+        Boss2State.PhaseTransition => nameof(Boss2State.PhaseTransition),
+        Boss2State.Dead => nameof(Boss2State.Dead),
+        Boss2State.None => nameof(Boss2State.None),
+        _ => "Unknown"
+    };
 
-    private static readonly string[] Boss2StateNames = [
-        "None",
-        "Idle",
-        "PatrolChase",
-        "MoveToTakeoff",
-        "PlatformTraverse",
-        "Telegraph",
-        "Execute",
-        "WallCrashStun",
-        "Recovery",
-        "PhaseTransition",
-        "Dead"
-    ];
+    /// <summary>戦闘 Phase の識別文字列を取得します。</summary>
+    public static string Get(Phase phase) => phase switch {
+        Phase.Phase1 => "Phase 1",
+        Phase.Phase2 => "Phase 2",
+        Phase.Phase3 => "Phase 3",
+        _ => "Unknown"
+    };
 
-    private static readonly string[] PhaseNames = [
-        "Unknown",
-        "Phase 1",
-        "Phase 2",
-        "Phase 3",
-        "Phase Transition",
-        "Dead"
-    ];
+    /// <summary>技能に応じた予兆 HUD 状態バッジ文字列を取得します。</summary>
+    public static string GetTelegraphBadge(BossSkill skill) => skill switch {
+        BossSkill.Aimed3Shot => "[STATE: TELEGRAPHING (WIND-UP: Aimed3Shot)]",
+        BossSkill.RingBurst => "[STATE: TELEGRAPHING (WIND-UP: RingBurst)]",
+        BossSkill.DoubleSpiral => "[STATE: TELEGRAPHING (WIND-UP: DoubleSpiral)]",
+        BossSkill.RainDrop => "[STATE: TELEGRAPHING (WIND-UP: RainDrop)]",
+        BossSkill.CrossChaos => "[STATE: TELEGRAPHING (WIND-UP: CrossChaos)]",
+        BossSkill.FastSniper => "[STATE: TELEGRAPHING (WIND-UP: FastSniper)]",
+        BossSkill.DiveRam => "[STATE: TELEGRAPHING (WIND-UP: DiveRam)]",
+        BossSkill.HeavySlash => "[STATE: TELEGRAPHING (WIND-UP: HeavySlash)]",
+        BossSkill.DoubleCleave => "[STATE: TELEGRAPHING (WIND-UP: DoubleCleave)]",
+        BossSkill.GroundStomp => "[STATE: TELEGRAPHING (WIND-UP: GroundStomp)]",
+        BossSkill.LeapSmash => "[STATE: TELEGRAPHING (WIND-UP: LeapSmash)]",
+        BossSkill.FrenzyCharge => "[STATE: TELEGRAPHING (WIND-UP: FrenzyCharge)]",
+        BossSkill.EarthquakeRoar => "[STATE: TELEGRAPHING (WIND-UP: EarthquakeRoar)]",
+        _ => "[STATE: TELEGRAPHING (WIND-UP: None)]"
+    };
 
-    // フレーム内文字列補間をゼロ化するための事前生成 HUD 状態バッジ文字列
-    private static readonly string[] Boss1TelegraphBadges = [
-        "[STATE: TELEGRAPHING (WIND-UP: None)]",
-        "[STATE: TELEGRAPHING (WIND-UP: Aimed3Shot)]",
-        "[STATE: TELEGRAPHING (WIND-UP: RingBurst)]",
-        "[STATE: TELEGRAPHING (WIND-UP: DoubleSpiral)]",
-        "[STATE: TELEGRAPHING (WIND-UP: RainDrop)]",
-        "[STATE: TELEGRAPHING (WIND-UP: CrossChaos)]",
-        "[STATE: TELEGRAPHING (WIND-UP: FastSniper)]",
-        "[STATE: TELEGRAPHING (WIND-UP: DiveRam)]"
-    ];
+    /// <summary>技能に応じた実行 HUD 状態バッジ文字列を取得します。</summary>
+    public static string GetExecuteBadge(BossSkill skill) => skill switch {
+        BossSkill.Aimed3Shot => "[STATE: EXECUTING (Aimed3Shot)]",
+        BossSkill.RingBurst => "[STATE: EXECUTING (RingBurst)]",
+        BossSkill.DoubleSpiral => "[STATE: EXECUTING (DoubleSpiral)]",
+        BossSkill.RainDrop => "[STATE: EXECUTING (RainDrop)]",
+        BossSkill.CrossChaos => "[STATE: EXECUTING (CrossChaos)]",
+        BossSkill.FastSniper => "[STATE: EXECUTING (FastSniper)]",
+        BossSkill.DiveRam => "[STATE: EXECUTING (DiveRam)]",
+        BossSkill.HeavySlash => "[STATE: EXECUTING (HeavySlash)]",
+        BossSkill.DoubleCleave => "[STATE: EXECUTING (DoubleCleave)]",
+        BossSkill.GroundStomp => "[STATE: EXECUTING (GroundStomp)]",
+        BossSkill.LeapSmash => "[STATE: EXECUTING (LeapSmash)]",
+        BossSkill.FrenzyCharge => "[STATE: EXECUTING (FrenzyCharge)]",
+        BossSkill.EarthquakeRoar => "[STATE: EXECUTING (EarthquakeRoar)]",
+        _ => "[STATE: EXECUTING (None)]"
+    };
 
-    private static readonly string[] Boss1ExecuteBadges = [
-        "[STATE: EXECUTING (None)]",
-        "[STATE: EXECUTING (Aimed3Shot)]",
-        "[STATE: EXECUTING (RingBurst)]",
-        "[STATE: EXECUTING (DoubleSpiral)]",
-        "[STATE: EXECUTING (RainDrop)]",
-        "[STATE: EXECUTING (CrossChaos)]",
-        "[STATE: EXECUTING (FastSniper)]",
-        "[STATE: EXECUTING (DiveRam)]"
-    ];
+    /// <summary>Boss 2 の追跡技能バッジ文字列を取得します。</summary>
+    public static string GetBoss2ChaseBadge(BossSkill skill) => skill switch {
+        BossSkill.HeavySlash => "[STATE: CHASE (NEXT: HeavySlash)]",
+        BossSkill.DoubleCleave => "[STATE: CHASE (NEXT: DoubleCleave)]",
+        BossSkill.GroundStomp => "[STATE: CHASE (NEXT: GroundStomp)]",
+        BossSkill.LeapSmash => "[STATE: CHASE (NEXT: LeapSmash)]",
+        BossSkill.FrenzyCharge => "[STATE: CHASE (NEXT: FrenzyCharge)]",
+        BossSkill.EarthquakeRoar => "[STATE: CHASE (NEXT: EarthquakeRoar)]",
+        _ => "[STATE: CHASE (NEXT: None)]"
+    };
 
-    private static readonly string[] Boss2TelegraphBadges = [
-        "[STATE: TELEGRAPHING (WIND-UP: None)]",
-        "[STATE: TELEGRAPHING (WIND-UP: HeavySlash)]",
-        "[STATE: TELEGRAPHING (WIND-UP: DoubleCleave)]",
-        "[STATE: TELEGRAPHING (WIND-UP: GroundStomp)]",
-        "[STATE: TELEGRAPHING (WIND-UP: LeapSmash)]",
-        "[STATE: TELEGRAPHING (WIND-UP: FrenzyCharge)]",
-        "[STATE: TELEGRAPHING (WIND-UP: EarthquakeRoar)]"
-    ];
-
-    private static readonly string[] Boss2ExecuteBadges = [
-        "[STATE: EXECUTING (None)]",
-        "[STATE: EXECUTING (HeavySlash)]",
-        "[STATE: EXECUTING (DoubleCleave)]",
-        "[STATE: EXECUTING (GroundStomp)]",
-        "[STATE: EXECUTING (LeapSmash)]",
-        "[STATE: EXECUTING (FrenzyCharge)]",
-        "[STATE: EXECUTING (EarthquakeRoar)]"
-    ];
-
-    private static readonly string[] Boss2ChaseBadges = [
-        "[STATE: CHASE (NEXT: None)]",
-        "[STATE: CHASE (NEXT: HeavySlash)]",
-        "[STATE: CHASE (NEXT: DoubleCleave)]",
-        "[STATE: CHASE (NEXT: GroundStomp)]",
-        "[STATE: CHASE (NEXT: LeapSmash)]",
-        "[STATE: CHASE (NEXT: FrenzyCharge)]",
-        "[STATE: CHASE (NEXT: EarthquakeRoar)]"
-    ];
-
-    public static string Get(BossSkill skill)
-    {
-        var val = (ushort)skill;
-        if (val >= 101 && val <= 107) return Boss1SkillNames[val - 100];
-        if (val >= 201 && val <= 206) return Boss2SkillNames[val - 200];
-        return "None";
-    }
-
-    public static string Get(Boss1State state)
-    {
-        var idx = (int)state;
-        return idx >= 0 && idx < Boss1StateNames.Length ? Boss1StateNames[idx] : "Unknown";
-    }
-
-    public static string Get(Boss2State state)
-    {
-        var idx = (int)state;
-        return idx >= 0 && idx < Boss2StateNames.Length ? Boss2StateNames[idx] : "Unknown";
-    }
-
-    public static string Get(Phase phase)
-    {
-        var idx = (int)phase;
-        return idx >= 0 && idx < PhaseNames.Length ? PhaseNames[idx] : "Unknown";
-    }
-
-    public static string GetBoss1TelegraphBadge(BossSkill skill)
-    {
-        var val = (ushort)skill;
-        var idx = val >= 101 && val <= 107 ? val - 100 : 0;
-        return Boss1TelegraphBadges[idx];
-    }
-
-    public static string GetBoss1ExecuteBadge(BossSkill skill)
-    {
-        var val = (ushort)skill;
-        var idx = val >= 101 && val <= 107 ? val - 100 : 0;
-        return Boss1ExecuteBadges[idx];
-    }
-
-    public static string GetBoss2TelegraphBadge(BossSkill skill)
-    {
-        var val = (ushort)skill;
-        var idx = val >= 201 && val <= 206 ? val - 200 : 0;
-        return Boss2TelegraphBadges[idx];
-    }
-
-    public static string GetBoss2ExecuteBadge(BossSkill skill)
-    {
-        var val = (ushort)skill;
-        var idx = val >= 201 && val <= 206 ? val - 200 : 0;
-        return Boss2ExecuteBadges[idx];
-    }
-
-    public static string GetBoss2ChaseBadge(BossSkill skill)
-    {
-        var val = (ushort)skill;
-        var idx = val >= 201 && val <= 206 ? val - 200 : 0;
-        return Boss2ChaseBadges[idx];
-    }
+    public static string GetBoss1TelegraphBadge(BossSkill skill) => GetTelegraphBadge(skill);
+    public static string GetBoss1ExecuteBadge(BossSkill skill) => GetExecuteBadge(skill);
+    public static string GetBoss2TelegraphBadge(BossSkill skill) => GetTelegraphBadge(skill);
+    public static string GetBoss2ExecuteBadge(BossSkill skill) => GetExecuteBadge(skill);
 }
