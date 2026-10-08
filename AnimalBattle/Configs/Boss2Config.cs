@@ -38,95 +38,9 @@ public sealed class Boss2PhaseConfig {
 }
 
 /// <summary>
-///     Config/boss2.toml または boss1.toml から読み込まれる技能意思決定ルールの設定クラスです。
-/// </summary>
-public sealed class AttackRuleConfig {
-    /// <summary>技能識別名（例: "HeavySlash", "DoubleCleave"）</summary>
-    public string Skill { get; set; } = string.Empty;
-
-    /// <summary>技能の基本冷却時間（秒）</summary>
-    public float Cooldown { get; set; }
-
-    /// <summary>最小有効距離（ピクセル）</summary>
-    public float MinDistance { get; set; }
-
-    /// <summary>最大有効距離（ピクセル）</summary>
-    public float MaxDistance { get; set; }
-
-    /// <summary>基礎加重（欲望値）</summary>
-    public float Weight { get; set; }
-
-    /// <summary>同一足場を要求するかどうか</summary>
-    public bool RequireSamePlatform { get; set; }
-
-    /// <summary>プレイヤーの接地を要求するかどうか（null の場合は問わない）</summary>
-    public bool? RequirePlayerGrounded { get; set; }
-
-    /// <summary>プレイヤー空中時の加重倍率</summary>
-    public float PreferAirborneBonus { get; set; }
-}
-
-/// <summary>
 ///     Config/boss2.toml から読み込まれる Boss 2 (Ground Crusher) の基本パラメータおよび各フェーズの FSM 設定クラス。
 /// </summary>
-public sealed class Boss2Config {
-    /// <summary>Boss 表示名</summary>
-    public string BossName { get; set; } = string.Empty;
-
-    /// <summary>Boss の最大 HP</summary>
-    public float MaxHp { get; set; }
-
-    /// <summary>Boss の基準出現 X 座標</summary>
-    public float SpawnX { get; set; }
-
-    /// <summary>Boss の基準出現 Y 座標</summary>
-    public float SpawnY { get; set; }
-
-    /// <summary>Boss 描画スケール X</summary>
-    public float ScaleX { get; set; }
-
-    /// <summary>Boss 描画スケール Y</summary>
-    public float ScaleY { get; set; }
-
-    /// <summary>Boss 被弾判定 (Hurtbox) の幾何形状種別（"Box" または "Circle"）</summary>
-    public string HurtboxShape { get; set; } = string.Empty;
-
-    /// <summary>Boss 被弾当たり判定幅</summary>
-    public float HurtboxWidth { get; set; }
-
-    /// <summary>Boss 被弾当たり判定高さ</summary>
-    public float HurtboxHeight { get; set; }
-
-    /// <summary>Boss 被弾当たり判定円半径</summary>
-    public float HurtboxRadius { get; set; }
-
-    /// <summary>Boss 被弾判定の X 軸局所オフセット</summary>
-    public float HurtboxOffsetX { get; set; }
-
-    /// <summary>Boss 被弾判定の Y 軸局所オフセット</summary>
-    public float HurtboxOffsetY { get; set; }
-
-    /// <summary>Boss 身体接触攻撃判定 (Hitbox) の幾何形状種別（"Box" または "Circle"）</summary>
-    public string HitboxShape { get; set; } = string.Empty;
-
-    /// <summary>Boss 接触攻撃判定幅</summary>
-    public float BodyHitboxWidth { get; set; }
-
-    /// <summary>Boss 接触攻撃判定高さ</summary>
-    public float BodyHitboxHeight { get; set; }
-
-    /// <summary>Boss 接触攻撃判定円半径</summary>
-    public float BodyHitboxRadius { get; set; }
-
-    /// <summary>Boss 接触判定の X 軸局所オフセット</summary>
-    public float BodyHitboxOffsetX { get; set; }
-
-    /// <summary>Boss 接触判定の Y 軸局所オフセット</summary>
-    public float BodyHitboxOffsetY { get; set; }
-
-    /// <summary>Boss 身体接触命中時の与ダメージ量</summary>
-    public float BodyContactDamage { get; set; }
-
+public sealed class Boss2Config : BaseBossConfig {
     /// <summary>地形衝突判定幅</summary>
     public float CollisionWidth { get; set; }
 
@@ -217,25 +131,7 @@ public sealed class Boss2Config {
     /// <summary>Phase 3 状態機設定</summary>
     public Boss2PhaseConfig Phase3 { get; set; } = new();
 
-    /// <summary>
-    ///     設定に基づいた Boss 2 被弾判定 (<see cref="CollisionShape" />) を取得します。
-    /// </summary>
-    /// <returns>構築された被弾衝突形状バリアント</returns>
-    public CollisionShape GetHurtboxShape()
-    {
-        return CollisionShapeFactory.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxWidth, HurtboxHeight,
-            HurtboxOffsetX, HurtboxOffsetY);
-    }
 
-    /// <summary>
-    ///     設定に基づいた Boss 2 接触攻撃判定 (<see cref="CollisionShape" />) を取得します。
-    /// </summary>
-    /// <returns>構築された接触攻撃衝突形状バリアント</returns>
-    public CollisionShape GetHitboxShape()
-    {
-        return CollisionShapeFactory.CreateWithFallback(HitboxShape, BodyHitboxRadius, BodyHitboxWidth,
-            BodyHitboxHeight, BodyHitboxOffsetX, BodyHitboxOffsetY);
-    }
 
     /// <summary>
     ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{Boss2Config}" /> インスタンスを生成します。
