@@ -99,26 +99,7 @@ public static class GameEngine {
         return NativeBindings.Engine_EndDraw();
     }
 
-    /// <summary>
-    ///     フレーム描画の開始処理（画面クリア等）を行います。
-    /// </summary>
-    /// <returns>成功時 true、失敗時 false</returns>
-    public static bool BeginFrame()
-    {
-        _commandBuffer.Reset();
-        return NativeBindings.Engine_BeginDraw();
-    }
 
-    /// <summary>
-    ///     フレーム描画の終了処理（コマンド一括提出・バックバッファ反転等）を行います。
-    /// </summary>
-    /// <param name="deltaTime">前フレームからの経過秒数</param>
-    /// <returns>成功時 true、失敗时 false</returns>
-    public static bool EndFrame(float deltaTime)
-    {
-        _commandBuffer.Submit();
-        return NativeBindings.Engine_EndDraw();
-    }
 
     /// <summary>
     ///     アプリケーション終了要求を発行します。

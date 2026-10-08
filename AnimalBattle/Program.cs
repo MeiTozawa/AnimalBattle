@@ -1,3 +1,4 @@
+using AnimalBattle.Core;
 using AnimalBattle.Scenes;
 
 namespace AnimalBattle;
@@ -20,41 +21,9 @@ internal static class Program {
             using BattleScene battleScene = new();
             battleScene.Initialize();
 
-            var stopwatch = Stopwatch.StartNew();
-            var lastTime = stopwatch.ElapsedTicks;
-            var tickFrequency = (double)Stopwatch.Frequency;
-
-            Debug.WriteLine("メインゲームループを開始します...");
-            var frameCount = 0;
-            while (true)
-            {
-                if (!GameEngine.ProcessMessage())
-                {
-                    Debug.WriteLine($"[終了] ウィンドウメッセージ処理が終了を返しました (フレーム数: {frameCount})");
-                    break;
-                }
-
-                if (GameEngine.IsExitRequested())
-                {
-                    Debug.WriteLine($"[終了] アプリケーション終了要求を受信しました (フレーム数: {frameCount})");
-                    break;
-                }
-
-                var currentTime = stopwatch.ElapsedTicks;
-                var rawDeltaTime = (float)((currentTime - lastTime) / tickFrequency);
-                lastTime = currentTime;
-
-                // 産業級メインループ防トンネル保護：最大単一ステップを 50ms (20 FPS 相当) に制限し、ウィンドウドラッグやフレーム落ちによる壁抜けを防止
-                var deltaTime = Math.Clamp(rawDeltaTime, 0.0f, 0.05f);
-
-                GameEngine.BeginFrame();
-
-                battleScene.Update(deltaTime);
-                battleScene.Render();
-
-                GameEngine.EndFrame(deltaTime);
-                frameCount++;
-            }
+            Debug.WriteLine("双スレッドロックステップパイプラインループを開始します...");
+            using DualThreadGameLoop gameLoop = new();
+            gameLoop.Run(battleScene);
         }
         catch (Exception ex)
         {
