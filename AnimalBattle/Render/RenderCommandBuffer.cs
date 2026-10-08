@@ -10,7 +10,7 @@ namespace AnimalBattle.Render;
 ///     fixed ピン留め不要・GC アロケーションゼロで動作し、<see cref="IDisposable" /> による厳格な RAII 寿命管理を提供します。
 /// </summary>
 public sealed unsafe class RenderCommandBuffer : IDisposable {
-    private const int DefaultPacketCapacity = 8192;
+    private const int DefaultPacketCapacity = 16384;
     private const int DefaultTextCapacity = 8192;
 
     // 前・後台ダブルバッファの物理ポインタ
@@ -21,12 +21,24 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private CompactCirclePacket* _circleBuffer0;
     private CompactCirclePacket* _circleBuffer1;
 
-    // 現在のフレームで書き込み対象となっているアクティブバッファへのポインタ
+    // 前・後台ダブルバッファの独立要素カウント
+    private int _packetCount0;
+    private int _packetCount1;
+    private int _textLength0;
+    private int _textLength1;
+    private int _circleCount0;
+    private int _circleCount1;
+
+    // 現在のフレームで書き込み対象となっているアクティブバッファへのポインタ及びアクティブカウンター
     private RenderPacket* _packetBuffer;
     private char* _textBuffer;
     private CompactCirclePacket* _circleBuffer;
     private int _writeIndex;
     private int _circleBatchStart;
+
+    private int _currentPacketCount;
+    private int _currentTextLength;
+    private int _currentCircleCount;
 
     // 描画パイプライン状態シャドウキャッシュ（冗長な状態設定コマンドを排除し、GPU パイプラインストールを防止）
     private const int DefaultBlendMode = 0;
@@ -52,9 +64,16 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         PacketCapacity = Math.Max(64, initialPacketCapacity);
         TextCapacity = Math.Max(64, initialTextCapacity);
         CircleCapacity = Math.Max(64, initialPacketCapacity);
-        PacketCount = 0;
-        TextLength = 0;
-        CircleCount = 0;
+        _packetCount0 = 0;
+        _packetCount1 = 0;
+        _textLength0 = 0;
+        _textLength1 = 0;
+        _circleCount0 = 0;
+        _circleCount1 = 0;
+        _currentPacketCount = 0;
+        _currentTextLength = 0;
+        _currentCircleCount = 0;
+        _circleBatchStart = 0;
         IsDisposed = false;
         _writeIndex = 0;
 
@@ -75,9 +94,9 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     現在バッファに格納されている緊密配置円コマンド数。
+    ///     現在アクティブな書き込みバッファに格納されている緊密配置円コマンド数。
     /// </summary>
-    public int CircleCount { get; private set; }
+    public int CircleCount => _currentCircleCount;
 
     /// <summary>
     ///     緊密配置円バッファの最大収容可能要素数。
@@ -85,24 +104,24 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public int CircleCapacity { get; private set; }
 
     /// <summary>
-    ///     現在バッファに格納されている描画コマンド数。
+    ///     現在アクティブな書き込みバッファに格納されている描画コマンド数。
     /// </summary>
-    private int PacketCount { get; set; }
+    public int PacketCount => _currentPacketCount;
 
     /// <summary>
-    ///     現在バッファに格納されている文字列バッファの文字数。
+    ///     現在アクティブな書き込みバッファに格納されている文字列バッファの文字数。
     /// </summary>
-    private int TextLength { get; set; }
+    public int TextLength => _currentTextLength;
 
     /// <summary>
     ///     描画コマンドバッファの最大収容可能要素数。
     /// </summary>
-    private int PacketCapacity { get; set; }
+    public int PacketCapacity { get; private set; }
 
     /// <summary>
     ///     文字列バッファの最大収容可能文字数。
     /// </summary>
-    private int TextCapacity { get; set; }
+    public int TextCapacity { get; private set; }
 
     /// <summary>
     ///     リソースが破棄済みであるか否かを取得します。
@@ -154,7 +173,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
-        _packetBuffer[PacketCount++] = new RenderPacket {
+        _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawBox,
             Box = new DrawBoxPacket {
                 X1 = x1,
@@ -194,7 +213,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
-        _packetBuffer[PacketCount++] = new RenderPacket {
+        _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawLine,
             Line = new DrawLinePacket {
                 X1 = x1,
@@ -218,7 +237,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
-        _packetBuffer[PacketCount++] = new RenderPacket {
+        _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawGraph,
             Graph = new DrawGraphPacket {
                 X = x,
@@ -242,7 +261,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
-        _packetBuffer[PacketCount++] = new RenderPacket {
+        _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawRotaGraph,
             RotaGraph = new DrawRotaGraphPacket {
                 CenterX = centerX,
@@ -277,7 +296,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
-        _packetBuffer[PacketCount++] = new RenderPacket {
+        _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawRectRotaGraph,
             RectRotaGraph = new DrawRectRotaGraphPacket {
                 CenterX = centerX,
@@ -308,14 +327,14 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         EnsurePacketCapacity(1);
         var strLength = text.Length;
         EnsureTextCapacity(strLength + 1);
-        var offset = TextLength;
+        var offset = _currentTextLength;
 
         Span<char> destination = new(_textBuffer + offset, strLength + 1);
         text.CopyTo(destination);
         _textBuffer[offset + strLength] = '\0';
-        TextLength += strLength + 1;
+        _currentTextLength += strLength + 1;
 
-        _packetBuffer[PacketCount++] = new RenderPacket {
+        _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawString,
             StringData = new DrawStringPacket {
                 X = x,
@@ -341,7 +360,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
 
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
-        _packetBuffer[PacketCount++] = new RenderPacket {
+        _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.SetDrawBlendMode,
             Blend = new SetBlendModePacket {
                 Mode = mode,
@@ -366,7 +385,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
 
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
-        _packetBuffer[PacketCount++] = new RenderPacket {
+        _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.SetDrawBright,
             Bright = new SetBrightPacket {
                 R = r,
@@ -377,32 +396,60 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     蓄積された描画コマンドを 1 回の P/Invoke で C++ ネイティブエンジンへ一括提出します。
-    ///     fixed ピン留めを行わず、Cache Line 整列済みの非托管物理ポインタを直接渡します。
+    ///     蓄積された描画コマンドを 1 回の P/Invoke で C++ ネイティブエンジンへ一括提出します（単一スレッド動作互換用）。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Submit()
     {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
-        EnsurePendingCircleBatchFlushed();
+        FinishRecording();
 
-        if (PacketCount > 0 || CircleCount > 0)
+        var packets = _writeIndex == 0 ? _packetBuffer0 : _packetBuffer1;
+        var pCount = _writeIndex == 0 ? _packetCount0 : _packetCount1;
+        var texts = _writeIndex == 0 ? _textBuffer0 : _textBuffer1;
+        var tLength = _writeIndex == 0 ? _textLength0 : _textLength1;
+        var circles = _writeIndex == 0 ? _circleBuffer0 : _circleBuffer1;
+        var cCount = _writeIndex == 0 ? _circleCount0 : _circleCount1;
+
+        if (pCount > 0 || cCount > 0)
         {
-            NativeBindings.Engine_SubmitRenderCommands(_packetBuffer, PacketCount, _textBuffer, TextLength, _circleBuffer, CircleCount);
+            NativeBindings.Engine_SubmitRenderCommands(packets, pCount, texts, tLength, circles, cCount);
+        }
+    }
+
+    /// <summary>
+    ///     レンダリングスレッド用：前台バッファ（Front Buffer、1 - WriteIndex）に格納されたコマンド群を
+    ///     C++ ネイティブエンジンへ一括提出します。現在の書き込みバッファには一切干渉しません。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SubmitFront()
+    {
+        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        var frontIndex = 1 - _writeIndex;
+        var packets = frontIndex == 0 ? _packetBuffer0 : _packetBuffer1;
+        var pCount = frontIndex == 0 ? _packetCount0 : _packetCount1;
+        var texts = frontIndex == 0 ? _textBuffer0 : _textBuffer1;
+        var tLength = frontIndex == 0 ? _textLength0 : _textLength1;
+        var circles = frontIndex == 0 ? _circleBuffer0 : _circleBuffer1;
+        var cCount = frontIndex == 0 ? _circleCount0 : _circleCount1;
+
+        if (pCount > 0 || cCount > 0)
+        {
+            NativeBindings.Engine_SubmitRenderCommands(packets, pCount, texts, tLength, circles, cCount);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsurePendingCircleBatchFlushed()
     {
-        if (CircleCount > _circleBatchStart)
+        if (_currentCircleCount > _circleBatchStart)
         {
-            var count = CircleCount - _circleBatchStart;
+            var count = _currentCircleCount - _circleBatchStart;
             var offset = _circleBatchStart;
-            _circleBatchStart = CircleCount;
+            _circleBatchStart = _currentCircleCount;
 
             EnsurePacketCapacity(1);
-            _packetBuffer[PacketCount++] = new RenderPacket {
+            _packetBuffer[_currentPacketCount++] = new RenderPacket {
                 Type = RenderPacketType.DrawCircleBatch,
                 CircleBatch = new DrawCircleBatchPacket {
                     Offset = offset,
@@ -419,7 +466,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public void PushCompactCircle(int x, int y, int radius, uint color, bool fill)
     {
         EnsureCircleCapacity(1);
-        _circleBuffer[CircleCount++] = new CompactCirclePacket(x, y, radius, color, fill);
+        _circleBuffer[_currentCircleCount++] = new CompactCirclePacket(x, y, radius, color, fill);
     }
 
     /// <summary>
@@ -431,9 +478,9 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         EnsureCircleCapacity(circles.Length);
         fixed (CompactCirclePacket* src = circles)
         {
-            Buffer.MemoryCopy(src, _circleBuffer + CircleCount, (long)(sizeof(CompactCirclePacket) * (CircleCapacity - CircleCount)), (long)(sizeof(CompactCirclePacket) * circles.Length));
+            Buffer.MemoryCopy(src, _circleBuffer + _currentCircleCount, (long)(sizeof(CompactCirclePacket) * (CircleCapacity - _currentCircleCount)), (long)(sizeof(CompactCirclePacket) * circles.Length));
         }
-        CircleCount += circles.Length;
+        _currentCircleCount += circles.Length;
     }
 
     /// <summary>
@@ -442,19 +489,19 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public int WriteIndex => _writeIndex;
 
     /// <summary>
-    ///     前・後台バッファを乒乓（Ping-Pong）切り替えし、次フレームの記録バッファを準備します（GC 発生なし）。
+    ///     論理スレッド用：現在の書き込みバッファ（Back Buffer）のカウンターおよびパイプライン状態を初期化し、
+    ///     新規フレームの描画コマンド記録を開始します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Swap()
+    public void BeginRecording()
     {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
-        _writeIndex ^= 1;
         _packetBuffer = _writeIndex == 0 ? _packetBuffer0 : _packetBuffer1;
         _textBuffer = _writeIndex == 0 ? _textBuffer0 : _textBuffer1;
         _circleBuffer = _writeIndex == 0 ? _circleBuffer0 : _circleBuffer1;
-        PacketCount = 0;
-        TextLength = 0;
-        CircleCount = 0;
+        _currentPacketCount = 0;
+        _currentTextLength = 0;
+        _currentCircleCount = 0;
         _circleBatchStart = 0;
         _activeBlendMode = DefaultBlendMode;
         _activeBlendPal = DefaultBlendPal;
@@ -464,7 +511,49 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     描画バッファのカウンターおよびパイプラインシャドウ状態をリセットし、次フレームの記録に備えます（GC 発生なし）。
+    ///     論理スレッド用：現在の書き込みバッファの記録を完了し、未フラッシュの円バッチを確定させて要素数を確定・公開します。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FinishRecording()
+    {
+        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        EnsurePendingCircleBatchFlushed();
+        if (_writeIndex == 0)
+        {
+            _packetCount0 = _currentPacketCount;
+            _textLength0 = _currentTextLength;
+            _circleCount0 = _currentCircleCount;
+        }
+        else
+        {
+            _packetCount1 = _currentPacketCount;
+            _textLength1 = _currentTextLength;
+            _circleCount1 = _currentCircleCount;
+        }
+    }
+
+    /// <summary>
+    ///     前・後台バッファのスロットインデックスを乒乓（Ping-Pong）切り替えします。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SwapBuffers()
+    {
+        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        _writeIndex ^= 1;
+    }
+
+    /// <summary>
+    ///     前・後台バッファを乒乓（Ping-Pong）切り替えし、次フレームの記録バッファを準備します（GC 発生なし、単一スレッド互換用）。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Swap()
+    {
+        SwapBuffers();
+        BeginRecording();
+    }
+
+    /// <summary>
+    ///     描画バッファのカウンターおよびパイプラインシャドウ状態をリセットし、次フレームの記録に備えます（GC 発生なし、単一スレッド互換用）。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Reset()
@@ -522,7 +611,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private void EnsurePacketCapacity(int extraCount)
     {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
-        var required = PacketCount + extraCount;
+        var required = _currentPacketCount + extraCount;
         if (required <= PacketCapacity) return;
         var newCapacity = Math.Max(PacketCapacity * 2, required);
         var byteCount = (nuint)(sizeof(RenderPacket) * newCapacity);
@@ -535,7 +624,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private void EnsureTextCapacity(int extraLength)
     {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
-        var required = TextLength + extraLength;
+        var required = _currentTextLength + extraLength;
         if (required > TextCapacity)
         {
             var newCapacity = Math.Max(TextCapacity * 2, required);
@@ -550,7 +639,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private void EnsureCircleCapacity(int extraCount)
     {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
-        var required = CircleCount + extraCount;
+        var required = _currentCircleCount + extraCount;
         if (required <= CircleCapacity) return;
         var newCapacity = Math.Max(CircleCapacity * 2, required);
         var byteCount = (nuint)(sizeof(CompactCirclePacket) * newCapacity);
