@@ -16,10 +16,17 @@ enum class RenderPacketType : uint16_t {
     DrawRectRotaGraph = 6,
     DrawString = 7,
     SetDrawBlendMode = 8,
-    SetDrawBright = 9
+    SetDrawBright = 9,
+    DrawCircleBatch = 10
 };
 
 #pragma pack(push, 4)
+
+/// @brief 円描画バッチ（連続する CompactCirclePacket の範囲）コマンドデータ
+struct DrawCircleBatchPacket {
+    int32_t offset;
+    int32_t count;
+};
 
 /// @brief 矩形描画コマンドデータ
 struct DrawBoxPacket {
@@ -135,6 +142,7 @@ struct RenderPacket {
         DrawStringPacket string_data;
         SetBlendModePacket blend;
         SetBrightPacket bright;
+        DrawCircleBatchPacket circle_batch;
         uint8_t raw_data[44];
     };
 };

@@ -24,7 +24,7 @@ namespace ab {
         virtual void FlushCommands() = 0;
 
         // --- バッチ描画コマンド受付 ---
-        virtual void SubmitPackets(const RenderPacket* packets, int packet_count, const wchar_t* text_buffer, int text_length) = 0;
+        virtual void SubmitPackets(const RenderPacket* packets, int packet_count, const wchar_t* text_buffer, int text_length, const CompactCirclePacket* circle_buffer = nullptr, int circle_count = 0) = 0;
         virtual void SubmitCompactCircles(const CompactCirclePacket* circles, int count) = 0;
 
         // --- テクスチャ・アセット管理 ---

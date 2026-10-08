@@ -457,6 +457,9 @@ public sealed class WorldRenderSystem : IDisposable {
         _bCoreColor = bulletCfg.BossBulletCoreColor;
     }
 
+    /// <summary>
+    ///     自機弾を描画します。GameEngine.DrawCircle 経由で Stage3 緊密配置図元ストリーム（CompactCirclePacket、20バイト）へ直接記録されます。
+    /// </summary>
     private void DrawPlayerBulletsBatch(Iter it, Field<Transform> trans, Field<Velocity> vel)
     {
         var count = it.Count();
@@ -485,6 +488,9 @@ public sealed class WorldRenderSystem : IDisposable {
         }
     }
 
+    /// <summary>
+    ///     標準ボス弾幕を描画します。20 バイト緊密配置バッファへ高密度記録され、C++ 側でレジスタ展開一括ディスパッチされます。
+    /// </summary>
     private void DrawStandardBossBulletsBatch(Iter it, Field<Transform> trans, Field<Bullet> bullet)
     {
         var count = it.Count();

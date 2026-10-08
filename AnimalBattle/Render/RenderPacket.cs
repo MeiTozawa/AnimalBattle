@@ -34,7 +34,10 @@ public enum RenderPacketType : ushort {
     SetDrawBlendMode = 8,
 
     /// <summary>描画輝度設定</summary>
-    SetDrawBright = 9
+    SetDrawBright = 9,
+
+    /// <summary>高密度円描画バッチ（連続する CompactCirclePacket 範囲）</summary>
+    DrawCircleBatch = 10
 }
 
 /// <summary>
@@ -293,6 +296,18 @@ public struct SetBrightPacket {
 }
 
 /// <summary>
+///     円描画バッチコマンドデータ。
+/// </summary>
+[StructLayout(LayoutKind.Sequential, Pack = 4)]
+public struct DrawCircleBatchPacket {
+    /// <summary>CompactCirclePacket バッファ内の先頭インデックス</summary>
+    public int Offset;
+
+    /// <summary>描画する円の要素数</summary>
+    public int Count;
+}
+
+/// <summary>
 ///     C# - C++ 間で一括転送される 48 バイト固定長の Blittable 描画コマンドパケット。
 ///     各種描画コマンドデータは共用体（Explicit Layout Union）として同一オフセットに配置されます。
 /// </summary>
@@ -330,4 +345,7 @@ public struct RenderPacket {
 
     /// <summary>描画輝度設定コマンドデータ</summary>
     [FieldOffset(4)] public SetBrightPacket Bright;
+
+    /// <summary>高密度円描画バッチコマンドデータ</summary>
+    [FieldOffset(4)] public DrawCircleBatchPacket CircleBatch;
 }

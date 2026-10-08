@@ -49,7 +49,9 @@ internal static unsafe partial class NativeBindings {
         RenderPacket* packets,
         int packetCount,
         char* textBuffer,
-        int textLength);
+        int textLength,
+        CompactCirclePacket* circles,
+        int circleCount);
 
     [LibraryImport(_dllName, EntryPoint = "Engine_SubmitCompactCircles")]
     [SuppressGCTransition]

@@ -106,7 +106,9 @@ __declspec(dllexport) void Engine_SubmitRenderCommands(
     const ab::RenderPacket* packets,
     int packet_count,
     const wchar_t* text_buffer,
-    int text_length) noexcept {
+    int text_length,
+    const ab::CompactCirclePacket* circles = nullptr,
+    int circle_count = 0) noexcept {
     if (packets == nullptr || packet_count <= 0) {
         return;
     }
@@ -116,7 +118,7 @@ __declspec(dllexport) void Engine_SubmitRenderCommands(
             return;
         }
 
-        render_service->SubmitPackets(packets, packet_count, text_buffer, text_length);
+        render_service->SubmitPackets(packets, packet_count, text_buffer, text_length, circles, circle_count);
     } catch (...) {
     }
 }

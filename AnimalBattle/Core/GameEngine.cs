@@ -193,6 +193,15 @@ public static class GameEngine {
     }
 
     /// <summary>
+    ///     高密度円描画コマンド群をバッチメモリコピーで一括追加します（20 バイト緊密配置ストリーム）。
+    /// </summary>
+    /// <param name="circles">緊密配置された円パケットの読み取り専用スパン。</param>
+    public static void DrawCirclesBatch(ReadOnlySpan<CompactCirclePacket> circles)
+    {
+        _commandBuffer.PushCompactCirclesBatch(circles);
+    }
+
+    /// <summary>
     ///     矩形（ボックス）を画面上に描画します。
     /// </summary>
     /// <param name="p1">左上座標 (<see cref="Vec2i" />)</param>

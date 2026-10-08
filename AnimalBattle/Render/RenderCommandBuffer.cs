@@ -26,6 +26,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private char* _textBuffer;
     private CompactCirclePacket* _circleBuffer;
     private int _writeIndex;
+    private int _circleBatchStart;
 
     // 描画パイプライン状態シャドウキャッシュ（冗長な状態設定コマンドを排除し、GPU パイプラインストールを防止）
     private const int DefaultBlendMode = 0;
@@ -151,6 +152,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <param name="fill">塗りつぶしフラグ。</param>
     public void PushDrawBox(int x1, int y1, int x2, int y2, uint color, bool fill)
     {
+        EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[PacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawBox,
@@ -166,26 +168,17 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     円描画コマンドをバッファへ追加します。
+    ///     円描画コマンドをバッファへ追加します。20 バイトの緊密配置円バッファへ高速転送されます。
     /// </summary>
     /// <param name="centerX">中心 X 座標。</param>
     /// <param name="centerY">中心 Y 座標。</param>
     /// <param name="radius">半径 (px)。</param>
     /// <param name="color">描画カラー。</param>
     /// <param name="fill">塗りつぶしフラグ。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushDrawCircle(int centerX, int centerY, int radius, uint color, bool fill)
     {
-        EnsurePacketCapacity(1);
-        _packetBuffer[PacketCount++] = new RenderPacket {
-            Type = RenderPacketType.DrawCircle,
-            Circle = new DrawCirclePacket {
-                CenterX = centerX,
-                CenterY = centerY,
-                Radius = radius,
-                Color = color,
-                Fill = fill ? (byte)1 : (byte)0
-            }
-        };
+        PushCompactCircle(centerX, centerY, radius, color, fill);
     }
 
     /// <summary>
@@ -199,6 +192,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <param name="thickness">線の太さ。</param>
     public void PushDrawLine(int x1, int y1, int x2, int y2, uint color, int thickness)
     {
+        EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[PacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawLine,
@@ -222,6 +216,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <param name="trans">透過フラグ。</param>
     public void PushDrawGraph(int x, int y, int handle, bool trans)
     {
+        EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[PacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawGraph,
@@ -245,6 +240,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <param name="trans">透過フラグ。</param>
     public void PushDrawRotaGraph(int centerX, int centerY, float scale, float angle, int handle, bool trans)
     {
+        EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[PacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawRotaGraph,
@@ -279,6 +275,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         float scale, float angle,
         int handle, bool trans, bool turnX)
     {
+        EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[PacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawRectRotaGraph,
@@ -307,6 +304,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <param name="color">描画カラー。</param>
     public void PushDrawString(int x, int y, ReadOnlySpan<char> text, uint color)
     {
+        EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         var strLength = text.Length;
         EnsureTextCapacity(strLength + 1);
@@ -341,6 +339,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         _activeBlendMode = mode;
         _activeBlendPal = pal;
 
+        EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[PacketCount++] = new RenderPacket {
             Type = RenderPacketType.SetDrawBlendMode,
@@ -365,6 +364,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         _activeBrightG = g;
         _activeBrightB = b;
 
+        EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[PacketCount++] = new RenderPacket {
             Type = RenderPacketType.SetDrawBright,
@@ -384,15 +384,31 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public void Submit()
     {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
+        EnsurePendingCircleBatchFlushed();
 
-        if (CircleCount > 0)
+        if (PacketCount > 0 || CircleCount > 0)
         {
-            NativeBindings.Engine_SubmitCompactCircles(_circleBuffer, CircleCount);
+            NativeBindings.Engine_SubmitRenderCommands(_packetBuffer, PacketCount, _textBuffer, TextLength, _circleBuffer, CircleCount);
         }
+    }
 
-        if (PacketCount > 0)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void EnsurePendingCircleBatchFlushed()
+    {
+        if (CircleCount > _circleBatchStart)
         {
-            NativeBindings.Engine_SubmitRenderCommands(_packetBuffer, PacketCount, _textBuffer, TextLength);
+            var count = CircleCount - _circleBatchStart;
+            var offset = _circleBatchStart;
+            _circleBatchStart = CircleCount;
+
+            EnsurePacketCapacity(1);
+            _packetBuffer[PacketCount++] = new RenderPacket {
+                Type = RenderPacketType.DrawCircleBatch,
+                CircleBatch = new DrawCircleBatchPacket {
+                    Offset = offset,
+                    Count = count
+                }
+            };
         }
     }
 
@@ -439,6 +455,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         PacketCount = 0;
         TextLength = 0;
         CircleCount = 0;
+        _circleBatchStart = 0;
         _activeBlendMode = DefaultBlendMode;
         _activeBlendPal = DefaultBlendPal;
         _activeBrightR = DefaultBrightR;

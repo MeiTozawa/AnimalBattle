@@ -73,12 +73,24 @@ namespace ab {
         }
 
         // --- バッチ描画コマンドダイレクトディスパッチ ---
-        void SubmitPackets(const RenderPacket* packets, int packet_count, const wchar_t* text_buffer, int text_length) override {
+        void SubmitPackets(
+            const RenderPacket* packets,
+            int packet_count,
+            const wchar_t* text_buffer,
+            int text_length,
+            const CompactCirclePacket* circle_buffer = nullptr,
+            int circle_count = 0) override {
             if (!packets || packet_count <= 0) return;
 
             for (int i = 0; i < packet_count; ++i) {
                 const auto& p = packets[i];
                 switch (p.type) {
+                case RenderPacketType::DrawCircleBatch:
+                    if (circle_buffer != nullptr && p.circle_batch.offset >= 0 &&
+                        p.circle_batch.offset + p.circle_batch.count <= circle_count) {
+                        SubmitCompactCircles(circle_buffer + p.circle_batch.offset, p.circle_batch.count);
+                    }
+                    break;
                 case RenderPacketType::DrawBox:
                     DrawBox(Rect<int>{Vec2i{p.box.x1, p.box.y1}, Vec2i{p.box.x2, p.box.y2}},
                             p.box.color,
