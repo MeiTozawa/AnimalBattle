@@ -37,6 +37,11 @@ public sealed class Boss1Agent : BaseBossAgent
     /// <inheritdoc />
     public override float HoverTimer => _brain.HoverTimer;
 
+    /// <inheritdoc />
+    public override double Rotation =>
+        MathF.Sin(_brain.HoverTimer * ConfigManager.Render.BossEffects.BossHoverAngleSpeed)
+        * ConfigManager.Render.BossEffects.BossHoverAngleAmp;
+
     private void InitializeComponents(Entity entity, int spriteHandle)
     {
         var b1Cfg = ConfigManager.Boss1;

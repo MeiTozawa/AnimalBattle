@@ -47,6 +47,9 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// <summary>Boss 1 の浮遊タイマー値を取得します。</summary>
     public virtual float HoverTimer => 0.0f;
 
+    /// <summary>Boss 描画時の回転角（ラジアン）を取得します。</summary>
+    public virtual double Rotation => 0.0;
+
     /// <summary>AI 目標地点 X 座標を取得します。</summary>
     public virtual float TargetX => Brain.TargetX;
 

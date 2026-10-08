@@ -162,76 +162,40 @@ public sealed class WorldRenderSystem : IDisposable {
         var bx = (int)boss.X;
         var by = (int)boss.Y;
 
-        if (boss.BossType == BossType.Boss1)
+        if (boss.CurrentState.IsTelegraph)
         {
-            if (boss.CurrentState.IsTelegraph)
-            {
-                var progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
-                DrawBossTelegraph(boss, playerX, playerY, progress);
-            }
+            var progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
+            DrawBossTelegraph(boss, playerX, playerY, progress);
+        }
 
-            var bossAngle = MathF.Sin(boss.HoverTimer * bossFx.BossHoverAngleSpeed) * bossFx.BossHoverAngleAmp;
-            GameEngine.DrawRectRotaGraph(
+        var flipX = !boss.FacingRight;
+        var rotation = boss.Rotation;
+
+        GameEngine.DrawRectRotaGraph(
+            bx,
+            by,
+            boss.Sprite.SrcRect.X1,
+            boss.Sprite.SrcRect.Y1,
+            boss.Sprite.SrcRect.Width,
+            boss.Sprite.SrcRect.Height,
+            boss.ScaleX,
+            rotation,
+            boss.Sprite.GraphHandle,
+            true,
+            flipX);
+
+        // 隙あり（Vulnerable）時の直接変色・脈動発光 & 攻撃チャンスマーカー
+        if (boss.IsVulnerable)
+            DrawBossVulnerableEffects(
                 bx,
                 by,
-                boss.Sprite.SrcRect.X1,
-                boss.Sprite.SrcRect.Y1,
-                boss.Sprite.SrcRect.Width,
-                boss.Sprite.SrcRect.Height,
+                boss.Sprite.SrcRect,
                 boss.ScaleX,
-                bossAngle,
+                rotation,
                 boss.Sprite.GraphHandle,
-                true,
-                false);
-
-            // 隙あり（Vulnerable）時の直接変色・脈動発光 & 攻撃チャンスマーカー
-            if (boss.IsVulnerable)
-                DrawBossVulnerableEffects(
-                    bx,
-                    by,
-                    boss.Sprite.SrcRect,
-                    boss.ScaleX,
-                    bossAngle,
-                    boss.Sprite.GraphHandle,
-                    false,
-                    boss.StateTimer,
-                    bossFx);
-        }
-        else if (boss.BossType == BossType.Boss2)
-        {
-            if (boss.CurrentState.IsTelegraph)
-            {
-                var progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
-                DrawBossTelegraph(boss, playerX, playerY, progress);
-            }
-
-            var flipX = !boss.FacingRight;
-            GameEngine.DrawRectRotaGraph(
-                bx,
-                by,
-                boss.Sprite.SrcRect.X1,
-                boss.Sprite.SrcRect.Y1,
-                boss.Sprite.SrcRect.Width,
-                boss.Sprite.SrcRect.Height,
-                boss.ScaleX,
-                0.0,
-                boss.Sprite.GraphHandle,
-                true,
-                flipX);
-
-            // 隙あり（Vulnerable）時の直接変色・脈動発光 & 攻撃チャンスマーカー
-            if (boss.IsVulnerable)
-                DrawBossVulnerableEffects(
-                    bx,
-                    by,
-                    boss.Sprite.SrcRect,
-                    boss.ScaleX,
-                    0.0,
-                    boss.Sprite.GraphHandle,
-                    flipX,
-                    boss.StateTimer,
-                    bossFx);
-        }
+                flipX,
+                boss.StateTimer,
+                bossFx);
     }
 
     private static void DrawBossVulnerableEffects(
