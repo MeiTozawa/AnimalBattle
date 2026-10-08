@@ -384,9 +384,16 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public void Submit()
     {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
-        if (PacketCount <= 0) return;
 
-        NativeBindings.Engine_SubmitRenderCommands(_packetBuffer, PacketCount, _textBuffer, TextLength);
+        if (CircleCount > 0)
+        {
+            NativeBindings.Engine_SubmitCompactCircles(_circleBuffer, CircleCount);
+        }
+
+        if (PacketCount > 0)
+        {
+            NativeBindings.Engine_SubmitRenderCommands(_packetBuffer, PacketCount, _textBuffer, TextLength);
+        }
     }
 
     /// <summary>

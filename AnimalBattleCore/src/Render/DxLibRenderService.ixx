@@ -46,6 +46,32 @@ namespace ab {
         void ClearCommands() override {}
         void FlushCommands() override {}
 
+        // --- 高密度図元バッチ高速ディスパッチ ---
+        void SubmitCompactCircles(const CompactCirclePacket* circles, int count) override {
+            if (!circles || count <= 0) return;
+
+            if (camera_enabled_) {
+                const float scale = camera_scale_;
+                const float half_w = viewport_width_ / 2.0f;
+                const float half_h = viewport_height_ / 2.0f;
+                const float cx = camera_x_;
+                const float cy = camera_y_;
+
+                for (int i = 0; i < count; ++i) {
+                    const auto& c = circles[i];
+                    int px = static_cast<int>((c.center_x - cx) * scale + half_w);
+                    int py = static_cast<int>((c.center_y - cy) * scale + half_h);
+                    int r = static_cast<int>(c.radius * scale);
+                    ::DrawCircle(px, py, r, c.color, c.fill != 0 ? TRUE : FALSE);
+                }
+            } else {
+                for (int i = 0; i < count; ++i) {
+                    const auto& c = circles[i];
+                    ::DrawCircle(c.center_x, c.center_y, c.radius, c.color, c.fill != 0 ? TRUE : FALSE);
+                }
+            }
+        }
+
         // --- バッチ描画コマンドダイレクトディスパッチ ---
         void SubmitPackets(const RenderPacket* packets, int packet_count, const wchar_t* text_buffer, int text_length) override {
             if (!packets || packet_count <= 0) return;

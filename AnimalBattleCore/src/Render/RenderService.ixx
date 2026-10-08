@@ -10,6 +10,7 @@ export import RenderTypes;
 namespace ab {
     export using ab::RenderPacket;
     export using ab::RenderPacketType;
+    export using ab::CompactCirclePacket;
 
     /// @brief バックエンド非依存のレンダリングサービス抽象インターフェース
     export class IRenderService {
@@ -24,6 +25,7 @@ namespace ab {
 
         // --- バッチ描画コマンド受付 ---
         virtual void SubmitPackets(const RenderPacket* packets, int packet_count, const wchar_t* text_buffer, int text_length) = 0;
+        virtual void SubmitCompactCircles(const CompactCirclePacket* circles, int count) = 0;
 
         // --- テクスチャ・アセット管理 ---
         virtual int LoadGraph(const wchar_t* file_path) = 0;
