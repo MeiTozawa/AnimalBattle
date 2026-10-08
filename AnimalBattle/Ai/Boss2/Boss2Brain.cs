@@ -14,18 +14,12 @@ namespace AnimalBattle.Ai.Boss2;
 ///     Boss 2 の統合意思決定および行動制御ブレインです。
 ///     HFSM および AbilitySystemComponent を通じて足場移動、近接攻撃、気絶、状態遷移を一元管理します。
 /// </summary>
-public sealed class Boss2Brain : IBossBrain {
-    private static readonly StringId StateRoot = "Root";
-    private static readonly StringId StateCombat = "Combat";
+public sealed class Boss2Brain : BaseBossBrain {
     private static readonly StringId StateIdle = "Idle";
     private static readonly StringId StatePatrolChase = "PatrolChase";
     private static readonly StringId StatePlatformTraverse = "PlatformTraverse";
     private static readonly StringId StateAbility = "Ability";
-
-    private static readonly StringId StateReaction = "Reaction";
     private static readonly StringId StateWallCrashStun = "WallCrashStun";
-    private static readonly StringId StatePhaseTransition = "PhaseTransition";
-    private static readonly StringId StateDead = "Dead";
 
     private enum TraverseStage : byte {
         Ascent,
@@ -35,33 +29,20 @@ public sealed class Boss2Brain : IBossBrain {
 
     private readonly IBoss2Configuration _configuration;
     private readonly Func<PlatformNavigationGraph?>? _navGraphProvider;
-    private readonly AbilitySystemComponent _asc = new();
-
-    private readonly StateMachine _rootMachine = new(StateRoot);
-    private readonly StateMachine _combatMachine = new(StateCombat);
-    private readonly StateMachine _reactionMachine = new(StateReaction);
 
     private State _idleState = null!;
     private State _patrolChaseState = null!;
     private State _platformTraverseState = null!;
     private State _abilityState = null!;
-
     private State _wallCrashStunState = null!;
-    private State _phaseTransitionState = null!;
-    private State _deadState = null!;
 
     private TraverseStage _traverseStage = TraverseStage.Ascent;
-    private float _stateTimer;
     private float _traverseTimer;
     private float _jumpCooldown;
 
-    private bool _isDead;
     private bool _isWallStunned;
-    private Phase? _pendingPhaseTransition;
 
-    private Vec2f _currentPosition;
     private Vec2f _currentVelocity;
-    private Vec2f _targetPosition;
     private bool _facingRight = true;
 
     /// <summary>Boss 2 ブレインを初期化します。</summary>
@@ -86,29 +67,11 @@ public sealed class Boss2Brain : IBossBrain {
         Reset(spawnX, spawnY);
     }
 
-    /// <summary>現在の Boss 座標を取得します。</summary>
-    public Vec2f Position => _currentPosition;
-
-    /// <summary>AI 目標地点座標を取得します。</summary>
-    public Vec2f TargetPosition => _targetPosition;
-
-    /// <summary>AI 目標地点 X 座標を取得します。</summary>
-    public float TargetX => _targetPosition.X;
-
-    /// <summary>AI 目標地点 Y 座標を取得します。</summary>
-    public float TargetY => _targetPosition.Y;
-
     /// <summary>現在の Boss 移動速度を取得します。</summary>
     public Vec2f Velocity => _currentVelocity;
 
-    /// <summary>現在の右向きフラグを取得します。</summary>
-    public bool FacingRight => _facingRight;
-
-    /// <summary>現在の戦闘フェーズを取得します。</summary>
-    public Phase Phase { get; private set; }
-
-    /// <summary>現在アクティブな能力システムコンポーネントを取得します。</summary>
-    public AbilitySystemComponent AbilitySystem => _asc;
+    /// <inheritdoc />
+    public override bool FacingRight => _facingRight;
 
     /// <summary>現在のマクロ・ミクロ統合状態を取得します。</summary>
     public Boss2State State {
@@ -138,17 +101,11 @@ public sealed class Boss2Brain : IBossBrain {
         }
     }
 
-    /// <summary>現在の Boss 統一マクロ状態を取得します。</summary>
-    public BossState CurrentState => BossState.From(State);
+    /// <inheritdoc />
+    public override BossState CurrentState => BossState.From(State);
 
-    /// <summary>現在発動中の技能を取得します。</summary>
-    public BossSkill CurrentSkill => _asc.CurrentAbility?.SkillId ?? BossSkill.None;
-
-    /// <summary>現在状態の経過時間を取得します。</summary>
-    public float StateTimer => _asc.IsCasting ? _asc.SkillRunner.PhaseElapsed : _stateTimer;
-
-    /// <summary>現在状態の目標持続時間を取得します。</summary>
-    public float StateDuration {
+    /// <inheritdoc />
+    public override float StateDuration {
         get {
             var phaseCfg = _configuration.GetPhase(Phase);
             if (_rootMachine.CurrentState == _reactionMachine)
@@ -172,21 +129,11 @@ public sealed class Boss2Brain : IBossBrain {
         }
     }
 
-    /// <summary>後隙または気絶による易傷状態かどうかを取得します。</summary>
-    public bool IsVulnerable => State is Boss2State.Recovery or Boss2State.WallCrashStun;
-
-    /// <summary>死亡状態かどうかを取得します。</summary>
-    public bool IsDead => _isDead;
+    /// <inheritdoc />
+    public override bool IsVulnerable => State is Boss2State.Recovery or Boss2State.WallCrashStun;
 
     /// <summary>近接攻撃判定生成イベント。</summary>
     public event Action<BossSkill, float, float>? OnCreateHitbox;
-
-    /// <summary>弾幕波次発射イベント。</summary>
-    public event Action<BossSkill, Vec2f, Vec2f>? OnEmitBarrageWave;
-
-    /// <summary>全弾幕消去イベント。</summary>
-    public event Action? OnClearBullets;
-
 
     private void InitializeAbilities()
     {
@@ -200,7 +147,7 @@ public sealed class Boss2Brain : IBossBrain {
         RegisterSkill(BossSkill.EarthquakeRoar, patternCfg);
 
         _asc.OnExecuteMovement += (vx, vy) => _currentVelocity = new Vec2f(vx, vy);
-        _asc.OnEmitBullet += (skill, _, _) => OnEmitBarrageWave?.Invoke(skill, _currentPosition, _targetPosition);
+        _asc.OnEmitBullet += (skill, _, _) => RaiseEmitBarrageWave(skill, _currentPosition, _targetPosition);
         _asc.OnCreateHitbox += (skill, ox, oy) => OnCreateHitbox?.Invoke(skill, ox, oy);
         _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
@@ -239,6 +186,8 @@ public sealed class Boss2Brain : IBossBrain {
 
     private void InitializeStateMachine()
     {
+        InitializeBaseStateMachine();
+
         _idleState = new State(StateIdle, onEnter: () => {
             _stateTimer = 0.0f;
             _currentVelocity = Vec2f.Zero;
@@ -267,36 +216,22 @@ public sealed class Boss2Brain : IBossBrain {
             _asc.InterruptCurrentAbility();
         });
 
-        _phaseTransitionState = new State(StatePhaseTransition, onEnter: () => {
-            _stateTimer = 0.0f;
-            _currentVelocity = Vec2f.Zero;
-            _asc.InterruptCurrentAbility();
-            OnClearBullets?.Invoke();
-            if (_pendingPhaseTransition.HasValue)
-            {
-                Phase = _pendingPhaseTransition.Value;
-                _pendingPhaseTransition = null;
-                SyncPhaseAbilitiesCooldown(_configuration.GetPhase(Phase));
-            }
-        });
-
-        _deadState = new State(StateDead, onEnter: () => {
-            _currentVelocity = Vec2f.Zero;
-            _asc.InterruptCurrentAbility();
-            OnClearBullets?.Invoke();
-        });
-
         _reactionMachine.AddSubState(_wallCrashStunState);
-        _reactionMachine.AddSubState(_phaseTransitionState);
-        _reactionMachine.AddSubState(_deadState);
 
-        _rootMachine.AddSubState(_combatMachine);
-        _rootMachine.AddSubState(_reactionMachine);
-        _rootMachine.SetInitialState(_combatMachine);
-
-        _rootMachine.AddGlobalTransition(() => _isDead, _reactionMachine);
-        _rootMachine.AddGlobalTransition(() => _pendingPhaseTransition.HasValue, _reactionMachine);
         _rootMachine.AddGlobalTransition(() => _isWallStunned, _reactionMachine);
+    }
+
+    /// <inheritdoc />
+    protected override void OnPhaseTransitionEntered(Phase newPhase)
+    {
+        _currentVelocity = Vec2f.Zero;
+        SyncPhaseAbilitiesCooldown(_configuration.GetPhase(newPhase));
+    }
+
+    /// <inheritdoc />
+    protected override void OnDeadEntered()
+    {
+        _currentVelocity = Vec2f.Zero;
     }
 
     /// <summary>
@@ -320,16 +255,6 @@ public sealed class Boss2Brain : IBossBrain {
         SyncPhaseAbilitiesCooldown(_configuration.GetPhase(Phase));
         _combatMachine.ChangeState(_idleState);
         _rootMachine.ChangeState(_combatMachine);
-    }
-
-    /// <summary>
-    ///     死亡状態へ遷移します。
-    /// </summary>
-    public void Kill()
-    {
-        _isDead = true;
-        _reactionMachine.ChangeState(_deadState);
-        _rootMachine.ChangeState(_reactionMachine);
     }
 
     /// <summary>
@@ -388,22 +313,8 @@ public sealed class Boss2Brain : IBossBrain {
 
     private void EvaluatePhaseTransition(float currentHp, float maxHp)
     {
-        if (maxHp <= 0.0f || _pendingPhaseTransition.HasValue) return;
-        if (_rootMachine.CurrentState == _reactionMachine) return;
-
-        var hpRatio = currentHp / maxHp;
         var b2Cfg = ConfigManager.Boss2;
-
-        if (Phase == Phase.Phase1 && hpRatio <= b2Cfg.Phase2.HpThreshold)
-        {
-            _pendingPhaseTransition = Phase.Phase2;
-            _reactionMachine.ChangeState(_phaseTransitionState);
-        }
-        else if (Phase == Phase.Phase2 && hpRatio <= b2Cfg.Phase3.HpThreshold)
-        {
-            _pendingPhaseTransition = Phase.Phase3;
-            _reactionMachine.ChangeState(_phaseTransitionState);
-        }
+        EvaluatePhaseTransition(currentHp, maxHp, b2Cfg.Phase2.HpThreshold, b2Cfg.Phase3.HpThreshold);
     }
 
     private void UpdatePhaseTransition(float dt)
