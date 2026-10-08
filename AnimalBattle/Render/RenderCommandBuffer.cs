@@ -17,6 +17,19 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
 
     private char* _textBuffer;
 
+    // 描画パイプライン状態シャドウキャッシュ（冗長な状態設定コマンドを排除し、GPU パイプラインストールを防止）
+    private const int DefaultBlendMode = 0;
+    private const int DefaultBlendPal = 0;
+    private const int DefaultBrightR = 255;
+    private const int DefaultBrightG = 255;
+    private const int DefaultBrightB = 255;
+
+    private int _activeBlendMode = DefaultBlendMode;
+    private int _activeBlendPal = DefaultBlendPal;
+    private int _activeBrightR = DefaultBrightR;
+    private int _activeBrightG = DefaultBrightG;
+    private int _activeBrightB = DefaultBrightB;
+
     /// <summary>
     ///     指定された初期容量で 64 バイト物理整列の非托管メモリを確保し、描画コマンドバッファを初期化します。
     /// </summary>
@@ -281,11 +294,16 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
 
     /// <summary>
     ///     描画ブレンドモード設定コマンドをバッファへ追加します。
+    ///     現在のシャドウ状態と完全に一致する場合は、冗長なコマンド送信を早期リターンで排除します。
     /// </summary>
     /// <param name="mode">ブレンドモード値。</param>
     /// <param name="pal">ブレンドパラメータ。</param>
     public void PushSetDrawBlendMode(int mode, int pal)
     {
+        if (_activeBlendMode == mode && _activeBlendPal == pal) return;
+        _activeBlendMode = mode;
+        _activeBlendPal = pal;
+
         EnsurePacketCapacity(1);
         _packetBuffer[PacketCount++] = new RenderPacket {
             Type = RenderPacketType.SetDrawBlendMode,
@@ -298,12 +316,18 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
 
     /// <summary>
     ///     描画輝度設定コマンドをバッファへ追加します。
+    ///     現在のシャドウ状態と完全に一致する場合は、冗长なコマンド送信を早期リターンで排除します。
     /// </summary>
     /// <param name="r">赤輝度。</param>
     /// <param name="g">緑輝度。</param>
     /// <param name="b">青輝度。</param>
     public void PushSetDrawBright(int r, int g, int b)
     {
+        if (_activeBrightR == r && _activeBrightG == g && _activeBrightB == b) return;
+        _activeBrightR = r;
+        _activeBrightG = g;
+        _activeBrightB = b;
+
         EnsurePacketCapacity(1);
         _packetBuffer[PacketCount++] = new RenderPacket {
             Type = RenderPacketType.SetDrawBright,
@@ -329,7 +353,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     描画バッファのカウンターをリセットし、次フレームの記録に備えます（GC 発生なし）。
+    ///     描画バッファのカウンターおよびパイプラインシャドウ状態をリセットし、次フレームの記録に備えます（GC 発生なし）。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Reset()
@@ -337,6 +361,11 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
         PacketCount = 0;
         TextLength = 0;
+        _activeBlendMode = DefaultBlendMode;
+        _activeBlendPal = DefaultBlendPal;
+        _activeBrightR = DefaultBrightR;
+        _activeBrightG = DefaultBrightG;
+        _activeBrightB = DefaultBrightB;
     }
 
     private void Dispose(bool disposing)
