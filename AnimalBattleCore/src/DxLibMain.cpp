@@ -79,10 +79,11 @@ void ShutdownDxLibBackend() noexcept {
 
 bool ProcessDxLibMessages() noexcept {
     try {
+        bool success = (::ProcessMessage() == 0);
         if (g_input_service != nullptr) {
             g_input_service->Update();
         }
-        return ::ProcessMessage() == 0;
+        return success;
     } catch (...) {
         return false;
     }

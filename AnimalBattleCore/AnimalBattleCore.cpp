@@ -160,6 +160,16 @@ __declspec(dllexport) void Input_Update() noexcept {
     }
 }
 
+__declspec(dllexport) void Input_Snapshot() noexcept {
+    try {
+        auto* input_service = ab::GetInputService();
+        if (input_service != nullptr) {
+            input_service->Snapshot();
+        }
+    } catch (...) {
+    }
+}
+
 __declspec(dllexport) bool Input_IsPressed(int action) noexcept {
     try {
         auto* input_service = ab::GetInputService();

@@ -51,6 +51,7 @@ public static class GameEngine {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void BeginRecording()
     {
+        NativeBindings.Input_Snapshot();
         _commandBuffer.BeginRecording();
     }
 

@@ -76,6 +76,10 @@ internal static unsafe partial class NativeBindings {
     [SuppressGCTransition]
     public static partial void Input_Update();
 
+    [LibraryImport(_dllName, EntryPoint = "Input_Snapshot")]
+    [SuppressGCTransition]
+    public static partial void Input_Snapshot();
+
     [LibraryImport(_dllName, EntryPoint = "Input_IsPressed")]
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]

@@ -13,8 +13,9 @@ namespace ab {
     public:
         virtual ~IInputService() = default;
 
-        // --- 更新 ---
+        // --- 更新与快照 ---
         virtual void Update() = 0;
+        virtual void Snapshot() = 0;
 
         // --- アクション判定 ---
         virtual bool IsPressed(ActionId action) const = 0;
