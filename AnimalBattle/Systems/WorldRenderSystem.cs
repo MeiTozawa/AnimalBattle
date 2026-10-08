@@ -19,14 +19,16 @@ namespace AnimalBattle.Systems;
 ///     <see cref="WorldRenderSystem" /> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリを構築します。
 /// </remarks>
 public sealed class WorldRenderSystem : IDisposable {
-    private readonly Ecs.IterFieldCallback<Transform, Bullet> _drawBossBulletsCallback;
+    private readonly Ecs.IterFieldCallback<Transform, Bullet> _drawStandardBossBulletsCallback;
+    private readonly Ecs.IterFieldCallback<Transform, Bullet, BulletModifier> _drawSpecialBossBulletsCallback;
 
     // 毎フレームの Iter コールバックでのクロージャ割り当てを完全に排除するための事前確保デリゲート
     private readonly Ecs.IterFieldCallback<Transform, Velocity> _drawPlayerBulletsCallback;
     private Color _bCoreColor;
     private int _bCoreMinRadius;
     private float _bCoreRadiusRatio;
-    private Query<Transform, Bullet> _bossBulletQuery;
+    private Query<Transform, Bullet> _standardBossBulletQuery;
+    private Query<Transform, Bullet, BulletModifier> _specialBossBulletQuery;
 
     private int _bOutlinePadding;
     private int _bulletClipMaxX;
@@ -57,7 +59,11 @@ public sealed class WorldRenderSystem : IDisposable {
         _playerBulletQuery = world.QueryBuilder<Transform, Velocity>()
            .With<PlayerBulletTag>()
            .Build();
-        _bossBulletQuery = world.QueryBuilder<Transform, Bullet>()
+        _standardBossBulletQuery = world.QueryBuilder<Transform, Bullet>()
+           .With<BossBulletTag>()
+           .Without<BulletModifier>()
+           .Build();
+        _specialBossBulletQuery = world.QueryBuilder<Transform, Bullet, BulletModifier>()
            .With<BossBulletTag>()
            .Build();
         _spriteEffectQuery = world.QueryBuilder<Transform, Sprite, FadeEffect>()
@@ -73,7 +79,8 @@ public sealed class WorldRenderSystem : IDisposable {
            .Build();
 
         _drawPlayerBulletsCallback = DrawPlayerBulletsBatch;
-        _drawBossBulletsCallback = DrawBossBulletsBatch;
+        _drawStandardBossBulletsCallback = DrawStandardBossBulletsBatch;
+        _drawSpecialBossBulletsCallback = DrawSpecialBossBulletsBatch;
     }
 
     /// <inheritdoc />
@@ -82,7 +89,8 @@ public sealed class WorldRenderSystem : IDisposable {
         if (!_isDisposed)
         {
             _playerBulletQuery.Dispose();
-            _bossBulletQuery.Dispose();
+            _standardBossBulletQuery.Dispose();
+            _specialBossBulletQuery.Dispose();
             _spriteEffectQuery.Dispose();
             _ringEffectQuery.Dispose();
             _particleEffectQuery.Dispose();
@@ -130,7 +138,8 @@ public sealed class WorldRenderSystem : IDisposable {
 
         UpdateBulletRenderContext(bulletCfg, arenaCfg);
         _playerBulletQuery.Iter(_drawPlayerBulletsCallback);
-        _bossBulletQuery.Iter(_drawBossBulletsCallback);
+        _standardBossBulletQuery.Iter(_drawStandardBossBulletsCallback);
+        _specialBossBulletQuery.Iter(_drawSpecialBossBulletsCallback);
 
         DrawSpriteEffects(_spriteEffectQuery);
         DrawRingEffects(_ringEffectQuery);
@@ -476,7 +485,7 @@ public sealed class WorldRenderSystem : IDisposable {
         }
     }
 
-    private void DrawBossBulletsBatch(Iter it, Field<Transform> trans, Field<Bullet> bullet)
+    private void DrawStandardBossBulletsBatch(Iter it, Field<Transform> trans, Field<Bullet> bullet)
     {
         var count = it.Count();
         for (var i = 0; i < count; ++i)
@@ -490,18 +499,28 @@ public sealed class WorldRenderSystem : IDisposable {
             var outlineRadius = radius + _bOutlinePadding;
             var coreRadius = Math.Max(_bCoreMinRadius, (int)(radius * _bCoreRadiusRatio));
 
-            var e = it.Entity(i);
-            if (e.Has<BulletModifier>())
-            {
-                ref readonly var mod = ref e.Get<BulletModifier>();
-                DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, _bOutlinePadding, _bCoreColor);
-            }
-            else
-            {
-                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                GameEngine.DrawCircle(bx, by, coreRadius, _bCoreColor, true);
-            }
+            GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
+            GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
+            GameEngine.DrawCircle(bx, by, coreRadius, _bCoreColor, true);
+        }
+    }
+
+    private void DrawSpecialBossBulletsBatch(Iter it, Field<Transform> trans, Field<Bullet> bullet, Field<BulletModifier> modifier)
+    {
+        var count = it.Count();
+        for (var i = 0; i < count; ++i)
+        {
+            var bx = (int)trans[i].X;
+            var by = (int)trans[i].Y;
+            if (bx < _bulletClipMinX || bx > _bulletClipMaxX || by < _bulletClipMinY || by > _bulletClipMaxY) continue;
+
+            var b = bullet[i];
+            ref readonly var mod = ref modifier[i];
+            var radius = (int)b.Radius;
+            var outlineRadius = radius + _bOutlinePadding;
+            var coreRadius = Math.Max(_bCoreMinRadius, (int)(radius * _bCoreRadiusRatio));
+
+            DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, _bOutlinePadding, _bCoreColor);
         }
     }
 
