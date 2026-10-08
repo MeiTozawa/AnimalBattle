@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using AnimalBattle.Bindings;
 using AnimalBattle.Render;
 
@@ -45,6 +46,60 @@ public static class GameEngine {
     }
 
     /// <summary>
+    ///     論理スレッド用：新規フレームの描画コマンド記録を開始します。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void BeginRecording()
+    {
+        _commandBuffer.BeginRecording();
+    }
+
+    /// <summary>
+    ///     論理スレッド用：描画コマンド記録を完了し、前台バッファへ公開します。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void FinishRecording()
+    {
+        _commandBuffer.FinishRecording();
+    }
+
+    /// <summary>
+    ///     レンダリングスレッド用：前台バッファ（Front Buffer）に蓄積された描画コマンドを C++ へ一括提出します。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void SubmitFront()
+    {
+        _commandBuffer.SubmitFront();
+    }
+
+    /// <summary>
+    ///     前・後台バッファのスロットを切り替えます。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void SwapBuffers()
+    {
+        _commandBuffer.SwapBuffers();
+    }
+
+    /// <summary>
+    ///     レンダリングスレッド用：画面クリアおよび描画準備を開始します。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool BeginDraw()
+    {
+        return NativeBindings.Engine_BeginDraw();
+    }
+
+    /// <summary>
+    ///     レンダリングスレッド用：バックバッファの画面反転（ScreenFlip / VSync）を実行します。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool EndDraw()
+    {
+        return NativeBindings.Engine_EndDraw();
+    }
+
+    /// <summary>
     ///     フレーム描画の開始処理（画面クリア等）を行います。
     /// </summary>
     /// <returns>成功時 true、失敗時 false</returns>
@@ -58,7 +113,7 @@ public static class GameEngine {
     ///     フレーム描画の終了処理（コマンド一括提出・バックバッファ反転等）を行います。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過秒数</param>
-    /// <returns>成功時 true、失敗時 false</returns>
+    /// <returns>成功時 true、失敗时 false</returns>
     public static bool EndFrame(float deltaTime)
     {
         _commandBuffer.Submit();
