@@ -91,6 +91,44 @@ public struct DrawCirclePacket {
 }
 
 /// <summary>
+///     20 バイト緊密配置の高密度円描画パケット（弾幕・パーティクルバッチ用）。
+///     48 バイトの汎用 RenderPacket を介さず、連続メモリ上で高密度ストリーミング転送されます。
+/// </summary>
+[StructLayout(LayoutKind.Sequential, Pack = 4)]
+public struct CompactCirclePacket {
+    /// <summary>円中心 X 座標</summary>
+    public int CenterX;
+
+    /// <summary>円中心 Y 座標</summary>
+    public int CenterY;
+
+    /// <summary>円半径</summary>
+    public int Radius;
+
+    /// <summary>円描画カラー</summary>
+    public uint Color;
+
+    /// <summary>円塗りつぶしフラグ (1: 塗りつぶし, 0: 枠線)</summary>
+    public byte Fill;
+
+    private byte _padding0;
+    private byte _padding1;
+    private byte _padding2;
+
+    public CompactCirclePacket(int centerX, int centerY, int radius, uint color, bool fill)
+    {
+        CenterX = centerX;
+        CenterY = centerY;
+        Radius = radius;
+        Color = color;
+        Fill = (byte)(fill ? 1 : 0);
+        _padding0 = 0;
+        _padding1 = 0;
+        _padding2 = 0;
+    }
+}
+
+/// <summary>
 ///     線分描画コマンドデータ。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]

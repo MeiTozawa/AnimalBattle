@@ -18,10 +18,13 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private RenderPacket* _packetBuffer1;
     private char* _textBuffer0;
     private char* _textBuffer1;
+    private CompactCirclePacket* _circleBuffer0;
+    private CompactCirclePacket* _circleBuffer1;
 
     // 現在のフレームで書き込み対象となっているアクティブバッファへのポインタ
     private RenderPacket* _packetBuffer;
     private char* _textBuffer;
+    private CompactCirclePacket* _circleBuffer;
     private int _writeIndex;
 
     // 描画パイプライン状態シャドウキャッシュ（冗長な状態設定コマンドを排除し、GPU パイプラインストールを防止）
@@ -47,22 +50,38 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     {
         PacketCapacity = Math.Max(64, initialPacketCapacity);
         TextCapacity = Math.Max(64, initialTextCapacity);
+        CircleCapacity = Math.Max(64, initialPacketCapacity);
         PacketCount = 0;
         TextLength = 0;
+        CircleCount = 0;
         IsDisposed = false;
         _writeIndex = 0;
 
         var packetBytes = (nuint)(sizeof(RenderPacket) * PacketCapacity);
         var textBytes = (nuint)(sizeof(char) * TextCapacity);
+        var circleBytes = (nuint)(sizeof(CompactCirclePacket) * CircleCapacity);
 
         _packetBuffer0 = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes, 64);
         _packetBuffer1 = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes, 64);
         _textBuffer0 = (char*)NativeMemory.AlignedAlloc(textBytes, 64);
         _textBuffer1 = (char*)NativeMemory.AlignedAlloc(textBytes, 64);
+        _circleBuffer0 = (CompactCirclePacket*)NativeMemory.AlignedAlloc(circleBytes, 64);
+        _circleBuffer1 = (CompactCirclePacket*)NativeMemory.AlignedAlloc(circleBytes, 64);
 
         _packetBuffer = _packetBuffer0;
         _textBuffer = _textBuffer0;
+        _circleBuffer = _circleBuffer0;
     }
+
+    /// <summary>
+    ///     現在バッファに格納されている緊密配置円コマンド数。
+    /// </summary>
+    public int CircleCount { get; private set; }
+
+    /// <summary>
+    ///     緊密配置円バッファの最大収容可能要素数。
+    /// </summary>
+    public int CircleCapacity { get; private set; }
 
     /// <summary>
     ///     現在バッファに格納されている描画コマンド数。
@@ -98,6 +117,11 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     ///     文字列バッファの先頭物理アドレス（アライメント検証用）。
     /// </summary>
     internal void* TextBufferPtr => _textBuffer;
+
+    /// <summary>
+    ///     高密度円コマンドバッファの先頭物理アドレス（アライメント検証用）。
+    /// </summary>
+    internal void* CircleBufferPtr => _circleBuffer;
 
     /// <summary>
     ///     確保されている非托管物理メモリを解放します。
@@ -366,6 +390,30 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
+    ///     20 バイト緊密配置の高密度円描画コマンドをバッファへ追加します（48 バイト汎用パケットをバイパス）。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void PushCompactCircle(int x, int y, int radius, uint color, bool fill)
+    {
+        EnsureCircleCapacity(1);
+        _circleBuffer[CircleCount++] = new CompactCirclePacket(x, y, radius, color, fill);
+    }
+
+    /// <summary>
+    ///     高密度円描画コマンド群をバッチメモリコピーで一括追加します。
+    /// </summary>
+    public void PushCompactCirclesBatch(ReadOnlySpan<CompactCirclePacket> circles)
+    {
+        if (circles.IsEmpty) return;
+        EnsureCircleCapacity(circles.Length);
+        fixed (CompactCirclePacket* src = circles)
+        {
+            Buffer.MemoryCopy(src, _circleBuffer + CircleCount, (long)(sizeof(CompactCirclePacket) * (CircleCapacity - CircleCount)), (long)(sizeof(CompactCirclePacket) * circles.Length));
+        }
+        CircleCount += circles.Length;
+    }
+
+    /// <summary>
     ///     ダブルバッファの書き込み対象インデックス (0 または 1)。
     /// </summary>
     public int WriteIndex => _writeIndex;
@@ -380,8 +428,10 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         _writeIndex ^= 1;
         _packetBuffer = _writeIndex == 0 ? _packetBuffer0 : _packetBuffer1;
         _textBuffer = _writeIndex == 0 ? _textBuffer0 : _textBuffer1;
+        _circleBuffer = _writeIndex == 0 ? _circleBuffer0 : _circleBuffer1;
         PacketCount = 0;
         TextLength = 0;
+        CircleCount = 0;
         _activeBlendMode = DefaultBlendMode;
         _activeBlendPal = DefaultBlendPal;
         _activeBrightR = DefaultBrightR;
@@ -426,8 +476,21 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
             _textBuffer1 = null;
         }
 
+        if (_circleBuffer0 != null)
+        {
+            NativeMemory.AlignedFree(_circleBuffer0);
+            _circleBuffer0 = null;
+        }
+
+        if (_circleBuffer1 != null)
+        {
+            NativeMemory.AlignedFree(_circleBuffer1);
+            _circleBuffer1 = null;
+        }
+
         _packetBuffer = null;
         _textBuffer = null;
+        _circleBuffer = null;
 
         IsDisposed = true;
     }
@@ -458,5 +521,18 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
             _textBuffer = _writeIndex == 0 ? _textBuffer0 : _textBuffer1;
             TextCapacity = newCapacity;
         }
+    }
+
+    private void EnsureCircleCapacity(int extraCount)
+    {
+        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        var required = CircleCount + extraCount;
+        if (required <= CircleCapacity) return;
+        var newCapacity = Math.Max(CircleCapacity * 2, required);
+        var byteCount = (nuint)(sizeof(CompactCirclePacket) * newCapacity);
+        _circleBuffer0 = (CompactCirclePacket*)NativeMemory.AlignedRealloc(_circleBuffer0, byteCount, 64);
+        _circleBuffer1 = (CompactCirclePacket*)NativeMemory.AlignedRealloc(_circleBuffer1, byteCount, 64);
+        _circleBuffer = _writeIndex == 0 ? _circleBuffer0 : _circleBuffer1;
+        CircleCapacity = newCapacity;
     }
 }

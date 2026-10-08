@@ -42,6 +42,17 @@ struct DrawCirclePacket {
     uint8_t padding[3];
 };
 
+/// @brief 20 バイト緊密配置の高密度円描画パケット（弾幕・パーティクルバッチ用）
+struct CompactCirclePacket {
+    int32_t center_x;
+    int32_t center_y;
+    int32_t radius;
+    uint32_t color;
+    uint8_t fill;
+    uint8_t padding[3];
+};
+static_assert(sizeof(CompactCirclePacket) == 20, "CompactCirclePacket size must be exactly 20 bytes");
+
 /// @brief 線分描画コマンドデータ
 struct DrawLinePacket {
     int32_t x1;
