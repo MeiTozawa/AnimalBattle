@@ -164,11 +164,10 @@ public sealed class WorldRenderSystem : IDisposable {
 
         if (boss.BossType == BossType.Boss1)
         {
-            if (boss.CurrentState == BossState.Boss1_Telegraph)
+            if (boss.CurrentState.IsTelegraph)
             {
                 var progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
-                DrawBoss1Telegraph(boss.X, boss.Y, boss.CurrentSkill, boss.TargetX, boss.TargetY, playerX, playerY,
-                    progress, boss.StateTimer);
+                DrawBossTelegraph(boss, playerX, playerY, progress);
             }
 
             var bossAngle = MathF.Sin(boss.HoverTimer * bossFx.BossHoverAngleSpeed) * bossFx.BossHoverAngleAmp;
@@ -200,11 +199,10 @@ public sealed class WorldRenderSystem : IDisposable {
         }
         else if (boss.BossType == BossType.Boss2)
         {
-            if (boss.CurrentState == BossState.Boss2_Telegraph)
+            if (boss.CurrentState.IsTelegraph)
             {
                 var progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
-                DrawBoss2Telegraph(boss.X, boss.Y, boss.CurrentSkill, boss.TargetX, boss.TargetY, playerX, playerY,
-                    boss.FacingRight, progress);
+                DrawBossTelegraph(boss, playerX, playerY, progress);
             }
 
             var flipX = !boss.FacingRight;
@@ -271,20 +269,29 @@ public sealed class WorldRenderSystem : IDisposable {
         GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
     }
 
-    private static void DrawBoss1Telegraph(
-        float bx,
-        float by,
-        BossSkill skill,
-        float targetX,
-        float targetY,
+    private static (float targetX, float targetY) ResolveTargetPosition(float targetX, float targetY, float playerX, float playerY)
+    {
+        return (
+            targetX != 0.0f || targetY != 0.0f ? targetX : playerX,
+            targetX != 0.0f || targetY != 0.0f ? targetY : playerY
+        );
+    }
+
+    private static void DrawBossTelegraph(
+        BaseBossAgent boss,
         float playerX,
         float playerY,
-        float progress,
-        float stateTimer)
+        float progress)
     {
-        var patternCfg = ConfigManager.Boss1Patterns;
-        var finalTargetX = targetX != 0.0f || targetY != 0.0f ? targetX : playerX;
-        var finalTargetY = targetX != 0.0f || targetY != 0.0f ? targetY : playerY;
+        var (finalTargetX, finalTargetY) = ResolveTargetPosition(boss.TargetX, boss.TargetY, playerX, playerY);
+        var bx = boss.X;
+        var by = boss.Y;
+        var skill = boss.CurrentSkill;
+        var stateTimer = boss.StateTimer;
+        var facingRight = boss.FacingRight;
+
+        var pattern1 = ConfigManager.Boss1Patterns;
+        var pattern2 = ConfigManager.Boss2Patterns;
 
         switch (skill)
         {
@@ -294,10 +301,10 @@ public sealed class WorldRenderSystem : IDisposable {
                     by,
                     finalTargetX,
                     finalTargetY,
-                    patternCfg.Aimed3Shot.SpreadAngle,
-                    patternCfg.Aimed3Shot.BulletCount,
+                    pattern1.Aimed3Shot.SpreadAngle,
+                    pattern1.Aimed3Shot.BulletCount,
                     progress,
-                    patternCfg.Aimed3Shot.TelegraphColor);
+                    pattern1.Aimed3Shot.TelegraphColor);
             break;
 
             case BossSkill.FastSniper:
@@ -309,7 +316,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     0.0f,
                     1,
                     progress,
-                    patternCfg.FastSniper.TelegraphColor,
+                    pattern1.FastSniper.TelegraphColor,
                     true);
             break;
 
@@ -319,20 +326,20 @@ public sealed class WorldRenderSystem : IDisposable {
                     by,
                     finalTargetX,
                     finalTargetY,
-                    patternCfg.DiveRam.ImpactRadius,
+                    pattern1.DiveRam.ImpactRadius,
                     progress,
-                    patternCfg.DiveRam.TelegraphColor);
+                    pattern1.DiveRam.TelegraphColor);
             break;
 
             case BossSkill.RingBurst:
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
                     bx,
                     by,
-                    patternCfg.RingBurst.BulletCount,
+                    pattern1.RingBurst.BulletCount,
                     0.0f,
                     75.0f,
                     progress,
-                    patternCfg.RingBurst.TelegraphColor);
+                    pattern1.RingBurst.TelegraphColor);
             break;
 
             case BossSkill.DoubleSpiral:
@@ -344,17 +351,17 @@ public sealed class WorldRenderSystem : IDisposable {
                     spiralAngle,
                     90.0f,
                     progress,
-                    patternCfg.DoubleSpiral.TelegraphColor);
+                    pattern1.DoubleSpiral.TelegraphColor);
             break;
 
             case BossSkill.RainDrop:
                 TelegraphRenderHelper.DrawSkyfallColumns(
-                    patternCfg.RainDrop.MinX,
-                    patternCfg.RainDrop.MaxX,
+                    pattern1.RainDrop.MinX,
+                    pattern1.RainDrop.MaxX,
                     6,
                     650.0f,
                     progress,
-                    patternCfg.RainDrop.TelegraphColor,
+                    pattern1.RainDrop.TelegraphColor,
                     "▼ RAIN ▼");
             break;
 
@@ -367,46 +374,14 @@ public sealed class WorldRenderSystem : IDisposable {
                     crossAngle,
                     110.0f,
                     progress,
-                    patternCfg.CrossChaos.TelegraphColor);
+                    pattern1.CrossChaos.TelegraphColor);
             break;
 
-            default:
-                Debug.Fail($"[WorldRender 警告] 未知の Boss1 スキル予兆: {skill}");
-                TelegraphRenderHelper.DrawAimingLasers(
-                    bx,
-                    by,
-                    finalTargetX,
-                    finalTargetY,
-                    patternCfg.Aimed3Shot.SpreadAngle,
-                    patternCfg.Aimed3Shot.BulletCount,
-                    progress,
-                    patternCfg.Aimed3Shot.TelegraphColor);
-            break;
-        }
-    }
-
-    private static void DrawBoss2Telegraph(
-        float bx,
-        float by,
-        BossSkill skill,
-        float targetX,
-        float targetY,
-        float playerX,
-        float playerY,
-        bool facingRight,
-        float progress)
-    {
-        var b2Cfg = ConfigManager.Boss2;
-        var patternCfg = ConfigManager.Boss2Patterns;
-        var finalTargetX = targetX != 0.0f || targetY != 0.0f ? targetX : playerX;
-        var finalTargetY = targetX != 0.0f || targetY != 0.0f ? targetY : playerY;
-
-        switch (skill)
-        {
             case BossSkill.GroundStomp:
+                var b2Cfg = ConfigManager.Boss2;
                 var groundY = by + b2Cfg.CollisionHeight / 2.0f;
                 TelegraphRenderHelper.DrawGroundShockwaveRails((int)bx, groundY, progress,
-                    patternCfg.GroundStomp.TelegraphColor);
+                    pattern2.GroundStomp.TelegraphColor);
             break;
 
             case BossSkill.LeapSmash:
@@ -414,17 +389,17 @@ public sealed class WorldRenderSystem : IDisposable {
                     finalTargetX,
                     finalTargetY,
                     progress,
-                    patternCfg.LeapSmash.TelegraphColor);
+                    pattern2.LeapSmash.TelegraphColor);
             break;
 
             case BossSkill.EarthquakeRoar:
                 TelegraphRenderHelper.DrawSkyfallColumns(
-                    patternCfg.EarthquakeRoar.MinX,
-                    patternCfg.EarthquakeRoar.MaxX,
+                    pattern2.EarthquakeRoar.MinX,
+                    pattern2.EarthquakeRoar.MaxX,
                     5,
                     650.0f,
                     progress,
-                    patternCfg.EarthquakeRoar.TelegraphColor,
+                    pattern2.EarthquakeRoar.TelegraphColor,
                     "▼ ROCK ▼");
             break;
 
@@ -432,44 +407,36 @@ public sealed class WorldRenderSystem : IDisposable {
                 TelegraphRenderHelper.DrawChargeDangerTrack(
                     (int)bx,
                     (int)by,
-                    b2Cfg.CollisionHeight,
+                    ConfigManager.Boss2.CollisionHeight,
                     facingRight,
                     progress,
-                    patternCfg.FrenzyCharge.TelegraphColor);
+                    pattern2.FrenzyCharge.TelegraphColor);
             break;
 
             case BossSkill.DoubleCleave:
                 TelegraphRenderHelper.DrawMeleeDangerBox(
                     (int)bx,
                     (int)by,
-                    patternCfg.DoubleCleave.SlashRangeX,
-                    patternCfg.DoubleCleave.SlashRangeY,
+                    pattern2.DoubleCleave.SlashRangeX,
+                    pattern2.DoubleCleave.SlashRangeY,
                     facingRight,
                     progress,
-                    patternCfg.DoubleCleave.TelegraphColor);
+                    pattern2.DoubleCleave.TelegraphColor);
             break;
 
             case BossSkill.HeavySlash:
                 TelegraphRenderHelper.DrawMeleeDangerBox(
                     (int)bx,
                     (int)by,
-                    patternCfg.HeavySlash.SlashRangeX,
-                    patternCfg.HeavySlash.SlashRangeY,
+                    pattern2.HeavySlash.SlashRangeX,
+                    pattern2.HeavySlash.SlashRangeY,
                     facingRight,
                     progress,
-                    patternCfg.HeavySlash.TelegraphColor);
+                    pattern2.HeavySlash.TelegraphColor);
             break;
 
             default:
-                Debug.Fail($"[WorldRender 警告] 未知の Boss2 スキル予兆: {skill}");
-                TelegraphRenderHelper.DrawMeleeDangerBox(
-                    (int)bx,
-                    (int)by,
-                    patternCfg.HeavySlash.SlashRangeX,
-                    patternCfg.HeavySlash.SlashRangeY,
-                    facingRight,
-                    progress,
-                    patternCfg.HeavySlash.TelegraphColor);
+                Debug.Fail($"[WorldRender 警告] 未知の Boss スキル予兆: {skill}");
             break;
         }
     }
