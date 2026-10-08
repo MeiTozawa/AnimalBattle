@@ -65,7 +65,7 @@ public class BattleScene : IDisposable {
            .Build();
 
         // 3. アクティブな Boss (デフォルト: Boss 1) の生成
-        SwitchBoss(CurrentBossName);
+        SwitchBoss(CurrentBossType);
     }
 
     /// <summary>
@@ -124,22 +124,31 @@ public class BattleScene : IDisposable {
         GC.SuppressFinalize(this);
     }
 
-    private void SpawnBoss1(Entity bossEntity)
+    private void SpawnBoss(BossType bossType, Entity bossEntity)
     {
-        var hasBoss1Handle = AssetManager.TryGetTexture(ResourcePath.Characters.Character031_3Png, out var boss1Handle);
-        Debug.Assert(hasBoss1Handle, $"Boss 1 テクスチャがロードされていません: {ResourcePath.Characters.Character031_3Png}");
-        Boss = new Boss1Agent(bossEntity, boss1Handle);
-        Debug.WriteLine(
-            $"[BattleScene] Boss 1 (Ancient Cat Overlord) を生成・リセットしました (HP: {ConfigManager.Boss1.MaxHp}, Pos: {ConfigManager.Boss1.SpawnX}, {ConfigManager.Boss1.SpawnY})");
-    }
+        var (texPath, bossTitle) = bossType switch {
+            BossType.Boss1 => (ResourcePath.Characters.Character031_3Png, "Boss 1 (Ancient Cat Overlord)"),
+            BossType.Boss2 => (ResourcePath.Characters.Character027_3Png, "Boss 2 (Ground Crusher)"),
+            _ => AssertHelper.FailWithDefault("未知のBossType", (ResourcePath.Characters.Character031_3Png, "Boss 1"))
+        };
 
-    private void SpawnBoss2(Entity bossEntity)
-    {
-        var hasBoss2Handle = AssetManager.TryGetTexture(ResourcePath.Characters.Character027_3Png, out var boss2Handle);
-        Debug.Assert(hasBoss2Handle, $"Boss 2 テクスチャがロードされていません: {ResourcePath.Characters.Character027_3Png}");
-        Boss = new Boss2Agent(bossEntity, boss2Handle, () => _tileMap?.NavGraph);
+        var hasHandle = AssetManager.TryGetTexture(texPath, out var handle);
+        Debug.Assert(hasHandle, $"Boss テクスチャがロードされていません: {texPath}");
+
+        BaseBossConfig cfg = bossType switch {
+            BossType.Boss1 => ConfigManager.Boss1,
+            BossType.Boss2 => ConfigManager.Boss2,
+            _ => ConfigManager.Boss1
+        };
+
+        Boss = bossType switch {
+            BossType.Boss1 => new Boss1Agent(bossEntity, handle),
+            BossType.Boss2 => new Boss2Agent(bossEntity, handle, () => _tileMap?.NavGraph),
+            _ => new Boss1Agent(bossEntity, handle)
+        };
+
         Debug.WriteLine(
-            $"[BattleScene] Boss 2 (Ground Crusher) を生成・リセットしました (HP: {ConfigManager.Boss2.MaxHp}, Pos: {ConfigManager.Boss2.SpawnX}, {ConfigManager.Boss2.SpawnY})");
+            $"[BattleScene] {bossTitle} を生成・リセットしました (HP: {cfg.MaxHp}, Pos: {cfg.SpawnX}, {cfg.SpawnY})");
     }
 
     /// <summary>
@@ -161,30 +170,15 @@ public class BattleScene : IDisposable {
     /// <summary>
     ///     対象の Boss へ切り替えます。
     /// </summary>
-    /// <param name="bossName">切り替え先の Boss 識別名 ("Boss1" または "Boss2")</param>
-    private void SwitchBoss(string bossName)
+    /// <param name="bossType">切り替え先の Boss 種別</param>
+    private void SwitchBoss(BossType bossType)
     {
         var otherBoss = _ecsWorld.Lookup(CurrentBossName);
         if (otherBoss.IsAlive()) otherBoss.Destruct();
-        
-        var bossEntity = _ecsWorld.Entity(bossName);
 
-        switch (bossName)
-        {
-            case Boss1Name:
-                CurrentBossType =  BossType.Boss1;
-                SpawnBoss1(bossEntity);
-            break;
-
-            case Boss2Name:
-                CurrentBossType =  BossType.Boss2;
-                SpawnBoss2(bossEntity);
-            break;
-
-            default:
-                Debug.Fail("未知のBoss名前");
-            break;
-        }
+        CurrentBossType = bossType;
+        var bossEntity = _ecsWorld.Entity(CurrentBossName);
+        SpawnBoss(bossType, bossEntity);
     }
 
     /// <summary>
@@ -197,52 +191,39 @@ public class BattleScene : IDisposable {
         ConfigManager.PlayerContainer.OnConfigReloaded += OnPlayerConfigReloaded;
     }
 
-    private void OnBoss1ConfigReloaded()
+    private void OnBoss1ConfigReloaded() => OnBossConfigReloaded(BossType.Boss1);
+    private void OnBoss2ConfigReloaded() => OnBossConfigReloaded(BossType.Boss2);
+
+    private void OnBossConfigReloaded(BossType bossType)
     {
-        if (CurrentBossName == Boss1Name)
+        if (CurrentBossType != bossType) return;
+
+        var (bossName, bCfg) = bossType switch {
+            BossType.Boss1 => (Boss1Name, (BaseBossConfig)ConfigManager.Boss1),
+            BossType.Boss2 => (Boss2Name, (BaseBossConfig)ConfigManager.Boss2),
+            _ => (Boss1Name, (BaseBossConfig)ConfigManager.Boss1)
+        };
+
+        var bossEntity = _ecsWorld.Lookup(bossName);
+        if (!bossEntity.IsAlive()) return;
+
+        bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
+        bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), bCfg.BodyContactDamage, Faction.Hostile, false));
+
+        if (bossType == BossType.Boss2)
         {
-            var bossEntity = _ecsWorld.Lookup("Boss1");
-            if (bossEntity.IsAlive() && bossEntity.Has<Boss1Tag>())
-            {
-                var bCfg = ConfigManager.Boss1;
-                bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
-                bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), bCfg.BodyContactDamage, Faction.Hostile, false));
-
-                if (bossEntity.Has<Transform>())
-                {
-                    ref var t = ref bossEntity.GetMut<Transform>();
-                    t.ScaleX = bCfg.ScaleX;
-                    t.ScaleY = bCfg.ScaleY;
-                }
-
-                Debug.WriteLine("[BattleScene] Boss 1 の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
-            }
+            var b2Cfg = ConfigManager.Boss2;
+            bossEntity.Set(new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight));
         }
-    }
 
-    private void OnBoss2ConfigReloaded()
-    {
-        if (CurrentBossName == Boss2Name)
+        if (bossEntity.Has<Transform>())
         {
-            var bossEntity = _ecsWorld.Lookup("Boss2");
-            if (bossEntity.IsAlive() && bossEntity.Has<Boss2Tag>())
-            {
-                var bCfg = ConfigManager.Boss2;
-                bossEntity.Set(new Hurtbox(bCfg.GetHurtboxShape(), Faction.Hostile));
-                bossEntity.Set(new Hitbox(bCfg.GetHitboxShape(), bCfg.BodyContactDamage, Faction.Hostile, false));
-                bossEntity.Set(new CollisionBox(bCfg.CollisionWidth, bCfg.CollisionHeight));
-
-                if (bossEntity.Has<Transform>())
-                {
-                    ref var t = ref bossEntity.GetMut<Transform>();
-                    t.ScaleX = bCfg.ScaleX;
-                    t.ScaleY = bCfg.ScaleY;
-                }
-
-                Debug.WriteLine(
-                    "[BattleScene] Boss 2 の Hurtbox / Hitbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
-            }
+            ref var t = ref bossEntity.GetMut<Transform>();
+            t.ScaleX = bCfg.ScaleX;
+            t.ScaleY = bCfg.ScaleY;
         }
+
+        Debug.WriteLine($"[BattleScene] {bossName} の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
     }
 
     private void OnPlayerConfigReloaded()
@@ -302,12 +283,12 @@ public class BattleScene : IDisposable {
     {
         if (InputService.IsPressed(InputAction.SelectBoss1))
         {
-            SwitchBoss(Boss1Name);
+            SwitchBoss(BossType.Boss1);
             ResetCombat();
         }
         else if (InputService.IsPressed(InputAction.SelectBoss2))
         {
-            SwitchBoss(Boss2Name);
+            SwitchBoss(BossType.Boss2);
             ResetCombat();
         }
         else if (InputService.IsPressed(InputAction.Restart))
