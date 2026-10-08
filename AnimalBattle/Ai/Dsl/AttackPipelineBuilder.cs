@@ -13,11 +13,11 @@ namespace AnimalBattle.Ai.Dsl;
 public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill skill) {
     private readonly List<AttackComponent> _components = [];
     private readonly PhasePipelineBuilder _parent = parent;
+    private ArmorType _armor = ArmorType.None;
     private float _executeDuration = 0.50f;
+    private float _poiseThreshold;
     private float _range = 200.0f;
     private float _recoveryDuration = 0.50f;
-    private ArmorType _armor = ArmorType.None;
-    private float _poiseThreshold = 0.0f;
     private DecisionRuleBuilder? _ruleBuilder;
     private float _telegraphDuration = 0.40f;
 

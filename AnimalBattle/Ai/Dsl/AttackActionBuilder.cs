@@ -103,7 +103,8 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder Dive(float descentSpeed = 1200.0f)
     {
         var index = components.Count;
-        components.Add(new AttackComponent(AttackComponentKind.VelocityDive, index, 0.0f, descentSpeed, 0.0f, triggerTime));
+        components.Add(new AttackComponent(AttackComponentKind.VelocityDive, index, 0.0f, descentSpeed, 0.0f,
+            triggerTime));
         return this;
     }
 
@@ -129,7 +130,8 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder CameraShake(float intensity = 5.0f, float duration = 0.2f)
     {
         var index = components.Count;
-        components.Add(new AttackComponent(AttackComponentKind.ScreenShake, index, intensity, duration, 0.0f, triggerTime));
+        components.Add(new AttackComponent(AttackComponentKind.ScreenShake, index, intensity, duration, 0.0f,
+            triggerTime));
         return this;
     }
 }

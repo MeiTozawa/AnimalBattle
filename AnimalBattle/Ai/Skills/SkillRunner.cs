@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 
@@ -9,9 +8,9 @@ namespace AnimalBattle.Ai.Skills;
 ///     ヒープ割り当てを行わず、高精度な時系列コンポーネント発火と状態問い合わせを提供します。
 /// </summary>
 public sealed class SkillRunner {
-    private ulong _triggeredMask;
     private float _facingDirection = 1.0f;
     private bool _hasLeftGround;
+    private ulong _triggeredMask;
 
     /// <summary>現在実行中の攻撃定義を取得します。</summary>
     public AttackDefinition? Definition { get; private set; }
@@ -62,10 +61,7 @@ public sealed class SkillRunner {
     {
         Debug.Assert(definition is not null, "[SkillRunner 警告] null の攻撃定義で Start が呼び出されました。");
 
-        if (!definition.IsValid)
-        {
-            Debug.WriteLine($"[SkillRunner 警告] 攻撃定義が不正です: {definition.Skill}");
-        }
+        if (!definition.IsValid) Debug.WriteLine($"[SkillRunner 警告] 攻撃定義が不正です: {definition.Skill}");
 
         Definition = definition;
         _facingDirection = facingDirection >= 0.0f ? 1.0f : -1.0f;

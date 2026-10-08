@@ -76,8 +76,7 @@ public sealed class AssetManager : IDisposable {
             if (!LoadCharacterClips(charType, config)) allLoaded = false;
         }
 
-        ReadOnlySpan<string> commonTextures =
-        [
+        ReadOnlySpan<string> commonTextures = [
             ResourcePath.Characters.Character031_3Png,
             ResourcePath.Characters.Character027_3Png,
             ResourcePath.Characters.SwordShieldEffectSpritesPng,
@@ -87,10 +86,7 @@ public sealed class AssetManager : IDisposable {
         foreach (var texPath in commonTextures)
         {
             var loadResult = LoadTexture(texPath);
-            if (loadResult.IsError)
-            {
-                allLoaded = false;
-            }
+            if (loadResult.IsError) allLoaded = false;
         }
 
         IsInitialized = true;
@@ -167,10 +163,8 @@ public sealed class AssetManager : IDisposable {
     /// <returns>取得成功時は true、未キャッシュ時は false。</returns>
     public static bool TryGetTexture(string relativePath, out int handle)
     {
-        if (!string.IsNullOrWhiteSpace(relativePath) && _textureHandles.TryGetValue(relativePath, out handle))
-        {
-            return true;
-        }
+        if (!string.IsNullOrWhiteSpace(relativePath) &&
+            _textureHandles.TryGetValue(relativePath, out handle)) return true;
 
         handle = -1;
         return false;
@@ -189,16 +183,11 @@ public sealed class AssetManager : IDisposable {
         if (clipId != StringId.Empty && _characterConfigs.TryGetValue(type, out var config) && config != null)
         {
             var clip = config.FindClip(clipId);
-            if (clip != null && !string.IsNullOrWhiteSpace(clip.SpritePath) && TryGetTexture(clip.SpritePath, out handle))
-            {
-                return true;
-            }
+            if (clip != null && !string.IsNullOrWhiteSpace(clip.SpritePath) &&
+                TryGetTexture(clip.SpritePath, out handle)) return true;
         }
 
-        if (_characterSpriteHandles.TryGetValue(type, out handle))
-        {
-            return true;
-        }
+        if (_characterSpriteHandles.TryGetValue(type, out handle)) return true;
 
         handle = -1;
         return false;

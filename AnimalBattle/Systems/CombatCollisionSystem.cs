@@ -1,6 +1,3 @@
-using System.Drawing;
-using AnimalBattle.Characters;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
@@ -69,7 +66,8 @@ public static class CombatCollisionSystem {
 
                         if (PhysicsService.Intersects(trans, hitbox.Shape, vicTrans, hurtbox.Shape))
                         {
-                            ApplyHit(world, target.Entity, ref vicTrans, ref hurtbox, in hitbox, ref shouldDestroyAttacker);
+                            ApplyHit(world, target.Entity, ref vicTrans, ref hurtbox, in hitbox,
+                                ref shouldDestroyAttacker);
                             if (shouldDestroyAttacker) break;
                         }
                     }

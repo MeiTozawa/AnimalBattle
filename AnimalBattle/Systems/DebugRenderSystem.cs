@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps;

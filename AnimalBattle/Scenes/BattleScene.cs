@@ -16,6 +16,8 @@ namespace AnimalBattle.Scenes;
 public class BattleScene : IDisposable {
     private readonly DebugRenderSystem _debugRenderer;
     private readonly WorldRenderSystem _worldRenderer;
+    private const string Boss1Name =  "Boss1";
+    private const string Boss2Name =  "Boss2";
     private World _ecsWorld;
     private Query _effectsQuery;
     private bool _isDisposed;
@@ -63,13 +65,13 @@ public class BattleScene : IDisposable {
            .Build();
 
         // 3. アクティブな Boss (デフォルト: Boss 1) の生成
-        SpawnBoss(CurrentBossType);
+        SwitchBoss(CurrentBossName);
     }
 
     /// <summary>
     ///     現在アクティブな BattleScene インスタンスを取得します。
     /// </summary>
-    public static BattleScene? Current { get; private set; }
+    public static BattleScene Current { get; private set; } = null!;
 
     /// <summary>
     ///     現在アクティブなプレイヤー自機インスタンスを取得します。
@@ -94,7 +96,11 @@ public class BattleScene : IDisposable {
     /// <summary>
     ///     現在アクティブな Boss の識別名を取得します。
     /// </summary>
-    private string CurrentBossId => CurrentBossType == BossType.Boss1 ? "Boss1" : "Boss2";
+    private string CurrentBossName => CurrentBossType switch {
+        BossType.Boss1 => Boss1Name,
+        BossType.Boss2 => Boss2Name,
+        _ => AssertHelper.FailWithDefault("未知のBossタイプ", Boss1Name)
+    };
 
     /// <inheritdoc />
     public void Dispose()
@@ -113,28 +119,9 @@ public class BattleScene : IDisposable {
         _platformQuery.Dispose();
         _ecsWorld.Dispose();
         AssetManager.Shutdown();
-        if (Current == this) Current = null;
+        if (Current == this) Current = null!;
         _isDisposed = true;
         GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    ///     指定された種類の Boss エンティティを生成またはリセットします。
-    /// </summary>
-    /// <param name="bossType">生成する Boss の種別 (<see cref="BossType.Boss1" /> または <see cref="BossType.Boss2" />)</param>
-    /// <returns>生成または再初期化された Flecs エンティティ</returns>
-    private void SpawnBoss(BossType bossType)
-    {
-        var otherBossName = bossType == BossType.Boss1 ? "Boss2" : "Boss1";
-        var otherBoss = _ecsWorld.Lookup(otherBossName);
-        if (otherBoss.IsAlive()) otherBoss.Destruct();
-
-        var entityName = bossType == BossType.Boss1 ? "Boss1" : "Boss2";
-        var bossEntity = _ecsWorld.Entity(entityName);
-
-        if (bossType == BossType.Boss1)
-            SpawnBoss1(bossEntity);
-        else if (bossType == BossType.Boss2) SpawnBoss2(bossEntity);
     }
 
     private void SpawnBoss1(Entity bossEntity)
@@ -174,14 +161,30 @@ public class BattleScene : IDisposable {
     /// <summary>
     ///     対象の Boss へ切り替えます。
     /// </summary>
-    /// <param name="bossId">切り替え先の Boss 識別名 ("Boss1" または "Boss2")</param>
-    private void SwitchBoss(string bossId)
+    /// <param name="bossName">切り替え先の Boss 識別名 ("Boss1" または "Boss2")</param>
+    private void SwitchBoss(string bossName)
     {
-        var targetType = bossId.Equals("Boss2", StringComparison.OrdinalIgnoreCase)
-            ? BossType.Boss2
-            : BossType.Boss1;
-        CurrentBossType = targetType;
-        SpawnBoss(targetType);
+        var otherBoss = _ecsWorld.Lookup(CurrentBossName);
+        if (otherBoss.IsAlive()) otherBoss.Destruct();
+        
+        var bossEntity = _ecsWorld.Entity(bossName);
+
+        switch (bossName)
+        {
+            case Boss1Name:
+                CurrentBossType =  BossType.Boss1;
+                SpawnBoss1(bossEntity);
+            break;
+
+            case Boss2Name:
+                CurrentBossType =  BossType.Boss2;
+                SpawnBoss2(bossEntity);
+            break;
+
+            default:
+                Debug.Fail("未知のBoss名前");
+            break;
+        }
     }
 
     /// <summary>
@@ -196,7 +199,7 @@ public class BattleScene : IDisposable {
 
     private void OnBoss1ConfigReloaded()
     {
-        if (CurrentBossId.Equals("Boss1", StringComparison.OrdinalIgnoreCase))
+        if (CurrentBossName == Boss1Name)
         {
             var bossEntity = _ecsWorld.Lookup("Boss1");
             if (bossEntity.IsAlive() && bossEntity.Has<Boss1Tag>())
@@ -219,7 +222,7 @@ public class BattleScene : IDisposable {
 
     private void OnBoss2ConfigReloaded()
     {
-        if (CurrentBossId.Equals("Boss2", StringComparison.OrdinalIgnoreCase))
+        if (CurrentBossName == Boss2Name)
         {
             var bossEntity = _ecsWorld.Lookup("Boss2");
             if (bossEntity.IsAlive() && bossEntity.Has<Boss2Tag>())
@@ -247,7 +250,7 @@ public class BattleScene : IDisposable {
         var playerEntity = _ecsWorld.Lookup("Player1");
         if (!playerEntity.IsAlive()) return;
         var pCfg = ConfigManager.Player;
-        playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly));
+        playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
         playerEntity.Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight));
 
         if (playerEntity.Has<Transform>())
@@ -299,12 +302,12 @@ public class BattleScene : IDisposable {
     {
         if (InputService.IsPressed(InputAction.SelectBoss1))
         {
-            SwitchBoss("Boss1");
+            SwitchBoss(Boss1Name);
             ResetCombat();
         }
         else if (InputService.IsPressed(InputAction.SelectBoss2))
         {
-            SwitchBoss("Boss2");
+            SwitchBoss(Boss2Name);
             ResetCombat();
         }
         else if (InputService.IsPressed(InputAction.Restart))

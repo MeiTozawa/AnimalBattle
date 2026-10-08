@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Characters;
@@ -19,7 +18,6 @@ namespace AnimalBattle.Systems;
 /// <remarks>
 ///     <see cref="WorldRenderSystem" /> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリを構築します。
 /// </remarks>
-/// <param name="world">描画対象の Flecs.NET ワールド。</param>
 public sealed class WorldRenderSystem : IDisposable {
     private readonly Ecs.IterFieldCallback<Transform, Bullet> _drawBossBulletsCallback;
 
@@ -101,7 +99,7 @@ public sealed class WorldRenderSystem : IDisposable {
     /// <param name="platformQuery">プラットフォーム足場検索クエリ。</param>
     public void Render(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery)
     {
-        Render(tileMap, platformQuery, BattleScene.Current?.Player, BattleScene.Current?.Boss);
+        Render(tileMap, platformQuery, BattleScene.Current.Player, BattleScene.Current.Boss);
     }
 
     /// <summary>
@@ -139,7 +137,8 @@ public sealed class WorldRenderSystem : IDisposable {
         DrawParticleEffects(_particleEffectQuery);
     }
 
-    private static void DrawPlatforms(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery, ViewportRenderConfig viewport)
+    private static void DrawPlatforms(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery,
+        ViewportRenderConfig viewport)
     {
         if (tileMap != null)
             tileMap.DrawCulled(viewport.X, viewport.Y, viewport.Width, viewport.Height);
@@ -199,7 +198,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     boss.StateTimer,
                     bossFx);
         }
-        else
+        else if (boss.BossType == BossType.Boss2)
         {
             if (boss.CurrentState == BossState.Boss2_Telegraph)
             {
@@ -564,8 +563,7 @@ public sealed class WorldRenderSystem : IDisposable {
             if (e.Has<BulletModifier>())
             {
                 ref readonly var mod = ref e.Get<BulletModifier>();
-                DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, _bOutlinePadding,
-                    _bCoreRadiusRatio, _bCoreColor);
+                DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, _bOutlinePadding, _bCoreColor);
             }
             else
             {
@@ -585,7 +583,6 @@ public sealed class WorldRenderSystem : IDisposable {
         int outlineRadius,
         int coreRadius,
         int outlinePadding,
-        float coreRadiusRatio,
         Color coreColor)
     {
         switch (mod.Type)

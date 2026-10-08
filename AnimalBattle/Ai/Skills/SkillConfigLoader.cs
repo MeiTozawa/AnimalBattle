@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using AnimalBattle.Ai.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
@@ -42,33 +41,25 @@ public static class SkillConfigLoader {
     {
         // 業務バリデーション
         if (castDuration <= 0.0f || windUpTime <= 0.0f || recoveryTime <= 0.0f)
-        {
             return Error.Validation(
                 "Skill.InvalidDuration",
                 $"技能 '{skill}' の時間設定が不正です。");
-        }
 
         if (effectiveRange < 0.0f)
-        {
             return Error.Validation("Skill.InvalidRange", $"技能 '{skill}' の有効射程が負数です: {effectiveRange}");
-        }
 
         var components = new List<AttackComponent>();
         var index = 0;
 
         if (events != null && events.Count > 0)
-        {
             foreach (var ev in events)
             {
                 var kind = ResolveComponentKind(ev.Type);
                 components.Add(new AttackComponent(kind, index++, ev.Param0, ev.Param1, ev.Param2, ev.Time));
             }
-        }
         else if (defaultInterval > 0.0f && defaultSpeed > 0.0f)
-        {
             // 旧来パラメータに基づく周期的弾幕自動生成フォールバック
             for (var t = 0.0f; t < castDuration; t += defaultInterval)
-            {
                 components.Add(new AttackComponent(
                     AttackComponentKind.Bullet,
                     index++,
@@ -76,8 +67,6 @@ public static class SkillConfigLoader {
                     defaultCount > 0 ? defaultCount : 1,
                     defaultSpread,
                     t));
-            }
-        }
 
         var definition = new AttackDefinition(
             skill,
@@ -89,10 +78,7 @@ public static class SkillConfigLoader {
             armor,
             poiseThreshold);
 
-        if (!definition.IsValid)
-        {
-            return Error.Validation("Skill.InvalidDefinition", $"技能 '{skill}' の内部定義検証に失敗しました。");
-        }
+        if (!definition.IsValid) return Error.Validation("Skill.InvalidDefinition", $"技能 '{skill}' の内部定義検証に失敗しました。");
 
         return definition;
     }
@@ -159,8 +145,7 @@ public static class SkillConfigLoader {
                 config.RainDrop.Events,
                 config.RainDrop.Interval,
                 config.RainDrop.BulletSpeed,
-                1,
-                0.0f),
+                1),
 
             BossSkill.CrossChaos => BuildAttackDefinition(
                 skill,
@@ -183,8 +168,7 @@ public static class SkillConfigLoader {
                 config.FastSniper.Events,
                 config.FastSniper.Interval,
                 config.FastSniper.BulletSpeed,
-                1,
-                0.0f),
+                1),
 
             _ => Error.NotFound("Skill.Unsupported", $"Boss 1 ではサポートされていない技能です: {skill}")
         };
@@ -254,7 +238,7 @@ public static class SkillConfigLoader {
                 config.EarthquakeRoar.RockSpeed,
                 config.EarthquakeRoar.RockCount > 0 ? config.EarthquakeRoar.RockCount : 1,
                 0.0f,
-                armor: ArmorType.SuperArmor),
+                ArmorType.SuperArmor),
 
             _ => Error.NotFound("Skill.Unsupported", $"Boss 2 ではサポートされていない技能です: {skill}")
         };

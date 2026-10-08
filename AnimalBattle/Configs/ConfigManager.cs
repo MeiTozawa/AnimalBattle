@@ -1,10 +1,8 @@
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
-using ErrorOr;
 
 namespace AnimalBattle.Configs;
 
@@ -105,7 +103,8 @@ public static class ConfigManager {
         LoadConfig(ResourcePath.Config.Boss2, ref _boss2ConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Boss1Patterns, ref _boss1PatternsContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Boss2Patterns, ref _boss2PatternsContainer, ref successCount, ref failureCount);
-        LoadConfig(ResourcePath.Config.SpecialBullets, ref _specialBulletsContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.SpecialBullets, ref _specialBulletsContainer, ref successCount,
+            ref failureCount);
         LoadConfig(ResourcePath.Config.Arena, ref _arenaConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Render, ref _renderConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Platform.SheetToml, ref _tileSetConfigContainer, ref successCount, ref failureCount);
@@ -124,7 +123,8 @@ public static class ConfigManager {
             SpecialBullets.MagentaPulseAmplitude > 0.0f &&
             SpecialBullets.YellowOrbitSpeed > 0.0f,
             "特殊弾幕変調パラメータが正常に読み込まれていません。");
-        Debug.WriteLine($"[C# 特殊弾幕設定] Cyan Amp={SpecialBullets.CyanWaveAmplitude} | Magenta Amp={SpecialBullets.MagentaPulseAmplitude} | Yellow Speed={SpecialBullets.YellowOrbitSpeed}");
+        Debug.WriteLine(
+            $"[C# 特殊弾幕設定] Cyan Amp={SpecialBullets.CyanWaveAmplitude} | Magenta Amp={SpecialBullets.MagentaPulseAmplitude} | Yellow Speed={SpecialBullets.YellowOrbitSpeed}");
 
         _boss1ConfigContainer.OnConfigReloaded += Boss1PipelineDefinition.Reload;
         _boss2ConfigContainer.OnConfigReloaded += Boss2PipelineDefinition.Reload;

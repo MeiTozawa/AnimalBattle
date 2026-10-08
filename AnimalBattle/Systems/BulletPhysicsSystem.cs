@@ -1,5 +1,4 @@
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -53,9 +52,7 @@ public static class BulletPhysicsSystem {
 
             if (nextX < minX || nextX > maxX ||
                 nextY < minY || nextY > maxY)
-            {
                 CombatEntityPoolHelper.Recycle(w, it.Entity(i));
-            }
         }
     }
 }

@@ -1,8 +1,5 @@
-using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Components;
-using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters.Boss;
@@ -11,15 +8,20 @@ namespace AnimalBattle.Characters.Boss;
 ///     多態 Boss 自治エージェント共通の基底抽象クラス。
 ///     Pawn を継承し、AI 意思決定ブレインと ECS Entity 間の同期ライフサイクルを一元管理します。
 /// </summary>
-public abstract class BaseBossAgent : Pawn, IDisposable
-{
-    private World _currentWorld;
-
+public abstract class BaseBossAgent : Pawn, IDisposable {
     /// <summary>弾幕角度変調用オフセット。</summary>
     protected float EmitterAngleOffset;
 
+    /// <summary>
+    ///     対象の Flecs エンティティを指定して基底クラスを初期化します。
+    /// </summary>
+    /// <param name="entity">Flecs エンティティ句柄。</param>
+    protected BaseBossAgent(Entity entity) : base(entity)
+    {
+    }
+
     /// <summary>現在の Flecs ワールドを取得します。</summary>
-    public World CurrentWorld => _currentWorld;
+    public World CurrentWorld { get; private set; }
 
     /// <summary>Boss 意思決定ブレインの基底参照を取得します。</summary>
     public abstract IBossBrain Brain { get; }
@@ -58,11 +60,11 @@ public abstract class BaseBossAgent : Pawn, IDisposable
     public virtual bool FacingRight => Brain.FacingRight;
 
     /// <summary>
-    ///     対象の Flecs エンティティを指定して基底クラスを初期化します。
+    ///     Boss エージェントのリソースを解放します。
     /// </summary>
-    /// <param name="entity">Flecs エンティティ句柄。</param>
-    protected BaseBossAgent(Entity entity) : base(entity)
+    public virtual void Dispose()
     {
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
@@ -92,20 +94,18 @@ public abstract class BaseBossAgent : Pawn, IDisposable
         float collisionHeight = 0.0f)
     {
         entity.Set(new Health(maxHp))
-            .Set(new InvincibleOnHit(0.0f))
-            .Set(new HitFlashConfig(0.08f, Color.White))
-            .Set(new Transform(spawnX, spawnY, scaleX, scaleY))
-            .Set(new Velocity(0.0f))
-            .Set(new Hurtbox(hurtboxShape, Faction.Hostile))
-            .Set(new Hitbox(hitboxShape, bodyContactDamage, Faction.Hostile, false))
-            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
-            .Set(new BossCombatState(IsVulnerable, Phase))
-            .Add<BossTag>();
+           .Set(new InvincibleOnHit(0.0f))
+           .Set(new HitFlashConfig(0.08f, Color.White))
+           .Set(new Transform(spawnX, spawnY, scaleX, scaleY))
+           .Set(new Velocity(0.0f))
+           .Set(new Hurtbox(hurtboxShape, Faction.Hostile))
+           .Set(new Hitbox(hitboxShape, bodyContactDamage, Faction.Hostile, false))
+           .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
+           .Set(new BossCombatState(IsVulnerable, Phase))
+           .Add<BossTag>();
 
         if (collisionWidth > 0.0f && collisionHeight > 0.0f)
-        {
             entity.Set(new CollisionBox(collisionWidth, collisionHeight));
-        }
     }
 
     /// <summary>
@@ -113,7 +113,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable
     /// </summary>
     protected void SetCurrentWorld(World world)
     {
-        _currentWorld = world;
+        CurrentWorld = world;
     }
 
     /// <summary>
@@ -128,6 +128,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable
             if (!Brain.IsDead) Brain.Kill();
             return true;
         }
+
         return false;
     }
 
@@ -149,10 +150,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable
     /// </summary>
     protected void HandleClearBullets()
     {
-        if (_currentWorld != default)
-        {
-            CombatEffectHelper.ClearAllBossBullets(_currentWorld);
-        }
+        if (CurrentWorld != default) CombatEffectHelper.ClearAllBossBullets(CurrentWorld);
     }
 
     /// <summary>
@@ -192,12 +190,4 @@ public abstract class BaseBossAgent : Pawn, IDisposable
 
     /// <summary>リセット時のサブクラス固有の座標・体力・状態復元を実行します。</summary>
     protected abstract void OnReset();
-
-    /// <summary>
-    ///     Boss エージェントのリソースを解放します。
-    /// </summary>
-    public virtual void Dispose()
-    {
-        GC.SuppressFinalize(this);
-    }
 }

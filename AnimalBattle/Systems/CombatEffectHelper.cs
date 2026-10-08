@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
@@ -102,17 +101,17 @@ public static class CombatEffectHelper {
         {
             case Phase.Phase1:
                 bulletCount = 1;
-                break;
+            break;
             case Phase.Phase2:
                 bulletCount = 2;
-                break;
+            break;
             case Phase.Phase3:
                 bulletCount = 3;
-                break;
+            break;
             default:
                 Debug.Fail($"[CombatEffectHelper 警告] 未知のフェーズ: {phase}");
                 bulletCount = 1;
-                break;
+            break;
         }
 
         const float counterBulletSpeed = 160.0f;
@@ -284,7 +283,8 @@ public static class CombatEffectHelper {
         Color color,
         SlashDirection direction = SlashDirection.Right)
     {
-        var hasTexture = AssetManager.TryGetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng, out var slashHandle);
+        var hasTexture =
+            AssetManager.TryGetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng, out var slashHandle);
         Debug.Assert(hasTexture, $"近接斬撃エフェクトテクスチャがロードされていません: {ResourcePath.Characters.SwordShieldEffectSpritesPng}");
         var colIndex = 5; // 第 6 列 (0-based: 5)
         var rowIndex = (int)direction;
@@ -327,7 +327,7 @@ public static class CombatEffectHelper {
     {
         var entity = CombatEntityPoolHelper.RentBossBullet(world)
            .Set(new Transform(x, y))
-           .Set(new Velocity(vx, 0.0f))
+           .Set(new Velocity(vx))
            .Set(new Bullet(radius, fillColor, outlineColor))
            .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile))
            .Add<BossBulletTag>();

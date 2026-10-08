@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using AnimalBattle.Scenes;
 
 namespace AnimalBattle;
