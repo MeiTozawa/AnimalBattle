@@ -414,7 +414,7 @@ public sealed class HeavySlashConfig {
     public float SlashDamage { get; set; }
 
     /// <summary>斬撃攻撃判定の残留持続時間</summary>
-    public float HitboxDuration { get; set; } = 0.28f;
+    public float HitboxDuration { get; set; }
 
     /// <summary>斬撃エフェクトカラー</summary>
     public Color SlashColor { get; set; }
@@ -449,10 +449,10 @@ public sealed class GroundStompConfig {
     public float HitboxOffsetY { get; set; }
 
     /// <summary>地面接触面の Y 補正オフセット</summary>
-    public float GroundOffsetY { get; set; } = 10.0f;
+    public float GroundOffsetY { get; set; }
 
     /// <summary>左右衝撃波生成の水平 X オフセット</summary>
-    public float ShockwaveOffsetX { get; set; } = 30.0f;
+    public float ShockwaveOffsetX { get; set; }
 
     /// <summary>衝撃波水平推進速度</summary>
     public float ShockwaveSpeed { get; set; }
@@ -514,13 +514,13 @@ public sealed class LeapSmashConfig {
     public int ShrapnelCount { get; set; }
 
     /// <summary>破片飛散開始角度倍率</summary>
-    public float ShrapnelAngleStartRatio { get; set; } = 0.15f;
+    public float ShrapnelAngleStartRatio { get; set; }
 
     /// <summary>破片飛散扇状角度幅倍率</summary>
-    public float ShrapnelAngleSpanRatio { get; set; } = 0.7f;
+    public float ShrapnelAngleSpanRatio { get; set; }
 
     /// <summary>破片生成位置の垂直 Y オフセット</summary>
-    public float ShrapnelOffsetY { get; set; } = 15.0f;
+    public float ShrapnelOffsetY { get; set; }
 
     /// <summary>破片飛散速度</summary>
     public float ShrapnelSpeed { get; set; }
@@ -535,10 +535,10 @@ public sealed class LeapSmashConfig {
     public Color ShrapnelOutlineColor { get; set; }
 
     /// <summary>着地叩きつけ近接判定半径</summary>
-    public float SlashRadius { get; set; } = 80.0f;
+    public float SlashRadius { get; set; }
 
     /// <summary>着地叩きつけダメージ</summary>
-    public float SlashDamage { get; set; } = 1.5f;
+    public float SlashDamage { get; set; }
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
@@ -620,16 +620,16 @@ public sealed class FrenzyChargeConfig {
     public float ChargeSpeed { get; set; }
 
     /// <summary>突進攻撃判定幅</summary>
-    public float HitboxWidth { get; set; } = 100.0f;
+    public float HitboxWidth { get; set; }
 
     /// <summary>突進攻撃判定高さ</summary>
-    public float HitboxHeight { get; set; } = 60.0f;
+    public float HitboxHeight { get; set; }
 
     /// <summary>突進攻撃判定持続時間</summary>
-    public float HitboxDuration { get; set; } = 0.25f;
+    public float HitboxDuration { get; set; }
 
     /// <summary>突進攻撃判定エフェクトカラー</summary>
-    public Color HitboxColor { get; set; } = Color.FromArgb(0xFF, 0xFF, 0x17, 0x44);
+    public Color HitboxColor { get; set; }
 
     /// <summary>壁激突時の破片数</summary>
     public int ShrapnelCount { get; set; }
