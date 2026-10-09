@@ -20,6 +20,7 @@ public static class ConfigManager {
     private static ConfigBase<SpecialBulletConfig> _specialBulletsContainer = new(new SpecialBulletConfig());
     private static ConfigBase<ArenaConfig> _arenaConfigContainer = new(new ArenaConfig());
     private static ConfigBase<RenderConfig> _renderConfigContainer = new(new RenderConfig());
+    private static ConfigBase<CameraConfig> _cameraConfigContainer = new(new CameraConfig());
     private static ConfigBase<TileSetConfig> _tileSetConfigContainer = new(new TileSetConfig());
     private static bool _isInitialized;
 
@@ -52,6 +53,9 @@ public static class ConfigManager {
     /// <summary>描画および UI 設定オブジェクトを取得します。</summary>
     public static RenderConfig Render => _renderConfigContainer.Config;
 
+    /// <summary>カメラおよび画面振動設定オブジェクトを取得します。</summary>
+    public static CameraConfig Camera => _cameraConfigContainer.Config;
+
     /// <summary>タイルセット足場設定オブジェクトを取得します。</summary>
     public static TileSetConfig TileSet => _tileSetConfigContainer.Config;
 
@@ -78,6 +82,9 @@ public static class ConfigManager {
 
     /// <summary>描画設定コンテナを取得します。</summary>
     public static ConfigBase<RenderConfig> RenderContainer => _renderConfigContainer;
+
+    /// <summary>カメラ設定コンテナを取得します。</summary>
+    public static ConfigBase<CameraConfig> CameraContainer => _cameraConfigContainer;
 
     /// <summary>タイルセット設定コンテナを取得します。</summary>
     public static ConfigBase<TileSetConfig> TileSetContainer => _tileSetConfigContainer;
@@ -108,6 +115,7 @@ public static class ConfigManager {
             ref failureCount);
         LoadConfig(ResourcePath.Config.Arena, ref _arenaConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Render, ref _renderConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Camera, ref _cameraConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Platform.SheetToml, ref _tileSetConfigContainer, ref successCount, ref failureCount);
 
         Debug.Assert(failureCount == 0, "一部の TOML 設定ファイルの読み込みに失敗しました。");
@@ -148,6 +156,7 @@ public static class ConfigManager {
         _specialBulletsContainer = new(bundle.SpecialBullet);
         _arenaConfigContainer = new(bundle.Arena);
         _renderConfigContainer = new(bundle.Render);
+        _cameraConfigContainer = new(bundle.Camera);
         _tileSetConfigContainer = new(bundle.TileSet);
 
         Debug.WriteLine("[C# 設定初期化] Release 版: バイナリ設定データ (baked_configs.bin) を正常にロードして起動しました。");
@@ -192,6 +201,7 @@ public static class ConfigManager {
         _specialBulletsContainer.Dispose();
         _arenaConfigContainer.Dispose();
         _renderConfigContainer.Dispose();
+        _cameraConfigContainer.Dispose();
         _tileSetConfigContainer.Dispose();
     }
 }

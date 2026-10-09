@@ -113,6 +113,7 @@ public static class DamageResolutionSystem
                     }
 
                     // 死亡または反撃判定
+                    var cameraCfg = ConfigManager.Camera;
                     if (hp.Current <= 0.0f)
                     {
                         entity.Add<DeadTag>();
@@ -124,18 +125,34 @@ public static class DamageResolutionSystem
                         if (entity.Has<PlayerTag>())
                         {
                             CombatEffectHelper.SpawnPlayerDeathParticles(world, trans.X, trans.Y);
+                            CameraService.AddTrauma(cameraCfg.PlayerHeavyHitTrauma);
                         }
                         else if (entity.Has<BossTag>())
                         {
                             CombatEffectHelper.ClearAllBossBullets(world);
                             CombatEffectHelper.SpawnVictoryExplosions(world, trans.X, trans.Y);
+                            CameraService.AddTrauma(cameraCfg.VictoryExplosionTrauma);
                         }
                     }
-                    else if (entity.Has<BossCombatState>())
+                    else
                     {
-                        ref readonly var combat = ref entity.Get<BossCombatState>();
-                        // Boss 被弾反撃：現在の Phase に応じた数量の黑色弾幕を発射
-                        CombatEffectHelper.SpawnBossCounterAttack(world, trans.X, trans.Y, combat.Phase);
+                        if (entity.Has<PlayerTag>())
+                        {
+                            var trauma = isHeavy ? cameraCfg.PlayerHeavyHitTrauma : cameraCfg.PlayerHitTrauma;
+                            CameraService.AddTrauma(trauma);
+                            CameraService.AddDirectionalImpulse(dmg.KnockbackX, dmg.KnockbackY, cameraCfg.DirectionalImpulseRatio);
+                        }
+                        else if (isVulnerable)
+                        {
+                            CameraService.AddTrauma(cameraCfg.BossVulnerableHitTrauma);
+                        }
+
+                        if (entity.Has<BossCombatState>())
+                        {
+                            ref readonly var combat = ref entity.Get<BossCombatState>();
+                            // Boss 被弾反撃：現在の Phase に応じた数量の黑色弾幕を発射
+                            CombatEffectHelper.SpawnBossCounterAttack(world, trans.X, trans.Y, combat.Phase);
+                        }
                     }
 
                     entity.Remove<IncomingDamage>();

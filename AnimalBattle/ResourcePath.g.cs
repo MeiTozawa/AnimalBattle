@@ -87,6 +87,9 @@ public static class ResourcePath
         /// <summary>boss2_patterns.toml 設定ファイル名。</summary>
         public const string Boss2Patterns = "boss2_patterns.toml";
 
+        /// <summary>camera.toml 設定ファイル名。</summary>
+        public const string Camera = "camera.toml";
+
         /// <summary>player.toml 設定ファイル名。</summary>
         public const string Player = "player.toml";
 
@@ -110,6 +113,9 @@ public static class ResourcePath
 
         /// <summary>boss2_patterns.toml の相対パス。</summary>
         public const string Boss2PatternsToml = @"Config\boss2_patterns.toml";
+
+        /// <summary>camera.toml の相対パス。</summary>
+        public const string CameraToml = @"Config\camera.toml";
 
         /// <summary>player.toml の相対パス。</summary>
         public const string PlayerToml = @"Config\player.toml";

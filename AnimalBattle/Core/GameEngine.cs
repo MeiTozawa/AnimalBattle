@@ -205,6 +205,28 @@ public static class GameEngine {
     }
 
     /// <summary>
+    ///     カメラシェイク等によるグローバル描画オフセット X（ピクセル）。
+    /// </summary>
+    public static int CameraOffsetX { get; private set; }
+
+    /// <summary>
+    ///     カメラシェイク等によるグローバル描画オフセット Y（ピクセル）。
+    /// </summary>
+    public static int CameraOffsetY { get; private set; }
+
+    /// <summary>
+    ///     グローバルカメラ描画オフセットを設定します。
+    /// </summary>
+    /// <param name="x">X 軸オフセット</param>
+    /// <param name="y">Y 軸オフセット</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void SetCameraOffset(int x, int y)
+    {
+        CameraOffsetX = x;
+        CameraOffsetY = y;
+    }
+
+    /// <summary>
     ///     円を画面上に描画します。
     /// </summary>
     /// <param name="center">中心座標 (<see cref="Vec2i" />)</param>
@@ -213,7 +235,7 @@ public static class GameEngine {
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawCircle(Vec2i center, int radius, Color color, bool fill)
     {
-        _commandBuffer.PushDrawCircle(center.X, center.Y, radius, color.ToUint(), fill);
+        _commandBuffer.PushDrawCircle(center.X + CameraOffsetX, center.Y + CameraOffsetY, radius, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -226,7 +248,7 @@ public static class GameEngine {
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawCircle(int x, int y, int radius, Color color, bool fill)
     {
-        _commandBuffer.PushDrawCircle(x, y, radius, color.ToUint(), fill);
+        _commandBuffer.PushDrawCircle(x + CameraOffsetX, y + CameraOffsetY, radius, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -235,7 +257,18 @@ public static class GameEngine {
     /// <param name="circles">緊密配置された円パケットの読み取り専用スパン。</param>
     public static void DrawCirclesBatch(ReadOnlySpan<CompactCirclePacket> circles)
     {
-        _commandBuffer.PushCompactCirclesBatch(circles);
+        if (CameraOffsetX == 0 && CameraOffsetY == 0)
+        {
+            _commandBuffer.PushCompactCirclesBatch(circles);
+        }
+        else
+        {
+            for (var i = 0; i < circles.Length; i++)
+            {
+                var c = circles[i];
+                _commandBuffer.PushDrawCircle(c.CenterX + CameraOffsetX, c.CenterY + CameraOffsetY, c.Radius, c.Color, c.Fill != 0);
+            }
+        }
     }
 
     /// <summary>
@@ -247,7 +280,7 @@ public static class GameEngine {
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawBox(Vec2i p1, Vec2i p2, Color color, bool fill)
     {
-        _commandBuffer.PushDrawBox(p1.X, p1.Y, p2.X, p2.Y, color.ToUint(), fill);
+        _commandBuffer.PushDrawBox(p1.X + CameraOffsetX, p1.Y + CameraOffsetY, p2.X + CameraOffsetX, p2.Y + CameraOffsetY, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -261,7 +294,7 @@ public static class GameEngine {
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawBox(int x1, int y1, int x2, int y2, Color color, bool fill)
     {
-        _commandBuffer.PushDrawBox(x1, y1, x2, y2, color.ToUint(), fill);
+        _commandBuffer.PushDrawBox(x1 + CameraOffsetX, y1 + CameraOffsetY, x2 + CameraOffsetX, y2 + CameraOffsetY, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -273,7 +306,7 @@ public static class GameEngine {
     /// <param name="thickness">線の太さ</param>
     public static void DrawLine(Vec2i p1, Vec2i p2, Color color, int thickness = 1)
     {
-        _commandBuffer.PushDrawLine(p1.X, p1.Y, p2.X, p2.Y, color.ToUint(), thickness);
+        _commandBuffer.PushDrawLine(p1.X + CameraOffsetX, p1.Y + CameraOffsetY, p2.X + CameraOffsetX, p2.Y + CameraOffsetY, color.ToUint(), thickness);
     }
 
     /// <summary>
@@ -287,7 +320,7 @@ public static class GameEngine {
     /// <param name="thickness">線の太さ</param>
     public static void DrawLine(int x1, int y1, int x2, int y2, Color color, int thickness = 1)
     {
-        _commandBuffer.PushDrawLine(x1, y1, x2, y2, color.ToUint(), thickness);
+        _commandBuffer.PushDrawLine(x1 + CameraOffsetX, y1 + CameraOffsetY, x2 + CameraOffsetX, y2 + CameraOffsetY, color.ToUint(), thickness);
     }
 
     /// <summary>
@@ -298,7 +331,7 @@ public static class GameEngine {
     /// <param name="color">描画カラー (<see cref="Color" />)</param>
     public static void DrawString(Vec2i pos, string text, Color color)
     {
-        _commandBuffer.PushDrawString(pos.X, pos.Y, text, color.ToUint());
+        _commandBuffer.PushDrawString(pos.X + CameraOffsetX, pos.Y + CameraOffsetY, text, color.ToUint());
     }
 
     /// <summary>
@@ -310,7 +343,7 @@ public static class GameEngine {
     /// <param name="color">描画カラー (<see cref="Color" />)</param>
     public static void DrawString(int x, int y, string text, Color color)
     {
-        _commandBuffer.PushDrawString(x, y, text, color.ToUint());
+        _commandBuffer.PushDrawString(x + CameraOffsetX, y + CameraOffsetY, text, color.ToUint());
     }
 
     /// <summary>
@@ -322,7 +355,7 @@ public static class GameEngine {
     /// <param name="color">描画カラー (<see cref="Color" />)</param>
     public static void DrawString(int x, int y, ReadOnlySpan<char> text, Color color)
     {
-        _commandBuffer.PushDrawString(x, y, text, color.ToUint());
+        _commandBuffer.PushDrawString(x + CameraOffsetX, y + CameraOffsetY, text, color.ToUint());
     }
 
     /// <summary>
@@ -333,7 +366,7 @@ public static class GameEngine {
     /// <param name="trans">透過を有効にするかどうか</param>
     public static void DrawGraph(Vec2i pos, int handle, bool trans)
     {
-        _commandBuffer.PushDrawGraph(pos.X, pos.Y, handle, trans);
+        _commandBuffer.PushDrawGraph(pos.X + CameraOffsetX, pos.Y + CameraOffsetY, handle, trans);
     }
 
     /// <summary>
@@ -345,7 +378,7 @@ public static class GameEngine {
     /// <param name="trans">透過を有効にするかどうか</param>
     public static void DrawGraph(int x, int y, int handle, bool trans)
     {
-        _commandBuffer.PushDrawGraph(x, y, handle, trans);
+        _commandBuffer.PushDrawGraph(x + CameraOffsetX, y + CameraOffsetY, handle, trans);
     }
 
     /// <summary>
@@ -358,7 +391,7 @@ public static class GameEngine {
     /// <param name="trans">透過描画を有効にするかどうか</param>
     public static void DrawRotaGraph(Vec2i center, double scale, double angle, int handle, bool trans)
     {
-        _commandBuffer.PushDrawRotaGraph(center.X, center.Y, (float)scale, (float)angle, handle, trans);
+        _commandBuffer.PushDrawRotaGraph(center.X + CameraOffsetX, center.Y + CameraOffsetY, (float)scale, (float)angle, handle, trans);
     }
 
     /// <summary>
@@ -383,7 +416,7 @@ public static class GameEngine {
         bool turnX)
     {
         _commandBuffer.PushDrawRectRotaGraph(
-            center.X, center.Y,
+            center.X + CameraOffsetX, center.Y + CameraOffsetY,
             srcPos.X, srcPos.Y,
             srcSize.X, srcSize.Y,
             (float)scale, (float)angle,
@@ -420,7 +453,7 @@ public static class GameEngine {
         bool turnX)
     {
         _commandBuffer.PushDrawRectRotaGraph(
-            x, y,
+            x + CameraOffsetX, y + CameraOffsetY,
             srcX, srcY,
             width, height,
             (float)scale, (float)angle,

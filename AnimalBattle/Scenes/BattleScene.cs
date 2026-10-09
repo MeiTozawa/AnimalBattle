@@ -277,6 +277,9 @@ public class BattleScene : IDisposable {
 
         // 2. ECS 全量シミュレーションパイプライン（意図消費 -> 物理積分 -> 武器冷却 -> 衝突判定 -> ダメージ裁定 -> アニメーション歩進）
         _ecsWorld.Progress(deltaTime);
+
+        // 3. カメラシェイク・振動減衰更新
+        CameraService.Update(deltaTime);
     }
 
     private void HandleInput()
@@ -303,6 +306,7 @@ public class BattleScene : IDisposable {
         CombatEffectHelper.ClearAllBossBullets(_ecsWorld);
         _playerBulletsQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
         _vfxQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
+        CameraService.Reset();
         Player.Reset(ConfigManager.Player);
     }
 
@@ -311,8 +315,10 @@ public class BattleScene : IDisposable {
     /// </summary>
     public void Render()
     {
+        GameEngine.SetCameraOffset(CameraService.OffsetX, CameraService.OffsetY);
         _worldRenderer.Render(_tileMap, _platformQuery);
-        HudRenderSystem.Render(Player, Boss, Player.RemainingJumps);
         _debugRenderer.Render(_platformQuery, _tileMap);
+        GameEngine.SetCameraOffset(0, 0);
+        HudRenderSystem.Render(Player, Boss, Player.RemainingJumps);
     }
 }

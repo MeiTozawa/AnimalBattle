@@ -64,6 +64,9 @@ public sealed class BakedConfigBundle {
     /// <summary>描画・カメラ・UI 設定</summary>
     public RenderConfig Render { get; set; } = new();
 
+    /// <summary>カメラ・画面振動設定</summary>
+    public CameraConfig Camera { get; set; } = new();
+
     /// <summary>タイルセット設定</summary>
     public TileSetConfig TileSet { get; set; } = new();
 }
@@ -92,6 +95,7 @@ public sealed class BakedConfigBundle {
 
 [JsonSerializable(typeof(TileMapConfig))]
 [JsonSerializable(typeof(RenderConfig))]
+[JsonSerializable(typeof(CameraConfig))]
 [JsonSerializable(typeof(TileSetConfig))]
 [JsonSerializable(typeof(AnimationClipConfig))]
 [JsonSerializable(typeof(AnimationConfig))]

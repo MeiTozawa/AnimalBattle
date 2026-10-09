@@ -49,6 +49,7 @@ _CONFIG_MAP = {
     "SpecialBullet": _CONFIG_DIR / "special_bullets.toml",
     "Arena": _CONFIG_DIR / "arena.toml",
     "Render": _CONFIG_DIR / "render.toml",
+    "Camera": _CONFIG_DIR / "camera.toml",
     "TileSet": _RESOURCE_DIR / "Platform" / "sheet.toml",
 }
 
