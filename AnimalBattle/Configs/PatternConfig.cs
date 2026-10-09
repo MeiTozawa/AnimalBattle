@@ -70,7 +70,7 @@ public sealed class DiveRamConfig {
     public Color ImpactOutlineColor { get; set; }
 
     /// <summary>着地炸裂弾の特殊弾幕種別（Magenta, Cyan, Yellow, Black, Normal）</summary>
-    public string BulletType { get; set; } = "Magenta";
+    public string BulletType { get; set; } = string.Empty;
 
     /// <summary>突進残影トレイルカラー</summary>
     public Color TrailColor { get; set; }

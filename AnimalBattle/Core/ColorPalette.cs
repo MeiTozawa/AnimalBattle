@@ -171,4 +171,38 @@ public static class ColorPalette {
 
     /// <summary>無敵時間シールド光輪色 (0x8800FFFF)</summary>
     public static readonly Color InvincibleShield = Color.FromArgb(0x88, 0x00, 0xFF, 0xFF);
+
+    // ==========================================
+    // 特殊弾幕種別専用カラー (BulletType Palette)
+    // ==========================================
+
+    /// <summary>品紅弾幕塗りつぶし色 (0xFFFF1493)</summary>
+    public static readonly Color BulletMagentaFill = Color.FromArgb(0xFF, 0xFF, 0x14, 0x93);
+
+    /// <summary>品紅弾幕外枠発光色 (0xFFFF80AB)</summary>
+    public static readonly Color BulletMagentaOutline = Color.FromArgb(0xFF, 0xFF, 0x80, 0xAB);
+
+    /// <summary>黄弾幕塗りつぶしゴールド (0xFFFFD700)</summary>
+    public static readonly Color BulletYellowFill = Color.FromArgb(0xFF, 0xFF, 0xD7, 0x00);
+
+    /// <summary>黄弾幕外枠発光色 (0xFFFFF275)</summary>
+    public static readonly Color BulletYellowOutline = Color.FromArgb(0xFF, 0xFF, 0xF2, 0x75);
+
+    /// <summary>黄弾幕副螺旋塗りつぶしエレクトリックイエロー (0xFFFFEA00)</summary>
+    public static readonly Color BulletYellowSubFill = Color.FromArgb(0xFF, 0xFF, 0xEA, 0x00);
+
+    /// <summary>黄弾幕副螺旋外枠明黄色 (0xFFFFFF8D)</summary>
+    public static readonly Color BulletYellowSubOutline = Color.FromArgb(0xFF, 0xFF, 0xFF, 0x8D);
+
+    /// <summary>青弾幕塗りつぶし電光シアン (0xFF00E5FF)</summary>
+    public static readonly Color BulletCyanFill = Color.FromArgb(0xFF, 0x00, 0xE5, 0xFF);
+
+    /// <summary>青弾幕外枠発光シアン白 (0xFFE0F7FA)</summary>
+    public static readonly Color BulletCyanOutline = Color.FromArgb(0xFF, 0xE0, 0xF7, 0xFA);
+
+    /// <summary>黒弾幕塗りつぶし暗黒コア (0xFF111116)</summary>
+    public static readonly Color BulletBlackFill = Color.FromArgb(0xFF, 0x11, 0x11, 0x16);
+
+    /// <summary>黒弾幕外枠クリムゾン発光 (0xFFFF1744)</summary>
+    public static readonly Color BulletBlackOutline = Color.FromArgb(0xFF, 0xFF, 0x17, 0x44);
 }
