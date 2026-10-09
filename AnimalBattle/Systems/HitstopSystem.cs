@@ -1,11 +1,10 @@
-using System;
 using AnimalBattle.Components;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
-///     ヒットストップ（時間凍結）およびスプライト微小振動（Jitter）の減衰を制御する ECS System。
+///     ヒットストップ（時間凍結）のタイマー減衰および解除を制御する ECS システム。
 /// </summary>
 public static class HitstopSystem
 {
@@ -18,27 +17,15 @@ public static class HitstopSystem
     {
         world.System<HitstopState>("HitstopStateSystem")
             .Kind(Ecs.PreUpdate)
-            .Each((it, i, ref hitstop) =>
+            .Each((Iter it, int i, ref HitstopState hitstop) =>
             {
                 hitstop.RemainingSeconds -= it.DeltaTime();
                 if (hitstop.RemainingSeconds <= 0.0f)
                 {
                     var entity = it.Entity(i);
                     entity.Remove<HitstopState>();
-                    if (entity.Has<SpriteJitter>())
-                    {
-                        entity.Remove<SpriteJitter>();
-                    }
+                    entity.Remove<SpriteJitter>();
                 }
-            });
-
-        world.System<SpriteJitter>("SpriteJitterSystem")
-            .Kind(Ecs.PreUpdate)
-            .Each((it, i, ref jitter) =>
-            {
-                jitter.Timer += it.DeltaTime();
-                jitter.CurrentOffsetX = MathF.Sin(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeX;
-                jitter.CurrentOffsetY = MathF.Cos(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeY;
             });
 
         return world;
