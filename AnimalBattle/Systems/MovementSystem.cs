@@ -1,3 +1,4 @@
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
@@ -45,7 +46,7 @@ public static class MovementSystem {
                     ref var intent = ref intents[i];
                     ref var jump = ref jumps[i];
 
-                    ExecuteKinematics(ref trans, ref vel, ref col, in intent, ref jump, dt, pQuery, cfg, world);
+                    ExecuteKinematics(it.Entity(i), ref trans, ref vel, ref col, in intent, ref jump, dt, pQuery, cfg, world);
                 }
             });
 
@@ -53,6 +54,7 @@ public static class MovementSystem {
     }
 
     private static void ExecuteKinematics(
+        Entity entity,
         ref Transform trans,
         ref Velocity vel,
         ref CollisionBox col,
@@ -63,6 +65,7 @@ public static class MovementSystem {
         ArenaConfig? arenaCfg,
         World? effectWorld)
     {
+        var wasGrounded = col.IsGrounded;
         // 1. 水平移動の加減速・摩擦制動の適用
         var targetVx = intent.MoveX * jump.MoveSpeed;
         if (jump.GroundAcceleration > 0.0f)
@@ -121,6 +124,7 @@ public static class MovementSystem {
         // 跳躍の判定と実行
         if (jump.JumpBufferTimer > 0.0f)
         {
+            var didJump = false;
             if (col.IsGrounded || jump.CoyoteTimer > 0.0f)
             {
                 // 地面初段ジャンプ（接地またはコヨーテ猶予内）
@@ -129,6 +133,7 @@ public static class MovementSystem {
                 jump.CoyoteTimer = 0.0f;
                 jump.JumpBufferTimer = 0.0f;
                 jump.RemainingJumps = jump.MaxJumps - 1;
+                didJump = true;
             }
             else if (jump.RemainingJumps > 0)
             {
@@ -136,8 +141,19 @@ public static class MovementSystem {
                 vel.Vy = jump.SecondJumpVelocity;
                 jump.RemainingJumps--;
                 jump.JumpBufferTimer = 0.0f;
+                didJump = true;
                 if (effectWorld.HasValue)
                     CombatEffectHelper.SpawnJumpRingEffect(effectWorld.Value, trans.X, trans.Y + col.Height / 2.0f);
+            }
+
+            if (didJump && entity.Has<SpringScale>())
+            {
+                ref var spring = ref entity.GetMut<SpringScale>();
+                var pCfg = ConfigManager.Player;
+                spring.CurrentX = pCfg.JumpStretchScaleX;
+                spring.CurrentY = pCfg.JumpStretchScaleY;
+                spring.VelX = 0.0f;
+                spring.VelY = 0.0f;
             }
         }
 
@@ -204,6 +220,17 @@ public static class MovementSystem {
                 adjustedPosY = floorLimitY;
                 adjustedVy = 0.0f;
             }
+        }
+
+        // 接地瞬間時の押し潰し演出（横広スカッシュ）
+        if (!wasGrounded && isGrounded && entity.Has<SpringScale>())
+        {
+            ref var spring = ref entity.GetMut<SpringScale>();
+            var pCfg = ConfigManager.Player;
+            spring.CurrentX = pCfg.LandSquashScaleX;
+            spring.CurrentY = pCfg.LandSquashScaleY;
+            spring.VelX = 0.0f;
+            spring.VelY = 0.0f;
         }
 
         if (isGrounded) jump.RemainingJumps = jump.MaxJumps;

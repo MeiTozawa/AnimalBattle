@@ -34,6 +34,7 @@ public sealed class PlayerPawn : Pawn
            .Set(new WeaponIntent())
            .Set(JumpCapability.FromPlayerConfig(pCfg))
            .Set(WeaponState.FromPlayerConfig(pCfg))
+           .Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio))
            .Add<PlayerTag>();
     }
 
@@ -69,6 +70,7 @@ public sealed class PlayerPawn : Pawn
 
         Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
         Entity.Set(WeaponState.FromPlayerConfig(pCfg));
+        Entity.Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio));
         Entity.GetMut<MovementIntent>().Reset();
         Entity.GetMut<WeaponIntent>().Reset();
 

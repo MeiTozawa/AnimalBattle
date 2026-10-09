@@ -2,6 +2,7 @@ using System.Drawing;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Characters;
 using AnimalBattle.Characters.Boss;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps;
 using AnimalBattle.Scenes;
@@ -441,15 +442,25 @@ public sealed class WorldRenderSystem : IDisposable {
             jitterY = jitter.CurrentOffsetY;
         }
 
+        var springScale = 1.0f;
+        var springOffsetY = 0.0f;
+        if (player.Entity.Has<SpringScale>())
+        {
+            ref readonly var spring = ref player.Entity.Get<SpringScale>();
+            springScale = (spring.CurrentX + spring.CurrentY) * 0.5f;
+            var halfH = player.Sprite.SrcRect.Height * player.ScaleX * 0.5f;
+            springOffsetY = (1.0f - spring.CurrentY) * (halfH * 0.4f);
+        }
+
         if (!isInvincibleBlinking)
             GameEngine.DrawRectRotaGraph(
                 (int)(player.X + jitterX),
-                (int)(player.Y + jitterY),
+                (int)(player.Y + jitterY + springOffsetY),
                 player.Sprite.SrcRect.X1,
                 player.Sprite.SrcRect.Y1,
                 player.Sprite.SrcRect.Width,
                 player.Sprite.SrcRect.Height,
-                player.ScaleX,
+                player.ScaleX * springScale,
                 0.0,
                 player.Sprite.GraphHandle,
                 true,

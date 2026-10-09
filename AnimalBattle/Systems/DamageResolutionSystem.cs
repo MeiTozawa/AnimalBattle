@@ -90,6 +90,17 @@ public static class DamageResolutionSystem
                         entity.Set(new SpriteJitter(jitterAmp, 0.0f, 30.0f));
                     }
 
+                    // スプリング被弾押し潰し変形の適用
+                    if (entity.Has<SpringScale>())
+                    {
+                        ref var spring = ref entity.GetMut<SpringScale>();
+                        var pCfg = ConfigManager.Player;
+                        spring.CurrentX = pCfg.HitSquashScaleX;
+                        spring.CurrentY = pCfg.HitSquashScaleY;
+                        spring.VelX = 0.0f;
+                        spring.VelY = 0.0f;
+                    }
+
                     // ノックバック物理インパルスの適用
                     if (entity.Has<PlayerTag>() && entity.Has<Velocity>())
                     {

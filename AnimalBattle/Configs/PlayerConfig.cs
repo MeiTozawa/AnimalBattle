@@ -148,6 +148,30 @@ public sealed class PlayerConfig {
     /// <summary>強攻撃・弱点ヒットストップ時間（秒）</summary>
     public float HitstopHeavyDuration { get; set; }
 
+    /// <summary>スプリング固有振動数（Hz）</summary>
+    public float SpringFrequency { get; set; }
+
+    /// <summary>スプリング減衰比</summary>
+    public float SpringDampingRatio { get; set; }
+
+    /// <summary>跳躍開始時ストレッチ拡大率 X</summary>
+    public float JumpStretchScaleX { get; set; }
+
+    /// <summary>跳躍開始時ストレッチ拡大率 Y</summary>
+    public float JumpStretchScaleY { get; set; }
+
+    /// <summary>着地時スカッシュ拡大率 X</summary>
+    public float LandSquashScaleX { get; set; }
+
+    /// <summary>着地時スカッシュ拡大率 Y</summary>
+    public float LandSquashScaleY { get; set; }
+
+    /// <summary>被弾衝撃時スカッシュ拡大率 X</summary>
+    public float HitSquashScaleX { get; set; }
+
+    /// <summary>被弾衝撃時スカッシュ拡大率 Y</summary>
+    public float HitSquashScaleY { get; set; }
+
     /// <summary>
     ///     設定に基づいたプレイヤー被弾判定 (<see cref="CollisionShape" />) を取得します。
     /// </summary>
