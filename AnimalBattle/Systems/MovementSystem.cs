@@ -128,9 +128,22 @@ public static class MovementSystem {
             }
         }
 
-        // 3. 重力加速度の適用
+        // 3. 重力加速度および可変高度・頂点滞空の適用
+        var effectiveGravity = jump.Gravity;
+
+        // キー解放時の上昇速度減衰（小ジャンプ制御）
+        if (vel.Vy < 0.0f && !intent.JumpHolding && jump.JumpCutDamping > 0.0f)
+        {
+            effectiveGravity /= jump.JumpCutDamping;
+        }
+        else if (MathF.Abs(vel.Vy) < jump.ApexFloatVelocityThreshold && jump.ApexFloatGravityMultiplier > 0.0f)
+        {
+            // 頂点付近の滞空時間延長（浮遊感・狙い撃ち猶予の付与）
+            effectiveGravity *= jump.ApexFloatGravityMultiplier;
+        }
+
         var currentVy = vel.Vy;
-        PhysicsService.ApplyGravity(ref currentVy, jump.Gravity, jump.MaxFallSpeed, dt);
+        PhysicsService.ApplyGravity(ref currentVy, effectiveGravity, jump.MaxFallSpeed, dt);
         vel.Vy = currentVy;
 
         // 4. 次フレーム目標座標の算出
