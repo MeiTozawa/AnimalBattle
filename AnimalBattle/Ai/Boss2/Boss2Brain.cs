@@ -43,6 +43,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     private bool _isWallStunned;
 
     private Vec2f _currentVelocity;
+    private Vec2f _leapStartPosition;
     private bool _facingRight = true;
 
     /// <summary>Boss 2 ブレインを初期化します。</summary>
@@ -241,6 +242,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     {
         _currentPosition = new Vec2f(x, y);
         _targetPosition = new Vec2f(x, y);
+        _leapStartPosition = new Vec2f(x, y);
         _currentVelocity = Vec2f.Zero;
         _facingRight = true;
         _stateTimer = 0.0f;
@@ -301,7 +303,7 @@ public sealed class Boss2Brain : BaseBossBrain {
             }
             else if (_combatMachine.CurrentState == _abilityState)
             {
-                UpdateAbility(isOnWall);
+                UpdateAbility(dt, isOnWall, isGrounded, playerPosition);
             }
         }
         else if (_rootMachine.CurrentState == _reactionMachine)
@@ -441,6 +443,10 @@ public sealed class Boss2Brain : BaseBossBrain {
             if (_asc.TryActivateAbility(chosenSkill, dir))
             {
                 _targetPosition = new Vec2f(_currentPosition.X + dx, _currentPosition.Y + dy);
+                if (chosenSkill == BossSkill.LeapSmash)
+                {
+                    _leapStartPosition = _currentPosition;
+                }
                 _currentVelocity = Vec2f.Zero;
                 _combatMachine.ChangeState(_abilityState);
                 return;
@@ -452,6 +458,11 @@ public sealed class Boss2Brain : BaseBossBrain {
             var antiKiteSkill = isSamePlatform ? BossSkill.GroundStomp : BossSkill.LeapSmash;
             if (_asc.TryActivateAbility(antiKiteSkill, dir))
             {
+                _targetPosition = new Vec2f(_currentPosition.X + dx, _currentPosition.Y + dy);
+                if (antiKiteSkill == BossSkill.LeapSmash)
+                {
+                    _leapStartPosition = _currentPosition;
+                }
                 _currentVelocity = Vec2f.Zero;
                 _combatMachine.ChangeState(_abilityState);
             }
@@ -500,7 +511,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         }
     }
 
-    private void UpdateAbility(bool isOnWall)
+    private void UpdateAbility(float dt, bool isOnWall, bool isGrounded, Vec2f playerPos)
     {
         if (CurrentSkill == BossSkill.FrenzyCharge &&
             _asc.SkillRunner.CurrentPhase == SkillPhase.Active &&
@@ -510,6 +521,85 @@ public sealed class Boss2Brain : BaseBossBrain {
             _isWallStunned = true;
             _reactionMachine.ChangeState(_wallCrashStunState);
             _rootMachine.ChangeState(_reactionMachine);
+            return;
+        }
+
+        if (CurrentSkill == BossSkill.LeapSmash)
+        {
+            UpdateLeapSmashMotion(dt, isGrounded, playerPos);
+        }
+    }
+
+    private void UpdateLeapSmashMotion(float dt, bool isGrounded, Vec2f playerPos)
+    {
+        var runner = _asc.SkillRunner;
+        var patternCfg = ConfigManager.Boss2Patterns.LeapSmash;
+        var flyDuration = patternCfg.FlyDuration > 0.0f ? patternCfg.FlyDuration : 0.45f;
+        var peakY = patternCfg.PeakAltitudeY > 0.0f ? patternCfg.PeakAltitudeY : 130.0f;
+        var hangDuration = patternCfg.ApexHangDuration > 0.0f ? patternCfg.ApexHangDuration : 0.50f;
+        var descentSpeed = patternCfg.DescentSpeed > 0.0f ? patternCfg.DescentSpeed : 1200.0f;
+
+        if (runner.CurrentPhase == SkillPhase.Telegraph)
+        {
+            _currentVelocity = Vec2f.Zero;
+            _targetPosition = playerPos;
+            _leapStartPosition = _currentPosition;
+            var dx = _targetPosition.X - _currentPosition.X;
+            if (MathF.Abs(dx) > _configuration.CombatSettings.MoveThreshold)
+            {
+                _facingRight = dx > 0.0f;
+            }
+            return;
+        }
+
+        if (runner.CurrentPhase == SkillPhase.Active)
+        {
+            var elapsed = runner.PhaseElapsed;
+
+            // 1. 上昇飛翔フェーズ (0.0 ～ FlyDuration)
+            if (elapsed < flyDuration)
+            {
+                var progress = Math.Clamp(elapsed / flyDuration, 0.0f, 1.0f);
+                var easeProgress = MathF.Sin(progress * MathF.PI * 0.5f); // Smooth Sine EaseOut
+
+                var desiredX = _leapStartPosition.X + (_targetPosition.X - _leapStartPosition.X) * easeProgress;
+                var desiredY = _leapStartPosition.Y + (peakY - _leapStartPosition.Y) * easeProgress;
+
+                var vx = dt > 0.0f ? (desiredX - _currentPosition.X) / dt : 0.0f;
+                var vy = dt > 0.0f ? (desiredY - _currentPosition.Y) / dt : 0.0f;
+                _currentVelocity = new Vec2f(vx, vy);
+
+                var dx = _targetPosition.X - _currentPosition.X;
+                if (MathF.Abs(dx) > _configuration.CombatSettings.MoveThreshold)
+                    _facingRight = dx > 0.0f;
+            }
+            // 2. 最高点懸停フェーズ (FlyDuration ～ FlyDuration + ApexHangDuration)
+            else if (elapsed < flyDuration + hangDuration)
+            {
+                var desiredX = _targetPosition.X;
+                var desiredY = peakY;
+                var vx = dt > 0.0f ? (desiredX - _currentPosition.X) / dt : 0.0f;
+                var vy = dt > 0.0f ? (desiredY - _currentPosition.Y) / dt : 0.0f;
+                _currentVelocity = new Vec2f(vx, vy);
+            }
+            // 3. 垂直急降下叩きつけフェーズ
+            else
+            {
+                if (isGrounded && elapsed > flyDuration + hangDuration + 0.05f)
+                {
+                    _currentVelocity = Vec2f.Zero;
+                }
+                else
+                {
+                    _currentVelocity = new Vec2f(0.0f, descentSpeed);
+                }
+            }
+            return;
+        }
+
+        if (runner.CurrentPhase == SkillPhase.Recovery)
+        {
+            _currentVelocity = Vec2f.Zero;
         }
     }
 

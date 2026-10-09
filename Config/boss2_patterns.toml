@@ -75,7 +75,7 @@ StrParam = ""
 SkillName = "Titan Leap Smash"
 WindUpTime = 0.40
 TelegraphColor = 0xFFFF3D00
-CastDuration = 0.75
+CastDuration = 1.60
 RecoveryTime = 0.80
 DefaultCooldown = 6.0
 JumpForce = 680.0
@@ -83,6 +83,8 @@ FlyDuration = 0.45
 PeakAltitudeY = 130.0
 ApexHangDuration = 0.5
 DescentSpeed = 1200.0
+SlashRadius = 80.0
+SlashDamage = 1.5
 ShrapnelCount = 6
 ShrapnelAngleStartRatio = 0.15
 ShrapnelAngleSpanRatio = 0.70
@@ -93,20 +95,12 @@ ShrapnelFillColor = 0xFFFF6D00
 ShrapnelOutlineColor = 0xFFFFD180
 
 [[LeapSmash.Events]]
-Time = 0.45
-Type = "hitbox"
+Time = 0.10
+Type = "ongroundedhitbox"
 Param0 = 0.0
 Param1 = 0.0
 Param2 = 1.0
 StrParam = "SmashImpact"
-
-[[LeapSmash.Events]]
-Time = 0.45
-Type = "shake"
-Param0 = 10.0
-Param1 = 0.35
-Param2 = 0.0
-StrParam = ""
 
 [DoubleCleave]
 SkillName = "Twin Cleave Fury"

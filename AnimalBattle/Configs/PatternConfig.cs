@@ -534,6 +534,12 @@ public sealed class LeapSmashConfig {
     /// <summary>破片外枠カラー</summary>
     public Color ShrapnelOutlineColor { get; set; }
 
+    /// <summary>着地叩きつけ近接判定半径</summary>
+    public float SlashRadius { get; set; } = 80.0f;
+
+    /// <summary>着地叩きつけダメージ</summary>
+    public float SlashDamage { get; set; } = 1.5f;
+
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 }

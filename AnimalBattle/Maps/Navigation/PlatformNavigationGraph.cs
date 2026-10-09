@@ -189,15 +189,15 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
 
         // 1. 同一プラットフォーム上にいる場合は直接歩行追従
         if (currentNode != null && targetNode != null && currentNode.Id == targetNode.Id)
-            return NavPlan.CreateDirectWalk(targetX, moveSpeed, currentNode, targetNode);
+            return NavPlan.CreateDirectWalk(currentX, targetX, moveSpeed, currentNode, targetNode, Config.TakeoffTriggerDistance);
 
         // 2. プラットフォームノードが特定できない場合のフォールバック
         if (currentNode == null || targetNode == null)
-            return NavPlan.CreateNoPath(targetX, moveSpeed, currentNode, targetNode);
+            return NavPlan.CreateNoPath(currentX, targetX, moveSpeed, currentNode, targetNode);
 
         // 3. A* 経路探索
         if (!TrySearchAStar(currentNode, targetNode, currentX, targetX, out var path) || path.Count == 0)
-            return NavPlan.CreateNoPath(targetX, moveSpeed, currentNode, targetNode);
+            return NavPlan.CreateNoPath(currentX, targetX, moveSpeed, currentNode, targetNode);
 
         var firstLink = path[0];
 

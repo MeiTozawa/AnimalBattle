@@ -73,15 +73,22 @@ public sealed class NavPlan(
     /// <summary>
     ///     同一プラットフォーム内での直接歩行追従プランを生成します。
     /// </summary>
-    public static NavPlan CreateDirectWalk(float targetX, float moveSpeed, PlatformNode? currentNode,
-        PlatformNode? targetNode)
+    public static NavPlan CreateDirectWalk(
+        float currentX,
+        float targetX,
+        float moveSpeed,
+        PlatformNode? currentNode,
+        PlatformNode? targetNode,
+        float moveThreshold = 15.0f)
     {
+        var dx = targetX - currentX;
+        var dir = MathF.Abs(dx) > moveThreshold ? MathF.Sign(dx) : 0.0f;
         return new NavPlan(
             NavStatus.DirectWalk,
             targetX,
             targetX,
             targetX,
-            moveSpeed,
+            dir * moveSpeed,
             0.0f,
             currentNode,
             targetNode);
@@ -90,15 +97,22 @@ public sealed class NavPlan(
     /// <summary>
     ///     経路が存在しない場合のフォールバックプランを生成します。
     /// </summary>
-    public static NavPlan CreateNoPath(float targetX, float moveSpeed, PlatformNode? currentNode,
-        PlatformNode? targetNode)
+    public static NavPlan CreateNoPath(
+        float currentX,
+        float targetX,
+        float moveSpeed,
+        PlatformNode? currentNode,
+        PlatformNode? targetNode,
+        float moveThreshold = 15.0f)
     {
+        var dx = targetX - currentX;
+        var dir = MathF.Abs(dx) > moveThreshold ? MathF.Sign(dx) : 0.0f;
         return new NavPlan(
             NavStatus.NoPath,
             targetX,
             targetX,
             targetX,
-            moveSpeed,
+            dir * moveSpeed,
             0.0f,
             currentNode,
             targetNode);

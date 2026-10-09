@@ -93,12 +93,15 @@ public sealed class Boss2Agent : BaseBossAgent
             new Vec2f(trans.X, trans.Y));
 
         vel.Vx = _brain.Velocity.X;
-        if (_brain.State == Boss2State.PlatformTraverse || isGrounded)
+        var isControlledAirborne = _brain.State == Boss2State.PlatformTraverse
+            || (_brain.AbilitySystem.IsCasting && _brain.CurrentSkill == BossSkill.LeapSmash);
+
+        if (isControlledAirborne || isGrounded)
         {
             vel.Vy = _brain.Velocity.Y;
         }
 
-        UpdateMovementAndCollision(ref trans, ref vel, ref col, deltaTime, platformQuery);
+        UpdateMovementAndCollision(ref trans, ref vel, ref col, deltaTime, platformQuery, isControlledAirborne);
 
         if (Entity.Has<Sprite>())
         {
@@ -115,13 +118,14 @@ public sealed class Boss2Agent : BaseBossAgent
         ref Velocity vel,
         ref CollisionBox col,
         float dt,
-        Query<Transform, CollisionBox> platformQuery)
+        Query<Transform, CollisionBox> platformQuery,
+        bool isControlledAirborne)
     {
         var b2Cfg = ConfigManager.Boss2;
         var arenaCfg = ConfigManager.Arena;
 
-        // 空中落下物理：PlatformTraverse 状態の独自跳躍積分時を除き、通常重力加速度を適用
-        if (!col.IsGrounded && _brain.State != Boss2State.PlatformTraverse)
+        // 空中落下物理：PlatformTraverse や LeapSmash などの制御空中移動時を除き、通常重力加速度を適用
+        if (!col.IsGrounded && !isControlledAirborne)
         {
             var curVy = vel.Vy;
             PhysicsService.ApplyGravity(ref curVy, b2Cfg.Gravity, b2Cfg.MaxFallSpeed, dt);
@@ -141,7 +145,8 @@ public sealed class Boss2Agent : BaseBossAgent
         var platformGroundY = float.MaxValue;
         var platformVy = 0.0f;
 
-        var ignorePlatforms = _brain.CurrentSkill == BossSkill.LeapSmash;
+        // 制御空中移動時かつ上昇・滞空（vel.Vy <= 0）の間は足場着地判定をスキップ
+        var ignorePlatforms = isControlledAirborne && vel.Vy <= 0.0f;
         if (!ignorePlatforms)
         {
             platformQuery.Each((ref platTrans, ref platCol) =>
@@ -251,6 +256,23 @@ public sealed class Boss2Agent : BaseBossAgent
         }
         else if (skill is BossSkill.GroundStomp or BossSkill.LeapSmash)
         {
+            if (skill == BossSkill.LeapSmash)
+            {
+                var groundY = trans.Y + colHeight / 2.0f;
+                CombatEffectHelper.SpawnMeleeSlashHitbox(
+                    CurrentWorld,
+                    trans.X,
+                    groundY - patternCfg.LeapSmash.SlashRadius * 0.5f,
+                    0.0f,
+                    0.0f,
+                    patternCfg.LeapSmash.SlashRadius * 2.0f,
+                    patternCfg.LeapSmash.SlashRadius * 1.5f,
+                    patternCfg.LeapSmash.SlashDamage,
+                    0.25f,
+                    patternCfg.LeapSmash.ShrapnelFillColor,
+                    SlashDirection.Down);
+            }
+
             BarrageEmitter.EmitBoss2(CurrentWorld, skill, new Vec2f(trans.X, trans.Y), _brain.TargetPosition, forwardDir, colHeight);
         }
     }
