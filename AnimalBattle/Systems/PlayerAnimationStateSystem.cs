@@ -25,6 +25,7 @@ public static class PlayerAnimationStateSystem
         world.System<Velocity, CollisionBox, Health, Animation>("PlayerAnimationStateSystem")
             .With<PlayerTag>()
             .Without<DeadTag>()
+            .Without<HitstopState>()
             .Kind(Ecs.PreUpdate)
             .Each((ref vel, ref col, ref hp, ref anim) =>
             {

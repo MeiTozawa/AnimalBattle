@@ -25,6 +25,7 @@ public static class MovementSystem {
         world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability>("MovementSystem")
            .Kind(Ecs.OnUpdate)
            .Without<DeadTag>()
+           .Without<HitstopState>()
            .Iter((Iter it,
                 Field<Transform> transforms,
                 Field<Velocity> velocities,
@@ -49,27 +50,6 @@ public static class MovementSystem {
             });
 
         return world;
-    }
-
-    /// <summary>
-    ///     単一エンティティのキネマティック運動物理を 1 フレーム分更新します（テストおよび直接呼び出し互換用）。
-    /// </summary>
-    public static void UpdateEntity(
-        Entity entity,
-        float dt,
-        Query<Transform, CollisionBox> platformQuery,
-        ArenaConfig? arenaCfg = null,
-        World? effectWorld = null)
-    {
-        if (!entity.IsAlive()) return;
-
-        ref var trans = ref entity.GetMut<Transform>();
-        ref var vel = ref entity.GetMut<Velocity>();
-        ref var col = ref entity.GetMut<CollisionBox>();
-        ref var intent = ref entity.GetMut<MovementIntent>();
-        ref var jump = ref entity.GetMut<JumpCapability>();
-
-        ExecuteKinematics(ref trans, ref vel, ref col, in intent, ref jump, dt, platformQuery, arenaCfg, effectWorld);
     }
 
     private static void ExecuteKinematics(

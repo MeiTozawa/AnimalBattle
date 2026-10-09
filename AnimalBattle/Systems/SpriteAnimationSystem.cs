@@ -17,6 +17,7 @@ public static class SpriteAnimationSystem {
     {
         world.System<Animation, Sprite>("SpriteAnimationSystem")
            .Kind(Ecs.OnUpdate)
+           .Without<HitstopState>()
            .Each((it, i, ref anim, ref sprite) =>
             {
                 if (!anim.IsPlaying) return;
