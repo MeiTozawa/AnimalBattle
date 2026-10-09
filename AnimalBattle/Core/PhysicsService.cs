@@ -246,6 +246,17 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
+    ///     現在値を目標値へ指定の最大変化量 (maxDelta) を超えない範囲で移動させます。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float MoveTowards(float current, float target, float maxDelta)
+    {
+        if (MathF.Abs(target - current) <= maxDelta)
+            return target;
+        return current + MathF.Sign(target - current) * maxDelta;
+    }
+
+    /// <summary>
     ///     Boss のホバリング調和軌道（2軸正弦・余弦波動＋プレイヤー追従重み＋平滑 Lerp 補間）をインライン計算します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -83,8 +83,41 @@ public static class MovementSystem {
         ArenaConfig? arenaCfg,
         World? effectWorld)
     {
-        // 1. 水平移動意図の適用
-        vel.Vx = intent.MoveX * jump.MoveSpeed;
+        // 1. 水平移動の加減速・摩擦制動の適用
+        var targetVx = intent.MoveX * jump.MoveSpeed;
+        if (jump.GroundAcceleration > 0.0f)
+        {
+            float accel;
+            if (col.IsGrounded)
+            {
+                if (MathF.Abs(targetVx) < float.Epsilon)
+                {
+                    // 停止（接地自然減速）
+                    accel = jump.GroundDeceleration;
+                }
+                else if (MathF.Sign(targetVx) != MathF.Sign(vel.Vx) && MathF.Abs(vel.Vx) > float.Epsilon)
+                {
+                    // 反転（急停止制動）
+                    accel = jump.TurnaroundDeceleration;
+                }
+                else
+                {
+                    // 通常地上加速
+                    accel = jump.GroundAcceleration;
+                }
+            }
+            else
+            {
+                // 空中制御（入力有無に応じた加減速）
+                accel = MathF.Abs(targetVx) > float.Epsilon ? jump.AirAcceleration : jump.AirDeceleration;
+            }
+
+            vel.Vx = PhysicsService.MoveTowards(vel.Vx, targetVx, accel * dt);
+        }
+        else
+        {
+            vel.Vx = targetVx;
+        }
 
         // 2. 先行入力およびコヨーテタイムの更新
         if (intent.JumpTriggered)
