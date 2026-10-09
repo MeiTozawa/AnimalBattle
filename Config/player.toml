@@ -39,3 +39,18 @@ BulletDamage = 1.0
 # 隙あり（Vulnerable / 易傷）状態の Boss に対するダメージ倍率
 VulnerableDamageMultiplier = 2.0
 
+# --- プレイヤー運動・操作感設定 ---
+JumpBufferDuration = 0.10
+CoyoteTimeDuration = 0.10
+JumpCutDamping = 0.50
+ApexFloatVelocityThreshold = 90.0
+ApexFloatGravityMultiplier = 0.45
+
+GroundAcceleration = 2880.0
+GroundDeceleration = 3600.0
+TurnaroundDeceleration = 6400.0
+AirAcceleration = 1800.0
+AirDeceleration = 1200.0
+
+HitstopLightDuration = 0.05
+HitstopHeavyDuration = 0.12

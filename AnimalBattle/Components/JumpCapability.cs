@@ -27,6 +27,42 @@ public struct JumpCapability
     /// <summary>現在の残り跳躍可能回数。</summary>
     public int RemainingJumps;
 
+    /// <summary>先行入力猶予時間（秒）。</summary>
+    public float JumpBufferDuration;
+
+    /// <summary>現在の先行入力タイマー（秒）。</summary>
+    public float JumpBufferTimer;
+
+    /// <summary>コヨーテタイム猶予時間（秒）。</summary>
+    public float CoyoteTimeDuration;
+
+    /// <summary>現在のコヨーテタイムタイマー（秒）。</summary>
+    public float CoyoteTimer;
+
+    /// <summary>ジャンプ中断時の上昇速度減衰率。</summary>
+    public float JumpCutDamping;
+
+    /// <summary>頂点滞空判定の速度閾値（px/s）。</summary>
+    public float ApexFloatVelocityThreshold;
+
+    /// <summary>頂点滞空時の重力倍率。</summary>
+    public float ApexFloatGravityMultiplier;
+
+    /// <summary>地面初速加速度（px/s²）。</summary>
+    public float GroundAcceleration;
+
+    /// <summary>地面自然減速加速度（px/s²）。</summary>
+    public float GroundDeceleration;
+
+    /// <summary>地面反転制動加速度（px/s²）。</summary>
+    public float TurnaroundDeceleration;
+
+    /// <summary>空中移動加速度（px/s²）。</summary>
+    public float AirAcceleration;
+
+    /// <summary>空中自然減速加速度（px/s²）。</summary>
+    public float AirDeceleration;
+
     /// <summary>
     ///     プレイヤー設定（PlayerConfig）から跳躍能力コンポーネントを構築します。
     /// </summary>
@@ -43,7 +79,19 @@ public struct JumpCapability
             FirstJumpVelocity = cfg.FirstJumpVelocity,
             SecondJumpVelocity = cfg.SecondJumpVelocity,
             MaxJumps = cfg.MaxJumps,
-            RemainingJumps = cfg.MaxJumps
+            RemainingJumps = cfg.MaxJumps,
+            JumpBufferDuration = cfg.JumpBufferDuration,
+            JumpBufferTimer = 0.0f,
+            CoyoteTimeDuration = cfg.CoyoteTimeDuration,
+            CoyoteTimer = 0.0f,
+            JumpCutDamping = cfg.JumpCutDamping,
+            ApexFloatVelocityThreshold = cfg.ApexFloatVelocityThreshold,
+            ApexFloatGravityMultiplier = cfg.ApexFloatGravityMultiplier,
+            GroundAcceleration = cfg.GroundAcceleration,
+            GroundDeceleration = cfg.GroundDeceleration,
+            TurnaroundDeceleration = cfg.TurnaroundDeceleration,
+            AirAcceleration = cfg.AirAcceleration,
+            AirDeceleration = cfg.AirDeceleration
         };
     }
 }

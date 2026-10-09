@@ -112,6 +112,42 @@ public sealed class PlayerConfig {
     /// <summary>隙あり（Vulnerable / 易傷）状態の Boss に対する与ダメージ倍率</summary>
     public float VulnerableDamageMultiplier { get; set; }
 
+    /// <summary>先行入力猶予時間（秒）</summary>
+    public float JumpBufferDuration { get; set; }
+
+    /// <summary>コヨーテタイム猶予時間（秒）</summary>
+    public float CoyoteTimeDuration { get; set; }
+
+    /// <summary>ジャンプ中断時の上昇速度減衰率</summary>
+    public float JumpCutDamping { get; set; }
+
+    /// <summary>頂点滞空判定の速度閾値（px/s）</summary>
+    public float ApexFloatVelocityThreshold { get; set; }
+
+    /// <summary>頂点滞空時の重力倍率</summary>
+    public float ApexFloatGravityMultiplier { get; set; }
+
+    /// <summary>地面初速加速度（px/s²）</summary>
+    public float GroundAcceleration { get; set; }
+
+    /// <summary>地面自然減速加速度（px/s²）</summary>
+    public float GroundDeceleration { get; set; }
+
+    /// <summary>地面反転制動加速度（px/s²）</summary>
+    public float TurnaroundDeceleration { get; set; }
+
+    /// <summary>空中移動加速度（px/s²）</summary>
+    public float AirAcceleration { get; set; }
+
+    /// <summary>空中自然減速加速度（px/s²）</summary>
+    public float AirDeceleration { get; set; }
+
+    /// <summary>通常ヒットストップ時間（秒）</summary>
+    public float HitstopLightDuration { get; set; }
+
+    /// <summary>強攻撃・弱点ヒットストップ時間（秒）</summary>
+    public float HitstopHeavyDuration { get; set; }
+
     /// <summary>
     ///     設定に基づいたプレイヤー被弾判定 (<see cref="CollisionShape" />) を取得します。
     /// </summary>
