@@ -16,6 +16,7 @@ ImpactFillColor = 0xFFFF1744
 ImpactOutlineColor = 0xFFFF8A80
 TrailColor = 0xFFFF5555
 EaseType = "InQuad"
+BulletType = "Magenta"
 
 [[DiveRam.Events]]
 Time = 0.0
@@ -31,7 +32,7 @@ Type = "bullet"
 Param0 = 210.0
 Param1 = 8.0
 Param2 = 6.283185
-StrParam = "Normal"
+StrParam = "Magenta"
 
 [[DiveRam.Events]]
 Time = 0.45

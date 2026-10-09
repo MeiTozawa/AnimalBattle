@@ -264,6 +264,7 @@ public static class BarrageEmitter
     {
         var count = Math.Max(1, cfg.ImpactBulletCount);
         var step = MathF.PI * 2.0f / count;
+        var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Magenta);
 
         for (var i = 0; i < count; i++)
         {
@@ -278,7 +279,7 @@ public static class BarrageEmitter
                 vx,
                 vy,
                 cfg.ImpactBulletRadius,
-                BulletType.Normal,
+                bType,
                 cfg.ImpactFillColor,
                 cfg.ImpactOutlineColor);
         }

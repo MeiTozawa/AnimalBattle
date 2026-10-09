@@ -76,6 +76,8 @@ public sealed class Boss2Agent : BaseBossAgent
 
         ref readonly var health = ref Entity.Get<Health>();
         ref var col = ref Entity.GetMut<CollisionBox>();
+        ref var trans = ref Entity.GetMut<Transform>();
+        ref var vel = ref Entity.GetMut<Velocity>();
         var isGrounded = col.IsGrounded;
         var isOnWall = col.IsOnWall;
 
@@ -87,13 +89,14 @@ public sealed class Boss2Agent : BaseBossAgent
             isGrounded,
             isOnWall,
             health.Current,
-            health.Max);
-
-        ref var trans = ref Entity.GetMut<Transform>();
-        ref var vel = ref Entity.GetMut<Velocity>();
+            health.Max,
+            new Vec2f(trans.X, trans.Y));
 
         vel.Vx = _brain.Velocity.X;
-        vel.Vy = _brain.Velocity.Y;
+        if (_brain.State == Boss2State.PlatformTraverse || isGrounded)
+        {
+            vel.Vy = _brain.Velocity.Y;
+        }
 
         UpdateMovementAndCollision(ref trans, ref vel, ref col, deltaTime, platformQuery);
 
@@ -116,6 +119,14 @@ public sealed class Boss2Agent : BaseBossAgent
     {
         var b2Cfg = ConfigManager.Boss2;
         var arenaCfg = ConfigManager.Arena;
+
+        // 空中落下物理：PlatformTraverse 状態の独自跳躍積分時を除き、通常重力加速度を適用
+        if (!col.IsGrounded && _brain.State != Boss2State.PlatformTraverse)
+        {
+            var curVy = vel.Vy;
+            PhysicsService.ApplyGravity(ref curVy, b2Cfg.Gravity, b2Cfg.MaxFallSpeed, dt);
+            vel.Vy = curVy;
+        }
 
         var nextX = trans.X + vel.Vx * dt;
         var nextY = trans.Y + vel.Vy * dt;
@@ -184,6 +195,10 @@ public sealed class Boss2Agent : BaseBossAgent
         ref var col = ref Entity.GetMut<CollisionBox>();
         col.IsGrounded = false;
         col.IsOnWall = false;
+
+        ref var vel = ref Entity.GetMut<Velocity>();
+        vel.Vx = 0.0f;
+        vel.Vy = 0.0f;
 
         _brain.Reset(b2Cfg.SpawnX, b2Cfg.SpawnY);
     }

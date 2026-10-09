@@ -268,9 +268,15 @@ public sealed class Boss2Brain : BaseBossBrain {
         bool isGrounded,
         bool isOnWall,
         float currentHp,
-        float maxHp)
+        float maxHp,
+        Vec2f? bossPosition = null)
     {
         if (_isDead || dt <= 0.0f) return;
+
+        if (bossPosition.HasValue)
+        {
+            _currentPosition = bossPosition.Value;
+        }
 
         if (_jumpCooldown > 0.0f) _jumpCooldown = MathF.Max(0.0f, _jumpCooldown - dt);
 
