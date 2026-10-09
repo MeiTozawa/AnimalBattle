@@ -77,6 +77,34 @@ public static class DamageResolutionSystem
                     hp.InvincibleTimer = invCfg.Duration;
                     entity.Set(new HitFlashEffect(flashCfg.Duration, flashCfg.Color));
 
+                    // ヒットストップおよび受撃局所振動の適用
+                    var isHeavy = isVulnerable || dmg.IsHeavyImpact;
+                    var hitstopDuration = isHeavy
+                        ? ConfigManager.Player.HitstopHeavyDuration
+                        : ConfigManager.Player.HitstopLightDuration;
+
+                    if (hitstopDuration > 0.0f)
+                    {
+                        entity.Set(new HitstopState(hitstopDuration));
+                        var jitterAmp = isHeavy ? 4.0f : 2.0f;
+                        entity.Set(new SpriteJitter(jitterAmp, 0.0f, 30.0f));
+                    }
+
+                    // ノックバック物理インパルスの適用
+                    if (entity.Has<PlayerTag>() && entity.Has<Velocity>())
+                    {
+                        ref var vel = ref entity.GetMut<Velocity>();
+                        vel.Vx = dmg.KnockbackX;
+                        if (dmg.KnockbackY < 0.0f)
+                        {
+                            vel.Vy = dmg.KnockbackY;
+                            if (entity.Has<CollisionBox>())
+                            {
+                                entity.GetMut<CollisionBox>().IsGrounded = false;
+                            }
+                        }
+                    }
+
                     if (isVulnerable)
                     {
                         // 易傷特効クリティカル火花

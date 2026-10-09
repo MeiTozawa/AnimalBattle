@@ -168,8 +168,17 @@ public sealed class WorldRenderSystem : IDisposable {
     {
         if (boss == null || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
 
-        var bx = (int)boss.X;
-        var by = (int)boss.Y;
+        var jitterX = 0.0f;
+        var jitterY = 0.0f;
+        if (boss.Entity.Has<SpriteJitter>())
+        {
+            ref readonly var jitter = ref boss.Entity.Get<SpriteJitter>();
+            jitterX = jitter.CurrentOffsetX;
+            jitterY = jitter.CurrentOffsetY;
+        }
+
+        var bx = (int)(boss.X + jitterX);
+        var by = (int)(boss.Y + jitterY);
 
         if (boss.CurrentState.IsTelegraph)
         {
@@ -423,10 +432,19 @@ public sealed class WorldRenderSystem : IDisposable {
         var isInvincibleBlinking = !isFlashing && invTimer > 0.0f &&
             (int)(invTimer * 30.0f) % 2 != 0;
 
+        var jitterX = 0.0f;
+        var jitterY = 0.0f;
+        if (player.Entity.Has<SpriteJitter>())
+        {
+            ref readonly var jitter = ref player.Entity.Get<SpriteJitter>();
+            jitterX = jitter.CurrentOffsetX;
+            jitterY = jitter.CurrentOffsetY;
+        }
+
         if (!isInvincibleBlinking)
             GameEngine.DrawRectRotaGraph(
-                (int)player.X,
-                (int)player.Y,
+                (int)(player.X + jitterX),
+                (int)(player.Y + jitterY),
                 player.Sprite.SrcRect.X1,
                 player.Sprite.SrcRect.Y1,
                 player.Sprite.SrcRect.Width,

@@ -66,7 +66,7 @@ public static class CombatCollisionSystem {
 
                         if (PhysicsService.Intersects(trans, hitbox.Shape, vicTrans, hurtbox.Shape))
                         {
-                            ApplyHit(world, target.Entity, ref vicTrans, ref hurtbox, in hitbox,
+                            ApplyHit(world, target.Entity, ref vicTrans, in trans, ref hurtbox, in hitbox,
                                 ref shouldDestroyAttacker);
                             if (shouldDestroyAttacker) break;
                         }
@@ -83,11 +83,20 @@ public static class CombatCollisionSystem {
         World world,
         Entity vicEntity,
         ref Transform vicTrans,
+        in Transform atkTrans,
         ref Hurtbox hurtbox,
         in Hitbox localHitbox,
         ref bool shouldDestroyAttacker)
     {
-        vicEntity.Set(new IncomingDamage { Amount = localHitbox.Damage, SourceFaction = localHitbox.Faction });
+        var knockbackDir = vicTrans.X >= atkTrans.X ? 1.0f : -1.0f;
+        var isHeavy = localHitbox.Damage >= 2.0f;
+        vicEntity.Set(new IncomingDamage {
+            Amount = localHitbox.Damage,
+            SourceFaction = localHitbox.Faction,
+            KnockbackX = knockbackDir * 180.0f,
+            KnockbackY = -90.0f,
+            IsHeavyImpact = isHeavy
+        });
         CombatEffectHelper.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX,
             vicTrans.Y + hurtbox.Shape.OffsetY);
 
