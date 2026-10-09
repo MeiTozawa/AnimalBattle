@@ -86,19 +86,43 @@ public static class MovementSystem {
         // 1. 水平移動意図の適用
         vel.Vx = intent.MoveX * jump.MoveSpeed;
 
-        // 2. 跳躍意図の適用
+        // 2. 先行入力およびコヨーテタイムの更新
         if (intent.JumpTriggered)
         {
-            if (col.IsGrounded)
+            jump.JumpBufferTimer = jump.JumpBufferDuration;
+        }
+        else if (jump.JumpBufferTimer > 0.0f)
+        {
+            jump.JumpBufferTimer = MathF.Max(0.0f, jump.JumpBufferTimer - dt);
+        }
+
+        if (col.IsGrounded)
+        {
+            jump.CoyoteTimer = jump.CoyoteTimeDuration;
+        }
+        else if (jump.CoyoteTimer > 0.0f)
+        {
+            jump.CoyoteTimer = MathF.Max(0.0f, jump.CoyoteTimer - dt);
+        }
+
+        // 跳躍の判定と実行
+        if (jump.JumpBufferTimer > 0.0f)
+        {
+            if (col.IsGrounded || jump.CoyoteTimer > 0.0f)
             {
+                // 地面初段ジャンプ（接地またはコヨーテ猶予内）
                 vel.Vy = jump.FirstJumpVelocity;
                 col.IsGrounded = false;
+                jump.CoyoteTimer = 0.0f;
+                jump.JumpBufferTimer = 0.0f;
                 jump.RemainingJumps = jump.MaxJumps - 1;
             }
             else if (jump.RemainingJumps > 0)
             {
+                // 空中二段ジャンプ
                 vel.Vy = jump.SecondJumpVelocity;
                 jump.RemainingJumps--;
+                jump.JumpBufferTimer = 0.0f;
                 if (effectWorld.HasValue)
                     CombatEffectHelper.SpawnJumpRingEffect(effectWorld.Value, trans.X, trans.Y + col.Height / 2.0f);
             }
