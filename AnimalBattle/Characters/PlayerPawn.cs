@@ -29,7 +29,7 @@ public sealed class PlayerPawn : Pawn
            .Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight))
            .Set(new Hurtbox(pCfg.GetHurtboxShape()))
            .Set(new Animation("Idle"))
-           .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 64, 64)))
+           .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 32, 32)))
            .Set(new MovementIntent())
            .Set(new WeaponIntent())
            .Set(JumpCapability.FromPlayerConfig(pCfg))

@@ -57,9 +57,9 @@ HitstopHeavyDuration = 0.12
 
 # --- スカッシュ＆ストレッチ（二階減衰振動スプリング）設定 ---
 SpringFrequency = 18.0
-SpringDampingRatio = 0.55
-JumpStretchScaleX = 0.80
-JumpStretchScaleY = 1.25
+SpringDampingRatio = 0.65
+JumpStretchScaleX = 0.85
+JumpStretchScaleY = 1.20
 LandSquashScaleX = 1.30
 LandSquashScaleY = 0.75
 LandSquashVelocityThreshold = 150.0
