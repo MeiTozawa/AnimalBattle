@@ -48,6 +48,15 @@ public sealed class WorldRenderSystem : IDisposable {
 
     private int _pOuterRadius;
     private int _pTrailOffset;
+    private float _pTrailOffset1;
+    private float _pTrailOffset2;
+    private float _pTrailOffset3;
+    private int _pTrailRadius1;
+    private int _pTrailRadius2;
+    private int _pTrailRadius3;
+    private Color _pTrailColor1;
+    private Color _pTrailColor2;
+    private Color _pTrailColor3;
     private Query<Transform, RingEffect, FadeEffect> _ringEffectQuery;
     private Query<Transform, Sprite, FadeEffect> _spriteEffectQuery;
 
@@ -479,6 +488,27 @@ public sealed class WorldRenderSystem : IDisposable {
         _pInnerRadius = (int)bulletCfg.PlayerBulletInnerRadius;
         _pInnerColor = bulletCfg.PlayerBulletInnerColor;
         _pTrailOffset = bulletCfg.PlayerBulletTrailHalfWidth;
+
+        // トレイル基準色の抽出（未指定時は外層カラーを採用）
+        var trailBase = bulletCfg.PlayerBulletTrailColor.A > 0 ? bulletCfg.PlayerBulletTrailColor : _pOuterColor;
+        var tr = trailBase.R;
+        var tg = trailBase.G;
+        var tb = trailBase.B;
+
+        // 3 段階アルファ減衰カラーの事前計算
+        _pTrailColor1 = Color.FromArgb(bulletCfg.PlayerBulletTrailAlpha1, tr, tg, tb);
+        _pTrailColor2 = Color.FromArgb(bulletCfg.PlayerBulletTrailAlpha2, tr, tg, tb);
+        _pTrailColor3 = Color.FromArgb(bulletCfg.PlayerBulletTrailAlpha3, tr, tg, tb);
+
+        // 外層半径に基づく各階層ピクセル半径の事前計算
+        _pTrailRadius1 = Math.Max(1, (int)MathF.Round(_pOuterRadius * bulletCfg.PlayerBulletTrailRadiusRatio1));
+        _pTrailRadius2 = Math.Max(1, (int)MathF.Round(_pOuterRadius * bulletCfg.PlayerBulletTrailRadiusRatio2));
+        _pTrailRadius3 = Math.Max(1, (int)MathF.Round(_pOuterRadius * bulletCfg.PlayerBulletTrailRadiusRatio3));
+
+        // 速度逆方向オフセット距離（基準幅 × 比率）の事前計算
+        _pTrailOffset1 = _pTrailOffset * bulletCfg.PlayerBulletTrailOffsetRatio1;
+        _pTrailOffset2 = _pTrailOffset * bulletCfg.PlayerBulletTrailOffsetRatio2;
+        _pTrailOffset3 = _pTrailOffset * bulletCfg.PlayerBulletTrailOffsetRatio3;
 
         _bOutlinePadding = bulletCfg.BossBulletOutlinePadding;
         _bCoreRadiusRatio = bulletCfg.BossBulletCoreRadiusRatio;
