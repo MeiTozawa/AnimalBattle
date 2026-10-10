@@ -35,6 +35,14 @@ ANIMALBATTLE_CORE_API void SetPhysicsService(IPhysicsService* service) noexcept;
 /// @brief 現在アクティブな物理サービスを取得する
 ANIMALBATTLE_CORE_API IPhysicsService* GetPhysicsService() noexcept;
 
+class ISoundService;
+
+/// @brief アクティブなサウンドサービスを設定する
+ANIMALBATTLE_CORE_API void SetSoundService(ISoundService* service) noexcept;
+
+/// @brief 現在アクティブなサウンドサービスを取得する
+ANIMALBATTLE_CORE_API ISoundService* GetSoundService() noexcept;
+
 /// @brief DxLib バックエンドを初期化してサービスを登録する
 ANIMALBATTLE_CORE_API bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept;
 
@@ -45,5 +53,15 @@ ANIMALBATTLE_CORE_API void ShutdownDxLibBackend() noexcept;
 ANIMALBATTLE_CORE_API bool ProcessDxLibMessages() noexcept;
 
 }  // namespace ab
+
+// --- Audio APIs ---
+extern "C" {
+ANIMALBATTLE_CORE_API int Sound_Load(const wchar_t* file_path) noexcept;
+ANIMALBATTLE_CORE_API bool Sound_Play(int sound_handle, int play_type, bool top_position_flag) noexcept;
+ANIMALBATTLE_CORE_API bool Sound_Stop(int sound_handle) noexcept;
+ANIMALBATTLE_CORE_API bool Sound_SetVolume(int sound_handle, int volume_ratio) noexcept;
+ANIMALBATTLE_CORE_API bool Sound_Delete(int sound_handle) noexcept;
+ANIMALBATTLE_CORE_API bool Sound_IsPlaying(int sound_handle) noexcept;
+}
 
 #endif  // ANIMALBATTLE_CORE_ENGINE_CORE_H_

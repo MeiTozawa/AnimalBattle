@@ -9,6 +9,7 @@ import RenderService;
 import InputService;
 import PhysicsService;
 import DefaultPhysicsService;
+import SoundService;
 
 namespace ab {
 
@@ -16,6 +17,7 @@ namespace {
 IRenderService* g_render_service = nullptr;
 IInputService* g_input_service = nullptr;
 IPhysicsService* g_physics_service = nullptr;
+ISoundService* g_sound_service = nullptr;
 DefaultPhysicsService g_fallback_physics{};
 }
 
@@ -41,6 +43,14 @@ void SetPhysicsService(IPhysicsService* service) noexcept {
 
 IPhysicsService* GetPhysicsService() noexcept {
     return g_physics_service != nullptr ? g_physics_service : &g_fallback_physics;
+}
+
+void SetSoundService(ISoundService* service) noexcept {
+    g_sound_service = service;
+}
+
+ISoundService* GetSoundService() noexcept {
+    return g_sound_service;
 }
 
 }  // namespace ab
@@ -486,6 +496,86 @@ __declspec(dllexport) bool Physics_CheckPlatformGround(float prev_y, float next_
                 *out_vy = result.adjusted_vy;
             }
             return result.is_grounded;
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+// --- サウンド再生 API ---
+
+__declspec(dllexport) int Sound_Load(const wchar_t* file_path) noexcept {
+    try {
+        auto* sound_service = ab::GetSoundService();
+        if (sound_service != nullptr && file_path != nullptr) {
+            return sound_service->LoadSound(file_path);
+        }
+        return -1;
+    } catch (...) {
+        return -1;
+    }
+}
+
+__declspec(dllexport) bool Sound_Play(int sound_handle, int play_type, bool top_position_flag) noexcept {
+    try {
+        auto* sound_service = ab::GetSoundService();
+        if (sound_service != nullptr && sound_handle >= 0) {
+            auto pt = ab::SoundPlayType::Back;
+            if (play_type == 0) {
+                pt = ab::SoundPlayType::Normal;
+            } else if (play_type == 2) {
+                pt = ab::SoundPlayType::Loop;
+            }
+            return sound_service->Play(sound_handle, pt, top_position_flag);
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+__declspec(dllexport) bool Sound_Stop(int sound_handle) noexcept {
+    try {
+        auto* sound_service = ab::GetSoundService();
+        if (sound_service != nullptr && sound_handle >= 0) {
+            return sound_service->Stop(sound_handle);
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+__declspec(dllexport) bool Sound_SetVolume(int sound_handle, int volume_ratio) noexcept {
+    try {
+        auto* sound_service = ab::GetSoundService();
+        if (sound_service != nullptr && sound_handle >= 0) {
+            return sound_service->SetVolume(sound_handle, volume_ratio);
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+__declspec(dllexport) bool Sound_Delete(int sound_handle) noexcept {
+    try {
+        auto* sound_service = ab::GetSoundService();
+        if (sound_service != nullptr && sound_handle >= 0) {
+            return sound_service->Delete(sound_handle);
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+__declspec(dllexport) bool Sound_IsPlaying(int sound_handle) noexcept {
+    try {
+        auto* sound_service = ab::GetSoundService();
+        if (sound_service != nullptr && sound_handle >= 0) {
+            return sound_service->IsPlaying(sound_handle);
         }
         return false;
     } catch (...) {

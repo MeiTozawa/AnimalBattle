@@ -12,6 +12,7 @@
 import DxLibRenderService;
 import DxLibInputService;
 import DefaultPhysicsService;
+import DxLibSoundService;
 
 namespace ab {
 namespace {
@@ -19,6 +20,7 @@ namespace {
 std::unique_ptr<DxLibRenderService> g_render_service = nullptr;
 std::unique_ptr<DxLibInputService> g_input_service = nullptr;
 std::unique_ptr<DefaultPhysicsService> g_physics_service = nullptr;
+std::unique_ptr<DxLibSoundService> g_sound_service = nullptr;
 HWND g_hwnd = nullptr;
 HDC g_hdc = nullptr;
 
@@ -30,6 +32,7 @@ bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept {
         g_render_service = std::make_unique<DxLibRenderService>(width, height);
         g_input_service = std::make_unique<DxLibInputService>();
         g_physics_service = std::make_unique<DefaultPhysicsService>();
+        g_sound_service = std::make_unique<DxLibSoundService>();
 
         if (g_hwnd != nullptr) {
             ::SetUserWindow(g_hwnd);
@@ -52,6 +55,7 @@ bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept {
         SetRenderService(g_render_service.get());
         SetInputService(g_input_service.get());
         SetPhysicsService(g_physics_service.get());
+        SetSoundService(g_sound_service.get());
         return true;
     } catch (...) {
         return false;
@@ -63,12 +67,14 @@ void ShutdownDxLibBackend() noexcept {
         SetRenderService(nullptr);
         SetInputService(nullptr);
         SetPhysicsService(nullptr);
+        SetSoundService(nullptr);
 
         if (g_hwnd != nullptr && g_hdc != nullptr) {
             ::ReleaseDC(g_hwnd, g_hdc);
             g_hdc = nullptr;
         }
 
+        g_sound_service.reset();
         g_physics_service.reset();
         g_input_service.reset();
         g_render_service.reset();
