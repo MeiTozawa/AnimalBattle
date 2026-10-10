@@ -5,7 +5,7 @@ SpawnX = 640.0
 SpawnY = 200.0
 ScaleX = 0.6
 ScaleY = 0.6
-HitFlashDuration = 0.08
+HitFlashDuration = 0.05
 
 # Boss Hurtbox (Collision check against player bullets)
 HurtboxShape = "Circle"

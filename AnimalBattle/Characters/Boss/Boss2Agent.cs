@@ -53,6 +53,7 @@ public sealed class Boss2Agent : BaseBossAgent
             b2Cfg.SpawnY,
             b2Cfg.ScaleX,
             b2Cfg.ScaleY,
+            b2Cfg.HitFlashDuration,
             b2Cfg.GetHurtboxShape(),
             b2Cfg.GetHitboxShape(),
             b2Cfg.BodyContactDamage,
@@ -103,11 +104,8 @@ public sealed class Boss2Agent : BaseBossAgent
 
         UpdateMovementAndCollision(ref trans, ref vel, ref col, deltaTime, platformQuery, isControlledAirborne);
 
-        if (Entity.Has<Sprite>())
-        {
-            ref var sprite = ref Entity.GetMut<Sprite>();
-            sprite.FlipX = !_brain.FacingRight;
-        }
+        ref var sprite = ref Entity.GetMut<Sprite>();
+        sprite.FlipX = !_brain.FacingRight;
 
         OnPostUpdate(deltaTime, world);
         SyncCombatState();
@@ -229,7 +227,7 @@ public sealed class Boss2Agent : BaseBossAgent
 
         var forwardDir = _brain.FacingRight ? 1.0f : -1.0f;
         var dir = _brain.FacingRight ? SlashDirection.Right : SlashDirection.Left;
-        var colHeight = Entity.Has<CollisionBox>() ? Entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
+        var colHeight = Entity.Get<CollisionBox>().Height;
 
         if (skill == BossSkill.HeavySlash)
         {
@@ -293,7 +291,7 @@ public sealed class Boss2Agent : BaseBossAgent
     {
         if (CurrentWorld == default) return;
         var b2Cfg = ConfigManager.Boss2;
-        var colHeight = Entity.Has<CollisionBox>() ? Entity.Get<CollisionBox>().Height : b2Cfg.CollisionHeight;
+        var colHeight = Entity.Get<CollisionBox>().Height;
         var forwardDir = _brain.FacingRight ? 1.0f : -1.0f;
         BarrageEmitter.EmitBoss2(CurrentWorld, skill, origin, target, forwardDir, colHeight);
     }

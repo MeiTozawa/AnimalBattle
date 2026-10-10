@@ -70,7 +70,8 @@ public static class BossDamageResolutionSystem
                     if (hitstopDuration > 0.0f)
                     {
                         entity.Set(new HitstopState(hitstopDuration));
-                        entity.Set(new SpriteJitter(isHeavy ? 4.0f : 2.0f, 0.0f, 30.0f));
+                        var jitterAmp = isHeavy ? pCfg.HitJitterHeavyAmplitude : pCfg.HitJitterLightAmplitude;
+                        entity.Set(new SpriteJitter(jitterAmp, 0.0f, pCfg.HitJitterFrequency));
                     }
 
                     if (isVulnerable)

@@ -205,6 +205,15 @@ public sealed class PlayerConfig {
     /// <summary>強攻撃・弱点ヒットストップ時間（秒）</summary>
     public float HitstopHeavyDuration { get; set; }
 
+    /// <summary>通常ヒット時のスプライト振動振幅（ピクセル）</summary>
+    public float HitJitterLightAmplitude { get; set; }
+
+    /// <summary>強攻撃・弱点ヒット時のスプライト振動振幅（ピクセル）</summary>
+    public float HitJitterHeavyAmplitude { get; set; }
+
+    /// <summary>ヒット時スプライト局所振動周波数（Hz）</summary>
+    public float HitJitterFrequency { get; set; }
+
     /// <summary>スプリング固有振動数（Hz）</summary>
     public float SpringFrequency { get; set; }
 

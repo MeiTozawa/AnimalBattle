@@ -19,13 +19,14 @@ public static class WeaponSystem
     /// <returns>メソッドチェーン用の <see cref="World"/></returns>
     public static World AddWeaponSystem(this World world)
     {
-        world.System<Transform, WeaponIntent, WeaponState>("WeaponSystem")
+        world.System<Transform, WeaponIntent, WeaponState, SpringScale>("WeaponSystem")
             .Kind(Ecs.OnUpdate)
             .Without<DeadTag>()
             .Iter((Iter it,
                    Field<Transform> transforms,
                    Field<WeaponIntent> intents,
-                   Field<WeaponState> weapons) =>
+                   Field<WeaponState> weapons,
+                   Field<SpringScale> springs) =>
             {
                 var dt = it.DeltaTime();
                 var count = it.Count();
@@ -35,8 +36,9 @@ public static class WeaponSystem
                     ref var trans = ref transforms[i];
                     ref var intent = ref intents[i];
                     ref var weapon = ref weapons[i];
+                    ref var spring = ref springs[i];
 
-                    ExecuteWeapon(it.Entity(i), ref trans, ref intent, ref weapon, dt, world);
+                    ExecuteWeapon(ref trans, ref intent, ref weapon, ref spring, dt, world);
                 }
             });
 
@@ -56,15 +58,16 @@ public static class WeaponSystem
         ref var trans = ref entity.GetMut<Transform>();
         ref var intent = ref entity.GetMut<WeaponIntent>();
         ref var weapon = ref entity.GetMut<WeaponState>();
+        ref var spring = ref entity.GetMut<SpringScale>();
 
-        ExecuteWeapon(entity, ref trans, ref intent, ref weapon, dt, world);
+        ExecuteWeapon(ref trans, ref intent, ref weapon, ref spring, dt, world);
     }
 
     private static void ExecuteWeapon(
-        Entity entity,
         ref Transform trans,
         ref WeaponIntent intent,
         ref WeaponState weapon,
+        ref SpringScale spring,
         float dt,
         World world)
     {
@@ -107,14 +110,10 @@ public static class WeaponSystem
             trans.X -= dirX * pCfg.ShootRecoilDistance;
             trans.Y -= dirY * pCfg.ShootRecoilDistance;
 
-            if (entity.Has<SpringScale>())
-            {
-                ref var spring = ref entity.GetMut<SpringScale>();
-                spring.CurrentX = pCfg.ShootRecoilStretchX;
-                spring.CurrentY = pCfg.ShootRecoilStretchY;
-                spring.VelX = 0.0f;
-                spring.VelY = 0.0f;
-            }
+            spring.CurrentX = pCfg.ShootRecoilStretchX;
+            spring.CurrentY = pCfg.ShootRecoilStretchY;
+            spring.VelX = 0.0f;
+            spring.VelY = 0.0f;
 
             EventBus.Publish(new PlayerShotFiredEvent(spawnX, spawnY, dirX, dirY));
 

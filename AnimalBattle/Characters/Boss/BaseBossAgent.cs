@@ -1,6 +1,7 @@
 using System.Drawing;
 using AnimalBattle.Ai.Abilities;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Core;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters.Boss;
@@ -94,6 +95,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
         float spawnY,
         float scaleX,
         float scaleY,
+        float hitFlashDuration,
         CollisionShape hurtboxShape,
         CollisionShape hitboxShape,
         float bodyContactDamage,
@@ -102,7 +104,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     {
         entity.Set(new Health(maxHp))
            .Set(new InvincibleOnHit(0.0f))
-           .Set(new HitFlashConfig(0.08f, Color.White))
+           .Set(new HitFlashConfig(hitFlashDuration, ColorPalette.White))
            .Set(new Transform(spawnX, spawnY, scaleX, scaleY))
            .Set(new Velocity(0.0f))
            .Set(new Hurtbox(hurtboxShape, Faction.Hostile))

@@ -25,7 +25,7 @@ public static class MovementSystem {
     {
         var pQuery = platformQuery ?? world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
 
-        world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability, DashState>("MovementSystem")
+        world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability, DashState, Sprite, Health, SpringScale>("MovementSystem")
            .Kind(Ecs.OnUpdate)
            .Without<DeadTag>()
            .Without<HitstopState>()
@@ -35,7 +35,10 @@ public static class MovementSystem {
                 Field<CollisionBox> collisionBoxes,
                 Field<MovementIntent> intents,
                 Field<JumpCapability> jumps,
-                Field<DashState> dashes) =>
+                Field<DashState> dashes,
+                Field<Sprite> sprites,
+                Field<Health> healths,
+                Field<SpringScale> springs) =>
             {
                 var dt = it.DeltaTime();
                 var count = it.Count();
@@ -49,8 +52,11 @@ public static class MovementSystem {
                     ref var intent = ref intents[i];
                     ref var jump = ref jumps[i];
                     ref var dash = ref dashes[i];
+                    ref var sprite = ref sprites[i];
+                    ref var hp = ref healths[i];
+                    ref var spring = ref springs[i];
 
-                    ExecuteKinematics(it.Entity(i), ref trans, ref vel, ref col, in intent, ref jump, ref dash, dt, pQuery, cfg, world);
+                    ExecuteKinematics(ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref hp, ref spring, dt, pQuery, cfg, world);
                 }
             });
 
@@ -58,13 +64,15 @@ public static class MovementSystem {
     }
 
     private static void ExecuteKinematics(
-        Entity entity,
         ref Transform trans,
         ref Velocity vel,
         ref CollisionBox col,
         in MovementIntent intent,
         ref JumpCapability jump,
         ref DashState dash,
+        ref Sprite sprite,
+        ref Health hp,
+        ref SpringScale spring,
         float dt,
         Query<Transform, CollisionBox> platformQuery,
         ArenaConfig? arenaCfg,
@@ -91,31 +99,19 @@ public static class MovementSystem {
             {
                 dash.DirectionX = MathF.Sign(intent.MoveX);
             }
-            else if (entity.Has<Sprite>())
-            {
-                dash.DirectionX = entity.Get<Sprite>().FlipX ? -1.0f : 1.0f;
-            }
             else
             {
-                dash.DirectionX = 1.0f;
+                dash.DirectionX = sprite.FlipX ? -1.0f : 1.0f;
             }
 
             // 無敵フレーム付与
-            if (entity.Has<Health>())
-            {
-                ref var hp = ref entity.GetMut<Health>();
-                hp.InvincibleTimer = MathF.Max(hp.InvincibleTimer, pCfg.DashInvincibleDuration);
-            }
+            hp.InvincibleTimer = MathF.Max(hp.InvincibleTimer, pCfg.DashInvincibleDuration);
 
             // スカッシュ＆ストレッチ突進変形演出
-            if (entity.Has<SpringScale>())
-            {
-                ref var spring = ref entity.GetMut<SpringScale>();
-                spring.CurrentX = pCfg.DashStretchScaleX;
-                spring.CurrentY = pCfg.DashStretchScaleY;
-                spring.VelX = 0.0f;
-                spring.VelY = 0.0f;
-            }
+            spring.CurrentX = pCfg.DashStretchScaleX;
+            spring.CurrentY = pCfg.DashStretchScaleY;
+            spring.VelX = 0.0f;
+            spring.VelY = 0.0f;
 
             EventBus.Publish(new PlayerDashedEvent(dash.DirectionX));
         }
@@ -134,9 +130,8 @@ public static class MovementSystem {
             if (dash.GhostTrailTimer >= pCfg.DashGhostTrailInterval)
             {
                 dash.GhostTrailTimer = 0.0f;
-                if (effectWorld.HasValue && entity.Has<Sprite>())
+                if (effectWorld.HasValue)
                 {
-                    ref readonly var sprite = ref entity.Get<Sprite>();
                     CombatEffectHelper.SpawnGhostTrail(
                         effectWorld.Value,
                         trans.X,
@@ -236,9 +231,8 @@ public static class MovementSystem {
                     EventBus.Publish(new PlayerDoubleJumpedEvent());
                 }
 
-                if (didJump && entity.Has<SpringScale>())
+                if (didJump)
                 {
-                    ref var spring = ref entity.GetMut<SpringScale>();
                     spring.CurrentX = pCfg.JumpStretchScaleX;
                     spring.CurrentY = pCfg.JumpStretchScaleY;
                     spring.VelX = 0.0f;
@@ -316,14 +310,10 @@ public static class MovementSystem {
         if (!wasGrounded && isGrounded && vel.Vy >= jump.LandSquashVelocityThreshold)
         {
             EventBus.Publish(new PlayerLandedEvent(vel.Vy));
-            if (entity.Has<SpringScale>())
-            {
-                ref var spring = ref entity.GetMut<SpringScale>();
-                spring.CurrentX = pCfg.LandSquashScaleX;
-                spring.CurrentY = pCfg.LandSquashScaleY;
-                spring.VelX = 0.0f;
-                spring.VelY = 0.0f;
-            }
+            spring.CurrentX = pCfg.LandSquashScaleX;
+            spring.CurrentY = pCfg.LandSquashScaleY;
+            spring.VelX = 0.0f;
+            spring.VelY = 0.0f;
         }
 
         if (isGrounded) jump.RemainingJumps = jump.MaxJumps;

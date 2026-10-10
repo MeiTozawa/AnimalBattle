@@ -79,6 +79,9 @@ AirDeceleration = 1200.0
 
 HitstopLightDuration = 0.05
 HitstopHeavyDuration = 0.12
+HitJitterLightAmplitude = 1.5
+HitJitterHeavyAmplitude = 4.0
+HitJitterFrequency = 30.0
 
 # --- スカッシュ＆ストレッチ（二階減衰振動スプリング）設定 ---
 SpringFrequency = 18.0

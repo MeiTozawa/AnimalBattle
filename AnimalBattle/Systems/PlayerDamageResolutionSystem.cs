@@ -72,7 +72,8 @@ public static class PlayerDamageResolutionSystem
                     if (hitstopDuration > 0.0f)
                     {
                         entity.Set(new HitstopState(hitstopDuration));
-                        entity.Set(new SpriteJitter(isHeavy ? 4.0f : 2.0f, 0.0f, 30.0f));
+                        var jitterAmp = isHeavy ? pCfg.HitJitterHeavyAmplitude : pCfg.HitJitterLightAmplitude;
+                        entity.Set(new SpriteJitter(jitterAmp, 0.0f, pCfg.HitJitterFrequency));
                     }
 
                     // スプリング被弾スカッシュ変形の直接適用

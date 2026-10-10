@@ -53,6 +53,7 @@ public sealed class Boss1Agent : BaseBossAgent
             b1Cfg.SpawnY,
             b1Cfg.ScaleX,
             b1Cfg.ScaleY,
+            b1Cfg.HitFlashDuration,
             b1Cfg.GetHurtboxShape(),
             b1Cfg.GetHitboxShape(),
             b1Cfg.BodyContactDamage);
@@ -78,6 +79,8 @@ public sealed class Boss1Agent : BaseBossAgent
         ref var trans = ref Entity.GetMut<Transform>();
         trans.X = _brain.Position.X;
         trans.Y = _brain.Position.Y;
+        ref var sprite = ref Entity.GetMut<Sprite>();
+        sprite.FlipX = !_brain.FacingRight;
 
         OnPostUpdate(deltaTime, world);
         SyncCombatState();
