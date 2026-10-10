@@ -155,6 +155,12 @@ public class BattleScene : IDisposable {
             _ => new Boss1Agent(bossEntity, handle)
         };
 
+        Boss.AbilitySystem.OnScreenShake += (intensity, duration) =>
+        {
+            var trauma = intensity > 1.0f ? intensity * 0.1f : intensity;
+            CameraService.AddTrauma(trauma);
+        };
+
         Debug.WriteLine(
             $"[BattleScene] {bossTitle} を生成・リセットしました (HP: {cfg.MaxHp}, Pos: {cfg.SpawnX}, {cfg.SpawnY})");
     }
@@ -287,8 +293,8 @@ public class BattleScene : IDisposable {
         // 2. ECS 全量シミュレーションパイプライン（意図消費 -> 物理積分 -> 武器冷却 -> 衝突判定 -> ダメージ裁定 -> アニメーション歩進）
         _ecsWorld.Progress(deltaTime);
 
-        // 3. カメラシェイク・振動減衰更新
-        CameraService.Update(deltaTime);
+        // 3. カメラシェイク・振動減衰および動的構図更新
+        CameraService.Update(deltaTime, Player.X, Player.Y, Player.Vx, Player.Vy, Boss.X, Boss.Y);
     }
 
     private void HandleInput()
@@ -325,7 +331,7 @@ public class BattleScene : IDisposable {
     /// </summary>
     public void Render()
     {
-        GameEngine.SetCameraOffset(CameraService.OffsetX, CameraService.OffsetY);
+        GameEngine.SetCameraOffset(CameraService.RenderOffsetX, CameraService.RenderOffsetY);
         _worldRenderer.Render(_tileMap, _platformQuery);
         _debugRenderer.Render(_platformQuery, _tileMap);
         GameEngine.SetCameraOffset(0, 0);

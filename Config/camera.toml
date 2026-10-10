@@ -8,6 +8,14 @@ NoiseFrequency2 = 83.0
 NoiseFrequency3 = 49.0
 NoiseFrequency4 = 91.0
 
+# Kinetic Framing & Follow
+LookAheadFactor = 0.12
+FollowSpeed = 6.0
+PlayerFocusWeight = 0.65
+BossFocusWeight = 0.35
+MaxPanX = 35.0
+MaxPanY = 25.0
+
 # Combat Camera Trauma Events
 PlayerHitTrauma = 0.65
 PlayerHeavyHitTrauma = 0.85

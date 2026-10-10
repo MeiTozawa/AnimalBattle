@@ -1,3 +1,5 @@
+using AnimalBattle.Ai.Abilities;
+
 namespace AnimalBattle.Ai.Contracts;
 
 /// <summary>
@@ -5,6 +7,9 @@ namespace AnimalBattle.Ai.Contracts;
 /// </summary>
 public interface IBossBrain
 {
+    /// <summary>現在アクティブな能力システムコンポーネントを取得します。</summary>
+    AbilitySystemComponent AbilitySystem { get; }
+
     /// <summary>現在の戦闘フェーズを取得します。</summary>
     Phase Phase { get; }
 

@@ -1,4 +1,5 @@
 using System.Drawing;
+using AnimalBattle.Ai.Abilities;
 using AnimalBattle.Ai.Contracts;
 using Flecs.NET.Core;
 
@@ -25,6 +26,9 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
 
     /// <summary>Boss 意思決定ブレインの基底参照を取得します。</summary>
     public abstract IBossBrain Brain { get; }
+
+    /// <summary>Boss のアビリティシステムコンポーネントを取得します。</summary>
+    public virtual AbilitySystemComponent AbilitySystem => Brain.AbilitySystem;
 
     /// <summary>Boss の種別を取得します。</summary>
     public abstract BossType BossType { get; }
