@@ -222,8 +222,8 @@ public static class MovementSystem {
             }
         }
 
-        // 接地瞬間時の押し潰し演出（横広スカッシュ）
-        if (!wasGrounded && isGrounded && entity.Has<SpringScale>())
+        // 接地瞬間時の押し潰し演出（落下速度が設定閾値以上の場合のみ適用）
+        if (!wasGrounded && isGrounded && vel.Vy >= jump.LandSquashVelocityThreshold && entity.Has<SpringScale>())
         {
             ref var spring = ref entity.GetMut<SpringScale>();
             var pCfg = ConfigManager.Player;

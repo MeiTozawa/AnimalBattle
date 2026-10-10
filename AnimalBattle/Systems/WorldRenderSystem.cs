@@ -447,9 +447,9 @@ public sealed class WorldRenderSystem : IDisposable {
         if (player.Entity.Has<SpringScale>())
         {
             ref readonly var spring = ref player.Entity.Get<SpringScale>();
-            springScale = (spring.CurrentX + spring.CurrentY) * 0.5f;
+            springScale = Math.Clamp((spring.CurrentX + spring.CurrentY) * 0.5f, 0.2f, 3.0f);
             var halfH = player.Sprite.SrcRect.Height * player.ScaleX * 0.5f;
-            springOffsetY = (1.0f - spring.CurrentY) * (halfH * 0.4f);
+            springOffsetY = Math.Clamp((1.0f - spring.CurrentY) * (halfH * 0.4f), -halfH, halfH);
         }
 
         if (!isInvincibleBlinking)

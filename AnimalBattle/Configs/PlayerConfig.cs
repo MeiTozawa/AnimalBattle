@@ -166,6 +166,9 @@ public sealed class PlayerConfig {
     /// <summary>着地時スカッシュ拡大率 Y</summary>
     public float LandSquashScaleY { get; set; }
 
+    /// <summary>着地時スカッシュ演出を発火させる最小下落速度閾値（px/s）</summary>
+    public float LandSquashVelocityThreshold { get; set; }
+
     /// <summary>被弾衝撃時スカッシュ拡大率 X</summary>
     public float HitSquashScaleX { get; set; }
 

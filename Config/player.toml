@@ -62,6 +62,7 @@ JumpStretchScaleX = 0.80
 JumpStretchScaleY = 1.25
 LandSquashScaleX = 1.30
 LandSquashScaleY = 0.75
+LandSquashVelocityThreshold = 150.0
 HitSquashScaleX = 1.20
 HitSquashScaleY = 0.80
 

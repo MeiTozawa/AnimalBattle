@@ -63,6 +63,9 @@ public struct JumpCapability
     /// <summary>空中自然減速加速度（px/s²）。</summary>
     public float AirDeceleration;
 
+    /// <summary>着地時スカッシュ演出を発火させる最小下落速度閾値（px/s）。</summary>
+    public float LandSquashVelocityThreshold;
+
     /// <summary>
     ///     プレイヤー設定（PlayerConfig）から跳躍能力コンポーネントを構築します。
     /// </summary>
@@ -91,7 +94,8 @@ public struct JumpCapability
             GroundDeceleration = cfg.GroundDeceleration,
             TurnaroundDeceleration = cfg.TurnaroundDeceleration,
             AirAcceleration = cfg.AirAcceleration,
-            AirDeceleration = cfg.AirDeceleration
+            AirDeceleration = cfg.AirDeceleration,
+            LandSquashVelocityThreshold = cfg.LandSquashVelocityThreshold
         };
     }
 }
