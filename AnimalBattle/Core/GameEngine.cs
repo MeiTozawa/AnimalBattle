@@ -400,11 +400,36 @@ public static class GameEngine {
     /// <param name="center">描画中心座標 (<see cref="Vec2i" />)</param>
     /// <param name="srcPos">切り出し開始座標 (<see cref="Vec2i" />)</param>
     /// <param name="srcSize">切り出しサイズ (<see cref="Vec2i" />)</param>
-    /// <param name="scale">拡大率</param>
+    /// <param name="scaleX">X 軸拡大率</param>
+    /// <param name="scaleY">Y 軸拡大率</param>
     /// <param name="angle">回転角度 (ラジアン)</param>
     /// <param name="handle">画像ハンドル</param>
     /// <param name="trans">透過描画を有効にするかどうか</param>
     /// <param name="turnX">左右反転描画を行うかどうか</param>
+    public static void DrawRectRotaGraph(
+        Vec2i center,
+        Vec2i srcPos,
+        Vec2i srcSize,
+        double scaleX,
+        double scaleY,
+        double angle,
+        int handle,
+        bool trans,
+        bool turnX)
+    {
+        _commandBuffer.PushDrawRectRotaGraph(
+            center.X + CameraOffsetX, center.Y + CameraOffsetY,
+            srcPos.X, srcPos.Y,
+            srcSize.X, srcSize.Y,
+            (float)scaleX, (float)scaleY, (float)angle,
+            handle,
+            trans,
+            turnX);
+    }
+
+    /// <summary>
+    ///     スプライトシートから指定矩形を切り出し、回転・等比拡縮・左右反転を行って描画します。
+    /// </summary>
     public static void DrawRectRotaGraph(
         Vec2i center,
         Vec2i srcPos,
@@ -415,18 +440,11 @@ public static class GameEngine {
         bool trans,
         bool turnX)
     {
-        _commandBuffer.PushDrawRectRotaGraph(
-            center.X + CameraOffsetX, center.Y + CameraOffsetY,
-            srcPos.X, srcPos.Y,
-            srcSize.X, srcSize.Y,
-            (float)scale, (float)angle,
-            handle,
-            trans,
-            turnX);
+        DrawRectRotaGraph(center, srcPos, srcSize, scale, scale, angle, handle, trans, turnX);
     }
 
     /// <summary>
-    ///     スプライトシートから指定矩形を切り出し、回転・拡縮・左右反転を行って描画します。
+    ///     スプライトシートから指定矩形を切り出し、回転・独立 X/Y 軸拡縮・左右反転を行って描画します。
     /// </summary>
     /// <param name="x">描画中心 X 座標</param>
     /// <param name="y">描画中心 Y 座標</param>
@@ -434,11 +452,39 @@ public static class GameEngine {
     /// <param name="srcY">切り出し開始 Y 座標</param>
     /// <param name="width">切り出し幅</param>
     /// <param name="height">切り出し高さ</param>
-    /// <param name="scale">拡大率</param>
+    /// <param name="scaleX">X 軸拡大率</param>
+    /// <param name="scaleY">Y 軸拡大率</param>
     /// <param name="angle">回転角度 (ラジアン)</param>
     /// <param name="handle">画像ハンドル</param>
     /// <param name="trans">透過描画を有効にするかどうか</param>
     /// <param name="turnX">左右反転描画を行うかどうか</param>
+    public static void DrawRectRotaGraph(
+        int x,
+        int y,
+        int srcX,
+        int srcY,
+        int width,
+        int height,
+        double scaleX,
+        double scaleY,
+        double angle,
+        int handle,
+        bool trans,
+        bool turnX)
+    {
+        _commandBuffer.PushDrawRectRotaGraph(
+            x + CameraOffsetX, y + CameraOffsetY,
+            srcX, srcY,
+            width, height,
+            (float)scaleX, (float)scaleY, (float)angle,
+            handle,
+            trans,
+            turnX);
+    }
+
+    /// <summary>
+    ///     スプライトシートから指定矩形を切り出し、回転・等比拡縮・左右反転を行って描画します。
+    /// </summary>
     public static void DrawRectRotaGraph(
         int x,
         int y,
@@ -452,14 +498,7 @@ public static class GameEngine {
         bool trans,
         bool turnX)
     {
-        _commandBuffer.PushDrawRectRotaGraph(
-            x + CameraOffsetX, y + CameraOffsetY,
-            srcX, srcY,
-            width, height,
-            (float)scale, (float)angle,
-            handle,
-            trans,
-            turnX);
+        DrawRectRotaGraph(x, y, srcX, srcY, width, height, scale, scale, angle, handle, trans, turnX);
     }
 
     /// <summary>

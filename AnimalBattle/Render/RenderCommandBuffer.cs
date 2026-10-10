@@ -282,8 +282,17 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <param name="srcX">切り出し開始 X 座標。</param>
     /// <param name="srcY">切り出し開始 Y 座標。</param>
     /// <param name="srcW">切り出し幅。</param>
+    /// <summary>
+    ///     矩形切り出し回転拡縮画像描画コマンド（独立 X/Y 軸拡縮）をバッファへ追加します。
+    /// </summary>
+    /// <param name="centerX">描画中心 X 座標。</param>
+    /// <param name="centerY">描画中心 Y 座標。</param>
+    /// <param name="srcX">切り出し開始 X 座標。</param>
+    /// <param name="srcY">切り出し開始 Y 座標。</param>
+    /// <param name="srcW">切り出し幅。</param>
     /// <param name="srcH">切り出し高さ。</param>
-    /// <param name="scale">拡大率。</param>
+    /// <param name="scaleX">X 軸拡大率。</param>
+    /// <param name="scaleY">Y 軸拡大率。</param>
     /// <param name="angle">回転角度 (ラジアン)。</param>
     /// <param name="handle">画像ハンドル。</param>
     /// <param name="trans">透過フラグ。</param>
@@ -291,7 +300,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public void PushDrawRectRotaGraph(
         int centerX, int centerY,
         int srcX, int srcY, int srcW, int srcH,
-        float scale, float angle,
+        float scaleX, float scaleY, float angle,
         int handle, bool trans, bool turnX)
     {
         EnsurePendingCircleBatchFlushed();
@@ -305,13 +314,26 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
                 SrcY = srcY,
                 SrcW = srcW,
                 SrcH = srcH,
-                Scale = scale,
+                ScaleX = scaleX,
+                ScaleY = scaleY,
                 Angle = angle,
                 Handle = handle,
                 Trans = trans ? (byte)1 : (byte)0,
                 TurnX = turnX ? (byte)1 : (byte)0
             }
         };
+    }
+
+    /// <summary>
+    ///     矩形切り出し回転拡縮画像描画コマンド（等比拡縮）をバッファへ追加します。
+    /// </summary>
+    public void PushDrawRectRotaGraph(
+        int centerX, int centerY,
+        int srcX, int srcY, int srcW, int srcH,
+        float scale, float angle,
+        int handle, bool trans, bool turnX)
+    {
+        PushDrawRectRotaGraph(centerX, centerY, srcX, srcY, srcW, srcH, scale, scale, angle, handle, trans, turnX);
     }
 
     /// <summary>

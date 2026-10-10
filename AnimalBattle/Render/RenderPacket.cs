@@ -228,8 +228,11 @@ public struct DrawRectRotaGraphPacket {
     /// <summary>切り出し高さ</summary>
     public int SrcH;
 
-    /// <summary>拡大率</summary>
-    public float Scale;
+    /// <summary>拡大率 X</summary>
+    public float ScaleX;
+
+    /// <summary>拡大率 Y</summary>
+    public float ScaleY;
 
     /// <summary>回転角度 (ラジアン)</summary>
     public float Angle;
