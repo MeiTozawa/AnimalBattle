@@ -401,4 +401,49 @@ public static class CombatEffectHelper {
            .Set(new Sprite(graphHandle, flipX, true, srcRect, color))
            .Set(new FadeEffect(duration, 160.0f, 0.0f));
     }
+
+    /// <summary>
+    ///     射撃出膛時のマズルフラッシュ（銃口閃光）エフェクトを生成します。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド。</param>
+    /// <param name="x">銃口 X 座標。</param>
+    /// <param name="y">銃口 Y 座標。</param>
+    public static void SpawnMuzzleFlash(World world, float x, float y)
+    {
+        var pCfg = ConfigManager.Player;
+        CombatEntityPoolHelper.RentSparkEffect(world)
+           .Set(new Transform(x, y))
+           .Set(new Velocity(0.0f))
+           .Set(new Bullet(pCfg.MuzzleFlashRadius, ColorPalette.MuzzleFlashFill, ColorPalette.White))
+           .Set(new FadeEffect(pCfg.MuzzleFlashDuration, 255.0f, 0.0f));
+    }
+
+    /// <summary>
+    ///     弾丸が Boss に命中・撃砕された際の飛散破片パーティクル群（Impact Splatter）を生成します。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド。</param>
+    /// <param name="x">着弾 X 座標。</param>
+    /// <param name="y">着弾 Y 座標。</param>
+    /// <param name="hitDirX">着弾進行方向 X。</param>
+    /// <param name="hitDirY">着弾進行方向 Y。</param>
+    public static void SpawnBulletImpactSplatter(World world, float x, float y, float hitDirX, float hitDirY)
+    {
+        var pCfg = ConfigManager.Player;
+        var count = Random.Shared.Next(pCfg.ImpactSplatterMinCount, pCfg.ImpactSplatterMaxCount + 1);
+        var baseAngle = MathF.Atan2(-hitDirY, -hitDirX);
+
+        for (var i = 0; i < count; i++)
+        {
+            var spreadAngle = baseAngle + (Random.Shared.NextSingle() - 0.5f) * MathF.PI * 0.8f;
+            var speed = pCfg.ImpactSplatterMinSpeed + Random.Shared.NextSingle() * (pCfg.ImpactSplatterMaxSpeed - pCfg.ImpactSplatterMinSpeed);
+            var vx = MathF.Cos(spreadAngle) * speed;
+            var vy = MathF.Sin(spreadAngle) * speed;
+
+            CombatEntityPoolHelper.RentSparkEffect(world)
+               .Set(new Transform(x, y))
+               .Set(new Velocity(vx, vy))
+               .Set(new Bullet(pCfg.ImpactSplatterParticleRadius, ColorPalette.ImpactSplatterFill, ColorPalette.White))
+               .Set(new FadeEffect(pCfg.ImpactSplatterDuration, 255.0f, 0.0f));
+        }
+    }
 }

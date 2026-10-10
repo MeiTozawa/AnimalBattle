@@ -175,6 +175,12 @@ public static class ColorPalette {
     /// <summary>ダッシュ残像半透明シアン発光色 (0xB450C8FF)</summary>
     public static readonly Color GhostTrailCyan = Color.FromArgb(0xB4, 0x50, 0xC8, 0xFF);
 
+    /// <summary>銃口閃光マズルフラッシュ発光色 (0xFFDCEBFF)</summary>
+    public static readonly Color MuzzleFlashFill = Color.FromArgb(0xFF, 0xDC, 0xEB, 0xFF);
+
+    /// <summary>弾丸撃砕破片スパッター塗りつぶし色 (0xFFFFE664)</summary>
+    public static readonly Color ImpactSplatterFill = Color.FromArgb(0xFF, 0xFF, 0xE6, 0x64);
+
     // ==========================================
     // 特殊弾幕種別専用カラー (BulletType Palette)
     // ==========================================

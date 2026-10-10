@@ -100,6 +100,11 @@ public static class CombatCollisionSystem {
         CombatEffectHelper.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX,
             vicTrans.Y + hurtbox.Shape.OffsetY);
 
+        if (localHitbox.Faction == Faction.Friendly)
+        {
+            CombatEffectHelper.SpawnBulletImpactSplatter(world, atkTrans.X, atkTrans.Y, knockbackDir, 0.0f);
+        }
+
         if (localHitbox.DestroyOnHit) shouldDestroyAttacker = true;
     }
 

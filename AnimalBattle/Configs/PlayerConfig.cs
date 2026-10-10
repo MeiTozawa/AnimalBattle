@@ -109,6 +109,39 @@ public sealed class PlayerConfig {
     /// <summary>銃弾 1 発あたりの与ダメージ量</summary>
     public float BulletDamage { get; set; }
 
+    /// <summary>射撃出膛時の自機微後退距離（ピクセル）</summary>
+    public float ShootRecoilDistance { get; set; }
+
+    /// <summary>射撃反動時のスプリング圧縮倍率 X</summary>
+    public float ShootRecoilStretchX { get; set; }
+
+    /// <summary>射撃反動時のスプリング伸長倍率 Y</summary>
+    public float ShootRecoilStretchY { get; set; }
+
+    /// <summary>銃口閃光（マズルフラッシュ）持続時間（秒）</summary>
+    public float MuzzleFlashDuration { get; set; }
+
+    /// <summary>銃口閃光（マズルフラッシュ）初期半径（ピクセル）</summary>
+    public float MuzzleFlashRadius { get; set; }
+
+    /// <summary>弾丸命中撃砕破片の最小飛散個数</summary>
+    public int ImpactSplatterMinCount { get; set; }
+
+    /// <summary>弾丸命中撃砕破片の最大飛散個数</summary>
+    public int ImpactSplatterMaxCount { get; set; }
+
+    /// <summary>弾丸命中撃砕破片の最小初速（px/s）</summary>
+    public float ImpactSplatterMinSpeed { get; set; }
+
+    /// <summary>弾丸命中撃砕破片の最大初速（px/s）</summary>
+    public float ImpactSplatterMaxSpeed { get; set; }
+
+    /// <summary>弾丸命中撃砕破片粒子の半径（ピクセル）</summary>
+    public float ImpactSplatterParticleRadius { get; set; }
+
+    /// <summary>弾丸命中撃砕破片のフェード持続時間（秒）</summary>
+    public float ImpactSplatterDuration { get; set; }
+
     /// <summary>隙あり（Vulnerable / 易傷）状態の Boss に対する与ダメージ倍率</summary>
     public float VulnerableDamageMultiplier { get; set; }
 

@@ -1,4 +1,5 @@
 using AnimalBattle.Components;
+using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
 using Flecs.NET.Core;
@@ -31,11 +32,11 @@ public static class WeaponSystem
 
                 for (var i = 0; i < count; i++)
                 {
-                    ref readonly var trans = ref transforms[i];
+                    ref var trans = ref transforms[i];
                     ref var intent = ref intents[i];
                     ref var weapon = ref weapons[i];
 
-                    ExecuteWeapon(in trans, ref intent, ref weapon, dt, world);
+                    ExecuteWeapon(it.Entity(i), ref trans, ref intent, ref weapon, dt, world);
                 }
             });
 
@@ -52,15 +53,16 @@ public static class WeaponSystem
     {
         if (!entity.IsAlive()) return;
 
-        ref readonly var trans = ref entity.Get<Transform>();
+        ref var trans = ref entity.GetMut<Transform>();
         ref var intent = ref entity.GetMut<WeaponIntent>();
         ref var weapon = ref entity.GetMut<WeaponState>();
 
-        ExecuteWeapon(in trans, ref intent, ref weapon, dt, world);
+        ExecuteWeapon(entity, ref trans, ref intent, ref weapon, dt, world);
     }
 
     private static void ExecuteWeapon(
-        in Transform trans,
+        Entity entity,
+        ref Transform trans,
         ref WeaponIntent intent,
         ref WeaponState weapon,
         float dt,
@@ -96,6 +98,23 @@ public static class WeaponSystem
                 .Set(new CollisionBox(weapon.BulletWidth, weapon.BulletHeight))
                 .Set(new Hitbox(new CollisionShape.Box(weapon.BulletWidth, weapon.BulletHeight), weapon.BulletDamage))
                 .Add<PlayerBulletTag>();
+
+            // 銃口閃光（Muzzle Flash）エフェクト生成
+            CombatEffectHelper.SpawnMuzzleFlash(world, spawnX, spawnY);
+
+            // 自機射撃微後退反動（Recoil Impulse & Squash/Stretch）
+            var pCfg = ConfigManager.Player;
+            trans.X -= dirX * pCfg.ShootRecoilDistance;
+            trans.Y -= dirY * pCfg.ShootRecoilDistance;
+
+            if (entity.Has<SpringScale>())
+            {
+                ref var spring = ref entity.GetMut<SpringScale>();
+                spring.CurrentX = pCfg.ShootRecoilStretchX;
+                spring.CurrentY = pCfg.ShootRecoilStretchY;
+                spring.VelX = 0.0f;
+                spring.VelY = 0.0f;
+            }
 
             EventBus.Publish(new PlayerShotFiredEvent(spawnX, spawnY, dirX, dirY));
 
