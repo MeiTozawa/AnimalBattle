@@ -40,8 +40,12 @@ public class BattleScene : IDisposable {
         Debug.Assert(hasPlayerHandle, "プレイヤーの初期スプライトハンドルが見つかりません。");
 
         _ecsWorld.Import<ComponentRequirementsModule>();
-        _ecsWorld.Import<EffectModule>();
+        _ecsWorld.Import<CombatFeedbackModule>();
+        _ecsWorld.Import<AnimationModule>();
+        _ecsWorld.Import<CombatModule>();
         _ecsWorld.Import<BulletModule>();
+        _ecsWorld.Import<DamageResolutionModule>();
+        _ecsWorld.Import<EffectModule>();
 
         var playerCfg = ConfigManager.Player;
 

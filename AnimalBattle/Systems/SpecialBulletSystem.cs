@@ -1,3 +1,5 @@
+using System;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using Flecs.NET.Core;
@@ -5,12 +7,14 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-///     特殊弾幕の周期アニメーションと動的変調を制御する ECS System。
+///     特殊弾幕（青弾・品紅弾・黒弾）の周期アニメーションと動的変調（正弦波揺動・拡縮脈動）を制御する単一責任 ECS システム。
 /// </summary>
 public static class SpecialBulletSystem {
     /// <summary>
     ///     特殊弾幕変調システムを Flecs.NET ワールドへ登録します。
     /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド</param>
+    /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddSpecialBulletSystem(this World world)
     {
         world.System<Velocity, BulletModifier, Bullet, Hitbox>("SpecialBulletSystem")
@@ -68,50 +72,6 @@ public static class SpecialBulletSystem {
                         ref var h = ref hitbox[i];
                         h.Shape = new CollisionShape.Circle(radius);
                     }
-                }
-            });
-
-        world.System<Transform, Velocity, OrbitSatellite, BulletModifier>("OrbitSatelliteMovementSystem")
-           .With<BossBulletTag>()
-           .Kind(Ecs.OnUpdate)
-           .Iter((Iter it, Field<Transform> trans, Field<Velocity> vel, Field<OrbitSatellite> satellites,
-                Field<BulletModifier> modifiers) =>
-            {
-                var count = it.Count();
-                if (count <= 0) return;
-
-                var dt = it.DeltaTime();
-                var cfg = ConfigManager.SpecialBullets;
-                var orbitSpeed = cfg.YellowOrbitSpeed;
-                var w = it.World();
-
-                for (var i = 0; i < count; ++i)
-                {
-                    ref var sat = ref satellites[i];
-                    if (!sat.Parent.IsAlive() || !sat.Parent.Has<BossBulletTag>())
-                    {
-                        CombatEntityPoolHelper.Recycle(w, it.Entity(i));
-                        continue;
-                    }
-
-                    ref var mod = ref modifiers[i];
-                    mod.ElapsedTimer += dt;
-
-                    ref readonly var parentTrans = ref sat.Parent.Get<Transform>();
-                    var angle = sat.InitialAngle + mod.ElapsedTimer * orbitSpeed;
-                    var cos = MathF.Cos(angle);
-                    var sin = MathF.Sin(angle);
-
-                    var satX = parentTrans.X + cos * sat.OrbitDistance;
-                    var satY = parentTrans.Y + sin * sat.OrbitDistance;
-
-                    ref var t = ref trans[i];
-                    t.Position = new Vec2f(satX, satY);
-
-                    ref readonly var parentVel = ref sat.Parent.Get<Velocity>();
-                    var tangentSpeed = sat.OrbitDistance * orbitSpeed;
-                    ref var v = ref vel[i];
-                    v.Value = new Vec2f(parentVel.Vx - sin * tangentSpeed, parentVel.Vy + cos * tangentSpeed);
                 }
             });
 

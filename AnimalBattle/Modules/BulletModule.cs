@@ -4,29 +4,20 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Modules;
 
 /// <summary>
-///     弾幕 Boss 戦におけるスプライトアニメーション、弾物理（SIMD 計算委譲）および
-///     戦闘幾何衝突判定システムを Flecs.NET ECS 常駐 Routine として一括登録するネイティブモジュール。
-///     表現層（描画・UI）や入力制御を排除し、純粋な物理・衝突シミュレーションに特化します。
+///     弾物理（等速直線移動・画面外消滅判定）、特殊弾幕変調（正弦波・脈動）、および周回衛星弾幕システムを
+///     一括管理する弾幕モジュール。
 /// </summary>
 public readonly struct BulletModule : IFlecsModule {
     /// <summary>
-    ///     全戦闘物理・衝突関連の ECS 常駐 Routine (System) をワールドへ登録します。
+    ///     全弾幕物理・特殊変調・周回衛星関連の ECS システムをワールドへ登録します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     public void InitModule(World world)
     {
         world.Module<BulletModule>();
 
-        world.AddHitstopSystem()
-           .AddSpriteJitterSystem()
-           .AddSpringScaleSystem()
-           .AddSpriteAnimationSystem()
-           .AddPlayerAnimationStateSystem()
-           .AddBulletPhysicsSystem()
-           .AddSpecialBulletSystem()
-           .AddMovementSystem()
-           .AddWeaponSystem()
-           .AddCombatCollisionSystem()
-           .AddDamageResolutionSystem();
+        world.AddBulletPhysicsSystem()
+             .AddSpecialBulletSystem()
+             .AddOrbitSatelliteMovementSystem();
     }
 }
