@@ -88,6 +88,33 @@ public sealed class BulletRenderConfig {
     /// <summary>プレイヤー弾ビームトレイル色 (<see cref="Color" />)</summary>
     public Color PlayerBulletTrailColor { get; set; }
 
+    /// <summary>プレイヤー弾トレイル第1階層のアルファ値 (0～255)</summary>
+    public int PlayerBulletTrailAlpha1 { get; set; }
+
+    /// <summary>プレイヤー弾トレイル第2階層のアルファ値 (0～255)</summary>
+    public int PlayerBulletTrailAlpha2 { get; set; }
+
+    /// <summary>プレイヤー弾トレイル第3階層のアルファ値 (0～255)</summary>
+    public int PlayerBulletTrailAlpha3 { get; set; }
+
+    /// <summary>プレイヤー弾トレイル第1階層の半径比率</summary>
+    public float PlayerBulletTrailRadiusRatio1 { get; set; }
+
+    /// <summary>プレイヤー弾トレイル第2階層の半径比率</summary>
+    public float PlayerBulletTrailRadiusRatio2 { get; set; }
+
+    /// <summary>プレイヤー弾トレイル第3階層の半径比率</summary>
+    public float PlayerBulletTrailRadiusRatio3 { get; set; }
+
+    /// <summary>プレイヤー弾トレイル第1階層のオフセット距離比率</summary>
+    public float PlayerBulletTrailOffsetRatio1 { get; set; }
+
+    /// <summary>プレイヤー弾トレイル第2階層のオフセット距離比率</summary>
+    public float PlayerBulletTrailOffsetRatio2 { get; set; }
+
+    /// <summary>プレイヤー弾トレイル第3階層のオフセット距離比率</summary>
+    public float PlayerBulletTrailOffsetRatio3 { get; set; }
+
     /// <summary>Boss 弾内層ホワイトコア半径比率</summary>
     public float BossBulletCoreRadiusRatio { get; set; }
 

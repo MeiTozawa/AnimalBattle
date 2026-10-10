@@ -41,6 +41,17 @@ PlayerBulletTrailHalfWidth = 7
 PlayerBulletTrailHalfHeight = 2  
 PlayerBulletTrailColor = 0xFF80FFFF 
 
+# プレイヤー弾 3 段階トレイル減衰パラメータ
+PlayerBulletTrailAlpha1 = 180
+PlayerBulletTrailAlpha2 = 110
+PlayerBulletTrailAlpha3 = 45
+PlayerBulletTrailRadiusRatio1 = 0.75
+PlayerBulletTrailRadiusRatio2 = 0.50
+PlayerBulletTrailRadiusRatio3 = 0.28
+PlayerBulletTrailOffsetRatio1 = 0.45
+PlayerBulletTrailOffsetRatio2 = 0.85
+PlayerBulletTrailOffsetRatio3 = 1.30 
+
 BossBulletCoreRadiusRatio = 0.45 
 BossBulletCoreMinRadius = 2      
 BossBulletCoreColor = 0xFFFFFFFF 
