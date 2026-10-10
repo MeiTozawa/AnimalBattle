@@ -44,6 +44,7 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     private Vec2f _currentVelocity;
     private Vec2f _leapStartPosition;
+    private float _targetLandingSurfaceY;
     private bool _facingRight = true;
 
     /// <summary>Boss 2 ブレインを初期化します。</summary>
@@ -70,6 +71,9 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     /// <summary>現在の Boss 移動速度を取得します。</summary>
     public Vec2f Velocity => _currentVelocity;
+
+    /// <summary>泰山圧頂技能の目標着地サーフェス Y 座標（足場上面または床面）を取得します。</summary>
+    public float TargetLandingSurfaceY => _targetLandingSurfaceY;
 
     /// <inheritdoc />
     public override bool FacingRight => _facingRight;
@@ -131,7 +135,9 @@ public sealed class Boss2Brain : BaseBossBrain {
     }
 
     /// <inheritdoc />
-    public override bool IsVulnerable => State is Boss2State.Recovery or Boss2State.WallCrashStun;
+    public override bool IsVulnerable =>
+        (State == Boss2State.Recovery && CurrentSkill == BossSkill.LeapSmash)
+        || State == Boss2State.WallCrashStun;
 
     /// <summary>近接攻撃判定生成イベント。</summary>
     public event Action<BossSkill, float, float>? OnCreateHitbox;
@@ -226,6 +232,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     protected override void OnPhaseTransitionEntered(Phase newPhase)
     {
         _currentVelocity = Vec2f.Zero;
+        _targetLandingSurfaceY = 0.0f;
         SyncPhaseAbilitiesCooldown(_configuration.GetPhase(newPhase));
     }
 
@@ -233,6 +240,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     protected override void OnDeadEntered()
     {
         _currentVelocity = Vec2f.Zero;
+        _targetLandingSurfaceY = 0.0f;
     }
 
     /// <summary>
@@ -243,6 +251,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         _currentPosition = new Vec2f(x, y);
         _targetPosition = new Vec2f(x, y);
         _leapStartPosition = new Vec2f(x, y);
+        _targetLandingSurfaceY = 0.0f;
         _currentVelocity = Vec2f.Zero;
         _facingRight = true;
         _stateTimer = 0.0f;
@@ -446,6 +455,7 @@ public sealed class Boss2Brain : BaseBossBrain {
                 if (chosenSkill == BossSkill.LeapSmash)
                 {
                     _leapStartPosition = _currentPosition;
+                    LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
                 }
                 _currentVelocity = Vec2f.Zero;
                 _combatMachine.ChangeState(_abilityState);
@@ -462,6 +472,7 @@ public sealed class Boss2Brain : BaseBossBrain {
                 if (antiKiteSkill == BossSkill.LeapSmash)
                 {
                     _leapStartPosition = _currentPosition;
+                    LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
                 }
                 _currentVelocity = Vec2f.Zero;
                 _combatMachine.ChangeState(_abilityState);
@@ -542,7 +553,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         if (runner.CurrentPhase == SkillPhase.Telegraph)
         {
             _currentVelocity = Vec2f.Zero;
-            _targetPosition = playerPos;
+            LockLeapSmashTarget(playerPos.X, playerPos.Y);
             _leapStartPosition = _currentPosition;
             var dx = _targetPosition.X - _currentPosition.X;
             if (MathF.Abs(dx) > _configuration.CombatSettings.MoveThreshold)
@@ -621,6 +632,50 @@ public sealed class Boss2Brain : BaseBossBrain {
     {
         _stateTimer = 0.0f;
         _currentVelocity = Vec2f.Zero;
+        _targetLandingSurfaceY = 0.0f;
         _combatMachine.ChangeState(_idleState);
+    }
+
+    private void LockLeapSmashTarget(float playerX, float playerCenterY)
+    {
+        var playerHitboxHeight = _configuration.CombatSettings.PlayerHitboxHeight > 0.0f
+            ? _configuration.CombatSettings.PlayerHitboxHeight
+            : 48.0f;
+        var playerFootY = playerCenterY + playerHitboxHeight * 0.5f;
+
+        _targetLandingSurfaceY = CalculateTargetLandingSurfaceY(playerX, playerFootY);
+        _targetPosition = new Vec2f(playerX, _targetLandingSurfaceY - playerHitboxHeight * 0.5f);
+    }
+
+    private float CalculateTargetLandingSurfaceY(float targetX, float playerFootY)
+    {
+        var arenaCfg = ConfigManager.Arena;
+        var floorY = arenaCfg.FloorLimitY;
+        var navGraph = _navGraphProvider?.Invoke();
+
+        var bestSurfaceY = floorY;
+
+        if (navGraph is not null && navGraph.Nodes.Count > 0)
+        {
+            // プレイヤーの足元と同じ、または足元より下にある足場を検索（頭上の足場は除外）
+            // 接地浮動小数点誤差吸収用に 5.0px の許容誤差を設定
+            const float tolerance = 5.0f;
+
+            foreach (var node in navGraph.Nodes)
+            {
+                if (node.ContainsX(targetX, 15.0f))
+                {
+                    if (node.TopY >= playerFootY - tolerance)
+                    {
+                        if (node.TopY < bestSurfaceY)
+                        {
+                            bestSurfaceY = node.TopY;
+                        }
+                    }
+                }
+            }
+        }
+
+        return bestSurfaceY;
     }
 }

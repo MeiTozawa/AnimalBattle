@@ -163,7 +163,7 @@ StrParam = ""
 [EarthquakeRoar]
 SkillName = "Cataclysm Earthquake Roar"
 WindUpTime = 0.60
-TelegraphColor = 0xFF795548
+TelegraphColor = 0xFF00E5FF
 CastDuration = 1.80
 RecoveryTime = 0.60
 DefaultCooldown = 10.0
@@ -172,5 +172,6 @@ MinX = 80.0
 MaxX = 1200.0
 RockSpeed = 360.0
 RockRadius = 9.0
-RockFillColor = 0xFF8D6E63
-RockOutlineColor = 0xFFD7CCC8
+RockFillColor = 0xFF00E5FF
+RockOutlineColor = 0xFFE0F7FA
+BulletType = "Cyan"

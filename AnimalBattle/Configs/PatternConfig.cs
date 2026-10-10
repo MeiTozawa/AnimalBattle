@@ -69,6 +69,9 @@ public sealed class DiveRamConfig {
     /// <summary>着地炸裂弾外枠カラー</summary>
     public Color ImpactOutlineColor { get; set; }
 
+    /// <summary>着地炸裂弾の発生 Y オフセット (px)</summary>
+    public float ImpactOffsetY { get; set; }
+
     /// <summary>着地炸裂弾の特殊弾幕種別（Magenta, Cyan, Yellow, Black, Normal）</summary>
     public string BulletType { get; set; } = string.Empty;
 
@@ -695,6 +698,9 @@ public sealed class EarthquakeRoarConfig {
 
     /// <summary>落石外枠カラー</summary>
     public Color RockOutlineColor { get; set; }
+
+    /// <summary>落石の特殊弾幕種別（Magenta, Cyan, Yellow, Black, Normal）</summary>
+    public string BulletType { get; set; } = string.Empty;
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];

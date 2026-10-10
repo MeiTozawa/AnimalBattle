@@ -149,8 +149,19 @@ public sealed class Boss2Agent : BaseBossAgent
         var ignorePlatforms = isControlledAirborne && vel.Vy <= 0.0f;
         if (!ignorePlatforms)
         {
+            var isLeapSmash = _brain.CurrentSkill == BossSkill.LeapSmash;
+            var targetLandingSurfaceY = _brain.TargetLandingSurfaceY;
+
             platformQuery.Each((ref platTrans, ref platCol) =>
             {
+                var platTopY = platTrans.Y - platCol.Height / 2.0f;
+
+                // 泰山圧頂急降下中：目標着地サーフェス（足場上面または床）より上層にある足場は貫通（スキップ）
+                if (isLeapSmash && targetLandingSurfaceY > 0.0f && platTopY < targetLandingSurfaceY - 5.0f)
+                {
+                    return;
+                }
+
                 Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
                 if (PhysicsService.CheckPlatformGround(currentY, nextY, bossBox, platformBox, out var groundY, out var pVy))
                 {

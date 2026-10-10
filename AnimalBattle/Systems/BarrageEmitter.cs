@@ -265,6 +265,7 @@ public static class BarrageEmitter
         var count = Math.Max(1, cfg.ImpactBulletCount);
         var step = MathF.PI * 2.0f / count;
         var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Magenta);
+        var spawnY = origin.Y + cfg.ImpactOffsetY;
 
         for (var i = 0; i < count; i++)
         {
@@ -275,7 +276,7 @@ public static class BarrageEmitter
             CombatEffectHelper.SpawnBossSpecialBullet(
                 world,
                 origin.X,
-                origin.Y,
+                spawnY,
                 vx,
                 vy,
                 cfg.ImpactBulletRadius,
@@ -289,6 +290,7 @@ public static class BarrageEmitter
     private static void EmitEarthquakeRocks(World world, EarthquakeRoarConfig cfg)
     {
         var count = Math.Max(1, cfg.RockCount);
+        var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Cyan);
         for (var i = 0; i < count; i++)
         {
             var rx = cfg.MinX + Random.Shared.NextSingle() * (cfg.MaxX - cfg.MinX);
@@ -299,7 +301,7 @@ public static class BarrageEmitter
                 0.0f,
                 cfg.RockSpeed,
                 cfg.RockRadius,
-                BulletType.Normal,
+                bType,
                 cfg.RockFillColor,
                 cfg.RockOutlineColor);
         }
