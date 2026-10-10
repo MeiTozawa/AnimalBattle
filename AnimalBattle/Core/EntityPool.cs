@@ -182,9 +182,17 @@ public sealed class EntityPool : IDisposable {
         if (entity.Has<PoolLeaseState>())
         {
             ref var state = ref entity.GetMut<PoolLeaseState>();
-            if (state.PoolId != PoolId || !state.IsRented)
-                // 別プールのエンティティ、または既にプール内に返却済みの二重返却を安全に無視
+            if (state.PoolId != PoolId)
+            {
+                // 異なる世代または外部プールの孤児エンティティは画面残留を防ぐため安全に破棄
+                entity.Destruct();
                 return;
+            }
+
+            if (!state.IsRented)
+                // 既にプール内に返却済みの二重返却を安全に無視
+                return;
+
             state.IsRented = false;
         }
 

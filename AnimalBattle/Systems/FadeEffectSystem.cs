@@ -24,16 +24,18 @@ public static class FadeEffectSystem {
                 var dt = it.DeltaTime();
                 for (var i = 0; i < count; ++i)
                 {
-                    fade[i].ElapsedTimer += dt;
-                    if (fade[i].ElapsedTimer >= fade[i].Duration)
+                    ref var f = ref fade[i];
+                    f.ElapsedTimer += dt;
+                    if (f.ElapsedTimer >= f.Duration)
                     {
+                        f.CurrentAlpha = f.EndAlpha;
                         CombatEntityPoolHelper.Recycle(it.World(), it.Entity(i));
                         continue;
                     }
 
-                    var progress = Math.Clamp(fade[i].ElapsedTimer / Math.Max(0.001f, fade[i].Duration), 0.0f, 1.0f);
-                    var factor = EasingMath.Evaluate(fade[i].Ease, progress);
-                    fade[i].CurrentAlpha = fade[i].StartAlpha + (fade[i].EndAlpha - fade[i].StartAlpha) * factor;
+                    var progress = Math.Clamp(f.ElapsedTimer / Math.Max(0.001f, f.Duration), 0.0f, 1.0f);
+                    var factor = EasingMath.Evaluate(f.Ease, progress);
+                    f.CurrentAlpha = f.StartAlpha + (f.EndAlpha - f.StartAlpha) * factor;
                 }
             });
 
