@@ -537,11 +537,27 @@ public sealed class WorldRenderSystem : IDisposable {
                 var dirX = vx * invSpeed;
                 var dirY = vy * invSpeed;
 
-                var trailX = (int)(px - dirX * _pTrailOffset);
-                var trailY = (int)(py - dirY * _pTrailOffset);
-                GameEngine.DrawCircle(trailX, trailY, _pInnerRadius, _pOuterColor, true);
+                // 画家アルゴリズム（奥から手前）に従い、3 段階の彗星トレイルを描画
+                // 第3階層：先端（最も遠く、最小、最も透明）
+                GameEngine.DrawCircle(
+                    (int)(px - dirX * _pTrailOffset3),
+                    (int)(py - dirY * _pTrailOffset3),
+                    _pTrailRadius3, _pTrailColor3, true);
+
+                // 第2階層：中段
+                GameEngine.DrawCircle(
+                    (int)(px - dirX * _pTrailOffset2),
+                    (int)(py - dirY * _pTrailOffset2),
+                    _pTrailRadius2, _pTrailColor2, true);
+
+                // 第1階層：弾頭近端（弾頭外枠を覆い、滑らかに接続）
+                GameEngine.DrawCircle(
+                    (int)(px - dirX * _pTrailOffset1),
+                    (int)(py - dirY * _pTrailOffset1),
+                    _pTrailRadius1, _pTrailColor1, true);
             }
 
+            // 弾頭本体（外層グロー＋内層白色コア）
             GameEngine.DrawCircle(px, py, _pOuterRadius, _pOuterColor, true);
             GameEngine.DrawCircle(px, py, _pInnerRadius, _pInnerColor, true);
         }
