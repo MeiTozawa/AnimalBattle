@@ -451,14 +451,22 @@ public sealed class WorldRenderSystem : IDisposable {
             jitterY = jitter.CurrentOffsetY;
         }
 
-        var springScale = 1.0f;
+        var finalScaleX = player.ScaleX;
+        var finalScaleY = player.ScaleY;
         var springOffsetY = 0.0f;
-        if (player.Entity.Has<SpringScale>())
+
+        if (player is PlayerPawn playerPawn)
         {
-            ref readonly var spring = ref player.Entity.Get<SpringScale>();
-            springScale = Math.Clamp((spring.CurrentX + spring.CurrentY) * 0.5f, 0.2f, 3.0f);
-            var halfH = player.Sprite.SrcRect.Height * player.ScaleX * 0.5f;
-            springOffsetY = Math.Clamp((1.0f - spring.CurrentY) * (halfH * 0.4f), -halfH, halfH);
+            ref readonly var spring = ref playerPawn.SpringScale;
+            finalScaleX *= spring.CurrentX;
+            finalScaleY *= spring.CurrentY;
+
+            if (playerPawn.IsGrounded)
+            {
+                // 接地時は脚底を接触線に固定し、頭部・胴体のみを下方に押し潰し復元
+                var halfH = playerPawn.Sprite.SrcRect.Height * playerPawn.ScaleY * 0.5f;
+                springOffsetY = halfH * (1.0f - spring.CurrentY);
+            }
         }
 
         if (!isInvincibleBlinking)
@@ -469,7 +477,8 @@ public sealed class WorldRenderSystem : IDisposable {
                 player.Sprite.SrcRect.Y1,
                 player.Sprite.SrcRect.Width,
                 player.Sprite.SrcRect.Height,
-                player.ScaleX * springScale,
+                finalScaleX,
+                finalScaleY,
                 0.0,
                 player.Sprite.GraphHandle,
                 true,

@@ -38,6 +38,9 @@ public sealed class PlayerPawn : Pawn
            .Add<PlayerTag>();
     }
 
+    /// <summary>スプリング拡縮変形状態の参照を取得します（常駐 SpringScale への直接アクセス）。</summary>
+    public ref readonly SpringScale SpringScale => ref Entity.Get<SpringScale>();
+
     /// <summary>残り二段ジャンプ回数を取得または設定します。</summary>
     public int RemainingJumps
     {

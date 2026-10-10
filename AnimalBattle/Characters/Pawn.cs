@@ -131,12 +131,8 @@ public abstract class Pawn
     /// <summary>接地状態であるかを取得または設定します。</summary>
     public virtual bool IsGrounded
     {
-        get => Entity.Has<CollisionBox>() && Entity.Get<CollisionBox>().IsGrounded;
-        set
-        {
-            if (Entity.Has<CollisionBox>())
-                Entity.GetMut<CollisionBox>().IsGrounded = value;
-        }
+        get => Entity.Get<CollisionBox>().IsGrounded;
+        set => Entity.GetMut<CollisionBox>().IsGrounded = value;
     }
 
     #endregion
