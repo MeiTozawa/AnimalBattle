@@ -117,7 +117,7 @@ def generate_code() -> str:
     ]
 
     # ---- 1. Resource/ 直下のサブディレクトリごとにクラスを生成 ----
-    known_subdirs = ["Characters", "Platform"]
+    known_subdirs = ["Characters", "Platform", "Sound"]
     existing_subdirs = {d.name: d for d in _scan_subdirectories(_RESOURCE_ROOT)}
 
     for subdir_name in known_subdirs:

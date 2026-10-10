@@ -2,6 +2,7 @@ using System;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using AnimalBattle.Events;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -87,6 +88,7 @@ public static class BossDamageResolutionSystem
                         CombatEffectHelper.ClearAllBossBullets(world);
                         CombatEffectHelper.SpawnVictoryExplosions(world, trans.X, trans.Y);
                         CameraService.AddTrauma(cameraCfg.VictoryExplosionTrauma);
+                        EventBus.Publish(new BossDiedEvent());
                     }
                     else
                     {
@@ -94,6 +96,8 @@ public static class BossDamageResolutionSystem
                         {
                             CameraService.AddTrauma(cameraCfg.BossVulnerableHitTrauma);
                         }
+
+                        EventBus.Publish(new BossDamagedEvent(finalDamage, hp.Current, isVulnerable));
 
                         // Boss 被弾反撃：現在の Phase に応じた数量の黑色弾幕を発射
                         CombatEffectHelper.SpawnBossCounterAttack(world, trans.X, trans.Y, combat.Phase);

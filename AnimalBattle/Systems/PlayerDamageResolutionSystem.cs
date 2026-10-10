@@ -2,6 +2,7 @@ using System;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using AnimalBattle.Events;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -59,9 +60,11 @@ public static class PlayerDamageResolutionSystem
                     }
 
                     // HP 減算および無敵タイマー・被弾白閃エフェクトの注入
+                    var prevHp = hp.Current;
                     hp.Current = MathF.Max(0.0f, hp.Current - dmg.Amount);
                     hp.InvincibleTimer = invCfg.Duration;
                     entity.Set(new HitFlashEffect(flashCfg.Duration, flashCfg.Color));
+                    EventBus.Publish(new PlayerHealthChangedEvent(prevHp, hp.Current, hp.Max));
 
                     // ヒットストップ時間および微小振動の付与
                     var isHeavy = dmg.IsHeavyImpact;
@@ -93,12 +96,14 @@ public static class PlayerDamageResolutionSystem
                         sprite.IsVisible = false;
                         CombatEffectHelper.SpawnPlayerDeathParticles(world, trans.X, trans.Y);
                         CameraService.AddTrauma(cameraCfg.PlayerHeavyHitTrauma);
+                        EventBus.Publish(new PlayerDiedEvent());
                     }
                     else
                     {
                         var trauma = isHeavy ? cameraCfg.PlayerHeavyHitTrauma : cameraCfg.PlayerHitTrauma;
                         CameraService.AddTrauma(trauma);
                         CameraService.AddDirectionalImpulse(dmg.KnockbackX, dmg.KnockbackY, cameraCfg.DirectionalImpulseRatio);
+                        EventBus.Publish(new PlayerDamagedEvent(dmg.Amount, hp.Current, isHeavy));
                     }
 
                     entity.Remove<IncomingDamage>();

@@ -22,6 +22,7 @@ public static class ConfigManager {
     private static ConfigBase<RenderConfig> _renderConfigContainer = new(new RenderConfig());
     private static ConfigBase<CameraConfig> _cameraConfigContainer = new(new CameraConfig());
     private static ConfigBase<TileSetConfig> _tileSetConfigContainer = new(new TileSetConfig());
+    private static ConfigBase<AudioConfig> _audioConfigContainer = new(new AudioConfig());
     private static bool _isInitialized;
 
     static ConfigManager()
@@ -59,6 +60,9 @@ public static class ConfigManager {
     /// <summary>タイルセット足場設定オブジェクトを取得します。</summary>
     public static TileSetConfig TileSet => _tileSetConfigContainer.Config;
 
+    /// <summary>音響および音量設定オブジェクトを取得します。</summary>
+    public static AudioConfig Audio => _audioConfigContainer.Config;
+
     /// <summary>プレイヤー設定コンテナを取得します。</summary>
     public static ConfigBase<PlayerConfig> PlayerContainer => _playerConfigContainer;
 
@@ -89,6 +93,9 @@ public static class ConfigManager {
     /// <summary>タイルセット設定コンテナを取得します。</summary>
     public static ConfigBase<TileSetConfig> TileSetContainer => _tileSetConfigContainer;
 
+    /// <summary>音響設定コンテナを取得します。</summary>
+    public static ConfigBase<AudioConfig> AudioContainer => _audioConfigContainer;
+
     /// <summary>
     ///     全設定を初期化します。
     ///     Debug ビルド時は TOML ファイル群を動的ロードしてホットリロード監視を開始します。
@@ -117,6 +124,7 @@ public static class ConfigManager {
         LoadConfig(ResourcePath.Config.Render, ref _renderConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Camera, ref _cameraConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Platform.SheetToml, ref _tileSetConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Audio, ref _audioConfigContainer, ref successCount, ref failureCount);
 
         Debug.Assert(failureCount == 0, "一部の TOML 設定ファイルの読み込みに失敗しました。");
 

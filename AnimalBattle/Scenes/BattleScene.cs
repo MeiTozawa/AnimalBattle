@@ -3,6 +3,8 @@ using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Characters;
 using AnimalBattle.Characters.Boss;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
+using AnimalBattle.Events;
 using AnimalBattle.Maps;
 using Flecs.NET.Core;
 
@@ -122,6 +124,8 @@ public class BattleScene : IDisposable {
         _vfxQuery.Dispose();
         _platformQuery.Dispose();
         _ecsWorld.Dispose();
+        SoundService.StopBgm();
+        EventBus.Publish(new CombatResetEvent());
         AssetManager.Shutdown();
         if (Current == this) Current = null!;
         _isDisposed = true;
@@ -161,6 +165,7 @@ public class BattleScene : IDisposable {
     public void Initialize()
     {
         RegisterConfigReloadHooks();
+        SoundService.PlayBgm();
     }
 
     /// <summary>
@@ -312,6 +317,7 @@ public class BattleScene : IDisposable {
         _vfxQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
         CameraService.Reset();
         Player.Reset(ConfigManager.Player);
+        EventBus.Publish(new CombatResetEvent());
     }
 
     /// <summary>

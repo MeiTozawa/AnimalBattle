@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
+using AnimalBattle.Events;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -33,26 +34,32 @@ public static class BarrageEmitter
         {
             case BossSkill.Aimed3Shot:
                 EmitAimedSpread(world, patternCfg.Aimed3Shot, origin, target);
+                EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
             case BossSkill.FastSniper:
                 EmitSniper(world, patternCfg.FastSniper, origin, target);
+                EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
             case BossSkill.RingBurst:
                 EmitRadialRing(world, patternCfg.RingBurst, origin, ref angleOffset);
+                EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
             case BossSkill.DoubleSpiral:
                 EmitDoubleSpiral(world, patternCfg.DoubleSpiral, origin, ref angleOffset);
+                EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
             case BossSkill.CrossChaos:
                 EmitCrossChaos(world, patternCfg.CrossChaos, origin, ref angleOffset);
+                EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
             case BossSkill.RainDrop:
                 EmitRainDrop(world, patternCfg.RainDrop);
+                EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
             case BossSkill.DiveRam:
@@ -262,10 +269,11 @@ public static class BarrageEmitter
     /// <summary>急降下着地炸裂弾幕を生成します。</summary>
     private static void EmitDiveImpact(World world, DiveRamConfig cfg, Vec2f origin)
     {
+        var spawnY = origin.Y + cfg.ImpactOffsetY;
+        EventBus.Publish(new BossDiveImpactEvent(origin.X, spawnY));
         var count = Math.Max(1, cfg.ImpactBulletCount);
         var step = MathF.PI * 2.0f / count;
         var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Magenta);
-        var spawnY = origin.Y + cfg.ImpactOffsetY;
 
         for (var i = 0; i < count; i++)
         {

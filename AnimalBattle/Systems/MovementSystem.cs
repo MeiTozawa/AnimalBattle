@@ -1,5 +1,6 @@
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Events;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -134,6 +135,7 @@ public static class MovementSystem {
                 jump.JumpBufferTimer = 0.0f;
                 jump.RemainingJumps = jump.MaxJumps - 1;
                 didJump = true;
+                EventBus.Publish(new PlayerJumpedEvent());
             }
             else if (jump.RemainingJumps > 0)
             {
@@ -144,6 +146,7 @@ public static class MovementSystem {
                 didJump = true;
                 if (effectWorld.HasValue)
                     CombatEffectHelper.SpawnJumpRingEffect(effectWorld.Value, trans.X, trans.Y + col.Height / 2.0f);
+                EventBus.Publish(new PlayerDoubleJumpedEvent());
             }
 
             if (didJump && entity.Has<SpringScale>())
@@ -223,14 +226,18 @@ public static class MovementSystem {
         }
 
         // 接地瞬間時の押し潰し演出（落下速度が設定閾値以上の場合のみ適用）
-        if (!wasGrounded && isGrounded && vel.Vy >= jump.LandSquashVelocityThreshold && entity.Has<SpringScale>())
+        if (!wasGrounded && isGrounded && vel.Vy >= jump.LandSquashVelocityThreshold)
         {
-            ref var spring = ref entity.GetMut<SpringScale>();
-            var pCfg = ConfigManager.Player;
-            spring.CurrentX = pCfg.LandSquashScaleX;
-            spring.CurrentY = pCfg.LandSquashScaleY;
-            spring.VelX = 0.0f;
-            spring.VelY = 0.0f;
+            EventBus.Publish(new PlayerLandedEvent(vel.Vy));
+            if (entity.Has<SpringScale>())
+            {
+                ref var spring = ref entity.GetMut<SpringScale>();
+                var pCfg = ConfigManager.Player;
+                spring.CurrentX = pCfg.LandSquashScaleX;
+                spring.CurrentY = pCfg.LandSquashScaleY;
+                spring.VelX = 0.0f;
+                spring.VelY = 0.0f;
+            }
         }
 
         if (isGrounded) jump.RemainingJumps = jump.MaxJumps;

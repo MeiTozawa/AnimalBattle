@@ -1,5 +1,6 @@
 using AnimalBattle.Components;
 using AnimalBattle.Core;
+using AnimalBattle.Events;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -95,6 +96,8 @@ public static class WeaponSystem
                 .Set(new CollisionBox(weapon.BulletWidth, weapon.BulletHeight))
                 .Set(new Hitbox(new CollisionShape.Box(weapon.BulletWidth, weapon.BulletHeight), weapon.BulletDamage))
                 .Add<PlayerBulletTag>();
+
+            EventBus.Publish(new PlayerShotFiredEvent(spawnX, spawnY, dirX, dirY));
 
             weapon.CooldownRemaining = weapon.CooldownDuration;
             intent.ShootTriggered = false;

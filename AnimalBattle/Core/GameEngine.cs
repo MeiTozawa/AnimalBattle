@@ -25,6 +25,7 @@ public static class GameEngine {
         Debug.Assert(initSuccess, "Native エンジンの初期化に失敗しました。");
 
         InputService.RegisterDefaultActions();
+        SoundService.Initialize();
     }
 
     /// <summary>
@@ -32,6 +33,7 @@ public static class GameEngine {
     /// </summary>
     public static void Shutdown()
     {
+        SoundService.Shutdown();
         _commandBuffer.Dispose();
         NativeBindings.Engine_Shutdown();
     }

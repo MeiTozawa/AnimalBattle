@@ -65,6 +65,60 @@ public static class ResourcePath
     }
 
     /// <summary>
+    /// Sound リソースのパス定数。
+    /// </summary>
+    public static class Sound
+    {
+        /// <summary>Sound リソースフォルダの相対パス。</summary>
+        public const string Directory = @"Sound";
+
+        /// <summary>bgm_battle.mp3 のファイルパス。</summary>
+        public const string BgmBattleMp3 = @"Sound\bgm_battle.mp3";
+
+        /// <summary>boss_bullet_shoot.mp3 のファイルパス。</summary>
+        public const string BossBulletShootMp3 = @"Sound\boss_bullet_shoot.mp3";
+
+        /// <summary>boss_death.mp3 のファイルパス。</summary>
+        public const string BossDeathMp3 = @"Sound\boss_death.mp3";
+
+        /// <summary>boss_dive_impact.mp3 のファイルパス。</summary>
+        public const string BossDiveImpactMp3 = @"Sound\boss_dive_impact.mp3";
+
+        /// <summary>boss_warning.mp3 のファイルパス。</summary>
+        public const string BossWarningMp3 = @"Sound\boss_warning.mp3";
+
+        /// <summary>bullet_hit_boss.mp3 のファイルパス。</summary>
+        public const string BulletHitBossMp3 = @"Sound\bullet_hit_boss.mp3";
+
+        /// <summary>bullet_hit_vulnerable.mp3 のファイルパス。</summary>
+        public const string BulletHitVulnerableMp3 = @"Sound\bullet_hit_vulnerable.mp3";
+
+        /// <summary>player_dash.mp3 のファイルパス。</summary>
+        public const string PlayerDashMp3 = @"Sound\player_dash.mp3";
+
+        /// <summary>player_death.mp3 のファイルパス。</summary>
+        public const string PlayerDeathMp3 = @"Sound\player_death.mp3";
+
+        /// <summary>player_double_jump.mp3 のファイルパス。</summary>
+        public const string PlayerDoubleJumpMp3 = @"Sound\player_double_jump.mp3";
+
+        /// <summary>player_hit.mp3 のファイルパス。</summary>
+        public const string PlayerHitMp3 = @"Sound\player_hit.mp3";
+
+        /// <summary>player_jump.mp3 のファイルパス。</summary>
+        public const string PlayerJumpMp3 = @"Sound\player_jump.mp3";
+
+        /// <summary>player_land.mp3 のファイルパス。</summary>
+        public const string PlayerLandMp3 = @"Sound\player_land.mp3";
+
+        /// <summary>player_low_health.mp3 のファイルパス。</summary>
+        public const string PlayerLowHealthMp3 = @"Sound\player_low_health.mp3";
+
+        /// <summary>player_shoot.mp3 のファイルパス。</summary>
+        public const string PlayerShootMp3 = @"Sound\player_shoot.mp3";
+    }
+
+    /// <summary>
     /// ゲーム設定 TOML ファイルのリソースパス定数。
     /// </summary>
     public static class Config
@@ -74,6 +128,9 @@ public static class ResourcePath
 
         /// <summary>arena.toml 設定ファイル名。</summary>
         public const string Arena = "arena.toml";
+
+        /// <summary>audio.toml 設定ファイル名。</summary>
+        public const string Audio = "audio.toml";
 
         /// <summary>boss1.toml 設定ファイル名。</summary>
         public const string Boss1 = "boss1.toml";
@@ -101,6 +158,9 @@ public static class ResourcePath
 
         /// <summary>arena.toml の相対パス。</summary>
         public const string ArenaToml = @"Config\arena.toml";
+
+        /// <summary>audio.toml の相対パス。</summary>
+        public const string AudioToml = @"Config\audio.toml";
 
         /// <summary>boss1.toml の相対パス。</summary>
         public const string Boss1Toml = @"Config\boss1.toml";
