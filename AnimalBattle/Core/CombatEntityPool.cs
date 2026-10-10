@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Core;
@@ -158,19 +159,27 @@ public sealed class CombatEntityPoolComponent : IDisposable {
 /// </summary>
 public static class CombatEntityPoolHelper {
     /// <summary>
-    ///     Flecs ワールドから共有戦闘エンティティプールを取得します（未登録の場合は遅延生成して登録）。
+    ///     戦闘エンティティプールを明示的に事前確保・登録します（シーン初期化時に一度のみ呼び出し）。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド。</param>
+    /// <returns>登録された戦闘エンティティプールコンポーネント。</returns>
+    public static CombatEntityPoolComponent InitializeCombatEntityPool(this World world)
+    {
+        Debug.Assert(!world.Has<CombatEntityPoolComponent>(), "[CombatEntityPool 警告] 戦闘エンティティプールが多重初期化されました。");
+        CombatEntityPoolComponent comp = new(world);
+        world.Set(comp);
+        return comp;
+    }
+
+    /// <summary>
+    ///     Flecs ワールドから共有戦闘エンティティプールを取得します。
+    ///     事前初期化前提のダイレクトアクセスとし、ホットパス（高頻度呼び出し）での Has 分岐判定を根絶します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド。</param>
     /// <returns>戦闘エンティティプールコンポーネント。</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CombatEntityPoolComponent GetCombatEntityPool(this World world)
     {
-        if (!world.Has<CombatEntityPoolComponent>())
-        {
-            CombatEntityPoolComponent comp = new(world);
-            world.Set(comp);
-            return comp;
-        }
-
         return world.Get<CombatEntityPoolComponent>();
     }
 

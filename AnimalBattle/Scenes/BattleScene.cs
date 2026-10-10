@@ -50,7 +50,7 @@ public class BattleScene : IDisposable {
         _ecsWorld.Import<EffectModule>();
 
         // 共有戦闘エンティティプールを事前確保・初期化（初弾発射時の遅延生成による Stage 競合および破棄漏れを根絶）
-        _ecsWorld.GetCombatEntityPool();
+        _ecsWorld.InitializeCombatEntityPool();
 
         var playerCfg = ConfigManager.Player;
 
