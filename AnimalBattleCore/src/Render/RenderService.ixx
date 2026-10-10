@@ -41,7 +41,10 @@ namespace ab {
         virtual void DrawString(Vec2i pos, const wchar_t* text, uint32_t color) = 0;
         virtual void DrawGraph(Vec2i pos, int handle, bool trans_flag) = 0;
         virtual void DrawRotaGraph(Vec2i center, double ext_rate, double angle, int graph_handle, bool trans_flag) = 0;
-        virtual void DrawRectRotaGraph(Vec2i center, Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) = 0;
+        virtual void DrawRectRotaGraph(Vec2i center, Rect<int> src, double ext_rate_x, double ext_rate_y, double angle, int graph_handle, bool trans_flag, bool turn_flag) = 0;
+        virtual void DrawRectRotaGraph(Vec2i center, Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) {
+            DrawRectRotaGraph(center, src, ext_rate, ext_rate, angle, graph_handle, trans_flag, turn_flag);
+        }
 
         // --- カメラ・状態設定 ---
         virtual void SetCameraEnabled(bool enabled) = 0;

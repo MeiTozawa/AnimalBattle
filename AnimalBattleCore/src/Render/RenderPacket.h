@@ -90,7 +90,7 @@ struct DrawRotaGraphPacket {
     uint8_t padding[3];
 };
 
-/// @brief 矩形切り出し回転拡縮画像描画コマンドデータ
+/// @brief 矩形切り出し回転拡縮画像描画コマンドデータ（独立 X/Y 軸拡縮対応）
 struct DrawRectRotaGraphPacket {
     int32_t center_x;
     int32_t center_y;
@@ -98,7 +98,8 @@ struct DrawRectRotaGraphPacket {
     int32_t src_y;
     int32_t src_w;
     int32_t src_h;
-    float scale;
+    float scale_x;
+    float scale_y;
     float angle;
     int32_t handle;
     uint8_t trans;

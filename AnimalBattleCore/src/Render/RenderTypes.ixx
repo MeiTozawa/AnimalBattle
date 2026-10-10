@@ -119,7 +119,8 @@ namespace ab {
     export struct DrawRectRotaGraphCmd {
         Vec2i center;
         Rect<int> src;
-        double ext_rate;
+        double ext_rate_x;
+        double ext_rate_y;
         double angle;
         int graph_handle;
         bool trans_flag;

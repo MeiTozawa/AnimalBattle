@@ -3,8 +3,6 @@ module;
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <string>
-#include <utility>
 #include <DxLib.h>
 
 #ifdef GetObject
@@ -126,7 +124,8 @@ namespace ab {
                                           Vec2i{p.rect_rota_graph.src_x, p.rect_rota_graph.src_y},
                                           Vec2i{p.rect_rota_graph.src_x + p.rect_rota_graph.src_w,
                                                 p.rect_rota_graph.src_y + p.rect_rota_graph.src_h}},
-                                      static_cast<double>(p.rect_rota_graph.scale),
+                                      static_cast<double>(p.rect_rota_graph.scale_x),
+                                      static_cast<double>(p.rect_rota_graph.scale_y),
                                       static_cast<double>(p.rect_rota_graph.angle),
                                       p.rect_rota_graph.handle,
                                       p.rect_rota_graph.trans != 0,
@@ -215,21 +214,24 @@ namespace ab {
             double scale = camera_enabled_ ? (ext_rate * camera_scale_) : ext_rate;
             ::DrawRotaGraph(p.x, p.y, scale, angle, graph_handle, trans_flag ? TRUE : FALSE);
         }
-        void DrawRectRotaGraph(Vec2i center, Rect<int> src, double ext_rate, double angle, int graph_handle, bool trans_flag, bool turn_flag) override {
+        using IRenderService::DrawRectRotaGraph;
+        void DrawRectRotaGraph(Vec2i center, Rect<int> src, double ext_rate_x, double ext_rate_y, double angle, int graph_handle, bool trans_flag, bool turn_flag) override {
             Vec2i p = ApplyCamera(center);
-            double scale = camera_enabled_ ? (ext_rate * camera_scale_) : ext_rate;
+            double scale_x = camera_enabled_ ? (ext_rate_x * camera_scale_) : ext_rate_x;
+            double scale_y = camera_enabled_ ? (ext_rate_y * camera_scale_) : ext_rate_y;
             int src_w = src.Width();
             int src_h = src.Height();
-            ::DrawRectRotaGraph(p.x, p.y, src.p1.x, src.p1.y, src_w, src_h,
-                                scale, angle, graph_handle,
-                                trans_flag ? TRUE : FALSE, turn_flag ? TRUE : FALSE);
+            ::DrawRectRotaGraph3(p.x, p.y, src.p1.x, src.p1.y, src_w, src_h,
+                                 src_w * 0.5, src_h * 0.5,
+                                 scale_x, scale_y, angle, graph_handle,
+                                 trans_flag ? TRUE : FALSE, turn_flag ? TRUE : FALSE);
         }
 
         // --- カメラ・状態設定 ---
         void SetCameraEnabled(bool enabled) override { camera_enabled_ = enabled; }
         void SetCameraState(float x, float y, float scale) override { camera_x_ = x; camera_y_ = y; camera_scale_ = scale; }
         void SetDrawBlendMode(BlendMode mode, int pal) override {
-            int dx_mode = DX_BLENDMODE_NOBLEND;
+            int dx_mode;
             switch (mode) {
             case BlendMode::Alpha: dx_mode = DX_BLENDMODE_ALPHA; break;
             case BlendMode::Add:   dx_mode = DX_BLENDMODE_ADD; break;
