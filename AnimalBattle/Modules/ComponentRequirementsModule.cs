@@ -25,7 +25,8 @@ public readonly struct ComponentRequirementsModule : IFlecsModule {
            .Add(Ecs.With, world.Component<InvincibleOnHit>().Entity)
            .Add(Ecs.With, world.Component<HitFlashConfig>().Entity)
            .Add(Ecs.With, world.Component<Sprite>().Entity)
-           .Add(Ecs.With, world.Component<Animation>().Entity);
+           .Add(Ecs.With, world.Component<Animation>().Entity)
+           .Add(Ecs.With, world.Component<DashState>().Entity);
 
         // BossTag に共通して必須なコンポーネント群
         world.Component<BossTag>().Entity

@@ -172,6 +172,9 @@ public static class ColorPalette {
     /// <summary>無敵時間シールド光輪色 (0x8800FFFF)</summary>
     public static readonly Color InvincibleShield = Color.FromArgb(0x88, 0x00, 0xFF, 0xFF);
 
+    /// <summary>ダッシュ残像半透明シアン発光色 (0xB450C8FF)</summary>
+    public static readonly Color GhostTrailCyan = Color.FromArgb(0xB4, 0x50, 0xC8, 0xFF);
+
     // ==========================================
     // 特殊弾幕種別専用カラー (BulletType Palette)
     // ==========================================

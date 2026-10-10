@@ -9,12 +9,15 @@ NoiseFrequency3 = 49.0
 NoiseFrequency4 = 91.0
 
 # Kinetic Framing & Follow
+ArenaCenterX = 640.0
+ArenaCenterY = 360.0
 LookAheadFactor = 0.12
 FollowSpeed = 6.0
 PlayerFocusWeight = 0.65
 BossFocusWeight = 0.35
 MaxPanX = 35.0
 MaxPanY = 25.0
+AbilityShakeTraumaScale = 0.10
 
 # Combat Camera Trauma Events
 PlayerHitTrauma = 0.65

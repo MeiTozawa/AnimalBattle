@@ -8,9 +8,6 @@ namespace AnimalBattle.Core;
 /// </summary>
 public static class CameraService
 {
-    private const float ArenaCenterX = 640.0f;
-    private const float ArenaCenterY = 360.0f;
-
     private static float _trauma;
     private static float _time;
     private static float _impulseX;
@@ -94,7 +91,8 @@ public static class CameraService
     /// <param name="deltaTime">前フレームからの経過秒数</param>
     public static void Update(float deltaTime)
     {
-        Update(deltaTime, ArenaCenterX, ArenaCenterY, 0.0f, 0.0f, ArenaCenterX, ArenaCenterY);
+        var cfg = ConfigManager.Camera;
+        Update(deltaTime, cfg.ArenaCenterX, cfg.ArenaCenterY, 0.0f, 0.0f, cfg.ArenaCenterX, cfg.ArenaCenterY);
     }
 
     /// <summary>
@@ -135,9 +133,9 @@ public static class CameraService
         var targetCamX = focusX + playerVx * cfg.LookAheadFactor;
         var targetCamY = focusY + playerVy * cfg.LookAheadFactor;
 
-        // 中心 (640, 360) からの変位に対するカメラ描画逆オフセット
-        var desiredPanX = Math.Clamp(ArenaCenterX - targetCamX, -cfg.MaxPanX, cfg.MaxPanX);
-        var desiredPanY = Math.Clamp(ArenaCenterY - targetCamY, -cfg.MaxPanY, cfg.MaxPanY);
+        // 中心変位に対するカメラ描画逆オフセット
+        var desiredPanX = Math.Clamp(cfg.ArenaCenterX - targetCamX, -cfg.MaxPanX, cfg.MaxPanX);
+        var desiredPanY = Math.Clamp(cfg.ArenaCenterY - targetCamY, -cfg.MaxPanY, cfg.MaxPanY);
 
         // 指数平滑化 Lerp による追従
         var lerpFactor = 1.0f - MathF.Exp(-cfg.FollowSpeed * deltaTime);

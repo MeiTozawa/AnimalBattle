@@ -366,4 +366,39 @@ public static class CombatEffectHelper {
 
         if (entity.Has<BulletModifier>()) entity.Remove<BulletModifier>();
     }
+
+    /// <summary>
+    ///     ダッシュ高速移動時の半透明速度残像（Ghost Trail）エフェクトを生成します。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド。</param>
+    /// <param name="x">出現中心 X 座標。</param>
+    /// <param name="y">出現中心 Y 座標。</param>
+    /// <param name="scaleX">描画スケール X。</param>
+    /// <param name="scaleY">描画スケール Y。</param>
+    /// <param name="rotation">描画回転角（ラジアン）。</param>
+    /// <param name="graphHandle">テクスチャ画像ハンドル。</param>
+    /// <param name="srcRect">テクスチャ切り出し矩形。</param>
+    /// <param name="flipX">水平反転フラグ。</param>
+    /// <param name="color">残像発光カラー。</param>
+    /// <param name="duration">残像持続時間（秒）。</param>
+    public static void SpawnGhostTrail(
+        World world,
+        float x,
+        float y,
+        float scaleX,
+        float scaleY,
+        float rotation,
+        int graphHandle,
+        Rect srcRect,
+        bool flipX,
+        Color color,
+        float duration)
+    {
+        CombatEntityPoolHelper.RentAreaEffect(world)
+           .Set(new Transform(x, y, scaleX, scaleY, rotation))
+           .Set(new Velocity(0.0f))
+           .Set(new Hitbox(default, 0.0f, Faction.Friendly, false))
+           .Set(new Sprite(graphHandle, flipX, true, srcRect, color))
+           .Set(new FadeEffect(duration, 160.0f, 0.0f));
+    }
 }

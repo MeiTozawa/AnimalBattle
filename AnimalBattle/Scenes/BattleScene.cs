@@ -157,7 +157,8 @@ public class BattleScene : IDisposable {
 
         Boss.AbilitySystem.OnScreenShake += (intensity, duration) =>
         {
-            var trauma = intensity > 1.0f ? intensity * 0.1f : intensity;
+            var camCfg = ConfigManager.Camera;
+            var trauma = intensity > 1.0f ? intensity * camCfg.AbilityShakeTraumaScale : intensity;
             CameraService.AddTrauma(trauma);
         };
 

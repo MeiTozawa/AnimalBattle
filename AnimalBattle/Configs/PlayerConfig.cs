@@ -127,6 +127,30 @@ public sealed class PlayerConfig {
     /// <summary>頂点滞空時の重力倍率</summary>
     public float ApexFloatGravityMultiplier { get; set; }
 
+    /// <summary>ダッシュ突進速度（px/s）</summary>
+    public float DashSpeed { get; set; }
+
+    /// <summary>ダッシュ持続時間（秒）</summary>
+    public float DashDuration { get; set; }
+
+    /// <summary>ダッシュ再使用クールダウン時間（秒）</summary>
+    public float DashCooldown { get; set; }
+
+    /// <summary>ダッシュによる無敵時間（秒）</summary>
+    public float DashInvincibleDuration { get; set; }
+
+    /// <summary>ダッシュ開始時の横長ストレッチ変形倍率 X</summary>
+    public float DashStretchScaleX { get; set; }
+
+    /// <summary>ダッシュ開始時の扁平ストレッチ変形倍率 Y</summary>
+    public float DashStretchScaleY { get; set; }
+
+    /// <summary>ダッシュ中の残像生成間隔（秒）</summary>
+    public float DashGhostTrailInterval { get; set; }
+
+    /// <summary>ダッシュ残像のフェード持続時間（秒）</summary>
+    public float DashGhostTrailDuration { get; set; }
+
     /// <summary>地面初速加速度（px/s²）</summary>
     public float GroundAcceleration { get; set; }
 

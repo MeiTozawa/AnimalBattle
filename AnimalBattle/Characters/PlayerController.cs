@@ -37,6 +37,7 @@ public sealed class PlayerController
         var jumpPressed = InputService.IsPressed(InputAction.Jump);
         var jumpHolding = InputService.IsHolding(InputAction.Jump);
         var shootPressed = InputService.IsPressed(InputAction.Attack) || InputService.IsHolding(InputAction.Attack);
+        var dashPressed = InputService.IsPressed(InputAction.Skill);
 
         var isUp = InputService.IsHolding(InputAction.Up);
         var isDown = InputService.IsHolding(InputAction.Down);
@@ -56,16 +57,17 @@ public sealed class PlayerController
             dirY = 0.0f;
         }
 
-        SubmitInput(moveX, jumpPressed, jumpHolding, shootPressed, dirX, dirY);
+        SubmitInput(moveX, jumpPressed, jumpHolding, shootPressed, dashPressed, dirX, dirY);
     }
 
     /// <summary>
-    ///     指定された移動・跳躍・射撃入力をエンティティの意図コンポーネントへ注入します（テスト・AI操作・リプレイ対応）。
+    ///     指定された移動・跳躍・射撃・ダッシュ入力をエンティティの意図コンポーネントへ注入します（テスト・AI操作・リプレイ対応）。
     /// </summary>
     /// <param name="moveX">水平移動入力値（-1.0f: 左, 1.0f: 右, 0.0f: 静止）。</param>
     /// <param name="jumpPressed">跳躍キー押下フラグ。</param>
     /// <param name="jumpHolding">跳躍キー保持フラグ。</param>
     /// <param name="shootPressed">射撃キー押下フラグ。</param>
+    /// <param name="dashPressed">ダッシュ・回避キー押下フラグ。</param>
     /// <param name="aimDirX">射撃水平瞄準ベクトル（省略時はスプライト向き）。</param>
     /// <param name="aimDirY">射撃垂直瞄準ベクトル（省略時は 0.0f）。</param>
     private void SubmitInput(
@@ -73,6 +75,7 @@ public sealed class PlayerController
         bool jumpPressed,
         bool jumpHolding,
         bool shootPressed,
+        bool dashPressed,
         float? aimDirX = null,
         float? aimDirY = null)
     {
@@ -83,6 +86,7 @@ public sealed class PlayerController
         moveIntent.MoveX = moveX;
         moveIntent.JumpTriggered = jumpPressed;
         moveIntent.JumpHolding = jumpHolding;
+        moveIntent.DashTriggered = dashPressed;
 
         ref var weaponIntent = ref entity.GetMut<WeaponIntent>();
         weaponIntent.ShootTriggered = shootPressed;

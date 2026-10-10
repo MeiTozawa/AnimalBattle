@@ -15,6 +15,9 @@ public struct MovementIntent
     /// <summary>跳躍キーが押し続けられているかどうか（可変高度跳躍用）。</summary>
     public bool JumpHolding;
 
+    /// <summary>今フレームでダッシュ・回避キーが押下されたかどうか。</summary>
+    public bool DashTriggered;
+
     /// <summary>
     ///     すべての移動入力を初期状態にリセットします。
     /// </summary>
@@ -23,5 +26,6 @@ public struct MovementIntent
         MoveX = 0.0f;
         JumpTriggered = false;
         JumpHolding = false;
+        DashTriggered = false;
     }
 }

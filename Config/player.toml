@@ -46,6 +46,16 @@ JumpCutDamping = 0.50
 ApexFloatVelocityThreshold = 90.0
 ApexFloatGravityMultiplier = 0.45
 
+# --- ダッシュ（回避・無敵フレーム）設定 ---
+DashSpeed = 680.0
+DashDuration = 0.18
+DashCooldown = 0.40
+DashInvincibleDuration = 0.18
+DashStretchScaleX = 1.35
+DashStretchScaleY = 0.70
+DashGhostTrailInterval = 0.04
+DashGhostTrailDuration = 0.16
+
 GroundAcceleration = 2880.0
 GroundDeceleration = 3600.0
 TurnaroundDeceleration = 6400.0

@@ -35,11 +35,18 @@ public sealed class PlayerPawn : Pawn
            .Set(JumpCapability.FromPlayerConfig(pCfg))
            .Set(WeaponState.FromPlayerConfig(pCfg))
            .Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio))
+           .Set(new DashState())
            .Add<PlayerTag>();
     }
 
     /// <summary>スプリング拡縮変形状態の参照を取得します（常駐 SpringScale への直接アクセス）。</summary>
     public ref readonly SpringScale SpringScale => ref Entity.Get<SpringScale>();
+
+    /// <summary>現在ダッシュ中であるかどうかを取得します。</summary>
+    public bool IsDashing => Entity.Get<DashState>().IsDashing;
+
+    /// <summary>ダッシュ再使用クールダウン残り秒数を取得します。</summary>
+    public float DashCooldown => Entity.Get<DashState>().Cooldown;
 
     /// <summary>残り二段ジャンプ回数を取得または設定します。</summary>
     public int RemainingJumps
@@ -74,6 +81,7 @@ public sealed class PlayerPawn : Pawn
         Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
         Entity.Set(WeaponState.FromPlayerConfig(pCfg));
         Entity.Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio));
+        Entity.Set(new DashState());
         Entity.GetMut<MovementIntent>().Reset();
         Entity.GetMut<WeaponIntent>().Reset();
 
