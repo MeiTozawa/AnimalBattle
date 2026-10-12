@@ -151,7 +151,7 @@ public static class ConfigManager {
         ErrorOr<BakedConfigBundle> loadResult = BinaryConfigLoader.Load();
         if (loadResult.IsError)
         {
-            Debug.WriteLine($"[C# 設定エラー] Release 版バイナリ設定 (baked_configs.bin) の読み込みに失敗しました: {loadResult.FirstError.Description}");
+            Debug.Fail($"[ConfigManager エラー] Release 版バイナリ設定 (baked_configs.bin) の読み込みに失敗しました: {loadResult.FirstError.Description}");
             return;
         }
 
@@ -189,8 +189,7 @@ public static class ConfigManager {
         }
         else
         {
-            Debug.WriteLine(
-                $"[C# 設定警告] {configPath} の読み込みに失敗しました ({res.FirstError.Type}): {res.FirstError.Description}");
+            Debug.Assert(false, $"[ConfigManager 警告] {configPath} の読み込みに失敗しました ({res.FirstError.Type}): {res.FirstError.Description}");
             failureCount++;
         }
     }

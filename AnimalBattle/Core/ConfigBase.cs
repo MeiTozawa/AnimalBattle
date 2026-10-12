@@ -73,7 +73,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
         var resolvedPath = resolver.ResolveConfigPath(defaultFileName);
         if (string.IsNullOrEmpty(resolvedPath) || !File.Exists(resolvedPath))
         {
-            Debug.WriteLine($"[C# 設定警告] TOML 設定ファイルが見つかりませんでした: {defaultFileName}");
+            Debug.Fail($"[ConfigBase 警告] TOML 設定ファイルが見つかりませんでした: {defaultFileName}");
             return Error.NotFound("Config.NotFound", $"TOML 設定ファイルが見つかりません ({defaultFileName})。");
         }
 
@@ -113,7 +113,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"[ConfigBase 警告] {typeof(T).Name} のリロード中にエラーが発生しました: {ex.Message}");
+                        Debug.Fail($"[ConfigBase 警告] {typeof(T).Name} のリロード中に例外が発生しました: {ex.Message}", ex.ToString());
                     }
                 });
 
@@ -122,7 +122,7 @@ public class ConfigBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[ConfigBase 警告] 設定ファイルの読み込み中に例外が発生しました: {ex.Message}");
+            Debug.Fail($"[ConfigBase 警告] 設定ファイルの読み込み中に例外が発生しました: {ex.Message}", ex.ToString());
             return Error.Failure("Config.Exception", ex.Message);
         }
 #endif

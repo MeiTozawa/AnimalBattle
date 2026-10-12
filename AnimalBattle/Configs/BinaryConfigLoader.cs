@@ -64,7 +64,7 @@ public static class BinaryConfigLoader {
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[BinaryConfigLoader 警告] バイナリ設定の読み込み中に例外が発生しました: {ex.Message}");
+            Debug.Fail($"[BinaryConfigLoader 警告] バイナリ設定の読み込み中に例外が発生しました: {ex.Message}", ex.ToString());
             return Error.Failure("Config.Exception", $"バイナリ設定の読み込み中に例外が発生しました: {ex.Message}");
         }
     }
