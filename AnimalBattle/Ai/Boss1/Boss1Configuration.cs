@@ -186,6 +186,7 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     public Boss1PhaseSettings GetPhase(Phase phase)
     {
         var index = (int)phase - 1;
+        Debug.Assert(index >= 0 && index < _phases.Length, $"[Boss1Configuration 警告] 不正なフェーズ番号です: {phase}");
         if (index < 0 || index >= _phases.Length) return _phases[0];
 
         try
@@ -194,7 +195,7 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
                 Phase.Phase1 => ConfigManager.Boss1.Phase1,
                 Phase.Phase2 => ConfigManager.Boss1.Phase2,
                 Phase.Phase3 => ConfigManager.Boss1.Phase3,
-                _ => ConfigManager.Boss1.Phase1
+                _ => AssertHelper.FailWithDefault($"[Boss1Configuration 警告] 未知のフェーズ: {phase}", ConfigManager.Boss1.Phase1)
             };
 
             if (tomlPhase.HoverDuration > 0.0f)
@@ -223,8 +224,7 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
         }
         catch (Exception ex)
         {
-            // TOML 未ロード環境（単体テスト等）はデフォルト設定を返却
-            Debug.WriteLine($"[Boss1Configuration 警告] フェーズ設定の取得中に例外が発生しました（デフォルトを返却します）: {ex.Message}");
+            Debug.Fail($"[Boss1Configuration 警告] フェーズ設定の取得中に例外が発生しました: {ex.Message}", ex.ToString());
         }
 
         return _phases[index];
@@ -282,8 +282,7 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
         }
         catch (Exception ex)
         {
-            // TOML 未ロード環境はフォールバック
-            Debug.WriteLine($"[Boss1Configuration 警告] 攻撃パターンの取得中に例外が発生しました（フォールバックします）: {ex.Message}");
+            Debug.Fail($"[Boss1Configuration 警告] 攻撃パターンの取得中に例外が発生しました: {ex.Message}", ex.ToString());
         }
 
         for (var index = 0; index < _attacks.Length; index++)

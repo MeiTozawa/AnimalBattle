@@ -149,13 +149,13 @@ public class BattleScene : IDisposable {
         BaseBossConfig cfg = bossType switch {
             BossType.Boss1 => ConfigManager.Boss1,
             BossType.Boss2 => ConfigManager.Boss2,
-            _ => ConfigManager.Boss1
+            _ => AssertHelper.FailWithDefault($"[BattleScene 警告] 未知のBossType (cfg): {bossType}", ConfigManager.Boss1)
         };
 
         Boss = bossType switch {
             BossType.Boss1 => new Boss1Agent(bossEntity, handle),
             BossType.Boss2 => new Boss2Agent(bossEntity, handle, () => _tileMap?.NavGraph),
-            _ => new Boss1Agent(bossEntity, handle)
+            _ => AssertHelper.FailWithDefault($"[BattleScene 警告] 未知のBossType (Agent): {bossType}", new Boss1Agent(bossEntity, handle))
         };
 
         Boss.AbilitySystem.OnScreenShake += (intensity, duration) =>
@@ -220,7 +220,7 @@ public class BattleScene : IDisposable {
         var (bossName, bCfg) = bossType switch {
             BossType.Boss1 => (Boss1Name, (BaseBossConfig)ConfigManager.Boss1),
             BossType.Boss2 => (Boss2Name, (BaseBossConfig)ConfigManager.Boss2),
-            _ => (Boss1Name, (BaseBossConfig)ConfigManager.Boss1)
+            _ => AssertHelper.FailWithDefault($"[BattleScene 警告] 未知のBossType (Reload): {bossType}", (Boss1Name, (BaseBossConfig)ConfigManager.Boss1))
         };
 
         var bossEntity = _ecsWorld.Lookup(bossName);

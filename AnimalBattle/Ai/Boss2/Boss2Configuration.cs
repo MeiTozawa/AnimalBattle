@@ -169,7 +169,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
             Phase.Phase1 => toml.Phase1,
             Phase.Phase2 => toml.Phase2,
             Phase.Phase3 => toml.Phase3,
-            _ => toml.Phase1
+            _ => AssertHelper.FailWithDefault($"[Boss2Configuration 警告] 未知のフェーズ (PhaseConfig): {phase}", toml.Phase1)
         };
 
         IReadOnlyList<BossSkill> skills = phase switch {
@@ -178,7 +178,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
                 [BossSkill.DoubleCleave, BossSkill.GroundStomp, BossSkill.LeapSmash, BossSkill.DoubleCleave],
             Phase.Phase3 =>
                 [BossSkill.FrenzyCharge, BossSkill.EarthquakeRoar, BossSkill.DoubleCleave, BossSkill.LeapSmash],
-            _ => [BossSkill.HeavySlash]
+            _ => AssertHelper.FailWithDefault<IReadOnlyList<BossSkill>>($"[Boss2Configuration 警告] 未知のフェーズ (Skills): {phase}", [BossSkill.HeavySlash])
         };
 
         var jumpForce = loco.JumpForce > 0 ? loco.JumpForce : phaseCfg.JumpForce;
@@ -219,8 +219,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
         }
         catch (Exception ex)
         {
-            // TOML 未ロード環境はフォールバック
-            Debug.WriteLine($"[Boss2Configuration 警告] 攻撃パターンの取得中に例外が発生しました（フォールバックします）: {ex.Message}");
+            Debug.Fail($"[Boss2Configuration 警告] 攻撃パターンの取得中に例外が発生しました: {ex.Message}", ex.ToString());
         }
 
         for (var index = 0; index < _attacks.Length; index++)
@@ -268,7 +267,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
             BossSkill.DoubleCleave => pattern.DoubleCleave.DefaultCooldown,
             BossSkill.HeavySlash => pattern.HeavySlash.DefaultCooldown,
             BossSkill.FrenzyCharge => pattern.FrenzyCharge.DefaultCooldown,
-            _ => 3.0f
+            _ => AssertHelper.FailWithDefault($"[Boss2Configuration 警告] 未知の技能クールダウン要求: {skill}", 0.0f)
         };
     }
 }
