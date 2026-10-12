@@ -73,7 +73,7 @@ public static class CombatCollisionSystem {
                         }
                     }
 
-                    if (shouldDestroyAttacker) CombatPoolService.Recycle(atkEntity);
+                    if (shouldDestroyAttacker) atkEntity.Add<RecycleTag>();
                 }
             });
 
