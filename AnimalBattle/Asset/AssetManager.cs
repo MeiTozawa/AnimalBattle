@@ -1,5 +1,4 @@
 using AnimalBattle.Configs;
-using ErrorOr;
 
 namespace AnimalBattle.Asset;
 
@@ -85,12 +84,12 @@ public sealed class AssetManager : IDisposable {
 
         foreach (var texPath in commonTextures)
         {
-            var loadResult = LoadTexture(texPath);
-            if (loadResult.IsError) allLoaded = false;
+            var handle = LoadTexture(texPath);
+            if (handle < 0) allLoaded = false;
         }
 
         IsInitialized = true;
-        if (!allLoaded) Debug.WriteLine("[AssetManager 警告] 一部のアセットのロードに失敗しました。デフォルト/欠落テクスチャ状態で継続します。");
+        Debug.Assert(allLoaded, "[AssetManager 警告] 一部のアセットのロードに失敗しました。");
     }
 
     private static bool LoadCharacterSprite(CharacterType charType)
@@ -98,17 +97,17 @@ public sealed class AssetManager : IDisposable {
         if (!AnimationRegistry.CharacterSprites.TryGetValue(charType, out var relPath)) return true;
 
         var fullPath = ResolveAssetPath(relPath);
-        var loadResult = AssetService.LoadGraph(fullPath);
-        if (!loadResult.IsError)
+        var handle = AssetService.LoadGraph(fullPath);
+        Debug.Assert(handle >= 0, $"[AssetManager 警告] キャラクタースプライトのロードに失敗しました ({charType}): {fullPath}");
+        if (handle >= 0)
         {
-            _characterSpriteHandles[charType] = loadResult.Value;
-            _textureHandles[relPath] = loadResult.Value;
+            _characterSpriteHandles[charType] = handle;
+            _textureHandles[relPath] = handle;
             Debug.WriteLine(
-                $"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {loadResult.Value})");
+                $"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {handle})");
             return true;
         }
 
-        Debug.WriteLine($"[C# アニメーション警告] キャラクタースプライトのロードに失敗しました ({charType}): {loadResult.FirstError.Description}");
         return false;
     }
 
@@ -116,16 +115,14 @@ public sealed class AssetManager : IDisposable {
     {
         var allClipsLoaded = true;
         foreach (var clip in config.Clips)
+        {
             if (!string.IsNullOrWhiteSpace(clip.SpritePath))
             {
-                var loadResult = LoadTexture(clip.SpritePath);
-                if (loadResult.IsError)
-                {
-                    Debug.WriteLine(
-                        $"[C# アニメーション警告] クリップスプライトのロードに失敗しました ({charType} / {clip.Name}): {clip.SpritePath}");
-                    allClipsLoaded = false;
-                }
+                var handle = LoadTexture(clip.SpritePath);
+                Debug.Assert(handle >= 0, $"[AssetManager 警告] クリップスプライトのロードに失敗しました ({charType} / {clip.Name}): {clip.SpritePath}");
+                if (handle < 0) allClipsLoaded = false;
             }
+        }
 
         return allClipsLoaded;
     }
@@ -135,24 +132,24 @@ public sealed class AssetManager : IDisposable {
     ///     既にロード済みの場合はキャッシュされたハンドルを返します。
     /// </summary>
     /// <param name="relativePath">リソース相対パス。</param>
-    /// <returns>グラフィックハンドルを含む ErrorOr 結果。</returns>
-    public static ErrorOr<int> LoadTexture(string relativePath)
+    /// <returns>正のグラフィックハンドル。失敗時は -1</returns>
+    public static int LoadTexture(string relativePath)
     {
-        if (string.IsNullOrWhiteSpace(relativePath)) return Error.Validation("Asset.EmptyPath", "相対パスが null または空です。");
+        Debug.Assert(!string.IsNullOrWhiteSpace(relativePath), "[AssetManager 警告] 相対パスが null または空です。");
+        if (string.IsNullOrWhiteSpace(relativePath)) return -1;
 
         if (_textureHandles.TryGetValue(relativePath, out var existingHandle)) return existingHandle;
 
         var fullPath = ResolveAssetPath(relativePath);
-        var loadResult = AssetService.LoadGraph(fullPath);
-        if (!loadResult.IsError)
+        var handle = AssetService.LoadGraph(fullPath);
+        Debug.Assert(handle >= 0, $"[AssetManager 警告] テクスチャのロードに失敗しました ({relativePath}): {fullPath}");
+        if (handle >= 0)
         {
-            _textureHandles[relativePath] = loadResult.Value;
-            Debug.WriteLine($"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {loadResult.Value})");
-            return loadResult;
+            _textureHandles[relativePath] = handle;
+            Debug.WriteLine($"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {handle})");
         }
 
-        Debug.WriteLine($"[C# アセット警告] テクスチャのロードに失敗しました ({relativePath}): {loadResult.FirstError.Description}");
-        return loadResult;
+        return handle;
     }
 
     /// <summary>

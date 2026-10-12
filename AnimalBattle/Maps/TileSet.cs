@@ -128,7 +128,9 @@ public sealed class TileSet(
     /// <param name="flipX">左右反転フラグ</param>
     public void DrawTile(int tileId, int centerX, int centerY, double scale, double angle, bool flipX)
     {
-        if (tileId <= 0 || GraphHandle < 0) return;
+        if (tileId <= 0) return;
+        Debug.Assert(GraphHandle >= 0, "[TileSet 警告] タイルセットのグラフィックハンドルが無効です。");
+        if (GraphHandle < 0) return;
 
         var src = GetSourceRect(tileId);
         if (src.Width <= 0 || src.Height <= 0) return;

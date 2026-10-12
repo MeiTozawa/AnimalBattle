@@ -30,7 +30,8 @@ public static class SpriteAnimationSystem {
                     return;
                 }
 
-                AssetManager.TryGetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip, out var handle);
+                var hasHandle = AssetManager.TryGetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip, out var handle);
+                Debug.Assert(hasHandle && handle >= 0, $"[SpriteAnimationSystem 警告] スプライトハンドルの取得に失敗しました ({anim.CharacterType} / {anim.CurrentClip})");
                 sprite.GraphHandle = handle;
                 sprite.SrcRect =
                     AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out var isFinished);

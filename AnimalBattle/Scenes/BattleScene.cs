@@ -271,9 +271,8 @@ public class BattleScene : IDisposable {
         var arenaCfg = ConfigManager.Arena;
         var tileMapCfg = arenaCfg.TileMap;
 
-        var sheetHandleRes = AssetManager.LoadTexture(tileMapCfg.TileSheetPath);
-        Debug.Assert(!sheetHandleRes.IsError, $"[BattleScene 警告] {tileMapCfg.TileSheetPath}の画像は読み取りできませんでした。");
-        var sheetHandle = sheetHandleRes.Value;
+        var sheetHandle = AssetManager.LoadTexture(tileMapCfg.TileSheetPath);
+        Debug.Assert(sheetHandle >= 0, $"[BattleScene 警告] {tileMapCfg.TileSheetPath}の画像は読み取りできませんでした。");
         TileSet tileSet = new(sheetHandle, ConfigManager.TileSet);
         _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
         _ecsWorld.Set(_tileMap);
