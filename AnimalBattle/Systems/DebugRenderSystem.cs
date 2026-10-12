@@ -182,7 +182,7 @@ public sealed class DebugRenderSystem(World world) : IDisposable {
         return faction switch {
             Faction.Friendly => ColorPalette.Green,
             Faction.Hostile => ColorPalette.Red,
-            _ => defaultColor
+            _ => AssertHelper.FailWithDefault($"[DebugRenderSystem 警告] 未知の Faction: {faction}", defaultColor)
         };
     }
 }

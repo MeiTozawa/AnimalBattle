@@ -143,7 +143,7 @@ public static class CombatEffectHelper {
             BulletType.Yellow => ColorPalette.BulletYellowFill,
             BulletType.Cyan => ColorPalette.BulletCyanFill,
             BulletType.Black => ColorPalette.BulletBlackFill,
-            _ => ColorPalette.RedBright
+            _ => AssertHelper.FailWithDefault($"[CombatEffectHelper 警告] 未知の BulletType (Fill): {type}", ColorPalette.RedBright)
         };
     }
 
@@ -157,7 +157,7 @@ public static class CombatEffectHelper {
             BulletType.Yellow => ColorPalette.BulletYellowOutline,
             BulletType.Cyan => ColorPalette.BulletCyanOutline,
             BulletType.Black => ColorPalette.BulletBlackOutline,
-            _ => ColorPalette.White
+            _ => AssertHelper.FailWithDefault($"[CombatEffectHelper 警告] 未知の BulletType (Outline): {type}", ColorPalette.White)
         };
     }
 

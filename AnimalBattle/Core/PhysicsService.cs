@@ -51,7 +51,7 @@ public static unsafe class PhysicsService {
             (CollisionShapeType.Point, CollisionShapeType.Point) =>
                 MathF.Abs(p1.X - p2.X) < 0.001f && MathF.Abs(p1.Y - p2.Y) < 0.001f,
 
-            _ => false
+            _ => AssertHelper.FailWithDefault($"[PhysicsService 警告] 未知または未サポートの衝突形状の組み合わせ: ({s1.Type}, {s2.Type})", false)
         };
     }
 

@@ -103,8 +103,9 @@ public static class ColorExtensions {
         if (colorString.TryParseColor(out var color)) return color;
 
         if (!string.IsNullOrWhiteSpace(colorString))
-            Debug.WriteLine(
-                $"[C# 描画警告] カラー文字列の解析に失敗しました: '{colorString}'。デフォルト色を使用します。");
+        {
+            Debug.Fail($"[ColorExtensions 警告] カラー文字列の解析に失敗しました: '{colorString}'。デフォルト色を使用します。");
+        }
 
         return fallback;
     }
