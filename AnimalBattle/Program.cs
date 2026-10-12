@@ -27,7 +27,8 @@ internal static class Program {
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[致命的クラッシュ例外]:\n{ex}");
+            Debug.Fail($"[致命的クラッシュ例外]: {ex.Message}", ex.ToString());
+            return;
         }
         finally
         {

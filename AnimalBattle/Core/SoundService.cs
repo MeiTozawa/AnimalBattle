@@ -34,7 +34,7 @@ public enum SfxType
 /// </summary>
 public static class SoundService
 {
-    private static readonly Dictionary<SfxType, int> _sfxHandles = new();
+    private static readonly Dictionary<SfxType, int> SfxHandles = new();
     private static int _bgmHandle = -1;
     private static bool _isInitialized;
 
@@ -83,15 +83,12 @@ public static class SoundService
             var handle = NativeBindings.Sound_Load(fullPath);
             Debug.Assert(handle >= 0, $"SFX 音声ファイルの読み込みに失敗しました (DxLib エラー): {fullPath} (SfxType: {type})");
 
-            if (handle >= 0)
-            {
-                _sfxHandles[type] = handle;
-            }
+            SfxHandles[type] = handle;
         }
 
         RegisterEventHandlers();
         _isInitialized = true;
-        Debug.WriteLine($"[SoundService] サウンドエンジン初期化完了: BGM 1 件、SFX {_sfxHandles.Count} 件をロードし、EventBus へ購読しました。");
+        Debug.WriteLine($"[SoundService] サウンドエンジン初期化完了: BGM 1 件、SFX {SfxHandles.Count} 件をロードし、EventBus へ購読しました。");
     }
 
     /// <summary>
@@ -149,7 +146,7 @@ public static class SoundService
 
     private static void OnPlayerHealthChanged(PlayerHealthChangedEvent e)
     {
-        if (e.PreviousHealth > 1.0f && e.CurrentHealth == 1.0f)
+        if (e.PreviousHealth > 1.0f && Math.Abs(e.CurrentHealth - 1.0f) < 0.0001f)
         {
             PlaySfx(SfxType.PlayerLowHealth);
         }
@@ -165,14 +162,7 @@ public static class SoundService
 
     private static void OnBossDamaged(BossDamagedEvent e)
     {
-        if (e.IsVulnerable)
-        {
-            PlaySfx(SfxType.BossHitVulnerable);
-        }
-        else
-        {
-            PlaySfx(SfxType.BossHit);
-        }
+        PlaySfx(e.IsVulnerable ? SfxType.BossHitVulnerable : SfxType.BossHit);
     }
 
     private static void OnBossDied(BossDiedEvent e) => PlaySfx(SfxType.BossDeath);
@@ -184,7 +174,7 @@ public static class SoundService
     /// <param name="volumeScale">相対音量スケール (0.0 ～ 1.0)</param>
     public static void PlaySfx(SfxType type, float volumeScale = 1.0f)
     {
-        if (!_sfxHandles.TryGetValue(type, out var handle) || handle < 0) return;
+        if (!SfxHandles.TryGetValue(type, out var handle) || handle < 0) return;
 
         var audioConfig = ConfigManager.Audio;
         var finalVolume = Math.Clamp(audioConfig.MasterVolume * audioConfig.SfxVolume * volumeScale * 255.0f, 0.0f, 255.0f);
@@ -233,7 +223,7 @@ public static class SoundService
             _bgmHandle = -1;
         }
 
-        foreach (var handle in _sfxHandles.Values)
+        foreach (var handle in SfxHandles.Values)
         {
             if (handle >= 0)
             {
@@ -241,7 +231,7 @@ public static class SoundService
                 NativeBindings.Sound_Delete(handle);
             }
         }
-        _sfxHandles.Clear();
+        SfxHandles.Clear();
 
         _isInitialized = false;
         Debug.WriteLine("[SoundService] サウンドエンジンをシャットダウンし、全音声メモリを解放しました。");

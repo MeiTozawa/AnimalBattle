@@ -190,7 +190,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[BaseBossAgent 警告] Reset 処理中に例外が発生しました: {ex.Message}");
+            Debug.Fail($"[BaseBossAgent 警告] Reset 処理中に例外が発生しました: {ex.Message}", ex.ToString());
         }
     }
 

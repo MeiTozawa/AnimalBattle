@@ -167,23 +167,23 @@ public sealed class EntityPool : IDisposable {
             entity.Destruct();
             return;
         }
-
-        if (entity.Has<PoolLeaseState>())
+        
+        Debug.Assert(entity.Has<PoolLeaseState>(), "[EntityPool] PoolLeaseState は必須です。");
+        ref var state = ref entity.GetMut<PoolLeaseState>();
+        Debug.Assert(state.PoolId == PoolId, $"[EntityPool] 返却対象エンティティの所属プールが一致しません。(期待PoolId: {PoolId}, 実際PoolId: {state.PoolId})");
+        if (state.PoolId != PoolId)
         {
-            ref var state = ref entity.GetMut<PoolLeaseState>();
-            if (state.PoolId != PoolId)
-            {
-                // 異なる世代または外部プールの孤児エンティティは画面残留を防ぐため安全に破棄
-                entity.Destruct();
-                return;
-            }
-
-            if (!state.IsRented)
-                // 既にプール内に返却済みの二重返却を安全に無視
-                return;
-
-            state.IsRented = false;
+            // 異なる世代または外部プールの孤児エンティティは画面残留を防ぐため安全に破棄
+            entity.Destruct();
+            return;
         }
+
+        Debug.Assert(state.IsRented, "[EntityPool] 既にプールへ返却済みのエンティティが二重返却（Double Free）されました。");
+        if (!state.IsRented)
+            // 既にプール内に返却済みの二重返却を安全に無視
+            return;
+
+        state.IsRented = false;
 
         Metrics.ActiveRentals = Math.Max(0, Metrics.ActiveRentals - 1);
 

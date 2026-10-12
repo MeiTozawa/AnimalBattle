@@ -39,7 +39,7 @@ public sealed class AssetPathResolver(string? baseDirectory = null) : IAssetPath
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[AssetPathResolver 警告] アセットパス探索中に例外が発生しました ({relativePath}): {ex.Message}");
+            Debug.Fail($"[AssetPathResolver 警告] アセットパス探索中に例外が発生しました ({relativePath}): {ex.Message}", ex.ToString());
         }
 
         return relativePath;
