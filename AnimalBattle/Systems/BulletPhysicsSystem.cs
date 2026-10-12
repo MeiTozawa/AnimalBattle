@@ -38,8 +38,6 @@ public static class BulletPhysicsSystem {
         var minY = arenaCfg.BulletDespawnMinY;
         var maxY = arenaCfg.BulletDespawnMaxY;
 
-        var w = it.World();
-
         // 原地移動と画面外判定を一括処理
         for (var i = 0; i < count; ++i)
         {
@@ -52,7 +50,7 @@ public static class BulletPhysicsSystem {
 
             if (nextX < minX || nextX > maxX ||
                 nextY < minY || nextY > maxY)
-                CombatEntityPoolHelper.Recycle(w, it.Entity(i));
+                CombatPoolService.Recycle(it.Entity(i));
         }
     }
 }

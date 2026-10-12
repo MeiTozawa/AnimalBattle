@@ -95,7 +95,7 @@ public static class WeaponSystem
             var vy = dirY * weapon.BulletSpeed;
 
             // 事前確保されたエンティティプールから自機弾丸を貸出
-            CombatEntityPoolHelper.RentPlayerBullet(world)
+            CombatPoolService.RentPlayerBullet()
                 .Set(new Transform(spawnX, spawnY))
                 .Set(new Velocity(vx, vy))
                 .Set(new CollisionBox(weapon.BulletWidth, weapon.BulletHeight))

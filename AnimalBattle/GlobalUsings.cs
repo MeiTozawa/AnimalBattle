@@ -2,6 +2,7 @@ global using System;
 global using AnimalBattle.Asset;
 global using AnimalBattle.Components;
 global using AnimalBattle.Core;
+global using AnimalBattle.CombatPool;
 global using AnimalBattle.Modules;
 global using AnimalBattle.Systems;
 global using System.Diagnostics;

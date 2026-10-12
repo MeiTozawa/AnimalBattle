@@ -53,7 +53,7 @@ public static class CombatEffectHelper {
         var (fill, outline) = ResolveBulletColors(type, fillColor, outlineColor);
 
         // 事前確保されたエンティティプールから Boss 弾幕エンティティを貸し出し
-        var entity = CombatEntityPoolHelper.RentBossBullet(world)
+        var entity = CombatPoolService.RentBossBullet()
            .Set(new Transform(x, y))
            .Set(new Velocity(vx, vy))
            .Set(new Bullet(radius, fill, outline))
@@ -70,7 +70,7 @@ public static class CombatEffectHelper {
                 var satRadius = MathF.Max(3.0f, radius * cfg.YellowSatelliteRadiusMultiplier);
                 var orbitDist = radius * cfg.YellowOrbitDistanceMultiplier;
 
-                CombatEntityPoolHelper.RentBossBullet(world)
+                CombatPoolService.RentBossBullet()
                    .Set(new Transform(x + orbitDist, y))
                    .Set(new Velocity(vx, vy))
                    .Set(new Bullet(satRadius, fill, outline))
@@ -197,7 +197,7 @@ public static class CombatEffectHelper {
         using var query = world.QueryBuilder()
            .With<BossBulletTag>()
            .Build();
-        query.Each(e => CombatEntityPoolHelper.Recycle(world, e));
+        query.Each(e => CombatPoolService.Recycle(e));
     }
 
     /// <summary>
@@ -208,7 +208,7 @@ public static class CombatEffectHelper {
     /// <param name="y">中心 Y 座標</param>
     public static void SpawnJumpRingEffect(World world, float x, float y)
     {
-        CombatEntityPoolHelper.RentRingEffect(world)
+        CombatPoolService.RentRingEffect()
            .Set(new Transform(x, y))
            .Set(new RingEffect(8.0f, 32.0f, ColorPalette.White))
            .Set(new FadeEffect(0.18f));
@@ -226,7 +226,7 @@ public static class CombatEffectHelper {
         {
             var angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
             var speed = 60.0f + Random.Shared.NextSingle() * 120.0f;
-            CombatEntityPoolHelper.RentSparkEffect(world)
+            CombatPoolService.RentSparkEffect()
                .Set(new Transform(x, y))
                .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
                .Set(new Bullet(3.5f, ColorPalette.SparkYellow, ColorPalette.White))
@@ -246,7 +246,7 @@ public static class CombatEffectHelper {
         {
             var angle = i / 16.0f * MathF.PI * 2.0f;
             var speed = 4.0f + i % 3 * 2.0f;
-            CombatEntityPoolHelper.RentSparkEffect(world)
+            CombatPoolService.RentSparkEffect()
                .Set(new Transform(x, y))
                .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
                .Set(new Bullet(5.0f, ColorPalette.Red, ColorPalette.White))
@@ -262,7 +262,7 @@ public static class CombatEffectHelper {
     /// <param name="y">中心 Y 座標</param>
     public static void SpawnShockwave(World world, float x, float y)
     {
-        CombatEntityPoolHelper.RentRingEffect(world)
+        CombatPoolService.RentRingEffect()
            .Set(new Transform(x, y))
            .Set(new RingEffect(20.0f, 150.0f, ColorPalette.Cyan))
            .Set(new FadeEffect(0.40f));
@@ -280,7 +280,7 @@ public static class CombatEffectHelper {
         {
             var angle = i / 32.0f * MathF.PI * 2.0f;
             var speed = 3.0f + i % 5 * 2.5f;
-            CombatEntityPoolHelper.RentSparkEffect(world)
+            CombatPoolService.RentSparkEffect()
                .Set(new Transform(x, y))
                .Set(new Velocity(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed))
                .Set(new Bullet(6.0f, ColorPalette.Gold, ColorPalette.GoldLight))
@@ -335,7 +335,7 @@ public static class CombatEffectHelper {
             _ => 0.0f
         };
 
-        CombatEntityPoolHelper.RentAreaEffect(world)
+        CombatPoolService.RentAreaEffect()
            .Set(new Transform(x + offsetX, y + offsetY, scale, scale))
            .Set(new Velocity(vx, vy))
            .Set(new Hitbox(new CollisionShape.Box(width, height, -offsetX, -offsetY), damage, Faction.Hostile, false))
@@ -357,14 +357,14 @@ public static class CombatEffectHelper {
     public static void SpawnGroundShockwave(World world, float x, float y, float vx, float radius, float damage,
         Color fillColor, Color outlineColor)
     {
-        var entity = CombatEntityPoolHelper.RentBossBullet(world)
+        var entity = CombatPoolService.RentBossBullet()
            .Set(new Transform(x, y))
            .Set(new Velocity(vx))
            .Set(new Bullet(radius, fillColor, outlineColor))
            .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile))
            .Add<BossBulletTag>();
 
-        if (entity.Has<BulletModifier>()) entity.Remove<BulletModifier>();
+        entity.Remove<BulletModifier>();
     }
 
     /// <summary>
@@ -394,7 +394,7 @@ public static class CombatEffectHelper {
         Color color,
         float duration)
     {
-        CombatEntityPoolHelper.RentAreaEffect(world)
+        CombatPoolService.RentAreaEffect()
            .Set(new Transform(x, y, scaleX, scaleY, rotation))
            .Set(new Velocity(0.0f))
            .Set(new Hitbox(default, 0.0f, Faction.Friendly, false))
@@ -411,11 +411,11 @@ public static class CombatEffectHelper {
     public static void SpawnMuzzleFlash(World world, float x, float y)
     {
         var pCfg = ConfigManager.Player;
-        CombatEntityPoolHelper.RentSparkEffect(world)
+        CombatPoolService.RentSparkEffect()
            .Set(new Transform(x, y))
            .Set(new Velocity(0.0f))
            .Set(new Bullet(pCfg.MuzzleFlashRadius, ColorPalette.MuzzleFlashFill, ColorPalette.White))
-           .Set(new FadeEffect(pCfg.MuzzleFlashDuration, 255.0f, 0.0f));
+           .Set(new FadeEffect(pCfg.MuzzleFlashDuration));
     }
 
     /// <summary>
@@ -439,11 +439,11 @@ public static class CombatEffectHelper {
             var vx = MathF.Cos(spreadAngle) * speed;
             var vy = MathF.Sin(spreadAngle) * speed;
 
-            CombatEntityPoolHelper.RentSparkEffect(world)
+            CombatPoolService.RentSparkEffect()
                .Set(new Transform(x, y))
                .Set(new Velocity(vx, vy))
                .Set(new Bullet(pCfg.ImpactSplatterParticleRadius, ColorPalette.ImpactSplatterFill, ColorPalette.White))
-               .Set(new FadeEffect(pCfg.ImpactSplatterDuration, 255.0f, 0.0f));
+               .Set(new FadeEffect(pCfg.ImpactSplatterDuration));
         }
     }
 }

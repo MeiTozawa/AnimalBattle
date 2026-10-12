@@ -1,17 +1,6 @@
 using Flecs.NET.Core;
 
-namespace AnimalBattle.Core;
-
-/// <summary>
-///     プール内エンティティの貸出状態および所属プールを追跡する内部コンポーネント。
-/// </summary>
-public struct PoolLeaseState {
-    /// <summary>所属するプールの固有識別子。</summary>
-    public ulong PoolId;
-
-    /// <summary>現在貸出中であるかフラグ。</summary>
-    public bool IsRented;
-}
+namespace AnimalBattle.CombatPool;
 
 /// <summary>
 ///     エンティティオブジェクトプールの運用テレメトリおよび健全性メトリクス。
@@ -39,7 +28,7 @@ public sealed class EntityPool : IDisposable {
     private static ulong _nextPoolId = 1;
     private readonly Action<Entity>? _onInit;
     private readonly Action<Entity>? _onReset;
-    private readonly World _world;
+    private World _world;
     private Entity[] _allAllocated;
     private bool _isDisposed;
     private Entity[] _pool;
@@ -136,7 +125,7 @@ public sealed class EntityPool : IDisposable {
     /// <returns>有効化されたエンティティ（上限到達時は無効な空エンティティ）。</returns>
     public Entity Rent()
     {
-        ObjectDisposedException.ThrowIf(_isDisposed, this);
+        Debug.Assert(!_isDisposed, "[EntityPool] 破棄済みのプールからエンティティを借出することはできません。");
 
         if (AvailableCount == 0)
         {
@@ -153,7 +142,7 @@ public sealed class EntityPool : IDisposable {
         }
 
         var e = _pool[--AvailableCount];
-        if (e.Has<PoolLeaseState>()) e.GetMut<PoolLeaseState>().IsRented = true;
+        e.GetMut<PoolLeaseState>().IsRented = true;
 
         Metrics.ActiveRentals++;
         if (Metrics.ActiveRentals > Metrics.PeakUsage) Metrics.PeakUsage = Metrics.ActiveRentals;

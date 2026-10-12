@@ -49,8 +49,8 @@ public class BattleScene : IDisposable {
         _ecsWorld.Import<DamageResolutionModule>();
         _ecsWorld.Import<EffectModule>();
 
-        // 共有戦闘エンティティプールを事前確保・初期化（初弾発射時の遅延生成による Stage 競合および破棄漏れを根絶）
-        _ecsWorld.InitializeCombatEntityPool();
+        // 共有戦闘エンティティプールサービスを事前確保・初期化（明示的初期化・ECS Singleton を脱却）
+        CombatPoolService.Initialize(_ecsWorld);
 
         var playerCfg = ConfigManager.Player;
 
@@ -119,7 +119,7 @@ public class BattleScene : IDisposable {
         ConfigManager.Boss2Container.OnConfigReloaded -= OnBoss2ConfigReloaded;
         ConfigManager.PlayerContainer.OnConfigReloaded -= OnPlayerConfigReloaded;
 
-        if (_ecsWorld.Has<CombatEntityPoolComponent>()) _ecsWorld.Get<CombatEntityPoolComponent>().Dispose();
+        CombatPoolService.Current?.Dispose();
 
         _worldRenderer.Dispose();
         _debugRenderer.Dispose();
@@ -323,8 +323,8 @@ public class BattleScene : IDisposable {
     private void ResetCombat()
     {
         CombatEffectHelper.ClearAllBossBullets(_ecsWorld);
-        _playerBulletsQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
-        _vfxQuery.Each(e => CombatEntityPoolHelper.Recycle(_ecsWorld, e));
+        _playerBulletsQuery.Each(e => CombatPoolService.Recycle(e));
+        _vfxQuery.Each(e => CombatPoolService.Recycle(e));
         CameraService.Reset();
         Player.Reset(ConfigManager.Player);
         EventBus.Publish(new CombatResetEvent());

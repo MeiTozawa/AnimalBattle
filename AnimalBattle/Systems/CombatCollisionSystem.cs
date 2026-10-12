@@ -57,22 +57,23 @@ public static class CombatCollisionSystem {
                             MathF.Abs(aCenterY - target.CenterY) > aHalfH + target.HalfH)
                             continue;
 
-                        if (!target.Entity.IsAlive()) continue;
-                        ref readonly var hp = ref target.Entity.Get<Health>();
+                        var vicEntity = target.Entity;
+                        if (!vicEntity.IsAlive()) continue;
+                        ref readonly var hp = ref vicEntity.Get<Health>();
                         if (hp.Current <= 0.0f || hp.InvincibleTimer > 0.0f) continue;
 
-                        ref var vicTrans = ref target.Entity.GetMut<Transform>();
-                        ref var hurtbox = ref target.Entity.GetMut<Hurtbox>();
+                        ref var vicTrans = ref vicEntity.GetMut<Transform>();
+                        ref var hurtbox = ref vicEntity.GetMut<Hurtbox>();
 
                         if (PhysicsService.Intersects(trans, hitbox.Shape, vicTrans, hurtbox.Shape))
                         {
-                            ApplyHit(world, target.Entity, ref vicTrans, in trans, ref hurtbox, in hitbox,
+                            ApplyHit(world, vicEntity, ref vicTrans, in trans, ref hurtbox, in hitbox,
                                 ref shouldDestroyAttacker);
                             if (shouldDestroyAttacker) break;
                         }
                     }
 
-                    if (shouldDestroyAttacker) CombatEntityPoolHelper.Recycle(world, atkEntity);
+                    if (shouldDestroyAttacker) CombatPoolService.Recycle(atkEntity);
                 }
             });
 
@@ -120,7 +121,7 @@ public static class CombatCollisionSystem {
 
     private sealed class CollisionContext {
         private readonly Ecs.IterFieldCallback<Transform, Hurtbox, Health> _collectIter;
-        public readonly Query<Transform, Hurtbox, Health> HurtboxQuery;
+        public Query<Transform, Hurtbox, Health> HurtboxQuery;
         public readonly HurtboxTarget[] Targets = new HurtboxTarget[32];
         public int TargetCount;
 

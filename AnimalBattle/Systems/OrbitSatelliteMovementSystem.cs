@@ -31,14 +31,13 @@ public static class OrbitSatelliteMovementSystem
                 var dt = it.DeltaTime();
                 var cfg = ConfigManager.SpecialBullets;
                 var orbitSpeed = cfg.YellowOrbitSpeed;
-                var w = it.World();
 
                 for (var i = 0; i < count; ++i)
                 {
                     ref var sat = ref satellites[i];
                     if (!sat.Parent.IsAlive() || !sat.Parent.Has<BossBulletTag>())
                     {
-                        CombatEntityPoolHelper.Recycle(w, it.Entity(i));
+                        CombatPoolService.Recycle(it.Entity(i));
                         continue;
                     }
 
