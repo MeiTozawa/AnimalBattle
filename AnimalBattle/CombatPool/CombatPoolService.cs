@@ -179,6 +179,7 @@ public sealed class CombatPoolService : IDisposable {
 
     private static void ResetBulletEntity(Entity e)
     {
+        e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
         e.Remove<BulletModifier>();
         e.Remove<OrbitSatellite>();
@@ -186,6 +187,7 @@ public sealed class CombatPoolService : IDisposable {
 
     private static void ResetEffectEntity(Entity e)
     {
+        e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
     }
 }
