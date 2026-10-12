@@ -50,7 +50,7 @@ public static class BulletPhysicsSystem {
 
             if (nextX < minX || nextX > maxX ||
                 nextY < minY || nextY > maxY)
-                CombatPoolService.Recycle(it.Entity(i));
+                it.Entity(i).Add<RecycleTag>();
         }
     }
 }

@@ -29,7 +29,7 @@ public static class FadeEffectSystem {
                     if (f.ElapsedTimer >= f.Duration)
                     {
                         f.CurrentAlpha = f.EndAlpha;
-                        CombatPoolService.Recycle(it.Entity(i));
+                        it.Entity(i).Add<RecycleTag>();
                         continue;
                     }
 

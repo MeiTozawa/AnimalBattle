@@ -37,7 +37,7 @@ public static class OrbitSatelliteMovementSystem
                     ref var sat = ref satellites[i];
                     if (!sat.Parent.IsAlive() || !sat.Parent.Has<BossBulletTag>())
                     {
-                        CombatPoolService.Recycle(it.Entity(i));
+                        it.Entity(i).Add<RecycleTag>();
                         continue;
                     }
 
