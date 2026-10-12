@@ -121,16 +121,7 @@ public sealed class Boss1Brain : BaseBossBrain {
             return;
         }
 
-        var cooldown = skill switch {
-            BossSkill.DiveRam => 5.0f,
-            BossSkill.Aimed3Shot => 3.0f,
-            BossSkill.RingBurst => 4.0f,
-            BossSkill.DoubleSpiral => 4.5f,
-            BossSkill.RainDrop => 6.0f,
-            BossSkill.CrossChaos => 5.0f,
-            BossSkill.FastSniper => 3.5f,
-            _ => 2.0f
-        };
+        var cooldown = _configuration.GetSkillDefaultCooldown(skill);
 
         var ability = new GameplayAbility {
             SkillId = skill,

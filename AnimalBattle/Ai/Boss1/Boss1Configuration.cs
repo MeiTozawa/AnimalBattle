@@ -150,6 +150,9 @@ public interface IBoss1Configuration {
 
     /// <summary>指定技能の検証済み pattern を取得します。</summary>
     bool GetAttack(BossSkill skill, out Boss1AttackPattern pattern);
+
+    /// <summary>指定技能のデフォルトクールダウン時間を取得します。</summary>
+    float GetSkillDefaultCooldown(BossSkill skill);
 }
 
 /// <summary>既定値を保持する Boss1 設定です。</summary>
@@ -292,6 +295,22 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
 
         pattern = null!;
         return false;
+    }
+
+    /// <inheritdoc />
+    public float GetSkillDefaultCooldown(BossSkill skill)
+    {
+        var toml = ConfigManager.Boss1Patterns;
+        return skill switch {
+            BossSkill.DiveRam => toml.DiveRam.DefaultCooldown,
+            BossSkill.Aimed3Shot => toml.Aimed3Shot.DefaultCooldown,
+            BossSkill.RingBurst => toml.RingBurst.DefaultCooldown,
+            BossSkill.DoubleSpiral => toml.DoubleSpiral.DefaultCooldown,
+            BossSkill.RainDrop => toml.RainDrop.DefaultCooldown,
+            BossSkill.CrossChaos => toml.CrossChaos.DefaultCooldown,
+            BossSkill.FastSniper => toml.FastSniper.DefaultCooldown,
+            _ => AssertHelper.FailWithDefault($"[Boss1Configuration 警告] 未知の技能クールダウン要求: {skill}", 0.0f)
+        };
     }
 
     private static BossSkill ResolveBossSkill(string skillName)

@@ -45,6 +45,9 @@ public sealed class DiveRamConfig {
     /// <summary>後隙硬直時間</summary>
     public float RecoveryTime { get; set; }
 
+    /// <summary>デフォルトクールダウン時間（秒）</summary>
+    public float DefaultCooldown { get; set; }
+
     /// <summary>技能の有効射程距離</summary>
     public float EffectiveRange { get; set; }
 
@@ -104,6 +107,9 @@ public sealed class Aimed3ShotConfig {
     /// <summary>後隙硬直時間</summary>
     public float RecoveryTime { get; set; }
 
+    /// <summary>デフォルトクールダウン時間（秒）</summary>
+    public float DefaultCooldown { get; set; }
+
     /// <summary>技能の有効射程距離</summary>
     public float EffectiveRange { get; set; }
 
@@ -154,6 +160,9 @@ public sealed class RingBurstConfig {
     /// <summary>後隙硬直時間</summary>
     public float RecoveryTime { get; set; }
 
+    /// <summary>デフォルトクールダウン時間（秒）</summary>
+    public float DefaultCooldown { get; set; }
+
     /// <summary>技能の有効射程距離</summary>
     public float EffectiveRange { get; set; }
 
@@ -203,6 +212,9 @@ public sealed class DoubleSpiralConfig {
 
     /// <summary>後隙硬直時間</summary>
     public float RecoveryTime { get; set; }
+
+    /// <summary>デフォルトクールダウン時間（秒）</summary>
+    public float DefaultCooldown { get; set; }
 
     /// <summary>技能の有効射程距離</summary>
     public float EffectiveRange { get; set; }
@@ -257,6 +269,9 @@ public sealed class RainDropConfig {
     /// <summary>後隙硬直時間</summary>
     public float RecoveryTime { get; set; }
 
+    /// <summary>デフォルトクールダウン時間（秒）</summary>
+    public float DefaultCooldown { get; set; }
+
     /// <summary>技能の有効射程距離</summary>
     public float EffectiveRange { get; set; }
 
@@ -307,6 +322,9 @@ public sealed class CrossChaosConfig {
     /// <summary>後隙硬直時間</summary>
     public float RecoveryTime { get; set; }
 
+    /// <summary>デフォルトクールダウン時間（秒）</summary>
+    public float DefaultCooldown { get; set; }
+
     /// <summary>技能の有効射程距離</summary>
     public float EffectiveRange { get; set; }
 
@@ -353,6 +371,9 @@ public sealed class FastSniperConfig {
 
     /// <summary>後隙硬直時間</summary>
     public float RecoveryTime { get; set; }
+
+    /// <summary>デフォルトクールダウン時間（秒）</summary>
+    public float DefaultCooldown { get; set; }
 
     /// <summary>技能の有効射程距離</summary>
     public float EffectiveRange { get; set; }
