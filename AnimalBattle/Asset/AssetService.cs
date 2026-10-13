@@ -1,6 +1,6 @@
 using AnimalBattle.Bindings;
 
-namespace AnimalBattle.Core;
+namespace AnimalBattle.Asset;
 
 /// <summary>
 ///     スプライト画像リソースのロードおよびメモリ解放を管理するマネージャークラス。

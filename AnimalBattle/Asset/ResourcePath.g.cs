@@ -5,7 +5,7 @@
 
 using System;
 
-namespace AnimalBattle;
+namespace AnimalBattle.Asset;
 
 /// <summary>
 /// プロジェクト内の各種リソース（画像、スプライトシート、XML定義、TOML設定ファイル等）の相対パス定数を提供する自動生成静的クラス。

@@ -23,7 +23,7 @@ _SCRIPT_DIR    = Path(__file__).resolve().parent
 _PROJECT_ROOT  = _SCRIPT_DIR.parent
 _RESOURCE_ROOT = _PROJECT_ROOT / "Resource"
 _CONFIG_ROOT   = _PROJECT_ROOT / "Config"
-_OUTPUT_FILE   = _PROJECT_ROOT / "AnimalBattle" / "ResourcePath.g.cs"
+_OUTPUT_FILE   = _PROJECT_ROOT / "AnimalBattle" / "Asset" / "ResourcePath.g.cs"
 
 
 # ---- 識別子生成ヘルパー ------------------------------------------------------
@@ -106,7 +106,7 @@ def generate_code() -> str:
         "",
         "using System;",
         "",
-        "namespace AnimalBattle;",
+        "namespace AnimalBattle.Asset;",
         "",
         "/// <summary>",
         "/// プロジェクト内の各種リソース（画像、スプライトシート、XML定義、TOML設定ファイル等）の相対パス定数を提供する自動生成静的クラス。",
