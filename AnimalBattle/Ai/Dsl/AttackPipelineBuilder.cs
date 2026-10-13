@@ -11,7 +11,7 @@ namespace AnimalBattle.Ai.Dsl;
 /// <param name="parent">親の Phase ビルダー。</param>
 /// <param name="skill">技能識別子。</param>
 public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill skill) {
-    private readonly List<AttackComponent> _components = [];
+    private readonly List<AttackActionStep> _actions = [];
     private readonly PhasePipelineBuilder _parent = parent;
     private ArmorType _armor = ArmorType.None;
     private float _executeDuration = 0.50f;
@@ -72,7 +72,7 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
     public AttackPipelineBuilder Action(float atTime, Action<AttackActionBuilder> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
-        AttackActionBuilder actionBuilder = new(atTime, _components);
+        AttackActionBuilder actionBuilder = new(atTime, _actions);
         configure(actionBuilder);
         return this;
     }
@@ -85,7 +85,7 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
     public AttackPipelineBuilder OnGrounded(Action<AttackActionBuilder> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
-        AttackActionBuilder actionBuilder = new(0.0f, _components, true);
+        AttackActionBuilder actionBuilder = new(0.0f, _actions, true);
         configure(actionBuilder);
         return this;
     }
@@ -174,7 +174,7 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
             _executeDuration,
             _recoveryDuration,
             _range,
-            _components.ToArray(),
+            _actions.ToArray(),
             _armor,
             _poiseThreshold);
     }

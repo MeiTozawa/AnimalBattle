@@ -87,12 +87,12 @@ public sealed class SkillRunner {
     }
 
     /// <summary>
-    ///     毎フレームの技能タイムラインを更新し、到達したコンポーネントをコールバックへ通知します。
+    ///     毎フレームの技能タイムラインを更新し、到達したアクションステップをコールバックへ通知します。
     /// </summary>
     /// <param name="dt">デルタ時間（秒）。</param>
     /// <param name="isGrounded">接地状態フラグ。</param>
-    /// <param name="onTrigger">コンポーネント発火時の通知コールバック（component, facingDir）。</param>
-    public void Update(float dt, bool isGrounded = false, Action<AttackComponent, float>? onTrigger = null)
+    /// <param name="onTrigger">アクション発火時の通知コールバック（action, facingDir）。</param>
+    public void Update(float dt, bool isGrounded = false, Action<AttackActionStep, float>? onTrigger = null)
     {
         if (Definition is null || CurrentPhase is SkillPhase.None or SkillPhase.Completed) return;
 
@@ -116,8 +116,8 @@ public sealed class SkillRunner {
             break;
 
             case SkillPhase.Active:
-                // Active 中のコンポーネント発火判定
-                ProcessActiveComponents(def, isGrounded, onTrigger);
+                // Active 中のアクション発火判定
+                ProcessActiveActions(def, isGrounded, onTrigger);
 
                 if (PhaseElapsed >= def.ExecuteDuration)
                 {
@@ -139,25 +139,25 @@ public sealed class SkillRunner {
     }
 
 
-    private void ProcessActiveComponents(AttackDefinition def, bool isGrounded,
-        Action<AttackComponent, float>? onTrigger)
+    private void ProcessActiveActions(AttackDefinition def, bool isGrounded,
+        Action<AttackActionStep, float>? onTrigger)
     {
-        var count = Math.Min(def.ComponentCount, 64);
+        var count = Math.Min(def.ActionCount, 64);
         for (var i = 0; i < count; i++)
         {
             var mask = 1UL << i;
             if ((_triggeredMask & mask) != 0) continue;
 
-            if (!def.TryGetComponent(i, out var comp)) continue;
+            if (!def.TryGetAction(i, out var step)) continue;
 
             // 接地イベント駆動判定
-            if (comp.Kind == AttackComponentKind.OnGroundedHitbox)
+            if (step.Kind == AttackActionKind.OnGroundedHitbox)
             {
-                var minTime = MathF.Max(comp.TriggerTime, 0.05f);
+                var minTime = MathF.Max(step.TriggerTime, 0.05f);
                 if (_hasLeftGround && isGrounded && PhaseElapsed >= minTime)
                 {
                     _triggeredMask |= mask;
-                    onTrigger?.Invoke(comp, _facingDirection);
+                    onTrigger?.Invoke(step, _facingDirection);
 
                     // 接地判定成功時は即座に Active を終了して Recovery へ
                     CurrentPhase = SkillPhase.Recovery;
@@ -169,10 +169,10 @@ public sealed class SkillRunner {
             }
 
             // 時系列駆動判定（浮動小数点微小誤差を許容）
-            if (PhaseElapsed + 0.0001f >= comp.TriggerTime)
+            if (PhaseElapsed + 0.0001f >= step.TriggerTime)
             {
                 _triggeredMask |= mask;
-                onTrigger?.Invoke(comp, _facingDirection);
+                onTrigger?.Invoke(step, _facingDirection);
             }
         }
     }

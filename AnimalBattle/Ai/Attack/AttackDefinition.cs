@@ -2,18 +2,18 @@ using AnimalBattle.Ai.Contracts;
 
 namespace AnimalBattle.Ai.Attack;
 
-/// <summary>攻撃の Telegraph、Execute、Recovery と component を保持する検証済み定義です。</summary>
+/// <summary>攻撃の Telegraph、Execute、Recovery と各アクションステップを保持する検証済み定義です。</summary>
 public sealed class AttackDefinition {
-    private readonly AttackComponent[] _components;
+    private readonly AttackActionStep[] _actions;
 
-    /// <summary>攻撃定義を生成します。component 配列は初期化時にコピーされます。</summary>
+    /// <summary>攻撃定義を生成します。アクション配列は初期化時にコピーされます。</summary>
     public AttackDefinition(
         BossSkill skill,
         float telegraphDuration,
         float executeDuration,
         float recoveryDuration,
         float range,
-        IReadOnlyList<AttackComponent>? components = null,
+        IReadOnlyList<AttackActionStep>? actions = null,
         ArmorType armor = ArmorType.None,
         float poiseThreshold = 0.0f)
     {
@@ -25,11 +25,11 @@ public sealed class AttackDefinition {
         Armor = armor;
         PoiseThreshold = poiseThreshold;
 
-        var componentCount = components?.Count ?? 0;
-        _components = new AttackComponent[componentCount];
-        if (components is not null)
-            for (var index = 0; index < componentCount; index++)
-                _components[index] = components[index];
+        var actionCount = actions?.Count ?? 0;
+        _actions = new AttackActionStep[actionCount];
+        if (actions is not null)
+            for (var index = 0; index < actionCount; index++)
+                _actions[index] = actions[index];
     }
 
     /// <summary>技能識別子を取得します。</summary>
@@ -53,10 +53,10 @@ public sealed class AttackDefinition {
     /// <summary>破防に必要な靭性ダメージ閾値を取得します。</summary>
     public float PoiseThreshold { get; }
 
-    /// <summary>設定 component 数を取得します。</summary>
-    public int ComponentCount => _components.Length;
+    /// <summary>設定アクションステップ数を取得します。</summary>
+    public int ActionCount => _actions.Length;
 
-    /// <summary>三段階と component の設定が実行可能かどうかを取得します。</summary>
+    /// <summary>三段階とアクションステップの設定が実行可能かどうかを取得します。</summary>
     public bool IsValid => Skill.IsValid()
      && IsPositiveFinite(TelegraphDuration)
      && IsPositiveFinite(ExecuteDuration)
@@ -65,29 +65,29 @@ public sealed class AttackDefinition {
      && Range >= 0
      && PoiseThreshold >= 0.0f
      && IsFinite(PoiseThreshold)
-     && IsAllComponentsValid();
+     && IsAllActionsValid();
 
-    /// <summary>指定 index の component を取得します。</summary>
-    public bool TryGetComponent(int index, out AttackComponent component)
+    /// <summary>指定 index のアクションステップを取得します。</summary>
+    public bool TryGetAction(int index, out AttackActionStep action)
     {
-        if ((uint)index >= (uint)_components.Length)
+        if ((uint)index >= (uint)_actions.Length)
         {
-            component = default;
+            action = default;
             return false;
         }
 
-        component = _components[index];
+        action = _actions[index];
         return true;
     }
 
-    private bool IsAllComponentsValid()
+    private bool IsAllActionsValid()
     {
-        for (var index = 0; index < _components.Length; index++)
+        for (var index = 0; index < _actions.Length; index++)
         {
-            if (!_components[index].IsValid) return false;
+            if (!_actions[index].IsValid) return false;
 
             for (var previous = 0; previous < index; previous++)
-                if (_components[previous].Index == _components[index].Index)
+                if (_actions[previous].Index == _actions[index].Index)
                     return false;
         }
 

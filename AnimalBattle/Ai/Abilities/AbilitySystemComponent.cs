@@ -138,7 +138,7 @@ public sealed class AbilitySystemComponent {
 
         if (CurrentAbility is null) return;
 
-        _skillRunner.Update(dt, isGrounded, (comp, dir) => ExecuteComponent(comp, dir));
+        _skillRunner.Update(dt, isGrounded, (step, dir) => ExecuteAction(step, dir));
         UpdatePhaseTags(_skillRunner.CurrentPhase);
 
         if (_skillRunner.IsComplete)
@@ -171,28 +171,28 @@ public sealed class AbilitySystemComponent {
         }
     }
 
-    private void ExecuteComponent(AttackComponent comp, float dir)
+    private void ExecuteAction(AttackActionStep step, float dir)
     {
         if (CurrentAbility is null) return;
 
-        switch (comp.Kind)
+        switch (step.Kind)
         {
-            case AttackComponentKind.Movement:
-            case AttackComponentKind.VelocityDive:
-                OnExecuteMovement?.Invoke(comp.Param0 * dir, comp.Param1);
+            case AttackActionKind.Movement:
+            case AttackActionKind.VelocityDive:
+                OnExecuteMovement?.Invoke(step.Param0 * dir, step.Param1);
                 break;
-            case AttackComponentKind.Bullet:
-                OnEmitBullet?.Invoke(CurrentAbility.SkillId, comp.Param0 * dir, comp.Param1);
+            case AttackActionKind.Bullet:
+                OnEmitBullet?.Invoke(CurrentAbility.SkillId, step.Param0 * dir, step.Param1);
                 break;
-            case AttackComponentKind.Hitbox:
-            case AttackComponentKind.OnGroundedHitbox:
-                OnCreateHitbox?.Invoke(CurrentAbility.SkillId, comp.Param0 * dir, comp.Param1);
+            case AttackActionKind.Hitbox:
+            case AttackActionKind.OnGroundedHitbox:
+                OnCreateHitbox?.Invoke(CurrentAbility.SkillId, step.Param0 * dir, step.Param1);
                 break;
-            case AttackComponentKind.AudioCue:
-                OnPlayAudio?.Invoke((int)comp.Param0, comp.Param1);
+            case AttackActionKind.AudioCue:
+                OnPlayAudio?.Invoke((int)step.Param0, step.Param1);
                 break;
-            case AttackComponentKind.ScreenShake:
-                OnScreenShake?.Invoke(comp.Param0, comp.Param1);
+            case AttackActionKind.ScreenShake:
+                OnScreenShake?.Invoke(step.Param0, step.Param1);
                 break;
         }
     }

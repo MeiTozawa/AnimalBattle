@@ -48,20 +48,20 @@ public static class SkillConfigLoader {
         if (effectiveRange < 0.0f)
             return Error.Validation("Skill.InvalidRange", $"技能 '{skill}' の有効射程が負数です: {effectiveRange}");
 
-        var components = new List<AttackComponent>();
+        var actions = new List<AttackActionStep>();
         var index = 0;
 
         if (events != null && events.Count > 0)
             foreach (var ev in events)
             {
-                var kind = ResolveComponentKind(ev.Type);
-                components.Add(new AttackComponent(kind, index++, ev.Param0, ev.Param1, ev.Param2, ev.Time));
+                var kind = ResolveActionKind(ev.Type);
+                actions.Add(new AttackActionStep(kind, index++, ev.Param0, ev.Param1, ev.Param2, ev.Time));
             }
         else if (defaultInterval > 0.0f && defaultSpeed > 0.0f)
             // 旧来パラメータに基づく周期的弾幕自動生成フォールバック
             for (var t = 0.0f; t < castDuration; t += defaultInterval)
-                components.Add(new AttackComponent(
-                    AttackComponentKind.Bullet,
+                actions.Add(new AttackActionStep(
+                    AttackActionKind.Bullet,
                     index++,
                     defaultSpeed,
                     defaultCount > 0 ? defaultCount : 1,
@@ -74,7 +74,7 @@ public static class SkillConfigLoader {
             castDuration,
             recoveryTime,
             effectiveRange,
-            components.ToArray(),
+            actions.ToArray(),
             armor,
             poiseThreshold);
 
@@ -244,26 +244,26 @@ public static class SkillConfigLoader {
         };
     }
 
-    private static AttackComponentKind ResolveComponentKind(string? typeName)
+    private static AttackActionKind ResolveActionKind(string? typeName)
     {
         if (string.IsNullOrWhiteSpace(typeName)) return FallbackUnknownType("<empty>");
 
         return typeName.Trim().ToLowerInvariant() switch {
-            "bullet" => AttackComponentKind.Bullet,
-            "hitbox" => AttackComponentKind.Hitbox,
-            "movement" => AttackComponentKind.Movement,
-            "easingmovement" => AttackComponentKind.EasingMovement,
-            "velocitydive" => AttackComponentKind.VelocityDive,
-            "ongroundedhitbox" => AttackComponentKind.OnGroundedHitbox,
-            "sound" or "audiocue" => AttackComponentKind.AudioCue,
-            "shake" or "screenshake" => AttackComponentKind.ScreenShake,
+            "bullet" => AttackActionKind.Bullet,
+            "hitbox" => AttackActionKind.Hitbox,
+            "movement" => AttackActionKind.Movement,
+            "easingmovement" => AttackActionKind.EasingMovement,
+            "velocitydive" => AttackActionKind.VelocityDive,
+            "ongroundedhitbox" => AttackActionKind.OnGroundedHitbox,
+            "sound" or "audiocue" => AttackActionKind.AudioCue,
+            "shake" or "screenshake" => AttackActionKind.ScreenShake,
             _ => FallbackUnknownType(typeName)
         };
     }
 
-    private static AttackComponentKind FallbackUnknownType(string typeName)
+    private static AttackActionKind FallbackUnknownType(string typeName)
     {
         Debug.Assert(false, $"[SkillConfigLoader] 未知のイベント種別です: '{typeName}'。Bullet としてフォールバックします。");
-        return AttackComponentKind.Bullet;
+        return AttackActionKind.Bullet;
     }
 }
