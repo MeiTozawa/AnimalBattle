@@ -1,4 +1,4 @@
-using AnimalBattle.Ai.Attack;
+using AnimalBattle.Abilities.Attack;
 
 namespace AnimalBattle.Ai.Dsl;
 
@@ -21,7 +21,7 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder Dash(float speedX, float speedY = 0.0f)
     {
         var index = actions.Count;
-        actions.Add(new AttackActionStep(AttackActionKind.Movement, index, speedX, speedY, triggerTime));
+        actions.Add(AttackActionStep.CreateMovement(index, speedX, speedY, triggerTime));
         return this;
     }
 
@@ -34,8 +34,7 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder Slash(float offsetX = 80.0f, float offsetY = -10.0f)
     {
         var index = actions.Count;
-        var kind = isOnGrounded ? AttackActionKind.OnGroundedHitbox : AttackActionKind.Hitbox;
-        actions.Add(new AttackActionStep(kind, index, offsetX, offsetY, triggerTime));
+        actions.Add(AttackActionStep.CreateHitbox(index, offsetX, offsetY, triggerTime, isOnGrounded));
         return this;
     }
 
@@ -48,8 +47,7 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder Hitbox(float x = 0.0f, float y = 0.0f)
     {
         var index = actions.Count;
-        var kind = isOnGrounded ? AttackActionKind.OnGroundedHitbox : AttackActionKind.Hitbox;
-        actions.Add(new AttackActionStep(kind, index, x, y, triggerTime));
+        actions.Add(AttackActionStep.CreateHitbox(index, x, y, triggerTime, isOnGrounded));
         return this;
     }
 
@@ -62,7 +60,7 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder Bullet(float x = 0.0f, float y = 0.0f)
     {
         var index = actions.Count;
-        actions.Add(new AttackActionStep(AttackActionKind.Bullet, index, x, y, 0.0f, triggerTime));
+        actions.Add(AttackActionStep.CreateBullet(index, x, y, 0.0f, triggerTime));
         return this;
     }
 
@@ -76,8 +74,7 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder Barrage(float bulletSpeed, float bulletCount = 1.0f, float spreadAngle = 0.0f)
     {
         var index = actions.Count;
-        actions.Add(new AttackActionStep(AttackActionKind.Bullet, index, bulletSpeed, bulletCount, spreadAngle,
-            triggerTime));
+        actions.Add(AttackActionStep.CreateBullet(index, bulletSpeed, bulletCount, spreadAngle, triggerTime));
         return this;
     }
 
@@ -90,8 +87,7 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder FlyToTarget(float peakAltitudeY = 130.0f, float flyDuration = 0.45f)
     {
         var index = actions.Count;
-        actions.Add(new AttackActionStep(AttackActionKind.EasingMovement, index, peakAltitudeY, flyDuration, 0.0f,
-            triggerTime));
+        actions.Add(AttackActionStep.CreateEasingMovement(index, peakAltitudeY, flyDuration, triggerTime));
         return this;
     }
 
@@ -103,8 +99,7 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder Dive(float descentSpeed = 1200.0f)
     {
         var index = actions.Count;
-        actions.Add(new AttackActionStep(AttackActionKind.VelocityDive, index, 0.0f, descentSpeed, 0.0f,
-            triggerTime));
+        actions.Add(AttackActionStep.CreateVelocityDive(index, descentSpeed, triggerTime));
         return this;
     }
 
@@ -117,7 +112,7 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder Sound(int soundId, float volume = 1.0f)
     {
         var index = actions.Count;
-        actions.Add(new AttackActionStep(AttackActionKind.AudioCue, index, soundId, volume, 0.0f, triggerTime));
+        actions.Add(AttackActionStep.CreateAudio(index, soundId, volume, triggerTime));
         return this;
     }
 
@@ -130,8 +125,7 @@ public sealed class AttackActionBuilder(
     public AttackActionBuilder CameraShake(float intensity = 5.0f, float duration = 0.2f)
     {
         var index = actions.Count;
-        actions.Add(new AttackActionStep(AttackActionKind.ScreenShake, index, intensity, duration, 0.0f,
-            triggerTime));
+        actions.Add(AttackActionStep.CreateScreenShake(index, intensity, duration, triggerTime));
         return this;
     }
 }

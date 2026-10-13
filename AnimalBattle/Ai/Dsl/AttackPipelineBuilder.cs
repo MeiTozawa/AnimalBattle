@@ -1,5 +1,5 @@
 using System.Drawing;
-using AnimalBattle.Ai.Attack;
+using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
 
@@ -10,10 +10,10 @@ namespace AnimalBattle.Ai.Dsl;
 /// </summary>
 /// <param name="parent">親の Phase ビルダー。</param>
 /// <param name="skill">技能識別子。</param>
-public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill skill) {
+public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, AbilityId skill) {
     private readonly List<AttackActionStep> _actions = [];
     private readonly PhasePipelineBuilder _parent = parent;
-    private ArmorType _armor = ArmorType.None;
+    private GameplayTag _armorTag = GameplayTag.None;
     private float _executeDuration = 0.50f;
     private float _poiseThreshold;
     private float _range = 200.0f;
@@ -22,17 +22,17 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
     private float _telegraphDuration = 0.40f;
 
     /// <summary>対象の技能識別子を取得します。</summary>
-    public BossSkill Skill { get; } = skill;
+    public AbilityId Skill { get; } = skill;
 
     /// <summary>
-    ///     この攻撃のスーパーアーマー種別および破防靭性値を設定します。
+    ///     この攻撃のアーマータグおよび破防靭性値を設定します。
     /// </summary>
-    /// <param name="armor">アーマー種別。</param>
+    /// <param name="armorTag">アーマータグ（SuperArmor, Invincible 等）。</param>
     /// <param name="poise">破防靭性値（既定値: 0.0f）。</param>
     /// <returns>現在の攻撃ビルダー。</returns>
-    public AttackPipelineBuilder Armor(ArmorType armor, float poise = 0.0f)
+    public AttackPipelineBuilder Armor(GameplayTag armorTag, float poise = 0.0f)
     {
-        _armor = armor;
+        _armorTag = armorTag;
         _poiseThreshold = poise;
         return this;
     }
@@ -138,7 +138,7 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
     /// </summary>
     /// <param name="skill">次に定義する技能識別子。</param>
     /// <returns>新しい攻撃ビルダー。</returns>
-    public AttackPipelineBuilder Attack(BossSkill skill)
+    public AttackPipelineBuilder Attack(AbilityId skill)
     {
         return _parent.Attack(skill);
     }
@@ -175,7 +175,7 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, BossSkill
             _recoveryDuration,
             _range,
             _actions.ToArray(),
-            _armor,
+            _armorTag,
             _poiseThreshold);
     }
 

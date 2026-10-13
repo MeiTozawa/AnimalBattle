@@ -1,6 +1,4 @@
-using AnimalBattle.Ai.Contracts;
-
-namespace AnimalBattle.Ai.Attack;
+namespace AnimalBattle.Abilities.Attack;
 
 /// <summary>攻撃の Telegraph、Execute、Recovery と各アクションステップを保持する検証済み定義です。</summary>
 public sealed class AttackDefinition {
@@ -8,13 +6,13 @@ public sealed class AttackDefinition {
 
     /// <summary>攻撃定義を生成します。アクション配列は初期化時にコピーされます。</summary>
     public AttackDefinition(
-        BossSkill skill,
+        AbilityId skill,
         float telegraphDuration,
         float executeDuration,
         float recoveryDuration,
         float range,
         IReadOnlyList<AttackActionStep>? actions = null,
-        ArmorType armor = ArmorType.None,
+        GameplayTag armorTag = GameplayTag.None,
         float poiseThreshold = 0.0f)
     {
         Skill = skill;
@@ -22,7 +20,7 @@ public sealed class AttackDefinition {
         ExecuteDuration = executeDuration;
         RecoveryDuration = recoveryDuration;
         Range = range;
-        Armor = armor;
+        ArmorTag = armorTag;
         PoiseThreshold = poiseThreshold;
 
         var actionCount = actions?.Count ?? 0;
@@ -33,7 +31,7 @@ public sealed class AttackDefinition {
     }
 
     /// <summary>技能識別子を取得します。</summary>
-    public BossSkill Skill { get; }
+    public AbilityId Skill { get; }
 
     /// <summary>Telegraph の設定時間を取得します。</summary>
     public float TelegraphDuration { get; }
@@ -47,8 +45,8 @@ public sealed class AttackDefinition {
     /// <summary>攻撃範囲を取得します。</summary>
     public float Range { get; }
 
-    /// <summary>出招実行時のアーマー・耐性種別を取得します。</summary>
-    public ArmorType Armor { get; }
+    /// <summary>出招実行時のアーマー・耐性タグ（SuperArmor, Invincible 等）を取得します。</summary>
+    public GameplayTag ArmorTag { get; }
 
     /// <summary>破防に必要な靭性ダメージ閾値を取得します。</summary>
     public float PoiseThreshold { get; }

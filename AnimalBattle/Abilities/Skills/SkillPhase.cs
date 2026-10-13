@@ -1,4 +1,4 @@
-namespace AnimalBattle.Ai.Skills;
+namespace AnimalBattle.Abilities.Skills;
 
 /// <summary>
 ///     技能実行の微視的フェーズ（予兆・実行・後隙）を表す列挙体です。

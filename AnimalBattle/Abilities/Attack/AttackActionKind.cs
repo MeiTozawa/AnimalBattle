@@ -1,4 +1,4 @@
-namespace AnimalBattle.Ai.Attack;
+namespace AnimalBattle.Abilities.Attack;
 
 /// <summary>攻撃の各実行アクション（タイムラインステップ）の種類を定義します。</summary>
 public enum AttackActionKind {

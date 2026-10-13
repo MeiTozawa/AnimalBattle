@@ -1,7 +1,6 @@
-using AnimalBattle.Ai.Attack;
-using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Abilities.Attack;
 
-namespace AnimalBattle.Ai.Skills;
+namespace AnimalBattle.Abilities.Skills;
 
 /// <summary>
 ///     単一の技能実行タイムライン（前隙・判定・後隙）を一元管理する軽量ランナーです。
@@ -44,9 +43,9 @@ public sealed class SkillRunner {
         }
     }
 
-    /// <summary>現在有効なアーマー種別を取得します。</summary>
-    public ArmorType CurrentArmor =>
-        CurrentPhase == SkillPhase.Active && Definition is not null ? Definition.Armor : ArmorType.None;
+    /// <summary>現在有効なアーマータグを取得します。</summary>
+    public GameplayTag CurrentArmorTag =>
+        CurrentPhase == SkillPhase.Active && Definition is not null ? Definition.ArmorTag : GameplayTag.None;
 
     /// <summary>現在有効な靭性閾値を取得します。</summary>
     public float PoiseThreshold =>

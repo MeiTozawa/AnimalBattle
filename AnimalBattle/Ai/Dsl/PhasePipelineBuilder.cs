@@ -88,7 +88,7 @@ public sealed class PhasePipelineBuilder(BossPipelineBuilder parent, Phase phase
     /// </summary>
     /// <param name="skill">技能識別子。</param>
     /// <returns>新しい攻撃パイプラインビルダー。</returns>
-    public AttackPipelineBuilder Attack(BossSkill skill)
+    public AttackPipelineBuilder Attack(AbilityId skill)
     {
         AttackPipelineBuilder builder = new(this, skill);
         _attackBuilders.Add(builder);
