@@ -166,40 +166,32 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     /// <inheritdoc />
     public Boss1PhaseSettings GetPhase(Phase phase)
     {
-        try
-        {
-            var tomlPhase = phase switch {
-                Phase.Phase1 => ConfigManager.Boss1.Phase1,
-                Phase.Phase2 => ConfigManager.Boss1.Phase2,
-                Phase.Phase3 => ConfigManager.Boss1.Phase3,
-                _ => AssertHelper.FailWithDefault($"[Boss1Configuration 警告] 未知のフェーズ: {phase}", ConfigManager.Boss1.Phase1)
-            };
+        var tomlPhase = phase switch {
+            Phase.Phase1 => ConfigManager.Boss1.Phase1,
+            Phase.Phase2 => ConfigManager.Boss1.Phase2,
+            Phase.Phase3 => ConfigManager.Boss1.Phase3,
+            _ => AssertHelper.FailWithDefault($"[Boss1Configuration 警告] 未知のフェーズ: {phase}", ConfigManager.Boss1.Phase1)
+        };
 
-            var order = tomlPhase.Skills.Count > 0
-                ? tomlPhase.Skills.Select(s => new StringId(s)).Where(id => !id.IsEmpty).ToArray()
-                : Array.Empty<StringId>();
+        var order = tomlPhase.Skills.Count > 0
+            ? tomlPhase.Skills.Select(s => new StringId(s)).Where(id => !id.IsEmpty).ToArray()
+            : [];
 
-            return new Boss1PhaseSettings(
-                tomlPhase.HoverDuration,
-                tomlPhase.HoverBaseY,
-                tomlPhase.HoverSpeedX,
-                tomlPhase.HoverAmpX,
-                tomlPhase.HoverSpeedY,
-                tomlPhase.HoverAmpY,
-                tomlPhase.PlayerPursuitWeight,
-                tomlPhase.HoverLerpSpeed,
-                tomlPhase.TelegraphShakeIntensity,
-                tomlPhase.RecoverFlybackSpeed,
-                tomlPhase.RecoverDelayRatio,
-                tomlPhase.TransitionDuration,
-                tomlPhase.TransitionFloatSpeed,
-                order);
-        }
-        catch (Exception ex)
-        {
-            Debug.Fail($"[Boss1Configuration 警告] フェーズ設定の取得中に例外が発生しました: {ex.Message}", ex.ToString());
-            return new Boss1PhaseSettings(0.8f, 220.0f, 1.6f, 240.0f, 1.8f, 60.0f, 0.12f, 3.5f, 8.0f, 4.0f, 0.5f, 1.0f, 3.0f, Array.Empty<StringId>());
-        }
+        return new Boss1PhaseSettings(
+            tomlPhase.HoverDuration,
+            tomlPhase.HoverBaseY,
+            tomlPhase.HoverSpeedX,
+            tomlPhase.HoverAmpX,
+            tomlPhase.HoverSpeedY,
+            tomlPhase.HoverAmpY,
+            tomlPhase.PlayerPursuitWeight,
+            tomlPhase.HoverLerpSpeed,
+            tomlPhase.TelegraphShakeIntensity,
+            tomlPhase.RecoverFlybackSpeed,
+            tomlPhase.RecoverDelayRatio,
+            tomlPhase.TransitionDuration,
+            tomlPhase.TransitionFloatSpeed,
+            order);
     }
 
     /// <inheritdoc />

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai.Dsl;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 
@@ -18,11 +19,11 @@ public readonly struct Boss2PhaseSettings(
     float patrolRadius,
     float transitionDuration,
     IReadOnlyList<StringId> attackOrder,
-    IReadOnlyList<AttackDecisionRule>? rules = null,
-    float maxAscentDuration = 0.80f,
-    float landingRecoveryDuration = 0.10f,
-    float takeoffDistance = 50.0f,
-    float chaseTimeout = 3.0f) {
+    IReadOnlyList<AttackDecisionRule> rules,
+    float maxAscentDuration,
+    float landingRecoveryDuration,
+    float takeoffDistance,
+    float chaseTimeout) {
     /// <summary>攻撃開始までの待機時間です。</summary>
     public float IdleDuration { get; } = idleDuration;
 
@@ -176,15 +177,10 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     /// <inheritdoc />
     public StringId WallStunSkillTag => new(ConfigManager.Boss2.WallStunSkill);
 
-    private readonly Boss2AttackPattern[] _attacks = Boss2PipelineDefinition.Pipeline.Attacks
-        .Select(kv => new Boss2AttackPattern(kv.Key, kv.Value))
-        .ToArray();
-
     /// <inheritdoc />
     public Boss2PhaseSettings GetPhase(Phase phase)
     {
         var toml = ConfigManager.Boss2;
-        Boss2PipelineDefinition.Pipeline.TryGetLocomotion(phase, out var loco);
 
         var phaseCfg = phase switch {
             Phase.Phase1 => toml.Phase1,
@@ -198,29 +194,44 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
             ? phaseCfg.Skills.Select(s => new StringId(s)).ToList()
             : [];
 
-        var jumpForce = loco.JumpForce > 0 ? loco.JumpForce : phaseCfg.JumpForce;
-        var gravity = loco.Gravity > 0 ? loco.Gravity : toml.Gravity;
-        var maxFallSpeed = loco.MaxFallSpeed > 0 ? loco.MaxFallSpeed : 850.0f;
-        var maxAscent = loco.MaxAscentDuration > 0 ? loco.MaxAscentDuration : 0.80f;
-        var landingRecovery = loco.LandingRecoveryDuration > 0 ? loco.LandingRecoveryDuration : 0.10f;
-        var takeoffDistance = loco.TakeoffDistance > 0 ? loco.TakeoffDistance : 50.0f;
-        var chaseTimeout = phaseCfg.ChaseTimeout > 0 ? phaseCfg.ChaseTimeout :
-            toml.ChaseTimeout > 0 ? toml.ChaseTimeout : 3.0f;
+        var jumpForce = phaseCfg.JumpForce > 0 ? phaseCfg.JumpForce : toml.JumpForce;
+        var chaseTimeout = phaseCfg.ChaseTimeout > 0 ? phaseCfg.ChaseTimeout : toml.ChaseTimeout;
+        var rules = ConvertRules(phaseCfg.Rules);
 
         return new Boss2PhaseSettings(
             phaseCfg.IdleDuration,
             phaseCfg.MoveSpeed,
             jumpForce,
-            gravity,
-            maxFallSpeed,
+            toml.Gravity,
+            toml.MaxFallSpeed,
             toml.PatrolRadius,
             phaseCfg.TransitionDuration,
             skills,
-            Boss2PipelineDefinition.Pipeline.GetRules(phase),
-            maxAscent,
-            landingRecovery,
-            takeoffDistance,
+            rules,
+            toml.MaxAscentDuration,
+            toml.LandingRecoveryDuration,
+            toml.TakeoffDistance,
             chaseTimeout);
+    }
+
+    private static IReadOnlyList<AttackDecisionRule> ConvertRules(List<AttackRuleConfig>? rules)
+    {
+        if (rules is null || rules.Count == 0) return [];
+        var result = new AttackDecisionRule[rules.Count];
+        for (var i = 0; i < rules.Count; i++)
+        {
+            var r = rules[i];
+            var builder = new DecisionRuleBuilder()
+               .Cooldown(r.Cooldown)
+               .Distance(r.MinDistance, r.MaxDistance)
+               .Weight(r.Weight)
+               .RequireSamePlatform(r.RequireSamePlatform);
+
+            if (r.PreferAirborneBonus > 0.0f) builder.PreferAirborneBonus(r.PreferAirborneBonus);
+            if (r.RequirePlayerGrounded.HasValue) builder.RequirePlayerGrounded(r.RequirePlayerGrounded.Value);
+            result[i] = builder.Build(new StringId(r.Skill));
+        }
+        return result;
     }
 
     /// <inheritdoc />
@@ -228,9 +239,11 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     {
         try
         {
-            if (Boss2PipelineDefinition.Pipeline.TryGetAttack(skill, out var definition))
+            var patternCfg = ConfigManager.Boss2Patterns;
+            var defResult = Boss2PatternLoader.BuildAttackDefinition(skill, patternCfg);
+            if (!defResult.IsError)
             {
-                pattern = new Boss2AttackPattern(skill, definition);
+                pattern = new Boss2AttackPattern(skill, defResult.Value);
                 return true;
             }
         }
@@ -238,13 +251,6 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
         {
             Debug.Fail($"[Boss2Configuration 警告] 攻撃パターンの取得中に例外が発生しました: {ex.Message}", ex.ToString());
         }
-
-        for (var index = 0; index < _attacks.Length; index++)
-            if (_attacks[index].SkillTag == skill)
-            {
-                pattern = _attacks[index];
-                return true;
-            }
 
         pattern = null!;
         return false;

@@ -1,8 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using AnimalBattle.Ai.Boss1;
-using AnimalBattle.Ai.Boss2;
 using ErrorOr;
 
 namespace AnimalBattle.Configs;
@@ -142,11 +140,6 @@ public static class ConfigManager {
             "特殊弾幕変調パラメータが正常に読み込まれていません。");
         Debug.WriteLine(
             $"[C# 特殊弾幕設定] Cyan Amp={SpecialBullets.CyanWaveAmplitude} | Magenta Amp={SpecialBullets.MagentaPulseAmplitude} | Yellow Speed={SpecialBullets.YellowOrbitSpeed}");
-
-        _boss1ConfigContainer.OnConfigReloaded += Boss1PipelineDefinition.Reload;
-        _boss2ConfigContainer.OnConfigReloaded += Boss2PipelineDefinition.Reload;
-        _boss1PatternsContainer.OnConfigReloaded += Boss1PipelineDefinition.Reload;
-        _boss2PatternsContainer.OnConfigReloaded += Boss2PipelineDefinition.Reload;
 #else
         ErrorOr<BakedConfigBundle> loadResult = BinaryConfigLoader.Load();
         if (loadResult.IsError)
@@ -169,9 +162,6 @@ public static class ConfigManager {
 
         Debug.WriteLine("[C# 設定初期化] Release 版: バイナリ設定データ (baked_configs.bin) を正常にロードして起動しました。");
 #endif
-
-        Boss1PipelineDefinition.Reload();
-        Boss2PipelineDefinition.Reload();
     }
 
 #if DEBUG
