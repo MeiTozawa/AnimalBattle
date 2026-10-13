@@ -139,6 +139,7 @@ public static class CombatSpawner {
     public static Color GetDefaultFillColor(BulletType type)
     {
         return type switch {
+            BulletType.Normal => ColorPalette.Red,
             BulletType.Magenta => ColorPalette.BulletMagentaFill,
             BulletType.Yellow => ColorPalette.BulletYellowFill,
             BulletType.Cyan => ColorPalette.BulletCyanFill,
@@ -153,6 +154,7 @@ public static class CombatSpawner {
     public static Color GetDefaultOutlineColor(BulletType type)
     {
         return type switch {
+            BulletType.Normal => ColorPalette.White,
             BulletType.Magenta => ColorPalette.BulletMagentaOutline,
             BulletType.Yellow => ColorPalette.BulletYellowOutline,
             BulletType.Cyan => ColorPalette.BulletCyanOutline,
@@ -169,23 +171,21 @@ public static class CombatSpawner {
         Color? customFill = null,
         Color? customOutline = null)
     {
+        var hasFill = customFill != null && !customFill.Value.IsEmpty && customFill.Value.A > 0;
+        var hasOutline = customOutline != null && !customOutline.Value.IsEmpty && customOutline.Value.A > 0;
+
+        if (hasFill && hasOutline)
+        {
+            return (customFill!.Value, customOutline!.Value);
+        }
+
         var defaultFill = GetDefaultFillColor(type);
         var defaultOutline = GetDefaultOutlineColor(type);
 
-        if (customFill == null || customFill.Value.IsEmpty || customFill.Value.A == 0)
-        {
-            var outline = customOutline == null || customOutline.Value.IsEmpty || customOutline.Value.A == 0
-                ? defaultOutline
-                : customOutline.Value;
-            return (defaultFill, outline);
-        }
+        var fill = hasFill ? customFill!.Value : defaultFill;
+        var outline = hasOutline ? customOutline!.Value : defaultOutline;
 
-        var fill = customFill.Value;
-        var outl = customOutline == null || customOutline.Value.IsEmpty || customOutline.Value.A == 0
-            ? defaultOutline
-            : customOutline.Value;
-
-        return (fill, outl);
+        return (fill, outline);
     }
 
     /// <summary>
