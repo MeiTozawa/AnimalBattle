@@ -1,4 +1,4 @@
-namespace AnimalBattle.Core;
+namespace AnimalBattle.Combat;
 
 /// <summary>
 ///     斬撃エフェクトの展開方向（朝下、朝上、朝右、朝左）。

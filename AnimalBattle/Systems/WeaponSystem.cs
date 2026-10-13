@@ -103,7 +103,7 @@ public static class WeaponSystem
                 .Add<PlayerBulletTag>();
 
             // 銃口閃光（Muzzle Flash）エフェクト生成
-            CombatEffectHelper.SpawnMuzzleFlash(world, spawnX, spawnY);
+            CombatSpawner.SpawnMuzzleFlash(world, spawnX, spawnY);
 
             // 自機射撃微後退反動（Recoil Impulse & Squash/Stretch）
             var pCfg = ConfigManager.Player;

@@ -1,4 +1,4 @@
-namespace AnimalBattle.Components;
+namespace AnimalBattle.Combat;
 
 /// <summary>
 ///     判定盒 (Hitbox/Hurtbox) の所属陣営（味方・敵・中立）を識別する列挙型。

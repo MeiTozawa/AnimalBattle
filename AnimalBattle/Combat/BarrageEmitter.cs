@@ -4,7 +4,7 @@ using AnimalBattle.Configs;
 using AnimalBattle.Events;
 using Flecs.NET.Core;
 
-namespace AnimalBattle.Systems;
+namespace AnimalBattle.Combat;
 
 /// <summary>
 ///     設定駆動型の弾幕および波次生成を一元管理する静的サービスです。
@@ -124,7 +124,7 @@ public static class BarrageEmitter
             var vx = MathF.Cos(angle) * cfg.BulletSpeed;
             var vy = MathF.Sin(angle) * cfg.BulletSpeed;
 
-            CombatEffectHelper.SpawnBossSpecialBullet(
+            CombatSpawner.SpawnBossSpecialBullet(
                 world,
                 origin.X,
                 origin.Y,
@@ -147,7 +147,7 @@ public static class BarrageEmitter
         var vy = MathF.Sin(angle) * cfg.BulletSpeed;
         var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Black);
 
-        CombatEffectHelper.SpawnBossSpecialBullet(
+        CombatSpawner.SpawnBossSpecialBullet(
             world,
             origin.X,
             origin.Y,
@@ -172,7 +172,7 @@ public static class BarrageEmitter
             var vx = MathF.Cos(angle) * cfg.BulletSpeed;
             var vy = MathF.Sin(angle) * cfg.BulletSpeed;
 
-            CombatEffectHelper.SpawnBossSpecialBullet(
+            CombatSpawner.SpawnBossSpecialBullet(
                 world,
                 origin.X,
                 origin.Y,
@@ -194,7 +194,7 @@ public static class BarrageEmitter
 
         var vx1 = MathF.Cos(angleOffset) * cfg.BulletSpeed;
         var vy1 = MathF.Sin(angleOffset) * cfg.BulletSpeed;
-        CombatEffectHelper.SpawnBossSpecialBullet(
+        CombatSpawner.SpawnBossSpecialBullet(
             world,
             origin.X,
             origin.Y,
@@ -208,7 +208,7 @@ public static class BarrageEmitter
         var angle2 = angleOffset + MathF.PI;
         var vx2 = MathF.Cos(angle2) * cfg.BulletSpeed;
         var vy2 = MathF.Sin(angle2) * cfg.BulletSpeed;
-        CombatEffectHelper.SpawnBossSpecialBullet(
+        CombatSpawner.SpawnBossSpecialBullet(
             world,
             origin.X,
             origin.Y,
@@ -233,7 +233,7 @@ public static class BarrageEmitter
             var vx = MathF.Cos(angle) * cfg.BulletSpeed;
             var vy = MathF.Sin(angle) * cfg.BulletSpeed;
 
-            CombatEffectHelper.SpawnBossSpecialBullet(
+            CombatSpawner.SpawnBossSpecialBullet(
                 world,
                 origin.X,
                 origin.Y,
@@ -254,7 +254,7 @@ public static class BarrageEmitter
         var rx = cfg.MinX + Random.Shared.NextSingle() * (cfg.MaxX - cfg.MinX);
         var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Cyan);
 
-        CombatEffectHelper.SpawnBossSpecialBullet(
+        CombatSpawner.SpawnBossSpecialBullet(
             world,
             rx,
             0.0f,
@@ -281,7 +281,7 @@ public static class BarrageEmitter
             var vx = MathF.Cos(angle) * cfg.ImpactBulletSpeed;
             var vy = MathF.Sin(angle) * cfg.ImpactBulletSpeed;
 
-            CombatEffectHelper.SpawnBossSpecialBullet(
+            CombatSpawner.SpawnBossSpecialBullet(
                 world,
                 origin.X,
                 spawnY,
@@ -302,7 +302,7 @@ public static class BarrageEmitter
         for (var i = 0; i < count; i++)
         {
             var rx = cfg.MinX + Random.Shared.NextSingle() * (cfg.MaxX - cfg.MinX);
-            CombatEffectHelper.SpawnBossSpecialBullet(
+            CombatSpawner.SpawnBossSpecialBullet(
                 world,
                 rx,
                 0.0f,
@@ -319,9 +319,9 @@ public static class BarrageEmitter
     private static void EmitGroundStompShockwaves(World world, GroundStompConfig cfg, Vec2f origin, float bodyHeight)
     {
         var groundY = origin.Y + bodyHeight / 2.0f - cfg.GroundOffsetY;
-        CombatEffectHelper.SpawnShockwave(world, origin.X, groundY);
+        CombatSpawner.SpawnShockwave(world, origin.X, groundY);
 
-        CombatEffectHelper.SpawnGroundShockwave(
+        CombatSpawner.SpawnGroundShockwave(
             world,
             origin.X - cfg.ShockwaveOffsetX,
             groundY,
@@ -331,7 +331,7 @@ public static class BarrageEmitter
             cfg.FillColor,
             cfg.OutlineColor);
 
-        CombatEffectHelper.SpawnGroundShockwave(
+        CombatSpawner.SpawnGroundShockwave(
             world,
             origin.X + cfg.ShockwaveOffsetX,
             groundY,
@@ -346,7 +346,7 @@ public static class BarrageEmitter
     private static void EmitLeapSmashShrapnel(World world, LeapSmashConfig cfg, Vec2f origin, float bodyHeight)
     {
         var groundY = origin.Y + bodyHeight / 2.0f;
-        CombatEffectHelper.SpawnShockwave(world, origin.X, groundY);
+        CombatSpawner.SpawnShockwave(world, origin.X, groundY);
 
         var count = Math.Max(2, cfg.ShrapnelCount);
         for (var k = 0; k < count; k++)
@@ -356,7 +356,7 @@ public static class BarrageEmitter
             var vx = MathF.Cos(angle) * cfg.ShrapnelSpeed;
             var vy = MathF.Sin(angle) * cfg.ShrapnelSpeed;
 
-            CombatEffectHelper.SpawnBossBullet(
+            CombatSpawner.SpawnBossBullet(
                 world,
                 origin.X,
                 groundY - cfg.ShrapnelOffsetY,

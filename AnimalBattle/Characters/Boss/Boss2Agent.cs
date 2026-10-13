@@ -233,7 +233,7 @@ public sealed class Boss2Agent : BaseBossAgent
         {
             var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
             var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
-            CombatEffectHelper.SpawnMeleeSlashHitbox(
+            CombatSpawner.SpawnMeleeSlashHitbox(
                 CurrentWorld,
                 trans.X + offX,
                 trans.Y + offY,
@@ -250,7 +250,7 @@ public sealed class Boss2Agent : BaseBossAgent
         {
             var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
             var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
-            CombatEffectHelper.SpawnMeleeSlashHitbox(
+            CombatSpawner.SpawnMeleeSlashHitbox(
                 CurrentWorld,
                 trans.X + offX,
                 trans.Y + offY,
@@ -268,7 +268,7 @@ public sealed class Boss2Agent : BaseBossAgent
             if (skill == BossSkill.LeapSmash)
             {
                 var groundY = trans.Y + colHeight / 2.0f;
-                CombatEffectHelper.SpawnMeleeSlashHitbox(
+                CombatSpawner.SpawnMeleeSlashHitbox(
                     CurrentWorld,
                     trans.X,
                     groundY - patternCfg.LeapSmash.SlashRadius * 0.5f,

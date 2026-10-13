@@ -77,8 +77,8 @@ public static class BossDamageResolutionSystem
                     if (isVulnerable)
                     {
                         // 易傷特効クリティカル火花
-                        CombatEffectHelper.SpawnHitSparkEffect(world, trans.X - 8.0f, trans.Y - 8.0f);
-                        CombatEffectHelper.SpawnHitSparkEffect(world, trans.X + 8.0f, trans.Y + 8.0f);
+                        CombatSpawner.SpawnHitSparkEffect(world, trans.X - 8.0f, trans.Y - 8.0f);
+                        CombatSpawner.SpawnHitSparkEffect(world, trans.X + 8.0f, trans.Y + 8.0f);
                     }
 
                     // 死亡または生存時反撃・カメラ衝撃判定
@@ -86,8 +86,8 @@ public static class BossDamageResolutionSystem
                     {
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
-                        CombatEffectHelper.ClearAllBossBullets(world);
-                        CombatEffectHelper.SpawnVictoryExplosions(world, trans.X, trans.Y);
+                        CombatSpawner.ClearAllBossBullets(world);
+                        CombatSpawner.SpawnVictoryExplosions(world, trans.X, trans.Y);
                         CameraService.AddTrauma(cameraCfg.VictoryExplosionTrauma);
                         EventBus.Publish(new BossDiedEvent());
                     }
@@ -101,7 +101,7 @@ public static class BossDamageResolutionSystem
                         EventBus.Publish(new BossDamagedEvent(finalDamage, hp.Current, isVulnerable));
 
                         // Boss 被弾反撃：現在の Phase に応じた数量の黑色弾幕を発射
-                        CombatEffectHelper.SpawnBossCounterAttack(world, trans.X, trans.Y, combat.Phase);
+                        CombatSpawner.SpawnBossCounterAttack(world, trans.X, trans.Y, combat.Phase);
                     }
 
                     entity.Remove<IncomingDamage>();

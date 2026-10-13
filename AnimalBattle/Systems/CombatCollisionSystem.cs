@@ -98,12 +98,12 @@ public static class CombatCollisionSystem {
             KnockbackY = -90.0f,
             IsHeavyImpact = isHeavy
         });
-        CombatEffectHelper.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX,
+        CombatSpawner.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX,
             vicTrans.Y + hurtbox.Shape.OffsetY);
 
         if (localHitbox.Faction == Faction.Friendly)
         {
-            CombatEffectHelper.SpawnBulletImpactSplatter(world, atkTrans.X, atkTrans.Y, knockbackDir, 0.0f);
+            CombatSpawner.SpawnBulletImpactSplatter(world, atkTrans.X, atkTrans.Y, knockbackDir, 0.0f);
         }
 
         if (localHitbox.DestroyOnHit) shouldDestroyAttacker = true;

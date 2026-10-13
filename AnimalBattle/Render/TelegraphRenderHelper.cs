@@ -1,7 +1,7 @@
 using System.Drawing;
 using AnimalBattle.Configs;
 
-namespace AnimalBattle.Systems;
+namespace AnimalBattle.Render;
 
 /// <summary>
 ///     Boss の攻撃予兆（Telegraph / Indicator）描画を一括管理する静的ヘルパークラス。
@@ -198,7 +198,7 @@ public static class TelegraphRenderHelper {
         // 着地危険領域 (プレイヤーの衝突箱高さを基準に算出)
         var tx = (int)targetX;
         var ty = (int)targetY;
-        var halfWidth = (int)impactRadius;
+        var halfWidth = (int)(impactRadius);
         var halfHeight = (int)(playerCfg.HitboxHeight / 2.0f);
         var x1 = tx - halfWidth;
         var y1 = ty - halfHeight;

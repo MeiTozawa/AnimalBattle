@@ -1,4 +1,4 @@
-namespace AnimalBattle.Components;
+namespace AnimalBattle.Combat;
 
 /// <summary>
 ///     弾幕の特殊挙動・視覚表現の種別を定義する列挙型。

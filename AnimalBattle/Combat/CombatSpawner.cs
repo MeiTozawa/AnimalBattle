@@ -3,13 +3,13 @@ using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
-namespace AnimalBattle.Systems;
+namespace AnimalBattle.Combat;
 
 /// <summary>
 ///     戦闘演出（被弾スパーク・ジャンプエフェクト・衝撃波・撃破爆発等）および弾幕生成の補助メソッド群を提供する静的ヘルパークラス。
 ///     生成する敵弾に <see cref="Hitbox" />（敵性陣営・円形判定）を付与します。
 /// </summary>
-public static class CombatEffectHelper {
+public static class CombatSpawner {
     /// <summary>
     ///     指定座標に Boss 弾幕エンティティを生成します。
     /// </summary>
@@ -108,7 +108,7 @@ public static class CombatEffectHelper {
                 bulletCount = 3;
             break;
             default:
-                Debug.Fail($"[CombatEffectHelper 警告] 未知のフェーズ: {phase}");
+                Debug.Fail($"[CombatSpawner 警告] 未知のフェーズ: {phase}");
                 bulletCount = 1;
             break;
         }
@@ -143,7 +143,7 @@ public static class CombatEffectHelper {
             BulletType.Yellow => ColorPalette.BulletYellowFill,
             BulletType.Cyan => ColorPalette.BulletCyanFill,
             BulletType.Black => ColorPalette.BulletBlackFill,
-            _ => AssertHelper.FailWithDefault($"[CombatEffectHelper 警告] 未知の BulletType (Fill): {type}", ColorPalette.RedBright)
+            _ => AssertHelper.FailWithDefault($"[CombatSpawner 警告] 未知の BulletType (Fill): {type}", ColorPalette.RedBright)
         };
     }
 
@@ -157,7 +157,7 @@ public static class CombatEffectHelper {
             BulletType.Yellow => ColorPalette.BulletYellowOutline,
             BulletType.Cyan => ColorPalette.BulletCyanOutline,
             BulletType.Black => ColorPalette.BulletBlackOutline,
-            _ => AssertHelper.FailWithDefault($"[CombatEffectHelper 警告] 未知の BulletType (Outline): {type}", ColorPalette.White)
+            _ => AssertHelper.FailWithDefault($"[CombatSpawner 警告] 未知の BulletType (Outline): {type}", ColorPalette.White)
         };
     }
 
