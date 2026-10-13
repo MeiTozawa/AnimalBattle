@@ -39,7 +39,6 @@ public sealed class TimelineAttackAbility : GameplayAbility {
         StringId tag,
         AttackDefinition timeline,
         float cooldown = 0.0f,
-        GameplayTag cooldownTags = GameplayTag.None,
         GameplayTag requiredTags = GameplayTag.None,
         GameplayTag blockedTags = GameplayTag.Stunned,
         string? displayName = null,
@@ -52,7 +51,6 @@ public sealed class TimelineAttackAbility : GameplayAbility {
         TelegraphRenderer = telegraphRenderer;
         Timeline = timeline;
         Cooldown = cooldown;
-        CooldownTags = cooldownTags;
         RequiredTags = requiredTags;
         BlockedTags = blockedTags;
         ActivationOwnedTags = GameplayTag.Casting;

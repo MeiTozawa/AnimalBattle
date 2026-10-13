@@ -1,19 +1,11 @@
-using AnimalBattle.Core;
-
 namespace AnimalBattle.Abilities;
 
 /// <summary>
-///     UE GAS 準拠：持続時間付きタグ（Timed Tags）および能力ごとの冷却時間を一元管理する追跡器です。
-///     冷却期間中は自動的に ASC へ CooldownTags を付与し、満了時に解除します。
+///     能力ごとの冷却時間を一元管理する高速追跡器です。
+///     ヒープ割り当てを生じさせない零 GC 構造として動作します。
 /// </summary>
 public sealed class CooldownTracker {
     private readonly Dictionary<StringId, float> _stringCooldowns = new();
-    private readonly List<TimedTag> _timedTags = new();
-
-    private struct TimedTag {
-        public GameplayTag Tag;
-        public float Remaining;
-    }
 
     /// <summary>直前に実行された能力識別タグを取得します。</summary>
     public StringId LastExecutedTag { get; private set; } = StringId.Empty;
@@ -22,46 +14,24 @@ public sealed class CooldownTracker {
     public int ConsecutiveUseCount { get; private set; }
 
     /// <summary>
-    ///     経過時間に基づいてすべての能力の冷却時間および時限タグを減衰更新します。
+    ///     経過時間に基づいてすべての能力の冷却時間を減衰更新します。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過秒数。</param>
-    /// <param name="asc">タグを同期する能力システムコンポーネント。</param>
-    public void Update(float deltaTime, AbilitySystemComponent asc)
+    public void Update(float deltaTime)
     {
-        if (deltaTime <= 0.0f) return;
+        if (deltaTime <= 0.0f || _stringCooldowns.Count == 0) return;
 
-        // 1. 個別 StringId 冷却時間の減衰
-        if (_stringCooldowns.Count > 0)
+        foreach (var key in _stringCooldowns.Keys)
         {
-            foreach (var key in _stringCooldowns.Keys)
-            {
-                var current = _stringCooldowns[key];
-                if (current > 0.0f) _stringCooldowns[key] = MathF.Max(0.0f, current - deltaTime);
-            }
-        }
-
-        // 2. 時限 CooldownTag の減衰と満了時自動解除
-        for (var i = _timedTags.Count - 1; i >= 0; i--)
-        {
-            var item = _timedTags[i];
-            item.Remaining -= deltaTime;
-
-            if (item.Remaining <= 0.0f)
-            {
-                asc.RemoveTag(item.Tag);
-                _timedTags.RemoveAt(i);
-            }
-            else
-            {
-                _timedTags[i] = item;
-            }
+            var current = _stringCooldowns[key];
+            if (current > 0.0f) _stringCooldowns[key] = MathF.Max(0.0f, current - deltaTime);
         }
     }
 
     /// <summary>
-    ///     指定能力タグの冷却および時限タグを適用します。
+    ///     指定能力タグの冷却を適用します。
     /// </summary>
-    public void Trigger(AbilitySystemComponent asc, StringId tag, float cooldown, GameplayTag cooldownTags = GameplayTag.None)
+    public void Trigger(StringId tag, float cooldown)
     {
         if (tag.IsEmpty) return;
 
@@ -76,12 +46,6 @@ public sealed class CooldownTracker {
         if (cooldown > 0.0f)
         {
             _stringCooldowns[tag] = cooldown;
-
-            if (cooldownTags != GameplayTag.None)
-            {
-                asc.AddTag(cooldownTags);
-                _timedTags.Add(new TimedTag { Tag = cooldownTags, Remaining = cooldown });
-            }
         }
     }
 
@@ -104,20 +68,11 @@ public sealed class CooldownTracker {
     }
 
     /// <summary>
-    ///     すべての能力の冷却時間、時限タグ、および連続使用履歴をリセットします。
+    ///     すべての能力の冷却時間および連続使用履歴をリセットします。
     /// </summary>
-    public void Reset(AbilitySystemComponent? asc = null)
+    public void Reset()
     {
-        if (asc is not null)
-        {
-            foreach (var item in _timedTags)
-            {
-                asc.RemoveTag(item.Tag);
-            }
-        }
-
         _stringCooldowns.Clear();
-        _timedTags.Clear();
         LastExecutedTag = StringId.Empty;
         ConsecutiveUseCount = 0;
     }

@@ -96,8 +96,6 @@ public sealed class DiveRamConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownHeavy | GameplayTag.CooldownMelee;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -167,8 +165,6 @@ public sealed class Aimed3ShotConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -241,8 +237,6 @@ public sealed class RingBurstConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -318,8 +312,6 @@ public sealed class DoubleSpiralConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -404,8 +396,6 @@ public sealed class RainDropConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -475,8 +465,6 @@ public sealed class CrossChaosConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged | GameplayTag.CooldownHeavy;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -546,8 +534,6 @@ public sealed class FastSniperConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -614,8 +600,6 @@ public sealed class HeavySlashConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownMelee;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -699,8 +683,6 @@ public sealed class GroundStompConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownMelee;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -793,8 +775,6 @@ public sealed class LeapSmashConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownHeavy | GameplayTag.CooldownMelee;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -878,8 +858,6 @@ public sealed class DoubleCleaveConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownMelee;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -969,8 +947,6 @@ public sealed class FrenzyChargeConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownHeavy;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -1048,8 +1024,6 @@ public sealed class EarthquakeRoarConfig : IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <inheritdoc />
-    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownHeavy;
 
     /// <inheritdoc />
     public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)

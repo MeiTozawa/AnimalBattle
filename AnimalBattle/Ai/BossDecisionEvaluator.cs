@@ -32,7 +32,7 @@ public readonly struct AttackDecisionContext(
 
 /// <summary>
 ///     技能意思決定ルールリストと現在の戦闘コンテキストを評価し、最適な出招技能を選択する評価器です。
-///     UE GAS 準拠：技能識別タグ StringId を評価し、CooldownTags および BlockedTags の自動判定と連動します。
+///     UE GAS 準拠：技能識別タグ StringId を評価し、RequiredTags および BlockedTags の自動判定と連動します。
 /// </summary>
 public static class BossDecisionEvaluator {
     /// <summary>
@@ -141,8 +141,8 @@ public static class BossDecisionEvaluator {
         // 2. UE GAS タグ阻害およびアビリティ制約判定（ASC 指定時）
         if (asc != null && asc.TryGetAbility(rule.SkillTag, out var ability) && ability != null)
         {
-            // BlockedTags または CooldownTags を持っている場合は除外
-            if (!asc.Tags.Matches(ability.RequiredTags, ability.BlockedTags | ability.CooldownTags))
+            // BlockedTags を持っている場合、または RequiredTags を満たさない場合は除外
+            if (!asc.Tags.Matches(ability.RequiredTags, ability.BlockedTags))
                 return false;
         }
 

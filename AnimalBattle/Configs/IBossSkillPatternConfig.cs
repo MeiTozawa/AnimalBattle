@@ -8,7 +8,7 @@ namespace AnimalBattle.Configs;
 
 /// <summary>
 ///     Boss 技能パターン設定の共通インターフェース。
-///     時序定義、前兆演出、冷却タグ解決を自身に内包し、
+///     時序定義、前兆演出、弾幕および判定生成を自身に内包し、
 ///     コード内での技能名ハードコードおよび switch-case を完全に排除します。
 /// </summary>
 public interface IBossSkillPatternConfig {
@@ -33,8 +33,6 @@ public interface IBossSkillPatternConfig {
     /// <summary>時序キーフレームイベント一覧</summary>
     List<SkillEventConfig> Events { get; set; }
 
-    /// <summary>UE GAS 冷却タグを解決します。</summary>
-    GameplayTag ResolveCooldownTags();
 
     /// <summary>技能識別タグに対応する不変攻撃時序定義をビルドします。</summary>
     ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag);

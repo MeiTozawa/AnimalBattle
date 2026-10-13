@@ -107,7 +107,7 @@ public sealed class AbilitySystemComponent {
     {
         var ctx = new AbilityActivationContext(direction);
 
-        // CanActivate 判定（Tag阻害、CooldownTags、個別CD判定を統合評価）
+        // CanActivate 判定（Tag阻害および個別CD判定を統合評価）
         if (!ability.CanActivate(this, in ctx))
         {
             return false;
@@ -128,13 +128,13 @@ public sealed class AbilitySystemComponent {
     }
 
     /// <summary>
-    ///     技能の冷却時間および時限タグを適用・コミットします。
+    ///     技能の冷却時間を適用・コミットします。
     /// </summary>
     public void CommitCooldown(GameplayAbility ability)
     {
         if (!ability.AbilityTag.IsEmpty)
         {
-            _cooldownTracker.Trigger(this, ability.AbilityTag, ability.Cooldown, ability.CooldownTags);
+            _cooldownTracker.Trigger(ability.AbilityTag, ability.Cooldown);
         }
     }
 
@@ -182,8 +182,8 @@ public sealed class AbilitySystemComponent {
     /// </summary>
     public void Update(float dt, bool isGrounded = false)
     {
-        // 1. 冷却および時限タグの自動減衰
-        _cooldownTracker.Update(dt, this);
+        // 1. 冷却の自動減衰
+        _cooldownTracker.Update(dt);
 
         // 2. 実行中アビリティの更新
         CurrentAbility?.Update(dt, this, isGrounded);

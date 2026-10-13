@@ -23,9 +23,6 @@ public abstract class GameplayAbility {
     /// <summary>発動を禁止する排他タグを取得します。</summary>
     public GameplayTag BlockedTags { get; init; } = GameplayTag.Stunned;
 
-    /// <summary>発動後に自身へ付与され、再発動を阻害する冷却組タグ（CooldownMelee, CooldownRanged 等）。</summary>
-    public GameplayTag CooldownTags { get; init; } = GameplayTag.None;
-
     /// <summary>実行中に自身へ付与されるタグ（Activation Owned Tags）を取得します。</summary>
     public GameplayTag ActivationOwnedTags { get; init; } = GameplayTag.Casting;
 
@@ -45,12 +42,11 @@ public abstract class GameplayAbility {
 
     /// <summary>
     ///     現在のコンテキストとタグ状態に基づいて技能が発動可能かを判定します。
-    ///     UE GAS 準拠：CooldownTags は BlockedTags の一部として統合評価されます。
     /// </summary>
     public virtual bool CanActivate(AbilitySystemComponent asc, in AbilityActivationContext ctx)
     {
-        // 1. Tag 判定：必須タグを満たし、かつ BlockedTags と CooldownTags のいずれも持っていないこと
-        if (!asc.Tags.Matches(RequiredTags, BlockedTags | CooldownTags))
+        // 1. Tag 判定：必須タグを満たし、かつ BlockedTags を持っていないこと
+        if (!asc.Tags.Matches(RequiredTags, BlockedTags))
             return false;
 
         // 2. 個別 AbilityTag 冷却判定

@@ -8,7 +8,7 @@ namespace AnimalBattle.Ai.Boss2;
 
 /// <summary>
 ///     Boss 2（大地粉碎者）の TOML 設定から検証済みの <see cref="AttackDefinition" /> および <see cref="TimelineAttackAbility" /> を構築するローダーです。
-///     UE GAS 準拠：各招式に適切な CooldownTags を自動設定します。
+///     技能識別タグ StringId を基盤とする攻撃能力を構築します。
 /// </summary>
 public static class Boss2PatternLoader {
     /// <summary>
@@ -25,7 +25,7 @@ public static class Boss2PatternLoader {
     }
 
     /// <summary>
-    ///     指定技能タグの <see cref="TimelineAttackAbility" /> を構築し、UE GAS 冷却タグをバインドします。
+    ///     指定技能タグの <see cref="TimelineAttackAbility" /> を構築します。
     /// </summary>
     public static ErrorOr<TimelineAttackAbility> BuildAbility(
         StringId skill,
@@ -41,10 +41,9 @@ public static class Boss2PatternLoader {
         var defResult = patternConfig.BuildAttackDefinition(skill);
         if (defResult.IsError) return defResult.Errors;
 
-        var cooldownTags = patternConfig.ResolveCooldownTags();
         var telegraphRenderer = patternConfig.BuildTelegraphRenderer();
         var displayName = string.IsNullOrWhiteSpace(patternConfig.SkillName) ? skill.ToString() : patternConfig.SkillName;
-        return new TimelineAttackAbility(skill, defResult.Value, cooldown, cooldownTags, displayName: displayName, telegraphRenderer: telegraphRenderer);
+        return new TimelineAttackAbility(skill, defResult.Value, cooldown, displayName: displayName, telegraphRenderer: telegraphRenderer);
     }
 
     /// <summary>
@@ -67,16 +66,5 @@ public static class Boss2PatternLoader {
         return config.TryGetSkill(skill, out var patternConfig)
             ? patternConfig.BuildTelegraphRenderer()
             : null;
-    }
-
-    /// <summary>
-    ///     技能識別タグに対応する UE GAS 冷却グループタグを取得します。
-    /// </summary>
-    public static GameplayTag ResolveCooldownTags(StringId skill, Boss2PatternConfig config)
-    {
-        ArgumentNullException.ThrowIfNull(config);
-        return config.TryGetSkill(skill, out var patternConfig)
-            ? patternConfig.ResolveCooldownTags()
-            : GameplayTag.None;
     }
 }
