@@ -1,4 +1,4 @@
-namespace AnimalBattle.Systems;
+namespace AnimalBattle.Core.Geometry;
 
 /// <summary>
 ///     Boss 攻撃予兆（Telegraph）の幾何学的計算（レーザー照準、危険矩形、突進軌道、地表衝撃波、放射光線等）を提供する静的ヘルパークラス。

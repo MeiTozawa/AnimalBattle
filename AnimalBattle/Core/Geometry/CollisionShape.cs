@@ -1,6 +1,6 @@
 using ErrorOr;
 
-namespace AnimalBattle.Components;
+namespace AnimalBattle.Core.Geometry;
 
 /// <summary>
 ///     2D 幾何衝突形状種別。

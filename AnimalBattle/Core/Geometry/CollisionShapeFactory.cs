@@ -1,6 +1,6 @@
 using ErrorOr;
 
-namespace AnimalBattle.Configs;
+namespace AnimalBattle.Core.Geometry;
 
 /// <summary>
 ///     設定パラメータや文字列データから <see cref="CollisionShape" /> インスタンスを安全に生成・検証する静的ファクトリクラス。
