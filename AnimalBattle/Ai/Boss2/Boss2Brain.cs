@@ -441,7 +441,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         var isPlayerGrounded = !isPlayerAirborne;
 
         AttackDecisionContext decisionContext = new(distance, isSamePlatform, isPlayerGrounded, isPlayerAirborne);
-        var chosenSkill = BossDecisionEvaluator.EvaluateWeighted(phaseCfg.Rules, _asc.CooldownTracker, in decisionContext);
+        var chosenSkill = BossDecisionEvaluator.EvaluateWeighted(phaseCfg.Rules, _asc.Cooldowns, in decisionContext);
 
         var dir = _facingRight ? 1.0f : -1.0f;
 

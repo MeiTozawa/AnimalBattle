@@ -121,7 +121,7 @@ public static class BossDecisionEvaluator {
         Random? random = null)
     {
         ArgumentNullException.ThrowIfNull(asc);
-        return EvaluateWeighted(rules, asc.CooldownTracker, in context, random, asc);
+        return EvaluateWeighted(rules, asc.Cooldowns, in context, random, asc);
     }
 
     private static bool IsRuleEligible(

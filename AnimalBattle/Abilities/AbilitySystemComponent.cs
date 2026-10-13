@@ -22,9 +22,6 @@ public sealed class AbilitySystemComponent {
     /// <summary>冷却時間追跡器を取得します。</summary>
     public CooldownTracker Cooldowns => _cooldownTracker;
 
-    /// <summary>後方互換性プロパティ：冷却時間追跡器を取得します。</summary>
-    public CooldownTracker CooldownTracker => _cooldownTracker;
-
     /// <summary>現在発動中の技能フェーズを取得します。</summary>
     public SkillPhase CurrentPhase => CurrentAbility?.CurrentPhase ?? SkillPhase.None;
 
