@@ -16,9 +16,10 @@ public static class CombatRecycleSystem {
     /// <returns>メソッドチェーン用の <see cref="World" />。</returns>
     public static World AddCombatRecycleSystem(this World world)
     {
-        world.System<RecycleTag>("CombatRecycleSystem")
+        world.System("CombatRecycleSystem")
+           .With<RecycleTag>()
            .Kind(Ecs.PostUpdate)
-           .Iter((Iter it, Field<RecycleTag> _) =>
+           .Iter((Iter it) =>
             {
                 var count = it.Count();
                 for (var i = 0; i < count; i++)
