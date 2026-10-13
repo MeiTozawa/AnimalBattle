@@ -1,4 +1,5 @@
 using AnimalBattle.Abilities.Attack;
+using AnimalBattle.Core;
 using ErrorOr;
 
 namespace AnimalBattle.Abilities.Skills;
@@ -10,7 +11,7 @@ public static class SkillConfigLoader {
     /// <summary>
     ///     パラメータ群およびキーフレームイベント一覧から不変時序定義をビルドします。
     /// </summary>
-    /// <param name="skill">技能識別子。</param>
+    /// <param name="skillTag">技能識別タグ。</param>
     /// <param name="windUpTime">前隙予兆時間。</param>
     /// <param name="castDuration">発動持続時間。</param>
     /// <param name="recoveryTime">後隙硬直時間。</param>
@@ -20,11 +21,11 @@ public static class SkillConfigLoader {
     /// <param name="defaultSpeed">周期弾幕の弾速。</param>
     /// <param name="defaultCount">周期弾幕の弾数。</param>
     /// <param name="defaultSpread">周期弾幕の拡散角度。</param>
-    /// <param name="armor">出招中のアーマー種別。</param>
+    /// <param name="armorTag">出招中のアーマー種別。</param>
     /// <param name="poiseThreshold">靭性閾値。</param>
     /// <returns>成功時は <see cref="AttackDefinition" />、検証失敗時は <see cref="Error" />。</returns>
     public static ErrorOr<AttackDefinition> BuildAttackDefinition(
-        AbilityId skill,
+        StringId skillTag,
         float windUpTime,
         float castDuration,
         float recoveryTime,
@@ -41,10 +42,10 @@ public static class SkillConfigLoader {
         if (castDuration <= 0.0f || windUpTime <= 0.0f || recoveryTime <= 0.0f)
             return Error.Validation(
                 "Skill.InvalidDuration",
-                $"技能 '{skill}' の時間設定が不正です。");
+                $"技能 '{skillTag}' の時間設定が不正です。");
 
         if (effectiveRange < 0.0f)
-            return Error.Validation("Skill.InvalidRange", $"技能 '{skill}' の有効射程が負数です: {effectiveRange}");
+            return Error.Validation("Skill.InvalidRange", $"技能 '{skillTag}' の有効射程が負数です: {effectiveRange}");
 
         var actions = new List<AttackActionStep>();
         var index = 0;
@@ -67,7 +68,7 @@ public static class SkillConfigLoader {
                     t));
 
         var definition = new AttackDefinition(
-            skill,
+            skillTag,
             windUpTime,
             castDuration,
             recoveryTime,
@@ -76,7 +77,7 @@ public static class SkillConfigLoader {
             armorTag,
             poiseThreshold);
 
-        if (!definition.IsValid) return Error.Validation("Skill.InvalidDefinition", $"技能 '{skill}' の内部定義検証に失敗しました。");
+        if (!definition.IsValid) return Error.Validation("Skill.InvalidDefinition", $"技能 '{skillTag}' の内部定義検証に失敗しました。");
 
         return definition;
     }

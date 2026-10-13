@@ -15,9 +15,6 @@ public sealed class AbilitySpec(AbilitySpecHandle handle, GameplayAbility abilit
     /// <summary>能力識別タグ。</summary>
     public StringId Tag => Ability.AbilityTag;
 
-    /// <summary>互換性プロパティ：能力識別子。</summary>
-    public AbilityId Id => Ability.AbilityId;
-
     /// <summary>当前是否处于激活执行状态。</summary>
     public bool IsActive { get; internal set; }
 

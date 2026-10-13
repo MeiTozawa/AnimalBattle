@@ -1,4 +1,5 @@
 using AnimalBattle.Abilities;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Contracts;
 
@@ -16,8 +17,8 @@ public interface IBossBrain
     /// <summary>現在の Boss 統一マクロ状態を取得します。</summary>
     BossState CurrentState { get; }
 
-    /// <summary>現在発動中の技能を取得します。</summary>
-    AbilityId CurrentSkill { get; }
+    /// <summary>現在発動中の技能識別タグを取得します。</summary>
+    StringId CurrentSkillTag { get; }
 
     /// <summary>現在状態の経過時間を取得します。</summary>
     float StateTimer { get; }
@@ -44,7 +45,7 @@ public interface IBossBrain
     bool IsDead { get; }
 
     /// <summary>弾幕波次発射イベント。</summary>
-    event Action<AbilityId, Vec2f, Vec2f>? OnEmitBarrageWave;
+    event Action<StringId, Vec2f, Vec2f>? OnEmitBarrageWave;
 
     /// <summary>全弾幕消去イベント。</summary>
     event Action? OnClearBullets;

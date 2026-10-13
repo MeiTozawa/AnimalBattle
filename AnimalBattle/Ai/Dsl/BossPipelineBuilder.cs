@@ -1,5 +1,6 @@
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Dsl;
 
@@ -31,7 +32,7 @@ public sealed class BossPipelineBuilder(BossType bossType, string name) {
     public BossBehaviorPipeline Build()
     {
         Dictionary<Phase, IReadOnlyList<AttackDecisionRule>> rulesByPhase = [];
-        Dictionary<AbilityId, AttackDefinition> attacks = [];
+        Dictionary<StringId, AttackDefinition> attacks = [];
         Dictionary<Phase, PhaseLocomotionSettings> locomotionByPhase = [];
 
         foreach (var phaseBuilder in _phaseBuilders)
@@ -41,7 +42,7 @@ public sealed class BossPipelineBuilder(BossType bossType, string name) {
             foreach (var attackBuilder in phaseBuilder.AttackBuilders)
             {
                 var def = attackBuilder.BuildAttackDefinition();
-                attacks[attackBuilder.Skill] = def;
+                attacks[attackBuilder.SkillTag] = def;
 
                 var rule = attackBuilder.BuildDecisionRule();
                 if (rule.HasValue) phaseRules.Add(rule.Value);

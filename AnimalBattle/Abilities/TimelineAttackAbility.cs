@@ -44,22 +44,6 @@ public sealed class TimelineAttackAbility : GameplayAbility {
         ActivationOwnedTags = GameplayTag.Casting;
     }
 
-    /// <summary>
-    ///     互換性コンストラクタ：能力識別子を指定して初期化します。
-    /// </summary>
-    public TimelineAttackAbility(
-        AbilityId id,
-        AttackDefinition timeline,
-        float cooldown = 0.0f,
-        GameplayTag cooldownTags = GameplayTag.None,
-        GameplayTag requiredTags = GameplayTag.None,
-        GameplayTag blockedTags = GameplayTag.Stunned,
-        Action<AbilityTelegraphContext>? telegraphRenderer = null)
-        : this(new StringId(id.ToString()), timeline, cooldown, cooldownTags, requiredTags, blockedTags, id.ToString(), telegraphRenderer)
-    {
-        AbilityId = id;
-    }
-
     /// <inheritdoc />
     public override void DrawTelegraph(in AbilityTelegraphContext ctx)
     {

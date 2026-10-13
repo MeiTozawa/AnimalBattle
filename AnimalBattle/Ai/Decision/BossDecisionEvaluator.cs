@@ -1,5 +1,6 @@
 using AnimalBattle.Abilities;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Decision;
 
@@ -33,13 +34,13 @@ public readonly struct AttackDecisionContext(
 
 /// <summary>
 ///     技能意思決定ルールリストと現在の戦闘コンテキストを評価し、最適な出招技能を選択する評価器です。
-///     UE GAS 準拠：CooldownTags および BlockedTags の自動判定と連動可能です。
+///     UE GAS 準拠：技能識別タグ StringId を評価し、CooldownTags および BlockedTags の自動判定と連動します。
 /// </summary>
 public static class BossDecisionEvaluator {
     /// <summary>
-    ///     候補ルールの中で最もスコアが高い技能を選択します。
+    ///     候補ルールの中で最もスコアが高い技能識別タグを選択します。
     /// </summary>
-    public static AbilityId EvaluateBest(
+    public static StringId EvaluateBest(
         IReadOnlyList<AttackDecisionRule> rules,
         CooldownTracker cooldownTracker,
         in AttackDecisionContext context,
@@ -48,7 +49,7 @@ public static class BossDecisionEvaluator {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(cooldownTracker);
 
-        var bestSkill = AbilityId.None;
+        var bestSkill = StringId.Empty;
         var bestScore = -1.0f;
 
         for (var index = 0; index < rules.Count; index++)
@@ -59,7 +60,7 @@ public static class BossDecisionEvaluator {
             if (score > bestScore)
             {
                 bestScore = score;
-                bestSkill = rule.Skill;
+                bestSkill = rule.SkillTag;
             }
         }
 
@@ -67,9 +68,9 @@ public static class BossDecisionEvaluator {
     }
 
     /// <summary>
-    ///     候補ルールの中からスコアに応じた加重ランダム抽選で技能を選択します。
+    ///     候補ルールの中からスコアに応じた加重ランダム抽選で技能識別タグを選択します。
     /// </summary>
-    public static AbilityId EvaluateWeighted(
+    public static StringId EvaluateWeighted(
         IReadOnlyList<AttackDecisionRule> rules,
         CooldownTracker cooldownTracker,
         in AttackDecisionContext context,
@@ -79,7 +80,7 @@ public static class BossDecisionEvaluator {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(cooldownTracker);
 
-        Span<AbilityId> candidateSkills = stackalloc AbilityId[rules.Count];
+        Span<StringId> candidateSkills = stackalloc StringId[rules.Count];
         Span<float> candidateScores = stackalloc float[rules.Count];
         var count = 0;
         var totalScore = 0.0f;
@@ -89,13 +90,13 @@ public static class BossDecisionEvaluator {
             var rule = rules[index];
             if (!IsRuleEligible(rule, cooldownTracker, in context, asc, out var score)) continue;
 
-            candidateSkills[count] = rule.Skill;
+            candidateSkills[count] = rule.SkillTag;
             candidateScores[count] = score;
             totalScore += score;
             count++;
         }
 
-        if (count == 0 || totalScore <= 0.0f) return AbilityId.None;
+        if (count == 0 || totalScore <= 0.0f) return StringId.Empty;
 
         if (count == 1) return candidateSkills[0];
 
@@ -115,14 +116,14 @@ public static class BossDecisionEvaluator {
     /// <summary>
     ///     ASC 直接連携の加重ランダム抽選オーバーロードです。
     /// </summary>
-    public static AbilityId EvaluateWeighted(
+    public static StringId EvaluateWeighted(
         IReadOnlyList<AttackDecisionRule> rules,
         AbilitySystemComponent asc,
         in AttackDecisionContext context,
         Random? random = null)
     {
         ArgumentNullException.ThrowIfNull(asc);
-        return EvaluateWeighted(rules, asc.Cooldowns, in context, random, asc);
+        return EvaluateWeighted(rules, asc.CooldownTracker, in context, random, asc);
     }
 
     private static bool IsRuleEligible(
@@ -137,10 +138,10 @@ public static class BossDecisionEvaluator {
         if (!rule.IsValid) return false;
 
         // 1. 冷却時間判定
-        if (!cooldownTracker.IsReady(rule.Skill)) return false;
+        if (!cooldownTracker.IsReady(rule.SkillTag)) return false;
 
         // 2. UE GAS タグ阻害およびアビリティ制約判定（ASC 指定時）
-        if (asc != null && asc.TryGetAbility(rule.Skill, out var ability) && ability != null)
+        if (asc != null && asc.TryGetAbility(rule.SkillTag, out var ability) && ability != null)
         {
             // BlockedTags または CooldownTags を持っている場合は除外
             if (!asc.Tags.Matches(ability.RequiredTags, ability.BlockedTags | ability.CooldownTags))
@@ -148,8 +149,8 @@ public static class BossDecisionEvaluator {
         }
 
         // 3. 連続発動回数制限判定
-        if (rule.Skill == cooldownTracker.LastExecutedAbility &&
-            cooldownTracker.ConsecutiveUseCount >= rule.MaxConsecutiveUses)
+        var isLast = !rule.SkillTag.IsEmpty && rule.SkillTag == cooldownTracker.LastExecutedTag;
+        if (isLast && cooldownTracker.ConsecutiveUseCount >= rule.MaxConsecutiveUses)
             return false;
 
         // 4. 距離判定
@@ -167,7 +168,7 @@ public static class BossDecisionEvaluator {
         if (context.IsPlayerAirborne && rule.PreferAirborneBonus > 0.0f) score *= rule.PreferAirborneBonus;
 
         // 8. 連続使用時の重み減衰計算
-        if (rule.Skill == cooldownTracker.LastExecutedAbility && cooldownTracker.ConsecutiveUseCount > 0)
+        if (isLast && cooldownTracker.ConsecutiveUseCount > 0)
         {
             var decay = MathF.Pow(rule.ConsecutiveDecay, cooldownTracker.ConsecutiveUseCount);
             score *= decay;

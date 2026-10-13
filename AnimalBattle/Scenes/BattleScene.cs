@@ -218,8 +218,8 @@ public class BattleScene : IDisposable {
         if (CurrentBossType != bossType) return;
 
         var (bossName, bCfg) = bossType switch {
-            BossType.Boss1 => (Boss1Name, (BaseBossConfig)ConfigManager.Boss1),
-            BossType.Boss2 => (Boss2Name, (BaseBossConfig)ConfigManager.Boss2),
+            BossType.Boss1 => (Boss1Name, ConfigManager.Boss1),
+            BossType.Boss2 => (Boss2Name, ConfigManager.Boss2),
             _ => AssertHelper.FailWithDefault($"[BattleScene 警告] 未知のBossType (Reload): {bossType}", (Boss1Name, (BaseBossConfig)ConfigManager.Boss1))
         };
 
@@ -322,8 +322,8 @@ public class BattleScene : IDisposable {
     private void ResetCombat()
     {
         CombatSpawner.ClearAllBossBullets(_ecsWorld);
-        _playerBulletsQuery.Each(e => CombatPoolService.Recycle(e));
-        _vfxQuery.Each(e => CombatPoolService.Recycle(e));
+        _playerBulletsQuery.Each(CombatPoolService.Recycle);
+        _vfxQuery.Each(CombatPoolService.Recycle);
         CameraService.Reset();
         Player.Reset(ConfigManager.Player);
         EventBus.Publish(new CombatResetEvent());

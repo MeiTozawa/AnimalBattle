@@ -50,8 +50,8 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>AI 目標地点 Y 座標を取得します。</summary>
     public float TargetY => _targetPosition.Y;
 
-    /// <summary>現在発動中の技能を取得します。</summary>
-    public virtual AbilityId CurrentSkill => _asc.CurrentAbility?.AbilityId ?? AbilityId.None;
+    /// <summary>現在発動中の技能識別タグを取得します。</summary>
+    public virtual StringId CurrentSkillTag => _asc.CurrentAbility?.AbilityTag ?? StringId.Empty;
 
     /// <summary>現在状態の経過時間を取得します。</summary>
     public virtual float StateTimer => _asc.IsCasting && _asc.SkillRunner is { } runner ? runner.PhaseElapsed : _stateTimer;
@@ -63,7 +63,7 @@ public abstract class BaseBossBrain : IBossBrain
     public virtual bool FacingRight => true;
 
     /// <summary>弾幕波次発射イベント。</summary>
-    public event Action<AbilityId, Vec2f, Vec2f>? OnEmitBarrageWave;
+    public event Action<StringId, Vec2f, Vec2f>? OnEmitBarrageWave;
 
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;
@@ -77,7 +77,7 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>
     ///     弾幕発射イベントを発火します。
     /// </summary>
-    protected void RaiseEmitBarrageWave(AbilityId skill, Vec2f origin, Vec2f target)
+    protected void RaiseEmitBarrageWave(StringId skill, Vec2f origin, Vec2f target)
     {
         OnEmitBarrageWave?.Invoke(skill, origin, target);
     }

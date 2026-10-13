@@ -17,6 +17,7 @@ public sealed class Boss1Brain : BaseBossBrain {
     private static readonly StringId StateAbility = "Ability";
 
     private readonly IBoss1Configuration _configuration;
+
     private State _hoverState = null!;
     private State _abilityState = null!;
 
@@ -96,20 +97,28 @@ public sealed class Boss1Brain : BaseBossBrain {
     private void InitializeAbilities()
     {
         var patternCfg = ConfigManager.Boss1Patterns;
+        var boss1Cfg = ConfigManager.Boss1;
 
-        RegisterSkill(AbilityId.DiveRam, patternCfg);
-        RegisterSkill(AbilityId.Aimed3Shot, patternCfg);
-        RegisterSkill(AbilityId.RingBurst, patternCfg);
-        RegisterSkill(AbilityId.DoubleSpiral, patternCfg);
-        RegisterSkill(AbilityId.RainDrop, patternCfg);
-        RegisterSkill(AbilityId.CrossChaos, patternCfg);
-        RegisterSkill(AbilityId.FastSniper, patternCfg);
+        var skillNames = new HashSet<string>(boss1Cfg.Phase1.Skills);
+        skillNames.UnionWith(boss1Cfg.Phase2.Skills);
+        skillNames.UnionWith(boss1Cfg.Phase3.Skills);
+        foreach (var rule in boss1Cfg.Phase1.Rules) skillNames.Add(rule.Skill);
+        foreach (var rule in boss1Cfg.Phase2.Rules) skillNames.Add(rule.Skill);
+        foreach (var rule in boss1Cfg.Phase3.Rules) skillNames.Add(rule.Skill);
+
+        foreach (var name in skillNames)
+        {
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                RegisterSkill(new StringId(name), patternCfg);
+            }
+        }
 
         _asc.OnEmitBullet += (skill, _, _) => RaiseEmitBarrageWave(skill, _currentPosition, _targetPosition);
         _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
 
-    private void RegisterSkill(AbilityId skill, Boss1PatternConfig config)
+    private void RegisterSkill(StringId skill, Boss1PatternConfig config)
     {
         var cooldown = _configuration.GetSkillDefaultCooldown(skill);
         var buildResult = Boss1PatternLoader.BuildAbility(skill, config, cooldown);
@@ -204,9 +213,7 @@ public sealed class Boss1Brain : BaseBossBrain {
         var phaseCfg = _configuration.GetPhase(Phase);
 
         var targetY = phaseCfg.HoverBaseY;
-        _currentPosition = new Vec2f(
-            _currentPosition.X,
-            _currentPosition.Y + (targetY - _currentPosition.Y) * Math.Clamp(dt * phaseCfg.TransitionFloatSpeed, 0.0f, 1.0f));
+        _currentPosition = _currentPosition with { Y = _currentPosition.Y + (targetY - _currentPosition.Y) * Math.Clamp(dt * phaseCfg.TransitionFloatSpeed, 0.0f, 1.0f) };
 
         if (_stateTimer >= phaseCfg.TransitionDuration)
         {
@@ -266,7 +273,7 @@ public sealed class Boss1Brain : BaseBossBrain {
 
     private void UpdateAbilityMotion(float dt, Vec2f playerPos)
     {
-        if (CurrentSkill == AbilityId.DiveRam)
+        if (CurrentSkillTag == _configuration.DiveSkillTag)
         {
             if (_asc.SkillRunner?.CurrentPhase == SkillPhase.Active)
             {

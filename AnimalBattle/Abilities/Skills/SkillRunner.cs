@@ -59,7 +59,7 @@ public sealed class SkillRunner {
     public void Start(AttackDefinition definition, float facingDirection = 1.0f)
     {
         Debug.Assert(definition is not null, "[SkillRunner 警告] null の攻撃定義で Start が呼び出されました。");
-        Debug.Assert(definition.IsValid, $"[SkillRunner 警告] 攻撃定義が不正です: {definition.Skill}");
+        Debug.Assert(definition.IsValid, $"[SkillRunner 警告] 攻撃定義が不正です: {definition.SkillTag}");
 
         Definition = definition;
         _facingDirection = facingDirection >= 0.0f ? 1.0f : -1.0f;

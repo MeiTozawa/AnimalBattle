@@ -1,4 +1,5 @@
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Dsl;
 
@@ -86,9 +87,9 @@ public sealed class PhasePipelineBuilder(BossPipelineBuilder parent, Phase phase
     /// <summary>
     ///     この Phase に新しい攻撃パターンを追加します。
     /// </summary>
-    /// <param name="skill">技能識別子。</param>
+    /// <param name="skill">技能識別タグ。</param>
     /// <returns>新しい攻撃パイプラインビルダー。</returns>
-    public AttackPipelineBuilder Attack(AbilityId skill)
+    public AttackPipelineBuilder Attack(StringId skill)
     {
         AttackPipelineBuilder builder = new(this, skill);
         _attackBuilders.Add(builder);

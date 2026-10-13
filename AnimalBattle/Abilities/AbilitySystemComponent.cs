@@ -12,7 +12,6 @@ namespace AnimalBattle.Abilities;
 public sealed class AbilitySystemComponent {
     private readonly Dictionary<AbilitySpecHandle, AbilitySpec> _abilities = new();
     private readonly Dictionary<StringId, AbilitySpecHandle> _tagIndex = new();
-    private readonly Dictionary<AbilityId, AbilitySpecHandle> _legacyIdIndex = new();
     private readonly CooldownTracker _cooldownTracker = new();
 
     /// <summary>戦闘タグコンテナを取得します。</summary>
@@ -40,10 +39,10 @@ public sealed class AbilitySystemComponent {
     public event Action<float, float>? OnExecuteMovement;
 
     /// <summary>弾幕発射イベント。</summary>
-    public event Action<AbilityId, float, float>? OnEmitBullet;
+    public event Action<StringId, float, float>? OnEmitBullet;
 
     /// <summary>近接判定生成イベント。</summary>
-    public event Action<AbilityId, float, float>? OnCreateHitbox;
+    public event Action<StringId, float, float>? OnCreateHitbox;
 
     /// <summary>音効再生イベント。</summary>
     public event Action<int, float>? OnPlayAudio;
@@ -52,7 +51,7 @@ public sealed class AbilitySystemComponent {
     public event Action<float, float>? OnScreenShake;
 
     /// <summary>技能完了通知イベント。</summary>
-    public event Action<AbilityId>? OnSkillCompleted;
+    public event Action<StringId>? OnSkillCompleted;
 
     /// <summary>能力をコンポーネントに付与・登録し、一意のスペックハンドルを返します。</summary>
     public AbilitySpecHandle GiveAbility(GameplayAbility ability)
@@ -67,11 +66,6 @@ public sealed class AbilitySystemComponent {
         if (!ability.AbilityTag.IsEmpty)
         {
             _tagIndex[ability.AbilityTag] = handle;
-        }
-
-        if (ability.AbilityId != AbilityId.None)
-        {
-            _legacyIdIndex[ability.AbilityId] = handle;
         }
 
         return handle;
@@ -97,19 +91,6 @@ public sealed class AbilitySystemComponent {
     public bool TryGetAbility(StringId abilityTag, out GameplayAbility? ability)
     {
         if (_tagIndex.TryGetValue(abilityTag, out var handle) && _abilities.TryGetValue(handle, out var spec))
-        {
-            ability = spec.Ability;
-            return true;
-        }
-
-        ability = null;
-        return false;
-    }
-
-    /// <summary>後方互換性：指定技能の登録を取得します。</summary>
-    public bool TryGetAbility(AbilityId id, out GameplayAbility? ability)
-    {
-        if (_legacyIdIndex.TryGetValue(id, out var handle) && _abilities.TryGetValue(handle, out var spec))
         {
             ability = spec.Ability;
             return true;
@@ -169,20 +150,6 @@ public sealed class AbilitySystemComponent {
         return InternalActivateAbility(spec, direction);
     }
 
-    /// <summary>
-    ///     後方互換性：指定技能の発動を試行します。
-    /// </summary>
-    public bool TryActivateAbility(AbilityId id, float direction = 1.0f)
-    {
-        if (!_legacyIdIndex.TryGetValue(id, out var handle) || !_abilities.TryGetValue(handle, out var spec))
-        {
-            Debug.Assert(false, $"[ASC] 未登録の技能を発動しようとしました: {id}");
-            return false;
-        }
-
-        return InternalActivateAbility(spec, direction);
-    }
-
     private bool InternalActivateAbility(AbilitySpec spec, float direction)
     {
         var ability = spec.Ability;
@@ -218,11 +185,6 @@ public sealed class AbilitySystemComponent {
         {
             _cooldownTracker.Trigger(this, ability.AbilityTag, ability.Cooldown, ability.CooldownTags);
         }
-
-        if (ability.AbilityId != AbilityId.None)
-        {
-            _cooldownTracker.Trigger(this, ability.AbilityId, ability.Cooldown, ability.CooldownTags);
-        }
     }
 
     /// <summary>
@@ -233,7 +195,7 @@ public sealed class AbilitySystemComponent {
         if (CurrentAbility is null) return;
 
         var ability = CurrentAbility;
-        var finishedId = ability.AbilityId;
+        var finishedTag = ability.AbilityTag;
 
         if (ability.ActivationOwnedTags != GameplayTag.None)
         {
@@ -252,7 +214,7 @@ public sealed class AbilitySystemComponent {
         }
 
         CurrentAbility = null;
-        OnSkillCompleted?.Invoke(finishedId);
+        OnSkillCompleted?.Invoke(finishedTag);
     }
 
     /// <summary>
@@ -263,7 +225,6 @@ public sealed class AbilitySystemComponent {
         if (CurrentAbility is null) return;
 
         var ability = CurrentAbility;
-        var interruptedId = ability.AbilityId;
 
         if (ability.ActivationOwnedTags != GameplayTag.None)
         {
@@ -302,7 +263,7 @@ public sealed class AbilitySystemComponent {
     /// </summary>
     public void DispatchAction(AttackActionStep step, float dir)
     {
-        var currentId = CurrentAbility?.AbilityId ?? AbilityId.None;
+        var currentTag = CurrentAbility?.AbilityTag ?? StringId.Empty;
 
         switch (step.Kind)
         {
@@ -313,12 +274,12 @@ public sealed class AbilitySystemComponent {
                 break;
 
             case AttackActionKind.Bullet:
-                OnEmitBullet?.Invoke(currentId, step.Param0 * dir, step.Param1);
+                OnEmitBullet?.Invoke(currentTag, step.Param0 * dir, step.Param1);
                 break;
 
             case AttackActionKind.Hitbox:
             case AttackActionKind.OnGroundedHitbox:
-                OnCreateHitbox?.Invoke(currentId, step.Param0 * dir, step.Param1);
+                OnCreateHitbox?.Invoke(currentTag, step.Param0 * dir, step.Param1);
                 break;
 
             case AttackActionKind.AudioCue:

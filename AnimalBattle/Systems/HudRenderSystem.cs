@@ -162,7 +162,7 @@ public static class HudRenderSystem {
         var abilityName = currentAbility?.DisplayName;
         if (string.IsNullOrEmpty(abilityName))
         {
-            abilityName = boss.CurrentSkill != AbilityId.None ? boss.CurrentSkill.ToString() : "None";
+            abilityName = !boss.CurrentSkillTag.IsEmpty ? boss.CurrentSkillTag.ToString() : "None";
         }
 
         (stateName, badgeColor) = state switch {

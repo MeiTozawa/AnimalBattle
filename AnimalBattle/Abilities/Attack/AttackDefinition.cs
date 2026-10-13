@@ -1,3 +1,5 @@
+using AnimalBattle.Core;
+
 namespace AnimalBattle.Abilities.Attack;
 
 /// <summary>攻撃の Telegraph、Execute、Recovery と各アクションステップを保持する検証済み定義です。</summary>
@@ -6,7 +8,7 @@ public sealed class AttackDefinition {
 
     /// <summary>攻撃定義を生成します。アクション配列は初期化時にコピーされます。</summary>
     public AttackDefinition(
-        AbilityId skill,
+        StringId skillTag,
         float telegraphDuration,
         float executeDuration,
         float recoveryDuration,
@@ -15,7 +17,7 @@ public sealed class AttackDefinition {
         GameplayTag armorTag = GameplayTag.None,
         float poiseThreshold = 0.0f)
     {
-        Skill = skill;
+        SkillTag = skillTag;
         TelegraphDuration = telegraphDuration;
         ExecuteDuration = executeDuration;
         RecoveryDuration = recoveryDuration;
@@ -30,8 +32,8 @@ public sealed class AttackDefinition {
                 _actions[index] = actions[index];
     }
 
-    /// <summary>技能識別子を取得します。</summary>
-    public AbilityId Skill { get; }
+    /// <summary>対象の技能識別タグを取得します。</summary>
+    public StringId SkillTag { get; }
 
     /// <summary>Telegraph の設定時間を取得します。</summary>
     public float TelegraphDuration { get; }
@@ -55,7 +57,7 @@ public sealed class AttackDefinition {
     public int ActionCount => _actions.Length;
 
     /// <summary>三段階とアクションステップの設定が実行可能かどうかを取得します。</summary>
-    public bool IsValid => Skill.IsValid()
+    public bool IsValid => !SkillTag.IsEmpty
      && IsPositiveFinite(TelegraphDuration)
      && IsPositiveFinite(ExecuteDuration)
      && IsPositiveFinite(RecoveryDuration)

@@ -65,6 +65,9 @@ public sealed class Boss1Config : BaseBossConfig {
     /// <summary>被弾時ホワイトフラッシュ持続時間（秒）</summary>
     public float HitFlashDuration { get; set; }
 
+    /// <summary>急降下突進技能識別名</summary>
+    public string DiveSkill { get; set; } = string.Empty;
+
     /// <summary>Phase 1 状態機設定</summary>
     public Boss1PhaseFsmConfig Phase1 { get; set; } = new();
 

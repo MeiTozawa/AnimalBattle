@@ -57,6 +57,12 @@ MeleeTriggerRangeY = 75.0
 AntiKitingRangedDistance = 450.0
 AntiKitingMidDistance = 120.0
 AntiKitingEnforceMultiplier = 1.5
+AntiKitingMeleeSkill = "GroundStomp"
+AntiKitingRangedSkill = "LeapSmash"
+
+# 特殊技能挙動バインド
+TargetLockSkill = "LeapSmash"
+WallStunSkill = "FrenzyCharge"
 
 # Phase 1 状態機械設定
 [Phase1]

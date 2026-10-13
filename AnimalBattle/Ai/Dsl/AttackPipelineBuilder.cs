@@ -2,15 +2,17 @@ using System.Drawing;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Dsl;
 
 /// <summary>
 ///     単一の攻撃パターン（前摇、多段時間軸、後隙、意思決定ルール）を宣言的に構築するビルダーです。
+///     UE GAS 準拠：技能識別子は StringId 動的タグとして管理されます。
 /// </summary>
 /// <param name="parent">親の Phase ビルダー。</param>
-/// <param name="skill">技能識別子。</param>
-public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, AbilityId skill) {
+/// <param name="skillTag">技能識別タグ。</param>
+public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, StringId skillTag) {
     private readonly List<AttackActionStep> _actions = [];
     private readonly PhasePipelineBuilder _parent = parent;
     private GameplayTag _armorTag = GameplayTag.None;
@@ -21,8 +23,8 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, AbilityId
     private DecisionRuleBuilder? _ruleBuilder;
     private float _telegraphDuration = 0.40f;
 
-    /// <summary>対象の技能識別子を取得します。</summary>
-    public AbilityId Skill { get; } = skill;
+    /// <summary>対象の技能識別タグを取得します。</summary>
+    public StringId SkillTag { get; } = skillTag;
 
     /// <summary>
     ///     この攻撃のアーマータグおよび破防靭性値を設定します。
@@ -128,7 +130,7 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, AbilityId
     {
         if (rules is null) return this;
 
-        var skillName = Skill.ToString();
+        var skillName = SkillTag.ToString();
         var config = rules.Find(r => string.Equals(r.Skill, skillName, StringComparison.OrdinalIgnoreCase));
         return Rule(config);
     }
@@ -136,9 +138,9 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, AbilityId
     /// <summary>
     ///     次の攻撃の定義に進みます（親の PhasePipelineBuilder へ戻ります）。
     /// </summary>
-    /// <param name="skill">次に定義する技能識別子。</param>
+    /// <param name="skill">次に定義する技能識別タグ。</param>
     /// <returns>新しい攻撃ビルダー。</returns>
-    public AttackPipelineBuilder Attack(AbilityId skill)
+    public AttackPipelineBuilder Attack(StringId skill)
     {
         return _parent.Attack(skill);
     }
@@ -169,7 +171,7 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, AbilityId
     public AttackDefinition BuildAttackDefinition()
     {
         return new AttackDefinition(
-            Skill,
+            SkillTag,
             _telegraphDuration,
             _executeDuration,
             _recoveryDuration,
@@ -185,6 +187,6 @@ public sealed class AttackPipelineBuilder(PhasePipelineBuilder parent, AbilityId
     /// <returns>生成された AttackDecisionRule、または null。</returns>
     public AttackDecisionRule? BuildDecisionRule()
     {
-        return _ruleBuilder?.Build(Skill);
+        return _ruleBuilder?.Build(SkillTag);
     }
 }

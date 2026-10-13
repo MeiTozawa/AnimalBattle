@@ -28,7 +28,8 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
     public StringId(string? source)
     {
         Value = ComputeHash(source);
-        if (!string.IsNullOrEmpty(source)) _stringPool.TryAdd(Value, source);
+        Debug.Assert(!string.IsNullOrEmpty(source), "StringId source is null or empty");
+        _stringPool.TryAdd(Value, source);
     }
 
     /// <summary>
@@ -49,14 +50,8 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
     {
         if (string.IsNullOrEmpty(text)) return 0;
 
-        var hash = 2166136261;
-        for (var i = 0; i < text.Length; i++)
-        {
-            var c = char.ToLowerInvariant(text[i]);
-            hash = (hash ^ c) * 16777619;
-        }
-
-        return hash;
+        return text.Select(char.ToLowerInvariant).
+            Aggregate(2166136261, (current, c) => (current ^ c) * 16777619);
     }
 
     /// <summary>文字列から <see cref="StringId" /> への暗黙的型変換を提供します。</summary>

@@ -1,4 +1,3 @@
-using AnimalBattle.Abilities;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
@@ -10,24 +9,6 @@ namespace AnimalBattle.Core;
 ///     ホットパスにおける <see cref="Enum.ToString()" /> のリフレクション辞書検索とヒープ文字列割り当てを完全に排除します。
 /// </summary>
 public static class EnumStringLut {
-    /// <summary>技能識別文字列を取得します。</summary>
-    public static string Get(AbilityId skill) => skill switch {
-        AbilityId.Aimed3Shot => nameof(AbilityId.Aimed3Shot),
-        AbilityId.RingBurst => nameof(AbilityId.RingBurst),
-        AbilityId.DoubleSpiral => nameof(AbilityId.DoubleSpiral),
-        AbilityId.RainDrop => nameof(AbilityId.RainDrop),
-        AbilityId.CrossChaos => nameof(AbilityId.CrossChaos),
-        AbilityId.FastSniper => nameof(AbilityId.FastSniper),
-        AbilityId.DiveRam => nameof(AbilityId.DiveRam),
-        AbilityId.HeavySlash => nameof(AbilityId.HeavySlash),
-        AbilityId.DoubleCleave => nameof(AbilityId.DoubleCleave),
-        AbilityId.GroundStomp => nameof(AbilityId.GroundStomp),
-        AbilityId.LeapSmash => nameof(AbilityId.LeapSmash),
-        AbilityId.FrenzyCharge => nameof(AbilityId.FrenzyCharge),
-        AbilityId.EarthquakeRoar => nameof(AbilityId.EarthquakeRoar),
-        _ => "None"
-    };
-
     /// <summary>Boss 1 状態の識別文字列を取得します。</summary>
     public static string Get(Boss1State state) => state switch {
         Boss1State.Hover => nameof(Boss1State.Hover),

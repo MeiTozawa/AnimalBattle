@@ -1,11 +1,13 @@
 using System.Collections.Frozen;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Dsl;
 
 /// <summary>
 ///     宣言的 DSL から一括構築された不変の Boss 振る舞い・技能パイプラインです。
+///     技能定義は動的タグ StringId によりインデックスされます。
 /// </summary>
 /// <param name="bossType">Boss の種別。</param>
 /// <param name="name">パイプラインの識別名。</param>
@@ -16,9 +18,9 @@ public sealed class BossBehaviorPipeline(
     BossType bossType,
     string name,
     Dictionary<Phase, IReadOnlyList<AttackDecisionRule>> rulesByPhase,
-    Dictionary<AbilityId, AttackDefinition> attacks,
+    Dictionary<StringId, AttackDefinition> attacks,
     Dictionary<Phase, PhaseLocomotionSettings>? locomotionByPhase = null) {
-    private readonly FrozenDictionary<AbilityId, AttackDefinition> _attacks = attacks.ToFrozenDictionary();
+    private readonly FrozenDictionary<StringId, AttackDefinition> _attacks = attacks.ToFrozenDictionary();
 
     private readonly FrozenDictionary<Phase, PhaseLocomotionSettings> _locomotionByPhase =
         (locomotionByPhase ?? []).ToFrozenDictionary();
@@ -33,7 +35,7 @@ public sealed class BossBehaviorPipeline(
     public string Name { get; } = name;
 
     /// <summary>全攻撃の検証済み AttackDefinition マップを取得します。</summary>
-    public IReadOnlyDictionary<AbilityId, AttackDefinition> Attacks => _attacks;
+    public IReadOnlyDictionary<StringId, AttackDefinition> Attacks => _attacks;
 
     /// <summary>
     ///     指定 Phase の攻撃意思決定ルール一覧を取得します。
@@ -48,12 +50,12 @@ public sealed class BossBehaviorPipeline(
     }
 
     /// <summary>
-    ///     指定された AbilityId の AttackDefinition を取得します。
+    ///     指定された StringId の AttackDefinition を取得します。
     /// </summary>
-    /// <param name="skill">技能識別子。</param>
+    /// <param name="skill">技能識別タグ。</param>
     /// <param name="definition">見つかった攻撃定義。</param>
     /// <returns>定義が存在する場合は true。</returns>
-    public bool TryGetAttack(AbilityId skill, out AttackDefinition definition)
+    public bool TryGetAttack(StringId skill, out AttackDefinition definition)
     {
         return _attacks.TryGetValue(skill, out definition!);
     }

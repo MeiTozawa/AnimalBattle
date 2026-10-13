@@ -122,6 +122,18 @@ public sealed class Boss2Config : BaseBossConfig {
     /// <summary>カイト対策で強制技発動を行う追跡タイムアウト倍率</summary>
     public float AntiKitingEnforceMultiplier { get; set; }
 
+    /// <summary>カイト対策近接技能識別名</summary>
+    public string AntiKitingMeleeSkill { get; set; } = string.Empty;
+
+    /// <summary>カイト対策遠隔技能識別名</summary>
+    public string AntiKitingRangedSkill { get; set; } = string.Empty;
+
+    /// <summary>目標ロック・飛翔技能識別名</summary>
+    public string TargetLockSkill { get; set; } = string.Empty;
+
+    /// <summary>壁激突スタン技能識別名</summary>
+    public string WallStunSkill { get; set; } = string.Empty;
+
     /// <summary>Phase 1 状態機設定</summary>
     public Boss2PhaseConfig Phase1 { get; set; } = new();
 

@@ -40,8 +40,8 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// <summary>現在の Boss 状態を取得します。</summary>
     public virtual BossState CurrentState => Brain.CurrentState;
 
-    /// <summary>現在選択されている攻撃技能種別を取得します。</summary>
-    public virtual AbilityId CurrentSkill => Brain.CurrentSkill;
+    /// <summary>現在選択されている攻撃技能識別タグを取得します。</summary>
+    public virtual StringId CurrentSkillTag => Brain.CurrentSkillTag;
 
     /// <summary>現在状態の経過時間を取得します。</summary>
     public virtual float StateTimer => Brain.StateTimer;
@@ -159,7 +159,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// <summary>
     ///     弾幕波次発射イベントを処理します。
     /// </summary>
-    protected abstract void HandleEmitBarrageWave(AbilityId skill, Vec2f origin, Vec2f target);
+    protected abstract void HandleEmitBarrageWave(StringId skill, Vec2f origin, Vec2f target);
 
     /// <summary>
     ///     フィールド上に存在するすべての Boss 弾幕を一括消去します。

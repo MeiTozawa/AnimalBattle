@@ -78,6 +78,9 @@ public sealed class Boss2Brain : BaseBossBrain {
     /// <inheritdoc />
     public override bool FacingRight => _facingRight;
 
+    /// <summary>Boss 2 の設定プロバイダを取得します。</summary>
+    public IBoss2Configuration Configuration => _configuration;
+
     /// <summary>現在のマクロ・ミクロ統合状態を取得します。</summary>
     public Boss2State State {
         get {
@@ -135,18 +138,27 @@ public sealed class Boss2Brain : BaseBossBrain {
     }
 
     /// <summary>近接攻撃判定生成イベント。</summary>
-    public event Action<AbilityId, float, float>? OnCreateHitbox;
+    public event Action<StringId, float, float>? OnCreateHitbox;
 
     private void InitializeAbilities()
     {
         var patternCfg = ConfigManager.Boss2Patterns;
+        var boss2Cfg = ConfigManager.Boss2;
 
-        RegisterSkill(AbilityId.HeavySlash, patternCfg);
-        RegisterSkill(AbilityId.GroundStomp, patternCfg);
-        RegisterSkill(AbilityId.LeapSmash, patternCfg);
-        RegisterSkill(AbilityId.DoubleCleave, patternCfg);
-        RegisterSkill(AbilityId.FrenzyCharge, patternCfg);
-        RegisterSkill(AbilityId.EarthquakeRoar, patternCfg);
+        var skillNames = new HashSet<string>(boss2Cfg.Phase1.Skills);
+        skillNames.UnionWith(boss2Cfg.Phase2.Skills);
+        skillNames.UnionWith(boss2Cfg.Phase3.Skills);
+        foreach (var rule in boss2Cfg.Phase1.Rules) skillNames.Add(rule.Skill);
+        foreach (var rule in boss2Cfg.Phase2.Rules) skillNames.Add(rule.Skill);
+        foreach (var rule in boss2Cfg.Phase3.Rules) skillNames.Add(rule.Skill);
+
+        foreach (var name in skillNames)
+        {
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                RegisterSkill(new StringId(name), patternCfg);
+            }
+        }
 
         _asc.OnExecuteMovement += (vx, vy) => _currentVelocity = new Vec2f(vx, vy);
         _asc.OnEmitBullet += (skill, _, _) => RaiseEmitBarrageWave(skill, _currentPosition, _targetPosition);
@@ -154,7 +166,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
 
-    private void RegisterSkill(AbilityId skill, Boss2PatternConfig config)
+    private void RegisterSkill(StringId skill, Boss2PatternConfig config)
     {
         var cooldown = _configuration.GetSkillDefaultCooldown(skill);
         var buildResult = Boss2PatternLoader.BuildAbility(skill, config, cooldown);
@@ -171,7 +183,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     {
         foreach (var rule in phaseCfg.Rules)
         {
-            if (rule.Cooldown > 0.0f && _asc.TryGetAbility(rule.Skill, out var ability) && ability is not null)
+            if (rule.Cooldown > 0.0f && _asc.TryGetAbility(rule.SkillTag, out var ability) && ability is not null)
             {
                 ability.Cooldown = rule.Cooldown;
             }
@@ -435,12 +447,12 @@ public sealed class Boss2Brain : BaseBossBrain {
 
         var dir = _facingRight ? 1.0f : -1.0f;
 
-        if (chosenSkill != AbilityId.None)
+        if (!chosenSkill.IsEmpty)
         {
             if (_asc.TryActivateAbility(chosenSkill, dir))
             {
                 _targetPosition = new Vec2f(_currentPosition.X + dx, _currentPosition.Y + dy);
-                if (chosenSkill == AbilityId.LeapSmash)
+                if (chosenSkill == _configuration.TargetLockSkillTag)
                 {
                     _leapStartPosition = _currentPosition;
                     LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
@@ -453,11 +465,11 @@ public sealed class Boss2Brain : BaseBossBrain {
 
         if (_stateTimer >= phaseCfg.ChaseTimeout)
         {
-            var antiKiteSkill = isSamePlatform ? AbilityId.GroundStomp : AbilityId.LeapSmash;
+            StringId antiKiteSkill = isSamePlatform ? _configuration.AntiKitingMeleeSkillTag : _configuration.AntiKitingRangedSkillTag;
             if (_asc.TryActivateAbility(antiKiteSkill, dir))
             {
                 _targetPosition = new Vec2f(_currentPosition.X + dx, _currentPosition.Y + dy);
-                if (antiKiteSkill == AbilityId.LeapSmash)
+                if (antiKiteSkill == _configuration.TargetLockSkillTag)
                 {
                     _leapStartPosition = _currentPosition;
                     LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
@@ -512,7 +524,7 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     private void UpdateAbility(float dt, bool isOnWall, bool isGrounded, Vec2f playerPos)
     {
-        if (CurrentSkill == AbilityId.FrenzyCharge &&
+        if (CurrentSkillTag == _configuration.WallStunSkillTag &&
             _asc.SkillRunner?.CurrentPhase == SkillPhase.Active &&
             isOnWall &&
             MathF.Abs(_currentVelocity.X) > 10.0f)
@@ -523,7 +535,7 @@ public sealed class Boss2Brain : BaseBossBrain {
             return;
         }
 
-        if (CurrentSkill == AbilityId.LeapSmash)
+        if (CurrentSkillTag == _configuration.TargetLockSkillTag)
         {
             UpdateLeapSmashMotion(dt, isGrounded, playerPos);
         }

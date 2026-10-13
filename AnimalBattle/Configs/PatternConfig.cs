@@ -1,5 +1,15 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using AnimalBattle.Abilities;
+using AnimalBattle.Abilities.Attack;
+using AnimalBattle.Abilities.Skills;
+using AnimalBattle.Ai.Boss1;
+using AnimalBattle.Combat;
+using AnimalBattle.Core;
+using AnimalBattle.Events;
+using AnimalBattle.Render;
 using ErrorOr;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Configs;
 
@@ -29,7 +39,7 @@ public sealed class SkillEventConfig {
 /// <summary>
 ///     俯衝突進・メテオダイブ技能の設定クラス。
 /// </summary>
-public sealed class DiveRamConfig {
+public sealed class DiveRamConfig : IBoss1SkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -86,12 +96,34 @@ public sealed class DiveRamConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownHeavy | GameplayTag.CooldownMelee;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, armorTag: GameplayTag.SuperArmor);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => TelegraphRenderHelper.DrawDiveRamTelegraph(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, ImpactRadius, ctx.Progress, TelegraphColor);
+
+    /// <inheritdoc />
+    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
+        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, dashSpeed: DashSpeed, easeType: EaseType);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+        => BarrageEmitter.EmitDiveImpact(world, this, origin);
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     自機狙い 3 連射技能の設定クラス。
 /// </summary>
-public sealed class Aimed3ShotConfig {
+public sealed class Aimed3ShotConfig : IBoss1SkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -139,12 +171,37 @@ public sealed class Aimed3ShotConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, BulletCount, SpreadAngle);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, SpreadAngle, BulletCount, ctx.Progress, TelegraphColor);
+
+    /// <inheritdoc />
+    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
+        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, BulletCount, SpreadAngle);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    {
+        BarrageEmitter.EmitAimedSpread(world, this, origin, target);
+        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+    }
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     16 方向全方位リング弾幕技能の設定クラス。
 /// </summary>
-public sealed class RingBurstConfig {
+public sealed class RingBurstConfig : IBoss1SkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -192,12 +249,37 @@ public sealed class RingBurstConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, BulletCount, AngleStep);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.BossX, ctx.BossY, BulletCount, 0.0f, 75.0f, ctx.Progress, TelegraphColor);
+
+    /// <inheritdoc />
+    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
+        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, BulletCount, AngleStep);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    {
+        BarrageEmitter.EmitRadialRing(world, this, origin, ref angleOffset);
+        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+    }
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     双螺旋回転弾幕技能の設定クラス。
 /// </summary>
-public sealed class DoubleSpiralConfig {
+public sealed class DoubleSpiralConfig : IBoss1SkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -248,12 +330,40 @@ public sealed class DoubleSpiralConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 2, AngleStep);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => {
+            var spiralAngle = ctx.StateTimer * 4.0f;
+            TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.BossX, ctx.BossY, 2, spiralAngle, 90.0f, ctx.Progress, TelegraphColor);
+        };
+
+    /// <inheritdoc />
+    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
+        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, 2, AngleStep);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    {
+        BarrageEmitter.EmitDoubleSpiral(world, this, origin, ref angleOffset);
+        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+    }
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     降雨弾幕技能の設定クラス。
 /// </summary>
-public sealed class RainDropConfig {
+public sealed class RainDropConfig : IBoss1SkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -262,6 +372,15 @@ public sealed class RainDropConfig {
 
     /// <summary>予兆エフェクトカラー</summary>
     public Color TelegraphColor { get; set; }
+
+    /// <summary>予兆柱の表示本数</summary>
+    public int TelegraphColumnCount { get; set; } = 6;
+
+    /// <summary>予兆柱の高さ</summary>
+    public float TelegraphColumnHeight { get; set; } = 650.0f;
+
+    /// <summary>予兆警告テキスト</summary>
+    public string TelegraphWarningText { get; set; } = "▼ RAIN ▼";
 
     /// <summary>発動持続時間</summary>
     public float CastDuration { get; set; }
@@ -301,12 +420,37 @@ public sealed class RainDropConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 1);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => TelegraphRenderHelper.DrawSkyfallColumns(MinX, MaxX, TelegraphColumnCount, TelegraphColumnHeight, ctx.Progress, TelegraphColor, TelegraphWarningText);
+
+    /// <inheritdoc />
+    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
+        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, 2, 0.0f, MinX, MaxX);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    {
+        BarrageEmitter.EmitRainDrop(world, this);
+        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+    }
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     全方位交差波弾幕技能の設定クラス。
 /// </summary>
-public sealed class CrossChaosConfig {
+public sealed class CrossChaosConfig : IBoss1SkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -351,12 +495,40 @@ public sealed class CrossChaosConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged | GameplayTag.CooldownHeavy;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 4, AngleStep);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => {
+            var crossAngle = ctx.StateTimer * 2.5f;
+            TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.BossX, ctx.BossY, 4, crossAngle, 110.0f, ctx.Progress, TelegraphColor);
+        };
+
+    /// <inheritdoc />
+    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
+        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, 4, AngleStep);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    {
+        BarrageEmitter.EmitCrossChaos(world, this, origin, ref angleOffset);
+        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+    }
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     高速レーザースナイパー弾幕技能の設定クラス。
 /// </summary>
-public sealed class FastSniperConfig {
+public sealed class FastSniperConfig : IBoss1SkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -398,12 +570,37 @@ public sealed class FastSniperConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownRanged;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 1);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, 0.0f, 1, ctx.Progress, TelegraphColor, true);
+
+    /// <inheritdoc />
+    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
+        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, 1);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    {
+        BarrageEmitter.EmitSniper(world, this, origin, target);
+        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+    }
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     Boss 2 重劈斬撃技能の設定クラス。
 /// </summary>
-public sealed class HeavySlashConfig {
+public sealed class HeavySlashConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -445,12 +642,47 @@ public sealed class HeavySlashConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownMelee;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, SlashRangeX, Events, armorTag: GameplayTag.SuperArmor);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => TelegraphRenderHelper.DrawMeleeDangerBox((int)ctx.BossX, (int)ctx.BossY, SlashRangeX, SlashRangeY, ctx.FacingRight, ctx.Progress, TelegraphColor);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight) { }
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
+    {
+        var b2Cfg = ConfigManager.Boss2;
+        var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
+        var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
+        var dir = forwardDir > 0.0f ? SlashDirection.Right : SlashDirection.Left;
+        CombatSpawner.SpawnMeleeSlashHitbox(
+            world,
+            origin.X + offX,
+            origin.Y + offY,
+            vx,
+            0.0f,
+            SlashRangeX,
+            SlashRangeY,
+            SlashDamage,
+            HitboxDuration,
+            SlashColor,
+            dir);
+    }
 }
 
 /// <summary>
 ///     Boss 2 撼地踏撃技能の設定クラス。
 /// </summary>
-public sealed class GroundStompConfig {
+public sealed class GroundStompConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -495,12 +727,35 @@ public sealed class GroundStompConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownMelee;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, ShockwaveSpeed, Events, armorTag: GameplayTag.SuperArmor);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => {
+            var b2Cfg = ConfigManager.Boss2;
+            var groundY = ctx.BossY + b2Cfg.CollisionHeight / 2.0f;
+            TelegraphRenderHelper.DrawGroundShockwaveRails((int)ctx.BossX, groundY, ctx.Progress, TelegraphColor);
+        };
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+        => BarrageEmitter.EmitGroundStompShockwaves(world, this, origin, bodyHeight);
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
+        => BarrageEmitter.EmitGroundStompShockwaves(world, this, origin, bodyHeight);
 }
 
 /// <summary>
 ///     Boss 2 泰山圧頂技能の設定クラス。
 /// </summary>
-public sealed class LeapSmashConfig {
+public sealed class LeapSmashConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -566,12 +821,47 @@ public sealed class LeapSmashConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownHeavy | GameplayTag.CooldownMelee;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, JumpForce, Events, armorTag: GameplayTag.Invincible);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => TelegraphRenderHelper.DrawLeapSmashTelegraph(ctx.TargetX, ctx.TargetY, ctx.Progress, TelegraphColor);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+        => BarrageEmitter.EmitLeapSmashShrapnel(world, this, origin, bodyHeight);
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
+    {
+        var groundY = origin.Y + bodyHeight / 2.0f;
+        CombatSpawner.SpawnMeleeSlashHitbox(
+            world,
+            origin.X,
+            groundY - SlashRadius * 0.5f,
+            0.0f,
+            0.0f,
+            SlashRadius * 2.0f,
+            SlashRadius * 1.5f,
+            SlashDamage,
+            0.25f,
+            ShrapnelFillColor,
+            SlashDirection.Down);
+
+        BarrageEmitter.EmitLeapSmashShrapnel(world, this, origin, bodyHeight);
+    }
 }
 
 /// <summary>
 ///     Boss 2 二連重斬技能の設定クラス。
 /// </summary>
-public sealed class DoubleCleaveConfig {
+public sealed class DoubleCleaveConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -616,12 +906,47 @@ public sealed class DoubleCleaveConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownMelee;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, SlashRangeX, Events, armorTag: GameplayTag.SuperArmor);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => TelegraphRenderHelper.DrawMeleeDangerBox((int)ctx.BossX, (int)ctx.BossY, SlashRangeX, SlashRangeY, ctx.FacingRight, ctx.Progress, TelegraphColor);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight) { }
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
+    {
+        var b2Cfg = ConfigManager.Boss2;
+        var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
+        var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
+        var dir = forwardDir > 0.0f ? SlashDirection.Right : SlashDirection.Left;
+        CombatSpawner.SpawnMeleeSlashHitbox(
+            world,
+            origin.X + offX,
+            origin.Y + offY,
+            vx,
+            0.0f,
+            SlashRangeX,
+            SlashRangeY,
+            SlashDamage,
+            HitboxDuration,
+            SlashColor,
+            dir);
+    }
 }
 
 /// <summary>
 ///     Boss 2 狂暴横衝直撞技能の設定クラス。
 /// </summary>
-public sealed class FrenzyChargeConfig {
+public sealed class FrenzyChargeConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -672,12 +997,29 @@ public sealed class FrenzyChargeConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownHeavy;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, ChargeSpeed, Events, armorTag: GameplayTag.SuperArmor);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => TelegraphRenderHelper.DrawChargeDangerTrack((int)ctx.BossX, (int)ctx.BossY, ConfigManager.Boss2.CollisionHeight, ctx.FacingRight, ctx.Progress, TelegraphColor);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight) { }
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     Boss 2 滅地狂吼技能の設定クラス。
 /// </summary>
-public sealed class EarthquakeRoarConfig {
+public sealed class EarthquakeRoarConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -686,6 +1028,15 @@ public sealed class EarthquakeRoarConfig {
 
     /// <summary>予兆エフェクトカラー</summary>
     public Color TelegraphColor { get; set; }
+
+    /// <summary>予兆柱の表示本数</summary>
+    public int TelegraphColumnCount { get; set; }
+
+    /// <summary>予兆柱の高さ</summary>
+    public float TelegraphColumnHeight { get; set; }
+
+    /// <summary>予兆警告テキスト</summary>
+    public string TelegraphWarningText { get; set; } = string.Empty;
 
     /// <summary>発動持続時間</summary>
     public float CastDuration { get; set; }
@@ -725,6 +1076,24 @@ public sealed class EarthquakeRoarConfig {
 
     /// <summary>時序キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
+
+    /// <inheritdoc />
+    public GameplayTag ResolveCooldownTags() => GameplayTag.CooldownHeavy;
+
+    /// <inheritdoc />
+    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, MaxX, Events, Interval, RockSpeed, RockCount > 0 ? RockCount : 1, 0.0f, GameplayTag.SuperArmor);
+
+    /// <inheritdoc />
+    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+        => ctx => TelegraphRenderHelper.DrawSkyfallColumns(MinX, MaxX, TelegraphColumnCount, TelegraphColumnHeight, ctx.Progress, TelegraphColor, TelegraphWarningText);
+
+    /// <inheritdoc />
+    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+        => BarrageEmitter.EmitEarthquakeRocks(world, this);
+
+    /// <inheritdoc />
+    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
@@ -789,6 +1158,30 @@ public sealed class Boss1PatternConfig {
     /// <summary>高速レーザースナイパー弾幕技能設定</summary>
     public FastSniperConfig FastSniper { get; set; } = new();
 
+    private Dictionary<StringId, IBossSkillPatternConfig>? _skillCache;
+
+    /// <summary>
+    ///     技能識別タグに対応するパターン設定を動的に取得します。
+    /// </summary>
+    public bool TryGetSkill(StringId skill, [NotNullWhen(true)] out IBossSkillPatternConfig? pattern)
+    {
+        _skillCache ??= BuildSkillCache();
+        return _skillCache.TryGetValue(skill, out pattern);
+    }
+
+    private Dictionary<StringId, IBossSkillPatternConfig> BuildSkillCache()
+    {
+        var cache = new Dictionary<StringId, IBossSkillPatternConfig>();
+        foreach (var prop in GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+        {
+            if (typeof(IBossSkillPatternConfig).IsAssignableFrom(prop.PropertyType) && prop.GetValue(this) is IBossSkillPatternConfig skillConfig)
+            {
+                cache[new StringId(prop.Name)] = skillConfig;
+            }
+        }
+        return cache;
+    }
+
     /// <summary>
     ///     文字列で指定された弾幕種別をパースします。
     /// </summary>
@@ -828,6 +1221,30 @@ public sealed class Boss2PatternConfig {
 
     /// <summary>Boss 2 滅地狂吼技能設定</summary>
     public EarthquakeRoarConfig EarthquakeRoar { get; set; } = new();
+
+    private Dictionary<StringId, IBossSkillPatternConfig>? _skillCache;
+
+    /// <summary>
+    ///     技能識別タグに対応するパターン設定を動的に取得します。
+    /// </summary>
+    public bool TryGetSkill(StringId skill, [NotNullWhen(true)] out IBossSkillPatternConfig? pattern)
+    {
+        _skillCache ??= BuildSkillCache();
+        return _skillCache.TryGetValue(skill, out pattern);
+    }
+
+    private Dictionary<StringId, IBossSkillPatternConfig> BuildSkillCache()
+    {
+        var cache = new Dictionary<StringId, IBossSkillPatternConfig>();
+        foreach (var prop in GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+        {
+            if (typeof(IBossSkillPatternConfig).IsAssignableFrom(prop.PropertyType) && prop.GetValue(this) is IBossSkillPatternConfig skillConfig)
+            {
+                cache[new StringId(prop.Name)] = skillConfig;
+            }
+        }
+        return cache;
+    }
 
     /// <summary>
     ///     指定された TOML ファイルから Boss 2 パターン設定を読み込みます。

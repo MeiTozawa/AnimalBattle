@@ -1,6 +1,6 @@
 using System.Diagnostics;
-using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using AnimalBattle.Events;
 using Flecs.NET.Core;
 
@@ -15,13 +15,13 @@ public static class BarrageEmitter
     ///     Boss 1 の技能に応じた弾幕波次を生成します。
     /// </summary>
     /// <param name="world">対象のワールド。</param>
-    /// <param name="skill">発動技能種別。</param>
+    /// <param name="skill">発動技能識別タグ。</param>
     /// <param name="origin">発射元座標。</param>
     /// <param name="target">目標座標。</param>
     /// <param name="angleOffset">回転角オフセット参照。</param>
     public static void EmitBoss1(
         World world,
-        AbilityId skill,
+        StringId skill,
         Vec2f origin,
         Vec2f target,
         ref float angleOffset)
@@ -29,42 +29,9 @@ public static class BarrageEmitter
         Debug.Assert(world != default, "World インスタンスが有効である必要があります。");
 
         var patternCfg = ConfigManager.Boss1Patterns;
-
-        switch (skill)
+        if (patternCfg.TryGetSkill(skill, out var pattern))
         {
-            case AbilityId.Aimed3Shot:
-                EmitAimedSpread(world, patternCfg.Aimed3Shot, origin, target);
-                EventBus.Publish(new BossBarrageFiredEvent(skill));
-                break;
-
-            case AbilityId.FastSniper:
-                EmitSniper(world, patternCfg.FastSniper, origin, target);
-                EventBus.Publish(new BossBarrageFiredEvent(skill));
-                break;
-
-            case AbilityId.RingBurst:
-                EmitRadialRing(world, patternCfg.RingBurst, origin, ref angleOffset);
-                EventBus.Publish(new BossBarrageFiredEvent(skill));
-                break;
-
-            case AbilityId.DoubleSpiral:
-                EmitDoubleSpiral(world, patternCfg.DoubleSpiral, origin, ref angleOffset);
-                EventBus.Publish(new BossBarrageFiredEvent(skill));
-                break;
-
-            case AbilityId.CrossChaos:
-                EmitCrossChaos(world, patternCfg.CrossChaos, origin, ref angleOffset);
-                EventBus.Publish(new BossBarrageFiredEvent(skill));
-                break;
-
-            case AbilityId.RainDrop:
-                EmitRainDrop(world, patternCfg.RainDrop);
-                EventBus.Publish(new BossBarrageFiredEvent(skill));
-                break;
-
-            case AbilityId.DiveRam:
-                EmitDiveImpact(world, patternCfg.DiveRam, origin);
-                break;
+            pattern.EmitBarrage(world, origin, target, ref angleOffset, 1.0f, 0.0f);
         }
     }
 
@@ -72,14 +39,14 @@ public static class BarrageEmitter
     ///     Boss 2 の技能に応じた弾幕および衝撃波を生成します。
     /// </summary>
     /// <param name="world">対象のワールド。</param>
-    /// <param name="skill">発動技能種別。</param>
+    /// <param name="skill">発動技能識別タグ。</param>
     /// <param name="origin">発射元座標。</param>
     /// <param name="target">目標座標。</param>
     /// <param name="forwardDir">前方向き。</param>
     /// <param name="bodyHeight">衝突判定高さ。</param>
     public static void EmitBoss2(
         World world,
-        AbilityId skill,
+        StringId skill,
         Vec2f origin,
         Vec2f target,
         float forwardDir,
@@ -88,25 +55,15 @@ public static class BarrageEmitter
         Debug.Assert(world != default, "World インスタンスが有効である必要があります。");
 
         var patternCfg = ConfigManager.Boss2Patterns;
-
-        switch (skill)
+        if (patternCfg.TryGetSkill(skill, out var pattern))
         {
-            case AbilityId.EarthquakeRoar:
-                EmitEarthquakeRocks(world, patternCfg.EarthquakeRoar);
-                break;
-
-            case AbilityId.GroundStomp:
-                EmitGroundStompShockwaves(world, patternCfg.GroundStomp, origin, bodyHeight);
-                break;
-
-            case AbilityId.LeapSmash:
-                EmitLeapSmashShrapnel(world, patternCfg.LeapSmash, origin, bodyHeight);
-                break;
+            float dummyOffset = 0.0f;
+            pattern.EmitBarrage(world, origin, target, ref dummyOffset, forwardDir, bodyHeight);
         }
     }
 
     /// <summary>自機狙い扇状弾幕を生成します。</summary>
-    private static void EmitAimedSpread(World world, Aimed3ShotConfig cfg, Vec2f origin, Vec2f target)
+    internal static void EmitAimedSpread(World world, Aimed3ShotConfig cfg, Vec2f origin, Vec2f target)
     {
         var dx = target.X - origin.X;
         var dy = target.Y - origin.Y;
@@ -138,7 +95,7 @@ public static class BarrageEmitter
     }
 
     /// <summary>高速狙撃弾幕を生成します。</summary>
-    private static void EmitSniper(World world, FastSniperConfig cfg, Vec2f origin, Vec2f target)
+    internal static void EmitSniper(World world, FastSniperConfig cfg, Vec2f origin, Vec2f target)
     {
         var dx = target.X - origin.X;
         var dy = target.Y - origin.Y;
@@ -160,7 +117,7 @@ public static class BarrageEmitter
     }
 
     /// <summary>全方位円環弾幕を生成します。</summary>
-    private static void EmitRadialRing(World world, RingBurstConfig cfg, Vec2f origin, ref float angleOffset)
+    internal static void EmitRadialRing(World world, RingBurstConfig cfg, Vec2f origin, ref float angleOffset)
     {
         var count = Math.Max(1, cfg.BulletCount);
         var step = cfg.AngleStep > 0.0f ? cfg.AngleStep : MathF.PI * 2.0f / count;
@@ -188,7 +145,7 @@ public static class BarrageEmitter
     }
 
     /// <summary>二重螺旋弾幕を生成します。</summary>
-    private static void EmitDoubleSpiral(World world, DoubleSpiralConfig cfg, Vec2f origin, ref float angleOffset)
+    internal static void EmitDoubleSpiral(World world, DoubleSpiralConfig cfg, Vec2f origin, ref float angleOffset)
     {
         var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Yellow);
 
@@ -223,7 +180,7 @@ public static class BarrageEmitter
     }
 
     /// <summary>十字交差弾幕を生成します。</summary>
-    private static void EmitCrossChaos(World world, CrossChaosConfig cfg, Vec2f origin, ref float angleOffset)
+    internal static void EmitCrossChaos(World world, CrossChaosConfig cfg, Vec2f origin, ref float angleOffset)
     {
         var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Magenta);
 
@@ -249,7 +206,7 @@ public static class BarrageEmitter
     }
 
     /// <summary>天水降雨弾幕を生成します。</summary>
-    private static void EmitRainDrop(World world, RainDropConfig cfg)
+    internal static void EmitRainDrop(World world, RainDropConfig cfg)
     {
         var rx = cfg.MinX + Random.Shared.NextSingle() * (cfg.MaxX - cfg.MinX);
         var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Cyan);
@@ -267,7 +224,7 @@ public static class BarrageEmitter
     }
 
     /// <summary>急降下着地炸裂弾幕を生成します。</summary>
-    private static void EmitDiveImpact(World world, DiveRamConfig cfg, Vec2f origin)
+    internal static void EmitDiveImpact(World world, DiveRamConfig cfg, Vec2f origin)
     {
         var spawnY = origin.Y + cfg.ImpactOffsetY;
         EventBus.Publish(new BossDiveImpactEvent(origin.X, spawnY));
@@ -295,7 +252,7 @@ public static class BarrageEmitter
     }
 
     /// <summary>滅地狂吼の天降落石を生成します。</summary>
-    private static void EmitEarthquakeRocks(World world, EarthquakeRoarConfig cfg)
+    internal static void EmitEarthquakeRocks(World world, EarthquakeRoarConfig cfg)
     {
         var count = Math.Max(1, cfg.RockCount);
         var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Cyan);
@@ -316,7 +273,7 @@ public static class BarrageEmitter
     }
 
     /// <summary>撼地踏撃の双方向衝撃波を生成します。</summary>
-    private static void EmitGroundStompShockwaves(World world, GroundStompConfig cfg, Vec2f origin, float bodyHeight)
+    internal static void EmitGroundStompShockwaves(World world, GroundStompConfig cfg, Vec2f origin, float bodyHeight)
     {
         var groundY = origin.Y + bodyHeight / 2.0f - cfg.GroundOffsetY;
         CombatSpawner.SpawnShockwave(world, origin.X, groundY);
@@ -343,7 +300,7 @@ public static class BarrageEmitter
     }
 
     /// <summary>泰山圧頂の着地破片を生成します。</summary>
-    private static void EmitLeapSmashShrapnel(World world, LeapSmashConfig cfg, Vec2f origin, float bodyHeight)
+    internal static void EmitLeapSmashShrapnel(World world, LeapSmashConfig cfg, Vec2f origin, float bodyHeight)
     {
         var groundY = origin.Y + bodyHeight / 2.0f;
         CombatSpawner.SpawnShockwave(world, origin.X, groundY);

@@ -3,6 +3,7 @@ using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Boss2;
 
@@ -16,7 +17,7 @@ public readonly struct Boss2PhaseSettings(
     float maxFallSpeed,
     float patrolRadius,
     float transitionDuration,
-    IReadOnlyList<AbilityId> attackOrder,
+    IReadOnlyList<StringId> attackOrder,
     IReadOnlyList<AttackDecisionRule>? rules = null,
     float maxAscentDuration = 0.80f,
     float landingRecoveryDuration = 0.10f,
@@ -44,7 +45,7 @@ public readonly struct Boss2PhaseSettings(
     public float TransitionDuration { get; } = transitionDuration;
 
     /// <summary>この Phase で実行可能な攻撃順序です。</summary>
-    public IReadOnlyList<AbilityId> AttackOrder { get; } = attackOrder ?? [];
+    public IReadOnlyList<StringId> AttackOrder { get; } = attackOrder ?? [];
 
     /// <summary>この Phase で評価される攻撃意思決定ルールです。</summary>
     public IReadOnlyList<AttackDecisionRule> Rules { get; } = rules ?? [];
@@ -64,9 +65,9 @@ public readonly struct Boss2PhaseSettings(
 
 /// <summary>Boss2 攻撃の定義と固有パラメータです。</summary>
 /// <remarks>Boss2 攻撃 pattern を生成します。</remarks>
-public sealed class Boss2AttackPattern(AbilityId skill, AttackDefinition definition) {
-    /// <summary>技能識別子です。</summary>
-    public AbilityId Skill { get; } = skill;
+public sealed class Boss2AttackPattern(StringId skillTag, AttackDefinition definition) {
+    /// <summary>技能識別タグです。</summary>
+    public StringId SkillTag { get; } = skillTag;
 
     /// <summary>共通 Telegraph/Execute/Recovery 定義です。</summary>
     public AttackDefinition Definition { get; } = definition;
@@ -136,29 +137,48 @@ public readonly struct Boss2CombatSettings(
 
 /// <summary>Boss2 State_Module が読む設定の注入境界です。</summary>
 public interface IBoss2Configuration {
+    /// <summary>カイト対策近接技能タグを取得します。</summary>
+    StringId AntiKitingMeleeSkillTag { get; }
+
+    /// <summary>カイト対策遠隔技能タグを取得します。</summary>
+    StringId AntiKitingRangedSkillTag { get; }
+
+    /// <summary>目標ロック・飛翔技能タグを取得します。</summary>
+    StringId TargetLockSkillTag { get; }
+
+    /// <summary>壁激突スタン技能タグを取得します。</summary>
+    StringId WallStunSkillTag { get; }
+
     /// <summary>Boss2 戦闘判定および反風筝・衝突に関する設定を取得します。</summary>
     Boss2CombatSettings CombatSettings { get; }
 
     /// <summary>指定 Phase の検証済み設定を取得します。</summary>
     Boss2PhaseSettings GetPhase(Phase phase);
 
-    /// <summary>指定 AbilityId の検証済み pattern を取得します。</summary>
-    bool GetAttack(AbilityId skill, out Boss2AttackPattern pattern);
+    /// <summary>指定技能タグの検証済み pattern を取得します。</summary>
+    bool GetAttack(StringId skill, out Boss2AttackPattern pattern);
 
-    /// <summary>技能の既定冷却時間を取得します。</summary>
-    float GetSkillDefaultCooldown(AbilityId skill);
+    /// <summary>技能タグの既定冷却時間を取得します。</summary>
+    float GetSkillDefaultCooldown(StringId skill);
 }
 
 /// <summary>既存 Boss2 設定の検証済み既定 snapshot です。</summary>
 public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
-    private readonly Boss2AttackPattern[] _attacks = [
-        new(AbilityId.HeavySlash, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.HeavySlash]),
-        new(AbilityId.DoubleCleave, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.DoubleCleave]),
-        new(AbilityId.GroundStomp, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.GroundStomp]),
-        new(AbilityId.LeapSmash, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.LeapSmash]),
-        new(AbilityId.FrenzyCharge, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.FrenzyCharge]),
-        new(AbilityId.EarthquakeRoar, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.EarthquakeRoar])
-    ];
+    /// <inheritdoc />
+    public StringId AntiKitingMeleeSkillTag => new(ConfigManager.Boss2.AntiKitingMeleeSkill);
+
+    /// <inheritdoc />
+    public StringId AntiKitingRangedSkillTag => new(ConfigManager.Boss2.AntiKitingRangedSkill);
+
+    /// <inheritdoc />
+    public StringId TargetLockSkillTag => new(ConfigManager.Boss2.TargetLockSkill);
+
+    /// <inheritdoc />
+    public StringId WallStunSkillTag => new(ConfigManager.Boss2.WallStunSkill);
+
+    private readonly Boss2AttackPattern[] _attacks = Boss2PipelineDefinition.Pipeline.Attacks
+        .Select(kv => new Boss2AttackPattern(kv.Key, kv.Value))
+        .ToArray();
 
     /// <inheritdoc />
     public Boss2PhaseSettings GetPhase(Phase phase)
@@ -173,14 +193,10 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
             _ => AssertHelper.FailWithDefault($"[Boss2Configuration 警告] 未知のフェーズ (PhaseConfig): {phase}", toml.Phase1)
         };
 
-        IReadOnlyList<AbilityId> skills = phase switch {
-            Phase.Phase1 => [AbilityId.HeavySlash, AbilityId.GroundStomp, AbilityId.HeavySlash, AbilityId.LeapSmash],
-            Phase.Phase2 =>
-                [AbilityId.DoubleCleave, AbilityId.GroundStomp, AbilityId.LeapSmash, AbilityId.DoubleCleave],
-            Phase.Phase3 =>
-                [AbilityId.FrenzyCharge, AbilityId.EarthquakeRoar, AbilityId.DoubleCleave, AbilityId.LeapSmash],
-            _ => AssertHelper.FailWithDefault<IReadOnlyList<AbilityId>>($"[Boss2Configuration 警告] 未知のフェーズ (Skills): {phase}", [AbilityId.HeavySlash])
-        };
+        // 配置文件里的技能名称转成 StringId，避免在代码中硬编码
+        IReadOnlyList<StringId> skills = phaseCfg.Skills.Count > 0
+            ? phaseCfg.Skills.Select(s => new StringId(s)).ToList()
+            : [];
 
         var jumpForce = loco.JumpForce > 0 ? loco.JumpForce : phaseCfg.JumpForce;
         var gravity = loco.Gravity > 0 ? loco.Gravity : toml.Gravity;
@@ -208,7 +224,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     }
 
     /// <inheritdoc />
-    public bool GetAttack(AbilityId skill, out Boss2AttackPattern pattern)
+    public bool GetAttack(StringId skill, out Boss2AttackPattern pattern)
     {
         try
         {
@@ -224,7 +240,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
         }
 
         for (var index = 0; index < _attacks.Length; index++)
-            if (_attacks[index].Skill == skill)
+            if (_attacks[index].SkillTag == skill)
             {
                 pattern = _attacks[index];
                 return true;
@@ -258,17 +274,17 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     }
 
     /// <inheritdoc />
-    public float GetSkillDefaultCooldown(AbilityId skill)
+    public float GetSkillDefaultCooldown(StringId skill)
     {
+        var toml = ConfigManager.Boss2;
+        foreach (var rule in toml.Phase1.Rules)
+            if (skill == rule.Skill && rule.Cooldown > 0) return rule.Cooldown;
+        foreach (var rule in toml.Phase2.Rules)
+            if (skill == rule.Skill && rule.Cooldown > 0) return rule.Cooldown;
+        foreach (var rule in toml.Phase3.Rules)
+            if (skill == rule.Skill && rule.Cooldown > 0) return rule.Cooldown;
+
         var pattern = ConfigManager.Boss2Patterns;
-        return skill switch {
-            AbilityId.EarthquakeRoar => pattern.EarthquakeRoar.DefaultCooldown,
-            AbilityId.LeapSmash => pattern.LeapSmash.DefaultCooldown,
-            AbilityId.GroundStomp => pattern.GroundStomp.DefaultCooldown,
-            AbilityId.DoubleCleave => pattern.DoubleCleave.DefaultCooldown,
-            AbilityId.HeavySlash => pattern.HeavySlash.DefaultCooldown,
-            AbilityId.FrenzyCharge => pattern.FrenzyCharge.DefaultCooldown,
-            _ => AssertHelper.FailWithDefault($"[Boss2Configuration 警告] 未知の技能クールダウン要求: {skill}", 0.0f)
-        };
+        return pattern.TryGetSkill(skill, out var s) ? s.DefaultCooldown : 0.0f;
     }
 }

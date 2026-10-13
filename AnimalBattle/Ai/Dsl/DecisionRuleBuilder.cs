@@ -1,4 +1,5 @@
 using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Dsl;
 
@@ -100,12 +101,12 @@ public sealed class DecisionRuleBuilder {
     /// <summary>
     ///     設定されたパラメータから不変の AttackDecisionRule を構築します。
     /// </summary>
-    /// <param name="skill">対象の技能識別子。</param>
+    /// <param name="skillTag">対象の技能識別タグ。</param>
     /// <returns>検証済みの AttackDecisionRule。</returns>
-    public AttackDecisionRule Build(AbilityId skill)
+    public AttackDecisionRule Build(StringId skillTag)
     {
         return new AttackDecisionRule(
-            skill,
+            skillTag,
             _cooldown,
             _minDistance,
             _maxDistance,

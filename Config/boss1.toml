@@ -18,6 +18,9 @@ BodyHitboxRadius = 50.0
 BodyHitboxOffsetY = 0.0
 BodyContactDamage = 1.0
 
+# 特殊行動技能タグ設定
+DiveSkill = "DiveRam"
+
 # Phase 1 状態機械設定
 [Phase1]
 HpThreshold = 1.0
