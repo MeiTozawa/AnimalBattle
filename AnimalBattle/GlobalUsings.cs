@@ -1,4 +1,5 @@
 global using System;
+global using AnimalBattle.Abilities;
 global using AnimalBattle.Asset;
 global using AnimalBattle.Components;
 global using AnimalBattle.Configs;

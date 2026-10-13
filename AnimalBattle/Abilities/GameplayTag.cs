@@ -1,4 +1,4 @@
-namespace AnimalBattle.Ai.Abilities;
+namespace AnimalBattle.Abilities;
 
 /// <summary>
 ///     戦闘状態および能力の制約を表す 64 ビット型安全タグフラグです。
@@ -21,7 +21,7 @@ public enum GameplayTag : ulong {
     /// <summary>攻撃後隙硬直中。</summary>
     Recovery = 1UL << 3,
 
-    /// <summary>剛体。</summary>
+    /// <summary>剛体（スーパーアーマー）。</summary>
     SuperArmor = 1UL << 4,
 
     /// <summary>完全無敵。</summary>
@@ -40,5 +40,18 @@ public enum GameplayTag : ulong {
     Stunned = 1UL << 9,
 
     /// <summary>打断中断状態。</summary>
-    Interrupted = 1UL << 10
+    Interrupted = 1UL << 10,
+
+    // ===== UE 风格 Cooldown 标签体系 =====
+    /// <summary>全局公共冷却（Global Cooldown，防止同一帧或短时间内瞬间连发）。</summary>
+    CooldownGlobal = 1UL << 11,
+
+    /// <summary>近戦技能組冷却（近接技全体の連続使用を抑制）。</summary>
+    CooldownMelee = 1UL << 12,
+
+    /// <summary>遠隔・弾幕技能組冷却（弾幕密度と射撃リズムを統制）。</summary>
+    CooldownRanged = 1UL << 13,
+
+    /// <summary>大技・高脅威技能組冷却（必殺・位移大技の頻度を抑制）。</summary>
+    CooldownHeavy = 1UL << 14
 }
