@@ -19,20 +19,3 @@ public enum PooledEntityType : byte {
     /// <summary>近接斬撃や判定を伴うエリアエフェクト。</summary>
     AreaEffect = 4
 }
-
-/// <summary>
-///     プール管理対象エンティティであることを示す識別コンポーネント。
-///     リサイクル時に対応するプールへの返却を O(1) で判定します。
-/// </summary>
-public readonly record struct PooledEntity(PooledEntityType PoolType);
-
-/// <summary>
-///     エンティティのプール貸出状態および所属プール代際を識別するコンポーネント。
-/// </summary>
-public struct PoolLeaseState {
-    /// <summary>所属プールの固有識別子。</summary>
-    public ulong PoolId;
-
-    /// <summary>現在貸出中かどうか。</summary>
-    public bool IsRented;
-}

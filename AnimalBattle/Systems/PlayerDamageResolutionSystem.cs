@@ -21,14 +21,14 @@ public static class PlayerDamageResolutionSystem
     /// <returns>登録済みワールド</returns>
     public static World AddPlayerDamageResolutionSystem(this World world)
     {
-        world.System<Health, IncomingDamage, InvincibleOnHit, HitFlashConfig, Transform, Velocity, CollisionBox, SpringScale, Sprite>("PlayerDamageResolutionSystem")
+        world.System<Health, IncomingDamage, InvincibleOnHit, HitFlashSettings, Transform, Velocity, CollisionBox, SpringScale, Sprite>("PlayerDamageResolutionSystem")
             .With<PlayerTag>()
             .Kind(Ecs.OnValidate)
             .Iter((Iter it,
                 Field<Health> hps,
                 Field<IncomingDamage> damages,
                 Field<InvincibleOnHit> invConfigs,
-                Field<HitFlashConfig> flashConfigs,
+                Field<HitFlashSettings> flashConfigs,
                 Field<Transform> transforms,
                 Field<Velocity> velocities,
                 Field<CollisionBox> collisionBoxes,

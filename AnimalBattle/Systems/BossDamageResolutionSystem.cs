@@ -20,14 +20,14 @@ public static class BossDamageResolutionSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddBossDamageResolutionSystem(this World world)
     {
-        world.System<Health, IncomingDamage, InvincibleOnHit, HitFlashConfig, Transform, BossCombatState, Sprite>("BossDamageResolutionSystem")
+        world.System<Health, IncomingDamage, InvincibleOnHit, HitFlashSettings, Transform, BossCombatState, Sprite>("BossDamageResolutionSystem")
             .With<BossTag>()
             .Kind(Ecs.OnValidate)
             .Iter((Iter it,
                 Field<Health> hps,
                 Field<IncomingDamage> damages,
                 Field<InvincibleOnHit> invConfigs,
-                Field<HitFlashConfig> flashConfigs,
+                Field<HitFlashSettings> flashConfigs,
                 Field<Transform> transforms,
                 Field<BossCombatState> combats,
                 Field<Sprite> sprites) =>

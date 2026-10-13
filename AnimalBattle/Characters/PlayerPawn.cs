@@ -23,7 +23,7 @@ public sealed class PlayerPawn : Pawn
 
         Entity.Set(new Health(pCfg.MaxHp))
            .Set(new InvincibleOnHit(pCfg.InvincibleDuration))
-           .Set(new HitFlashConfig(pCfg.HitFlashDuration, Color.White))
+           .Set(new HitFlashSettings(pCfg.HitFlashDuration, Color.White))
            .Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
            .Set(new Velocity(0.0f))
            .Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight))

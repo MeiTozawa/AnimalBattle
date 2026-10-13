@@ -23,7 +23,7 @@ public readonly struct ComponentRequirementsModule : IFlecsModule {
            .Add(Ecs.With, world.Component<CollisionBox>().Entity)
            .Add(Ecs.With, world.Component<Health>().Entity)
            .Add(Ecs.With, world.Component<InvincibleOnHit>().Entity)
-           .Add(Ecs.With, world.Component<HitFlashConfig>().Entity)
+           .Add(Ecs.With, world.Component<HitFlashSettings>().Entity)
            .Add(Ecs.With, world.Component<Sprite>().Entity)
            .Add(Ecs.With, world.Component<Animation>().Entity)
            .Add(Ecs.With, world.Component<DashState>().Entity)
@@ -35,7 +35,7 @@ public readonly struct ComponentRequirementsModule : IFlecsModule {
            .Add(Ecs.With, world.Component<Velocity>().Entity)
            .Add(Ecs.With, world.Component<Health>().Entity)
            .Add(Ecs.With, world.Component<InvincibleOnHit>().Entity)
-           .Add(Ecs.With, world.Component<HitFlashConfig>().Entity)
+           .Add(Ecs.With, world.Component<HitFlashSettings>().Entity)
            .Add(Ecs.With, world.Component<BossCombatState>().Entity);
 
         // Boss 2 (Ground Crusher) 専用コンポーネント群

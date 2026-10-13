@@ -104,7 +104,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     {
         entity.Set(new Health(maxHp))
            .Set(new InvincibleOnHit(0.0f))
-           .Set(new HitFlashConfig(hitFlashDuration, ColorPalette.White))
+           .Set(new HitFlashSettings(hitFlashDuration, ColorPalette.White))
            .Set(new Transform(spawnX, spawnY, scaleX, scaleY))
            .Set(new Velocity(0.0f))
            .Set(new Hurtbox(hurtboxShape, Faction.Hostile))
