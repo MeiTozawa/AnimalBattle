@@ -48,10 +48,6 @@ public readonly struct AttackActionStep(
     public static AttackActionStep CreateBullet(int index, float speed, float count, float spread, float triggerTime) =>
         new(AttackActionKind.Bullet, index, speed, count, spread, triggerTime);
 
-    /// <summary>音効再生アクションステップを生成します。</summary>
-    public static AttackActionStep CreateAudio(int index, int soundId, float volume, float triggerTime) =>
-        new(AttackActionKind.AudioCue, index, soundId, volume, 0.0f, triggerTime);
-
     /// <summary>画面振動アクションステップを生成します。</summary>
     public static AttackActionStep CreateScreenShake(int index, float intensity, float duration, float triggerTime) =>
         new(AttackActionKind.ScreenShake, index, intensity, duration, 0.0f, triggerTime);

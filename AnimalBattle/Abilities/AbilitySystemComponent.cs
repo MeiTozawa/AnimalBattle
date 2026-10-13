@@ -7,11 +7,10 @@ namespace AnimalBattle.Abilities;
 
 /// <summary>
 ///     UE GAS 準拠：エンティティの技能登録、時限タグおよび冷却管理、状態タグ判定、および能力時序推進を一元管理する汎用コンポーネントです。
-///     能力は AbilitySpecHandle または動的 AbilityTag（StringId）によって管理・駆動され、全域 Enum への依存を持ちません。
+///     能力は動的 AbilityTag（StringId）によって管理・駆動され、全域 Enum への依存を持ちません。
 /// </summary>
 public sealed class AbilitySystemComponent {
-    private readonly Dictionary<AbilitySpecHandle, GameplayAbility> _abilities = new();
-    private readonly Dictionary<StringId, AbilitySpecHandle> _tagIndex = new();
+    private readonly Dictionary<StringId, GameplayAbility> _abilities = new();
     private readonly CooldownTracker _cooldownTracker = new();
 
     /// <summary>戦闘タグコンテナを取得します。</summary>
@@ -41,46 +40,26 @@ public sealed class AbilitySystemComponent {
     /// <summary>近接判定生成イベント。</summary>
     public event Action<StringId, float, float>? OnCreateHitbox;
 
-    /// <summary>音効再生イベント。</summary>
-    public event Action<int, float>? OnPlayAudio;
-
     /// <summary>画面振動イベント。</summary>
     public event Action<float, float>? OnScreenShake;
 
     /// <summary>技能完了通知イベント。</summary>
     public event Action<StringId>? OnSkillCompleted;
 
-    /// <summary>能力をコンポーネントに付与・登録し、一意のスペックハンドルを返します。</summary>
-    public AbilitySpecHandle GiveAbility(GameplayAbility ability)
+    /// <summary>能力をコンポーネントに付与・登録します。</summary>
+    public void GiveAbility(GameplayAbility ability)
     {
         ArgumentNullException.ThrowIfNull(ability);
 
-        var handle = AbilitySpecHandle.Generate();
-        _abilities[handle] = ability;
-
         if (!ability.AbilityTag.IsEmpty)
         {
-            _tagIndex[ability.AbilityTag] = handle;
+            _abilities[ability.AbilityTag] = ability;
         }
-
-        return handle;
     }
-
-    /// <summary>スペックハンドルによって登録済み能力を取得します。</summary>
-    public bool TryGetAbility(AbilitySpecHandle handle, out GameplayAbility? ability) =>
-        _abilities.TryGetValue(handle, out ability);
 
     /// <summary>技能識別タグによって登録済み能力を取得します（UE GAS 準拠）。</summary>
-    public bool TryGetAbility(StringId abilityTag, out GameplayAbility? ability)
-    {
-        if (_tagIndex.TryGetValue(abilityTag, out var handle))
-        {
-            return _abilities.TryGetValue(handle, out ability);
-        }
-
-        ability = null;
-        return false;
-    }
+    public bool TryGetAbility(StringId abilityTag, out GameplayAbility? ability) =>
+        _abilities.TryGetValue(abilityTag, out ability);
 
     /// <summary>戦闘タグを直接付与します。</summary>
     public void AddTag(GameplayTag tag)
@@ -105,25 +84,11 @@ public sealed class AbilitySystemComponent {
     public bool HasAnyTag(GameplayTag tag) => Tags.HasAny(tag);
 
     /// <summary>
-    ///     スペックハンドルを指定して技能の発動を試行します。
-    /// </summary>
-    public bool TryActivateAbility(AbilitySpecHandle handle, float direction = 1.0f)
-    {
-        if (!_abilities.TryGetValue(handle, out var ability))
-        {
-            Debug.Assert(false, $"[ASC] 未登録のハンドルを発動しようとしました: {handle}");
-            return false;
-        }
-
-        return InternalActivateAbility(ability, direction);
-    }
-
-    /// <summary>
     ///     技能識別タグを指定して技能の発動を試行します（UE GAS 準拠）。
     /// </summary>
     public bool TryActivateAbility(StringId abilityTag, float direction = 1.0f)
     {
-        if (!_tagIndex.TryGetValue(abilityTag, out var handle) || !_abilities.TryGetValue(handle, out var ability))
+        if (!_abilities.TryGetValue(abilityTag, out var ability))
         {
             Debug.Assert(false, $"[ASC] 未登録のタグを発動しようとしました: {abilityTag}");
             return false;
@@ -240,10 +205,6 @@ public sealed class AbilitySystemComponent {
             case AttackActionKind.Hitbox:
             case AttackActionKind.OnGroundedHitbox:
                 OnCreateHitbox?.Invoke(currentTag, step.Param0 * dir, step.Param1);
-                break;
-
-            case AttackActionKind.AudioCue:
-                OnPlayAudio?.Invoke((int)step.Param0, step.Param1);
                 break;
 
             case AttackActionKind.ScreenShake:

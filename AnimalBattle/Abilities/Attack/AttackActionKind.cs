@@ -20,9 +20,6 @@ public enum AttackActionKind {
     /// <summary>接地時に判定を生成するイベント駆動アクションです。</summary>
     OnGroundedHitbox, // = 6
 
-    /// <summary>音効 Cue を発行する表現層アクションです。</summary>
-    AudioCue, // = 7
-
     /// <summary>画面振動をトリガーする表現層アクションです。</summary>
-    ScreenShake // = 8
+    ScreenShake // = 7
 }
