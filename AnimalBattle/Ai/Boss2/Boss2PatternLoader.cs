@@ -2,6 +2,7 @@ using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
 using AnimalBattle.Configs;
+using AnimalBattle.Render;
 using ErrorOr;
 
 namespace AnimalBattle.Ai.Boss2;
@@ -93,7 +94,39 @@ public static class Boss2PatternLoader {
         if (defResult.IsError) return defResult.Errors;
 
         var cooldownTags = ResolveCooldownTags(skill);
-        return new TimelineAttackAbility(skill, defResult.Value, cooldown, cooldownTags);
+        var telegraphRenderer = ResolveTelegraphRenderer(skill, config);
+        return new TimelineAttackAbility(skill, defResult.Value, cooldown, cooldownTags, telegraphRenderer: telegraphRenderer);
+    }
+
+    /// <summary>
+    ///     技能識別子に対応する前兆演出レンダラーを取得します。
+    /// </summary>
+    public static Action<AbilityTelegraphContext>? ResolveTelegraphRenderer(AbilityId skill, Boss2PatternConfig pattern2)
+    {
+        return skill switch {
+            AbilityId.GroundStomp => ctx => {
+                var b2Cfg = ConfigManager.Boss2;
+                var groundY = ctx.BossY + b2Cfg.CollisionHeight / 2.0f;
+                TelegraphRenderHelper.DrawGroundShockwaveRails((int)ctx.BossX, groundY, ctx.Progress, pattern2.GroundStomp.TelegraphColor);
+            },
+
+            AbilityId.LeapSmash => ctx => TelegraphRenderHelper.DrawLeapSmashTelegraph(
+                ctx.TargetX, ctx.TargetY, ctx.Progress, pattern2.LeapSmash.TelegraphColor),
+
+            AbilityId.EarthquakeRoar => ctx => TelegraphRenderHelper.DrawSkyfallColumns(
+                pattern2.EarthquakeRoar.MinX, pattern2.EarthquakeRoar.MaxX, 5, 650.0f, ctx.Progress, pattern2.EarthquakeRoar.TelegraphColor, "▼ ROCK ▼"),
+
+            AbilityId.FrenzyCharge => ctx => TelegraphRenderHelper.DrawChargeDangerTrack(
+                (int)ctx.BossX, (int)ctx.BossY, ConfigManager.Boss2.CollisionHeight, ctx.FacingRight, ctx.Progress, pattern2.FrenzyCharge.TelegraphColor),
+
+            AbilityId.DoubleCleave => ctx => TelegraphRenderHelper.DrawMeleeDangerBox(
+                (int)ctx.BossX, (int)ctx.BossY, pattern2.DoubleCleave.SlashRangeX, pattern2.DoubleCleave.SlashRangeY, ctx.FacingRight, ctx.Progress, pattern2.DoubleCleave.TelegraphColor),
+
+            AbilityId.HeavySlash => ctx => TelegraphRenderHelper.DrawMeleeDangerBox(
+                (int)ctx.BossX, (int)ctx.BossY, pattern2.HeavySlash.SlashRangeX, pattern2.HeavySlash.SlashRangeY, ctx.FacingRight, ctx.Progress, pattern2.HeavySlash.TelegraphColor),
+
+            _ => null
+        };
     }
 
     /// <summary>

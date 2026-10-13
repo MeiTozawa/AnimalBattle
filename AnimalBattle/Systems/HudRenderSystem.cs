@@ -119,7 +119,7 @@ public static class HudRenderSystem {
 
         var phase = ToLegacyPhase(boss.Phase);
         var bossTitle = GetBossTitle(boss.BossType, phase);
-        GetBossStateInfo(boss.CurrentState, boss.CurrentSkill, hpCfg, out var stateName, out var stateBadgeColor);
+        GetBossStateInfo(boss, hpCfg, out var stateName, out var stateBadgeColor);
         DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, boss.CurrentHp, boss.MaxHp, phase,
             boss.StateTimer, boss.StateDuration);
     }
@@ -154,17 +154,25 @@ public static class HudRenderSystem {
         _ => AssertHelper.FailWithDefault("[HUD 警告] 未知のフェーズ", 1)
     };
 
-    private static void GetBossStateInfo(BossState state, AbilityId skill, BossHpBarRenderConfig hpCfg,
+    private static void GetBossStateInfo(BaseBossAgent boss, BossHpBarRenderConfig hpCfg,
         out string stateName, out Color badgeColor)
     {
+        var state = boss.CurrentState;
+        var currentAbility = boss.AbilitySystem.CurrentAbility;
+        var abilityName = currentAbility?.DisplayName;
+        if (string.IsNullOrEmpty(abilityName))
+        {
+            abilityName = boss.CurrentSkill != AbilityId.None ? boss.CurrentSkill.ToString() : "None";
+        }
+
         (stateName, badgeColor) = state switch {
             { IsDead: true } => ("[STATE: DEFEATED]", ColorPalette.Gray),
             { IsPhaseTransition: true } => ("[STATE: PHASE TRANSITION]", hpCfg.StatePhaseTransitionColor),
             { IsRecovery: true } => ("[STATE: RECOVERING]", hpCfg.StateRecoveringColor),
             _ when state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.WallCrashStun =>
                 ("[STATE: WALL CRASH STUNNED]", ColorPalette.Gold),
-            { IsTelegraph: true } => (EnumStringLut.GetTelegraphBadge(skill), hpCfg.StateTelegraphingColor),
-            { IsExecute: true } => (EnumStringLut.GetExecuteBadge(skill), hpCfg.StateCastingColor),
+            { IsTelegraph: true } => ($"[STATE: TELEGRAPHING (WIND-UP: {abilityName})]", hpCfg.StateTelegraphingColor),
+            { IsExecute: true } => ($"[STATE: EXECUTING ({abilityName})]", hpCfg.StateCastingColor),
             _ => state.BossType switch {
                 BossType.Boss1 => state.AsBoss1() switch {
                     Boss1State.Hover => ("[STATE: HOVERING (IDLE)]", hpCfg.StateDefaultColor),
@@ -173,7 +181,7 @@ public static class HudRenderSystem {
                 },
                 BossType.Boss2 => state.AsBoss2() switch {
                     Boss2State.Idle => ("[STATE: IDLE / ALERT]", hpCfg.StateDefaultColor),
-                    Boss2State.PatrolChase => (EnumStringLut.GetBoss2ChaseBadge(skill), hpCfg.StateDefaultColor),
+                    Boss2State.PatrolChase => ($"[STATE: CHASE (NEXT: {abilityName})]", hpCfg.StateDefaultColor),
                     Boss2State.MoveToTakeoff => ("[STATE: NAVIGATING TO TAKEOFF]", hpCfg.StateDefaultColor),
                     Boss2State.PlatformTraverse => ("[STATE: PLATFORM TRAVERSE (AIRBORNE)]", hpCfg.StateDefaultColor),
                     _ => (AssertHelper.FailWithDefault("[HUD 警告] 未知のステート", "[STATE: UNKNOWN]"), hpCfg.StateDefaultColor)

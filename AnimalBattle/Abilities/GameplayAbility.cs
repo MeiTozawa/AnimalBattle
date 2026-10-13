@@ -94,4 +94,10 @@ public abstract class GameplayAbility {
     ///     技能が中断・打断された際のキャンセル処理を実行します。
     /// </summary>
     public virtual void CancelAbility(AbilitySystemComponent asc) { }
+
+    /// <summary>
+    ///     技能の前兆（Telegraph）演出を描画します。
+    ///     UE GAS 準拠：技能自身がその視覚表現の責務を持ちます。
+    /// </summary>
+    public virtual void DrawTelegraph(in AbilityTelegraphContext ctx) { }
 }

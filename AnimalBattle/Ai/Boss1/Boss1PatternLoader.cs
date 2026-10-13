@@ -2,6 +2,7 @@ using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
 using AnimalBattle.Configs;
+using AnimalBattle.Render;
 using ErrorOr;
 
 namespace AnimalBattle.Ai.Boss1;
@@ -114,7 +115,50 @@ public static class Boss1PatternLoader {
         if (defResult.IsError) return defResult.Errors;
 
         var cooldownTags = ResolveCooldownTags(skill);
-        return new TimelineAttackAbility(skill, defResult.Value, cooldown, cooldownTags);
+        var telegraphRenderer = ResolveTelegraphRenderer(skill, config);
+        return new TimelineAttackAbility(skill, defResult.Value, cooldown, cooldownTags, telegraphRenderer: telegraphRenderer);
+    }
+
+    /// <summary>
+    ///     技能識別子に対応する前兆演出レンダラーを取得します。
+    /// </summary>
+    public static Action<AbilityTelegraphContext>? ResolveTelegraphRenderer(AbilityId skill, Boss1PatternConfig pattern1)
+    {
+        return skill switch {
+            AbilityId.Aimed3Shot => ctx => TelegraphRenderHelper.DrawAimingLasers(
+                ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY,
+                pattern1.Aimed3Shot.SpreadAngle, pattern1.Aimed3Shot.BulletCount,
+                ctx.Progress, pattern1.Aimed3Shot.TelegraphColor),
+
+            AbilityId.FastSniper => ctx => TelegraphRenderHelper.DrawAimingLasers(
+                ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY,
+                0.0f, 1, ctx.Progress, pattern1.FastSniper.TelegraphColor, true),
+
+            AbilityId.DiveRam => ctx => TelegraphRenderHelper.DrawDiveRamTelegraph(
+                ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY,
+                pattern1.DiveRam.ImpactRadius, ctx.Progress, pattern1.DiveRam.TelegraphColor),
+
+            AbilityId.RingBurst => ctx => TelegraphRenderHelper.DrawRadialThreatSpikes(
+                ctx.BossX, ctx.BossY, pattern1.RingBurst.BulletCount,
+                0.0f, 75.0f, ctx.Progress, pattern1.RingBurst.TelegraphColor),
+
+            AbilityId.DoubleSpiral => ctx => {
+                var spiralAngle = ctx.StateTimer * 4.0f;
+                TelegraphRenderHelper.DrawRadialThreatSpikes(
+                    ctx.BossX, ctx.BossY, 2, spiralAngle, 90.0f, ctx.Progress, pattern1.DoubleSpiral.TelegraphColor);
+            },
+
+            AbilityId.RainDrop => ctx => TelegraphRenderHelper.DrawSkyfallColumns(
+                pattern1.RainDrop.MinX, pattern1.RainDrop.MaxX, 6, 650.0f, ctx.Progress, pattern1.RainDrop.TelegraphColor, "▼ RAIN ▼"),
+
+            AbilityId.CrossChaos => ctx => {
+                var crossAngle = ctx.StateTimer * 2.5f;
+                TelegraphRenderHelper.DrawRadialThreatSpikes(
+                    ctx.BossX, ctx.BossY, 4, crossAngle, 110.0f, ctx.Progress, pattern1.CrossChaos.TelegraphColor);
+            },
+
+            _ => null
+        };
     }
 
     /// <summary>

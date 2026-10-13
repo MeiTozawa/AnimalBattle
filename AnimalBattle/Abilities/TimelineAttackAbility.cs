@@ -1,10 +1,12 @@
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Abilities;
 
 /// <summary>
 ///     前隙（Telegraph）、判定（Active）、後隙（Recovery）の三段階時序を持つ戦闘招式能力です。
+///     自身の前兆視覚表現（TelegraphRenderer）を内包し、表現層の switch-case 依存を排除します。
 /// </summary>
 public sealed class TimelineAttackAbility : GameplayAbility {
     /// <summary>検証済みの不変時序定義を取得します。</summary>
@@ -13,32 +15,55 @@ public sealed class TimelineAttackAbility : GameplayAbility {
     /// <summary>時序推進ランナーを取得します。</summary>
     public SkillRunner Runner { get; } = new();
 
+    /// <summary>前兆（Telegraph）描画処理デリゲートを取得または設定します。</summary>
+    public Action<AbilityTelegraphContext>? TelegraphRenderer { get; init; }
+
     /// <summary>
-    ///     時序攻撃能力を初期化します。
+    ///     時序攻撃能力を初期化します（UE GAS 準拠：StringId 識別）。
     /// </summary>
-    /// <param name="id">能力識別子。</param>
-    /// <param name="timeline">攻撃時序定義。</param>
-    /// <param name="cooldown">冷却時間（秒）。</param>
-    /// <param name="cooldownTags">冷却期間中に自身へ付与されるタグ（CooldownMelee, CooldownRanged 等）。</param>
-    /// <param name="requiredTags">発動に必要なタグ制約。</param>
-    /// <param name="blockedTags">発動を阻害するタグ制約。</param>
     public TimelineAttackAbility(
-        AbilityId id,
+        StringId tag,
         AttackDefinition timeline,
         float cooldown = 0.0f,
         GameplayTag cooldownTags = GameplayTag.None,
         GameplayTag requiredTags = GameplayTag.None,
-        GameplayTag blockedTags = GameplayTag.Stunned)
+        GameplayTag blockedTags = GameplayTag.Stunned,
+        string? displayName = null,
+        Action<AbilityTelegraphContext>? telegraphRenderer = null)
     {
         ArgumentNullException.ThrowIfNull(timeline);
 
-        AbilityId = id;
+        AbilityTag = tag;
+        DisplayName = displayName ?? tag.ToString();
+        TelegraphRenderer = telegraphRenderer;
         Timeline = timeline;
         Cooldown = cooldown;
         CooldownTags = cooldownTags;
         RequiredTags = requiredTags;
         BlockedTags = blockedTags;
         ActivationOwnedTags = GameplayTag.Casting;
+    }
+
+    /// <summary>
+    ///     互換性コンストラクタ：能力識別子を指定して初期化します。
+    /// </summary>
+    public TimelineAttackAbility(
+        AbilityId id,
+        AttackDefinition timeline,
+        float cooldown = 0.0f,
+        GameplayTag cooldownTags = GameplayTag.None,
+        GameplayTag requiredTags = GameplayTag.None,
+        GameplayTag blockedTags = GameplayTag.Stunned,
+        Action<AbilityTelegraphContext>? telegraphRenderer = null)
+        : this(new StringId(id.ToString()), timeline, cooldown, cooldownTags, requiredTags, blockedTags, id.ToString(), telegraphRenderer)
+    {
+        AbilityId = id;
+    }
+
+    /// <inheritdoc />
+    public override void DrawTelegraph(in AbilityTelegraphContext ctx)
+    {
+        TelegraphRenderer?.Invoke(ctx);
     }
 
     /// <inheritdoc />
