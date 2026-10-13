@@ -55,9 +55,9 @@ public sealed class Boss1Brain : BaseBossBrain {
                 if (_reactionMachine.CurrentState == _phaseTransitionState) return Boss1State.PhaseTransition;
             }
 
-            if (_combatMachine.CurrentState == _abilityState && _asc.SkillRunner is { } runner)
+            if (_combatMachine.CurrentState == _abilityState && _asc.IsCasting)
             {
-                return runner.CurrentPhase switch {
+                return _asc.CurrentPhase switch {
                     SkillPhase.Telegraph => Boss1State.Telegraph,
                     SkillPhase.Active => Boss1State.Execute,
                     SkillPhase.Recovery => Boss1State.Recovery,
@@ -81,9 +81,9 @@ public sealed class Boss1Brain : BaseBossBrain {
                 return phaseCfg.TransitionDuration;
             }
 
-            if (_combatMachine.CurrentState == _abilityState && _asc.SkillRunner is { } runner)
+            if (_combatMachine.CurrentState == _abilityState && _asc.IsCasting)
             {
-                return runner.PhaseDuration;
+                return _asc.PhaseDuration;
             }
 
             return phaseCfg.HoverDuration;
@@ -274,10 +274,9 @@ public sealed class Boss1Brain : BaseBossBrain {
     {
         if (CurrentSkillTag == _configuration.DiveSkillTag)
         {
-            if (_asc.SkillRunner?.CurrentPhase == SkillPhase.Active)
+            if (_asc.CurrentPhase == SkillPhase.Active)
             {
-                var duration = Math.Max(0.01f, _asc.SkillRunner.PhaseDuration);
-                var progress = Math.Clamp(_asc.SkillRunner.PhaseElapsed / duration, 0.0f, 1.0f);
+                var progress = _asc.PhaseProgress;
                 var easeProgress = EasingMath.Evaluate(EaseType.InQuad, progress);
 
                 _currentPosition = new Vec2f(

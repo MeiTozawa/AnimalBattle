@@ -15,6 +15,20 @@ public sealed class TimelineAttackAbility : GameplayAbility {
     /// <summary>時序推進ランナーを取得します。</summary>
     public SkillRunner Runner { get; } = new();
 
+    /// <inheritdoc />
+    public override SkillPhase CurrentPhase => Runner.CurrentPhase;
+
+    /// <inheritdoc />
+    public override float PhaseElapsed => Runner.PhaseElapsed;
+
+    /// <inheritdoc />
+    public override float PhaseDuration => Runner.PhaseDuration;
+
+    /// <inheritdoc />
+    public override float PhaseProgress => Runner.PhaseDuration > 0.0f
+        ? Math.Clamp(Runner.PhaseElapsed / Runner.PhaseDuration, 0.0f, 1.0f)
+        : 0.0f;
+
     /// <summary>前兆（Telegraph）描画処理デリゲートを取得または設定します。</summary>
     public Action<AbilityTelegraphContext>? TelegraphRenderer { get; init; }
 

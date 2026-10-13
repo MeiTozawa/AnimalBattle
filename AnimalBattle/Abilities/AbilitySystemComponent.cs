@@ -6,7 +6,7 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Abilities;
 
 /// <summary>
-///     UE GAS 準拠：エンティティの技能登録、時限タグおよび冷却管理、状態タグ判定、および能力時序推進を一元管理する汎用コンポーネントです。
+///     エンティティの技能登録、時限タグおよび冷却管理、状態タグ判定、および能力時序推進を一元管理する汎用コンポーネントです。
 ///     能力は動的 AbilityTag（StringId）によって管理・駆動され、全域 Enum への依存を持ちません。
 /// </summary>
 public sealed class AbilitySystemComponent {
@@ -25,8 +25,17 @@ public sealed class AbilitySystemComponent {
     /// <summary>後方互換性プロパティ：冷却時間追跡器を取得します。</summary>
     public CooldownTracker CooldownTracker => _cooldownTracker;
 
-    /// <summary>時序技能実行器の参照を取得します（TimelineAttackAbility 発動中のみ有効）。</summary>
-    public SkillRunner? SkillRunner => (CurrentAbility as TimelineAttackAbility)?.Runner;
+    /// <summary>現在発動中の技能フェーズを取得します。</summary>
+    public SkillPhase CurrentPhase => CurrentAbility?.CurrentPhase ?? SkillPhase.None;
+
+    /// <summary>現在フェーズ内の経過時間（秒）を取得します。</summary>
+    public float PhaseElapsed => CurrentAbility?.PhaseElapsed ?? 0.0f;
+
+    /// <summary>現在フェーズの目標持続時間（秒）を取得します。</summary>
+    public float PhaseDuration => CurrentAbility?.PhaseDuration ?? 0.0f;
+
+    /// <summary>現在フェーズの進行度（0.0 ～ 1.0）を取得します。</summary>
+    public float PhaseProgress => CurrentAbility?.PhaseProgress ?? 0.0f;
 
     /// <summary>現在何らかの技能を発動中かどうかを取得します。</summary>
     public bool IsCasting => CurrentAbility != null;

@@ -89,9 +89,9 @@ public sealed class Boss2Brain : BaseBossBrain {
                 if (_reactionMachine.CurrentState == _wallCrashStunState) return Boss2State.WallCrashStun;
             }
 
-            if (_combatMachine.CurrentState == _abilityState && _asc.SkillRunner is { } runner)
+            if (_combatMachine.CurrentState == _abilityState && _asc.IsCasting)
             {
-                return runner.CurrentPhase switch {
+                return _asc.CurrentPhase switch {
                     SkillPhase.Telegraph => Boss2State.Telegraph,
                     SkillPhase.Active => Boss2State.Execute,
                     SkillPhase.Recovery => Boss2State.Recovery,
@@ -123,9 +123,9 @@ public sealed class Boss2Brain : BaseBossBrain {
                 return 0.0f;
             }
 
-            if (_combatMachine.CurrentState == _abilityState && _asc.SkillRunner is { } runner)
+            if (_combatMachine.CurrentState == _abilityState && _asc.IsCasting)
             {
-                return runner.PhaseDuration;
+                return _asc.PhaseDuration;
             }
 
             if (_combatMachine.CurrentState == _idleState) return phaseCfg.IdleDuration;
@@ -523,7 +523,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     private void UpdateAbility(float dt, bool isOnWall, bool isGrounded, Vec2f playerPos)
     {
         if (CurrentSkillTag == _configuration.WallStunSkillTag &&
-            _asc.SkillRunner?.CurrentPhase == SkillPhase.Active &&
+            _asc.CurrentPhase == SkillPhase.Active &&
             isOnWall &&
             MathF.Abs(_currentVelocity.X) > 10.0f)
         {
@@ -541,8 +541,7 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     private void UpdateLeapSmashMotion(float dt, bool isGrounded, Vec2f playerPos)
     {
-        var runner = _asc.SkillRunner;
-        if (runner is null) return;
+        if (!_asc.IsCasting) return;
 
         var patternCfg = ConfigManager.Boss2Patterns.LeapSmash;
         var flyDuration = patternCfg.FlyDuration;
@@ -550,7 +549,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         var hangDuration = patternCfg.ApexHangDuration;
         var descentSpeed = patternCfg.DescentSpeed;
 
-        if (runner.CurrentPhase == SkillPhase.Telegraph)
+        if (_asc.CurrentPhase == SkillPhase.Telegraph)
         {
             _currentVelocity = Vec2f.Zero;
             LockLeapSmashTarget(playerPos.X, playerPos.Y);
@@ -563,9 +562,9 @@ public sealed class Boss2Brain : BaseBossBrain {
             return;
         }
 
-        if (runner.CurrentPhase == SkillPhase.Active)
+        if (_asc.CurrentPhase == SkillPhase.Active)
         {
-            var elapsed = runner.PhaseElapsed;
+            var elapsed = _asc.PhaseElapsed;
 
             // 1. 上昇飛翔フェーズ (0.0 ～ FlyDuration)
             if (elapsed < flyDuration)
@@ -608,7 +607,7 @@ public sealed class Boss2Brain : BaseBossBrain {
             return;
         }
 
-        if (runner.CurrentPhase == SkillPhase.Recovery)
+        if (_asc.CurrentPhase == SkillPhase.Recovery)
         {
             _currentVelocity = Vec2f.Zero;
         }
