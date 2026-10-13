@@ -1,11 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
-using AnimalBattle.Configs;
 using ErrorOr;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 using Tomlyn.Extensions.Configuration;
 
-namespace AnimalBattle.Core;
+namespace AnimalBattle.Configs;
 
 /// <summary>
 ///     TOML 設定ファイルからの動的読み込み、自動リロード（reloadOnChange）、およびプロパティ設定をサポートする設定コンテナクラス。

@@ -1,6 +1,7 @@
 global using System;
 global using AnimalBattle.Asset;
 global using AnimalBattle.Components;
+global using AnimalBattle.Configs;
 global using AnimalBattle.Core;
 global using AnimalBattle.Core.Geometry;
 global using AnimalBattle.Combat;
