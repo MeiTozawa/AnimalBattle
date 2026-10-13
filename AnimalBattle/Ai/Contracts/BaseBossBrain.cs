@@ -99,7 +99,6 @@ public abstract class BaseBossBrain : IBossBrain
         {
             _stateTimer = 0.0f;
             _asc.InterruptCurrentAbility();
-            RaiseClearBullets();
             if (_pendingPhaseTransition.HasValue)
             {
                 Phase = _pendingPhaseTransition.Value;

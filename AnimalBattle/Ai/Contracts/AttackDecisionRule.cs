@@ -1,3 +1,4 @@
+using AnimalBattle.Configs;
 using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai.Contracts;
@@ -74,4 +75,21 @@ public readonly struct AttackDecisionRule {
         PreferAirborneBonus >= 0.0f &&
         MaxConsecutiveUses >= 0 &&
         ConsecutiveDecay is >= 0.0f and <= 1.0f;
+
+    /// <summary>
+    ///     TOML 意思決定ルール設定から検証済みの意思決定ルールを生成します。
+    /// </summary>
+    public static AttackDecisionRule FromConfig(AttackRuleConfig config)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+        return new AttackDecisionRule(
+            new StringId(config.Skill),
+            config.Cooldown,
+            config.MinDistance,
+            config.MaxDistance,
+            config.Weight,
+            config.RequireSamePlatform,
+            config.RequirePlayerGrounded,
+            config.PreferAirborneBonus > 0.0f ? config.PreferAirborneBonus : 1.0f);
+    }
 }

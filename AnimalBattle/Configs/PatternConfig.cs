@@ -3,7 +3,6 @@ using System.Drawing;
 using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
-using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Combat;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
@@ -39,7 +38,7 @@ public sealed class SkillEventConfig {
 /// <summary>
 ///     俯衝突進・メテオダイブ技能の設定クラス。
 /// </summary>
-public sealed class DiveRamConfig : IBoss1SkillPatternConfig {
+public sealed class DiveRamConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -109,10 +108,6 @@ public sealed class DiveRamConfig : IBoss1SkillPatternConfig {
         => ctx => TelegraphRenderHelper.DrawDiveRamTelegraph(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, ImpactRadius, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
-        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, dashSpeed: DashSpeed, easeType: EaseType);
-
-    /// <inheritdoc />
     public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
         => BarrageEmitter.EmitDiveImpact(world, this, origin);
 
@@ -123,7 +118,7 @@ public sealed class DiveRamConfig : IBoss1SkillPatternConfig {
 /// <summary>
 ///     自機狙い 3 連射技能の設定クラス。
 /// </summary>
-public sealed class Aimed3ShotConfig : IBoss1SkillPatternConfig {
+public sealed class Aimed3ShotConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -184,10 +179,6 @@ public sealed class Aimed3ShotConfig : IBoss1SkillPatternConfig {
         => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, SpreadAngle, BulletCount, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
-        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, BulletCount, SpreadAngle);
-
-    /// <inheritdoc />
     public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
         BarrageEmitter.EmitAimedSpread(world, this, origin, target);
@@ -201,7 +192,7 @@ public sealed class Aimed3ShotConfig : IBoss1SkillPatternConfig {
 /// <summary>
 ///     16 方向全方位リング弾幕技能の設定クラス。
 /// </summary>
-public sealed class RingBurstConfig : IBoss1SkillPatternConfig {
+public sealed class RingBurstConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -262,10 +253,6 @@ public sealed class RingBurstConfig : IBoss1SkillPatternConfig {
         => ctx => TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.BossX, ctx.BossY, BulletCount, 0.0f, 75.0f, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
-        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, BulletCount, AngleStep);
-
-    /// <inheritdoc />
     public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
         BarrageEmitter.EmitRadialRing(world, this, origin, ref angleOffset);
@@ -279,7 +266,7 @@ public sealed class RingBurstConfig : IBoss1SkillPatternConfig {
 /// <summary>
 ///     双螺旋回転弾幕技能の設定クラス。
 /// </summary>
-public sealed class DoubleSpiralConfig : IBoss1SkillPatternConfig {
+public sealed class DoubleSpiralConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -346,10 +333,6 @@ public sealed class DoubleSpiralConfig : IBoss1SkillPatternConfig {
         };
 
     /// <inheritdoc />
-    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
-        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, 2, AngleStep);
-
-    /// <inheritdoc />
     public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
         BarrageEmitter.EmitDoubleSpiral(world, this, origin, ref angleOffset);
@@ -363,7 +346,7 @@ public sealed class DoubleSpiralConfig : IBoss1SkillPatternConfig {
 /// <summary>
 ///     降雨弾幕技能の設定クラス。
 /// </summary>
-public sealed class RainDropConfig : IBoss1SkillPatternConfig {
+public sealed class RainDropConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -433,10 +416,6 @@ public sealed class RainDropConfig : IBoss1SkillPatternConfig {
         => ctx => TelegraphRenderHelper.DrawSkyfallColumns(MinX, MaxX, TelegraphColumnCount, TelegraphColumnHeight, ctx.Progress, TelegraphColor, TelegraphWarningText);
 
     /// <inheritdoc />
-    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
-        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, 2, 0.0f, MinX, MaxX);
-
-    /// <inheritdoc />
     public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
         BarrageEmitter.EmitRainDrop(world, this);
@@ -450,7 +429,7 @@ public sealed class RainDropConfig : IBoss1SkillPatternConfig {
 /// <summary>
 ///     全方位交差波弾幕技能の設定クラス。
 /// </summary>
-public sealed class CrossChaosConfig : IBoss1SkillPatternConfig {
+public sealed class CrossChaosConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -511,10 +490,6 @@ public sealed class CrossChaosConfig : IBoss1SkillPatternConfig {
         };
 
     /// <inheritdoc />
-    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
-        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, 4, AngleStep);
-
-    /// <inheritdoc />
     public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
         BarrageEmitter.EmitCrossChaos(world, this, origin, ref angleOffset);
@@ -528,7 +503,7 @@ public sealed class CrossChaosConfig : IBoss1SkillPatternConfig {
 /// <summary>
 ///     高速レーザースナイパー弾幕技能の設定クラス。
 /// </summary>
-public sealed class FastSniperConfig : IBoss1SkillPatternConfig {
+public sealed class FastSniperConfig : IBossSkillPatternConfig {
     /// <summary>技能名</summary>
     public string SkillName { get; set; } = string.Empty;
 
@@ -581,10 +556,6 @@ public sealed class FastSniperConfig : IBoss1SkillPatternConfig {
     /// <inheritdoc />
     public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, 0.0f, 1, ctx.Progress, TelegraphColor, true);
-
-    /// <inheritdoc />
-    public Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag)
-        => new(skillTag, WindUpTime, CastDuration, RecoveryTime, Interval, BulletSpeed, 1);
 
     /// <inheritdoc />
     public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)

@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using AnimalBattle.Abilities;
-using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Ai.Dsl;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 
@@ -62,19 +60,6 @@ public readonly struct Boss2PhaseSettings(
 
     /// <summary>プレイヤー追跡時に遠隔技へ移行するまでのタイムアウト時間（秒）です。</summary>
     public float ChaseTimeout { get; } = chaseTimeout;
-}
-
-/// <summary>Boss2 攻撃の定義と固有パラメータです。</summary>
-/// <remarks>Boss2 攻撃 pattern を生成します。</remarks>
-public sealed class Boss2AttackPattern(StringId skillTag, AttackDefinition definition) {
-    /// <summary>技能識別タグです。</summary>
-    public StringId SkillTag { get; } = skillTag;
-
-    /// <summary>共通 Telegraph/Execute/Recovery 定義です。</summary>
-    public AttackDefinition Definition { get; } = definition;
-
-    /// <summary>設定値が実行可能かどうかを取得します。</summary>
-    public bool IsValid => Definition.IsValid;
 }
 
 /// <summary>Boss2 戦闘判定および追跡・反風筝に関する設定値です。</summary>
@@ -156,9 +141,6 @@ public interface IBoss2Configuration {
     /// <summary>指定 Phase の検証済み設定を取得します。</summary>
     Boss2PhaseSettings GetPhase(Phase phase);
 
-    /// <summary>指定技能タグの検証済み pattern を取得します。</summary>
-    bool GetAttack(StringId skill, out Boss2AttackPattern pattern);
-
     /// <summary>技能タグの既定冷却時間を取得します。</summary>
     float GetSkillDefaultCooldown(StringId skill);
 }
@@ -214,47 +196,8 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
             chaseTimeout);
     }
 
-    private static IReadOnlyList<AttackDecisionRule> ConvertRules(List<AttackRuleConfig>? rules)
-    {
-        if (rules is null || rules.Count == 0) return [];
-        var result = new AttackDecisionRule[rules.Count];
-        for (var i = 0; i < rules.Count; i++)
-        {
-            var r = rules[i];
-            var builder = new DecisionRuleBuilder()
-               .Cooldown(r.Cooldown)
-               .Distance(r.MinDistance, r.MaxDistance)
-               .Weight(r.Weight)
-               .RequireSamePlatform(r.RequireSamePlatform);
-
-            if (r.PreferAirborneBonus > 0.0f) builder.PreferAirborneBonus(r.PreferAirborneBonus);
-            if (r.RequirePlayerGrounded.HasValue) builder.RequirePlayerGrounded(r.RequirePlayerGrounded.Value);
-            result[i] = builder.Build(new StringId(r.Skill));
-        }
-        return result;
-    }
-
-    /// <inheritdoc />
-    public bool GetAttack(StringId skill, out Boss2AttackPattern pattern)
-    {
-        try
-        {
-            var patternCfg = ConfigManager.Boss2Patterns;
-            var defResult = Boss2PatternLoader.BuildAttackDefinition(skill, patternCfg);
-            if (!defResult.IsError)
-            {
-                pattern = new Boss2AttackPattern(skill, defResult.Value);
-                return true;
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.Fail($"[Boss2Configuration 警告] 攻撃パターンの取得中に例外が発生しました: {ex.Message}", ex.ToString());
-        }
-
-        pattern = null!;
-        return false;
-    }
+    private static IReadOnlyList<AttackDecisionRule> ConvertRules(List<AttackRuleConfig>? rules) =>
+        rules?.Select(AttackDecisionRule.FromConfig).ToArray() ?? [];
 
     /// <inheritdoc />
     public Boss2CombatSettings CombatSettings {

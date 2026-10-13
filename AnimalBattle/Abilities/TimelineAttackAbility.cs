@@ -90,7 +90,7 @@ public sealed class TimelineAttackAbility : GameplayAbility {
         {
             case SkillPhase.Telegraph:
                 asc.AddTag(GameplayTag.Telegraph);
-                break;
+            break;
 
             case SkillPhase.Active:
                 asc.AddTag(GameplayTag.Active);
@@ -98,7 +98,7 @@ public sealed class TimelineAttackAbility : GameplayAbility {
                 {
                     asc.AddTag(Timeline.ArmorTag);
                 }
-                break;
+            break;
 
             case SkillPhase.Recovery:
                 asc.AddTag(GameplayTag.Recovery | GameplayTag.Vulnerable);

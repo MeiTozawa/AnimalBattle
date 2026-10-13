@@ -1,7 +1,6 @@
 using System.Drawing;
 using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
-using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Core;
 using ErrorOr;
 
@@ -48,12 +47,4 @@ public interface IBossSkillPatternConfig {
 
     /// <summary>近接判定および派生弾幕を生成します。</summary>
     void SpawnHitbox(Flecs.NET.Core.World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos);
-}
-
-/// <summary>
-///     Boss 1 技能パターン設定の拡張インターフェース（後方互換用）。
-/// </summary>
-public interface IBoss1SkillPatternConfig : IBossSkillPatternConfig {
-    /// <summary>後方互換用 Boss 1 攻撃パターンを生成します。</summary>
-    Boss1AttackPattern BuildLegacyAttackPattern(StringId skillTag);
 }
