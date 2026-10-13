@@ -1,11 +1,35 @@
+using AnimalBattle.Core;
+
 namespace AnimalBattle.Abilities;
 
 /// <summary>
 ///     戦闘技能・能力の実行ライフサイクル、タグ制約、および時序推進を定義する多態基底クラスです。
+///     UE GAS 準拠：能力識別は AbilityTag（StringId）によって動的に行われ、全域 Enum に依存しません。
 /// </summary>
 public abstract class GameplayAbility {
-    /// <summary>技能識別子を取得または初期化します。</summary>
-    public AbilityId AbilityId { get; init; }
+    private AbilityId _abilityId;
+
+    /// <summary>能力の識別タグ（UE の AbilityTags に相当）を取得または初期化します。</summary>
+    public StringId AbilityTag { get; init; } = StringId.Empty;
+
+    /// <summary>HUD やログ等で表示される能力表示名を取得または初期化します。</summary>
+    public string DisplayName { get; init; } = string.Empty;
+
+    /// <summary>互換性プロパティ：技能識別子を取得または初期化します。</summary>
+    public AbilityId AbilityId {
+        get => _abilityId != AbilityId.None ? _abilityId : (Enum.TryParse(AbilityTag.ToString(), true, out AbilityId id) ? id : AbilityId.None);
+        init {
+            _abilityId = value;
+            if (AbilityTag.IsEmpty && value != AbilityId.None)
+            {
+                AbilityTag = new StringId(value.ToString());
+            }
+            if (string.IsNullOrEmpty(DisplayName) && value != AbilityId.None)
+            {
+                DisplayName = value.ToString();
+            }
+        }
+    }
 
     /// <summary>互換性プロパティ：技能識別子を取得します。</summary>
     public AbilityId SkillId => AbilityId;
@@ -41,8 +65,11 @@ public abstract class GameplayAbility {
         if (!asc.Tags.Matches(RequiredTags, BlockedTags | CooldownTags))
             return false;
 
-        // 2. 個別 AbilityId 冷却判定
-        if (!asc.Cooldowns.IsReady(AbilityId))
+        // 2. 個別 AbilityTag / AbilityId 冷却判定
+        if (!AbilityTag.IsEmpty && !asc.Cooldowns.IsReady(AbilityTag))
+            return false;
+
+        if (AbilityId != AbilityId.None && !asc.Cooldowns.IsReady(AbilityId))
             return false;
 
         return true;

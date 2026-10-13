@@ -54,7 +54,7 @@ public abstract class BaseBossBrain : IBossBrain
     public virtual AbilityId CurrentSkill => _asc.CurrentAbility?.AbilityId ?? AbilityId.None;
 
     /// <summary>現在状態の経過時間を取得します。</summary>
-    public virtual float StateTimer => _asc.IsCasting ? _asc.SkillRunner?.PhaseElapsed ?? 0.0f : _stateTimer;
+    public virtual float StateTimer => _asc.IsCasting && _asc.SkillRunner is { } runner ? runner.PhaseElapsed : _stateTimer;
 
     /// <summary>死亡状態かどうかを取得します。</summary>
     public bool IsDead => _isDead;

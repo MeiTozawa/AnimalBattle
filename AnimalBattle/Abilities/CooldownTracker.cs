@@ -1,3 +1,5 @@
+using AnimalBattle.Core;
+
 namespace AnimalBattle.Abilities;
 
 /// <summary>
@@ -5,6 +7,7 @@ namespace AnimalBattle.Abilities;
 ///     冷却期間中は自動的に ASC へ CooldownTags を付与し、満了時に解除します。
 /// </summary>
 public sealed class CooldownTracker {
+    private readonly Dictionary<StringId, float> _stringCooldowns = new();
     private readonly Dictionary<AbilityId, float> _cooldowns = new();
     private readonly List<TimedTag> _timedTags = new();
 
@@ -13,7 +16,10 @@ public sealed class CooldownTracker {
         public float Remaining;
     }
 
-    /// <summary>直前に実行された能力識別子を取得します。</summary>
+    /// <summary>直前に実行された能力識別タグを取得します。</summary>
+    public StringId LastExecutedTag { get; private set; } = StringId.Empty;
+
+    /// <summary>互換性プロパティ：直前に実行された能力識別子を取得します。</summary>
     public AbilityId LastExecutedAbility { get; private set; } = AbilityId.None;
 
     /// <summary>同一能力の連続実行回数を取得します。</summary>
@@ -28,7 +34,16 @@ public sealed class CooldownTracker {
     {
         if (deltaTime <= 0.0f) return;
 
-        // 1. 個別 AbilityId 冷却時間の減衰
+        // 1. 個別 StringId / AbilityId 冷却時間の減衰
+        if (_stringCooldowns.Count > 0)
+        {
+            foreach (var key in _stringCooldowns.Keys)
+            {
+                var current = _stringCooldowns[key];
+                if (current > 0.0f) _stringCooldowns[key] = MathF.Max(0.0f, current - deltaTime);
+            }
+        }
+
         if (_cooldowns.Count > 0)
         {
             foreach (var id in _cooldowns.Keys)
@@ -57,12 +72,35 @@ public sealed class CooldownTracker {
     }
 
     /// <summary>
-    ///     指定能力の冷却および時限タグを適用します。
+    ///     指定能力タグの冷却および時限タグを適用します。
     /// </summary>
-    /// <param name="asc">対象の能力システムコンポーネント。</param>
-    /// <param name="id">能力識別子。</param>
-    /// <param name="cooldown">冷却秒数。</param>
-    /// <param name="cooldownTags">付与する冷却タグ（CooldownMelee, CooldownGlobal 等）。</param>
+    public void Trigger(AbilitySystemComponent asc, StringId tag, float cooldown, GameplayTag cooldownTags = GameplayTag.None)
+    {
+        if (tag.IsEmpty) return;
+
+        if (tag == LastExecutedTag)
+            ConsecutiveUseCount++;
+        else
+        {
+            LastExecutedTag = tag;
+            ConsecutiveUseCount = 1;
+        }
+
+        if (cooldown > 0.0f)
+        {
+            _stringCooldowns[tag] = cooldown;
+
+            if (cooldownTags != GameplayTag.None)
+            {
+                asc.AddTag(cooldownTags);
+                _timedTags.Add(new TimedTag { Tag = cooldownTags, Remaining = cooldown });
+            }
+        }
+    }
+
+    /// <summary>
+    ///     互換性メソッド：指定能力識別子の冷却および時限タグを適用します。
+    /// </summary>
     public void Trigger(AbilitySystemComponent asc, AbilityId id, float cooldown, GameplayTag cooldownTags = GameplayTag.None)
     {
         if (!id.IsValid()) return;
@@ -88,10 +126,17 @@ public sealed class CooldownTracker {
     }
 
     /// <summary>
-    ///     指定能力が使用可能（個別冷却完了）かどうかを判定します。
+    ///     指定能力タグが使用可能（個別冷却完了）かどうかを判定します。
     /// </summary>
-    /// <param name="id">対象の能力識別子。</param>
-    /// <returns>冷却が完了している場合は true。</returns>
+    public bool IsReady(StringId tag)
+    {
+        if (tag.IsEmpty) return true;
+        return !_stringCooldowns.TryGetValue(tag, out var remaining) || remaining <= 0.0f;
+    }
+
+    /// <summary>
+    ///     互換性メソッド：指定能力が使用可能（個別冷却完了）かどうかを判定します。
+    /// </summary>
     public bool IsReady(AbilityId id)
     {
         if (!id.IsValid()) return false;
@@ -99,10 +144,17 @@ public sealed class CooldownTracker {
     }
 
     /// <summary>
-    ///     指定能力の残り冷却秒数を取得します。
+    ///     指定能力タグの残り冷却秒数を取得します。
     /// </summary>
-    /// <param name="id">対象の能力識別子。</param>
-    /// <returns>残り冷却秒数。冷却完了時は 0.0f。</returns>
+    public float GetRemaining(StringId tag)
+    {
+        if (tag.IsEmpty || !_stringCooldowns.TryGetValue(tag, out var remaining)) return 0.0f;
+        return remaining;
+    }
+
+    /// <summary>
+    ///     互換性メソッド：指定能力の残り冷却秒数を取得します。
+    /// </summary>
     public float GetRemaining(AbilityId id)
     {
         if (!id.IsValid() || !_cooldowns.TryGetValue(id, out var remaining)) return 0.0f;
@@ -122,8 +174,10 @@ public sealed class CooldownTracker {
             }
         }
 
+        _stringCooldowns.Clear();
         _cooldowns.Clear();
         _timedTags.Clear();
+        LastExecutedTag = StringId.Empty;
         LastExecutedAbility = AbilityId.None;
         ConsecutiveUseCount = 0;
     }

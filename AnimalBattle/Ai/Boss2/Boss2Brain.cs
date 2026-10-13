@@ -485,7 +485,7 @@ public sealed class Boss2Brain : BaseBossBrain {
                     _traverseStage = TraverseStage.Descent;
                     _traverseTimer = 0.0f;
                 }
-                break;
+            break;
 
             case TraverseStage.Descent:
                 var fallVy = MathF.Min(phaseCfg.MaxFallSpeed, _currentVelocity.Y + phaseCfg.Gravity * dt);
@@ -497,7 +497,7 @@ public sealed class Boss2Brain : BaseBossBrain {
                     _traverseTimer = 0.0f;
                     _currentVelocity = Vec2f.Zero;
                 }
-                break;
+            break;
 
             case TraverseStage.Landing:
                 _currentVelocity = Vec2f.Zero;
@@ -506,7 +506,7 @@ public sealed class Boss2Brain : BaseBossBrain {
                     _combatMachine.ChangeState(_patrolChaseState);
                     _stateTimer = 0.0f;
                 }
-                break;
+            break;
         }
     }
 
@@ -535,10 +535,10 @@ public sealed class Boss2Brain : BaseBossBrain {
         if (runner is null) return;
 
         var patternCfg = ConfigManager.Boss2Patterns.LeapSmash;
-        var flyDuration = patternCfg.FlyDuration > 0.0f ? patternCfg.FlyDuration : 0.45f;
-        var peakY = patternCfg.PeakAltitudeY > 0.0f ? patternCfg.PeakAltitudeY : 130.0f;
-        var hangDuration = patternCfg.ApexHangDuration > 0.0f ? patternCfg.ApexHangDuration : 0.50f;
-        var descentSpeed = patternCfg.DescentSpeed > 0.0f ? patternCfg.DescentSpeed : 1200.0f;
+        var flyDuration = patternCfg.FlyDuration;
+        var peakY = patternCfg.PeakAltitudeY;
+        var hangDuration = patternCfg.ApexHangDuration;
+        var descentSpeed = patternCfg.DescentSpeed;
 
         if (runner.CurrentPhase == SkillPhase.Telegraph)
         {

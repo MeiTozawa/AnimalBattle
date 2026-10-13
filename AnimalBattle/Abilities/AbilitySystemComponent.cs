@@ -1,13 +1,18 @@
+using System.Diagnostics;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Abilities;
 
 /// <summary>
 ///     UE GAS 準拠：エンティティの技能登録、時限タグおよび冷却管理、状態タグ判定、および能力時序推進を一元管理する汎用コンポーネントです。
+///     能力は AbilitySpecHandle または動的 AbilityTag（StringId）によって管理・駆動され、全域 Enum への依存を持ちません。
 /// </summary>
 public sealed class AbilitySystemComponent {
-    private readonly Dictionary<AbilityId, AbilitySpec> _abilities = new();
+    private readonly Dictionary<AbilitySpecHandle, AbilitySpec> _abilities = new();
+    private readonly Dictionary<StringId, AbilitySpecHandle> _tagIndex = new();
+    private readonly Dictionary<AbilityId, AbilitySpecHandle> _legacyIdIndex = new();
     private readonly CooldownTracker _cooldownTracker = new();
 
     /// <summary>戦闘タグコンテナを取得します。</summary>
@@ -49,20 +54,62 @@ public sealed class AbilitySystemComponent {
     /// <summary>技能完了通知イベント。</summary>
     public event Action<AbilityId>? OnSkillCompleted;
 
-    /// <summary>能力をコンポーネントに付与・登録します。</summary>
-    public void GiveAbility(GameplayAbility ability)
+    /// <summary>能力をコンポーネントに付与・登録し、一意のスペックハンドルを返します。</summary>
+    public AbilitySpecHandle GiveAbility(GameplayAbility ability)
     {
         ArgumentNullException.ThrowIfNull(ability);
-        _abilities[ability.AbilityId] = new AbilitySpec(ability);
+
+        var handle = AbilitySpecHandle.Generate();
+        var spec = new AbilitySpec(handle, ability);
+
+        _abilities[handle] = spec;
+
+        if (!ability.AbilityTag.IsEmpty)
+        {
+            _tagIndex[ability.AbilityTag] = handle;
+        }
+
+        if (ability.AbilityId != AbilityId.None)
+        {
+            _legacyIdIndex[ability.AbilityId] = handle;
+        }
+
+        return handle;
     }
 
     /// <summary>後方互換性：能力を登録します。</summary>
     public void RegisterAbility(GameplayAbility ability) => GiveAbility(ability);
 
-    /// <summary>指定技能の登録を取得します。</summary>
+    /// <summary>スペックハンドルによって登録済み能力を取得します。</summary>
+    public bool TryGetAbility(AbilitySpecHandle handle, out GameplayAbility? ability)
+    {
+        if (_abilities.TryGetValue(handle, out var spec))
+        {
+            ability = spec.Ability;
+            return true;
+        }
+
+        ability = null;
+        return false;
+    }
+
+    /// <summary>技能識別タグによって登録済み能力を取得します（UE GAS 準拠）。</summary>
+    public bool TryGetAbility(StringId abilityTag, out GameplayAbility? ability)
+    {
+        if (_tagIndex.TryGetValue(abilityTag, out var handle) && _abilities.TryGetValue(handle, out var spec))
+        {
+            ability = spec.Ability;
+            return true;
+        }
+
+        ability = null;
+        return false;
+    }
+
+    /// <summary>後方互換性：指定技能の登録を取得します。</summary>
     public bool TryGetAbility(AbilityId id, out GameplayAbility? ability)
     {
-        if (_abilities.TryGetValue(id, out var spec))
+        if (_legacyIdIndex.TryGetValue(id, out var handle) && _abilities.TryGetValue(handle, out var spec))
         {
             ability = spec.Ability;
             return true;
@@ -95,31 +142,59 @@ public sealed class AbilitySystemComponent {
     public bool HasAnyTag(GameplayTag tag) => Tags.HasAny(tag);
 
     /// <summary>
-    ///     指定技能の発動を試行します。
-    ///     UE GAS 準拠：RequiredTags / BlockedTags / CooldownTags / CanActivate 判定パイプラインを通過します。
+    ///     スペックハンドルを指定して技能の発動を試行します。
     /// </summary>
-    /// <param name="id">発動対象技能識別子。</param>
-    /// <param name="direction">向き係数（正: 右向き、負: 左向き）。</param>
-    /// <returns>発動に成功した場合は true、失敗時は false。</returns>
+    public bool TryActivateAbility(AbilitySpecHandle handle, float direction = 1.0f)
+    {
+        if (!_abilities.TryGetValue(handle, out var spec))
+        {
+            Debug.Assert(false, $"[ASC] 未登録のハンドルを発動しようとしました: {handle}");
+            return false;
+        }
+
+        return InternalActivateAbility(spec, direction);
+    }
+
+    /// <summary>
+    ///     技能識別タグを指定して技能の発動を試行します（UE GAS 準拠）。
+    /// </summary>
+    public bool TryActivateAbility(StringId abilityTag, float direction = 1.0f)
+    {
+        if (!_tagIndex.TryGetValue(abilityTag, out var handle) || !_abilities.TryGetValue(handle, out var spec))
+        {
+            Debug.Assert(false, $"[ASC] 未登録のタグを発動しようとしました: {abilityTag}");
+            return false;
+        }
+
+        return InternalActivateAbility(spec, direction);
+    }
+
+    /// <summary>
+    ///     後方互換性：指定技能の発動を試行します。
+    /// </summary>
     public bool TryActivateAbility(AbilityId id, float direction = 1.0f)
     {
-        // 1. 未登録チェック
-        if (!_abilities.TryGetValue(id, out var spec))
+        if (!_legacyIdIndex.TryGetValue(id, out var handle) || !_abilities.TryGetValue(handle, out var spec))
         {
             Debug.Assert(false, $"[ASC] 未登録の技能を発動しようとしました: {id}");
             return false;
         }
 
+        return InternalActivateAbility(spec, direction);
+    }
+
+    private bool InternalActivateAbility(AbilitySpec spec, float direction)
+    {
         var ability = spec.Ability;
         var ctx = new AbilityActivationContext(direction);
 
-        // 2. CanActivate 判定（Tag阻害、CooldownTags、個別CD判定を統合評価）
+        // CanActivate 判定（Tag阻害、CooldownTags、個別CD判定を統合評価）
         if (!ability.CanActivate(this, in ctx))
         {
             return false;
         }
 
-        // 3. 発動コミット
+        // 発動コミット
         CurrentAbility = ability;
         spec.IsActive = true;
 
@@ -139,7 +214,15 @@ public sealed class AbilitySystemComponent {
     /// </summary>
     public void CommitCooldown(GameplayAbility ability)
     {
-        _cooldownTracker.Trigger(this, ability.AbilityId, ability.Cooldown, ability.CooldownTags);
+        if (!ability.AbilityTag.IsEmpty)
+        {
+            _cooldownTracker.Trigger(this, ability.AbilityTag, ability.Cooldown, ability.CooldownTags);
+        }
+
+        if (ability.AbilityId != AbilityId.None)
+        {
+            _cooldownTracker.Trigger(this, ability.AbilityId, ability.Cooldown, ability.CooldownTags);
+        }
     }
 
     /// <summary>
@@ -149,18 +232,23 @@ public sealed class AbilitySystemComponent {
     {
         if (CurrentAbility is null) return;
 
-        var finishedId = CurrentAbility.AbilityId;
+        var ability = CurrentAbility;
+        var finishedId = ability.AbilityId;
 
-        if (CurrentAbility.ActivationOwnedTags != GameplayTag.None)
+        if (ability.ActivationOwnedTags != GameplayTag.None)
         {
-            RemoveTag(CurrentAbility.ActivationOwnedTags);
+            RemoveTag(ability.ActivationOwnedTags);
         }
 
-        CurrentAbility.EndAbility(this);
+        ability.EndAbility(this);
 
-        if (_abilities.TryGetValue(finishedId, out var spec))
+        foreach (var spec in _abilities.Values)
         {
-            spec.IsActive = false;
+            if (spec.Ability == ability)
+            {
+                spec.IsActive = false;
+                break;
+            }
         }
 
         CurrentAbility = null;
@@ -174,19 +262,24 @@ public sealed class AbilitySystemComponent {
     {
         if (CurrentAbility is null) return;
 
-        var interruptedId = CurrentAbility.AbilityId;
+        var ability = CurrentAbility;
+        var interruptedId = ability.AbilityId;
 
-        if (CurrentAbility.ActivationOwnedTags != GameplayTag.None)
+        if (ability.ActivationOwnedTags != GameplayTag.None)
         {
-            RemoveTag(CurrentAbility.ActivationOwnedTags);
+            RemoveTag(ability.ActivationOwnedTags);
         }
 
         AddTag(GameplayTag.Interrupted);
-        CurrentAbility.CancelAbility(this);
+        ability.CancelAbility(this);
 
-        if (_abilities.TryGetValue(interruptedId, out var spec))
+        foreach (var spec in _abilities.Values)
         {
-            spec.IsActive = false;
+            if (spec.Ability == ability)
+            {
+                spec.IsActive = false;
+                break;
+            }
         }
 
         CurrentAbility = null;
@@ -195,8 +288,6 @@ public sealed class AbilitySystemComponent {
     /// <summary>
     ///     毎フレームの技能時序推進と冷却時間更新を実行します。
     /// </summary>
-    /// <param name="dt">デルタ時間。</param>
-    /// <param name="isGrounded">接地状態フラグ。</param>
     public void Update(float dt, bool isGrounded = false)
     {
         // 1. 冷却および時限タグの自動減衰
