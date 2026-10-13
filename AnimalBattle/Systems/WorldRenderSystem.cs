@@ -1,6 +1,5 @@
 using System.Drawing;
 using AnimalBattle.Abilities;
-using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Characters;
 using AnimalBattle.Characters.Boss;
 using AnimalBattle.Components;

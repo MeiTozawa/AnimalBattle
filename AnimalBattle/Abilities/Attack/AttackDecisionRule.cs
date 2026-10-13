@@ -1,7 +1,4 @@
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-
-namespace AnimalBattle.Ai.Contracts;
+namespace AnimalBattle.Abilities.Attack;
 
 /// <summary>
 ///     技能の意思決定条件を定義する検証済みルール構造体です。

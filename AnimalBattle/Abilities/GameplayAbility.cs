@@ -28,12 +28,6 @@ public abstract class GameplayAbility {
     /// <summary>実行中に自身へ付与されるタグ（Activation Owned Tags）を取得します。</summary>
     public GameplayTag ActivationOwnedTags { get; init; } = GameplayTag.Casting;
 
-    /// <summary>後方互換性：GrantedTags へのエイリアス。</summary>
-    public GameplayTag GrantedTags {
-        get => ActivationOwnedTags;
-        init => ActivationOwnedTags = value;
-    }
-
     /// <summary>
     ///     現在のコンテキストとタグ状態に基づいて技能が発動可能かを判定します。
     ///     UE GAS 準拠：CooldownTags は BlockedTags の一部として統合評価されます。

@@ -1,4 +1,4 @@
-namespace AnimalBattle.Ai.Contracts;
+namespace AnimalBattle.Ai;
 
 /// <summary>
 ///     状態機ランタイムが扱う Boss の種別を定義します。

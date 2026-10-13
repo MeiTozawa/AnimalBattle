@@ -1,8 +1,6 @@
-using AnimalBattle.Abilities;
 using AnimalBattle.Ai.Hfsm;
-using AnimalBattle.Core;
 
-namespace AnimalBattle.Ai.Contracts;
+namespace AnimalBattle.Ai;
 
 /// <summary>
 ///     Boss 意思決定ブレインの共通基底抽象クラス。

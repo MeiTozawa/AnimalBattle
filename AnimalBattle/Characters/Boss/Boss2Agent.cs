@@ -1,5 +1,5 @@
+using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss2;
-using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps.Navigation;
 using AnimalBattle.Systems;

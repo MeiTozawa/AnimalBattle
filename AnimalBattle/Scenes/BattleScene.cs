@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai;
 using AnimalBattle.Characters;
 using AnimalBattle.Characters.Boss;
 using AnimalBattle.Configs;

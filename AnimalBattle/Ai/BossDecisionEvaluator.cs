@@ -1,8 +1,6 @@
-using AnimalBattle.Abilities;
-using AnimalBattle.Ai.Contracts;
-using AnimalBattle.Core;
+using AnimalBattle.Abilities.Attack;
 
-namespace AnimalBattle.Ai.Decision;
+namespace AnimalBattle.Ai;
 
 /// <summary>
 ///     技能判定時に必要な戦闘コンテキストパラメータを保持する軽量構造体です。

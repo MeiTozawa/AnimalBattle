@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
 
-namespace AnimalBattle.Ai.Contracts;
+namespace AnimalBattle.Ai;
 
 /// <summary>
 ///     Boss AI の状態を表す型安全な判別構造体です（BossType + 各 Boss 固有状態値）。

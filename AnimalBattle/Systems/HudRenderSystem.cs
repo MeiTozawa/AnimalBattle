@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Abilities;
+using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
-using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Characters;
 using AnimalBattle.Characters.Boss;
 using AnimalBattle.Configs;

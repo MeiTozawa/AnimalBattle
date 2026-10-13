@@ -1,4 +1,4 @@
-namespace AnimalBattle.Ai.Contracts;
+namespace AnimalBattle.Ai;
 
 /// <summary>
 ///     Boss AI の親 Phase 領域を定義します。
@@ -23,14 +23,4 @@ public enum Phase {
     ///     第 3 Phase を示します。
     /// </summary>
     Phase3 = 3,
-
-    /// <summary>
-    ///     Phase の切り替え処理中であることを示します。
-    /// </summary>
-    PhaseTransition = 4,
-
-    /// <summary>
-    ///     Boss が終端の死亡状態であることを示します。
-    /// </summary>
-    Dead = 5
 }

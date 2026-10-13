@@ -1,6 +1,6 @@
 using System.Drawing;
 using AnimalBattle.Abilities;
-using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai;
 using AnimalBattle.Core;
 using Flecs.NET.Core;
 

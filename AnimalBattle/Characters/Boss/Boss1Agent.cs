@@ -1,5 +1,5 @@
+using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss1;
-using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
 using AnimalBattle.Systems;
 using Flecs.NET.Core;

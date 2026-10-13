@@ -1,4 +1,3 @@
-using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 

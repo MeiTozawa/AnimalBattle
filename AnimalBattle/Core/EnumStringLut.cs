@@ -1,6 +1,6 @@
+using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
-using AnimalBattle.Ai.Contracts;
 
 namespace AnimalBattle.Core;
 

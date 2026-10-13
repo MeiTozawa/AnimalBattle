@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using AnimalBattle.Abilities;
-using AnimalBattle.Ai.Decision;
 using AnimalBattle.Abilities.Skills;
-using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Hfsm;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;

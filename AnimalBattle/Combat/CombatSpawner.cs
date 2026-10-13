@@ -1,5 +1,5 @@
 using System.Drawing;
-using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai;
 using AnimalBattle.Configs;
 using Flecs.NET.Core;
 

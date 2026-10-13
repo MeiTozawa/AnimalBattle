@@ -10,15 +10,12 @@ namespace AnimalBattle.Abilities;
 ///     能力は AbilitySpecHandle または動的 AbilityTag（StringId）によって管理・駆動され、全域 Enum への依存を持ちません。
 /// </summary>
 public sealed class AbilitySystemComponent {
-    private readonly Dictionary<AbilitySpecHandle, AbilitySpec> _abilities = new();
+    private readonly Dictionary<AbilitySpecHandle, GameplayAbility> _abilities = new();
     private readonly Dictionary<StringId, AbilitySpecHandle> _tagIndex = new();
     private readonly CooldownTracker _cooldownTracker = new();
 
     /// <summary>戦闘タグコンテナを取得します。</summary>
     public GameplayTagContainer Tags { get; private set; } = new();
-
-    /// <summary>現在アクティブな戦闘状態タグを取得します（後方互換性）。</summary>
-    public GameplayTag ActiveTags => Tags.RawTags;
 
     /// <summary>現在発動中の技能インスタンスを取得します。</summary>
     public GameplayAbility? CurrentAbility { get; private set; }
@@ -59,9 +56,7 @@ public sealed class AbilitySystemComponent {
         ArgumentNullException.ThrowIfNull(ability);
 
         var handle = AbilitySpecHandle.Generate();
-        var spec = new AbilitySpec(handle, ability);
-
-        _abilities[handle] = spec;
+        _abilities[handle] = ability;
 
         if (!ability.AbilityTag.IsEmpty)
         {
@@ -71,29 +66,16 @@ public sealed class AbilitySystemComponent {
         return handle;
     }
 
-    /// <summary>後方互換性：能力を登録します。</summary>
-    public void RegisterAbility(GameplayAbility ability) => GiveAbility(ability);
-
     /// <summary>スペックハンドルによって登録済み能力を取得します。</summary>
-    public bool TryGetAbility(AbilitySpecHandle handle, out GameplayAbility? ability)
-    {
-        if (_abilities.TryGetValue(handle, out var spec))
-        {
-            ability = spec.Ability;
-            return true;
-        }
-
-        ability = null;
-        return false;
-    }
+    public bool TryGetAbility(AbilitySpecHandle handle, out GameplayAbility? ability) =>
+        _abilities.TryGetValue(handle, out ability);
 
     /// <summary>技能識別タグによって登録済み能力を取得します（UE GAS 準拠）。</summary>
     public bool TryGetAbility(StringId abilityTag, out GameplayAbility? ability)
     {
-        if (_tagIndex.TryGetValue(abilityTag, out var handle) && _abilities.TryGetValue(handle, out var spec))
+        if (_tagIndex.TryGetValue(abilityTag, out var handle))
         {
-            ability = spec.Ability;
-            return true;
+            return _abilities.TryGetValue(handle, out ability);
         }
 
         ability = null;
@@ -127,13 +109,13 @@ public sealed class AbilitySystemComponent {
     /// </summary>
     public bool TryActivateAbility(AbilitySpecHandle handle, float direction = 1.0f)
     {
-        if (!_abilities.TryGetValue(handle, out var spec))
+        if (!_abilities.TryGetValue(handle, out var ability))
         {
             Debug.Assert(false, $"[ASC] 未登録のハンドルを発動しようとしました: {handle}");
             return false;
         }
 
-        return InternalActivateAbility(spec, direction);
+        return InternalActivateAbility(ability, direction);
     }
 
     /// <summary>
@@ -141,18 +123,17 @@ public sealed class AbilitySystemComponent {
     /// </summary>
     public bool TryActivateAbility(StringId abilityTag, float direction = 1.0f)
     {
-        if (!_tagIndex.TryGetValue(abilityTag, out var handle) || !_abilities.TryGetValue(handle, out var spec))
+        if (!_tagIndex.TryGetValue(abilityTag, out var handle) || !_abilities.TryGetValue(handle, out var ability))
         {
             Debug.Assert(false, $"[ASC] 未登録のタグを発動しようとしました: {abilityTag}");
             return false;
         }
 
-        return InternalActivateAbility(spec, direction);
+        return InternalActivateAbility(ability, direction);
     }
 
-    private bool InternalActivateAbility(AbilitySpec spec, float direction)
+    private bool InternalActivateAbility(GameplayAbility ability, float direction)
     {
-        var ability = spec.Ability;
         var ctx = new AbilityActivationContext(direction);
 
         // CanActivate 判定（Tag阻害、CooldownTags、個別CD判定を統合評価）
@@ -163,7 +144,6 @@ public sealed class AbilitySystemComponent {
 
         // 発動コミット
         CurrentAbility = ability;
-        spec.IsActive = true;
 
         if (ability.ActivationOwnedTags != GameplayTag.None)
         {
@@ -203,16 +183,6 @@ public sealed class AbilitySystemComponent {
         }
 
         ability.EndAbility(this);
-
-        foreach (var spec in _abilities.Values)
-        {
-            if (spec.Ability == ability)
-            {
-                spec.IsActive = false;
-                break;
-            }
-        }
-
         CurrentAbility = null;
         OnSkillCompleted?.Invoke(finishedTag);
     }
@@ -233,16 +203,6 @@ public sealed class AbilitySystemComponent {
 
         AddTag(GameplayTag.Interrupted);
         ability.CancelAbility(this);
-
-        foreach (var spec in _abilities.Values)
-        {
-            if (spec.Ability == ability)
-            {
-                spec.IsActive = false;
-                break;
-            }
-        }
-
         CurrentAbility = null;
     }
 

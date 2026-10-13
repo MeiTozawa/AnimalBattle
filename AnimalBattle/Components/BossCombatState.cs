@@ -1,4 +1,4 @@
-using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Ai;
 
 namespace AnimalBattle.Components;
 
