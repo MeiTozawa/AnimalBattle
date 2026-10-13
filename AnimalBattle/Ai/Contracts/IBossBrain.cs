@@ -1,4 +1,4 @@
-using AnimalBattle.Ai.Abilities;
+using AnimalBattle.Abilities;
 
 namespace AnimalBattle.Ai.Contracts;
 
@@ -17,7 +17,7 @@ public interface IBossBrain
     BossState CurrentState { get; }
 
     /// <summary>現在発動中の技能を取得します。</summary>
-    BossSkill CurrentSkill { get; }
+    AbilityId CurrentSkill { get; }
 
     /// <summary>現在状態の経過時間を取得します。</summary>
     float StateTimer { get; }
@@ -37,9 +37,6 @@ public interface IBossBrain
     /// <summary>現在の Boss 座標を取得します。</summary>
     Vec2f Position { get; }
 
-    /// <summary>Boss が後隙による易傷状態であるかを取得します。</summary>
-    bool IsVulnerable { get; }
-
     /// <summary>Boss が右向きであるかを取得します。</summary>
     bool FacingRight => true;
 
@@ -47,7 +44,7 @@ public interface IBossBrain
     bool IsDead { get; }
 
     /// <summary>弾幕波次発射イベント。</summary>
-    event Action<BossSkill, Vec2f, Vec2f>? OnEmitBarrageWave;
+    event Action<AbilityId, Vec2f, Vec2f>? OnEmitBarrageWave;
 
     /// <summary>全弾幕消去イベント。</summary>
     event Action? OnClearBullets;

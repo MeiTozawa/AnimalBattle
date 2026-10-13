@@ -1,4 +1,4 @@
-using AnimalBattle.Ai.Abilities;
+using AnimalBattle.Abilities;
 using AnimalBattle.Ai.Hfsm;
 using AnimalBattle.Core;
 
@@ -51,10 +51,10 @@ public abstract class BaseBossBrain : IBossBrain
     public float TargetY => _targetPosition.Y;
 
     /// <summary>現在発動中の技能を取得します。</summary>
-    public virtual BossSkill CurrentSkill => _asc.CurrentAbility?.SkillId ?? BossSkill.None;
+    public virtual AbilityId CurrentSkill => _asc.CurrentAbility?.AbilityId ?? AbilityId.None;
 
     /// <summary>現在状態の経過時間を取得します。</summary>
-    public virtual float StateTimer => _asc.IsCasting ? _asc.SkillRunner.PhaseElapsed : _stateTimer;
+    public virtual float StateTimer => _asc.IsCasting ? _asc.SkillRunner?.PhaseElapsed ?? 0.0f : _stateTimer;
 
     /// <summary>死亡状態かどうかを取得します。</summary>
     public bool IsDead => _isDead;
@@ -63,7 +63,7 @@ public abstract class BaseBossBrain : IBossBrain
     public virtual bool FacingRight => true;
 
     /// <summary>弾幕波次発射イベント。</summary>
-    public event Action<BossSkill, Vec2f, Vec2f>? OnEmitBarrageWave;
+    public event Action<AbilityId, Vec2f, Vec2f>? OnEmitBarrageWave;
 
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;
@@ -74,13 +74,10 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>現在状態の目標持続時間を取得します。</summary>
     public abstract float StateDuration { get; }
 
-    /// <summary>Boss が後隙による易傷状態であるかを取得します。</summary>
-    public abstract bool IsVulnerable { get; }
-
     /// <summary>
     ///     弾幕発射イベントを発火します。
     /// </summary>
-    protected void RaiseEmitBarrageWave(BossSkill skill, Vec2f origin, Vec2f target)
+    protected void RaiseEmitBarrageWave(AbilityId skill, Vec2f origin, Vec2f target)
     {
         OnEmitBarrageWave?.Invoke(skill, origin, target);
     }

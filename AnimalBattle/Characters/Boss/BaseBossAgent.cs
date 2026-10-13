@@ -1,5 +1,5 @@
 using System.Drawing;
-using AnimalBattle.Ai.Abilities;
+using AnimalBattle.Abilities;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Core;
 using Flecs.NET.Core;
@@ -41,7 +41,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     public virtual BossState CurrentState => Brain.CurrentState;
 
     /// <summary>現在選択されている攻撃技能種別を取得します。</summary>
-    public virtual BossSkill CurrentSkill => Brain.CurrentSkill;
+    public virtual AbilityId CurrentSkill => Brain.CurrentSkill;
 
     /// <summary>現在状態の経過時間を取得します。</summary>
     public virtual float StateTimer => Brain.StateTimer;
@@ -62,7 +62,13 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     public virtual float TargetY => Brain.TargetY;
 
     /// <summary>Boss が後隙による易傷状態であるかを取得します。</summary>
-    public virtual bool IsVulnerable => Brain.IsVulnerable;
+    public virtual bool IsVulnerable => AbilitySystem.HasTag(GameplayTag.Vulnerable);
+
+    /// <summary>Boss が無敵状態であるかを取得します（被弾無敵タイマーまたは GAS Invincible タグ）。</summary>
+    public new bool IsInvincible => base.IsInvincible || AbilitySystem.HasTag(GameplayTag.Invincible);
+
+    /// <summary>Boss がスーパーアーマー（剛体）状態であるかを取得します。</summary>
+    public virtual bool HasSuperArmor => AbilitySystem.HasTag(GameplayTag.SuperArmor);
 
     /// <summary>Boss が右向きであるかを取得します。</summary>
     public virtual bool FacingRight => Brain.FacingRight;
@@ -110,7 +116,8 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
            .Set(new Hurtbox(hurtboxShape, Faction.Hostile))
            .Set(new Hitbox(hitboxShape, bodyContactDamage, Faction.Hostile, false))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
-           .Set(new BossCombatState(IsVulnerable, Phase))
+           .Set(new BossCombatState(Phase))
+           .Set(AbilitySystem)
            .Add<BossTag>();
 
         if (collisionWidth > 0.0f && collisionHeight > 0.0f)
@@ -146,13 +153,13 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// </summary>
     protected void SyncCombatState()
     {
-        Entity.Set(new BossCombatState(IsVulnerable, Phase));
+        Entity.Set(new BossCombatState(Phase));
     }
 
     /// <summary>
     ///     弾幕波次発射イベントを処理します。
     /// </summary>
-    protected abstract void HandleEmitBarrageWave(BossSkill skill, Vec2f origin, Vec2f target);
+    protected abstract void HandleEmitBarrageWave(AbilityId skill, Vec2f origin, Vec2f target);
 
     /// <summary>
     ///     フィールド上に存在するすべての Boss 弾幕を一括消去します。
@@ -186,7 +193,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
             FlipX = false;
             IsVisible = true;
             ClearTransientEffects();
-            Entity.Set(new BossCombatState(IsVulnerable, Phase));
+            Entity.Set(new BossCombatState(Phase));
         }
         catch (Exception ex)
         {
