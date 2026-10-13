@@ -1,3 +1,4 @@
+using AnimalBattle.Abilities;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
@@ -9,21 +10,21 @@ namespace AnimalBattle.Core;
 ///     ホットパスにおける <see cref="Enum.ToString()" /> のリフレクション辞書検索とヒープ文字列割り当てを完全に排除します。
 /// </summary>
 public static class EnumStringLut {
-    /// <summary>Boss 技能の識別文字列を取得します。</summary>
-    public static string Get(BossSkill skill) => skill switch {
-        BossSkill.Aimed3Shot => nameof(BossSkill.Aimed3Shot),
-        BossSkill.RingBurst => nameof(BossSkill.RingBurst),
-        BossSkill.DoubleSpiral => nameof(BossSkill.DoubleSpiral),
-        BossSkill.RainDrop => nameof(BossSkill.RainDrop),
-        BossSkill.CrossChaos => nameof(BossSkill.CrossChaos),
-        BossSkill.FastSniper => nameof(BossSkill.FastSniper),
-        BossSkill.DiveRam => nameof(BossSkill.DiveRam),
-        BossSkill.HeavySlash => nameof(BossSkill.HeavySlash),
-        BossSkill.DoubleCleave => nameof(BossSkill.DoubleCleave),
-        BossSkill.GroundStomp => nameof(BossSkill.GroundStomp),
-        BossSkill.LeapSmash => nameof(BossSkill.LeapSmash),
-        BossSkill.FrenzyCharge => nameof(BossSkill.FrenzyCharge),
-        BossSkill.EarthquakeRoar => nameof(BossSkill.EarthquakeRoar),
+    /// <summary>技能識別文字列を取得します。</summary>
+    public static string Get(AbilityId skill) => skill switch {
+        AbilityId.Aimed3Shot => nameof(AbilityId.Aimed3Shot),
+        AbilityId.RingBurst => nameof(AbilityId.RingBurst),
+        AbilityId.DoubleSpiral => nameof(AbilityId.DoubleSpiral),
+        AbilityId.RainDrop => nameof(AbilityId.RainDrop),
+        AbilityId.CrossChaos => nameof(AbilityId.CrossChaos),
+        AbilityId.FastSniper => nameof(AbilityId.FastSniper),
+        AbilityId.DiveRam => nameof(AbilityId.DiveRam),
+        AbilityId.HeavySlash => nameof(AbilityId.HeavySlash),
+        AbilityId.DoubleCleave => nameof(AbilityId.DoubleCleave),
+        AbilityId.GroundStomp => nameof(AbilityId.GroundStomp),
+        AbilityId.LeapSmash => nameof(AbilityId.LeapSmash),
+        AbilityId.FrenzyCharge => nameof(AbilityId.FrenzyCharge),
+        AbilityId.EarthquakeRoar => nameof(AbilityId.EarthquakeRoar),
         _ => "None"
     };
 
@@ -65,54 +66,54 @@ public static class EnumStringLut {
     };
 
     /// <summary>技能に応じた予兆 HUD 状態バッジ文字列を取得します。</summary>
-    public static string GetTelegraphBadge(BossSkill skill) => skill switch {
-        BossSkill.Aimed3Shot => "[STATE: TELEGRAPHING (WIND-UP: Aimed3Shot)]",
-        BossSkill.RingBurst => "[STATE: TELEGRAPHING (WIND-UP: RingBurst)]",
-        BossSkill.DoubleSpiral => "[STATE: TELEGRAPHING (WIND-UP: DoubleSpiral)]",
-        BossSkill.RainDrop => "[STATE: TELEGRAPHING (WIND-UP: RainDrop)]",
-        BossSkill.CrossChaos => "[STATE: TELEGRAPHING (WIND-UP: CrossChaos)]",
-        BossSkill.FastSniper => "[STATE: TELEGRAPHING (WIND-UP: FastSniper)]",
-        BossSkill.DiveRam => "[STATE: TELEGRAPHING (WIND-UP: DiveRam)]",
-        BossSkill.HeavySlash => "[STATE: TELEGRAPHING (WIND-UP: HeavySlash)]",
-        BossSkill.DoubleCleave => "[STATE: TELEGRAPHING (WIND-UP: DoubleCleave)]",
-        BossSkill.GroundStomp => "[STATE: TELEGRAPHING (WIND-UP: GroundStomp)]",
-        BossSkill.LeapSmash => "[STATE: TELEGRAPHING (WIND-UP: LeapSmash)]",
-        BossSkill.FrenzyCharge => "[STATE: TELEGRAPHING (WIND-UP: FrenzyCharge)]",
-        BossSkill.EarthquakeRoar => "[STATE: TELEGRAPHING (WIND-UP: EarthquakeRoar)]",
+    public static string GetTelegraphBadge(AbilityId skill) => skill switch {
+        AbilityId.Aimed3Shot => "[STATE: TELEGRAPHING (WIND-UP: Aimed3Shot)]",
+        AbilityId.RingBurst => "[STATE: TELEGRAPHING (WIND-UP: RingBurst)]",
+        AbilityId.DoubleSpiral => "[STATE: TELEGRAPHING (WIND-UP: DoubleSpiral)]",
+        AbilityId.RainDrop => "[STATE: TELEGRAPHING (WIND-UP: RainDrop)]",
+        AbilityId.CrossChaos => "[STATE: TELEGRAPHING (WIND-UP: CrossChaos)]",
+        AbilityId.FastSniper => "[STATE: TELEGRAPHING (WIND-UP: FastSniper)]",
+        AbilityId.DiveRam => "[STATE: TELEGRAPHING (WIND-UP: DiveRam)]",
+        AbilityId.HeavySlash => "[STATE: TELEGRAPHING (WIND-UP: HeavySlash)]",
+        AbilityId.DoubleCleave => "[STATE: TELEGRAPHING (WIND-UP: DoubleCleave)]",
+        AbilityId.GroundStomp => "[STATE: TELEGRAPHING (WIND-UP: GroundStomp)]",
+        AbilityId.LeapSmash => "[STATE: TELEGRAPHING (WIND-UP: LeapSmash)]",
+        AbilityId.FrenzyCharge => "[STATE: TELEGRAPHING (WIND-UP: FrenzyCharge)]",
+        AbilityId.EarthquakeRoar => "[STATE: TELEGRAPHING (WIND-UP: EarthquakeRoar)]",
         _ => "[STATE: TELEGRAPHING (WIND-UP: None)]"
     };
 
     /// <summary>技能に応じた実行 HUD 状態バッジ文字列を取得します。</summary>
-    public static string GetExecuteBadge(BossSkill skill) => skill switch {
-        BossSkill.Aimed3Shot => "[STATE: EXECUTING (Aimed3Shot)]",
-        BossSkill.RingBurst => "[STATE: EXECUTING (RingBurst)]",
-        BossSkill.DoubleSpiral => "[STATE: EXECUTING (DoubleSpiral)]",
-        BossSkill.RainDrop => "[STATE: EXECUTING (RainDrop)]",
-        BossSkill.CrossChaos => "[STATE: EXECUTING (CrossChaos)]",
-        BossSkill.FastSniper => "[STATE: EXECUTING (FastSniper)]",
-        BossSkill.DiveRam => "[STATE: EXECUTING (DiveRam)]",
-        BossSkill.HeavySlash => "[STATE: EXECUTING (HeavySlash)]",
-        BossSkill.DoubleCleave => "[STATE: EXECUTING (DoubleCleave)]",
-        BossSkill.GroundStomp => "[STATE: EXECUTING (GroundStomp)]",
-        BossSkill.LeapSmash => "[STATE: EXECUTING (LeapSmash)]",
-        BossSkill.FrenzyCharge => "[STATE: EXECUTING (FrenzyCharge)]",
-        BossSkill.EarthquakeRoar => "[STATE: EXECUTING (EarthquakeRoar)]",
+    public static string GetExecuteBadge(AbilityId skill) => skill switch {
+        AbilityId.Aimed3Shot => "[STATE: EXECUTING (Aimed3Shot)]",
+        AbilityId.RingBurst => "[STATE: EXECUTING (RingBurst)]",
+        AbilityId.DoubleSpiral => "[STATE: EXECUTING (DoubleSpiral)]",
+        AbilityId.RainDrop => "[STATE: EXECUTING (RainDrop)]",
+        AbilityId.CrossChaos => "[STATE: EXECUTING (CrossChaos)]",
+        AbilityId.FastSniper => "[STATE: EXECUTING (FastSniper)]",
+        AbilityId.DiveRam => "[STATE: EXECUTING (DiveRam)]",
+        AbilityId.HeavySlash => "[STATE: EXECUTING (HeavySlash)]",
+        AbilityId.DoubleCleave => "[STATE: EXECUTING (DoubleCleave)]",
+        AbilityId.GroundStomp => "[STATE: EXECUTING (GroundStomp)]",
+        AbilityId.LeapSmash => "[STATE: EXECUTING (LeapSmash)]",
+        AbilityId.FrenzyCharge => "[STATE: EXECUTING (FrenzyCharge)]",
+        AbilityId.EarthquakeRoar => "[STATE: EXECUTING (EarthquakeRoar)]",
         _ => "[STATE: EXECUTING (None)]"
     };
 
     /// <summary>Boss 2 の追跡技能バッジ文字列を取得します。</summary>
-    public static string GetBoss2ChaseBadge(BossSkill skill) => skill switch {
-        BossSkill.HeavySlash => "[STATE: CHASE (NEXT: HeavySlash)]",
-        BossSkill.DoubleCleave => "[STATE: CHASE (NEXT: DoubleCleave)]",
-        BossSkill.GroundStomp => "[STATE: CHASE (NEXT: GroundStomp)]",
-        BossSkill.LeapSmash => "[STATE: CHASE (NEXT: LeapSmash)]",
-        BossSkill.FrenzyCharge => "[STATE: CHASE (NEXT: FrenzyCharge)]",
-        BossSkill.EarthquakeRoar => "[STATE: CHASE (NEXT: EarthquakeRoar)]",
+    public static string GetBoss2ChaseBadge(AbilityId skill) => skill switch {
+        AbilityId.HeavySlash => "[STATE: CHASE (NEXT: HeavySlash)]",
+        AbilityId.DoubleCleave => "[STATE: CHASE (NEXT: DoubleCleave)]",
+        AbilityId.GroundStomp => "[STATE: CHASE (NEXT: GroundStomp)]",
+        AbilityId.LeapSmash => "[STATE: CHASE (NEXT: LeapSmash)]",
+        AbilityId.FrenzyCharge => "[STATE: CHASE (NEXT: FrenzyCharge)]",
+        AbilityId.EarthquakeRoar => "[STATE: CHASE (NEXT: EarthquakeRoar)]",
         _ => "[STATE: CHASE (NEXT: None)]"
     };
 
-    public static string GetBoss1TelegraphBadge(BossSkill skill) => GetTelegraphBadge(skill);
-    public static string GetBoss1ExecuteBadge(BossSkill skill) => GetExecuteBadge(skill);
-    public static string GetBoss2TelegraphBadge(BossSkill skill) => GetTelegraphBadge(skill);
-    public static string GetBoss2ExecuteBadge(BossSkill skill) => GetExecuteBadge(skill);
+    public static string GetBoss1TelegraphBadge(AbilityId skill) => GetTelegraphBadge(skill);
+    public static string GetBoss1ExecuteBadge(AbilityId skill) => GetExecuteBadge(skill);
+    public static string GetBoss2TelegraphBadge(AbilityId skill) => GetTelegraphBadge(skill);
+    public static string GetBoss2ExecuteBadge(AbilityId skill) => GetExecuteBadge(skill);
 }

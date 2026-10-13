@@ -39,7 +39,7 @@ public static class Boss2PipelineDefinition {
                 boss2.LandingRecoveryDuration,
                 boss2.TakeoffDistance);
 
-        p1.Attack(BossSkill.HeavySlash)
+        p1.Attack(AbilityId.HeavySlash)
            .Telegraph(pattern.HeavySlash.WindUpTime, pattern.HeavySlash.TelegraphColor)
            .Execute(pattern.HeavySlash.CastDuration, pattern.HeavySlash.SlashRangeX)
            .Action(0.0f,
@@ -47,15 +47,15 @@ public static class Boss2PipelineDefinition {
            .Recovery(pattern.HeavySlash.RecoveryTime)
            .Rule(boss2.Phase1.Rules);
 
-        p1.Attack(BossSkill.GroundStomp)
+        p1.Attack(AbilityId.GroundStomp)
            .Telegraph(pattern.GroundStomp.WindUpTime, pattern.GroundStomp.TelegraphColor)
            .Execute(pattern.GroundStomp.CastDuration, pattern.GroundStomp.ShockwaveSpeed)
            .Action(0.0f, act => act.Hitbox(0.0f, pattern.GroundStomp.HitboxOffsetY))
            .Recovery(pattern.GroundStomp.RecoveryTime)
            .Rule(boss2.Phase1.Rules);
 
-        ConfigureLeapSmash(p1.Attack(BossSkill.LeapSmash), pattern, boss2.Phase1.Rules);
-        ConfigureEarthquakeRoar(p1.Attack(BossSkill.EarthquakeRoar), pattern, boss2.Phase1.Rules);
+        ConfigureLeapSmash(p1.Attack(AbilityId.LeapSmash), pattern, boss2.Phase1.Rules);
+        ConfigureEarthquakeRoar(p1.Attack(AbilityId.EarthquakeRoar), pattern, boss2.Phase1.Rules);
 
         // Phase 2
         var p2 = builder.Phase(Phase.Phase2)
@@ -71,7 +71,7 @@ public static class Boss2PipelineDefinition {
                 boss2.LandingRecoveryDuration,
                 boss2.TakeoffDistance);
 
-        p2.Attack(BossSkill.DoubleCleave)
+        p2.Attack(AbilityId.DoubleCleave)
            .Telegraph(pattern.DoubleCleave.WindUpTime, pattern.DoubleCleave.TelegraphColor)
            .Execute(pattern.DoubleCleave.CastDuration, pattern.DoubleCleave.SlashRangeX)
            .Action(0.0f,
@@ -82,15 +82,15 @@ public static class Boss2PipelineDefinition {
            .Recovery(pattern.DoubleCleave.RecoveryTime)
            .Rule(boss2.Phase2.Rules);
 
-        p2.Attack(BossSkill.GroundStomp)
+        p2.Attack(AbilityId.GroundStomp)
            .Telegraph(pattern.GroundStomp.WindUpTime, pattern.GroundStomp.TelegraphColor)
            .Execute(pattern.GroundStomp.CastDuration, pattern.GroundStomp.ShockwaveSpeed)
            .Action(0.0f, act => act.Hitbox(0.0f, pattern.GroundStomp.HitboxOffsetY))
            .Recovery(pattern.GroundStomp.RecoveryTime)
            .Rule(boss2.Phase2.Rules);
 
-        ConfigureLeapSmash(p2.Attack(BossSkill.LeapSmash), pattern, boss2.Phase2.Rules);
-        ConfigureEarthquakeRoar(p2.Attack(BossSkill.EarthquakeRoar), pattern, boss2.Phase2.Rules);
+        ConfigureLeapSmash(p2.Attack(AbilityId.LeapSmash), pattern, boss2.Phase2.Rules);
+        ConfigureEarthquakeRoar(p2.Attack(AbilityId.EarthquakeRoar), pattern, boss2.Phase2.Rules);
 
         // Phase 3
         var p3 = builder.Phase(Phase.Phase3)
@@ -106,7 +106,7 @@ public static class Boss2PipelineDefinition {
                 boss2.LandingRecoveryDuration,
                 boss2.TakeoffDistance);
 
-        var frenzy = p3.Attack(BossSkill.FrenzyCharge)
+        var frenzy = p3.Attack(AbilityId.FrenzyCharge)
            .Telegraph(pattern.FrenzyCharge.WindUpTime, pattern.FrenzyCharge.TelegraphColor)
            .Execute(pattern.FrenzyCharge.CastDuration, pattern.FrenzyCharge.ChargeSpeed)
            .Action(0.0f, act => act.Dash(pattern.FrenzyCharge.ChargeSpeed).Hitbox());
@@ -114,9 +114,9 @@ public static class Boss2PipelineDefinition {
         frenzy.Recovery(pattern.FrenzyCharge.RecoveryTime)
            .Rule(boss2.Phase3.Rules);
 
-        ConfigureEarthquakeRoar(p3.Attack(BossSkill.EarthquakeRoar), pattern, boss2.Phase3.Rules);
+        ConfigureEarthquakeRoar(p3.Attack(AbilityId.EarthquakeRoar), pattern, boss2.Phase3.Rules);
 
-        p3.Attack(BossSkill.DoubleCleave)
+        p3.Attack(AbilityId.DoubleCleave)
            .Telegraph(pattern.DoubleCleave.WindUpTime, pattern.DoubleCleave.TelegraphColor)
            .Execute(pattern.DoubleCleave.CastDuration, pattern.DoubleCleave.SlashRangeX)
            .Action(0.0f,
@@ -127,7 +127,7 @@ public static class Boss2PipelineDefinition {
            .Recovery(pattern.DoubleCleave.RecoveryTime)
            .Rule(boss2.Phase3.Rules);
 
-        ConfigureLeapSmash(p3.Attack(BossSkill.LeapSmash), pattern, boss2.Phase3.Rules);
+        ConfigureLeapSmash(p3.Attack(AbilityId.LeapSmash), pattern, boss2.Phase3.Rules);
 
         return builder.Build();
     }

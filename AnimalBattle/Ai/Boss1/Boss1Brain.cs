@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using AnimalBattle.Ai.Abilities;
+using AnimalBattle.Abilities;
+using AnimalBattle.Abilities.Skills;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Hfsm;
-using AnimalBattle.Ai.Skills;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 
@@ -55,9 +55,9 @@ public sealed class Boss1Brain : BaseBossBrain {
                 if (_reactionMachine.CurrentState == _phaseTransitionState) return Boss1State.PhaseTransition;
             }
 
-            if (_combatMachine.CurrentState == _abilityState && _asc.CurrentAbility != null)
+            if (_combatMachine.CurrentState == _abilityState && _asc.SkillRunner is { } runner)
             {
-                return _asc.SkillRunner.CurrentPhase switch {
+                return runner.CurrentPhase switch {
                     SkillPhase.Telegraph => Boss1State.Telegraph,
                     SkillPhase.Active => Boss1State.Execute,
                     SkillPhase.Recovery => Boss1State.Recovery,
@@ -81,9 +81,9 @@ public sealed class Boss1Brain : BaseBossBrain {
                 return phaseCfg.TransitionDuration;
             }
 
-            if (_combatMachine.CurrentState == _abilityState && _asc.CurrentAbility != null)
+            if (_combatMachine.CurrentState == _abilityState && _asc.SkillRunner is { } runner)
             {
-                return _asc.SkillRunner.PhaseDuration;
+                return runner.PhaseDuration;
             }
 
             return phaseCfg.HoverDuration;
@@ -93,44 +93,33 @@ public sealed class Boss1Brain : BaseBossBrain {
     /// <summary>浮遊アニメーション用の累積タイマーを取得します。</summary>
     public float HoverTimer => _hoverTimer;
 
-    /// <inheritdoc />
-    public override bool IsVulnerable => State == Boss1State.Recovery && CurrentSkill == BossSkill.DiveRam;
-
     private void InitializeAbilities()
     {
         var patternCfg = ConfigManager.Boss1Patterns;
 
-        RegisterSkill(BossSkill.DiveRam, patternCfg);
-        RegisterSkill(BossSkill.Aimed3Shot, patternCfg);
-        RegisterSkill(BossSkill.RingBurst, patternCfg);
-        RegisterSkill(BossSkill.DoubleSpiral, patternCfg);
-        RegisterSkill(BossSkill.RainDrop, patternCfg);
-        RegisterSkill(BossSkill.CrossChaos, patternCfg);
-        RegisterSkill(BossSkill.FastSniper, patternCfg);
+        RegisterSkill(AbilityId.DiveRam, patternCfg);
+        RegisterSkill(AbilityId.Aimed3Shot, patternCfg);
+        RegisterSkill(AbilityId.RingBurst, patternCfg);
+        RegisterSkill(AbilityId.DoubleSpiral, patternCfg);
+        RegisterSkill(AbilityId.RainDrop, patternCfg);
+        RegisterSkill(AbilityId.CrossChaos, patternCfg);
+        RegisterSkill(AbilityId.FastSniper, patternCfg);
 
         _asc.OnEmitBullet += (skill, _, _) => RaiseEmitBarrageWave(skill, _currentPosition, _targetPosition);
         _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
 
-    private void RegisterSkill(BossSkill skill, Boss1PatternConfig config)
+    private void RegisterSkill(AbilityId skill, Boss1PatternConfig config)
     {
-        var buildResult = SkillConfigLoader.BuildFromBoss1(skill, config);
+        var cooldown = _configuration.GetSkillDefaultCooldown(skill);
+        var buildResult = Boss1PatternLoader.BuildAbility(skill, config, cooldown);
         if (buildResult.IsError)
         {
             Debug.Assert(false, $"Boss 1 技能時序の構築に失敗しました: {skill}");
             return;
         }
 
-        var cooldown = _configuration.GetSkillDefaultCooldown(skill);
-
-        var ability = new GameplayAbility {
-            SkillId = skill,
-            Cooldown = cooldown,
-            Timeline = buildResult.Value,
-            GrantedTags = GameplayTag.Casting
-        };
-
-        _asc.RegisterAbility(ability);
+        _asc.GiveAbility(buildResult.Value);
     }
 
     private void InitializeStateMachine()
@@ -277,9 +266,9 @@ public sealed class Boss1Brain : BaseBossBrain {
 
     private void UpdateAbilityMotion(float dt, Vec2f playerPos)
     {
-        if (CurrentSkill == BossSkill.DiveRam)
+        if (CurrentSkill == AbilityId.DiveRam)
         {
-            if (_asc.SkillRunner.CurrentPhase == SkillPhase.Active)
+            if (_asc.SkillRunner?.CurrentPhase == SkillPhase.Active)
             {
                 var duration = Math.Max(0.01f, _asc.SkillRunner.PhaseDuration);
                 var progress = Math.Clamp(_asc.SkillRunner.PhaseElapsed / duration, 0.0f, 1.0f);

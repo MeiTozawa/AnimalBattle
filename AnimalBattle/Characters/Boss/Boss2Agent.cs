@@ -95,7 +95,7 @@ public sealed class Boss2Agent : BaseBossAgent
 
         vel.Vx = _brain.Velocity.X;
         var isControlledAirborne = _brain.State == Boss2State.PlatformTraverse
-            || (_brain.AbilitySystem.IsCasting && _brain.CurrentSkill == BossSkill.LeapSmash);
+            || (_brain.AbilitySystem.IsCasting && _brain.CurrentSkill == AbilityId.LeapSmash);
 
         if (isControlledAirborne || isGrounded)
         {
@@ -147,7 +147,7 @@ public sealed class Boss2Agent : BaseBossAgent
         var ignorePlatforms = isControlledAirborne && vel.Vy <= 0.0f;
         if (!ignorePlatforms)
         {
-            var isLeapSmash = _brain.CurrentSkill == BossSkill.LeapSmash;
+            var isLeapSmash = _brain.CurrentSkill == AbilityId.LeapSmash;
             var targetLandingSurfaceY = _brain.TargetLandingSurfaceY;
 
             platformQuery.Each((ref platTrans, ref platCol) =>
@@ -217,7 +217,7 @@ public sealed class Boss2Agent : BaseBossAgent
         _brain.Reset(b2Cfg.SpawnX, b2Cfg.SpawnY);
     }
 
-    private void HandleCreateHitbox(BossSkill skill, float offsetX, float offsetY)
+    private void HandleCreateHitbox(AbilityId skill, float offsetX, float offsetY)
     {
         if (CurrentWorld == default) return;
         var patternCfg = ConfigManager.Boss2Patterns;
@@ -229,7 +229,7 @@ public sealed class Boss2Agent : BaseBossAgent
         var dir = _brain.FacingRight ? SlashDirection.Right : SlashDirection.Left;
         var colHeight = Entity.Get<CollisionBox>().Height;
 
-        if (skill == BossSkill.HeavySlash)
+        if (skill == AbilityId.HeavySlash)
         {
             var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
             var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
@@ -246,7 +246,7 @@ public sealed class Boss2Agent : BaseBossAgent
                 patternCfg.HeavySlash.SlashColor,
                 dir);
         }
-        else if (skill == BossSkill.DoubleCleave)
+        else if (skill == AbilityId.DoubleCleave)
         {
             var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
             var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
@@ -263,9 +263,9 @@ public sealed class Boss2Agent : BaseBossAgent
                 patternCfg.DoubleCleave.SlashColor,
                 dir);
         }
-        else if (skill is BossSkill.GroundStomp or BossSkill.LeapSmash)
+        else if (skill is AbilityId.GroundStomp or AbilityId.LeapSmash)
         {
-            if (skill == BossSkill.LeapSmash)
+            if (skill == AbilityId.LeapSmash)
             {
                 var groundY = trans.Y + colHeight / 2.0f;
                 CombatSpawner.SpawnMeleeSlashHitbox(
@@ -287,7 +287,7 @@ public sealed class Boss2Agent : BaseBossAgent
     }
 
     /// <inheritdoc />
-    protected override void HandleEmitBarrageWave(BossSkill skill, Vec2f origin, Vec2f target)
+    protected override void HandleEmitBarrageWave(AbilityId skill, Vec2f origin, Vec2f target)
     {
         if (CurrentWorld == default) return;
         var b2Cfg = ConfigManager.Boss2;

@@ -102,7 +102,7 @@ public sealed class DecisionRuleBuilder {
     /// </summary>
     /// <param name="skill">対象の技能識別子。</param>
     /// <returns>検証済みの AttackDecisionRule。</returns>
-    public AttackDecisionRule Build(BossSkill skill)
+    public AttackDecisionRule Build(AbilityId skill)
     {
         return new AttackDecisionRule(
             skill,

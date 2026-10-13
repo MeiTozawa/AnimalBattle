@@ -21,7 +21,7 @@ public static class BarrageEmitter
     /// <param name="angleOffset">回転角オフセット参照。</param>
     public static void EmitBoss1(
         World world,
-        BossSkill skill,
+        AbilityId skill,
         Vec2f origin,
         Vec2f target,
         ref float angleOffset)
@@ -32,37 +32,37 @@ public static class BarrageEmitter
 
         switch (skill)
         {
-            case BossSkill.Aimed3Shot:
+            case AbilityId.Aimed3Shot:
                 EmitAimedSpread(world, patternCfg.Aimed3Shot, origin, target);
                 EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
-            case BossSkill.FastSniper:
+            case AbilityId.FastSniper:
                 EmitSniper(world, patternCfg.FastSniper, origin, target);
                 EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
-            case BossSkill.RingBurst:
+            case AbilityId.RingBurst:
                 EmitRadialRing(world, patternCfg.RingBurst, origin, ref angleOffset);
                 EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
-            case BossSkill.DoubleSpiral:
+            case AbilityId.DoubleSpiral:
                 EmitDoubleSpiral(world, patternCfg.DoubleSpiral, origin, ref angleOffset);
                 EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
-            case BossSkill.CrossChaos:
+            case AbilityId.CrossChaos:
                 EmitCrossChaos(world, patternCfg.CrossChaos, origin, ref angleOffset);
                 EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
-            case BossSkill.RainDrop:
+            case AbilityId.RainDrop:
                 EmitRainDrop(world, patternCfg.RainDrop);
                 EventBus.Publish(new BossBarrageFiredEvent(skill));
                 break;
 
-            case BossSkill.DiveRam:
+            case AbilityId.DiveRam:
                 EmitDiveImpact(world, patternCfg.DiveRam, origin);
                 break;
         }
@@ -79,7 +79,7 @@ public static class BarrageEmitter
     /// <param name="bodyHeight">衝突判定高さ。</param>
     public static void EmitBoss2(
         World world,
-        BossSkill skill,
+        AbilityId skill,
         Vec2f origin,
         Vec2f target,
         float forwardDir,
@@ -91,15 +91,15 @@ public static class BarrageEmitter
 
         switch (skill)
         {
-            case BossSkill.EarthquakeRoar:
+            case AbilityId.EarthquakeRoar:
                 EmitEarthquakeRocks(world, patternCfg.EarthquakeRoar);
                 break;
 
-            case BossSkill.GroundStomp:
+            case AbilityId.GroundStomp:
                 EmitGroundStompShockwaves(world, patternCfg.GroundStomp, origin, bodyHeight);
                 break;
 
-            case BossSkill.LeapSmash:
+            case AbilityId.LeapSmash:
                 EmitLeapSmashShrapnel(world, patternCfg.LeapSmash, origin, bodyHeight);
                 break;
         }

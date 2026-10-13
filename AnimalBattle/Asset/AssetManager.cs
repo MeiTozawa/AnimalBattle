@@ -70,9 +70,8 @@ public sealed class AssetManager : IDisposable {
         foreach (var (charType, config) in AnimationRegistry.CharacterConfigs)
         {
             _characterConfigs[charType] = config;
-            if (!LoadCharacterSprite(charType)) allLoaded = false;
-
-            if (!LoadCharacterClips(charType, config)) allLoaded = false;
+            LoadCharacterSprite(charType);
+            LoadCharacterClips(charType, config);
         }
 
         ReadOnlySpan<string> commonTextures = [
@@ -92,39 +91,29 @@ public sealed class AssetManager : IDisposable {
         Debug.Assert(allLoaded, "[AssetManager 警告] 一部のアセットのロードに失敗しました。");
     }
 
-    private static bool LoadCharacterSprite(CharacterType charType)
+    private static void LoadCharacterSprite(CharacterType charType)
     {
-        if (!AnimationRegistry.CharacterSprites.TryGetValue(charType, out var relPath)) return true;
+        if (!AnimationRegistry.CharacterSprites.TryGetValue(charType, out var relPath)) return;
 
         var fullPath = ResolveAssetPath(relPath);
         var handle = AssetService.LoadGraph(fullPath);
         Debug.Assert(handle >= 0, $"[AssetManager 警告] キャラクタースプライトのロードに失敗しました ({charType}): {fullPath}");
-        if (handle >= 0)
-        {
-            _characterSpriteHandles[charType] = handle;
-            _textureHandles[relPath] = handle;
-            Debug.WriteLine(
-                $"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {handle})");
-            return true;
-        }
-
-        return false;
+        _characterSpriteHandles[charType] = handle;
+        _textureHandles[relPath] = handle;
+        Debug.WriteLine(
+            $"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {handle})");
     }
 
-    private static bool LoadCharacterClips(CharacterType charType, AnimationConfig config)
+    private static void LoadCharacterClips(CharacterType charType, AnimationConfig config)
     {
-        var allClipsLoaded = true;
         foreach (var clip in config.Clips)
         {
             if (!string.IsNullOrWhiteSpace(clip.SpritePath))
             {
                 var handle = LoadTexture(clip.SpritePath);
                 Debug.Assert(handle >= 0, $"[AssetManager 警告] クリップスプライトのロードに失敗しました ({charType} / {clip.Name}): {clip.SpritePath}");
-                if (handle < 0) allClipsLoaded = false;
             }
         }
-
-        return allClipsLoaded;
     }
 
     /// <summary>
@@ -143,11 +132,8 @@ public sealed class AssetManager : IDisposable {
         var fullPath = ResolveAssetPath(relativePath);
         var handle = AssetService.LoadGraph(fullPath);
         Debug.Assert(handle >= 0, $"[AssetManager 警告] テクスチャのロードに失敗しました ({relativePath}): {fullPath}");
-        if (handle >= 0)
-        {
-            _textureHandles[relativePath] = handle;
-            Debug.WriteLine($"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {handle})");
-        }
+        _textureHandles[relativePath] = handle;
+        Debug.WriteLine($"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {handle})");
 
         return handle;
     }
@@ -177,7 +163,7 @@ public sealed class AssetManager : IDisposable {
     /// <returns>取得成功時は true、失敗時は false。</returns>
     public static bool TryGetCharacterSpriteHandle(CharacterType type, StringId clipId, out int handle)
     {
-        if (clipId != StringId.Empty && _characterConfigs.TryGetValue(type, out var config) && config != null)
+        if (clipId != StringId.Empty && _characterConfigs.TryGetValue(type, out var config))
         {
             var clip = config.FindClip(clipId);
             if (clip != null && !string.IsNullOrWhiteSpace(clip.SpritePath) &&
@@ -198,7 +184,7 @@ public sealed class AssetManager : IDisposable {
     /// <returns>取得成功時は true、未登録時は false。</returns>
     public static bool TryGetCharacterConfig(CharacterType type, out AnimationConfig config)
     {
-        if (_characterConfigs.TryGetValue(type, out var found) && found != null)
+        if (_characterConfigs.TryGetValue(type, out var found))
         {
             config = found;
             return true;

@@ -1,4 +1,5 @@
 using System.Drawing;
+using AnimalBattle.Abilities;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Characters;
 using AnimalBattle.Characters.Boss;
@@ -287,7 +288,7 @@ public sealed class WorldRenderSystem : IDisposable {
 
         switch (skill)
         {
-            case BossSkill.Aimed3Shot:
+            case AbilityId.Aimed3Shot:
                 TelegraphRenderHelper.DrawAimingLasers(
                     bx,
                     by,
@@ -299,7 +300,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     pattern1.Aimed3Shot.TelegraphColor);
             break;
 
-            case BossSkill.FastSniper:
+            case AbilityId.FastSniper:
                 TelegraphRenderHelper.DrawAimingLasers(
                     bx,
                     by,
@@ -312,7 +313,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     true);
             break;
 
-            case BossSkill.DiveRam:
+            case AbilityId.DiveRam:
                 TelegraphRenderHelper.DrawDiveRamTelegraph(
                     bx,
                     by,
@@ -323,7 +324,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     pattern1.DiveRam.TelegraphColor);
             break;
 
-            case BossSkill.RingBurst:
+            case AbilityId.RingBurst:
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
                     bx,
                     by,
@@ -334,7 +335,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     pattern1.RingBurst.TelegraphColor);
             break;
 
-            case BossSkill.DoubleSpiral:
+            case AbilityId.DoubleSpiral:
                 var spiralAngle = stateTimer * 4.0f;
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
                     bx,
@@ -346,7 +347,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     pattern1.DoubleSpiral.TelegraphColor);
             break;
 
-            case BossSkill.RainDrop:
+            case AbilityId.RainDrop:
                 TelegraphRenderHelper.DrawSkyfallColumns(
                     pattern1.RainDrop.MinX,
                     pattern1.RainDrop.MaxX,
@@ -357,7 +358,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     "▼ RAIN ▼");
             break;
 
-            case BossSkill.CrossChaos:
+            case AbilityId.CrossChaos:
                 var crossAngle = stateTimer * 2.5f;
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
                     bx,
@@ -369,14 +370,14 @@ public sealed class WorldRenderSystem : IDisposable {
                     pattern1.CrossChaos.TelegraphColor);
             break;
 
-            case BossSkill.GroundStomp:
+            case AbilityId.GroundStomp:
                 var b2Cfg = ConfigManager.Boss2;
                 var groundY = by + b2Cfg.CollisionHeight / 2.0f;
                 TelegraphRenderHelper.DrawGroundShockwaveRails((int)bx, groundY, progress,
                     pattern2.GroundStomp.TelegraphColor);
             break;
 
-            case BossSkill.LeapSmash:
+            case AbilityId.LeapSmash:
                 TelegraphRenderHelper.DrawLeapSmashTelegraph(
                     finalTargetX,
                     finalTargetY,
@@ -384,7 +385,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     pattern2.LeapSmash.TelegraphColor);
             break;
 
-            case BossSkill.EarthquakeRoar:
+            case AbilityId.EarthquakeRoar:
                 TelegraphRenderHelper.DrawSkyfallColumns(
                     pattern2.EarthquakeRoar.MinX,
                     pattern2.EarthquakeRoar.MaxX,
@@ -395,7 +396,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     "▼ ROCK ▼");
             break;
 
-            case BossSkill.FrenzyCharge:
+            case AbilityId.FrenzyCharge:
                 TelegraphRenderHelper.DrawChargeDangerTrack(
                     (int)bx,
                     (int)by,
@@ -405,7 +406,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     pattern2.FrenzyCharge.TelegraphColor);
             break;
 
-            case BossSkill.DoubleCleave:
+            case AbilityId.DoubleCleave:
                 TelegraphRenderHelper.DrawMeleeDangerBox(
                     (int)bx,
                     (int)by,
@@ -416,7 +417,7 @@ public sealed class WorldRenderSystem : IDisposable {
                     pattern2.DoubleCleave.TelegraphColor);
             break;
 
-            case BossSkill.HeavySlash:
+            case AbilityId.HeavySlash:
                 TelegraphRenderHelper.DrawMeleeDangerBox(
                     (int)bx,
                     (int)by,

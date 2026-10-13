@@ -1,4 +1,4 @@
-using AnimalBattle.Ai.Attack;
+using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Ai.Contracts;
 
 namespace AnimalBattle.Ai.Dsl;
@@ -31,7 +31,7 @@ public sealed class BossPipelineBuilder(BossType bossType, string name) {
     public BossBehaviorPipeline Build()
     {
         Dictionary<Phase, IReadOnlyList<AttackDecisionRule>> rulesByPhase = [];
-        Dictionary<BossSkill, AttackDefinition> attacks = [];
+        Dictionary<AbilityId, AttackDefinition> attacks = [];
         Dictionary<Phase, PhaseLocomotionSettings> locomotionByPhase = [];
 
         foreach (var phaseBuilder in _phaseBuilders)

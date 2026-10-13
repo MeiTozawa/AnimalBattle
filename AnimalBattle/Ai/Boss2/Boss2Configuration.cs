@@ -1,5 +1,6 @@
 using System.Diagnostics;
-using AnimalBattle.Ai.Attack;
+using AnimalBattle.Abilities;
+using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
 
@@ -15,7 +16,7 @@ public readonly struct Boss2PhaseSettings(
     float maxFallSpeed,
     float patrolRadius,
     float transitionDuration,
-    IReadOnlyList<BossSkill> attackOrder,
+    IReadOnlyList<AbilityId> attackOrder,
     IReadOnlyList<AttackDecisionRule>? rules = null,
     float maxAscentDuration = 0.80f,
     float landingRecoveryDuration = 0.10f,
@@ -43,7 +44,7 @@ public readonly struct Boss2PhaseSettings(
     public float TransitionDuration { get; } = transitionDuration;
 
     /// <summary>この Phase で実行可能な攻撃順序です。</summary>
-    public IReadOnlyList<BossSkill> AttackOrder { get; } = attackOrder ?? [];
+    public IReadOnlyList<AbilityId> AttackOrder { get; } = attackOrder ?? [];
 
     /// <summary>この Phase で評価される攻撃意思決定ルールです。</summary>
     public IReadOnlyList<AttackDecisionRule> Rules { get; } = rules ?? [];
@@ -63,9 +64,9 @@ public readonly struct Boss2PhaseSettings(
 
 /// <summary>Boss2 攻撃の定義と固有パラメータです。</summary>
 /// <remarks>Boss2 攻撃 pattern を生成します。</remarks>
-public sealed class Boss2AttackPattern(BossSkill skill, AttackDefinition definition) {
+public sealed class Boss2AttackPattern(AbilityId skill, AttackDefinition definition) {
     /// <summary>技能識別子です。</summary>
-    public BossSkill Skill { get; } = skill;
+    public AbilityId Skill { get; } = skill;
 
     /// <summary>共通 Telegraph/Execute/Recovery 定義です。</summary>
     public AttackDefinition Definition { get; } = definition;
@@ -141,22 +142,22 @@ public interface IBoss2Configuration {
     /// <summary>指定 Phase の検証済み設定を取得します。</summary>
     Boss2PhaseSettings GetPhase(Phase phase);
 
-    /// <summary>指定 BossSkill の検証済み pattern を取得します。</summary>
-    bool GetAttack(BossSkill skill, out Boss2AttackPattern pattern);
+    /// <summary>指定 AbilityId の検証済み pattern を取得します。</summary>
+    bool GetAttack(AbilityId skill, out Boss2AttackPattern pattern);
 
     /// <summary>技能の既定冷却時間を取得します。</summary>
-    float GetSkillDefaultCooldown(BossSkill skill);
+    float GetSkillDefaultCooldown(AbilityId skill);
 }
 
 /// <summary>既存 Boss2 設定の検証済み既定 snapshot です。</summary>
 public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     private readonly Boss2AttackPattern[] _attacks = [
-        new(BossSkill.HeavySlash, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.HeavySlash]),
-        new(BossSkill.DoubleCleave, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.DoubleCleave]),
-        new(BossSkill.GroundStomp, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.GroundStomp]),
-        new(BossSkill.LeapSmash, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.LeapSmash]),
-        new(BossSkill.FrenzyCharge, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.FrenzyCharge]),
-        new(BossSkill.EarthquakeRoar, Boss2PipelineDefinition.Pipeline.Attacks[BossSkill.EarthquakeRoar])
+        new(AbilityId.HeavySlash, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.HeavySlash]),
+        new(AbilityId.DoubleCleave, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.DoubleCleave]),
+        new(AbilityId.GroundStomp, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.GroundStomp]),
+        new(AbilityId.LeapSmash, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.LeapSmash]),
+        new(AbilityId.FrenzyCharge, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.FrenzyCharge]),
+        new(AbilityId.EarthquakeRoar, Boss2PipelineDefinition.Pipeline.Attacks[AbilityId.EarthquakeRoar])
     ];
 
     /// <inheritdoc />
@@ -172,13 +173,13 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
             _ => AssertHelper.FailWithDefault($"[Boss2Configuration 警告] 未知のフェーズ (PhaseConfig): {phase}", toml.Phase1)
         };
 
-        IReadOnlyList<BossSkill> skills = phase switch {
-            Phase.Phase1 => [BossSkill.HeavySlash, BossSkill.GroundStomp, BossSkill.HeavySlash, BossSkill.LeapSmash],
+        IReadOnlyList<AbilityId> skills = phase switch {
+            Phase.Phase1 => [AbilityId.HeavySlash, AbilityId.GroundStomp, AbilityId.HeavySlash, AbilityId.LeapSmash],
             Phase.Phase2 =>
-                [BossSkill.DoubleCleave, BossSkill.GroundStomp, BossSkill.LeapSmash, BossSkill.DoubleCleave],
+                [AbilityId.DoubleCleave, AbilityId.GroundStomp, AbilityId.LeapSmash, AbilityId.DoubleCleave],
             Phase.Phase3 =>
-                [BossSkill.FrenzyCharge, BossSkill.EarthquakeRoar, BossSkill.DoubleCleave, BossSkill.LeapSmash],
-            _ => AssertHelper.FailWithDefault<IReadOnlyList<BossSkill>>($"[Boss2Configuration 警告] 未知のフェーズ (Skills): {phase}", [BossSkill.HeavySlash])
+                [AbilityId.FrenzyCharge, AbilityId.EarthquakeRoar, AbilityId.DoubleCleave, AbilityId.LeapSmash],
+            _ => AssertHelper.FailWithDefault<IReadOnlyList<AbilityId>>($"[Boss2Configuration 警告] 未知のフェーズ (Skills): {phase}", [AbilityId.HeavySlash])
         };
 
         var jumpForce = loco.JumpForce > 0 ? loco.JumpForce : phaseCfg.JumpForce;
@@ -207,7 +208,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     }
 
     /// <inheritdoc />
-    public bool GetAttack(BossSkill skill, out Boss2AttackPattern pattern)
+    public bool GetAttack(AbilityId skill, out Boss2AttackPattern pattern)
     {
         try
         {
@@ -257,16 +258,16 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     }
 
     /// <inheritdoc />
-    public float GetSkillDefaultCooldown(BossSkill skill)
+    public float GetSkillDefaultCooldown(AbilityId skill)
     {
         var pattern = ConfigManager.Boss2Patterns;
         return skill switch {
-            BossSkill.EarthquakeRoar => pattern.EarthquakeRoar.DefaultCooldown,
-            BossSkill.LeapSmash => pattern.LeapSmash.DefaultCooldown,
-            BossSkill.GroundStomp => pattern.GroundStomp.DefaultCooldown,
-            BossSkill.DoubleCleave => pattern.DoubleCleave.DefaultCooldown,
-            BossSkill.HeavySlash => pattern.HeavySlash.DefaultCooldown,
-            BossSkill.FrenzyCharge => pattern.FrenzyCharge.DefaultCooldown,
+            AbilityId.EarthquakeRoar => pattern.EarthquakeRoar.DefaultCooldown,
+            AbilityId.LeapSmash => pattern.LeapSmash.DefaultCooldown,
+            AbilityId.GroundStomp => pattern.GroundStomp.DefaultCooldown,
+            AbilityId.DoubleCleave => pattern.DoubleCleave.DefaultCooldown,
+            AbilityId.HeavySlash => pattern.HeavySlash.DefaultCooldown,
+            AbilityId.FrenzyCharge => pattern.FrenzyCharge.DefaultCooldown,
             _ => AssertHelper.FailWithDefault($"[Boss2Configuration 警告] 未知の技能クールダウン要求: {skill}", 0.0f)
         };
     }

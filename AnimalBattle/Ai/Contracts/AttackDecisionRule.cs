@@ -17,7 +17,7 @@ namespace AnimalBattle.Ai.Contracts;
 /// <param name="maxConsecutiveUses">連続発動可能な最大回数。超過時は抽選除外。</param>
 /// <param name="consecutiveDecay">連続発動時の重み減衰率。範囲は0.0fから1.0f。</param>
 public readonly struct AttackDecisionRule(
-    BossSkill skill,
+    AbilityId skill,
     float cooldown = 0.0f,
     float minDistance = 0.0f,
     float maxDistance = 300.0f,
@@ -28,7 +28,7 @@ public readonly struct AttackDecisionRule(
     int maxConsecutiveUses = 2,
     float consecutiveDecay = 0.5f) {
     /// <summary>対象の技能識別子を取得します。</summary>
-    public BossSkill Skill { get; } = skill;
+    public AbilityId Skill { get; } = skill;
 
     /// <summary>技能の基本冷却時間を取得します。単位は秒。</summary>
     public float Cooldown { get; } = cooldown;

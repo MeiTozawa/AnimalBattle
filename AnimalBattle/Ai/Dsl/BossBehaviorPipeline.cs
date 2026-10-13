@@ -1,5 +1,5 @@
 using System.Collections.Frozen;
-using AnimalBattle.Ai.Attack;
+using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Ai.Contracts;
 
 namespace AnimalBattle.Ai.Dsl;
@@ -16,9 +16,9 @@ public sealed class BossBehaviorPipeline(
     BossType bossType,
     string name,
     Dictionary<Phase, IReadOnlyList<AttackDecisionRule>> rulesByPhase,
-    Dictionary<BossSkill, AttackDefinition> attacks,
+    Dictionary<AbilityId, AttackDefinition> attacks,
     Dictionary<Phase, PhaseLocomotionSettings>? locomotionByPhase = null) {
-    private readonly FrozenDictionary<BossSkill, AttackDefinition> _attacks = attacks.ToFrozenDictionary();
+    private readonly FrozenDictionary<AbilityId, AttackDefinition> _attacks = attacks.ToFrozenDictionary();
 
     private readonly FrozenDictionary<Phase, PhaseLocomotionSettings> _locomotionByPhase =
         (locomotionByPhase ?? []).ToFrozenDictionary();
@@ -33,7 +33,7 @@ public sealed class BossBehaviorPipeline(
     public string Name { get; } = name;
 
     /// <summary>全攻撃の検証済み AttackDefinition マップを取得します。</summary>
-    public IReadOnlyDictionary<BossSkill, AttackDefinition> Attacks => _attacks;
+    public IReadOnlyDictionary<AbilityId, AttackDefinition> Attacks => _attacks;
 
     /// <summary>
     ///     指定 Phase の攻撃意思決定ルール一覧を取得します。
@@ -48,12 +48,12 @@ public sealed class BossBehaviorPipeline(
     }
 
     /// <summary>
-    ///     指定された BossSkill の AttackDefinition を取得します。
+    ///     指定された AbilityId の AttackDefinition を取得します。
     /// </summary>
     /// <param name="skill">技能識別子。</param>
     /// <param name="definition">見つかった攻撃定義。</param>
     /// <returns>定義が存在する場合は true。</returns>
-    public bool TryGetAttack(BossSkill skill, out AttackDefinition definition)
+    public bool TryGetAttack(AbilityId skill, out AttackDefinition definition)
     {
         return _attacks.TryGetValue(skill, out definition!);
     }

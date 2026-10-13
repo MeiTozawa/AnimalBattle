@@ -107,7 +107,7 @@ public sealed class Boss1Agent : BaseBossAgent
     }
 
     /// <inheritdoc />
-    protected override void HandleEmitBarrageWave(BossSkill skill, Vec2f origin, Vec2f target)
+    protected override void HandleEmitBarrageWave(AbilityId skill, Vec2f origin, Vec2f target)
     {
         if (CurrentWorld == default) return;
         BarrageEmitter.EmitBoss1(CurrentWorld, skill, origin, target, ref EmitterAngleOffset);

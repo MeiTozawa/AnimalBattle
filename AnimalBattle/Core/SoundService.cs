@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using AnimalBattle.Asset;
 using AnimalBattle.Bindings;
-using AnimalBattle.Configs;
 using AnimalBattle.Events;
 
 namespace AnimalBattle.Core;

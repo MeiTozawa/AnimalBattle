@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using AnimalBattle.Ai.Attack;
+using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Configs;
 
@@ -21,7 +21,7 @@ public readonly struct Boss1PhaseSettings(
     float recoverDelayRatio,
     float transitionDuration,
     float transitionFloatSpeed,
-    IReadOnlyList<BossSkill> attackOrder) {
+    IReadOnlyList<AbilityId> attackOrder) {
     /// <summary>Hover の継続時間です。</summary>
     public float HoverDuration { get; } = hoverDuration;
 
@@ -62,14 +62,14 @@ public readonly struct Boss1PhaseSettings(
     public float TransitionFloatSpeed { get; } = transitionFloatSpeed;
 
     /// <summary>この Phase の技能順です。</summary>
-    public IReadOnlyList<BossSkill> AttackOrder { get; } =
+    public IReadOnlyList<AbilityId> AttackOrder { get; } =
         attackOrder ?? throw new ArgumentNullException(nameof(attackOrder));
 }
 
 /// <summary>Boss1 攻撃の三段階と固有パラメータを不変に保持します。</summary>
 /// <remarks>Boss1 攻撃 pattern を生成します。</remarks>
 public sealed class Boss1AttackPattern(
-    BossSkill skill,
+    AbilityId skill,
     AttackDefinition definition,
     float interval = 0,
     float bulletSpeed = 0,
@@ -81,7 +81,7 @@ public sealed class Boss1AttackPattern(
     EaseType easeType = EaseType.Linear) {
     /// <summary>Boss1 攻撃 pattern を生成します。</summary>
     public Boss1AttackPattern(
-        BossSkill skill,
+        AbilityId skill,
         float telegraphDuration,
         float executeDuration,
         float recoveryDuration,
@@ -108,7 +108,7 @@ public sealed class Boss1AttackPattern(
     }
 
     /// <summary>安定した技能識別子です。</summary>
-    public BossSkill Skill { get; } = skill;
+    public AbilityId Skill { get; } = skill;
 
     /// <summary>共通 Telegraph/Execute/Recovery 定義です。</summary>
     public AttackDefinition Definition { get; } = definition;
@@ -139,8 +139,8 @@ public sealed class Boss1AttackPattern(
 
     /// <summary>三段階と固有パラメータが実行可能かどうかを取得します。</summary>
     public bool IsValid => Definition.IsValid
-     && (Skill == BossSkill.DiveRam || (Interval > 0 && BulletSpeed > 0))
-     && (Skill != BossSkill.RainDrop || MaxX > MinX);
+     && (Skill == AbilityId.DiveRam || (Interval > 0 && BulletSpeed > 0))
+     && (Skill != AbilityId.RainDrop || MaxX > MinX);
 }
 
 /// <summary>Boss1 State_Module が読む設定の注入境界です。</summary>
@@ -149,37 +149,37 @@ public interface IBoss1Configuration {
     Boss1PhaseSettings GetPhase(Phase phase);
 
     /// <summary>指定技能の検証済み pattern を取得します。</summary>
-    bool GetAttack(BossSkill skill, out Boss1AttackPattern pattern);
+    bool GetAttack(AbilityId skill, out Boss1AttackPattern pattern);
 
     /// <summary>指定技能のデフォルトクールダウン時間を取得します。</summary>
-    float GetSkillDefaultCooldown(BossSkill skill);
+    float GetSkillDefaultCooldown(AbilityId skill);
 }
 
 /// <summary>既定値を保持する Boss1 設定です。</summary>
 public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     private readonly Boss1AttackPattern[] _attacks = [
-        new(BossSkill.Aimed3Shot, Boss1PipelineDefinition.Pipeline.Attacks[BossSkill.Aimed3Shot], 0.45f, 372.0f, 3,
+        new(AbilityId.Aimed3Shot, Boss1PipelineDefinition.Pipeline.Attacks[AbilityId.Aimed3Shot], 0.45f, 372.0f, 3,
             0.16f),
-        new(BossSkill.RingBurst, Boss1PipelineDefinition.Pipeline.Attacks[BossSkill.RingBurst], 0.50f, 228.0f, 16,
+        new(AbilityId.RingBurst, Boss1PipelineDefinition.Pipeline.Attacks[AbilityId.RingBurst], 0.50f, 228.0f, 16,
             0.25f),
-        new(BossSkill.DoubleSpiral, Boss1PipelineDefinition.Pipeline.Attacks[BossSkill.DoubleSpiral], 0.075f, 288.0f, 2,
+        new(AbilityId.DoubleSpiral, Boss1PipelineDefinition.Pipeline.Attacks[AbilityId.DoubleSpiral], 0.075f, 288.0f, 2,
             0.22f),
-        new(BossSkill.RainDrop, Boss1PipelineDefinition.Pipeline.Attacks[BossSkill.RainDrop], 0.32f, 312.0f, 2, 0,
+        new(AbilityId.RainDrop, Boss1PipelineDefinition.Pipeline.Attacks[AbilityId.RainDrop], 0.32f, 312.0f, 2, 0,
             60.0f, 1220.0f),
-        new(BossSkill.CrossChaos, Boss1PipelineDefinition.Pipeline.Attacks[BossSkill.CrossChaos], 0.10f, 312.0f, 4,
+        new(AbilityId.CrossChaos, Boss1PipelineDefinition.Pipeline.Attacks[AbilityId.CrossChaos], 0.10f, 312.0f, 4,
             0.18f),
-        new(BossSkill.FastSniper, Boss1PipelineDefinition.Pipeline.Attacks[BossSkill.FastSniper], 0.30f, 510.0f, 1),
-        new(BossSkill.DiveRam, Boss1PipelineDefinition.Pipeline.Attacks[BossSkill.DiveRam], dashSpeed: 960.0f,
+        new(AbilityId.FastSniper, Boss1PipelineDefinition.Pipeline.Attacks[AbilityId.FastSniper], 0.30f, 510.0f, 1),
+        new(AbilityId.DiveRam, Boss1PipelineDefinition.Pipeline.Attacks[AbilityId.DiveRam], dashSpeed: 960.0f,
             easeType: EaseType.InQuad)
     ];
 
     private readonly Boss1PhaseSettings[] _phases = [
         new(0.8f, 220.0f, 1.6f, 240.0f, 1.8f, 60.0f, 0.12f, 3.5f, 8.0f, 4.0f, 0.5f, 1.0f, 3.0f,
-            [BossSkill.Aimed3Shot, BossSkill.DiveRam, BossSkill.RingBurst]),
+            [AbilityId.Aimed3Shot, AbilityId.DiveRam, AbilityId.RingBurst]),
         new(0.6f, 250.0f, 2.0f, 350.0f, 2.4f, 90.0f, 0.15f, 4.0f, 10.0f, 4.5f, 0.45f, 1.0f, 3.5f,
-            [BossSkill.DoubleSpiral, BossSkill.DiveRam, BossSkill.RainDrop]),
+            [AbilityId.DoubleSpiral, AbilityId.DiveRam, AbilityId.RainDrop]),
         new(0.4f, 280.0f, 2.6f, 420.0f, 3.0f, 120.0f, 0.20f, 4.5f, 12.0f, 5.0f, 0.40f, 1.0f, 4.0f,
-            [BossSkill.CrossChaos, BossSkill.DiveRam, BossSkill.FastSniper])
+            [AbilityId.CrossChaos, AbilityId.DiveRam, AbilityId.FastSniper])
     ];
 
     /// <inheritdoc />
@@ -201,7 +201,7 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
             if (tomlPhase.HoverDuration > 0.0f)
             {
                 var order = tomlPhase.Skills.Count > 0
-                    ? tomlPhase.Skills.Select(ResolveBossSkill).Where(id => id.IsValid()).ToArray()
+                    ? tomlPhase.Skills.Select(ResolveAbility).Where(id => id.IsValid()).ToArray()
                     : _phases[index].AttackOrder.ToArray();
 
 
@@ -231,42 +231,42 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     }
 
     /// <inheritdoc />
-    public bool GetAttack(BossSkill skill, out Boss1AttackPattern pattern)
+    public bool GetAttack(AbilityId skill, out Boss1AttackPattern pattern)
     {
         try
         {
             var toml = ConfigManager.Boss1Patterns;
             Boss1AttackPattern? configuredPattern = skill switch {
-                BossSkill.Aimed3Shot =>
+                AbilityId.Aimed3Shot =>
                     new Boss1AttackPattern(skill, toml.Aimed3Shot.WindUpTime, toml.Aimed3Shot.CastDuration,
                         toml.Aimed3Shot.RecoveryTime, toml.Aimed3Shot.Interval, toml.Aimed3Shot.BulletSpeed,
                         toml.Aimed3Shot.BulletCount, toml.Aimed3Shot.SpreadAngle),
 
-                BossSkill.RingBurst =>
+                AbilityId.RingBurst =>
                     new Boss1AttackPattern(skill, toml.RingBurst.WindUpTime, toml.RingBurst.CastDuration,
                         toml.RingBurst.RecoveryTime, toml.RingBurst.Interval, toml.RingBurst.BulletSpeed,
                         toml.RingBurst.BulletCount, toml.RingBurst.AngleStep),
 
-                BossSkill.DoubleSpiral =>
+                AbilityId.DoubleSpiral =>
                     new Boss1AttackPattern(skill, toml.DoubleSpiral.WindUpTime, toml.DoubleSpiral.CastDuration,
                         toml.DoubleSpiral.RecoveryTime, toml.DoubleSpiral.Interval, toml.DoubleSpiral.BulletSpeed,
                         2, toml.DoubleSpiral.AngleStep),
 
-                BossSkill.RainDrop =>
+                AbilityId.RainDrop =>
                     new Boss1AttackPattern(skill, toml.RainDrop.WindUpTime, toml.RainDrop.CastDuration,
                         toml.RainDrop.RecoveryTime, toml.RainDrop.Interval, toml.RainDrop.BulletSpeed, 2, 0.0f,
                         toml.RainDrop.MinX, toml.RainDrop.MaxX),
 
-                BossSkill.CrossChaos =>
+                AbilityId.CrossChaos =>
                     new Boss1AttackPattern(skill, toml.CrossChaos.WindUpTime, toml.CrossChaos.CastDuration,
                         toml.CrossChaos.RecoveryTime, toml.CrossChaos.Interval, toml.CrossChaos.BulletSpeed, 4,
                         toml.CrossChaos.AngleStep),
 
-                BossSkill.FastSniper =>
+                AbilityId.FastSniper =>
                     new Boss1AttackPattern(skill, toml.FastSniper.WindUpTime, toml.FastSniper.CastDuration,
                         toml.FastSniper.RecoveryTime, toml.FastSniper.Interval, toml.FastSniper.BulletSpeed, 1),
 
-                BossSkill.DiveRam =>
+                AbilityId.DiveRam =>
                     new Boss1AttackPattern(skill, toml.DiveRam.WindUpTime, toml.DiveRam.CastDuration,
                         toml.DiveRam.RecoveryTime, dashSpeed: toml.DiveRam.DashSpeed,
                         easeType: toml.DiveRam.EaseType),
@@ -297,23 +297,23 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     }
 
     /// <inheritdoc />
-    public float GetSkillDefaultCooldown(BossSkill skill)
+    public float GetSkillDefaultCooldown(AbilityId skill)
     {
         var toml = ConfigManager.Boss1Patterns;
         return skill switch {
-            BossSkill.DiveRam => toml.DiveRam.DefaultCooldown,
-            BossSkill.Aimed3Shot => toml.Aimed3Shot.DefaultCooldown,
-            BossSkill.RingBurst => toml.RingBurst.DefaultCooldown,
-            BossSkill.DoubleSpiral => toml.DoubleSpiral.DefaultCooldown,
-            BossSkill.RainDrop => toml.RainDrop.DefaultCooldown,
-            BossSkill.CrossChaos => toml.CrossChaos.DefaultCooldown,
-            BossSkill.FastSniper => toml.FastSniper.DefaultCooldown,
+            AbilityId.DiveRam => toml.DiveRam.DefaultCooldown,
+            AbilityId.Aimed3Shot => toml.Aimed3Shot.DefaultCooldown,
+            AbilityId.RingBurst => toml.RingBurst.DefaultCooldown,
+            AbilityId.DoubleSpiral => toml.DoubleSpiral.DefaultCooldown,
+            AbilityId.RainDrop => toml.RainDrop.DefaultCooldown,
+            AbilityId.CrossChaos => toml.CrossChaos.DefaultCooldown,
+            AbilityId.FastSniper => toml.FastSniper.DefaultCooldown,
             _ => AssertHelper.FailWithDefault($"[Boss1Configuration 警告] 未知の技能クールダウン要求: {skill}", 0.0f)
         };
     }
 
-    private static BossSkill ResolveBossSkill(string skillName)
+    private static AbilityId ResolveAbility(string skillName)
     {
-        return Enum.TryParse(skillName, true, out BossSkill id) ? id : BossSkill.None;
+        return Enum.TryParse(skillName, true, out AbilityId id) ? id : AbilityId.None;
     }
 }

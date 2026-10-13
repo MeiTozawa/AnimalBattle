@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
+using AnimalBattle.Abilities;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Ai.Contracts;
@@ -153,7 +154,7 @@ public static class HudRenderSystem {
         _ => AssertHelper.FailWithDefault("[HUD 警告] 未知のフェーズ", 1)
     };
 
-    private static void GetBossStateInfo(BossState state, BossSkill skill, BossHpBarRenderConfig hpCfg,
+    private static void GetBossStateInfo(BossState state, AbilityId skill, BossHpBarRenderConfig hpCfg,
         out string stateName, out Color badgeColor)
     {
         (stateName, badgeColor) = state switch {

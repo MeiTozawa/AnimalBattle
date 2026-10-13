@@ -33,7 +33,6 @@ public static class AssetService {
     public static bool DeleteGraph(int handle)
     {
         Debug.Assert(handle >= 0, $"[AssetService 警告] 無効なグラフィックハンドルです (Handle: {handle})。");
-        if (handle < 0) return false;
 
         var success = NativeBindings.Engine_DeleteGraph(handle);
         Debug.Assert(success, $"[AssetService 警告] グラフィックハンドルの解放に失敗しました (Handle: {handle})。");

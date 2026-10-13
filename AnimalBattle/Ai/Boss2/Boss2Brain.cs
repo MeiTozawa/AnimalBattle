@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using AnimalBattle.Ai.Abilities;
-using AnimalBattle.Ai.Contracts;
+using AnimalBattle.Abilities;
 using AnimalBattle.Ai.Decision;
+using AnimalBattle.Abilities.Skills;
+using AnimalBattle.Ai.Contracts;
 using AnimalBattle.Ai.Hfsm;
-using AnimalBattle.Ai.Skills;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Maps.Navigation;
@@ -88,9 +88,9 @@ public sealed class Boss2Brain : BaseBossBrain {
                 if (_reactionMachine.CurrentState == _wallCrashStunState) return Boss2State.WallCrashStun;
             }
 
-            if (_combatMachine.CurrentState == _abilityState && _asc.CurrentAbility != null)
+            if (_combatMachine.CurrentState == _abilityState && _asc.SkillRunner is { } runner)
             {
-                return _asc.SkillRunner.CurrentPhase switch {
+                return runner.CurrentPhase switch {
                     SkillPhase.Telegraph => Boss2State.Telegraph,
                     SkillPhase.Active => Boss2State.Execute,
                     SkillPhase.Recovery => Boss2State.Recovery,
@@ -122,9 +122,9 @@ public sealed class Boss2Brain : BaseBossBrain {
                 return 0.0f;
             }
 
-            if (_combatMachine.CurrentState == _abilityState && _asc.CurrentAbility != null)
+            if (_combatMachine.CurrentState == _abilityState && _asc.SkillRunner is { } runner)
             {
-                return _asc.SkillRunner.PhaseDuration;
+                return runner.PhaseDuration;
             }
 
             if (_combatMachine.CurrentState == _idleState) return phaseCfg.IdleDuration;
@@ -134,24 +134,19 @@ public sealed class Boss2Brain : BaseBossBrain {
         }
     }
 
-    /// <inheritdoc />
-    public override bool IsVulnerable =>
-        (State == Boss2State.Recovery && CurrentSkill == BossSkill.LeapSmash)
-        || State == Boss2State.WallCrashStun;
-
     /// <summary>近接攻撃判定生成イベント。</summary>
-    public event Action<BossSkill, float, float>? OnCreateHitbox;
+    public event Action<AbilityId, float, float>? OnCreateHitbox;
 
     private void InitializeAbilities()
     {
         var patternCfg = ConfigManager.Boss2Patterns;
 
-        RegisterSkill(BossSkill.HeavySlash, patternCfg);
-        RegisterSkill(BossSkill.GroundStomp, patternCfg);
-        RegisterSkill(BossSkill.LeapSmash, patternCfg);
-        RegisterSkill(BossSkill.DoubleCleave, patternCfg);
-        RegisterSkill(BossSkill.FrenzyCharge, patternCfg);
-        RegisterSkill(BossSkill.EarthquakeRoar, patternCfg);
+        RegisterSkill(AbilityId.HeavySlash, patternCfg);
+        RegisterSkill(AbilityId.GroundStomp, patternCfg);
+        RegisterSkill(AbilityId.LeapSmash, patternCfg);
+        RegisterSkill(AbilityId.DoubleCleave, patternCfg);
+        RegisterSkill(AbilityId.FrenzyCharge, patternCfg);
+        RegisterSkill(AbilityId.EarthquakeRoar, patternCfg);
 
         _asc.OnExecuteMovement += (vx, vy) => _currentVelocity = new Vec2f(vx, vy);
         _asc.OnEmitBullet += (skill, _, _) => RaiseEmitBarrageWave(skill, _currentPosition, _targetPosition);
@@ -159,25 +154,17 @@ public sealed class Boss2Brain : BaseBossBrain {
         _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
 
-    private void RegisterSkill(BossSkill skill, Boss2PatternConfig config)
+    private void RegisterSkill(AbilityId skill, Boss2PatternConfig config)
     {
-        var buildResult = SkillConfigLoader.BuildFromBoss2(skill, config);
+        var cooldown = _configuration.GetSkillDefaultCooldown(skill);
+        var buildResult = Boss2PatternLoader.BuildAbility(skill, config, cooldown);
         if (buildResult.IsError)
         {
             Debug.Assert(false, $"Boss 2 技能時序の構築に失敗しました: {skill}");
             return;
         }
 
-        var cooldown = _configuration.GetSkillDefaultCooldown(skill);
-
-        var ability = new GameplayAbility {
-            SkillId = skill,
-            Cooldown = cooldown,
-            Timeline = buildResult.Value,
-            GrantedTags = GameplayTag.Casting
-        };
-
-        _asc.RegisterAbility(ability);
+        _asc.GiveAbility(buildResult.Value);
     }
 
     private void SyncPhaseAbilitiesCooldown(Boss2PhaseSettings phaseCfg)
@@ -221,6 +208,7 @@ public sealed class Boss2Brain : BaseBossBrain {
             _stateTimer = 0.0f;
             _currentVelocity = Vec2f.Zero;
             _asc.InterruptCurrentAbility();
+            _asc.AddTag(GameplayTag.Stunned | GameplayTag.Vulnerable);
         });
 
         _reactionMachine.AddSubState(_wallCrashStunState);
@@ -447,12 +435,12 @@ public sealed class Boss2Brain : BaseBossBrain {
 
         var dir = _facingRight ? 1.0f : -1.0f;
 
-        if (chosenSkill != BossSkill.None)
+        if (chosenSkill != AbilityId.None)
         {
             if (_asc.TryActivateAbility(chosenSkill, dir))
             {
                 _targetPosition = new Vec2f(_currentPosition.X + dx, _currentPosition.Y + dy);
-                if (chosenSkill == BossSkill.LeapSmash)
+                if (chosenSkill == AbilityId.LeapSmash)
                 {
                     _leapStartPosition = _currentPosition;
                     LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
@@ -465,11 +453,11 @@ public sealed class Boss2Brain : BaseBossBrain {
 
         if (_stateTimer >= phaseCfg.ChaseTimeout)
         {
-            var antiKiteSkill = isSamePlatform ? BossSkill.GroundStomp : BossSkill.LeapSmash;
+            var antiKiteSkill = isSamePlatform ? AbilityId.GroundStomp : AbilityId.LeapSmash;
             if (_asc.TryActivateAbility(antiKiteSkill, dir))
             {
                 _targetPosition = new Vec2f(_currentPosition.X + dx, _currentPosition.Y + dy);
-                if (antiKiteSkill == BossSkill.LeapSmash)
+                if (antiKiteSkill == AbilityId.LeapSmash)
                 {
                     _leapStartPosition = _currentPosition;
                     LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
@@ -524,8 +512,8 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     private void UpdateAbility(float dt, bool isOnWall, bool isGrounded, Vec2f playerPos)
     {
-        if (CurrentSkill == BossSkill.FrenzyCharge &&
-            _asc.SkillRunner.CurrentPhase == SkillPhase.Active &&
+        if (CurrentSkill == AbilityId.FrenzyCharge &&
+            _asc.SkillRunner?.CurrentPhase == SkillPhase.Active &&
             isOnWall &&
             MathF.Abs(_currentVelocity.X) > 10.0f)
         {
@@ -535,7 +523,7 @@ public sealed class Boss2Brain : BaseBossBrain {
             return;
         }
 
-        if (CurrentSkill == BossSkill.LeapSmash)
+        if (CurrentSkill == AbilityId.LeapSmash)
         {
             UpdateLeapSmashMotion(dt, isGrounded, playerPos);
         }
@@ -544,6 +532,8 @@ public sealed class Boss2Brain : BaseBossBrain {
     private void UpdateLeapSmashMotion(float dt, bool isGrounded, Vec2f playerPos)
     {
         var runner = _asc.SkillRunner;
+        if (runner is null) return;
+
         var patternCfg = ConfigManager.Boss2Patterns.LeapSmash;
         var flyDuration = patternCfg.FlyDuration > 0.0f ? patternCfg.FlyDuration : 0.45f;
         var peakY = patternCfg.PeakAltitudeY > 0.0f ? patternCfg.PeakAltitudeY : 130.0f;
@@ -621,6 +611,7 @@ public sealed class Boss2Brain : BaseBossBrain {
 
         if (_stateTimer >= _configuration.CombatSettings.WallCrashStunDuration)
         {
+            _asc.RemoveTag(GameplayTag.Stunned | GameplayTag.Vulnerable);
             _isWallStunned = false;
             _combatMachine.ChangeState(_idleState);
             _rootMachine.ChangeState(_combatMachine);

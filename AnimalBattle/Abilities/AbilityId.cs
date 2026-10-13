@@ -1,13 +1,20 @@
-namespace AnimalBattle.Ai.Contracts;
+namespace AnimalBattle.Abilities;
 
 /// <summary>
-///     Boss の技能・招式を表す強タイプ列挙体です。
+///     ゲーム内のすべての戦闘技能および能力を表す型安全な統一識別子です。
 /// </summary>
-public enum BossSkill : ushort {
+public enum AbilityId : ushort {
     /// <summary>無効または未指定の技能です。</summary>
     None = 0,
 
-    // Boss 1: Ancient Cat Overlord 技能 (101~107)
+    // プレイヤー技能 (1..99)
+    /// <summary>自機射撃。</summary>
+    PlayerShoot = 1,
+
+    /// <summary>自機ダッシュ・回避。</summary>
+    PlayerDash = 2,
+
+    // Boss 1: Ancient Cat Overlord 技能 (101..107)
     /// <summary>Boss 1: 3方向狙撃弾（Aimed3Shot）</summary>
     Aimed3Shot = 101,
 
@@ -29,7 +36,7 @@ public enum BossSkill : ushort {
     /// <summary>Boss 1: 俯衝突進（DiveRam）</summary>
     DiveRam = 107,
 
-    // Boss 2: Ground Crusher 技能 (201~206)
+    // Boss 2: Ground Crusher 技能 (201..206)
     /// <summary>Boss 2: 近接重劈（HeavySlash）</summary>
     HeavySlash = 201,
 
@@ -50,22 +57,12 @@ public enum BossSkill : ushort {
 }
 
 /// <summary>
-///     <see cref="BossSkill" /> の拡張メソッドを提供します。
+///     <see cref="AbilityId" /> の拡張メソッドを提供します。
 /// </summary>
-public static class BossSkillExtensions {
-    /// <summary>
-    ///     技能が有効かどうかを判定します。
-    /// </summary>
-    public static bool IsValid(this BossSkill skill)
-    {
-        return skill != BossSkill.None;
-    }
+public static class AbilityIdExtensions {
+    /// <summary>能力が有効かどうかを判定します。</summary>
+    public static bool IsValid(this AbilityId id) => id != AbilityId.None;
 
-    /// <summary>
-    ///     技能の整数値を取得します。
-    /// </summary>
-    public static int AsInt(this BossSkill skill)
-    {
-        return (int)skill;
-    }
+    /// <summary>能力の整数値を取得します。</summary>
+    public static int AsInt(this AbilityId id) => (int)id;
 }
