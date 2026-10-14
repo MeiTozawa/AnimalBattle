@@ -45,7 +45,7 @@ public static class EasingMath {
             EaseType.InOutBounce => progress < 0.5f
                 ? (1.0f - EvaluateOutBounce(1.0f - 2.0f * progress)) * 0.5f
                 : (1.0f + EvaluateOutBounce(2.0f * progress - 1.0f)) * 0.5f,
-            _ => throw new ArgumentOutOfRangeException(nameof(ease), ease, $"未定義の EaseType です: {ease}")
+            _ => AssertHelper.FailWithDefault($"[EasingMath 警告] 未定義の EaseType です: {ease}", progress)
         };
     }
 

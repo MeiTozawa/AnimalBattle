@@ -423,7 +423,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Submit()
     {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
+        if (IsDisposed) return;
         FinishRecording();
 
         var packets = _writeIndex == 0 ? _packetBuffer0 : _packetBuffer1;
@@ -446,7 +447,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SubmitFront()
     {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
+        if (IsDisposed) return;
         var frontIndex = 1 - _writeIndex;
         var packets = frontIndex == 0 ? _packetBuffer0 : _packetBuffer1;
         var pCount = frontIndex == 0 ? _packetCount0 : _packetCount1;
@@ -517,7 +519,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginRecording()
     {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
+        if (IsDisposed) return;
         _packetBuffer = _writeIndex == 0 ? _packetBuffer0 : _packetBuffer1;
         _textBuffer = _writeIndex == 0 ? _textBuffer0 : _textBuffer1;
         _circleBuffer = _writeIndex == 0 ? _circleBuffer0 : _circleBuffer1;
@@ -538,7 +541,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void FinishRecording()
     {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
+        if (IsDisposed) return;
         EnsurePendingCircleBatchFlushed();
         if (_writeIndex == 0)
         {
@@ -560,7 +564,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SwapBuffers()
     {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
+        if (IsDisposed) return;
         _writeIndex ^= 1;
     }
 
@@ -632,7 +637,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
 
     private void EnsurePacketCapacity(int extraCount)
     {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
+        if (IsDisposed) return;
         var required = _currentPacketCount + extraCount;
         if (required <= PacketCapacity) return;
         var newCapacity = Math.Max(PacketCapacity * 2, required);
@@ -645,7 +651,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
 
     private void EnsureTextCapacity(int extraLength)
     {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
+        if (IsDisposed) return;
         var required = _currentTextLength + extraLength;
         if (required > TextCapacity)
         {
@@ -660,7 +667,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
 
     private void EnsureCircleCapacity(int extraCount)
     {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
+        if (IsDisposed) return;
         var required = _currentCircleCount + extraCount;
         if (required <= CircleCapacity) return;
         var newCapacity = Math.Max(CircleCapacity * 2, required);

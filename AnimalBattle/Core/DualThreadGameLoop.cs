@@ -23,7 +23,8 @@ public sealed class DualThreadGameLoop : IDisposable {
     /// <param name="battleScene">実行対象のバトルシーン。</param>
     public void Run(BattleScene battleScene)
     {
-        ObjectDisposedException.ThrowIf(_isDisposed, this);
+        Debug.Assert(!_isDisposed, "[DualThreadGameLoop] 破棄済みのループを開始することはできません。");
+        if (_isDisposed) return;
 
         _isRunning = true;
         _fatalException = null;
