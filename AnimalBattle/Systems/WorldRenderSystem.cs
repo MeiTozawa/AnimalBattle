@@ -288,9 +288,10 @@ public sealed class WorldRenderSystem : IDisposable {
         if (player == null || !player.IsAlive || !player.Sprite.IsVisible || player.Sprite.GraphHandle < 0) return;
 
         var isFlashing = player.IsFlashing;
-        var invTimer = player.Entity.Get<Health>().InvincibleTimer;
-        var isInvincibleBlinking = !isFlashing && invTimer > 0.0f &&
-            (int)(invTimer * 30.0f) % 2 != 0;
+        var untargetableTimer = player.AbilitySystem.GetTagRemainingTime(GameplayTag.Untargetable);
+        var isUntargetable = untargetableTimer > 0.0f;
+        var isInvincibleBlinking = !isFlashing && isUntargetable &&
+            (int)(untargetableTimer * 30.0f) % 2 != 0;
 
         var jitterX = 0.0f;
         var jitterY = 0.0f;

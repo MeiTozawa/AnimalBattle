@@ -20,7 +20,7 @@ public static class BossDamageResolutionSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddBossDamageResolutionSystem(this World world)
     {
-        world.System<Health, IncomingDamage, InvincibleOnHit, HitFlashSettings, Transform, BossCombatState, Sprite>("BossDamageResolutionSystem")
+        world.System<Health, IncomingDamage, InvincibleOnHit, HitFlashSettings, Transform, BossCombatState, Sprite, AbilitySystemComponent>("BossDamageResolutionSystem")
             .With<BossTag>()
             .Kind(Ecs.OnValidate)
             .Iter((Iter it,
@@ -30,7 +30,8 @@ public static class BossDamageResolutionSystem
                 Field<HitFlashSettings> flashConfigs,
                 Field<Transform> transforms,
                 Field<BossCombatState> combats,
-                Field<Sprite> sprites) =>
+                Field<Sprite> sprites,
+                Field<AbilitySystemComponent> ascs) =>
             {
                 var count = it.Count();
                 var pCfg = ConfigManager.Player;
@@ -46,11 +47,10 @@ public static class BossDamageResolutionSystem
                     ref readonly var trans = ref transforms[i];
                     ref readonly var combat = ref combats[i];
                     ref var sprite = ref sprites[i];
+                    var asc = ascs[i];
 
-                    // 完全無敵状態（GAS GameplayTag.Invincible 保持時）、被弾無敵時間中、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
-                    var asc = entity.Get<AbilitySystemComponent>();
-                    var isInvincible = asc.HasTag(GameplayTag.Invincible);
-                    if (isInvincible || hp.InvincibleTimer > 0.0f || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
+                    // 完全無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
+                    if (asc.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
                     {
                         entity.Remove<IncomingDamage>();
                         continue;
@@ -63,7 +63,10 @@ public static class BossDamageResolutionSystem
                     hp.Current = MathF.Max(0.0f, hp.Current - finalDamage);
 
                     // 無敵時間および被弾白閃演出の注入
-                    hp.InvincibleTimer = invCfg.Duration;
+                    if (invCfg.Duration > 0.0f)
+                    {
+                        asc.ApplyGameplayEffect(GameplayTag.Invincible, invCfg.Duration, entity.Id);
+                    }
                     entity.Set(new HitFlashEffect(flashCfg.Duration, flashCfg.Color));
 
                     // ヒットストップおよび受撃局所振動の適用（SuperArmor 剛体タグ未保持時のみ適用）

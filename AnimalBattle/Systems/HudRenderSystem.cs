@@ -167,7 +167,7 @@ public static class HudRenderSystem {
 
         (stateName, badgeColor) = state switch {
             { IsDead: true } => ("[STATE: DEFEATED]", ColorPalette.Gray),
-            { IsPhaseTransition: true } => ("[STATE: PHASE TRANSITION]", hpCfg.StatePhaseTransitionColor),
+            { IsPhaseTransition: true } => ("[STATE: PHASE TRANSITION (INVINCIBLE)]", hpCfg.StatePhaseTransitionColor),
             { IsRecovery: true } => ("[STATE: RECOVERING]", hpCfg.StateRecoveringColor),
             _ when state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.WallCrashStun =>
                 ("[STATE: WALL CRASH STUNNED]", ColorPalette.Gold),

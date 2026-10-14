@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Drawing;
+using AnimalBattle.Abilities;
 using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
@@ -11,6 +12,9 @@ namespace AnimalBattle.Characters;
 /// </summary>
 public sealed class PlayerPawn : Pawn
 {
+    /// <summary>プレイヤー自機のアビリティシステムコンポーネントを取得します。</summary>
+    public override AbilitySystemComponent AbilitySystem { get; } = new();
+
     /// <summary>
     ///     設定情報と Flecs エンティティ句柄を指定して、自機 Pawn を初期化します。
     /// </summary>
@@ -36,6 +40,7 @@ public sealed class PlayerPawn : Pawn
            .Set(WeaponState.FromPlayerConfig(pCfg))
            .Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio))
            .Set(new DashState())
+           .Set(AbilitySystem)
            .Add<PlayerTag>();
     }
 
@@ -89,5 +94,6 @@ public sealed class PlayerPawn : Pawn
         FlipX = false;
         IsVisible = true;
         ClearTransientEffects();
+        AbilitySystem.ClearTags();
     }
 }

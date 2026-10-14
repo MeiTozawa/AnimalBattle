@@ -1,3 +1,4 @@
+using AnimalBattle.Abilities;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -25,7 +26,7 @@ public static class MovementSystem {
     {
         var pQuery = platformQuery ?? world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
 
-        world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability, DashState, Sprite, Health, SpringScale>("MovementSystem")
+        world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability, DashState, Sprite, SpringScale, AbilitySystemComponent>("MovementSystem")
            .Kind(Ecs.OnUpdate)
            .Without<DeadTag>()
            .Without<HitstopState>()
@@ -37,8 +38,8 @@ public static class MovementSystem {
                 Field<JumpCapability> jumps,
                 Field<DashState> dashes,
                 Field<Sprite> sprites,
-                Field<Health> healths,
-                Field<SpringScale> springs) =>
+                Field<SpringScale> springs,
+                Field<AbilitySystemComponent> ascs) =>
             {
                 var dt = it.DeltaTime();
                 var count = it.Count();
@@ -53,10 +54,11 @@ public static class MovementSystem {
                     ref var jump = ref jumps[i];
                     ref var dash = ref dashes[i];
                     ref var sprite = ref sprites[i];
-                    ref var hp = ref healths[i];
                     ref var spring = ref springs[i];
+                    var asc = ascs[i];
 
-                    ExecuteKinematics(ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref hp, ref spring, dt, pQuery, cfg, world);
+                    var entity = it.Entity(i);
+                    ExecuteKinematics(entity, asc, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, pQuery, cfg, world);
                 }
             });
 
@@ -64,6 +66,8 @@ public static class MovementSystem {
     }
 
     private static void ExecuteKinematics(
+        Entity entity,
+        AbilitySystemComponent asc,
         ref Transform trans,
         ref Velocity vel,
         ref CollisionBox col,
@@ -71,7 +75,6 @@ public static class MovementSystem {
         ref JumpCapability jump,
         ref DashState dash,
         ref Sprite sprite,
-        ref Health hp,
         ref SpringScale spring,
         float dt,
         Query<Transform, CollisionBox> platformQuery,
@@ -104,8 +107,8 @@ public static class MovementSystem {
                 dash.DirectionX = sprite.FlipX ? -1.0f : 1.0f;
             }
 
-            // 無敵フレーム付与
-            hp.InvincibleTimer = MathF.Max(hp.InvincibleTimer, pCfg.DashInvincibleDuration);
+            // ダッシュ不可命中フレーム付与（弾幕・敵接触をすり抜ける）
+            asc.ApplyGameplayEffect(GameplayTag.Untargetable, pCfg.DashInvincibleDuration, entity.Id);
 
             // スカッシュ＆ストレッチ突進変形演出
             spring.CurrentX = pCfg.DashStretchScaleX;

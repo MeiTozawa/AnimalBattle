@@ -1,3 +1,4 @@
+using AnimalBattle.Abilities;
 using AnimalBattle.Components;
 using Flecs.NET.Core;
 
@@ -27,7 +28,8 @@ public readonly struct ComponentRequirementsModule : IFlecsModule {
            .Add(Ecs.With, world.Component<Sprite>().Entity)
            .Add(Ecs.With, world.Component<Animation>().Entity)
            .Add(Ecs.With, world.Component<DashState>().Entity)
-           .Add(Ecs.With, world.Component<SpringScale>().Entity);
+           .Add(Ecs.With, world.Component<SpringScale>().Entity)
+           .Add(Ecs.With, world.Component<AbilitySystemComponent>().Entity);
 
         // BossTag に共通して必須なコンポーネント群
         world.Component<BossTag>().Entity
@@ -36,7 +38,8 @@ public readonly struct ComponentRequirementsModule : IFlecsModule {
            .Add(Ecs.With, world.Component<Health>().Entity)
            .Add(Ecs.With, world.Component<InvincibleOnHit>().Entity)
            .Add(Ecs.With, world.Component<HitFlashSettings>().Entity)
-           .Add(Ecs.With, world.Component<BossCombatState>().Entity);
+           .Add(Ecs.With, world.Component<BossCombatState>().Entity)
+           .Add(Ecs.With, world.Component<AbilitySystemComponent>().Entity);
 
         // Boss 2 (Ground Crusher) 専用コンポーネント群
         world.Component<Boss2Tag>().Entity

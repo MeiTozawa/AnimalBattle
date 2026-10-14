@@ -29,7 +29,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     public abstract IBossBrain Brain { get; }
 
     /// <summary>Boss のアビリティシステムコンポーネントを取得します。</summary>
-    public virtual AbilitySystemComponent AbilitySystem => Brain.AbilitySystem;
+    public override AbilitySystemComponent AbilitySystem => Brain.AbilitySystem;
 
     /// <summary>Boss の種別を取得します。</summary>
     public abstract BossType BossType { get; }
@@ -64,8 +64,6 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// <summary>Boss が後隙による易傷状態であるかを取得します。</summary>
     public virtual bool IsVulnerable => AbilitySystem.HasTag(GameplayTag.Vulnerable);
 
-    /// <summary>Boss が無敵状態であるかを取得します（被弾無敵タイマーまたは GAS Invincible タグ）。</summary>
-    public new bool IsInvincible => base.IsInvincible || AbilitySystem.HasTag(GameplayTag.Invincible);
 
     /// <summary>Boss がスーパーアーマー（剛体）状態であるかを取得します。</summary>
     public virtual bool HasSuperArmor => AbilitySystem.HasTag(GameplayTag.SuperArmor);

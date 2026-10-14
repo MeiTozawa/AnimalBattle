@@ -34,5 +34,8 @@ public enum GameplayTag : ulong {
     Stunned = 1UL << 7,
 
     /// <summary>打断中断状態。</summary>
-    Interrupted = 1UL << 8
+    Interrupted = 1UL << 8,
+
+    /// <summary>不可命中/不可被选中（翻滚冲刺、受击闪烁、遁地等无敌帧，攻击直接穿透不触发碰撞判定）。</summary>
+    Untargetable = 1UL << 9
 }

@@ -1,3 +1,4 @@
+using AnimalBattle.Abilities;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters;
@@ -103,11 +104,14 @@ public abstract class Pawn
     /// <summary>最大 HP を取得します。</summary>
     public float MaxHp => Entity.Get<Health>().Max;
 
+    /// <summary>アビリティシステムコンポーネントを取得します。</summary>
+    public virtual AbilitySystemComponent AbilitySystem => Entity.Get<AbilitySystemComponent>();
+
     /// <summary>生存中であるかを取得します。</summary>
     public bool IsAlive => Entity.Get<Health>().Current > 0.0f;
 
-    /// <summary>無敵保護状態であるかを取得します。</summary>
-    public bool IsInvincible => Entity.Get<Health>().InvincibleTimer > 0.0f;
+    /// <summary>無敵保護または不可命中状態であるかを取得します。</summary>
+    public bool IsInvincible => AbilitySystem.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable);
 
     /// <summary>所属陣営を取得します。</summary>
     public Faction Faction => Entity.Get<Hurtbox>().Faction;

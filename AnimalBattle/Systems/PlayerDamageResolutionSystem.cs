@@ -1,4 +1,5 @@
 using System;
+using AnimalBattle.Abilities;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -21,7 +22,7 @@ public static class PlayerDamageResolutionSystem
     /// <returns>登録済みワールド</returns>
     public static World AddPlayerDamageResolutionSystem(this World world)
     {
-        world.System<Health, IncomingDamage, InvincibleOnHit, HitFlashSettings, Transform, Velocity, CollisionBox, SpringScale, Sprite>("PlayerDamageResolutionSystem")
+        world.System<Health, IncomingDamage, InvincibleOnHit, HitFlashSettings, Transform, Velocity, CollisionBox, SpringScale, Sprite, AbilitySystemComponent>("PlayerDamageResolutionSystem")
             .With<PlayerTag>()
             .Kind(Ecs.OnValidate)
             .Iter((Iter it,
@@ -33,7 +34,8 @@ public static class PlayerDamageResolutionSystem
                 Field<Velocity> velocities,
                 Field<CollisionBox> collisionBoxes,
                 Field<SpringScale> springScales,
-                Field<Sprite> sprites) =>
+                Field<Sprite> sprites,
+                Field<AbilitySystemComponent> ascs) =>
             {
                 var count = it.Count();
                 var pCfg = ConfigManager.Player;
@@ -51,18 +53,19 @@ public static class PlayerDamageResolutionSystem
                     ref var col = ref collisionBoxes[i];
                     ref var spring = ref springScales[i];
                     ref var sprite = ref sprites[i];
+                    var asc = ascs[i];
 
-                    // 無敵時間中、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
-                    if (hp.InvincibleTimer > 0.0f || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
+                    // 無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
+                    if (asc.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
                     {
                         entity.Remove<IncomingDamage>();
                         continue;
                     }
 
-                    // HP 減算および無敵タイマー・被弾白閃エフェクトの注入
+                    // HP 減算および不可命中無敵時間・被弾白閃エフェクトの注入
                     var prevHp = hp.Current;
                     hp.Current = MathF.Max(0.0f, hp.Current - dmg.Amount);
-                    hp.InvincibleTimer = invCfg.Duration;
+                    asc.ApplyGameplayEffect(GameplayTag.Untargetable, invCfg.Duration, entity.Id);
                     entity.Set(new HitFlashEffect(flashCfg.Duration, flashCfg.Color));
                     EventBus.Publish(new PlayerHealthChangedEvent(prevHp, hp.Current, hp.Max));
 

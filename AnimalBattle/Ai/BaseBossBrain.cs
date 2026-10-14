@@ -97,12 +97,16 @@ public abstract class BaseBossBrain : IBossBrain
         {
             _stateTimer = 0.0f;
             _asc.InterruptCurrentAbility();
+            _asc.AddTag(GameplayTag.Invincible);
             if (_pendingPhaseTransition.HasValue)
             {
                 Phase = _pendingPhaseTransition.Value;
                 _pendingPhaseTransition = null;
                 OnPhaseTransitionEntered(Phase);
             }
+        }, onExit: () =>
+        {
+            _asc.RemoveTag(GameplayTag.Invincible);
         });
 
         _deadState = new State(StateDead, onEnter: () =>
@@ -153,11 +157,13 @@ public abstract class BaseBossBrain : IBossBrain
         {
             _pendingPhaseTransition = Phase.Phase2;
             _reactionMachine.ChangeState(_phaseTransitionState);
+            _rootMachine.ChangeState(_reactionMachine);
         }
         else if (Phase == Phase.Phase2 && hpRatio <= p3Threshold)
         {
             _pendingPhaseTransition = Phase.Phase3;
             _reactionMachine.ChangeState(_phaseTransitionState);
+            _rootMachine.ChangeState(_reactionMachine);
         }
     }
 }
