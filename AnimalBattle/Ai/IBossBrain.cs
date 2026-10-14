@@ -17,11 +17,8 @@ public interface IBossBrain
     /// <summary>現在発動中の技能識別タグを取得します。</summary>
     StringId CurrentSkillTag { get; }
 
-    /// <summary>現在状態の経過時間を取得します。</summary>
+    /// <summary>現在 AI 状態の経過時間（秒）を取得します。</summary>
     float StateTimer { get; }
-
-    /// <summary>現在状態の目標持続時間を取得します。</summary>
-    float StateDuration { get; }
 
     /// <summary>AI 目標地点座標を取得します。</summary>
     Vec2f TargetPosition { get; }

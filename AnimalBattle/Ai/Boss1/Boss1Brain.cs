@@ -72,23 +72,6 @@ public sealed class Boss1Brain : BaseBossBrain {
     /// <inheritdoc />
     public override BossState CurrentState => BossState.From(State);
 
-    /// <inheritdoc />
-    public override float StateDuration {
-        get {
-            var phaseCfg = _configuration.GetPhase(Phase);
-            if (_rootMachine.CurrentState == _reactionMachine)
-            {
-                return phaseCfg.TransitionDuration;
-            }
-
-            if (_combatMachine.CurrentState == _abilityState && _asc.IsCasting)
-            {
-                return _asc.PhaseDuration;
-            }
-
-            return phaseCfg.HoverDuration;
-        }
-    }
 
     /// <summary>浮遊アニメーション用の累積タイマーを取得します。</summary>
     public float HoverTimer => _hoverTimer;

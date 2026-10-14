@@ -43,11 +43,8 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// <summary>現在選択されている攻撃技能識別タグを取得します。</summary>
     public virtual StringId CurrentSkillTag => Brain.CurrentSkillTag;
 
-    /// <summary>現在状態の経過時間を取得します。</summary>
+    /// <summary>現在 AI 状態の経過時間（秒）を取得します。</summary>
     public virtual float StateTimer => Brain.StateTimer;
-
-    /// <summary>現在状態の目標持続時間を取得します。</summary>
-    public virtual float StateDuration => Brain.StateDuration;
 
     /// <summary>Boss 1 の浮遊タイマー値を取得します。</summary>
     public virtual float HoverTimer => 0.0f;

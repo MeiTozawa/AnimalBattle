@@ -110,30 +110,6 @@ public sealed class Boss2Brain : BaseBossBrain {
     /// <inheritdoc />
     public override BossState CurrentState => BossState.From(State);
 
-    /// <inheritdoc />
-    public override float StateDuration {
-        get {
-            var phaseCfg = _configuration.GetPhase(Phase);
-            if (_rootMachine.CurrentState == _reactionMachine)
-            {
-                if (_reactionMachine.CurrentState == _wallCrashStunState)
-                    return _configuration.CombatSettings.WallCrashStunDuration;
-                if (_reactionMachine.CurrentState == _phaseTransitionState)
-                    return phaseCfg.TransitionDuration;
-                return 0.0f;
-            }
-
-            if (_combatMachine.CurrentState == _abilityState && _asc.IsCasting)
-            {
-                return _asc.PhaseDuration;
-            }
-
-            if (_combatMachine.CurrentState == _idleState) return phaseCfg.IdleDuration;
-            if (_combatMachine.CurrentState == _patrolChaseState) return phaseCfg.ChaseTimeout;
-
-            return 0.0f;
-        }
-    }
 
     /// <summary>近接攻撃判定生成イベント。</summary>
     public event Action<StringId, float, float>? OnCreateHitbox;

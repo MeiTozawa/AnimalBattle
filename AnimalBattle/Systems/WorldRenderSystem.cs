@@ -192,7 +192,7 @@ public sealed class WorldRenderSystem : IDisposable {
 
         if (boss.CurrentState.IsTelegraph)
         {
-            var progress = Math.Clamp(boss.StateTimer / Math.Max(0.01f, boss.StateDuration), 0.0f, 1.0f);
+            var progress = boss.AbilitySystem.PhaseProgress;
             DrawBossTelegraph(boss, playerX, playerY, progress);
         }
 

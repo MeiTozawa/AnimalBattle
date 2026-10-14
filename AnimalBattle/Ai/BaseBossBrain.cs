@@ -51,8 +51,8 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>現在発動中の技能識別タグを取得します。</summary>
     public virtual StringId CurrentSkillTag => _asc.CurrentAbility?.AbilityTag ?? StringId.Empty;
 
-    /// <summary>現在状態の経過時間を取得します。</summary>
-    public virtual float StateTimer => _asc.IsCasting ? _asc.PhaseElapsed : _stateTimer;
+    /// <summary>現在 AI 状態の経過時間（秒）を取得します。</summary>
+    public virtual float StateTimer => _stateTimer;
 
     /// <summary>死亡状態かどうかを取得します。</summary>
     public bool IsDead => _isDead;
@@ -69,8 +69,6 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>現在の Boss 統一マクロ状態を取得します。</summary>
     public abstract BossState CurrentState { get; }
 
-    /// <summary>現在状態の目標持続時間を取得します。</summary>
-    public abstract float StateDuration { get; }
 
     /// <summary>
     ///     弾幕発射イベントを発火します。

@@ -120,8 +120,22 @@ public static class HudRenderSystem {
         var phase = ToLegacyPhase(boss.Phase);
         var bossTitle = GetBossTitle(boss.BossType, phase);
         GetBossStateInfo(boss, hpCfg, out var stateName, out var stateBadgeColor);
+        string timerText;
+        if (boss.AbilitySystem.IsCasting)
+        {
+            var pElapsed = boss.AbilitySystem.PhaseElapsed;
+            var pDuration = boss.AbilitySystem.PhaseDuration;
+            timerText = pDuration > 0.0f
+                ? $"{pElapsed:F1}s/{pDuration:F1}s"
+                : $"{pElapsed:F1}s";
+        }
+        else
+        {
+            timerText = $"{boss.StateTimer:F1}s";
+        }
+
         DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, boss.CurrentHp, boss.MaxHp, phase,
-            boss.StateTimer, boss.StateDuration);
+            timerText);
     }
 
     private static string GetBossTitle(BossType bossType, int phase)
@@ -200,8 +214,7 @@ public static class HudRenderSystem {
         float currentHp,
         float maxHp,
         int phase,
-        float stateTimer,
-        float stateDuration)
+        string timerText)
     {
         var barX1 = hpCfg.BarX1;
         var barY1 = hpCfg.BarY1;
@@ -220,9 +233,6 @@ public static class HudRenderSystem {
         var hpY = barY1 - (hpCfg.HpTextOffsetY != 0 ? hpCfg.HpTextOffsetY : hpCfg.HeaderOffsetY);
         GameEngine.DrawString(hpX, hpY, hpText, hpCfg.HpTextColor);
 
-        var timerText = stateDuration > 0.0f
-            ? $"{stateTimer:F1}s/{stateDuration:F1}s"
-            : $"{stateTimer:F1}s";
         var badgeX = barX1 + hpCfg.StateBadgeOffsetX;
         var badgeY = barY1 - (hpCfg.StateBadgeOffsetY != 0 ? hpCfg.StateBadgeOffsetY : hpCfg.HeaderOffsetY);
         GameEngine.DrawString(badgeX, badgeY, $"{stateName} ({timerText})", stateBadgeColor);
