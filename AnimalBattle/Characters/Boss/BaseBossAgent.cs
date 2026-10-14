@@ -185,20 +185,13 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// </summary>
     public virtual void Reset()
     {
-        try
-        {
-            EmitterAngleOffset = 0.0f;
-            OnReset();
-            SetVelocity(0.0f, 0.0f);
-            FlipX = false;
-            IsVisible = true;
-            ClearTransientEffects();
-            Entity.Set(new BossCombatState(Phase));
-        }
-        catch (Exception ex)
-        {
-            Debug.Fail($"[BaseBossAgent 警告] Reset 処理中に例外が発生しました: {ex.Message}", ex.ToString());
-        }
+        EmitterAngleOffset = 0.0f;
+        OnReset();
+        SetVelocity(0.0f, 0.0f);
+        FlipX = false;
+        IsVisible = true;
+        ClearTransientEffects();
+        Entity.Set(new BossCombatState(Phase));
     }
 
     /// <summary>フレーム末尾におけるサブクラス固有の演出・描画同期を実行します。</summary>
