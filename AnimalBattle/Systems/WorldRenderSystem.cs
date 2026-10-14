@@ -224,6 +224,134 @@ public sealed class WorldRenderSystem : IDisposable {
                 flipX,
                 boss.StateTimer,
                 bossFx);
+
+        // フェーズ遷移無敵時の金身オーラ & シールド結界演出
+        if (boss.CurrentState.IsPhaseTransition)
+            DrawBossPhaseTransitionEffects(
+                bx,
+                by,
+                boss.Sprite.SrcRect,
+                boss.ScaleX,
+                rotation,
+                boss.Sprite.GraphHandle,
+                flipX,
+                boss.StateTimer,
+                bossFx);
+    }
+
+    private static void DrawBossPhaseTransitionEffects(
+        int bx,
+        int by,
+        in Rect srcRect,
+        float scaleX,
+        double angle,
+        int graphHandle,
+        bool flipX,
+        float stateTimer,
+        BossEffectsRenderConfig bossFx)
+    {
+        // 1. 金身覇体・高周波脈動加算発光（Golden Super Armor Silhouette）
+        var pulse = 0.5f + 0.5f * MathF.Sin(stateTimer * bossFx.InvinciblePulseSpeed);
+        var goldAlpha = (int)(bossFx.InvincibleAuraBaseAlpha + bossFx.InvincibleAuraPulseAlpha * pulse);
+        GameEngine.SetDrawBright(bossFx.InvincibleAuraColor.R, bossFx.InvincibleAuraColor.G, bossFx.InvincibleAuraColor.B);
+        GameEngine.SetDrawBlendMode(BlendMode.Add, goldAlpha);
+        GameEngine.DrawRectRotaGraph(
+            bx,
+            by,
+            srcRect.X1,
+            srcRect.Y1,
+            srcRect.Width,
+            srcRect.Height,
+            scaleX * bossFx.InvincibleAuraScale,
+            angle,
+            graphHandle,
+            true,
+            flipX);
+        GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+        GameEngine.SetDrawBright(255, 255, 255);
+
+        // 2. 球状無敵エネルギーシールド結界
+        var baseRadius = bossFx.InvincibleShieldRadius;
+        var shieldBreath = MathF.Sin(stateTimer * bossFx.InvincibleBreathSpeed) * bossFx.InvincibleBreathAmplitude;
+        var currentShieldRadius = (int)(baseRadius + shieldBreath);
+
+        // 2.1 内層半透明エネルギー膜
+        var shieldFillAlpha = (int)(bossFx.InvincibleFillBaseAlpha + bossFx.InvincibleFillPulseAlpha * pulse);
+        GameEngine.SetDrawBlendMode(BlendMode.Add, shieldFillAlpha);
+        GameEngine.DrawCircle(bx, by, currentShieldRadius, ColorPalette.Gold, true);
+
+        // 2.2 外周高輝度二重力場リング
+        var shieldRingAlpha = (int)(bossFx.InvincibleRingBaseAlpha + bossFx.InvincibleRingPulseAlpha * pulse);
+        GameEngine.SetDrawBlendMode(BlendMode.Add, shieldRingAlpha);
+        GameEngine.DrawCircle(bx, by, currentShieldRadius, ColorPalette.GoldLight, false);
+        if (currentShieldRadius > 1)
+        {
+            GameEngine.DrawCircle(bx, by, currentShieldRadius - 1, ColorPalette.Gold, false);
+        }
+
+        // 3. 周期拡散エネルギー衝撃波
+        var ripple1 = (stateTimer * bossFx.InvincibleRippleSpeed) % 1.0f;
+        var ripple1Radius = (int)(currentShieldRadius * (bossFx.InvincibleRippleStartRatio + bossFx.InvincibleRippleExpandRatio * ripple1));
+        var ripple1Alpha = (int)(bossFx.InvincibleRippleMaxAlpha * (1.0f - ripple1));
+        if (ripple1Alpha > 0)
+        {
+            GameEngine.SetDrawBlendMode(BlendMode.Add, ripple1Alpha);
+            GameEngine.DrawCircle(bx, by, ripple1Radius, ColorPalette.GoldLight, false);
+        }
+
+        var ripple2 = (stateTimer * bossFx.InvincibleRippleSpeed + 0.5f) % 1.0f;
+        var ripple2Radius = (int)(currentShieldRadius * (bossFx.InvincibleRippleStartRatio + bossFx.InvincibleRippleExpandRatio * ripple2));
+        var ripple2Alpha = (int)(bossFx.InvincibleRippleMaxAlpha * (1.0f - ripple2));
+        if (ripple2Alpha > 0)
+        {
+            GameEngine.SetDrawBlendMode(BlendMode.Add, ripple2Alpha);
+            GameEngine.DrawCircle(bx, by, ripple2Radius, ColorPalette.White, false);
+        }
+
+        // 4. 四元自転防護プリズム法陣
+        var orbitAngle = stateTimer * bossFx.InvincibleOrbitSpeed;
+        const float angleStep = MathF.PI * 0.5f;
+
+        Span<int> nodeXs = stackalloc int[4];
+        Span<int> nodeYs = stackalloc int[4];
+        for (var i = 0; i < 4; i++)
+        {
+            var theta = orbitAngle + i * angleStep;
+            nodeXs[i] = (int)(bx + MathF.Cos(theta) * currentShieldRadius);
+            nodeYs[i] = (int)(by + MathF.Sin(theta) * currentShieldRadius);
+        }
+
+        // 菱形結界光線
+        var prismAlpha = (int)(bossFx.InvinciblePrismAlphaBase + bossFx.InvinciblePrismAlphaPulse * pulse);
+        GameEngine.SetDrawBlendMode(BlendMode.Add, prismAlpha);
+        for (var i = 0; i < 4; i++)
+        {
+            var next = (i + 1) % 4;
+            GameEngine.DrawLine(nodeXs[i], nodeYs[i], nodeXs[next], nodeYs[next], ColorPalette.GoldLight, bossFx.InvinciblePrismThickness);
+        }
+
+        // 4 個のエネルギー浮遊核
+        for (var i = 0; i < 4; i++)
+        {
+            GameEngine.SetDrawBlendMode(BlendMode.Add, bossFx.InvincibleNodeAlpha);
+            GameEngine.DrawCircle(nodeXs[i], nodeYs[i], bossFx.InvincibleNodeOuterRadius, ColorPalette.GoldLight, true);
+            GameEngine.DrawCircle(nodeXs[i], nodeYs[i], bossFx.InvincibleNodeInnerRadius, ColorPalette.White, true);
+        }
+
+        // 5. 核心十字神聖星芒
+        var crossAngle = stateTimer * bossFx.InvincibleCrossAngleSpeed;
+        var flareLength = currentShieldRadius * bossFx.InvincibleCrossLengthRatio;
+        var crossAlpha = (int)(bossFx.InvincibleCrossAlphaBase + bossFx.InvincibleCrossAlphaPulse * pulse);
+        GameEngine.SetDrawBlendMode(BlendMode.Add, crossAlpha);
+        for (var i = 0; i < 4; i++)
+        {
+            var theta = crossAngle + i * angleStep;
+            var fx = (int)(bx + MathF.Cos(theta) * flareLength);
+            var fy = (int)(by + MathF.Sin(theta) * flareLength);
+            GameEngine.DrawLine(bx, by, fx, fy, ColorPalette.GoldLight, bossFx.InvincibleCrossThickness);
+        }
+
+        GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
     }
 
     private static void DrawBossVulnerableEffects(

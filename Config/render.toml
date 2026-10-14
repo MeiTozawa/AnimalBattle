@@ -27,6 +27,36 @@ ChanceMarkerText = "▼ ATTACK! ▼"
 ChanceMarkerOffsetY = 70.0
 ChanceMarkerColor = 0xFFFFD700
 
+# 無敵・フェーズ遷移シールド設定
+InvincibleShieldRadius = 54.0
+InvincibleAuraScale = 1.07
+InvinciblePulseSpeed = 10.0
+InvincibleAuraBaseAlpha = 115
+InvincibleAuraPulseAlpha = 100
+InvincibleAuraColor = 0xFFFFD700
+InvincibleBreathSpeed = 6.0
+InvincibleBreathAmplitude = 3.5
+InvincibleFillBaseAlpha = 45
+InvincibleFillPulseAlpha = 30
+InvincibleRingBaseAlpha = 160
+InvincibleRingPulseAlpha = 85
+InvincibleRippleSpeed = 1.6
+InvincibleRippleStartRatio = 0.85
+InvincibleRippleExpandRatio = 0.60
+InvincibleRippleMaxAlpha = 170
+InvincibleOrbitSpeed = 4.0
+InvincibleNodeOuterRadius = 5
+InvincibleNodeInnerRadius = 2
+InvincibleNodeAlpha = 230
+InvinciblePrismAlphaBase = 110
+InvinciblePrismAlphaPulse = 60
+InvinciblePrismThickness = 1
+InvincibleCrossAngleSpeed = 2.2
+InvincibleCrossLengthRatio = 0.45
+InvincibleCrossAlphaBase = 140
+InvincibleCrossAlphaPulse = 70
+InvincibleCrossThickness = 2
+
 BossHoverAngleAmp = 0.08         
 BossHoverAngleSpeed = 2.0        
         

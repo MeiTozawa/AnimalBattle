@@ -55,6 +55,90 @@ public sealed class BossEffectsRenderConfig {
     /// <summary>易傷時の醒目攻撃チャンス表示色 (<see cref="Color" />)</summary>
     public Color ChanceMarkerColor { get; set; }
 
+    /// <summary>無敵・フェーズ遷移シールドの基準半径 (px)</summary>
+    public float InvincibleShieldRadius { get; set; }
+
+    /// <summary>金身オーラ拡大倍率</summary>
+    public float InvincibleAuraScale { get; set; }
+
+    /// <summary>金身脈動角速度</summary>
+    public float InvinciblePulseSpeed { get; set; }
+
+    /// <summary>金身オーラ基礎アルファ値 (0～255)</summary>
+    public int InvincibleAuraBaseAlpha { get; set; }
+
+    /// <summary>金身オーラ脈動振幅アルファ値</summary>
+    public int InvincibleAuraPulseAlpha { get; set; }
+
+    /// <summary>金身オーラ発光色 (<see cref="Color" />)</summary>
+    public Color InvincibleAuraColor { get; set; }
+
+    /// <summary>シールド結界呼吸周波数</summary>
+    public float InvincibleBreathSpeed { get; set; }
+
+    /// <summary>シールド結界呼吸振幅 (px)</summary>
+    public float InvincibleBreathAmplitude { get; set; }
+
+    /// <summary>シールド内層塗りつぶし基礎アルファ値 (0～255)</summary>
+    public int InvincibleFillBaseAlpha { get; set; }
+
+    /// <summary>シールド内層塗りつぶし脈動アルファ値</summary>
+    public int InvincibleFillPulseAlpha { get; set; }
+
+    /// <summary>シールド外周枠線基礎アルファ値 (0～255)</summary>
+    public int InvincibleRingBaseAlpha { get; set; }
+
+    /// <summary>シールド外周枠線脈動アルファ値</summary>
+    public int InvincibleRingPulseAlpha { get; set; }
+
+    /// <summary>排斥衝撃波拡散速度</summary>
+    public float InvincibleRippleSpeed { get; set; }
+
+    /// <summary>排斥衝撃波開始半径比率</summary>
+    public float InvincibleRippleStartRatio { get; set; }
+
+    /// <summary>排斥衝撃波最大拡大量比率</summary>
+    public float InvincibleRippleExpandRatio { get; set; }
+
+    /// <summary>排斥衝撃波最大アルファ値 (0～255)</summary>
+    public int InvincibleRippleMaxAlpha { get; set; }
+
+    /// <summary>四元防護ノード公転角速度</summary>
+    public float InvincibleOrbitSpeed { get; set; }
+
+    /// <summary>防護ノード外周光輪半径 (px)</summary>
+    public int InvincibleNodeOuterRadius { get; set; }
+
+    /// <summary>防護ノード中心白熱コア半径 (px)</summary>
+    public int InvincibleNodeInnerRadius { get; set; }
+
+    /// <summary>防護ノードアルファ値 (0～255)</summary>
+    public int InvincibleNodeAlpha { get; set; }
+
+    /// <summary>防護結界光線基礎アルファ値 (0～255)</summary>
+    public int InvinciblePrismAlphaBase { get; set; }
+
+    /// <summary>防護結界光線脈動アルファ値</summary>
+    public int InvinciblePrismAlphaPulse { get; set; }
+
+    /// <summary>防護結界光線線の太さ (px)</summary>
+    public int InvinciblePrismThickness { get; set; }
+
+    /// <summary>核心十字星芒自転角速度</summary>
+    public float InvincibleCrossAngleSpeed { get; set; }
+
+    /// <summary>核心十字星芒長さ比率 (シールド半径に対する比率)</summary>
+    public float InvincibleCrossLengthRatio { get; set; }
+
+    /// <summary>核心十字星芒基礎アルファ値 (0～255)</summary>
+    public int InvincibleCrossAlphaBase { get; set; }
+
+    /// <summary>核心十字星芒脈動アルファ値</summary>
+    public int InvincibleCrossAlphaPulse { get; set; }
+
+    /// <summary>核心十字星芒線の太さ (px)</summary>
+    public int InvincibleCrossThickness { get; set; }
+
     /// <summary>Boss 浮遊時の揺れ角度振幅</summary>
     public double BossHoverAngleAmp { get; set; }
 
@@ -170,37 +254,37 @@ public sealed class HudRenderConfig {
     public List<HudTextItem> Text { get; set; } = [];
 
     /// <summary>Boss 切り替え操作案内テキスト</summary>
-    public string BossSwitchGuideText { get; set; } = "[1] Boss 1 (Aerial Cat)  [2] Boss 2 (Ground Crusher)";
+    public string BossSwitchGuideText { get; set; } = string.Empty;
 
     /// <summary>Boss 切り替え操作案内文字色 (<see cref="Color" />)</summary>
-    public Color BossSwitchGuideColor { get; set; } = ColorPalette.GoldLight;
+    public Color BossSwitchGuideColor { get; set; }
 
     /// <summary>二段ジャンプインジケータ X 座標</summary>
-    public int DoubleJumpX { get; set; } = 20;
+    public int DoubleJumpX { get; set; }
 
     /// <summary>二段ジャンプインジケータ Y 座標</summary>
-    public int DoubleJumpY { get; set; } = 134;
+    public int DoubleJumpY { get; set; }
 
     /// <summary>二段ジャンプ表示ラベル文字列</summary>
-    public string DoubleJumpText { get; set; } = "DOUBLE JUMP:";
+    public string DoubleJumpText { get; set; } = string.Empty;
 
     /// <summary>二段ジャンプ有効時シンボル色 (<see cref="Color" />)</summary>
-    public Color DoubleJumpActiveColor { get; set; } = ColorPalette.Cyan;
+    public Color DoubleJumpActiveColor { get; set; }
 
     /// <summary>二段ジャンプ消費時シンボル色 (<see cref="Color" />)</summary>
     public Color DoubleJumpInactiveColor { get; set; } = ColorPalette.Gray;
 
     /// <summary>プレイヤー HP 表示 X 座標</summary>
-    public int PlayerHpX { get; set; } = 20;
+    public int PlayerHpX { get; set; }
 
     /// <summary>プレイヤー HP 表示 Y 座標</summary>
-    public int PlayerHpY { get; set; } = 154;
+    public int PlayerHpY { get; set; }
 
     /// <summary>プレイヤー HP 表示ラベル文字列</summary>
-    public string PlayerHpText { get; set; } = "PLAYER HP:  ";
+    public string PlayerHpText { get; set; } = string.Empty;
 
     /// <summary>プレイヤー HP 高（3以上）文字色 (<see cref="Color" />)</summary>
-    public Color PlayerHpHighColor { get; set; } = ColorPalette.Green;
+    public Color PlayerHpHighColor { get; set; }
 
     /// <summary>プレイヤー HP 中（2）文字色 (<see cref="Color" />)</summary>
     public Color PlayerHpMidColor { get; set; } = ColorPalette.Gold;
@@ -253,31 +337,31 @@ public sealed class BossHpBarRenderConfig {
     public Color TopHighlightColor { get; set; }
 
     /// <summary>ヘッダー文字の Y 座標オフセット</summary>
-    public int HeaderOffsetY { get; set; } = 22;
+    public int HeaderOffsetY { get; set; }
 
     /// <summary>Boss タイトル表示 X 軸オフセット (BarX1 からの相対距離)</summary>
     public int TitleOffsetX { get; set; }
 
     /// <summary>Boss タイトル表示 Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
-    public int TitleOffsetY { get; set; } = 22;
+    public int TitleOffsetY { get; set; }
 
     /// <summary>Boss タイトル文字色 (<see cref="Color" />)</summary>
     public Color TitleColor { get; set; }
 
     /// <summary>HP 数値テキストの右端 X 軸オフセット (BarX2 から左方向へのオフセット)</summary>
-    public int HpTextOffsetRight { get; set; } = 170;
+    public int HpTextOffsetRight { get; set; }
 
     /// <summary>HP 数値テキストの Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
-    public int HpTextOffsetY { get; set; } = 22;
+    public int HpTextOffsetY { get; set; }
 
     /// <summary>HP 数値文字色 (<see cref="Color" />)</summary>
     public Color HpTextColor { get; set; }
 
     /// <summary>状態バッジテキストの X 軸オフセット (BarX1 からの相対距離)</summary>
-    public int StateBadgeOffsetX { get; set; } = 270;
+    public int StateBadgeOffsetX { get; set; }
 
     /// <summary>状態バッジテキストの Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
-    public int StateBadgeOffsetY { get; set; } = 22;
+    public int StateBadgeOffsetY { get; set; }
 
     /// <summary>前隙予兆状態バッジ文字色 (<see cref="Color" />)</summary>
     public Color StateTelegraphingColor { get; set; }
@@ -424,16 +508,16 @@ public sealed class DebugRenderConfig {
 /// </summary>
 public sealed class ViewportRenderConfig {
     /// <summary>ビューポート左上 X 座標（ピクセル）</summary>
-    public float X { get; set; } = 0.0f;
+    public float X { get; set; }
 
     /// <summary>ビューポート左上 Y 座標（ピクセル）</summary>
-    public float Y { get; set; } = 0.0f;
+    public float Y { get; set; }
 
     /// <summary>ビューポート幅（ピクセル）</summary>
-    public float Width { get; set; } = 1280.0f;
+    public float Width { get; set; }
 
     /// <summary>ビューポート高さ（ピクセル）</summary>
-    public float Height { get; set; } = 720.0f;
+    public float Height { get; set; }
 }
 
 /// <summary>
