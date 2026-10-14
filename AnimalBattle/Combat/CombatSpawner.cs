@@ -69,6 +69,7 @@ public static class CombatSpawner {
                 var cfg = ConfigManager.SpecialBullets;
                 var satRadius = MathF.Max(3.0f, radius * cfg.YellowSatelliteRadiusMultiplier);
                 var orbitDist = radius * cfg.YellowOrbitDistanceMultiplier;
+                var parentVersion = entity.Get<PoolLeaseState>().Version;
 
                 CombatPoolService.RentBossBullet()
                    .Set(new Transform(x + orbitDist, y))
@@ -76,7 +77,7 @@ public static class CombatSpawner {
                    .Set(new Bullet(satRadius, fill, outline))
                    .Set(new Hitbox(new CollisionShape.Circle(satRadius), cfg.YellowSatelliteDamage, Faction.Hostile))
                    .Set(new BulletModifier(BulletType.Yellow, satRadius, vx, vy))
-                   .Set(new OrbitSatellite(entity, orbitDist))
+                   .Set(new OrbitSatellite(entity, orbitDist, 0.0f, parentVersion))
                    .Add<BossBulletTag>();
             }
         }

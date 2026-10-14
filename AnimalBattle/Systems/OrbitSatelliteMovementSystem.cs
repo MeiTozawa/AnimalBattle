@@ -8,7 +8,7 @@ namespace AnimalBattle.Systems;
 
 /// <summary>
 ///     周回衛星弾幕（<see cref="OrbitSatellite" />）の公転軌道座標および接線速度を計算する単一責任 ECS システム。
-///     親弾が消滅または無効化された場合、衛星弾を自動的に回収プールへ返却します。
+///     親弾が消滅、無効化、またはプールへ返却・再利用された場合、衛星弾を自動的に回収プールへ返却します。
 /// </summary>
 public static class OrbitSatelliteMovementSystem
 {
@@ -31,11 +31,23 @@ public static class OrbitSatelliteMovementSystem
                 var dt = it.DeltaTime();
                 var cfg = ConfigManager.SpecialBullets;
                 var orbitSpeed = cfg.YellowOrbitSpeed;
+                var arenaCfg = ConfigManager.Arena;
+                var minX = arenaCfg.BulletDespawnMinX;
+                var maxX = arenaCfg.BulletDespawnMaxX;
+                var minY = arenaCfg.BulletDespawnMinY;
+                var maxY = arenaCfg.BulletDespawnMaxY;
 
                 for (var i = 0; i < count; ++i)
                 {
                     ref var sat = ref satellites[i];
-                    if (!sat.Parent.IsAlive() || !sat.Parent.Has<BossBulletTag>())
+                    if (!sat.Parent.IsAlive() || !sat.Parent.Enabled())
+                    {
+                        it.Entity(i).Add<RecycleTag>();
+                        continue;
+                    }
+
+                    ref readonly var parentLease = ref sat.Parent.Get<PoolLeaseState>();
+                    if (!parentLease.IsRented || parentLease.Version != sat.ParentVersion)
                     {
                         it.Entity(i).Add<RecycleTag>();
                         continue;
@@ -51,6 +63,12 @@ public static class OrbitSatelliteMovementSystem
 
                     var satX = parentTrans.X + cos * sat.OrbitDistance;
                     var satY = parentTrans.Y + sin * sat.OrbitDistance;
+
+                    if (satX < minX || satX > maxX || satY < minY || satY > maxY)
+                    {
+                        it.Entity(i).Add<RecycleTag>();
+                        continue;
+                    }
 
                     ref var t = ref trans[i];
                     t.Position = new Vec2f(satX, satY);

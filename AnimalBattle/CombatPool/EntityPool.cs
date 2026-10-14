@@ -142,7 +142,9 @@ public sealed class EntityPool : IDisposable {
         }
 
         var e = _pool[--AvailableCount];
-        e.GetMut<PoolLeaseState>().IsRented = true;
+        ref var leaseState = ref e.GetMut<PoolLeaseState>();
+        leaseState.IsRented = true;
+        leaseState.Version++;
 
         Metrics.ActiveRentals++;
         if (Metrics.ActiveRentals > Metrics.PeakUsage) Metrics.PeakUsage = Metrics.ActiveRentals;
