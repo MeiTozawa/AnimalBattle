@@ -45,7 +45,7 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig {
     public virtual Action<AbilityTelegraphContext>? BuildTelegraphRenderer() => null;
 
     /// <inheritdoc />
-    public virtual void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight) { }
+    public virtual void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight) { }
 
     /// <inheritdoc />
     public virtual void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }

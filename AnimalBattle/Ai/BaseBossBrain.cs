@@ -61,7 +61,7 @@ public abstract class BaseBossBrain : IBossBrain
     public virtual bool FacingRight => true;
 
     /// <summary>弾幕波次発射イベント。</summary>
-    public event Action<StringId, Vec2f, Vec2f>? OnEmitBarrageWave;
+    public event Action<StringId, Vec2f, Vec2f>? OnEmitBulletWave;
 
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;
@@ -75,9 +75,9 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>
     ///     弾幕発射イベントを発火します。
     /// </summary>
-    protected void RaiseEmitBarrageWave(StringId skill, Vec2f origin, Vec2f target)
+    protected void RaiseEmitBulletWave(StringId skill, Vec2f origin, Vec2f target)
     {
-        OnEmitBarrageWave?.Invoke(skill, origin, target);
+        OnEmitBulletWave?.Invoke(skill, origin, target);
     }
 
     /// <summary>

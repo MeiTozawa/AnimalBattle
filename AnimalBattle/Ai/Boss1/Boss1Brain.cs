@@ -113,7 +113,7 @@ public sealed class Boss1Brain : BaseBossBrain {
             }
         }
 
-        _asc.OnEmitBullet += (skill, _, _) => RaiseEmitBarrageWave(skill, _currentPosition, _targetPosition);
+        _asc.OnEmitBullet += (skill, _, _) => RaiseEmitBulletWave(skill, _currentPosition, _targetPosition);
         _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
 

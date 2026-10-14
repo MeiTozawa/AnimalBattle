@@ -86,7 +86,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// </summary>
     protected void BindBrainEvents(IBossBrain brain)
     {
-        brain.OnEmitBarrageWave += HandleEmitBarrageWave;
+        brain.OnEmitBulletWave += HandleEmitBulletWave;
         brain.OnClearBullets += HandleClearBullets;
     }
 
@@ -159,7 +159,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// <summary>
     ///     弾幕波次発射イベントを処理します。
     /// </summary>
-    protected abstract void HandleEmitBarrageWave(StringId skill, Vec2f origin, Vec2f target);
+    protected abstract void HandleEmitBulletWave(StringId skill, Vec2f origin, Vec2f target);
 
     /// <summary>
     ///     フィールド上に存在するすべての Boss 弾幕を一括消去します。

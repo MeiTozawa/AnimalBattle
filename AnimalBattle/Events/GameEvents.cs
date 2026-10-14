@@ -27,7 +27,7 @@ public readonly record struct PlayerDiedEvent;
 public readonly record struct PlayerHealthChangedEvent(float PreviousHealth, float CurrentHealth, float MaxHealth);
 
 /// <summary>Boss が弾幕波次を発射したイベント</summary>
-public readonly record struct BossBarrageFiredEvent(StringId Ability);
+public readonly record struct BossBulletFiredEvent(StringId Ability);
 
 /// <summary>Boss が急降下衝撃波を発生させたイベント</summary>
 public readonly record struct BossDiveImpactEvent(float X, float Y);

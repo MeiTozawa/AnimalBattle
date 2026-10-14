@@ -41,7 +41,7 @@ public interface IBossSkillPatternConfig {
     Action<AbilityTelegraphContext>? BuildTelegraphRenderer();
 
     /// <summary>弾幕波次を生成します。</summary>
-    void EmitBarrage(Flecs.NET.Core.World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight);
+    void EmitBullet(Flecs.NET.Core.World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight);
 
     /// <summary>近接判定および派生弾幕を生成します。</summary>
     void SpawnHitbox(Flecs.NET.Core.World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos);

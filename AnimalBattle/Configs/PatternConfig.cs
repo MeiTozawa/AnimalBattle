@@ -79,8 +79,8 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
         => ctx => TelegraphRenderHelper.DrawDiveRamTelegraph(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, ImpactRadius, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
-        => BarrageEmitter.EmitDiveImpact(world, this, origin);
+    public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+        => BulletEmitter.EmitDiveImpact(world, this, origin);
 }
 
 /// <summary>
@@ -99,9 +99,9 @@ public sealed class Aimed3ShotConfig : BulletPatternConfigBase {
         => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, SpreadAngle, BulletCount, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
-        BarrageEmitter.EmitAimedSpread(world, this, origin, target);
+        BulletEmitter.EmitAimedSpread(world, this, origin, target);
         PublishBulletFired();
     }
 }
@@ -122,9 +122,9 @@ public sealed class RingBurstConfig : BulletPatternConfigBase {
         => ctx => TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.BossX, ctx.BossY, BulletCount, 0.0f, 75.0f, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
-        BarrageEmitter.EmitRadialRing(world, this, origin, ref angleOffset);
+        BulletEmitter.EmitRadialRing(world, this, origin, ref angleOffset);
         PublishBulletFired();
     }
 }
@@ -160,9 +160,9 @@ public sealed class DoubleSpiralConfig : BulletPatternConfigBase {
         };
 
     /// <inheritdoc />
-    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
-        BarrageEmitter.EmitDoubleSpiral(world, this, origin, ref angleOffset);
+        BulletEmitter.EmitDoubleSpiral(world, this, origin, ref angleOffset);
         PublishBulletFired();
     }
 }
@@ -195,9 +195,9 @@ public sealed class RainDropConfig : BulletPatternConfigBase {
         => ctx => TelegraphRenderHelper.DrawSkyfallColumns(MinX, MaxX, TelegraphColumnCount, TelegraphColumnHeight, ctx.Progress, TelegraphColor, TelegraphWarningText);
 
     /// <inheritdoc />
-    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
-        BarrageEmitter.EmitRainDrop(world, this);
+        BulletEmitter.EmitRainDrop(world, this);
         PublishBulletFired();
     }
 }
@@ -221,9 +221,9 @@ public sealed class CrossChaosConfig : BulletPatternConfigBase {
         };
 
     /// <inheritdoc />
-    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
-        BarrageEmitter.EmitCrossChaos(world, this, origin, ref angleOffset);
+        BulletEmitter.EmitCrossChaos(world, this, origin, ref angleOffset);
         PublishBulletFired();
     }
 }
@@ -241,9 +241,9 @@ public sealed class FastSniperConfig : BulletPatternConfigBase {
         => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, 0.0f, 1, ctx.Progress, TelegraphColor, true);
 
     /// <inheritdoc />
-    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
-        BarrageEmitter.EmitSniper(world, this, origin, target);
+        BulletEmitter.EmitSniper(world, this, origin, target);
         PublishBulletFired();
     }
 }
@@ -323,12 +323,12 @@ public sealed class GroundStompConfig : SkillPatternConfigBase {
         };
 
     /// <inheritdoc />
-    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
-        => BarrageEmitter.EmitGroundStompShockwaves(world, this, origin, bodyHeight);
+    public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+        => BulletEmitter.EmitGroundStompShockwaves(world, this, origin, bodyHeight);
 
     /// <inheritdoc />
     public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
-        => BarrageEmitter.EmitGroundStompShockwaves(world, this, origin, bodyHeight);
+        => BulletEmitter.EmitGroundStompShockwaves(world, this, origin, bodyHeight);
 }
 
 /// <summary>
@@ -389,8 +389,8 @@ public sealed class LeapSmashConfig : SkillPatternConfigBase {
         => ctx => TelegraphRenderHelper.DrawLeapSmashTelegraph(ctx.TargetX, ctx.TargetY, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
-        => BarrageEmitter.EmitLeapSmashShrapnel(world, this, origin, bodyHeight);
+    public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+        => BulletEmitter.EmitLeapSmashShrapnel(world, this, origin, bodyHeight);
 
     /// <inheritdoc />
     public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
@@ -409,7 +409,7 @@ public sealed class LeapSmashConfig : SkillPatternConfigBase {
             ShrapnelFillColor,
             SlashDirection.Down);
 
-        BarrageEmitter.EmitLeapSmashShrapnel(world, this, origin, bodyHeight);
+        BulletEmitter.EmitLeapSmashShrapnel(world, this, origin, bodyHeight);
     }
 }
 
@@ -545,8 +545,8 @@ public sealed class EarthquakeRoarConfig : SkillPatternConfigBase {
         => ctx => TelegraphRenderHelper.DrawSkyfallColumns(MinX, MaxX, TelegraphColumnCount, TelegraphColumnHeight, ctx.Progress, TelegraphColor, TelegraphWarningText);
 
     /// <inheritdoc />
-    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
-        => BarrageEmitter.EmitEarthquakeRocks(world, this);
+    public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+        => BulletEmitter.EmitEarthquakeRocks(world, this);
 }
 
 /// <summary>

@@ -242,11 +242,11 @@ public sealed class Boss2Agent : BaseBossAgent
     }
 
     /// <inheritdoc />
-    protected override void HandleEmitBarrageWave(StringId skill, Vec2f origin, Vec2f target)
+    protected override void HandleEmitBulletWave(StringId skill, Vec2f origin, Vec2f target)
     {
         if (CurrentWorld == default) return;
         var colHeight = Entity.Get<CollisionBox>().Height;
         var forwardDir = _brain.FacingRight ? 1.0f : -1.0f;
-        BarrageEmitter.EmitBoss2(CurrentWorld, skill, origin, target, forwardDir, colHeight);
+        BulletEmitter.EmitBoss2(CurrentWorld, skill, origin, target, forwardDir, colHeight);
     }
 }

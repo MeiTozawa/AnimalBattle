@@ -1,6 +1,3 @@
-using System.Diagnostics;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
 using AnimalBattle.Events;
 using Flecs.NET.Core;
 
@@ -9,7 +6,7 @@ namespace AnimalBattle.Combat;
 /// <summary>
 ///     設定駆動型の弾幕および波次生成を一元管理する静的サービスです。
 /// </summary>
-public static class BarrageEmitter
+public static class BulletEmitter
 {
     /// <summary>
     ///     Boss 1 の技能に応じた弾幕波次を生成します。
@@ -31,7 +28,7 @@ public static class BarrageEmitter
         var patternCfg = ConfigManager.Boss1Patterns;
         if (patternCfg.TryGetSkill(skill, out var pattern))
         {
-            pattern.EmitBarrage(world, origin, target, ref angleOffset, 1.0f, 0.0f);
+            pattern.EmitBullet(world, origin, target, ref angleOffset, 1.0f, 0.0f);
         }
     }
 
@@ -58,7 +55,7 @@ public static class BarrageEmitter
         if (patternCfg.TryGetSkill(skill, out var pattern))
         {
             float dummyOffset = 0.0f;
-            pattern.EmitBarrage(world, origin, target, ref dummyOffset, forwardDir, bodyHeight);
+            pattern.EmitBullet(world, origin, target, ref dummyOffset, forwardDir, bodyHeight);
         }
     }
 

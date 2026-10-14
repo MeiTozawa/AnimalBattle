@@ -159,7 +159,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         }
 
         _asc.OnExecuteMovement += (vx, vy) => _currentVelocity = new Vec2f(vx, vy);
-        _asc.OnEmitBullet += (skill, _, _) => RaiseEmitBarrageWave(skill, _currentPosition, _targetPosition);
+        _asc.OnEmitBullet += (skill, _, _) => RaiseEmitBulletWave(skill, _currentPosition, _targetPosition);
         _asc.OnCreateHitbox += (skill, ox, oy) => OnCreateHitbox?.Invoke(skill, ox, oy);
         _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
