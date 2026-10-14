@@ -55,7 +55,8 @@ public sealed class AbilitySystemComponent {
     /// <summary>能力をコンポーネントに付与・登録します。</summary>
     public void GiveAbility(GameplayAbility ability)
     {
-        ArgumentNullException.ThrowIfNull(ability);
+        Debug.Assert(ability != null, "ability は null であってはなりません。");
+        if (ability == null) return;
 
         if (!ability.AbilityTag.IsEmpty)
         {

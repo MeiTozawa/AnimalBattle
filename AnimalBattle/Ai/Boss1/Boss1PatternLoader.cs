@@ -16,7 +16,8 @@ public static class Boss1PatternLoader {
     /// </summary>
     public static ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skill, Boss1PatternConfig config)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        Debug.Assert(config != null, "config は null であってはなりません。");
+        if (config == null) return Error.Unexpected("Config.Null", "Boss 1 パターン設定が null です。");
         if (!config.TryGetSkill(skill, out var patternConfig))
         {
             return Error.NotFound("Skill.Unsupported", $"Boss 1 ではサポートされていない技能です: {skill}");
@@ -32,7 +33,8 @@ public static class Boss1PatternLoader {
         Boss1PatternConfig config,
         float cooldown = 0.0f)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        Debug.Assert(config != null, "config は null であってはなりません。");
+        if (config == null) return Error.Unexpected("Config.Null", "Boss 1 パターン設定が null です。");
         if (!config.TryGetSkill(skill, out var patternConfig))
         {
             return Error.NotFound("Skill.Unsupported", $"Boss 1 ではサポートされていない技能です: {skill}");
@@ -51,7 +53,8 @@ public static class Boss1PatternLoader {
     /// </summary>
     public static string ResolveDisplayName(StringId skill, Boss1PatternConfig config)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        Debug.Assert(config != null, "config は null であってはなりません。");
+        if (config == null) return skill.ToString();
         return config.TryGetSkill(skill, out var patternConfig) && !string.IsNullOrWhiteSpace(patternConfig.SkillName)
             ? patternConfig.SkillName
             : skill.ToString();
@@ -62,7 +65,8 @@ public static class Boss1PatternLoader {
     /// </summary>
     public static Action<AbilityTelegraphContext>? ResolveTelegraphRenderer(StringId skill, Boss1PatternConfig config)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        Debug.Assert(config != null, "config は null であってはなりません。");
+        if (config == null) return null;
         return config.TryGetSkill(skill, out var patternConfig)
             ? patternConfig.BuildTelegraphRenderer()
             : null;

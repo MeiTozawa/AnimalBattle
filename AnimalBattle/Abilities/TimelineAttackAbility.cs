@@ -44,12 +44,12 @@ public sealed class TimelineAttackAbility : GameplayAbility {
         string? displayName = null,
         Action<AbilityTelegraphContext>? telegraphRenderer = null)
     {
-        ArgumentNullException.ThrowIfNull(timeline);
+        Debug.Assert(timeline != null, "timeline は null であってはなりません。");
 
         AbilityTag = tag;
         DisplayName = displayName ?? tag.ToString();
         TelegraphRenderer = telegraphRenderer;
-        Timeline = timeline;
+        Timeline = timeline ?? new AttackDefinition(tag, 0.1f, 0.1f, 0.1f, 0.0f);
         Cooldown = cooldown;
         RequiredTags = requiredTags;
         BlockedTags = blockedTags;

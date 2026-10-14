@@ -78,7 +78,8 @@ public readonly struct AttackDecisionRule {
     /// </summary>
     public static AttackDecisionRule FromConfig(AttackRuleConfig config)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        Debug.Assert(config != null, "AttackRuleConfig は null であってはなりません。");
+        if (config == null) return default;
         return new AttackDecisionRule(
             new StringId(config.Skill),
             config.Cooldown,
