@@ -26,12 +26,16 @@ public static class SpriteAnimationSystem {
 
                 if (!AssetManager.TryGetCharacterConfig(anim.CharacterType, out var charConfig))
                 {
-                    Debug.Assert(false, $"キャラクターのアニメーション設定が登録されていません: {anim.CharacterType}");
+                    Debug.Fail($"キャラクターのアニメーション設定が登録されていません: {anim.CharacterType}");
                     return;
                 }
 
                 var hasHandle = AssetManager.TryGetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip, out var handle);
-                Debug.Assert(hasHandle && handle >= 0, $"[SpriteAnimationSystem 警告] スプライトハンドルの取得に失敗しました ({anim.CharacterType} / {anim.CurrentClip})");
+                if (!hasHandle || handle < 0)
+                {
+                    Debug.Fail($"[SpriteAnimationSystem 警告] スプライトハンドルの取得に失敗しました ({anim.CharacterType} / {anim.CurrentClip})");
+                    return;
+                }
                 sprite.GraphHandle = handle;
                 sprite.SrcRect =
                     AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out var isFinished);
