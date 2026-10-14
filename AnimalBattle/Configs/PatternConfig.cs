@@ -1,11 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
 using AnimalBattle.Combat;
 using AnimalBattle.Core;
-using AnimalBattle.Events;
 using AnimalBattle.Render;
 using ErrorOr;
 using Flecs.NET.Core;
@@ -16,50 +14,29 @@ namespace AnimalBattle.Configs;
 ///     TOML で定義される単一キーフレームイベント設定クラス。
 /// </summary>
 public sealed class SkillEventConfig {
-    /// <summary>発動遅延時間。</summary>
+    /// <summary>発動遅延時間（秒）</summary>
     public float Time { get; set; }
 
-    /// <summary>イベント種別。</summary>
+    /// <summary>イベント種別名</summary>
     public string Type { get; set; } = string.Empty;
 
-    /// <summary>パラメータ 0。</summary>
+    /// <summary>パラメータ 0</summary>
     public float Param0 { get; set; }
 
-    /// <summary>パラメータ 1。</summary>
+    /// <summary>パラメータ 1</summary>
     public float Param1 { get; set; }
 
-    /// <summary>パラメータ 2。</summary>
+    /// <summary>パラメータ 2</summary>
     public float Param2 { get; set; }
 
-    /// <summary>文字パラメータ。</summary>
+    /// <summary>文字列パラメータ</summary>
     public string StrParam { get; set; } = string.Empty;
 }
 
 /// <summary>
 ///     俯衝突進・メテオダイブ技能の設定クラス。
 /// </summary>
-public sealed class DiveRamConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>デフォルトクールダウン時間（秒）</summary>
-    public float DefaultCooldown { get; set; }
-
-    /// <summary>技能の有効射程距離</summary>
-    public float EffectiveRange { get; set; }
-
+public sealed class DiveRamConfig : SkillPatternConfigBase {
     /// <summary>突進速度倍率</summary>
     public float DashSpeed { get; set; }
 
@@ -84,7 +61,7 @@ public sealed class DiveRamConfig : IBossSkillPatternConfig {
     /// <summary>着地炸裂弾の発生 Y オフセット (px)</summary>
     public float ImpactOffsetY { get; set; }
 
-    /// <summary>着地炸裂弾の特殊弾幕種別（Magenta, Cyan, Yellow, Black, Normal）</summary>
+    /// <summary>着地炸裂弾の特殊弾種別（Magenta, Cyan, Yellow, Black, Normal）</summary>
     public string BulletType { get; set; } = string.Empty;
 
     /// <summary>突進残影トレイルカラー</summary>
@@ -93,206 +70,71 @@ public sealed class DiveRamConfig : IBossSkillPatternConfig {
     /// <summary>突進補間に使用するイージング種別</summary>
     public EaseType EaseType { get; set; }
 
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, armorTag: GameplayTag.SuperArmor);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => TelegraphRenderHelper.DrawDiveRamTelegraph(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, ImpactRadius, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
         => BarrageEmitter.EmitDiveImpact(world, this, origin);
-
-    /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     自機狙い 3 連射技能の設定クラス。
 /// </summary>
-public sealed class Aimed3ShotConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>デフォルトクールダウン時間（秒）</summary>
-    public float DefaultCooldown { get; set; }
-
-    /// <summary>技能の有効射程距離</summary>
-    public float EffectiveRange { get; set; }
-
-    /// <summary>発射間隔</summary>
-    public float Interval { get; set; }
-
-    /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; }
-
-    /// <summary>拡散角度</summary>
+public sealed class Aimed3ShotConfig : BulletPatternConfigBase {
+    /// <summary>拡散角度（ラジアン）</summary>
     public float SpreadAngle { get; set; }
 
-    /// <summary>弾の半径</summary>
-    public float BulletRadius { get; set; }
-
-    /// <summary>弾数</summary>
-    public int BulletCount { get; set; }
-
-    /// <summary>弾の塗りつぶしカラー</summary>
-    public Color FillColor { get; set; }
-
-    /// <summary>弾の外枠カラー</summary>
-    public Color OutlineColor { get; set; }
-
-    /// <summary>弾幕種別</summary>
-    public string BulletType { get; set; } = string.Empty;
-
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, BulletCount, SpreadAngle);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, SpreadAngle, BulletCount, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
         BarrageEmitter.EmitAimedSpread(world, this, origin, target);
-        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+        PublishBulletFired();
     }
-
-    /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     16 方向全方位リング弾幕技能の設定クラス。
 /// </summary>
-public sealed class RingBurstConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>デフォルトクールダウン時間（秒）</summary>
-    public float DefaultCooldown { get; set; }
-
-    /// <summary>技能の有効射程距離</summary>
-    public float EffectiveRange { get; set; }
-
-    /// <summary>発射間隔</summary>
-    public float Interval { get; set; }
-
-    /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; }
-
-    /// <summary>弾間の角度間隔</summary>
+public sealed class RingBurstConfig : BulletPatternConfigBase {
+    /// <summary>弾間の角度間隔（ラジアン）</summary>
     public float AngleStep { get; set; }
 
-    /// <summary>弾の半径</summary>
-    public float BulletRadius { get; set; }
-
-    /// <summary>弾数</summary>
-    public int BulletCount { get; set; }
-
-    /// <summary>弾の塗りつぶしカラー</summary>
-    public Color FillColor { get; set; }
-
-    /// <summary>弾の外枠カラー</summary>
-    public Color OutlineColor { get; set; }
-
-    /// <summary>弾幕種別</summary>
-    public string BulletType { get; set; } = string.Empty;
-
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, BulletCount, AngleStep);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.BossX, ctx.BossY, BulletCount, 0.0f, 75.0f, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
         BarrageEmitter.EmitRadialRing(world, this, origin, ref angleOffset);
-        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+        PublishBulletFired();
     }
-
-    /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     双螺旋回転弾幕技能の設定クラス。
 /// </summary>
-public sealed class DoubleSpiralConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>デフォルトクールダウン時間（秒）</summary>
-    public float DefaultCooldown { get; set; }
-
-    /// <summary>技能の有効射程距離</summary>
-    public float EffectiveRange { get; set; }
-
-    /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; }
-
-    /// <summary>発射ごとの角度変化量</summary>
+public sealed class DoubleSpiralConfig : BulletPatternConfigBase {
+    /// <summary>発射ごとの角度変化量（ラジアン）</summary>
     public float AngleStep { get; set; }
-
-    /// <summary>発射間隔</summary>
-    public float Interval { get; set; }
-
-    /// <summary>弾の半径</summary>
-    public float BulletRadius { get; set; }
 
     /// <summary>第 1 弾の塗りつぶしカラー</summary>
     public Color FillColor1 { get; set; }
@@ -306,48 +148,29 @@ public sealed class DoubleSpiralConfig : IBossSkillPatternConfig {
     /// <summary>第 2 弾の外枠カラー</summary>
     public Color OutlineColor2 { get; set; }
 
-    /// <summary>弾幕種別</summary>
-    public string BulletType { get; set; } = string.Empty;
-
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 2, AngleStep);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => {
             var spiralAngle = ctx.StateTimer * 4.0f;
             TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.BossX, ctx.BossY, 2, spiralAngle, 90.0f, ctx.Progress, TelegraphColor);
         };
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
         BarrageEmitter.EmitDoubleSpiral(world, this, origin, ref angleOffset);
-        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+        PublishBulletFired();
     }
-
-    /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     降雨弾幕技能の設定クラス。
 /// </summary>
-public sealed class RainDropConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
+public sealed class RainDropConfig : BulletPatternConfigBase {
     /// <summary>予兆柱の表示本数</summary>
     public int TelegraphColumnCount { get; set; } = 6;
 
@@ -357,263 +180,88 @@ public sealed class RainDropConfig : IBossSkillPatternConfig {
     /// <summary>予兆警告テキスト</summary>
     public string TelegraphWarningText { get; set; } = "▼ RAIN ▼";
 
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>デフォルトクールダウン時間（秒）</summary>
-    public float DefaultCooldown { get; set; }
-
-    /// <summary>技能の有効射程距離</summary>
-    public float EffectiveRange { get; set; }
-
-    /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; }
-
-    /// <summary>発射間隔</summary>
-    public float Interval { get; set; }
-
-    /// <summary>弾の半径</summary>
-    public float BulletRadius { get; set; }
-
     /// <summary>弾生成の最小 X 座標</summary>
     public float MinX { get; set; }
 
     /// <summary>弾生成の最大 X 座標</summary>
     public float MaxX { get; set; }
 
-    /// <summary>弾の塗りつぶしカラー</summary>
-    public Color FillColor { get; set; }
-
-    /// <summary>弾の外枠カラー</summary>
-    public Color OutlineColor { get; set; }
-
-    /// <summary>弾幕種別</summary>
-    public string BulletType { get; set; } = string.Empty;
-
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 1);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => TelegraphRenderHelper.DrawSkyfallColumns(MinX, MaxX, TelegraphColumnCount, TelegraphColumnHeight, ctx.Progress, TelegraphColor, TelegraphWarningText);
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
         BarrageEmitter.EmitRainDrop(world, this);
-        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+        PublishBulletFired();
     }
-
-    /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     全方位交差波弾幕技能の設定クラス。
 /// </summary>
-public sealed class CrossChaosConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>デフォルトクールダウン時間（秒）</summary>
-    public float DefaultCooldown { get; set; }
-
-    /// <summary>技能の有効射程距離</summary>
-    public float EffectiveRange { get; set; }
-
-    /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; }
-
-    /// <summary>発射ごとの角度変化量</summary>
+public sealed class CrossChaosConfig : BulletPatternConfigBase {
+    /// <summary>発射ごとの角度変化量（ラジアン）</summary>
     public float AngleStep { get; set; }
 
-    /// <summary>発射間隔</summary>
-    public float Interval { get; set; }
-
-    /// <summary>弾の半径</summary>
-    public float BulletRadius { get; set; }
-
-    /// <summary>弾の塗りつぶしカラー</summary>
-    public Color FillColor { get; set; }
-
-    /// <summary>弾の外枠カラー</summary>
-    public Color OutlineColor { get; set; }
-
-    /// <summary>弾幕種別</summary>
-    public string BulletType { get; set; } = string.Empty;
-
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 4, AngleStep);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => {
             var crossAngle = ctx.StateTimer * 2.5f;
             TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.BossX, ctx.BossY, 4, crossAngle, 110.0f, ctx.Progress, TelegraphColor);
         };
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
         BarrageEmitter.EmitCrossChaos(world, this, origin, ref angleOffset);
-        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+        PublishBulletFired();
     }
-
-    /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     高速レーザースナイパー弾幕技能の設定クラス。
 /// </summary>
-public sealed class FastSniperConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>デフォルトクールダウン時間（秒）</summary>
-    public float DefaultCooldown { get; set; }
-
-    /// <summary>技能の有効射程距離</summary>
-    public float EffectiveRange { get; set; }
-
-    /// <summary>発射間隔</summary>
-    public float Interval { get; set; }
-
-    /// <summary>弾速</summary>
-    public float BulletSpeed { get; set; }
-
-    /// <summary>弾の半径</summary>
-    public float BulletRadius { get; set; }
-
-    /// <summary>弾の塗りつぶしカラー</summary>
-    public Color FillColor { get; set; }
-
-    /// <summary>弾の外枠カラー</summary>
-    public Color OutlineColor { get; set; }
-
-    /// <summary>弾幕種別</summary>
-    public string BulletType { get; set; } = string.Empty;
-
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
+public sealed class FastSniperConfig : BulletPatternConfigBase {
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 1);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, 0.0f, 1, ctx.Progress, TelegraphColor, true);
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
     {
         BarrageEmitter.EmitSniper(world, this, origin, target);
-        EventBus.Publish(new BossBarrageFiredEvent(new StringId(SkillName)));
+        PublishBulletFired();
     }
-
-    /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     Boss 2 重劈斬撃技能の設定クラス。
 /// </summary>
-public sealed class HeavySlashConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>基本冷却時間</summary>
-    public float DefaultCooldown { get; set; }
-
-    /// <summary>突進速度</summary>
-    public float DashSpeed { get; set; }
-
-    /// <summary>斬撃判定 X 半径</summary>
-    public float SlashRangeX { get; set; }
-
-    /// <summary>斬撃判定 Y 半径</summary>
-    public float SlashRangeY { get; set; }
-
-    /// <summary>斬撃円形半径</summary>
-    public float SlashRadius { get; set; }
-
-    /// <summary>斬撃命中ダメージ</summary>
-    public float SlashDamage { get; set; }
-
-    /// <summary>斬撃攻撃判定の残留持続時間</summary>
-    public float HitboxDuration { get; set; }
-
-    /// <summary>斬撃エフェクトカラー</summary>
-    public Color SlashColor { get; set; }
-
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
+public sealed class HeavySlashConfig : MeleePatternConfigBase {
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, SlashRangeX, Events, armorTag: GameplayTag.SuperArmor);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => TelegraphRenderHelper.DrawMeleeDangerBox((int)ctx.BossX, (int)ctx.BossY, SlashRangeX, SlashRangeY, ctx.FacingRight, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight) { }
-
-    /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
+    public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
     {
         var b2Cfg = ConfigManager.Boss2;
         var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
@@ -637,35 +285,17 @@ public sealed class HeavySlashConfig : IBossSkillPatternConfig {
 /// <summary>
 ///     Boss 2 撼地踏撃技能の設定クラス。
 /// </summary>
-public sealed class GroundStompConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>基本冷却時間</summary>
-    public float DefaultCooldown { get; set; }
-
+public sealed class GroundStompConfig : SkillPatternConfigBase {
     /// <summary>判定生成オフセット Y</summary>
     public float HitboxOffsetY { get; set; }
 
-    /// <summary>地面接触面の Y 補正オフセット</summary>
+    /// <summary>着地判定オフセット Y</summary>
     public float GroundOffsetY { get; set; }
 
-    /// <summary>左右衝撃波生成の水平 X オフセット</summary>
+    /// <summary>衝撃波生成オフセット X</summary>
     public float ShockwaveOffsetX { get; set; }
 
-    /// <summary>衝撃波水平推進速度</summary>
+    /// <summary>衝撃波速度</summary>
     public float ShockwaveSpeed { get; set; }
 
     /// <summary>衝撃波弾半径</summary>
@@ -680,16 +310,12 @@ public sealed class GroundStompConfig : IBossSkillPatternConfig {
     /// <summary>衝撃波外枠カラー</summary>
     public Color OutlineColor { get; set; }
 
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, ShockwaveSpeed, Events, armorTag: GameplayTag.SuperArmor);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => {
             var b2Cfg = ConfigManager.Boss2;
             var groundY = ctx.BossY + b2Cfg.CollisionHeight / 2.0f;
@@ -697,36 +323,18 @@ public sealed class GroundStompConfig : IBossSkillPatternConfig {
         };
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
         => BarrageEmitter.EmitGroundStompShockwaves(world, this, origin, bodyHeight);
 
     /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
+    public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
         => BarrageEmitter.EmitGroundStompShockwaves(world, this, origin, bodyHeight);
 }
 
 /// <summary>
 ///     Boss 2 泰山圧頂技能の設定クラス。
 /// </summary>
-public sealed class LeapSmashConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>基本冷却時間</summary>
-    public float DefaultCooldown { get; set; }
-
+public sealed class LeapSmashConfig : SkillPatternConfigBase {
     /// <summary>跳躍初速</summary>
     public float JumpForce { get; set; }
 
@@ -772,24 +380,20 @@ public sealed class LeapSmashConfig : IBossSkillPatternConfig {
     /// <summary>着地叩きつけダメージ</summary>
     public float SlashDamage { get; set; }
 
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, JumpForce, Events, armorTag: GameplayTag.Invincible);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => TelegraphRenderHelper.DrawLeapSmashTelegraph(ctx.TargetX, ctx.TargetY, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
         => BarrageEmitter.EmitLeapSmashShrapnel(world, this, origin, bodyHeight);
 
     /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
+    public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
     {
         var groundY = origin.Y + bodyHeight / 2.0f;
         CombatSpawner.SpawnMeleeSlashHitbox(
@@ -812,66 +416,23 @@ public sealed class LeapSmashConfig : IBossSkillPatternConfig {
 /// <summary>
 ///     Boss 2 二連重斬技能の設定クラス。
 /// </summary>
-public sealed class DoubleCleaveConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>基本冷却時間</summary>
-    public float DefaultCooldown { get; set; }
-
+public sealed class DoubleCleaveConfig : MeleePatternConfigBase {
     /// <summary>2 回目の斬撃追加前方オフセット X</summary>
     public float SecondSlashOffsetX { get; set; }
 
-    /// <summary>前進突進速度</summary>
-    public float DashSpeed { get; set; }
-
-    /// <summary>2 回目の斬撃までのインターバル</summary>
+    /// <summary>2 回目の斬撃までのインターバル（秒）</summary>
     public float SlashInterval { get; set; }
 
-    /// <summary>斬撃 X 範囲</summary>
-    public float SlashRangeX { get; set; }
-
-    /// <summary>斬撃 Y 範囲</summary>
-    public float SlashRangeY { get; set; }
-
-    /// <summary>斬撃ダメージ</summary>
-    public float SlashDamage { get; set; }
-
-    /// <summary>斬撃攻撃判定の残留持続時間</summary>
-    public float HitboxDuration { get; set; } = 0.24f;
-
-    /// <summary>斬撃エフェクトカラー</summary>
-    public Color SlashColor { get; set; }
-
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, SlashRangeX, Events, armorTag: GameplayTag.SuperArmor);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => TelegraphRenderHelper.DrawMeleeDangerBox((int)ctx.BossX, (int)ctx.BossY, SlashRangeX, SlashRangeY, ctx.FacingRight, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight) { }
-
-    /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
+    public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
     {
         var b2Cfg = ConfigManager.Boss2;
         var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
@@ -886,7 +447,7 @@ public sealed class DoubleCleaveConfig : IBossSkillPatternConfig {
             SlashRangeX,
             SlashRangeY,
             SlashDamage,
-            HitboxDuration,
+            HitboxDuration > 0.0f ? HitboxDuration : 0.24f,
             SlashColor,
             dir);
     }
@@ -895,25 +456,7 @@ public sealed class DoubleCleaveConfig : IBossSkillPatternConfig {
 /// <summary>
 ///     Boss 2 狂暴横衝直撞技能の設定クラス。
 /// </summary>
-public sealed class FrenzyChargeConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
-    /// <summary>突進持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>壁衝突後の後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>基本冷却時間</summary>
-    public float DefaultCooldown { get; set; }
-
+public sealed class FrenzyChargeConfig : SkillPatternConfigBase {
     /// <summary>全画面高速突進速度</summary>
     public float ChargeSpeed { get; set; }
 
@@ -923,7 +466,7 @@ public sealed class FrenzyChargeConfig : IBossSkillPatternConfig {
     /// <summary>突進攻撃判定高さ</summary>
     public float HitboxHeight { get; set; }
 
-    /// <summary>突進攻撃判定持続時間</summary>
+    /// <summary>突進攻撃判定持続時間（秒）</summary>
     public float HitboxDuration { get; set; }
 
     /// <summary>突進攻撃判定エフェクトカラー</summary>
@@ -944,38 +487,19 @@ public sealed class FrenzyChargeConfig : IBossSkillPatternConfig {
     /// <summary>破片外枠カラー</summary>
     public Color ShrapnelOutlineColor { get; set; }
 
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, ChargeSpeed, Events, armorTag: GameplayTag.SuperArmor);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => TelegraphRenderHelper.DrawChargeDangerTrack((int)ctx.BossX, (int)ctx.BossY, ConfigManager.Boss2.CollisionHeight, ctx.FacingRight, ctx.Progress, TelegraphColor);
-
-    /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight) { }
-
-    /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
 ///     Boss 2 滅地狂吼技能の設定クラス。
 /// </summary>
-public sealed class EarthquakeRoarConfig : IBossSkillPatternConfig {
-    /// <summary>技能名</summary>
-    public string SkillName { get; set; } = string.Empty;
-
-    /// <summary>前隙予兆時間</summary>
-    public float WindUpTime { get; set; }
-
-    /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
-
+public sealed class EarthquakeRoarConfig : SkillPatternConfigBase {
     /// <summary>予兆柱の表示本数</summary>
     public int TelegraphColumnCount { get; set; }
 
@@ -985,16 +509,7 @@ public sealed class EarthquakeRoarConfig : IBossSkillPatternConfig {
     /// <summary>予兆警告テキスト</summary>
     public string TelegraphWarningText { get; set; } = string.Empty;
 
-    /// <summary>発動持続時間</summary>
-    public float CastDuration { get; set; }
-
-    /// <summary>後隙硬直時間</summary>
-    public float RecoveryTime { get; set; }
-
-    /// <summary>基本冷却時間</summary>
-    public float DefaultCooldown { get; set; }
-
-    /// <summary>落石投下間隔</summary>
+    /// <summary>咆哮波状落石の投下間隔（秒）</summary>
     public float Interval { get; set; }
 
     /// <summary>1 回あたりの落石投下数</summary>
@@ -1018,31 +533,24 @@ public sealed class EarthquakeRoarConfig : IBossSkillPatternConfig {
     /// <summary>落石外枠カラー</summary>
     public Color RockOutlineColor { get; set; }
 
-    /// <summary>落石の特殊弾幕種別（Magenta, Cyan, Yellow, Black, Normal）</summary>
+    /// <summary>落石の特殊弾種別（Magenta, Cyan, Yellow, Black, Normal）</summary>
     public string BulletType { get; set; } = string.Empty;
 
-    /// <summary>時序キーフレームイベント一覧</summary>
-    public List<SkillEventConfig> Events { get; set; } = [];
-
-
     /// <inheritdoc />
-    public ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
+    public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, MaxX, Events, Interval, RockSpeed, RockCount > 0 ? RockCount : 1, 0.0f, GameplayTag.SuperArmor);
 
     /// <inheritdoc />
-    public Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
+    public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => TelegraphRenderHelper.DrawSkyfallColumns(MinX, MaxX, TelegraphColumnCount, TelegraphColumnHeight, ctx.Progress, TelegraphColor, TelegraphWarningText);
 
     /// <inheritdoc />
-    public void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
+    public override void EmitBarrage(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
         => BarrageEmitter.EmitEarthquakeRocks(world, this);
-
-    /// <inheritdoc />
-    public void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos) { }
 }
 
 /// <summary>
-///     特殊弾幕変調パラメータ設定クラス。
+///     特殊弾変調パラメータ設定クラス。
 /// </summary>
 public sealed class SpecialBulletConfig {
     /// <summary>青弾および黒弾の法線正弦波揺動振幅</summary>
@@ -1057,7 +565,7 @@ public sealed class SpecialBulletConfig {
     /// <summary>品紅弾および黒弾の呼吸拡縮脈動周波数</summary>
     public float MagentaPulseFrequency { get; set; }
 
-    /// <summary>黄弾公転衛星の回転角速度ラジアン毎秒</summary>
+    /// <summary>黄弾公転衛星の回転角速度（ラジアン/秒）</summary>
     public float YellowOrbitSpeed { get; set; }
 
     /// <summary>黄弾公転衛星の軌道半径倍率</summary>
@@ -1070,18 +578,16 @@ public sealed class SpecialBulletConfig {
     public float YellowSatelliteDamage { get; set; }
 
     /// <summary>
-    ///     指定された TOML ファイルから特殊弾幕変調設定を読み込みます。
+    ///     指定された TOML ファイルから特殊弾変調設定を読み込みます。
     /// </summary>
     public static ErrorOr<ConfigBase<SpecialBulletConfig>> LoadFromFile(string path = ResourcePath.Config.SpecialBullets)
-    {
-        return ConfigBase<SpecialBulletConfig>.LoadFromFile(path);
-    }
+        => ConfigBase<SpecialBulletConfig>.LoadFromFile(path);
 }
 
 /// <summary>
-///     Boss 1 専用の技能・弾幕パターン設定クラス。
+///     Boss 1 専用の技能・弾パターン設定クラス。
 /// </summary>
-public sealed class Boss1PatternConfig {
+public sealed class Boss1PatternConfig : BossPatternConfigContainerBase {
     /// <summary>俯衝突進・メテオダイブ技能設定</summary>
     public DiveRamConfig DiveRam { get; set; } = new();
 
@@ -1103,52 +609,17 @@ public sealed class Boss1PatternConfig {
     /// <summary>高速レーザースナイパー弾幕技能設定</summary>
     public FastSniperConfig FastSniper { get; set; } = new();
 
-    private Dictionary<StringId, IBossSkillPatternConfig>? _skillCache;
-
-    /// <summary>
-    ///     技能識別タグに対応するパターン設定を動的に取得します。
-    /// </summary>
-    public bool TryGetSkill(StringId skill, [NotNullWhen(true)] out IBossSkillPatternConfig? pattern)
-    {
-        _skillCache ??= BuildSkillCache();
-        return _skillCache.TryGetValue(skill, out pattern);
-    }
-
-    private Dictionary<StringId, IBossSkillPatternConfig> BuildSkillCache()
-    {
-        var cache = new Dictionary<StringId, IBossSkillPatternConfig>();
-        foreach (var prop in GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
-        {
-            if (typeof(IBossSkillPatternConfig).IsAssignableFrom(prop.PropertyType) && prop.GetValue(this) is IBossSkillPatternConfig skillConfig)
-            {
-                cache[new StringId(prop.Name)] = skillConfig;
-            }
-        }
-        return cache;
-    }
-
-    /// <summary>
-    ///     文字列で指定された弾幕種別をパースします。
-    /// </summary>
-    public static BulletType ParseBulletType(string? typeStr, BulletType defaultType = BulletType.Normal)
-    {
-        if (!string.IsNullOrWhiteSpace(typeStr) && Enum.TryParse(typeStr, true, out BulletType result)) return result;
-        return defaultType;
-    }
-
     /// <summary>
     ///     指定された TOML ファイルから Boss 1 パターン設定を読み込みます。
     /// </summary>
     public static ErrorOr<ConfigBase<Boss1PatternConfig>> LoadFromFile(string path = ResourcePath.Config.Boss1Patterns)
-    {
-        return ConfigBase<Boss1PatternConfig>.LoadFromFile(path);
-    }
+        => ConfigBase<Boss1PatternConfig>.LoadFromFile(path);
 }
 
 /// <summary>
 ///     Boss 2 専用の近接・広域技能パターン設定クラス。
 /// </summary>
-public sealed class Boss2PatternConfig {
+public sealed class Boss2PatternConfig : BossPatternConfigContainerBase {
     /// <summary>Boss 2 重劈斬撃技能設定</summary>
     public HeavySlashConfig HeavySlash { get; set; } = new();
 
@@ -1167,35 +638,9 @@ public sealed class Boss2PatternConfig {
     /// <summary>Boss 2 滅地狂吼技能設定</summary>
     public EarthquakeRoarConfig EarthquakeRoar { get; set; } = new();
 
-    private Dictionary<StringId, IBossSkillPatternConfig>? _skillCache;
-
-    /// <summary>
-    ///     技能識別タグに対応するパターン設定を動的に取得します。
-    /// </summary>
-    public bool TryGetSkill(StringId skill, [NotNullWhen(true)] out IBossSkillPatternConfig? pattern)
-    {
-        _skillCache ??= BuildSkillCache();
-        return _skillCache.TryGetValue(skill, out pattern);
-    }
-
-    private Dictionary<StringId, IBossSkillPatternConfig> BuildSkillCache()
-    {
-        var cache = new Dictionary<StringId, IBossSkillPatternConfig>();
-        foreach (var prop in GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
-        {
-            if (typeof(IBossSkillPatternConfig).IsAssignableFrom(prop.PropertyType) && prop.GetValue(this) is IBossSkillPatternConfig skillConfig)
-            {
-                cache[new StringId(prop.Name)] = skillConfig;
-            }
-        }
-        return cache;
-    }
-
     /// <summary>
     ///     指定された TOML ファイルから Boss 2 パターン設定を読み込みます。
     /// </summary>
     public static ErrorOr<ConfigBase<Boss2PatternConfig>> LoadFromFile(string path = ResourcePath.Config.Boss2Patterns)
-    {
-        return ConfigBase<Boss2PatternConfig>.LoadFromFile(path);
-    }
+        => ConfigBase<Boss2PatternConfig>.LoadFromFile(path);
 }
