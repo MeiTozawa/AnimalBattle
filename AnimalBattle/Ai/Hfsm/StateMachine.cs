@@ -11,6 +11,14 @@ public class StateMachine : State {
     private readonly List<(Func<bool> Condition, IState TargetState)> _globalTransitions = [];
     private IState? _currentState;
 
+    /// <summary>この状態マシンがアクティブであるか（ルートマシン、または親状態マシンで現在選択されているか）を取得します。</summary>
+    public bool IsActive => Parent switch
+    {
+        null => true,
+        StateMachine parentSm => parentSm.IsActive && parentSm.CurrentState == this,
+        _ => true
+    };
+
     /// <summary>現在アクティブな子状態を取得します。</summary>
     public IState? CurrentState => _currentState;
 
@@ -52,9 +60,16 @@ public class StateMachine : State {
         Debug.Assert(targetState != null, "targetState は null であってはなりません。");
         if (targetState == null || _currentState == targetState) return;
 
-        _currentState?.Exit();
-        _currentState = targetState;
-        _currentState.Enter();
+        if (IsActive)
+        {
+            _currentState?.Exit();
+            _currentState = targetState;
+            _currentState.Enter();
+        }
+        else
+        {
+            _currentState = targetState;
+        }
     }
 
     /// <summary>識別子を指定して子状態を検索します。</summary>

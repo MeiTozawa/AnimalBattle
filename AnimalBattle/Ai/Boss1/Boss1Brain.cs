@@ -140,6 +140,7 @@ public sealed class Boss1Brain : BaseBossBrain {
         Phase = Phase.Phase1;
 
         _asc.InterruptCurrentAbility();
+        _asc.ClearTags();
         _reactionMachine.ChangeState(_phaseTransitionState);
         _combatMachine.ChangeState(_hoverState);
         _rootMachine.ChangeState(_combatMachine);

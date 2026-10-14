@@ -190,12 +190,17 @@ public sealed class Boss2Brain : BaseBossBrain {
         _combatMachine.AddSubState(_abilityState);
         _combatMachine.SetInitialState(_idleState);
 
-        _wallCrashStunState = new State(StateWallCrashStun, onEnter: () => {
-            _stateTimer = 0.0f;
-            _currentVelocity = Vec2f.Zero;
-            _asc.InterruptCurrentAbility();
-            _asc.AddTag(GameplayTag.Stunned | GameplayTag.Vulnerable);
-        });
+        _wallCrashStunState = new State(
+            StateWallCrashStun,
+            onEnter: () => {
+                _stateTimer = 0.0f;
+                _currentVelocity = Vec2f.Zero;
+                _asc.InterruptCurrentAbility();
+                _asc.AddTag(GameplayTag.Stunned | GameplayTag.Vulnerable);
+            },
+            onExit: () => {
+                _asc.RemoveTag(GameplayTag.Stunned | GameplayTag.Vulnerable);
+            });
 
         _reactionMachine.AddSubState(_wallCrashStunState);
 
@@ -237,6 +242,8 @@ public sealed class Boss2Brain : BaseBossBrain {
         Phase = Phase.Phase1;
 
         _asc.InterruptCurrentAbility();
+        _asc.ClearTags();
+        _reactionMachine.ChangeState(_phaseTransitionState);
         SyncPhaseAbilitiesCooldown(_configuration.GetPhase(Phase));
         _combatMachine.ChangeState(_idleState);
         _rootMachine.ChangeState(_combatMachine);
@@ -596,7 +603,6 @@ public sealed class Boss2Brain : BaseBossBrain {
 
         if (_stateTimer >= _configuration.CombatSettings.WallCrashStunDuration)
         {
-            _asc.RemoveTag(GameplayTag.Stunned | GameplayTag.Vulnerable);
             _isWallStunned = false;
             _combatMachine.ChangeState(_idleState);
             _rootMachine.ChangeState(_combatMachine);
