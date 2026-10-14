@@ -44,8 +44,8 @@ public static class BossDecisionEvaluator {
         in AttackDecisionContext context,
         AbilitySystemComponent? asc = null)
     {
-        ArgumentNullException.ThrowIfNull(rules);
-        ArgumentNullException.ThrowIfNull(cooldownTracker);
+        Debug.Assert(rules != null && cooldownTracker != null, "[BossDecisionEvaluator] rules または cooldownTracker が null です。");
+        if (rules == null || cooldownTracker == null) return StringId.Empty;
 
         var bestSkill = StringId.Empty;
         var bestScore = -1.0f;
@@ -75,8 +75,8 @@ public static class BossDecisionEvaluator {
         Random? random = null,
         AbilitySystemComponent? asc = null)
     {
-        ArgumentNullException.ThrowIfNull(rules);
-        ArgumentNullException.ThrowIfNull(cooldownTracker);
+        Debug.Assert(rules != null && cooldownTracker != null, "[BossDecisionEvaluator] rules または cooldownTracker が null です。");
+        if (rules == null || cooldownTracker == null) return StringId.Empty;
 
         Span<StringId> candidateSkills = stackalloc StringId[rules.Count];
         Span<float> candidateScores = stackalloc float[rules.Count];
@@ -120,7 +120,8 @@ public static class BossDecisionEvaluator {
         in AttackDecisionContext context,
         Random? random = null)
     {
-        ArgumentNullException.ThrowIfNull(asc);
+        Debug.Assert(asc != null, "[BossDecisionEvaluator] asc が null です。");
+        if (asc == null) return StringId.Empty;
         return EvaluateWeighted(rules, asc.Cooldowns, in context, random, asc);
     }
 

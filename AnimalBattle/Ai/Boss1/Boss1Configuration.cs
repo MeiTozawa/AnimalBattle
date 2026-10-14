@@ -61,7 +61,7 @@ public readonly struct Boss1PhaseSettings(
 
     /// <summary>この Phase の技能順です。</summary>
     public IReadOnlyList<StringId> AttackOrder { get; } =
-        attackOrder ?? throw new ArgumentNullException(nameof(attackOrder));
+        attackOrder ?? AssertHelper.FailWithDefault("[Boss1PhaseSettings 警告] attackOrder が null です。空配列にフォールバックします。", Array.Empty<StringId>());
 }
 
 /// <summary>Boss1 State_Module が読む設定の注入境界です。</summary>

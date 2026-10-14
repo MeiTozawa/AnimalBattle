@@ -22,7 +22,8 @@ public class StateMachine : State {
     /// <summary>子状態を追加します。</summary>
     public void AddSubState(IState state)
     {
-        ArgumentNullException.ThrowIfNull(state);
+        Debug.Assert(state != null, "state は null であってはなりません。");
+        if (state == null) return;
         state.Parent = this;
         _subStates.Add(state);
         _currentState ??= state;
@@ -31,7 +32,8 @@ public class StateMachine : State {
     /// <summary>初期状態を明示的に設定します。</summary>
     public void SetInitialState(IState state)
     {
-        ArgumentNullException.ThrowIfNull(state);
+        Debug.Assert(state != null, "state は null であってはなりません。");
+        if (state == null) return;
         Debug.Assert(_subStates.Contains(state), $"未登録の状態を初期状態に設定しようとしました: {state.Id}");
         _currentState = state;
     }
@@ -39,17 +41,16 @@ public class StateMachine : State {
     /// <summary>最優先評価されるグローバル遷移条件を追加します。</summary>
     public void AddGlobalTransition(Func<bool> condition, IState targetState)
     {
-        ArgumentNullException.ThrowIfNull(condition);
-        ArgumentNullException.ThrowIfNull(targetState);
+        Debug.Assert(condition != null && targetState != null, "condition または targetState は null であってはなりません。");
+        if (condition == null || targetState == null) return;
         _globalTransitions.Add((condition, targetState));
     }
 
     /// <summary>指定子状態へ切り替えます。</summary>
     public void ChangeState(IState targetState)
     {
-        ArgumentNullException.ThrowIfNull(targetState);
-
-        if (_currentState == targetState) return;
+        Debug.Assert(targetState != null, "targetState は null であってはなりません。");
+        if (targetState == null || _currentState == targetState) return;
 
         _currentState?.Exit();
         _currentState = targetState;
