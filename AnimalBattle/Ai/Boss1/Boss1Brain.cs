@@ -120,7 +120,7 @@ public sealed class Boss1Brain : BaseBossBrain {
     private void RegisterSkill(StringId skill, Boss1PatternConfig config)
     {
         var cooldown = _configuration.GetSkillDefaultCooldown(skill);
-        var buildResult = Boss1PatternLoader.BuildAbility(skill, config, cooldown);
+        var buildResult = BossPatternLoader.BuildAbility(skill, config, cooldown);
         if (buildResult.IsError)
         {
             Debug.Assert(false, $"Boss 1 技能時序の構築に失敗しました: {skill}");

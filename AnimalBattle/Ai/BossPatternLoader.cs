@@ -4,40 +4,39 @@ using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using ErrorOr;
 
-namespace AnimalBattle.Ai.Boss1;
+namespace AnimalBattle.Ai;
 
 /// <summary>
-///     Boss 1（古代猫帝）の TOML 設定から検証済みの <see cref="AttackDefinition" /> および <see cref="TimelineAttackAbility" /> を構築するローダーです。
-///     UE GAS 準拠：技能識別タグ StringId を基盤とする攻撃能力を構築します。
+///     TOML 設定から検証済みの <see cref="AttackDefinition" /> および <see cref="TimelineAttackAbility" /> を構築する共通ローダー。
 /// </summary>
-public static class Boss1PatternLoader {
+public static class BossPatternLoader {
     /// <summary>
     ///     指定技能タグの不変攻撃時序定義をビルドします。
     /// </summary>
-    public static ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skill, Boss1PatternConfig config)
+    public static ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skill, BossPatternConfigContainerBase config)
     {
         Debug.Assert(config != null, "config は null であってはなりません。");
-        if (config == null) return Error.Unexpected("Config.Null", "Boss 1 パターン設定が null です。");
+        if (config == null) return Error.Unexpected("Config.Null", "Boss パターン設定が null です。");
         if (!config.TryGetSkill(skill, out var patternConfig))
         {
-            return Error.NotFound("Skill.Unsupported", $"Boss 1 ではサポートされていない技能です: {skill}");
+            return Error.NotFound("Skill.Unsupported", $"サポートされていない技能です: {skill}");
         }
         return patternConfig.BuildAttackDefinition(skill);
     }
 
     /// <summary>
-    ///     指定技能タグの <see cref="TimelineAttackAbility" /> を構築し、UE GAS 冷却タグをバインドします。
+    ///     指定技能タグの <see cref="TimelineAttackAbility" /> を構築します。
     /// </summary>
     public static ErrorOr<TimelineAttackAbility> BuildAbility(
         StringId skill,
-        Boss1PatternConfig config,
+        BossPatternConfigContainerBase config,
         float cooldown = 0.0f)
     {
         Debug.Assert(config != null, "config は null であってはなりません。");
-        if (config == null) return Error.Unexpected("Config.Null", "Boss 1 パターン設定が null です。");
+        if (config == null) return Error.Unexpected("Config.Null", "Boss パターン設定が null です。");
         if (!config.TryGetSkill(skill, out var patternConfig))
         {
-            return Error.NotFound("Skill.Unsupported", $"Boss 1 ではサポートされていない技能です: {skill}");
+            return Error.NotFound("Skill.Unsupported", $"サポートされていない技能です: {skill}");
         }
 
         var defResult = patternConfig.BuildAttackDefinition(skill);
@@ -49,9 +48,9 @@ public static class Boss1PatternLoader {
     }
 
     /// <summary>
-    ///     技能識別タグに対応する表示名を TOML 設定から解決します。
+    ///     技能識別タグに対応する表示名を解決します。
     /// </summary>
-    public static string ResolveDisplayName(StringId skill, Boss1PatternConfig config)
+    public static string ResolveDisplayName(StringId skill, BossPatternConfigContainerBase config)
     {
         Debug.Assert(config != null, "config は null であってはなりません。");
         if (config == null) return skill.ToString();
@@ -63,7 +62,7 @@ public static class Boss1PatternLoader {
     /// <summary>
     ///     技能識別タグに対応する前兆演出レンダラーを取得します。
     /// </summary>
-    public static Action<AbilityTelegraphContext>? ResolveTelegraphRenderer(StringId skill, Boss1PatternConfig config)
+    public static Action<AbilityTelegraphContext>? ResolveTelegraphRenderer(StringId skill, BossPatternConfigContainerBase config)
     {
         Debug.Assert(config != null, "config は null であってはなりません。");
         if (config == null) return null;
