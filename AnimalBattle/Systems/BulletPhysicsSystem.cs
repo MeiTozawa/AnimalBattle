@@ -14,12 +14,14 @@ public static class BulletPhysicsSystem {
     {
         world.System<Transform, Velocity>("PlayerBulletMovementSystem")
            .With<PlayerBulletTag>()
+           .Without<RecycleTag>()
            .Kind(Ecs.OnUpdate)
            .Iter(RunBatchBulletMovement);
 
         world.System<Transform, Velocity>("BossBulletMovementSystem")
            .With<BossBulletTag>()
            .Without<OrbitSatellite>()
+           .Without<RecycleTag>()
            .Kind(Ecs.OnUpdate)
            .Iter(RunBatchBulletMovement);
 

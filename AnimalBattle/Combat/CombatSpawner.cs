@@ -191,14 +191,18 @@ public static class CombatSpawner {
 
     /// <summary>
     ///     フィールド上に存在するすべての Boss 弾幕を一括消去します。
+    ///     シミュレーション実行中の時序競合および二重返却（Double Free）を防止するため、
+    ///     即時返却ではなく <see cref="RecycleTag" /> を付与し、
+    ///     フレーム末尾の <see cref="CombatRecycleSystem" /> へ回収を一元委譲します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     public static void ClearAllBossBullets(World world)
     {
         using var query = world.QueryBuilder()
            .With<BossBulletTag>()
+           .Without<RecycleTag>()
            .Build();
-        query.Each(e => CombatPoolService.Recycle(e));
+        query.Each(e => e.Add<RecycleTag>());
     }
 
     /// <summary>

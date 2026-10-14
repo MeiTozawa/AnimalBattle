@@ -19,6 +19,7 @@ public static class CombatCollisionSystem {
         CollisionContext context = new(world);
 
         world.System<Transform, Hitbox>("CombatCollisionSystem")
+           .Without<RecycleTag>()
            .Kind(Ecs.OnUpdate)
            .Iter((Iter it, Field<Transform> atkTrans, Field<Hitbox> hitboxes) =>
             {

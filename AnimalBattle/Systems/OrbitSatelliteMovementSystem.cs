@@ -21,6 +21,7 @@ public static class OrbitSatelliteMovementSystem
     {
         world.System<Transform, Velocity, OrbitSatellite, BulletModifier>("OrbitSatelliteMovementSystem")
            .With<BossBulletTag>()
+           .Without<RecycleTag>()
            .Kind(Ecs.OnUpdate)
            .Iter((Iter it, Field<Transform> trans, Field<Velocity> vel, Field<OrbitSatellite> satellites,
                 Field<BulletModifier> modifiers) =>
@@ -40,7 +41,7 @@ public static class OrbitSatelliteMovementSystem
                 for (var i = 0; i < count; ++i)
                 {
                     ref var sat = ref satellites[i];
-                    if (!sat.Parent.IsAlive() || !sat.Parent.Enabled())
+                    if (!sat.Parent.IsAlive() || !sat.Parent.Enabled() || sat.Parent.Has<RecycleTag>())
                     {
                         it.Entity(i).Add<RecycleTag>();
                         continue;
