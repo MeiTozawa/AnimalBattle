@@ -73,7 +73,7 @@ public static class BarrageEmitter
         var halfSpread = cfg.SpreadAngle / 2.0f;
         var startAngle = baseAngle - halfSpread;
         var angleStep = count > 1 ? cfg.SpreadAngle / (count - 1) : 0.0f;
-        var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Cyan);
+        var bType = BossPatternConfigContainerBase.ParseBulletType(cfg.BulletType, BulletType.Cyan);
 
         for (var i = 0; i < count; i++)
         {
@@ -102,7 +102,7 @@ public static class BarrageEmitter
         var angle = MathF.Atan2(dy, dx);
         var vx = MathF.Cos(angle) * cfg.BulletSpeed;
         var vy = MathF.Sin(angle) * cfg.BulletSpeed;
-        var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Black);
+        var bType = BossPatternConfigContainerBase.ParseBulletType(cfg.BulletType, BulletType.Black);
 
         CombatSpawner.SpawnBossSpecialBullet(
             world,
@@ -121,7 +121,7 @@ public static class BarrageEmitter
     {
         var count = Math.Max(1, cfg.BulletCount);
         var step = cfg.AngleStep > 0.0f ? cfg.AngleStep : MathF.PI * 2.0f / count;
-        var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Magenta);
+        var bType = BossPatternConfigContainerBase.ParseBulletType(cfg.BulletType, BulletType.Magenta);
 
         for (var i = 0; i < count; i++)
         {
@@ -147,7 +147,7 @@ public static class BarrageEmitter
     /// <summary>二重螺旋弾幕を生成します。</summary>
     internal static void EmitDoubleSpiral(World world, DoubleSpiralConfig cfg, Vec2f origin, ref float angleOffset)
     {
-        var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Yellow);
+        var bType = BossPatternConfigContainerBase.ParseBulletType(cfg.BulletType, BulletType.Yellow);
 
         var vx1 = MathF.Cos(angleOffset) * cfg.BulletSpeed;
         var vy1 = MathF.Sin(angleOffset) * cfg.BulletSpeed;
@@ -182,7 +182,7 @@ public static class BarrageEmitter
     /// <summary>十字交差弾幕を生成します。</summary>
     internal static void EmitCrossChaos(World world, CrossChaosConfig cfg, Vec2f origin, ref float angleOffset)
     {
-        var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Magenta);
+        var bType = BossPatternConfigContainerBase.ParseBulletType(cfg.BulletType, BulletType.Magenta);
 
         for (var k = 0; k < 4; k++)
         {
@@ -209,7 +209,7 @@ public static class BarrageEmitter
     internal static void EmitRainDrop(World world, RainDropConfig cfg)
     {
         var rx = cfg.MinX + Random.Shared.NextSingle() * (cfg.MaxX - cfg.MinX);
-        var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Cyan);
+        var bType = BossPatternConfigContainerBase.ParseBulletType(cfg.BulletType, BulletType.Cyan);
 
         CombatSpawner.SpawnBossSpecialBullet(
             world,
@@ -230,7 +230,7 @@ public static class BarrageEmitter
         EventBus.Publish(new BossDiveImpactEvent(origin.X, spawnY));
         var count = Math.Max(1, cfg.ImpactBulletCount);
         var step = MathF.PI * 2.0f / count;
-        var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Magenta);
+        var bType = BossPatternConfigContainerBase.ParseBulletType(cfg.BulletType, BulletType.Magenta);
 
         for (var i = 0; i < count; i++)
         {
@@ -255,7 +255,7 @@ public static class BarrageEmitter
     internal static void EmitEarthquakeRocks(World world, EarthquakeRoarConfig cfg)
     {
         var count = Math.Max(1, cfg.RockCount);
-        var bType = Boss1PatternConfig.ParseBulletType(cfg.BulletType, BulletType.Cyan);
+        var bType = BossPatternConfigContainerBase.ParseBulletType(cfg.BulletType, BulletType.Cyan);
         for (var i = 0; i < count; i++)
         {
             var rx = cfg.MinX + Random.Shared.NextSingle() * (cfg.MaxX - cfg.MinX);
