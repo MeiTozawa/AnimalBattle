@@ -1,6 +1,6 @@
 # Boss 2: Ground Crusher Golem Base Attributes
 BossName = "Boss2"
-MaxHp = 45.0
+MaxHp = 120.0
 SpawnX = 900.0
 SpawnY = 480.0
 ScaleX = 0.65
@@ -193,13 +193,13 @@ MaxDistance = 700.0
 Weight = 85.0
 PreferAirborneBonus = 2.0
 
-# Phase 遷移能力設定（データ駆動：タグおよび持続時間は設定から動的供給）
+# Phase 遷移能力設定
 [PhaseTransition]
 Duration = 1.0
 ActivationOwnedTags = ["Invincible", "Phasing", "Casting"]
 BlockedTags = []
 
-# 壁激突気絶（スタン）設定（データ駆動：持続時間と付与タグ）
+# 壁激突気絶（スタン）設定
 [WallCrashStun]
 Duration = 1.2
 GrantedTags = ["Stunned", "Vulnerable"]

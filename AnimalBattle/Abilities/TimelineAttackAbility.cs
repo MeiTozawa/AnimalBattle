@@ -117,7 +117,7 @@ public sealed class TimelineAttackAbility : GameplayAbility {
                 {
                     asc.AddTag(Timeline.RecoveryTag);
                 }
-                break;
+            break;
         }
     }
 
