@@ -18,8 +18,8 @@ ImpactFillColor = 0xFFFF1493
 ImpactOutlineColor = 0xFFFF80AB
 TrailColor = 0xFFFF5555
 EaseType = "InQuad"
-BulletType = "Magenta"
 ArmorTags = ["SuperArmor"]
+RecoveryTags = ["Vulnerable"]
 
 [[DiveRam.Events]]
 Time = 0.0
@@ -61,6 +61,7 @@ BulletCount = 3
 FillColor = 0xFF00E5FF
 OutlineColor = 0xFFE0F7FA
 BulletType = "Cyan"
+RecoveryTags = []
 
 [[Aimed3Shot.Events]]
 Time = 0.0
@@ -94,6 +95,7 @@ BulletCount = 16
 FillColor = 0xFFFF1493
 OutlineColor = 0xFFFF80AB
 BulletType = "Magenta"
+RecoveryTags = []
 
 [[RingBurst.Events]]
 Time = 0.0
@@ -128,6 +130,7 @@ OutlineColor1 = 0xFFFFF275
 FillColor2 = 0xFFFFEA00
 OutlineColor2 = 0xFFFFFF8D
 BulletType = "Yellow"
+RecoveryTags = []
 
 [RainDrop]
 SkillName = "Skyfall Rain Barrage"
@@ -148,6 +151,7 @@ MaxX = 1220.0
 FillColor = 0xFF00E5FF
 OutlineColor = 0xFFE0F7FA
 BulletType = "Cyan"
+RecoveryTags = []
 
 [CrossChaos]
 SkillName = "Cross Chaos Waves"
@@ -164,6 +168,7 @@ BulletRadius = 8.5
 FillColor = 0xFFFF1493
 OutlineColor = 0xFFFF80AB
 BulletType = "Magenta"
+RecoveryTags = []
 
 [FastSniper]
 SkillName = "Laser Fast Sniper"
@@ -179,6 +184,7 @@ BulletRadius = 6.5
 FillColor = 0xFF111116
 OutlineColor = 0xFFFF1744
 BulletType = "Black"
+RecoveryTags = []
 
 [[FastSniper.Events]]
 Time = 0.0

@@ -43,9 +43,15 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig {
     /// <summary>パース済みのアーマータグフラグを取得します。</summary>
     public GameplayTag ParsedArmorTag => GameplayTagHelper.ParseTags(ArmorTags);
 
+    /// <summary>後隙（Recovery）中に自身へ付与されるタグ一覧（例: ["Vulnerable"]）</summary>
+    public List<string> RecoveryTags { get; set; } = [];
+
+    /// <summary>パース済みの後隙タグフラグを取得します。</summary>
+    public GameplayTag ParsedRecoveryTag => GameplayTagHelper.ParseTags(RecoveryTags);
+
     /// <inheritdoc />
     public virtual ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, armorTag: ParsedArmorTag);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, armorTag: ParsedArmorTag, recoveryTag: ParsedRecoveryTag);
 
     /// <inheritdoc />
     public virtual Action<AbilityTelegraphContext>? BuildTelegraphRenderer() => null;

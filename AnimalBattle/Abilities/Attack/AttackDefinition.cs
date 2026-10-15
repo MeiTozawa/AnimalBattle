@@ -15,6 +15,7 @@ public sealed class AttackDefinition {
         float range,
         IReadOnlyList<AttackActionStep>? actions = null,
         GameplayTag armorTag = GameplayTag.None,
+        GameplayTag recoveryTag = GameplayTag.None,
         float poiseThreshold = 0.0f)
     {
         SkillTag = skillTag;
@@ -23,6 +24,7 @@ public sealed class AttackDefinition {
         RecoveryDuration = recoveryDuration;
         Range = range;
         ArmorTag = armorTag;
+        RecoveryTag = recoveryTag;
         PoiseThreshold = poiseThreshold;
 
         var actionCount = actions?.Count ?? 0;
@@ -49,6 +51,9 @@ public sealed class AttackDefinition {
 
     /// <summary>出招実行時のアーマー・耐性タグ（SuperArmor, Invincible 等）を取得します。</summary>
     public GameplayTag ArmorTag { get; }
+
+    /// <summary>後隙（Recovery）中に自身へ付与されるタグ（Vulnerable 等）を取得します。</summary>
+    public GameplayTag RecoveryTag { get; }
 
     /// <summary>破防に必要な靭性ダメージ閾値を取得します。</summary>
     public float PoiseThreshold { get; }

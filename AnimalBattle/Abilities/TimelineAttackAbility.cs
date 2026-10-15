@@ -112,13 +112,17 @@ public sealed class TimelineAttackAbility : GameplayAbility {
             break;
 
             case SkillPhase.Recovery:
-                asc.AddTag(GameplayTag.Recovery | GameplayTag.Vulnerable);
+                asc.AddTag(GameplayTag.Recovery);
+                if (Timeline.RecoveryTag != GameplayTag.None)
+                {
+                    asc.AddTag(Timeline.RecoveryTag);
+                }
                 break;
         }
     }
 
     private void ClearPhaseTags(AbilitySystemComponent asc)
     {
-        asc.RemoveTag(GameplayTag.Telegraph | GameplayTag.Active | GameplayTag.Recovery | GameplayTag.Vulnerable | Timeline.ArmorTag);
+        asc.RemoveTag(GameplayTag.Telegraph | GameplayTag.Active | GameplayTag.Recovery | Timeline.ArmorTag | Timeline.RecoveryTag);
     }
 }

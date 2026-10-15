@@ -36,6 +36,7 @@ public static class SkillConfigLoader {
         int defaultCount = 0,
         float defaultSpread = 0.0f,
         GameplayTag armorTag = GameplayTag.None,
+        GameplayTag recoveryTag = GameplayTag.None,
         float poiseThreshold = 0.0f)
     {
         // 業務バリデーション
@@ -75,6 +76,7 @@ public static class SkillConfigLoader {
             effectiveRange,
             actions.ToArray(),
             armorTag,
+            recoveryTag,
             poiseThreshold);
 
         if (!definition.IsValid) return Error.Validation("Skill.InvalidDefinition", $"技能 '{skillTag}' の内部定義検証に失敗しました。");

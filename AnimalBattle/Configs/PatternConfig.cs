@@ -72,7 +72,7 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, armorTag: ParsedArmorTag);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, armorTag: ParsedArmorTag, recoveryTag: ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -92,7 +92,7 @@ public sealed class Aimed3ShotConfig : BulletPatternConfigBase {
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, BulletCount, SpreadAngle);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, BulletCount, SpreadAngle, ParsedArmorTag, ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -115,7 +115,7 @@ public sealed class RingBurstConfig : BulletPatternConfigBase {
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, BulletCount, AngleStep);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, BulletCount, AngleStep, ParsedArmorTag, ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -150,7 +150,7 @@ public sealed class DoubleSpiralConfig : BulletPatternConfigBase {
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 2, AngleStep);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 2, AngleStep, ParsedArmorTag, ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -188,7 +188,7 @@ public sealed class RainDropConfig : BulletPatternConfigBase {
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 1);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 1, 0.0f, ParsedArmorTag, ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -211,7 +211,7 @@ public sealed class CrossChaosConfig : BulletPatternConfigBase {
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 4, AngleStep);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 4, AngleStep, ParsedArmorTag, ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -234,7 +234,7 @@ public sealed class CrossChaosConfig : BulletPatternConfigBase {
 public sealed class FastSniperConfig : BulletPatternConfigBase {
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 1);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, Interval, BulletSpeed, 1, 0.0f, ParsedArmorTag, ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -254,7 +254,7 @@ public sealed class FastSniperConfig : BulletPatternConfigBase {
 public sealed class HeavySlashConfig : MeleePatternConfigBase {
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, SlashRangeX, Events, armorTag: ParsedArmorTag);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, SlashRangeX, Events, armorTag: ParsedArmorTag, recoveryTag: ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -312,7 +312,7 @@ public sealed class GroundStompConfig : SkillPatternConfigBase {
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, ShockwaveSpeed, Events, armorTag: ParsedArmorTag);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, ShockwaveSpeed, Events, armorTag: ParsedArmorTag, recoveryTag: ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -382,7 +382,7 @@ public sealed class LeapSmashConfig : SkillPatternConfigBase {
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, JumpForce, Events, armorTag: ParsedArmorTag);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, JumpForce, Events, armorTag: ParsedArmorTag, recoveryTag: ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -425,7 +425,7 @@ public sealed class DoubleCleaveConfig : MeleePatternConfigBase {
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, SlashRangeX, Events, armorTag: ParsedArmorTag);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, SlashRangeX, Events, armorTag: ParsedArmorTag, recoveryTag: ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -489,7 +489,7 @@ public sealed class FrenzyChargeConfig : SkillPatternConfigBase {
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, ChargeSpeed, Events, armorTag: ParsedArmorTag);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, ChargeSpeed, Events, armorTag: ParsedArmorTag, recoveryTag: ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
@@ -538,7 +538,7 @@ public sealed class EarthquakeRoarConfig : SkillPatternConfigBase {
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, MaxX, Events, Interval, RockSpeed, RockCount > 0 ? RockCount : 1, 0.0f, ParsedArmorTag);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, MaxX, Events, Interval, RockSpeed, RockCount > 0 ? RockCount : 1, 0.0f, ParsedArmorTag, ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
