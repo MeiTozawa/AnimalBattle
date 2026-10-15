@@ -48,11 +48,6 @@ JumpCooldownDuration = 1.0
 # 戦闘・スタン・判定パラメータ
 WallCrashStunDuration = 1.2
 SamePlatformToleranceY = 60.0
-
-# 壁激突気絶（スタン）設定（データ駆動：持続時間と付与タグ）
-[WallCrashStun]
-Duration = 1.2
-GrantedTags = ["Stunned", "Vulnerable"]
 AirborneVelocityThreshold = 15.0
 AirborneHeightThreshold = 50.0
 MeleeTriggerRangeX = 175.0
@@ -203,4 +198,10 @@ PreferAirborneBonus = 2.0
 Duration = 1.0
 ActivationOwnedTags = ["Invincible", "Phasing", "Casting"]
 BlockedTags = []
+
+# 壁激突気絶（スタン）設定（データ駆動：持続時間と付与タグ）
+[WallCrashStun]
+Duration = 1.2
+GrantedTags = ["Stunned", "Vulnerable"]
+
 
