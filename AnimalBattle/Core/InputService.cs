@@ -10,9 +10,6 @@ namespace AnimalBattle.Core;
 public static unsafe partial class InputService {
     private static bool _isCursorVisible = true;
 
-    [LibraryImport("user32.dll")]
-    private static partial int ShowCursor([MarshalAs(UnmanagedType.Bool)] bool bShow);
-
     /// <summary>
     ///     現在の OS マウスカーソル可視状態を取得します。
     /// </summary>
@@ -26,7 +23,7 @@ public static unsafe partial class InputService {
     {
         if (_isCursorVisible == visible) return;
         _isCursorVisible = visible;
-        ShowCursor(visible);
+        NativeBindings.Engine_SetMouseDispFlag(visible);
     }
     /// <summary>
     ///     入力状態を明示的に更新します（通常は Engine_ProcessMessages で自動実行されます）。

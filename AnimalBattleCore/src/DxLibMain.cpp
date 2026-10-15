@@ -78,6 +78,7 @@ void ShutdownDxLibBackend() noexcept {
         g_physics_service.reset();
         g_input_service.reset();
         g_render_service.reset();
+        ::SetMouseDispFlag(TRUE);
         ::DxLib_End();
     } catch (...) {
     }
@@ -92,6 +93,13 @@ bool ProcessDxLibMessages() noexcept {
         return success;
     } catch (...) {
         return false;
+    }
+}
+
+void SetMouseDispFlag(bool visible) noexcept {
+    try {
+        ::SetMouseDispFlag(visible ? TRUE : FALSE);
+    } catch (...) {
     }
 }
 

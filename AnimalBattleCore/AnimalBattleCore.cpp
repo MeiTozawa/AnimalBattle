@@ -86,6 +86,13 @@ __declspec(dllexport) bool Engine_ProcessMessages() noexcept {
     }
 }
 
+__declspec(dllexport) void Engine_SetMouseDispFlag(bool visible) noexcept {
+    try {
+        ab::SetMouseDispFlag(visible);
+    } catch (...) {
+    }
+}
+
 __declspec(dllexport) bool Engine_BeginDraw() noexcept {
     try {
         auto* render_service = ab::GetRenderService();

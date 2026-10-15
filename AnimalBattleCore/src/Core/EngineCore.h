@@ -52,6 +52,9 @@ ANIMALBATTLE_CORE_API void ShutdownDxLibBackend() noexcept;
 /// @brief DxLib のウィンドウメッセージを処理する
 ANIMALBATTLE_CORE_API bool ProcessDxLibMessages() noexcept;
 
+/// @brief マウスカーソルの表示／非表示を設定する
+ANIMALBATTLE_CORE_API void SetMouseDispFlag(bool visible) noexcept;
+
 }  // namespace ab
 
 // --- Audio APIs ---

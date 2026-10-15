@@ -68,6 +68,10 @@ internal static unsafe partial class NativeBindings {
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Engine_IsExitRequested();
 
+    [LibraryImport(_dllName, EntryPoint = "Engine_SetMouseDispFlag")]
+    [SuppressGCTransition]
+    public static partial void Engine_SetMouseDispFlag([MarshalAs(UnmanagedType.U1)] bool visible);
+
     #endregion
 
     #region InputService High-Level APIs
