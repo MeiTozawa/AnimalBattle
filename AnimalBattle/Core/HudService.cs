@@ -7,17 +7,16 @@ using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Characters;
 using AnimalBattle.Characters.Boss;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
 
-namespace AnimalBattle.Systems;
+namespace AnimalBattle.Core;
 
 /// <summary>
-///     画面上部操作ヘルプ、自機 HP・二段ジャンプ残数、および画面下部 Boss 大 HP バー・行動状態バッジを描画する HUD 描画システム。
-///     領域モデル（<see cref="Pawn" /> / <see cref="Characters.Boss.BaseBossAgent" />）から直接状態を読み取って描画します。
+///     画面上部操作ヘルプ、自機 HP・二段ジャンプ残数、および画面下部 Boss 大 HP バー・行動状態バッジを描画する HUD サービスクラス。
+///     領域モデル（<see cref="Pawn" /> / <see cref="Characters.Boss.BaseBossAgent" />）から直接状態を読み取ってスクリーン空間に描画します。
 /// </summary>
-public static class HudRenderSystem {
+public static class HudService {
     private static readonly string[] BossTitles = [
-        "BOSS: Unknown [PHASE 1/3]",
+        "BOSS: Unknown",
         "BOSS: Boss1 [PHASE 1/3]",
         "BOSS: Boss1 [PHASE 2/3]",
         "BOSS: Boss1 [PHASE 3/3]",
@@ -41,7 +40,7 @@ public static class HudRenderSystem {
     ];
 
     /// <summary>
-    ///     HUD および各種ステータス UI を描画します。
+    ///     HUD および各種ステータス UI をスクリーン空間に描画します。
     /// </summary>
     /// <param name="player">現在アクティブな自機 Pawn。</param>
     /// <param name="boss">現在アクティブな首領 Agent。</param>
