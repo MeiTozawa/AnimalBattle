@@ -341,7 +341,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         if (navGraph is not null && navGraph.Nodes.Count > 0)
         {
             var bossFootY = _currentPosition.Y + _configuration.CombatSettings.CollisionHeight / 2.0f;
-            var playerFootY = playerPos.Y + _configuration.CombatSettings.PlayerHitboxHeight / 2.0f;
+            var playerFootY = playerPos.Y + _configuration.CombatSettings.PlayerCollisionHeight / 2.0f;
             plan = navGraph.FindPath(_currentPosition.X, bossFootY, playerPos.X, playerFootY, isGrounded, phaseCfg.MoveSpeed);
         }
 
@@ -565,13 +565,13 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     private void LockLeapSmashTarget(float playerX, float playerCenterY)
     {
-        var playerHitboxHeight = _configuration.CombatSettings.PlayerHitboxHeight > 0.0f
-            ? _configuration.CombatSettings.PlayerHitboxHeight
+        var playerCollisionHeight = _configuration.CombatSettings.PlayerCollisionHeight > 0.0f
+            ? _configuration.CombatSettings.PlayerCollisionHeight
             : 48.0f;
-        var playerFootY = playerCenterY + playerHitboxHeight * 0.5f;
+        var playerFootY = playerCenterY + playerCollisionHeight * 0.5f;
 
         _targetLandingSurfaceY = CalculateTargetLandingSurfaceY(playerX, playerFootY);
-        _targetPosition = new Vec2f(playerX, _targetLandingSurfaceY - playerHitboxHeight * 0.5f);
+        _targetPosition = new Vec2f(playerX, _targetLandingSurfaceY - playerCollisionHeight * 0.5f);
     }
 
     private float CalculateTargetLandingSurfaceY(float targetX, float playerFootY)

@@ -273,7 +273,7 @@ public class BattleScene : IDisposable {
         var playerEntity = _ecsWorld.Lookup("Player1");
         if (!playerEntity.IsAlive()) return;
         playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
-        playerEntity.Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight));
+        playerEntity.Set(new CollisionBox(pCfg.CollisionWidth, pCfg.CollisionHeight));
 
         if (playerEntity.Has<Transform>())
         {

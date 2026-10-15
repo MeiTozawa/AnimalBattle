@@ -11,8 +11,8 @@ MaxFallSpeed = 600.0
 MaxJumps = 2
 
 # Player Terrain Collision
-HitboxWidth = 32.0
-HitboxHeight = 42.0
+CollisionWidth = 32.0
+CollisionHeight = 42.0
 
 # Player Hurtbox
 HurtboxShape = "Circle"

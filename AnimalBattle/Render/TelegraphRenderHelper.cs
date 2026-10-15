@@ -199,7 +199,7 @@ public static class TelegraphRenderHelper {
         var tx = (int)targetX;
         var ty = (int)targetY;
         var halfWidth = (int)(impactRadius);
-        var halfHeight = (int)(playerCfg.HitboxHeight / 2.0f);
+        var halfHeight = (int)(playerCfg.CollisionHeight / 2.0f);
         var x1 = tx - halfWidth;
         var y1 = ty - halfHeight;
         var x2 = tx + halfWidth;
@@ -275,7 +275,7 @@ public static class TelegraphRenderHelper {
         var tx = (int)targetX;
         var ty = (int)targetY;
         var halfWidth = (int)(b2Cfg.BodyHitboxWidth > 0.0f ? b2Cfg.BodyHitboxWidth : 70.0f);
-        var halfHeight = (int)(playerCfg.HitboxHeight / 2.0f);
+        var halfHeight = (int)(playerCfg.CollisionHeight / 2.0f);
         var x1 = tx - halfWidth;
         var y1 = ty - halfHeight;
         var x2 = tx + halfWidth;

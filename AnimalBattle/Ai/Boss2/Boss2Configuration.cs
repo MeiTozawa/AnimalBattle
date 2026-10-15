@@ -76,7 +76,7 @@ public readonly struct Boss2CombatSettings(
     float antiKitingRangedDistance,
     float antiKitingMidDistance,
     float antiKitingEnforceMultiplier,
-    float playerHitboxHeight) {
+    float playerCollisionHeight) {
     /// <summary>衝突判定の高さ（px）です。</summary>
     public float CollisionHeight { get; } = collisionHeight;
 
@@ -114,7 +114,7 @@ public readonly struct Boss2CombatSettings(
     public float AntiKitingEnforceMultiplier { get; } = antiKitingEnforceMultiplier;
 
     /// <summary>プレイヤーの判定高さ（px）です。</summary>
-    public float PlayerHitboxHeight { get; } = playerHitboxHeight;
+    public float PlayerCollisionHeight { get; } = playerCollisionHeight;
 }
 
 /// <summary>Boss2 State_Module が読む設定の注入境界です。</summary>
@@ -217,7 +217,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
                 toml.AntiKitingRangedDistance,
                 toml.AntiKitingMidDistance,
                 toml.AntiKitingEnforceMultiplier,
-                ConfigManager.Player.HitboxHeight);
+                ConfigManager.Player.CollisionHeight);
         }
     }
 

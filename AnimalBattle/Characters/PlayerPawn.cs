@@ -30,7 +30,7 @@ public sealed class PlayerPawn : Pawn
            .Set(new HitFlashSettings(pCfg.HitFlashDuration, Color.White))
            .Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
            .Set(new Velocity(0.0f))
-           .Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight))
+           .Set(new CollisionBox(pCfg.CollisionWidth, pCfg.CollisionHeight))
            .Set(new Hurtbox(pCfg.GetHurtboxShape()))
            .Set(new Animation("Idle"))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 32, 32)))
@@ -105,7 +105,7 @@ public sealed class PlayerPawn : Pawn
 
         Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
         Entity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
-        Entity.Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight));
+        Entity.Set(new CollisionBox(pCfg.CollisionWidth, pCfg.CollisionHeight));
 
         if (Entity.Has<Health>())
         {

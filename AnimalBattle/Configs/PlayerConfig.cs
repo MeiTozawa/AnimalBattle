@@ -55,14 +55,11 @@ public sealed class PlayerConfig {
     /// <summary>プレイヤー被弾判定の Y 軸局所オフセット（ピクセル）</summary>
     public float HurtboxOffsetY { get; set; }
 
-    /// <summary>敵弾に対するプレイヤー当たり判定半径（後方互換プロパティ）</summary>
-    public float HitboxRadius => HurtboxRadius;
-
     /// <summary>地形足場との衝突幅（ピクセル）</summary>
-    public float HitboxWidth { get; set; }
+    public float CollisionWidth { get; set; }
 
     /// <summary>地形足場との衝突高さ（ピクセル）</summary>
-    public float HitboxHeight { get; set; }
+    public float CollisionHeight { get; set; }
 
     /// <summary>プレイヤー描画スケール X</summary>
     public float ScaleX { get; set; }
