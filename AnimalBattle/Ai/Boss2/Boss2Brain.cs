@@ -10,14 +10,13 @@ namespace AnimalBattle.Ai.Boss2;
 
 /// <summary>
 ///     Boss 2 の統合意思決定および行動制御ブレインです。
-///     HFSM および AbilitySystemComponent を通じて足場移動、近接攻撃、気絶、状態遷移を一元管理します。
+///     フラット FSM および AbilitySystemComponentを通じて足場移動、近接攻撃、気絶、状態遷移を一元管理します。
 /// </summary>
 public sealed class Boss2Brain : BaseBossBrain {
     private static readonly StringId StateIdle = "Idle";
     private static readonly StringId StatePatrolChase = "PatrolChase";
     private static readonly StringId StatePlatformTraverse = "PlatformTraverse";
     private static readonly StringId StateAbility = "Ability";
-    private static readonly StringId StateWallCrashStun = "WallCrashStun";
 
     private enum TraverseStage : byte {
         Ascent,
@@ -32,13 +31,10 @@ public sealed class Boss2Brain : BaseBossBrain {
     private State _patrolChaseState = null!;
     private State _platformTraverseState = null!;
     private State _abilityState = null!;
-    private State _wallCrashStunState = null!;
 
     private TraverseStage _traverseStage = TraverseStage.Ascent;
     private float _traverseTimer;
     private float _jumpCooldown;
-
-    private bool _isWallStunned;
 
     private Vec2f _currentVelocity;
     private Vec2f _leapStartPosition;
@@ -82,14 +78,11 @@ public sealed class Boss2Brain : BaseBossBrain {
     /// <summary>現在のマクロ・ミクロ統合状態を取得します。</summary>
     public Boss2State State {
         get {
-            if (_rootMachine.CurrentState == _reactionMachine)
-            {
-                if (_reactionMachine.CurrentState == _deadState) return Boss2State.Dead;
-                if (_reactionMachine.CurrentState == _phaseTransitionState) return Boss2State.PhaseTransition;
-                if (_reactionMachine.CurrentState == _wallCrashStunState) return Boss2State.WallCrashStun;
-            }
+            if (_isDead) return Boss2State.Dead;
+            if (_asc.HasTag(GameplayTag.Phasing)) return Boss2State.PhaseTransition;
+            if (_asc.HasTag(GameplayTag.Stunned)) return Boss2State.WallCrashStun;
 
-            if (_combatMachine.CurrentState == _abilityState && _asc.IsCasting)
+            if (_stateMachine.CurrentState == _abilityState && _asc.IsCasting)
             {
                 return _asc.CurrentPhase switch {
                     SkillPhase.Telegraph => Boss2State.Telegraph,
@@ -99,9 +92,9 @@ public sealed class Boss2Brain : BaseBossBrain {
                 };
             }
 
-            if (_combatMachine.CurrentState == _idleState) return Boss2State.Idle;
-            if (_combatMachine.CurrentState == _patrolChaseState) return Boss2State.PatrolChase;
-            if (_combatMachine.CurrentState == _platformTraverseState) return Boss2State.PlatformTraverse;
+            if (_stateMachine.CurrentState == _idleState) return Boss2State.Idle;
+            if (_stateMachine.CurrentState == _patrolChaseState) return Boss2State.PatrolChase;
+            if (_stateMachine.CurrentState == _platformTraverseState) return Boss2State.PlatformTraverse;
 
             return Boss2State.Idle;
         }
@@ -110,12 +103,13 @@ public sealed class Boss2Brain : BaseBossBrain {
     /// <inheritdoc />
     public override BossState CurrentState => BossState.From(State);
 
-
     /// <summary>近接攻撃判定生成イベント。</summary>
     public event Action<StringId, float, float>? OnCreateHitbox;
 
     private void InitializeAbilities()
     {
+        InitializeBaseBrain(_configuration.PhaseTransition);
+
         var patternCfg = ConfigManager.Boss2Patterns;
         var boss2Cfg = ConfigManager.Boss2;
 
@@ -166,8 +160,6 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     private void InitializeStateMachine()
     {
-        InitializeBaseStateMachine();
-
         _idleState = new State(StateIdle, onEnter: () => {
             _stateTimer = 0.0f;
             _currentVelocity = Vec2f.Zero;
@@ -184,27 +176,11 @@ public sealed class Boss2Brain : BaseBossBrain {
             _currentVelocity = Vec2f.Zero;
         });
 
-        _combatMachine.AddSubState(_idleState);
-        _combatMachine.AddSubState(_patrolChaseState);
-        _combatMachine.AddSubState(_platformTraverseState);
-        _combatMachine.AddSubState(_abilityState);
-        _combatMachine.SetInitialState(_idleState);
-
-        _wallCrashStunState = new State(
-            StateWallCrashStun,
-            onEnter: () => {
-                _stateTimer = 0.0f;
-                _currentVelocity = Vec2f.Zero;
-                _asc.InterruptCurrentAbility();
-                _asc.AddTag(GameplayTag.Stunned | GameplayTag.Vulnerable);
-            },
-            onExit: () => {
-                _asc.RemoveTag(GameplayTag.Stunned | GameplayTag.Vulnerable);
-            });
-
-        _reactionMachine.AddSubState(_wallCrashStunState);
-
-        _rootMachine.AddGlobalTransition(() => _isWallStunned, _reactionMachine);
+        _stateMachine.AddState(_idleState);
+        _stateMachine.AddState(_patrolChaseState);
+        _stateMachine.AddState(_platformTraverseState);
+        _stateMachine.AddState(_abilityState);
+        _stateMachine.SetInitialState(_idleState);
     }
 
     /// <inheritdoc />
@@ -213,6 +189,14 @@ public sealed class Boss2Brain : BaseBossBrain {
         _currentVelocity = Vec2f.Zero;
         _targetLandingSurfaceY = 0.0f;
         SyncPhaseAbilitiesCooldown(_configuration.GetPhase(newPhase));
+    }
+
+    /// <inheritdoc />
+    protected override void OnPhaseTransitionCompleted()
+    {
+        _stateTimer = 0.0f;
+        _currentVelocity = Vec2f.Zero;
+        _stateMachine.ChangeState(_idleState);
     }
 
     /// <inheritdoc />
@@ -237,16 +221,12 @@ public sealed class Boss2Brain : BaseBossBrain {
         _traverseTimer = 0.0f;
         _jumpCooldown = 0.0f;
         _isDead = false;
-        _isWallStunned = false;
-        _pendingPhaseTransition = null;
         Phase = Phase.Phase1;
 
         _asc.InterruptCurrentAbility();
         _asc.ClearTags();
-        _reactionMachine.ChangeState(_phaseTransitionState);
         SyncPhaseAbilitiesCooldown(_configuration.GetPhase(Phase));
-        _combatMachine.ChangeState(_idleState);
-        _rootMachine.ChangeState(_combatMachine);
+        _stateMachine.ChangeState(_idleState);
     }
 
     /// <summary>
@@ -275,58 +255,45 @@ public sealed class Boss2Brain : BaseBossBrain {
         EvaluatePhaseTransition(currentHp, maxHp);
 
         _asc.Update(dt, isGrounded);
-        _rootMachine.Update(dt);
 
-        if (_rootMachine.CurrentState == _combatMachine)
+        if (_asc.HasTag(GameplayTag.Phasing))
         {
-            if (_combatMachine.CurrentState == _idleState)
-            {
-                UpdateIdle(dt, playerPosition, isPlayerAlive, isGrounded);
-            }
-            else if (_combatMachine.CurrentState == _patrolChaseState)
-            {
-                UpdatePatrolChase(dt, playerPosition, playerVelocity, isPlayerAlive, isGrounded);
-            }
-            else if (_combatMachine.CurrentState == _platformTraverseState)
-            {
-                UpdatePlatformTraverse(dt, isGrounded);
-            }
-            else if (_combatMachine.CurrentState == _abilityState)
-            {
-                UpdateAbility(dt, isOnWall, isGrounded, playerPosition);
-            }
+            _currentVelocity = Vec2f.Zero;
+            return;
         }
-        else if (_rootMachine.CurrentState == _reactionMachine)
+
+        if (_asc.HasTag(GameplayTag.Stunned))
         {
-            if (_reactionMachine.CurrentState == _wallCrashStunState)
-            {
-                UpdateWallCrashStun(dt);
-            }
-            else if (_reactionMachine.CurrentState == _phaseTransitionState)
-            {
-                UpdatePhaseTransition(dt);
-            }
+            _currentVelocity = Vec2f.Zero;
+            return;
+        }
+
+        _stateMachine.Update(dt);
+
+        if (_stateMachine.CurrentState == _idleState)
+        {
+            UpdateIdle(dt, playerPosition, isPlayerAlive, isGrounded);
+        }
+        else if (_stateMachine.CurrentState == _patrolChaseState)
+        {
+            UpdatePatrolChase(dt, playerPosition, playerVelocity, isPlayerAlive, isGrounded);
+        }
+        else if (_stateMachine.CurrentState == _platformTraverseState)
+        {
+            UpdatePlatformTraverse(dt, isGrounded);
+        }
+        else if (_stateMachine.CurrentState == _abilityState)
+        {
+            UpdateAbility(dt, isOnWall, isGrounded, playerPosition);
         }
     }
 
     private void EvaluatePhaseTransition(float currentHp, float maxHp)
     {
         var b2Cfg = ConfigManager.Boss2;
-        EvaluatePhaseTransition(currentHp, maxHp, b2Cfg.Phase2.HpThreshold, b2Cfg.Phase3.HpThreshold);
-    }
-
-    private void UpdatePhaseTransition(float dt)
-    {
-        _stateTimer += dt;
-        _currentVelocity = Vec2f.Zero;
-        var phaseCfg = _configuration.GetPhase(Phase);
-
-        if (_stateTimer >= phaseCfg.TransitionDuration)
-        {
-            _combatMachine.ChangeState(_idleState);
-            _rootMachine.ChangeState(_combatMachine);
-            _stateTimer = 0.0f;
-        }
+        var p2Duration = _configuration.GetPhase(Phase.Phase2).TransitionDuration;
+        var p3Duration = _configuration.GetPhase(Phase.Phase3).TransitionDuration;
+        EvaluatePhaseTransition(currentHp, maxHp, b2Cfg.Phase2.HpThreshold, b2Cfg.Phase3.HpThreshold, p2Duration, p3Duration);
     }
 
     private void UpdateIdle(float dt, Vec2f playerPos, bool isPlayerAlive, bool isGrounded)
@@ -344,7 +311,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         var phaseCfg = _configuration.GetPhase(Phase);
         if (_stateTimer >= phaseCfg.IdleDuration && isPlayerAlive && isGrounded)
         {
-            _combatMachine.ChangeState(_patrolChaseState);
+            _stateMachine.ChangeState(_patrolChaseState);
             _stateTimer = 0.0f;
         }
     }
@@ -358,7 +325,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     {
         if (!isGrounded)
         {
-            _combatMachine.ChangeState(_platformTraverseState);
+            _stateMachine.ChangeState(_platformTraverseState);
             _traverseStage = TraverseStage.Descent;
             _traverseTimer = 0.0f;
             return;
@@ -386,7 +353,7 @@ public sealed class Boss2Brain : BaseBossBrain {
             _facingRight = jumpVx >= 0.0f;
             _currentVelocity = new Vec2f(jumpVx, jumpVy);
             _jumpCooldown = _configuration.CombatSettings.JumpCooldownDuration;
-            _combatMachine.ChangeState(_platformTraverseState);
+            _stateMachine.ChangeState(_platformTraverseState);
             _traverseStage = TraverseStage.Ascent;
             _traverseTimer = 0.0f;
             return;
@@ -439,7 +406,7 @@ public sealed class Boss2Brain : BaseBossBrain {
                     LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
                 }
                 _currentVelocity = Vec2f.Zero;
-                _combatMachine.ChangeState(_abilityState);
+                _stateMachine.ChangeState(_abilityState);
                 return;
             }
         }
@@ -456,7 +423,7 @@ public sealed class Boss2Brain : BaseBossBrain {
                     LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
                 }
                 _currentVelocity = Vec2f.Zero;
-                _combatMachine.ChangeState(_abilityState);
+                _stateMachine.ChangeState(_abilityState);
             }
         }
     }
@@ -496,7 +463,7 @@ public sealed class Boss2Brain : BaseBossBrain {
                 _currentVelocity = Vec2f.Zero;
                 if (_traverseTimer >= phaseCfg.LandingRecoveryDuration)
                 {
-                    _combatMachine.ChangeState(_patrolChaseState);
+                    _stateMachine.ChangeState(_patrolChaseState);
                     _stateTimer = 0.0f;
                 }
             break;
@@ -510,9 +477,12 @@ public sealed class Boss2Brain : BaseBossBrain {
             isOnWall &&
             MathF.Abs(_currentVelocity.X) > 10.0f)
         {
-            _isWallStunned = true;
-            _reactionMachine.ChangeState(_wallCrashStunState);
-            _rootMachine.ChangeState(_reactionMachine);
+            _currentVelocity = Vec2f.Zero;
+            _asc.InterruptCurrentAbility();
+            _asc.ApplyGameplayEffect(
+                _configuration.WallCrashStun.ParsedGrantedTags,
+                _configuration.WallCrashStun.Duration);
+            _stateMachine.ChangeState(_idleState);
             return;
         }
 
@@ -596,26 +566,12 @@ public sealed class Boss2Brain : BaseBossBrain {
         }
     }
 
-    private void UpdateWallCrashStun(float dt)
-    {
-        _stateTimer += dt;
-        _currentVelocity = Vec2f.Zero;
-
-        if (_stateTimer >= _configuration.CombatSettings.WallCrashStunDuration)
-        {
-            _isWallStunned = false;
-            _combatMachine.ChangeState(_idleState);
-            _rootMachine.ChangeState(_combatMachine);
-            _stateTimer = 0.0f;
-        }
-    }
-
     private void OnAbilityCompleted()
     {
         _stateTimer = 0.0f;
         _currentVelocity = Vec2f.Zero;
         _targetLandingSurfaceY = 0.0f;
-        _combatMachine.ChangeState(_idleState);
+        _stateMachine.ChangeState(_idleState);
     }
 
     private void LockLeapSmashTarget(float playerX, float playerCenterY)
@@ -639,8 +595,6 @@ public sealed class Boss2Brain : BaseBossBrain {
 
         if (navGraph is not null && navGraph.Nodes.Count > 0)
         {
-            // プレイヤーの足元と同じ、または足元より下にある足場を検索（頭上の足場は除外）
-            // 接地浮動小数点誤差吸収用に 5.0px の許容誤差を設定
             const float tolerance = 5.0f;
 
             foreach (var node in navGraph.Nodes)

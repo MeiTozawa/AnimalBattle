@@ -9,7 +9,7 @@ namespace AnimalBattle.Ai.Boss1;
 
 /// <summary>
 ///     Boss 1 の統合意思決定・行動制御ブレインです。
-///     HFSM および AbilitySystemComponent を通じて時序・判定・状態遷移を一元管理します。
+///     フラット FSM および AbilitySystemComponentを通じて時序・判定・状態遷移を一元管理します。
 /// </summary>
 public sealed class Boss1Brain : BaseBossBrain {
     private static readonly StringId StateHover = "Hover";
@@ -49,13 +49,10 @@ public sealed class Boss1Brain : BaseBossBrain {
     /// <summary>現在のマクロ・ミクロ統合状態を取得します。</summary>
     public Boss1State State {
         get {
-            if (_rootMachine.CurrentState == _reactionMachine)
-            {
-                if (_reactionMachine.CurrentState == _deadState) return Boss1State.Dead;
-                if (_reactionMachine.CurrentState == _phaseTransitionState) return Boss1State.PhaseTransition;
-            }
+            if (_isDead) return Boss1State.Dead;
+            if (_asc.HasTag(GameplayTag.Phasing)) return Boss1State.PhaseTransition;
 
-            if (_combatMachine.CurrentState == _abilityState && _asc.IsCasting)
+            if (_stateMachine.CurrentState == _abilityState && _asc.IsCasting)
             {
                 return _asc.CurrentPhase switch {
                     SkillPhase.Telegraph => Boss1State.Telegraph,
@@ -72,12 +69,13 @@ public sealed class Boss1Brain : BaseBossBrain {
     /// <inheritdoc />
     public override BossState CurrentState => BossState.From(State);
 
-
     /// <summary>浮遊アニメーション用の累積タイマーを取得します。</summary>
     public float HoverTimer => _hoverTimer;
 
     private void InitializeAbilities()
     {
+        InitializeBaseBrain(_configuration.PhaseTransition);
+
         var patternCfg = ConfigManager.Boss1Patterns;
         var boss1Cfg = ConfigManager.Boss1;
 
@@ -115,13 +113,12 @@ public sealed class Boss1Brain : BaseBossBrain {
 
     private void InitializeStateMachine()
     {
-        InitializeBaseStateMachine();
-
         _hoverState = new State(StateHover, onEnter: () => _stateTimer = 0.0f);
         _abilityState = new State(StateAbility);
-        _combatMachine.AddSubState(_hoverState);
-        _combatMachine.AddSubState(_abilityState);
-        _combatMachine.SetInitialState(_hoverState);
+
+        _stateMachine.AddState(_hoverState);
+        _stateMachine.AddState(_abilityState);
+        _stateMachine.SetInitialState(_hoverState);
     }
 
     /// <summary>
@@ -136,14 +133,11 @@ public sealed class Boss1Brain : BaseBossBrain {
         _hoverTimer = 0.0f;
         _attackIndex = 0;
         _isDead = false;
-        _pendingPhaseTransition = null;
         Phase = Phase.Phase1;
 
         _asc.InterruptCurrentAbility();
         _asc.ClearTags();
-        _reactionMachine.ChangeState(_phaseTransitionState);
-        _combatMachine.ChangeState(_hoverState);
-        _rootMachine.ChangeState(_combatMachine);
+        _stateMachine.ChangeState(_hoverState);
     }
 
     /// <summary>
@@ -162,32 +156,31 @@ public sealed class Boss1Brain : BaseBossBrain {
         EvaluatePhaseTransition(currentHp, maxHp);
 
         _asc.Update(dt);
-        _rootMachine.Update(dt);
 
-        if (_rootMachine.CurrentState == _combatMachine)
+        if (_asc.HasTag(GameplayTag.Phasing))
         {
-            if (_combatMachine.CurrentState == _hoverState)
-            {
-                UpdateHoverMotion(dt, playerPosition, isPlayerAlive);
-            }
-            else if (_combatMachine.CurrentState == _abilityState)
-            {
-                UpdateAbilityMotion(dt, playerPosition);
-            }
+            UpdatePhaseTransitionMotion(dt);
+            return;
         }
-        else if (_rootMachine.CurrentState == _reactionMachine)
+
+        _stateMachine.Update(dt);
+
+        if (_stateMachine.CurrentState == _hoverState)
         {
-            if (_reactionMachine.CurrentState == _phaseTransitionState)
-            {
-                UpdatePhaseTransitionMotion(dt);
-            }
+            UpdateHoverMotion(dt, playerPosition, isPlayerAlive);
+        }
+        else if (_stateMachine.CurrentState == _abilityState)
+        {
+            UpdateAbilityMotion(dt, playerPosition);
         }
     }
 
     private void EvaluatePhaseTransition(float currentHp, float maxHp)
     {
         var b1Cfg = ConfigManager.Boss1;
-        EvaluatePhaseTransition(currentHp, maxHp, b1Cfg.Phase2.HpThreshold, b1Cfg.Phase3.HpThreshold);
+        var p2Duration = _configuration.GetPhase(Phase.Phase2).TransitionDuration;
+        var p3Duration = _configuration.GetPhase(Phase.Phase3).TransitionDuration;
+        EvaluatePhaseTransition(currentHp, maxHp, b1Cfg.Phase2.HpThreshold, b1Cfg.Phase3.HpThreshold, p2Duration, p3Duration);
     }
 
     private void UpdatePhaseTransitionMotion(float dt)
@@ -196,14 +189,16 @@ public sealed class Boss1Brain : BaseBossBrain {
         var phaseCfg = _configuration.GetPhase(Phase);
 
         var targetY = phaseCfg.HoverBaseY;
-        _currentPosition = _currentPosition with { Y = _currentPosition.Y + (targetY - _currentPosition.Y) * Math.Clamp(dt * phaseCfg.TransitionFloatSpeed, 0.0f, 1.0f) };
+        _currentPosition = _currentPosition with {
+            Y = _currentPosition.Y + (targetY - _currentPosition.Y) * Math.Clamp(dt * phaseCfg.TransitionFloatSpeed, 0.0f, 1.0f)
+        };
+    }
 
-        if (_stateTimer >= phaseCfg.TransitionDuration)
-        {
-            _combatMachine.ChangeState(_hoverState);
-            _rootMachine.ChangeState(_combatMachine);
-            _stateTimer = 0.0f;
-        }
+    /// <inheritdoc />
+    protected override void OnPhaseTransitionCompleted()
+    {
+        _stateTimer = 0.0f;
+        _stateMachine.ChangeState(_hoverState);
     }
 
     private void UpdateHoverMotion(float dt, Vec2f playerPos, bool isPlayerAlive)
@@ -248,7 +243,7 @@ public sealed class Boss1Brain : BaseBossBrain {
             {
                 _startPosition = _currentPosition;
                 _targetPosition = playerPos;
-                _combatMachine.ChangeState(_abilityState);
+                _stateMachine.ChangeState(_abilityState);
                 return;
             }
         }
@@ -292,6 +287,6 @@ public sealed class Boss1Brain : BaseBossBrain {
     private void OnAbilityCompleted()
     {
         _stateTimer = 0.0f;
-        _combatMachine.ChangeState(_hoverState);
+        _stateMachine.ChangeState(_hoverState);
     }
 }

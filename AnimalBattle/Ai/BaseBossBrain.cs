@@ -1,31 +1,28 @@
+using AnimalBattle.Abilities;
+using AnimalBattle.Abilities.Skills;
 using AnimalBattle.Ai.Hfsm;
+using AnimalBattle.Configs;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai;
 
 /// <summary>
 ///     Boss 意思決定ブレインの共通基底抽象クラス。
-///     階層型有限状態機械（HFSM）のルート・戦闘・反応状態マシン構造、
-///     GAS アビリティシステム連携、フェーズ遷移判定、死亡制御を一元管理します。
+///     フラット有限状態マシンによる戦闘状態管理、
+///     GASによるフェーズ遷移・状態異常管理、
+///     および死亡制御を一元管理します。
 /// </summary>
 public abstract class BaseBossBrain : IBossBrain
 {
-    protected static readonly StringId StateRoot = "Root";
     protected static readonly StringId StateCombat = "Combat";
-    protected static readonly StringId StateReaction = "Reaction";
-    protected static readonly StringId StatePhaseTransition = "PhaseTransition";
-    protected static readonly StringId StateDead = "Dead";
 
     protected readonly AbilitySystemComponent _asc = new();
-    protected readonly StateMachine _rootMachine = new(StateRoot);
-    protected readonly StateMachine _combatMachine = new(StateCombat);
-    protected readonly StateMachine _reactionMachine = new(StateReaction);
+    protected readonly StateMachine _stateMachine = new(StateCombat);
 
-    protected State _phaseTransitionState = null!;
-    protected State _deadState = null!;
+    protected PhaseTransitionAbility _phaseTransitionAbility = null!;
 
     protected float _stateTimer;
     protected bool _isDead;
-    protected Phase? _pendingPhaseTransition;
 
     protected Vec2f _currentPosition;
     protected Vec2f _targetPosition;
@@ -69,7 +66,6 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>現在の Boss 統一マクロ状態を取得します。</summary>
     public abstract BossState CurrentState { get; }
 
-
     /// <summary>
     ///     弾幕発射イベントを発火します。
     /// </summary>
@@ -87,81 +83,77 @@ public abstract class BaseBossBrain : IBossBrain
     }
 
     /// <summary>
-    ///     共通状態マシン構造（Root, Combat, Reaction, PhaseTransition, Dead）を初期化します。
+    ///     共通ブレイン基盤（GAS フェーズ遷移能力登録・イベント購読）を初期化します。
     /// </summary>
-    protected void InitializeBaseStateMachine()
+    protected void InitializeBaseBrain(PhaseTransitionAbilityConfig phaseConfig)
     {
-        _phaseTransitionState = new State(StatePhaseTransition, onEnter: () =>
+        _phaseTransitionAbility = new PhaseTransitionAbility(phaseConfig);
+        _asc.GiveAbility(_phaseTransitionAbility);
+        _asc.OnSkillCompleted += abilityTag =>
         {
-            _stateTimer = 0.0f;
-            _asc.InterruptCurrentAbility();
-            _asc.AddTag(GameplayTag.Invincible);
-            if (_pendingPhaseTransition.HasValue)
+            if (abilityTag == _phaseTransitionAbility.AbilityTag)
             {
-                Phase = _pendingPhaseTransition.Value;
-                _pendingPhaseTransition = null;
-                OnPhaseTransitionEntered(Phase);
+                OnPhaseTransitionCompleted();
             }
-        }, onExit: () =>
-        {
-            _asc.RemoveTag(GameplayTag.Invincible);
-        });
-
-        _deadState = new State(StateDead, onEnter: () =>
-        {
-            _asc.InterruptCurrentAbility();
-            RaiseClearBullets();
-            OnDeadEntered();
-        });
-
-        _reactionMachine.AddSubState(_phaseTransitionState);
-        _reactionMachine.AddSubState(_deadState);
-
-        _rootMachine.AddSubState(_combatMachine);
-        _rootMachine.AddSubState(_reactionMachine);
-        _rootMachine.SetInitialState(_combatMachine);
-
-        _rootMachine.AddGlobalTransition(() => _isDead, _reactionMachine);
-        _rootMachine.AddGlobalTransition(() => _pendingPhaseTransition.HasValue, _reactionMachine);
+        };
     }
 
-    /// <summary>フェーズ遷移状態突入時の追加処理フック（派生クラスで拡張）。</summary>
+    /// <summary>フェーズ遷移開始時の追加処理フック（派生クラスで拡張）。</summary>
     protected virtual void OnPhaseTransitionEntered(Phase newPhase) { }
+
+    /// <summary>フェーズ遷移完了時の追加処理フック（派生クラスで拡張）。</summary>
+    protected virtual void OnPhaseTransitionCompleted() { }
 
     /// <summary>死亡状態突入時の追加処理フック（派生クラスで拡張）。</summary>
     protected virtual void OnDeadEntered() { }
 
     /// <summary>
-    ///     死亡状態へ遷移します。
+    ///     Boss を死亡状態へ移行させます。
+    ///     すべての発動中アビリティを即座に中断し、全戦闘タグを安全に解除します。
     /// </summary>
     public virtual void Kill()
     {
         _isDead = true;
-        _reactionMachine.ChangeState(_deadState);
-        _rootMachine.ChangeState(_reactionMachine);
+        _asc.InterruptCurrentAbility();
+        _asc.ClearTags();
+        RaiseClearBullets();
+        OnDeadEntered();
     }
 
     /// <summary>
     ///     現在の HP 割合に基づいてフェーズ遷移を評価します。
     /// </summary>
-    protected void EvaluatePhaseTransition(float currentHp, float maxHp, float p2Threshold, float p3Threshold)
+    protected void EvaluatePhaseTransition(
+        float currentHp,
+        float maxHp,
+        float p2Threshold,
+        float p3Threshold,
+        float p2Duration = 0.0f,
+        float p3Duration = 0.0f)
     {
-        if (maxHp <= 0.0f || _pendingPhaseTransition.HasValue) return;
-        if (_rootMachine.CurrentState == _reactionMachine) return;
+        if (maxHp <= 0.0f || _asc.HasTag(GameplayTag.Phasing) || _isDead) return;
 
         var hpRatio = currentHp / maxHp;
 
         if (Phase == Phase.Phase1 && hpRatio <= p2Threshold)
         {
-            _pendingPhaseTransition = Phase.Phase2;
-            _reactionMachine.ChangeState(_phaseTransitionState);
-            _rootMachine.ChangeState(_reactionMachine);
+            StartPhaseTransition(Phase.Phase2, p2Duration);
         }
         else if (Phase == Phase.Phase2 && hpRatio <= p3Threshold)
         {
-            _pendingPhaseTransition = Phase.Phase3;
-            _reactionMachine.ChangeState(_phaseTransitionState);
-            _rootMachine.ChangeState(_reactionMachine);
+            StartPhaseTransition(Phase.Phase3, p3Duration);
         }
+    }
+
+    /// <summary>
+    ///     指定フェーズへの遷移を開始し、GAS フェーズ遷移能力を起動します。
+    /// </summary>
+    protected void StartPhaseTransition(Phase newPhase, float duration = 0.0f)
+    {
+        Phase = newPhase;
+        _asc.InterruptCurrentAbility();
+        _phaseTransitionAbility.Configure(duration);
+        _asc.TryActivateAbility(_phaseTransitionAbility.AbilityTag);
+        OnPhaseTransitionEntered(newPhase);
     }
 }
