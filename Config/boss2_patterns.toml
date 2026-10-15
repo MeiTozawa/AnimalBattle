@@ -117,9 +117,10 @@ RecoveryTime = 0.55
 DefaultCooldown = 3.0
 SecondSlashOffsetX = 15.0
 DashSpeed = 420.0
-SlashInterval = 0.30
+SlashInterval = 0.45
 SlashRangeX = 105.0
 SlashRangeY = 80.0
+TelegraphRangeX = 200.0
 SlashDamage = 1.0
 HitboxDuration = 0.24
 SlashColor = 0xFFFF1744
@@ -135,7 +136,23 @@ Param2 = 1.0
 StrParam = "Slash1"
 
 [[DoubleCleave.Events]]
-Time = 0.30
+Time = 0.20
+Type = "movement"
+Param0 = 420.0
+Param1 = 0.0
+Param2 = 0.0
+StrParam = ""
+
+[[DoubleCleave.Events]]
+Time = 0.45
+Type = "movement"
+Param0 = 0.0
+Param1 = 0.0
+Param2 = 0.0
+StrParam = ""
+
+[[DoubleCleave.Events]]
+Time = 0.45
 Type = "hitbox"
 Param0 = 15.0
 Param1 = 0.0

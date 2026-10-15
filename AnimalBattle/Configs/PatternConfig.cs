@@ -423,19 +423,23 @@ public sealed class DoubleCleaveConfig : MeleePatternConfigBase {
     /// <summary>2 回目の斬撃までのインターバル（秒）</summary>
     public float SlashInterval { get; set; }
 
+    /// <summary>前兆危険矩形 X 範囲</summary>
+    public float TelegraphRangeX { get; set; }
+
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
         => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, SlashRangeX, Events, armorTag: ParsedArmorTag, recoveryTag: ParsedRecoveryTag);
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
-        => ctx => TelegraphRenderHelper.DrawMeleeDangerBox((int)ctx.BossX, (int)ctx.BossY, SlashRangeX, SlashRangeY, ctx.FacingRight, ctx.Progress, TelegraphColor);
+        => ctx => TelegraphRenderHelper.DrawMeleeDangerBox((int)ctx.BossX, (int)ctx.BossY, TelegraphRangeX, SlashRangeY, ctx.FacingRight, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
     public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
     {
         var b2Cfg = ConfigManager.Boss2;
-        var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
+        var additionalX = MathF.Abs(offsetX);
+        var offX = forwardDir * (b2Cfg.SlashSpawnOffsetX + additionalX);
         var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
         var dir = forwardDir > 0.0f ? SlashDirection.Right : SlashDirection.Left;
         CombatSpawner.SpawnMeleeSlashHitbox(

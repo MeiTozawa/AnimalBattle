@@ -224,10 +224,10 @@ public sealed class Boss2Agent : BaseBossAgent
         if (CurrentWorld == default) return;
         var patternCfg = ConfigManager.Boss2Patterns;
         ref readonly var trans = ref Entity.Get<Transform>();
-        ref readonly var vel = ref Entity.Get<Velocity>();
 
         var forwardDir = _brain.FacingRight ? 1.0f : -1.0f;
         var colHeight = Entity.Get<CollisionBox>().Height;
+        var vx = _brain.Velocity.X;
 
         if (patternCfg.TryGetSkill(skill, out var pattern))
         {
@@ -235,7 +235,7 @@ public sealed class Boss2Agent : BaseBossAgent
                 CurrentWorld,
                 new Vec2f(trans.X, trans.Y),
                 forwardDir,
-                vel.Vx,
+                vx,
                 colHeight,
                 offsetX,
                 offsetY,

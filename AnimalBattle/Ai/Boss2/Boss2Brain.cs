@@ -475,6 +475,10 @@ public sealed class Boss2Brain : BaseBossBrain {
         {
             UpdateLeapSmashMotion(dt, isGrounded, playerPos);
         }
+        else if (_asc.CurrentPhase == SkillPhase.Recovery)
+        {
+            _currentVelocity = Vec2f.Zero;
+        }
     }
 
     private void UpdateLeapSmashMotion(float dt, bool isGrounded, Vec2f playerPos)
