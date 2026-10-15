@@ -504,6 +504,29 @@ public sealed class DebugRenderConfig {
 }
 
 /// <summary>
+///     タクティカルエイムレティクル（鼠标准星）の描画設定クラス。
+/// </summary>
+public sealed class AimReticleRenderConfig {
+    /// <summary>レティクル外周円環の基準半径 (px)</summary>
+    public float BaseRadius { get; set; }
+
+    /// <summary>射撃開火時の最大スプリング拡張振幅 (px)</summary>
+    public float RecoilExpansion { get; set; }
+
+    /// <summary>スプリング反動復元周波数 (Hz)</summary>
+    public float SpringFrequency { get; set; }
+
+    /// <summary>スプリング減衰比 (0.0: 無減衰, 1.0: 臨界減衰)</summary>
+    public float SpringDampingRatio { get; set; }
+
+    /// <summary>上下左右 4 方向刻度ショートラインの長さ (px)</summary>
+    public int TickLength { get; set; }
+
+    /// <summary>円環と刻度線の間のギャップ幅 (px)</summary>
+    public int TickGap { get; set; }
+}
+
+/// <summary>
 ///     描画視口およびカメラカリング領域設定クラス。
 /// </summary>
 public sealed class ViewportRenderConfig {
@@ -544,6 +567,9 @@ public sealed class RenderConfig {
 
     /// <summary>Hitbox / Hurtbox デバッグ描画設定</summary>
     public DebugRenderConfig Debug { get; set; } = new();
+
+    /// <summary>タクティカルエイムレティクル（鼠标准星）描画設定</summary>
+    public AimReticleRenderConfig AimReticle { get; set; } = new();
 
     /// <summary>
     ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{RenderConfig}" /> インスタンスを生成します。

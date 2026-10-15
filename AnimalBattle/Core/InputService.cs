@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Runtime.InteropServices;
 using AnimalBattle.Bindings;
 
 namespace AnimalBattle.Core;
@@ -6,7 +7,27 @@ namespace AnimalBattle.Core;
 /// <summary>
 ///     Native C++ InputService と連携し、コンテキストスタック・抽象アクション入力判定を提供する高レベルサービスクラス。
 /// </summary>
-public static unsafe class InputService {
+public static unsafe partial class InputService {
+    private static bool _isCursorVisible = true;
+
+    [LibraryImport("user32.dll")]
+    private static partial int ShowCursor([MarshalAs(UnmanagedType.Bool)] bool bShow);
+
+    /// <summary>
+    ///     現在の OS マウスカーソル可視状態を取得します。
+    /// </summary>
+    public static bool IsCursorVisible => _isCursorVisible;
+
+    /// <summary>
+    ///     OS マウスカーソルの表示／非表示を切り替えます（多重呼び出し安全な冪等制御）。
+    /// </summary>
+    /// <param name="visible">表示する場合は true、非表示にする場合は false。</param>
+    public static void SetCursorVisible(bool visible)
+    {
+        if (_isCursorVisible == visible) return;
+        _isCursorVisible = visible;
+        ShowCursor(visible);
+    }
     /// <summary>
     ///     入力状態を明示的に更新します（通常は Engine_ProcessMessages で自動実行されます）。
     /// </summary>
@@ -193,8 +214,7 @@ public static unsafe class InputService {
         BindAction(InputContext.InGame, InputAction.Right, InputButton.KeyRight, InputButton.KeyD,
             InputButton.PadRight);
         BindAction(InputContext.InGame, InputAction.Jump, InputButton.KeySpace, InputButton.KeyZ, InputButton.Pad1);
-        BindAction(InputContext.InGame, InputAction.Attack, InputButton.KeyJ, InputButton.KeyX, InputButton.Pad2,
-            InputButton.MouseLeft);
+        BindAction(InputContext.InGame, InputAction.Attack, InputButton.MouseLeft, InputButton.Pad2);
         BindAction(InputContext.InGame, InputAction.Skill, InputButton.KeyK, InputButton.KeyC, InputButton.Pad3,
             InputButton.MouseRight, InputButton.KeyLShift, InputButton.KeyRShift);
         BindAction(InputContext.InGame, InputAction.Restart, InputButton.KeyR);

@@ -73,6 +73,9 @@ public class BattleScene : IDisposable {
            .With<VfxTag>()
            .Build();
 
+        InputService.SetCursorVisible(false);
+        AimReticleService.Initialize();
+
         // 3. アクティブな Boss (デフォルト: Boss 1) の生成
         SwitchBoss(CurrentBossType);
     }
@@ -128,6 +131,8 @@ public class BattleScene : IDisposable {
         _platformQuery.Dispose();
         _ecsWorld.Dispose();
         SoundService.StopBgm();
+        InputService.SetCursorVisible(true);
+        AimReticleService.Shutdown();
         EventBus.Publish(new CombatResetEvent());
         AssetManager.Shutdown();
         if (Current == this) Current = null!;
@@ -138,8 +143,8 @@ public class BattleScene : IDisposable {
     private void SpawnBoss(BossType bossType, Entity bossEntity)
     {
         var (texPath, bossTitle) = bossType switch {
-            BossType.Boss1 => (ResourcePath.Characters.Character031_3Png, "Boss 1 (Ancient Cat Overlord)"),
-            BossType.Boss2 => (ResourcePath.Characters.Character027_3Png, "Boss 2 (Ground Crusher)"),
+            BossType.Boss1 => (ResourcePath.Characters.Character031_3Png, "Boss 1"),
+            BossType.Boss2 => (ResourcePath.Characters.Character027_3Png, "Boss 2"),
             _ => AssertHelper.FailWithDefault("未知のBossType", (ResourcePath.Characters.Character031_3Png, "Boss 1"))
         };
 
@@ -298,6 +303,9 @@ public class BattleScene : IDisposable {
 
         // 3. カメラシェイク・振動減衰および動的構図更新
         CameraService.Update(deltaTime, Player.X, Player.Y, Player.Vx, Player.Vy, Boss.X, Boss.Y);
+
+        // 4. マウス照準レティクル（准星）のスプリング反動拡縮更新
+        AimReticleService.Update(deltaTime);
     }
 
     private void HandleInput()
@@ -325,6 +333,7 @@ public class BattleScene : IDisposable {
         _playerBulletsQuery.Each(e => e.Add<RecycleTag>());
         _vfxQuery.Each(e => e.Add<RecycleTag>());
         CameraService.Reset();
+        AimReticleService.Reset();
         Player.Reset(ConfigManager.Player);
         EventBus.Publish(new CombatResetEvent());
     }
@@ -338,6 +347,7 @@ public class BattleScene : IDisposable {
         _worldRenderer.Render(_tileMap, _platformQuery);
         _debugRenderer.Render(_platformQuery, _tileMap);
         GameEngine.SetCameraOffset(0, 0);
-        HudRenderSystem.Render(Player, Boss, Player.RemainingJumps);
+        HudService.Render(Player, Boss, Player.RemainingJumps);
+        AimReticleService.Render();
     }
 }

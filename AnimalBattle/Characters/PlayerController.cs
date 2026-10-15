@@ -1,3 +1,6 @@
+using AnimalBattle.Components;
+using AnimalBattle.Core;
+
 namespace AnimalBattle.Characters;
 
 /// <summary>
@@ -39,22 +42,40 @@ public sealed class PlayerController
         var shootPressed = InputService.IsPressed(InputAction.Attack) || InputService.IsHolding(InputAction.Attack);
         var dashPressed = InputService.IsPressed(InputAction.Skill);
 
-        var isUp = InputService.IsHolding(InputAction.Up);
-        var isDown = InputService.IsHolding(InputAction.Down);
-        var inputX = (isRight ? 1.0f : 0.0f) - (isLeft ? 1.0f : 0.0f);
-        var inputY = (isDown ? 1.0f : 0.0f) - (isUp ? 1.0f : 0.0f);
+        // マウス画面座標からカメラ逆オフセットでワールド座標を逆算
+        var mouseScreen = InputService.GetMousePosition();
+        var mouseWorldX = mouseScreen.X - CameraService.RenderOffsetX;
+        var mouseWorldY = mouseScreen.Y - CameraService.RenderOffsetY;
+
+        var entity = _pawn.Entity;
+        ref readonly var trans = ref entity.Get<Transform>();
+        ref readonly var box = ref entity.Get<CollisionBox>();
+
+        // プレイヤー中心（射撃起点）座標
+        var playerCenterX = trans.X;
+        var playerCenterY = trans.Y - box.Height * 0.5f;
+
+        var diffX = mouseWorldX - playerCenterX;
+        var diffY = mouseWorldY - playerCenterY;
+        var distSq = diffX * diffX + diffY * diffY;
 
         float dirX, dirY;
-        if (Math.Abs(inputX) > 0.001f || Math.Abs(inputY) > 0.001f)
+        if (distSq > 0.0001f)
         {
-            var len = MathF.Sqrt(inputX * inputX + inputY * inputY);
-            dirX = inputX / len;
-            dirY = inputY / len;
+            var invDist = 1.0f / MathF.Sqrt(distSq);
+            dirX = diffX * invDist;
+            dirY = diffY * invDist;
         }
         else
         {
             dirX = _pawn.FlipX ? -1.0f : 1.0f;
             dirY = 0.0f;
+        }
+
+        // キャラクター向き（FlipX）：マウスが自機中心より左にあれば反転、右にあれば正面
+        if (MathF.Abs(diffX) > 0.5f)
+        {
+            _pawn.FlipX = diffX < 0.0f;
         }
 
         SubmitInput(moveX, jumpPressed, jumpHolding, shootPressed, dashPressed, dirX, dirY);
@@ -93,11 +114,14 @@ public sealed class PlayerController
         weaponIntent.AimDirectionX = aimDirX ?? (_pawn.FlipX ? -1.0f : 1.0f);
         weaponIntent.AimDirectionY = aimDirY ?? 0.0f;
 
-        _pawn.FlipX = moveX switch {
-            // 移動入力に応じた描画スプライトの左右反転同期
-            < -0.01f => true,
-            > 0.01f => false,
-            _ => _pawn.FlipX
-        };
+        if (!aimDirX.HasValue)
+        {
+            _pawn.FlipX = moveX switch {
+                // 移動入力に応じた描画スプライトの左右反転同期（aimDirX 未指定時のみ）
+                < -0.01f => true,
+                > 0.01f => false,
+                _ => _pawn.FlipX
+            };
+        }
     }
 }

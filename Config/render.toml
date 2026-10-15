@@ -191,6 +191,15 @@ VictoryRetryY = 350
 VictoryRetryColor = 0xFFFFFFFF
 VictoryRetryText = "Congratulations! Press [ R ] to Play Again!"
 
+# タクティカルマウスの標準スター配置
+[AimReticle]
+BaseRadius = 10.0
+RecoilExpansion = 3.5
+SpringFrequency = 32.0
+SpringDampingRatio = 0.65
+TickLength = 4
+TickGap = 2
+
 [Debug]
 Enabled = false
 PlayerTerrainBoxColor = 0xFF00FF88
