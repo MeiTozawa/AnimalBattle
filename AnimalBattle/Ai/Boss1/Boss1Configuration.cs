@@ -74,12 +74,18 @@ public interface IBoss1Configuration {
 
     /// <summary>指定技能タグのデフォルトクールダウン時間を取得します。</summary>
     float GetSkillDefaultCooldown(StringId skill);
+
+    /// <summary>Phase 遷移能力設定を取得します。</summary>
+    PhaseTransitionAbilityConfig PhaseTransition { get; }
 }
 
 /// <summary>既定値を保持する Boss1 設定です。</summary>
 public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     /// <inheritdoc />
     public StringId DiveSkillTag => new(ConfigManager.Boss1.DiveSkill);
+
+    /// <inheritdoc />
+    public PhaseTransitionAbilityConfig PhaseTransition => ConfigManager.Boss1.PhaseTransition;
 
     /// <inheritdoc />
     public Boss1PhaseSettings GetPhase(Phase phase)

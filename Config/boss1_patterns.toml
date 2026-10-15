@@ -19,6 +19,7 @@ ImpactOutlineColor = 0xFFFF80AB
 TrailColor = 0xFFFF5555
 EaseType = "InQuad"
 BulletType = "Magenta"
+ArmorTags = ["SuperArmor"]
 
 [[DiveRam.Events]]
 Time = 0.0

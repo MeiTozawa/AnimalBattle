@@ -141,3 +141,10 @@ MinDistance = 150.0
 MaxDistance = 1200.0
 Weight = 100.0
 
+# Phase 遷移能力設定（データ駆動：タグおよび持続時間は設定から動的供給）
+[PhaseTransition]
+Duration = 1.0
+ActivationOwnedTags = ["Invincible", "Phasing", "Casting"]
+BlockedTags = []
+
+

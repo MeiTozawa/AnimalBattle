@@ -143,10 +143,22 @@ public interface IBoss2Configuration {
 
     /// <summary>技能タグの既定冷却時間を取得します。</summary>
     float GetSkillDefaultCooldown(StringId skill);
+
+    /// <summary>Phase 遷移能力設定を取得します。</summary>
+    PhaseTransitionAbilityConfig PhaseTransition { get; }
+
+    /// <summary>壁激突スタン設定を取得します。</summary>
+    WallCrashStunConfig WallCrashStun { get; }
 }
 
 /// <summary>既存 Boss2 設定の検証済み既定 snapshot です。</summary>
 public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
+    /// <inheritdoc />
+    public PhaseTransitionAbilityConfig PhaseTransition => ConfigManager.Boss2.PhaseTransition;
+
+    /// <inheritdoc />
+    public WallCrashStunConfig WallCrashStun => ConfigManager.Boss2.WallCrashStun;
+
     /// <inheritdoc />
     public StringId AntiKitingMeleeSkillTag => new(ConfigManager.Boss2.AntiKitingMeleeSkill);
 

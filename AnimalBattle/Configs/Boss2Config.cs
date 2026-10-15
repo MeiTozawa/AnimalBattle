@@ -143,6 +143,12 @@ public sealed class Boss2Config : BaseBossConfig {
     /// <summary>Phase 3 状態機設定</summary>
     public Boss2PhaseConfig Phase3 { get; set; } = new();
 
+    /// <summary>Phase 遷移（フェーズ移行）能力設定</summary>
+    public PhaseTransitionAbilityConfig PhaseTransition { get; set; } = new();
+
+    /// <summary>壁激突気絶（スタン）設定</summary>
+    public WallCrashStunConfig WallCrashStun { get; set; } = new();
+
 
 
     /// <summary>

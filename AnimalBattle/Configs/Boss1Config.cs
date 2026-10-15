@@ -77,6 +77,9 @@ public sealed class Boss1Config : BaseBossConfig {
     /// <summary>Phase 3 状態機設定</summary>
     public Boss1PhaseFsmConfig Phase3 { get; set; } = new();
 
+    /// <summary>Phase 遷移（フェーズ移行）能力設定</summary>
+    public PhaseTransitionAbilityConfig PhaseTransition { get; set; } = new();
+
     /// <summary>
     ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{Boss1Config}" /> インスタンスを生成します。
     /// </summary>

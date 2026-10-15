@@ -14,6 +14,7 @@ SlashRadius = 55.0
 SlashDamage = 1.0
 HitboxDuration = 0.28
 SlashColor = 0xFFFF7043
+ArmorTags = ["SuperArmor"]
 
 [[HeavySlash.Events]]
 Time = 0.0
@@ -54,6 +55,7 @@ ShockwaveRadius = 13.0
 ShockwaveDamage = 1.0
 FillColor = 0xFFFF9800
 OutlineColor = 0xFFFFE082
+ArmorTags = ["SuperArmor"]
 
 [[GroundStomp.Events]]
 Time = 0.0
@@ -93,6 +95,7 @@ ShrapnelSpeed = 260.0
 ShrapnelRadius = 7.5
 ShrapnelFillColor = 0xFFFF6D00
 ShrapnelOutlineColor = 0xFFFFD180
+ArmorTags = ["Invincible"]
 
 [[LeapSmash.Events]]
 Time = 0.10
@@ -117,6 +120,7 @@ SlashRangeY = 80.0
 SlashDamage = 1.0
 HitboxDuration = 0.24
 SlashColor = 0xFFFF1744
+ArmorTags = ["SuperArmor"]
 
 [[DoubleCleave.Events]]
 Time = 0.0
@@ -151,6 +155,7 @@ ShrapnelSpeed = 240.0
 ShrapnelRadius = 8.0
 ShrapnelFillColor = 0xFFFF5252
 ShrapnelOutlineColor = 0xFFFF8A80
+ArmorTags = ["SuperArmor"]
 
 [[FrenzyCharge.Events]]
 Time = 0.0
@@ -178,3 +183,4 @@ RockRadius = 9.0
 RockFillColor = 0xFF00E5FF
 RockOutlineColor = 0xFFE0F7FA
 BulletType = "Cyan"
+ArmorTags = ["SuperArmor"]

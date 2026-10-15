@@ -37,9 +37,15 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig {
     /// <summary>キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
+    /// <summary>出招・判定中に自身へ付与されるアーマータグ一覧（例: ["SuperArmor"] または ["Invincible"]）</summary>
+    public List<string> ArmorTags { get; set; } = [];
+
+    /// <summary>パース済みのアーマータグフラグを取得します。</summary>
+    public GameplayTag ParsedArmorTag => GameplayTagHelper.ParseTags(ArmorTags);
+
     /// <inheritdoc />
     public virtual ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
-        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events);
+        => SkillConfigLoader.BuildAttackDefinition(skillTag, WindUpTime, CastDuration, RecoveryTime, EffectiveRange, Events, armorTag: ParsedArmorTag);
 
     /// <inheritdoc />
     public virtual Action<AbilityTelegraphContext>? BuildTelegraphRenderer() => null;
