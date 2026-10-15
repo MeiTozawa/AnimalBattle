@@ -107,14 +107,17 @@ Text = [
 BossSwitchGuideText = "[1] Boss 1   [2] Boss 2"
 BossSwitchGuideColor = 0xFFFFF275
 
+CharacterSwitchGuideText = "[3] Cat (Ranged)   [4] Bunny (Melee)"
+CharacterSwitchGuideColor = 0xFF80FFA0
+
 DoubleJumpX = 20
-DoubleJumpY = 154
+DoubleJumpY = 168
 DoubleJumpText = "DOUBLE JUMP:"
 DoubleJumpActiveColor = 0xFF00E5FF
 DoubleJumpInactiveColor = 0xFF888888
 
 PlayerHpX = 20
-PlayerHpY = 174
+PlayerHpY = 188
 PlayerHpText = "PLAYER HP:  "
 PlayerHpHighColor = 0xFF00FF88
 PlayerHpMidColor = 0xFFFFD700

@@ -85,6 +85,13 @@ public static class HudService {
 
         var switchGuideY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
         GameEngine.DrawString(hudCfg.TitleX, switchGuideY, hudCfg.BossSwitchGuideText, hudCfg.BossSwitchGuideColor);
+
+        if (!string.IsNullOrEmpty(hudCfg.CharacterSwitchGuideText))
+        {
+            lineIndex++;
+            var charGuideY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
+            GameEngine.DrawString(hudCfg.TitleX, charGuideY, hudCfg.CharacterSwitchGuideText, hudCfg.CharacterSwitchGuideColor);
+        }
     }
 
     private static void DrawPlayerStatus(Pawn? player, int remainingJumps, HudRenderConfig hudCfg)
@@ -99,16 +106,29 @@ public static class HudService {
         var jumpColor = remainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
         GameEngine.DrawString(hudCfg.DoubleJumpX, hudCfg.DoubleJumpY, jumpText, jumpColor);
 
-        var currentHp = Math.Clamp((int)player.CurrentHp, 0, 3);
-        var hpColor = currentHp switch {
-            >= 3 => hudCfg.PlayerHpHighColor,
-            2 => hudCfg.PlayerHpMidColor,
-            1 => hudCfg.PlayerHpLowColor,
+        var maxHp = (int)Math.Max(1.0f, player.MaxHp);
+        var currentHp = Math.Clamp((int)player.CurrentHp, 0, maxHp);
+
+        var sb = new System.Text.StringBuilder("[ ");
+        for (var i = 0; i < maxHp; i++)
+        {
+            sb.Append(i < currentHp ? "●  " : "○  ");
+        }
+        sb.Append(']');
+        var symbols = sb.ToString();
+
+        var hpRatio = (float)currentHp / maxHp;
+        var hpColor = hpRatio switch {
+            >= 0.66f => hudCfg.PlayerHpHighColor,
+            >= 0.33f => hudCfg.PlayerHpMidColor,
+            > 0.0f => hudCfg.PlayerHpLowColor,
             _ => hudCfg.PlayerHpDeadColor
         };
+
+        var charName = player is PlayerPawn pp ? pp.CurrentCharacter.ToString() : "Cat";
         var hpText = player.IsInvincible
-            ? $"HP: {PlayerHpSymbols[currentHp]} ({currentHp}/3) [INVINCIBLE]"
-            : PlayerHpLut[currentHp];
+            ? $"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp}) [INVINCIBLE]"
+            : $"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp})";
         GameEngine.DrawString(hudCfg.PlayerHpX, hudCfg.PlayerHpY, hpText, hpColor);
     }
 

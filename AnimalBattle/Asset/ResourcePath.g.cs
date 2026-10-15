@@ -45,6 +45,18 @@ public static class ResourcePath
         /// <summary>4_Cat_Fall-Sheet.png のファイルパス。</summary>
         public const string CatFallSheetPng = @"Characters\4_Cat_Fall-Sheet.png";
 
+        /// <summary>BunnyAttack-Sheet.png のファイルパス。</summary>
+        public const string BunnyattackSheetPng = @"Characters\BunnyAttack-Sheet.png";
+
+        /// <summary>BunnyIdle-Sheet.png のファイルパス。</summary>
+        public const string BunnyidleSheetPng = @"Characters\BunnyIdle-Sheet.png";
+
+        /// <summary>BunnyJump-Sheet.png のファイルパス。</summary>
+        public const string BunnyjumpSheetPng = @"Characters\BunnyJump-Sheet.png";
+
+        /// <summary>BunnyRun-Sheet.png のファイルパス。</summary>
+        public const string BunnyrunSheetPng = @"Characters\BunnyRun-Sheet.png";
+
         /// <summary>sword &amp; shield effect sprites.png のファイルパス。</summary>
         public const string SwordShieldEffectSpritesPng = @"Characters\sword & shield effect sprites.png";
     }
@@ -144,11 +156,14 @@ public static class ResourcePath
         /// <summary>boss2_patterns.toml 設定ファイル名。</summary>
         public const string Boss2Patterns = "boss2_patterns.toml";
 
+        /// <summary>bunny.toml 設定ファイル名。</summary>
+        public const string Bunny = "bunny.toml";
+
         /// <summary>camera.toml 設定ファイル名。</summary>
         public const string Camera = "camera.toml";
 
-        /// <summary>player.toml 設定ファイル名。</summary>
-        public const string Player = "player.toml";
+        /// <summary>cat.toml 設定ファイル名。</summary>
+        public const string Cat = "cat.toml";
 
         /// <summary>render.toml 設定ファイル名。</summary>
         public const string Render = "render.toml";
@@ -174,11 +189,14 @@ public static class ResourcePath
         /// <summary>boss2_patterns.toml の相対パス。</summary>
         public const string Boss2PatternsToml = @"Config\boss2_patterns.toml";
 
+        /// <summary>bunny.toml の相対パス。</summary>
+        public const string BunnyToml = @"Config\bunny.toml";
+
         /// <summary>camera.toml の相対パス。</summary>
         public const string CameraToml = @"Config\camera.toml";
 
-        /// <summary>player.toml の相対パス。</summary>
-        public const string PlayerToml = @"Config\player.toml";
+        /// <summary>cat.toml の相対パス。</summary>
+        public const string CatToml = @"Config\cat.toml";
 
         /// <summary>render.toml の相対パス。</summary>
         public const string RenderToml = @"Config\render.toml";

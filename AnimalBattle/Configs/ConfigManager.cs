@@ -10,7 +10,8 @@ namespace AnimalBattle.Configs;
 ///     Debug ビルド時の動的自動リロードおよび Release ビルド時のバイナリ高速ロードを提供する静的設定マネージャークラス。
 /// </summary>
 public static class ConfigManager {
-    private static ConfigBase<PlayerConfig> _playerConfigContainer = new(new PlayerConfig());
+    private static ConfigBase<PlayerConfig> _catConfigContainer = new(new PlayerConfig());
+    private static ConfigBase<PlayerConfig> _bunnyConfigContainer = new(new PlayerConfig());
     private static ConfigBase<Boss1Config> _boss1ConfigContainer = new(new Boss1Config());
     private static ConfigBase<Boss2Config> _boss2ConfigContainer = new(new Boss2Config());
     private static ConfigBase<Boss1PatternConfig> _boss1PatternsContainer = new(new Boss1PatternConfig());
@@ -28,8 +29,17 @@ public static class ConfigManager {
         Initialize();
     }
 
-    /// <summary>プレイヤー設定オブジェクトを取得します。</summary>
-    public static PlayerConfig Player => _playerConfigContainer.Config;
+    /// <summary>Cat (猫) プレイヤー設定オブジェクトを取得します。</summary>
+    public static PlayerConfig Cat => _catConfigContainer.Config;
+
+    /// <summary>Bunny (ウサギ) プレイヤー設定オブジェクトを取得します。</summary>
+    public static PlayerConfig Bunny => _bunnyConfigContainer.Config;
+
+    /// <summary>現在選択中のプレイヤー設定オブジェクトを取得します。</summary>
+    public static PlayerConfig Player => Scenes.BattleScene.Current?.Player?.CurrentCharacter == CharacterType.Bunny ? Bunny : Cat;
+
+    /// <summary>指定されたキャラクター種別のプレイヤー設定オブジェクトを取得します。</summary>
+    public static PlayerConfig GetPlayerConfig(CharacterType charType) => charType == CharacterType.Bunny ? Bunny : Cat;
 
     /// <summary>Boss 1 (Ancient Cat Overlord) 設定オブジェクトを取得します。</summary>
     public static Boss1Config Boss1 => _boss1ConfigContainer.Config;
@@ -61,8 +71,14 @@ public static class ConfigManager {
     /// <summary>音響および音量設定オブジェクトを取得します。</summary>
     public static AudioConfig Audio => _audioConfigContainer.Config;
 
-    /// <summary>プレイヤー設定コンテナを取得します。</summary>
-    public static ConfigBase<PlayerConfig> PlayerContainer => _playerConfigContainer;
+    /// <summary>Cat プレイヤー設定コンテナを取得します。</summary>
+    public static ConfigBase<PlayerConfig> CatContainer => _catConfigContainer;
+
+    /// <summary>Bunny プレイヤー設定コンテナを取得します。</summary>
+    public static ConfigBase<PlayerConfig> BunnyContainer => _bunnyConfigContainer;
+
+    /// <summary>現在選択中のプレイヤー設定コンテナを取得します（後方互換）。</summary>
+    public static ConfigBase<PlayerConfig> PlayerContainer => Scenes.BattleScene.Current?.Player?.CurrentCharacter == CharacterType.Bunny ? _bunnyConfigContainer : _catConfigContainer;
 
     /// <summary>Boss 1 設定コンテナを取得します。</summary>
     public static ConfigBase<Boss1Config> Boss1Container => _boss1ConfigContainer;
@@ -111,7 +127,8 @@ public static class ConfigManager {
         var successCount = 0;
         var failureCount = 0;
 
-        LoadConfig(ResourcePath.Config.Player, ref _playerConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Cat, ref _catConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Bunny, ref _bunnyConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Boss1, ref _boss1ConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Boss2, ref _boss2ConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Boss1Patterns, ref _boss1PatternsContainer, ref successCount, ref failureCount);
@@ -149,7 +166,8 @@ public static class ConfigManager {
         }
 
         BakedConfigBundle bundle = loadResult.Value;
-        _playerConfigContainer = new(bundle.Player);
+        _catConfigContainer = new(bundle.Cat ?? bundle.Player);
+        _bunnyConfigContainer = new(bundle.Bunny ?? bundle.Player);
         _boss1ConfigContainer = new(bundle.Boss1);
         _boss2ConfigContainer = new(bundle.Boss2);
         _boss1PatternsContainer = new(bundle.Boss1Pattern);
@@ -190,7 +208,8 @@ public static class ConfigManager {
     /// </summary>
     public static void Dispose()
     {
-        _playerConfigContainer.Dispose();
+        _catConfigContainer.Dispose();
+        _bunnyConfigContainer.Dispose();
         _boss1ConfigContainer.Dispose();
         _boss2ConfigContainer.Dispose();
         _boss1PatternsContainer.Dispose();
@@ -200,5 +219,6 @@ public static class ConfigManager {
         _renderConfigContainer.Dispose();
         _cameraConfigContainer.Dispose();
         _tileSetConfigContainer.Dispose();
+        _audioConfigContainer.Dispose();
     }
 }

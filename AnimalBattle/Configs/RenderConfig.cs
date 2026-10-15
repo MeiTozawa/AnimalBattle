@@ -259,6 +259,12 @@ public sealed class HudRenderConfig {
     /// <summary>Boss 切り替え操作案内文字色 (<see cref="Color" />)</summary>
     public Color BossSwitchGuideColor { get; set; }
 
+    /// <summary>キャラクター切り替え操作案内テキスト</summary>
+    public string CharacterSwitchGuideText { get; set; } = string.Empty;
+
+    /// <summary>キャラクター切り替え操作案内文字色 (<see cref="Color" />)</summary>
+    public Color CharacterSwitchGuideColor { get; set; }
+
     /// <summary>二段ジャンプインジケータ X 座標</summary>
     public int DoubleJumpX { get; set; }
 

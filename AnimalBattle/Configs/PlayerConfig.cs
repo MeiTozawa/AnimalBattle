@@ -109,6 +109,33 @@ public sealed class PlayerConfig {
     /// <summary>銃弾 1 発あたりの与ダメージ量</summary>
     public float BulletDamage { get; set; }
 
+    /// <summary>近接攻撃力（Bunny）</summary>
+    public float AttackDamage { get; set; }
+
+    /// <summary>近接攻撃クールダウン間隔（秒）</summary>
+    public float AttackCooldown { get; set; }
+
+    /// <summary>近接攻撃前方出現オフセット（px）</summary>
+    public float AttackRange { get; set; }
+
+    /// <summary>近接攻撃判定幅（px）</summary>
+    public float AttackWidth { get; set; }
+
+    /// <summary>近接攻撃判定高さ（px）</summary>
+    public float AttackHeight { get; set; }
+
+    /// <summary>近接攻撃持続時間（秒）</summary>
+    public float AttackDuration { get; set; }
+
+    /// <summary>近接攻撃時の前進インパルス距離（px）</summary>
+    public float AttackLungeDistance { get; set; }
+
+    /// <summary>近接攻撃時のスプリング変形倍率 X</summary>
+    public float AttackStretchScaleX { get; set; }
+
+    /// <summary>近接攻撃時のスプリング変形倍率 Y</summary>
+    public float AttackStretchScaleY { get; set; }
+
     /// <summary>射撃出膛時の自機微後退距離（ピクセル）</summary>
     public float ShootRecoilDistance { get; set; }
 
@@ -266,7 +293,7 @@ public sealed class PlayerConfig {
     /// </summary>
     /// <param name="path">TOML ファイル名</param>
     /// <returns>読み込み結果</returns>
-    public static ErrorOr<ConfigBase<PlayerConfig>> LoadFromFile(string path = ResourcePath.Config.Player)
+    public static ErrorOr<ConfigBase<PlayerConfig>> LoadFromFile(string path = ResourcePath.Config.Cat)
     {
         return ConfigBase<PlayerConfig>.LoadFromFile(path);
     }

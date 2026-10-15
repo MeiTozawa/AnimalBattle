@@ -349,6 +349,47 @@ public static class CombatSpawner {
     }
 
     /// <summary>
+    ///     プレイヤー自機の近接攻撃判定（矩形 Hitbox ＋ 斬撃スプライト視覚エフェクト）を生成します。
+    ///     命中時に単回ダメージ（3点）を与え、自動破棄 (DestroyOnHit: true) されます。
+    /// </summary>
+    public static void SpawnPlayerMeleeAttack(
+        World world,
+        float x,
+        float y,
+        float width,
+        float height,
+        float damage,
+        float lifetime,
+        SlashDirection direction)
+    {
+        var hasTexture =
+            AssetManager.TryGetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng, out var slashHandle);
+        Debug.Assert(hasTexture, $"近接斬撃エフェクトテクスチャがロードされていません: {ResourcePath.Characters.SwordShieldEffectSpritesPng}");
+        var colIndex = 5; // 第 6 列 (0-based: 5)
+        var rowIndex = (int)direction;
+        var srcRect = Rect.FromWidthHeight(colIndex * 64, rowIndex * 64, 64, 64);
+        var scale = MathF.Max(width, height) / 36.0f;
+
+        var offsetX = direction switch {
+            SlashDirection.Right => -18.0f * scale,
+            SlashDirection.Left => 18.0f * scale,
+            _ => 0.0f
+        };
+        var offsetY = direction switch {
+            SlashDirection.Down => -18.0f * scale,
+            SlashDirection.Up => 18.0f * scale,
+            _ => 0.0f
+        };
+
+        CombatPoolService.RentAreaEffect()
+           .Set(new Transform(x + offsetX, y + offsetY, scale, scale))
+           .Set(new Velocity(0.0f))
+           .Set(new Hitbox(new CollisionShape.Box(width, height, -offsetX, -offsetY), damage, Faction.Friendly, true))
+           .Set(new Sprite(slashHandle, false, true, srcRect, Color.FromArgb(255, 255, 240, 200)))
+           .Set(new FadeEffect(lifetime, 255.0f, 0.0f));
+    }
+
+    /// <summary>
     ///     地面を這う衝撃波弾幕エンティティを生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>

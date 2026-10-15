@@ -52,7 +52,7 @@ public class BattleScene : IDisposable {
         // 共有戦闘エンティティプールサービスを事前確保・初期化（明示的初期化・ECS Singleton を脱却）
         CombatPoolService.Initialize(_ecsWorld);
 
-        var playerCfg = ConfigManager.Player;
+        var playerCfg = ConfigManager.Cat;
 
         var playerEntity = _ecsWorld.Entity("Player1");
         Player = new PlayerPawn(playerEntity, playerCfg, playerHandle);
@@ -120,7 +120,8 @@ public class BattleScene : IDisposable {
         if (_isDisposed) return;
         ConfigManager.Boss1Container.OnConfigReloaded -= OnBoss1ConfigReloaded;
         ConfigManager.Boss2Container.OnConfigReloaded -= OnBoss2ConfigReloaded;
-        ConfigManager.PlayerContainer.OnConfigReloaded -= OnPlayerConfigReloaded;
+        ConfigManager.CatContainer.OnConfigReloaded -= OnCatConfigReloaded;
+        ConfigManager.BunnyContainer.OnConfigReloaded -= OnBunnyConfigReloaded;
 
         CombatPoolService.Current?.Dispose();
 
@@ -212,7 +213,8 @@ public class BattleScene : IDisposable {
     {
         ConfigManager.Boss1Container.OnConfigReloaded += OnBoss1ConfigReloaded;
         ConfigManager.Boss2Container.OnConfigReloaded += OnBoss2ConfigReloaded;
-        ConfigManager.PlayerContainer.OnConfigReloaded += OnPlayerConfigReloaded;
+        ConfigManager.CatContainer.OnConfigReloaded += OnCatConfigReloaded;
+        ConfigManager.BunnyContainer.OnConfigReloaded += OnBunnyConfigReloaded;
     }
 
     private void OnBoss1ConfigReloaded() => OnBossConfigReloaded(BossType.Boss1);
@@ -250,11 +252,26 @@ public class BattleScene : IDisposable {
         Debug.WriteLine($"[BattleScene] {bossName} の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
     }
 
-    private void OnPlayerConfigReloaded()
+    private void OnCatConfigReloaded()
+    {
+        if (Player.CurrentCharacter == CharacterType.Cat)
+        {
+            ApplyPlayerConfig(ConfigManager.Cat);
+        }
+    }
+
+    private void OnBunnyConfigReloaded()
+    {
+        if (Player.CurrentCharacter == CharacterType.Bunny)
+        {
+            ApplyPlayerConfig(ConfigManager.Bunny);
+        }
+    }
+
+    private void ApplyPlayerConfig(PlayerConfig pCfg)
     {
         var playerEntity = _ecsWorld.Lookup("Player1");
         if (!playerEntity.IsAlive()) return;
-        var pCfg = ConfigManager.Player;
         playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
         playerEntity.Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight));
 
@@ -265,7 +282,20 @@ public class BattleScene : IDisposable {
             t.ScaleY = pCfg.ScaleY;
         }
 
-        Debug.WriteLine("[BattleScene] Player の Hurtbox / CollisionBox / Scale を TOML からリアルタイム同期しました");
+        playerEntity.Set(JumpCapability.FromPlayerConfig(pCfg));
+
+        if (Player.CurrentCharacter == CharacterType.Bunny)
+        {
+            playerEntity.Remove<CatWeaponState>();
+            playerEntity.Set(BunnyWeaponState.FromConfig(pCfg));
+        }
+        else
+        {
+            playerEntity.Remove<BunnyWeaponState>();
+            playerEntity.Set(CatWeaponState.FromConfig(pCfg));
+        }
+
+        Debug.WriteLine($"[BattleScene] Player ({Player.CurrentCharacter}) の Hurtbox / CollisionBox / Scale / Weapon / Jump を TOML からリアルタイム同期しました");
     }
 
     /// <summary>
@@ -320,6 +350,14 @@ public class BattleScene : IDisposable {
             SwitchBoss(BossType.Boss2);
             ResetCombat();
         }
+        else if (InputService.IsPressed(InputAction.SelectCharacter1))
+        {
+            Player.SwitchCharacter(CharacterType.Cat, ConfigManager.Cat);
+        }
+        else if (InputService.IsPressed(InputAction.SelectCharacter2))
+        {
+            Player.SwitchCharacter(CharacterType.Bunny, ConfigManager.Bunny);
+        }
         else if (InputService.IsPressed(InputAction.Restart))
         {
             ResetCurrentBoss();
@@ -334,7 +372,7 @@ public class BattleScene : IDisposable {
         _vfxQuery.Each(e => e.Add<RecycleTag>());
         CameraService.Reset();
         AimReticleService.Reset();
-        Player.Reset(ConfigManager.Player);
+        Player.Reset(ConfigManager.GetPlayerConfig(Player.CurrentCharacter));
         EventBus.Publish(new CombatResetEvent());
     }
 

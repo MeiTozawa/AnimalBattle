@@ -41,7 +41,9 @@ _RESOURCE_DIR = _PROJECT_ROOT / "Resource"
 _OUTPUT_BIN = _RESOURCE_DIR / "baked_configs.bin"
 
 _CONFIG_MAP = {
-    "Player": _CONFIG_DIR / "player.toml",
+    "Cat": _CONFIG_DIR / "cat.toml",
+    "Bunny": _CONFIG_DIR / "bunny.toml",
+    "Player": _CONFIG_DIR / "cat.toml",
     "Boss1": _CONFIG_DIR / "boss1.toml",
     "Boss2": _CONFIG_DIR / "boss2.toml",
     "Boss1Pattern": _CONFIG_DIR / "boss1_patterns.toml",

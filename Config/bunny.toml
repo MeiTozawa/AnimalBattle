@@ -1,55 +1,39 @@
-# Player Configuration
-MaxHp = 3
+# Bunny Player Configuration
+MaxHp = 6
 InvincibleDuration = 0.8
 HitFlashDuration = 0.08
-MoveSpeed = 288.0
+MoveSpeed = 330.0
 WalkAnimVelocityThreshold = 0.1
-FirstJumpVelocity = -672.0
-SecondJumpVelocity = -552.0
+FirstJumpVelocity = -720.0
+SecondJumpVelocity = -620.0
 Gravity = 1620.0
 MaxFallSpeed = 600.0
 MaxJumps = 2
 
 # Player Terrain Collision
 HitboxWidth = 32.0
-HitboxHeight = 48.0
+HitboxHeight = 42.0
 
 # Player Hurtbox
 HurtboxShape = "Circle"
 HurtboxRadius = 7.0
-HurtboxOffsetY = 16.0
+HurtboxOffsetY = 12.0
 
-ScaleX = 2.0
-ScaleY = 2.0
+ScaleX = 1.8
+ScaleY = 1.8
 SpawnX = 320.0
 SpawnY = 500.0
 
-# Shoot & Bullet Configuration
-ShootCooldown = 0.16
-BulletSpeed = 960.0
-BulletSpawnOffset = 24.0
-BulletSpawnOffsetY = -4.0
-
-# Player Bullet Hitbox
-BulletHitboxShape = "Box"
-BulletWidth = 12.0
-BulletHeight = 8.0
-BulletDamage = 1.0
-
-# --- 射撃出膛感・反動 (Recoil) 設定 ---
-ShootRecoilDistance = 2.0
-ShootRecoilStretchX = 0.88
-ShootRecoilStretchY = 1.12
-MuzzleFlashDuration = 0.04
-MuzzleFlashRadius = 6.0
-
-# --- 命中撃砕破片 (Impact Splatter) 設定 ---
-ImpactSplatterMinCount = 4
-ImpactSplatterMaxCount = 6
-ImpactSplatterMinSpeed = 80.0
-ImpactSplatterMaxSpeed = 220.0
-ImpactSplatterParticleRadius = 2.5
-ImpactSplatterDuration = 0.15
+# Bunny Melee Attack Configuration
+AttackDamage = 3.0
+AttackCooldown = 0.30
+AttackRange = 48.0
+AttackWidth = 88.0
+AttackHeight = 64.0
+AttackDuration = 0.15
+AttackLungeDistance = 3.0
+AttackStretchScaleX = 1.15
+AttackStretchScaleY = 0.88
 
 # 隙あり（Vulnerable / 易傷）状態の Boss に対するダメージ倍率
 VulnerableDamageMultiplier = 2.0
@@ -62,7 +46,7 @@ ApexFloatVelocityThreshold = 90.0
 ApexFloatGravityMultiplier = 0.45
 
 # --- ダッシュ（回避・無敵フレーム）設定 ---
-DashSpeed = 680.0
+DashSpeed = 700.0
 DashDuration = 0.18
 DashCooldown = 0.40
 DashInvincibleDuration = 0.18
@@ -71,10 +55,10 @@ DashStretchScaleY = 0.70
 DashGhostTrailInterval = 0.04
 DashGhostTrailDuration = 0.16
 
-GroundAcceleration = 2880.0
+GroundAcceleration = 3000.0
 GroundDeceleration = 3600.0
-TurnaroundDeceleration = 6400.0
-AirAcceleration = 1800.0
+TurnaroundDeceleration = 6600.0
+AirAcceleration = 1900.0
 AirDeceleration = 1200.0
 
 HitstopLightDuration = 0.05
@@ -93,4 +77,3 @@ LandSquashScaleY = 0.75
 LandSquashVelocityThreshold = 150.0
 HitSquashScaleX = 1.20
 HitSquashScaleY = 0.80
-

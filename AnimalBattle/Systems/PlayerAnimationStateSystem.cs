@@ -14,6 +14,7 @@ public static class PlayerAnimationStateSystem
     private static readonly StringId ClipRun = "Run";
     private static readonly StringId ClipJump = "Jump";
     private static readonly StringId ClipFall = "Fall";
+    private static readonly StringId ClipAttack = "Attack";
 
     /// <summary>
     ///     自機アニメーション状態選択システムを Flecs.NET ワールドへ登録します。
@@ -30,6 +31,9 @@ public static class PlayerAnimationStateSystem
             .Each((ref vel, ref col, ref hp, ref anim) =>
             {
                 if (hp.Current <= 0.0f) return;
+
+                // 攻撃アニメーション再生中は終了まで維持
+                if (anim.CurrentClip == ClipAttack && !anim.IsFinished) return;
 
                 if (!col.IsGrounded)
                 {

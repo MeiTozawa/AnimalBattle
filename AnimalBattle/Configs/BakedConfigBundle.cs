@@ -40,8 +40,14 @@ public sealed class JsonColorConverter : JsonConverter<Color> {
 ///     Release ビルド時に単一のバイナリファイルとしてパッケージングされる全設定バンドル。
 /// </summary>
 public sealed class BakedConfigBundle {
-    /// <summary>プレイヤー設定</summary>
+    /// <summary>プレイヤー設定 (後方互換)</summary>
     public PlayerConfig Player { get; set; } = new();
+
+    /// <summary>Cat (猫) プレイヤー設定</summary>
+    public PlayerConfig Cat { get; set; } = new();
+
+    /// <summary>Bunny (ウサギ) プレイヤー設定</summary>
+    public PlayerConfig Bunny { get; set; } = new();
 
     /// <summary>Boss 1 設定</summary>
     public Boss1Config Boss1 { get; set; } = new();

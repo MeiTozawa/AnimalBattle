@@ -14,6 +14,8 @@ public enum CharacterType
 {
     /// <summary>Cat キャラクター。</summary>
     Cat,
+    /// <summary>Bunny キャラクター。</summary>
+    Bunny,
 }
 
 /// <summary>
@@ -43,6 +45,20 @@ internal static class AnimationRegistry
                     new() { Name = "Run", SpritePath = @"Characters\2_Cat_Run-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 9, Fps = 12.0f, IsLooping = true },
                     new() { Name = "Jump", SpritePath = @"Characters\3_Cat_Jump-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 3, Fps = 12.0f, IsLooping = false },
                     new() { Name = "Fall", SpritePath = @"Characters\4_Cat_Fall-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 3, Fps = 12.0f, IsLooping = true },
+                ],
+            },
+            [CharacterType.Bunny] = new()
+            {
+                DisplayName = "Bunny",
+                CellWidth = 32,
+                CellHeight = 32,
+                Clips =
+                [
+                    new() { Name = "Idle", SpritePath = @"Characters\BunnyIdle-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 7, Fps = 10.0f, IsLooping = true },
+                    new() { Name = "Run", SpritePath = @"Characters\BunnyRun-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 4, Fps = 10.0f, IsLooping = true },
+                    new() { Name = "Jump", SpritePath = @"Characters\BunnyJump-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 8, Fps = 12.0f, IsLooping = false },
+                    new() { Name = "Fall", SpritePath = @"Characters\BunnyJump-Sheet.png", Row = 0, StartFrame = 8, EndFrame = 12, Fps = 10.0f, IsLooping = true },
+                    new() { Name = "Attack", SpritePath = @"Characters\BunnyAttack-Sheet.png", Row = 0, StartFrame = 0, EndFrame = 6, Fps = 23.3f, IsLooping = false },
                 ],
             },
         };

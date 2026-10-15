@@ -37,7 +37,7 @@ public sealed class PlayerPawn : Pawn
            .Set(new MovementIntent())
            .Set(new WeaponIntent())
            .Set(JumpCapability.FromPlayerConfig(pCfg))
-           .Set(WeaponState.FromPlayerConfig(pCfg))
+           .Set(CatWeaponState.FromConfig(pCfg))
            .Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio))
            .Set(new DashState())
            .Set(AbilitySystem)
@@ -60,11 +60,91 @@ public sealed class PlayerPawn : Pawn
         set => Entity.GetMut<JumpCapability>().RemainingJumps = value;
     }
 
-    /// <summary>射撃クールダウンの残り秒数を取得または設定します。</summary>
+    /// <summary>武器クールダウンの残り秒数を取得または設定します。</summary>
     public float ShootCooldown
     {
-        get => Entity.Get<WeaponState>().CooldownRemaining;
-        set => Entity.GetMut<WeaponState>().CooldownRemaining = Math.Max(0.0f, value);
+        get => CurrentCharacter == CharacterType.Bunny
+            ? (Entity.Has<BunnyWeaponState>() ? Entity.Get<BunnyWeaponState>().CooldownRemaining : 0.0f)
+            : (Entity.Has<CatWeaponState>() ? Entity.Get<CatWeaponState>().CooldownRemaining : 0.0f);
+        set
+        {
+            var val = Math.Max(0.0f, value);
+            if (CurrentCharacter == CharacterType.Bunny && Entity.Has<BunnyWeaponState>())
+            {
+                Entity.GetMut<BunnyWeaponState>().CooldownRemaining = val;
+            }
+            else if (Entity.Has<CatWeaponState>())
+            {
+                Entity.GetMut<CatWeaponState>().CooldownRemaining = val;
+            }
+        }
+    }
+
+    /// <summary>現在選択されているキャラクター種別を取得します。</summary>
+    public CharacterType CurrentCharacter { get; private set; } = CharacterType.Cat;
+
+    /// <summary>
+    ///     自機キャラクター（Cat または Bunny）を動的に切り替えます。
+    ///     スプライト画像ハンドル、アニメーション設定および武器状態を同期更新します。
+    /// </summary>
+    /// <param name="newChar">切り替え先のキャラクター種別。</param>
+    /// <param name="pCfg">プレイヤー設定。</param>
+    public void SwitchCharacter(CharacterType newChar, PlayerConfig pCfg)
+    {
+        CurrentCharacter = newChar;
+        ref var anim = ref Entity.GetMut<Animation>();
+        anim.CharacterType = newChar;
+        anim.Play("Idle");
+
+        if (AssetManager.TryGetCharacterSpriteHandle(newChar, "Idle", out var handle))
+        {
+            ref var sprite = ref Entity.GetMut<Sprite>();
+            sprite.GraphHandle = handle;
+            sprite.SrcRect = new Rect(0, 0, 32, 32);
+        }
+
+        Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
+        Entity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
+        Entity.Set(new CollisionBox(pCfg.HitboxWidth, pCfg.HitboxHeight));
+
+        if (Entity.Has<Health>())
+        {
+            ref var hp = ref Entity.GetMut<Health>();
+            var oldMax = hp.Max;
+            hp.Max = pCfg.MaxHp;
+            if (hp.Current >= oldMax)
+            {
+                hp.Current = pCfg.MaxHp;
+            }
+            else
+            {
+                hp.Current = Math.Clamp(hp.Current, 0.0f, hp.Max);
+            }
+        }
+        else
+        {
+            Entity.Set(new Health(pCfg.MaxHp));
+        }
+
+        if (Entity.Has<Transform>())
+        {
+            ref var t = ref Entity.GetMut<Transform>();
+            t.ScaleX = pCfg.ScaleX;
+            t.ScaleY = pCfg.ScaleY;
+        }
+
+        if (newChar == CharacterType.Bunny)
+        {
+            Entity.Remove<CatWeaponState>();
+            Entity.Set(BunnyWeaponState.FromConfig(pCfg));
+        }
+        else
+        {
+            Entity.Remove<BunnyWeaponState>();
+            Entity.Set(CatWeaponState.FromConfig(pCfg));
+        }
+
+        Debug.WriteLine($"[PlayerPawn] プレイヤーキャラクターを切り替えました: {newChar} (Speed: {pCfg.MoveSpeed}, Jump: {pCfg.FirstJumpVelocity})");
     }
 
     /// <summary>
@@ -83,7 +163,7 @@ public sealed class PlayerPawn : Pawn
         c.IsGrounded = false;
 
         Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
-        Entity.Set(WeaponState.FromPlayerConfig(pCfg));
+        SwitchCharacter(CurrentCharacter, pCfg);
         Entity.Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio));
         Entity.Set(new DashState());
         Entity.GetMut<MovementIntent>().Reset();
