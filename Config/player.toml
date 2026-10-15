@@ -1,6 +1,6 @@
 # Player Configuration
 MaxHp = 3
-InvincibleDuration = 0.5
+InvincibleDuration = 0.8
 HitFlashDuration = 0.08
 MoveSpeed = 288.0
 WalkAnimVelocityThreshold = 0.1

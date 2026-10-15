@@ -1,6 +1,5 @@
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Abilities;
 
@@ -49,7 +48,7 @@ public sealed class TimelineAttackAbility : GameplayAbility {
         AbilityTag = tag;
         DisplayName = displayName ?? tag.ToString();
         TelegraphRenderer = telegraphRenderer;
-        Timeline = timeline ?? new AttackDefinition(tag, 0.1f, 0.1f, 0.1f, 0.0f);
+        Timeline = timeline;
         Cooldown = cooldown;
         RequiredTags = requiredTags;
         BlockedTags = blockedTags;
@@ -71,7 +70,7 @@ public sealed class TimelineAttackAbility : GameplayAbility {
     /// <inheritdoc />
     public override void Update(float dt, AbilitySystemComponent asc, bool isGrounded = false)
     {
-        Runner.Update(dt, isGrounded, (step, dir) => asc.DispatchAction(step, dir));
+        Runner.Update(dt, isGrounded, asc.DispatchAction);
         UpdatePhaseTags(asc, Runner.CurrentPhase);
 
         if (Runner.IsComplete)

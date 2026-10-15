@@ -36,6 +36,9 @@ public enum GameplayTag : ulong {
     /// <summary>打断中断状態。</summary>
     Interrupted = 1UL << 8,
 
-    /// <summary>不可命中/不可被选中（翻滚冲刺、受击闪烁、遁地等无敌帧，攻击直接穿透不触发碰撞判定）。</summary>
-    Untargetable = 1UL << 9
+    /// <summary>ヒット不可</summary>
+    Untargetable = 1UL << 9,
+
+    /// <summary>フェーズの移行中</summary>
+    Phasing = 1UL << 10
 }

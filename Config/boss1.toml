@@ -36,7 +36,7 @@ PlayerPursuitWeight = 0.12
 TelegraphShakeIntensity = 8.0
 RecoverFlybackSpeed = 4.0
 RecoverDelayRatio = 0.5
-TransitionDuration = 1.0
+TransitionDuration = 1.5
 TransitionFloatSpeed = 3.0
 Skills = ["Aimed3Shot", "DiveRam", "RingBurst"]
 
@@ -76,7 +76,7 @@ PlayerPursuitWeight = 0.15
 TelegraphShakeIntensity = 10.0
 RecoverFlybackSpeed = 4.5
 RecoverDelayRatio = 0.45
-TransitionDuration = 1.0
+TransitionDuration = 1.5
 TransitionFloatSpeed = 3.5
 Skills = ["DoubleSpiral", "DiveRam", "RainDrop"]
 
@@ -116,7 +116,7 @@ PlayerPursuitWeight = 0.20
 TelegraphShakeIntensity = 12.0
 RecoverFlybackSpeed = 5.0
 RecoverDelayRatio = 0.40
-TransitionDuration = 1.0
+TransitionDuration = 1.5
 TransitionFloatSpeed = 4.0
 Skills = ["CrossChaos", "DiveRam", "FastSniper"]
 

@@ -72,7 +72,7 @@ PatrolDuration = 2.0
 MoveSpeed = 160.0
 JumpForce = 640.0
 TelegraphShakeIntensity = 6.0
-TransitionDuration = 1.0
+TransitionDuration = 1.5
 ChaseTimeout = 3.0
 Skills = ["HeavySlash", "GroundStomp", "HeavySlash", "LeapSmash"]
 
@@ -115,7 +115,7 @@ PatrolDuration = 1.5
 MoveSpeed = 220.0
 JumpForce = 680.0
 TelegraphShakeIntensity = 10.0
-TransitionDuration = 1.0
+TransitionDuration = 1.5
 ChaseTimeout = 3.0
 Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "DoubleCleave"]
 
@@ -158,7 +158,7 @@ PatrolDuration = 1.0
 MoveSpeed = 280.0
 JumpForce = 720.0
 TelegraphShakeIntensity = 14.0
-TransitionDuration = 1.2
+TransitionDuration = 2.0
 ChaseTimeout = 2.5
 Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash"]
 
