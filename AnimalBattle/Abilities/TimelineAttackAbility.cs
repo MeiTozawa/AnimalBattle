@@ -64,6 +64,7 @@ public sealed class TimelineAttackAbility : GameplayAbility {
     /// <inheritdoc />
     public override void Activate(AbilitySystemComponent asc, in AbilityActivationContext ctx)
     {
+        Debug.WriteLine($"Activating {DisplayName}");
         Runner.Start(Timeline, ctx.Direction);
     }
 
