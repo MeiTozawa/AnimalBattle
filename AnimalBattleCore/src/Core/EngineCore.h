@@ -57,14 +57,6 @@ ANIMALBATTLE_CORE_API void SetMouseDispFlag(bool visible) noexcept;
 
 }  // namespace ab
 
-// --- Audio APIs ---
-extern "C" {
-ANIMALBATTLE_CORE_API int Sound_Load(const wchar_t* file_path) noexcept;
-ANIMALBATTLE_CORE_API bool Sound_Play(int sound_handle, int play_type, bool top_position_flag) noexcept;
-ANIMALBATTLE_CORE_API bool Sound_Stop(int sound_handle) noexcept;
-ANIMALBATTLE_CORE_API bool Sound_SetVolume(int sound_handle, int volume_ratio) noexcept;
-ANIMALBATTLE_CORE_API bool Sound_Delete(int sound_handle) noexcept;
-ANIMALBATTLE_CORE_API bool Sound_IsPlaying(int sound_handle) noexcept;
-}
-
 #endif  // ANIMALBATTLE_CORE_ENGINE_CORE_H_
+
+
