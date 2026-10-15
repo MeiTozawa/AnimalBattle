@@ -1,4 +1,5 @@
 using AnimalBattle.Abilities;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
@@ -19,7 +20,9 @@ public static class CombatCollisionSystem {
     {
         CollisionContext context = new(world);
 
+        // 1. 通常単発攻撃判定パイプライン（弾幕等：HitHistory なし・entity.Has 一切なし）
         world.System<Transform, Hitbox>("CombatCollisionSystem")
+           .Without<HitHistory>()
            .Without<RecycleTag>()
            .Kind(Ecs.OnUpdate)
            .Iter((Iter it, Field<Transform> atkTrans, Field<Hitbox> hitboxes) =>
@@ -27,7 +30,6 @@ public static class CombatCollisionSystem {
                 context.Refresh();
                 if (context.TargetCount == 0) return;
 
-                var pCfg = ConfigManager.Player;
                 var count = it.Count();
 
                 for (var i = 0; i < count; i++)
@@ -83,7 +85,7 @@ public static class CombatCollisionSystem {
         return world;
     }
 
-    private static void ApplyHit(
+    internal static void ApplyHit(
         World world,
         Entity vicEntity,
         ref Transform vicTrans,
@@ -112,7 +114,7 @@ public static class CombatCollisionSystem {
         if (localHitbox.DestroyOnHit) shouldDestroyAttacker = true;
     }
 
-    private struct HurtboxTarget {
+    internal struct HurtboxTarget {
         public Entity Entity;
         public float CenterX;
         public float CenterY;
@@ -122,7 +124,7 @@ public static class CombatCollisionSystem {
         public CollisionShape Shape;
     }
 
-    private sealed class CollisionContext {
+    internal sealed class CollisionContext {
         private readonly Ecs.IterFieldCallback<Transform, Hurtbox, Health, AbilitySystemComponent> _collectIter;
         public Query<Transform, Hurtbox, Health, AbilitySystemComponent> HurtboxQuery;
         public readonly HurtboxTarget[] Targets = new HurtboxTarget[32];

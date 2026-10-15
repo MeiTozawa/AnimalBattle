@@ -9,5 +9,6 @@ global using AnimalBattle.Combat;
 global using AnimalBattle.CombatPool;
 global using AnimalBattle.Modules;
 global using AnimalBattle.Render;
+global using AnimalBattle.Renderer;
 global using AnimalBattle.Systems;
 global using System.Diagnostics;

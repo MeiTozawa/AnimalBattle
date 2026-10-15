@@ -16,8 +16,8 @@ namespace AnimalBattle.Scenes;
 ///     プレイヤー、Boss、プラットフォームへ Bevy スタイルの Hitbox / Hurtbox を付与します。
 /// </summary>
 public class BattleScene : IDisposable {
-    private readonly DebugRenderSystem _debugRenderer;
-    private readonly WorldRenderSystem _worldRenderer;
+    private readonly DebugRenderer _debugRenderer;
+    private readonly WorldRenderer _worldRenderer;
     private const string Boss1Name =  "Boss1";
     private const string Boss2Name =  "Boss2";
     private World _ecsWorld;
@@ -64,8 +64,8 @@ public class BattleScene : IDisposable {
            .With<PlatformTag>()
            .Build();
 
-        _worldRenderer = new WorldRenderSystem(_ecsWorld);
-        _debugRenderer = new DebugRenderSystem(_ecsWorld);
+        _worldRenderer = new WorldRenderer(_ecsWorld);
+        _debugRenderer = new DebugRenderer(_ecsWorld);
         _playerBulletsQuery = _ecsWorld.QueryBuilder()
            .With<PlayerBulletTag>()
            .Build();
@@ -74,7 +74,7 @@ public class BattleScene : IDisposable {
            .Build();
 
         InputService.SetCursorVisible(false);
-        AimReticleService.Initialize();
+        AimReticleRenderer.Initialize();
 
         // 3. アクティブな Boss (デフォルト: Boss 1) の生成
         SwitchBoss(CurrentBossType);
@@ -133,7 +133,7 @@ public class BattleScene : IDisposable {
         _ecsWorld.Dispose();
         SoundService.StopBgm();
         InputService.SetCursorVisible(true);
-        AimReticleService.Shutdown();
+        AimReticleRenderer.Shutdown();
         EventBus.Publish(new CombatResetEvent());
         AssetManager.Shutdown();
         if (Current == this) Current = null!;
@@ -335,7 +335,7 @@ public class BattleScene : IDisposable {
         CameraService.Update(deltaTime, Player.X, Player.Y, Player.Vx, Player.Vy, Boss.X, Boss.Y);
 
         // 4. マウス照準レティクル（准星）のスプリング反動拡縮更新
-        AimReticleService.Update(deltaTime);
+        AimReticleRenderer.Update(deltaTime);
     }
 
     private void HandleInput()
@@ -371,7 +371,7 @@ public class BattleScene : IDisposable {
         _playerBulletsQuery.Each(e => e.Add<RecycleTag>());
         _vfxQuery.Each(e => e.Add<RecycleTag>());
         CameraService.Reset();
-        AimReticleService.Reset();
+        AimReticleRenderer.Reset();
         Player.Reset(ConfigManager.GetPlayerConfig(Player.CurrentCharacter));
         EventBus.Publish(new CombatResetEvent());
     }
@@ -386,6 +386,6 @@ public class BattleScene : IDisposable {
         _debugRenderer.Render(_platformQuery, _tileMap);
         GameEngine.SetCameraOffset(0, 0);
         HudService.Render(Player, Boss, Player.RemainingJumps);
-        AimReticleService.Render();
+        AimReticleRenderer.Render();
     }
 }
