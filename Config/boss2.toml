@@ -108,7 +108,7 @@ Weight = 50.0
 
 # Phase 2 状態機械設定
 [Phase2]
-HpThreshold = 0.66
+HpThreshold = 0.667
 IdleDuration = 0.5
 PatrolDuration = 1.5
 MoveSpeed = 220.0
@@ -151,7 +151,7 @@ Weight = 60.0
 
 # Phase 3 状態機械設定
 [Phase3]
-HpThreshold = 0.33
+HpThreshold = 0.334
 IdleDuration = 0.3
 PatrolDuration = 1.0
 MoveSpeed = 280.0
