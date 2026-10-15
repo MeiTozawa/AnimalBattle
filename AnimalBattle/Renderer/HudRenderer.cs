@@ -8,13 +8,13 @@ using AnimalBattle.Characters;
 using AnimalBattle.Characters.Boss;
 using AnimalBattle.Configs;
 
-namespace AnimalBattle.Core;
+namespace AnimalBattle.Renderer;
 
 /// <summary>
-///     画面上部操作ヘルプ、自機 HP・二段ジャンプ残数、および画面下部 Boss 大 HP バー・行動状態バッジを描画する HUD サービスクラス。
+///     画面上部操作ヘルプ、自機 HP・二段ジャンプ残数、および画面下部 Boss 大 HP バー・行動状態バッジを描画する HUD レンダラークラス。
 ///     領域モデル（<see cref="Pawn" /> / <see cref="Characters.Boss.BaseBossAgent" />）から直接状態を読み取ってスクリーン空間に描画します。
 /// </summary>
-public static class HudService {
+public static class HudRenderer {
     private static readonly string[] BossTitles = [
         "BOSS: Unknown",
         "BOSS: Boss1 [PHASE 1/3]",
@@ -119,8 +119,8 @@ public static class HudService {
 
         var hpRatio = (float)currentHp / maxHp;
         var hpColor = hpRatio switch {
-            >= 0.66f => hudCfg.PlayerHpHighColor,
-            >= 0.33f => hudCfg.PlayerHpMidColor,
+            var r when r >= hudCfg.PlayerHpHighThreshold => hudCfg.PlayerHpHighColor,
+            var r when r >= hudCfg.PlayerHpMidThreshold => hudCfg.PlayerHpMidColor,
             > 0.0f => hudCfg.PlayerHpLowColor,
             _ => hudCfg.PlayerHpDeadColor
         };
@@ -172,8 +172,8 @@ public static class HudService {
             modalCfg.GameOverBgColor, true);
         GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2,
             modalCfg.GameOverOuterBorderColor, false);
-        GameEngine.DrawBox(modalCfg.GameOverX1 + 2, modalCfg.GameOverY1 + 2, modalCfg.GameOverX2 - 2,
-            modalCfg.GameOverY2 - 2, modalCfg.GameOverInnerBorderColor, false);
+        GameEngine.DrawBox(modalCfg.GameOverX1 + modalCfg.InnerBorderPadding, modalCfg.GameOverY1 + modalCfg.InnerBorderPadding, modalCfg.GameOverX2 - modalCfg.InnerBorderPadding,
+            modalCfg.GameOverY2 - modalCfg.InnerBorderPadding, modalCfg.GameOverInnerBorderColor, false);
         GameEngine.DrawString(modalCfg.GameOverTitleX, modalCfg.GameOverTitleY, modalCfg.GameOverTitleText,
             modalCfg.GameOverTitleColor);
         GameEngine.DrawString(modalCfg.GameOverRetryX, modalCfg.GameOverRetryY, modalCfg.GameOverRetryText,
@@ -203,7 +203,7 @@ public static class HudService {
             { IsPhaseTransition: true } => ("[STATE: PHASE TRANSITION (INVINCIBLE)]", hpCfg.StatePhaseTransitionColor),
             { IsRecovery: true } => ("[STATE: RECOVERING]", hpCfg.StateRecoveringColor),
             _ when state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.WallCrashStun =>
-                ("[STATE: STUNNED (VULNERABLE)]", ColorPalette.Gold),
+                ("[STATE: STUNNED (VULNERABLE)]", hpCfg.StateStunnedColor),
             { IsTelegraph: true } => ($"[STATE: TELEGRAPHING (WIND-UP: {abilityName})]", hpCfg.StateTelegraphingColor),
             { IsExecute: true } => ($"[STATE: EXECUTING ({abilityName})]", hpCfg.StateCastingColor),
             _ => state.BossType switch {
@@ -293,8 +293,8 @@ public static class HudService {
         // Phase 分割マーカー (1/3, 2/3)
         var p1Split = barX1 + totalWidth / 3;
         var p2Split = barX1 + totalWidth * 2 / 3;
-        GameEngine.DrawBox(p1Split - 1, barY1, p1Split + 1, barY2, hpCfg.BorderColor, true);
-        GameEngine.DrawBox(p2Split - 1, barY1, p2Split + 1, barY2, hpCfg.BorderColor, true);
+        GameEngine.DrawBox(p1Split - hpCfg.PhaseSplitWidth, barY1, p1Split + hpCfg.PhaseSplitWidth, barY2, hpCfg.BorderColor, true);
+        GameEngine.DrawBox(p2Split - hpCfg.PhaseSplitWidth, barY1, p2Split + hpCfg.PhaseSplitWidth, barY2, hpCfg.BorderColor, true);
 
         // 勝利バナー
         if (currentHp > 0.0f) return;
@@ -302,8 +302,8 @@ public static class HudService {
             modalCfg.VictoryBgColor, true);
         GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2,
             modalCfg.VictoryOuterBorderColor, false);
-        GameEngine.DrawBox(modalCfg.VictoryX1 + 2, modalCfg.VictoryY1 + 2, modalCfg.VictoryX2 - 2,
-            modalCfg.VictoryY2 - 2, modalCfg.VictoryInnerBorderColor, false);
+        GameEngine.DrawBox(modalCfg.VictoryX1 + modalCfg.InnerBorderPadding, modalCfg.VictoryY1 + modalCfg.InnerBorderPadding, modalCfg.VictoryX2 - modalCfg.InnerBorderPadding,
+            modalCfg.VictoryY2 - modalCfg.InnerBorderPadding, modalCfg.VictoryInnerBorderColor, false);
         GameEngine.DrawString(modalCfg.VictoryTitleX, modalCfg.VictoryTitleY, modalCfg.VictoryTitleText,
             modalCfg.VictoryTitleColor);
         GameEngine.DrawString(modalCfg.VictoryRetryX, modalCfg.VictoryRetryY, modalCfg.VictoryRetryText,

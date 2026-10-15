@@ -1,14 +1,14 @@
 using AnimalBattle.Configs;
 using AnimalBattle.Events;
 
-namespace AnimalBattle.Core;
+namespace AnimalBattle.Renderer;
 
 /// <summary>
-///     マウス照準レティクル（准星）の動的スプリング拡縮およびスクリーン描画を統括するサービスクラス。
+///     マウス照準レティクル（准星）の動的スプリング拡縮およびスクリーン描画を統括するレンダラークラス。
 ///     設定ファイル（render.toml の [AimReticle]）から動的パラメータを読み込み、
 ///     射撃イベント（<see cref="PlayerShotFiredEvent" />）に連動した反動拡縮パルスと戦術照準器を描画します。
 /// </summary>
-public static class AimReticleService
+public static class AimReticleRenderer
 {
     private static float _expansion;
     private static float _expansionVelocity;
@@ -20,7 +20,7 @@ public static class AimReticleService
     public static float CurrentExpansion => _expansion;
 
     /// <summary>
-    ///     レティクルサービスを初期化し、イベント購読を開始します。
+    ///     レティクルレンダラーを初期化し、イベント購読を開始します。
     /// </summary>
     public static void Initialize()
     {
@@ -118,7 +118,7 @@ public static class AimReticleService
         }
 
         // 異常発散やオーバーフローを確実に防止する防護クランプ
-        _expansion = Math.Clamp(_expansion, -cfg.BaseRadius + 1.0f, cfg.RecoilExpansion * 3.0f);
+        _expansion = Math.Clamp(_expansion, -cfg.BaseRadius + 1.0f, cfg.RecoilExpansion * cfg.RecoilExpansionClampRatio);
     }
 
     /// <summary>
@@ -138,26 +138,26 @@ public static class AimReticleService
     public static void Render(int x, int y)
     {
         var cfg = ConfigManager.Render.AimReticle;
-        var radius = Math.Clamp((int)MathF.Round(cfg.BaseRadius + _expansion), 1, 100);
+        var radius = Math.Clamp((int)MathF.Round(cfg.BaseRadius + _expansion), cfg.MinRadius, cfg.MaxRadius);
 
         // 1. 中心高輝度ドット（照準中心コア）
-        GameEngine.DrawCircle(x, y, 1, ColorPalette.White, fill: true);
+        GameEngine.DrawCircle(x, y, cfg.CenterDotRadius, cfg.CenterDotColor, fill: true);
 
         // 2. 外周円環（タクティカルリング）
-        GameEngine.DrawCircle(x, y, radius, ColorPalette.CyanLight, fill: false);
+        GameEngine.DrawCircle(x, y, radius, cfg.RingColor, fill: false);
 
         // 3. 上下左右 4 方向の刻度ショートライン
         var inner = radius + cfg.TickGap;
         var outer = inner + cfg.TickLength;
 
         // 上
-        GameEngine.DrawLine(x, y - inner, x, y - outer, ColorPalette.CyanNeon);
+        GameEngine.DrawLine(x, y - inner, x, y - outer, cfg.TickColor);
         // 下
-        GameEngine.DrawLine(x, y + inner, x, y + outer, ColorPalette.CyanNeon);
+        GameEngine.DrawLine(x, y + inner, x, y + outer, cfg.TickColor);
         // 左
-        GameEngine.DrawLine(x - inner, y, x - outer, y, ColorPalette.CyanNeon);
+        GameEngine.DrawLine(x - inner, y, x - outer, y, cfg.TickColor);
         // 右
-        GameEngine.DrawLine(x + inner, y, x + outer, y, ColorPalette.CyanNeon);
+        GameEngine.DrawLine(x + inner, y, x + outer, y, cfg.TickColor);
     }
 
     /// <summary>
@@ -170,7 +170,7 @@ public static class AimReticleService
     }
 
     /// <summary>
-    ///     サービスのイベント購読を解除します。
+    ///     レンダラーのイベント購読を解除します。
     /// </summary>
     public static void Shutdown()
     {

@@ -55,6 +55,27 @@ public sealed class BossEffectsRenderConfig {
     /// <summary>易傷時の醒目攻撃チャンス表示色 (<see cref="Color" />)</summary>
     public Color ChanceMarkerColor { get; set; }
 
+    /// <summary>易傷時のオーラ脈動角速度</summary>
+    public float VulnerablePulseSpeed { get; set; } = 10.0f;
+
+    /// <summary>易傷時のオーラ基礎アルファ値 (0～255)</summary>
+    public int VulnerableAuraBaseAlpha { get; set; } = 130;
+
+    /// <summary>易傷時のオーラ脈動アルファ振幅</summary>
+    public int VulnerableAuraPulseAlpha { get; set; } = 110;
+
+    /// <summary>易傷時のオーラ拡大量比率</summary>
+    public float VulnerableAuraScale { get; set; } = 1.04f;
+
+    /// <summary>易傷マーカー浮動揺れ角速度</summary>
+    public float ChanceMarkerBobbingSpeed { get; set; } = 8.0f;
+
+    /// <summary>易傷マーカー浮動揺れ振幅 (px)</summary>
+    public float ChanceMarkerBobbingAmplitude { get; set; } = 4.0f;
+
+    /// <summary>易傷マーカー文字 1 文字あたりの推定幅 (px)</summary>
+    public int ChanceMarkerCharWidth { get; set; } = 7;
+
     /// <summary>無敵・フェーズ遷移シールドの基準半径 (px)</summary>
     public float InvincibleShieldRadius { get; set; }
 
@@ -216,6 +237,60 @@ public sealed class BulletRenderConfig {
 
     /// <summary>画面外カリング（描画除外）マージン Y (ピクセル)</summary>
     public int ViewportCullingMarginY { get; set; }
+
+    /// <summary>マゼンタ弾オーラ基礎半径比率</summary>
+    public float SpecialMagentaAuraBaseRatio { get; set; } = 1.35f;
+
+    /// <summary>マゼンタ弾オーラ脈動比率</summary>
+    public float SpecialMagentaAuraPulseRatio { get; set; } = 0.15f;
+
+    /// <summary>マゼンタ弾脈動角速度</summary>
+    public float SpecialMagentaPulseSpeed { get; set; } = 6.0f;
+
+    /// <summary>マゼンタ弾オーラアルファ値 (0～255)</summary>
+    public int SpecialMagentaAuraAlpha { get; set; } = 65;
+
+    /// <summary>シアン弾外周リング拡張幅 (px)</summary>
+    public int SpecialCyanRingPadding { get; set; } = 2;
+
+    /// <summary>シアン弾外周リング発光色 (<see cref="Color" />)</summary>
+    public Color SpecialCyanRingColor { get; set; } = Color.FromArgb(50, 0, 240, 255);
+
+    /// <summary>ブラック弾オーラ基礎半径比率</summary>
+    public float SpecialBlackAuraBaseRatio { get; set; } = 1.4f;
+
+    /// <summary>ブラック弾オーラ脈動比率</summary>
+    public float SpecialBlackAuraPulseRatio { get; set; } = 0.2f;
+
+    /// <summary>ブラック弾脈動角速度</summary>
+    public float SpecialBlackPulseSpeed { get; set; } = 6.0f;
+
+    /// <summary>ブラック弾オーラ色 (<see cref="Color" />)</summary>
+    public Color SpecialBlackAuraColor { get; set; } = Color.FromArgb(90, 220, 20, 80);
+
+    /// <summary>ブラック弾衛星公転半径比率</summary>
+    public float SpecialBlackSatelliteOrbitRatio { get; set; } = 1.55f;
+
+    /// <summary>ブラック弾衛星公転角速度</summary>
+    public float SpecialBlackSatelliteOrbitSpeed { get; set; } = 6.0f;
+
+    /// <summary>ブラック弾衛星半径比率</summary>
+    public float SpecialBlackSatelliteRadiusRatio { get; set; } = 0.55f;
+
+    /// <summary>ブラック弾衛星最小ピクセル半径</summary>
+    public int SpecialBlackSatelliteMinRadius { get; set; } = 3;
+
+    /// <summary>ブラック弾内層微小核最小ピクセル半径</summary>
+    public int SpecialBlackCoreInnerMinRadius { get; set; } = 2;
+
+    /// <summary>ブラック弾内層微小核半径除数</summary>
+    public int SpecialBlackCoreInnerDivisor { get; set; } = 2;
+
+    /// <summary>ブラック弾内層微小核色 (<see cref="Color" />)</summary>
+    public Color SpecialBlackCoreInnerColor { get; set; } = Color.FromArgb(255, 255, 180, 200);
+
+    /// <summary>パーティクルエフェクト外枠ピクセル拡張幅</summary>
+    public int ParticleOutlinePadding { get; set; } = 1;
 }
 
 /// <summary>
@@ -300,6 +375,12 @@ public sealed class HudRenderConfig {
 
     /// <summary>プレイヤー HP 死亡（0）文字色 (<see cref="Color" />)</summary>
     public Color PlayerHpDeadColor { get; set; } = ColorPalette.Gray;
+
+    /// <summary>プレイヤー HP 高判定閾値比率</summary>
+    public float PlayerHpHighThreshold { get; set; } = 0.66f;
+
+    /// <summary>プレイヤー HP 中判定閾値比率</summary>
+    public float PlayerHpMidThreshold { get; set; } = 0.33f;
 }
 
 /// <summary>
@@ -383,6 +464,12 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>通常巡航状態バッジ文字色 (<see cref="Color" />)</summary>
     public Color StateDefaultColor { get; set; }
+
+    /// <summary>気絶・易傷状態バッジ文字色 (<see cref="Color" />)</summary>
+    public Color StateStunnedColor { get; set; } = ColorPalette.Gold;
+
+    /// <summary>Phase 分割マーカー半幅 (px)</summary>
+    public int PhaseSplitWidth { get; set; } = 1;
 }
 
 /// <summary>
@@ -478,6 +565,9 @@ public sealed class ModalRenderConfig {
 
     /// <summary>Victory リトライ案内文字列</summary>
     public string VictoryRetryText { get; set; } = string.Empty;
+
+    /// <summary>モーダルダイアログ内枠線のパディング (px)</summary>
+    public int InnerBorderPadding { get; set; } = 2;
 }
 
 /// <summary>
@@ -507,6 +597,30 @@ public sealed class DebugRenderConfig {
 
     /// <summary>デバッグ状態インジケータ文字色 (<see cref="Color" />)</summary>
     public Color IndicatorColor { get; set; }
+
+    /// <summary>中立陣営当たり判定色 (<see cref="Color" />)</summary>
+    public Color NeutralHitboxColor { get; set; } = ColorPalette.Gray;
+
+    /// <summary>自機デバッグ情報テキスト表示 X オフセット (px)</summary>
+    public int PlayerInfoOffsetX { get; set; } = -10;
+
+    /// <summary>自機デバッグ情報テキスト表示 Y オフセット (px)</summary>
+    public int PlayerInfoOffsetY { get; set; } = -16;
+
+    /// <summary>点衝突形状描画半径 (px)</summary>
+    public int PointShapeRadius { get; set; } = 2;
+
+    /// <summary>ナビゲーションメッシュノード描画色 (<see cref="Color" />)</summary>
+    public Color NavNodeColor { get; set; } = ColorPalette.Cyan;
+
+    /// <summary>ナビゲーション自由落下リンク描画色 (<see cref="Color" />)</summary>
+    public Color NavEdgeDropColor { get; set; } = ColorPalette.Gold;
+
+    /// <summary>ナビゲーションジャンプリンク描画色 (<see cref="Color" />)</summary>
+    public Color NavEdgeJumpColor { get; set; } = ColorPalette.Green;
+
+    /// <summary>ナビゲーションメッシュノード描画半径 (px)</summary>
+    public int NavNodeRadius { get; set; } = 4;
 }
 
 /// <summary>
@@ -530,6 +644,27 @@ public sealed class AimReticleRenderConfig {
 
     /// <summary>円環と刻度線の間のギャップ幅 (px)</summary>
     public int TickGap { get; set; }
+
+    /// <summary>中心照準ドット半径 (px)</summary>
+    public int CenterDotRadius { get; set; } = 1;
+
+    /// <summary>中心照準ドット表示色 (<see cref="Color" />)</summary>
+    public Color CenterDotColor { get; set; } = ColorPalette.White;
+
+    /// <summary>外周タクティカルリング表示色 (<see cref="Color" />)</summary>
+    public Color RingColor { get; set; } = ColorPalette.CyanLight;
+
+    /// <summary>上下左右刻度ショートライン表示色 (<see cref="Color" />)</summary>
+    public Color TickColor { get; set; } = ColorPalette.CyanNeon;
+
+    /// <summary>照準リング最小半径クランプ (px)</summary>
+    public int MinRadius { get; set; } = 1;
+
+    /// <summary>照準リング最大半径クランプ (px)</summary>
+    public int MaxRadius { get; set; } = 100;
+
+    /// <summary>反動拡張上限倍率</summary>
+    public float RecoilExpansionClampRatio { get; set; } = 3.0f;
 }
 
 /// <summary>
@@ -547,6 +682,20 @@ public sealed class ViewportRenderConfig {
 
     /// <summary>ビューポート高さ（ピクセル）</summary>
     public float Height { get; set; }
+
+    /// <summary>タイルマップ未指定時のプラットフォーム代替塗りつぶし色</summary>
+    public Color PlatformFallbackFillColor { get; set; } = ColorPalette.DarkBg;
+
+    /// <summary>タイルマップ未指定時のプラットフォーム代替枠線色</summary>
+    public Color PlatformFallbackBorderColor { get; set; } = ColorPalette.Cyan;
+}
+
+/// <summary>
+///     自機プレイヤー描画設定クラス。
+/// </summary>
+public sealed class PlayerRenderConfig {
+    /// <summary>無敵時スプライト点滅周波数 (Hz)</summary>
+    public float InvincibleBlinkFrequency { get; set; } = 30.0f;
 }
 
 /// <summary>
@@ -576,6 +725,9 @@ public sealed class RenderConfig {
 
     /// <summary>タクティカルエイムレティクル（鼠标准星）描画設定</summary>
     public AimReticleRenderConfig AimReticle { get; set; } = new();
+
+    /// <summary>自機プレイヤー描画設定</summary>
+    public PlayerRenderConfig Player { get; set; } = new();
 
     /// <summary>
     ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{RenderConfig}" /> インスタンスを生成します。

@@ -385,7 +385,7 @@ public class BattleScene : IDisposable {
         _worldRenderer.Render(_tileMap, _platformQuery);
         _debugRenderer.Render(_platformQuery, _tileMap);
         GameEngine.SetCameraOffset(0, 0);
-        HudService.Render(Player, Boss, Player.RemainingJumps);
+        HudRenderer.Render(Player, Boss, Player.RemainingJumps);
         AimReticleRenderer.Render();
     }
 }

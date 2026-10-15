@@ -1,9 +1,10 @@
-
 [Viewport]
 X = 0.0
 Y = 0.0
 Width = 1280.0
 Height = 720.0
+PlatformFallbackFillColor = 0xFF141926
+PlatformFallbackBorderColor = 0xFF00E5FF
 
 [BossEffects]
 DangerBoxAlpha = 100
@@ -26,6 +27,15 @@ SkyfallTextOffsetY = 20.0
 ChanceMarkerText = "▼ ATTACK! ▼"
 ChanceMarkerOffsetY = 70.0
 ChanceMarkerColor = 0xFFFFD700
+
+# 隙あり（Vulnerable）時の演出パラメータ
+VulnerablePulseSpeed = 10.0
+VulnerableAuraBaseAlpha = 130
+VulnerableAuraPulseAlpha = 110
+VulnerableAuraScale = 1.04
+ChanceMarkerBobbingSpeed = 8.0
+ChanceMarkerBobbingAmplitude = 4.0
+ChanceMarkerCharWidth = 7
 
 # 無敵・フェーズ遷移シールド設定
 InvincibleShieldRadius = 54.0
@@ -57,19 +67,20 @@ InvincibleCrossAlphaBase = 140
 InvincibleCrossAlphaPulse = 70
 InvincibleCrossThickness = 2
 
-BossHoverAngleAmp = 0.08         
-BossHoverAngleSpeed = 2.0        
-        
+BossHoverAngleAmp = 0.08
+BossHoverAngleSpeed = 2.0
 
+[Player]
+InvincibleBlinkFrequency = 30.0
 
 [Bullets]
-PlayerBulletOuterRadius = 6.0    
-PlayerBulletOuterColor = 0xFF00FFFF 
-PlayerBulletInnerRadius = 3.0    
-PlayerBulletInnerColor = 0xFFFFFFFF 
-PlayerBulletTrailHalfWidth = 7   
-PlayerBulletTrailHalfHeight = 2  
-PlayerBulletTrailColor = 0xFF80FFFF 
+PlayerBulletOuterRadius = 6.0
+PlayerBulletOuterColor = 0xFF00FFFF
+PlayerBulletInnerRadius = 3.0
+PlayerBulletInnerColor = 0xFFFFFFFF
+PlayerBulletTrailHalfWidth = 7
+PlayerBulletTrailHalfHeight = 2
+PlayerBulletTrailColor = 0xFF80FFFF
 
 # プレイヤー弾 3 段階トレイル減衰パラメータ
 PlayerBulletTrailAlpha1 = 180
@@ -80,14 +91,37 @@ PlayerBulletTrailRadiusRatio2 = 0.50
 PlayerBulletTrailRadiusRatio3 = 0.28
 PlayerBulletTrailOffsetRatio1 = 0.45
 PlayerBulletTrailOffsetRatio2 = 0.85
-PlayerBulletTrailOffsetRatio3 = 1.30 
+PlayerBulletTrailOffsetRatio3 = 1.30
 
-BossBulletCoreRadiusRatio = 0.45 
-BossBulletCoreMinRadius = 2      
-BossBulletCoreColor = 0xFFFFFFFF 
-BossBulletOutlinePadding = 2     
-ViewportCullingMarginX = 50      
-ViewportCullingMarginY = 50     
+BossBulletCoreRadiusRatio = 0.45
+BossBulletCoreMinRadius = 2
+BossBulletCoreColor = 0xFFFFFFFF
+BossBulletOutlinePadding = 2
+ViewportCullingMarginX = 50
+ViewportCullingMarginY = 50
+
+# 特殊弾幕演出パラメータ
+SpecialMagentaAuraBaseRatio = 1.35
+SpecialMagentaAuraPulseRatio = 0.15
+SpecialMagentaPulseSpeed = 6.0
+SpecialMagentaAuraAlpha = 65
+
+SpecialCyanRingPadding = 2
+SpecialCyanRingColor = 0x3200F0FF
+
+SpecialBlackAuraBaseRatio = 1.4
+SpecialBlackAuraPulseRatio = 0.2
+SpecialBlackPulseSpeed = 6.0
+SpecialBlackAuraColor = 0x5ADC1450
+SpecialBlackSatelliteOrbitRatio = 1.55
+SpecialBlackSatelliteOrbitSpeed = 6.0
+SpecialBlackSatelliteRadiusRatio = 0.55
+SpecialBlackSatelliteMinRadius = 3
+SpecialBlackCoreInnerMinRadius = 2
+SpecialBlackCoreInnerDivisor = 2
+SpecialBlackCoreInnerColor = 0xFFFFB4C8
+
+ParticleOutlinePadding = 1
 
 [Hud]
 TitleX = 20
@@ -123,51 +157,55 @@ PlayerHpHighColor = 0xFF00FF88
 PlayerHpMidColor = 0xFFFFD700
 PlayerHpLowColor = 0xFFFF3333
 PlayerHpDeadColor = 0xFF888888
+PlayerHpHighThreshold = 0.66
+PlayerHpMidThreshold = 0.33
 
 [BossHpBar]
-BarX1 = 240                      
-BarY1 = 662                      
-BarX2 = 1040                     
-BarY2 = 688                      
+BarX1 = 240
+BarY1 = 662
+BarX2 = 1040
+BarY2 = 688
 
 Phase1Color = 0xFF00E5FF
 Phase2Color = 0xFFBA55D3
 Phase3Color = 0xFFFF1744
 
-BgPadding = 4                    
-BgColor = 0xDD0A0D14             
-BorderColor = 0xFFFFFFFF         
-TopHighlightThickness = 3        
-TopHighlightColor = 0xFFFFFFFF  
+BgPadding = 4
+BgColor = 0xDD0A0D14
+BorderColor = 0xFFFFFFFF
+TopHighlightThickness = 3
+TopHighlightColor = 0xFFFFFFFF
 
-HeaderOffsetY = 22               
+HeaderOffsetY = 22
 
 # Boss Title
 TitleOffsetX = 0
 TitleOffsetY = 22
-TitleColor = 0xFFFFD700          
+TitleColor = 0xFFFFD700
 
-StateBadgeOffsetX = 250          
+StateBadgeOffsetX = 250
 StateBadgeOffsetY = 22
 
 HpTextOffsetRight = 100
 HpTextOffsetY = 22
-HpTextColor = 0xFFFFFFFF         
+HpTextColor = 0xFFFFFFFF
 
-StateTelegraphingColor = 0xFFFF5555  
-StateCastingColor = 0xFFFFD700       
-StateRecoveringColor = 0xFF00FF88    
+StateTelegraphingColor = 0xFFFF5555
+StateCastingColor = 0xFFFFD700
+StateRecoveringColor = 0xFF00FF88
 StatePhaseTransitionColor = 0xFFFF88FF
-StateDefaultColor = 0xFF88CCFF       
+StateDefaultColor = 0xFF88CCFF
+StateStunnedColor = 0xFFFFD700
+PhaseSplitWidth = 1
 
 [Modals]
 GameOverX1 = 360
 GameOverY1 = 260
 GameOverX2 = 920
 GameOverY2 = 440
-GameOverBgColor = 0xDD2A0505          
-GameOverOuterBorderColor = 0xFFFF3333 
-GameOverInnerBorderColor = 0xFFFF8888 
+GameOverBgColor = 0xDD2A0505
+GameOverOuterBorderColor = 0xFFFF3333
+GameOverInnerBorderColor = 0xFFFF8888
 GameOverTitleX = 540
 GameOverTitleY = 305
 GameOverTitleColor = 0xFFFF3333
@@ -182,9 +220,9 @@ VictoryX1 = 340
 VictoryY1 = 250
 VictoryX2 = 940
 VictoryY2 = 450
-VictoryBgColor = 0xEE2A2A00            
-VictoryOuterBorderColor = 0xFFFFD700   
-VictoryInnerBorderColor = 0xFFFFF275   
+VictoryBgColor = 0xEE2A2A00
+VictoryOuterBorderColor = 0xFFFFD700
+VictoryInnerBorderColor = 0xFFFFF275
 VictoryTitleX = 440
 VictoryTitleY = 295
 VictoryTitleColor = 0xFFFFD700
@@ -193,6 +231,7 @@ VictoryRetryX = 460
 VictoryRetryY = 350
 VictoryRetryColor = 0xFFFFFFFF
 VictoryRetryText = "Congratulations! Press [ R ] to Play Again!"
+InnerBorderPadding = 2
 
 # タクティカルマウスの標準スター配置
 [AimReticle]
@@ -202,6 +241,13 @@ SpringFrequency = 32.0
 SpringDampingRatio = 0.65
 TickLength = 4
 TickGap = 2
+CenterDotRadius = 1
+CenterDotColor = 0xFFFFFFFF
+RingColor = 0xFF80FFFF
+TickColor = 0xFF00FFFF
+MinRadius = 1
+MaxRadius = 100
+RecoilExpansionClampRatio = 3.0
 
 [Debug]
 Enabled = false
@@ -212,3 +258,11 @@ BossBulletHitboxColor = 0xFFFFD700
 PlayerBulletHitboxColor = 0xFF00FFFF
 PlatformHitboxColor = 0xFF88CCFF
 IndicatorColor = 0xFFFFD700
+NeutralHitboxColor = 0xFF888888
+PlayerInfoOffsetX = -10
+PlayerInfoOffsetY = -16
+PointShapeRadius = 2
+NavNodeColor = 0xFF00E5FF
+NavEdgeDropColor = 0xFFFFD700
+NavEdgeJumpColor = 0xFF00FF88
+NavNodeRadius = 4

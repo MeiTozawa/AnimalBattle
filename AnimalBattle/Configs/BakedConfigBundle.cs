@@ -114,6 +114,7 @@ public sealed class BakedConfigBundle {
 
 [JsonSerializable(typeof(TileMapConfig))]
 [JsonSerializable(typeof(RenderConfig))]
+[JsonSerializable(typeof(PlayerRenderConfig))]
 [JsonSerializable(typeof(CameraConfig))]
 [JsonSerializable(typeof(TileSetConfig))]
 [JsonSerializable(typeof(AnimationClipConfig))]

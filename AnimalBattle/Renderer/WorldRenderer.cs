@@ -8,7 +8,7 @@ using AnimalBattle.Maps;
 using AnimalBattle.Scenes;
 using Flecs.NET.Core;
 
-namespace AnimalBattle.Systems;
+namespace AnimalBattle.Renderer;
 
 /// <summary>
 ///     アリーナ足場・タイルマップ、Boss 1 / Boss 2 (オーラ・無敵シールド・予兆リング・スプライト・被弾フラッシュ・突進残影)、
@@ -17,9 +17,9 @@ namespace AnimalBattle.Systems;
 ///     海量弾幕・パーティクルエフェクトのみを Flecs ECS 高速クエリで一括描画します。
 /// </summary>
 /// <remarks>
-///     <see cref="WorldRenderSystem" /> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリを構築します。
+///     <see cref="WorldRenderer" /> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリを構築します。
 /// </remarks>
-public sealed class WorldRenderSystem : IDisposable {
+public sealed class WorldRenderer : IDisposable {
     private readonly Ecs.IterFieldCallback<Transform, Bullet> _drawStandardBossBulletsCallback;
     private readonly Ecs.IterFieldCallback<Transform, Bullet, BulletModifier> _drawSpecialBossBulletsCallback;
 
@@ -61,10 +61,10 @@ public sealed class WorldRenderSystem : IDisposable {
     private Query<Transform, Sprite, FadeEffect> _spriteEffectQuery;
 
     /// <summary>
-    ///     <see cref="WorldRenderSystem" /> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリと不変デリゲートを構築します。
+    ///     <see cref="WorldRenderer" /> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリと不変デリゲートを構築します。
     /// </summary>
     /// <param name="world">描画対象の Flecs.NET ワールド。</param>
-    public WorldRenderSystem(World world)
+    public WorldRenderer(World world)
     {
         _playerBulletQuery = world.QueryBuilder<Transform, Velocity>()
            .With<PlayerBulletTag>()
@@ -143,7 +143,7 @@ public sealed class WorldRenderSystem : IDisposable {
 
         DrawPlatforms(tileMap, platformQuery, renderCfg.Viewport);
         DrawBoss(boss, bossFx, playerX, playerY);
-        DrawPlayer(player);
+        DrawPlayer(player, renderCfg.Player);
         DrawHitFlashEffects(_hitFlashQuery);
 
         UpdateBulletRenderContext(bulletCfg, arenaCfg);
@@ -153,7 +153,7 @@ public sealed class WorldRenderSystem : IDisposable {
 
         DrawSpriteEffects(_spriteEffectQuery);
         DrawRingEffects(_ringEffectQuery);
-        DrawParticleEffects(_particleEffectQuery);
+        DrawParticleEffects(_particleEffectQuery, bulletCfg);
     }
 
     private static void DrawPlatforms(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery,
@@ -169,8 +169,8 @@ public sealed class WorldRenderSystem : IDisposable {
                 var x2 = (int)(trans.X + col.Width / 2.0f);
                 var y2 = (int)(trans.Y + col.Height / 2.0f);
 
-                GameEngine.DrawBox(x1, y1, x2, y2, ColorPalette.DarkBg, true);
-                GameEngine.DrawBox(x1, y1, x2, y2, ColorPalette.Cyan, false);
+                GameEngine.DrawBox(x1, y1, x2, y2, viewport.PlatformFallbackFillColor, true);
+                GameEngine.DrawBox(x1, y1, x2, y2, viewport.PlatformFallbackBorderColor, false);
             });
     }
 
@@ -365,8 +365,8 @@ public sealed class WorldRenderSystem : IDisposable {
         float stateTimer,
         BossEffectsRenderConfig bossFx)
     {
-        var pulse = 0.5f + 0.5f * MathF.Sin(stateTimer * 10.0f);
-        var vulnAlpha = (int)(130 + 110 * pulse);
+        var pulse = 0.5f + 0.5f * MathF.Sin(stateTimer * bossFx.VulnerablePulseSpeed);
+        var vulnAlpha = (int)(bossFx.VulnerableAuraBaseAlpha + bossFx.VulnerableAuraPulseAlpha * pulse);
         GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
         GameEngine.DrawRectRotaGraph(
             bx,
@@ -375,15 +375,15 @@ public sealed class WorldRenderSystem : IDisposable {
             srcRect.Y1,
             srcRect.Width,
             srcRect.Height,
-            scaleX * 1.04f,
+            scaleX * bossFx.VulnerableAuraScale,
             angle,
             graphHandle,
             true,
             flipX);
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
 
-        var bobbing = MathF.Sin(stateTimer * 8.0f) * 4.0f;
-        var textWidth = bossFx.ChanceMarkerText.Length * 7;
+        var bobbing = MathF.Sin(stateTimer * bossFx.ChanceMarkerBobbingSpeed) * bossFx.ChanceMarkerBobbingAmplitude;
+        var textWidth = bossFx.ChanceMarkerText.Length * bossFx.ChanceMarkerCharWidth;
         var textX = bx - textWidth / 2;
         var textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
         GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
@@ -411,7 +411,7 @@ public sealed class WorldRenderSystem : IDisposable {
         currentAbility.DrawTelegraph(in ctx);
     }
 
-    private static void DrawPlayer(Pawn? player)
+    private static void DrawPlayer(Pawn? player, PlayerRenderConfig playerCfg)
     {
         if (player == null || !player.IsAlive || !player.Sprite.IsVisible || player.Sprite.GraphHandle < 0) return;
 
@@ -419,7 +419,7 @@ public sealed class WorldRenderSystem : IDisposable {
         var untargetableTimer = player.AbilitySystem.GetTagRemainingTime(GameplayTag.Untargetable);
         var isUntargetable = untargetableTimer > 0.0f;
         var isInvincibleBlinking = !isFlashing && isUntargetable &&
-            (int)(untargetableTimer * 30.0f) % 2 != 0;
+            (int)(untargetableTimer * playerCfg.InvincibleBlinkFrequency) % 2 != 0;
 
         var jitterX = 0.0f;
         var jitterY = 0.0f;
@@ -576,6 +576,7 @@ public sealed class WorldRenderSystem : IDisposable {
 
     private void DrawSpecialBossBulletsBatch(Iter it, Field<Transform> trans, Field<Bullet> bullet, Field<BulletModifier> modifier)
     {
+        var bulletCfg = ConfigManager.Render.Bullets;
         var count = it.Count();
         for (var i = 0; i < count; ++i)
         {
@@ -589,7 +590,7 @@ public sealed class WorldRenderSystem : IDisposable {
             var outlineRadius = radius + _bOutlinePadding;
             var coreRadius = Math.Max(_bCoreMinRadius, (int)(radius * _bCoreRadiusRatio));
 
-            DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, _bOutlinePadding, _bCoreColor);
+            DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, _bOutlinePadding, _bCoreColor, bulletCfg);
         }
     }
 
@@ -602,14 +603,15 @@ public sealed class WorldRenderSystem : IDisposable {
         int outlineRadius,
         int coreRadius,
         int outlinePadding,
-        Color coreColor)
+        Color coreColor,
+        BulletRenderConfig bulletCfg)
     {
         switch (mod.Type)
         {
             case BulletType.Magenta: {
                 // 品紅色：周期的に明滅・脈動する外周半透明オーラ輪
-                var pulseAura = radius * (1.35f + 0.15f * MathF.Sin(mod.ElapsedTimer * 6.0f));
-                var auraColor = Color.FromArgb(65, b.FillColor.R, b.FillColor.G, b.FillColor.B);
+                var pulseAura = radius * (bulletCfg.SpecialMagentaAuraBaseRatio + bulletCfg.SpecialMagentaAuraPulseRatio * MathF.Sin(mod.ElapsedTimer * bulletCfg.SpecialMagentaPulseSpeed));
+                var auraColor = Color.FromArgb(bulletCfg.SpecialMagentaAuraAlpha, b.FillColor.R, b.FillColor.G, b.FillColor.B);
                 GameEngine.DrawCircle(bx, by, (int)pulseAura, auraColor, false);
                 GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
                 GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
@@ -626,7 +628,7 @@ public sealed class WorldRenderSystem : IDisposable {
 
             case BulletType.Cyan: {
                 // 青色：電光シアンの輪郭とエフェクトリング
-                GameEngine.DrawCircle(bx, by, outlineRadius + 2, Color.FromArgb(50, 0, 240, 255), false);
+                GameEngine.DrawCircle(bx, by, outlineRadius + bulletCfg.SpecialCyanRingPadding, bulletCfg.SpecialCyanRingColor, false);
                 GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
                 GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
                 GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
@@ -635,15 +637,15 @@ public sealed class WorldRenderSystem : IDisposable {
 
             case BulletType.Black: {
                 // 黑色：全 3 種特効統合（呼吸拡縮オーラ + 自転二重円 + 虚空暗黒芯）
-                var pulseAura = radius * (1.4f + 0.2f * MathF.Sin(mod.ElapsedTimer * 6.0f));
-                GameEngine.DrawCircle(bx, by, (int)pulseAura, Color.FromArgb(90, 220, 20, 80), false);
+                var pulseAura = radius * (bulletCfg.SpecialBlackAuraBaseRatio + bulletCfg.SpecialBlackAuraPulseRatio * MathF.Sin(mod.ElapsedTimer * bulletCfg.SpecialBlackPulseSpeed));
+                GameEngine.DrawCircle(bx, by, (int)pulseAura, bulletCfg.SpecialBlackAuraColor, false);
 
                 // 衛星小円（黒核・赤枠）
-                var orbitDist = radius * 1.55f;
-                var angle = mod.ElapsedTimer * 6.0f;
+                var orbitDist = radius * bulletCfg.SpecialBlackSatelliteOrbitRatio;
+                var angle = mod.ElapsedTimer * bulletCfg.SpecialBlackSatelliteOrbitSpeed;
                 var satX = (int)(bx + MathF.Cos(angle) * orbitDist);
                 var satY = (int)(by + MathF.Sin(angle) * orbitDist);
-                var satRadius = Math.Max(3, (int)(radius * 0.55f));
+                var satRadius = Math.Max(bulletCfg.SpecialBlackSatelliteMinRadius, (int)(radius * bulletCfg.SpecialBlackSatelliteRadiusRatio));
                 var satOutline = satRadius + outlinePadding;
 
                 GameEngine.DrawCircle(satX, satY, satOutline, b.OutlineColor, true);
@@ -652,7 +654,7 @@ public sealed class WorldRenderSystem : IDisposable {
                 // 主円（深黒コア + ネオン発光輪郭 + 微小ホワイト核）
                 GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
                 GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                GameEngine.DrawCircle(bx, by, Math.Max(2, coreRadius / 2), Color.FromArgb(255, 255, 180, 200), true);
+                GameEngine.DrawCircle(bx, by, Math.Max(bulletCfg.SpecialBlackCoreInnerMinRadius, coreRadius / bulletCfg.SpecialBlackCoreInnerDivisor), bulletCfg.SpecialBlackCoreInnerColor, true);
                 break;
             }
 
@@ -735,7 +737,7 @@ public sealed class WorldRenderSystem : IDisposable {
         });
     }
 
-    private static void DrawParticleEffects(Query<Transform, Bullet, FadeEffect> particleEffectQuery)
+    private static void DrawParticleEffects(Query<Transform, Bullet, FadeEffect> particleEffectQuery, BulletRenderConfig bulletCfg)
     {
         particleEffectQuery.Each((ref trans, ref b, ref fade) =>
         {
@@ -747,7 +749,7 @@ public sealed class WorldRenderSystem : IDisposable {
             var radius = (int)b.Radius;
 
             GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
-            GameEngine.DrawCircle(px, py, radius + 1, b.OutlineColor, true);
+            GameEngine.DrawCircle(px, py, radius + bulletCfg.ParticleOutlinePadding, b.OutlineColor, true);
             GameEngine.DrawCircle(px, py, radius, b.FillColor, true);
             GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
         });

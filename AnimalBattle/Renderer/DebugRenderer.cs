@@ -4,17 +4,17 @@ using AnimalBattle.Maps;
 using AnimalBattle.Maps.Navigation;
 using Flecs.NET.Core;
 
-namespace AnimalBattle.Systems;
+namespace AnimalBattle.Renderer;
 
 /// <summary>
 ///     衝突・被弾・攻撃判定枠およびナビゲーションメッシュをワイヤーフレーム描画するデバッグ表示システム。
 ///     F1 または H キーでリアルタイムに ON / OFF を切り替え可能です。
 /// </summary>
 /// <remarks>
-///     <see cref="DebugRenderSystem" /> の新しいインスタンスを初期化し、判定枠クエリを構築します。
+///     <see cref="DebugRenderer" /> の新しいインスタンスを初期化し、判定枠クエリを構築します。
 /// </remarks>
 /// <param name="world">登録先の Flecs.NET ワールド。</param>
-public sealed class DebugRenderSystem(World world) : IDisposable {
+public sealed class DebugRenderer(World world) : IDisposable {
     private static bool _prevToggleKey;
 
     private readonly Query<Transform, Hitbox> _hitboxQuery = world.QueryBuilder<Transform, Hitbox>()
@@ -53,7 +53,7 @@ public sealed class DebugRenderSystem(World world) : IDisposable {
         DrawCollisionBoxes(colQuery, dbgCfg);
         DrawHurtboxes(_hurtboxQuery, dbgCfg);
         DrawHitboxes(_hitboxQuery, dbgCfg);
-        DrawPlatformNavGraph(tileMap);
+        DrawPlatformNavGraph(tileMap, dbgCfg);
     }
 
     private static void ProcessToggleInput(DebugRenderConfig dbgCfg)
@@ -78,7 +78,7 @@ public sealed class DebugRenderSystem(World world) : IDisposable {
             GameEngine.DrawBox(x1, y1, x2, y2, boxColor, false);
 
             if (e.Has<PlayerTag>())
-                GameEngine.DrawString(x1 - 10, y1 - 16, $"P({(int)trans.X},{(int)trans.Y}) [Grounded:{col.IsGrounded}]",
+                GameEngine.DrawString(x1 + dbgCfg.PlayerInfoOffsetX, y1 + dbgCfg.PlayerInfoOffsetY, $"P({(int)trans.X},{(int)trans.Y}) [Grounded:{col.IsGrounded}]",
                     boxColor);
         });
     }
@@ -92,13 +92,13 @@ public sealed class DebugRenderSystem(World world) : IDisposable {
             var hurtColor = hurtbox.Faction switch {
                 Faction.Friendly => dbgCfg.PlayerHurtboxColor,
                 Faction.Hostile => dbgCfg.BossHitboxColor,
-                Faction.Neutral => ColorPalette.Gray,
+                Faction.Neutral => dbgCfg.NeutralHitboxColor,
                 _ => GetFallbackFactionColor(hurtbox.Faction, dbgCfg.BossHitboxColor)
             };
 
             var worldCenterX = trans.X + hurtbox.Shape.OffsetX;
             var worldCenterY = trans.Y + hurtbox.Shape.OffsetY;
-            DrawCollisionShape(hurtbox.Shape, worldCenterX, worldCenterY, hurtColor);
+            DrawCollisionShape(hurtbox.Shape, worldCenterX, worldCenterY, hurtColor, dbgCfg);
         });
     }
 
@@ -111,17 +111,17 @@ public sealed class DebugRenderSystem(World world) : IDisposable {
             var hitColor = hitbox.Faction switch {
                 Faction.Friendly => dbgCfg.PlayerBulletHitboxColor,
                 Faction.Hostile => dbgCfg.BossBulletHitboxColor,
-                Faction.Neutral => ColorPalette.Gray,
+                Faction.Neutral => dbgCfg.NeutralHitboxColor,
                 _ => GetFallbackFactionColor(hitbox.Faction, dbgCfg.BossBulletHitboxColor)
             };
 
             var worldCenterX = trans.X + hitbox.Shape.OffsetX;
             var worldCenterY = trans.Y + hitbox.Shape.OffsetY;
-            DrawCollisionShape(hitbox.Shape, worldCenterX, worldCenterY, hitColor);
+            DrawCollisionShape(hitbox.Shape, worldCenterX, worldCenterY, hitColor, dbgCfg);
         });
     }
 
-    private static void DrawCollisionShape(CollisionShape shape, float worldCenterX, float worldCenterY, Color color)
+    private static void DrawCollisionShape(CollisionShape shape, float worldCenterX, float worldCenterY, Color color, DebugRenderConfig dbgCfg)
     {
         switch (shape.Type)
         {
@@ -141,7 +141,7 @@ public sealed class DebugRenderSystem(World world) : IDisposable {
             break;
 
             case CollisionShapeType.Point:
-                GameEngine.DrawCircle((int)worldCenterX, (int)worldCenterY, 2, color, false);
+                GameEngine.DrawCircle((int)worldCenterX, (int)worldCenterY, dbgCfg.PointShapeRadius, color, false);
             break;
 
             default:
@@ -150,20 +150,20 @@ public sealed class DebugRenderSystem(World world) : IDisposable {
         }
     }
 
-    private static void DrawPlatformNavGraph(TileMap? tileMap)
+    private static void DrawPlatformNavGraph(TileMap? tileMap, DebugRenderConfig dbgCfg)
     {
         if (tileMap == null || tileMap.NavGraph.Nodes.Count == 0) return;
 
         var graph = tileMap.NavGraph;
-        var nodeColor = ColorPalette.Cyan;
-        var edgeDropColor = ColorPalette.Gold;
-        var edgeJumpColor = ColorPalette.Green;
+        var nodeColor = dbgCfg.NavNodeColor;
+        var edgeDropColor = dbgCfg.NavEdgeDropColor;
+        var edgeJumpColor = dbgCfg.NavEdgeJumpColor;
 
         foreach (var node in graph.Nodes)
         {
             var nx = (int)node.CenterX;
             var ny = (int)node.TopY;
-            GameEngine.DrawCircle(nx, ny, 4, nodeColor, true);
+            GameEngine.DrawCircle(nx, ny, dbgCfg.NavNodeRadius, nodeColor, true);
         }
 
         foreach (var link in graph.Links)
@@ -182,7 +182,7 @@ public sealed class DebugRenderSystem(World world) : IDisposable {
         return faction switch {
             Faction.Friendly => ColorPalette.Green,
             Faction.Hostile => ColorPalette.Red,
-            _ => AssertHelper.FailWithDefault($"[DebugRenderSystem 警告] 未知の Faction: {faction}", defaultColor)
+            _ => AssertHelper.FailWithDefault($"[DebugRenderer 警告] 未知の Faction: {faction}", defaultColor)
         };
     }
 }
