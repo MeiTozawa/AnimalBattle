@@ -12,7 +12,7 @@ public sealed class EntityPoolMetrics {
     /// <summary>プールの動的拡張が発生した回数。</summary>
     public int ExpansionCount { get; internal set; }
 
-    /// <summary>最大容量上限に達して貸出要求が熔断（拒否）された回数。</summary>
+    /// <summary>最大容量上限に達して貸出要求が拒否された回数。</summary>
     public int OverflowCount { get; internal set; }
 
     /// <summary>現在アクティブに貸出中のエンティティ数。</summary>

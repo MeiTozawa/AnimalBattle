@@ -4,49 +4,49 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Ai.Hfsm;
 
 /// <summary>
-///     親状態と子状態の階層更新およびグローバル優先遷移を管理する階層状態マシンです。
+///     ゼロGC・アトミック遷移を提供するフラット有限状態マシン（FSM）。
 /// </summary>
-public class StateMachine : State {
-    private readonly List<IState> _subStates = [];
+public class StateMachine : IState {
+    private readonly List<IState> _states = [];
     private readonly List<(Func<bool> Condition, IState TargetState)> _globalTransitions = [];
     private IState? _currentState;
 
-    /// <summary>この状態マシンがアクティブであるか（ルートマシン、または親状態マシンで現在選択されているか）を取得します。</summary>
-    public bool IsActive => Parent switch
-    {
-        null => true,
-        StateMachine parentSm => parentSm.IsActive && parentSm.CurrentState == this,
-        _ => true
-    };
+    /// <summary>状態マシン識別子を取得します。</summary>
+    public StringId Id { get; }
 
-    /// <summary>現在アクティブな子状態を取得します。</summary>
+    /// <summary>現在アクティブな状態を取得します。</summary>
     public IState? CurrentState => _currentState;
 
     /// <summary>
-    ///     状態マシンインスタンスを生成します。
+    ///     識別子を指定して状態マシンを初期化します。
     /// </summary>
-    public StateMachine(StringId id) : base(id) { }
+    public StateMachine(StringId id)
+    {
+        Id = id;
+    }
 
-    /// <summary>子状態を追加します。</summary>
-    public void AddSubState(IState state)
+    /// <summary>状態を登録します。</summary>
+    public void AddState(IState state)
     {
         Debug.Assert(state != null, "state は null であってはなりません。");
         if (state == null) return;
-        state.Parent = this;
-        _subStates.Add(state);
+        _states.Add(state);
         _currentState ??= state;
     }
+
+    /// <summary>互換性のための状態追加メソッド（AddState へ委譲）。</summary>
+    public void AddSubState(IState state) => AddState(state);
 
     /// <summary>初期状態を明示的に設定します。</summary>
     public void SetInitialState(IState state)
     {
         Debug.Assert(state != null, "state は null であってはなりません。");
         if (state == null) return;
-        Debug.Assert(_subStates.Contains(state), $"未登録の状態を初期状態に設定しようとしました: {state.Id}");
+        Debug.Assert(_states.Contains(state), $"未登録の状態を初期状態に設定しようとしました: {state.Id}");
         _currentState = state;
     }
 
-    /// <summary>最優先評価されるグローバル遷移条件を追加します。</summary>
+    /// <summary>最優先評価される大域遷移条件を追加します。</summary>
     public void AddGlobalTransition(Func<bool> condition, IState targetState)
     {
         Debug.Assert(condition != null && targetState != null, "condition または targetState は null であってはなりません。");
@@ -54,52 +54,26 @@ public class StateMachine : State {
         _globalTransitions.Add((condition, targetState));
     }
 
-    /// <summary>指定子状態へ切り替えます。</summary>
+    /// <summary>指定状態へアトミックに切り替えます。</summary>
     public void ChangeState(IState targetState)
     {
         Debug.Assert(targetState != null, "targetState は null であってはなりません。");
         if (targetState == null || _currentState == targetState) return;
 
-        if (IsActive)
-        {
-            _currentState?.Exit();
-            _currentState = targetState;
-            _currentState.Enter();
-        }
-        else
-        {
-            _currentState = targetState;
-        }
-    }
-
-    /// <summary>識別子を指定して子状態を検索します。</summary>
-    public bool TryGetSubState(StringId id, out IState? state)
-    {
-        for (var i = 0; i < _subStates.Count; i++)
-        {
-            if (_subStates[i].Id == id)
-            {
-                state = _subStates[i];
-                return true;
-            }
-        }
-
-        state = null;
-        return false;
+        _currentState?.Exit();
+        _currentState = targetState;
+        _currentState.Enter();
     }
 
     /// <inheritdoc />
-    public override void Enter()
+    public void Enter()
     {
-        base.Enter();
         _currentState?.Enter();
     }
 
     /// <inheritdoc />
-    public override void Update(float dt)
+    public void Update(float dt)
     {
-        base.Update(dt);
-
         for (var i = 0; i < _globalTransitions.Count; i++)
         {
             var (condition, target) = _globalTransitions[i];
@@ -114,9 +88,8 @@ public class StateMachine : State {
     }
 
     /// <inheritdoc />
-    public override void Exit()
+    public void Exit()
     {
         _currentState?.Exit();
-        base.Exit();
     }
 }

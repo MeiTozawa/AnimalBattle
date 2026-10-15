@@ -3,14 +3,11 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Ai.Hfsm;
 
 /// <summary>
-///     階層状態の基本実装クラスです。
+///     状態マシン状態の基本実装クラスです。
 /// </summary>
 public class State : IState {
     /// <summary>状態識別子を取得します。</summary>
     public StringId Id { get; }
-
-    /// <summary>親状態を取得または設定します。</summary>
-    public IState? Parent { get; set; }
 
     /// <summary>突入時コールバック。</summary>
     protected readonly Action? OnEnterAction;
