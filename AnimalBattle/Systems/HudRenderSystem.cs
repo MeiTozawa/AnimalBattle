@@ -184,7 +184,7 @@ public static class HudRenderSystem {
             { IsPhaseTransition: true } => ("[STATE: PHASE TRANSITION (INVINCIBLE)]", hpCfg.StatePhaseTransitionColor),
             { IsRecovery: true } => ("[STATE: RECOVERING]", hpCfg.StateRecoveringColor),
             _ when state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.WallCrashStun =>
-                ("[STATE: WALL CRASH STUNNED]", ColorPalette.Gold),
+                ("[STATE: STUNNED (VULNERABLE)]", ColorPalette.Gold),
             { IsTelegraph: true } => ($"[STATE: TELEGRAPHING (WIND-UP: {abilityName})]", hpCfg.StateTelegraphingColor),
             { IsExecute: true } => ($"[STATE: EXECUTING ({abilityName})]", hpCfg.StateCastingColor),
             _ => state.BossType switch {

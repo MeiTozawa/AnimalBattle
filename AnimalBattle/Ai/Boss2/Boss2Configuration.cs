@@ -76,7 +76,6 @@ public readonly struct Boss2CombatSettings(
     float antiKitingRangedDistance,
     float antiKitingMidDistance,
     float antiKitingEnforceMultiplier,
-    float wallCrashStunDuration,
     float playerHitboxHeight) {
     /// <summary>衝突判定の高さ（px）です。</summary>
     public float CollisionHeight { get; } = collisionHeight;
@@ -114,9 +113,6 @@ public readonly struct Boss2CombatSettings(
     /// <summary>反風筝強制発動タイムアウト倍率です。</summary>
     public float AntiKitingEnforceMultiplier { get; } = antiKitingEnforceMultiplier;
 
-    /// <summary>壁激突時の気絶時間（秒）です。</summary>
-    public float WallCrashStunDuration { get; } = wallCrashStunDuration;
-
     /// <summary>プレイヤーの判定高さ（px）です。</summary>
     public float PlayerHitboxHeight { get; } = playerHitboxHeight;
 }
@@ -132,8 +128,7 @@ public interface IBoss2Configuration {
     /// <summary>目標ロック・飛翔技能タグを取得します。</summary>
     StringId TargetLockSkillTag { get; }
 
-    /// <summary>壁激突スタン技能タグを取得します。</summary>
-    StringId WallStunSkillTag { get; }
+
 
     /// <summary>Boss2 戦闘判定および反風筝・衝突に関する設定を取得します。</summary>
     Boss2CombatSettings CombatSettings { get; }
@@ -146,18 +141,12 @@ public interface IBoss2Configuration {
 
     /// <summary>Phase 遷移能力設定を取得します。</summary>
     PhaseTransitionAbilityConfig PhaseTransition { get; }
-
-    /// <summary>壁激突スタン設定を取得します。</summary>
-    WallCrashStunConfig WallCrashStun { get; }
 }
 
 /// <summary>既存 Boss2 設定の検証済み既定 snapshot です。</summary>
 public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     /// <inheritdoc />
     public PhaseTransitionAbilityConfig PhaseTransition => ConfigManager.Boss2.PhaseTransition;
-
-    /// <inheritdoc />
-    public WallCrashStunConfig WallCrashStun => ConfigManager.Boss2.WallCrashStun;
 
     /// <inheritdoc />
     public StringId AntiKitingMeleeSkillTag => new(ConfigManager.Boss2.AntiKitingMeleeSkill);
@@ -168,8 +157,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     /// <inheritdoc />
     public StringId TargetLockSkillTag => new(ConfigManager.Boss2.TargetLockSkill);
 
-    /// <inheritdoc />
-    public StringId WallStunSkillTag => new(ConfigManager.Boss2.WallStunSkill);
+
 
     /// <inheritdoc />
     public Boss2PhaseSettings GetPhase(Phase phase)
@@ -229,7 +217,6 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
                 toml.AntiKitingRangedDistance,
                 toml.AntiKitingMidDistance,
                 toml.AntiKitingEnforceMultiplier,
-                toml.WallCrashStunDuration,
                 ConfigManager.Player.HitboxHeight);
         }
     }

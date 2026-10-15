@@ -238,7 +238,6 @@ public sealed class Boss2Brain : BaseBossBrain {
         Vec2f playerVelocity,
         bool isPlayerAlive,
         bool isGrounded,
-        bool isOnWall,
         float currentHp,
         float maxHp,
         Vec2f? bossPosition = null)
@@ -284,7 +283,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         }
         else if (_stateMachine.CurrentState == _abilityState)
         {
-            UpdateAbility(dt, isOnWall, isGrounded, playerPosition);
+            UpdateAbility(dt, isGrounded, playerPosition);
         }
     }
 
@@ -470,22 +469,8 @@ public sealed class Boss2Brain : BaseBossBrain {
         }
     }
 
-    private void UpdateAbility(float dt, bool isOnWall, bool isGrounded, Vec2f playerPos)
+    private void UpdateAbility(float dt, bool isGrounded, Vec2f playerPos)
     {
-        if (CurrentSkillTag == _configuration.WallStunSkillTag &&
-            _asc.CurrentPhase == SkillPhase.Active &&
-            isOnWall &&
-            MathF.Abs(_currentVelocity.X) > 10.0f)
-        {
-            _currentVelocity = Vec2f.Zero;
-            _asc.InterruptCurrentAbility();
-            _asc.ApplyGameplayEffect(
-                _configuration.WallCrashStun.ParsedGrantedTags,
-                _configuration.WallCrashStun.Duration);
-            _stateMachine.ChangeState(_idleState);
-            return;
-        }
-
         if (CurrentSkillTag == _configuration.TargetLockSkillTag)
         {
             UpdateLeapSmashMotion(dt, isGrounded, playerPos);

@@ -147,7 +147,7 @@ SkillName = "Frenzy Rampage Charge"
 WindUpTime = 0.55
 TelegraphColor = 0xFFD50000
 CastDuration = 1.30
-RecoveryTime = 0.60
+RecoveryTime = 1.20
 DefaultCooldown = 7.0
 ChargeSpeed = 620.0
 HitboxWidth = 100.0
@@ -160,7 +160,7 @@ ShrapnelRadius = 8.0
 ShrapnelFillColor = 0xFFFF5252
 ShrapnelOutlineColor = 0xFFFF8A80
 ArmorTags = ["SuperArmor"]
-RecoveryTags = []
+RecoveryTags = ["Stunned", "Vulnerable"]
 
 [[FrenzyCharge.Events]]
 Time = 0.0

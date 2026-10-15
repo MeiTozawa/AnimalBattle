@@ -25,9 +25,6 @@ public struct CollisionBox(float width, float height, float offsetX = 0.0f, floa
     /// <summary>接地フラグ</summary>
     public bool IsGrounded = false;
 
-    /// <summary>壁接触フラグ</summary>
-    public bool IsOnWall = false;
-
     /// <summary>
     ///     <see cref="CollisionBox" /> を統一幾何形状 <see cref="CollisionShape" /> へ変換します。
     /// </summary>

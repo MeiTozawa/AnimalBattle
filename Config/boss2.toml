@@ -62,7 +62,6 @@ AntiKitingRangedSkill = "LeapSmash"
 
 # 特殊技能挙動バインド
 TargetLockSkill = "LeapSmash"
-WallStunSkill = "FrenzyCharge"
 
 # Phase 1 状態機械設定
 [Phase1]

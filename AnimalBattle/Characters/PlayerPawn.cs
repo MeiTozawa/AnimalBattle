@@ -81,7 +81,6 @@ public sealed class PlayerPawn : Pawn
 
         ref var c = ref Entity.GetMut<CollisionBox>();
         c.IsGrounded = false;
-        c.IsOnWall = false;
 
         Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
         Entity.Set(WeaponState.FromPlayerConfig(pCfg));

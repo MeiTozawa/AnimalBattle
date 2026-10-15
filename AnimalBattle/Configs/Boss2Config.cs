@@ -95,9 +95,6 @@ public sealed class Boss2Config : BaseBossConfig {
     /// <summary>跳躍クールダウン時間（秒）</summary>
     public float JumpCooldownDuration { get; set; }
 
-    /// <summary>壁激突時のスタン気絶時間（秒）</summary>
-    public float WallCrashStunDuration { get; set; }
-
     /// <summary>同一足場と判定する垂直許容誤差（ピクセル）</summary>
     public float SamePlatformToleranceY { get; set; }
 
@@ -131,9 +128,6 @@ public sealed class Boss2Config : BaseBossConfig {
     /// <summary>目標ロック・飛翔技能識別名</summary>
     public string TargetLockSkill { get; set; } = string.Empty;
 
-    /// <summary>壁激突スタン技能識別名</summary>
-    public string WallStunSkill { get; set; } = string.Empty;
-
     /// <summary>Phase 1 状態機設定</summary>
     public Boss2PhaseConfig Phase1 { get; set; } = new();
 
@@ -145,9 +139,6 @@ public sealed class Boss2Config : BaseBossConfig {
 
     /// <summary>Phase 遷移（フェーズ移行）能力設定</summary>
     public PhaseTransitionAbilityConfig PhaseTransition { get; set; } = new();
-
-    /// <summary>壁激突気絶（スタン）設定</summary>
-    public WallCrashStunConfig WallCrashStun { get; set; } = new();
 
 
 

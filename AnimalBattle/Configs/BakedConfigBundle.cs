@@ -86,6 +86,7 @@ public sealed class BakedConfigBundle {
 [JsonSerializable(typeof(AttackRuleConfig))]
 [JsonSerializable(typeof(Boss2Config))]
 [JsonSerializable(typeof(Boss2PhaseConfig))]
+[JsonSerializable(typeof(PhaseTransitionAbilityConfig))]
 [JsonSerializable(typeof(Boss1PatternConfig))]
 [JsonSerializable(typeof(Boss2PatternConfig))]
 [JsonSerializable(typeof(DiveRamConfig))]

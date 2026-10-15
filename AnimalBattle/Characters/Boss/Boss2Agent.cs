@@ -80,7 +80,6 @@ public sealed class Boss2Agent : BaseBossAgent
         ref var trans = ref Entity.GetMut<Transform>();
         ref var vel = ref Entity.GetMut<Velocity>();
         var isGrounded = col.IsGrounded;
-        var isOnWall = col.IsOnWall;
 
         _brain.Update(
             deltaTime,
@@ -88,7 +87,6 @@ public sealed class Boss2Agent : BaseBossAgent
             playerVelocity,
             true,
             isGrounded,
-            isOnWall,
             health.Current,
             health.Max,
             new Vec2f(trans.X, trans.Y));
@@ -130,13 +128,18 @@ public sealed class Boss2Agent : BaseBossAgent
             vel.Vy = curVy;
         }
 
-        var nextX = trans.X + vel.Vx * dt;
-        var nextY = trans.Y + vel.Vy * dt;
-        nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
-
-        var currentY = trans.Y;
         var colWidth = col.Width > 0 ? col.Width : b2Cfg.CollisionWidth;
         var colHeight = col.Height > 0 ? col.Height : b2Cfg.CollisionHeight;
+
+        var minX = arenaCfg.BoundaryMinX + colWidth / 2.0f;
+        var maxX = arenaCfg.BoundaryMaxX - colWidth / 2.0f;
+
+        var nextX = trans.X + vel.Vx * dt;
+        var nextY = trans.Y + vel.Vy * dt;
+
+        nextX = Math.Clamp(nextX, minX, maxX);
+
+        var currentY = trans.Y;
         Box2D bossBox = new(nextX, nextY, colWidth, colHeight);
 
         var hitPlatform = false;
@@ -208,7 +211,6 @@ public sealed class Boss2Agent : BaseBossAgent
 
         ref var col = ref Entity.GetMut<CollisionBox>();
         col.IsGrounded = false;
-        col.IsOnWall = false;
 
         ref var vel = ref Entity.GetMut<Velocity>();
         vel.Vx = 0.0f;
