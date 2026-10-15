@@ -353,7 +353,6 @@ public static class CombatSpawner {
     ///     命中時に単回ダメージ（3点）を与え、自動破棄 (DestroyOnHit: true) されます。
     /// </summary>
     public static void SpawnPlayerMeleeAttack(
-        World world,
         float x,
         float y,
         float width,
@@ -384,9 +383,11 @@ public static class CombatSpawner {
         CombatPoolService.RentAreaEffect()
            .Set(new Transform(x + offsetX, y + offsetY, scale, scale))
            .Set(new Velocity(0.0f))
-           .Set(new Hitbox(new CollisionShape.Box(width, height, -offsetX, -offsetY), damage, Faction.Friendly, true))
+           .Set(new Hitbox(new CollisionShape.Box(width, height, -offsetX, -offsetY), damage, Faction.Friendly, false))
            .Set(new Sprite(slashHandle, false, true, srcRect, Color.FromArgb(255, 255, 240, 200)))
-           .Set(new FadeEffect(lifetime, 255.0f, 0.0f));
+           .Set(new FadeEffect(lifetime, 255.0f, 0.0f))
+           .Add<PlayerMeleeTag>()
+           .Set(new HitHistory());
     }
 
     /// <summary>
@@ -408,7 +409,8 @@ public static class CombatSpawner {
            .Set(new Velocity(vx))
            .Set(new Bullet(radius, fillColor, outlineColor))
            .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile))
-           .Add<BossBulletTag>();
+           .Add<BossBulletTag>()
+           .Add<IndestructibleBulletTag>();
 
         entity.Remove<BulletModifier>();
     }

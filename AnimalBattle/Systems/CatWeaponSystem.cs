@@ -45,21 +45,6 @@ public static class CatWeaponSystem
         return world;
     }
 
-    /// <summary>
-    ///     単一エンティティの Cat 武器状態を 1 フレーム分更新します（テストおよび直接呼び出し互換用）。
-    /// </summary>
-    public static void UpdateEntity(Entity entity, float dt, World world)
-    {
-        if (!entity.IsAlive()) return;
-
-        ref var trans = ref entity.GetMut<Transform>();
-        ref var intent = ref entity.GetMut<WeaponIntent>();
-        ref var weapon = ref entity.GetMut<CatWeaponState>();
-        ref var spring = ref entity.GetMut<SpringScale>();
-
-        ExecuteCatWeapon(entity, ref trans, ref intent, ref weapon, ref spring, dt, world);
-    }
-
     private static void ExecuteCatWeapon(
         Entity entity,
         ref Transform trans,

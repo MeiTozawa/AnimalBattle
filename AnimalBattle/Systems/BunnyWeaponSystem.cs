@@ -45,21 +45,6 @@ public static class BunnyWeaponSystem
         return world;
     }
 
-    /// <summary>
-    ///     単一エンティティの Bunny 武器状態を 1 フレーム分更新します（テストおよび直接呼び出し互換用）。
-    /// </summary>
-    public static void UpdateEntity(Entity entity, float dt, World world)
-    {
-        if (!entity.IsAlive()) return;
-
-        ref var trans = ref entity.GetMut<Transform>();
-        ref var intent = ref entity.GetMut<WeaponIntent>();
-        ref var weapon = ref entity.GetMut<BunnyWeaponState>();
-        ref var spring = ref entity.GetMut<SpringScale>();
-
-        ExecuteBunnyWeapon(entity, ref trans, ref intent, ref weapon, ref spring, dt, world);
-    }
-
     private static void ExecuteBunnyWeapon(
         Entity entity,
         ref Transform trans,
@@ -100,9 +85,7 @@ public static class BunnyWeaponSystem
                 slashDir = dirY >= 0.0f ? SlashDirection.Down : SlashDirection.Up;
             }
 
-            CombatSpawner.SpawnPlayerMeleeAttack(
-                world,
-                spawnX,
+            CombatSpawner.SpawnPlayerMeleeAttack(spawnX,
                 spawnY,
                 weapon.AttackWidth,
                 weapon.AttackHeight,

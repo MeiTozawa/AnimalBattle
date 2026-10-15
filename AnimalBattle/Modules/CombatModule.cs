@@ -19,7 +19,9 @@ public readonly struct CombatModule : IFlecsModule
         world.AddMovementSystem()
              .AddCatWeaponSystem()
              .AddBunnyWeaponSystem()
+             .AddMeleeBulletCancelSystem()
              .AddCombatCollisionSystem()
+             .AddPersistentCollisionSystem()
              .AddCombatRecycleSystem();
     }
 }
