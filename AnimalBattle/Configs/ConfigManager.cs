@@ -36,7 +36,7 @@ public static class ConfigManager {
     public static PlayerConfig Bunny => _bunnyConfigContainer.Config;
 
     /// <summary>現在選択中のプレイヤー設定オブジェクトを取得します。</summary>
-    public static PlayerConfig Player => Scenes.BattleScene.Current?.Player?.CurrentCharacter == CharacterType.Bunny ? Bunny : Cat;
+    public static PlayerConfig Player => GameManager.Current?.Player?.CurrentCharacter == CharacterType.Bunny ? Bunny : Cat;
 
     /// <summary>指定されたキャラクター種別のプレイヤー設定オブジェクトを取得します。</summary>
     public static PlayerConfig GetPlayerConfig(CharacterType charType) => charType == CharacterType.Bunny ? Bunny : Cat;
@@ -78,7 +78,7 @@ public static class ConfigManager {
     public static ConfigBase<PlayerConfig> BunnyContainer => _bunnyConfigContainer;
 
     /// <summary>現在選択中のプレイヤー設定コンテナを取得します（後方互換）。</summary>
-    public static ConfigBase<PlayerConfig> PlayerContainer => Scenes.BattleScene.Current?.Player?.CurrentCharacter == CharacterType.Bunny ? _bunnyConfigContainer : _catConfigContainer;
+    public static ConfigBase<PlayerConfig> PlayerContainer => GameManager.Current?.Player?.CurrentCharacter == CharacterType.Bunny ? _bunnyConfigContainer : _catConfigContainer;
 
     /// <summary>Boss 1 設定コンテナを取得します。</summary>
     public static ConfigBase<Boss1Config> Boss1Container => _boss1ConfigContainer;

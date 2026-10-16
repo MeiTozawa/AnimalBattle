@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
-using AnimalBattle.Scenes;
 
 namespace AnimalBattle.Core;
 
@@ -20,8 +19,8 @@ public sealed class DualThreadGameLoop : IDisposable {
     ///     メインスレッド上で双スレッドパイプラインループを開始します。
     ///     メッセージループ処理と DxLib の描画提示を統括し、論理スレッドが正常終了または例外発生するまでブロックします。
     /// </summary>
-    /// <param name="battleScene">実行対象のバトルシーン。</param>
-    public void Run(BattleScene battleScene)
+    /// <param name="gameManager">実行対象のバトルシーン。</param>
+    public void Run(GameManager gameManager)
     {
         Debug.Assert(!_isDisposed, "[DualThreadGameLoop] 破棄済みのループを開始することはできません。");
         if (_isDisposed) return;
@@ -29,7 +28,7 @@ public sealed class DualThreadGameLoop : IDisposable {
         _isRunning = true;
         _fatalException = null;
 
-        _logicThread = new Thread(() => LogicThreadEntry(battleScene)) {
+        _logicThread = new Thread(() => LogicThreadEntry(gameManager)) {
             Name = "GameLogicThread",
             Priority = ThreadPriority.Normal,
             IsBackground = true
@@ -102,7 +101,7 @@ public sealed class DualThreadGameLoop : IDisposable {
         }
     }
 
-    private void LogicThreadEntry(BattleScene scene)
+    private void LogicThreadEntry(GameManager scene)
     {
         try
         {

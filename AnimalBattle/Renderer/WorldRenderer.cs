@@ -5,7 +5,6 @@ using AnimalBattle.Characters.Boss;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps;
-using AnimalBattle.Scenes;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Renderer;
@@ -117,7 +116,7 @@ public sealed class WorldRenderer : IDisposable {
     /// <param name="platformQuery">プラットフォーム足場検索クエリ。</param>
     public void Render(TileMap? tileMap, Query<Transform, CollisionBox> platformQuery)
     {
-        Render(tileMap, platformQuery, BattleScene.Current.Player, BattleScene.Current.Boss);
+        Render(tileMap, platformQuery, GameManager.Current.Player, GameManager.Current.Boss);
     }
 
     /// <summary>

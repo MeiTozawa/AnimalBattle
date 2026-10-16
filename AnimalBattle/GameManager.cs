@@ -1,21 +1,18 @@
-using System.Diagnostics;
 using AnimalBattle.Ai;
 using AnimalBattle.Characters;
 using AnimalBattle.Characters.Boss;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
 using AnimalBattle.Events;
 using AnimalBattle.Maps;
 using Flecs.NET.Core;
 
-namespace AnimalBattle.Scenes;
+namespace AnimalBattle;
 
 /// <summary>
 ///     Flecs.NET ワールドおよび多 Boss (Boss 1 / Boss 2) 戦パイプラインを統括するバトルシーンクラス。
 ///     TOML 設定ファイル（player.toml, boss1.toml, boss2.toml, arena.toml）から初期パラメータをロードし、
 ///     プレイヤー、Boss、プラットフォームへ Bevy スタイルの Hitbox / Hurtbox を付与します。
 /// </summary>
-public class BattleScene : IDisposable {
+public class GameManager : IDisposable {
     private readonly DebugRenderer _debugRenderer;
     private readonly WorldRenderer _worldRenderer;
     private const string Boss1Name =  "Boss1";
@@ -28,9 +25,9 @@ public class BattleScene : IDisposable {
     private TileMap? _tileMap;
 
     /// <summary>
-    ///     <see cref="BattleScene" /> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
+    ///     <see cref="GameManager" /> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
     /// </summary>
-    public BattleScene()
+    public GameManager()
     {
         _ecsWorld = World.Create();
         Current = this;
@@ -81,9 +78,9 @@ public class BattleScene : IDisposable {
     }
 
     /// <summary>
-    ///     現在アクティブな BattleScene インスタンスを取得します。
+    ///     現在アクティブな GameManager インスタンスを取得します。
     /// </summary>
-    public static BattleScene Current { get; private set; } = null!;
+    public static GameManager Current { get; private set; } = null!;
 
     /// <summary>
     ///     現在アクティブなプレイヤー自機インスタンスを取得します。
@@ -155,13 +152,13 @@ public class BattleScene : IDisposable {
         BaseBossConfig cfg = bossType switch {
             BossType.Boss1 => ConfigManager.Boss1,
             BossType.Boss2 => ConfigManager.Boss2,
-            _ => AssertHelper.FailWithDefault($"[BattleScene 警告] 未知のBossType (cfg): {bossType}", ConfigManager.Boss1)
+            _ => AssertHelper.FailWithDefault($"[GameManager 警告] 未知のBossType (cfg): {bossType}", ConfigManager.Boss1)
         };
 
         Boss = bossType switch {
             BossType.Boss1 => new Boss1Agent(bossEntity, handle),
             BossType.Boss2 => new Boss2Agent(bossEntity, handle, () => _tileMap?.NavGraph),
-            _ => AssertHelper.FailWithDefault($"[BattleScene 警告] 未知のBossType (Agent): {bossType}", new Boss1Agent(bossEntity, handle))
+            _ => AssertHelper.FailWithDefault($"[GameManager 警告] 未知のBossType (Agent): {bossType}", new Boss1Agent(bossEntity, handle))
         };
 
         Boss.AbilitySystem.OnScreenShake += (intensity, duration) =>
@@ -172,7 +169,7 @@ public class BattleScene : IDisposable {
         };
 
         Debug.WriteLine(
-            $"[BattleScene] {bossTitle} を生成・リセットしました (HP: {cfg.MaxHp}, Pos: {cfg.SpawnX}, {cfg.SpawnY})");
+            $"[GameManager] {bossTitle} を生成・リセットしました (HP: {cfg.MaxHp}, Pos: {cfg.SpawnX}, {cfg.SpawnY})");
     }
 
     /// <summary>
@@ -227,7 +224,7 @@ public class BattleScene : IDisposable {
         var (bossName, bCfg) = bossType switch {
             BossType.Boss1 => (Boss1Name, ConfigManager.Boss1),
             BossType.Boss2 => (Boss2Name, ConfigManager.Boss2),
-            _ => AssertHelper.FailWithDefault($"[BattleScene 警告] 未知のBossType (Reload): {bossType}", (Boss1Name, (BaseBossConfig)ConfigManager.Boss1))
+            _ => AssertHelper.FailWithDefault($"[GameManager 警告] 未知のBossType (Reload): {bossType}", (Boss1Name, (BaseBossConfig)ConfigManager.Boss1))
         };
 
         var bossEntity = _ecsWorld.Lookup(bossName);
@@ -249,7 +246,7 @@ public class BattleScene : IDisposable {
             t.ScaleY = bCfg.ScaleY;
         }
 
-        Debug.WriteLine($"[BattleScene] {bossName} の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
+        Debug.WriteLine($"[GameManager] {bossName} の Hurtbox / Hitbox / Scale を TOML からリアルタイム同期しました");
     }
 
     private void OnCatConfigReloaded()
@@ -295,7 +292,7 @@ public class BattleScene : IDisposable {
             playerEntity.Set(CatWeaponState.FromConfig(pCfg));
         }
 
-        Debug.WriteLine($"[BattleScene] Player ({Player.CurrentCharacter}) の Hurtbox / CollisionBox / Scale / Weapon / Jump を TOML からリアルタイム同期しました");
+        Debug.WriteLine($"[GameManager] Player ({Player.CurrentCharacter}) の Hurtbox / CollisionBox / Scale / Weapon / Jump を TOML からリアルタイム同期しました");
     }
 
     /// <summary>
@@ -307,13 +304,13 @@ public class BattleScene : IDisposable {
         var tileMapCfg = arenaCfg.TileMap;
 
         var sheetHandle = AssetManager.LoadTexture(tileMapCfg.TileSheetPath);
-        Debug.Assert(sheetHandle >= 0, $"[BattleScene 警告] {tileMapCfg.TileSheetPath}の画像は読み取りできませんでした。");
+        Debug.Assert(sheetHandle >= 0, $"[GameManager 警告] {tileMapCfg.TileSheetPath}の画像は読み取りできませんでした。");
         TileSet tileSet = new(sheetHandle, ConfigManager.TileSet);
         _tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
         _ecsWorld.Set(_tileMap);
 
         _tileMap.BuildPlatformColliders(_ecsWorld);
-        Debug.WriteLine("[BattleScene] TileMap および TileSet プラットフォームコライダーが正常に初期化されました。");
+        Debug.WriteLine("[GameManager] TileMap および TileSet プラットフォームコライダーが正常に初期化されました。");
     }
 
     /// <summary>

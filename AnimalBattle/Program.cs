@@ -1,5 +1,4 @@
 using AnimalBattle.Core;
-using AnimalBattle.Scenes;
 
 namespace AnimalBattle;
 
@@ -18,12 +17,12 @@ internal static class Program {
             GameEngine.Initialize(width, height);
 
             Debug.WriteLine("Flecs.NET ワールドおよびバトルシーンを初期化中...");
-            using BattleScene battleScene = new();
-            battleScene.Initialize();
+            using GameManager gameManager = new();
+            gameManager.Initialize();
 
             Debug.WriteLine("双スレッドロックステップパイプラインループを開始します...");
             using DualThreadGameLoop gameLoop = new();
-            gameLoop.Run(battleScene);
+            gameLoop.Run(gameManager);
         }
         catch (Exception ex)
         {

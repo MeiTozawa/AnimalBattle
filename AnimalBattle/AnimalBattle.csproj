@@ -28,6 +28,9 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Prefabs\" />
+    </ItemGroup>
     <Target Name="GenerateCodeFromConfigs" BeforeTargets="BeforeBuild">
         <Exec Command="python ..\scripts\bake_configs_binary.py" StandardOutputImportance="low" ContinueOnError="true"/>
         <Exec Command="python ..\scripts\generate_resource_paths.py" StandardOutputImportance="low" ContinueOnError="true"/>
