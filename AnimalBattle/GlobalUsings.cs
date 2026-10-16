@@ -7,6 +7,7 @@ global using AnimalBattle.Core;
 global using AnimalBattle.Core.Geometry;
 global using AnimalBattle.Combat;
 global using AnimalBattle.CombatPool;
+global using AnimalBattle.Effects;
 global using AnimalBattle.Modules;
 global using AnimalBattle.Render;
 global using AnimalBattle.Renderer;
