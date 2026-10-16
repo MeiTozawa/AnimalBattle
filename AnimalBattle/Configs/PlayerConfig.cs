@@ -208,6 +208,18 @@ public sealed class PlayerConfig {
     /// <summary>ダッシュ残像のフェード持続時間（秒）</summary>
     public float DashGhostTrailDuration { get; set; }
 
+    /// <summary>ダッシュ残像の初期アルファ値 (0～255)</summary>
+    public float DashGhostTrailAlpha { get; set; }
+
+    /// <summary>二段ジャンプ空気リングエフェクトの初期半径 (px)</summary>
+    public float JumpRingInitialRadius { get; set; }
+
+    /// <summary>二段ジャンプ空気リングエフェクトの最大拡散半径 (px)</summary>
+    public float JumpRingMaxRadius { get; set; }
+
+    /// <summary>二段ジャンプ空気リングエフェクトのフェード持続時間（秒）</summary>
+    public float JumpRingDuration { get; set; }
+
     /// <summary>地面初速加速度（px/s²）</summary>
     public float GroundAcceleration { get; set; }
 

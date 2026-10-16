@@ -54,6 +54,12 @@ DashStretchScaleX = 1.35
 DashStretchScaleY = 0.70
 DashGhostTrailInterval = 0.04
 DashGhostTrailDuration = 0.16
+DashGhostTrailAlpha = 160.0
+
+# --- ジャンプエフェクト設定 ---
+JumpRingInitialRadius = 8.0
+JumpRingMaxRadius = 32.0
+JumpRingDuration = 0.18
 
 GroundAcceleration = 3000.0
 GroundDeceleration = 3600.0

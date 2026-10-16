@@ -581,6 +581,24 @@ public sealed class SpecialBulletConfig {
     /// <summary>黄弾公転衛星の接触ダメージ</summary>
     public float YellowSatelliteDamage { get; set; }
 
+    /// <summary>黄弾公転衛星の最小半径クランプ (px)</summary>
+    public float YellowSatelliteMinRadius { get; set; }
+
+    /// <summary>Boss 被弾反撃黒弾の移動速度 (px/s)</summary>
+    public float CounterBulletSpeed { get; set; }
+
+    /// <summary>Boss 被弾反撃黒弾の判定半径 (px)</summary>
+    public float CounterBulletRadius { get; set; }
+
+    /// <summary>Phase 1 時の反撃黒弾発射数</summary>
+    public int CounterBulletCountPhase1 { get; set; }
+
+    /// <summary>Phase 2 時の反撃黒弾発射数</summary>
+    public int CounterBulletCountPhase2 { get; set; }
+
+    /// <summary>Phase 3 時の反撃黒弾発射数</summary>
+    public int CounterBulletCountPhase3 { get; set; }
+
     /// <summary>
     ///     指定された TOML ファイルから特殊弾変調設定を読み込みます。
     /// </summary>

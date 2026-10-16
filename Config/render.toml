@@ -266,3 +266,35 @@ NavNodeColor = 0xFF00E5FF
 NavEdgeDropColor = 0xFFFFD700
 NavEdgeJumpColor = 0xFF00FF88
 NavNodeRadius = 4
+
+[VisualEffects]
+HitSparkCount = 3
+HitSparkMinSpeed = 60.0
+HitSparkSpeedRange = 120.0
+HitSparkRadius = 3.5
+HitSparkDuration = 0.12
+
+PlayerDeathParticleCount = 16
+PlayerDeathParticleBaseSpeed = 4.0
+PlayerDeathParticleSpeedStep = 2.0
+PlayerDeathParticleRadius = 5.0
+PlayerDeathParticleDuration = 0.60
+
+ShockwaveInitialRadius = 20.0
+ShockwaveMaxRadius = 150.0
+ShockwaveDuration = 0.40
+
+VictoryExplosionCount = 32
+VictoryExplosionBaseSpeed = 3.0
+VictoryExplosionSpeedStep = 2.5
+VictoryExplosionRadius = 6.0
+VictoryExplosionDuration = 0.90
+
+[SlashEffect]
+SpriteColIndex = 5
+SpriteCellSize = 64
+BossBaseReferenceSize = 28.0
+PlayerBaseReferenceSize = 36.0
+CenterBiasOffset = -18.0
+PlayerSlashAlpha = 255.0
+PlayerSlashColor = 0xFFFFF0C8

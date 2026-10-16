@@ -7,3 +7,11 @@ YellowOrbitSpeed = 6.0
 YellowOrbitDistanceMultiplier = 1.5
 YellowSatelliteRadiusMultiplier = 0.55
 YellowSatelliteDamage = 1.0
+
+# Counter Bullet & Satellite Constraint
+CounterBulletSpeed = 160.0
+CounterBulletRadius = 8.0
+CounterBulletCountPhase1 = 1
+CounterBulletCountPhase2 = 2
+CounterBulletCountPhase3 = 3
+YellowSatelliteMinRadius = 3.0

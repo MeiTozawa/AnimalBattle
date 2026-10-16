@@ -699,6 +699,46 @@ public sealed class PlayerRenderConfig {
 }
 
 /// <summary>
+///     汎用視覚演出・パーティクル描画パラメータ設定クラス。
+/// </summary>
+public sealed class VisualEffectsRenderConfig {
+    public int HitSparkCount { get; set; }
+    public float HitSparkMinSpeed { get; set; }
+    public float HitSparkSpeedRange { get; set; }
+    public float HitSparkRadius { get; set; }
+    public float HitSparkDuration { get; set; }
+
+    public int PlayerDeathParticleCount { get; set; }
+    public float PlayerDeathParticleBaseSpeed { get; set; }
+    public float PlayerDeathParticleSpeedStep { get; set; }
+    public float PlayerDeathParticleRadius { get; set; }
+    public float PlayerDeathParticleDuration { get; set; }
+
+    public float ShockwaveInitialRadius { get; set; }
+    public float ShockwaveMaxRadius { get; set; }
+    public float ShockwaveDuration { get; set; }
+
+    public int VictoryExplosionCount { get; set; }
+    public float VictoryExplosionBaseSpeed { get; set; }
+    public float VictoryExplosionSpeedStep { get; set; }
+    public float VictoryExplosionRadius { get; set; }
+    public float VictoryExplosionDuration { get; set; }
+}
+
+/// <summary>
+///     近接斬撃エフェクトスプライト描画設定クラス。
+/// </summary>
+public sealed class SlashEffectRenderConfig {
+    public int SpriteColIndex { get; set; }
+    public int SpriteCellSize { get; set; }
+    public float BossBaseReferenceSize { get; set; }
+    public float PlayerBaseReferenceSize { get; set; }
+    public float CenterBiasOffset { get; set; }
+    public float PlayerSlashAlpha { get; set; }
+    public Color PlayerSlashColor { get; set; }
+}
+
+/// <summary>
 ///     Config/render.toml から読み込まれる全体の描画および UI 設定クラス。
 /// </summary>
 public sealed class RenderConfig {
@@ -728,6 +768,12 @@ public sealed class RenderConfig {
 
     /// <summary>自機プレイヤー描画設定</summary>
     public PlayerRenderConfig Player { get; set; } = new();
+
+    /// <summary>視覚エフェクト・パーティクル共通描画設定</summary>
+    public VisualEffectsRenderConfig VisualEffects { get; set; } = new();
+
+    /// <summary>近接斬撃エフェクトスプライト描画設定</summary>
+    public SlashEffectRenderConfig SlashEffect { get; set; } = new();
 
     /// <summary>
     ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{RenderConfig}" /> インスタンスを生成します。
