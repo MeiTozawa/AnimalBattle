@@ -58,6 +58,7 @@ public sealed class WorldRenderer : IDisposable {
     private Color _pTrailColor3;
     private Query<Transform, RingEffect, FadeEffect> _ringEffectQuery;
     private Query<Transform, Sprite, FadeEffect> _spriteEffectQuery;
+    private Query<Transform, Sprite> _playerMeleeQuery;
 
     /// <summary>
     ///     <see cref="WorldRenderer" /> の新しいインスタンスを初期化し、弾幕・エフェクト用のクエリと不変デリゲートを構築します。
@@ -77,6 +78,9 @@ public sealed class WorldRenderer : IDisposable {
            .Build();
         _spriteEffectQuery = world.QueryBuilder<Transform, Sprite, FadeEffect>()
            .With<VfxTag>()
+           .Build();
+        _playerMeleeQuery = world.QueryBuilder<Transform, Sprite>()
+           .With<PlayerMeleeTag>()
            .Build();
         _ringEffectQuery = world.QueryBuilder<Transform, RingEffect, FadeEffect>()
            .With<VfxTag>()
@@ -151,6 +155,7 @@ public sealed class WorldRenderer : IDisposable {
         _specialBossBulletQuery.Iter(_drawSpecialBossBulletsCallback);
 
         DrawSpriteEffects(_spriteEffectQuery);
+        DrawPlayerMelee(_playerMeleeQuery);
         DrawRingEffects(_ringEffectQuery);
         DrawParticleEffects(_particleEffectQuery, bulletCfg);
     }
@@ -703,6 +708,31 @@ public sealed class WorldRenderer : IDisposable {
 
             GameEngine.SetDrawBright(sprite.Color.R, sprite.Color.G, sprite.Color.B);
             GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
+            GameEngine.DrawRectRotaGraph(
+                (int)trans.X,
+                (int)trans.Y,
+                sprite.SrcRect.X1,
+                sprite.SrcRect.Y1,
+                sprite.SrcRect.Width,
+                sprite.SrcRect.Height,
+                trans.ScaleX,
+                trans.Rotation,
+                sprite.GraphHandle,
+                true,
+                sprite.FlipX);
+            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+            GameEngine.SetDrawBright(255, 255, 255);
+        });
+    }
+
+    private static void DrawPlayerMelee(Query<Transform, Sprite> playerMeleeQuery)
+    {
+        playerMeleeQuery.Each((ref trans, ref sprite) =>
+        {
+            if (!sprite.IsVisible || sprite.GraphHandle < 0) return;
+
+            GameEngine.SetDrawBright(sprite.Color.R, sprite.Color.G, sprite.Color.B);
+            GameEngine.SetDrawBlendMode(BlendMode.Add, 255);
             GameEngine.DrawRectRotaGraph(
                 (int)trans.X,
                 (int)trans.Y,

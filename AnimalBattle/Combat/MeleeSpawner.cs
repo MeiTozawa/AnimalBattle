@@ -1,14 +1,18 @@
+using System.Diagnostics;
 using System.Drawing;
+using AnimalBattle.Asset;
 using AnimalBattle.CombatPool;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core.Geometry;
+using AnimalBattle.Prefabs;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Combat;
 
 /// <summary>
-///     近接斬撃攻撃の判定ボリューム（Hitbox）および付随する視覚エフェクトスプライトの生成を担当する静的サービスです。
+///     近接斬撃攻撃の判定ボリューム（Hitbox）および付随する視覚エフェクトスプライトの生成・制御を担当する静的サービスです。
+///     自機近接斬撃判定は常駐エンティティの .Enable() / .Disable() により制御され、ゼロアロケーションで実行されます。
 /// </summary>
 public static class MeleeSpawner
 {
@@ -60,16 +64,16 @@ public static class MeleeSpawner
     }
 
     /// <summary>
-    ///     プレイヤー自機の近接攻撃判定（矩形 Hitbox ＋ 斬撃スプライト視覚エフェクト）を生成します。
-    ///     命中時に単回ダメージを与え、多フレーム重複ヒット防止用の <see cref="HitHistory" /> を付与します。
+    ///     自機常駐の近接攻撃判定（矩形 Hitbox ＋ 斬撃スプライト視覚エフェクト）を設定し、有効化（.Enable()）します。
+    ///     頻繁な生成・破棄を行わず常駐エンティティの有効/無効切り替えによってゼロアロケーションを実現します。
     /// </summary>
-    public static void SpawnPlayerMeleeAttack(
+    public static void ActivatePlayerMeleeAttack(
+        Entity meleeEntity,
         float x,
         float y,
         float width,
         float height,
         float damage,
-        float lifetime,
         SlashDirection direction)
     {
         var hasTexture =
@@ -94,13 +98,12 @@ public static class MeleeSpawner
             _ => 0.0f
         };
 
-        CombatPoolService.RentAreaEffect()
+        meleeEntity
            .Set(new Transform(x + offsetX, y + offsetY, scale, scale))
-           .Set(new Velocity(0.0f))
+           .Set(new Velocity(0.0f, 0.0f))
            .Set(new Hitbox(new CollisionShape.Box(width, height, -offsetX, -offsetY), damage, Faction.Friendly, false))
+           .Set(new HitHistory())
            .Set(new Sprite(slashHandle, false, true, srcRect, slashCfg.PlayerSlashColor))
-           .Set(new FadeEffect(lifetime, slashCfg.PlayerSlashAlpha, 0.0f))
-           .Add<PlayerMeleeTag>()
-           .Set(new HitHistory());
+           .Enable();
     }
 }

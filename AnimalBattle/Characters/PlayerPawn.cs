@@ -1,48 +1,26 @@
 using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Abilities;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters;
 
 /// <summary>
-///     プレイヤー自機の移動、跳躍、重力、射撃およびアニメーション状態を一元管理する受控躯体（PlayerPawn）です。
-///     <see cref="Pawn" /> 基底クラスを継承し、空間・物理・生命・描画の共通操作を利用します。
+///     プレイヤー自機の移動、跳躍、重力、射撃およびアニメーション状態を一元管理する受控躯体（PlayerPawn）の抽象基底クラスです。
+///     <see cref="Pawn" /> 基底クラスを継承し、空間・物理・生命・描画の共通操作を提供します。
 /// </summary>
-public sealed class PlayerPawn : Pawn
+public abstract class PlayerPawn : Pawn
 {
     /// <summary>プレイヤー自機のアビリティシステムコンポーネントを取得します。</summary>
     public override AbilitySystemComponent AbilitySystem { get; } = new();
 
-    /// <summary>
-    ///     設定情報と Flecs エンティティ句柄を指定して、自機 Pawn を初期化します。
-    /// </summary>
-    /// <param name="entity">対応する Flecs エンティティ句柄。</param>
-    /// <param name="pCfg">プレイヤー設定。</param>
-    /// <param name="spriteHandle">プレイヤースプライトの画像ハンドル。</param>
-    public PlayerPawn(Entity entity, PlayerConfig pCfg, int spriteHandle) : base(entity)
-    {
-        Debug.Assert(pCfg != null, "PlayerConfig は null であってはなりません。");
+    /// <summary>現在選択されているキャラクター種別を取得します。</summary>
+    public abstract CharacterType CharacterType { get; }
 
-        Entity.Set(new Health(pCfg.MaxHp))
-           .Set(new InvincibleOnHit(pCfg.InvincibleDuration))
-           .Set(new HitFlashSettings(pCfg.HitFlashDuration, Color.White))
-           .Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
-           .Set(new Velocity(0.0f))
-           .Set(new CollisionBox(pCfg.CollisionWidth, pCfg.CollisionHeight))
-           .Set(new Hurtbox(pCfg.GetHurtboxShape()))
-           .Set(new Animation("Idle"))
-           .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 32, 32)))
-           .Set(new MovementIntent())
-           .Set(new WeaponIntent())
-           .Set(JumpCapability.FromPlayerConfig(pCfg))
-           .Set(CatWeaponState.FromConfig(pCfg))
-           .Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio))
-           .Set(new DashState())
-           .Set(AbilitySystem)
-           .Add<PlayerTag>();
-    }
+    /// <summary>後方互換性用のキャラクター種別プロパティ。</summary>
+    public CharacterType CurrentCharacter => CharacterType;
 
     /// <summary>スプリング拡縮変形状態の参照を取得します（常駐 SpringScale への直接アクセス）。</summary>
     public ref readonly SpringScale SpringScale => ref Entity.Get<SpringScale>();
@@ -61,97 +39,29 @@ public sealed class PlayerPawn : Pawn
     }
 
     /// <summary>武器クールダウンの残り秒数を取得または設定します。</summary>
-    public float ShootCooldown
-    {
-        get => CurrentCharacter == CharacterType.Bunny
-            ? (Entity.Has<BunnyWeaponState>() ? Entity.Get<BunnyWeaponState>().CooldownRemaining : 0.0f)
-            : (Entity.Has<CatWeaponState>() ? Entity.Get<CatWeaponState>().CooldownRemaining : 0.0f);
-        set
-        {
-            var val = Math.Max(0.0f, value);
-            if (CurrentCharacter == CharacterType.Bunny && Entity.Has<BunnyWeaponState>())
-            {
-                Entity.GetMut<BunnyWeaponState>().CooldownRemaining = val;
-            }
-            else if (Entity.Has<CatWeaponState>())
-            {
-                Entity.GetMut<CatWeaponState>().CooldownRemaining = val;
-            }
-        }
-    }
-
-    /// <summary>現在選択されているキャラクター種別を取得します。</summary>
-    public CharacterType CurrentCharacter { get; private set; } = CharacterType.Cat;
+    public abstract float AttackCooldown { get; set; }
 
     /// <summary>
-    ///     自機キャラクター（Cat または Bunny）を動的に切り替えます。
-    ///     スプライト画像ハンドル、アニメーション設定および武器状態を同期更新します。
+    ///     基底プレイヤーコンポーネントを指定して初期化します。
     /// </summary>
-    /// <param name="newChar">切り替え先のキャラクター種別。</param>
+    /// <param name="entity">対応する Flecs エンティティ句柄。</param>
     /// <param name="pCfg">プレイヤー設定。</param>
-    public void SwitchCharacter(CharacterType newChar, PlayerConfig pCfg)
+    /// <param name="spriteHandle">プレイヤースプライトの画像ハンドル。</param>
+    protected PlayerPawn(Entity entity, PlayerConfig pCfg, int spriteHandle) : base(entity)
     {
-        CurrentCharacter = newChar;
-        ref var anim = ref Entity.GetMut<Animation>();
-        anim.CharacterType = newChar;
-        anim.Play("Idle");
+        Debug.Assert(pCfg != null, "PlayerConfig は null であってはなりません。");
 
-        if (AssetManager.TryGetCharacterSpriteHandle(newChar, "Idle", out var handle))
-        {
-            ref var sprite = ref Entity.GetMut<Sprite>();
-            sprite.GraphHandle = handle;
-            sprite.SrcRect = new Rect(0, 0, 32, 32);
-        }
-
-        Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
-        Entity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
-        Entity.Set(new CollisionBox(pCfg.CollisionWidth, pCfg.CollisionHeight));
-
-        if (Entity.Has<Health>())
-        {
-            ref var hp = ref Entity.GetMut<Health>();
-            var oldMax = hp.Max;
-            hp.Max = pCfg.MaxHp;
-            if (hp.Current >= oldMax)
-            {
-                hp.Current = pCfg.MaxHp;
-            }
-            else
-            {
-                hp.Current = Math.Clamp(hp.Current, 0.0f, hp.Max);
-            }
-        }
-        else
-        {
-            Entity.Set(new Health(pCfg.MaxHp));
-        }
-
-        if (Entity.Has<Transform>())
-        {
-            ref var t = ref Entity.GetMut<Transform>();
-            t.ScaleX = pCfg.ScaleX;
-            t.ScaleY = pCfg.ScaleY;
-        }
-
-        if (newChar == CharacterType.Bunny)
-        {
-            Entity.Remove<CatWeaponState>();
-            Entity.Set(BunnyWeaponState.FromConfig(pCfg));
-        }
-        else
-        {
-            Entity.Remove<BunnyWeaponState>();
-            Entity.Set(CatWeaponState.FromConfig(pCfg));
-        }
-
-        Debug.WriteLine($"[PlayerPawn] プレイヤーキャラクターを切り替えました: {newChar} (Speed: {pCfg.MoveSpeed}, Jump: {pCfg.FirstJumpVelocity})");
+        Entity.Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
+           .Set(new Animation("Idle"))
+           .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 32, 32)))
+           .Set(AbilitySystem);
     }
 
     /// <summary>
     ///     自機 Pawn を指定設定で初期位置へリセットします。
     /// </summary>
     /// <param name="pCfg">リセット用プレイヤー設定。</param>
-    public void Reset(PlayerConfig pCfg)
+    public virtual void Reset(PlayerConfig pCfg)
     {
         Debug.Assert(pCfg != null, "PlayerConfig は null であってはなりません。");
 
@@ -163,7 +73,6 @@ public sealed class PlayerPawn : Pawn
         c.IsGrounded = false;
 
         Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
-        SwitchCharacter(CurrentCharacter, pCfg);
         Entity.Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio));
         Entity.Set(new DashState());
         Entity.GetMut<MovementIntent>().Reset();

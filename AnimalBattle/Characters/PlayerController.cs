@@ -9,7 +9,7 @@ namespace AnimalBattle.Characters;
 /// </summary>
 public sealed class PlayerController
 {
-    private readonly PlayerPawn _pawn;
+    private PlayerPawn _pawn;
 
     /// <summary>
     ///     制御対象の自機躯体（PlayerPawn）を指定してコントローラーを初期化します。
@@ -21,8 +21,16 @@ public sealed class PlayerController
         _pawn = pawn;
     }
 
-    /// <summary>制御対象の PlayerPawn を取得します。</summary>
-    public PlayerPawn Pawn => _pawn;
+    /// <summary>制御対象の PlayerPawn を取得または設定します。</summary>
+    public PlayerPawn Pawn
+    {
+        get => _pawn;
+        set
+        {
+            System.Diagnostics.Debug.Assert(value != null, "PlayerPawn インスタンスは null であってはなりません。");
+            _pawn = value;
+        }
+    }
 
     /// <summary>
     ///     グローバル入力サービスからハードウェア入力をポーリングし、エンティティへ意図を反映します。

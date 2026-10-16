@@ -36,7 +36,6 @@ public readonly struct ComponentRequirementsModule : IFlecsModule {
            .Add(Ecs.With, world.Component<Transform>().Entity)
            .Add(Ecs.With, world.Component<Velocity>().Entity)
            .Add(Ecs.With, world.Component<Health>().Entity)
-           .Add(Ecs.With, world.Component<InvincibleOnHit>().Entity)
            .Add(Ecs.With, world.Component<HitFlashSettings>().Entity)
            .Add(Ecs.With, world.Component<BossCombatState>().Entity)
            .Add(Ecs.With, world.Component<AbilitySystemComponent>().Entity);

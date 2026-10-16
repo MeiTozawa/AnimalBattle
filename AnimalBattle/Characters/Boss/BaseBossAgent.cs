@@ -86,37 +86,20 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     }
 
     /// <summary>
-    ///     共通コンポーネント群を Entity に一括登録します。
+    ///     実行時スプライト画像およびアビリティシステムコンポーネントを Entity に登録します。
+    ///     （基礎パラメータ、判定形状および陣営タグは Prefab 原型より自動継承されます）
     /// </summary>
-    protected void InitializeCommonComponents(
+    protected void InitializeComponents(
         Entity entity,
         int spriteHandle,
-        float maxHp,
         float spawnX,
         float spawnY,
         float scaleX,
-        float scaleY,
-        float hitFlashDuration,
-        CollisionShape hurtboxShape,
-        CollisionShape hitboxShape,
-        float bodyContactDamage,
-        float collisionWidth = 0.0f,
-        float collisionHeight = 0.0f)
+        float scaleY)
     {
-        entity.Set(new Health(maxHp))
-           .Set(new InvincibleOnHit(0.0f))
-           .Set(new HitFlashSettings(hitFlashDuration, ColorPalette.White))
-           .Set(new Transform(spawnX, spawnY, scaleX, scaleY))
-           .Set(new Velocity(0.0f))
-           .Set(new Hurtbox(hurtboxShape, Faction.Hostile))
-           .Set(new Hitbox(hitboxShape, bodyContactDamage, Faction.Hostile, false))
+        entity.Set(new Transform(spawnX, spawnY, scaleX, scaleY))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
-           .Set(new BossCombatState(Phase))
-           .Set(AbilitySystem)
-           .Add<BossTag>();
-
-        if (collisionWidth > 0.0f && collisionHeight > 0.0f)
-            entity.Set(new CollisionBox(collisionWidth, collisionHeight));
+           .Set(AbilitySystem);
     }
 
     /// <summary>

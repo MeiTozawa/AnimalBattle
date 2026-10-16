@@ -1,9 +1,10 @@
+using AnimalBattle.Components;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
 
 /// <summary>
-///     イージング関数に基づく透明度フェードイン・フェードアウトの進行を制御し、持続時間満了時にエンティティを自動破棄する ECS System。
+///     イージング関数に基づく透明度フェードイン・フェードアウトの進行を制御し、持続時間満了時にエンティティを自動破棄（または無効化）する ECS System。
 ///     局所的かつ軽量な演出更新のため、余分なバッファ割当や P/Invoke を行わず単一パスで直接処理します。
 /// </summary>
 public static class FadeEffectSystem {

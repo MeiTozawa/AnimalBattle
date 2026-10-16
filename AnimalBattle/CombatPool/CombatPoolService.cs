@@ -1,97 +1,62 @@
 using System.Diagnostics;
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using AnimalBattle.Components;
+using AnimalBattle.Prefabs;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.CombatPool;
 
 /// <summary>
-///     弾幕・エフェクト用の戦闘エンティティプールを統括管理するシーン級ドメインサービス。
-///     ECS コンポーネント（world.Get）のルックアップオーバーヘッドおよび P/Invoke を根絶し、
-///     直接メモリ参照による高速借出・返却を提供します。
+///     弾幕・エフェクト・近接判定等の戦闘エンティティプールを集中管理するシーン級ドメインサービス。
+///     Flecs Prefab と 1 対 1 に紐づく同構プール（Isomorphic Pool）マトリクスを保持し、
+///     実行時の Archetype 変動（Table Move）を完全に排除したゼロ GC 借出・返却を提供します。
 /// </summary>
-public sealed class CombatPoolService : IDisposable {
+public sealed class CombatPoolService : IDisposable
+{
     private static CombatPoolService? _current;
+    private readonly EntityPool?[] _poolsByPrefabKey = new EntityPool?[Enum.GetValues<PrefabKey>().Length];
+    private readonly Dictionary<ulong, EntityPool> _poolsById = new();
 
     /// <summary>現在アクティブな戦闘エンティティプールサービスインスタンスを取得します。</summary>
     public static CombatPoolService Current => _current!;
 
     /// <summary>自機通常弾用エンティティプールを取得します。</summary>
-    public EntityPool PlayerBullets { get; }
+    public EntityPool PlayerBullets => _poolsByPrefabKey[(int)PrefabKey.PlayerBullet]!;
 
-    /// <summary>Boss 弾幕用エンティティプールを取得します。</summary>
-    public EntityPool BossBullets { get; }
+    /// <summary>Boss 通常弾幕用エンティティプールを取得します。</summary>
+    public EntityPool BossBullets => _poolsByPrefabKey[(int)PrefabKey.BossNormalBullet]!;
 
     /// <summary>点粒子スパーク用エンティティプールを取得します。</summary>
-    public EntityPool SparkEffects { get; }
+    public EntityPool SparkEffects => _poolsByPrefabKey[(int)PrefabKey.SparkVfx]!;
 
     /// <summary>リング演出用エンティティプールを取得します。</summary>
-    public EntityPool RingEffects { get; }
+    public EntityPool RingEffects => _poolsByPrefabKey[(int)PrefabKey.RingVfx]!;
 
     /// <summary>判定付与エリア演出用エンティティプールを取得します。</summary>
-    public EntityPool AreaEffects { get; }
+    public EntityPool AreaEffects => _poolsByPrefabKey[(int)PrefabKey.AreaVfx]!;
 
     /// <summary>
-    ///     <see cref="CombatPoolService" /> の新しいインスタンスを初期化し、各種同構エンティティを事前確保します。
+    ///     戦闘エンティティプールサービスを初期化し、各種 Prefab に対応する同構プールを事前確保します。
     /// </summary>
     /// <param name="world">エンティティが所属する Flecs.NET ワールド。</param>
     public CombatPoolService(World world)
     {
-        PlayerBullets = new EntityPool(
-            world,
-            128,
-            e => e.Set(new PooledEntity(PooledEntityType.PlayerBullet))
-               .Set(new Transform(0, 0))
-               .Set(new Velocity(0))
-               .Set(new CollisionBox(0, 0))
-               .Set(new Hitbox(default, 0))
-               .Add<PlayerBulletTag>(),
-            ResetBulletEntity);
+        RegisterPool(PrefabKey.PlayerBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.PlayerBullet), 128, ResetBulletEntity));
+        RegisterPool(PrefabKey.BossNormalBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossNormalBullet), 64, ResetBulletEntity));
+        RegisterPool(PrefabKey.BossMagentaBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossMagentaBullet), 64, ResetBulletEntity));
+        RegisterPool(PrefabKey.BossYellowBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossYellowBullet), 64, ResetBulletEntity));
+        RegisterPool(PrefabKey.BossYellowSatellite, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossYellowSatellite), 64, ResetBulletEntity));
+        RegisterPool(PrefabKey.BossBlueBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossBlueBullet), 64, ResetBulletEntity));
+        RegisterPool(PrefabKey.BossBlackBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossBlackBullet), 64, ResetBulletEntity));
+        RegisterPool(PrefabKey.SparkVfx, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.SparkVfx), 256, ResetEffectEntity));
+        RegisterPool(PrefabKey.RingVfx, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.RingVfx), 64, ResetEffectEntity));
+        RegisterPool(PrefabKey.AreaVfx, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.AreaVfx), 32, ResetEffectEntity));
+    }
 
-        BossBullets = new EntityPool(
-            world,
-            256,
-            e => e.Set(new PooledEntity(PooledEntityType.BossBullet))
-               .Set(new Transform(0, 0))
-               .Set(new Velocity(0))
-               .Set(new Bullet(0, Color.Empty, Color.Empty))
-               .Set(new Hitbox(default, 0, Faction.Hostile))
-               .Add<BossBulletTag>(),
-            ResetBulletEntity);
-
-        SparkEffects = new EntityPool(
-            world,
-            256,
-            e => e.Set(new PooledEntity(PooledEntityType.SparkEffect))
-               .Set(new Transform(0, 0))
-               .Set(new Velocity(0))
-               .Set(new Bullet(0, Color.Empty, Color.Empty))
-               .Set(new FadeEffect(1.0f))
-               .Add<VfxTag>(),
-            ResetEffectEntity);
-
-        RingEffects = new EntityPool(
-            world,
-            64,
-            e => e.Set(new PooledEntity(PooledEntityType.RingEffect))
-               .Set(new Transform(0, 0))
-               .Set(new RingEffect(0, 0, Color.Empty))
-               .Set(new FadeEffect(1.0f))
-               .Add<VfxTag>(),
-            ResetEffectEntity);
-
-        AreaEffects = new EntityPool(
-            world,
-            32,
-            e => e.Set(new PooledEntity(PooledEntityType.AreaEffect))
-               .Set(new Transform(0, 0))
-               .Set(new Velocity(0))
-               .Set(new Hitbox(default, 0, Faction.Hostile, false))
-               .Set(new Sprite(-1))
-               .Set(new FadeEffect(1.0f))
-               .Add<VfxTag>(),
-            ResetEffectEntity);
+    private void RegisterPool(PrefabKey key, EntityPool pool)
+    {
+        _poolsByPrefabKey[(int)key] = pool;
+        _poolsById[pool.PoolId] = pool;
     }
 
     /// <summary>
@@ -106,29 +71,44 @@ public sealed class CombatPoolService : IDisposable {
         return _current;
     }
 
+    /// <summary>
+    ///     指定された PrefabKey に対応する同構プールからエンティティを借出します。
+    /// </summary>
+    /// <param name="key">対象の PrefabKey。</param>
+    /// <returns>有効化されたエンティティ。</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Entity Rent(PrefabKey key)
+    {
+        var pool = Current._poolsByPrefabKey[(int)key];
+        if (pool != null) return pool.Rent();
+
+        Debug.Fail($"[CombatPoolService 警告] PrefabKey {key} に対応するプールが登録されていません。");
+        return default;
+    }
+
     /// <summary>自機通常弾エンティティをプールから借出します。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Entity RentPlayerBullet() => Current.PlayerBullets.Rent();
+    public static Entity RentPlayerBullet() => Rent(PrefabKey.PlayerBullet);
 
-    /// <summary>Boss 弾幕エンティティをプールから借出します。</summary>
+    /// <summary>Boss 通常弾幕エンティティをプールから借出します。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Entity RentBossBullet() => Current.BossBullets.Rent();
+    public static Entity RentBossBullet() => Rent(PrefabKey.BossNormalBullet);
 
     /// <summary>スパーク演出用エンティティをプールから借出します。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Entity RentSparkEffect() => Current.SparkEffects.Rent();
+    public static Entity RentSparkEffect() => Rent(PrefabKey.SparkVfx);
 
     /// <summary>リング演出用エンティティをプールから借出します。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Entity RentRingEffect() => Current.RingEffects.Rent();
+    public static Entity RentRingEffect() => Rent(PrefabKey.RingVfx);
 
     /// <summary>エリア演出用エンティティをプールから借出します。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Entity RentAreaEffect() => Current.AreaEffects.Rent();
+    public static Entity RentAreaEffect() => Rent(PrefabKey.AreaVfx);
 
     /// <summary>
-    ///     エンティティを安全に回収します。プール所属エンティティはプールへ返却（Disable）し、それ以外は Destruct します。
-    ///     ワールド引数を不要化し、直接ドメインサービスへ O(1) 委譲します。
+    ///     エンティティを安全に回収します。
+    ///     PoolId に基づき所属元の同構プールへ O(1) で即時返却（Disable）し、非プールエンティティは Destruct します。
     /// </summary>
     /// <param name="entity">回収するエンティティ。</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -136,30 +116,13 @@ public sealed class CombatPoolService : IDisposable {
     {
         if (!entity.IsAlive()) return;
 
-        if (entity.Has<PooledEntity>())
+        if (entity.Has<PoolLeaseState>())
         {
-            var type = entity.Get<PooledEntity>().PoolType;
-            var service = Current;
-            switch (type)
+            var poolId = entity.Get<PoolLeaseState>().PoolId;
+            if (Current._poolsById.TryGetValue(poolId, out var pool))
             {
-                case PooledEntityType.PlayerBullet:
-                    service.PlayerBullets.Return(entity);
-                    return;
-                case PooledEntityType.BossBullet:
-                    service.BossBullets.Return(entity);
-                    return;
-                case PooledEntityType.SparkEffect:
-                    service.SparkEffects.Return(entity);
-                    return;
-                case PooledEntityType.RingEffect:
-                    service.RingEffects.Return(entity);
-                    return;
-                case PooledEntityType.AreaEffect:
-                    service.AreaEffects.Return(entity);
-                    return;
-                default:
-                    Debug.Fail($"[CombatPoolService 警告] 未知の PooledEntityType: {type}");
-                    break;
+                pool.Return(entity);
+                return;
             }
         }
 
@@ -169,11 +132,14 @@ public sealed class CombatPoolService : IDisposable {
     /// <inheritdoc />
     public void Dispose()
     {
-        PlayerBullets.Dispose();
-        BossBullets.Dispose();
-        SparkEffects.Dispose();
-        RingEffects.Dispose();
-        AreaEffects.Dispose();
+        foreach (var pool in _poolsById.Values)
+        {
+            pool.Dispose();
+        }
+
+        _poolsById.Clear();
+        Array.Clear(_poolsByPrefabKey);
+
         if (_current == this) _current = null;
     }
 
@@ -181,16 +147,13 @@ public sealed class CombatPoolService : IDisposable {
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
-        e.Remove<BulletModifier>();
-        e.Remove<OrbitSatellite>();
         e.Remove<IndestructibleBulletTag>();
+        if (e.Has<OrbitSatellite>()) e.Remove<OrbitSatellite>();
     }
 
     private static void ResetEffectEntity(Entity e)
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
-        e.Remove<PlayerMeleeTag>();
-        e.Remove<HitHistory>();
     }
 }

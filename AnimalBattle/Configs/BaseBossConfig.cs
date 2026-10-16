@@ -1,3 +1,5 @@
+#nullable disable
+
 namespace AnimalBattle.Configs;
 
 /// <summary>
@@ -5,16 +7,16 @@ namespace AnimalBattle.Configs;
 /// </summary>
 public abstract class BaseBossConfig {
     /// <summary>Boss 表示名</summary>
-    public string BossName { get; set; } = string.Empty;
+    public string BossName { get; set; }
 
     /// <summary>Boss の最大 HP</summary>
     public float MaxHp { get; set; }
 
     /// <summary>Boss の出現 X 座標</summary>
-    public float SpawnX { get; set; } = 640.0f;
+    public float SpawnX { get; set; }
 
     /// <summary>Boss の出現 Y 座標</summary>
-    public float SpawnY { get; set; } = 200.0f;
+    public float SpawnY { get; set; }
 
     /// <summary>Boss 描画スケール X</summary>
     public float ScaleX { get; set; }
@@ -23,7 +25,7 @@ public abstract class BaseBossConfig {
     public float ScaleY { get; set; }
 
     /// <summary>Boss 被弾判定 (Hurtbox) の幾何形状種別（"Box" または "Circle"）</summary>
-    public string HurtboxShape { get; set; } = string.Empty;
+    public string HurtboxShape { get; set; }
 
     /// <summary>Boss 被弾当たり判定幅（HurtboxShape == "Box" 時に使用）</summary>
     public float HurtboxWidth { get; set; }
@@ -41,7 +43,7 @@ public abstract class BaseBossConfig {
     public float HurtboxOffsetY { get; set; }
 
     /// <summary>Boss 身体接触・攻撃判定 (Hitbox) の幾何形状種別（"Box" または "Circle"）</summary>
-    public string HitboxShape { get; set; } = string.Empty;
+    public string HitboxShape { get; set; }
 
     /// <summary>Boss 接触攻撃判定幅（HitboxShape == "Box" 時に使用）</summary>
     public float BodyHitboxWidth { get; set; }

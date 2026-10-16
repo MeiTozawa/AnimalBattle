@@ -45,20 +45,13 @@ public sealed class Boss1Agent : BaseBossAgent
     private void InitializeComponents(Entity entity, int spriteHandle)
     {
         var b1Cfg = ConfigManager.Boss1;
-        InitializeCommonComponents(
+        InitializeComponents(
             entity,
             spriteHandle,
-            b1Cfg.MaxHp,
             b1Cfg.SpawnX,
             b1Cfg.SpawnY,
             b1Cfg.ScaleX,
-            b1Cfg.ScaleY,
-            b1Cfg.HitFlashDuration,
-            b1Cfg.GetHurtboxShape(),
-            b1Cfg.GetHitboxShape(),
-            b1Cfg.BodyContactDamage);
-
-        entity.Add<Boss1Tag>();
+            b1Cfg.ScaleY);
     }
 
     /// <inheritdoc />

@@ -38,6 +38,9 @@ public struct BunnyWeaponState
     /// <summary>近接打撃時のスプリング変形倍率 Y。</summary>
     public float AttackStretchScaleY;
 
+    /// <summary>近接攻撃判定の残り有効秒数。0 より大きい場合は判定がアクティブ。</summary>
+    public float AttackActiveRemaining;
+
     /// <summary>
     ///     bunny.toml から BunnyWeaponState を構築します。
     /// </summary>

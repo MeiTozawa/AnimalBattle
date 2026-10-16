@@ -3,13 +3,16 @@ using AnimalBattle.Ai;
 using AnimalBattle.CombatPool;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
+using AnimalBattle.Core.Geometry;
+using AnimalBattle.Prefabs;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Combat;
 
 /// <summary>
 ///     敵性弾幕（Boss 弾幕・特殊弾幕・地面衝撃波・反撃黒弾）の生成および一括消去を管理する静的サービスです。
-///     生成する敵弾に <see cref="Hitbox" />（敵性陣営・円形判定）を付与します。
+///     Flecs Prefab と同構プールに基づき、動的な Archetype 変更を伴わずに高速生成します。
 /// </summary>
 public static class BulletSpawner
 {
@@ -36,40 +39,49 @@ public static class BulletSpawner
         Color? fillColor = null,
         Color? outlineColor = null)
     {
-        var (fill, outline) = BulletPalette.ResolveBulletColors(type, fillColor, outlineColor);
+        var prefabKey = type switch {
+            BulletType.Normal => PrefabKey.BossNormalBullet,
+            BulletType.Magenta => PrefabKey.BossMagentaBullet,
+            BulletType.Yellow => PrefabKey.BossYellowBullet,
+            BulletType.Cyan => PrefabKey.BossBlueBullet,
+            BulletType.Black => PrefabKey.BossBlackBullet,
+            _ => PrefabKey.BossNormalBullet
+        };
 
-        // 事前確保されたエンティティプールから Boss 弾幕エンティティを貸し出し
-        var entity = CombatPoolService.RentBossBullet()
+        // 各弾種固有の Prefab 同構プールから借出（Archetype 跨表搬遷ゼロ）
+        var entity = CombatPoolService.Rent(prefabKey)
            .Set(new Transform(x, y))
-           .Set(new Velocity(vx, vy))
-           .Set(new Bullet(radius, fill, outline))
-           .Set(new Hitbox(new CollisionShape.Circle(radius), 1.0f, Faction.Hostile))
-           .Add<BossBulletTag>();
+           .Set(new Velocity(vx, vy));
 
         if (type != BulletType.Normal)
         {
             entity.Set(new BulletModifier(type, radius, vx, vy));
-
-            if (type == BulletType.Yellow)
-            {
-                var cfg = ConfigManager.SpecialBullets;
-                var satRadius = MathF.Max(cfg.YellowSatelliteMinRadius, radius * cfg.YellowSatelliteRadiusMultiplier);
-                var orbitDist = radius * cfg.YellowOrbitDistanceMultiplier;
-                var parentVersion = entity.Get<PoolLeaseState>().Version;
-
-                CombatPoolService.RentBossBullet()
-                   .Set(new Transform(x + orbitDist, y))
-                   .Set(new Velocity(vx, vy))
-                   .Set(new Bullet(satRadius, fill, outline))
-                   .Set(new Hitbox(new CollisionShape.Circle(satRadius), cfg.YellowSatelliteDamage, Faction.Hostile))
-                   .Set(new BulletModifier(BulletType.Yellow, satRadius, vx, vy))
-                   .Set(new OrbitSatellite(entity, orbitDist, 0.0f, parentVersion))
-                   .Add<BossBulletTag>();
-            }
         }
-        else if (entity.Has<BulletModifier>())
+
+        if (fillColor.HasValue || outlineColor.HasValue)
         {
-            entity.Remove<BulletModifier>();
+            var (fill, outline) = BulletPalette.ResolveBulletColors(type, fillColor, outlineColor);
+            entity.Set(new Bullet(radius, fill, outline));
+        }
+
+        if (type == BulletType.Yellow)
+        {
+            var cfg = ConfigManager.SpecialBullets;
+            var satRadius = MathF.Max(cfg.YellowSatelliteMinRadius, radius * cfg.YellowSatelliteRadiusMultiplier);
+            var orbitDist = radius * cfg.YellowOrbitDistanceMultiplier;
+            var parentVersion = entity.Get<PoolLeaseState>().Version;
+
+            var sat = CombatPoolService.Rent(PrefabKey.BossYellowSatellite)
+               .Set(new Transform(x + orbitDist, y))
+               .Set(new Velocity(vx, vy))
+               .Set(new BulletModifier(BulletType.Yellow, satRadius, vx, vy))
+               .Set(new OrbitSatellite(entity, orbitDist, 0.0f, parentVersion));
+
+            if (fillColor.HasValue || outlineColor.HasValue)
+            {
+                var (fill, outline) = BulletPalette.ResolveBulletColors(type, fillColor, outlineColor);
+                sat.Set(new Bullet(satRadius, fill, outline));
+            }
         }
     }
 
@@ -109,15 +121,12 @@ public static class BulletSpawner
     public static void SpawnGroundShockwave(World world, float x, float y, float vx, float radius, float damage,
         Color fillColor, Color outlineColor)
     {
-        var entity = CombatPoolService.RentBossBullet()
+        CombatPoolService.Rent(PrefabKey.BossNormalBullet)
            .Set(new Transform(x, y))
-           .Set(new Velocity(vx))
+           .Set(new Velocity(vx, 0.0f))
            .Set(new Bullet(radius, fillColor, outlineColor))
            .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile))
-           .Add<BossBulletTag>()
            .Add<IndestructibleBulletTag>();
-
-        entity.Remove<BulletModifier>();
     }
 
     /// <summary>

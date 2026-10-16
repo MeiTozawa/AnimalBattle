@@ -3,6 +3,7 @@ using AnimalBattle.Characters;
 using AnimalBattle.Characters.Boss;
 using AnimalBattle.Events;
 using AnimalBattle.Maps;
+using AnimalBattle.Prefabs;
 using Flecs.NET.Core;
 
 namespace AnimalBattle;
@@ -46,13 +47,14 @@ public class GameManager : IDisposable {
         _ecsWorld.Import<DamageResolutionModule>();
         _ecsWorld.Import<EffectModule>();
 
-        // 共有戦闘エンティティプールサービスを事前確保・初期化（明示的初期化・ECS Singleton を脱却）
+        // Flecs Prefab 原型レジストリおよび同構プールサービスを初期化
+        PrefabRegistry.Initialize(_ecsWorld);
         CombatPoolService.Initialize(_ecsWorld);
 
         var playerCfg = ConfigManager.Cat;
 
-        var playerEntity = _ecsWorld.Entity("Player1");
-        Player = new PlayerPawn(playerEntity, playerCfg, playerHandle);
+        var playerEntity = _ecsWorld.Entity("Player1").IsA(PrefabRegistry.GetPrefab(PrefabKey.CatPlayer));
+        Player = new Cat(playerEntity, playerCfg, playerHandle);
         PlayerController = new PlayerController(Player);
 
         SetupArena();
@@ -85,7 +87,7 @@ public class GameManager : IDisposable {
     /// <summary>
     ///     現在アクティブなプレイヤー自機インスタンスを取得します。
     /// </summary>
-    public PlayerPawn Player { get; }
+    public PlayerPawn Player { get; private set; } = null!;
 
     /// <summary>
     ///     現在アクティブなプレイヤーコントローラーを取得します。
@@ -119,8 +121,9 @@ public class GameManager : IDisposable {
         ConfigManager.Boss2Container.OnConfigReloaded -= OnBoss2ConfigReloaded;
         ConfigManager.CatContainer.OnConfigReloaded -= OnCatConfigReloaded;
         ConfigManager.BunnyContainer.OnConfigReloaded -= OnBunnyConfigReloaded;
+        ConfigManager.CombatPrefabsContainer.OnConfigReloaded -= OnCombatPrefabsReloaded;
 
-        CombatPoolService.Current?.Dispose();
+        CombatPoolService.Current.Dispose();
 
         _worldRenderer.Dispose();
         _debugRenderer.Dispose();
@@ -199,7 +202,7 @@ public class GameManager : IDisposable {
         if (otherBoss.IsAlive()) otherBoss.Destruct();
 
         CurrentBossType = bossType;
-        var bossEntity = _ecsWorld.Entity(CurrentBossName);
+        var bossEntity = _ecsWorld.Entity(CurrentBossName).IsA(PrefabRegistry.GetPrefab(bossType.ToPrefabKey()));
         SpawnBoss(bossType, bossEntity);
     }
 
@@ -212,6 +215,13 @@ public class GameManager : IDisposable {
         ConfigManager.Boss2Container.OnConfigReloaded += OnBoss2ConfigReloaded;
         ConfigManager.CatContainer.OnConfigReloaded += OnCatConfigReloaded;
         ConfigManager.BunnyContainer.OnConfigReloaded += OnBunnyConfigReloaded;
+        ConfigManager.CombatPrefabsContainer.OnConfigReloaded += OnCombatPrefabsReloaded;
+    }
+
+    private void OnCombatPrefabsReloaded()
+    {
+        PrefabRegistry.ReloadPrefabs();
+        Debug.WriteLine("[GameManager] CombatPrefabs のホットリロードを完了しました");
     }
 
     private void OnBoss1ConfigReloaded() => OnBossConfigReloaded(BossType.Boss1);
@@ -251,7 +261,7 @@ public class GameManager : IDisposable {
 
     private void OnCatConfigReloaded()
     {
-        if (Player.CurrentCharacter == CharacterType.Cat)
+        if (Player is Cat)
         {
             ApplyPlayerConfig(ConfigManager.Cat);
         }
@@ -259,10 +269,79 @@ public class GameManager : IDisposable {
 
     private void OnBunnyConfigReloaded()
     {
-        if (Player.CurrentCharacter == CharacterType.Bunny)
+        if (Player is Bunny)
         {
             ApplyPlayerConfig(ConfigManager.Bunny);
         }
+    }
+
+    /// <summary>
+    ///     プレイヤー自機キャラクター（Cat または Bunny）を動的に切り替えます。
+    /// </summary>
+    /// <param name="newChar">切り替え先のキャラクター種別。</param>
+    public void SwitchPlayer(CharacterType newChar)
+    {
+        if (Player.CharacterType == newChar) return;
+
+        if (Player is Bunny oldBunny && oldBunny.MeleeAttackEntity.IsAlive())
+        {
+            oldBunny.MeleeAttackEntity.Disable();
+        }
+
+        var playerEntity = Player.Entity;
+        var oldPrefab = Player.CharacterType == CharacterType.Bunny
+            ? PrefabRegistry.GetPrefab(PrefabKey.BunnyPlayer)
+            : PrefabRegistry.GetPrefab(PrefabKey.CatPlayer);
+        var newPrefab = PrefabRegistry.GetPrefab(newChar.ToPrefabKey());
+
+        playerEntity.Remove(oldPrefab).IsA(newPrefab);
+
+        var pCfg = newChar == CharacterType.Cat ? ConfigManager.Cat : ConfigManager.Bunny;
+        AssetManager.TryGetCharacterSpriteHandle(newChar, "Idle", out var handle);
+
+        if (newChar == CharacterType.Cat)
+        {
+            playerEntity.Remove<BunnyWeaponState>();
+            playerEntity.Remove<PlayerMeleeWeapon>();
+            Player = new Cat(playerEntity, pCfg, handle);
+        }
+        else
+        {
+            playerEntity.Remove<CatWeaponState>();
+            Player = new Bunny(playerEntity, pCfg, handle);
+        }
+
+        PlayerController.Pawn = Player;
+
+        ref var anim = ref playerEntity.GetMut<Animation>();
+        anim.CharacterType = newChar;
+        anim.Play("Idle");
+
+        ref var sprite = ref playerEntity.GetMut<Sprite>();
+        sprite.GraphHandle = handle;
+        sprite.SrcRect = new Rect(0, 0, 32, 32);
+
+        playerEntity.Set(JumpCapability.FromPlayerConfig(pCfg));
+        playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
+        playerEntity.Set(new CollisionBox(pCfg.CollisionWidth, pCfg.CollisionHeight));
+
+        ref var hp = ref playerEntity.GetMut<Health>();
+        var oldMax = hp.Max;
+        hp.Max = pCfg.MaxHp;
+        if (hp.Current >= oldMax)
+        {
+            hp.Current = pCfg.MaxHp;
+        }
+        else
+        {
+            hp.Current = Math.Clamp(hp.Current, 0.0f, hp.Max);
+        }
+
+        ref var t = ref playerEntity.GetMut<Transform>();
+        t.ScaleX = pCfg.ScaleX;
+        t.ScaleY = pCfg.ScaleY;
+
+        Debug.WriteLine($"[GameManager] プレイヤーキャラクターを切り替えました: {newChar} (Speed: {pCfg.MoveSpeed}, Jump: {pCfg.FirstJumpVelocity})");
     }
 
     private void ApplyPlayerConfig(PlayerConfig pCfg)
@@ -272,27 +351,22 @@ public class GameManager : IDisposable {
         playerEntity.Set(new Hurtbox(pCfg.GetHurtboxShape()));
         playerEntity.Set(new CollisionBox(pCfg.CollisionWidth, pCfg.CollisionHeight));
 
-        if (playerEntity.Has<Transform>())
-        {
-            ref var t = ref playerEntity.GetMut<Transform>();
-            t.ScaleX = pCfg.ScaleX;
-            t.ScaleY = pCfg.ScaleY;
-        }
+        ref var t = ref playerEntity.GetMut<Transform>();
+        t.ScaleX = pCfg.ScaleX;
+        t.ScaleY = pCfg.ScaleY;
 
         playerEntity.Set(JumpCapability.FromPlayerConfig(pCfg));
 
-        if (Player.CurrentCharacter == CharacterType.Bunny)
+        if (Player is Bunny)
         {
-            playerEntity.Remove<CatWeaponState>();
             playerEntity.Set(BunnyWeaponState.FromConfig(pCfg));
         }
         else
         {
-            playerEntity.Remove<BunnyWeaponState>();
             playerEntity.Set(CatWeaponState.FromConfig(pCfg));
         }
 
-        Debug.WriteLine($"[GameManager] Player ({Player.CurrentCharacter}) の Hurtbox / CollisionBox / Scale / Weapon / Jump を TOML からリアルタイム同期しました");
+        Debug.WriteLine($"[GameManager] Player ({Player.CharacterType}) の Hurtbox / CollisionBox / Scale / Weapon / Jump を TOML からリアルタイム同期しました");
     }
 
     /// <summary>
@@ -349,11 +423,11 @@ public class GameManager : IDisposable {
         }
         else if (InputService.IsPressed(InputAction.SelectCharacter1))
         {
-            Player.SwitchCharacter(CharacterType.Cat, ConfigManager.Cat);
+            SwitchPlayer(CharacterType.Cat);
         }
         else if (InputService.IsPressed(InputAction.SelectCharacter2))
         {
-            Player.SwitchCharacter(CharacterType.Bunny, ConfigManager.Bunny);
+            SwitchPlayer(CharacterType.Bunny);
         }
         else if (InputService.IsPressed(InputAction.Restart))
         {

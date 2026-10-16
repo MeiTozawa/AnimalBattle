@@ -12,4 +12,7 @@ public struct PoolLeaseState {
 
     /// <summary>現在貸出中かどうか。</summary>
     public bool IsRented;
+
+    /// <summary>プール内での固定スロットインデックス。</summary>
+    public int SlotIndex;
 }

@@ -20,13 +20,12 @@ public static class BossDamageResolutionSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddBossDamageResolutionSystem(this World world)
     {
-        world.System<Health, IncomingDamage, InvincibleOnHit, HitFlashSettings, Transform, BossCombatState, Sprite, AbilitySystemComponent>("BossDamageResolutionSystem")
+        world.System<Health, IncomingDamage, HitFlashSettings, Transform, BossCombatState, Sprite, AbilitySystemComponent>("BossDamageResolutionSystem")
             .With<BossTag>()
             .Kind(Ecs.OnValidate)
             .Iter((Iter it,
                 Field<Health> hps,
                 Field<IncomingDamage> damages,
-                Field<InvincibleOnHit> invConfigs,
                 Field<HitFlashSettings> flashConfigs,
                 Field<Transform> transforms,
                 Field<BossCombatState> combats,
@@ -42,7 +41,6 @@ public static class BossDamageResolutionSystem
                     var entity = it.Entity(i);
                     ref var hp = ref hps[i];
                     ref readonly var dmg = ref damages[i];
-                    ref readonly var invCfg = ref invConfigs[i];
                     ref readonly var flashCfg = ref flashConfigs[i];
                     ref readonly var trans = ref transforms[i];
                     ref readonly var combat = ref combats[i];
@@ -62,11 +60,7 @@ public static class BossDamageResolutionSystem
                     var finalDamage = dmg.Amount * multiplier;
                     hp.Current = MathF.Max(0.0f, hp.Current - finalDamage);
 
-                    // 無敵時間および被弾白閃演出の注入
-                    if (invCfg.Duration > 0.0f)
-                    {
-                        asc.ApplyGameplayEffect(GameplayTag.Invincible, invCfg.Duration, entity.Id);
-                    }
+                    // 被弾白閃演出の注入
                     entity.Set(new HitFlashEffect(flashCfg.Duration, flashCfg.Color));
 
                     // ヒットストップおよび受撃局所振動の適用（SuperArmor 剛体タグ未保持時のみ適用）

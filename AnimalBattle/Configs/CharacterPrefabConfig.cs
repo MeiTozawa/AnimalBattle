@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 
+#nullable disable
+
 namespace AnimalBattle.Configs;
 
 /// <summary>
@@ -14,7 +16,7 @@ public sealed class PlayerPrefabConfig
     public float HitFlashDuration { get; set; }
     public float CollisionWidth { get; set; }
     public float CollisionHeight { get; set; }
-    public string HurtboxShape { get; set; } = string.Empty;
+    public string HurtboxShape { get; set; }
     public float HurtboxRadius { get; set; }
     public float HurtboxOffsetY { get; set; }
     public float ScaleX { get; set; }
@@ -36,14 +38,14 @@ public sealed class BossPrefabConfig
     public float ScaleY { get; set; }
 
     // 被弾判定ボックス (Hurtbox)
-    public string HurtboxShape { get; set; } = string.Empty;
+    public string HurtboxShape { get; set; }
     public float HurtboxRadius { get; set; }
     public float HurtboxWidth { get; set; }
     public float HurtboxHeight { get; set; }
     public float HurtboxOffsetY { get; set; }
 
     // 接触ダメージ判定ボックス (Hitbox)
-    public string HitboxShape { get; set; } = string.Empty;
+    public string HitboxShape { get; set; }
     public float BodyHitboxRadius { get; set; }
     public float BodyHitboxWidth { get; set; }
     public float BodyHitboxHeight { get; set; }

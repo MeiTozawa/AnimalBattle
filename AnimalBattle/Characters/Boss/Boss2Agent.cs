@@ -45,22 +45,13 @@ public sealed class Boss2Agent : BaseBossAgent
     private void InitializeComponents(Entity entity, int spriteHandle)
     {
         var b2Cfg = ConfigManager.Boss2;
-        InitializeCommonComponents(
+        InitializeComponents(
             entity,
             spriteHandle,
-            b2Cfg.MaxHp,
             b2Cfg.SpawnX,
             b2Cfg.SpawnY,
             b2Cfg.ScaleX,
-            b2Cfg.ScaleY,
-            b2Cfg.HitFlashDuration,
-            b2Cfg.GetHurtboxShape(),
-            b2Cfg.GetHitboxShape(),
-            b2Cfg.BodyContactDamage,
-            b2Cfg.CollisionWidth,
-            b2Cfg.CollisionHeight);
-
-        entity.Add<Boss2Tag>();
+            b2Cfg.ScaleY);
     }
 
     /// <inheritdoc />
