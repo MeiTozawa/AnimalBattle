@@ -122,7 +122,7 @@ public static class MeleeBulletCancelSystem
                     if (PhysicsService.Intersects(melee.Transform, melee.Shape, bt, bHitbox.Shape))
                     {
                         bEntity.Add<RecycleTag>();
-                        CombatSpawner.SpawnHitSparkEffect(_world, bt.X, bt.Y);
+                        EffectSpawner.SpawnHitSparkEffect(_world, bt.X, bt.Y);
 
                         if (!_sfxPlayedThisFrame)
                         {

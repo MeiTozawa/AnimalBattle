@@ -85,7 +85,7 @@ public static class BunnyWeaponSystem
                 slashDir = dirY >= 0.0f ? SlashDirection.Down : SlashDirection.Up;
             }
 
-            CombatSpawner.SpawnPlayerMeleeAttack(spawnX,
+            MeleeSpawner.SpawnPlayerMeleeAttack(spawnX,
                 spawnY,
                 weapon.AttackWidth,
                 weapon.AttackHeight,

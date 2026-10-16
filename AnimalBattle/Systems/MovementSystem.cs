@@ -135,7 +135,7 @@ public static class MovementSystem {
                 dash.GhostTrailTimer = 0.0f;
                 if (effectWorld.HasValue)
                 {
-                    CombatSpawner.SpawnGhostTrail(
+                    EffectSpawner.SpawnGhostTrail(
                         effectWorld.Value,
                         trans.X,
                         trans.Y,
@@ -230,7 +230,7 @@ public static class MovementSystem {
                     jump.JumpBufferTimer = 0.0f;
                     didJump = true;
                     if (effectWorld.HasValue)
-                        CombatSpawner.SpawnJumpRingEffect(effectWorld.Value, trans.X, trans.Y + col.Height / 2.0f);
+                        EffectSpawner.SpawnJumpRingEffect(effectWorld.Value, trans.X, trans.Y + col.Height / 2.0f);
                     EventBus.Publish(new PlayerDoubleJumpedEvent());
                 }
 

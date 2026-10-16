@@ -161,7 +161,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// </summary>
     protected void HandleClearBullets()
     {
-        if (CurrentWorld != default) CombatSpawner.ClearAllBossBullets(CurrentWorld);
+        if (CurrentWorld != default) BulletSpawner.ClearAllBossBullets(CurrentWorld);
     }
 
     /// <summary>

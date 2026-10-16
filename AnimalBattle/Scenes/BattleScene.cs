@@ -367,7 +367,7 @@ public class BattleScene : IDisposable {
 
     private void ResetCombat()
     {
-        CombatSpawner.ClearAllBossBullets(_ecsWorld);
+        BulletSpawner.ClearAllBossBullets(_ecsWorld);
         _playerBulletsQuery.Each(e => e.Add<RecycleTag>());
         _vfxQuery.Each(e => e.Add<RecycleTag>());
         CameraService.Reset();

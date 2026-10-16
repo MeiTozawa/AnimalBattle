@@ -267,7 +267,7 @@ public sealed class HeavySlashConfig : MeleePatternConfigBase {
         var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
         var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
         var dir = forwardDir > 0.0f ? SlashDirection.Right : SlashDirection.Left;
-        CombatSpawner.SpawnMeleeSlashHitbox(
+        MeleeSpawner.SpawnMeleeSlashHitbox(
             world,
             origin.X + offX,
             origin.Y + offY,
@@ -396,7 +396,7 @@ public sealed class LeapSmashConfig : SkillPatternConfigBase {
     public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
     {
         var groundY = origin.Y + bodyHeight / 2.0f;
-        CombatSpawner.SpawnMeleeSlashHitbox(
+        MeleeSpawner.SpawnMeleeSlashHitbox(
             world,
             origin.X,
             groundY - SlashRadius * 0.5f,
@@ -442,7 +442,7 @@ public sealed class DoubleCleaveConfig : MeleePatternConfigBase {
         var offX = forwardDir * (b2Cfg.SlashSpawnOffsetX + additionalX);
         var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
         var dir = forwardDir > 0.0f ? SlashDirection.Right : SlashDirection.Left;
-        CombatSpawner.SpawnMeleeSlashHitbox(
+        MeleeSpawner.SpawnMeleeSlashHitbox(
             world,
             origin.X + offX,
             origin.Y + offY,

@@ -87,7 +87,7 @@ public static class CatWeaponSystem
                 .Add<PlayerBulletTag>();
 
             // 銃口閃光（Muzzle Flash）エフェクト生成
-            CombatSpawner.SpawnMuzzleFlash(world, spawnX, spawnY);
+            EffectSpawner.SpawnMuzzleFlash(world, spawnX, spawnY);
 
             // 自機射撃微後退反動（Recoil Impulse & Squash/Stretch）
             trans.X -= dirX * weapon.ShootRecoilDistance;
