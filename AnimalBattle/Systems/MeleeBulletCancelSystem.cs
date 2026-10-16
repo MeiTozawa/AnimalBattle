@@ -26,11 +26,11 @@ public static class MeleeBulletCancelSystem
     private sealed class CancelContext
     {
         private readonly Ecs.IterFieldCallback<Transform, Hitbox> _collectMeleeIter;
-        private readonly Ecs.IterFieldCallback<Transform, Hitbox> _processBulletsIter;
+        private readonly Ecs.IterFieldCallback<Transform, Hitbox, Bullet> _processBulletsIter;
         private readonly World _world;
 
         public readonly Query<Transform, Hitbox> MeleeQuery;
-        public readonly Query<Transform, Hitbox> BulletQuery;
+        public readonly Query<Transform, Hitbox, Bullet> BulletQuery;
         public readonly MeleeTarget[] Melees = new MeleeTarget[8];
         public int MeleeCount;
         private bool _sfxPlayedThisFrame;
@@ -44,9 +44,8 @@ public static class MeleeBulletCancelSystem
                 .Without<RecycleTag>()
                 .Build();
 
-            BulletQuery = world.QueryBuilder<Transform, Hitbox>()
+            BulletQuery = world.QueryBuilder<Transform, Hitbox, Bullet>()
                 .With<BossBulletTag>()
-                .Without<IndestructibleBulletTag>()
                 .Without<RecycleTag>()
                 .Build();
 
@@ -91,11 +90,13 @@ public static class MeleeBulletCancelSystem
             }
         }
 
-        private void ProcessBullets(Iter it, Field<Transform> bTransforms, Field<Hitbox> bHitboxes)
+        private void ProcessBullets(Iter it, Field<Transform> bTransforms, Field<Hitbox> bHitboxes, Field<Bullet> bBullets)
         {
             var count = it.Count();
             for (var b = 0; b < count; b++)
             {
+                if (bBullets[b].IsIndestructible) continue;
+
                 ref readonly var bHitbox = ref bHitboxes[b];
                 if (!bHitbox.IsActive) continue;
 

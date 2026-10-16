@@ -41,6 +41,8 @@ public static class OrbitSatelliteMovementSystem
                 for (var i = 0; i < count; ++i)
                 {
                     ref var sat = ref satellites[i];
+                    if (!sat.IsActive) continue;
+
                     if (!sat.Parent.IsAlive() || !sat.Parent.Enabled() || sat.Parent.Has<RecycleTag>())
                     {
                         it.Entity(i).Add<RecycleTag>();

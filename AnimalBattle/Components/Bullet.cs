@@ -27,4 +27,7 @@ public struct Bullet(float radius, Color fillColor, Color outlineColor, bool isB
 
     /// <summary>画面端やプラットフォームで跳ね返るかどうかのフラグ</summary>
     public bool IsBouncing = isBouncing;
+
+    /// <summary>近接攻撃等で破壊・消去不可（地面衝撃波等）かどうかのフラグ。</summary>
+    public bool IsIndestructible = false;
 }

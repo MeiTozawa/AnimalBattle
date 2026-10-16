@@ -36,6 +36,8 @@ public static class SpecialBulletSystem {
                 for (var i = 0; i < count; ++i)
                 {
                     ref var mod = ref modifier[i];
+                    if (mod.Type == BulletType.Normal) continue;
+
                     mod.ElapsedTimer += dt;
 
                     var type = mod.Type;

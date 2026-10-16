@@ -27,7 +27,7 @@ public sealed class EntityPoolMetrics {
 /// </summary>
 public sealed class EntityPool : IDisposable {
     private static ulong _nextPoolId = 1;
-    private readonly Entity _prefab;
+    private Entity _prefab;
     private readonly Action<Entity>? _onInit;
     private readonly Action<Entity>? _onReset;
     private World _world;
@@ -51,24 +51,6 @@ public sealed class EntityPool : IDisposable {
         Action<Entity>? onReset = null,
         int maxCapacity = 2048)
         : this(world, initialCapacity, null, onReset, maxCapacity, prefab)
-    {
-    }
-
-    /// <summary>
-    ///     カスタム初期化デリゲートを指定してエンティティオブジェクトプールを初期化します（後方互換対応）。
-    /// </summary>
-    /// <param name="world">エンティティが所属する Flecs.NET ワールド。</param>
-    /// <param name="initialCapacity">初期事前確保エンティティ容量。</param>
-    /// <param name="onInit">エンティティ生成時の初期化デリゲート。</param>
-    /// <param name="onReset">エンティティ貸出時の状態リセット・クリーンアップデリゲート。</param>
-    /// <param name="maxCapacity">プールの最大許容上限容量。</param>
-    public EntityPool(
-        World world,
-        int initialCapacity = 64,
-        Action<Entity>? onInit = null,
-        Action<Entity>? onReset = null,
-        int maxCapacity = 2048)
-        : this(world, initialCapacity, onInit, onReset, maxCapacity, default)
     {
     }
 
@@ -172,7 +154,6 @@ public sealed class EntityPool : IDisposable {
     public Entity Rent()
     {
         Debug.Assert(!_isDisposed, "[EntityPool] 破棄済みのプールからエンティティを借出することはできません。");
-
         if (AvailableCount == 0)
         {
             if (TotalAllocated >= MaxCapacity)

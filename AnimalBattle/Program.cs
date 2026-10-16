@@ -13,14 +13,11 @@ internal static class Program {
             const int width = 1280;
             const int height = 720;
 
-            Debug.WriteLine("C++ DxLib ネイティブエンジンを初期化中...");
             GameEngine.Initialize(width, height);
 
-            Debug.WriteLine("Flecs.NET ワールドおよびバトルシーンを初期化中...");
             using GameManager gameManager = new();
             gameManager.Initialize();
 
-            Debug.WriteLine("双スレッドロックステップパイプラインループを開始します...");
             using DualThreadGameLoop gameLoop = new();
             gameLoop.Run(gameManager);
         }

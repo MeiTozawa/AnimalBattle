@@ -79,12 +79,11 @@ public static class CatWeaponSystem
             var vy = dirY * weapon.BulletSpeed;
 
             // 事前確保されたエンティティプールから自機弾丸を貸出
-            CombatPoolService.RentPlayerBullet()
+            var bulletEntity = CombatPoolService.RentPlayerBullet();
+            bulletEntity
                 .Set(new Transform(spawnX, spawnY))
                 .Set(new Velocity(vx, vy))
-                .Set(new CollisionBox(weapon.BulletWidth, weapon.BulletHeight))
-                .Set(new Hitbox(new CollisionShape.Box(weapon.BulletWidth, weapon.BulletHeight), weapon.BulletDamage))
-                .Add<PlayerBulletTag>();
+                .Set(new Hitbox(new CollisionShape.Box(weapon.BulletWidth, weapon.BulletHeight), weapon.BulletDamage));
 
             // 銃口閃光（Muzzle Flash）エフェクト生成
             EffectSpawner.SpawnMuzzleFlash(world, spawnX, spawnY);

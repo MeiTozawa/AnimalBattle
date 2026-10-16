@@ -46,7 +46,6 @@ public class GameManager : IDisposable {
         _ecsWorld.Import<DamageResolutionModule>();
         _ecsWorld.Import<EffectModule>();
 
-        // Flecs Prefab 原型レジストリおよび同構プールサービスを初期化
         PrefabRegistry.Initialize(_ecsWorld);
         CombatPoolService.Initialize(_ecsWorld);
 
@@ -74,7 +73,6 @@ public class GameManager : IDisposable {
         InputService.SetCursorVisible(false);
         AimReticleRenderer.Initialize();
 
-        // 3. アクティブな Boss (デフォルト: Boss 1) の生成
         SwitchBoss(CurrentBossType);
     }
 

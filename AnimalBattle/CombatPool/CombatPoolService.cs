@@ -41,13 +41,17 @@ public sealed class CombatPoolService : IDisposable
     /// <param name="world">エンティティが所属する Flecs.NET ワールド。</param>
     public CombatPoolService(World world)
     {
-        RegisterPool(PrefabKey.PlayerBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.PlayerBullet), 128, ResetBulletEntity));
-        RegisterPool(PrefabKey.BossNormalBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossNormalBullet), 64, ResetBulletEntity));
-        RegisterPool(PrefabKey.BossMagentaBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossMagentaBullet), 64, ResetBulletEntity));
-        RegisterPool(PrefabKey.BossYellowBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossYellowBullet), 64, ResetBulletEntity));
-        RegisterPool(PrefabKey.BossYellowSatellite, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossYellowSatellite), 64, ResetBulletEntity));
-        RegisterPool(PrefabKey.BossBlueBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossBlueBullet), 64, ResetBulletEntity));
-        RegisterPool(PrefabKey.BossBlackBullet, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossBlackBullet), 64, ResetBulletEntity));
+        var playerPool = new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.PlayerBullet), 64, ResetPlayerBulletEntity);
+        var bossPool = new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.BossNormalBullet), 256, ResetBossBulletEntity);
+
+        RegisterPool(PrefabKey.PlayerBullet, playerPool);
+        RegisterPool(PrefabKey.BossNormalBullet, bossPool);
+        _poolsByPrefabKey[(int)PrefabKey.BossMagentaBullet] = bossPool;
+        _poolsByPrefabKey[(int)PrefabKey.BossYellowBullet] = bossPool;
+        _poolsByPrefabKey[(int)PrefabKey.BossYellowSatellite] = bossPool;
+        _poolsByPrefabKey[(int)PrefabKey.BossBlueBullet] = bossPool;
+        _poolsByPrefabKey[(int)PrefabKey.BossBlackBullet] = bossPool;
+
         RegisterPool(PrefabKey.SparkVfx, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.SparkVfx), 256, ResetEffectEntity));
         RegisterPool(PrefabKey.RingVfx, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.RingVfx), 64, ResetEffectEntity));
         RegisterPool(PrefabKey.AreaVfx, new EntityPool(world, PrefabRegistry.GetPrefab(PrefabKey.AreaVfx), 32, ResetEffectEntity));
@@ -143,12 +147,30 @@ public sealed class CombatPoolService : IDisposable
         if (_current == this) _current = null;
     }
 
-    private static void ResetBulletEntity(Entity e)
+    private static void ResetPlayerBulletEntity(Entity e)
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
-        e.Remove<IndestructibleBulletTag>();
-        if (e.Has<OrbitSatellite>()) e.Remove<OrbitSatellite>();
+    }
+
+    private static void ResetBossBulletEntity(Entity e)
+    {
+        e.Remove<RecycleTag>();
+        e.Remove<HitFlashEffect>();
+
+        ref var bullet = ref e.GetMut<Bullet>();
+        bullet.IsIndestructible = false;
+        bullet.IsBouncing = false;
+        bullet.Lifetime = 0.0f;
+
+        ref var mod = ref e.GetMut<BulletModifier>();
+        mod.Type = BulletType.Normal;
+        mod.ElapsedTimer = 0.0f;
+
+        ref var sat = ref e.GetMut<OrbitSatellite>();
+        sat.IsActive = false;
+        sat.Parent = default;
+        sat.ParentVersion = 0;
     }
 
     private static void ResetEffectEntity(Entity e)

@@ -104,75 +104,29 @@ public static class PrefabRegistry
         var playerBulletPrefab = world.Prefab("PlayerBulletPrefab")
            .IsA(baseProj)
            .Add<PlayerBulletTag>()
-           .Set(new CollisionBox(playerBulletCfg.Width, playerBulletCfg.Height))
            .Set(new Hitbox(new CollisionShape.Box(playerBulletCfg.Width, playerBulletCfg.Height), playerBulletCfg.Damage, Faction.Friendly));
         Prefabs[(int)PrefabKey.PlayerBullet] = playerBulletPrefab;
 
-        // --- 2. Boss 弾幕基底 ---
+        // --- 2. Boss 統一弾幕基底（超集 Archetype：通常・品紅・黄・衛星・青・黒の全種別を同一 Archetype で共用） ---
         var bossNormalCfg = cfg.BossNormalBullet;
         var (normalFill, normalOutline) = BulletPalette.ResolveBulletColors(BulletType.Normal, ColorTranslator.FromHtml(bossNormalCfg.FillColor), ColorTranslator.FromHtml(bossNormalCfg.OutlineColor));
-        var bossBulletBase = world.Prefab("BossBulletBasePrefab")
-           .IsA(baseProj)
-           .Add<BossBulletTag>()
-           .Set(new Bullet(bossNormalCfg.Radius, normalFill, normalOutline))
-           .Set(new Hitbox(new CollisionShape.Circle(bossNormalCfg.Radius), bossNormalCfg.Damage, Faction.Hostile));
+        var bossBulletBase = world.Prefab("BossBulletBasePrefab");
+        // world.Prefab(...) は、評価スタック上の名前のない一時変数を返します。
+        // 直接チェーン呼び出しすることはできません!!!!!
+        bossBulletBase
+            .IsA(baseProj)
+            .Add<BossBulletTag>()
+            .Set(new Bullet(bossNormalCfg.Radius, normalFill, normalOutline))
+            .Set(new Hitbox(new CollisionShape.Circle(bossNormalCfg.Radius), bossNormalCfg.Damage, Faction.Hostile))
+            .Set(new BulletModifier(BulletType.Normal, bossNormalCfg.Radius, 0.0f, 0.0f))
+            .Set(new OrbitSatellite(false, default, 0.0f, 0.0f, 0));
 
-        // --- 3. Boss 通常弾 ---
-        var bossNormalBullet = world.Prefab("BossNormalBulletPrefab")
-           .IsA(bossBulletBase)
-           .Set(new Bullet(bossNormalCfg.Radius, normalFill, normalOutline))
-           .Set(new Hitbox(new CollisionShape.Circle(bossNormalCfg.Radius), bossNormalCfg.Damage, Faction.Hostile));
-        Prefabs[(int)PrefabKey.BossNormalBullet] = bossNormalBullet;
-
-        // --- 4. Boss 品紅特殊弾 ---
-        var magentaCfg = cfg.BossMagentaBullet;
-        var (magentaFill, magentaOutline) = BulletPalette.ResolveBulletColors(BulletType.Magenta, ColorTranslator.FromHtml(magentaCfg.FillColor), ColorTranslator.FromHtml(magentaCfg.OutlineColor));
-        var bossMagentaBullet = world.Prefab("BossMagentaBulletPrefab")
-           .IsA(bossBulletBase)
-           .Set(new Bullet(magentaCfg.Radius, magentaFill, magentaOutline))
-           .Set(new Hitbox(new CollisionShape.Circle(magentaCfg.Radius), magentaCfg.Damage, Faction.Hostile))
-           .Set(new BulletModifier(BulletType.Magenta, magentaCfg.Radius, 0.0f, 0.0f));
-        Prefabs[(int)PrefabKey.BossMagentaBullet] = bossMagentaBullet;
-
-        // --- 5. Boss 黄特殊弾 ---
-        var yellowCfg = cfg.BossYellowBullet;
-        var (yellowFill, yellowOutline) = BulletPalette.ResolveBulletColors(BulletType.Yellow, ColorTranslator.FromHtml(yellowCfg.FillColor), ColorTranslator.FromHtml(yellowCfg.OutlineColor));
-        var bossYellowBullet = world.Prefab("BossYellowBulletPrefab")
-           .IsA(bossBulletBase)
-           .Set(new Bullet(yellowCfg.Radius, yellowFill, yellowOutline))
-           .Set(new Hitbox(new CollisionShape.Circle(yellowCfg.Radius), yellowCfg.Damage, Faction.Hostile))
-           .Set(new BulletModifier(BulletType.Yellow, yellowCfg.Radius, 0.0f, 0.0f));
-        Prefabs[(int)PrefabKey.BossYellowBullet] = bossYellowBullet;
-
-        // --- 6. Boss 黄特殊弾周回衛星 ---
-        var satCfg = cfg.BossYellowSatellite;
-        var satRadius = Math.Max(satCfg.MinRadius, yellowCfg.Radius * satCfg.RadiusMultiplier);
-        var bossYellowSat = world.Prefab("BossYellowSatellitePrefab")
-           .IsA(bossBulletBase)
-           .Set(new Bullet(satRadius, yellowFill, yellowOutline))
-           .Set(new Hitbox(new CollisionShape.Circle(satRadius), satCfg.Damage, Faction.Hostile))
-           .Set(new BulletModifier(BulletType.Yellow, satRadius, 0.0f, 0.0f));
-        Prefabs[(int)PrefabKey.BossYellowSatellite] = bossYellowSat;
-
-        // --- 7. Boss 青特殊弾 ---
-        var blueCfg = cfg.BossBlueBullet;
-        var (blueFill, blueOutline) = BulletPalette.ResolveBulletColors(BulletType.Cyan, ColorTranslator.FromHtml(blueCfg.FillColor), ColorTranslator.FromHtml(blueCfg.OutlineColor));
-        var bossBlueBullet = world.Prefab("BossBlueBulletPrefab")
-           .IsA(bossBulletBase)
-           .Set(new Bullet(blueCfg.Radius, blueFill, blueOutline))
-           .Set(new Hitbox(new CollisionShape.Circle(blueCfg.Radius), blueCfg.Damage, Faction.Hostile))
-           .Set(new BulletModifier(BulletType.Cyan, blueCfg.Radius, 0.0f, 0.0f));
-        Prefabs[(int)PrefabKey.BossBlueBullet] = bossBlueBullet;
-
-        // --- 8. Boss 黒特殊弾 ---
-        var blackCfg = cfg.BossBlackBullet;
-        var (blackFill, blackOutline) = BulletPalette.ResolveBulletColors(BulletType.Black, ColorTranslator.FromHtml(blackCfg.FillColor), ColorTranslator.FromHtml(blackCfg.OutlineColor));
-        var bossBlackBullet = world.Prefab("BossBlackBulletPrefab")
-           .IsA(bossBulletBase)
-           .Set(new Bullet(blackCfg.Radius, blackFill, blackOutline))
-           .Set(new Hitbox(new CollisionShape.Circle(blackCfg.Radius), blackCfg.Damage, Faction.Hostile))
-           .Set(new BulletModifier(BulletType.Black, blackCfg.Radius, 0.0f, 0.0f));
-        Prefabs[(int)PrefabKey.BossBlackBullet] = bossBlackBullet;
+        Prefabs[(int)PrefabKey.BossNormalBullet] = bossBulletBase;
+        Prefabs[(int)PrefabKey.BossMagentaBullet] = bossBulletBase;
+        Prefabs[(int)PrefabKey.BossYellowBullet] = bossBulletBase;
+        Prefabs[(int)PrefabKey.BossYellowSatellite] = bossBulletBase;
+        Prefabs[(int)PrefabKey.BossBlueBullet] = bossBulletBase;
+        Prefabs[(int)PrefabKey.BossBlackBullet] = bossBulletBase;
 
         // --- 9. 自機近接斬撃判定 ---
         var slashCfg = cfg.PlayerSlashHitbox;

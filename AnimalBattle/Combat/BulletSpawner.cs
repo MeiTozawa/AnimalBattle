@@ -39,30 +39,15 @@ public static class BulletSpawner
         Color? fillColor = null,
         Color? outlineColor = null)
     {
-        var prefabKey = type switch {
-            BulletType.Normal => PrefabKey.BossNormalBullet,
-            BulletType.Magenta => PrefabKey.BossMagentaBullet,
-            BulletType.Yellow => PrefabKey.BossYellowBullet,
-            BulletType.Cyan => PrefabKey.BossBlueBullet,
-            BulletType.Black => PrefabKey.BossBlackBullet,
-            _ => PrefabKey.BossNormalBullet
-        };
+        var (fill, outline) = BulletPalette.ResolveBulletColors(type, fillColor, outlineColor);
 
-        // 各弾種固有の Prefab 同構プールから借出（Archetype 跨表搬遷ゼロ）
-        var entity = CombatPoolService.Rent(prefabKey)
-           .Set(new Transform(x, y))
-           .Set(new Velocity(vx, vy));
-
-        if (type != BulletType.Normal)
-        {
-            entity.Set(new BulletModifier(type, radius, vx, vy));
-        }
-
-        if (fillColor.HasValue || outlineColor.HasValue)
-        {
-            var (fill, outline) = BulletPalette.ResolveBulletColors(type, fillColor, outlineColor);
-            entity.Set(new Bullet(radius, fill, outline));
-        }
+        // 統合された BossBullets プールから借出
+        var entity = CombatPoolService.RentBossBullet();
+        entity
+            .Set(new Transform(x, y))
+            .Set(new Velocity(vx, vy))
+            .Set(new BulletModifier(type, radius, vx, vy))
+            .Set(new Bullet(radius, fill, outline));
 
         if (type == BulletType.Yellow)
         {
@@ -71,17 +56,14 @@ public static class BulletSpawner
             var orbitDist = radius * cfg.YellowOrbitDistanceMultiplier;
             var parentVersion = entity.Get<PoolLeaseState>().Version;
 
-            var sat = CombatPoolService.Rent(PrefabKey.BossYellowSatellite)
-               .Set(new Transform(x + orbitDist, y))
-               .Set(new Velocity(vx, vy))
-               .Set(new BulletModifier(BulletType.Yellow, satRadius, vx, vy))
-               .Set(new OrbitSatellite(entity, orbitDist, 0.0f, parentVersion));
-
-            if (fillColor.HasValue || outlineColor.HasValue)
-            {
-                var (fill, outline) = BulletPalette.ResolveBulletColors(type, fillColor, outlineColor);
-                sat.Set(new Bullet(satRadius, fill, outline));
-            }
+            var (satFill, satOutline) = BulletPalette.ResolveBulletColors(BulletType.Yellow, fillColor, outlineColor);
+            var satEntity = CombatPoolService.RentBossBullet();
+            satEntity
+                .Set(new Transform(x + orbitDist, y))
+                .Set(new Velocity(vx, vy))
+                .Set(new Bullet(satRadius, satFill, satOutline))
+                .Set(new BulletModifier(BulletType.Yellow, satRadius, vx, vy))
+                .Set(new OrbitSatellite(true, entity, orbitDist, 0.0f, parentVersion));
         }
     }
 
@@ -121,12 +103,16 @@ public static class BulletSpawner
     public static void SpawnGroundShockwave(World world, float x, float y, float vx, float radius, float damage,
         Color fillColor, Color outlineColor)
     {
-        CombatPoolService.Rent(PrefabKey.BossNormalBullet)
-           .Set(new Transform(x, y))
-           .Set(new Velocity(vx, 0.0f))
-           .Set(new Bullet(radius, fillColor, outlineColor))
-           .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile))
-           .Add<IndestructibleBulletTag>();
+        var bullet = new Bullet(radius, fillColor, outlineColor) {
+            IsIndestructible = true
+        };
+
+        var entity = CombatPoolService.RentBossBullet();
+        entity
+            .Set(new Transform(x, y))
+            .Set(new Velocity(vx, 0.0f))
+            .Set(bullet)
+            .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile));
     }
 
     /// <summary>
