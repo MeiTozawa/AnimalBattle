@@ -58,6 +58,7 @@ _CONFIG_MAP = {
     "BunnyPrefab": _CONFIG_DIR / "bunny.prefab.toml",
     "Boss1Prefab": _CONFIG_DIR / "boss1.prefab.toml",
     "Boss2Prefab": _CONFIG_DIR / "boss2.prefab.toml",
+    "StartScene": _CONFIG_DIR / "start_scene.toml",
 }
 
 def load_toml(path: Path) -> dict:

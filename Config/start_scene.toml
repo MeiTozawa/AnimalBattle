@@ -1,0 +1,46 @@
+# ==============================================================================
+# StartScene (キャラクター＆ボス選択画面) 設定ファイル
+# ==============================================================================
+
+[Layout.CatCard]
+X = 100
+Y = 150
+Width = 240
+Height = 390
+
+[Layout.BunnyCard]
+X = 360
+Y = 150
+Width = 240
+Height = 390
+
+[Layout.Boss1Card]
+X = 680
+Y = 150
+Width = 240
+Height = 390
+
+[Layout.Boss2Card]
+X = 940
+Y = 150
+Width = 240
+Height = 390
+
+[Layout.ConfirmButton]
+X = 490
+Y = 580
+Width = 300
+Height = 60
+
+[Colors]
+BgColor = 0xFF12141C
+CardBgColor = 0xFF1C202D
+CardHoverBgColor = 0xFF262C3E
+BorderDefaultColor = 0xFF464E64
+PlayerSelectedColor = 0xFF32C8F0
+BossSelectedColor = 0xFFF05050
+ConfirmBtnDefaultColor = 0xFF234B78
+ConfirmBtnHoverColor = 0xFF3282D2
+TextWhite = 0xFFF0F5FF
+TextMuted = 0xFFA0AABE
+TextGold = 0xFFFFD750

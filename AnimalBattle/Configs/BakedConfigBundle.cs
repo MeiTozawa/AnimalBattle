@@ -90,6 +90,9 @@ public sealed class BakedConfigBundle {
 
     /// <summary>Boss 2 原型設定 (boss2.prefab.toml)</summary>
     public BossPrefabConfig Boss2Prefab { get; set; } = new();
+
+    /// <summary>スタート・選人シーン設定 (start_scene.toml)</summary>
+    public StartSceneConfig StartScene { get; set; } = new();
 }
 
 /// <summary>
@@ -137,6 +140,10 @@ public sealed class BakedConfigBundle {
 [JsonSerializable(typeof(TileSetConfig))]
 [JsonSerializable(typeof(AnimationClipConfig))]
 [JsonSerializable(typeof(AnimationConfig))]
+[JsonSerializable(typeof(StartSceneConfig))]
+[JsonSerializable(typeof(StartSceneLayoutConfig))]
+[JsonSerializable(typeof(CardLayoutConfig))]
+[JsonSerializable(typeof(StartSceneColorsConfig))]
 [JsonSerializable(typeof(EaseType))]
 internal sealed partial class ConfigJsonContext : JsonSerializerContext {
 }

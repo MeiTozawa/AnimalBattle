@@ -27,6 +27,7 @@ public static class ConfigManager {
     private static ConfigBase<PlayerPrefabConfig> _bunnyPrefabConfigContainer = new(new PlayerPrefabConfig());
     private static ConfigBase<BossPrefabConfig> _boss1PrefabConfigContainer = new(new BossPrefabConfig());
     private static ConfigBase<BossPrefabConfig> _boss2PrefabConfigContainer = new(new BossPrefabConfig());
+    private static ConfigBase<StartSceneConfig> _startSceneConfigContainer = new(new StartSceneConfig());
     private static bool _isInitialized;
 
     static ConfigManager()
@@ -40,8 +41,11 @@ public static class ConfigManager {
     /// <summary>Bunny (ウサギ) プレイヤー設定オブジェクトを取得します。</summary>
     public static PlayerConfig Bunny => _bunnyConfigContainer.Config;
 
+    /// <summary>現在アクティブなキャラクター種別。</summary>
+    public static CharacterType ActiveCharacter { get; set; } = CharacterType.Cat;
+
     /// <summary>現在選択中のプレイヤー設定オブジェクトを取得します。</summary>
-    public static PlayerConfig Player => GameManager.Current?.Player?.CurrentCharacter == CharacterType.Bunny ? Bunny : Cat;
+    public static PlayerConfig Player => ActiveCharacter == CharacterType.Bunny ? Bunny : Cat;
 
     /// <summary>指定されたキャラクター種別のプレイヤー設定オブジェクトを取得します。</summary>
     public static PlayerConfig GetPlayerConfig(CharacterType charType) => charType == CharacterType.Bunny ? Bunny : Cat;
@@ -98,7 +102,7 @@ public static class ConfigManager {
     public static ConfigBase<PlayerConfig> BunnyContainer => _bunnyConfigContainer;
 
     /// <summary>現在選択中のプレイヤー設定コンテナを取得します（後方互換）。</summary>
-    public static ConfigBase<PlayerConfig> PlayerContainer => GameManager.Current?.Player?.CurrentCharacter == CharacterType.Bunny ? _bunnyConfigContainer : _catConfigContainer;
+    public static ConfigBase<PlayerConfig> PlayerContainer => ActiveCharacter == CharacterType.Bunny ? _bunnyConfigContainer : _catConfigContainer;
 
     /// <summary>Boss 1 設定コンテナを取得します。</summary>
     public static ConfigBase<Boss1Config> Boss1Container => _boss1ConfigContainer;
@@ -145,6 +149,12 @@ public static class ConfigManager {
     /// <summary>Boss 2 原型設定コンテナを取得します。</summary>
     public static ConfigBase<BossPrefabConfig> Boss2PrefabContainer => _boss2PrefabConfigContainer;
 
+    /// <summary>スタート・選人シーン設定オブジェクトを取得します。</summary>
+    public static StartSceneConfig StartScene => _startSceneConfigContainer.Config;
+
+    /// <summary>スタート・選人シーン設定コンテナを取得します。</summary>
+    public static ConfigBase<StartSceneConfig> StartSceneContainer => _startSceneConfigContainer;
+
     /// <summary>
     ///     全設定を初期化します。
     ///     Debug ビルド時は TOML ファイル群を動的ロードしてホットリロード監視を開始します。
@@ -180,6 +190,7 @@ public static class ConfigManager {
         LoadConfig(ResourcePath.Config.BunnyPrefab, ref _bunnyPrefabConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Boss1Prefab, ref _boss1PrefabConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Boss2Prefab, ref _boss2PrefabConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.StartScene, ref _startSceneConfigContainer, ref successCount, ref failureCount);
 
         Debug.Assert(failureCount == 0, "一部の TOML 設定ファイルの読み込みに失敗しました。");
 
@@ -222,6 +233,7 @@ public static class ConfigManager {
         _bunnyPrefabConfigContainer = new(bundle.BunnyPrefab);
         _boss1PrefabConfigContainer = new(bundle.Boss1Prefab);
         _boss2PrefabConfigContainer = new(bundle.Boss2Prefab);
+        _startSceneConfigContainer = new(bundle.StartScene ?? new StartSceneConfig());
 
         Debug.WriteLine("[C# 設定初期化] Release 版: バイナリ設定データ (baked_configs.bin) を正常にロードして起動しました。");
 #endif
@@ -270,5 +282,6 @@ public static class ConfigManager {
         _bunnyPrefabConfigContainer.Dispose();
         _boss1PrefabConfigContainer.Dispose();
         _boss2PrefabConfigContainer.Dispose();
+        _startSceneConfigContainer.Dispose();
     }
 }

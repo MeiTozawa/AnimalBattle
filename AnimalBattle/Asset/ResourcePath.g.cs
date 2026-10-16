@@ -186,6 +186,9 @@ public static class ResourcePath
         /// <summary>special_bullets.toml 設定ファイル名。</summary>
         public const string SpecialBullets = "special_bullets.toml";
 
+        /// <summary>start_scene.toml 設定ファイル名。</summary>
+        public const string StartScene = "start_scene.toml";
+
         /// <summary>arena.toml の相対パス。</summary>
         public const string ArenaToml = @"Config\arena.toml";
 
@@ -233,6 +236,9 @@ public static class ResourcePath
 
         /// <summary>special_bullets.toml の相対パス。</summary>
         public const string SpecialBulletsToml = @"Config\special_bullets.toml";
+
+        /// <summary>start_scene.toml の相対パス。</summary>
+        public const string StartSceneToml = @"Config\start_scene.toml";
     }
 
     /// <summary>リソースルートディレクトリ名。</summary>
