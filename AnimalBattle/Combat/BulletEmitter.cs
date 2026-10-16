@@ -87,7 +87,8 @@ public static class BulletEmitter
                 cfg.BulletRadius,
                 bType,
                 cfg.FillColor,
-                cfg.OutlineColor);
+                cfg.OutlineColor,
+                cfg.IsIndestructible);
         }
     }
 
@@ -110,7 +111,8 @@ public static class BulletEmitter
             cfg.BulletRadius,
             bType,
             cfg.FillColor,
-            cfg.OutlineColor);
+            cfg.OutlineColor,
+            cfg.IsIndestructible);
     }
 
     /// <summary>全方位円環弾幕を生成します。</summary>
@@ -135,7 +137,8 @@ public static class BulletEmitter
                 cfg.BulletRadius,
                 bType,
                 cfg.FillColor,
-                cfg.OutlineColor);
+                cfg.OutlineColor,
+                cfg.IsIndestructible);
         }
 
         angleOffset += 0.15f;
@@ -157,7 +160,8 @@ public static class BulletEmitter
             cfg.BulletRadius,
             bType,
             cfg.FillColor1,
-            cfg.OutlineColor1);
+            cfg.OutlineColor1,
+            cfg.IsIndestructible);
 
         var angle2 = angleOffset + MathF.PI;
         var vx2 = MathF.Cos(angle2) * cfg.BulletSpeed;
@@ -171,7 +175,8 @@ public static class BulletEmitter
             cfg.BulletRadius,
             bType,
             cfg.FillColor2,
-            cfg.OutlineColor2);
+            cfg.OutlineColor2,
+            cfg.IsIndestructible);
 
         angleOffset += cfg.AngleStep;
     }
@@ -196,7 +201,8 @@ public static class BulletEmitter
                 cfg.BulletRadius,
                 bType,
                 cfg.FillColor,
-                cfg.OutlineColor);
+                cfg.OutlineColor,
+                cfg.IsIndestructible);
         }
 
         angleOffset += cfg.AngleStep;
@@ -217,7 +223,8 @@ public static class BulletEmitter
             cfg.BulletRadius,
             bType,
             cfg.FillColor,
-            cfg.OutlineColor);
+            cfg.OutlineColor,
+            cfg.IsIndestructible);
     }
 
     /// <summary>急降下着地炸裂弾幕を生成します。</summary>
@@ -244,7 +251,8 @@ public static class BulletEmitter
                 cfg.ImpactBulletRadius,
                 bType,
                 cfg.ImpactFillColor,
-                cfg.ImpactOutlineColor);
+                cfg.ImpactOutlineColor,
+                cfg.IsIndestructible);
         }
     }
 
@@ -265,7 +273,8 @@ public static class BulletEmitter
                 cfg.RockRadius,
                 bType,
                 cfg.RockFillColor,
-                cfg.RockOutlineColor);
+                cfg.RockOutlineColor,
+                cfg.IsIndestructible);
         }
     }
 
@@ -283,7 +292,8 @@ public static class BulletEmitter
             cfg.ShockwaveRadius,
             cfg.ShockwaveDamage,
             cfg.FillColor,
-            cfg.OutlineColor);
+            cfg.OutlineColor,
+            cfg.IsIndestructible);
 
         BulletSpawner.SpawnGroundShockwave(
             world,
@@ -293,7 +303,8 @@ public static class BulletEmitter
             cfg.ShockwaveRadius,
             cfg.ShockwaveDamage,
             cfg.FillColor,
-            cfg.OutlineColor);
+            cfg.OutlineColor,
+            cfg.IsIndestructible);
     }
 
     /// <summary>泰山圧頂の着地破片を生成します。</summary>
@@ -318,7 +329,8 @@ public static class BulletEmitter
                 vy,
                 cfg.ShrapnelRadius,
                 cfg.ShrapnelFillColor,
-                cfg.ShrapnelOutlineColor);
+                cfg.ShrapnelOutlineColor,
+                cfg.IsIndestructible);
         }
     }
 }

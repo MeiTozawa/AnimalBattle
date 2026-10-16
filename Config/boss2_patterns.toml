@@ -56,6 +56,7 @@ ShockwaveRadius = 80.0
 ShockwaveDamage = 1.0
 FillColor = 0xFFFF9800
 OutlineColor = 0xFFFFE082
+IsIndestructible = true
 ArmorTags = ["SuperArmor"]
 RecoveryTags = []
 
@@ -97,6 +98,7 @@ ShrapnelSpeed = 260.0
 ShrapnelRadius = 40
 ShrapnelFillColor = 0xFFFF6D00
 ShrapnelOutlineColor = 0xFFFFD180
+IsIndestructible = true
 ArmorTags = ["Invincible"]
 RecoveryTags = ["Vulnerable"]
 
@@ -176,6 +178,7 @@ ShrapnelSpeed = 240.0
 ShrapnelRadius = 8.0
 ShrapnelFillColor = 0xFFFF5252
 ShrapnelOutlineColor = 0xFFFF8A80
+IsIndestructible = false
 ArmorTags = ["SuperArmor"]
 RecoveryTags = ["Stunned", "Vulnerable"]
 
@@ -205,5 +208,6 @@ RockRadius = 9.0
 RockFillColor = 0xFF00E5FF
 RockOutlineColor = 0xFFE0F7FA
 BulletType = "Cyan"
+IsIndestructible = false
 ArmorTags = ["SuperArmor"]
 RecoveryTags = []

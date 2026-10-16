@@ -34,6 +34,9 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig {
     /// <summary>有効射程距離</summary>
     public float EffectiveRange { get; set; }
 
+    /// <summary>生成弾幕が近接攻撃で破壊不能かどうかのフラグ。</summary>
+    public bool IsIndestructible { get; set; }
+
     /// <summary>キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 

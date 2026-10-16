@@ -599,6 +599,9 @@ public sealed class SpecialBulletConfig {
     /// <summary>Phase 3 時の反撃黒弾発射数</summary>
     public int CounterBulletCountPhase3 { get; set; }
 
+    /// <summary>Boss 被弾反撃黒弾が近接攻撃で破壊不能かどうかのフラグ。</summary>
+    public bool CounterBulletIsIndestructible { get; set; }
+
     /// <summary>
     ///     指定された TOML ファイルから特殊弾変調設定を読み込みます。
     /// </summary>

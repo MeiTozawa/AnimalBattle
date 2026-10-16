@@ -160,8 +160,6 @@ public sealed class CombatPoolService : IDisposable
 
         ref var bullet = ref e.GetMut<Bullet>();
         bullet.IsIndestructible = false;
-        bullet.IsBouncing = false;
-        bullet.Lifetime = 0.0f;
 
         ref var mod = ref e.GetMut<BulletModifier>();
         mod.Type = BulletType.Normal;

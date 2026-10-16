@@ -14,4 +14,5 @@ CounterBulletRadius = 8.0
 CounterBulletCountPhase1 = 1
 CounterBulletCountPhase2 = 2
 CounterBulletCountPhase3 = 3
+CounterBulletIsIndestructible = false
 YellowSatelliteMinRadius = 3.0

@@ -20,9 +20,9 @@ public static class BulletSpawner
     ///     指定座標に Boss 通常弾幕エンティティを生成します。
     /// </summary>
     public static void SpawnBossBullet(World world, float x, float y, float vx, float vy, float radius, Color fillColor,
-        Color outlineColor)
+        Color outlineColor, bool isIndestructible = false)
     {
-        SpawnBossSpecialBullet(world, x, y, vx, vy, radius, BulletType.Normal, fillColor, outlineColor);
+        SpawnBossSpecialBullet(world, x, y, vx, vy, radius, BulletType.Normal, fillColor, outlineColor, isIndestructible);
     }
 
     /// <summary>
@@ -37,9 +37,13 @@ public static class BulletSpawner
         float radius,
         BulletType type,
         Color? fillColor = null,
-        Color? outlineColor = null)
+        Color? outlineColor = null,
+        bool isIndestructible = false)
     {
         var (fill, outline) = BulletPalette.ResolveBulletColors(type, fillColor, outlineColor);
+        var bullet = new Bullet(radius, fill, outline) {
+            IsIndestructible = isIndestructible
+        };
 
         // 統合された BossBullets プールから借出
         var entity = CombatPoolService.RentBossBullet();
@@ -47,7 +51,7 @@ public static class BulletSpawner
             .Set(new Transform(x, y))
             .Set(new Velocity(vx, vy))
             .Set(new BulletModifier(type, radius, vx, vy))
-            .Set(new Bullet(radius, fill, outline));
+            .Set(bullet);
 
         if (type == BulletType.Yellow)
         {
@@ -57,12 +61,15 @@ public static class BulletSpawner
             var parentVersion = entity.Get<PoolLeaseState>().Version;
 
             var (satFill, satOutline) = BulletPalette.ResolveBulletColors(BulletType.Yellow, fillColor, outlineColor);
+            var satBullet = new Bullet(satRadius, satFill, satOutline) {
+                IsIndestructible = isIndestructible
+            };
             var satEntity = CombatPoolService.RentBossBullet();
             satEntity
                 .Set(new Transform(x + orbitDist, y))
                 .Set(new Velocity(vx, vy))
-                .Set(new Bullet(satRadius, satFill, satOutline))
                 .Set(new BulletModifier(BulletType.Yellow, satRadius, vx, vy))
+                .Set(satBullet)
                 .Set(new OrbitSatellite(true, entity, orbitDist, 0.0f, parentVersion));
         }
     }
@@ -93,18 +100,28 @@ public static class BulletSpawner
                 vx,
                 vy,
                 cfg.CounterBulletRadius,
-                BulletType.Black);
+                BulletType.Black,
+                isIndestructible: cfg.CounterBulletIsIndestructible);
         }
     }
 
     /// <summary>
     ///     地面を這う衝撃波弾幕エンティティを生成します。
     /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド。</param>
+    /// <param name="x">生成 X 座標。</param>
+    /// <param name="y">生成 Y 座標。</param>
+    /// <param name="vx">初速 X 成分。</param>
+    /// <param name="radius">判定半径。</param>
+    /// <param name="damage">威力ダメージ。</param>
+    /// <param name="fillColor">塗りつぶしカラー。</param>
+    /// <param name="outlineColor">外枠発光カラー。</param>
+    /// <param name="isIndestructible">近接攻撃で破壊不能かどうかのフラグ。</param>
     public static void SpawnGroundShockwave(World world, float x, float y, float vx, float radius, float damage,
-        Color fillColor, Color outlineColor)
+        Color fillColor, Color outlineColor, bool isIndestructible)
     {
         var bullet = new Bullet(radius, fillColor, outlineColor) {
-            IsIndestructible = true
+            IsIndestructible = isIndestructible
         };
 
         var entity = CombatPoolService.RentBossBullet();
@@ -117,7 +134,7 @@ public static class BulletSpawner
 
     /// <summary>
     ///     フィールド上に存在するすべての Boss 弾幕を一括消去します。
-    ///     シミュレーション実行中の時序競合および二重返却（Double Free）を防止するため、
+    ///     シミュレーション実行中の時序競合および二重返却を防止するため、
     ///     即時返却ではなく <see cref="RecycleTag" /> を付与し、
     ///     フレーム末尾の <see cref="CombatRecycleSystem" /> へ回収を一元委譲します。
     /// </summary>
