@@ -39,7 +39,6 @@ public class GameManager : IDisposable {
         var hasPlayerHandle = AssetManager.TryGetCharacterSpriteHandle(CharacterType.Cat, "Idle", out var playerHandle);
         Debug.Assert(hasPlayerHandle, "プレイヤーの初期スプライトハンドルが見つかりません。");
 
-        _ecsWorld.Import<ComponentRequirementsModule>();
         _ecsWorld.Import<CombatFeedbackModule>();
         _ecsWorld.Import<AnimationModule>();
         _ecsWorld.Import<CombatModule>();

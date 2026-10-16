@@ -71,9 +71,9 @@ public struct JumpCapability
     /// </summary>
     /// <param name="cfg">プレイヤー設定。</param>
     /// <returns>構築された JumpCapability インスタンス。</returns>
-    public static JumpCapability FromPlayerConfig(Configs.PlayerConfig cfg)
+    public static JumpCapability FromPlayerConfig(PlayerConfig cfg)
     {
-        System.Diagnostics.Debug.Assert(cfg != null, "PlayerConfig は null であってはなりません。");
+        Debug.Assert(cfg != null, "PlayerConfig は null であってはなりません。");
         return new JumpCapability
         {
             MoveSpeed = cfg.MoveSpeed,

@@ -14,7 +14,7 @@ namespace AnimalBattle.Prefabs;
 /// </summary>
 public static class PrefabRegistry
 {
-    private static readonly Entity[] _prefabs = new Entity[Enum.GetValues<PrefabKey>().Length];
+    private static readonly Entity[] Prefabs = new Entity[Enum.GetValues<PrefabKey>().Length];
     private static World _world;
     private static bool _isInitialized;
 
@@ -45,7 +45,7 @@ public static class PrefabRegistry
     public static Entity GetPrefab(PrefabKey key)
     {
         var idx = (int)key;
-        return _prefabs[idx];
+        return Prefabs[idx];
     }
 
     /// <summary>
@@ -106,7 +106,7 @@ public static class PrefabRegistry
            .Add<PlayerBulletTag>()
            .Set(new CollisionBox(playerBulletCfg.Width, playerBulletCfg.Height))
            .Set(new Hitbox(new CollisionShape.Box(playerBulletCfg.Width, playerBulletCfg.Height), playerBulletCfg.Damage, Faction.Friendly));
-        _prefabs[(int)PrefabKey.PlayerBullet] = playerBulletPrefab;
+        Prefabs[(int)PrefabKey.PlayerBullet] = playerBulletPrefab;
 
         // --- 2. Boss 弾幕基底 ---
         var bossNormalCfg = cfg.BossNormalBullet;
@@ -122,7 +122,7 @@ public static class PrefabRegistry
            .IsA(bossBulletBase)
            .Set(new Bullet(bossNormalCfg.Radius, normalFill, normalOutline))
            .Set(new Hitbox(new CollisionShape.Circle(bossNormalCfg.Radius), bossNormalCfg.Damage, Faction.Hostile));
-        _prefabs[(int)PrefabKey.BossNormalBullet] = bossNormalBullet;
+        Prefabs[(int)PrefabKey.BossNormalBullet] = bossNormalBullet;
 
         // --- 4. Boss 品紅特殊弾 ---
         var magentaCfg = cfg.BossMagentaBullet;
@@ -132,7 +132,7 @@ public static class PrefabRegistry
            .Set(new Bullet(magentaCfg.Radius, magentaFill, magentaOutline))
            .Set(new Hitbox(new CollisionShape.Circle(magentaCfg.Radius), magentaCfg.Damage, Faction.Hostile))
            .Set(new BulletModifier(BulletType.Magenta, magentaCfg.Radius, 0.0f, 0.0f));
-        _prefabs[(int)PrefabKey.BossMagentaBullet] = bossMagentaBullet;
+        Prefabs[(int)PrefabKey.BossMagentaBullet] = bossMagentaBullet;
 
         // --- 5. Boss 黄特殊弾 ---
         var yellowCfg = cfg.BossYellowBullet;
@@ -142,7 +142,7 @@ public static class PrefabRegistry
            .Set(new Bullet(yellowCfg.Radius, yellowFill, yellowOutline))
            .Set(new Hitbox(new CollisionShape.Circle(yellowCfg.Radius), yellowCfg.Damage, Faction.Hostile))
            .Set(new BulletModifier(BulletType.Yellow, yellowCfg.Radius, 0.0f, 0.0f));
-        _prefabs[(int)PrefabKey.BossYellowBullet] = bossYellowBullet;
+        Prefabs[(int)PrefabKey.BossYellowBullet] = bossYellowBullet;
 
         // --- 6. Boss 黄特殊弾周回衛星 ---
         var satCfg = cfg.BossYellowSatellite;
@@ -152,7 +152,7 @@ public static class PrefabRegistry
            .Set(new Bullet(satRadius, yellowFill, yellowOutline))
            .Set(new Hitbox(new CollisionShape.Circle(satRadius), satCfg.Damage, Faction.Hostile))
            .Set(new BulletModifier(BulletType.Yellow, satRadius, 0.0f, 0.0f));
-        _prefabs[(int)PrefabKey.BossYellowSatellite] = bossYellowSat;
+        Prefabs[(int)PrefabKey.BossYellowSatellite] = bossYellowSat;
 
         // --- 7. Boss 青特殊弾 ---
         var blueCfg = cfg.BossBlueBullet;
@@ -162,7 +162,7 @@ public static class PrefabRegistry
            .Set(new Bullet(blueCfg.Radius, blueFill, blueOutline))
            .Set(new Hitbox(new CollisionShape.Circle(blueCfg.Radius), blueCfg.Damage, Faction.Hostile))
            .Set(new BulletModifier(BulletType.Cyan, blueCfg.Radius, 0.0f, 0.0f));
-        _prefabs[(int)PrefabKey.BossBlueBullet] = bossBlueBullet;
+        Prefabs[(int)PrefabKey.BossBlueBullet] = bossBlueBullet;
 
         // --- 8. Boss 黒特殊弾 ---
         var blackCfg = cfg.BossBlackBullet;
@@ -172,7 +172,7 @@ public static class PrefabRegistry
            .Set(new Bullet(blackCfg.Radius, blackFill, blackOutline))
            .Set(new Hitbox(new CollisionShape.Circle(blackCfg.Radius), blackCfg.Damage, Faction.Hostile))
            .Set(new BulletModifier(BulletType.Black, blackCfg.Radius, 0.0f, 0.0f));
-        _prefabs[(int)PrefabKey.BossBlackBullet] = bossBlackBullet;
+        Prefabs[(int)PrefabKey.BossBlackBullet] = bossBlackBullet;
 
         // --- 9. 自機近接斬撃判定 ---
         var slashCfg = cfg.PlayerSlashHitbox;
@@ -180,7 +180,7 @@ public static class PrefabRegistry
            .IsA(baseMelee)
            .Add<PlayerMeleeTag>()
            .Set(new Hitbox(new CollisionShape.Box(slashCfg.Width, slashCfg.Height), slashCfg.Damage, Faction.Friendly));
-        _prefabs[(int)PrefabKey.PlayerSlashHitbox] = playerSlashHitbox;
+        Prefabs[(int)PrefabKey.PlayerSlashHitbox] = playerSlashHitbox;
 
         // --- 10. 点粒子スパーク演出 ---
         var sparkCfg = cfg.SparkVfx;
@@ -189,7 +189,7 @@ public static class PrefabRegistry
            .Set(new Velocity(0, 0))
            .Set(new Bullet(sparkCfg.DefaultRadius, Color.Empty, Color.Empty))
            .Set(new FadeEffect(sparkCfg.DefaultDuration));
-        _prefabs[(int)PrefabKey.SparkVfx] = sparkVfx;
+        Prefabs[(int)PrefabKey.SparkVfx] = sparkVfx;
 
         // --- 11. リング拡散演出 ---
         var ringCfg = cfg.RingVfx;
@@ -197,7 +197,7 @@ public static class PrefabRegistry
            .IsA(baseVfx)
            .Set(new RingEffect(ringCfg.InitialRadius, ringCfg.MaxRadius, Color.Empty))
            .Set(new FadeEffect(ringCfg.DefaultDuration));
-        _prefabs[(int)PrefabKey.RingVfx] = ringVfx;
+        Prefabs[(int)PrefabKey.RingVfx] = ringVfx;
 
         // --- 12. 判定付与エリア演出 ---
         var areaCfg = cfg.AreaVfx;
@@ -207,7 +207,7 @@ public static class PrefabRegistry
            .Set(new Hitbox(new CollisionShape.Box(0, 0), areaCfg.Damage, Faction.Hostile, false))
            .Set(new Sprite(-1))
            .Set(new FadeEffect(areaCfg.DefaultDuration));
-        _prefabs[(int)PrefabKey.AreaVfx] = areaVfx;
+        Prefabs[(int)PrefabKey.AreaVfx] = areaVfx;
     }
 
     private static void RegisterCharacterPrefabs(World world)
@@ -235,7 +235,7 @@ public static class PrefabRegistry
            .Set(new SpringScale(1.0f, 1.0f, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
            .Set(JumpCapability.FromPlayerConfig(ConfigManager.Cat))
            .Set(CatWeaponState.FromConfig(ConfigManager.Cat));
-        _prefabs[(int)PrefabKey.CatPlayer] = catPlayer;
+        Prefabs[(int)PrefabKey.CatPlayer] = catPlayer;
 
         // --- Bunny プレイヤー ---
         var bunnyCfg = ConfigManager.BunnyPrefab;
@@ -250,7 +250,7 @@ public static class PrefabRegistry
            .Set(new SpringScale(1.0f, 1.0f, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
            .Set(JumpCapability.FromPlayerConfig(ConfigManager.Bunny))
            .Set(BunnyWeaponState.FromConfig(ConfigManager.Bunny));
-        _prefabs[(int)PrefabKey.BunnyPlayer] = bunnyPlayer;
+        Prefabs[(int)PrefabKey.BunnyPlayer] = bunnyPlayer;
 
         // Boss 共通基底
         var bossBase = world.Prefab("BossBasePrefab")
@@ -268,7 +268,7 @@ public static class PrefabRegistry
            .Set(new Transform(0.0f, 0.0f, boss1Cfg.ScaleX, boss1Cfg.ScaleY))
            .Set(new Hurtbox(new CollisionShape.Circle(boss1Cfg.HurtboxRadius, 0.0f, boss1Cfg.HurtboxOffsetY), Faction.Hostile))
            .Set(new Hitbox(new CollisionShape.Circle(boss1Cfg.BodyHitboxRadius, 0.0f, boss1Cfg.BodyHitboxOffsetY), boss1Cfg.BodyContactDamage, Faction.Hostile, false));
-        _prefabs[(int)PrefabKey.Boss1] = boss1;
+        Prefabs[(int)PrefabKey.Boss1] = boss1;
 
         // --- Boss 2 ---
         var boss2Cfg = ConfigManager.Boss2Prefab;
@@ -281,6 +281,6 @@ public static class PrefabRegistry
            .Set(new CollisionBox(boss2Cfg.CollisionWidth, boss2Cfg.CollisionHeight))
            .Set(new Hurtbox(new CollisionShape.Box(boss2Cfg.HurtboxWidth, boss2Cfg.HurtboxHeight, 0.0f, boss2Cfg.HurtboxOffsetY), Faction.Hostile))
            .Set(new Hitbox(new CollisionShape.Box(boss2Cfg.BodyHitboxWidth, boss2Cfg.BodyHitboxHeight, 0.0f, boss2Cfg.BodyHitboxOffsetY), boss2Cfg.BodyContactDamage, Faction.Hostile, false));
-        _prefabs[(int)PrefabKey.Boss2] = boss2;
+        Prefabs[(int)PrefabKey.Boss2] = boss2;
     }
 }
