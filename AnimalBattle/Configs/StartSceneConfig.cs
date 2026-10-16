@@ -15,31 +15,109 @@ public sealed class CardLayoutConfig {
 }
 
 /// <summary>
+///     カード個別のテキスト設定（タイトル・特徴タグ・説明文）。
+/// </summary>
+public sealed class StartSceneCardTextConfig {
+    public string Title { get; set; } = string.Empty;
+    public string Tag { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+}
+
+/// <summary>
+///     StartScene の UI テキスト設定クラス。
+/// </summary>
+public sealed class StartSceneTextsConfig {
+    public string HeaderTitle { get; set; } = string.Empty;
+    public string PlayerHeader { get; set; } = string.Empty;
+    public string BossHeader { get; set; } = string.Empty;
+    public string HintText { get; set; } = string.Empty;
+    public string ConfirmButton { get; set; } = string.Empty;
+    public string SelectedBadge { get; set; } = string.Empty;
+    public string UnselectedBadge { get; set; } = string.Empty;
+
+    public StartSceneCardTextConfig Cat { get; set; } = new();
+    public StartSceneCardTextConfig Bunny { get; set; } = new();
+    public StartSceneCardTextConfig Boss1 { get; set; } = new();
+    public StartSceneCardTextConfig Boss2 { get; set; } = new();
+}
+
+/// <summary>
+///     StartScene のマウスホバー動效・物理アニメーション定数設定クラス。
+/// </summary>
+public sealed class StartSceneMotionConfig {
+    public float StepFrequency { get; set; }
+    public float StepAmplitude { get; set; }
+
+    public float Boss1FlyFrequency { get; set; }
+    public float Boss1FlyAmplitude { get; set; }
+    public float Boss1FlyOffsetY { get; set; }
+    public float Boss1TiltFrequency { get; set; }
+    public float Boss1TiltAmplitude { get; set; }
+    public double Boss1Scale { get; set; }
+    public float Boss1FlyDecaySpeed { get; set; }
+
+    public float Boss2SlamCycleDuration { get; set; }
+    public float Boss2RiseDuration { get; set; }
+    public float Boss2RiseHeight { get; set; }
+    public double Boss2RiseScale { get; set; }
+    public float Boss2SlamDuration { get; set; }
+    public double Boss2SlamScale { get; set; }
+    public float Boss2ImpactDuration { get; set; }
+    public float Boss2ImpactShakeFreq { get; set; }
+    public float Boss2ImpactShakeAmplitude { get; set; }
+    public double Boss2BaseScale { get; set; }
+}
+
+/// <summary>
 ///     StartScene の画面レイアウト設定クラス。
 /// </summary>
 public sealed class StartSceneLayoutConfig {
-    public CardLayoutConfig CatCard { get; set; } = new() { X = 100, Y = 150, Width = 240, Height = 390 };
-    public CardLayoutConfig BunnyCard { get; set; } = new() { X = 360, Y = 150, Width = 240, Height = 390 };
-    public CardLayoutConfig Boss1Card { get; set; } = new() { X = 680, Y = 150, Width = 240, Height = 390 };
-    public CardLayoutConfig Boss2Card { get; set; } = new() { X = 940, Y = 150, Width = 240, Height = 390 };
-    public CardLayoutConfig ConfirmButton { get; set; } = new() { X = 490, Y = 580, Width = 300, Height = 60 };
+    public CardLayoutConfig CatCard { get; set; } = new();
+    public CardLayoutConfig BunnyCard { get; set; } = new();
+    public CardLayoutConfig Boss1Card { get; set; } = new();
+    public CardLayoutConfig Boss2Card { get; set; } = new();
+    public CardLayoutConfig ConfirmButton { get; set; } = new();
+
+    public int HeaderTitleX { get; set; }
+    public int HeaderTitleY { get; set; }
+    public int PlayerHeaderX { get; set; }
+    public int PlayerHeaderY { get; set; }
+    public int BossHeaderX { get; set; }
+    public int BossHeaderY { get; set; }
+    public int HintTextX { get; set; }
+    public int HintTextY { get; set; }
+
+    public int ConfirmBtnTextOffsetX { get; set; }
+    public int ConfirmBtnTextOffsetY { get; set; }
+
+    public int CardTitleOffsetX { get; set; }
+    public int CardTitleOffsetY { get; set; }
+    public int CardTagOffsetX { get; set; }
+    public int CardTagOffsetY { get; set; }
+    public int CardBadgeBottomOffset { get; set; }
+    public int CardBadgeLeftOffset { get; set; }
+    public int CardDescBottomOffset { get; set; }
+    public int CardDescLeftOffset { get; set; }
+    public int PreviewCenterOffsetY { get; set; }
 }
 
 /// <summary>
 ///     StartScene の配色パレット設定クラス。
 /// </summary>
 public sealed class StartSceneColorsConfig {
-    public Color BgColor { get; set; } = Color.FromArgb(18, 20, 28);
-    public Color CardBgColor { get; set; } = Color.FromArgb(28, 32, 45);
-    public Color CardHoverBgColor { get; set; } = Color.FromArgb(38, 44, 62);
-    public Color BorderDefaultColor { get; set; } = Color.FromArgb(70, 78, 100);
-    public Color PlayerSelectedColor { get; set; } = Color.FromArgb(50, 200, 240);
-    public Color BossSelectedColor { get; set; } = Color.FromArgb(240, 80, 80);
-    public Color ConfirmBtnDefaultColor { get; set; } = Color.FromArgb(35, 75, 120);
-    public Color ConfirmBtnHoverColor { get; set; } = Color.FromArgb(50, 130, 210);
-    public Color TextWhite { get; set; } = Color.FromArgb(240, 245, 255);
-    public Color TextMuted { get; set; } = Color.FromArgb(160, 170, 190);
-    public Color TextGold { get; set; } = Color.FromArgb(255, 215, 80);
+    public Color BgColor { get; set; }
+    public Color CardBgColor { get; set; }
+    public Color CardHoverBgColor { get; set; }
+    public Color BorderDefaultColor { get; set; }
+    public Color PlayerSelectedColor { get; set; }
+    public Color BossSelectedColor { get; set; }
+    public Color ConfirmBtnDefaultColor { get; set; }
+    public Color ConfirmBtnHoverColor { get; set; }
+    public Color ConfirmBtnBorderDefaultColor { get; set; }
+    public Color ConfirmBtnBorderHoverColor { get; set; }
+    public Color TextWhite { get; set; }
+    public Color TextMuted { get; set; }
+    public Color TextGold { get; set; }
 }
 
 /// <summary>
@@ -48,4 +126,6 @@ public sealed class StartSceneColorsConfig {
 public sealed class StartSceneConfig {
     public StartSceneLayoutConfig Layout { get; set; } = new();
     public StartSceneColorsConfig Colors { get; set; } = new();
+    public StartSceneTextsConfig Texts { get; set; } = new();
+    public StartSceneMotionConfig Motion { get; set; } = new();
 }

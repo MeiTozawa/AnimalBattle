@@ -11,16 +11,13 @@ namespace AnimalBattle.Characters;
 /// </summary>
 public sealed class Cat : PlayerPawn
 {
-    /// <summary>Cat キャラクター種別。</summary>
-    public override CharacterType CharacterType => CharacterType.Cat;
-
     /// <summary>
     ///     Cat プレイヤー自機を初期化します。
     /// </summary>
     /// <param name="entity">対応する Flecs エンティティ句柄。</param>
     /// <param name="pCfg">プレイヤー設定。</param>
     /// <param name="spriteHandle">プレイヤースプライト画像ハンドル。</param>
-    public Cat(Entity entity, PlayerConfig pCfg, int spriteHandle) : base(entity, pCfg, spriteHandle)
+    public Cat(Entity entity, PlayerConfig pCfg, int spriteHandle) : base(entity, pCfg, spriteHandle, CharacterType.Cat)
     {
         Entity.Set(CatWeaponState.FromConfig(pCfg));
     }

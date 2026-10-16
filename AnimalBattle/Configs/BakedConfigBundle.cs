@@ -144,6 +144,9 @@ public sealed class BakedConfigBundle {
 [JsonSerializable(typeof(StartSceneLayoutConfig))]
 [JsonSerializable(typeof(CardLayoutConfig))]
 [JsonSerializable(typeof(StartSceneColorsConfig))]
+[JsonSerializable(typeof(StartSceneTextsConfig))]
+[JsonSerializable(typeof(StartSceneCardTextConfig))]
+[JsonSerializable(typeof(StartSceneMotionConfig))]
 [JsonSerializable(typeof(EaseType))]
 internal sealed partial class ConfigJsonContext : JsonSerializerContext {
 }

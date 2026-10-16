@@ -504,6 +504,83 @@ public static class GameEngine {
     }
 
     /// <summary>
+    ///     スプライトシートから指定矩形を切り出し、回転・独立 X/Y 軸拡縮・左右反転を行って描画します (DxLib DrawRectRotaGraph3 相当)。
+    /// </summary>
+    public static void DrawRectRotaGraph3(
+        int x,
+        int y,
+        int srcX,
+        int srcY,
+        int width,
+        int height,
+        double scaleX,
+        double scaleY,
+        double angle,
+        int handle,
+        bool trans,
+        bool turnX = false)
+    {
+        DrawRectRotaGraph(x, y, srcX, srcY, width, height, scaleX, scaleY, angle, handle, trans, turnX);
+    }
+
+    /// <summary>
+    ///     スプライトシートから指定矩形を切り出し、回転・独立 X/Y 軸拡縮・左右反転を行って描画します (DxLib DrawRectRotaGraph3 相当)。
+    /// </summary>
+    public static void DrawRectRotaGraph3(
+        Vec2i center,
+        Vec2i srcPos,
+        Vec2i srcSize,
+        double scaleX,
+        double scaleY,
+        double angle,
+        int handle,
+        bool trans,
+        bool turnX = false)
+    {
+        DrawRectRotaGraph(center, srcPos, srcSize, scaleX, scaleY, angle, handle, trans, turnX);
+    }
+
+    /// <summary>
+    ///     画像ハンドルを中心に独立 X/Y 軸拡縮・回転して描画します (DxLib DrawRotaGraph3 相当)。
+    /// </summary>
+    /// <param name="x">描画中心 X 座標</param>
+    /// <param name="y">描画中心 Y 座標</param>
+    /// <param name="scaleX">X 軸拡大率</param>
+    /// <param name="scaleY">Y 軸拡大率</param>
+    /// <param name="angle">回転角度 (ラジアン)</param>
+    /// <param name="handle">画像ハンドル</param>
+    /// <param name="trans">透過描画を有効にするかどうか</param>
+    /// <param name="turnX">左右反転描画を行うかどうか</param>
+    public static void DrawRotaGraph3(
+        int x,
+        int y,
+        double scaleX,
+        double scaleY,
+        double angle,
+        int handle,
+        bool trans,
+        bool turnX = false)
+    {
+        GetGraphSize(handle, out var w, out var h);
+        DrawRectRotaGraph(x, y, 0, 0, w, h, scaleX, scaleY, angle, handle, trans, turnX);
+    }
+
+    /// <summary>
+    ///     画像ハンドルを中心に独立 X/Y 軸拡縮・回転して描画します (DxLib DrawRotaGraph3 相当)。
+    /// </summary>
+    public static void DrawRotaGraph3(
+        Vec2i center,
+        double scaleX,
+        double scaleY,
+        double angle,
+        int handle,
+        bool trans,
+        bool turnX = false)
+    {
+        DrawRotaGraph3(center.X, center.Y, scaleX, scaleY, angle, handle, trans, turnX);
+    }
+
+    /// <summary>
     ///     描画ブレンドモードおよびパラメータを設定します。
     /// </summary>
     /// <param name="mode">ブレンドモード (<see cref="BlendMode" />)</param>

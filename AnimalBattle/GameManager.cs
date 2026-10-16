@@ -3,19 +3,20 @@ using AnimalBattle.Asset;
 using AnimalBattle.CombatPool;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
-using AnimalBattle.Core;
 using AnimalBattle.Modules;
 using AnimalBattle.Prefabs;
 using AnimalBattle.Scenes;
+using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle;
 
 /// <summary>
 ///     ゲームの全体ライフサイクル、共有 ECS ワールド、および GameFlow 状態遷移を統括するマネージャークラス。
+///     純粋な ECS アーキテクチャに従い、フレーム更新（Progress）内で全シミュレーションおよび描画パイプラインを駆動します。
 /// </summary>
 public class GameManager : IDisposable {
-    private World _ecsWorld;
+    private readonly World _ecsWorld;
     private bool _isDisposed;
 
     /// <summary>
@@ -27,16 +28,6 @@ public class GameManager : IDisposable {
     ///     共有 Flecs.NET ECS ワールドを取得します。
     /// </summary>
     public World EcsWorld => _ecsWorld;
-
-    /// <summary>
-    ///     開始・選人シーンコントローラー。
-    /// </summary>
-    public StartScene StartScene { get; }
-
-    /// <summary>
-    ///     戦闘バトルシーンコントローラー。
-    /// </summary>
-    public BattleScene BattleScene { get; }
 
     /// <summary>
     ///     <see cref="GameManager" /> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
@@ -56,15 +47,14 @@ public class GameManager : IDisposable {
         _ecsWorld.Import<BulletModule>();
         _ecsWorld.Import<DamageResolutionModule>();
         _ecsWorld.Import<EffectModule>();
+        _ecsWorld.Import<RenderModule>(); // 原生描画モジュール (Ecs.OnStore)
+
+        // 状態連動システム群の登録
+        _ecsWorld.AddStartSceneSystems()
+                 .AddBattleSceneSystems();
 
         PrefabRegistry.Initialize(_ecsWorld);
         CombatPoolService.Initialize(_ecsWorld);
-
-        StartScene = new StartScene();
-        BattleScene = new BattleScene();
-
-        StartScene.OnConfirmStart = (player, boss) => SwitchToBattle(player, boss);
-        BattleScene.OnReturnToStart = () => SwitchToStart();
 
         // 初期 GameFlow 状態の設定
         _ecsWorld.Set(new GameFlow {
@@ -79,7 +69,7 @@ public class GameManager : IDisposable {
     /// </summary>
     public void Initialize()
     {
-        StartScene.Setup(_ecsWorld);
+        StartSceneSpawner.Spawn(_ecsWorld);
     }
 
     /// <summary>
@@ -89,14 +79,14 @@ public class GameManager : IDisposable {
     /// <param name="bossType">選択された首領</param>
     public void SwitchToBattle(CharacterType playerType, BossType bossType)
     {
-        StartScene.Teardown();
+        StartSceneSpawner.Teardown(_ecsWorld);
 
         ref var flow = ref _ecsWorld.GetMut<GameFlow>();
         flow.State = GameState.Battle;
         flow.SelectedPlayer = playerType;
         flow.SelectedBoss = bossType;
 
-        BattleScene.Setup(_ecsWorld, playerType, bossType);
+        BattleSceneSpawner.Spawn(_ecsWorld, playerType, bossType);
     }
 
     /// <summary>
@@ -104,53 +94,28 @@ public class GameManager : IDisposable {
     /// </summary>
     public void SwitchToStart()
     {
-        BattleScene.Teardown();
-
         ref var flow = ref _ecsWorld.GetMut<GameFlow>();
         flow.State = GameState.Start;
 
-        StartScene.Setup(_ecsWorld);
+        BattleSceneSpawner.Teardown(_ecsWorld);
+        StartSceneSpawner.Spawn(_ecsWorld);
     }
 
     /// <summary>
-    ///     フレームごとの論理更新を行います。
+    ///     フレームごとの論理更新および描画コマンド記録を ECS パイプライン内で一括実行します。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過時間秒数</param>
     public void Update(float deltaTime)
     {
-        var flow = _ecsWorld.Get<GameFlow>();
-        switch (flow.State)
-        {
-            case GameState.Start:
-                StartScene.Update(deltaTime);
-                // プレビュー自機アニメーション等（SpriteAnimationSystem）を進める
-                _ecsWorld.Progress(deltaTime);
-                break;
-
-            case GameState.Battle:
-                BattleScene.Update(deltaTime);
-                // 物理・弾幕・衝突・ダメージ判定を進める
-                _ecsWorld.Progress(deltaTime);
-                break;
-        }
+        // PreUpdate -> OnUpdate -> OnValidate -> PostUpdate -> OnStore (RenderModule)
+        _ecsWorld.Progress(deltaTime);
     }
 
     /// <summary>
-    ///     フレームごとの描画コマンドを発行します。
+    ///     フレームごとの描画コマンドを発行します（描画処理は Progress 内の Ecs.OnStore にて自動記録済み）。
     /// </summary>
     public void Render()
     {
-        var flow = _ecsWorld.Get<GameFlow>();
-        switch (flow.State)
-        {
-            case GameState.Start:
-                StartScene.Render();
-                break;
-
-            case GameState.Battle:
-                BattleScene.Render();
-                break;
-        }
     }
 
     /// <inheritdoc />
@@ -158,8 +123,8 @@ public class GameManager : IDisposable {
     {
         if (_isDisposed) return;
 
-        StartScene.Dispose();
-        BattleScene.Dispose();
+        StartSceneSpawner.Teardown(_ecsWorld);
+        BattleSceneSpawner.Teardown(_ecsWorld);
 
         CombatPoolService.Current.Dispose();
         _ecsWorld.Dispose();

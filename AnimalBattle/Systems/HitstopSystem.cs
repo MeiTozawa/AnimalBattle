@@ -25,6 +25,12 @@ public static class HitstopSystem
                     var entity = it.Entity(i);
                     entity.Remove<HitstopState>();
                     entity.Remove<SpriteJitter>();
+                    if (entity.Has<Sprite>())
+                    {
+                        ref var sprite = ref entity.GetMut<Sprite>();
+                        sprite.JitterOffsetX = 0.0f;
+                        sprite.JitterOffsetY = 0.0f;
+                    }
                 }
             });
 

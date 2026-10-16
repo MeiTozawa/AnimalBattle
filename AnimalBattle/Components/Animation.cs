@@ -10,16 +10,15 @@ namespace AnimalBattle.Components;
 ///     指定された初期クリップ識別子およびキャラクター種別で <see cref="Animation" /> の新しいインスタンスを初期化します。
 /// </remarks>
 public struct Animation(
-    StringId defaultClip = default,
-    CharacterType characterType = CharacterType.Cat,
+    StringId defaultClip,
+    CharacterType characterType,
     bool isPlaying = true) {
-    /// <summary>デフォルトのアニメーションクリップ識別子 ("Idle")</summary>
-    public static readonly StringId DefaultClip = "Idle";
 
     /// <summary>
-    ///     デフォルト設定で <see cref="Animation" /> の新しいインスタンスを初期化します。
+    ///     指定されたキャラクター種別および初期クリップで <see cref="Animation" /> の新しいインスタンスを初期化します。
     /// </summary>
-    public Animation() : this(default)
+    public Animation(CharacterType characterType, StringId defaultClip, bool isPlaying = true)
+        : this(defaultClip, characterType, isPlaying)
     {
     }
 
@@ -27,7 +26,7 @@ public struct Animation(
     public CharacterType CharacterType = characterType;
 
     /// <summary>再生中のアニメーションクリップ識別子</summary>
-    public StringId CurrentClip = defaultClip.IsEmpty ? DefaultClip : defaultClip;
+    public StringId CurrentClip = defaultClip;
 
     /// <summary>現在のフレームインデックス</summary>
     public int CurrentFrameIndex = 0;

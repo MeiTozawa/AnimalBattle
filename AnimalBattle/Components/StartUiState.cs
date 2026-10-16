@@ -1,0 +1,20 @@
+using Flecs.NET.Core;
+
+namespace AnimalBattle.Components;
+
+/// <summary>
+///     ゲーム開始・選人画面の対話状態および動效タイマーを保持するコンポーネント。
+/// </summary>
+public struct StartUiState {
+    public Entity CatPreviewEntity;
+    public Entity BunnyPreviewEntity;
+    public float CatStepTimer;
+    public float BunnyStepTimer;
+    public float Boss1FlyTimer;
+    public float Boss2SlamTimer;
+    public bool IsBoss1Hovered;
+    public bool IsBoss2Hovered;
+    public bool IsConfirmHovered;
+    public int Boss1TextureHandle;
+    public int Boss2TextureHandle;
+}

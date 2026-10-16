@@ -122,7 +122,8 @@ public sealed class TileMap(
     ///     ナビゲーショングラフ (<see cref="PlatformNavigationGraph" />) を自動構築します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    public void BuildPlatformColliders(World world)
+    /// <param name="parent">所属させる親エンティティ（省略可）</param>
+    public void BuildPlatformColliders(World world, Entity parent)
     {
         if (Columns <= 0 || Rows <= 0 || TileSet.TileWidth <= 0 || TileSet.TileHeight <= 0) return;
 
@@ -160,7 +161,7 @@ public sealed class TileMap(
 
                 var tileCount = c - startCol;
                 RegisterPlatformNodeAndEntity(world, nodes, ref nodeId, r, startCol, tileCount, colOffsetX, colOffsetY,
-                    colWidth, colHeight);
+                    colWidth, colHeight, parent);
             }
         }
 
@@ -181,7 +182,8 @@ public sealed class TileMap(
         float colOffsetX,
         float colOffsetY,
         float colWidth,
-        float colHeight)
+        float colHeight,
+        Entity parent)
     {
         var leftX = OriginX + startCol * RenderTileWidth;
         var topY = OriginY + row * RenderTileHeight;
@@ -203,9 +205,11 @@ public sealed class TileMap(
         if (topSurfaceY <= arenaCfg.TileMap.MaxPlatformY && clampedRight > clampedLeft + arenaCfg.TileMap.MinPlatformWidth)
             nodes.Add(new PlatformNode(nodeId++, clampedLeft, clampedRight, topSurfaceY, platformHeight));
 
-        world.Entity($"Platform_{row}_{startCol}")
+        var entity = world.Entity($"Platform_{row}_{startCol}")
            .Set(new Transform(centerX, centerY))
            .Set(new CollisionBox(platformWidth, platformHeight))
            .Add<PlatformTag>();
+
+        entity.ChildOf(parent);
     }
 }

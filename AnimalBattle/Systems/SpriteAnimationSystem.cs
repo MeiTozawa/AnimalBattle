@@ -33,9 +33,14 @@ public static class SpriteAnimationSystem {
                 var hasHandle = AssetManager.TryGetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip, out var handle);
                 if (!hasHandle || handle < 0)
                 {
-                    Debug.Fail($"[SpriteAnimationSystem 警告] スプライトハンドルの取得に失敗しました ({anim.CharacterType} / {anim.CurrentClip})");
-                    return;
+                    Debug.WriteLine($"[SpriteAnimationSystem 警告] スプライトハンドルの取得に失敗しました ({anim.CharacterType} / {anim.CurrentClip})。Idle にフォールバックします。");
+                    anim.Play("Idle");
+                    if (!AssetManager.TryGetCharacterSpriteHandle(anim.CharacterType, "Idle", out handle) || handle < 0)
+                    {
+                        return;
+                    }
                 }
+
                 sprite.GraphHandle = handle;
                 sprite.SrcRect =
                     AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out var isFinished);

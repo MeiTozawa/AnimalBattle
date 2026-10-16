@@ -12,9 +12,6 @@ namespace AnimalBattle.Characters;
 /// </summary>
 public sealed class Bunny : PlayerPawn
 {
-    /// <summary>Bunny キャラクター種別。</summary>
-    public override CharacterType CharacterType => CharacterType.Bunny;
-
     /// <summary>常駐する自機近接斬撃判定エンティティ句柄を取得します。</summary>
     public Entity MeleeAttackEntity { get; }
 
@@ -24,7 +21,7 @@ public sealed class Bunny : PlayerPawn
     /// <param name="entity">対応する Flecs エンティティ句柄。</param>
     /// <param name="pCfg">プレイヤー設定。</param>
     /// <param name="spriteHandle">プレイヤースプライト画像ハンドル。</param>
-    public Bunny(Entity entity, PlayerConfig pCfg, int spriteHandle) : base(entity, pCfg, spriteHandle)
+    public Bunny(Entity entity, PlayerConfig pCfg, int spriteHandle) : base(entity, pCfg, spriteHandle, CharacterType.Bunny)
     {
         var melee = PrefabRegistry.Instantiate(entity.CsWorld(), PrefabKey.PlayerSlashHitbox);
         melee.Disable();

@@ -32,6 +32,27 @@ Y = 580
 Width = 300
 Height = 60
 
+[Layout]
+HeaderTitleX = 430
+HeaderTitleY = 40
+PlayerHeaderX = 240
+PlayerHeaderY = 105
+BossHeaderX = 820
+BossHeaderY = 105
+HintTextX = 330
+HintTextY = 665
+ConfirmBtnTextOffsetX = 55
+ConfirmBtnTextOffsetY = 20
+CardTitleOffsetX = 20
+CardTitleOffsetY = 20
+CardTagOffsetX = 15
+CardTagOffsetY = 55
+CardBadgeBottomOffset = 65
+CardBadgeLeftOffset = 30
+CardDescBottomOffset = 35
+CardDescLeftOffset = 10
+PreviewCenterOffsetY = 160
+
 [Colors]
 BgColor = 0xFF12141C
 CardBgColor = 0xFF1C202D
@@ -41,6 +62,58 @@ PlayerSelectedColor = 0xFF32C8F0
 BossSelectedColor = 0xFFF05050
 ConfirmBtnDefaultColor = 0xFF234B78
 ConfirmBtnHoverColor = 0xFF3282D2
+ConfirmBtnBorderDefaultColor = 0xFF3C78B4
+ConfirmBtnBorderHoverColor = 0xFF64C8FF
 TextWhite = 0xFFF0F5FF
 TextMuted = 0xFFA0AABE
 TextGold = 0xFFFFD750
+
+[Texts]
+HeaderTitle = "ANIMAL BATTLE - キャラクター＆ボス選択"
+PlayerHeader = "【 プレイヤー選択 】"
+BossHeader = "【 ボス選択 】"
+HintText = "※ マウスホバーでアクション確認 / クリックで選択 / [ENTER] キーで戦闘開始"
+ConfirmButton = "【 戦 闘 開 始 】 [ENTER]"
+SelectedBadge = "[ 選択中 - SELECTED ]"
+UnselectedBadge = "[ クリックで選択 ]"
+
+[Texts.Cat]
+Title = "キャット (Cat)"
+Tag = "【 突進 & 遠距離攻撃 】"
+Description = "鋭いダッシュ回避と遠距離弾幕射撃"
+
+[Texts.Bunny]
+Title = "バニー (Bunny)"
+Tag = "【 二段ジャンプ & 近接攻撃 】"
+Description = "軽快な二段ジャンプと大剣近接斬撃"
+
+[Texts.Boss1]
+Title = "ボス 1 (Boss 1)"
+Tag = "【 飛行浮遊 & 全方位弾幕 】"
+Description = "※ ホバーで飛行・浮遊動效"
+
+[Texts.Boss2]
+Title = "ボス 2 (Boss 2)"
+Tag = "【 突撃突進 & 衝撃波重撃 】"
+Description = "※ ホバーで騰空・重撃動效"
+
+[Motion]
+StepFrequency = 14.0
+StepAmplitude = 4.0
+Boss1FlyFrequency = 5.0
+Boss1FlyAmplitude = 10.0
+Boss1FlyOffsetY = -35.0
+Boss1TiltFrequency = 2.5
+Boss1TiltAmplitude = 0.05
+Boss1Scale = 0.65
+Boss1FlyDecaySpeed = 2.0
+Boss2SlamCycleDuration = 1.1
+Boss2RiseDuration = 0.25
+Boss2RiseHeight = -45.0
+Boss2RiseScale = 0.95
+Boss2SlamDuration = 0.10
+Boss2SlamScale = 0.98
+Boss2ImpactDuration = 0.15
+Boss2ImpactShakeFreq = 4.0
+Boss2ImpactShakeAmplitude = 2.0
+Boss2BaseScale = 0.65

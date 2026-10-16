@@ -13,11 +13,13 @@ namespace AnimalBattle.Characters;
 /// </summary>
 public abstract class PlayerPawn : Pawn
 {
+    private readonly AbilitySystemComponent _abilitySystem = new();
+
     /// <summary>プレイヤー自機のアビリティシステムコンポーネントを取得します。</summary>
-    public override AbilitySystemComponent AbilitySystem { get; } = new();
+    public override AbilitySystemComponent AbilitySystem => _abilitySystem;
 
     /// <summary>現在選択されているキャラクター種別を取得します。</summary>
-    public abstract CharacterType CharacterType { get; }
+    public CharacterType CharacterType { get; }
 
     /// <summary>後方互換性用のキャラクター種別プロパティ。</summary>
     public CharacterType CurrentCharacter => CharacterType;
@@ -47,14 +49,17 @@ public abstract class PlayerPawn : Pawn
     /// <param name="entity">対応する Flecs エンティティ句柄。</param>
     /// <param name="pCfg">プレイヤー設定。</param>
     /// <param name="spriteHandle">プレイヤースプライトの画像ハンドル。</param>
-    protected PlayerPawn(Entity entity, PlayerConfig pCfg, int spriteHandle) : base(entity)
+    /// <param name="characterType">プレイヤーキャラクター種別。</param>
+    protected PlayerPawn(Entity entity, PlayerConfig pCfg, int spriteHandle, CharacterType characterType) : base(entity)
     {
         Debug.Assert(pCfg != null, "PlayerConfig は null であってはなりません。");
 
+        CharacterType = characterType;
+
         Entity.Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
-           .Set(new Animation("Idle"))
+           .Set(new Animation(characterType, "Idle"))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 32, 32)))
-           .Set(AbilitySystem);
+           .Set(_abilitySystem);
     }
 
     /// <summary>

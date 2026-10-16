@@ -16,13 +16,23 @@ public static class SpriteJitterSystem
     /// <returns>登録済みワールド</returns>
     public static World AddSpriteJitterSystem(this World world)
     {
-        world.System<SpriteJitter>("SpriteJitterSystem")
+        world.System<SpriteJitter, Sprite>("SpriteJitterSystem")
             .Kind(Ecs.PreUpdate)
-            .Each((Iter it, int i, ref SpriteJitter jitter) =>
+            .Iter((Iter it, Field<SpriteJitter> jitters, Field<Sprite> sprites) =>
             {
-                jitter.Timer += it.DeltaTime();
-                jitter.CurrentOffsetX = MathF.Sin(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeX;
-                jitter.CurrentOffsetY = MathF.Cos(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeY;
+                var dt = it.DeltaTime();
+                var count = it.Count();
+                for (var i = 0; i < count; i++)
+                {
+                    ref var jitter = ref jitters[i];
+                    jitter.Timer += dt;
+                    jitter.CurrentOffsetX = MathF.Sin(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeX;
+                    jitter.CurrentOffsetY = MathF.Cos(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeY;
+
+                    ref var sprite = ref sprites[i];
+                    sprite.JitterOffsetX = jitter.CurrentOffsetX;
+                    sprite.JitterOffsetY = jitter.CurrentOffsetY;
+                }
             });
 
         return world;
