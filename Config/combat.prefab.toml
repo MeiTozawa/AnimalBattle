@@ -19,13 +19,13 @@ OutlineColor = "#FFFFFF"
 
 [BossMagentaBullet]
 Radius = 12.0
-Damage = 1.5
+Damage = 1.0
 FillColor = "#FF00FF"
 OutlineColor = "#FFFFFF"
 
 [BossYellowBullet]
 Radius = 14.0
-Damage = 2.0
+Damage = 1.0
 FillColor = "#FFFF00"
 OutlineColor = "#FFAA00"
 
@@ -50,7 +50,7 @@ OutlineColor = "#555555"
 # --- 近接斬撃判定原型 ---
 [PlayerSlashHitbox]
 Damage = 3.0
-Width = 88.0
+Width = 64.0
 Height = 64.0
 
 # --- 特効演出原型群 ---
