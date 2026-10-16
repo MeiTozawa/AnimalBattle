@@ -1,0 +1,22 @@
+# ===================================================================
+# Boss 1 (Ancient Cat Overlord) ECS 原型設定
+# ===================================================================
+MaxHp = 60.0
+HitFlashDuration = 0.05
+ScaleX = 0.6
+ScaleY = 0.6
+
+# 被弾判定ボックス (Hurtbox)
+HurtboxShape = "Circle"
+HurtboxRadius = 60.0
+HurtboxOffsetY = 0.0
+
+# 接触ダメージ判定ボックス (Body Contact Hitbox)
+HitboxShape = "Circle"
+BodyHitboxRadius = 50.0
+BodyHitboxOffsetY = 0.0
+BodyContactDamage = 1.0
+
+# 地形衝突ボックス
+CollisionWidth = 0.0
+CollisionHeight = 0.0

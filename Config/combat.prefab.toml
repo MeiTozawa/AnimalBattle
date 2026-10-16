@@ -1,0 +1,68 @@
+# ===================================================================
+# 戦闘原型設定 (Combat Prefabs Configuration)
+# 投射物（弾幕）、近战判定、演出（VFX）の ECS 原型パラメータ
+# ===================================================================
+
+# --- 自機通常弾原型 ---
+[PlayerBullet]
+Shape = "Box"
+Width = 12.0
+Height = 8.0
+Damage = 1.0
+
+# --- Boss 弾幕原型群 ---
+[BossNormalBullet]
+Radius = 8.0
+Damage = 1.0
+FillColor = "#FF0040"
+OutlineColor = "#FFFFFF"
+
+[BossMagentaBullet]
+Radius = 12.0
+Damage = 1.5
+FillColor = "#FF00FF"
+OutlineColor = "#FFFFFF"
+
+[BossYellowBullet]
+Radius = 14.0
+Damage = 2.0
+FillColor = "#FFFF00"
+OutlineColor = "#FFAA00"
+
+[BossYellowSatellite]
+MinRadius = 3.0
+RadiusMultiplier = 0.55
+OrbitDistanceMultiplier = 1.5
+Damage = 1.0
+
+[BossBlueBullet]
+Radius = 10.0
+Damage = 1.0
+FillColor = "#00D4FF"
+OutlineColor = "#FFFFFF"
+
+[BossBlackBullet]
+Radius = 8.0
+Damage = 1.2
+FillColor = "#202020"
+OutlineColor = "#555555"
+
+# --- 近接斬撃判定原型 ---
+[PlayerSlashHitbox]
+Damage = 3.0
+Width = 88.0
+Height = 64.0
+
+# --- 特効演出原型群 ---
+[SparkVfx]
+DefaultRadius = 2.5
+DefaultDuration = 0.3
+
+[RingVfx]
+InitialRadius = 8.0
+MaxRadius = 40.0
+DefaultDuration = 0.4
+
+[AreaVfx]
+DefaultDuration = 0.8
+Damage = 1.0

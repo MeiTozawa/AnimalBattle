@@ -1,0 +1,23 @@
+# ===================================================================
+# Cat プレイヤー ECS 原型設定 (Cat Player Prefab Configuration)
+# ===================================================================
+MaxHp = 3.0
+InvincibleDuration = 0.8
+HitFlashDuration = 0.08
+
+# 地形衝突ボックス
+CollisionWidth = 32.0
+CollisionHeight = 48.0
+
+# 被弾判定ボックス (Hurtbox)
+HurtboxShape = "Circle"
+HurtboxRadius = 7.0
+HurtboxOffsetY = 16.0
+
+# スプライトスケール
+ScaleX = 2.0
+ScaleY = 2.0
+
+# スプリング減衰パラメータ
+SpringFrequency = 18.0
+SpringDampingRatio = 0.65

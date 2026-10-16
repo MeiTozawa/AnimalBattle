@@ -53,6 +53,11 @@ _CONFIG_MAP = {
     "Render": _CONFIG_DIR / "render.toml",
     "Camera": _CONFIG_DIR / "camera.toml",
     "TileSet": _RESOURCE_DIR / "Platform" / "sheet.toml",
+    "CombatPrefab": _CONFIG_DIR / "combat.prefab.toml",
+    "CatPrefab": _CONFIG_DIR / "cat.prefab.toml",
+    "BunnyPrefab": _CONFIG_DIR / "bunny.prefab.toml",
+    "Boss1Prefab": _CONFIG_DIR / "boss1.prefab.toml",
+    "Boss2Prefab": _CONFIG_DIR / "boss2.prefab.toml",
 }
 
 def load_toml(path: Path) -> dict:

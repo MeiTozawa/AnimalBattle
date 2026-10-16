@@ -1,0 +1,24 @@
+# ===================================================================
+# Boss 2 (Ground Crusher Golem) ECS 原型設定
+# ===================================================================
+MaxHp = 120.0
+HitFlashDuration = 0.05
+ScaleX = 0.65
+ScaleY = 0.65
+
+# 被弾判定ボックス (Hurtbox)
+HurtboxShape = "Box"
+HurtboxWidth = 90.0
+HurtboxHeight = 110.0
+HurtboxOffsetY = 0.0
+
+# 接触ダメージ判定ボックス (Body Contact Hitbox)
+HitboxShape = "Box"
+BodyHitboxWidth = 80.0
+BodyHitboxHeight = 100.0
+BodyHitboxOffsetY = 0.0
+BodyContactDamage = 1.0
+
+# 地形衝突ボックス
+CollisionWidth = 70.0
+CollisionHeight = 90.0

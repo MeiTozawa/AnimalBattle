@@ -22,6 +22,11 @@ public static class ConfigManager {
     private static ConfigBase<CameraConfig> _cameraConfigContainer = new(new CameraConfig());
     private static ConfigBase<TileSetConfig> _tileSetConfigContainer = new(new TileSetConfig());
     private static ConfigBase<AudioConfig> _audioConfigContainer = new(new AudioConfig());
+    private static ConfigBase<CombatPrefabConfig> _combatPrefabConfigContainer = new(new CombatPrefabConfig());
+    private static ConfigBase<PlayerPrefabConfig> _catPrefabConfigContainer = new(new PlayerPrefabConfig());
+    private static ConfigBase<PlayerPrefabConfig> _bunnyPrefabConfigContainer = new(new PlayerPrefabConfig());
+    private static ConfigBase<BossPrefabConfig> _boss1PrefabConfigContainer = new(new BossPrefabConfig());
+    private static ConfigBase<BossPrefabConfig> _boss2PrefabConfigContainer = new(new BossPrefabConfig());
     private static bool _isInitialized;
 
     static ConfigManager()
@@ -71,6 +76,21 @@ public static class ConfigManager {
     /// <summary>音響および音量設定オブジェクトを取得します。</summary>
     public static AudioConfig Audio => _audioConfigContainer.Config;
 
+    /// <summary>戦闘原型設定オブジェクトを取得します。</summary>
+    public static CombatPrefabConfig CombatPrefabs => _combatPrefabConfigContainer.Config;
+
+    /// <summary>Cat プレイヤー原型設定オブジェクトを取得します。</summary>
+    public static PlayerPrefabConfig CatPrefab => _catPrefabConfigContainer.Config;
+
+    /// <summary>Bunny プレイヤー原型設定オブジェクトを取得します。</summary>
+    public static PlayerPrefabConfig BunnyPrefab => _bunnyPrefabConfigContainer.Config;
+
+    /// <summary>Boss 1 原型設定オブジェクトを取得します。</summary>
+    public static BossPrefabConfig Boss1Prefab => _boss1PrefabConfigContainer.Config;
+
+    /// <summary>Boss 2 原型設定オブジェクトを取得します。</summary>
+    public static BossPrefabConfig Boss2Prefab => _boss2PrefabConfigContainer.Config;
+
     /// <summary>Cat プレイヤー設定コンテナを取得します。</summary>
     public static ConfigBase<PlayerConfig> CatContainer => _catConfigContainer;
 
@@ -110,6 +130,21 @@ public static class ConfigManager {
     /// <summary>音響設定コンテナを取得します。</summary>
     public static ConfigBase<AudioConfig> AudioContainer => _audioConfigContainer;
 
+    /// <summary>戦闘原型設定コンテナを取得します。</summary>
+    public static ConfigBase<CombatPrefabConfig> CombatPrefabsContainer => _combatPrefabConfigContainer;
+
+    /// <summary>Cat プレイヤー原型設定コンテナを取得します。</summary>
+    public static ConfigBase<PlayerPrefabConfig> CatPrefabContainer => _catPrefabConfigContainer;
+
+    /// <summary>Bunny プレイヤー原型設定コンテナを取得します。</summary>
+    public static ConfigBase<PlayerPrefabConfig> BunnyPrefabContainer => _bunnyPrefabConfigContainer;
+
+    /// <summary>Boss 1 原型設定コンテナを取得します。</summary>
+    public static ConfigBase<BossPrefabConfig> Boss1PrefabContainer => _boss1PrefabConfigContainer;
+
+    /// <summary>Boss 2 原型設定コンテナを取得します。</summary>
+    public static ConfigBase<BossPrefabConfig> Boss2PrefabContainer => _boss2PrefabConfigContainer;
+
     /// <summary>
     ///     全設定を初期化します。
     ///     Debug ビルド時は TOML ファイル群を動的ロードしてホットリロード監視を開始します。
@@ -140,6 +175,11 @@ public static class ConfigManager {
         LoadConfig(ResourcePath.Config.Camera, ref _cameraConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Platform.SheetToml, ref _tileSetConfigContainer, ref successCount, ref failureCount);
         LoadConfig(ResourcePath.Config.Audio, ref _audioConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.CombatPrefab, ref _combatPrefabConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.CatPrefab, ref _catPrefabConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.BunnyPrefab, ref _bunnyPrefabConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Boss1Prefab, ref _boss1PrefabConfigContainer, ref successCount, ref failureCount);
+        LoadConfig(ResourcePath.Config.Boss2Prefab, ref _boss2PrefabConfigContainer, ref successCount, ref failureCount);
 
         Debug.Assert(failureCount == 0, "一部の TOML 設定ファイルの読み込みに失敗しました。");
 
@@ -177,6 +217,11 @@ public static class ConfigManager {
         _renderConfigContainer = new(bundle.Render);
         _cameraConfigContainer = new(bundle.Camera);
         _tileSetConfigContainer = new(bundle.TileSet);
+        _combatPrefabConfigContainer = new(bundle.CombatPrefab);
+        _catPrefabConfigContainer = new(bundle.CatPrefab);
+        _bunnyPrefabConfigContainer = new(bundle.BunnyPrefab);
+        _boss1PrefabConfigContainer = new(bundle.Boss1Prefab);
+        _boss2PrefabConfigContainer = new(bundle.Boss2Prefab);
 
         Debug.WriteLine("[C# 設定初期化] Release 版: バイナリ設定データ (baked_configs.bin) を正常にロードして起動しました。");
 #endif
@@ -220,5 +265,10 @@ public static class ConfigManager {
         _cameraConfigContainer.Dispose();
         _tileSetConfigContainer.Dispose();
         _audioConfigContainer.Dispose();
+        _combatPrefabConfigContainer.Dispose();
+        _catPrefabConfigContainer.Dispose();
+        _bunnyPrefabConfigContainer.Dispose();
+        _boss1PrefabConfigContainer.Dispose();
+        _boss2PrefabConfigContainer.Dispose();
     }
 }

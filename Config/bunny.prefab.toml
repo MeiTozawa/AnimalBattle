@@ -1,0 +1,23 @@
+# ===================================================================
+# Bunny プレイヤー ECS 原型設定 (Bunny Player Prefab Configuration)
+# ===================================================================
+MaxHp = 6.0
+InvincibleDuration = 0.8
+HitFlashDuration = 0.08
+
+# 地形衝突ボックス
+CollisionWidth = 32.0
+CollisionHeight = 42.0
+
+# 被弾判定ボックス (Hurtbox)
+HurtboxShape = "Circle"
+HurtboxRadius = 7.0
+HurtboxOffsetY = 12.0
+
+# スプライトスケール
+ScaleX = 1.8
+ScaleY = 1.8
+
+# スプリング減衰パラメータ
+SpringFrequency = 18.0
+SpringDampingRatio = 0.65
