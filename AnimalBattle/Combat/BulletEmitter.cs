@@ -78,7 +78,7 @@ public static class BulletEmitter
             var vx = MathF.Cos(angle) * cfg.BulletSpeed;
             var vy = MathF.Sin(angle) * cfg.BulletSpeed;
 
-            CombatSpawner.SpawnBossSpecialBullet(
+            BulletSpawner.SpawnBossSpecialBullet(
                 world,
                 origin.X,
                 origin.Y,
@@ -101,7 +101,7 @@ public static class BulletEmitter
         var vy = MathF.Sin(angle) * cfg.BulletSpeed;
         var bType = BossPatternConfigContainerBase.ParseBulletType(cfg.BulletType, BulletType.Black);
 
-        CombatSpawner.SpawnBossSpecialBullet(
+        BulletSpawner.SpawnBossSpecialBullet(
             world,
             origin.X,
             origin.Y,
@@ -126,7 +126,7 @@ public static class BulletEmitter
             var vx = MathF.Cos(angle) * cfg.BulletSpeed;
             var vy = MathF.Sin(angle) * cfg.BulletSpeed;
 
-            CombatSpawner.SpawnBossSpecialBullet(
+            BulletSpawner.SpawnBossSpecialBullet(
                 world,
                 origin.X,
                 origin.Y,
@@ -148,7 +148,7 @@ public static class BulletEmitter
 
         var vx1 = MathF.Cos(angleOffset) * cfg.BulletSpeed;
         var vy1 = MathF.Sin(angleOffset) * cfg.BulletSpeed;
-        CombatSpawner.SpawnBossSpecialBullet(
+        BulletSpawner.SpawnBossSpecialBullet(
             world,
             origin.X,
             origin.Y,
@@ -162,7 +162,7 @@ public static class BulletEmitter
         var angle2 = angleOffset + MathF.PI;
         var vx2 = MathF.Cos(angle2) * cfg.BulletSpeed;
         var vy2 = MathF.Sin(angle2) * cfg.BulletSpeed;
-        CombatSpawner.SpawnBossSpecialBullet(
+        BulletSpawner.SpawnBossSpecialBullet(
             world,
             origin.X,
             origin.Y,
@@ -187,7 +187,7 @@ public static class BulletEmitter
             var vx = MathF.Cos(angle) * cfg.BulletSpeed;
             var vy = MathF.Sin(angle) * cfg.BulletSpeed;
 
-            CombatSpawner.SpawnBossSpecialBullet(
+            BulletSpawner.SpawnBossSpecialBullet(
                 world,
                 origin.X,
                 origin.Y,
@@ -208,7 +208,7 @@ public static class BulletEmitter
         var rx = cfg.MinX + Random.Shared.NextSingle() * (cfg.MaxX - cfg.MinX);
         var bType = BossPatternConfigContainerBase.ParseBulletType(cfg.BulletType, BulletType.Cyan);
 
-        CombatSpawner.SpawnBossSpecialBullet(
+        BulletSpawner.SpawnBossSpecialBullet(
             world,
             rx,
             0.0f,
@@ -235,7 +235,7 @@ public static class BulletEmitter
             var vx = MathF.Cos(angle) * cfg.ImpactBulletSpeed;
             var vy = MathF.Sin(angle) * cfg.ImpactBulletSpeed;
 
-            CombatSpawner.SpawnBossSpecialBullet(
+            BulletSpawner.SpawnBossSpecialBullet(
                 world,
                 origin.X,
                 spawnY,
@@ -256,7 +256,7 @@ public static class BulletEmitter
         for (var i = 0; i < count; i++)
         {
             var rx = cfg.MinX + Random.Shared.NextSingle() * (cfg.MaxX - cfg.MinX);
-            CombatSpawner.SpawnBossSpecialBullet(
+            BulletSpawner.SpawnBossSpecialBullet(
                 world,
                 rx,
                 0.0f,
@@ -273,9 +273,9 @@ public static class BulletEmitter
     internal static void EmitGroundStompShockwaves(World world, GroundStompConfig cfg, Vec2f origin, float bodyHeight)
     {
         var groundY = origin.Y + bodyHeight / 2.0f - cfg.GroundOffsetY;
-        CombatSpawner.SpawnShockwave(world, origin.X, groundY);
+        EffectSpawner.SpawnShockwave(world, origin.X, groundY);
 
-        CombatSpawner.SpawnGroundShockwave(
+        BulletSpawner.SpawnGroundShockwave(
             world,
             origin.X - cfg.ShockwaveOffsetX,
             groundY,
@@ -285,7 +285,7 @@ public static class BulletEmitter
             cfg.FillColor,
             cfg.OutlineColor);
 
-        CombatSpawner.SpawnGroundShockwave(
+        BulletSpawner.SpawnGroundShockwave(
             world,
             origin.X + cfg.ShockwaveOffsetX,
             groundY,
@@ -300,7 +300,7 @@ public static class BulletEmitter
     internal static void EmitLeapSmashShrapnel(World world, LeapSmashConfig cfg, Vec2f origin, float bodyHeight)
     {
         var groundY = origin.Y + bodyHeight / 2.0f;
-        CombatSpawner.SpawnShockwave(world, origin.X, groundY);
+        EffectSpawner.SpawnShockwave(world, origin.X, groundY);
 
         var count = Math.Max(2, cfg.ShrapnelCount);
         for (var k = 0; k < count; k++)
@@ -310,7 +310,7 @@ public static class BulletEmitter
             var vx = MathF.Cos(angle) * cfg.ShrapnelSpeed;
             var vy = MathF.Sin(angle) * cfg.ShrapnelSpeed;
 
-            CombatSpawner.SpawnBossBullet(
+            BulletSpawner.SpawnBossBullet(
                 world,
                 origin.X,
                 groundY - cfg.ShrapnelOffsetY,
