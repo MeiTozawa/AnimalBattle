@@ -1,5 +1,3 @@
-using AnimalBattle.Components;
-using AnimalBattle.Core;
 using AnimalBattle.Systems.Render;
 using Flecs.NET.Core;
 
@@ -22,20 +20,7 @@ public readonly struct RenderModule : IFlecsModule {
         world.AddAimReticleUpdateSystem();
 
         // 1. ワールド空間描画前のカメラオフセット適用
-        world.System("CameraOffsetApplySystem")
-             .Kind(Ecs.OnStore)
-             .Iter((Iter it) =>
-             {
-                 var w = it.World();
-                 if (w.Get<GameFlow>().State == GameState.Battle)
-                 {
-                     GameEngine.SetCameraOffset(CameraService.RenderOffsetX, CameraService.RenderOffsetY);
-                 }
-                 else
-                 {
-                     GameEngine.SetCameraOffset(0, 0);
-                 }
-             });
+        world.AddCameraOffsetApplySystem();
 
         // 2. ワールド空間描画（タイルマップ、キャラクター、弾幕、予兆、VFX、デバッグ枠）
         world.AddTileMapRenderSystem()
@@ -46,12 +31,7 @@ public readonly struct RenderModule : IFlecsModule {
              .AddDebugGizmosRenderSystem();
 
         // 3. スクリーン空間描画前のカメラオフセットリセット (HUD / 照準器 / UI へのシェイク波及防止)
-        world.System("CameraOffsetResetSystem")
-             .Kind(Ecs.OnStore)
-             .Iter((Iter it) =>
-             {
-                 GameEngine.SetCameraOffset(0, 0);
-             });
+        world.AddCameraOffsetResetSystem();
 
         // 4. スクリーン空間描画（HUD、照準器）
         world.AddHudRenderSystem()
