@@ -7,7 +7,6 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
-using AnimalBattle.Renderer;
 using AnimalBattle.Scenes;
 using Flecs.NET.Core;
 
@@ -116,7 +115,7 @@ public static class BattleSceneSystems {
         playerBulletsQuery.Each(e => e.Add<RecycleTag>());
         vfxQuery.Each(e => e.Add<RecycleTag>());
         CameraService.Reset();
-        AimReticleRenderer.Reset();
+        world.Set(new AimReticleState());
 
         bossQuery.Each((ref BaseBossAgent boss) => boss.Reset());
         playerQuery.Each((ref PlayerPawn player) => player.Reset(ConfigManager.GetPlayerConfig(player.CurrentCharacter)));

@@ -12,7 +12,6 @@ using AnimalBattle.Core;
 using AnimalBattle.Events;
 using AnimalBattle.Maps;
 using AnimalBattle.Prefabs;
-using AnimalBattle.Renderer;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Scenes;
@@ -97,7 +96,7 @@ public static class BattleSceneSpawner {
 
         bossEntity.Set(boss);
 
-        AimReticleRenderer.Initialize();
+        world.Set(new AimReticleState());
         CameraService.Reset();
         GameEngine.SetCameraOffset(0, 0);
 
@@ -115,7 +114,7 @@ public static class BattleSceneSpawner {
         // 1. サウンド・カーソル・カメラ・照準器の復元
         SoundService.StopBgm();
         InputService.SetCursorVisible(true);
-        AimReticleRenderer.Shutdown();
+        world.Set(new AimReticleState());
         CameraService.Reset();
         GameEngine.SetCameraOffset(0, 0);
 
