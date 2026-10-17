@@ -37,6 +37,9 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// <summary>現在の戦闘 Phase を取得します。</summary>
     public virtual Phase Phase => Brain.Phase;
 
+    /// <summary>設定ファイル駆動の Phase 2 / 3 移行体力閾値比率（0.0 ~ 1.0）を取得します。</summary>
+    public abstract (float Phase2Threshold, float Phase3Threshold) PhaseThresholds { get; }
+
     /// <summary>現在の Boss 状態を取得します。</summary>
     public virtual BossState CurrentState => Brain.CurrentState;
 

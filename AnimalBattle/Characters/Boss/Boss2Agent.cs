@@ -42,6 +42,10 @@ public sealed class Boss2Agent : BaseBossAgent
     /// <inheritdoc />
     public override BossType BossType => BossType.Boss2;
 
+    /// <inheritdoc />
+    public override (float Phase2Threshold, float Phase3Threshold) PhaseThresholds =>
+        (ConfigManager.Boss2.Phase2.HpThreshold, ConfigManager.Boss2.Phase3.HpThreshold);
+
     private void InitializeComponents(Entity entity, int spriteHandle)
     {
         var b2Cfg = ConfigManager.Boss2;

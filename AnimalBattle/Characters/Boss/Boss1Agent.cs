@@ -35,6 +35,10 @@ public sealed class Boss1Agent : BaseBossAgent
     public override BossType BossType => BossType.Boss1;
 
     /// <inheritdoc />
+    public override (float Phase2Threshold, float Phase3Threshold) PhaseThresholds =>
+        (ConfigManager.Boss1.Phase2.HpThreshold, ConfigManager.Boss1.Phase3.HpThreshold);
+
+    /// <inheritdoc />
     public override float HoverTimer => _brain.HoverTimer;
 
     /// <inheritdoc />
