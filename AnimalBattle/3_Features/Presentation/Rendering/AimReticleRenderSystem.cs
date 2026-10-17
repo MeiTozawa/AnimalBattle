@@ -12,15 +12,12 @@ namespace AnimalBattle.Systems.Render;
 /// </summary>
 public static class AimReticleRenderSystem {
     /// <summary>
-    ///     照準器描画システム（および関連する物理更新システム）を Flecs.NET ワールドへ登録します。
+    ///     照準器描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <returns>登録済みワールド</returns>
     public static World AddAimReticleRenderSystem(this World world)
     {
-        // 物理更新システムを併せて登録
-        world.AddAimReticleUpdateSystem();
-
         // レティクル画面描画 (OnStore)
         world.System("AimReticleRenderSystem")
             .Kind(Ecs.OnStore)

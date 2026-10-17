@@ -18,6 +18,9 @@ public readonly struct RenderModule : IFlecsModule {
     {
         world.Module<RenderModule>();
 
+        // 照準器スプリング物理更新 (PreUpdate)
+        world.AddAimReticleUpdateSystem();
+
         // 1. ワールド空間描画前のカメラオフセット適用
         world.System("CameraOffsetApplySystem")
              .Kind(Ecs.OnStore)

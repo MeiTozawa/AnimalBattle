@@ -51,10 +51,8 @@ public class GameManager : IDisposable {
         _ecsWorld.Import<PlayerModule>();
         _ecsWorld.Import<BossModule>();
         _ecsWorld.Import<RenderModule>(); // 原生描画モジュール (Ecs.OnStore)
-
-        // 状態連動システム群の登録
-        _ecsWorld.AddStartSceneSystems()
-                 .AddBattleSceneSystems();
+        _ecsWorld.Import<StartSceneModule>();
+        _ecsWorld.Import<BattleSceneModule>();
 
         CombatPoolService.Initialize(_ecsWorld);
 
