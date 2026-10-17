@@ -1,4 +1,5 @@
 using System;
+using AnimalBattle.Abilities;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -20,7 +21,7 @@ public static class BossDamageResolutionSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddBossDamageResolutionSystem(this World world)
     {
-        world.System<Health, IncomingDamage, HitFlashSettings, Transform, BossCombatState, Sprite, AbilitySystemComponent>("BossDamageResolutionSystem")
+        world.System<Health, IncomingDamage, HitFlashSettings, Transform, BossCombatState, Sprite, GameplayTagState>("BossDamageResolutionSystem")
             .With<BossTag>()
             .Kind(Ecs.OnValidate)
             .Iter((Iter it,
@@ -30,7 +31,7 @@ public static class BossDamageResolutionSystem
                 Field<Transform> transforms,
                 Field<BossCombatState> combats,
                 Field<Sprite> sprites,
-                Field<AbilitySystemComponent> ascs) =>
+                Field<GameplayTagState> tags) =>
             {
                 var count = it.Count();
                 var pCfg = ConfigManager.Player;
@@ -45,17 +46,17 @@ public static class BossDamageResolutionSystem
                     ref readonly var trans = ref transforms[i];
                     ref readonly var combat = ref combats[i];
                     ref var sprite = ref sprites[i];
-                    var asc = ascs[i];
+                    ref readonly var tagState = ref tags[i];
 
                     // 完全無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
-                    if (asc.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
+                    if (tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
                     {
                         entity.Remove<IncomingDamage>();
                         continue;
                     }
 
                     // 易傷倍率の評価（GameplayTag.Vulnerable 駆動）
-                    var isVulnerable = asc.HasTag(GameplayTag.Vulnerable);
+                    var isVulnerable = tagState.HasTag(GameplayTag.Vulnerable);
                     var multiplier = isVulnerable ? pCfg.VulnerableDamageMultiplier : 1.0f;
                     var finalDamage = dmg.Amount * multiplier;
                     hp.Current = MathF.Max(0.0f, hp.Current - finalDamage);
@@ -64,7 +65,7 @@ public static class BossDamageResolutionSystem
                     entity.Set(new HitFlashEffect(flashCfg.Duration, flashCfg.Color));
 
                     // ヒットストップおよび受撃局所振動の適用（SuperArmor 剛体タグ未保持時のみ適用）
-                    var hasSuperArmor = asc.HasTag(GameplayTag.SuperArmor);
+                    var hasSuperArmor = tagState.HasTag(GameplayTag.SuperArmor);
                     if (!hasSuperArmor)
                     {
                         var isHeavy = isVulnerable || dmg.IsHeavyImpact;

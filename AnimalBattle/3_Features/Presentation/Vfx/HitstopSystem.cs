@@ -15,9 +15,9 @@ public static class HitstopSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddHitstopSystem(this World world)
     {
-        world.System<HitstopState>("HitstopStateSystem")
+        world.System<HitstopState, Sprite>("HitstopStateSystem")
             .Kind(Ecs.PreUpdate)
-            .Each((Iter it, int i, ref HitstopState hitstop) =>
+            .Each((Iter it, int i, ref HitstopState hitstop, ref Sprite sprite) =>
             {
                 hitstop.RemainingSeconds -= it.DeltaTime();
                 if (hitstop.RemainingSeconds <= 0.0f)
@@ -25,12 +25,8 @@ public static class HitstopSystem
                     var entity = it.Entity(i);
                     entity.Remove<HitstopState>();
                     entity.Remove<SpriteJitter>();
-                    if (entity.Has<Sprite>())
-                    {
-                        ref var sprite = ref entity.GetMut<Sprite>();
-                        sprite.JitterOffsetX = 0.0f;
-                        sprite.JitterOffsetY = 0.0f;
-                    }
+                    sprite.JitterOffsetX = 0.0f;
+                    sprite.JitterOffsetY = 0.0f;
                 }
             });
 

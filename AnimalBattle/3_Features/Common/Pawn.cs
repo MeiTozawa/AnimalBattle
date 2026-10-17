@@ -104,14 +104,11 @@ public abstract class Pawn
     /// <summary>最大 HP を取得します。</summary>
     public float MaxHp => Entity.Get<Health>().Max;
 
-    /// <summary>アビリティシステムコンポーネントを取得します。</summary>
-    public virtual AbilitySystemComponent AbilitySystem => Entity.Get<AbilitySystemComponent>();
-
     /// <summary>生存中であるかを取得します。</summary>
     public bool IsAlive => Entity.Get<Health>().Current > 0.0f;
 
-    /// <summary>無敵保護または不可命中状態であるかを取得します。</summary>
-    public bool IsInvincible => AbilitySystem.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable);
+    /// <summary>無敵保護または不可命中状態であるかを取得します（ホットパスでの entity.Has なし）。</summary>
+    public bool IsInvincible => Entity.Get<GameplayTagState>().HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable);
 
     /// <summary>所属陣営を取得します。</summary>
     public Faction Faction => Entity.Get<Hurtbox>().Faction;
@@ -162,9 +159,6 @@ public abstract class Pawn
 
     /// <summary>被弾時白閃演出中であるかを取得します。</summary>
     public bool IsFlashing => Entity.IsAlive() && Entity.Has<HitFlashEffect>();
-
-    /// <summary>現在再生中のアニメーションクリップ名を取得します。</summary>
-    public string CurrentAnimation => Entity.Has<Animation>() ? Entity.Get<Animation>().CurrentClip.ToString() : string.Empty;
 
     /// <summary>指定されたアニメーションクリップを再生します。</summary>
     protected void PlayAnimation(string clipName)

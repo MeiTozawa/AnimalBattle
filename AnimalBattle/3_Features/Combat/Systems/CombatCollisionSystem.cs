@@ -65,7 +65,6 @@ public static class CombatCollisionSystem {
                         if (!vicEntity.IsAlive()) continue;
                         ref readonly var hp = ref vicEntity.Get<Health>();
                         if (hp.Current <= 0.0f) continue;
-                        if (vicEntity.Has<AbilitySystemComponent>() && vicEntity.Get<AbilitySystemComponent>().HasTag(GameplayTag.Untargetable)) continue;
 
                         ref var vicTrans = ref vicEntity.GetMut<Transform>();
                         ref var hurtbox = ref vicEntity.GetMut<Hurtbox>();
@@ -125,14 +124,14 @@ public static class CombatCollisionSystem {
     }
 
     internal sealed class CollisionContext {
-        private readonly Ecs.IterFieldCallback<Transform, Hurtbox, Health, AbilitySystemComponent> _collectIter;
-        public Query<Transform, Hurtbox, Health, AbilitySystemComponent> HurtboxQuery;
+        private readonly Ecs.IterFieldCallback<Transform, Hurtbox, Health, GameplayTagState> _collectIter;
+        public Query<Transform, Hurtbox, Health, GameplayTagState> HurtboxQuery;
         public readonly HurtboxTarget[] Targets = new HurtboxTarget[32];
         public int TargetCount;
 
         public CollisionContext(World world)
         {
-            HurtboxQuery = world.QueryBuilder<Transform, Hurtbox, Health, AbilitySystemComponent>().Build();
+            HurtboxQuery = world.QueryBuilder<Transform, Hurtbox, Health, GameplayTagState>().Build();
             _collectIter = CollectTargets;
         }
 
@@ -142,7 +141,7 @@ public static class CombatCollisionSystem {
             HurtboxQuery.Iter(_collectIter);
         }
 
-        private void CollectTargets(Iter it, Field<Transform> trans, Field<Hurtbox> hurtboxes, Field<Health> hps, Field<AbilitySystemComponent> ascs)
+        private void CollectTargets(Iter it, Field<Transform> trans, Field<Hurtbox> hurtboxes, Field<Health> hps, Field<GameplayTagState> tags)
         {
             var count = it.Count();
             for (var i = 0; i < count; i++)
@@ -153,8 +152,8 @@ public static class CombatCollisionSystem {
                 if (hp.Current <= 0.0f)
                     continue;
 
-                var asc = ascs[i];
-                if (asc.HasTag(GameplayTag.Untargetable))
+                ref readonly var tag = ref tags[i];
+                if (tag.HasTag(GameplayTag.Untargetable))
                     continue;
 
                 var vicEntity = it.Entity(i);

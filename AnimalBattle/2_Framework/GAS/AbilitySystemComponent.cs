@@ -2,12 +2,13 @@ using System.Diagnostics;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
 using AnimalBattle.Core;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Abilities;
 
 /// <summary>
-///     エンティティの技能登録、時限タグおよび冷却管理、状態タグ判定、および能力時序推進を一元管理する汎用コンポーネントです。
-///     能力は動的 AbilityTag（StringId）によって管理・駆動され、全域 Enum への依存を持ちません。
+///     エンティティの技能登録、冷却管理、および技能時序（タイムライン）推進を一元管理するオーケストレーター。
+///     ECS コンポーネントとしての責務から切り離され、主に Boss Brain 等の行動主体が保持・制御します。
 /// </summary>
 public sealed class AbilitySystemComponent {
     private const int MaxActiveEffects = 8;
@@ -17,6 +18,9 @@ public sealed class AbilitySystemComponent {
     private readonly ActiveGameplayEffect[] _activeEffects = new ActiveGameplayEffect[MaxActiveEffects];
     private readonly int[] _tagCounts = new int[MaxTagBits];
     private GameplayTag _activeTagsMask = GameplayTag.None;
+    private Entity _ownerEntity;
+    private bool _hasOwnerTagState;
+    private bool _hasOwnerTimedEffects;
 
     /// <summary>戦闘タグコンテナを取得します。</summary>
     public GameplayTagContainer Tags => new(_activeTagsMask);
@@ -42,6 +46,9 @@ public sealed class AbilitySystemComponent {
     /// <summary>現在何らかの技能を発動中かどうかを取得します。</summary>
     public bool IsCasting => CurrentAbility != null;
 
+    /// <summary>所有者 Entity を取得します。</summary>
+    public Entity Owner => _ownerEntity;
+
     /// <summary>移動速度適用イベント。</summary>
     public event Action<float, float>? OnExecuteMovement;
 
@@ -57,11 +64,27 @@ public sealed class AbilitySystemComponent {
     /// <summary>技能完了通知イベント。</summary>
     public event Action<StringId>? OnSkillCompleted;
 
-    /// <summary>能力をコンポーネントに付与・登録します。</summary>
+    /// <summary>所有者 Entity を関連付け、タグ状態を初期同期します（初期化時に一度だけ存在検査を実施）。</summary>
+    public void SetOwner(Entity owner)
+    {
+        _ownerEntity = owner;
+        _hasOwnerTagState = owner.IsAlive() && owner.Has<GameplayTagState>();
+        _hasOwnerTimedEffects = owner.IsAlive() && owner.Has<TimedEffectsState>();
+        SyncTagsToOwner();
+    }
+
+    private void SyncTagsToOwner()
+    {
+        if (_hasOwnerTagState && _ownerEntity.IsAlive())
+        {
+            _ownerEntity.GetMut<GameplayTagState>().ActiveMask = _activeTagsMask;
+        }
+    }
+
+    /// <summary>能力を登録します。</summary>
     public void GiveAbility(GameplayAbility ability)
     {
         Debug.Assert(ability != null, "ability は null であってはなりません。");
-        if (ability == null) return;
 
         if (!ability.AbilityTag.IsEmpty)
         {
@@ -69,7 +92,7 @@ public sealed class AbilitySystemComponent {
         }
     }
 
-    /// <summary>技能識別タグによって登録済み能力を取得します（UE GAS 準拠）。</summary>
+    /// <summary>技能識別タグによって登録済み能力を取得します。</summary>
     public bool TryGetAbility(StringId abilityTag, out GameplayAbility? ability) =>
         _abilities.TryGetValue(abilityTag, out ability);
 
@@ -86,6 +109,7 @@ public sealed class AbilitySystemComponent {
                 }
             }
         }
+        SyncTagsToOwner();
     }
 
     private void DecrementTagCounts(GameplayTag tags)
@@ -101,36 +125,37 @@ public sealed class AbilitySystemComponent {
                 }
             }
         }
+        SyncTagsToOwner();
     }
 
-    /// <summary>戦闘タグを直接付与（参照カウント加算）します。</summary>
+    /// <summary>戦闘タグを付与します。</summary>
     public void AddTag(GameplayTag tag)
     {
         if (tag == GameplayTag.None) return;
         IncrementTagCounts(tag);
     }
 
-    /// <summary>戦闘タグを直接解除（参照カウント減算）します。</summary>
+    /// <summary>戦闘タグを解除します。</summary>
     public void RemoveTag(GameplayTag tag)
     {
         if (tag == GameplayTag.None) return;
         DecrementTagCounts(tag);
     }
 
-    /// <summary>
-    ///     時限ミニ効果（Mini-GameplayEffect）を適用します。
-    ///     同一発生源および同一タグの効果が存在する場合は持続時間を更新し、
-    ///     存在しない場合は定長プール ActiveEffect[8] の空きスロットへ割り当ててタグ参照カウントを加算します。
-    /// </summary>
-    /// <param name="grantedTags">付与する戦闘タグ</param>
-    /// <param name="duration">持続時間（秒）</param>
-    /// <param name="sourceHandle">付与元エンティティのハンドル・ID</param>
-    /// <returns>適用に成功した場合は true</returns>
+    /// <summary>時限エフェクトを適用します。</summary>
     public bool ApplyGameplayEffect(GameplayTag grantedTags, float duration, ulong sourceHandle = 0)
     {
         if (duration <= 0.0f || grantedTags == GameplayTag.None) return false;
 
-        // 1. 同一発生源 & 同一タグの既存エフェクトが存在する場合は持続時間を更新
+        // 所有者 Entity に TimedEffectsState が存在する場合は直接適用（entity.Has なし）
+        if (_hasOwnerTimedEffects && _hasOwnerTagState && _ownerEntity.IsAlive())
+        {
+            ref var effects = ref _ownerEntity.GetMut<TimedEffectsState>();
+            ref var tags = ref _ownerEntity.GetMut<GameplayTagState>();
+            TimedEffectService.ApplyEffect(ref effects, ref tags, grantedTags, duration, sourceHandle);
+        }
+
+        // 内部フォールバックキャッシュ
         for (var i = 0; i < MaxActiveEffects; i++)
         {
             ref var effect = ref _activeEffects[i];
@@ -142,7 +167,6 @@ public sealed class AbilitySystemComponent {
             }
         }
 
-        // 2. 空きスロットへ新規割り当て
         for (var i = 0; i < MaxActiveEffects; i++)
         {
             ref var effect = ref _activeEffects[i];
@@ -154,7 +178,6 @@ public sealed class AbilitySystemComponent {
             }
         }
 
-        // 3. プール満杯時：残り時間が最も短いエフェクトを上書き置換
         var shortestIdx = 0;
         var shortestRemaining = float.MaxValue;
         for (var i = 0; i < MaxActiveEffects; i++)
@@ -173,44 +196,20 @@ public sealed class AbilitySystemComponent {
         return true;
     }
 
-    /// <summary>指定された秒数だけ有効な時限タグを付与します（ApplyGameplayEffect のエイリアス）。</summary>
+    /// <summary>時限タグを付与します。</summary>
     public bool AddTimedTag(GameplayTag tag, float duration, ulong sourceHandle = 0) =>
         ApplyGameplayEffect(tag, duration, sourceHandle);
 
-    /// <summary>指定されたタグを含むすべてのアクティブエフェクトを解除します。</summary>
-    public void RemoveActiveEffectsWithTag(GameplayTag tag)
-    {
-        for (var i = 0; i < MaxActiveEffects; i++)
-        {
-            ref var effect = ref _activeEffects[i];
-            if (effect.IsActive && (effect.GrantedTags & tag) != GameplayTag.None)
-            {
-                effect.IsActive = false;
-                DecrementTagCounts(effect.GrantedTags);
-            }
-        }
-    }
-
-    /// <summary>指定された発生源ハンドルから付与されたすべてのアクティブエフェクトを解除します。</summary>
-    public void RemoveActiveEffectsFromSource(ulong sourceHandle)
-    {
-        for (var i = 0; i < MaxActiveEffects; i++)
-        {
-            ref var effect = ref _activeEffects[i];
-            if (effect.IsActive && effect.SourceHandle == sourceHandle)
-            {
-                effect.IsActive = false;
-                DecrementTagCounts(effect.GrantedTags);
-            }
-        }
-    }
-
-    /// <summary>指定された時限タグの最大残り秒数を取得します。</summary>
+    /// <summary>指定タグの残り時間を取得します。</summary>
     public float GetTagRemainingTime(GameplayTag tag)
     {
-        if ((_activeTagsMask & tag) == GameplayTag.None)
-            return 0.0f;
+        if (_hasOwnerTimedEffects && _ownerEntity.IsAlive())
+        {
+            ref readonly var effects = ref _ownerEntity.Get<TimedEffectsState>();
+            return TimedEffectService.GetTagRemainingTime(in effects, tag);
+        }
 
+        if ((_activeTagsMask & tag) == GameplayTag.None) return 0.0f;
         var maxRemaining = 0.0f;
         for (var i = 0; i < MaxActiveEffects; i++)
         {
@@ -220,11 +219,10 @@ public sealed class AbilitySystemComponent {
                 maxRemaining = MathF.Max(maxRemaining, effect.Remaining);
             }
         }
-
         return maxRemaining;
     }
 
-    /// <summary>すべての戦闘タグ（アクティブエフェクトおよび参照カウント）を初期化クリアします。</summary>
+    /// <summary>すべての戦闘タグをクリアします。</summary>
     public void ClearTags()
     {
         for (var i = 0; i < MaxActiveEffects; i++)
@@ -233,15 +231,30 @@ public sealed class AbilitySystemComponent {
         }
         Array.Clear(_tagCounts);
         _activeTagsMask = GameplayTag.None;
+        SyncTagsToOwner();
     }
 
-    /// <summary>指定タグをすべて保持しているか判定します（参照カウント > 0）。</summary>
-    public bool HasTag(GameplayTag tag) => (_activeTagsMask & tag) == tag;
+    /// <summary>指定タグをすべて保持しているか判定します（ホットパスでの entity.Has なし）。</summary>
+    public bool HasTag(GameplayTag tag)
+    {
+        if (_hasOwnerTagState && _ownerEntity.IsAlive())
+        {
+            return _ownerEntity.Get<GameplayTagState>().HasTag(tag);
+        }
+        return (_activeTagsMask & tag) == tag;
+    }
 
-    /// <summary>指定タグのいずれかを保持しているか判定します（参照カウント > 0）。</summary>
-    public bool HasAnyTag(GameplayTag tag) => (_activeTagsMask & tag) != GameplayTag.None;
+    /// <summary>指定タグのいずれかを保持しているか判定します（ホットパスでの entity.Has なし）。</summary>
+    public bool HasAnyTag(GameplayTag tag)
+    {
+        if (_hasOwnerTagState && _ownerEntity.IsAlive())
+        {
+            return _ownerEntity.Get<GameplayTagState>().HasAnyTag(tag);
+        }
+        return (_activeTagsMask & tag) != GameplayTag.None;
+    }
 
-    /// <summary>毎フレームのアクティブエフェクト時間減衰およびタグ参照カウント管理を推進します。</summary>
+    /// <summary>時限タグの時間を減衰更新します。</summary>
     public void UpdateTimedTags(float dt)
     {
         if (dt <= 0.0f) return;
@@ -260,9 +273,7 @@ public sealed class AbilitySystemComponent {
         }
     }
 
-    /// <summary>
-    ///     技能識別タグを指定して技能の発動を試行します（UE GAS 準拠）。
-    /// </summary>
+    /// <summary>技能識別タグを指定して発動を試行します。</summary>
     public bool TryActivateAbility(StringId abilityTag, float direction = 1.0f)
     {
         if (!_abilities.TryGetValue(abilityTag, out var ability))
@@ -278,13 +289,11 @@ public sealed class AbilitySystemComponent {
     {
         var ctx = new AbilityActivationContext(direction);
 
-        // CanActivate 判定（Tag阻害および個別CD判定を統合評価）
         if (!ability.CanActivate(this, in ctx))
         {
             return false;
         }
 
-        // 発動コミット
         CurrentAbility = ability;
 
         if (ability.ActivationOwnedTags != GameplayTag.None)
@@ -298,9 +307,7 @@ public sealed class AbilitySystemComponent {
         return true;
     }
 
-    /// <summary>
-    ///     技能の冷却時間を適用・コミットします。
-    /// </summary>
+    /// <summary>技能の冷却時間を適用します。</summary>
     public void CommitCooldown(GameplayAbility ability)
     {
         if (!ability.AbilityTag.IsEmpty)
@@ -309,9 +316,7 @@ public sealed class AbilitySystemComponent {
         }
     }
 
-    /// <summary>
-    ///     現在発動中の技能を正常に完了・終了します。
-    /// </summary>
+    /// <summary>現在発動中の技能を完了・終了します。</summary>
     public void EndCurrentAbility()
     {
         if (CurrentAbility is null) return;
@@ -329,9 +334,7 @@ public sealed class AbilitySystemComponent {
         OnSkillCompleted?.Invoke(finishedTag);
     }
 
-    /// <summary>
-    ///     現在発動中の技能を即座に中断・打断します。
-    /// </summary>
+    /// <summary>現在発動中の技能を即座に中断します。</summary>
     public void InterruptCurrentAbility()
     {
         if (CurrentAbility is null) return;
@@ -348,21 +351,14 @@ public sealed class AbilitySystemComponent {
         CurrentAbility = null;
     }
 
-    /// <summary>
-    ///     毎フレームの技能時序推進と冷却時間更新を実行します。
-    /// </summary>
+    /// <summary>毎フレームの技能時序推進と冷却時間更新を実行します。</summary>
     public void Update(float dt, bool isGrounded = false)
     {
-        // 1. 冷却の自動減衰
         _cooldownTracker.Update(dt);
-
-        // 2. 実行中アビリティの更新
         CurrentAbility?.Update(dt, this, isGrounded);
     }
 
-    /// <summary>
-    ///     アクションステップを実行・派発します。
-    /// </summary>
+    /// <summary>アクションステップを実行・派発します。</summary>
     public void DispatchAction(AttackActionStep step, float dir)
     {
         var currentTag = CurrentAbility?.AbilityTag ?? StringId.Empty;

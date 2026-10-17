@@ -29,7 +29,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     public abstract IBossBrain Brain { get; }
 
     /// <summary>Boss のアビリティシステムコンポーネントを取得します。</summary>
-    public override AbilitySystemComponent AbilitySystem => Brain.AbilitySystem;
+    public virtual AbilitySystemComponent AbilitySystem => Brain.AbilitySystem;
 
     /// <summary>Boss の種別を取得します。</summary>
     public abstract BossType BossType { get; }
@@ -64,7 +64,6 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// <summary>Boss が後隙による易傷状態であるかを取得します。</summary>
     public virtual bool IsVulnerable => AbilitySystem.HasTag(GameplayTag.Vulnerable);
 
-
     /// <summary>Boss がスーパーアーマー（剛体）状態であるかを取得します。</summary>
     public virtual bool HasSuperArmor => AbilitySystem.HasTag(GameplayTag.SuperArmor);
 
@@ -89,7 +88,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     }
 
     /// <summary>
-    ///     実行時スプライト画像およびアビリティシステムコンポーネントを Entity に登録します。
+    ///     実行時スプライト画像および空間変換を Entity に登録し、Brain のアビリティシステム所有者をバインドします。
     ///     （基礎パラメータ、判定形状および陣営タグは Prefab 原型より自動継承されます）
     /// </summary>
     protected void InitializeComponents(
@@ -101,8 +100,9 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
         float scaleY)
     {
         entity.Set(new Transform(spawnX, spawnY, scaleX, scaleY))
-           .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)))
-           .Set(AbilitySystem);
+           .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)));
+
+        Brain.AbilitySystem.SetOwner(entity);
     }
 
     /// <summary>
@@ -172,6 +172,10 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
         FlipX = false;
         IsVisible = true;
         ClearTransientEffects();
+        if (Entity.IsAlive())
+        {
+            Entity.Set(new TimedEffectsState());
+        }
         Entity.Set(new BossCombatState(Phase));
     }
 

@@ -26,7 +26,7 @@ public static class MovementSystem {
     {
         var pQuery = platformQuery ?? world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
 
-        world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability, DashState, Sprite, SpringScale, AbilitySystemComponent>("MovementSystem")
+        world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability, DashState, Sprite, SpringScale, TimedEffectsState, GameplayTagState>("MovementSystem")
            .Kind(Ecs.OnUpdate)
            .Without<DeadTag>()
            .Without<HitstopState>()
@@ -39,7 +39,8 @@ public static class MovementSystem {
                 Field<DashState> dashes,
                 Field<Sprite> sprites,
                 Field<SpringScale> springs,
-                Field<AbilitySystemComponent> ascs) =>
+                Field<TimedEffectsState> timedEffects,
+                Field<GameplayTagState> tags) =>
             {
                 var dt = it.DeltaTime();
                 var count = it.Count();
@@ -55,10 +56,11 @@ public static class MovementSystem {
                     ref var dash = ref dashes[i];
                     ref var sprite = ref sprites[i];
                     ref var spring = ref springs[i];
-                    var asc = ascs[i];
+                    ref var effect = ref timedEffects[i];
+                    ref var tag = ref tags[i];
 
                     var entity = it.Entity(i);
-                    ExecuteKinematics(entity, asc, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, pQuery, cfg, world);
+                    ExecuteKinematics(entity, ref effect, ref tag, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, pQuery, cfg, world);
                 }
             });
 
@@ -67,7 +69,8 @@ public static class MovementSystem {
 
     private static void ExecuteKinematics(
         Entity entity,
-        AbilitySystemComponent asc,
+        ref TimedEffectsState timedEffects,
+        ref GameplayTagState tagState,
         ref Transform trans,
         ref Velocity vel,
         ref CollisionBox col,
@@ -108,7 +111,7 @@ public static class MovementSystem {
             }
 
             // ダッシュ不可命中フレーム付与（弾幕・敵接触をすり抜ける）
-            asc.ApplyGameplayEffect(GameplayTag.Untargetable, pCfg.DashInvincibleDuration, entity.Id);
+            TimedEffectService.ApplyEffect(ref timedEffects, ref tagState, GameplayTag.Untargetable, pCfg.DashInvincibleDuration, entity.Id);
 
             // スカッシュ＆ストレッチ突進変形演出
             spring.CurrentX = pCfg.DashStretchScaleX;

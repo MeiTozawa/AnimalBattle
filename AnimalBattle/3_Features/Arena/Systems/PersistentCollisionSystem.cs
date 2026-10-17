@@ -71,7 +71,6 @@ public static class PersistentCollisionSystem
                         if (!vicEntity.IsAlive()) continue;
                         ref readonly var hp = ref vicEntity.Get<Health>();
                         if (hp.Current <= 0.0f) continue;
-                        if (vicEntity.Has<AbilitySystemComponent>() && vicEntity.Get<AbilitySystemComponent>().HasTag(GameplayTag.Untargetable)) continue;
 
                         ref var vicTrans = ref vicEntity.GetMut<Transform>();
                         ref var hurtbox = ref vicEntity.GetMut<Hurtbox>();

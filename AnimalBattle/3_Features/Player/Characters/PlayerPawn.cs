@@ -13,11 +13,6 @@ namespace AnimalBattle.Characters;
 /// </summary>
 public abstract class PlayerPawn : Pawn
 {
-    private readonly AbilitySystemComponent _abilitySystem = new();
-
-    /// <summary>プレイヤー自機のアビリティシステムコンポーネントを取得します。</summary>
-    public override AbilitySystemComponent AbilitySystem => _abilitySystem;
-
     /// <summary>現在選択されているキャラクター種別を取得します。</summary>
     public CharacterType CharacterType { get; }
 
@@ -58,8 +53,7 @@ public abstract class PlayerPawn : Pawn
 
         Entity.Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
            .Set(new Animation(characterType, "Idle"))
-           .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 32, 32)))
-           .Set(_abilitySystem);
+           .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 32, 32)));
     }
 
     /// <summary>
@@ -87,6 +81,7 @@ public abstract class PlayerPawn : Pawn
         FlipX = false;
         IsVisible = true;
         ClearTransientEffects();
-        AbilitySystem.ClearTags();
+        Entity.Set(new TimedEffectsState());
+        Entity.Set(new GameplayTagState());
     }
 }

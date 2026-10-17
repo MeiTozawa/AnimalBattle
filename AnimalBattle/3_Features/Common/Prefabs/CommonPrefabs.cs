@@ -1,3 +1,4 @@
+using AnimalBattle.Abilities;
 using AnimalBattle.Components;
 using AnimalBattle.Framework.Pooling;
 using Flecs.NET.Core;
@@ -47,6 +48,8 @@ public static class CommonPrefabs
         // キャラクター基底原型
         BaseCharacter = world.Prefab(BaseCharacterName)
             .Set(new Transform(0, 0))
-            .Set(new Velocity(0, 0));
+            .Set(new Velocity(0, 0))
+            .Set(new GameplayTagState())
+            .Set(new TimedEffectsState());
     }
 }

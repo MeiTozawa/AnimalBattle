@@ -22,7 +22,7 @@ public static class PlayerDamageResolutionSystem
     /// <returns>登録済みワールド</returns>
     public static World AddPlayerDamageResolutionSystem(this World world)
     {
-        world.System<Health, IncomingDamage, InvincibleOnHit, HitFlashSettings, Transform, Velocity, CollisionBox, SpringScale, Sprite, AbilitySystemComponent>("PlayerDamageResolutionSystem")
+        world.System<Health, IncomingDamage, InvincibleOnHit, HitFlashSettings, Transform, Velocity, CollisionBox, SpringScale, Sprite, GameplayTagState, TimedEffectsState>("PlayerDamageResolutionSystem")
             .With<PlayerTag>()
             .Kind(Ecs.OnValidate)
             .Iter((Iter it,
@@ -35,7 +35,8 @@ public static class PlayerDamageResolutionSystem
                 Field<CollisionBox> collisionBoxes,
                 Field<SpringScale> springScales,
                 Field<Sprite> sprites,
-                Field<AbilitySystemComponent> ascs) =>
+                Field<GameplayTagState> tags,
+                Field<TimedEffectsState> timedEffects) =>
             {
                 var count = it.Count();
                 var pCfg = ConfigManager.Player;
@@ -53,10 +54,11 @@ public static class PlayerDamageResolutionSystem
                     ref var col = ref collisionBoxes[i];
                     ref var spring = ref springScales[i];
                     ref var sprite = ref sprites[i];
-                    var asc = ascs[i];
+                    ref var tagState = ref tags[i];
+                    ref var effectState = ref timedEffects[i];
 
                     // 無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
-                    if (asc.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
+                    if (tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
                     {
                         entity.Remove<IncomingDamage>();
                         continue;
@@ -65,7 +67,7 @@ public static class PlayerDamageResolutionSystem
                     // HP 減算および不可命中無敵時間・被弾白閃エフェクトの注入
                     var prevHp = hp.Current;
                     hp.Current = MathF.Max(0.0f, hp.Current - dmg.Amount);
-                    asc.ApplyGameplayEffect(GameplayTag.Untargetable, invCfg.Duration, entity.Id);
+                    TimedEffectService.ApplyEffect(ref effectState, ref tagState, GameplayTag.Untargetable, invCfg.Duration, entity.Id);
                     entity.Set(new HitFlashEffect(flashCfg.Duration, flashCfg.Color));
                     EventBus.Publish(new PlayerHealthChangedEvent(prevHp, hp.Current, hp.Max));
 

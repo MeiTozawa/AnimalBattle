@@ -4,21 +4,48 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-///     ワールド内の全 <see cref="AbilitySystemComponent" /> に対して時限タグの持続時間を推進・減衰するシステム。
+///     全エンティティの時限エフェクト減衰およびタグ状態の同期を推進する純粋な ECS システム。
+///     インライン定長データコンポーネントを直接更新し、キャッシュ局所性と零 GC を維持します。
 /// </summary>
 public static class TimedTagSystem
 {
     public static World AddTimedTagSystem(this World world)
     {
-        world.System<AbilitySystemComponent>("TimedTagSystem")
+        world.System<TimedEffectsState, GameplayTagState>("TimedTagSystem")
             .Kind(Ecs.PreUpdate)
-            .Iter((Iter it, Field<AbilitySystemComponent> ascs) =>
+            .Iter((Iter it, Field<TimedEffectsState> effects, Field<GameplayTagState> tags) =>
             {
                 var dt = it.DeltaTime();
                 var count = it.Count();
+
                 for (var i = 0; i < count; i++)
                 {
-                    ascs[i].UpdateTimedTags(dt);
+                    ref var effect = ref effects[i];
+                    ref var tag = ref tags[i];
+                    var hasExpired = false;
+
+                    for (var s = 0; s < TimedEffectsState.MaxSlots; s++)
+                    {
+                        ref var slot = ref effect.GetSlotMut(s);
+                        if (!slot.IsActive) continue;
+
+                        slot.Remaining -= dt;
+                        if (slot.Remaining <= 0.0f)
+                        {
+                            slot.IsActive = false;
+                            slot.GrantedTags = GameplayTag.None;
+                            slot.Remaining = 0.0f;
+                            slot.TotalDuration = 0.0f;
+                            slot.SourceHandle = 0;
+                            hasExpired = true;
+                        }
+                    }
+
+                    // 失効したエフェクトが存在する場合のみタグビットマスクを再計算
+                    if (hasExpired)
+                    {
+                        TimedEffectService.RecalculateTagMask(ref effect, ref tag);
+                    }
                 }
             });
 
