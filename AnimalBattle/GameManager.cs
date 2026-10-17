@@ -1,10 +1,11 @@
 using AnimalBattle.Ai;
 using AnimalBattle.Asset;
-using AnimalBattle.CombatPool;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Modules;
-using AnimalBattle.Prefabs;
+using AnimalBattle.Common;
+using AnimalBattle.Player;
+using AnimalBattle.Bosses;
+using AnimalBattle.Combat;
+using AnimalBattle.Presentation;
+using AnimalBattle.Framework.Pooling;
 using AnimalBattle.Scenes;
 using AnimalBattle.Systems;
 using Flecs.NET.Core;
@@ -16,7 +17,7 @@ namespace AnimalBattle;
 ///     純粋な ECS アーキテクチャに従い、フレーム更新（Progress）内で全シミュレーションおよび描画パイプラインを駆動します。
 /// </summary>
 public class GameManager : IDisposable {
-    private readonly World _ecsWorld;
+    private World _ecsWorld;
     private bool _isDisposed;
 
     /// <summary>
@@ -40,20 +41,21 @@ public class GameManager : IDisposable {
         ConfigManager.Initialize();
         AssetManager.Initialize();
 
-        // 共有 ECS パイプラインモジュールの登録
+        // 共有 ECS パイプラインモジュールおよび Prefab 原型の登録（決定論的トポロジカル順序）
+        _ecsWorld.Import<CommonModule>();
+        _ecsWorld.Import<EffectModule>();
         _ecsWorld.Import<CombatFeedbackModule>();
         _ecsWorld.Import<AnimationModule>();
+        _ecsWorld.Import<ArenaModule>();
         _ecsWorld.Import<CombatModule>();
-        _ecsWorld.Import<BulletModule>();
-        _ecsWorld.Import<DamageResolutionModule>();
-        _ecsWorld.Import<EffectModule>();
+        _ecsWorld.Import<PlayerModule>();
+        _ecsWorld.Import<BossModule>();
         _ecsWorld.Import<RenderModule>(); // 原生描画モジュール (Ecs.OnStore)
 
         // 状態連動システム群の登録
         _ecsWorld.AddStartSceneSystems()
                  .AddBattleSceneSystems();
 
-        PrefabRegistry.Initialize(_ecsWorld);
         CombatPoolService.Initialize(_ecsWorld);
 
         // 初期 GameFlow 状態の設定
@@ -109,13 +111,6 @@ public class GameManager : IDisposable {
     {
         // PreUpdate -> OnUpdate -> OnValidate -> PostUpdate -> OnStore (RenderModule)
         _ecsWorld.Progress(deltaTime);
-    }
-
-    /// <summary>
-    ///     フレームごとの描画コマンドを発行します（描画処理は Progress 内の Ecs.OnStore にて自動記録済み）。
-    /// </summary>
-    public void Render()
-    {
     }
 
     /// <inheritdoc />
