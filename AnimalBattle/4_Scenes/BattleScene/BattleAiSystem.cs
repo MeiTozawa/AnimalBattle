@@ -43,18 +43,22 @@ public static class BattleAiSystem {
 
                 var dt = it.DeltaTime();
 
+                ref readonly var pTrans = ref player.Transform;
+                ref readonly var pVel = ref player.Velocity;
+                ref readonly var bTrans = ref boss.Transform;
+
                 boss.Update(
                     dt,
-                    new Vec2f(player.X, player.Y),
-                    new Vec2f(player.Vx, player.Vy),
+                    pTrans.Position,
+                    pVel.Value,
                     w,
                     platformQuery);
 
                 CameraService.Update(
                     dt,
-                    player.X, player.Y,
-                    player.Vx, player.Vy,
-                    boss.X, boss.Y);
+                    pTrans.X, pTrans.Y,
+                    pVel.Vx, pVel.Vy,
+                    bTrans.X, bTrans.Y);
             });
 
         return world;

@@ -116,8 +116,9 @@ public static class HudRenderSystem {
         var jumpColor = remainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
         GameEngine.DrawString(hudCfg.DoubleJumpX, hudCfg.DoubleJumpY, jumpText, jumpColor);
 
-        var maxHp = (int)Math.Max(1.0f, player.MaxHp);
-        var currentHp = Math.Clamp((int)player.CurrentHp, 0, maxHp);
+        ref readonly var playerHp = ref player.Health;
+        var maxHp = (int)Math.Max(1.0f, playerHp.Max);
+        var currentHp = Math.Clamp((int)playerHp.Current, 0, maxHp);
 
         var sb = new System.Text.StringBuilder("[ ");
         for (var i = 0; i < maxHp; i++)
@@ -163,7 +164,8 @@ public static class HudRenderSystem {
             timerText = $"{boss.StateTimer:F1}s";
         }
 
-        DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, boss.CurrentHp, boss.MaxHp, phase,
+        ref readonly var bossHp = ref boss.Health;
+        DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, bossHp.Current, bossHp.Max, phase,
             timerText, boss.PhaseThresholds);
     }
 

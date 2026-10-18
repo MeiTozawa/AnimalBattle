@@ -76,14 +76,14 @@ public sealed class PlayerController
         }
         else
         {
-            dirX = _pawn.FlipX ? -1.0f : 1.0f;
+            dirX = _pawn.Sprite.FlipX ? -1.0f : 1.0f;
             dirY = 0.0f;
         }
 
         // キャラクター向き（FlipX）：マウスが自機中心より左にあれば反転、右にあれば正面
         if (MathF.Abs(diffX) > 0.5f)
         {
-            _pawn.FlipX = diffX < 0.0f;
+            _pawn.SetFlipX(diffX < 0.0f);
         }
 
         SubmitInput(moveX, jumpPressed, jumpHolding, shootPressed, dashPressed, dirX, dirY);
@@ -119,17 +119,19 @@ public sealed class PlayerController
 
         ref var weaponIntent = ref entity.GetMut<WeaponIntent>();
         weaponIntent.ShootTriggered = shootPressed;
-        weaponIntent.AimDirectionX = aimDirX ?? (_pawn.FlipX ? -1.0f : 1.0f);
+        weaponIntent.AimDirectionX = aimDirX ?? (_pawn.Sprite.FlipX ? -1.0f : 1.0f);
         weaponIntent.AimDirectionY = aimDirY ?? 0.0f;
 
         if (!aimDirX.HasValue)
         {
-            _pawn.FlipX = moveX switch {
-                // 移動入力に応じた描画スプライトの左右反転同期（aimDirX 未指定時のみ）
-                < -0.01f => true,
-                > 0.01f => false,
-                _ => _pawn.FlipX
-            };
+            if (moveX < -0.01f)
+            {
+                _pawn.SetFlipX(true);
+            }
+            else if (moveX > 0.01f)
+            {
+                _pawn.SetFlipX(false);
+            }
         }
     }
 }

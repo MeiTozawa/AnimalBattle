@@ -169,8 +169,8 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
         EmitterAngleOffset = 0.0f;
         OnReset();
         SetVelocity(0.0f, 0.0f);
-        FlipX = false;
-        IsVisible = true;
+        SetFlipX(false);
+        SetVisible(true);
         ClearTransientEffects();
         if (Entity.IsAlive())
         {

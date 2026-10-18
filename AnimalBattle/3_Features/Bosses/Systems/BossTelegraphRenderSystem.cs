@@ -44,16 +44,19 @@ public static class BossTelegraphRenderSystem {
                 {
                     if (player.Entity.IsAlive())
                     {
-                        playerX = player.X;
-                        playerY = player.Y;
+                        ref readonly var pt = ref player.Transform;
+                        playerX = pt.X;
+                        playerY = pt.Y;
                     }
                 });
 
                 var renderCfg = ConfigManager.Render;
                 var bossFx = renderCfg.BossEffects;
 
-                var bx = (int)(boss.X + boss.Sprite.JitterOffsetX);
-                var by = (int)(boss.Y + boss.Sprite.JitterOffsetY);
+                ref readonly var bTrans = ref boss.Transform;
+                ref readonly var bSprite = ref boss.Sprite;
+                var bx = (int)(bTrans.X + bSprite.JitterOffsetX);
+                var by = (int)(bTrans.Y + bSprite.JitterOffsetY);
 
                 // 1. 予兆前揺（Telegraph）描画
                 if (boss.CurrentState.IsTelegraph)
@@ -69,16 +72,16 @@ public static class BossTelegraphRenderSystem {
                 if (boss.IsVulnerable)
                 {
                     DrawBossVulnerableEffects(
-                        bx, by, boss.Sprite.SrcRect, boss.ScaleX, boss.ScaleY, rotation,
-                        boss.Sprite.GraphHandle, flipX, boss.StateTimer, bossFx);
+                        bx, by, bSprite.SrcRect, bTrans.ScaleX, bTrans.ScaleY, rotation,
+                        bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
                 }
 
                 // 3. フェーズ遷移無敵結界演出
                 if (boss.CurrentState.IsPhaseTransition)
                 {
                     DrawBossPhaseTransitionEffects(
-                        bx, by, boss.Sprite.SrcRect, boss.ScaleX, boss.ScaleY, rotation,
-                        boss.Sprite.GraphHandle, flipX, boss.StateTimer, bossFx);
+                        bx, by, bSprite.SrcRect, bTrans.ScaleX, bTrans.ScaleY, rotation,
+                        bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
                 }
             });
 
@@ -103,7 +106,8 @@ public static class BossTelegraphRenderSystem {
         if (currentAbility == null) return;
 
         var (finalTargetX, finalTargetY) = ResolveTargetPosition(boss.TargetX, boss.TargetY, playerX, playerY);
-        AbilityTelegraphContext ctx = new(boss.X, boss.Y, finalTargetX, finalTargetY, boss.FacingRight, progress, boss.StateTimer);
+        ref readonly var bTrans = ref boss.Transform;
+        AbilityTelegraphContext ctx = new(bTrans.X, bTrans.Y, finalTargetX, finalTargetY, boss.FacingRight, progress, boss.StateTimer);
         currentAbility.DrawTelegraph(in ctx);
     }
 

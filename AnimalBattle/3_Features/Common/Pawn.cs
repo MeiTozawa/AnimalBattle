@@ -1,4 +1,5 @@
 using AnimalBattle.Abilities;
+using AnimalBattle.Components;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters;
@@ -6,7 +7,7 @@ namespace AnimalBattle.Characters;
 /// <summary>
 ///     戦闘空間内に存在する全操作対象エンティティ（自機 Pawn および首領 Agent）の共通基底クラス。
 ///     唯一の真実の源である Flecs エンティティ句柄を保持し、
-///     空間座標、線速度、生命値、衝突判定、スプライトおよびアニメーションの共通操作を一元的に提供します。
+///     コンポーネントの読み取り専用参照（ref readonly）および意図的アトミック操作を提供します。
 /// </summary>
 public abstract class Pawn
 {
@@ -27,49 +28,16 @@ public abstract class Pawn
 
     #region Transform & Velocity
 
-    /// <summary>ワールド X 座標を取得または設定します。</summary>
-    public float X
-    {
-        get => Entity.Get<Transform>().X;
-        set => Entity.GetMut<Transform>().X = value;
-    }
+    /// <summary>空間変換情報の読み取り専用参照を取得します。</summary>
+    public ref readonly Transform Transform => ref Entity.Get<Transform>();
 
-    /// <summary>ワールド Y 座標を取得または設定します。</summary>
-    public float Y
-    {
-        get => Entity.Get<Transform>().Y;
-        set => Entity.GetMut<Transform>().Y = value;
-    }
+    /// <summary>移動速度情報の読み取り専用参照を取得します。</summary>
+    public ref readonly Velocity Velocity => ref Entity.Get<Velocity>();
 
-    /// <summary>X 軸移動速度を取得または設定します。</summary>
-    public float Vx
-    {
-        get => Entity.Get<Velocity>().Vx;
-        set => Entity.GetMut<Velocity>().Vx = value;
-    }
+    /// <summary>現在位置座標を取得します。</summary>
+    public Vec2f Position => Entity.Get<Transform>().Position;
 
-    /// <summary>Y 軸移動速度を取得または設定します。</summary>
-    public float Vy
-    {
-        get => Entity.Get<Velocity>().Vy;
-        set => Entity.GetMut<Velocity>().Vy = value;
-    }
-
-    /// <summary>描画スケール X を取得または設定します。</summary>
-    public float ScaleX
-    {
-        get => Entity.Get<Transform>().ScaleX;
-        set => Entity.GetMut<Transform>().ScaleX = value;
-    }
-
-    /// <summary>描画スケール Y を取得または設定します。</summary>
-    public float ScaleY
-    {
-        get => Entity.Get<Transform>().ScaleY;
-        set => Entity.GetMut<Transform>().ScaleY = value;
-    }
-
-    /// <summary>ワールド座標を一括設定します。</summary>
+    /// <summary>ワールド座標を一括設定します（テレポート・初期配置意図）。</summary>
     public void SetPosition(float x, float y)
     {
         ref var t = ref Entity.GetMut<Transform>();
@@ -77,16 +45,28 @@ public abstract class Pawn
         t.Y = y;
     }
 
+    /// <summary>ワールド位置ベクトルを一括設定します。</summary>
+    public void SetPosition(Vec2f pos)
+    {
+        Entity.GetMut<Transform>().Position = pos;
+    }
+
     /// <summary>移動速度を一括設定します。</summary>
-    protected void SetVelocity(float vx, float vy)
+    public void SetVelocity(float vx, float vy)
     {
         ref var v = ref Entity.GetMut<Velocity>();
         v.Vx = vx;
         v.Vy = vy;
     }
 
+    /// <summary>移動速度ベクトルを一括設定します。</summary>
+    public void SetVelocity(Vec2f vel)
+    {
+        Entity.GetMut<Velocity>().Value = vel;
+    }
+
     /// <summary>空間変換パラメータ（座標・スケール）を一括設定します。</summary>
-    protected void SetTransform(float x, float y, float scaleX = 1.0f, float scaleY = 1.0f)
+    public void SetTransform(float x, float y, float scaleX = 1.0f, float scaleY = 1.0f)
     {
         Entity.Set(new Transform(x, y, scaleX, scaleY));
     }
@@ -95,14 +75,8 @@ public abstract class Pawn
 
     #region Health & Combat
 
-    /// <summary>ヘルス情報の参照を取得します。</summary>
+    /// <summary>ヘルス情報の読み取り専用参照を取得します。</summary>
     public ref readonly Health Health => ref Entity.Get<Health>();
-
-    /// <summary>現在の HP を取得します。</summary>
-    public float CurrentHp => Entity.Get<Health>().Current;
-
-    /// <summary>最大 HP を取得します。</summary>
-    public float MaxHp => Entity.Get<Health>().Max;
 
     /// <summary>生存中であるかを取得します。</summary>
     public bool IsAlive => Entity.Get<Health>().Current > 0.0f;
@@ -113,11 +87,11 @@ public abstract class Pawn
     /// <summary>所属陣営を取得します。</summary>
     public Faction Faction => Entity.Get<Hurtbox>().Faction;
 
-    /// <summary>受撃判定ボックスを取得します。</summary>
-    public Hurtbox Hurtbox => Entity.Get<Hurtbox>();
+    /// <summary>受撃判定ボックスの読み取り専用参照を取得します。</summary>
+    public ref readonly Hurtbox Hurtbox => ref Entity.Get<Hurtbox>();
 
     /// <summary>ヘルスを全回復・再初期化します。</summary>
-    protected void ResetHealth(float maxHp)
+    public void ResetHealth(float maxHp)
     {
         Entity.Set(new Health(maxHp));
     }
@@ -126,49 +100,37 @@ public abstract class Pawn
 
     #region Collision & Physics
 
-    /// <summary>地形衝突判定ボックスを取得します。</summary>
-    public CollisionBox CollisionBox => Entity.Get<CollisionBox>();
-
-    /// <summary>接地状態であるかを取得または設定します。</summary>
-    public virtual bool IsGrounded
-    {
-        get => Entity.Get<CollisionBox>().IsGrounded;
-        set => Entity.GetMut<CollisionBox>().IsGrounded = value;
-    }
+    /// <summary>地形衝突判定ボックスの読み取り専用参照を取得します。</summary>
+    public ref readonly CollisionBox CollisionBox => ref Entity.Get<CollisionBox>();
 
     #endregion
 
     #region Visual & Animation
 
-    /// <summary>スプライト表示情報を取得します。</summary>
-    public Sprite Sprite => Entity.Get<Sprite>();
+    /// <summary>スプライト表示情報の読み取り専用参照を取得します。</summary>
+    public ref readonly Sprite Sprite => ref Entity.Get<Sprite>();
 
-    /// <summary>スプライトの水平反転フラグを取得または設定します。</summary>
-    public bool FlipX
+    /// <summary>スプライトの左右反転フラグを設定します。</summary>
+    public void SetFlipX(bool flipX)
     {
-        get => Entity.Get<Sprite>().FlipX;
-        set => Entity.GetMut<Sprite>().FlipX = value;
+        Entity.GetMut<Sprite>().FlipX = flipX;
     }
 
-    /// <summary>スプライトの表示・非表示フラグを取得または設定します。</summary>
-    public bool IsVisible
+    /// <summary>スプライトの表示・非表示フラグを設定します。</summary>
+    public void SetVisible(bool isVisible)
     {
-        get => Entity.Get<Sprite>().IsVisible;
-        set => Entity.GetMut<Sprite>().IsVisible = value;
+        Entity.GetMut<Sprite>().IsVisible = isVisible;
     }
-
-    /// <summary>被弾時白閃演出中であるかを取得します。</summary>
-    public bool IsFlashing => Entity.IsAlive() && Entity.Has<HitFlashEffect>();
 
     /// <summary>指定されたアニメーションクリップを再生します。</summary>
-    protected void PlayAnimation(string clipName)
+    public void PlayAnimation(string clipName)
     {
         if (Entity.Has<Animation>())
             Entity.GetMut<Animation>().Play(clipName);
     }
 
     /// <summary>白閃や死亡タグなどの瞬態エフェクト・状態フラグをクリアします。</summary>
-    protected void ClearTransientEffects()
+    public void ClearTransientEffects()
     {
         if (Entity.IsAlive())
         {

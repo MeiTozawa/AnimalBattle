@@ -78,8 +78,8 @@ public abstract class PlayerPawn : Pawn
         Entity.GetMut<WeaponIntent>().Reset();
 
         PlayAnimation("Idle");
-        FlipX = false;
-        IsVisible = true;
+        SetFlipX(false);
+        SetVisible(true);
         ClearTransientEffects();
         Entity.Set(new TimedEffectsState());
         Entity.Set(new GameplayTagState());
