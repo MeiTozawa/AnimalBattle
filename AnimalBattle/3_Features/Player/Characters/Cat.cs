@@ -22,12 +22,6 @@ public sealed class Cat : PlayerPawn
         Entity.Set(CatWeaponState.FromConfig(pCfg));
     }
 
-    /// <summary>射撃クールダウン残り秒数の直接取得および設定（entity.Has なしの直接アクセス）。</summary>
-    public override float AttackCooldown
-    {
-        get => Entity.Get<CatWeaponState>().CooldownRemaining;
-        set => Entity.GetMut<CatWeaponState>().CooldownRemaining = Math.Max(0.0f, value);
-    }
 
     /// <summary>
     ///     Cat 自機を初期位置へリセットし、武器状態を再同期します。

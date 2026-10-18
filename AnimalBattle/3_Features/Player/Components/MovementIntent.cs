@@ -18,6 +18,9 @@ public struct MovementIntent
     /// <summary>今フレームでダッシュ・回避キーが押下されたかどうか。</summary>
     public bool DashTriggered;
 
+    /// <summary>水平指向方向（-1.0f: 左向き, 1.0f: 右向き）。</summary>
+    public float FacingX;
+
     /// <summary>
     ///     すべての移動入力を初期状態にリセットします。
     /// </summary>
@@ -27,5 +30,6 @@ public struct MovementIntent
         JumpTriggered = false;
         JumpHolding = false;
         DashTriggered = false;
+        FacingX = 1.0f;
     }
 }

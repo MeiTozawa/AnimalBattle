@@ -66,7 +66,7 @@ public static class BossTelegraphRenderSystem {
                 }
 
                 var flipX = !boss.FacingRight;
-                var rotation = boss.Rotation;
+                var rotation = bTrans.Rotation;
 
                 // 2. 虚弱（Vulnerable）状態の脈動オーラとマーカー
                 if (boss.IsVulnerable)

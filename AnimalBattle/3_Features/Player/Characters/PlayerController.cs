@@ -67,6 +67,20 @@ public sealed class PlayerController
         var diffY = mouseWorldY - playerCenterY;
         var distSq = diffX * diffX + diffY * diffY;
 
+        // キャラクター向き（FacingX）：マウスが自機中心より左右にあれば向き決定、微小差分時は前回の向きまたは移動入力を反映
+        var currentFacing = entity.Get<MovementIntent>().FacingX;
+        if (currentFacing == 0.0f) currentFacing = 1.0f;
+
+        var facingX = currentFacing;
+        if (MathF.Abs(diffX) > 0.5f)
+        {
+            facingX = diffX < 0.0f ? -1.0f : 1.0f;
+        }
+        else if (MathF.Abs(moveX) > 0.01f)
+        {
+            facingX = MathF.Sign(moveX);
+        }
+
         float dirX, dirY;
         if (distSq > 0.0001f)
         {
@@ -76,17 +90,11 @@ public sealed class PlayerController
         }
         else
         {
-            dirX = _pawn.Sprite.FlipX ? -1.0f : 1.0f;
+            dirX = facingX;
             dirY = 0.0f;
         }
 
-        // キャラクター向き（FlipX）：マウスが自機中心より左にあれば反転、右にあれば正面
-        if (MathF.Abs(diffX) > 0.5f)
-        {
-            _pawn.SetFlipX(diffX < 0.0f);
-        }
-
-        SubmitInput(moveX, jumpPressed, jumpHolding, shootPressed, dashPressed, dirX, dirY);
+        SubmitInput(moveX, jumpPressed, jumpHolding, shootPressed, dashPressed, facingX, dirX, dirY);
     }
 
     /// <summary>
@@ -97,7 +105,8 @@ public sealed class PlayerController
     /// <param name="jumpHolding">跳躍キー保持フラグ。</param>
     /// <param name="shootPressed">射撃キー押下フラグ。</param>
     /// <param name="dashPressed">ダッシュ・回避キー押下フラグ。</param>
-    /// <param name="aimDirX">射撃水平瞄準ベクトル（省略時はスプライト向き）。</param>
+    /// <param name="facingX">キャラクター水平指向方向（-1.0f: 左, 1.0f: 右）。</param>
+    /// <param name="aimDirX">射撃水平瞄準ベクトル（省略時は facingX）。</param>
     /// <param name="aimDirY">射撃垂直瞄準ベクトル（省略時は 0.0f）。</param>
     private void SubmitInput(
         float moveX,
@@ -105,6 +114,7 @@ public sealed class PlayerController
         bool jumpHolding,
         bool shootPressed,
         bool dashPressed,
+        float facingX,
         float? aimDirX = null,
         float? aimDirY = null)
     {
@@ -116,22 +126,11 @@ public sealed class PlayerController
         moveIntent.JumpTriggered = jumpPressed;
         moveIntent.JumpHolding = jumpHolding;
         moveIntent.DashTriggered = dashPressed;
+        moveIntent.FacingX = facingX;
 
         ref var weaponIntent = ref entity.GetMut<WeaponIntent>();
         weaponIntent.ShootTriggered = shootPressed;
-        weaponIntent.AimDirectionX = aimDirX ?? (_pawn.Sprite.FlipX ? -1.0f : 1.0f);
+        weaponIntent.AimDirectionX = aimDirX ?? facingX;
         weaponIntent.AimDirectionY = aimDirY ?? 0.0f;
-
-        if (!aimDirX.HasValue)
-        {
-            if (moveX < -0.01f)
-            {
-                _pawn.SetFlipX(true);
-            }
-            else if (moveX > 0.01f)
-            {
-                _pawn.SetFlipX(false);
-            }
-        }
     }
 }

@@ -38,13 +38,6 @@ public sealed class Boss1Agent : BaseBossAgent
     public override (float Phase2Threshold, float Phase3Threshold) PhaseThresholds =>
         (ConfigManager.Boss1.Phase2.HpThreshold, ConfigManager.Boss1.Phase3.HpThreshold);
 
-    /// <inheritdoc />
-    public override float HoverTimer => _brain.HoverTimer;
-
-    /// <inheritdoc />
-    public override double Rotation =>
-        MathF.Sin(_brain.HoverTimer * ConfigManager.Render.BossEffects.BossHoverAngleSpeed)
-        * ConfigManager.Render.BossEffects.BossHoverAngleAmp;
 
     private void InitializeComponents(Entity entity, int spriteHandle)
     {

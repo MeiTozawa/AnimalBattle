@@ -31,12 +31,6 @@ public sealed class Bunny : PlayerPawn
            .Set(new PlayerMeleeWeapon(melee));
     }
 
-    /// <summary>近接攻撃クールダウン残り秒数の直接取得および設定（entity.Has なしの直接アクセス）。</summary>
-    public override float AttackCooldown
-    {
-        get => Entity.Get<BunnyWeaponState>().CooldownRemaining;
-        set => Entity.GetMut<BunnyWeaponState>().CooldownRemaining = Math.Max(0.0f, value);
-    }
 
     /// <summary>
     ///     Bunny 自機を初期位置へリセットし、武器状態および常駐近接判定を安全に無効化します。

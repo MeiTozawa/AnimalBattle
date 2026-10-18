@@ -93,6 +93,12 @@ public static class MovementSystem {
             dash.Cooldown = MathF.Max(0.0f, dash.Cooldown - dt);
         }
 
+        // 意図に基づくスプライト反転の単方向同期（Presentation Sync）
+        if (intent.FacingX != 0.0f)
+        {
+            sprite.FlipX = intent.FacingX < 0.0f;
+        }
+
         // ダッシュ起動判定
         if (intent.DashTriggered && dash.Cooldown <= 0.0f && !dash.IsDashing)
         {
@@ -100,14 +106,14 @@ public static class MovementSystem {
             dash.Cooldown = pCfg.DashCooldown;
             dash.GhostTrailTimer = 0.0f;
 
-            // 突進方向決定（移動入力優先、入力なし時はスプライト向き）
+            // 突進方向決定（移動入力優先、入力なし時は意図上の水平向き）
             if (MathF.Abs(intent.MoveX) > 0.01f)
             {
                 dash.DirectionX = MathF.Sign(intent.MoveX);
             }
             else
             {
-                dash.DirectionX = sprite.FlipX ? -1.0f : 1.0f;
+                dash.DirectionX = intent.FacingX < 0.0f ? -1.0f : 1.0f;
             }
 
             // ダッシュ不可命中フレーム付与（弾幕・敵接触をすり抜ける）

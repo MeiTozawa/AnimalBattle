@@ -49,23 +49,17 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// <summary>現在 AI 状態の経過時間（秒）を取得します。</summary>
     public virtual float StateTimer => Brain.StateTimer;
 
-    /// <summary>Boss 1 の浮遊タイマー値を取得します。</summary>
-    public virtual float HoverTimer => 0.0f;
-
-    /// <summary>Boss 描画時の回転角（ラジアン）を取得します。</summary>
-    public virtual double Rotation => 0.0;
-
     /// <summary>AI 目標地点 X 座標を取得します。</summary>
     public virtual float TargetX => Brain.TargetX;
 
     /// <summary>AI 目標地点 Y 座標を取得します。</summary>
     public virtual float TargetY => Brain.TargetY;
 
-    /// <summary>Boss が後隙による易傷状態であるかを取得します。</summary>
-    public virtual bool IsVulnerable => AbilitySystem.HasTag(GameplayTag.Vulnerable);
+    /// <summary>Boss が後隙による易傷状態であるかを取得します（Entity の GameplayTagState を単一真理源とする）。</summary>
+    public virtual bool IsVulnerable => Entity.Get<GameplayTagState>().HasTag(GameplayTag.Vulnerable);
 
-    /// <summary>Boss がスーパーアーマー（剛体）状態であるかを取得します。</summary>
-    public virtual bool HasSuperArmor => AbilitySystem.HasTag(GameplayTag.SuperArmor);
+    /// <summary>Boss がスーパーアーマー（剛体）状態であるかを取得します（Entity の GameplayTagState を単一真理源とする）。</summary>
+    public virtual bool HasSuperArmor => Entity.Get<GameplayTagState>().HasTag(GameplayTag.SuperArmor);
 
     /// <summary>Boss が右向きであるかを取得します。</summary>
     public virtual bool FacingRight => Brain.FacingRight;

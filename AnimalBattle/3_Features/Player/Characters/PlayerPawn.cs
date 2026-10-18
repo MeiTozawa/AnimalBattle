@@ -22,21 +22,20 @@ public abstract class PlayerPawn : Pawn
     /// <summary>スプリング拡縮変形状態の参照を取得します（常駐 SpringScale への直接アクセス）。</summary>
     public ref readonly SpringScale SpringScale => ref Entity.Get<SpringScale>();
 
+    /// <summary>ダッシュ状態コンポーネントの読み取り専用参照を取得します。</summary>
+    public ref readonly DashState Dash => ref Entity.Get<DashState>();
+
     /// <summary>現在ダッシュ中であるかどうかを取得します。</summary>
-    public bool IsDashing => Entity.Get<DashState>().IsDashing;
+    public bool IsDashing => Dash.IsDashing;
 
     /// <summary>ダッシュ再使用クールダウン残り秒数を取得します。</summary>
-    public float DashCooldown => Entity.Get<DashState>().Cooldown;
+    public float DashCooldown => Dash.Cooldown;
 
-    /// <summary>残り二段ジャンプ回数を取得または設定します。</summary>
-    public int RemainingJumps
-    {
-        get => Entity.Get<JumpCapability>().RemainingJumps;
-        set => Entity.GetMut<JumpCapability>().RemainingJumps = value;
-    }
+    /// <summary>跳躍能力コンポーネントの読み取り専用参照を取得します。</summary>
+    public ref readonly JumpCapability Jump => ref Entity.Get<JumpCapability>();
 
-    /// <summary>武器クールダウンの残り秒数を取得または設定します。</summary>
-    public abstract float AttackCooldown { get; set; }
+    /// <summary>残り二段ジャンプ回数を取得します（HUD および外部クエリ用読み取り専用プロパティ）。</summary>
+    public int RemainingJumps => Jump.RemainingJumps;
 
     /// <summary>
     ///     基底プレイヤーコンポーネントを指定して初期化します。
