@@ -37,13 +37,13 @@ public static class BattleSceneSpawner {
 
         var root = world.Entity(RootName).Add<BattleSceneTag>();
 
-        ConfigManager.ActiveCharacter = playerType;
-
         // 1. 自機エンティティの生成
         var hasPlayerHandle = AssetManager.TryGetCharacterSpriteHandle(playerType, "Idle", out var playerHandle);
         Debug.Assert(hasPlayerHandle, "プレイヤーの初期スプライトハンドルが見つかりません。");
 
-        var playerCfg = ConfigManager.GetPlayerConfig(playerType);
+        PlayerConfig playerCfg = playerType == CharacterType.Bunny
+            ? world.Get<BunnyConfig>()
+            : world.Get<CatConfig>();
         var playerEntity = world.Entity("Player1")
             .ChildOf(root)
             .IsA(PlayerPrefabs.GetPrefab(playerType));
@@ -57,11 +57,11 @@ public static class BattleSceneSpawner {
         playerEntity.Set(controller);
 
         // 2. アリーナ・タイルマップの生成
-        var arenaCfg = ConfigManager.Arena;
+        var arenaCfg = world.Get<ArenaConfig>();
         var tileMapCfg = arenaCfg.TileMap;
         var sheetHandle = AssetManager.LoadTexture(tileMapCfg.TileSheetPath);
         Debug.Assert(sheetHandle >= 0, $"タイルシートが読み取れません: {tileMapCfg.TileSheetPath}");
-        TileSet tileSet = new(sheetHandle, ConfigManager.TileSet);
+        TileSet tileSet = new(sheetHandle, world.Get<TileSetConfig>());
         var tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
         tileMap.BuildPlatformColliders(world, root);
         root.Set(tileMap);
@@ -89,7 +89,7 @@ public static class BattleSceneSpawner {
 
         boss.AbilitySystem.OnScreenShake += (intensity, duration) =>
         {
-            var camCfg = ConfigManager.Camera;
+            var camCfg = world.Get<CameraConfig>();
             var trauma = intensity > 1.0f ? intensity * camCfg.AbilityShakeTraumaScale : intensity;
             CameraService.AddTrauma(trauma);
         };

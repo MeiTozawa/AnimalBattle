@@ -26,7 +26,7 @@ public static class CombatPrefabs
     /// </summary>
     public static void Register(World world)
     {
-        var cfg = ConfigManager.CombatPrefabs;
+        var cfg = world.Get<CombatPrefabConfig>();
 
         // --- 1. 自機通常弾 ---
         var playerBulletCfg = cfg.PlayerBullet;

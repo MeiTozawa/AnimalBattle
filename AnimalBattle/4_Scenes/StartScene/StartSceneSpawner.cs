@@ -13,10 +13,6 @@ namespace AnimalBattle.Scenes;
 public static class StartSceneSpawner {
     private const string RootName = "StartSceneRoot";
 
-    private static StartSceneLayoutConfig Layout => ConfigManager.StartScene.Layout;
-    private static Rectangle CatCardBounds => Layout.CatCard.ToRectangle();
-    private static Rectangle BunnyCardBounds => Layout.BunnyCard.ToRectangle();
-
     /// <summary>
     ///     開始画面のルートエンティティおよびプレビュー自機をワールドへ装配します。
     /// </summary>
@@ -28,19 +24,22 @@ public static class StartSceneSpawner {
         InputService.SetCursorVisible(true);
 
         var root = world.Entity(RootName).Add<StartSceneTag>();
+        var layout = world.Get<StartSceneConfig>().Layout;
+        var catCardBounds = layout.CatCard.ToRectangle();
+        var bunnyCardBounds = layout.BunnyCard.ToRectangle();
 
         // 1. 自機プレビューエンティティの生成 (AnimationModule / SpriteAnimationSystem の恩恵を享受)
         AssetManager.TryGetCharacterSpriteHandle(CharacterType.Cat, "Idle", out var catHandle);
         var catPreview = world.Entity("CatPreview")
             .ChildOf(root)
-            .Set(new Transform(CatCardBounds.X + CatCardBounds.Width / 2f, CatCardBounds.Y + Layout.PreviewCenterOffsetY, 3.5f, 3.5f))
+            .Set(new Transform(catCardBounds.X + catCardBounds.Width / 2f, catCardBounds.Y + layout.PreviewCenterOffsetY, 3.5f, 3.5f))
             .Set(new Sprite(catHandle, false, true, new Rect(0, 0, 32, 32)))
             .Set(new Animation { CharacterType = CharacterType.Cat, CurrentClip = "Idle", IsPlaying = true });
 
         AssetManager.TryGetCharacterSpriteHandle(CharacterType.Bunny, "Idle", out var bunnyHandle);
         var bunnyPreview = world.Entity("BunnyPreview")
             .ChildOf(root)
-            .Set(new Transform(BunnyCardBounds.X + BunnyCardBounds.Width / 2f, BunnyCardBounds.Y + Layout.PreviewCenterOffsetY, 3.5f, 3.5f))
+            .Set(new Transform(bunnyCardBounds.X + bunnyCardBounds.Width / 2f, bunnyCardBounds.Y + layout.PreviewCenterOffsetY, 3.5f, 3.5f))
             .Set(new Sprite(bunnyHandle, false, true, new Rect(0, 0, 32, 32)))
             .Set(new Animation { CharacterType = CharacterType.Bunny, CurrentClip = "Idle", IsPlaying = true });
 

@@ -1,9 +1,3 @@
-using AnimalBattle.Ai;
-using AnimalBattle.Combat;
-using AnimalBattle.Common;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core.Geometry;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Player;
@@ -35,7 +29,8 @@ public static class PlayerPrefabs
             .Set(new DashState());
 
         // --- Cat プレイヤー ---
-        var catCfg = ConfigManager.CatPrefab;
+        var catCfg = world.Get<CatPrefabConfig>();
+        var catCharCfg = world.Get<CatConfig>();
         CatPlayer = world.Prefab(CatPlayerName)
             .IsA(PlayerBase)
             .Set(new Health(catCfg.MaxHp))
@@ -45,11 +40,12 @@ public static class PlayerPrefabs
             .Set(new Hurtbox(new CollisionShape.Circle(catCfg.HurtboxRadius, 0.0f, catCfg.HurtboxOffsetY), Faction.Friendly))
             .Set(new Transform(0.0f, 0.0f, catCfg.ScaleX, catCfg.ScaleY))
             .Set(new SpringScale(1.0f, 1.0f, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
-            .Set(JumpCapability.FromPlayerConfig(ConfigManager.Cat))
-            .Set(CatWeaponState.FromConfig(ConfigManager.Cat));
+            .Set(JumpCapability.FromPlayerConfig(catCharCfg))
+            .Set(CatWeaponState.FromConfig(catCharCfg));
 
         // --- Bunny プレイヤー ---
-        var bunnyCfg = ConfigManager.BunnyPrefab;
+        var bunnyCfg = world.Get<BunnyPrefabConfig>();
+        var bunnyCharCfg = world.Get<BunnyConfig>();
         BunnyPlayer = world.Prefab(BunnyPlayerName)
             .IsA(PlayerBase)
             .Set(new Health(bunnyCfg.MaxHp))
@@ -59,8 +55,8 @@ public static class PlayerPrefabs
             .Set(new Hurtbox(new CollisionShape.Circle(bunnyCfg.HurtboxRadius, 0.0f, bunnyCfg.HurtboxOffsetY), Faction.Friendly))
             .Set(new Transform(0.0f, 0.0f, bunnyCfg.ScaleX, bunnyCfg.ScaleY))
             .Set(new SpringScale(1.0f, 1.0f, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
-            .Set(JumpCapability.FromPlayerConfig(ConfigManager.Bunny))
-            .Set(BunnyWeaponState.FromConfig(ConfigManager.Bunny));
+            .Set(JumpCapability.FromPlayerConfig(bunnyCharCfg))
+            .Set(BunnyWeaponState.FromConfig(bunnyCharCfg));
     }
 
     /// <summary>
