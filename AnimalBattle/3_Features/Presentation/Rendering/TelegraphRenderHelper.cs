@@ -29,9 +29,10 @@ public static class TelegraphRenderHelper {
         int laserCount,
         float progress,
         Color color,
-        bool isPrecisionSniper = false)
+        bool isPrecisionSniper = false,
+        BossEffectsRenderConfig? bossEffects = null)
     {
-        var bossFx = ConfigManager.Render.BossEffects;
+        var bossFx = bossEffects ?? new BossEffectsRenderConfig();
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
         var alpha = (int)(bossFx.LaserAlpha * (0.4f + 0.6f * clampedProgress));
         var thickness = isPrecisionSniper
@@ -86,9 +87,10 @@ public static class TelegraphRenderHelper {
         float rangeY,
         bool facingRight,
         float progress,
-        Color color)
+        Color color,
+        BossEffectsRenderConfig? bossEffects = null)
     {
-        var bossFx = ConfigManager.Render.BossEffects;
+        var bossFx = bossEffects ?? new BossEffectsRenderConfig();
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
         TelegraphGeometry.CalculateMeleeDangerRect(bx, by, rangeX, rangeY, facingRight, out var x1, out var y1,
             out var x2, out var y2);
@@ -136,11 +138,13 @@ public static class TelegraphRenderHelper {
         float height,
         bool facingRight,
         float progress,
-        Color color)
+        Color color,
+        BossEffectsRenderConfig? bossEffects = null,
+        ArenaConfig? arena = null)
     {
-        var bossFx = ConfigManager.Render.BossEffects;
+        var bossFx = bossEffects ?? new BossEffectsRenderConfig();
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
-        var arenaCfg = ConfigManager.Arena;
+        var arenaCfg = arena ?? new ArenaConfig();
 
         TelegraphGeometry.CalculateChargeTrackRect(bx, by, height, facingRight, arenaCfg.BoundaryMinX,
             arenaCfg.BoundaryMaxX, out var x1, out var y1, out var x2, out var y2);
@@ -184,10 +188,11 @@ public static class TelegraphRenderHelper {
         float targetY,
         float impactRadius,
         float progress,
-        Color color)
+        Color color,
+        BossEffectsRenderConfig? bossEffects = null,
+        float playerCollisionHeight = 32.0f)
     {
-        var bossFx = ConfigManager.Render.BossEffects;
-        var playerCfg = ConfigManager.Player;
+        var bossFx = bossEffects ?? new BossEffectsRenderConfig();
         _ = progress;
 
         // Boss から着地地点へのダイブ軌道線
@@ -199,7 +204,7 @@ public static class TelegraphRenderHelper {
         var tx = (int)targetX;
         var ty = (int)targetY;
         var halfWidth = (int)(impactRadius);
-        var halfHeight = (int)(playerCfg.CollisionHeight / 2.0f);
+        var halfHeight = (int)(playerCollisionHeight / 2.0f);
         var x1 = tx - halfWidth;
         var y1 = ty - halfHeight;
         var x2 = tx + halfWidth;
@@ -227,9 +232,10 @@ public static class TelegraphRenderHelper {
         float bx,
         float groundY,
         float progress,
-        Color color)
+        Color color,
+        BossEffectsRenderConfig? bossEffects = null)
     {
-        var bossFx = ConfigManager.Render.BossEffects;
+        var bossFx = bossEffects ?? new BossEffectsRenderConfig();
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
         var halfSpan = 200.0f + 150.0f * clampedProgress;
 
@@ -265,17 +271,18 @@ public static class TelegraphRenderHelper {
         float targetX,
         float targetY,
         float progress,
-        Color color)
+        Color color,
+        BossEffectsRenderConfig? bossEffects = null,
+        float playerCollisionHeight = 32.0f,
+        float bossBodyHitboxWidth = 70.0f)
     {
-        var bossFx = ConfigManager.Render.BossEffects;
-        var playerCfg = ConfigManager.Player;
-        var b2Cfg = ConfigManager.Boss2;
+        var bossFx = bossEffects ?? new BossEffectsRenderConfig();
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
 
         var tx = (int)targetX;
         var ty = (int)targetY;
-        var halfWidth = (int)(b2Cfg.BodyHitboxWidth > 0.0f ? b2Cfg.BodyHitboxWidth : 70.0f);
-        var halfHeight = (int)(playerCfg.CollisionHeight / 2.0f);
+        var halfWidth = (int)(bossBodyHitboxWidth > 0.0f ? bossBodyHitboxWidth : 70.0f);
+        var halfHeight = (int)(playerCollisionHeight / 2.0f);
         var x1 = tx - halfWidth;
         var y1 = ty - halfHeight;
         var x2 = tx + halfWidth;
@@ -313,9 +320,10 @@ public static class TelegraphRenderHelper {
         float groundY,
         float progress,
         Color color,
-        string markerText)
+        string markerText,
+        BossEffectsRenderConfig? bossEffects = null)
     {
-        var bossFx = ConfigManager.Render.BossEffects;
+        var bossFx = bossEffects ?? new BossEffectsRenderConfig();
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
         var alpha = (int)(bossFx.DangerBoxAlpha * (0.4f + 0.6f * clampedProgress));
         var step = (maxX - minX) / Math.Max(1, columnCount + 1);
@@ -370,9 +378,10 @@ public static class TelegraphRenderHelper {
         float baseAngle,
         float spikeLength,
         float progress,
-        Color color)
+        Color color,
+        BossEffectsRenderConfig? bossEffects = null)
     {
-        var bossFx = ConfigManager.Render.BossEffects;
+        var bossFx = bossEffects ?? new BossEffectsRenderConfig();
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
         var currentLength = spikeLength * (0.5f + 0.5f * clampedProgress);
         var alpha = (int)(bossFx.LaserAlpha * (0.5f + 0.5f * clampedProgress));

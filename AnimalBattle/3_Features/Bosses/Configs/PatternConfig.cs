@@ -76,7 +76,7 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
-        => ctx => TelegraphRenderHelper.DrawDiveRamTelegraph(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, ImpactRadius, ctx.Progress, TelegraphColor);
+        => ctx => TelegraphRenderHelper.DrawDiveRamTelegraph(ctx.SourceX, ctx.SourceY, ctx.TargetX, ctx.TargetY, ImpactRadius, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
     public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
@@ -96,7 +96,7 @@ public sealed class Aimed3ShotConfig : BulletPatternConfigBase {
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
-        => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, SpreadAngle, BulletCount, ctx.Progress, TelegraphColor);
+        => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.SourceX, ctx.SourceY, ctx.TargetX, ctx.TargetY, SpreadAngle, BulletCount, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
     public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
@@ -119,7 +119,7 @@ public sealed class RingBurstConfig : BulletPatternConfigBase {
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
-        => ctx => TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.BossX, ctx.BossY, BulletCount, 0.0f, 75.0f, ctx.Progress, TelegraphColor);
+        => ctx => TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.SourceX, ctx.SourceY, BulletCount, 0.0f, 75.0f, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
     public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
@@ -156,7 +156,7 @@ public sealed class DoubleSpiralConfig : BulletPatternConfigBase {
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => {
             var spiralAngle = ctx.StateTimer * 4.0f;
-            TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.BossX, ctx.BossY, 2, spiralAngle, 90.0f, ctx.Progress, TelegraphColor);
+            TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.SourceX, ctx.SourceY, 2, spiralAngle, 90.0f, ctx.Progress, TelegraphColor);
         };
 
     /// <inheritdoc />
@@ -217,7 +217,7 @@ public sealed class CrossChaosConfig : BulletPatternConfigBase {
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => {
             var crossAngle = ctx.StateTimer * 2.5f;
-            TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.BossX, ctx.BossY, 4, crossAngle, 110.0f, ctx.Progress, TelegraphColor);
+            TelegraphRenderHelper.DrawRadialThreatSpikes(ctx.SourceX, ctx.SourceY, 4, crossAngle, 110.0f, ctx.Progress, TelegraphColor);
         };
 
     /// <inheritdoc />
@@ -238,7 +238,7 @@ public sealed class FastSniperConfig : BulletPatternConfigBase {
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
-        => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.BossX, ctx.BossY, ctx.TargetX, ctx.TargetY, 0.0f, 1, ctx.Progress, TelegraphColor, true);
+        => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.SourceX, ctx.SourceY, ctx.TargetX, ctx.TargetY, 0.0f, 1, ctx.Progress, TelegraphColor, true);
 
     /// <inheritdoc />
     public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
@@ -258,7 +258,7 @@ public sealed class HeavySlashConfig : MeleePatternConfigBase {
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
-        => ctx => TelegraphRenderHelper.DrawMeleeDangerBox((int)ctx.BossX, (int)ctx.BossY, SlashRangeX, SlashRangeY, ctx.FacingRight, ctx.Progress, TelegraphColor);
+        => ctx => TelegraphRenderHelper.DrawMeleeDangerBox((int)ctx.SourceX, (int)ctx.SourceY, SlashRangeX, SlashRangeY, ctx.FacingRight, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
     public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
@@ -317,9 +317,8 @@ public sealed class GroundStompConfig : SkillPatternConfigBase {
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
         => ctx => {
-            var b2Cfg = ConfigManager.Boss2;
-            var groundY = ctx.BossY + b2Cfg.CollisionHeight / 2.0f;
-            TelegraphRenderHelper.DrawGroundShockwaveRails((int)ctx.BossX, groundY, ctx.Progress, TelegraphColor);
+            var groundY = ctx.SourceY + (ctx.SourceHeight > 0.0f ? ctx.SourceHeight : 80.0f) / 2.0f;
+            TelegraphRenderHelper.DrawGroundShockwaveRails((int)ctx.SourceX, groundY, ctx.Progress, TelegraphColor);
         };
 
     /// <inheritdoc />
@@ -432,7 +431,7 @@ public sealed class DoubleCleaveConfig : MeleePatternConfigBase {
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
-        => ctx => TelegraphRenderHelper.DrawMeleeDangerBox((int)ctx.BossX, (int)ctx.BossY, TelegraphRangeX, SlashRangeY, ctx.FacingRight, ctx.Progress, TelegraphColor);
+        => ctx => TelegraphRenderHelper.DrawMeleeDangerBox((int)ctx.SourceX, (int)ctx.SourceY, TelegraphRangeX, SlashRangeY, ctx.FacingRight, ctx.Progress, TelegraphColor);
 
     /// <inheritdoc />
     public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
@@ -497,7 +496,7 @@ public sealed class FrenzyChargeConfig : SkillPatternConfigBase {
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
-        => ctx => TelegraphRenderHelper.DrawChargeDangerTrack((int)ctx.BossX, (int)ctx.BossY, ConfigManager.Boss2.CollisionHeight, ctx.FacingRight, ctx.Progress, TelegraphColor);
+        => ctx => TelegraphRenderHelper.DrawChargeDangerTrack((int)ctx.SourceX, (int)ctx.SourceY, HitboxHeight > 0.0f ? HitboxHeight : (ctx.SourceHeight > 0.0f ? ctx.SourceHeight : 80.0f), ctx.FacingRight, ctx.Progress, TelegraphColor);
 }
 
 /// <summary>

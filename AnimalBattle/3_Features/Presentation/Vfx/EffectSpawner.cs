@@ -19,7 +19,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnJumpRingEffect(World world, float x, float y)
     {
-        var pCfg = ConfigManager.Player;
+        var pCfg = world.Get<CatConfig>();
         CombatPoolService.RentRingEffect()
            .Set(new Transform(x, y))
            .Set(new RingEffect(pCfg.JumpRingInitialRadius, pCfg.JumpRingMaxRadius, ColorPalette.White))
@@ -42,7 +42,7 @@ public static class EffectSpawner
         Color color,
         float duration)
     {
-        var pCfg = ConfigManager.Player;
+        var pCfg = world.Get<CatConfig>();
         CombatPoolService.RentAreaEffect()
            .Set(new Transform(x, y, scaleX, scaleY, rotation))
            .Set(new Velocity(0.0f))
@@ -56,7 +56,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnMuzzleFlash(World world, float x, float y)
     {
-        var pCfg = ConfigManager.Player;
+        var pCfg = world.Get<CatConfig>();
         CombatPoolService.RentSparkEffect()
            .Set(new Transform(x, y))
            .Set(new Velocity(0.0f))
@@ -69,7 +69,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnHitSparkEffect(World world, float x, float y)
     {
-        var vfxCfg = ConfigManager.Render.VisualEffects;
+        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
         for (var i = 0; i < vfxCfg.HitSparkCount; i++)
         {
             var angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
@@ -87,7 +87,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnBulletImpactSplatter(World world, float x, float y, float hitDirX, float hitDirY)
     {
-        var pCfg = ConfigManager.Player;
+        var pCfg = world.Get<CatConfig>();
         var count = Random.Shared.Next(pCfg.ImpactSplatterMinCount, pCfg.ImpactSplatterMaxCount + 1);
         var baseAngle = MathF.Atan2(-hitDirY, -hitDirX);
 
@@ -111,7 +111,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnPlayerDeathParticles(World world, float x, float y)
     {
-        var vfxCfg = ConfigManager.Render.VisualEffects;
+        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
         for (var i = 0; i < vfxCfg.PlayerDeathParticleCount; i++)
         {
             var angle = i / (float)vfxCfg.PlayerDeathParticleCount * MathF.PI * 2.0f;
@@ -129,7 +129,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnVictoryExplosions(World world, float x, float y)
     {
-        var vfxCfg = ConfigManager.Render.VisualEffects;
+        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
         for (var i = 0; i < vfxCfg.VictoryExplosionCount; i++)
         {
             var angle = i / (float)vfxCfg.VictoryExplosionCount * MathF.PI * 2.0f;
@@ -147,7 +147,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnShockwave(World world, float x, float y)
     {
-        var vfxCfg = ConfigManager.Render.VisualEffects;
+        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
         CombatPoolService.RentRingEffect()
            .Set(new Transform(x, y))
            .Set(new RingEffect(vfxCfg.ShockwaveInitialRadius, vfxCfg.ShockwaveMaxRadius, ColorPalette.Cyan))

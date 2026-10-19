@@ -26,7 +26,7 @@ public static class VfxPrefabs
     /// </summary>
     public static void Register(World world)
     {
-        var cfg = ConfigManager.CombatPrefabs;
+        var cfg = world.Get<CombatPrefabConfig>();
 
         // --- 1. 点粒子スパーク演出 ---
         var sparkCfg = cfg.SparkVfx;

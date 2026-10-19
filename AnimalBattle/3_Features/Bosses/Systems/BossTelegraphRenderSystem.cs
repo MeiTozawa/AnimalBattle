@@ -107,7 +107,8 @@ public static class BossTelegraphRenderSystem {
 
         var (finalTargetX, finalTargetY) = ResolveTargetPosition(boss.TargetX, boss.TargetY, playerX, playerY);
         ref readonly var bTrans = ref boss.Transform;
-        AbilityTelegraphContext ctx = new(bTrans.X, bTrans.Y, finalTargetX, finalTargetY, boss.FacingRight, progress, boss.StateTimer);
+        var bHeight = boss.Entity.Has<CollisionBox>() ? boss.Entity.Get<CollisionBox>().Height : 80.0f;
+        AbilityTelegraphContext ctx = new(bTrans.X, bTrans.Y, finalTargetX, finalTargetY, boss.FacingRight, progress, boss.StateTimer, bHeight);
         currentAbility.DrawTelegraph(in ctx);
     }
 
