@@ -17,19 +17,24 @@ public static class HitstopSystem
     {
         world.System<HitstopState, Sprite>("HitstopStateSystem")
             .Kind(Ecs.PreUpdate)
-            .Each((Iter it, int i, ref HitstopState hitstop, ref Sprite sprite) =>
-            {
-                hitstop.RemainingSeconds -= it.DeltaTime();
-                if (hitstop.RemainingSeconds <= 0.0f)
-                {
-                    var entity = it.Entity(i);
-                    entity.Remove<HitstopState>();
-                    entity.Remove<SpriteJitter>();
-                    sprite.JitterOffsetX = 0.0f;
-                    sprite.JitterOffsetY = 0.0f;
-                }
-            });
+            .Each(UpdateHitstopState);
 
         return world;
+    }
+
+    /// <summary>
+    ///     ヒットストップ状態減衰・解除処理（名前付き静的メソッド）。
+    /// </summary>
+    public static void UpdateHitstopState(Iter it, int i, ref HitstopState hitstop, ref Sprite sprite)
+    {
+        hitstop.RemainingSeconds -= it.DeltaTime();
+        if (hitstop.RemainingSeconds <= 0.0f)
+        {
+            var entity = it.Entity(i);
+            entity.Remove<HitstopState>();
+            entity.Remove<SpriteJitter>();
+            sprite.JitterOffsetX = 0.0f;
+            sprite.JitterOffsetY = 0.0f;
+        }
     }
 }

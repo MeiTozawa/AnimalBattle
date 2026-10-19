@@ -18,23 +18,28 @@ public static class SpriteJitterSystem
     {
         world.System<SpriteJitter, Sprite>("SpriteJitterSystem")
             .Kind(Ecs.PreUpdate)
-            .Iter((Iter it, Field<SpriteJitter> jitters, Field<Sprite> sprites) =>
-            {
-                var dt = it.DeltaTime();
-                var count = it.Count();
-                for (var i = 0; i < count; i++)
-                {
-                    ref var jitter = ref jitters[i];
-                    jitter.Timer += dt;
-                    jitter.CurrentOffsetX = MathF.Sin(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeX;
-                    jitter.CurrentOffsetY = MathF.Cos(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeY;
-
-                    ref var sprite = ref sprites[i];
-                    sprite.JitterOffsetX = jitter.CurrentOffsetX;
-                    sprite.JitterOffsetY = jitter.CurrentOffsetY;
-                }
-            });
+            .Iter(ExecuteSpriteJitter);
 
         return world;
+    }
+
+    /// <summary>
+    ///     スプライト局所振動オフセット計算パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void ExecuteSpriteJitter(Iter it, Field<SpriteJitter> jitters, Field<Sprite> sprites)
+    {
+        var dt = it.DeltaTime();
+        var count = it.Count();
+        for (var i = 0; i < count; i++)
+        {
+            ref var jitter = ref jitters[i];
+            jitter.Timer += dt;
+            jitter.CurrentOffsetX = MathF.Sin(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeX;
+            jitter.CurrentOffsetY = MathF.Cos(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeY;
+
+            ref var sprite = ref sprites[i];
+            sprite.JitterOffsetX = jitter.CurrentOffsetX;
+            sprite.JitterOffsetY = jitter.CurrentOffsetY;
+        }
     }
 }
