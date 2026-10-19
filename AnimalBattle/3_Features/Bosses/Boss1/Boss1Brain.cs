@@ -4,6 +4,7 @@ using AnimalBattle.Abilities.Skills;
 
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Ai.Boss1;
 
@@ -15,6 +16,7 @@ public sealed class Boss1Brain : BaseBossBrain {
     private static readonly StringId StateHover = "Hover";
     private static readonly StringId StateAbility = "Ability";
 
+    private readonly World _world;
     private readonly IBoss1Configuration _configuration;
 
     private State _hoverState = null!;
@@ -26,12 +28,15 @@ public sealed class Boss1Brain : BaseBossBrain {
     private Vec2f _startPosition;
 
     /// <summary>Boss 1 ブレインを初期化します。</summary>
+    /// <param name="world">対象の Flecs ワールド。</param>
     /// <param name="spawnX">スポーン X 座標。</param>
     /// <param name="spawnY">スポーン Y 座標。</param>
     /// <param name="configuration">設定プロバイダ。</param>
-    public Boss1Brain(float spawnX, float spawnY, IBoss1Configuration? configuration = null)
+    public Boss1Brain(World world, float spawnX, float spawnY, IBoss1Configuration? configuration = null)
     {
-        _configuration = configuration ?? new Boss1DefaultConfiguration();
+        Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
+        _world = world;
+        _configuration = configuration ?? new Boss1DefaultConfiguration(world);
         BaseX = spawnX;
         _currentPosition = new Vec2f(spawnX, spawnY);
         _startPosition = new Vec2f(spawnX, spawnY);
@@ -76,8 +81,8 @@ public sealed class Boss1Brain : BaseBossBrain {
     {
         InitializeBaseBrain(_configuration.PhaseTransition);
 
-        var patternCfg = ConfigManager.Boss1Patterns;
-        var boss1Cfg = ConfigManager.Boss1;
+        var patternCfg = _world.Get<Boss1PatternConfig>();
+        var boss1Cfg = _world.Get<Boss1Config>();
 
         var skillNames = new HashSet<string>(boss1Cfg.Phase1.Skills);
         skillNames.UnionWith(boss1Cfg.Phase2.Skills);
@@ -177,7 +182,7 @@ public sealed class Boss1Brain : BaseBossBrain {
 
     private void EvaluatePhaseTransition(float currentHp, float maxHp)
     {
-        var b1Cfg = ConfigManager.Boss1;
+        var b1Cfg = _world.Get<Boss1Config>();
         var p2Duration = _configuration.GetPhase(Phase.Phase2).TransitionDuration;
         var p3Duration = _configuration.GetPhase(Phase.Phase3).TransitionDuration;
         EvaluatePhaseTransition(currentHp, maxHp, b1Cfg.Phase2.HpThreshold, b1Cfg.Phase3.HpThreshold, p2Duration, p3Duration);

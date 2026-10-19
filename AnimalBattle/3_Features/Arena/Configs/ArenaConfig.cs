@@ -146,14 +146,4 @@ public sealed class ArenaConfig {
 
     /// <summary>物理更新の最大デルタタイム保護上限（秒）</summary>
     public float MaxDeltaTime { get; set; } = 0.05f;
-
-    /// <summary>
-    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{ArenaConfig}" /> インスタンスを生成します。
-    /// </summary>
-    /// <param name="path">TOML ファイル名</param>
-    /// <returns>読み込み結果</returns>
-    public static ErrorOr<ConfigBase<ArenaConfig>> LoadFromFile(string path = ResourcePath.Config.Arena)
-    {
-        return ConfigBase<ArenaConfig>.LoadFromFile(path);
-    }
 }

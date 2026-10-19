@@ -33,7 +33,7 @@ public static class BossPrefabs
             .Set(new BossCombatState(Phase.Phase1));
 
         // --- Boss 1 ---
-        var boss1Cfg = ConfigManager.Boss1Prefab;
+        var boss1Cfg = world.Get<Boss1PrefabConfig>();
         Boss1 = world.Prefab(Boss1Name)
             .IsA(BossBase)
             .Add<Boss1Tag>()
@@ -44,7 +44,7 @@ public static class BossPrefabs
             .Set(new Hitbox(new CollisionShape.Circle(boss1Cfg.BodyHitboxRadius, 0.0f, boss1Cfg.BodyHitboxOffsetY), boss1Cfg.BodyContactDamage, Faction.Hostile, false));
 
         // --- Boss 2 ---
-        var boss2Cfg = ConfigManager.Boss2Prefab;
+        var boss2Cfg = world.Get<Boss2PrefabConfig>();
         Boss2 = world.Prefab(Boss2Name)
             .IsA(BossBase)
             .Add<Boss2Tag>()

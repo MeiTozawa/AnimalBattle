@@ -44,19 +44,4 @@ public sealed class TileSetConfig {
 
     /// <summary>衝突判定領域の高さ</summary>
     public int CollisionHeight => CollisionY2 - CollisionY1;
-
-    /// <summary>
-    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{TileSetConfig}" /> インスタンスを生成します。
-    ///     Release ビルド時はバイナリから読み込まれた <see cref="ConfigManager.TileSet" /> を返却します。
-    /// </summary>
-    /// <param name="path">TOML ファイル名または相対パス</param>
-    /// <returns>読み込み結果</returns>
-    public static ErrorOr<ConfigBase<TileSetConfig>> LoadFromFile(string path = ResourcePath.Platform.SheetToml)
-    {
-#if DEBUG
-        return ConfigBase<TileSetConfig>.LoadFromFile(path);
-#else
-        return new ConfigBase<TileSetConfig>(ConfigManager.TileSet);
-#endif
-    }
 }

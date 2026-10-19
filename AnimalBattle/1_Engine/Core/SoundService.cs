@@ -37,6 +37,9 @@ public static class SoundService
     private static int _bgmHandle = -1;
     private static bool _isInitialized;
 
+    /// <summary>現在アクティブな音声設定。</summary>
+    public static AnimalBattle.Configs.AudioConfig CurrentConfig { get; set; } = new();
+
     /// <summary>
     ///     サウンドサービスが初期化済みかどうかを取得します。
     /// </summary>
@@ -175,7 +178,7 @@ public static class SoundService
     {
         if (!SfxHandles.TryGetValue(type, out var handle) || handle < 0) return;
 
-        var audioConfig = ConfigManager.Audio;
+        var audioConfig = CurrentConfig;
         var finalVolume = Math.Clamp(audioConfig.MasterVolume * audioConfig.SfxVolume * volumeScale * 255.0f, 0.0f, 255.0f);
         NativeBindings.Sound_SetVolume(handle, (int)finalVolume);
         NativeBindings.Sound_Play(handle, 1, true); // DX_PLAYTYPE_BACK, 先頭から再生
@@ -189,7 +192,7 @@ public static class SoundService
     {
         if (_bgmHandle < 0) return;
 
-        var audioConfig = ConfigManager.Audio;
+        var audioConfig = CurrentConfig;
         var finalVolume = Math.Clamp(audioConfig.MasterVolume * audioConfig.BgmVolume * 255.0f, 0.0f, 255.0f);
         NativeBindings.Sound_SetVolume(_bgmHandle, (int)finalVolume);
         NativeBindings.Sound_Play(_bgmHandle, loop ? 2 : 1, false); // DX_PLAYTYPE_LOOP : DX_PLAYTYPE_BACK

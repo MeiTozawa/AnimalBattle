@@ -143,26 +143,32 @@ public interface IBoss2Configuration {
     PhaseTransitionAbilityConfig PhaseTransition { get; }
 }
 
-/// <summary>既存 Boss2 設定の検証済み既定 snapshot です。</summary>
+/// <summary>ワールドから設定を取得する Boss2 設定プロバイダです。</summary>
 public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
-    /// <inheritdoc />
-    public PhaseTransitionAbilityConfig PhaseTransition => ConfigManager.Boss2.PhaseTransition;
+    private readonly Flecs.NET.Core.World _world;
+
+    public Boss2DefaultConfiguration(Flecs.NET.Core.World world)
+    {
+        Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
+        _world = world;
+    }
 
     /// <inheritdoc />
-    public StringId AntiKitingMeleeSkillTag => new(ConfigManager.Boss2.AntiKitingMeleeSkill);
+    public PhaseTransitionAbilityConfig PhaseTransition => _world.Get<Boss2Config>().PhaseTransition;
 
     /// <inheritdoc />
-    public StringId AntiKitingRangedSkillTag => new(ConfigManager.Boss2.AntiKitingRangedSkill);
+    public StringId AntiKitingMeleeSkillTag => new(_world.Get<Boss2Config>().AntiKitingMeleeSkill);
 
     /// <inheritdoc />
-    public StringId TargetLockSkillTag => new(ConfigManager.Boss2.TargetLockSkill);
+    public StringId AntiKitingRangedSkillTag => new(_world.Get<Boss2Config>().AntiKitingRangedSkill);
 
-
+    /// <inheritdoc />
+    public StringId TargetLockSkillTag => new(_world.Get<Boss2Config>().TargetLockSkill);
 
     /// <inheritdoc />
     public Boss2PhaseSettings GetPhase(Phase phase)
     {
-        var toml = ConfigManager.Boss2;
+        var toml = _world.Get<Boss2Config>();
 
         var phaseCfg = phase switch {
             Phase.Phase1 => toml.Phase1,
@@ -203,7 +209,12 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     public Boss2CombatSettings CombatSettings {
         get
         {
-            var toml = ConfigManager.Boss2;
+            var toml = _world.Get<Boss2Config>();
+            ref readonly var flow = ref _world.Get<AnimalBattle.Components.GameFlow>();
+            var playerHeight = flow.SelectedPlayer == CharacterType.Bunny
+                ? _world.Get<BunnyConfig>().CollisionHeight
+                : _world.Get<CatConfig>().CollisionHeight;
+
             return new Boss2CombatSettings(
                 toml.CollisionHeight,
                 toml.JumpCooldownDuration,
@@ -217,14 +228,14 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
                 toml.AntiKitingRangedDistance,
                 toml.AntiKitingMidDistance,
                 toml.AntiKitingEnforceMultiplier,
-                ConfigManager.Player.CollisionHeight);
+                playerHeight);
         }
     }
 
     /// <inheritdoc />
     public float GetSkillDefaultCooldown(StringId skill)
     {
-        var toml = ConfigManager.Boss2;
+        var toml = _world.Get<Boss2Config>();
         foreach (var rule in toml.Phase1.Rules)
             if (skill == rule.Skill && rule.Cooldown > 0) return rule.Cooldown;
         foreach (var rule in toml.Phase2.Rules)
@@ -232,7 +243,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
         foreach (var rule in toml.Phase3.Rules)
             if (skill == rule.Skill && rule.Cooldown > 0) return rule.Cooldown;
 
-        var pattern = ConfigManager.Boss2Patterns;
+        var pattern = _world.Get<Boss2PatternConfig>();
         return pattern.TryGetSkill(skill, out var s) ? s.DefaultCooldown : 0.0f;
     }
 }

@@ -139,16 +139,4 @@ public sealed class Boss2Config : BaseBossConfig {
 
     /// <summary>Phase 遷移（フェーズ移行）能力設定</summary>
     public PhaseTransitionAbilityConfig PhaseTransition { get; set; } = new();
-
-
-
-    /// <summary>
-    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{Boss2Config}" /> インスタンスを生成します。
-    /// </summary>
-    /// <param name="path">TOML ファイル名</param>
-    /// <returns>読み込み結果</returns>
-    public static ErrorOr<ConfigBase<Boss2Config>> LoadFromFile(string path = ResourcePath.Config.Boss2)
-    {
-        return ConfigBase<Boss2Config>.LoadFromFile(path);
-    }
 }

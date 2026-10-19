@@ -263,7 +263,7 @@ public sealed class HeavySlashConfig : MeleePatternConfigBase {
     /// <inheritdoc />
     public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
     {
-        var b2Cfg = ConfigManager.Boss2;
+        var b2Cfg = world.Get<Boss2Config>();
         var offX = offsetX != 0.0f ? offsetX : forwardDir * b2Cfg.SlashSpawnOffsetX;
         var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
         var dir = forwardDir > 0.0f ? SlashDirection.Right : SlashDirection.Left;
@@ -436,7 +436,7 @@ public sealed class DoubleCleaveConfig : MeleePatternConfigBase {
     /// <inheritdoc />
     public override void SpawnHitbox(World world, Vec2f origin, float forwardDir, float vx, float bodyHeight, float offsetX, float offsetY, Vec2f targetPos)
     {
-        var b2Cfg = ConfigManager.Boss2;
+        var b2Cfg = world.Get<Boss2Config>();
         var additionalX = MathF.Abs(offsetX);
         var offX = forwardDir * (b2Cfg.SlashSpawnOffsetX + additionalX);
         var offY = offsetY != 0.0f ? offsetY : b2Cfg.SlashSpawnOffsetY;
@@ -601,11 +601,6 @@ public sealed class SpecialBulletConfig {
     /// <summary>Boss 被弾反撃黒弾が近接攻撃で破壊不能かどうかのフラグ。</summary>
     public bool CounterBulletIsIndestructible { get; set; }
 
-    /// <summary>
-    ///     指定された TOML ファイルから特殊弾変調設定を読み込みます。
-    /// </summary>
-    public static ErrorOr<ConfigBase<SpecialBulletConfig>> LoadFromFile(string path = ResourcePath.Config.SpecialBullets)
-        => ConfigBase<SpecialBulletConfig>.LoadFromFile(path);
 }
 
 /// <summary>
@@ -633,11 +628,6 @@ public sealed class Boss1PatternConfig : BossPatternConfigContainerBase {
     /// <summary>高速レーザースナイパー弾幕技能設定</summary>
     public FastSniperConfig FastSniper { get; set; } = new();
 
-    /// <summary>
-    ///     指定された TOML ファイルから Boss 1 パターン設定を読み込みます。
-    /// </summary>
-    public static ErrorOr<ConfigBase<Boss1PatternConfig>> LoadFromFile(string path = ResourcePath.Config.Boss1Patterns)
-        => ConfigBase<Boss1PatternConfig>.LoadFromFile(path);
 }
 
 /// <summary>
@@ -662,9 +652,4 @@ public sealed class Boss2PatternConfig : BossPatternConfigContainerBase {
     /// <summary>Boss 2 滅地狂吼技能設定</summary>
     public EarthquakeRoarConfig EarthquakeRoar { get; set; } = new();
 
-    /// <summary>
-    ///     指定された TOML ファイルから Boss 2 パターン設定を読み込みます。
-    /// </summary>
-    public static ErrorOr<ConfigBase<Boss2PatternConfig>> LoadFromFile(string path = ResourcePath.Config.Boss2Patterns)
-        => ConfigBase<Boss2PatternConfig>.LoadFromFile(path);
 }

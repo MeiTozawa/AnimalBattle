@@ -27,8 +27,9 @@ public sealed class Boss2Agent : BaseBossAgent
         Func<PlatformNavigationGraph?>? navGraphProvider = null)
         : base(entity)
     {
-        var b2Cfg = ConfigManager.Boss2;
-        _brain = new Boss2Brain(b2Cfg.SpawnX, b2Cfg.SpawnY, null, navGraphProvider);
+        var world = entity.CsWorld();
+        var b2Cfg = world.Get<Boss2Config>();
+        _brain = new Boss2Brain(world, b2Cfg.SpawnX, b2Cfg.SpawnY, null, navGraphProvider);
 
         _brain.OnCreateHitbox += HandleCreateHitbox;
         BindBrainEvents(_brain);
@@ -43,12 +44,16 @@ public sealed class Boss2Agent : BaseBossAgent
     public override BossType BossType => BossType.Boss2;
 
     /// <inheritdoc />
-    public override (float Phase2Threshold, float Phase3Threshold) PhaseThresholds =>
-        (ConfigManager.Boss2.Phase2.HpThreshold, ConfigManager.Boss2.Phase3.HpThreshold);
+    public override (float Phase2Threshold, float Phase3Threshold) PhaseThresholds {
+        get {
+            var b2Cfg = Entity.CsWorld().Get<Boss2Config>();
+            return (b2Cfg.Phase2.HpThreshold, b2Cfg.Phase3.HpThreshold);
+        }
+    }
 
     private void InitializeComponents(Entity entity, int spriteHandle)
     {
-        var b2Cfg = ConfigManager.Boss2;
+        var b2Cfg = entity.CsWorld().Get<Boss2Config>();
         InitializeComponents(
             entity,
             spriteHandle,
@@ -112,8 +117,8 @@ public sealed class Boss2Agent : BaseBossAgent
         Query<Transform, CollisionBox> platformQuery,
         bool isControlledAirborne)
     {
-        var b2Cfg = ConfigManager.Boss2;
-        var arenaCfg = ConfigManager.Arena;
+        var b2Cfg = Entity.CsWorld().Get<Boss2Config>();
+        var arenaCfg = Entity.CsWorld().Get<ArenaConfig>();
 
         // 空中落下物理：PlatformTraverse や LeapSmash などの制御空中移動時を除き、通常重力加速度を適用
         if (!col.IsGrounded && !isControlledAirborne)
@@ -197,7 +202,7 @@ public sealed class Boss2Agent : BaseBossAgent
     /// <inheritdoc />
     protected override void OnReset()
     {
-        var b2Cfg = ConfigManager.Boss2;
+        var b2Cfg = Entity.CsWorld().Get<Boss2Config>();
         SetTransform(b2Cfg.SpawnX, b2Cfg.SpawnY, b2Cfg.ScaleX, b2Cfg.ScaleY);
         ref var t = ref Entity.GetMut<Transform>();
         t.Rotation = 0.0f;
@@ -217,7 +222,7 @@ public sealed class Boss2Agent : BaseBossAgent
     private void HandleCreateHitbox(StringId skill, float offsetX, float offsetY)
     {
         if (CurrentWorld == default) return;
-        var patternCfg = ConfigManager.Boss2Patterns;
+        var patternCfg = CurrentWorld.Get<Boss2PatternConfig>();
         ref readonly var trans = ref Entity.Get<Transform>();
 
         var forwardDir = _brain.FacingRight ? 1.0f : -1.0f;

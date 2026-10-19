@@ -17,6 +17,11 @@ public static class CameraService
     private static float _shakeOffsetY;
 
     /// <summary>
+    ///     現在アクティブなカメラ設定。
+    /// </summary>
+    public static AnimalBattle.Configs.CameraConfig CurrentConfig { get; set; } = new();
+
+    /// <summary>
     ///     現在の Trauma 値（0.0f ～ 1.0f）。
     /// </summary>
     public static float Trauma => _trauma;
@@ -78,7 +83,7 @@ public static class CameraService
     /// <param name="power">強度係数</param>
     public static void AddDirectionalImpulse(float dirX, float dirY, float power)
     {
-        var cfg = ConfigManager.Camera;
+        var cfg = CurrentConfig;
         _impulseX = Math.Clamp(_impulseX + dirX * power, -cfg.MaxOffsetX, cfg.MaxOffsetX);
         _impulseY = Math.Clamp(_impulseY + dirY * power, -cfg.MaxOffsetY, cfg.MaxOffsetY);
     }
@@ -89,8 +94,8 @@ public static class CameraService
     /// <param name="deltaTime">前フレームからの経過秒数</param>
     public static void Update(float deltaTime)
     {
-        var cfg = ConfigManager.Camera;
-        Update(deltaTime, cfg.ArenaCenterX, cfg.ArenaCenterY, 0.0f, 0.0f, cfg.ArenaCenterX, cfg.ArenaCenterY);
+        var cfg = CurrentConfig;
+        Update(deltaTime, cfg.ArenaCenterX, cfg.ArenaCenterY, 0.0f, 0.0f, cfg.ArenaCenterX, cfg.ArenaCenterY, cfg);
     }
 
     /// <summary>
@@ -103,6 +108,7 @@ public static class CameraService
     /// <param name="playerVy">プレイヤー速度 Vy</param>
     /// <param name="bossX">Boss ワールド X 座標</param>
     /// <param name="bossY">Boss ワールド Y 座標</param>
+    /// <param name="config">カメラ設定（null の場合は CurrentConfig を使用）</param>
     public static void Update(
         float deltaTime,
         float playerX,
@@ -110,9 +116,15 @@ public static class CameraService
         float playerVx,
         float playerVy,
         float bossX,
-        float bossY)
+        float bossY,
+        AnimalBattle.Configs.CameraConfig? config = null)
     {
-        var cfg = ConfigManager.Camera;
+        if (config != null)
+        {
+            CurrentConfig = config;
+        }
+
+        var cfg = CurrentConfig;
 
         // 1. 動的構図ターゲット計算 (加権中点 + 前瞻速度)
         var pWeight = cfg.PlayerFocusWeight;

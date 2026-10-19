@@ -774,14 +774,4 @@ public sealed class RenderConfig {
 
     /// <summary>近接斬撃エフェクトスプライト描画設定</summary>
     public SlashEffectRenderConfig SlashEffect { get; set; } = new();
-
-    /// <summary>
-    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{RenderConfig}" /> インスタンスを生成します。
-    /// </summary>
-    /// <param name="path">TOML ファイル名</param>
-    /// <returns>読み込み結果</returns>
-    public static ErrorOr<ConfigBase<RenderConfig>> LoadFromFile(string path = ResourcePath.Config.Render)
-    {
-        return ConfigBase<RenderConfig>.LoadFromFile(path);
-    }
 }

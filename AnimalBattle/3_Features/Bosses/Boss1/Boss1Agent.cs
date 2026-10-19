@@ -21,8 +21,9 @@ public sealed class Boss1Agent : BaseBossAgent
     /// <param name="spriteHandle">テクスチャハンドル。</param>
     public Boss1Agent(Entity entity, int spriteHandle) : base(entity)
     {
-        var b1Cfg = ConfigManager.Boss1;
-        _brain = new Boss1Brain(b1Cfg.SpawnX, b1Cfg.SpawnY);
+        var world = entity.CsWorld();
+        var b1Cfg = world.Get<Boss1Config>();
+        _brain = new Boss1Brain(world, b1Cfg.SpawnX, b1Cfg.SpawnY);
 
         BindBrainEvents(_brain);
         InitializeComponents(entity, spriteHandle);
@@ -35,13 +36,17 @@ public sealed class Boss1Agent : BaseBossAgent
     public override BossType BossType => BossType.Boss1;
 
     /// <inheritdoc />
-    public override (float Phase2Threshold, float Phase3Threshold) PhaseThresholds =>
-        (ConfigManager.Boss1.Phase2.HpThreshold, ConfigManager.Boss1.Phase3.HpThreshold);
+    public override (float Phase2Threshold, float Phase3Threshold) PhaseThresholds {
+        get {
+            var b1Cfg = Entity.CsWorld().Get<Boss1Config>();
+            return (b1Cfg.Phase2.HpThreshold, b1Cfg.Phase3.HpThreshold);
+        }
+    }
 
 
     private void InitializeComponents(Entity entity, int spriteHandle)
     {
-        var b1Cfg = ConfigManager.Boss1;
+        var b1Cfg = entity.CsWorld().Get<Boss1Config>();
         InitializeComponents(
             entity,
             spriteHandle,
@@ -80,14 +85,15 @@ public sealed class Boss1Agent : BaseBossAgent
     protected override void OnPostUpdate(float deltaTime, World world)
     {
         ref var t = ref Entity.GetMut<Transform>();
-        t.Rotation = (float)(MathF.Sin(_brain.HoverTimer * ConfigManager.Render.BossEffects.BossHoverAngleSpeed)
-            * ConfigManager.Render.BossEffects.BossHoverAngleAmp);
+        var fx = world.Get<RenderConfig>().BossEffects;
+        t.Rotation = (float)(MathF.Sin(_brain.HoverTimer * fx.BossHoverAngleSpeed)
+            * fx.BossHoverAngleAmp);
     }
 
     /// <inheritdoc />
     protected override void OnReset()
     {
-        var b1Cfg = ConfigManager.Boss1;
+        var b1Cfg = Entity.CsWorld().Get<Boss1Config>();
         SetTransform(b1Cfg.SpawnX, b1Cfg.SpawnY, b1Cfg.ScaleX, b1Cfg.ScaleY);
         ref var t = ref Entity.GetMut<Transform>();
         t.Rotation = 0.0f;

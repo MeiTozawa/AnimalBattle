@@ -79,22 +79,31 @@ public interface IBoss1Configuration {
     PhaseTransitionAbilityConfig PhaseTransition { get; }
 }
 
-/// <summary>既定値を保持する Boss1 設定です。</summary>
+/// <summary>ワールドから設定を取得する Boss1 設定プロバイダです。</summary>
 public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
-    /// <inheritdoc />
-    public StringId DiveSkillTag => new(ConfigManager.Boss1.DiveSkill);
+    private readonly Flecs.NET.Core.World _world;
+
+    public Boss1DefaultConfiguration(Flecs.NET.Core.World world)
+    {
+        System.Diagnostics.Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
+        _world = world;
+    }
 
     /// <inheritdoc />
-    public PhaseTransitionAbilityConfig PhaseTransition => ConfigManager.Boss1.PhaseTransition;
+    public StringId DiveSkillTag => new(_world.Get<Boss1Config>().DiveSkill);
+
+    /// <inheritdoc />
+    public PhaseTransitionAbilityConfig PhaseTransition => _world.Get<Boss1Config>().PhaseTransition;
 
     /// <inheritdoc />
     public Boss1PhaseSettings GetPhase(Phase phase)
     {
+        var b1Cfg = _world.Get<Boss1Config>();
         var tomlPhase = phase switch {
-            Phase.Phase1 => ConfigManager.Boss1.Phase1,
-            Phase.Phase2 => ConfigManager.Boss1.Phase2,
-            Phase.Phase3 => ConfigManager.Boss1.Phase3,
-            _ => AssertHelper.FailWithDefault($"[Boss1Configuration 警告] 未知のフェーズ: {phase}", ConfigManager.Boss1.Phase1)
+            Phase.Phase1 => b1Cfg.Phase1,
+            Phase.Phase2 => b1Cfg.Phase2,
+            Phase.Phase3 => b1Cfg.Phase3,
+            _ => AssertHelper.FailWithDefault($"[Boss1Configuration 警告] 未知のフェーズ: {phase}", b1Cfg.Phase1)
         };
 
         var order = tomlPhase.Skills.Count > 0
@@ -121,7 +130,7 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     /// <inheritdoc />
     public float GetSkillDefaultCooldown(StringId skill)
     {
-        var toml = ConfigManager.Boss1Patterns;
+        var toml = _world.Get<Boss1PatternConfig>();
         return toml.TryGetSkill(skill, out var skillConfig) ? skillConfig.DefaultCooldown : 0.0f;
     }
 }

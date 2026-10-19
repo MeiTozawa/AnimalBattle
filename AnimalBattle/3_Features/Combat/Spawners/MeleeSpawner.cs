@@ -35,7 +35,7 @@ public static class MeleeSpawner
             AssetManager.TryGetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng, out var slashHandle);
         Debug.Assert(hasTexture, $"近接斬撃エフェクトテクスチャがロードされていません: {ResourcePath.Characters.SwordShieldEffectSpritesPng}");
 
-        var slashCfg = ConfigManager.Render.SlashEffect;
+        var slashCfg = world.Get<RenderConfig>().SlashEffect;
         var colIndex = slashCfg.SpriteColIndex;
         var rowIndex = (int)direction;
         var cellSize = slashCfg.SpriteCellSize;
@@ -79,7 +79,7 @@ public static class MeleeSpawner
             AssetManager.TryGetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng, out var slashHandle);
         Debug.Assert(hasTexture, $"近接斬撃エフェクトテクスチャがロードされていません: {ResourcePath.Characters.SwordShieldEffectSpritesPng}");
 
-        var slashCfg = ConfigManager.Render.SlashEffect;
+        var slashCfg = meleeEntity.CsWorld().Get<RenderConfig>().SlashEffect;
         var colIndex = slashCfg.SpriteColIndex;
         var rowIndex = (int)direction;
         var cellSize = slashCfg.SpriteCellSize;

@@ -38,22 +38,22 @@ public sealed class ConfigService : IDisposable
 #if DEBUG
         TypeDescriptor.AddAttributes(typeof(Color), new TypeConverterAttribute(typeof(FlexibleColorConverter)));
 
-        CatHolder = CreateTomlHolder<CatConfig>(ResourcePath.Config.Cat);
-        BunnyHolder = CreateTomlHolder<BunnyConfig>(ResourcePath.Config.Bunny);
-        CatPrefabHolder = CreateTomlHolder<CatPrefabConfig>(ResourcePath.Config.CatPrefab);
-        BunnyPrefabHolder = CreateTomlHolder<BunnyPrefabConfig>(ResourcePath.Config.BunnyPrefab);
-        Boss1Holder = CreateTomlHolder<Boss1Config>(ResourcePath.Config.Boss1);
-        Boss2Holder = CreateTomlHolder<Boss2Config>(ResourcePath.Config.Boss2);
+        CatHolder = CreateTomlHolder<CatConfig>(ResourcePath.Config.Cat, (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCat(w, cfg));
+        BunnyHolder = CreateTomlHolder<BunnyConfig>(ResourcePath.Config.Bunny, (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncBunny(w, cfg));
+        CatPrefabHolder = CreateTomlHolder<CatPrefabConfig>(ResourcePath.Config.CatPrefab, (w, cfg) => { w.Set(cfg); AnimalBattle.Player.PlayerPrefabs.Register(w); });
+        BunnyPrefabHolder = CreateTomlHolder<BunnyPrefabConfig>(ResourcePath.Config.BunnyPrefab, (w, cfg) => { w.Set(cfg); AnimalBattle.Player.PlayerPrefabs.Register(w); });
+        Boss1Holder = CreateTomlHolder<Boss1Config>(ResourcePath.Config.Boss1, (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss1(w, cfg));
+        Boss2Holder = CreateTomlHolder<Boss2Config>(ResourcePath.Config.Boss2, (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss2(w, cfg));
         Boss1PatternsHolder = CreateTomlHolder<Boss1PatternConfig>(ResourcePath.Config.Boss1Patterns);
         Boss2PatternsHolder = CreateTomlHolder<Boss2PatternConfig>(ResourcePath.Config.Boss2Patterns);
-        Boss1PrefabHolder = CreateTomlHolder<Boss1PrefabConfig>(ResourcePath.Config.Boss1Prefab);
-        Boss2PrefabHolder = CreateTomlHolder<Boss2PrefabConfig>(ResourcePath.Config.Boss2Prefab);
+        Boss1PrefabHolder = CreateTomlHolder<Boss1PrefabConfig>(ResourcePath.Config.Boss1Prefab, (w, cfg) => { w.Set(cfg); AnimalBattle.Bosses.BossPrefabs.Register(w); });
+        Boss2PrefabHolder = CreateTomlHolder<Boss2PrefabConfig>(ResourcePath.Config.Boss2Prefab, (w, cfg) => { w.Set(cfg); AnimalBattle.Bosses.BossPrefabs.Register(w); });
         SpecialBulletsHolder = CreateTomlHolder<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets);
         ArenaHolder = CreateTomlHolder<ArenaConfig>(ResourcePath.Config.Arena);
         RenderHolder = CreateTomlHolder<RenderConfig>(ResourcePath.Config.Render);
-        CameraHolder = CreateTomlHolder<CameraConfig>(ResourcePath.Config.Camera);
+        CameraHolder = CreateTomlHolder<CameraConfig>(ResourcePath.Config.Camera, (w, cfg) => { w.Set(cfg); AnimalBattle.Core.CameraService.CurrentConfig = cfg; });
         TileSetHolder = CreateTomlHolder<TileSetConfig>(ResourcePath.Platform.SheetToml);
-        AudioHolder = CreateTomlHolder<AudioConfig>(ResourcePath.Config.Audio);
+        AudioHolder = CreateTomlHolder<AudioConfig>(ResourcePath.Config.Audio, (w, cfg) => { w.Set(cfg); AnimalBattle.Core.SoundService.CurrentConfig = cfg; });
         CombatPrefabsHolder = CreateTomlHolder<CombatPrefabConfig>(ResourcePath.Config.CombatPrefab);
         StartSceneHolder = CreateTomlHolder<StartSceneConfig>(ResourcePath.Config.StartScene);
 #else
@@ -109,16 +109,28 @@ public sealed class ConfigService : IDisposable
         world.Set(CombatPrefabsHolder.Value);
         world.Set(StartSceneHolder.Value);
 
+        AnimalBattle.Core.SoundService.CurrentConfig = AudioHolder.Value;
+        AnimalBattle.Core.CameraService.CurrentConfig = CameraHolder.Value;
+
         Debug.WriteLine("[C# 設定初期化] 全ての設定単例を Flecs ワールドへ正常に注入しました。");
     }
 
 #if DEBUG
-    private ConfigHolder<T> CreateTomlHolder<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(string path) where T : class, new()
+    private ConfigHolder<T> CreateTomlHolder<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>(
+        string path,
+        Action<World, T>? onReloaded = null) where T : class, new()
     {
         var holder = new ConfigHolder<T>(new T());
         var loader = new TomlHotReloadLoader<T>(path, holder, onReloaded: (w, cfg) =>
         {
-            w.Set(cfg);
+            if (onReloaded != null)
+            {
+                onReloaded(w, cfg);
+            }
+            else
+            {
+                w.Set(cfg);
+            }
         });
 
         var initial = loader.LoadInitial();

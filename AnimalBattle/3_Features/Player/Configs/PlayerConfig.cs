@@ -319,14 +319,4 @@ public class PlayerConfig : IConfigLifecycle {
         return CollisionShapeFactory.CreateWithFallback(BulletHitboxShape, BulletRadius, BulletWidth, BulletHeight,
             BulletHitboxOffsetX, BulletHitboxOffsetY);
     }
-
-    /// <summary>
-    ///     指定された TOML ファイルから設定を読み込んだ <see cref="ConfigBase{PlayerConfig}" /> インスタンスを生成します。
-    /// </summary>
-    /// <param name="path">TOML ファイル名</param>
-    /// <returns>読み込み結果</returns>
-    public static ErrorOr<ConfigBase<PlayerConfig>> LoadFromFile(string path = ResourcePath.Config.Cat)
-    {
-        return ConfigBase<PlayerConfig>.LoadFromFile(path);
-    }
 }

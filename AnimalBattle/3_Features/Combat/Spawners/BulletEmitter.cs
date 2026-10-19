@@ -25,7 +25,7 @@ public static class BulletEmitter
     {
         Debug.Assert(world != default, "World インスタンスが有効である必要があります。");
 
-        var patternCfg = ConfigManager.Boss1Patterns;
+        var patternCfg = world.Get<Boss1PatternConfig>();
         if (patternCfg.TryGetSkill(skill, out var pattern))
         {
             pattern.EmitBullet(world, origin, target, ref angleOffset, 1.0f, 0.0f);
@@ -51,7 +51,7 @@ public static class BulletEmitter
     {
         Debug.Assert(world != default, "World インスタンスが有効である必要があります。");
 
-        var patternCfg = ConfigManager.Boss2Patterns;
+        var patternCfg = world.Get<Boss2PatternConfig>();
         if (patternCfg.TryGetSkill(skill, out var pattern))
         {
             float dummyOffset = 0.0f;

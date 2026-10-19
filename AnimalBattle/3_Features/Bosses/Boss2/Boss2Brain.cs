@@ -5,6 +5,7 @@ using AnimalBattle.Abilities.Skills;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Maps.Navigation;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Ai.Boss2;
 
@@ -24,6 +25,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         Landing
     }
 
+    private readonly World _world;
     private readonly IBoss2Configuration _configuration;
     private readonly Func<PlatformNavigationGraph?>? _navGraphProvider;
 
@@ -42,17 +44,21 @@ public sealed class Boss2Brain : BaseBossBrain {
     private bool _facingRight = true;
 
     /// <summary>Boss 2 ブレインを初期化します。</summary>
+    /// <param name="world">対象の Flecs ワールド。</param>
     /// <param name="spawnX">スポーン X 座標。</param>
     /// <param name="spawnY">スポーン Y 座標。</param>
     /// <param name="configuration">設定プロバイダ。</param>
     /// <param name="navGraphProvider">ナビゲーショングラフプロバイダ。</param>
     public Boss2Brain(
+        World world,
         float spawnX,
         float spawnY,
         IBoss2Configuration? configuration = null,
         Func<PlatformNavigationGraph?>? navGraphProvider = null)
     {
-        _configuration = configuration ?? new Boss2DefaultConfiguration();
+        Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
+        _world = world;
+        _configuration = configuration ?? new Boss2DefaultConfiguration(world);
         _navGraphProvider = navGraphProvider;
         _currentPosition = new Vec2f(spawnX, spawnY);
         _targetPosition = new Vec2f(spawnX, spawnY);
@@ -110,8 +116,8 @@ public sealed class Boss2Brain : BaseBossBrain {
     {
         InitializeBaseBrain(_configuration.PhaseTransition);
 
-        var patternCfg = ConfigManager.Boss2Patterns;
-        var boss2Cfg = ConfigManager.Boss2;
+        var patternCfg = _world.Get<Boss2PatternConfig>();
+        var boss2Cfg = _world.Get<Boss2Config>();
 
         var skillNames = new HashSet<string>(boss2Cfg.Phase1.Skills);
         skillNames.UnionWith(boss2Cfg.Phase2.Skills);
@@ -289,7 +295,7 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     private void EvaluatePhaseTransition(float currentHp, float maxHp)
     {
-        var b2Cfg = ConfigManager.Boss2;
+        var b2Cfg = _world.Get<Boss2Config>();
         var p2Duration = _configuration.GetPhase(Phase.Phase2).TransitionDuration;
         var p3Duration = _configuration.GetPhase(Phase.Phase3).TransitionDuration;
         EvaluatePhaseTransition(currentHp, maxHp, b2Cfg.Phase2.HpThreshold, b2Cfg.Phase3.HpThreshold, p2Duration, p3Duration);
@@ -485,7 +491,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     {
         if (!_asc.IsCasting) return;
 
-        var patternCfg = ConfigManager.Boss2Patterns.LeapSmash;
+        var patternCfg = _world.Get<Boss2PatternConfig>().LeapSmash;
         var flyDuration = patternCfg.FlyDuration;
         var peakY = patternCfg.PeakAltitudeY;
         var hangDuration = patternCfg.ApexHangDuration;
@@ -576,7 +582,7 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     private float CalculateTargetLandingSurfaceY(float targetX, float playerFootY)
     {
-        var arenaCfg = ConfigManager.Arena;
+        var arenaCfg = _world.Get<ArenaConfig>();
         var floorY = arenaCfg.FloorLimitY;
         var navGraph = _navGraphProvider?.Invoke();
 

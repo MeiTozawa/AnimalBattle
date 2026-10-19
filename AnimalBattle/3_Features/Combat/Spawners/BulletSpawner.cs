@@ -54,7 +54,7 @@ public static class BulletSpawner
 
         if (type == BulletType.Yellow)
         {
-            var cfg = ConfigManager.SpecialBullets;
+            var cfg = world.Get<SpecialBulletConfig>();
             var satRadius = MathF.Max(cfg.YellowSatelliteMinRadius, radius * cfg.YellowSatelliteRadiusMultiplier);
             var orbitDist = radius * cfg.YellowOrbitDistanceMultiplier;
             var parentVersion = entity.Get<PoolLeaseState>().Version;
@@ -78,7 +78,7 @@ public static class BulletSpawner
     /// </summary>
     public static void SpawnBossCounterAttack(World world, float bossX, float bossY, Phase phase)
     {
-        var cfg = ConfigManager.SpecialBullets;
+        var cfg = world.Get<SpecialBulletConfig>();
         var bulletCount = phase switch {
             Phase.Phase1 => cfg.CounterBulletCountPhase1,
             Phase.Phase2 => cfg.CounterBulletCountPhase2,

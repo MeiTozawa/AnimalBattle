@@ -46,7 +46,6 @@ public class GameManager : IDisposable {
 
         _configService = new ConfigService();
         _configService.Initialize(_ecsWorld);
-        ConfigManager.Initialize();
         AssetManager.Initialize();
 
         // 共有 ECS パイプラインモジュールおよび Prefab 原型の登録（決定論的トポロジカル順序）
