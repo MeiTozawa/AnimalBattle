@@ -105,6 +105,8 @@ public sealed class BakedConfigBundle {
     Converters = [typeof(JsonColorConverter), typeof(JsonStringEnumConverter<EaseType>)])]
 [JsonSerializable(typeof(BakedConfigBundle))]
 [JsonSerializable(typeof(PlayerConfig))]
+[JsonSerializable(typeof(CatConfig))]
+[JsonSerializable(typeof(BunnyConfig))]
 [JsonSerializable(typeof(Boss1Config))]
 [JsonSerializable(typeof(Boss1PhaseFsmConfig))]
 [JsonSerializable(typeof(AttackRuleConfig))]
