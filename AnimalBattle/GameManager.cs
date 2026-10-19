@@ -20,6 +20,8 @@ public class GameManager : IDisposable {
     private World _ecsWorld;
     private readonly ConfigService _configService;
     private bool _isDisposed;
+    private bool _isUpdating;
+    private Action? _pendingSceneTransition;
 
     /// <summary>
     ///     現在アクティブな GameManager インスタンスを取得します。
@@ -81,10 +83,22 @@ public class GameManager : IDisposable {
 
     /// <summary>
     ///     戦闘シーンへ遷移します。
+    ///     システム実行中（ECS ステージ中）の場合は、Progress 終了後の安全な同期ポイントへ遅延実行されます。
     /// </summary>
     /// <param name="playerType">選択されたプレイヤーキャラクター</param>
     /// <param name="bossType">選択された首領</param>
     public void SwitchToBattle(CharacterType playerType, BossType bossType)
+    {
+        if (_isUpdating)
+        {
+            _pendingSceneTransition = () => ExecuteSwitchToBattle(playerType, bossType);
+            return;
+        }
+
+        ExecuteSwitchToBattle(playerType, bossType);
+    }
+
+    private void ExecuteSwitchToBattle(CharacterType playerType, BossType bossType)
     {
         StartSceneSpawner.Teardown(_ecsWorld);
 
@@ -98,8 +112,20 @@ public class GameManager : IDisposable {
 
     /// <summary>
     ///     開始選人シーンへ復帰します。
+    ///     システム実行中（ECS ステージ中）の場合は、Progress 終了後の安全な同期ポイントへ遅延実行されます。
     /// </summary>
     public void SwitchToStart()
+    {
+        if (_isUpdating)
+        {
+            _pendingSceneTransition = ExecuteSwitchToStart;
+            return;
+        }
+
+        ExecuteSwitchToStart();
+    }
+
+    private void ExecuteSwitchToStart()
     {
         ref var flow = ref _ecsWorld.GetMut<GameFlow>();
         flow.State = GameState.Start;
@@ -117,8 +143,24 @@ public class GameManager : IDisposable {
         // フレーム開始時：保留中の設定ホットリロードをワールドへ安全に適用
         ConfigHotReloadDispatcher.Dispatch(_ecsWorld);
 
-        // PreUpdate -> OnUpdate -> OnValidate -> PostUpdate -> OnStore (RenderModule)
-        _ecsWorld.Progress(deltaTime);
+        _isUpdating = true;
+        try
+        {
+            // PreUpdate -> OnUpdate -> OnValidate -> PostUpdate -> OnStore (RenderModule)
+            _ecsWorld.Progress(deltaTime);
+        }
+        finally
+        {
+            _isUpdating = false;
+        }
+
+        // システム更新完了後：ステージ外（非同期安全）で保留中のシーン遷移を実行
+        if (_pendingSceneTransition != null)
+        {
+            var transition = _pendingSceneTransition;
+            _pendingSceneTransition = null;
+            transition();
+        }
     }
 
     /// <inheritdoc />
