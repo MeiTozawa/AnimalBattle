@@ -28,27 +28,33 @@ public static class PlayerAnimationStateSystem
             .Without<DeadTag>()
             .Without<HitstopState>()
             .Kind(Ecs.PreUpdate)
-            .Each((ref vel, ref col, ref hp, ref anim) =>
-            {
-                if (hp.Current <= 0.0f) return;
-
-                // 攻撃アニメーション再生中は終了まで維持
-                if (anim.CurrentClip == ClipAttack && !anim.IsFinished) return;
-
-                if (!col.IsGrounded)
-                {
-                    anim.Play(vel.Vy < 0.0f ? ClipJump : ClipFall);
-                }
-                else
-                {
-                    var threshold = ConfigManager.Player.WalkAnimVelocityThreshold > 0.0f
-                        ? ConfigManager.Player.WalkAnimVelocityThreshold
-                        : 0.1f;
-
-                    anim.Play(MathF.Abs(vel.Vx) > threshold ? ClipRun : ClipIdle);
-                }
-            });
+            .Each(UpdateAnimationState);
 
         return world;
+    }
+
+    private static void UpdateAnimationState(
+        ref Velocity vel,
+        ref CollisionBox col,
+        ref Health hp,
+        ref Animation anim)
+    {
+        if (hp.Current <= 0.0f) return;
+
+        // 攻撃アニメーション再生中は終了まで維持
+        if (anim.CurrentClip == ClipAttack && !anim.IsFinished) return;
+
+        if (!col.IsGrounded)
+        {
+            anim.Play(vel.Vy < 0.0f ? ClipJump : ClipFall);
+        }
+        else
+        {
+            var threshold = ConfigManager.Player.WalkAnimVelocityThreshold > 0.0f
+                ? ConfigManager.Player.WalkAnimVelocityThreshold
+                : 0.1f;
+
+            anim.Play(MathF.Abs(vel.Vx) > threshold ? ClipRun : ClipIdle);
+        }
     }
 }

@@ -12,6 +12,9 @@ namespace AnimalBattle.Systems;
 ///     <see cref="MovementIntent" /> を消費し、重力、跳躍インパルス、足場衝突および画面境界を統一的に処理します。
 /// </summary>
 public static class MovementSystem {
+    private static Query<Transform, CollisionBox> _platformQuery;
+    private static ArenaConfig? _arenaCfg;
+
     /// <summary>
     ///     キネマティック運動物理システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -24,47 +27,55 @@ public static class MovementSystem {
         Query<Transform, CollisionBox>? platformQuery = null,
         ArenaConfig? arenaCfg = null)
     {
-        var pQuery = platformQuery ?? world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
+        _platformQuery = platformQuery ?? world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
+        _arenaCfg = arenaCfg;
 
         world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability, DashState, Sprite, SpringScale, TimedEffectsState, GameplayTagState>("MovementSystem")
            .Kind(Ecs.OnUpdate)
            .Without<DeadTag>()
            .Without<HitstopState>()
-           .Iter((Iter it,
-                Field<Transform> transforms,
-                Field<Velocity> velocities,
-                Field<CollisionBox> collisionBoxes,
-                Field<MovementIntent> intents,
-                Field<JumpCapability> jumps,
-                Field<DashState> dashes,
-                Field<Sprite> sprites,
-                Field<SpringScale> springs,
-                Field<TimedEffectsState> timedEffects,
-                Field<GameplayTagState> tags) =>
-            {
-                var dt = it.DeltaTime();
-                var count = it.Count();
-                var cfg = arenaCfg ?? ConfigManager.Arena;
-
-                for (var i = 0; i < count; i++)
-                {
-                    ref var trans = ref transforms[i];
-                    ref var vel = ref velocities[i];
-                    ref var col = ref collisionBoxes[i];
-                    ref var intent = ref intents[i];
-                    ref var jump = ref jumps[i];
-                    ref var dash = ref dashes[i];
-                    ref var sprite = ref sprites[i];
-                    ref var spring = ref springs[i];
-                    ref var effect = ref timedEffects[i];
-                    ref var tag = ref tags[i];
-
-                    var entity = it.Entity(i);
-                    ExecuteKinematics(entity, ref effect, ref tag, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, pQuery, cfg, world);
-                }
-            });
+           .Iter(ExecuteMovement);
 
         return world;
+    }
+
+    private static void ExecuteMovement(
+        Iter it,
+        Field<Transform> transforms,
+        Field<Velocity> velocities,
+        Field<CollisionBox> collisionBoxes,
+        Field<MovementIntent> intents,
+        Field<JumpCapability> jumps,
+        Field<DashState> dashes,
+        Field<Sprite> sprites,
+        Field<SpringScale> springs,
+        Field<TimedEffectsState> timedEffects,
+        Field<GameplayTagState> tags)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var dt = it.DeltaTime();
+        var cfg = _arenaCfg ?? ConfigManager.Arena;
+        var pQuery = _platformQuery!;
+        var world = it.World();
+
+        for (var i = 0; i < count; i++)
+        {
+            ref var trans = ref transforms[i];
+            ref var vel = ref velocities[i];
+            ref var col = ref collisionBoxes[i];
+            ref var intent = ref intents[i];
+            ref var jump = ref jumps[i];
+            ref var dash = ref dashes[i];
+            ref var sprite = ref sprites[i];
+            ref var spring = ref springs[i];
+            ref var effect = ref timedEffects[i];
+            ref var tag = ref tags[i];
+
+            var entity = it.Entity(i);
+            ExecuteKinematics(entity, ref effect, ref tag, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, pQuery, cfg, world);
+        }
     }
 
     private static void ExecuteKinematics(

@@ -19,49 +19,55 @@ public static class SpringScaleSystem
     {
         world.System<SpringScale, Sprite, Transform>("SpringScaleSystem")
             .Without<HitstopState>()
-            .Iter((Iter it, Field<SpringScale> springs, Field<Sprite> sprites, Field<Transform> transforms) =>
-            {
-                var dt = it.DeltaTime();
-                if (dt <= 0.0f) return;
-
-                var safeDt = MathF.Min(dt, 0.1f);
-                var count = it.Count();
-
-                for (var i = 0; i < count; i++)
-                {
-                    ref var spring = ref springs[i];
-
-                    UpdateDampedSpring(
-                        ref spring.CurrentX,
-                        ref spring.VelX,
-                        spring.TargetX,
-                        spring.Frequency,
-                        spring.DampingRatio,
-                        safeDt);
-
-                    UpdateDampedSpring(
-                        ref spring.CurrentY,
-                        ref spring.VelY,
-                        spring.TargetY,
-                        spring.Frequency,
-                        spring.DampingRatio,
-                        safeDt);
-
-                    ref var sprite = ref sprites[i];
-                    ref var trans = ref transforms[i];
-
-                    sprite.ScaleX = spring.CurrentX;
-                    sprite.ScaleY = spring.CurrentY;
-
-                    if (sprite.SrcRect.Height > 0)
-                    {
-                        var halfH = sprite.SrcRect.Height * trans.ScaleY * 0.5f;
-                        sprite.SpringOffsetY = halfH * (1.0f - spring.CurrentY);
-                    }
-                }
-            });
+            .Iter(ExecuteSpringScale);
 
         return world;
+    }
+
+    private static void ExecuteSpringScale(
+        Iter it,
+        Field<SpringScale> springs,
+        Field<Sprite> sprites,
+        Field<Transform> transforms)
+    {
+        var dt = it.DeltaTime();
+        if (dt <= 0.0f) return;
+
+        var safeDt = MathF.Min(dt, 0.1f);
+        var count = it.Count();
+
+        for (var i = 0; i < count; i++)
+        {
+            ref var spring = ref springs[i];
+
+            UpdateDampedSpring(
+                ref spring.CurrentX,
+                ref spring.VelX,
+                spring.TargetX,
+                spring.Frequency,
+                spring.DampingRatio,
+                safeDt);
+
+            UpdateDampedSpring(
+                ref spring.CurrentY,
+                ref spring.VelY,
+                spring.TargetY,
+                spring.Frequency,
+                spring.DampingRatio,
+                safeDt);
+
+            ref var sprite = ref sprites[i];
+            ref var trans = ref transforms[i];
+
+            sprite.ScaleX = spring.CurrentX;
+            sprite.ScaleY = spring.CurrentY;
+
+            if (sprite.SrcRect.Height > 0)
+            {
+                var halfH = sprite.SrcRect.Height * trans.ScaleY * 0.5f;
+                sprite.SpringOffsetY = halfH * (1.0f - spring.CurrentY);
+            }
+        }
     }
 
     /// <summary>
