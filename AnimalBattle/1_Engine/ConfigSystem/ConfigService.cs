@@ -49,8 +49,8 @@ public sealed class ConfigService : IDisposable
         Boss1PrefabHolder = CreateTomlHolder<Boss1PrefabConfig>(ResourcePath.Config.Boss1Prefab, (w, cfg) => { w.Set(cfg); AnimalBattle.Bosses.BossPrefabs.Register(w); });
         Boss2PrefabHolder = CreateTomlHolder<Boss2PrefabConfig>(ResourcePath.Config.Boss2Prefab, (w, cfg) => { w.Set(cfg); AnimalBattle.Bosses.BossPrefabs.Register(w); });
         SpecialBulletsHolder = CreateTomlHolder<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets);
-        ArenaHolder = CreateTomlHolder<ArenaConfig>(ResourcePath.Config.Arena);
-        RenderHolder = CreateTomlHolder<RenderConfig>(ResourcePath.Config.Render);
+        ArenaHolder = CreateTomlHolder<ArenaConfig>(ResourcePath.Config.Arena, (w, cfg) => { w.Set(cfg); AnimalBattle.Render.TelegraphRenderHelper.CurrentArena = cfg; });
+        RenderHolder = CreateTomlHolder<RenderConfig>(ResourcePath.Config.Render, (w, cfg) => { w.Set(cfg); AnimalBattle.Render.TelegraphRenderHelper.CurrentEffects = cfg.BossEffects; });
         CameraHolder = CreateTomlHolder<CameraConfig>(ResourcePath.Config.Camera, (w, cfg) => { w.Set(cfg); AnimalBattle.Core.CameraService.CurrentConfig = cfg; });
         TileSetHolder = CreateTomlHolder<TileSetConfig>(ResourcePath.Platform.SheetToml);
         AudioHolder = CreateTomlHolder<AudioConfig>(ResourcePath.Config.Audio, (w, cfg) => { w.Set(cfg); AnimalBattle.Core.SoundService.CurrentConfig = cfg; });
@@ -111,6 +111,8 @@ public sealed class ConfigService : IDisposable
 
         AnimalBattle.Core.SoundService.CurrentConfig = AudioHolder.Value;
         AnimalBattle.Core.CameraService.CurrentConfig = CameraHolder.Value;
+        AnimalBattle.Render.TelegraphRenderHelper.CurrentEffects = RenderHolder.Value.BossEffects;
+        AnimalBattle.Render.TelegraphRenderHelper.CurrentArena = ArenaHolder.Value;
 
         Debug.WriteLine("[C# 設定初期化] 全ての設定単例を Flecs ワールドへ正常に注入しました。");
     }

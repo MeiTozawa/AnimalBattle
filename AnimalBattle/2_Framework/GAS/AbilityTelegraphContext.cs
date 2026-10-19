@@ -12,5 +12,4 @@ public readonly record struct AbilityTelegraphContext(
     bool FacingRight,
     float Progress,
     float StateTimer,
-    float SourceHeight = 0.0f);
-
+    float SourceHeight);

@@ -6,6 +6,7 @@ using AnimalBattle.Characters.Boss;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
+using AnimalBattle.Render;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems.Render;
@@ -53,6 +54,10 @@ public static class BossTelegraphRenderSystem {
 
                 ref readonly var renderCfg = ref w.Get<RenderConfig>();
                 var bossFx = renderCfg.BossEffects;
+                ref readonly var arenaCfg = ref w.Get<ArenaConfig>();
+
+                TelegraphRenderHelper.CurrentEffects = bossFx;
+                TelegraphRenderHelper.CurrentArena = arenaCfg;
 
                 ref readonly var bTrans = ref boss.Transform;
                 ref readonly var bSprite = ref boss.Sprite;

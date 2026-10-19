@@ -96,7 +96,7 @@ public sealed class Aimed3ShotConfig : BulletPatternConfigBase {
 
     /// <inheritdoc />
     public override Action<AbilityTelegraphContext>? BuildTelegraphRenderer()
-        => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.SourceX, ctx.SourceY, ctx.TargetX, ctx.TargetY, SpreadAngle, BulletCount, ctx.Progress, TelegraphColor);
+        => ctx => TelegraphRenderHelper.DrawAimingLasers(ctx.SourceX, ctx.SourceY, ctx.TargetX, ctx.TargetY, SpreadAngle, BulletCount, ctx.Progress, TelegraphColor, false);
 
     /// <inheritdoc />
     public override void EmitBullet(World world, Vec2f origin, Vec2f target, ref float angleOffset, float forwardDir, float bodyHeight)
