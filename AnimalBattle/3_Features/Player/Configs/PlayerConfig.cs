@@ -6,7 +6,7 @@ namespace AnimalBattle.Configs;
 ///     Config/player.toml から読み込まれるプレイヤー動作・物理・判定パラメータの設定クラス。
 ///     形状種別、寸法、および局所オフセット (HurtboxOffsetX/Y, BulletHitboxOffsetX/Y) を完全管理します。
 /// </summary>
-public sealed class PlayerConfig {
+public class PlayerConfig : IConfigLifecycle {
     /// <summary>プレイヤーの最大 HP</summary>
     public int MaxHp { get; set; }
 
@@ -276,6 +276,29 @@ public sealed class PlayerConfig {
 
     /// <summary>被弾衝撃時スカッシュ拡大率 Y</summary>
     public float HitSquashScaleY { get; set; }
+
+    /// <inheritdoc />
+    public virtual ErrorOr<Success> Validate()
+    {
+        if (MaxHp <= 0)
+            return Error.Validation("PlayerConfig.InvalidMaxHp", "プレイヤー最大 HP は 1 以上である必要があります。");
+
+        if (MoveSpeed < 0.0f)
+            return Error.Validation("PlayerConfig.InvalidMoveSpeed", "プレイヤー移動速度は 0 以上である必要があります。");
+
+        if (HurtboxShape == "Circle" && HurtboxRadius <= 0.0f)
+            return Error.Validation("PlayerConfig.InvalidHurtboxRadius", "円形被弾判定の半径は 0 より大きい必要があります。");
+
+        if (HurtboxShape == "Box" && (HurtboxWidth <= 0.0f || HurtboxHeight <= 0.0f))
+            return Error.Validation("PlayerConfig.InvalidHurtboxBox", "矩形被弾判定の幅および高さは 0 より大きい必要があります。");
+
+        return Result.Success;
+    }
+
+    /// <inheritdoc />
+    public virtual void PostProcess()
+    {
+    }
 
     /// <summary>
     ///     設定に基づいたプレイヤー被弾判定 (<see cref="CollisionShape" />) を取得します。
