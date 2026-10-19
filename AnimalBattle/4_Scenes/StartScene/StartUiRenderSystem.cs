@@ -31,67 +31,75 @@ public static class StartUiRenderSystem {
     /// <returns>登録済みワールド</returns>
     public static World AddStartUiRenderSystem(this World world)
     {
-        var uiStateQuery = world.QueryBuilder<StartUiState>().Build();
-
-        world.System("StartUiRenderSystem")
+        world.System<StartUiState>("StartUiRenderSystem")
             .Kind(Ecs.OnStore)
-            .Iter((Iter it) =>
-            {
-                var w = it.World();
-                if (w.Get<GameFlow>().State != GameState.Start) return;
-
-                uiStateQuery.Each((ref StartUiState uiState) =>
-                {
-                    ref readonly var flow = ref w.Get<GameFlow>();
-
-                    // 1. タイトルヘッダー描画
-                    GameEngine.DrawString(Layout.HeaderTitleX, Layout.HeaderTitleY, Texts.HeaderTitle, Colors.TextGold);
-                    GameEngine.DrawString(Layout.PlayerHeaderX, Layout.PlayerHeaderY, Texts.PlayerHeader, Colors.TextWhite);
-                    GameEngine.DrawString(Layout.BossHeaderX, Layout.BossHeaderY, Texts.BossHeader, Colors.TextWhite);
-
-                    // 2. Cat カード描画
-                    DrawPlayerCard(
-                        uiState.CatPreviewEntity,
-                        CatCardBounds,
-                        Texts.Cat,
-                        flow.SelectedPlayer == CharacterType.Cat,
-                        uiState.CatStepTimer,
-                        Colors.PlayerSelectedColor);
-
-                    // 3. Bunny カード描画
-                    DrawPlayerCard(
-                        uiState.BunnyPreviewEntity,
-                        BunnyCardBounds,
-                        Texts.Bunny,
-                        flow.SelectedPlayer == CharacterType.Bunny,
-                        uiState.BunnyStepTimer,
-                        Colors.PlayerSelectedColor);
-
-                    // 4. Boss 1 カード描画 (飛行浮遊動效)
-                    DrawBoss1Card(
-                        Boss1CardBounds,
-                        Texts.Boss1,
-                        flow.SelectedBoss == BossType.Boss1,
-                        uiState.Boss1FlyTimer,
-                        uiState.Boss1TextureHandle);
-
-                    // 5. Boss 2 カード描画 (騰空下砸動效)
-                    DrawBoss2Card(
-                        Boss2CardBounds,
-                        Texts.Boss2,
-                        flow.SelectedBoss == BossType.Boss2,
-                        uiState.Boss2SlamTimer,
-                        uiState.Boss2TextureHandle);
-
-                    // 6. 確定ボタン描画
-                    DrawConfirmButton(uiState.IsConfirmHovered);
-
-                    // 7. 下部ヒントテキスト
-                    GameEngine.DrawString(Layout.HintTextX, Layout.HintTextY, Texts.HintText, Colors.TextMuted);
-                });
-            });
+            .Iter(ExecuteStartUiRender);
 
         return world;
+    }
+
+    /// <summary>
+    ///     開始選人画面の UI 描画パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void ExecuteStartUiRender(Iter it, Field<StartUiState> uiStates)
+    {
+        var w = it.World();
+        if (w.Get<GameFlow>().State != GameState.Start) return;
+
+        var count = it.Count();
+        if (count == 0) return;
+
+        ref readonly var flow = ref w.Get<GameFlow>();
+
+        for (var i = 0; i < count; i++)
+        {
+            ref var uiState = ref uiStates[i];
+
+            // 1. タイトルヘッダー描画
+            GameEngine.DrawString(Layout.HeaderTitleX, Layout.HeaderTitleY, Texts.HeaderTitle, Colors.TextGold);
+            GameEngine.DrawString(Layout.PlayerHeaderX, Layout.PlayerHeaderY, Texts.PlayerHeader, Colors.TextWhite);
+            GameEngine.DrawString(Layout.BossHeaderX, Layout.BossHeaderY, Texts.BossHeader, Colors.TextWhite);
+
+            // 2. Cat カード描画
+            DrawPlayerCard(
+                uiState.CatPreviewEntity,
+                CatCardBounds,
+                Texts.Cat,
+                flow.SelectedPlayer == CharacterType.Cat,
+                uiState.CatStepTimer,
+                Colors.PlayerSelectedColor);
+
+            // 3. Bunny カード描画
+            DrawPlayerCard(
+                uiState.BunnyPreviewEntity,
+                BunnyCardBounds,
+                Texts.Bunny,
+                flow.SelectedPlayer == CharacterType.Bunny,
+                uiState.BunnyStepTimer,
+                Colors.PlayerSelectedColor);
+
+            // 4. Boss 1 カード描画 (飛行浮遊動效)
+            DrawBoss1Card(
+                Boss1CardBounds,
+                Texts.Boss1,
+                flow.SelectedBoss == BossType.Boss1,
+                uiState.Boss1FlyTimer,
+                uiState.Boss1TextureHandle);
+
+            // 5. Boss 2 カード描画 (騰空下砸動效)
+            DrawBoss2Card(
+                Boss2CardBounds,
+                Texts.Boss2,
+                flow.SelectedBoss == BossType.Boss2,
+                uiState.Boss2SlamTimer,
+                uiState.Boss2TextureHandle);
+
+            // 6. 確定ボタン描画
+            DrawConfirmButton(uiState.IsConfirmHovered);
+
+            // 7. 下部ヒントテキスト
+            GameEngine.DrawString(Layout.HintTextX, Layout.HintTextY, Texts.HintText, Colors.TextMuted);
+        }
     }
 
     private static void DrawPlayerCard(
