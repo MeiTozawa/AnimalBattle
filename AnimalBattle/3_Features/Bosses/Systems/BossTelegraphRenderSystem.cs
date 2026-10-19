@@ -13,7 +13,14 @@ namespace AnimalBattle.Systems.Render;
 /// <summary>
 ///     Boss の前揺予兆線（Telegraph）、虚弱隙（Vulnerable）演出、およびフェーズ遷移無敵結界を描画する ECS システム。
 /// </summary>
-public static class BossTelegraphRenderSystem {
+public static class BossTelegraphRenderSystem
+{
+    private static Query<PlayerPawn> _playerQuery;
+    private static Query<BaseBossAgent> _bossQuery;
+    private static BaseBossAgent? _cachedBoss;
+    private static float _cachedPlayerX;
+    private static float _cachedPlayerY;
+
     /// <summary>
     ///     Boss 予兆・特殊状態描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -21,71 +28,85 @@ public static class BossTelegraphRenderSystem {
     /// <returns>登録済みワールド</returns>
     public static World AddBossTelegraphRenderSystem(this World world)
     {
-        var playerQuery = world.QueryBuilder<PlayerPawn>().Build();
-        var bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
+        _playerQuery = world.QueryBuilder<PlayerPawn>().Build();
+        _bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
 
         world.System("BossTelegraphRenderSystem")
             .Kind(Ecs.OnStore)
-            .Iter((Iter it) =>
-            {
-                var w = it.World();
-                ref readonly var flow = ref w.Get<GameFlow>();
-                if (flow.State != GameState.Battle) return;
-
-                BaseBossAgent? boss = null;
-                bossQuery.Each((ref BaseBossAgent b) => boss = b);
-                if (boss == null) return;
-                if (!boss.Entity.IsAlive() || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
-
-                var playerX = ConfigManager.Player.SpawnX;
-                var playerY = ConfigManager.Player.SpawnY;
-
-                playerQuery.Each((ref PlayerPawn player) =>
-                {
-                    if (player.Entity.IsAlive())
-                    {
-                        ref readonly var pt = ref player.Transform;
-                        playerX = pt.X;
-                        playerY = pt.Y;
-                    }
-                });
-
-                var renderCfg = ConfigManager.Render;
-                var bossFx = renderCfg.BossEffects;
-
-                ref readonly var bTrans = ref boss.Transform;
-                ref readonly var bSprite = ref boss.Sprite;
-                var bx = (int)(bTrans.X + bSprite.JitterOffsetX);
-                var by = (int)(bTrans.Y + bSprite.JitterOffsetY);
-
-                // 1. 予兆前揺（Telegraph）描画
-                if (boss.CurrentState.IsTelegraph)
-                {
-                    var progress = boss.AbilitySystem.PhaseProgress;
-                    DrawBossTelegraph(boss, playerX, playerY, progress);
-                }
-
-                var flipX = !boss.FacingRight;
-                var rotation = bTrans.Rotation;
-
-                // 2. 虚弱（Vulnerable）状態の脈動オーラとマーカー
-                if (boss.IsVulnerable)
-                {
-                    DrawBossVulnerableEffects(
-                        bx, by, bSprite.SrcRect, bTrans.ScaleX, bTrans.ScaleY, rotation,
-                        bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
-                }
-
-                // 3. フェーズ遷移無敵結界演出
-                if (boss.CurrentState.IsPhaseTransition)
-                {
-                    DrawBossPhaseTransitionEffects(
-                        bx, by, bSprite.SrcRect, bTrans.ScaleX, bTrans.ScaleY, rotation,
-                        bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
-                }
-            });
+            .Iter(ExecuteBossTelegraphRender);
 
         return world;
+    }
+
+    /// <summary>
+    ///     Boss 予兆線および特殊状態描画パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void ExecuteBossTelegraphRender(Iter it)
+    {
+        var w = it.World();
+        ref readonly var flow = ref w.Get<GameFlow>();
+        if (flow.State != GameState.Battle) return;
+
+        _cachedBoss = null;
+        _bossQuery.Each(FindBoss);
+        var boss = _cachedBoss;
+        _cachedBoss = null;
+
+        if (boss == null) return;
+        if (!boss.Entity.IsAlive() || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
+
+        _cachedPlayerX = ConfigManager.Player.SpawnX;
+        _cachedPlayerY = ConfigManager.Player.SpawnY;
+        _playerQuery.Each(FindPlayerPosition);
+
+        var playerX = _cachedPlayerX;
+        var playerY = _cachedPlayerY;
+
+        var renderCfg = ConfigManager.Render;
+        var bossFx = renderCfg.BossEffects;
+
+        ref readonly var bTrans = ref boss.Transform;
+        ref readonly var bSprite = ref boss.Sprite;
+        var bx = (int)(bTrans.X + bSprite.JitterOffsetX);
+        var by = (int)(bTrans.Y + bSprite.JitterOffsetY);
+
+        // 1. 予兆前揺（Telegraph）描画
+        if (boss.CurrentState.IsTelegraph)
+        {
+            var progress = boss.AbilitySystem.PhaseProgress;
+            DrawBossTelegraph(boss, playerX, playerY, progress);
+        }
+
+        var flipX = !boss.FacingRight;
+        var rotation = bTrans.Rotation;
+
+        // 2. 虚弱（Vulnerable）状態の脈動オーラとマーカー
+        if (boss.IsVulnerable)
+        {
+            DrawBossVulnerableEffects(
+                bx, by, bSprite.SrcRect, bTrans.ScaleX, bTrans.ScaleY, rotation,
+                bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
+        }
+
+        // 3. フェーズ遷移無敵結界演出
+        if (boss.CurrentState.IsPhaseTransition)
+        {
+            DrawBossPhaseTransitionEffects(
+                bx, by, bSprite.SrcRect, bTrans.ScaleX, bTrans.ScaleY, rotation,
+                bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
+        }
+    }
+
+    private static void FindBoss(ref BaseBossAgent b) => _cachedBoss = b;
+
+    private static void FindPlayerPosition(ref PlayerPawn player)
+    {
+        if (player.Entity.IsAlive())
+        {
+            ref readonly var pt = ref player.Transform;
+            _cachedPlayerX = pt.X;
+            _cachedPlayerY = pt.Y;
+        }
     }
 
     private static (float x, float y) ResolveTargetPosition(float targetX, float targetY, float playerX, float playerY)
