@@ -67,14 +67,15 @@ public abstract class PlayerPawn : Pawn
         SetVelocity(0.0f, 0.0f);
         ResetHealth(pCfg.MaxHp);
 
-        ref var c = ref Entity.GetMut<CollisionBox>();
-        c.IsGrounded = false;
+        var col = Entity.Get<CollisionBox>();
+        col.IsGrounded = false;
+        Entity.Set(col);
 
         Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
         Entity.Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio));
         Entity.Set(new DashState());
-        Entity.GetMut<MovementIntent>().Reset();
-        Entity.GetMut<WeaponIntent>().Reset();
+        Entity.Set(new MovementIntent());
+        Entity.Set(new WeaponIntent());
 
         PlayAnimation("Idle");
         SetFlipX(false);

@@ -209,12 +209,11 @@ public sealed class Boss2Agent : BaseBossAgent
 
         ResetHealth(b2Cfg.MaxHp);
 
-        ref var col = ref Entity.GetMut<CollisionBox>();
+        var col = Entity.Get<CollisionBox>();
         col.IsGrounded = false;
+        Entity.Set(col);
 
-        ref var vel = ref Entity.GetMut<Velocity>();
-        vel.Vx = 0.0f;
-        vel.Vy = 0.0f;
+        SetVelocity(0.0f, 0.0f);
 
         _brain.Reset(b2Cfg.SpawnX, b2Cfg.SpawnY);
     }

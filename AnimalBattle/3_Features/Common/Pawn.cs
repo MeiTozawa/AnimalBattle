@@ -54,15 +54,13 @@ public abstract class Pawn
     /// <summary>移動速度を一括設定します。</summary>
     public void SetVelocity(float vx, float vy)
     {
-        ref var v = ref Entity.GetMut<Velocity>();
-        v.Vx = vx;
-        v.Vy = vy;
+        Entity.Set(new Velocity(vx, vy));
     }
 
     /// <summary>移動速度ベクトルを一括設定します。</summary>
     public void SetVelocity(Vec2f vel)
     {
-        Entity.GetMut<Velocity>().Value = vel;
+        Entity.Set(new Velocity(vel));
     }
 
     /// <summary>空間変換パラメータ（座標・スケール）を一括設定します。</summary>

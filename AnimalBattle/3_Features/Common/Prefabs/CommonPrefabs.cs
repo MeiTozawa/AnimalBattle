@@ -27,8 +27,13 @@ public static class CommonPrefabs
     /// <param name="world">対象の Flecs.NET ワールド。</param>
     public static void Register(World world)
     {
-        // PoolLeaseState に AutoOverride を付与し、インスタンス化時の Archetype 跨表搬遷を完全根絶
+        // 実行時インスタンスコンポーネントに AutoOverride を付与し、Archetype 安定化およびインスタンス固有メモリを保証
         world.Component<PoolLeaseState>().AutoOverride<PoolLeaseState>();
+        world.Component<Transform>().AutoOverride<Transform>();
+        world.Component<Velocity>().AutoOverride<Velocity>();
+        world.Component<CollisionBox>().AutoOverride<CollisionBox>();
+        world.Component<GameplayTagState>().AutoOverride<GameplayTagState>();
+        world.Component<TimedEffectsState>().AutoOverride<TimedEffectsState>();
 
         // 投射物基底原型
         BaseProjectile = world.Prefab(BaseProjectileName)
