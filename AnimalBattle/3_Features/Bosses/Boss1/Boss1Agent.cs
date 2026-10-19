@@ -43,7 +43,6 @@ public sealed class Boss1Agent : BaseBossAgent
         }
     }
 
-
     private void InitializeComponents(Entity entity, int spriteHandle)
     {
         var b1Cfg = entity.CsWorld().Get<Boss1Config>();

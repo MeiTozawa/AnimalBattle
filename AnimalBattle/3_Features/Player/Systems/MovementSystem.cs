@@ -46,8 +46,7 @@ public static class MovementSystem {
                 var count = it.Count();
                 var w = it.World();
                 var cfg = arenaCfg ?? w.Get<ArenaConfig>();
-                ref readonly var flow = ref w.Get<GameFlow>();
-                PlayerConfig pCfg = flow.SelectedPlayer == CharacterType.Bunny ? w.Get<BunnyConfig>() : w.Get<CatConfig>();
+                var pCfg = w.GetActivePlayerConfig();
 
                 for (var i = 0; i < count; i++)
                 {

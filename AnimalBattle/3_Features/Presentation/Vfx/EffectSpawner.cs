@@ -19,7 +19,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnJumpRingEffect(World world, float x, float y)
     {
-        var pCfg = world.Get<CatConfig>();
+        var pCfg = world.GetActivePlayerConfig();
         CombatPoolService.RentRingEffect()
            .Set(new Transform(x, y))
            .Set(new RingEffect(pCfg.JumpRingInitialRadius, pCfg.JumpRingMaxRadius, ColorPalette.White))
@@ -42,7 +42,7 @@ public static class EffectSpawner
         Color color,
         float duration)
     {
-        var pCfg = world.Get<CatConfig>();
+        var pCfg = world.GetActivePlayerConfig();
         CombatPoolService.RentAreaEffect()
            .Set(new Transform(x, y, scaleX, scaleY, rotation))
            .Set(new Velocity(0.0f))
@@ -56,7 +56,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnMuzzleFlash(World world, float x, float y)
     {
-        var pCfg = world.Get<CatConfig>();
+        var pCfg = world.GetActivePlayerConfig();
         CombatPoolService.RentSparkEffect()
            .Set(new Transform(x, y))
            .Set(new Velocity(0.0f))
@@ -87,7 +87,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnBulletImpactSplatter(World world, float x, float y, float hitDirX, float hitDirY)
     {
-        var pCfg = world.Get<CatConfig>();
+        var pCfg = world.GetActivePlayerConfig();
         var count = Random.Shared.Next(pCfg.ImpactSplatterMinCount, pCfg.ImpactSplatterMaxCount + 1);
         var baseAngle = MathF.Atan2(-hitDirY, -hitDirX);
 

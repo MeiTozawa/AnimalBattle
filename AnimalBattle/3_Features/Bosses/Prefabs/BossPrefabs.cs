@@ -40,6 +40,7 @@ public static class BossPrefabs
             .Set(new Health(boss1Cfg.MaxHp))
             .Set(new HitFlashSettings(boss1Cfg.HitFlashDuration))
             .Set(new Transform(0.0f, 0.0f, boss1Cfg.ScaleX, boss1Cfg.ScaleY))
+            .Set(new CollisionBox(boss1Cfg.CollisionWidth, boss1Cfg.CollisionHeight))
             .Set(new Hurtbox(new CollisionShape.Circle(boss1Cfg.HurtboxRadius, 0.0f, boss1Cfg.HurtboxOffsetY), Faction.Hostile))
             .Set(new Hitbox(new CollisionShape.Circle(boss1Cfg.BodyHitboxRadius, 0.0f, boss1Cfg.BodyHitboxOffsetY), boss1Cfg.BodyContactDamage, Faction.Hostile, false));
 

@@ -36,6 +36,10 @@ public static class BossConfigSync
             health.Max = newMax;
             health.Current = Math.Clamp(ratio * newMax, 0.0f, newMax);
 
+            ref var col = ref e.GetMut<CollisionBox>();
+            col.Width = newConfig.CollisionWidth;
+            col.Height = newConfig.CollisionHeight;
+
             ref var hurt = ref e.GetMut<Hurtbox>();
             hurt.Shape = new CollisionShape.Circle(newConfig.HurtboxRadius, 0.0f, newConfig.HurtboxOffsetY);
 

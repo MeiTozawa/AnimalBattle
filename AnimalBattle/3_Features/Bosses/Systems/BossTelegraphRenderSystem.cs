@@ -37,9 +37,9 @@ public static class BossTelegraphRenderSystem {
                 if (boss == null) return;
                 if (!boss.Entity.IsAlive() || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
 
-                ref readonly var catCfg = ref w.Get<CatConfig>();
-                var playerX = catCfg.SpawnX;
-                var playerY = catCfg.SpawnY;
+                var playerCfg = w.GetActivePlayerConfig();
+                var playerX = playerCfg.SpawnX;
+                var playerY = playerCfg.SpawnY;
 
                 playerQuery.Each((ref PlayerPawn player) =>
                 {

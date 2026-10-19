@@ -41,8 +41,7 @@ public static class PlayerDamageResolutionSystem
                 var count = it.Count();
                 var w = it.World();
                 ref readonly var cameraCfg = ref w.Get<CameraConfig>();
-                ref readonly var flow = ref w.Get<GameFlow>();
-                PlayerConfig pCfg = flow.SelectedPlayer == CharacterType.Bunny ? w.Get<BunnyConfig>() : w.Get<CatConfig>();
+                var pCfg = w.GetActivePlayerConfig();
 
                 for (var i = 0; i < count; i++)
                 {

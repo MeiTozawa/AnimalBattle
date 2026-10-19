@@ -41,12 +41,6 @@ public sealed class Boss2PhaseConfig {
 ///     Config/boss2.toml から読み込まれる Boss 2 (Ground Crusher) の基本パラメータおよび各フェーズの FSM 設定クラス。
 /// </summary>
 public sealed class Boss2Config : BaseBossConfig {
-    /// <summary>地形衝突判定幅</summary>
-    public float CollisionWidth { get; set; }
-
-    /// <summary>地形衝突判定高さ</summary>
-    public float CollisionHeight { get; set; }
-
     /// <summary>近接斬撃エフェクトの基準前方生成オフセット X</summary>
     public float SlashSpawnOffsetX { get; set; }
 

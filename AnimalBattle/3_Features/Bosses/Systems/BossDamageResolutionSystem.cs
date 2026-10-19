@@ -35,7 +35,7 @@ public static class BossDamageResolutionSystem
             {
                 var count = it.Count();
                 var w = it.World();
-                ref readonly var pCfg = ref w.Get<CatConfig>();
+                var pCfg = w.GetActivePlayerConfig();
                 ref readonly var cameraCfg = ref w.Get<CameraConfig>();
 
                 for (var i = 0; i < count; i++)

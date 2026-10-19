@@ -210,10 +210,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
         get
         {
             var toml = _world.Get<Boss2Config>();
-            ref readonly var flow = ref _world.Get<AnimalBattle.Components.GameFlow>();
-            var playerHeight = flow.SelectedPlayer == CharacterType.Bunny
-                ? _world.Get<BunnyConfig>().CollisionHeight
-                : _world.Get<CatConfig>().CollisionHeight;
+            var playerHeight = _world.GetActivePlayerConfig().CollisionHeight;
 
             return new Boss2CombatSettings(
                 toml.CollisionHeight,

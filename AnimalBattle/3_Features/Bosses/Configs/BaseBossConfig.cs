@@ -24,6 +24,12 @@ public abstract class BaseBossConfig {
     /// <summary>Boss 描画スケール Y</summary>
     public float ScaleY { get; set; }
 
+    /// <summary>Boss 地形・幾何衝突判定幅（ピクセル）</summary>
+    public float CollisionWidth { get; set; }
+
+    /// <summary>Boss 地形・幾何衝突判定高さ（ピクセル）</summary>
+    public float CollisionHeight { get; set; }
+
     /// <summary>Boss 被弾判定 (Hurtbox) の幾何形状種別（"Box" または "Circle"）</summary>
     public string HurtboxShape { get; set; }
 

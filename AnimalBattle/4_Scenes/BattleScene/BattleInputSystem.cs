@@ -79,7 +79,7 @@ public static class BattleInputSystem {
         bossQuery.Each((ref BaseBossAgent boss) => boss.Reset());
         playerQuery.Each((ref PlayerPawn player) =>
         {
-            PlayerConfig cfg = player.CurrentCharacter == CharacterType.Bunny ? world.Get<BunnyConfig>() : world.Get<CatConfig>();
+            var cfg = world.GetPlayerConfig(player.CharacterType);
             player.Reset(cfg);
         });
 

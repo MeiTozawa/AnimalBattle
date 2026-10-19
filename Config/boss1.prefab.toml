@@ -18,5 +18,5 @@ BodyHitboxOffsetY = 0.0
 BodyContactDamage = 1.0
 
 # 地形衝突ボックス
-CollisionWidth = 0.0
-CollisionHeight = 0.0
+CollisionWidth = 120.0
+CollisionHeight = 120.0

@@ -32,8 +32,8 @@ public static class PlayerAnimationStateSystem
             {
                 var count = it.Count();
                 var w = it.World();
-                ref readonly var catCfg = ref w.Get<CatConfig>();
-                var threshold = catCfg.WalkAnimVelocityThreshold;
+                var pCfg = w.GetActivePlayerConfig();
+                var threshold = pCfg.WalkAnimVelocityThreshold;
 
                 for (var i = 0; i < count; i++)
                 {

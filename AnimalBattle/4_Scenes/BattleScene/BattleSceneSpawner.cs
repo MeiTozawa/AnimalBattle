@@ -41,16 +41,17 @@ public static class BattleSceneSpawner {
         var hasPlayerHandle = AssetManager.TryGetCharacterSpriteHandle(playerType, "Idle", out var playerHandle);
         Debug.Assert(hasPlayerHandle, "プレイヤーの初期スプライトハンドルが見つかりません。");
 
-        PlayerConfig playerCfg = playerType == CharacterType.Bunny
-            ? world.Get<BunnyConfig>()
-            : world.Get<CatConfig>();
+        var playerCfg = world.GetPlayerConfig(playerType);
         var playerEntity = world.Entity("Player1")
             .ChildOf(root)
             .IsA(PlayerPrefabs.GetPrefab(playerType));
 
-        PlayerPawn player = playerType == CharacterType.Bunny
-            ? new Bunny(playerEntity, playerCfg, playerHandle)
-            : new Cat(playerEntity, playerCfg, playerHandle);
+        PlayerPawn player = playerType switch
+        {
+            CharacterType.Bunny => new Bunny(playerEntity, playerCfg, playerHandle),
+            CharacterType.Cat => new Cat(playerEntity, playerCfg, playerHandle),
+            _ => AssertHelper.FailWithDefault($"未対応のキャラクター種別です: {playerType}", (PlayerPawn)new Cat(playerEntity, playerCfg, playerHandle))
+        };
         PlayerController controller = new(player);
 
         playerEntity.Set(player);
