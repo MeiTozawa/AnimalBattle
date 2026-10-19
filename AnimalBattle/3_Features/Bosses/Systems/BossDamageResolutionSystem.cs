@@ -34,8 +34,9 @@ public static class BossDamageResolutionSystem
                 Field<GameplayTagState> tags) =>
             {
                 var count = it.Count();
-                var pCfg = ConfigManager.Player;
-                var cameraCfg = ConfigManager.Camera;
+                var w = it.World();
+                ref readonly var pCfg = ref w.Get<CatConfig>();
+                ref readonly var cameraCfg = ref w.Get<CameraConfig>();
 
                 for (var i = 0; i < count; i++)
                 {

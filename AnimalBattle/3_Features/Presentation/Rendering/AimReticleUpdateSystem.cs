@@ -27,7 +27,7 @@ public static class AimReticleUpdateSystem {
             {
                 if (world.Has<AimReticleState>())
                 {
-                    var cfg = ConfigManager.Render.AimReticle;
+                    var cfg = world.Get<RenderConfig>().AimReticle;
                     ref var state = ref world.GetMut<AimReticleState>();
                     state.Expansion = cfg.RecoilExpansion;
                     state.ExpansionVelocity = 0.0f;
@@ -48,15 +48,14 @@ public static class AimReticleUpdateSystem {
                 if (!w.Has<AimReticleState>()) return;
 
                 ref var state = ref w.GetMut<AimReticleState>();
-                UpdateSpring(ref state, dt);
+                UpdateSpring(ref state, dt, w.Get<RenderConfig>().AimReticle);
             });
 
         return world;
     }
 
-    private static void UpdateSpring(ref AimReticleState state, float deltaTime)
+    private static void UpdateSpring(ref AimReticleState state, float deltaTime, AimReticleRenderConfig cfg)
     {
-        var cfg = ConfigManager.Render.AimReticle;
         var safeDt = MathF.Min(deltaTime, 0.1f);
         var frequency = cfg.SpringFrequency;
         var dampingRatio = cfg.SpringDampingRatio;

@@ -41,7 +41,7 @@ public static class DebugGizmosRenderSystem {
                 var w = it.World();
                 if (w.Get<GameFlow>().State != GameState.Battle) return;
 
-                var renderCfg = ConfigManager.Render;
+                var renderCfg = w.Get<RenderConfig>();
                 var dbgCfg = renderCfg.Debug;
 
                 ProcessToggleInput(dbgCfg);

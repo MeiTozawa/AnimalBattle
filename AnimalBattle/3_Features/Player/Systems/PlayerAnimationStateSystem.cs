@@ -28,24 +28,32 @@ public static class PlayerAnimationStateSystem
             .Without<DeadTag>()
             .Without<HitstopState>()
             .Kind(Ecs.PreUpdate)
-            .Each((ref vel, ref col, ref hp, ref anim) =>
+            .Iter((Iter it, Field<Velocity> velocities, Field<CollisionBox> collisionBoxes, Field<Health> healths, Field<Animation> anims) =>
             {
-                if (hp.Current <= 0.0f) return;
+                var count = it.Count();
+                var w = it.World();
+                ref readonly var catCfg = ref w.Get<CatConfig>();
+                var threshold = catCfg.WalkAnimVelocityThreshold;
 
-                // 攻撃アニメーション再生中は終了まで維持
-                if (anim.CurrentClip == ClipAttack && !anim.IsFinished) return;
-
-                if (!col.IsGrounded)
+                for (var i = 0; i < count; i++)
                 {
-                    anim.Play(vel.Vy < 0.0f ? ClipJump : ClipFall);
-                }
-                else
-                {
-                    var threshold = ConfigManager.Player.WalkAnimVelocityThreshold > 0.0f
-                        ? ConfigManager.Player.WalkAnimVelocityThreshold
-                        : 0.1f;
+                    ref readonly var hp = ref healths[i];
+                    if (hp.Current <= 0.0f) continue;
 
-                    anim.Play(MathF.Abs(vel.Vx) > threshold ? ClipRun : ClipIdle);
+                    ref var anim = ref anims[i];
+                    if (anim.CurrentClip == ClipAttack && !anim.IsFinished) continue;
+
+                    ref readonly var col = ref collisionBoxes[i];
+                    ref readonly var vel = ref velocities[i];
+
+                    if (!col.IsGrounded)
+                    {
+                        anim.Play(vel.Vy < 0.0f ? ClipJump : ClipFall);
+                    }
+                    else
+                    {
+                        anim.Play(MathF.Abs(vel.Vx) > threshold ? ClipRun : ClipIdle);
+                    }
                 }
             });
 

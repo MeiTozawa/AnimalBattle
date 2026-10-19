@@ -22,7 +22,7 @@ public static class InvincibleBlinkSystem {
             .Iter((Iter it, Field<Sprite> sprites, Field<TimedEffectsState> timedEffects, Field<GameplayTagState> tags) =>
             {
                 var count = it.Count();
-                var blinkFreq = ConfigManager.Render.Player.InvincibleBlinkFrequency;
+                var blinkFreq = it.World().Get<RenderConfig>().Player.InvincibleBlinkFrequency;
 
                 for (var i = 0; i < count; i++)
                 {

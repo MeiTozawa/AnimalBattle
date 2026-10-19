@@ -33,7 +33,7 @@ public static class BulletPhysicsSystem {
         if (count <= 0) return;
 
         var dt = it.DeltaTime();
-        var arenaCfg = ConfigManager.Arena;
+        ref readonly var arenaCfg = ref it.World().Get<ArenaConfig>();
         var minX = arenaCfg.BulletDespawnMinX;
         var maxX = arenaCfg.BulletDespawnMaxX;
         var minY = arenaCfg.BulletDespawnMinY;
@@ -60,7 +60,7 @@ public static class BulletPhysicsSystem {
         if (count <= 0) return;
 
         var dt = it.DeltaTime();
-        var arenaCfg = ConfigManager.Arena;
+        ref readonly var arenaCfg = ref it.World().Get<ArenaConfig>();
         var minX = arenaCfg.BulletDespawnMinX;
         var maxX = arenaCfg.BulletDespawnMaxX;
         var minY = arenaCfg.BulletDespawnMinY;

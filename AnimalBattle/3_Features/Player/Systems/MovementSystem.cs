@@ -17,7 +17,7 @@ public static class MovementSystem {
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
     /// <param name="platformQuery">足場プラットフォーム検索クエリ（省略時は内部生成）</param>
-    /// <param name="arenaCfg">アリーナ境界設定（省略時は ConfigManager.Arena）</param>
+    /// <param name="arenaCfg">アリーナ境界設定（省略時は World 単例）</param>
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddMovementSystem(
         this World world,
@@ -44,7 +44,10 @@ public static class MovementSystem {
             {
                 var dt = it.DeltaTime();
                 var count = it.Count();
-                var cfg = arenaCfg ?? ConfigManager.Arena;
+                var w = it.World();
+                var cfg = arenaCfg ?? w.Get<ArenaConfig>();
+                ref readonly var flow = ref w.Get<GameFlow>();
+                PlayerConfig pCfg = flow.SelectedPlayer == CharacterType.Bunny ? w.Get<BunnyConfig>() : w.Get<CatConfig>();
 
                 for (var i = 0; i < count; i++)
                 {
@@ -60,7 +63,7 @@ public static class MovementSystem {
                     ref var tag = ref tags[i];
 
                     var entity = it.Entity(i);
-                    ExecuteKinematics(entity, ref effect, ref tag, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, pQuery, cfg, world);
+                    ExecuteKinematics(entity, ref effect, ref tag, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, pQuery, cfg, pCfg, w);
                 }
             });
 
@@ -81,11 +84,11 @@ public static class MovementSystem {
         ref SpringScale spring,
         float dt,
         Query<Transform, CollisionBox> platformQuery,
-        ArenaConfig? arenaCfg,
+        ArenaConfig arenaCfg,
+        PlayerConfig pCfg,
         World? effectWorld)
     {
         var wasGrounded = col.IsGrounded;
-        var pCfg = ConfigManager.Player;
 
         // 0. ダッシュクールダウン減衰処理
         if (dash.Cooldown > 0.0f)

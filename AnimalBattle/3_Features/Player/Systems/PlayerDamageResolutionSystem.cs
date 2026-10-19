@@ -39,8 +39,10 @@ public static class PlayerDamageResolutionSystem
                 Field<TimedEffectsState> timedEffects) =>
             {
                 var count = it.Count();
-                var pCfg = ConfigManager.Player;
-                var cameraCfg = ConfigManager.Camera;
+                var w = it.World();
+                ref readonly var cameraCfg = ref w.Get<CameraConfig>();
+                ref readonly var flow = ref w.Get<GameFlow>();
+                PlayerConfig pCfg = flow.SelectedPlayer == CharacterType.Bunny ? w.Get<BunnyConfig>() : w.Get<CatConfig>();
 
                 for (var i = 0; i < count; i++)
                 {

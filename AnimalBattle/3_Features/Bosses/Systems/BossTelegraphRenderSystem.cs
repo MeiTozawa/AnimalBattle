@@ -37,8 +37,9 @@ public static class BossTelegraphRenderSystem {
                 if (boss == null) return;
                 if (!boss.Entity.IsAlive() || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
 
-                var playerX = ConfigManager.Player.SpawnX;
-                var playerY = ConfigManager.Player.SpawnY;
+                ref readonly var catCfg = ref w.Get<CatConfig>();
+                var playerX = catCfg.SpawnX;
+                var playerY = catCfg.SpawnY;
 
                 playerQuery.Each((ref PlayerPawn player) =>
                 {
@@ -50,7 +51,7 @@ public static class BossTelegraphRenderSystem {
                     }
                 });
 
-                var renderCfg = ConfigManager.Render;
+                ref readonly var renderCfg = ref w.Get<RenderConfig>();
                 var bossFx = renderCfg.BossEffects;
 
                 ref readonly var bTrans = ref boss.Transform;
@@ -107,7 +108,7 @@ public static class BossTelegraphRenderSystem {
 
         var (finalTargetX, finalTargetY) = ResolveTargetPosition(boss.TargetX, boss.TargetY, playerX, playerY);
         ref readonly var bTrans = ref boss.Transform;
-        var bHeight = boss.Entity.Has<CollisionBox>() ? boss.Entity.Get<CollisionBox>().Height : 80.0f;
+        var bHeight = boss.CollisionBox.Height;
         AbilityTelegraphContext ctx = new(bTrans.X, bTrans.Y, finalTargetX, finalTargetY, boss.FacingRight, progress, boss.StateTimer, bHeight);
         currentAbility.DrawTelegraph(in ctx);
     }

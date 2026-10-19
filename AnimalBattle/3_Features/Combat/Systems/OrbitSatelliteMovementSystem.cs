@@ -30,9 +30,10 @@ public static class OrbitSatelliteMovementSystem
                 if (count <= 0) return;
 
                 var dt = it.DeltaTime();
-                var cfg = ConfigManager.SpecialBullets;
+                var w = it.World();
+                ref readonly var cfg = ref w.Get<SpecialBulletConfig>();
                 var orbitSpeed = cfg.YellowOrbitSpeed;
-                var arenaCfg = ConfigManager.Arena;
+                ref readonly var arenaCfg = ref w.Get<ArenaConfig>();
                 var minX = arenaCfg.BulletDespawnMinX;
                 var maxX = arenaCfg.BulletDespawnMaxX;
                 var minY = arenaCfg.BulletDespawnMinY;

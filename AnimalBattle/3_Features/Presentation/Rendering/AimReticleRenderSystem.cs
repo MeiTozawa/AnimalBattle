@@ -29,15 +29,14 @@ public static class AimReticleRenderSystem {
 
                 ref readonly var state = ref w.Get<AimReticleState>();
                 var mouseScreen = InputService.GetMousePosition();
-                RenderReticle(mouseScreen.X, mouseScreen.Y, state.Expansion);
+                RenderReticle(mouseScreen.X, mouseScreen.Y, state.Expansion, w.Get<RenderConfig>().AimReticle);
             });
 
         return world;
     }
 
-    private static void RenderReticle(int x, int y, float expansion)
+    private static void RenderReticle(int x, int y, float expansion, AimReticleRenderConfig cfg)
     {
-        var cfg = ConfigManager.Render.AimReticle;
         var radius = Math.Clamp((int)MathF.Round(cfg.BaseRadius + expansion), cfg.MinRadius, cfg.MaxRadius);
 
         // 1. 中心高輝度ドット（照準中心コア）

@@ -96,7 +96,7 @@ public static class VfxRenderSystem {
                 if (w.Get<GameFlow>().State != GameState.Battle) return;
 
                 var count = it.Count();
-                var bulletCfg = ConfigManager.Render.Bullets;
+                var bulletCfg = w.Get<RenderConfig>().Bullets;
 
                 for (var i = 0; i < count; i++)
                 {

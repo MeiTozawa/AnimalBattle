@@ -30,7 +30,7 @@ public static class TileMapRenderSystem {
                 var w = it.World();
                 if (w.Get<GameFlow>().State != GameState.Battle) return;
 
-                var viewport = ConfigManager.Render.Viewport;
+                var viewport = w.Get<RenderConfig>().Viewport;
 
                 var renderedTileMap = false;
                 tileMapQuery.Each((ref TileMap tileMap) =>

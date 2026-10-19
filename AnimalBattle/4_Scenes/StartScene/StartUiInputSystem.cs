@@ -13,15 +13,6 @@ namespace AnimalBattle.Systems;
 ///     GameState.Start 状態時にのみアクティブとなり、マウスホバー動效・選人切り替え・戦闘開始を処理します。
 /// </summary>
 public static class StartUiInputSystem {
-    private static StartSceneLayoutConfig Layout => ConfigManager.StartScene.Layout;
-    private static StartSceneMotionConfig Motion => ConfigManager.StartScene.Motion;
-
-    private static Rectangle CatCardBounds => Layout.CatCard.ToRectangle();
-    private static Rectangle BunnyCardBounds => Layout.BunnyCard.ToRectangle();
-    private static Rectangle Boss1CardBounds => Layout.Boss1Card.ToRectangle();
-    private static Rectangle Boss2CardBounds => Layout.Boss2Card.ToRectangle();
-    private static Rectangle ConfirmButtonBounds => Layout.ConfirmButton.ToRectangle();
-
     /// <summary>
     ///     開始選人画面の入力判定システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -38,6 +29,16 @@ public static class StartUiInputSystem {
                 var w = it.World();
                 if (w.Get<GameFlow>().State != GameState.Start) return;
 
+                ref readonly var cfg = ref w.Get<StartSceneConfig>();
+                var layout = cfg.Layout;
+                var motion = cfg.Motion;
+
+                var catCardBounds = layout.CatCard.ToRectangle();
+                var bunnyCardBounds = layout.BunnyCard.ToRectangle();
+                var boss1CardBounds = layout.Boss1Card.ToRectangle();
+                var boss2CardBounds = layout.Boss2Card.ToRectangle();
+                var confirmButtonBounds = layout.ConfirmButton.ToRectangle();
+
                 uiStateQuery.Each((ref StartUiState uiState) =>
                 {
                     ref var flow = ref w.GetMut<GameFlow>();
@@ -48,7 +49,7 @@ public static class StartUiInputSystem {
                     var isConfirmKey = InputService.IsPressed(InputAction.Confirm);
 
                     // --- 1. Cat カード判定 ---
-                    var isCatHovered = CatCardBounds.Contains(mousePos.X, mousePos.Y);
+                    var isCatHovered = catCardBounds.Contains(mousePos.X, mousePos.Y);
                     if (uiState.CatPreviewEntity.IsAlive())
                     {
                         ref var anim = ref uiState.CatPreviewEntity.GetMut<Animation>();
@@ -69,7 +70,7 @@ public static class StartUiInputSystem {
                     }
 
                     // --- 2. Bunny カード判定 ---
-                    var isBunnyHovered = BunnyCardBounds.Contains(mousePos.X, mousePos.Y);
+                    var isBunnyHovered = bunnyCardBounds.Contains(mousePos.X, mousePos.Y);
                     if (uiState.BunnyPreviewEntity.IsAlive())
                     {
                         ref var anim = ref uiState.BunnyPreviewEntity.GetMut<Animation>();
@@ -90,7 +91,7 @@ public static class StartUiInputSystem {
                     }
 
                     // --- 3. Boss 1 カード判定 (飛行浮遊動效) ---
-                    uiState.IsBoss1Hovered = Boss1CardBounds.Contains(mousePos.X, mousePos.Y);
+                    uiState.IsBoss1Hovered = boss1CardBounds.Contains(mousePos.X, mousePos.Y);
                     if (uiState.IsBoss1Hovered)
                     {
                         uiState.Boss1FlyTimer += dt;
@@ -98,17 +99,17 @@ public static class StartUiInputSystem {
                     }
                     else
                     {
-                        uiState.Boss1FlyTimer = Math.Max(0f, uiState.Boss1FlyTimer - dt * Motion.Boss1FlyDecaySpeed);
+                        uiState.Boss1FlyTimer = Math.Max(0f, uiState.Boss1FlyTimer - dt * motion.Boss1FlyDecaySpeed);
                     }
 
                     // --- 4. Boss 2 カード判定 (騰空・重撃下砸動效) ---
-                    uiState.IsBoss2Hovered = Boss2CardBounds.Contains(mousePos.X, mousePos.Y);
+                    uiState.IsBoss2Hovered = boss2CardBounds.Contains(mousePos.X, mousePos.Y);
                     if (uiState.IsBoss2Hovered)
                     {
                         uiState.Boss2SlamTimer += dt;
-                        if (uiState.Boss2SlamTimer > Motion.Boss2SlamCycleDuration)
+                        if (uiState.Boss2SlamTimer > motion.Boss2SlamCycleDuration)
                         {
-                            uiState.Boss2SlamTimer -= Motion.Boss2SlamCycleDuration;
+                            uiState.Boss2SlamTimer -= motion.Boss2SlamCycleDuration;
                         }
                         if (isClick) flow.SelectedBoss = BossType.Boss2;
                     }
@@ -118,7 +119,7 @@ public static class StartUiInputSystem {
                     }
 
                     // --- 5. 確定ボタン判定 ---
-                    uiState.IsConfirmHovered = ConfirmButtonBounds.Contains(mousePos.X, mousePos.Y);
+                    uiState.IsConfirmHovered = confirmButtonBounds.Contains(mousePos.X, mousePos.Y);
                     if ((uiState.IsConfirmHovered && isClick) || isConfirmKey)
                     {
                         GameManager.Current.SwitchToBattle(flow.SelectedPlayer, flow.SelectedBoss);

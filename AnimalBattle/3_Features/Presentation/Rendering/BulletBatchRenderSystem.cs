@@ -59,11 +59,8 @@ public static class BulletBatchRenderSystem {
         return world;
     }
 
-    private static void UpdateContext()
+    private static void UpdateContext(BulletRenderConfig bulletCfg, ArenaConfig arenaCfg)
     {
-        var bulletCfg = ConfigManager.Render.Bullets;
-        var arenaCfg = ConfigManager.Arena;
-
         _clipMinX = (int)arenaCfg.BulletDespawnMinX - bulletCfg.ViewportCullingMarginX;
         _clipMaxX = (int)arenaCfg.BulletDespawnMaxX + bulletCfg.ViewportCullingMarginX;
         _clipMinY = (int)arenaCfg.BulletDespawnMinY - bulletCfg.ViewportCullingMarginY;
@@ -106,7 +103,7 @@ public static class BulletBatchRenderSystem {
         var count = it.Count();
         if (count == 0) return;
 
-        UpdateContext();
+        UpdateContext(w.Get<RenderConfig>().Bullets, w.Get<ArenaConfig>());
 
         for (var i = 0; i < count; ++i)
         {
@@ -152,8 +149,8 @@ public static class BulletBatchRenderSystem {
         var count = it.Count();
         if (count == 0) return;
 
-        UpdateContext();
-        var bulletCfg = ConfigManager.Render.Bullets;
+        var bulletCfg = w.Get<RenderConfig>().Bullets;
+        UpdateContext(bulletCfg, w.Get<ArenaConfig>());
 
         for (var i = 0; i < count; ++i)
         {

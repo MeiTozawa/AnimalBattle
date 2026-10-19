@@ -42,8 +42,9 @@ public static class HudRenderSystem {
                 bossQuery.Each((ref BaseBossAgent b) => boss = b);
 
                 var remainingJumps = player?.RemainingJumps ?? 0;
+                ref readonly var renderCfg = ref w.Get<RenderConfig>();
 
-                Render(player, boss, remainingJumps);
+                Render(player, boss, remainingJumps, in renderCfg);
             });
 
         return world;
@@ -55,9 +56,9 @@ public static class HudRenderSystem {
     /// <param name="player">現在アクティブな自機 Pawn。</param>
     /// <param name="boss">現在アクティブな首領 Agent。</param>
     /// <param name="remainingJumps">プレイヤーの二段ジャンプ残数。</param>
-    private static void Render(Pawn? player, BaseBossAgent? boss, int remainingJumps = 0)
+    /// <param name="renderCfg">描画設定。</param>
+    private static void Render(Pawn? player, BaseBossAgent? boss, int remainingJumps, in RenderConfig renderCfg)
     {
-        var renderCfg = ConfigManager.Render;
         var hudCfg = renderCfg.Hud;
         var hpCfg = renderCfg.BossHpBar;
         var modalCfg = renderCfg.Modals;
