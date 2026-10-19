@@ -11,7 +11,14 @@ namespace AnimalBattle.Systems.Render;
 ///     スクリーン空間における論理デバッグ HUD（Boss 状態機、二段ジャンプ、操作案内、デバッグ表示）を描画する ECS システム。
 ///     CameraOffsetResetSystem の後に実行されるため、カメラ移動やシェイクの影響を受けずに画面固定で描画されます。
 /// </summary>
-public static class DebugOverlayRenderSystem {
+public static class DebugOverlayRenderSystem
+{
+    private static Query<PlayerPawn> _playerQuery;
+    private static Query<BaseBossAgent> _bossQuery;
+
+    private static PlayerPawn? _cachedPlayer;
+    private static BaseBossAgent? _cachedBoss;
+
     /// <summary>
     ///     デバッグ論理オーバーレイ描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -19,31 +26,44 @@ public static class DebugOverlayRenderSystem {
     /// <returns>登録済みワールド</returns>
     public static World AddDebugOverlayRenderSystem(this World world)
     {
-        var playerQuery = world.QueryBuilder<PlayerPawn>().Build();
-        var bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
+        _playerQuery = world.QueryBuilder<PlayerPawn>().Build();
+        _bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
 
         world.System("DebugOverlayRenderSystem")
             .Kind(Ecs.OnStore)
-            .Iter((Iter it) =>
-            {
-                var w = it.World();
-                if (w.Get<GameFlow>().State != GameState.Battle) return;
-
-                var renderCfg = w.Get<RenderConfig>();
-                var dbgCfg = renderCfg.Debug;
-                if (!dbgCfg.DebugMode || !dbgCfg.IsActive) return;
-
-                PlayerPawn? player = null;
-                playerQuery.Each((ref PlayerPawn p) => player = p);
-
-                BaseBossAgent? boss = null;
-                bossQuery.Each((ref BaseBossAgent b) => boss = b);
-
-                DrawDebugOverlayHud(player, boss, in renderCfg);
-            });
+            .Iter(ExecuteDebugOverlayRender);
 
         return world;
     }
+
+    /// <summary>
+    ///     デバッグ論理オーバーレイ描画パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void ExecuteDebugOverlayRender(Iter it)
+    {
+        var w = it.World();
+        if (w.Get<GameFlow>().State != GameState.Battle) return;
+
+        var renderCfg = w.Get<RenderConfig>();
+        var dbgCfg = renderCfg.Debug;
+        if (!dbgCfg.DebugMode || !dbgCfg.IsActive) return;
+
+        _cachedPlayer = null;
+        _cachedBoss = null;
+
+        _playerQuery.Each(FindPlayer);
+        _bossQuery.Each(FindBoss);
+
+        var player = _cachedPlayer;
+        var boss = _cachedBoss;
+        _cachedPlayer = null;
+        _cachedBoss = null;
+
+        DrawDebugOverlayHud(player, boss, in renderCfg);
+    }
+
+    private static void FindPlayer(ref PlayerPawn p) => _cachedPlayer = p;
+    private static void FindBoss(ref BaseBossAgent b) => _cachedBoss = b;
 
     private static void DrawDebugOverlayHud(PlayerPawn? player, BaseBossAgent? boss, in RenderConfig renderCfg)
     {

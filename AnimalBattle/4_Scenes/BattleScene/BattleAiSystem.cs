@@ -72,7 +72,7 @@ public static class BattleAiSystem
             w,
             _platformQuery);
 
-        var camCfg = w.Get<AnimalBattle.Configs.CameraConfig>();
+        var camCfg = w.Get<CameraConfig>();
         CameraService.Update(
             dt,
             pTrans.Position,

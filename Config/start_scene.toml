@@ -62,12 +62,12 @@ UnselectedBadge = "[ クリックで選択 ]"
 
 [Texts.Cat]
 Title = "キャット (Cat)"
-Tag = "【 突進 & 遠距離攻撃 】"
+Tag = "【 遠距離攻撃 】"
 Description = "鋭いダッシュ回避と遠距離弾幕射撃"
 
 [Texts.Bunny]
 Title = "バニー (Bunny)"
-Tag = "【 二段ジャンプ & 近接攻撃 】"
+Tag = "【 近接攻撃 】"
 Description = "軽快な二段ジャンプと大剣近接斬撃"
 
 [Texts.Boss1]
