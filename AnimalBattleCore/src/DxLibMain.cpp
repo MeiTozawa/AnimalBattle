@@ -44,6 +44,7 @@ bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept {
         ::SetGraphMode(width, height, 32);
         ::SetBackgroundColor(24, 28, 44);
         if (::DxLib_Init() == -1) {
+            ::OutputDebugStringW(L"[DxLibMain エラー] DxLib_Init に失敗しました (-1)\n");
             return false;
         }
         ::SetDrawScreen(DX_SCREEN_BACK);
@@ -57,7 +58,11 @@ bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept {
         SetPhysicsService(g_physics_service.get());
         SetSoundService(g_sound_service.get());
         return true;
+    } catch (const std::exception& e) {
+        ::OutputDebugStringW(L"[DxLibMain 例外] SetupDxLibBackend で例外が発生しました\n");
+        return false;
     } catch (...) {
+        ::OutputDebugStringW(L"[DxLibMain 例外] SetupDxLibBackend で不明な例外が発生しました\n");
         return false;
     }
 }
@@ -81,26 +86,20 @@ void ShutdownDxLibBackend() noexcept {
         ::SetMouseDispFlag(TRUE);
         ::DxLib_End();
     } catch (...) {
+        ::OutputDebugStringW(L"[DxLibMain 警告] ShutdownDxLibBackend 中に例外が発生しました\n");
     }
 }
 
 bool ProcessDxLibMessages() noexcept {
-    try {
-        bool success = (::ProcessMessage() == 0);
-        if (g_input_service != nullptr) {
-            g_input_service->Update();
-        }
-        return success;
-    } catch (...) {
-        return false;
+    bool success = (::ProcessMessage() == 0);
+    if (g_input_service != nullptr) {
+        g_input_service->Update();
     }
+    return success;
 }
 
 void SetMouseDispFlag(bool visible) noexcept {
-    try {
-        ::SetMouseDispFlag(visible ? TRUE : FALSE);
-    } catch (...) {
-    }
+    ::SetMouseDispFlag(visible ? TRUE : FALSE);
 }
 
 }  // namespace ab
