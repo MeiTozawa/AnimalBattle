@@ -46,9 +46,6 @@ public sealed class AbilitySystemComponent {
     /// <summary>現在何らかの技能を発動中かどうかを取得します。</summary>
     public bool IsCasting => CurrentAbility != null;
 
-    /// <summary>所有者 Entity を取得します。</summary>
-    public Entity Owner => _ownerEntity;
-
     /// <summary>移動速度適用イベント。</summary>
     public event Action<float, float>? OnExecuteMovement;
 

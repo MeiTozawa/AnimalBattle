@@ -29,34 +29,36 @@ public static class PlayerPrefabs
             .Set(new DashState());
 
         // --- Cat プレイヤー ---
-        var catCfg = world.Get<CatPrefabConfig>();
-        var catCharCfg = world.Get<CatConfig>();
+        var catCfg = world.Get<CatConfig>();
+        Debug.Assert(catCfg != null, "CatConfig はワールドに登録されている必要があります。");
+
         CatPlayer = world.Prefab(CatPlayerName)
             .IsA(PlayerBase)
             .Set(new Health(catCfg.MaxHp))
             .Set(new InvincibleOnHit(catCfg.InvincibleDuration))
             .Set(new HitFlashSettings(catCfg.HitFlashDuration))
             .Set(new CollisionBox(catCfg.CollisionWidth, catCfg.CollisionHeight))
-            .Set(new Hurtbox(new CollisionShape.Circle(catCfg.HurtboxRadius, 0.0f, catCfg.HurtboxOffsetY), Faction.Friendly))
+            .Set(new Hurtbox(catCfg.GetHurtboxShape(), Faction.Friendly))
             .Set(new Transform(0.0f, 0.0f, catCfg.ScaleX, catCfg.ScaleY))
             .Set(new SpringScale(1.0f, 1.0f, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
-            .Set(JumpCapability.FromPlayerConfig(catCharCfg))
-            .Set(CatWeaponState.FromConfig(catCharCfg));
+            .Set(JumpCapability.FromPlayerConfig(catCfg))
+            .Set(CatWeaponState.FromConfig(catCfg));
 
         // --- Bunny プレイヤー ---
-        var bunnyCfg = world.Get<BunnyPrefabConfig>();
-        var bunnyCharCfg = world.Get<BunnyConfig>();
+        var bunnyCfg = world.Get<BunnyConfig>();
+        Debug.Assert(bunnyCfg != null, "BunnyConfig はワールドに登録されている必要があります。");
+
         BunnyPlayer = world.Prefab(BunnyPlayerName)
             .IsA(PlayerBase)
             .Set(new Health(bunnyCfg.MaxHp))
             .Set(new InvincibleOnHit(bunnyCfg.InvincibleDuration))
             .Set(new HitFlashSettings(bunnyCfg.HitFlashDuration))
             .Set(new CollisionBox(bunnyCfg.CollisionWidth, bunnyCfg.CollisionHeight))
-            .Set(new Hurtbox(new CollisionShape.Circle(bunnyCfg.HurtboxRadius, 0.0f, bunnyCfg.HurtboxOffsetY), Faction.Friendly))
+            .Set(new Hurtbox(bunnyCfg.GetHurtboxShape(), Faction.Friendly))
             .Set(new Transform(0.0f, 0.0f, bunnyCfg.ScaleX, bunnyCfg.ScaleY))
             .Set(new SpringScale(1.0f, 1.0f, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
-            .Set(JumpCapability.FromPlayerConfig(bunnyCharCfg))
-            .Set(BunnyWeaponState.FromConfig(bunnyCharCfg));
+            .Set(JumpCapability.FromPlayerConfig(bunnyCfg))
+            .Set(BunnyWeaponState.FromConfig(bunnyCfg));
     }
 
     /// <summary>

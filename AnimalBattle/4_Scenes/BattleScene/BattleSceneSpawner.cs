@@ -52,6 +52,7 @@ public static class BattleSceneSpawner {
             CharacterType.Cat => new Cat(playerEntity, playerCfg, playerHandle),
             _ => AssertHelper.FailWithDefault($"未対応のキャラクター種別です: {playerType}", (PlayerPawn)new Cat(playerEntity, playerCfg, playerHandle))
         };
+        player.Reset(playerCfg);
         PlayerController controller = new(player);
 
         playerEntity.Set(player);
@@ -87,6 +88,7 @@ public static class BattleSceneSpawner {
             BossType.Boss2 => new Boss2Agent(bossEntity, bossHandle, () => tileMap.NavGraph),
             _ => new Boss1Agent(bossEntity, bossHandle)
         };
+        boss.Reset();
 
         boss.AbilitySystem.OnScreenShake += (intensity, duration) =>
         {

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using AnimalBattle.Ai;
 using AnimalBattle.Combat;
 using AnimalBattle.Common;
@@ -33,28 +34,32 @@ public static class BossPrefabs
             .Set(new BossCombatState(Phase.Phase1));
 
         // --- Boss 1 ---
-        var boss1Cfg = world.Get<Boss1PrefabConfig>();
+        var b1Cfg = world.Get<Boss1Config>();
+        Debug.Assert(b1Cfg != null, "Boss1Config はワールドに登録されている必要があります。");
+
         Boss1 = world.Prefab(Boss1Name)
             .IsA(BossBase)
             .Add<Boss1Tag>()
-            .Set(new Health(boss1Cfg.MaxHp))
-            .Set(new HitFlashSettings(boss1Cfg.HitFlashDuration))
-            .Set(new Transform(0.0f, 0.0f, boss1Cfg.ScaleX, boss1Cfg.ScaleY))
-            .Set(new CollisionBox(boss1Cfg.CollisionWidth, boss1Cfg.CollisionHeight))
-            .Set(new Hurtbox(new CollisionShape.Circle(boss1Cfg.HurtboxRadius, 0.0f, boss1Cfg.HurtboxOffsetY), Faction.Hostile))
-            .Set(new Hitbox(new CollisionShape.Circle(boss1Cfg.BodyHitboxRadius, 0.0f, boss1Cfg.BodyHitboxOffsetY), boss1Cfg.BodyContactDamage, Faction.Hostile, false));
+            .Set(new Health(b1Cfg.MaxHp))
+            .Set(new HitFlashSettings(b1Cfg.HitFlashDuration))
+            .Set(new Transform(0.0f, 0.0f, b1Cfg.ScaleX, b1Cfg.ScaleY))
+            .Set(new CollisionBox(b1Cfg.CollisionWidth, b1Cfg.CollisionHeight))
+            .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
+            .Set(new Hitbox(b1Cfg.GetHitboxShape(), b1Cfg.BodyContactDamage, Faction.Hostile, false));
 
         // --- Boss 2 ---
-        var boss2Cfg = world.Get<Boss2PrefabConfig>();
+        var b2Cfg = world.Get<Boss2Config>();
+        Debug.Assert(b2Cfg != null, "Boss2Config はワールドに登録されている必要があります。");
+
         Boss2 = world.Prefab(Boss2Name)
             .IsA(BossBase)
             .Add<Boss2Tag>()
-            .Set(new Health(boss2Cfg.MaxHp))
-            .Set(new HitFlashSettings(boss2Cfg.HitFlashDuration))
-            .Set(new Transform(0.0f, 0.0f, boss2Cfg.ScaleX, boss2Cfg.ScaleY))
-            .Set(new CollisionBox(boss2Cfg.CollisionWidth, boss2Cfg.CollisionHeight))
-            .Set(new Hurtbox(new CollisionShape.Box(boss2Cfg.HurtboxWidth, boss2Cfg.HurtboxHeight, 0.0f, boss2Cfg.HurtboxOffsetY), Faction.Hostile))
-            .Set(new Hitbox(new CollisionShape.Box(boss2Cfg.BodyHitboxWidth, boss2Cfg.BodyHitboxHeight, 0.0f, boss2Cfg.BodyHitboxOffsetY), boss2Cfg.BodyContactDamage, Faction.Hostile, false));
+            .Set(new Health(b2Cfg.MaxHp))
+            .Set(new HitFlashSettings(b2Cfg.HitFlashDuration))
+            .Set(new Transform(0.0f, 0.0f, b2Cfg.ScaleX, b2Cfg.ScaleY))
+            .Set(new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight))
+            .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
+            .Set(new Hitbox(b2Cfg.GetHitboxShape(), b2Cfg.BodyContactDamage, Faction.Hostile, false));
     }
 
     /// <summary>
