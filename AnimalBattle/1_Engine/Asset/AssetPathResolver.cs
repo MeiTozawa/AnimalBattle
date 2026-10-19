@@ -18,17 +18,27 @@ public sealed class AssetPathResolver(string? baseDirectory = null) : IAssetPath
     {
         if (string.IsNullOrWhiteSpace(relativePath)) return relativePath;
 
+        // 相対パス文字列の事前検証
+        if (relativePath.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+        {
+            Debug.WriteLine($"[AssetPathResolver 警告] 不正な文字を含む相対パスです: {relativePath}");
+            return relativePath;
+        }
+
         if (Path.IsPathRooted(relativePath) && File.Exists(relativePath)) return Path.GetFullPath(relativePath);
 
-        try
+        // 1. 直下リソース探索
+        string[] directRoots = [_baseDir, Environment.CurrentDirectory];
+        foreach (var root in directRoots)
         {
-            string[] directRoots = [_baseDir, Environment.CurrentDirectory];
-            foreach (var root in directRoots)
-            {
-                var found = FindAssetFile(root, relativePath);
-                if (found != null) return found;
-            }
+            if (string.IsNullOrEmpty(root) || !Directory.Exists(root)) continue;
+            var found = FindAssetFile(root, relativePath);
+            if (found != null) return found;
+        }
 
+        // 2. 親ディレクトリへの遡及探索
+        if (Directory.Exists(_baseDir))
+        {
             DirectoryInfo? dir = new(_baseDir);
             while (dir != null)
             {
@@ -37,11 +47,8 @@ public sealed class AssetPathResolver(string? baseDirectory = null) : IAssetPath
                 dir = dir.Parent;
             }
         }
-        catch (Exception ex)
-        {
-            Debug.Fail($"[AssetPathResolver 警告] アセットパス探索中に例外が発生しました ({relativePath}): {ex.Message}", ex.ToString());
-        }
 
+        Debug.WriteLine($"[AssetPathResolver 警告] リソースが見つからないため元の相対パスを返却します: {relativePath}");
         return relativePath;
     }
 
