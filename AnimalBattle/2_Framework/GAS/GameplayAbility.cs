@@ -1,5 +1,4 @@
 using AnimalBattle.Abilities.Skills;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Abilities;
 

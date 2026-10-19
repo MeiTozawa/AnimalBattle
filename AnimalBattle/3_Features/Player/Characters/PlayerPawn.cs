@@ -67,9 +67,10 @@ public abstract class PlayerPawn : Pawn
         SetVelocity(0.0f, 0.0f);
         ResetHealth(pCfg.MaxHp);
 
-        var col = Entity.Get<CollisionBox>();
-        col.IsGrounded = false;
-        Entity.Set(col);
+        Entity.Set(new CollisionBox(pCfg.CollisionWidth, pCfg.CollisionHeight));
+        Entity.Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly));
+        Entity.Set(new InvincibleOnHit(pCfg.InvincibleDuration));
+        Entity.Set(new HitFlashSettings(pCfg.HitFlashDuration));
 
         Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
         Entity.Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio));

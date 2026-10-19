@@ -57,23 +57,4 @@ public sealed class CooldownTracker {
         if (tag.IsEmpty) return true;
         return !_stringCooldowns.TryGetValue(tag, out var remaining) || remaining <= 0.0f;
     }
-
-    /// <summary>
-    ///     指定能力タグの残り冷却秒数を取得します。
-    /// </summary>
-    public float GetRemaining(StringId tag)
-    {
-        if (tag.IsEmpty || !_stringCooldowns.TryGetValue(tag, out var remaining)) return 0.0f;
-        return remaining;
-    }
-
-    /// <summary>
-    ///     すべての能力の冷却時間および連続使用履歴をリセットします。
-    /// </summary>
-    public void Reset()
-    {
-        _stringCooldowns.Clear();
-        LastExecutedTag = StringId.Empty;
-        ConsecutiveUseCount = 0;
-    }
 }

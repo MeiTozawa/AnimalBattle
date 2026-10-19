@@ -11,14 +11,13 @@ public static class TimedEffectService
     /// <summary>
     ///     時限エフェクトをスロットへ登録し、タグ状態を更新します。
     /// </summary>
-    public static bool ApplyEffect(
-        ref TimedEffectsState effects,
+    public static void ApplyEffect(ref TimedEffectsState effects,
         ref GameplayTagState tagState,
         GameplayTag grantedTags,
         float duration,
         ulong sourceHandle = 0)
     {
-        if (duration <= 0.0f || grantedTags == GameplayTag.None) return false;
+        if (duration <= 0.0f || grantedTags == GameplayTag.None) return;
 
         // 1. 同一発生源かつ同一タグの既存エフェクトの持続時間を更新
         for (var i = 0; i < TimedEffectsState.MaxSlots; i++)
@@ -28,7 +27,7 @@ public static class TimedEffectService
             {
                 slot.Remaining = MathF.Max(slot.Remaining, duration);
                 slot.TotalDuration = MathF.Max(slot.TotalDuration, duration);
-                return true;
+                return;
             }
         }
 
@@ -44,7 +43,7 @@ public static class TimedEffectService
                 slot.TotalDuration = duration;
                 slot.SourceHandle = sourceHandle;
                 tagState.ActiveMask |= grantedTags;
-                return true;
+                return;
             }
         }
 
@@ -68,7 +67,6 @@ public static class TimedEffectService
         victim.TotalDuration = duration;
         victim.SourceHandle = sourceHandle;
         RecalculateTagMask(ref effects, ref tagState);
-        return true;
     }
 
     /// <summary>

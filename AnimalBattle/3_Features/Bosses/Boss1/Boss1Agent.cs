@@ -97,6 +97,10 @@ public sealed class Boss1Agent : BaseBossAgent
         ref var t = ref Entity.GetMut<Transform>();
         t.Rotation = 0.0f;
         ResetHealth(b1Cfg.MaxHp);
+        Entity.Set(new CollisionBox(b1Cfg.CollisionWidth, b1Cfg.CollisionHeight));
+        Entity.Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile));
+        Entity.Set(new Hitbox(b1Cfg.GetHitboxShape(), b1Cfg.BodyContactDamage, Faction.Hostile, false));
+        Entity.Set(new HitFlashSettings(b1Cfg.HitFlashDuration));
 
         _brain.Reset(b1Cfg.SpawnX, b1Cfg.SpawnY);
     }

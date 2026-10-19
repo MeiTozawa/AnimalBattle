@@ -209,9 +209,10 @@ public sealed class Boss2Agent : BaseBossAgent
 
         ResetHealth(b2Cfg.MaxHp);
 
-        var col = Entity.Get<CollisionBox>();
-        col.IsGrounded = false;
-        Entity.Set(col);
+        Entity.Set(new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight));
+        Entity.Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile));
+        Entity.Set(new Hitbox(b2Cfg.GetHitboxShape(), b2Cfg.BodyContactDamage, Faction.Hostile, false));
+        Entity.Set(new HitFlashSettings(b2Cfg.HitFlashDuration));
 
         SetVelocity(0.0f, 0.0f);
 

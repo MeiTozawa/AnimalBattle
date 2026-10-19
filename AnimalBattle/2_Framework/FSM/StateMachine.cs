@@ -29,7 +29,6 @@ public class StateMachine : IState {
     public void AddState(IState state)
     {
         Debug.Assert(state != null, "state は null であってはなりません。");
-        if (state == null) return;
         _states.Add(state);
         _currentState ??= state;
     }
@@ -41,24 +40,15 @@ public class StateMachine : IState {
     public void SetInitialState(IState state)
     {
         Debug.Assert(state != null, "state は null であってはなりません。");
-        if (state == null) return;
         Debug.Assert(_states.Contains(state), $"未登録の状態を初期状態に設定しようとしました: {state.Id}");
         _currentState = state;
-    }
-
-    /// <summary>最優先評価される大域遷移条件を追加します。</summary>
-    public void AddGlobalTransition(Func<bool> condition, IState targetState)
-    {
-        Debug.Assert(condition != null && targetState != null, "condition または targetState は null であってはなりません。");
-        if (condition == null || targetState == null) return;
-        _globalTransitions.Add((condition, targetState));
     }
 
     /// <summary>指定状態へアトミックに切り替えます。</summary>
     public void ChangeState(IState targetState)
     {
         Debug.Assert(targetState != null, "targetState は null であってはなりません。");
-        if (targetState == null || _currentState == targetState) return;
+        if (_currentState == targetState) return;
 
         _currentState?.Exit();
         _currentState = targetState;
