@@ -11,7 +11,5 @@ public readonly struct ArenaModule : IFlecsModule
     public void InitModule(World world)
     {
         world.Module<ArenaModule>();
-
-        world.AddPersistentCollisionSystem();
     }
 }

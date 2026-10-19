@@ -7,7 +7,13 @@ namespace AnimalBattle.Configs;
 /// </summary>
 public sealed class SpatialHashConfig {
     /// <summary>空間ハッシュの正方形セル一辺のサイズ（ピクセル）</summary>
-    public float CellSize { get; set; } = 256.0f;
+    public float CellSize { get; set; }
+
+    /// <summary>ハッシュテーブルのバケット数（2の冪乗）</summary>
+    public int TableSize { get; set; }
+
+    /// <summary>初期許容 Hurtbox エンティティ数</summary>
+    public int InitialCapacity { get; set; }
 }
 
 /// <summary>
