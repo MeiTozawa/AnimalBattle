@@ -9,7 +9,7 @@ namespace AnimalBattle.Configs;
 ///     TOML (cat.prefab.toml, bunny.prefab.toml) よりデシリアライズされます。
 /// </summary>
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-public sealed class PlayerPrefabConfig
+public class PlayerPrefabConfig
 {
     public float MaxHp { get; set; }
     public float InvincibleDuration { get; set; }
@@ -30,7 +30,7 @@ public sealed class PlayerPrefabConfig
 ///     TOML (boss1.prefab.toml, boss2.prefab.toml) よりデシリアライズされます。
 /// </summary>
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
-public sealed class BossPrefabConfig
+public class BossPrefabConfig
 {
     public float MaxHp { get; set; }
     public float HitFlashDuration { get; set; }

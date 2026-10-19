@@ -18,6 +18,7 @@ namespace AnimalBattle;
 /// </summary>
 public class GameManager : IDisposable {
     private World _ecsWorld;
+    private readonly ConfigService _configService;
     private bool _isDisposed;
 
     /// <summary>
@@ -31,6 +32,11 @@ public class GameManager : IDisposable {
     public World EcsWorld => _ecsWorld;
 
     /// <summary>
+    ///     設定サービスインスタンスを取得します。
+    /// </summary>
+    public ConfigService Configs => _configService;
+
+    /// <summary>
     ///     <see cref="GameManager" /> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
     /// </summary>
     public GameManager()
@@ -38,6 +44,8 @@ public class GameManager : IDisposable {
         _ecsWorld = World.Create();
         Current = this;
 
+        _configService = new ConfigService();
+        _configService.Initialize(_ecsWorld);
         ConfigManager.Initialize();
         AssetManager.Initialize();
 
@@ -107,6 +115,9 @@ public class GameManager : IDisposable {
     /// <param name="deltaTime">前フレームからの経過時間秒数</param>
     public void Update(float deltaTime)
     {
+        // フレーム開始時：保留中の設定ホットリロードをワールドへ安全に適用
+        ConfigHotReloadDispatcher.Dispatch(_ecsWorld);
+
         // PreUpdate -> OnUpdate -> OnValidate -> PostUpdate -> OnStore (RenderModule)
         _ecsWorld.Progress(deltaTime);
     }
@@ -120,6 +131,7 @@ public class GameManager : IDisposable {
         BattleSceneSpawner.Teardown(_ecsWorld);
 
         CombatPoolService.Current.Dispose();
+        _configService.Dispose();
         _ecsWorld.Dispose();
 
         AssetManager.Shutdown();
