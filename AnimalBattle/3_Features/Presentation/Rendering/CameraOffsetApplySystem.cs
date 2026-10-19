@@ -8,7 +8,8 @@ namespace AnimalBattle.Systems.Render;
 ///     ワールド空間描画直前にカメラオフセットを DxLib 描画コンテキストへ適用する純粋 ECS システム。
 ///     戦闘状態（GameState.Battle）時にのみカメラ座標を適用し、それ以外では (0, 0) を設定します。
 /// </summary>
-public static class CameraOffsetApplySystem {
+public static class CameraOffsetApplySystem
+{
     /// <summary>
     ///     カメラオフセット適用システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -18,19 +19,24 @@ public static class CameraOffsetApplySystem {
     {
         world.System("CameraOffsetApplySystem")
              .Kind(Ecs.OnStore)
-             .Iter((Iter it) =>
-             {
-                 var w = it.World();
-                 if (w.Get<GameFlow>().State == GameState.Battle)
-                 {
-                     GameEngine.SetCameraOffset(CameraService.RenderOffsetX, CameraService.RenderOffsetY);
-                 }
-                 else
-                 {
-                     GameEngine.SetCameraOffset(0, 0);
-                 }
-             });
+             .Iter(ExecuteCameraOffsetApply);
 
         return world;
+    }
+
+    /// <summary>
+    ///     カメラオフセット適用処理（名前付き静的メソッド）。
+    /// </summary>
+    public static void ExecuteCameraOffsetApply(Iter it)
+    {
+        var w = it.World();
+        if (w.Get<GameFlow>().State == GameState.Battle)
+        {
+            GameEngine.SetCameraOffset(CameraService.RenderOffsetX, CameraService.RenderOffsetY);
+        }
+        else
+        {
+            GameEngine.SetCameraOffset(0, 0);
+        }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Events;
@@ -9,8 +10,10 @@ namespace AnimalBattle.Systems.Render;
 ///     照準器（AimReticle）のスプリング物理拡縮状態（反動・減衰）を更新する ECS システム。
 ///     射撃イベントを購読して反動拡縮を付与し、PreUpdate フェーズで物理方程式に従い静止状態へ減衰させます。
 /// </summary>
-public static class AimReticleUpdateSystem {
+public static class AimReticleUpdateSystem
+{
     private static bool _isSubscribed;
+    private static World _subscribedWorld;
 
     /// <summary>
     ///     照準器物理更新システムを Flecs.NET ワールドへ登録します。
@@ -23,35 +26,43 @@ public static class AimReticleUpdateSystem {
 
         if (!_isSubscribed)
         {
-            EventBus.Subscribe<PlayerShotFiredEvent>(_ =>
-            {
-                if (world.Has<AimReticleState>())
-                {
-                    var cfg = ConfigManager.Render.AimReticle;
-                    ref var state = ref world.GetMut<AimReticleState>();
-                    state.Expansion = cfg.RecoilExpansion;
-                    state.ExpansionVelocity = 0.0f;
-                }
-            });
+            _subscribedWorld = world;
+            EventBus.Subscribe<PlayerShotFiredEvent>(OnPlayerShotFired);
             _isSubscribed = true;
         }
 
         // レティクル拡縮スプリング物理更新 (PreUpdate)
         world.System("AimReticleUpdateSystem")
             .Kind(Ecs.PreUpdate)
-            .Iter((Iter it) =>
-            {
-                var dt = it.DeltaTime();
-                if (dt <= 0.0f) return;
-
-                var w = it.World();
-                if (!w.Has<AimReticleState>()) return;
-
-                ref var state = ref w.GetMut<AimReticleState>();
-                UpdateSpring(ref state, dt);
-            });
+            .Iter(ExecuteAimReticleUpdate);
 
         return world;
+    }
+
+    private static void OnPlayerShotFired(PlayerShotFiredEvent _)
+    {
+        if (_subscribedWorld.Has<AimReticleState>())
+        {
+            var cfg = ConfigManager.Render.AimReticle;
+            ref var state = ref _subscribedWorld.GetMut<AimReticleState>();
+            state.Expansion = cfg.RecoilExpansion;
+            state.ExpansionVelocity = 0.0f;
+        }
+    }
+
+    /// <summary>
+    ///     レティクル拡縮スプリング物理更新パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void ExecuteAimReticleUpdate(Iter it)
+    {
+        var dt = it.DeltaTime();
+        if (dt <= 0.0f) return;
+
+        var w = it.World();
+        if (!w.Has<AimReticleState>()) return;
+
+        ref var state = ref w.GetMut<AimReticleState>();
+        UpdateSpring(ref state, dt);
     }
 
     private static void UpdateSpring(ref AimReticleState state, float deltaTime)

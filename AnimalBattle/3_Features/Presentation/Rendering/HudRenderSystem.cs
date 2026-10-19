@@ -17,6 +17,11 @@ namespace AnimalBattle.Systems.Render;
 ///     戦闘状態（GameState.Battle）時にスクリーン空間へ直接描画します。
 /// </summary>
 public static class HudRenderSystem {
+    private static Query<PlayerPawn> _playerQuery;
+    private static Query<BaseBossAgent> _bossQuery;
+    private static PlayerPawn? _cachedPlayer;
+    private static BaseBossAgent? _cachedBoss;
+
     /// <summary>
     ///     HUD 描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -24,30 +29,42 @@ public static class HudRenderSystem {
     /// <returns>登録済みワールド</returns>
     public static World AddHudRenderSystem(this World world)
     {
-        var playerQuery = world.QueryBuilder<PlayerPawn>().Build();
-        var bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
+        _playerQuery = world.QueryBuilder<PlayerPawn>().Build();
+        _bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
 
         world.System("HudRenderSystem")
             .Kind(Ecs.OnStore)
-            .Iter((Iter it) =>
-            {
-                var w = it.World();
-                ref readonly var flow = ref w.Get<GameFlow>();
-                if (flow.State != GameState.Battle) return;
-
-                PlayerPawn? player = null;
-                playerQuery.Each((ref PlayerPawn p) => player = p);
-
-                BaseBossAgent? boss = null;
-                bossQuery.Each((ref BaseBossAgent b) => boss = b);
-
-                var remainingJumps = player?.RemainingJumps ?? 0;
-
-                Render(player, boss, remainingJumps);
-            });
+            .Iter(ExecuteHudRender);
 
         return world;
     }
+
+    /// <summary>
+    ///     HUD 描画パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void ExecuteHudRender(Iter it)
+    {
+        var w = it.World();
+        ref readonly var flow = ref w.Get<GameFlow>();
+        if (flow.State != GameState.Battle) return;
+
+        _cachedPlayer = null;
+        _cachedBoss = null;
+        _playerQuery.Each(FindPlayer);
+        _bossQuery.Each(FindBoss);
+
+        var player = _cachedPlayer;
+        var boss = _cachedBoss;
+        _cachedPlayer = null;
+        _cachedBoss = null;
+
+        var remainingJumps = player?.RemainingJumps ?? 0;
+
+        Render(player, boss, remainingJumps);
+    }
+
+    private static void FindPlayer(ref PlayerPawn p) => _cachedPlayer = p;
+    private static void FindBoss(ref BaseBossAgent b) => _cachedBoss = b;
 
     /// <summary>
     ///     HUD および各種ステータス UI をスクリーン空間に描画します。

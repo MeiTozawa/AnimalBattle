@@ -10,7 +10,8 @@ namespace AnimalBattle.Systems.Render;
 ///     残影スプライト、環状衝撃波（RingEffect）、および弾丸破片パーティクルを描画する ECS エフェクト描画システム。
 ///     加算合成（BlendMode.Add）およびアルファ減衰（FadeEffect）を統合適用します。
 /// </summary>
-public static class VfxRenderSystem {
+public static class VfxRenderSystem
+{
     /// <summary>
     ///     VFX 描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -23,100 +24,115 @@ public static class VfxRenderSystem {
             .With<VfxTag>()
             .Without<RecycleTag>()
             .Kind(Ecs.OnStore)
-            .Iter((Iter it, Field<Transform> trans, Field<Sprite> sprites, Field<FadeEffect> fades) =>
-            {
-                var w = it.World();
-                if (w.Get<GameFlow>().State != GameState.Battle) return;
-
-                var count = it.Count();
-                for (var i = 0; i < count; i++)
-                {
-                    ref var fade = ref fades[i];
-                    var alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
-                    ref var sprite = ref sprites[i];
-                    if (alpha <= 0 || !sprite.IsVisible || sprite.GraphHandle < 0) continue;
-
-                    ref var t = ref trans[i];
-                    GameEngine.SetDrawBright(sprite.Color.R, sprite.Color.G, sprite.Color.B);
-                    GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
-                    GameEngine.DrawRectRotaGraph3(
-                        (int)t.X,
-                        (int)t.Y,
-                        sprite.SrcRect.Left,
-                        sprite.SrcRect.Top,
-                        sprite.SrcRect.Width,
-                        sprite.SrcRect.Height,
-                        t.ScaleX,
-                        t.ScaleY,
-                        t.Rotation,
-                        sprite.GraphHandle,
-                        true,
-                        sprite.FlipX);
-                    GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-                    GameEngine.SetDrawBright(255, 255, 255);
-                }
-            });
+            .Iter(DrawSpriteFadeEffects);
 
         // 2. 環状拡散リングエフェクト
         world.System<Transform, RingEffect, FadeEffect>("RingEffectRenderSystem")
             .With<VfxTag>()
             .Without<RecycleTag>()
             .Kind(Ecs.OnStore)
-            .Iter((Iter it, Field<Transform> trans, Field<RingEffect> rings, Field<FadeEffect> fades) =>
-            {
-                var w = it.World();
-                if (w.Get<GameFlow>().State != GameState.Battle) return;
-
-                var count = it.Count();
-                for (var i = 0; i < count; i++)
-                {
-                    ref var fade = ref fades[i];
-                    var alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
-                    if (alpha <= 0) continue;
-
-                    ref var ring = ref rings[i];
-                    var progress = Math.Clamp(fade.ElapsedTimer / Math.Max(0.001f, fade.Duration), 0.0f, 1.0f);
-                    var currentRadius = ring.StartRadius + (ring.EndRadius - ring.StartRadius) * progress;
-                    ref var t = ref trans[i];
-
-                    GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
-                    GameEngine.DrawCircle((int)t.X, (int)t.Y, (int)currentRadius, ring.Color, ring.IsFilled);
-                    GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-                }
-            });
+            .Iter(DrawRingEffects);
 
         // 3. 破片パーティクルエフェクト
         world.System<Transform, Bullet, FadeEffect>("ParticleEffectRenderSystem")
             .With<VfxTag>()
             .Without<RecycleTag>()
             .Kind(Ecs.OnStore)
-            .Iter((Iter it, Field<Transform> trans, Field<Bullet> bullets, Field<FadeEffect> fades) =>
-            {
-                var w = it.World();
-                if (w.Get<GameFlow>().State != GameState.Battle) return;
-
-                var count = it.Count();
-                var bulletCfg = ConfigManager.Render.Bullets;
-
-                for (var i = 0; i < count; i++)
-                {
-                    ref var fade = ref fades[i];
-                    var alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
-                    if (alpha <= 0) continue;
-
-                    ref var b = ref bullets[i];
-                    ref var t = ref trans[i];
-                    var px = (int)t.X;
-                    var py = (int)t.Y;
-                    var radius = (int)b.Radius;
-
-                    GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
-                    GameEngine.DrawCircle(px, py, radius + bulletCfg.ParticleOutlinePadding, b.OutlineColor, true);
-                    GameEngine.DrawCircle(px, py, radius, b.FillColor, true);
-                    GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-                }
-            });
+            .Iter(DrawParticleEffects);
 
         return world;
+    }
+
+    /// <summary>
+    ///     スプライト残影フェード描画パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void DrawSpriteFadeEffects(Iter it, Field<Transform> trans, Field<Sprite> sprites, Field<FadeEffect> fades)
+    {
+        var w = it.World();
+        if (w.Get<GameFlow>().State != GameState.Battle) return;
+
+        var count = it.Count();
+        for (var i = 0; i < count; i++)
+        {
+            ref var fade = ref fades[i];
+            var alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
+            ref var sprite = ref sprites[i];
+            if (alpha <= 0 || !sprite.IsVisible || sprite.GraphHandle < 0) continue;
+
+            ref var t = ref trans[i];
+            GameEngine.SetDrawBright(sprite.Color.R, sprite.Color.G, sprite.Color.B);
+            GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
+            GameEngine.DrawRectRotaGraph3(
+                (int)t.X,
+                (int)t.Y,
+                sprite.SrcRect.Left,
+                sprite.SrcRect.Top,
+                sprite.SrcRect.Width,
+                sprite.SrcRect.Height,
+                t.ScaleX,
+                t.ScaleY,
+                t.Rotation,
+                sprite.GraphHandle,
+                true,
+                sprite.FlipX);
+            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+            GameEngine.SetDrawBright(255, 255, 255);
+        }
+    }
+
+    /// <summary>
+    ///     環状衝撃波リング描画パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void DrawRingEffects(Iter it, Field<Transform> trans, Field<RingEffect> rings, Field<FadeEffect> fades)
+    {
+        var w = it.World();
+        if (w.Get<GameFlow>().State != GameState.Battle) return;
+
+        var count = it.Count();
+        for (var i = 0; i < count; i++)
+        {
+            ref var fade = ref fades[i];
+            var alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
+            if (alpha <= 0) continue;
+
+            ref var ring = ref rings[i];
+            var progress = Math.Clamp(fade.ElapsedTimer / Math.Max(0.001f, fade.Duration), 0.0f, 1.0f);
+            var currentRadius = ring.StartRadius + (ring.EndRadius - ring.StartRadius) * progress;
+            ref var t = ref trans[i];
+
+            GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
+            GameEngine.DrawCircle((int)t.X, (int)t.Y, (int)currentRadius, ring.Color, ring.IsFilled);
+            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+        }
+    }
+
+    /// <summary>
+    ///     破片パーティクル描画パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void DrawParticleEffects(Iter it, Field<Transform> trans, Field<Bullet> bullets, Field<FadeEffect> fades)
+    {
+        var w = it.World();
+        if (w.Get<GameFlow>().State != GameState.Battle) return;
+
+        var count = it.Count();
+        var bulletCfg = ConfigManager.Render.Bullets;
+
+        for (var i = 0; i < count; i++)
+        {
+            ref var fade = ref fades[i];
+            var alpha = (int)Math.Clamp(fade.CurrentAlpha, 0.0f, 255.0f);
+            if (alpha <= 0) continue;
+
+            ref var b = ref bullets[i];
+            ref var t = ref trans[i];
+            var px = (int)t.X;
+            var py = (int)t.Y;
+            var radius = (int)b.Radius;
+
+            GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
+            GameEngine.DrawCircle(px, py, radius + bulletCfg.ParticleOutlinePadding, b.OutlineColor, true);
+            GameEngine.DrawCircle(px, py, radius, b.FillColor, true);
+            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+        }
     }
 }

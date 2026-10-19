@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using System;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -10,7 +10,8 @@ namespace AnimalBattle.Systems.Render;
 ///     照準器（AimReticle）のスクリーン幾何学描画を制御する純粋 ECS 描画システム。
 ///     戦闘状態（GameState.Battle）時にのみマウス位置へタクティカルリングとクロスラインを描画します。
 /// </summary>
-public static class AimReticleRenderSystem {
+public static class AimReticleRenderSystem
+{
     /// <summary>
     ///     照準器描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -21,18 +22,23 @@ public static class AimReticleRenderSystem {
         // レティクル画面描画 (OnStore)
         world.System("AimReticleRenderSystem")
             .Kind(Ecs.OnStore)
-            .Iter((Iter it) =>
-            {
-                var w = it.World();
-                ref readonly var flow = ref w.Get<GameFlow>();
-                if (flow.State != GameState.Battle) return;
-
-                ref readonly var state = ref w.Get<AimReticleState>();
-                var mouseScreen = InputService.GetMousePosition();
-                RenderReticle(mouseScreen.X, mouseScreen.Y, state.Expansion);
-            });
+            .Iter(ExecuteAimReticleRender);
 
         return world;
+    }
+
+    /// <summary>
+    ///     照準器描画パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void ExecuteAimReticleRender(Iter it)
+    {
+        var w = it.World();
+        ref readonly var flow = ref w.Get<GameFlow>();
+        if (flow.State != GameState.Battle) return;
+
+        ref readonly var state = ref w.Get<AimReticleState>();
+        var mouseScreen = InputService.GetMousePosition();
+        RenderReticle(mouseScreen.X, mouseScreen.Y, state.Expansion);
     }
 
     private static void RenderReticle(int x, int y, float expansion)
@@ -57,6 +63,6 @@ public static class AimReticleRenderSystem {
         // 左
         GameEngine.DrawLine(x - inner, y, x - outer, y, cfg.TickColor);
         // 右
-        GameEngine.DrawLine(x + inner, y, x + outer, y, cfg.TickColor);
+        GameEngine.DrawLine(x + inner, y, x - outer, y, cfg.TickColor);
     }
 }
