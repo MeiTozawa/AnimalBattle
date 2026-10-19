@@ -121,11 +121,19 @@ public static class BattleSceneSpawner {
         CameraService.Reset();
         GameEngine.SetCameraOffset(0, 0);
 
-        // 2. 残存弾幕および VFX の一括回収・プール返却
+        // 2. 残存弾幕、近接判定および VFX の一括回収・プール返却
         BulletSpawner.ClearAllBossBullets(world);
         using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
         {
             playerBullets.Each(e => e.Add<RecycleTag>());
+        }
+        using (var playerMelee = world.QueryBuilder().With<PlayerMeleeTag>().Build())
+        {
+            playerMelee.Each(e =>
+            {
+                e.Disable();
+                e.Destruct();
+            });
         }
         using (var vfx = world.QueryBuilder().With<VfxTag>().Build())
         {

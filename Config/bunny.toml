@@ -1,5 +1,5 @@
 # Bunny Player Configuration
-MaxHp = 6
+MaxHp = 5
 InvincibleDuration = 0.8
 HitFlashDuration = 0.08
 MoveSpeed = 330.0

@@ -23,7 +23,9 @@ public sealed class Bunny : PlayerPawn
     /// <param name="spriteHandle">プレイヤースプライト画像ハンドル。</param>
     public Bunny(Entity entity, PlayerConfig pCfg, int spriteHandle) : base(entity, pCfg, spriteHandle, CharacterType.Bunny)
     {
-        var melee = entity.CsWorld().Entity().IsA(CombatPrefabs.PlayerSlashHitbox);
+        var melee = entity.CsWorld().Entity("PlayerSlashHitbox")
+            .ChildOf(entity)
+            .IsA(CombatPrefabs.PlayerSlashHitbox);
         melee.Disable();
         MeleeAttackEntity = melee;
 

@@ -101,6 +101,8 @@ public static class PlayerDamageResolutionSystem
                     {
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
+                        entity.Get<PlayerMeleeWeapon>().Entity.Disable();
+
                         EffectSpawner.SpawnPlayerDeathParticles(world, trans.X, trans.Y);
                         CameraService.AddTrauma(cameraCfg.PlayerHeavyHitTrauma);
                         EventBus.Publish(new PlayerDiedEvent());
