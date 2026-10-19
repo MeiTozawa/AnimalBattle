@@ -27,8 +27,8 @@ public static class BossConfigSync
         BossPrefabs.Register(world);
 
         // 3. 活体 Boss1 エンティティの再水和
-        using var query = world.QueryBuilder<Boss1Tag>().Build();
-        query.Each((Entity e, ref Boss1Tag _) =>
+        using var query = world.QueryBuilder().With<Boss1Tag>().Build();
+        query.Each((Entity e) =>
         {
             ref var health = ref e.GetMut<Health>();
             var ratio = health.Max > 0.0f ? health.Current / health.Max : 1.0f;
@@ -69,8 +69,8 @@ public static class BossConfigSync
         BossPrefabs.Register(world);
 
         // 3. 活体 Boss2 エンティティの再水和
-        using var query = world.QueryBuilder<Boss2Tag>().Build();
-        query.Each((Entity e, ref Boss2Tag _) =>
+        using var query = world.QueryBuilder().With<Boss2Tag>().Build();
+        query.Each((Entity e) =>
         {
             ref var health = ref e.GetMut<Health>();
             var ratio = health.Max > 0.0f ? health.Current / health.Max : 1.0f;

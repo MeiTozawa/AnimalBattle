@@ -30,8 +30,8 @@ public static class PlayerConfigSync
         ref readonly var flow = ref world.Get<GameFlow>();
         if (flow.SelectedPlayer != CharacterType.Cat) return;
 
-        using var query = world.QueryBuilder<PlayerTag>().Build();
-        query.Each((Entity e, ref PlayerTag _) =>
+        using var query = world.QueryBuilder().With<PlayerTag>().Build();
+        query.Each((Entity e) =>
         {
             RehydratePlayerEntity(e, newConfig);
         });
@@ -57,8 +57,8 @@ public static class PlayerConfigSync
         ref readonly var flow = ref world.Get<GameFlow>();
         if (flow.SelectedPlayer != CharacterType.Bunny) return;
 
-        using var query = world.QueryBuilder<PlayerTag>().Build();
-        query.Each((Entity e, ref PlayerTag _) =>
+        using var query = world.QueryBuilder().With<PlayerTag>().Build();
+        query.Each((Entity e) =>
         {
             RehydratePlayerEntity(e, newConfig);
         });
