@@ -54,8 +54,9 @@ public static class BinaryConfigLoader {
                 return bundle;
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is IOException or JsonException or InvalidDataException or UnauthorizedAccessException)
         {
+            Console.Error.WriteLine($"[BinaryConfigLoader 警告] バイナリ設定の読み込み中に例外が発生しました: {ex.Message}");
             Debug.Fail($"[BinaryConfigLoader 警告] バイナリ設定の読み込み中に例外が発生しました: {ex.Message}", ex.ToString());
             return Error.Failure("Config.Exception", $"バイナリ設定の読み込み中に例外が発生しました: {ex.Message}");
         }
