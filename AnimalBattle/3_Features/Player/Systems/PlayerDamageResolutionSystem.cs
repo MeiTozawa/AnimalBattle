@@ -58,8 +58,8 @@ public static class PlayerDamageResolutionSystem
                     ref var tagState = ref tags[i];
                     ref var effectState = ref timedEffects[i];
 
-                    // 無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
-                    if (tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
+                    // ゲームオーバー済み、無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
+                    if (w.Has<GameOverTag>() || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
                     {
                         entity.Remove<IncomingDamage>();
                         continue;
@@ -99,6 +99,7 @@ public static class PlayerDamageResolutionSystem
                     // 死亡または生存時の演出・カメラ衝撃判定
                     if (hp.Current <= 0.0f)
                     {
+                        w.Add<GameOverTag>();
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
                         entity.Get<PlayerMeleeWeapon>().Entity.Disable();

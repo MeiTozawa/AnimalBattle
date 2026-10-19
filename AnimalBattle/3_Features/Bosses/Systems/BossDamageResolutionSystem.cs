@@ -49,8 +49,8 @@ public static class BossDamageResolutionSystem
                     ref var sprite = ref sprites[i];
                     ref readonly var tagState = ref tags[i];
 
-                    // 完全無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
-                    if (tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
+                    // ゲームオーバー済み、完全無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
+                    if (world.Has<GameOverTag>() || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
                     {
                         entity.Remove<IncomingDamage>();
                         continue;
@@ -89,6 +89,7 @@ public static class BossDamageResolutionSystem
                     // 死亡または生存時反撃・カメラ衝撃判定
                     if (hp.Current <= 0.0f)
                     {
+                        world.Add<GameOverTag>();
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
                         BulletSpawner.ClearAllBossBullets(world);

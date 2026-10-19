@@ -54,6 +54,9 @@ public static class BattleInputSystem {
                     ResetCombat(w, playerBulletsQuery, vfxQuery, playerQuery, bossQuery);
                 }
 
+                // ゲームオーバー時は自機の操作入力を停止
+                if (w.Has<GameOverTag>()) return;
+
                 controllerQuery.Each((ref PlayerController controller) =>
                 {
                     controller.PollAndProcessInput();
@@ -70,6 +73,11 @@ public static class BattleInputSystem {
         Query<PlayerPawn> playerQuery,
         Query<BaseBossAgent> bossQuery)
     {
+        if (world.Has<GameOverTag>())
+        {
+            world.Remove<GameOverTag>();
+        }
+
         BulletSpawner.ClearAllBossBullets(world);
         playerBulletsQuery.Each(e => e.Add<RecycleTag>());
         vfxQuery.Each(e => e.Add<RecycleTag>());
