@@ -7,7 +7,8 @@ namespace AnimalBattle.Systems.Render;
 ///     スクリーン空間描画（HUD、照準器、UI）直前にカメラオフセットを (0, 0) にリセットする純粋 ECS システム。
 ///     画面固定 UI へのカメラ振動・追従の波及を遮断します。
 /// </summary>
-public static class CameraOffsetResetSystem {
+public static class CameraOffsetResetSystem
+{
     /// <summary>
     ///     カメラオフセットリセットシステムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -17,11 +18,16 @@ public static class CameraOffsetResetSystem {
     {
         world.System("CameraOffsetResetSystem")
              .Kind(Ecs.OnStore)
-             .Iter((Iter it) =>
-             {
-                 GameEngine.SetCameraOffset(Vec2i.Zero);
-             });
+             .Iter(ExecuteCameraOffsetReset);
 
         return world;
+    }
+
+    /// <summary>
+    ///     カメラオフセットリセット処理（名前付き静的メソッド）。
+    /// </summary>
+    public static void ExecuteCameraOffsetReset(Iter it)
+    {
+        GameEngine.SetCameraOffset(Vec2i.Zero);
     }
 }

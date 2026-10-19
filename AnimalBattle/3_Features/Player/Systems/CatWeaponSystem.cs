@@ -27,28 +27,34 @@ public static class CatWeaponSystem
         world.System<Transform, WeaponIntent, CatWeaponState, SpringScale>("CatWeaponSystem")
             .Kind(Ecs.OnUpdate)
             .Without<DeadTag>()
-            .Iter((Iter it,
-                   Field<Transform> transforms,
-                   Field<WeaponIntent> intents,
-                   Field<CatWeaponState> weapons,
-                   Field<SpringScale> springs) =>
-            {
-                var dt = it.DeltaTime();
-                var count = it.Count();
-
-                for (var i = 0; i < count; i++)
-                {
-                    ref var trans = ref transforms[i];
-                    ref var intent = ref intents[i];
-                    ref var weapon = ref weapons[i];
-                    ref var spring = ref springs[i];
-                    var entity = it.Entity(i);
-
-                    ExecuteCatWeapon(entity, ref trans, ref intent, ref weapon, ref spring, dt, world);
-                }
-            });
+            .Iter(ExecuteCatWeaponSystem);
 
         return world;
+    }
+
+    private static void ExecuteCatWeaponSystem(
+        Iter it,
+        Field<Transform> transforms,
+        Field<WeaponIntent> intents,
+        Field<CatWeaponState> weapons,
+        Field<SpringScale> springs)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var dt = it.DeltaTime();
+        var world = it.World();
+
+        for (var i = 0; i < count; i++)
+        {
+            ref var trans = ref transforms[i];
+            ref var intent = ref intents[i];
+            ref var weapon = ref weapons[i];
+            ref var spring = ref springs[i];
+            var entity = it.Entity(i);
+
+            ExecuteCatWeapon(entity, ref trans, ref intent, ref weapon, ref spring, dt, world);
+        }
     }
 
     private static void ExecuteCatWeapon(

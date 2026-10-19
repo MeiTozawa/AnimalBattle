@@ -11,7 +11,9 @@ MaxDeltaTime = 0.05
 
 # 2D 空間ハッシュグリッド設定
 [SpatialHash]
-CellSize = 256.0
+CellSize = 128.0
+TableSize = 512
+InitialCapacity = 64
 
 # 2D プラットフォーム跳躍・下落ナビゲーションおよび A* 探索設定
 [NavigationGraph]

@@ -9,7 +9,13 @@ namespace AnimalBattle.Systems.Render;
 /// <summary>
 ///     アリーナ足場およびタイルマップの視口カリング描画を行う ECS システム。
 /// </summary>
-public static class TileMapRenderSystem {
+public static class TileMapRenderSystem
+{
+    private static Query<Transform, CollisionBox> _platformQuery;
+    private static Query<TileMap> _tileMapQuery;
+    private static bool _renderedTileMap;
+    private static ViewportRenderConfig _cachedViewport = null!;
+
     /// <summary>
     ///     タイルマップ描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -17,41 +23,49 @@ public static class TileMapRenderSystem {
     /// <returns>登録済みワールド</returns>
     public static World AddTileMapRenderSystem(this World world)
     {
-        var platformQuery = world.QueryBuilder<Transform, CollisionBox>()
+        _platformQuery = world.QueryBuilder<Transform, CollisionBox>()
             .With<PlatformTag>()
             .Build();
 
-        var tileMapQuery = world.QueryBuilder<TileMap>().Build();
+        _tileMapQuery = world.QueryBuilder<TileMap>().Build();
 
         world.System("TileMapRenderSystem")
             .Kind(Ecs.OnStore)
-            .Iter((Iter it) =>
-            {
-                var w = it.World();
-                if (w.Get<GameFlow>().State != GameState.Battle) return;
-
-                var viewport = w.Get<RenderConfig>().Viewport;
-
-                var renderedTileMap = false;
-                tileMapQuery.Each((ref TileMap tileMap) =>
-                {
-                    renderedTileMap = true;
-                    tileMap.DrawCulled(viewport.Pos, viewport.Size);
-                });
-
-                if (!renderedTileMap)
-                {
-                    platformQuery.Each((ref Transform trans, ref CollisionBox col) =>
-                    {
-                        var p1 = (trans.Position - col.Size * 0.5f).ToVec2i();
-                        var p2 = (trans.Position + col.Size * 0.5f).ToVec2i();
-
-                        GameEngine.DrawBox(p1, p2, viewport.PlatformFallbackFillColor, true);
-                        GameEngine.DrawBox(p1, p2, viewport.PlatformFallbackBorderColor, false);
-                    });
-                }
-            });
+            .Iter(ExecuteTileMapRender);
 
         return world;
+    }
+
+    /// <summary>
+    ///     タイルマップ描画パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void ExecuteTileMapRender(Iter it)
+    {
+        var w = it.World();
+        if (w.Get<GameFlow>().State != GameState.Battle) return;
+
+        _cachedViewport = w.Get<RenderConfig>().Viewport;
+        _renderedTileMap = false;
+        _tileMapQuery.Each(DrawTileMap);
+
+        if (!_renderedTileMap)
+        {
+            _platformQuery.Each(DrawFallbackPlatform);
+        }
+    }
+
+    private static void DrawTileMap(ref TileMap tileMap)
+    {
+        _renderedTileMap = true;
+        tileMap.DrawCulled(_cachedViewport.Pos, _cachedViewport.Size);
+    }
+
+    private static void DrawFallbackPlatform(ref Transform trans, ref CollisionBox col)
+    {
+        var p1 = (trans.Position - col.Size * 0.5f).ToVec2i();
+        var p2 = (trans.Position + col.Size * 0.5f).ToVec2i();
+
+        GameEngine.DrawBox(p1, p2, _cachedViewport.PlatformFallbackFillColor, true);
+        GameEngine.DrawBox(p1, p2, _cachedViewport.PlatformFallbackBorderColor, false);
     }
 }

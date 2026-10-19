@@ -5,7 +5,8 @@ namespace AnimalBattle.Systems;
 /// <summary>
 ///     被弾時ホワイトフラッシュ（白閃）演出の持続時間タイマーおよび自動破棄を制御する ECS System。
 /// </summary>
-public static class HitFlashEffectSystem {
+public static class HitFlashEffectSystem
+{
     /// <summary>
     ///     受撃フラッシュ演出システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -14,13 +15,18 @@ public static class HitFlashEffectSystem {
     public static World AddHitFlashEffectSystem(this World world)
     {
         world.System<HitFlashEffect>("HitFlashEffectSystem")
-           .Kind(Ecs.OnUpdate)
-           .Each((it, i, ref flash) =>
-            {
-                flash.ElapsedTimer += it.DeltaTime();
-                if (flash.IsFinished) it.Entity(i).Remove<HitFlashEffect>();
-            });
+            .Kind(Ecs.OnUpdate)
+            .Each(UpdateHitFlashEffect);
 
         return world;
+    }
+
+    /// <summary>
+    ///     受撃フラッシュ演出タイマー更新処理（名前付き静的メソッド）。
+    /// </summary>
+    public static void UpdateHitFlashEffect(Iter it, int i, ref HitFlashEffect flash)
+    {
+        flash.ElapsedTimer += it.DeltaTime();
+        if (flash.IsFinished) it.Entity(i).Remove<HitFlashEffect>();
     }
 }

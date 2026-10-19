@@ -1,4 +1,5 @@
 using AnimalBattle.Components;
+using AnimalBattle.Core;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -19,55 +20,61 @@ public static class SpringScaleSystem
     {
         world.System<SpringScale, Sprite, Transform>("SpringScaleSystem")
             .Without<HitstopState>()
-            .Iter((Iter it, Field<SpringScale> springs, Field<Sprite> sprites, Field<Transform> transforms) =>
-            {
-                var dt = it.DeltaTime();
-                if (dt <= 0.0f) return;
-
-                var safeDt = MathF.Min(dt, 0.1f);
-                var count = it.Count();
-
-                for (var i = 0; i < count; i++)
-                {
-                    ref var spring = ref springs[i];
-
-                    var curX = spring.Current.X;
-                    var velX = spring.Velocity.X;
-                    UpdateDampedSpring(
-                        ref curX,
-                        ref velX,
-                        spring.Target.X,
-                        spring.Frequency,
-                        spring.DampingRatio,
-                        safeDt);
-
-                    var curY = spring.Current.Y;
-                    var velY = spring.Velocity.Y;
-                    UpdateDampedSpring(
-                        ref curY,
-                        ref velY,
-                        spring.Target.Y,
-                        spring.Frequency,
-                        spring.DampingRatio,
-                        safeDt);
-
-                    spring.Current = new Vec2f(curX, curY);
-                    spring.Velocity = new Vec2f(velX, velY);
-
-                    ref var sprite = ref sprites[i];
-                    ref var trans = ref transforms[i];
-
-                    sprite.Scale = spring.Current;
-
-                    if (sprite.SrcRect.Height > 0)
-                    {
-                        var halfH = sprite.SrcRect.Height * trans.Scale.Y * 0.5f;
-                        sprite.SpringOffsetY = halfH * (1.0f - spring.Current.Y);
-                    }
-                }
-            });
+            .Iter(ExecuteSpringScale);
 
         return world;
+    }
+
+    private static void ExecuteSpringScale(
+        Iter it,
+        Field<SpringScale> springs,
+        Field<Sprite> sprites,
+        Field<Transform> transforms)
+    {
+        var dt = it.DeltaTime();
+        if (dt <= 0.0f) return;
+
+        var safeDt = MathF.Min(dt, 0.1f);
+        var count = it.Count();
+
+        for (var i = 0; i < count; i++)
+        {
+            ref var spring = ref springs[i];
+
+            var curX = spring.Current.X;
+            var velX = spring.Velocity.X;
+            UpdateDampedSpring(
+                ref curX,
+                ref velX,
+                spring.Target.X,
+                spring.Frequency,
+                spring.DampingRatio,
+                safeDt);
+
+            var curY = spring.Current.Y;
+            var velY = spring.Velocity.Y;
+            UpdateDampedSpring(
+                ref curY,
+                ref velY,
+                spring.Target.Y,
+                spring.Frequency,
+                spring.DampingRatio,
+                safeDt);
+
+            spring.Current = new Vec2f(curX, curY);
+            spring.Velocity = new Vec2f(velX, velY);
+
+            ref var sprite = ref sprites[i];
+            ref var trans = ref transforms[i];
+
+            sprite.Scale = spring.Current;
+
+            if (sprite.SrcRect.Height > 0)
+            {
+                var halfH = sprite.SrcRect.Height * trans.Scale.Y * 0.5f;
+                sprite.SpringOffsetY = halfH * (1.0f - spring.Current.Y);
+            }
+        }
     }
 
     /// <summary>

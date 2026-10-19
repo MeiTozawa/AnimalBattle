@@ -19,29 +19,37 @@ public static class InvincibleBlinkSystem {
     {
         world.System<Sprite, TimedEffectsState, GameplayTagState>("InvincibleBlinkSystem")
             .Kind(Ecs.PreUpdate)
-            .Iter((Iter it, Field<Sprite> sprites, Field<TimedEffectsState> timedEffects, Field<GameplayTagState> tags) =>
-            {
-                var count = it.Count();
-                var blinkFreq = it.World().Get<RenderConfig>().Player.InvincibleBlinkFrequency;
-
-                for (var i = 0; i < count; i++)
-                {
-                    ref readonly var effect = ref timedEffects[i];
-                    ref readonly var tag = ref tags[i];
-                    ref var sprite = ref sprites[i];
-
-                    if (tag.HasTag(GameplayTag.Untargetable))
-                    {
-                        var untargetableTimer = TimedEffectService.GetTagRemainingTime(in effect, GameplayTag.Untargetable);
-                        sprite.IsVisible = (int)(untargetableTimer * blinkFreq) % 2 == 0;
-                    }
-                    else
-                    {
-                        sprite.IsVisible = true;
-                    }
-                }
-            });
+            .Iter(ExecuteInvincibleBlink);
 
         return world;
+    }
+
+    private static void ExecuteInvincibleBlink(
+        Iter it,
+        Field<Sprite> sprites,
+        Field<TimedEffectsState> timedEffects,
+        Field<GameplayTagState> tags)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var blinkFreq = it.World().Get<RenderConfig>().Player.InvincibleBlinkFrequency;
+
+        for (var i = 0; i < count; i++)
+        {
+            ref readonly var effect = ref timedEffects[i];
+            ref readonly var tag = ref tags[i];
+            ref var sprite = ref sprites[i];
+
+            if (tag.HasTag(GameplayTag.Untargetable))
+            {
+                var untargetableTimer = TimedEffectService.GetTagRemainingTime(in effect, GameplayTag.Untargetable);
+                sprite.IsVisible = (int)(untargetableTimer * blinkFreq) % 2 == 0;
+            }
+            else
+            {
+                sprite.IsVisible = true;
+            }
+        }
     }
 }

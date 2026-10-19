@@ -19,7 +19,9 @@ public readonly struct CombatModule : IFlecsModule
              .AddSpecialBulletSystem()
              .AddOrbitSatelliteMovementSystem()
              .AddMeleeBulletCancelSystem()
+             .AddHurtboxSpatialIndexSystem()
              .AddCombatCollisionSystem()
+             .AddPersistentCollisionSystem()
              .AddCombatRecycleSystem();
     }
 }

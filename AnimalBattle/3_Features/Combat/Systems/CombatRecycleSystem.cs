@@ -19,17 +19,19 @@ public static class CombatRecycleSystem {
         world.System("CombatRecycleSystem")
            .With<RecycleTag>()
            .Kind(Ecs.PostUpdate)
-           .Iter((Iter it) =>
-            {
-                var count = it.Count();
-                for (var i = 0; i < count; i++)
-                {
-                    var entity = it.Entity(i);
-                    entity.Remove<RecycleTag>();
-                    CombatPoolService.Recycle(entity);
-                }
-            });
+           .Iter(ExecuteCombatRecycle);
 
         return world;
+    }
+
+    private static void ExecuteCombatRecycle(Iter it)
+    {
+        var count = it.Count();
+        for (var i = 0; i < count; i++)
+        {
+            var entity = it.Entity(i);
+            entity.Remove<RecycleTag>();
+            CombatPoolService.Recycle(entity);
+        }
     }
 }

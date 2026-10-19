@@ -23,33 +23,38 @@ public static class BunnyWeaponSystem
         world.System<Transform, WeaponIntent, BunnyWeaponState, SpringScale, PlayerMeleeWeapon, Animation, CollisionBox>("BunnyWeaponSystem")
             .Kind(Ecs.OnUpdate)
             .Without<DeadTag>()
-            .Iter((Iter it,
-                   Field<Transform> transforms,
-                   Field<WeaponIntent> intents,
-                   Field<BunnyWeaponState> weapons,
-                   Field<SpringScale> springs,
-                   Field<PlayerMeleeWeapon> melees,
-                   Field<Animation> anims,
-                   Field<CollisionBox> collisions) =>
-            {
-                var dt = it.DeltaTime();
-                var count = it.Count();
-
-                for (var i = 0; i < count; i++)
-                {
-                    ref var trans = ref transforms[i];
-                    ref var intent = ref intents[i];
-                    ref var weapon = ref weapons[i];
-                    ref var spring = ref springs[i];
-                    ref readonly var melee = ref melees[i];
-                    ref var anim = ref anims[i];
-                    ref readonly var col = ref collisions[i];
-
-                    ExecuteBunnyWeapon(ref trans, ref intent, ref weapon, ref spring, melee.Entity, ref anim, in col, dt);
-                }
-            });
+            .Iter(ExecuteBunnyWeaponSystem);
 
         return world;
+    }
+
+    private static void ExecuteBunnyWeaponSystem(
+        Iter it,
+        Field<Transform> transforms,
+        Field<WeaponIntent> intents,
+        Field<BunnyWeaponState> weapons,
+        Field<SpringScale> springs,
+        Field<PlayerMeleeWeapon> melees,
+        Field<Animation> anims,
+        Field<CollisionBox> collisions)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var dt = it.DeltaTime();
+
+        for (var i = 0; i < count; i++)
+        {
+            ref var trans = ref transforms[i];
+            ref var intent = ref intents[i];
+            ref var weapon = ref weapons[i];
+            ref var spring = ref springs[i];
+            ref readonly var melee = ref melees[i];
+            ref var anim = ref anims[i];
+            ref readonly var col = ref collisions[i];
+
+            ExecuteBunnyWeapon(ref trans, ref intent, ref weapon, ref spring, melee.Entity, ref anim, in col, dt);
+        }
     }
 
     private static void ExecuteBunnyWeapon(

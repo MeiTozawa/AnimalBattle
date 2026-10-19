@@ -9,6 +9,12 @@ namespace AnimalBattle.Configs;
 public sealed class SpatialHashConfig {
     /// <summary>空間ハッシュの正方形セル一辺のサイズ（ピクセル）</summary>
     public float CellSize { get; set; }
+
+    /// <summary>ハッシュテーブルのバケット数（2の冪乗）</summary>
+    public int TableSize { get; set; }
+
+    /// <summary>初期許容 Hurtbox エンティティ数</summary>
+    public int InitialCapacity { get; set; }
 }
 
 /// <summary>
@@ -39,7 +45,7 @@ public sealed class NavigationGraphConfig {
     /// <summary>上方跳躍として判定する最小高度差（ピクセル）</summary>
     public float MinJumpDeltaY { get; set; }
 
-    /// <summary>下方下落として判定する高度差上限（ピクセル、負値）</summary>
+    /// <summary>下方下落として判定する高度差上限（ピクセル、负値）</summary>
     public float MinDropDeltaY { get; set; }
 
     /// <summary>プラットフォーム水平重なり判定の最小重なり幅（ピクセル）</summary>

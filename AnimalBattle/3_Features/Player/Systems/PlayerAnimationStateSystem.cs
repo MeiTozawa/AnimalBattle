@@ -28,35 +28,44 @@ public static class PlayerAnimationStateSystem
             .Without<DeadTag>()
             .Without<HitstopState>()
             .Kind(Ecs.PreUpdate)
-            .Iter((Iter it, Field<Velocity> velocities, Field<CollisionBox> collisionBoxes, Field<Health> healths, Field<Animation> anims) =>
-            {
-                var count = it.Count();
-                var w = it.World();
-                var pCfg = w.GetActivePlayerConfig();
-                var threshold = pCfg.WalkAnimVelocityThreshold;
-
-                for (var i = 0; i < count; i++)
-                {
-                    ref readonly var hp = ref healths[i];
-                    if (hp.Current <= 0.0f) continue;
-
-                    ref var anim = ref anims[i];
-                    if (anim.CurrentClip == ClipAttack && !anim.IsFinished) continue;
-
-                    ref readonly var col = ref collisionBoxes[i];
-                    ref readonly var vel = ref velocities[i];
-
-                    if (!col.IsGrounded)
-                    {
-                        anim.Play(vel.Value.Y < 0.0f ? ClipJump : ClipFall);
-                    }
-                    else
-                    {
-                        anim.Play(MathF.Abs(vel.Value.X) > threshold ? ClipRun : ClipIdle);
-                    }
-                }
-            });
+            .Iter(ExecutePlayerAnimationState);
 
         return world;
+    }
+
+    private static void ExecutePlayerAnimationState(
+        Iter it,
+        Field<Velocity> velocities,
+        Field<CollisionBox> collisionBoxes,
+        Field<Health> healths,
+        Field<Animation> anims)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var w = it.World();
+        var pCfg = w.GetActivePlayerConfig();
+        var threshold = pCfg.WalkAnimVelocityThreshold;
+
+        for (var i = 0; i < count; i++)
+        {
+            ref readonly var hp = ref healths[i];
+            if (hp.Current <= 0.0f) continue;
+
+            ref var anim = ref anims[i];
+            if (anim.CurrentClip == ClipAttack && !anim.IsFinished) continue;
+
+            ref readonly var col = ref collisionBoxes[i];
+            ref readonly var vel = ref velocities[i];
+
+            if (!col.IsGrounded)
+            {
+                anim.Play(vel.Value.Y < 0.0f ? ClipJump : ClipFall);
+            }
+            else
+            {
+                anim.Play(MathF.Abs(vel.Value.X) > threshold ? ClipRun : ClipIdle);
+            }
+        }
     }
 }

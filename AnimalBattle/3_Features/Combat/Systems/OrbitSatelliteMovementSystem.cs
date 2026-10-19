@@ -23,67 +23,73 @@ public static class OrbitSatelliteMovementSystem
            .With<BossBulletTag>()
            .Without<RecycleTag>()
            .Kind(Ecs.OnUpdate)
-           .Iter((Iter it, Field<Transform> trans, Field<Velocity> vel, Field<OrbitSatellite> satellites,
-                Field<BulletModifier> modifiers) =>
-            {
-                var count = it.Count();
-                if (count <= 0) return;
-
-                var dt = it.DeltaTime();
-                var w = it.World();
-                ref readonly var cfg = ref w.Get<SpecialBulletConfig>();
-                var orbitSpeed = cfg.YellowOrbitSpeed;
-                ref readonly var arenaCfg = ref w.Get<ArenaConfig>();
-                var minX = arenaCfg.BulletDespawnMinX;
-                var maxX = arenaCfg.BulletDespawnMaxX;
-                var minY = arenaCfg.BulletDespawnMinY;
-                var maxY = arenaCfg.BulletDespawnMaxY;
-
-                for (var i = 0; i < count; ++i)
-                {
-                    ref var sat = ref satellites[i];
-                    if (!sat.IsActive) continue;
-
-                    if (!sat.Parent.IsAlive() || !sat.Parent.Enabled() || sat.Parent.Has<RecycleTag>())
-                    {
-                        it.Entity(i).Add<RecycleTag>();
-                        continue;
-                    }
-
-                    ref readonly var parentLease = ref sat.Parent.Get<PoolLeaseState>();
-                    if (!parentLease.IsRented || parentLease.Version != sat.ParentVersion)
-                    {
-                        it.Entity(i).Add<RecycleTag>();
-                        continue;
-                    }
-
-                    ref var mod = ref modifiers[i];
-                    mod.ElapsedTimer += dt;
-
-                    ref readonly var parentTrans = ref sat.Parent.Get<Transform>();
-                    var angle = sat.InitialAngle + mod.ElapsedTimer * orbitSpeed;
-                    var cos = MathF.Cos(angle);
-                    var sin = MathF.Sin(angle);
-
-                    var satOffset = new Vec2f(cos * sat.OrbitDistance, sin * sat.OrbitDistance);
-                    var satPos = parentTrans.Position + satOffset;
-
-                    if (satPos.X < minX || satPos.X > maxX || satPos.Y < minY || satPos.Y > maxY)
-                    {
-                        it.Entity(i).Add<RecycleTag>();
-                        continue;
-                    }
-
-                    ref var t = ref trans[i];
-                    t.Position = satPos;
-
-                    ref readonly var parentVel = ref sat.Parent.Get<Velocity>();
-                    var tangentSpeed = sat.OrbitDistance * orbitSpeed;
-                    ref var v = ref vel[i];
-                    v.Value = parentVel.Value + new Vec2f(-sin * tangentSpeed, cos * tangentSpeed);
-                }
-            });
+           .Iter(ExecuteOrbitSatelliteMovement);
 
         return world;
+    }
+
+    private static void ExecuteOrbitSatelliteMovement(
+        Iter it,
+        Field<Transform> trans,
+        Field<Velocity> vel,
+        Field<OrbitSatellite> satellites,
+        Field<BulletModifier> modifiers)
+    {
+        var count = it.Count();
+        if (count <= 0) return;
+
+        var dt = it.DeltaTime();
+        var w = it.World();
+        ref readonly var cfg = ref w.Get<SpecialBulletConfig>();
+        var orbitSpeed = cfg.YellowOrbitSpeed;
+        ref readonly var arenaCfg = ref w.Get<ArenaConfig>();
+        var minX = arenaCfg.BulletDespawnMinX;
+        var maxX = arenaCfg.BulletDespawnMaxX;
+        var minY = arenaCfg.BulletDespawnMinY;
+        var maxY = arenaCfg.BulletDespawnMaxY;
+
+        for (var i = 0; i < count; ++i)
+        {
+            ref var sat = ref satellites[i];
+            if (!sat.IsActive) continue;
+
+            if (!sat.Parent.IsAlive() || !sat.Parent.Enabled() || sat.Parent.Has<RecycleTag>())
+            {
+                it.Entity(i).Add<RecycleTag>();
+                continue;
+            }
+
+            ref readonly var parentLease = ref sat.Parent.Get<PoolLeaseState>();
+            if (!parentLease.IsRented || parentLease.Version != sat.ParentVersion)
+            {
+                it.Entity(i).Add<RecycleTag>();
+                continue;
+            }
+
+            ref var mod = ref modifiers[i];
+            mod.ElapsedTimer += dt;
+
+            ref readonly var parentTrans = ref sat.Parent.Get<Transform>();
+            var angle = sat.InitialAngle + mod.ElapsedTimer * orbitSpeed;
+            var cos = MathF.Cos(angle);
+            var sin = MathF.Sin(angle);
+
+            var satOffset = new Vec2f(cos * sat.OrbitDistance, sin * sat.OrbitDistance);
+            var satPos = parentTrans.Position + satOffset;
+
+            if (satPos.X < minX || satPos.X > maxX || satPos.Y < minY || satPos.Y > maxY)
+            {
+                it.Entity(i).Add<RecycleTag>();
+                continue;
+            }
+
+            ref var t = ref trans[i];
+            t.Position = satPos;
+
+            ref readonly var parentVel = ref sat.Parent.Get<Velocity>();
+            var tangentSpeed = sat.OrbitDistance * orbitSpeed;
+            ref var v = ref vel[i];
+            v.Value = parentVel.Value + new Vec2f(-sin * tangentSpeed, cos * tangentSpeed);
+        }
     }
 }

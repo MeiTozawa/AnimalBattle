@@ -14,7 +14,13 @@ namespace AnimalBattle.Systems.Render;
 /// <summary>
 ///     Boss の前揺予兆線（Telegraph）、虚弱隙（Vulnerable）演出、およびフェーズ遷移無敵結界を描画する ECS システム。
 /// </summary>
-public static class BossTelegraphRenderSystem {
+public static class BossTelegraphRenderSystem
+{
+    private static Query<PlayerPawn> _playerQuery;
+    private static Query<BaseBossAgent> _bossQuery;
+    private static BaseBossAgent? _cachedBoss;
+    private static Vec2f _cachedPlayerPos;
+
     /// <summary>
     ///     Boss 予兆・特殊状態描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -22,72 +28,85 @@ public static class BossTelegraphRenderSystem {
     /// <returns>登録済みワールド</returns>
     public static World AddBossTelegraphRenderSystem(this World world)
     {
-        var playerQuery = world.QueryBuilder<PlayerPawn>().Build();
-        var bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
+        _playerQuery = world.QueryBuilder<PlayerPawn>().Build();
+        _bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
 
         world.System("BossTelegraphRenderSystem")
             .Kind(Ecs.OnStore)
-            .Iter((Iter it) =>
-            {
-                var w = it.World();
-                ref readonly var flow = ref w.Get<GameFlow>();
-                if (flow.State != GameState.Battle) return;
-
-                BaseBossAgent? boss = null;
-                bossQuery.Each((ref BaseBossAgent b) => boss = b);
-                if (boss == null) return;
-                if (!boss.Entity.IsAlive() || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
-
-                var playerCfg = w.GetActivePlayerConfig();
-                var playerPos = playerCfg.Spawn;
-
-                playerQuery.Each((ref PlayerPawn player) =>
-                {
-                    if (player.Entity.IsAlive())
-                    {
-                        playerPos = player.Transform.Position;
-                    }
-                });
-
-                ref readonly var renderCfg = ref w.Get<RenderConfig>();
-                var bossFx = renderCfg.BossEffects;
-                ref readonly var arenaCfg = ref w.Get<ArenaConfig>();
-
-                TelegraphRenderHelper.CurrentEffects = bossFx;
-                TelegraphRenderHelper.CurrentArena = arenaCfg;
-
-                ref readonly var bTrans = ref boss.Transform;
-                ref readonly var bSprite = ref boss.Sprite;
-                var bPos = (bTrans.Position + bSprite.JitterOffset).ToVec2i();
-
-                // 1. 予兆前揺（Telegraph）描画
-                if (boss.CurrentState.IsTelegraph)
-                {
-                    var progress = boss.AbilitySystem.PhaseProgress;
-                    DrawBossTelegraph(boss, playerPos, progress);
-                }
-
-                var flipX = !boss.FacingRight;
-                var rotation = bTrans.Rotation;
-
-                // 2. 虚弱（Vulnerable）状態の脈動オーラとマーカー
-                if (boss.IsVulnerable)
-                {
-                    DrawBossVulnerableEffects(
-                        bPos, bSprite.SrcRect, bTrans.Scale, rotation,
-                        bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
-                }
-
-                // 3. フェーズ遷移無敵結界演出
-                if (boss.CurrentState.IsPhaseTransition)
-                {
-                    DrawBossPhaseTransitionEffects(
-                        bPos, bSprite.SrcRect, bTrans.Scale, rotation,
-                        bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
-                }
-            });
+            .Iter(ExecuteBossTelegraphRender);
 
         return world;
+    }
+
+    /// <summary>
+    ///     Boss 予兆線および特殊状態描画パイプライン（名前付き静的メソッド）。
+    /// </summary>
+    public static void ExecuteBossTelegraphRender(Iter it)
+    {
+        var w = it.World();
+        ref readonly var flow = ref w.Get<GameFlow>();
+        if (flow.State != GameState.Battle) return;
+
+        _cachedBoss = null;
+        _bossQuery.Each(FindBoss);
+        var boss = _cachedBoss;
+        _cachedBoss = null;
+
+        if (boss == null) return;
+        if (!boss.Entity.IsAlive() || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
+
+        var playerCfg = w.GetActivePlayerConfig();
+        _cachedPlayerPos = playerCfg.Spawn;
+        _playerQuery.Each(FindPlayerPosition);
+
+        var playerPos = _cachedPlayerPos;
+
+        ref readonly var renderCfg = ref w.Get<RenderConfig>();
+        var bossFx = renderCfg.BossEffects;
+        ref readonly var arenaCfg = ref w.Get<ArenaConfig>();
+
+        TelegraphRenderHelper.CurrentEffects = bossFx;
+        TelegraphRenderHelper.CurrentArena = arenaCfg;
+
+        ref readonly var bTrans = ref boss.Transform;
+        ref readonly var bSprite = ref boss.Sprite;
+        var bPos = (bTrans.Position + bSprite.JitterOffset).ToVec2i();
+
+        // 1. 予兆前揺（Telegraph）描画
+        if (boss.CurrentState.IsTelegraph)
+        {
+            var progress = boss.AbilitySystem.PhaseProgress;
+            DrawBossTelegraph(boss, playerPos, progress);
+        }
+
+        var flipX = !boss.FacingRight;
+        var rotation = bTrans.Rotation;
+
+        // 2. 虚弱（Vulnerable）状態の脈動オーラとマーカー
+        if (boss.IsVulnerable)
+        {
+            DrawBossVulnerableEffects(
+                bPos, bSprite.SrcRect, bTrans.Scale, rotation,
+                bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
+        }
+
+        // 3. フェーズ遷移無敵結界演出
+        if (boss.CurrentState.IsPhaseTransition)
+        {
+            DrawBossPhaseTransitionEffects(
+                bPos, bSprite.SrcRect, bTrans.Scale, rotation,
+                bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
+        }
+    }
+
+    private static void FindBoss(ref BaseBossAgent b) => _cachedBoss = b;
+
+    private static void FindPlayerPosition(ref PlayerPawn player)
+    {
+        if (player.Entity.IsAlive())
+        {
+            _cachedPlayerPos = player.Transform.Position;
+        }
     }
 
     private static void DrawBossTelegraph(
