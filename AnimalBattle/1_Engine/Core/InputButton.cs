@@ -58,6 +58,10 @@ public enum InputButton {
     KeyDown = 0xD0,
     KeyRShift = 0x36,
     KeyRControl = 0x9D,
+    KeyF1 = 0x3B,
+    KeyF2 = 0x3C,
+    KeyF3 = 0x3D,
+    KeyF4 = 0x3E,
 
     // --- マウスボタン (300 ~ 399) ---
     MouseLeft = 300,

@@ -156,4 +156,19 @@ public abstract class BaseBossBrain : IBossBrain
         _asc.TryActivateAbility(_phaseTransitionAbility.AbilityTag);
         OnPhaseTransitionEntered(newPhase);
     }
+
+    /// <summary>
+    ///     デバッグ用に指定フェーズへ即座に切り替えます。
+    /// </summary>
+    public virtual void DebugSetPhase(Phase targetPhase)
+    {
+        if (_isDead) return;
+
+        Phase = targetPhase;
+        _asc.InterruptCurrentAbility();
+        _asc.RemoveTag(GameplayTag.Phasing);
+        _asc.RemoveTag(GameplayTag.Vulnerable);
+        _asc.RemoveTag(GameplayTag.SuperArmor);
+        OnPhaseTransitionCompleted();
+    }
 }

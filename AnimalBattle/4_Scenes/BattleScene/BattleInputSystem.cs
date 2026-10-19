@@ -1,3 +1,4 @@
+using AnimalBattle.Ai;
 using AnimalBattle.Characters;
 using AnimalBattle.Characters.Boss;
 using AnimalBattle.Combat;
@@ -14,6 +15,11 @@ namespace AnimalBattle.Systems;
 ///     GameState.Battle 状態時にのみアクティブとなり、PreUpdate フェーズでプレイヤーの入力を処理します。
 /// </summary>
 public static class BattleInputSystem {
+    private static bool _prevF1;
+    private static bool _prevF2;
+    private static bool _prevF3;
+    private static bool _prevF4;
+
     /// <summary>
     ///     戦闘入力処理システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -54,6 +60,14 @@ public static class BattleInputSystem {
                     ResetCombat(w, playerBulletsQuery, vfxQuery, playerQuery, bossQuery);
                 }
 
+                // デバッグ入力（F1 トグル、F2～F4 フェーズ切替）の処理
+                var renderCfg = w.Get<RenderConfig>();
+                var dbgCfg = renderCfg.Debug;
+                if (dbgCfg.DebugMode)
+                {
+                    ProcessDebugInput(w, dbgCfg, bossQuery);
+                }
+
                 // ゲームオーバー時は自機の操作入力を停止
                 if (w.Has<GameOverTag>()) return;
 
@@ -92,5 +106,41 @@ public static class BattleInputSystem {
         });
 
         EventBus.Publish(new CombatResetEvent());
+    }
+
+    private static void ProcessDebugInput(World world, DebugRenderConfig dbgCfg, Query<BaseBossAgent> bossQuery)
+    {
+        var isF1 = GameEngine.CheckHitKey((int)InputButton.KeyF1) || GameEngine.CheckHitKey((int)InputButton.KeyH);
+        if (isF1 && !_prevF1)
+        {
+            dbgCfg.IsActive = !dbgCfg.IsActive;
+            dbgCfg.Enabled = dbgCfg.IsActive;
+        }
+        _prevF1 = isF1;
+
+        if (!dbgCfg.IsActive) return;
+
+        // ゲームオーバー（Boss 撃破または自機死亡）時はフェーズ切替を無効化
+        if (world.Has<GameOverTag>()) return;
+
+        var isF2 = GameEngine.CheckHitKey((int)InputButton.KeyF2);
+        var isF3 = GameEngine.CheckHitKey((int)InputButton.KeyF3);
+        var isF4 = GameEngine.CheckHitKey((int)InputButton.KeyF4);
+
+        if ((isF2 && !_prevF2) || (isF3 && !_prevF3) || (isF4 && !_prevF4))
+        {
+            bossQuery.Each((ref BaseBossAgent boss) =>
+            {
+                if (!boss.IsAlive || boss.IsDead || boss.Health.Current <= 0.0f || (boss.Entity.IsAlive() && boss.Entity.Has<DeadTag>())) return;
+
+                if (isF2 && !_prevF2) boss.DebugSetPhase(Phase.Phase1);
+                else if (isF3 && !_prevF3) boss.DebugSetPhase(Phase.Phase2);
+                else if (isF4 && !_prevF4) boss.DebugSetPhase(Phase.Phase3);
+            });
+        }
+
+        _prevF2 = isF2;
+        _prevF3 = isF3;
+        _prevF4 = isF4;
     }
 }

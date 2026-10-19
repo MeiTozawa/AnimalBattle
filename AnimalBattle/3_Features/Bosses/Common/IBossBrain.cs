@@ -46,4 +46,7 @@ public interface IBossBrain
 
     /// <summary>死亡処理を実行します。</summary>
     void Kill();
+
+    /// <summary>デバッグ用に指定フェーズへ即座に切り替えます。</summary>
+    void DebugSetPhase(Phase targetPhase);
 }

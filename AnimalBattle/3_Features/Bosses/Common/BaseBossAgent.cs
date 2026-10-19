@@ -1,6 +1,7 @@
 using System.Drawing;
 using AnimalBattle.Abilities;
 using AnimalBattle.Ai;
+using AnimalBattle.Components;
 using AnimalBattle.Core;
 using Flecs.NET.Core;
 
@@ -63,6 +64,9 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
 
     /// <summary>Boss が右向きであるかを取得します。</summary>
     public virtual bool FacingRight => Brain.FacingRight;
+
+    /// <summary>Boss が死亡状態であるかを取得します。</summary>
+    public virtual bool IsDead => Brain.IsDead || (Entity.IsAlive() && Entity.Has<DeadTag>()) || Health.Current <= 0.0f;
 
     /// <summary>
     ///     Boss エージェントのリソースを解放します。
@@ -129,6 +133,27 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     protected void SyncCombatState()
     {
         Entity.Set(new BossCombatState(Phase));
+    }
+
+    /// <summary>
+    ///     デバッグ用に指定フェーズへ即座に切り替え、体力・弾幕および状態を同期します。
+    /// </summary>
+    public void DebugSetPhase(Phase targetPhase)
+    {
+        if (!IsAlive || IsDead || Health.Current <= 0.0f || (Entity.IsAlive() && Entity.Has<DeadTag>())) return;
+
+        Brain.DebugSetPhase(targetPhase);
+        var thresholds = PhaseThresholds;
+        ref var hp = ref Entity.GetMut<Health>();
+        var ratio = targetPhase switch {
+            Phase.Phase1 => 1.0f,
+            Phase.Phase2 => thresholds.Phase2Threshold,
+            Phase.Phase3 => thresholds.Phase3Threshold,
+            _ => 1.0f
+        };
+        hp.Current = Math.Clamp((float)Math.Round(hp.Max * ratio), 1.0f, hp.Max);
+        HandleClearBullets();
+        SyncCombatState();
     }
 
     /// <summary>

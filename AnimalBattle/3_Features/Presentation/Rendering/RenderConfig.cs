@@ -574,6 +574,17 @@ public sealed class ModalRenderConfig {
 ///     Hitbox / Hurtbox / 衝突境界線デバッグ可視化描画の設定クラス。
 /// </summary>
 public sealed class DebugRenderConfig {
+    /// <summary>
+    ///     デバッグモード全体の有効フラグ（Config/render.toml 由来）。
+    ///     false の場合、F1～F4 キーを含む全てのデバッグ入力および描画が無効化されます。
+    /// </summary>
+    public bool DebugMode { get; set; }
+
+    /// <summary>
+    ///     F1 キーによってトグルされるデバッグオーバーレイの表示状態。
+    /// </summary>
+    public bool IsActive { get; set; }
+
     /// <summary>起動時にデバッグ描画を有効にするか</summary>
     public bool Enabled { get; set; }
 
@@ -597,6 +608,24 @@ public sealed class DebugRenderConfig {
 
     /// <summary>デバッグ状態インジケータ文字色 (<see cref="Color" />)</summary>
     public Color IndicatorColor { get; set; }
+
+    /// <summary>デバッグ状態インジケータ表示 X 座標</summary>
+    public int IndicatorX { get; set; } = 980;
+
+    /// <summary>デバッグ状態インジケータ表示 Y 座標</summary>
+    public int IndicatorY { get; set; } = 16;
+
+    /// <summary>デバッグ状態インジケータ表示文字列</summary>
+    public string IndicatorText { get; set; } = "[DEBUG MODE ACTIVE - F1 to toggle]";
+
+    /// <summary>デバッグフェーズ切替操作案内テキスト</summary>
+    public string PhaseSwitchGuideText { get; set; } = "[F2] Phase 1   [F3] Phase 2   [F4] Phase 3";
+
+    /// <summary>デバッグフェーズ切替操作案内文字色 (<see cref="Color" />)</summary>
+    public Color PhaseSwitchGuideColor { get; set; } = ColorPalette.Gold;
+
+    /// <summary>デバッグ操作案内表示 Y オフセット (px)</summary>
+    public int GuideOffsetY { get; set; } = 24;
 
     /// <summary>中立陣営当たり判定色 (<see cref="Color" />)</summary>
     public Color NeutralHitboxColor { get; set; } = ColorPalette.Gray;

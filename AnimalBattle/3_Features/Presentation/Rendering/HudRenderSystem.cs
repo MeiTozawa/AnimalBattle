@@ -41,10 +41,9 @@ public static class HudRenderSystem {
                 BaseBossAgent? boss = null;
                 bossQuery.Each((ref BaseBossAgent b) => boss = b);
 
-                var remainingJumps = player?.RemainingJumps ?? 0;
                 ref readonly var renderCfg = ref w.Get<RenderConfig>();
 
-                Render(player, boss, remainingJumps, in renderCfg);
+                Render(player, boss, in renderCfg);
             });
 
         return world;
@@ -55,22 +54,20 @@ public static class HudRenderSystem {
     /// </summary>
     /// <param name="player">現在アクティブな自機 Pawn。</param>
     /// <param name="boss">現在アクティブな首領 Agent。</param>
-    /// <param name="remainingJumps">プレイヤーの二段ジャンプ残数。</param>
     /// <param name="renderCfg">描画設定。</param>
-    private static void Render(Pawn? player, BaseBossAgent? boss, int remainingJumps, in RenderConfig renderCfg)
+    private static void Render(Pawn? player, BaseBossAgent? boss, in RenderConfig renderCfg)
     {
         var hudCfg = renderCfg.Hud;
         var hpCfg = renderCfg.BossHpBar;
         var modalCfg = renderCfg.Modals;
-        var dbgCfg = renderCfg.Debug;
 
-        DrawControlHelp(hudCfg, dbgCfg);
-        DrawPlayerStatus(player, remainingJumps, hudCfg);
+        DrawControlHelp(hudCfg);
+        DrawPlayerStatus(player, hudCfg);
         DrawBossStatus(boss, hpCfg, modalCfg);
         DrawGameOverModal(player, modalCfg);
     }
 
-    private static void DrawControlHelp(HudRenderConfig hudCfg, DebugRenderConfig dbgCfg)
+    private static void DrawControlHelp(HudRenderConfig hudCfg)
     {
         GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY, hudCfg.TitleText, hudCfg.TitleColor);
 
@@ -78,44 +75,14 @@ public static class HudRenderSystem {
         foreach (var item in hudCfg.Text)
         {
             var drawY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
-
-            if (item.Text.Contains("F1", StringComparison.OrdinalIgnoreCase) ||
-                item.Text.Contains("Hitbox", StringComparison.OrdinalIgnoreCase))
-            {
-                var dbgStatus = dbgCfg.Enabled ? " [ON - H / F1 to toggle]" : " [OFF - H / F1 to toggle]";
-                var statusColor = dbgCfg.Enabled ? dbgCfg.IndicatorColor : item.Color;
-                GameEngine.DrawString(hudCfg.TitleX, drawY, $"{item.Text}{dbgStatus}", statusColor);
-            }
-            else
-            {
-                GameEngine.DrawString(hudCfg.TitleX, drawY, item.Text, item.Color);
-            }
-
+            GameEngine.DrawString(hudCfg.TitleX, drawY, item.Text, item.Color);
             lineIndex++;
-        }
-
-        var switchGuideY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
-        GameEngine.DrawString(hudCfg.TitleX, switchGuideY, hudCfg.BossSwitchGuideText, hudCfg.BossSwitchGuideColor);
-
-        if (!string.IsNullOrEmpty(hudCfg.CharacterSwitchGuideText))
-        {
-            lineIndex++;
-            var charGuideY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
-            GameEngine.DrawString(hudCfg.TitleX, charGuideY, hudCfg.CharacterSwitchGuideText, hudCfg.CharacterSwitchGuideColor);
         }
     }
 
-    private static void DrawPlayerStatus(Pawn? player, int remainingJumps, HudRenderConfig hudCfg)
+    private static void DrawPlayerStatus(Pawn? player, HudRenderConfig hudCfg)
     {
         if (player == null) return;
-
-        var jumpText = remainingJumps switch {
-            >= 2 => "Double Jump: [ ●  ● ]",
-            1 => "Double Jump: [ ●  ○ ]",
-            _ => "Double Jump: [ ○  ○ ]"
-        };
-        var jumpColor = remainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
-        GameEngine.DrawString(hudCfg.DoubleJumpX, hudCfg.DoubleJumpY, jumpText, jumpColor);
 
         ref readonly var playerHp = ref player.Health;
         var maxHp = (int)Math.Max(1.0f, playerHp.Max);
@@ -150,24 +117,8 @@ public static class HudRenderSystem {
 
         var phase = ToLegacyPhase(boss.Phase);
         var bossTitle = GetBossTitle(boss.BossType, phase);
-        GetBossStateInfo(boss, hpCfg, out var stateName, out var stateBadgeColor);
-        string timerText;
-        if (boss.AbilitySystem.IsCasting)
-        {
-            var pElapsed = boss.AbilitySystem.PhaseElapsed;
-            var pDuration = boss.AbilitySystem.PhaseDuration;
-            timerText = pDuration > 0.0f
-                ? $"{pElapsed:F1}s/{pDuration:F1}s"
-                : $"{pElapsed:F1}s";
-        }
-        else
-        {
-            timerText = $"{boss.StateTimer:F1}s";
-        }
-
         ref readonly var bossHp = ref boss.Health;
-        DrawBossHpBar(hpCfg, modalCfg, bossTitle, stateName, stateBadgeColor, bossHp.Current, bossHp.Max, phase,
-            timerText, boss.PhaseThresholds);
+        DrawBossHpBar(hpCfg, modalCfg, bossTitle, bossHp.Current, bossHp.Max, phase, boss.PhaseThresholds);
     }
 
     /// <summary>
@@ -209,7 +160,7 @@ public static class HudRenderSystem {
         _ => AssertHelper.FailWithDefault("[HUD 警告] 未知のフェーズ", 1)
     };
 
-    private static void GetBossStateInfo(BaseBossAgent boss, BossHpBarRenderConfig hpCfg,
+    internal static void GetBossStateInfo(BaseBossAgent boss, BossHpBarRenderConfig hpCfg,
         out string stateName, out Color badgeColor)
     {
         var state = boss.CurrentState;
@@ -250,12 +201,9 @@ public static class HudRenderSystem {
         BossHpBarRenderConfig hpCfg,
         ModalRenderConfig modalCfg,
         string bossTitle,
-        string stateName,
-        Color stateBadgeColor,
         float currentHp,
         float maxHp,
         int phase,
-        string timerText,
         (float Phase2Threshold, float Phase3Threshold) phaseThresholds)
     {
         var barX1 = hpCfg.BarX1;
@@ -274,10 +222,6 @@ public static class HudRenderSystem {
         var hpX = barX2 - (hpCfg.HpTextOffsetRight != 0 ? hpCfg.HpTextOffsetRight : 170);
         var hpY = barY1 - (hpCfg.HpTextOffsetY != 0 ? hpCfg.HpTextOffsetY : hpCfg.HeaderOffsetY);
         GameEngine.DrawString(hpX, hpY, hpText, hpCfg.HpTextColor);
-
-        var badgeX = barX1 + hpCfg.StateBadgeOffsetX;
-        var badgeY = barY1 - (hpCfg.StateBadgeOffsetY != 0 ? hpCfg.StateBadgeOffsetY : hpCfg.HeaderOffsetY);
-        GameEngine.DrawString(badgeX, badgeY, $"{stateName} ({timerText})", stateBadgeColor);
 
         // Boss HP バー背景および枠線
         GameEngine.DrawBox(barX1 - hpCfg.BgPadding, barY1 - hpCfg.BgPadding, barX2 + hpCfg.BgPadding,

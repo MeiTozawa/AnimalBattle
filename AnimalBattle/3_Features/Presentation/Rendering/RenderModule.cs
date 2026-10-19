@@ -33,8 +33,9 @@ public readonly struct RenderModule : IFlecsModule {
         // 3. スクリーン空間描画前のカメラオフセットリセット (HUD / 照準器 / UI へのシェイク波及防止)
         world.AddCameraOffsetResetSystem();
 
-        // 4. スクリーン空間描画（HUD、照準器）
+        // 4. スクリーン空間描画（HUD、照準器、デバッグオーバーレイ）
         world.AddHudRenderSystem()
-             .AddAimReticleRenderSystem();
+             .AddAimReticleRenderSystem()
+             .AddDebugOverlayRenderSystem();
     }
 }

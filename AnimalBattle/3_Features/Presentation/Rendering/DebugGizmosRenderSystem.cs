@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using AnimalBattle.Maps;
 using AnimalBattle.Maps.Navigation;
 using Flecs.NET.Core;
@@ -9,12 +10,10 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Systems.Render;
 
 /// <summary>
-///     衝突枠（CollisionBox）、攻撃判定枠（Hitbox）、被弾枠（Hurtbox）およびナビゲーショングラフのデバッグ枠線を描画する ECS システム。
-///     F1 または H キーによるトグル切り替えに対応します。
+///     衝突枠（CollisionBox）、攻撃判定枠（Hitbox）、被弾枠（Hurtbox）、およびナビゲーショングラフを描画する ECS システム。
+///     render.toml の DebugMode かつ IsActive 有効時にワールド空間（カメラオフセット適用中）に Gizmos を描画します。
 /// </summary>
 public static class DebugGizmosRenderSystem {
-    private static bool _prevToggleKey;
-
     /// <summary>
     ///     デバッグギズモ描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -44,13 +43,13 @@ public static class DebugGizmosRenderSystem {
                 var renderCfg = w.Get<RenderConfig>();
                 var dbgCfg = renderCfg.Debug;
 
-                ProcessToggleInput(dbgCfg);
-
-                if (!dbgCfg.Enabled) return;
+                // DebugMode が無効または非アクティブな場合は空間ギズモ描画をスキップ
+                if (!dbgCfg.DebugMode || !dbgCfg.IsActive) return;
 
                 TileMap? tileMap = null;
                 tileMapQuery.Each((ref TileMap tm) => tileMap = tm);
 
+                // 空間・物理 Gizmos 描画（ワールド座標系）
                 DrawCollisionBoxes(platformQuery, dbgCfg);
                 DrawHurtboxes(hurtboxQuery, dbgCfg);
                 DrawHitboxes(hitboxQuery, dbgCfg);
@@ -58,15 +57,6 @@ public static class DebugGizmosRenderSystem {
             });
 
         return world;
-    }
-
-    private static void ProcessToggleInput(DebugRenderConfig dbgCfg)
-    {
-        var isToggleKey = GameEngine.CheckHitKey(0x3B) || GameEngine.CheckHitKey(0x23);
-        var toggleJustPressed = isToggleKey && !_prevToggleKey;
-        _prevToggleKey = isToggleKey;
-
-        if (toggleJustPressed) dbgCfg.Enabled = !dbgCfg.Enabled;
     }
 
     private static void DrawCollisionBoxes(Query<Transform, CollisionBox> colQuery, DebugRenderConfig dbgCfg)
