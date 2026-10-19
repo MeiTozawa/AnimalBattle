@@ -69,13 +69,13 @@ public static class HudRenderSystem {
 
     private static void DrawControlHelp(HudRenderConfig hudCfg)
     {
-        GameEngine.DrawString(hudCfg.TitleX, hudCfg.TitleY, hudCfg.TitleText, hudCfg.TitleColor);
+        GameEngine.DrawString(hudCfg.TitlePos, hudCfg.TitleText, hudCfg.TitleColor);
 
         var lineIndex = 1;
         foreach (var item in hudCfg.Text)
         {
-            var drawY = hudCfg.TitleY + hudCfg.LineSpacing * lineIndex;
-            GameEngine.DrawString(hudCfg.TitleX, drawY, item.Text, item.Color);
+            var drawPos = new Vec2i(hudCfg.TitlePos.X, hudCfg.TitlePos.Y + hudCfg.LineSpacing * lineIndex);
+            GameEngine.DrawString(drawPos, item.Text, item.Color);
             lineIndex++;
         }
     }
@@ -108,7 +108,7 @@ public static class HudRenderSystem {
         var hpText = player.IsInvincible
             ? $"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp}) [INVINCIBLE]"
             : $"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp})";
-        GameEngine.DrawString(hudCfg.PlayerHpX, hudCfg.PlayerHpY, hpText, hpColor);
+        GameEngine.DrawString(hudCfg.PlayerHpPos, hpText, hpColor);
     }
 
     private static void DrawBossStatus(BaseBossAgent? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
@@ -141,16 +141,12 @@ public static class HudRenderSystem {
     private static void DrawGameOverModal(Pawn? player, ModalRenderConfig modalCfg)
     {
         if (player is not { IsAlive: false }) return;
-        GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2,
-            modalCfg.GameOverBgColor, true);
-        GameEngine.DrawBox(modalCfg.GameOverX1, modalCfg.GameOverY1, modalCfg.GameOverX2, modalCfg.GameOverY2,
-            modalCfg.GameOverOuterBorderColor, false);
-        GameEngine.DrawBox(modalCfg.GameOverX1 + modalCfg.InnerBorderPadding, modalCfg.GameOverY1 + modalCfg.InnerBorderPadding, modalCfg.GameOverX2 - modalCfg.InnerBorderPadding,
-            modalCfg.GameOverY2 - modalCfg.InnerBorderPadding, modalCfg.GameOverInnerBorderColor, false);
-        GameEngine.DrawString(modalCfg.GameOverTitleX, modalCfg.GameOverTitleY, modalCfg.GameOverTitleText,
-            modalCfg.GameOverTitleColor);
-        GameEngine.DrawString(modalCfg.GameOverRetryX, modalCfg.GameOverRetryY, modalCfg.GameOverRetryText,
-            modalCfg.GameOverRetryColor);
+        GameEngine.DrawBox(modalCfg.GameOverPos1, modalCfg.GameOverPos2, modalCfg.GameOverBgColor, true);
+        GameEngine.DrawBox(modalCfg.GameOverPos1, modalCfg.GameOverPos2, modalCfg.GameOverOuterBorderColor, false);
+        var pad = new Vec2i(modalCfg.InnerBorderPadding, modalCfg.InnerBorderPadding);
+        GameEngine.DrawBox(modalCfg.GameOverPos1 + pad, modalCfg.GameOverPos2 - pad, modalCfg.GameOverInnerBorderColor, false);
+        GameEngine.DrawString(modalCfg.GameOverTitlePos, modalCfg.GameOverTitleText, modalCfg.GameOverTitleColor);
+        GameEngine.DrawString(modalCfg.GameOverRetryPos, modalCfg.GameOverRetryText, modalCfg.GameOverRetryColor);
     }
 
     private static int ToLegacyPhase(Phase phase) => phase switch {
@@ -206,28 +202,26 @@ public static class HudRenderSystem {
         int phase,
         (float Phase2Threshold, float Phase3Threshold) phaseThresholds)
     {
-        var barX1 = hpCfg.BarX1;
-        var barY1 = hpCfg.BarY1;
-        var barX2 = hpCfg.BarX2;
-        var barY2 = hpCfg.BarY2;
-        var totalWidth = barX2 - barX1;
+        var barP1 = hpCfg.BarPos1;
+        var barP2 = hpCfg.BarPos2;
+        var totalWidth = barP2.X - barP1.X;
 
         // Boss 情報ヘッダー (HP バー上部)
         var hpText = $"HP: {currentHp:F0} / {maxHp:F0}";
 
-        var titleX = barX1 + hpCfg.TitleOffsetX;
-        var titleY = barY1 - (hpCfg.TitleOffsetY != 0 ? hpCfg.TitleOffsetY : hpCfg.HeaderOffsetY);
-        GameEngine.DrawString(titleX, titleY, bossTitle, hpCfg.TitleColor);
+        var titlePos = barP1 + (hpCfg.TitleOffset != Vec2i.Zero
+            ? hpCfg.TitleOffset
+            : new Vec2i(0, -hpCfg.HeaderOffsetY));
+        GameEngine.DrawString(titlePos, bossTitle, hpCfg.TitleColor);
 
-        var hpX = barX2 - (hpCfg.HpTextOffsetRight != 0 ? hpCfg.HpTextOffsetRight : 170);
-        var hpY = barY1 - (hpCfg.HpTextOffsetY != 0 ? hpCfg.HpTextOffsetY : hpCfg.HeaderOffsetY);
-        GameEngine.DrawString(hpX, hpY, hpText, hpCfg.HpTextColor);
+        var hpX = barP2.X - (hpCfg.HpTextOffsetRight != 0 ? hpCfg.HpTextOffsetRight : 170);
+        var hpY = barP1.Y - (hpCfg.HpTextOffsetY != 0 ? hpCfg.HpTextOffsetY : hpCfg.HeaderOffsetY);
+        GameEngine.DrawString(new Vec2i(hpX, hpY), hpText, hpCfg.HpTextColor);
 
         // Boss HP バー背景および枠線
-        GameEngine.DrawBox(barX1 - hpCfg.BgPadding, barY1 - hpCfg.BgPadding, barX2 + hpCfg.BgPadding,
-            barY2 + hpCfg.BgPadding, hpCfg.BgColor, true);
-        GameEngine.DrawBox(barX1 - hpCfg.BgPadding, barY1 - hpCfg.BgPadding, barX2 + hpCfg.BgPadding,
-            barY2 + hpCfg.BgPadding, hpCfg.BorderColor, false);
+        var bgPad = new Vec2i(hpCfg.BgPadding, hpCfg.BgPadding);
+        GameEngine.DrawBox(barP1 - bgPad, barP2 + bgPad, hpCfg.BgColor, true);
+        GameEngine.DrawBox(barP1 - bgPad, barP2 + bgPad, hpCfg.BorderColor, false);
 
         // Boss HP ゲージ塗りつぶし
         Color hpFillColor;
@@ -252,8 +246,8 @@ public static class HudRenderSystem {
         var fillWidth = (int)(totalWidth * hpRatio);
         if (fillWidth > 0)
         {
-            GameEngine.DrawBox(barX1, barY1, barX1 + fillWidth, barY2, hpFillColor, true);
-            GameEngine.DrawBox(barX1, barY1, barX1 + fillWidth, barY1 + hpCfg.TopHighlightThickness,
+            GameEngine.DrawBox(barP1, new Vec2i(barP1.X + fillWidth, barP2.Y), hpFillColor, true);
+            GameEngine.DrawBox(barP1, new Vec2i(barP1.X + fillWidth, barP1.Y + hpCfg.TopHighlightThickness),
                 hpCfg.TopHighlightColor, true);
         }
 
@@ -261,23 +255,19 @@ public static class HudRenderSystem {
         var p2Ratio = Math.Clamp(phaseThresholds.Phase2Threshold, 0.0f, 1.0f);
         var p3Ratio = Math.Clamp(phaseThresholds.Phase3Threshold, 0.0f, 1.0f);
 
-        var phase2MarkerX = barX1 + (int)(totalWidth * p2Ratio);
-        var phase3MarkerX = barX1 + (int)(totalWidth * p3Ratio);
+        var phase2MarkerX = barP1.X + (int)(totalWidth * p2Ratio);
+        var phase3MarkerX = barP1.X + (int)(totalWidth * p3Ratio);
 
-        GameEngine.DrawBox(phase2MarkerX - hpCfg.PhaseSplitWidth, barY1, phase2MarkerX + hpCfg.PhaseSplitWidth, barY2, hpCfg.BorderColor, true);
-        GameEngine.DrawBox(phase3MarkerX - hpCfg.PhaseSplitWidth, barY1, phase3MarkerX + hpCfg.PhaseSplitWidth, barY2, hpCfg.BorderColor, true);
+        GameEngine.DrawBox(new Vec2i(phase2MarkerX - hpCfg.PhaseSplitWidth, barP1.Y), new Vec2i(phase2MarkerX + hpCfg.PhaseSplitWidth, barP2.Y), hpCfg.BorderColor, true);
+        GameEngine.DrawBox(new Vec2i(phase3MarkerX - hpCfg.PhaseSplitWidth, barP1.Y), new Vec2i(phase3MarkerX + hpCfg.PhaseSplitWidth, barP2.Y), hpCfg.BorderColor, true);
 
         // 勝利バナー
         if (currentHp > 0.0f) return;
-        GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2,
-            modalCfg.VictoryBgColor, true);
-        GameEngine.DrawBox(modalCfg.VictoryX1, modalCfg.VictoryY1, modalCfg.VictoryX2, modalCfg.VictoryY2,
-            modalCfg.VictoryOuterBorderColor, false);
-        GameEngine.DrawBox(modalCfg.VictoryX1 + modalCfg.InnerBorderPadding, modalCfg.VictoryY1 + modalCfg.InnerBorderPadding, modalCfg.VictoryX2 - modalCfg.InnerBorderPadding,
-            modalCfg.VictoryY2 - modalCfg.InnerBorderPadding, modalCfg.VictoryInnerBorderColor, false);
-        GameEngine.DrawString(modalCfg.VictoryTitleX, modalCfg.VictoryTitleY, modalCfg.VictoryTitleText,
-            modalCfg.VictoryTitleColor);
-        GameEngine.DrawString(modalCfg.VictoryRetryX, modalCfg.VictoryRetryY, modalCfg.VictoryRetryText,
-            modalCfg.VictoryRetryColor);
+        GameEngine.DrawBox(modalCfg.VictoryPos1, modalCfg.VictoryPos2, modalCfg.VictoryBgColor, true);
+        GameEngine.DrawBox(modalCfg.VictoryPos1, modalCfg.VictoryPos2, modalCfg.VictoryOuterBorderColor, false);
+        var vicPad = new Vec2i(modalCfg.InnerBorderPadding, modalCfg.InnerBorderPadding);
+        GameEngine.DrawBox(modalCfg.VictoryPos1 + vicPad, modalCfg.VictoryPos2 - vicPad, modalCfg.VictoryInnerBorderColor, false);
+        GameEngine.DrawString(modalCfg.VictoryTitlePos, modalCfg.VictoryTitleText, modalCfg.VictoryTitleColor);
+        GameEngine.DrawString(modalCfg.VictoryRetryPos, modalCfg.VictoryRetryText, modalCfg.VictoryRetryColor);
     }
 }

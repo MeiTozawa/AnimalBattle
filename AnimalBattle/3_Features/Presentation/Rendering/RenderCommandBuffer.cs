@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AnimalBattle.Bindings;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Render;
 
@@ -163,23 +164,19 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     矩形描画コマンドをバッファへ追加します。
     /// </summary>
-    /// <param name="x1">左上 X 座標。</param>
-    /// <param name="y1">左上 Y 座標。</param>
-    /// <param name="x2">右下 X 座標。</param>
-    /// <param name="y2">右下 Y 座標。</param>
+    /// <param name="p1">左上座標 (<see cref="Vec2i" />)。</param>
+    /// <param name="p2">右下座標 (<see cref="Vec2i" />)。</param>
     /// <param name="color">描画カラー。</param>
     /// <param name="fill">塗りつぶしフラグ。</param>
-    public void PushDrawBox(int x1, int y1, int x2, int y2, uint color, bool fill)
+    public void PushDrawBox(Vec2i p1, Vec2i p2, uint color, bool fill)
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawBox,
             Box = new DrawBoxPacket {
-                X1 = x1,
-                Y1 = y1,
-                X2 = x2,
-                Y2 = y2,
+                P1 = p1,
+                P2 = p2,
                 Color = color,
                 Fill = fill ? (byte)1 : (byte)0
             }
@@ -189,37 +186,32 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     円描画コマンドをバッファへ追加します。20 バイトの緊密配置円バッファへ高速転送されます。
     /// </summary>
-    /// <param name="centerX">中心 X 座標。</param>
-    /// <param name="centerY">中心 Y 座標。</param>
+    /// <param name="center">中心座標 (<see cref="Vec2i" />)。</param>
     /// <param name="radius">半径 (px)。</param>
     /// <param name="color">描画カラー。</param>
     /// <param name="fill">塗りつぶしフラグ。</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PushDrawCircle(int centerX, int centerY, int radius, uint color, bool fill)
+    public void PushDrawCircle(Vec2i center, int radius, uint color, bool fill)
     {
-        PushCompactCircle(centerX, centerY, radius, color, fill);
+        PushCompactCircle(center, radius, color, fill);
     }
 
     /// <summary>
     ///     線分描画コマンドをバッファへ追加します。
     /// </summary>
-    /// <param name="x1">始点 X 座標。</param>
-    /// <param name="y1">始点 Y 座標。</param>
-    /// <param name="x2">終点 X 座標。</param>
-    /// <param name="y2">終点 Y 座標。</param>
+    /// <param name="p1">始点座標 (<see cref="Vec2i" />)。</param>
+    /// <param name="p2">終点座標 (<see cref="Vec2i" />)。</param>
     /// <param name="color">描画カラー。</param>
     /// <param name="thickness">線の太さ。</param>
-    public void PushDrawLine(int x1, int y1, int x2, int y2, uint color, int thickness)
+    public void PushDrawLine(Vec2i p1, Vec2i p2, uint color, int thickness)
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawLine,
             Line = new DrawLinePacket {
-                X1 = x1,
-                Y1 = y1,
-                X2 = x2,
-                Y2 = y2,
+                P1 = p1,
+                P2 = p2,
                 Color = color,
                 Thickness = thickness
             }
@@ -229,19 +221,17 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     画像描画コマンドをバッファへ追加します。
     /// </summary>
-    /// <param name="x">描画先 X 座標。</param>
-    /// <param name="y">描画先 Y 座標。</param>
+    /// <param name="pos">描画先座標 (<see cref="Vec2i" />)。</param>
     /// <param name="handle">画像ハンドル。</param>
     /// <param name="trans">透過フラグ。</param>
-    public void PushDrawGraph(int x, int y, int handle, bool trans)
+    public void PushDrawGraph(Vec2i pos, int handle, bool trans)
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawGraph,
             Graph = new DrawGraphPacket {
-                X = x,
-                Y = y,
+                Pos = pos,
                 Handle = handle,
                 Trans = trans ? (byte)1 : (byte)0
             }
@@ -251,21 +241,19 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     回転拡縮画像描画コマンドをバッファへ追加します。
     /// </summary>
-    /// <param name="centerX">中心 X 座標。</param>
-    /// <param name="centerY">中心 Y 座標。</param>
+    /// <param name="center">中心座標 (<see cref="Vec2i" />)。</param>
     /// <param name="scale">拡大率。</param>
     /// <param name="angle">回転角度 (ラジアン)。</param>
     /// <param name="handle">画像ハンドル。</param>
     /// <param name="trans">透過フラグ。</param>
-    public void PushDrawRotaGraph(int centerX, int centerY, float scale, float angle, int handle, bool trans)
+    public void PushDrawRotaGraph(Vec2i center, float scale, float angle, int handle, bool trans)
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawRotaGraph,
             RotaGraph = new DrawRotaGraphPacket {
-                CenterX = centerX,
-                CenterY = centerY,
+                Center = center,
                 Scale = scale,
                 Angle = angle,
                 Handle = handle,
@@ -275,47 +263,35 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     矩形切り出し回転拡縮画像描画コマンドをバッファへ追加します。
-    /// </summary>
-    /// <param name="centerX">中心 X 座標。</param>
-    /// <param name="centerY">中心 Y 座標。</param>
-    /// <param name="srcX">切り出し開始 X 座標。</param>
-    /// <param name="srcY">切り出し開始 Y 座標。</param>
-    /// <param name="srcW">切り出し幅。</param>
-    /// <summary>
     ///     矩形切り出し回転拡縮画像描画コマンド（独立 X/Y 軸拡縮）をバッファへ追加します。
     /// </summary>
-    /// <param name="centerX">描画中心 X 座標。</param>
-    /// <param name="centerY">描画中心 Y 座標。</param>
-    /// <param name="srcX">切り出し開始 X 座標。</param>
-    /// <param name="srcY">切り出し開始 Y 座標。</param>
-    /// <param name="srcW">切り出し幅。</param>
-    /// <param name="srcH">切り出し高さ。</param>
-    /// <param name="scaleX">X 軸拡大率。</param>
-    /// <param name="scaleY">Y 軸拡大率。</param>
+    /// <param name="center">描画中心座標 (<see cref="Vec2i" />)。</param>
+    /// <param name="srcPos">切り出し開始座標 (<see cref="Vec2i" />)。</param>
+    /// <param name="srcSize">切り出しサイズ (<see cref="Vec2i" />)。</param>
+    /// <param name="scale">拡大率 (<see cref="Vec2f" />)。</param>
     /// <param name="angle">回転角度 (ラジアン)。</param>
     /// <param name="handle">画像ハンドル。</param>
     /// <param name="trans">透過フラグ。</param>
     /// <param name="turnX">左右反転フラグ。</param>
     public void PushDrawRectRotaGraph(
-        int centerX, int centerY,
-        int srcX, int srcY, int srcW, int srcH,
-        float scaleX, float scaleY, float angle,
-        int handle, bool trans, bool turnX)
+        Vec2i center,
+        Vec2i srcPos,
+        Vec2i srcSize,
+        Vec2f scale,
+        float angle,
+        int handle,
+        bool trans,
+        bool turnX)
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
         _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawRectRotaGraph,
             RectRotaGraph = new DrawRectRotaGraphPacket {
-                CenterX = centerX,
-                CenterY = centerY,
-                SrcX = srcX,
-                SrcY = srcY,
-                SrcW = srcW,
-                SrcH = srcH,
-                ScaleX = scaleX,
-                ScaleY = scaleY,
+                Center = center,
+                SrcPos = srcPos,
+                SrcSize = srcSize,
+                Scale = scale,
                 Angle = angle,
                 Handle = handle,
                 Trans = trans ? (byte)1 : (byte)0,
@@ -325,25 +301,12 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     矩形切り出し回転拡縮画像描画コマンド（等比拡縮）をバッファへ追加します。
-    /// </summary>
-    public void PushDrawRectRotaGraph(
-        int centerX, int centerY,
-        int srcX, int srcY, int srcW, int srcH,
-        float scale, float angle,
-        int handle, bool trans, bool turnX)
-    {
-        PushDrawRectRotaGraph(centerX, centerY, srcX, srcY, srcW, srcH, scale, scale, angle, handle, trans, turnX);
-    }
-
-    /// <summary>
     ///     文字列描画コマンドをバッファへ追加します。
     /// </summary>
-    /// <param name="x">描画先 X 座標。</param>
-    /// <param name="y">描画先 Y 座標。</param>
+    /// <param name="pos">描画先座標 (<see cref="Vec2i" />)。</param>
     /// <param name="text">描画文字列。</param>
     /// <param name="color">描画カラー。</param>
-    public void PushDrawString(int x, int y, ReadOnlySpan<char> text, uint color)
+    public void PushDrawString(Vec2i pos, ReadOnlySpan<char> text, uint color)
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
@@ -359,8 +322,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         _packetBuffer[_currentPacketCount++] = new RenderPacket {
             Type = RenderPacketType.DrawString,
             StringData = new DrawStringPacket {
-                X = x,
-                Y = y,
+                Pos = pos,
                 Color = color,
                 TextOffset = offset,
                 TextLength = strLength
@@ -486,11 +448,15 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     20 バイト緊密配置の高密度円描画コマンドをバッファへ追加します（48 バイト汎用パケットをバイパス）。
     /// </summary>
+    /// <param name="center">中心座標 (<see cref="Vec2i" />)。</param>
+    /// <param name="radius">半径 (px)。</param>
+    /// <param name="color">描画カラー。</param>
+    /// <param name="fill">塗りつぶしフラグ。</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PushCompactCircle(int x, int y, int radius, uint color, bool fill)
+    public void PushCompactCircle(Vec2i center, int radius, uint color, bool fill)
     {
         EnsureCircleCapacity(1);
-        _circleBuffer[_currentCircleCount++] = new CompactCirclePacket(x, y, radius, color, fill);
+        _circleBuffer[_currentCircleCount++] = new CompactCirclePacket(center, radius, color, fill);
     }
 
     /// <summary>

@@ -1,26 +1,23 @@
 # Boss 1: Ancient Cat Overlord Base Attributes
 BossName = "Boss1"
 MaxHp = 60.0
-SpawnX = 640.0
-SpawnY = 200.0
-ScaleX = 0.6
-ScaleY = 0.6
+Spawn = { x = 640.0, y = 200.0 }
+Scale = { x = 0.6, y = 0.6 }
 HitFlashDuration = 0.05
 
 # Boss Hurtbox (Collision check against player bullets)
 HurtboxShape = "Circle"
 HurtboxRadius = 60.0
-HurtboxOffsetY = 0.0
+HurtboxOffset = { x = 0.0, y = 0.0 }
 
 # Boss Body Contact Hitbox (Damage to player upon contact)
 HitboxShape = "Circle"
 BodyHitboxRadius = 50.0
-BodyHitboxOffsetY = 0.0
+BodyHitboxOffset = { x = 0.0, y = 0.0 }
 BodyContactDamage = 1.0
 
 # Terrain Collision Box
-CollisionWidth = 120.0
-CollisionHeight = 120.0
+CollisionSize = { x = 120.0, y = 120.0 }
 
 # 特殊行動技能タグ設定
 DiveSkill = "DiveRam"
@@ -31,10 +28,8 @@ HpThreshold = 1.0
 HoverDuration = 0.8
 PatrolDuration = 2.0
 HoverBaseY = 220.0
-HoverSpeedX = 1.6
-HoverAmpX = 240.0
-HoverSpeedY = 1.8
-HoverAmpY = 60.0
+HoverSpeed = { x = 1.6, y = 1.8 }
+HoverAmp = { x = 240.0, y = 60.0 }
 HoverLerpSpeed = 3.5
 PlayerPursuitWeight = 0.12
 TelegraphShakeIntensity = 8.0
@@ -71,10 +66,8 @@ HpThreshold = 0.667
 HoverDuration = 0.6
 PatrolDuration = 1.5
 HoverBaseY = 250.0
-HoverSpeedX = 2.0
-HoverAmpX = 350.0
-HoverSpeedY = 2.4
-HoverAmpY = 90.0
+HoverSpeed = { x = 2.0, y = 2.4 }
+HoverAmp = { x = 350.0, y = 90.0 }
 HoverLerpSpeed = 4.0
 PlayerPursuitWeight = 0.15
 TelegraphShakeIntensity = 10.0
@@ -111,10 +104,8 @@ HpThreshold = 0.334
 HoverDuration = 0.4
 PatrolDuration = 1.0
 HoverBaseY = 280.0
-HoverSpeedX = 2.6
-HoverAmpX = 420.0
-HoverSpeedY = 3.0
-HoverAmpY = 120.0
+HoverSpeed = { x = 2.6, y = 3.0 }
+HoverAmp = { x = 420.0, y = 120.0 }
 HoverLerpSpeed = 4.5
 PlayerPursuitWeight = 0.20
 TelegraphShakeIntensity = 12.0

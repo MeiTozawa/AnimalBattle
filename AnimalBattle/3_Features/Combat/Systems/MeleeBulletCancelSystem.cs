@@ -1,6 +1,9 @@
+using System;
 using AnimalBattle.Combat;
 using AnimalBattle.Components;
 using AnimalBattle.Core;
+using AnimalBattle.Core.Geometry;
+using AnimalBattle.Effects;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -17,10 +20,8 @@ public static class MeleeBulletCancelSystem
     {
         public Transform Transform;
         public CollisionShape Shape;
-        public float CenterX;
-        public float CenterY;
-        public float HalfW;
-        public float HalfH;
+        public Vec2f Center;
+        public Vec2f HalfExtents;
     }
 
     private sealed class CancelContext
@@ -73,19 +74,15 @@ public static class MeleeBulletCancelSystem
                 if (!h.IsActive) continue;
 
                 ref readonly var t = ref trans[i];
-                var halfW = h.Shape.Type == CollisionShapeType.Box ? h.Shape.Width * 0.5f : h.Shape.Radius;
-                var halfH = h.Shape.Type == CollisionShapeType.Box ? h.Shape.Height * 0.5f : h.Shape.Radius;
-                var cX = t.X + h.Shape.OffsetX;
-                var cY = t.Y + h.Shape.OffsetY;
+                var half = h.Shape.Type == CollisionShapeType.Box ? h.Shape.Size * 0.5f : new Vec2f(h.Shape.Radius, h.Shape.Radius);
+                var c = t.Position + h.Shape.Offset;
 
                 Melees[MeleeCount++] = new MeleeTarget
                 {
                     Transform = t,
                     Shape = h.Shape,
-                    CenterX = cX,
-                    CenterY = cY,
-                    HalfW = halfW,
-                    HalfH = halfH
+                    Center = c,
+                    HalfExtents = half
                 };
             }
         }
@@ -103,18 +100,17 @@ public static class MeleeBulletCancelSystem
                 ref readonly var bt = ref bTransforms[b];
                 var bEntity = it.Entity(b);
 
-                var bCenterX = bt.X + bHitbox.Shape.OffsetX;
-                var bCenterY = bt.Y + bHitbox.Shape.OffsetY;
-                var bHalfW = bHitbox.Shape.Type == CollisionShapeType.Box ? bHitbox.Shape.Width * 0.5f : bHitbox.Shape.Radius;
-                var bHalfH = bHitbox.Shape.Type == CollisionShapeType.Box ? bHitbox.Shape.Height * 0.5f : bHitbox.Shape.Radius;
+                var bCenter = bt.Position + bHitbox.Shape.Offset;
+                var bHalf = bHitbox.Shape.Type == CollisionShapeType.Box ? bHitbox.Shape.Size * 0.5f : new Vec2f(bHitbox.Shape.Radius, bHitbox.Shape.Radius);
 
                 for (var m = 0; m < MeleeCount; m++)
                 {
                     ref readonly var melee = ref Melees[m];
 
                     // AABB 粗判定による早期枝刈り
-                    if (MathF.Abs(melee.CenterX - bCenterX) > melee.HalfW + bHalfW ||
-                        MathF.Abs(melee.CenterY - bCenterY) > melee.HalfH + bHalfH)
+                    var diff = melee.Center - bCenter;
+                    if (MathF.Abs(diff.X) > melee.HalfExtents.X + bHalf.X ||
+                        MathF.Abs(diff.Y) > melee.HalfExtents.Y + bHalf.Y)
                     {
                         continue;
                     }
@@ -123,7 +119,7 @@ public static class MeleeBulletCancelSystem
                     if (PhysicsService.Intersects(melee.Transform, melee.Shape, bt, bHitbox.Shape))
                     {
                         bEntity.Add<RecycleTag>();
-                        EffectSpawner.SpawnHitSparkEffect(_world, bt.X, bt.Y);
+                        EffectSpawner.SpawnHitSparkEffect(_world, bt.Position);
 
                         if (!_sfxPlayedThisFrame)
                         {

@@ -23,11 +23,11 @@ public static class CameraOffsetApplySystem {
                  var w = it.World();
                  if (w.Get<GameFlow>().State == GameState.Battle)
                  {
-                     GameEngine.SetCameraOffset(CameraService.RenderOffsetX, CameraService.RenderOffsetY);
+                     GameEngine.SetCameraOffset(CameraService.RenderOffset);
                  }
                  else
                  {
-                     GameEngine.SetCameraOffset(0, 0);
+                     GameEngine.SetCameraOffset(Vec2i.Zero);
                  }
              });
 

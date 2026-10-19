@@ -45,9 +45,9 @@ public static class StartUiRenderSystem {
                     ref readonly var flow = ref w.Get<GameFlow>();
 
                     // 1. タイトルヘッダー描画
-                    GameEngine.DrawString(layout.HeaderTitleX, layout.HeaderTitleY, texts.HeaderTitle, colors.TextGold);
-                    GameEngine.DrawString(layout.PlayerHeaderX, layout.PlayerHeaderY, texts.PlayerHeader, colors.TextWhite);
-                    GameEngine.DrawString(layout.BossHeaderX, layout.BossHeaderY, texts.BossHeader, colors.TextWhite);
+                    GameEngine.DrawString(layout.HeaderTitlePos, texts.HeaderTitle, colors.TextGold);
+                    GameEngine.DrawString(layout.PlayerHeaderPos, texts.PlayerHeader, colors.TextWhite);
+                    GameEngine.DrawString(layout.BossHeaderPos, texts.BossHeader, colors.TextWhite);
 
                     // 2. Cat カード描画
                     DrawPlayerCard(
@@ -91,7 +91,7 @@ public static class StartUiRenderSystem {
                     DrawConfirmButton(uiState.IsConfirmHovered, confirmBtnBounds, cfg);
 
                     // 7. 下部ヒントテキスト
-                    GameEngine.DrawString(layout.HintTextX, layout.HintTextY, texts.HintText, colors.TextMuted);
+                    GameEngine.DrawString(layout.HintTextPos, texts.HintText, colors.TextMuted);
                 });
             });
 
@@ -112,16 +112,18 @@ public static class StartUiRenderSystem {
         var motion = cfg.Motion;
         var texts = cfg.Texts;
 
+        var p1 = new Vec2i(bounds.Left, bounds.Top);
+        var p2 = new Vec2i(bounds.Right, bounds.Bottom);
         var borderColor = isSelected ? selectColor : colors.BorderDefaultColor;
-        GameEngine.DrawBox(bounds.Left, bounds.Top, bounds.Right, bounds.Bottom, colors.CardBgColor, true);
-        GameEngine.DrawBox(bounds.Left, bounds.Top, bounds.Right, bounds.Bottom, borderColor, false);
+        GameEngine.DrawBox(p1, p2, colors.CardBgColor, true);
+        GameEngine.DrawBox(p1, p2, borderColor, false);
         if (isSelected)
         {
-            GameEngine.DrawBox(bounds.Left - 1, bounds.Top - 1, bounds.Right + 1, bounds.Bottom + 1, borderColor, false);
+            GameEngine.DrawBox(p1 - Vec2i.One, p2 + Vec2i.One, borderColor, false);
         }
 
-        GameEngine.DrawString(bounds.Left + layout.CardTitleOffsetX, bounds.Top + layout.CardTitleOffsetY, cardText.Title, isSelected ? selectColor : colors.TextWhite);
-        GameEngine.DrawString(bounds.Left + layout.CardTagOffsetX, bounds.Top + layout.CardTagOffsetY, cardText.Tag, colors.TextGold);
+        GameEngine.DrawString(p1 + layout.CardTitleOffset, cardText.Title, isSelected ? selectColor : colors.TextWhite);
+        GameEngine.DrawString(p1 + layout.CardTagOffset, cardText.Tag, colors.TextGold);
 
         // プレビュー自機スプライト描画
         if (previewEntity.IsAlive())
@@ -132,18 +134,13 @@ public static class StartUiRenderSystem {
             // ホバー時の小幅左右ステップ振動
             var stepOffset = stepTimer > 0f ? MathF.Sin(stepTimer * motion.StepFrequency) * motion.StepAmplitude : 0f;
 
-            var drawCenterX = (int)(transform.X + stepOffset);
-            var drawCenterY = (int)transform.Y;
+            var drawCenter = new Vec2i((int)(transform.Position.X + stepOffset), (int)transform.Position.Y);
 
-            GameEngine.DrawRectRotaGraph3(
-                drawCenterX,
-                drawCenterY,
-                sprite.SrcRect.Left,
-                sprite.SrcRect.Top,
-                sprite.SrcRect.Width,
-                sprite.SrcRect.Height,
-                transform.ScaleX,
-                transform.ScaleY,
+            GameEngine.DrawRectRotaGraph(
+                drawCenter,
+                new Vec2i(sprite.SrcRect.Left, sprite.SrcRect.Top),
+                new Vec2i(sprite.SrcRect.Width, sprite.SrcRect.Height),
+                transform.Scale,
                 0.0,
                 sprite.GraphHandle,
                 true,
@@ -152,8 +149,8 @@ public static class StartUiRenderSystem {
 
         var badgeText = isSelected ? texts.SelectedBadge : texts.UnselectedBadge;
         var badgeColor = isSelected ? selectColor : colors.TextMuted;
-        GameEngine.DrawString(bounds.Left + layout.CardBadgeLeftOffset, bounds.Bottom - layout.CardBadgeBottomOffset, badgeText, badgeColor);
-        GameEngine.DrawString(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset, cardText.Description, colors.TextMuted);
+        GameEngine.DrawString(new Vec2i(bounds.Left + layout.CardBadgeLeftOffset, bounds.Bottom - layout.CardBadgeBottomOffset), badgeText, badgeColor);
+        GameEngine.DrawString(new Vec2i(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset), cardText.Description, colors.TextMuted);
     }
 
     private static void DrawCardBox(
@@ -167,21 +164,23 @@ public static class StartUiRenderSystem {
         var layout = cfg.Layout;
         var texts = cfg.Texts;
 
+        var p1 = new Vec2i(bounds.Left, bounds.Top);
+        var p2 = new Vec2i(bounds.Right, bounds.Bottom);
         var borderColor = isSelected ? selectColor : colors.BorderDefaultColor;
-        GameEngine.DrawBox(bounds.Left, bounds.Top, bounds.Right, bounds.Bottom, colors.CardBgColor, true);
-        GameEngine.DrawBox(bounds.Left, bounds.Top, bounds.Right, bounds.Bottom, borderColor, false);
+        GameEngine.DrawBox(p1, p2, colors.CardBgColor, true);
+        GameEngine.DrawBox(p1, p2, borderColor, false);
         if (isSelected)
         {
-            GameEngine.DrawBox(bounds.Left - 1, bounds.Top - 1, bounds.Right + 1, bounds.Bottom + 1, borderColor, false);
+            GameEngine.DrawBox(p1 - Vec2i.One, p2 + Vec2i.One, borderColor, false);
         }
 
-        GameEngine.DrawString(bounds.Left + layout.CardTitleOffsetX, bounds.Top + layout.CardTitleOffsetY, cardText.Title, isSelected ? selectColor : colors.TextWhite);
-        GameEngine.DrawString(bounds.Left + layout.CardTagOffsetX, bounds.Top + layout.CardTagOffsetY, cardText.Tag, colors.TextGold);
+        GameEngine.DrawString(p1 + layout.CardTitleOffset, cardText.Title, isSelected ? selectColor : colors.TextWhite);
+        GameEngine.DrawString(p1 + layout.CardTagOffset, cardText.Tag, colors.TextGold);
 
         var badgeText = isSelected ? texts.SelectedBadge : texts.UnselectedBadge;
         var badgeColor = isSelected ? selectColor : colors.TextMuted;
-        GameEngine.DrawString(bounds.Left + layout.CardBadgeLeftOffset, bounds.Bottom - layout.CardBadgeBottomOffset, badgeText, badgeColor);
-        GameEngine.DrawString(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset, cardText.Description, colors.TextMuted);
+        GameEngine.DrawString(new Vec2i(bounds.Left + layout.CardBadgeLeftOffset, bounds.Bottom - layout.CardBadgeBottomOffset), badgeText, badgeColor);
+        GameEngine.DrawString(new Vec2i(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset), cardText.Description, colors.TextMuted);
     }
 
     private static void DrawBoss1Card(
@@ -206,14 +205,11 @@ public static class StartUiRenderSystem {
                 ? MathF.Sin(flyTimer * motion.Boss1TiltFrequency) * motion.Boss1TiltAmplitude
                 : 0f;
 
-            var drawX = bounds.Left + bounds.Width / 2;
-            var drawY = (int)(bounds.Top + layout.PreviewCenterOffsetY + flyOffsetY);
+            var drawCenter = new Vec2i(bounds.Left + bounds.Width / 2, (int)(bounds.Top + layout.PreviewCenterOffsetY + flyOffsetY));
 
             // 192x192 のボス画像をカード枠に適合するスケールで独立描画
-            GameEngine.DrawRotaGraph3(
-                drawX,
-                drawY,
-                motion.Boss1Scale,
+            GameEngine.DrawRotaGraph(
+                drawCenter,
                 motion.Boss1Scale,
                 tiltAngle,
                 textureHandle,
@@ -238,8 +234,7 @@ public static class StartUiRenderSystem {
 
             var offsetY = 0f;
             var baseScale = motion.Boss2BaseScale;
-            var scaleX = baseScale;
-            var scaleY = baseScale;
+            var scale = new Vec2f((float)baseScale, (float)baseScale);
 
             if (slamTimer > 0f)
             {
@@ -251,34 +246,28 @@ public static class StartUiRenderSystem {
                 {
                     var t = slamTimer / riseEnd;
                     offsetY = motion.Boss2RiseHeight * t;
-                    scaleX = baseScale * motion.Boss2RiseScale;
-                    scaleY = baseScale * (2.0 - motion.Boss2RiseScale);
+                    scale = new Vec2f((float)(baseScale * motion.Boss2RiseScale), (float)(baseScale * (2.0 - motion.Boss2RiseScale)));
                 }
                 else if (slamTimer <= slamEnd)
                 {
                     var t = (slamTimer - riseEnd) / motion.Boss2SlamDuration;
                     offsetY = motion.Boss2RiseHeight * (1f - t);
-                    scaleX = baseScale * motion.Boss2SlamScale;
-                    scaleY = baseScale * (2.0 - motion.Boss2SlamScale);
+                    scale = new Vec2f((float)(baseScale * motion.Boss2SlamScale), (float)(baseScale * (2.0 - motion.Boss2SlamScale)));
                 }
                 else if (slamTimer <= impactEnd)
                 {
                     var t = (slamTimer - slamEnd) / motion.Boss2ImpactDuration;
                     offsetY = MathF.Sin(t * MathF.PI * motion.Boss2ImpactShakeFreq) * motion.Boss2ImpactShakeAmplitude;
-                    scaleX = baseScale * (1.15 - 0.15 * t);
-                    scaleY = baseScale * (0.85 + 0.15 * t);
+                    scale = new Vec2f((float)(baseScale * (1.15 - 0.15 * t)), (float)(baseScale * (0.85 + 0.15 * t)));
                 }
             }
 
-            var drawX = bounds.Left + bounds.Width / 2;
-            var drawY = (int)(bounds.Top + layout.PreviewCenterOffsetY + offsetY);
+            var drawCenter = new Vec2i(bounds.Left + bounds.Width / 2, (int)(bounds.Top + layout.PreviewCenterOffsetY + offsetY));
 
             // 192x192 のボス画像をカード枠に適合するスケールで独立拡縮描画
             GameEngine.DrawRotaGraph3(
-                drawX,
-                drawY,
-                scaleX,
-                scaleY,
+                drawCenter,
+                scale,
                 0.0,
                 textureHandle,
                 true);
@@ -294,27 +283,19 @@ public static class StartUiRenderSystem {
         var btnColor = isHovered ? colors.ConfirmBtnHoverColor : colors.ConfirmBtnDefaultColor;
         var borderColor = isHovered ? colors.ConfirmBtnBorderHoverColor : colors.ConfirmBtnBorderDefaultColor;
 
-        GameEngine.DrawBox(
-            bounds.Left, bounds.Top,
-            bounds.Right, bounds.Bottom,
-            btnColor, true);
+        var p1 = new Vec2i(bounds.Left, bounds.Top);
+        var p2 = new Vec2i(bounds.Right, bounds.Bottom);
 
-        GameEngine.DrawBox(
-            bounds.Left, bounds.Top,
-            bounds.Right, bounds.Bottom,
-            borderColor, false);
+        GameEngine.DrawBox(p1, p2, btnColor, true);
+        GameEngine.DrawBox(p1, p2, borderColor, false);
 
         if (isHovered)
         {
-            GameEngine.DrawBox(
-                bounds.Left - 1, bounds.Top - 1,
-                bounds.Right + 1, bounds.Bottom + 1,
-                borderColor, false);
+            GameEngine.DrawBox(p1 - Vec2i.One, p2 + Vec2i.One, borderColor, false);
         }
 
         GameEngine.DrawString(
-            bounds.Left + layout.ConfirmBtnTextOffsetX,
-            bounds.Top + layout.ConfirmBtnTextOffsetY,
+            p1 + layout.ConfirmBtnTextOffset,
             texts.ConfirmButton,
             colors.TextWhite);
     }

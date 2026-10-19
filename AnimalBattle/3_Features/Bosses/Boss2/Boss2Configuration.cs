@@ -71,8 +71,7 @@ public readonly struct Boss2CombatSettings(
     float samePlatformToleranceY,
     float airborneVelocityThreshold,
     float airborneHeightThreshold,
-    float meleeTriggerRangeX,
-    float meleeTriggerRangeY,
+    Vec2f meleeTriggerRange,
     float antiKitingRangedDistance,
     float antiKitingMidDistance,
     float antiKitingEnforceMultiplier,
@@ -98,11 +97,8 @@ public readonly struct Boss2CombatSettings(
     /// <summary>プレイヤー滞空判定の高度差閾値（px）です。</summary>
     public float AirborneHeightThreshold { get; } = airborneHeightThreshold;
 
-    /// <summary>近接技トリガーの X 範囲（px）です。</summary>
-    public float MeleeTriggerRangeX { get; } = meleeTriggerRangeX;
-
-    /// <summary>近接技トリガーの Y 範囲（px）です。</summary>
-    public float MeleeTriggerRangeY { get; } = meleeTriggerRangeY;
+    /// <summary>近接技トリガーの判定範囲 (Vec2f) です。</summary>
+    public Vec2f MeleeTriggerRange { get; } = meleeTriggerRange;
 
     /// <summary>反風筝遠距離技の発動距離（px）です。</summary>
     public float AntiKitingRangedDistance { get; } = antiKitingRangedDistance;
@@ -210,18 +206,17 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
         get
         {
             var toml = _world.Get<Boss2Config>();
-            var playerHeight = _world.GetActivePlayerConfig().CollisionHeight;
+            var playerHeight = _world.GetActivePlayerConfig().CollisionSize.Y;
 
             return new Boss2CombatSettings(
-                toml.CollisionHeight,
+                toml.CollisionSize.Y,
                 toml.JumpCooldownDuration,
                 toml.TakeoffVelocityThreshold,
                 toml.MoveThreshold,
                 toml.SamePlatformToleranceY,
                 toml.AirborneVelocityThreshold,
                 toml.AirborneHeightThreshold,
-                toml.MeleeTriggerRangeX,
-                toml.MeleeTriggerRangeY,
+                toml.MeleeTriggerRange,
                 toml.AntiKitingRangedDistance,
                 toml.AntiKitingMidDistance,
                 toml.AntiKitingEnforceMultiplier,

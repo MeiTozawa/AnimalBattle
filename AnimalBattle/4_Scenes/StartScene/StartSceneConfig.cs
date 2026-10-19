@@ -1,17 +1,16 @@
 using System.Drawing;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Configs;
 
 /// <summary>
-///     カード矩形領域設定（X, Y, Width, Height）。
+///     カード矩形領域設定（位置・サイズ）。
 /// </summary>
 public sealed class CardLayoutConfig {
-    public int X { get; set; }
-    public int Y { get; set; }
-    public int Width { get; set; }
-    public int Height { get; set; }
+    public Vec2i Pos { get; set; }
+    public Vec2i Size { get; set; }
 
-    public Rectangle ToRectangle() => new(X, Y, Width, Height);
+    public Rectangle ToRectangle() => new(Pos.X, Pos.Y, Size.X, Size.Y);
 }
 
 /// <summary>
@@ -78,22 +77,15 @@ public sealed class StartSceneLayoutConfig {
     public CardLayoutConfig Boss2Card { get; set; } = new();
     public CardLayoutConfig ConfirmButton { get; set; } = new();
 
-    public int HeaderTitleX { get; set; }
-    public int HeaderTitleY { get; set; }
-    public int PlayerHeaderX { get; set; }
-    public int PlayerHeaderY { get; set; }
-    public int BossHeaderX { get; set; }
-    public int BossHeaderY { get; set; }
-    public int HintTextX { get; set; }
-    public int HintTextY { get; set; }
+    public Vec2i HeaderTitlePos { get; set; }
+    public Vec2i PlayerHeaderPos { get; set; }
+    public Vec2i BossHeaderPos { get; set; }
+    public Vec2i HintTextPos { get; set; }
 
-    public int ConfirmBtnTextOffsetX { get; set; }
-    public int ConfirmBtnTextOffsetY { get; set; }
+    public Vec2i ConfirmBtnTextOffset { get; set; }
 
-    public int CardTitleOffsetX { get; set; }
-    public int CardTitleOffsetY { get; set; }
-    public int CardTagOffsetX { get; set; }
-    public int CardTagOffsetY { get; set; }
+    public Vec2i CardTitleOffset { get; set; }
+    public Vec2i CardTagOffset { get; set; }
     public int CardBadgeBottomOffset { get; set; }
     public int CardBadgeLeftOffset { get; set; }
     public int CardDescBottomOffset { get; set; }

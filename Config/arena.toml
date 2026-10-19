@@ -40,10 +40,8 @@ DropCostHeightMultiplier = 0.6
 # 2D Grid TileMap Configuration
 [TileMap]
 TileSheetPath = "Platform\\sheet.png"
-RenderTileWidth = 70
-RenderTileHeight = 70
-OriginX = -25.0
-OriginY = 0.0
+RenderTileSize = { x = 70, y = 70 }
+Origin = { x = -25.0, y = 0.0 }
 MaxPlatformY = 720.0
 MinPlatformWidth = 10.0
 Data = [

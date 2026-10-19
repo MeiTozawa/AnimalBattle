@@ -101,7 +101,7 @@ public static class BattleSceneSpawner {
 
         world.Set(new AimReticleState());
         CameraService.Reset();
-        GameEngine.SetCameraOffset(0, 0);
+        GameEngine.SetCameraOffset(Vec2i.Zero);
 
         InputService.SetCursorVisible(false);
         SoundService.PlayBgm();
@@ -124,7 +124,7 @@ public static class BattleSceneSpawner {
         InputService.SetCursorVisible(true);
         world.Set(new AimReticleState());
         CameraService.Reset();
-        GameEngine.SetCameraOffset(0, 0);
+        GameEngine.SetCameraOffset(Vec2i.Zero);
 
         // 2. 残存弾幕、近接判定および VFX の一括回収・プール返却
         BulletSpawner.ClearAllBossBullets(world);

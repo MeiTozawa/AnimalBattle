@@ -6,17 +6,15 @@ InvincibleDuration = 0.8
 HitFlashDuration = 0.08
 
 # 地形衝突ボックス
-CollisionWidth = 32.0
-CollisionHeight = 48.0
+CollisionSize = { x = 32.0, y = 48.0 }
 
 # 被弾判定ボックス (Hurtbox)
 HurtboxShape = "Circle"
 HurtboxRadius = 7.0
-HurtboxOffsetY = 16.0
+HurtboxOffset = { x = 0.0, y = 16.0 }
 
 # スプライトスケール
-ScaleX = 2.0
-ScaleY = 2.0
+Scale = { x = 2.0, y = 2.0 }
 
 # スプリング減衰パラメータ
 SpringFrequency = 18.0

@@ -119,8 +119,7 @@ namespace ab {
     export struct DrawRectRotaGraphCmd {
         Vec2i center;
         Rect<int> src;
-        double ext_rate_x;
-        double ext_rate_y;
+        Vec2f scale;
         double angle;
         int graph_handle;
         bool trans_flag;
@@ -143,8 +142,7 @@ namespace ab {
     };
 
     export struct SetCameraStateCmd {
-        float x;
-        float y;
+        Vec2f pos;
         float scale;
     };
 

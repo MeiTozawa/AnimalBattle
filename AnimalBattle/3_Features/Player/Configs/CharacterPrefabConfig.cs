@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using AnimalBattle.Core;
 
 #nullable disable
 
@@ -14,13 +15,11 @@ public class PlayerPrefabConfig
     public float MaxHp { get; set; }
     public float InvincibleDuration { get; set; }
     public float HitFlashDuration { get; set; }
-    public float CollisionWidth { get; set; }
-    public float CollisionHeight { get; set; }
+    public Vec2f CollisionSize { get; set; }
     public string HurtboxShape { get; set; }
     public float HurtboxRadius { get; set; }
-    public float HurtboxOffsetY { get; set; }
-    public float ScaleX { get; set; }
-    public float ScaleY { get; set; }
+    public Vec2f HurtboxOffset { get; set; }
+    public Vec2f Scale { get; set; }
     public float SpringFrequency { get; set; }
     public float SpringDampingRatio { get; set; }
 }
@@ -34,25 +33,21 @@ public class BossPrefabConfig
 {
     public float MaxHp { get; set; }
     public float HitFlashDuration { get; set; }
-    public float ScaleX { get; set; }
-    public float ScaleY { get; set; }
+    public Vec2f Scale { get; set; }
 
     // 被弾判定ボックス (Hurtbox)
     public string HurtboxShape { get; set; }
     public float HurtboxRadius { get; set; }
-    public float HurtboxWidth { get; set; }
-    public float HurtboxHeight { get; set; }
-    public float HurtboxOffsetY { get; set; }
+    public Vec2f HurtboxSize { get; set; }
+    public Vec2f HurtboxOffset { get; set; }
 
     // 接触ダメージ判定ボックス (Hitbox)
     public string HitboxShape { get; set; }
     public float BodyHitboxRadius { get; set; }
-    public float BodyHitboxWidth { get; set; }
-    public float BodyHitboxHeight { get; set; }
-    public float BodyHitboxOffsetY { get; set; }
+    public Vec2f BodyHitboxSize { get; set; }
+    public Vec2f BodyHitboxOffset { get; set; }
     public float BodyContactDamage { get; set; }
 
     // 地形衝突ボックス
-    public float CollisionWidth { get; set; }
-    public float CollisionHeight { get; set; }
+    public Vec2f CollisionSize { get; set; }
 }

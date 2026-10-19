@@ -1,3 +1,4 @@
+using AnimalBattle.Core;
 using ErrorOr;
 
 namespace AnimalBattle.Configs;
@@ -18,17 +19,11 @@ public sealed class Boss1PhaseFsmConfig {
     /// <summary>浮遊基準 Y 座標</summary>
     public float HoverBaseY { get; set; }
 
-    /// <summary>水平浮遊速度</summary>
-    public float HoverSpeedX { get; set; }
+    /// <summary>浮遊速度 (Vec2f)</summary>
+    public Vec2f HoverSpeed { get; set; }
 
-    /// <summary>水平浮遊振幅</summary>
-    public float HoverAmpX { get; set; }
-
-    /// <summary>垂直浮遊速度</summary>
-    public float HoverSpeedY { get; set; }
-
-    /// <summary>垂直浮遊振幅</summary>
-    public float HoverAmpY { get; set; }
+    /// <summary>浮遊振幅 (Vec2f)</summary>
+    public Vec2f HoverAmp { get; set; }
 
     /// <summary>浮動追従の補間速度（Lerp Speed）</summary>
     public float HoverLerpSpeed { get; set; }

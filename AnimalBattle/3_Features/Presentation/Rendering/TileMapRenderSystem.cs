@@ -36,20 +36,18 @@ public static class TileMapRenderSystem {
                 tileMapQuery.Each((ref TileMap tileMap) =>
                 {
                     renderedTileMap = true;
-                    tileMap.DrawCulled(viewport.X, viewport.Y, viewport.Width, viewport.Height);
+                    tileMap.DrawCulled(viewport.Pos, viewport.Size);
                 });
 
                 if (!renderedTileMap)
                 {
                     platformQuery.Each((ref Transform trans, ref CollisionBox col) =>
                     {
-                        var x1 = (int)(trans.X - col.Width / 2.0f);
-                        var y1 = (int)(trans.Y - col.Height / 2.0f);
-                        var x2 = (int)(trans.X + col.Width / 2.0f);
-                        var y2 = (int)(trans.Y + col.Height / 2.0f);
+                        var p1 = (trans.Position - col.Size * 0.5f).ToVec2i();
+                        var p2 = (trans.Position + col.Size * 0.5f).ToVec2i();
 
-                        GameEngine.DrawBox(x1, y1, x2, y2, viewport.PlatformFallbackFillColor, true);
-                        GameEngine.DrawBox(x1, y1, x2, y2, viewport.PlatformFallbackBorderColor, false);
+                        GameEngine.DrawBox(p1, p2, viewport.PlatformFallbackFillColor, true);
+                        GameEngine.DrawBox(p1, p2, viewport.PlatformFallbackBorderColor, false);
                     });
                 }
             });

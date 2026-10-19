@@ -19,7 +19,7 @@ public static class CameraOffsetResetSystem {
              .Kind(Ecs.OnStore)
              .Iter((Iter it) =>
              {
-                 GameEngine.SetCameraOffset(0, 0);
+                 GameEngine.SetCameraOffset(Vec2i.Zero);
              });
 
         return world;

@@ -25,8 +25,7 @@ public static class HitstopSystem
                     var entity = it.Entity(i);
                     entity.Remove<HitstopState>();
                     entity.Remove<SpriteJitter>();
-                    sprite.JitterOffsetX = 0.0f;
-                    sprite.JitterOffsetY = 0.0f;
+                    sprite.JitterOffset = Vec2f.Zero;
                 }
             });
 

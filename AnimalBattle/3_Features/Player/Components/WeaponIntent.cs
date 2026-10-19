@@ -1,3 +1,5 @@
+using AnimalBattle.Core;
+
 namespace AnimalBattle.Components;
 
 /// <summary>
@@ -9,11 +11,8 @@ public struct WeaponIntent
     /// <summary>今フレームで射撃トリガーが引かれたかどうか。</summary>
     public bool ShootTriggered;
 
-    /// <summary>瞄準方向の X 成分。</summary>
-    public float AimDirectionX;
-
-    /// <summary>瞄準方向の Y 成分。</summary>
-    public float AimDirectionY;
+    /// <summary>照準方向ベクトル (Vec2f)</summary>
+    public Vec2f AimDirection;
 
     /// <summary>
     ///     すべての射撃入力を初期状態にリセットします。
@@ -21,7 +20,6 @@ public struct WeaponIntent
     public void Reset()
     {
         ShootTriggered = false;
-        AimDirectionX = 0.0f;
-        AimDirectionY = 0.0f;
+        AimDirection = Vec2f.Zero;
     }
 }

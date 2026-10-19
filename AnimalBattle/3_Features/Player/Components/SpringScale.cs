@@ -1,28 +1,21 @@
+using AnimalBattle.Core;
+
 namespace AnimalBattle.Components;
 
 /// <summary>
 ///     二階減衰振動スプリングモデルに基づくスカッシュ＆ストレッチ（押し潰し・引き伸ばし）変形スケールコンポーネント。
-///     目標スケール（TargetX, TargetY）に向かって物理的に滑らかに揺れ戻りながら収束します。
+///     目標スケール（Target）に向かって物理的に滑らかに揺れ戻りながら収束します。
 /// </summary>
 public struct SpringScale
 {
-    /// <summary>現在の X 軸スケール倍率</summary>
-    public float CurrentX;
+    /// <summary>現在のスケール倍率 (Vec2f)</summary>
+    public Vec2f Current;
 
-    /// <summary>現在の Y 軸スケール倍率</summary>
-    public float CurrentY;
+    /// <summary>スケール変化速度 (Vec2f)</summary>
+    public Vec2f Velocity;
 
-    /// <summary>X 軸スケール変化速度</summary>
-    public float VelX;
-
-    /// <summary>Y 軸スケール変化速度</summary>
-    public float VelY;
-
-    /// <summary>目標 X 軸スケール倍率（通常 1.0f）</summary>
-    public float TargetX;
-
-    /// <summary>目標 Y 軸スケール倍率（通常 1.0f）</summary>
-    public float TargetY;
+    /// <summary>目標スケール倍率 (Vec2f)</summary>
+    public Vec2f Target;
 
     /// <summary>固有振動数（Hz）</summary>
     public float Frequency;
@@ -33,18 +26,14 @@ public struct SpringScale
     /// <summary>
     ///     初期スケールと振動パラメータを指定してコンポーネントを構築します。
     /// </summary>
-    /// <param name="defaultX">初期 X スケール</param>
-    /// <param name="defaultY">初期 Y スケール</param>
+    /// <param name="defaultScale">初期スケール (Vec2f)</param>
     /// <param name="frequency">固有振動数 (Hz)</param>
     /// <param name="dampingRatio">減衰比</param>
-    public SpringScale(float defaultX, float defaultY, float frequency, float dampingRatio)
+    public SpringScale(Vec2f defaultScale, float frequency, float dampingRatio)
     {
-        CurrentX = defaultX;
-        CurrentY = defaultY;
-        VelX = 0.0f;
-        VelY = 0.0f;
-        TargetX = defaultX;
-        TargetY = defaultY;
+        Current = defaultScale;
+        Velocity = Vec2f.Zero;
+        Target = defaultScale;
         Frequency = frequency;
         DampingRatio = dampingRatio;
     }

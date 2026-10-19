@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using AnimalBattle.Core;
 
 #nullable disable
 
@@ -49,8 +50,7 @@ public sealed class CombatPrefabConfig
 public sealed class PlayerBulletPrefabConfig
 {
     public string Shape { get; set; }
-    public float Width { get; set; }
-    public float Height { get; set; }
+    public Vec2f Size { get; set; }
     public float Damage { get; set; }
 }
 
@@ -112,8 +112,7 @@ public sealed class BossBlackBulletPrefabConfig
 public sealed class PlayerSlashHitboxPrefabConfig
 {
     public float Damage { get; set; }
-    public float Width { get; set; }
-    public float Height { get; set; }
+    public Vec2f Size { get; set; }
 }
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]

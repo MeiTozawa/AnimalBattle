@@ -33,7 +33,7 @@ public static class CombatPrefabs
         PlayerBullet = world.Prefab(PlayerBulletName)
             .IsA(CommonPrefabs.BaseProjectile)
             .Add<PlayerBulletTag>()
-            .Set(new Hitbox(new CollisionShape.Box(playerBulletCfg.Width, playerBulletCfg.Height), playerBulletCfg.Damage, Faction.Friendly));
+            .Set(new Hitbox(new CollisionShape.Box(playerBulletCfg.Size), playerBulletCfg.Damage, Faction.Friendly));
 
         // --- 2. Boss 統一弾幕基底（超集 Archetype：通常・品紅・黄・衛星・青・黒の全種別を同一 Archetype で共用） ---
         var bossNormalCfg = cfg.BossNormalBullet;
@@ -47,7 +47,7 @@ public static class CombatPrefabs
             .Add<BossBulletTag>() 
             .Set(new Bullet(bossNormalCfg.Radius, normalFill, normalOutline)) 
             .Set(new Hitbox(new CollisionShape.Circle(bossNormalCfg.Radius), bossNormalCfg.Damage, Faction.Hostile)) 
-            .Set(new BulletModifier(BulletType.Normal, bossNormalCfg.Radius, 0.0f, 0.0f)) 
+            .Set(new BulletModifier(BulletType.Normal, bossNormalCfg.Radius, Vec2f.Zero)) 
             .Set(new OrbitSatellite(false, Entity.Null(), 0.0f, 0.0f, 0));
 
         // --- 3. 自機近接斬撃判定 ---
@@ -55,6 +55,6 @@ public static class CombatPrefabs
         PlayerSlashHitbox = world.Prefab(PlayerSlashHitboxName)
             .IsA(CommonPrefabs.BaseMeleeHitbox)
             .Add<PlayerMeleeTag>()
-            .Set(new Hitbox(new CollisionShape.Box(slashCfg.Width, slashCfg.Height), slashCfg.Damage, Faction.Friendly));
+            .Set(new Hitbox(new CollisionShape.Box(slashCfg.Size), slashCfg.Damage, Faction.Friendly));
     }
 }

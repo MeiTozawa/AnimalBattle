@@ -8,10 +8,8 @@ namespace AnimalBattle.Ai.Boss1;
 public readonly struct Boss1PhaseSettings(
     float hoverDuration,
     float hoverBaseY,
-    float hoverSpeedX,
-    float hoverAmpX,
-    float hoverSpeedY,
-    float hoverAmpY,
+    Vec2f hoverSpeed,
+    Vec2f hoverAmp,
     float playerPursuitWeight,
     float hoverLerpSpeed,
     float telegraphShakeIntensity,
@@ -26,17 +24,11 @@ public readonly struct Boss1PhaseSettings(
     /// <summary>Hover の基準 Y 座標です。</summary>
     public float HoverBaseY { get; } = hoverBaseY;
 
-    /// <summary>水平移動の角速度です。</summary>
-    public float HoverSpeedX { get; } = hoverSpeedX;
+    /// <summary>浮遊移動の角速度です。</summary>
+    public Vec2f HoverSpeed { get; } = hoverSpeed;
 
-    /// <summary>水平移動の振幅です。</summary>
-    public float HoverAmpX { get; } = hoverAmpX;
-
-    /// <summary>垂直移動の角速度です。</summary>
-    public float HoverSpeedY { get; } = hoverSpeedY;
-
-    /// <summary>垂直移動の振幅です。</summary>
-    public float HoverAmpY { get; } = hoverAmpY;
+    /// <summary>浮遊移動の振幅です。</summary>
+    public Vec2f HoverAmp { get; } = hoverAmp;
 
     /// <summary>プレイヤーへの追従重みです。</summary>
     public float PlayerPursuitWeight { get; } = playerPursuitWeight;
@@ -113,10 +105,8 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
         return new Boss1PhaseSettings(
             tomlPhase.HoverDuration,
             tomlPhase.HoverBaseY,
-            tomlPhase.HoverSpeedX,
-            tomlPhase.HoverAmpX,
-            tomlPhase.HoverSpeedY,
-            tomlPhase.HoverAmpY,
+            tomlPhase.HoverSpeed,
+            tomlPhase.HoverAmp,
             tomlPhase.PlayerPursuitWeight,
             tomlPhase.HoverLerpSpeed,
             tomlPhase.TelegraphShakeIntensity,

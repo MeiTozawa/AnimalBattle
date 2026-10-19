@@ -1,3 +1,4 @@
+using AnimalBattle.Core;
 using ErrorOr;
 
 namespace AnimalBattle.Configs;
@@ -7,7 +8,7 @@ namespace AnimalBattle.Configs;
 /// </summary>
 public sealed class SpatialHashConfig {
     /// <summary>空間ハッシュの正方形セル一辺のサイズ（ピクセル）</summary>
-    public float CellSize { get; set; } = 256.0f;
+    public float CellSize { get; set; }
 }
 
 /// <summary>
@@ -15,67 +16,67 @@ public sealed class SpatialHashConfig {
 /// </summary>
 public sealed class NavigationGraphConfig {
     /// <summary>放物線跳躍軌道の障害物遮断レイキャストサンプリング分割数</summary>
-    public int TrajectorySampleSteps { get; set; } = 16;
+    public int TrajectorySampleSteps { get; set; }
 
     /// <summary>Boss 足元プラットフォーム判定の垂直許容誤差（ピクセル）</summary>
-    public float BossNodeToleranceY { get; set; } = 35.0f;
+    public float BossNodeToleranceY { get; set; }
 
     /// <summary>Boss 足元プラットフォーム判定の水平はみ出しマージン（ピクセル）</summary>
-    public float BossNodeMarginX { get; set; } = 55.0f;
+    public float BossNodeMarginX { get; set; }
 
     /// <summary>目標プレイヤー足元プラットフォーム判定の垂直許容誤差（ピクセル）</summary>
-    public float TargetToleranceY { get; set; } = 45.0f;
+    public float TargetToleranceY { get; set; }
 
     /// <summary>目標プレイヤー足元プラットフォーム判定の水平はみ出しマージン（ピクセル）</summary>
-    public float TargetMarginX { get; set; } = 35.0f;
+    public float TargetMarginX { get; set; }
 
     /// <summary>跳躍離陸点への接近判定距離（ピクセル）</summary>
-    public float TakeoffTriggerDistance { get; set; } = 22.0f;
+    public float TakeoffTriggerDistance { get; set; }
 
     /// <summary>下落離脱点への接近判定距離（ピクセル）</summary>
-    public float DropTriggerDistance { get; set; } = 16.0f;
+    public float DropTriggerDistance { get; set; }
 
     /// <summary>上方跳躍として判定する最小高度差（ピクセル）</summary>
-    public float MinJumpDeltaY { get; set; } = 15.0f;
+    public float MinJumpDeltaY { get; set; }
 
     /// <summary>下方下落として判定する高度差上限（ピクセル、負値）</summary>
-    public float MinDropDeltaY { get; set; } = -20.0f;
+    public float MinDropDeltaY { get; set; }
 
     /// <summary>プラットフォーム水平重なり判定の最小重なり幅（ピクセル）</summary>
-    public float PlatformOverlapThreshold { get; set; } = 20.0f;
+    public float PlatformOverlapThreshold { get; set; }
 
     /// <summary>プラットフォーム端からの踏切・着地安全マージン（ピクセル）</summary>
-    public float PlatformEdgeMargin { get; set; } = 15.0f;
+    public float PlatformEdgeMargin { get; set; }
 
     /// <summary>上下重畳足場間の斜め跳躍時、踏切位置を重なり境界より外側へオフセットする距離（ピクセル）</summary>
-    public float OverlapTakeoffOffsetX { get; set; } = 25.0f;
+    public float OverlapTakeoffOffsetX { get; set; }
 
     /// <summary>上下重畳足場間の斜め跳躍時、着地目標を足場内側へ深く踏み込ませるオフセット距離（ピクセル）</summary>
-    public float OverlapLandingOffsetX { get; set; } = 35.0f;
+    public float OverlapLandingOffsetX { get; set; }
 
     /// <summary>足場端からの段差下落時、下方足場への着地予測点を外側へオフセットする距離（ピクセル）</summary>
-    public float DropLandingOffsetX { get; set; } = 35.0f;
+    public float DropLandingOffsetX { get; set; }
 
     /// <summary>跳躍最高到達時間に対する滞空許容時間倍率</summary>
-    public float JumpWindowTimeMultiplier { get; set; } = 1.5f;
+    public float JumpWindowTimeMultiplier { get; set; }
 
     /// <summary>滞空水平移動速度の最小許容倍率（巡航速度比）</summary>
-    public float MinJumpVxRatio { get; set; } = 0.8f;
+    public float MinJumpVxRatio { get; set; }
 
     /// <summary>滞空水平移動速度の最大許容倍率（巡航速度比）</summary>
-    public float MaxJumpVxRatio { get; set; } = 1.5f;
+    public float MaxJumpVxRatio { get; set; }
 
     /// <summary>上方跳躍移動の基本コスト加算値</summary>
-    public float JumpCostBase { get; set; } = 40.0f;
+    public float JumpCostBase { get; set; }
 
     /// <summary>足場間ギャップを跨ぐ斜め跳躍の基本コスト加算値</summary>
-    public float CrossGapJumpCostBase { get; set; } = 60.0f;
+    public float CrossGapJumpCostBase { get; set; }
 
     /// <summary>段差下落移動の基本コスト加算値</summary>
-    public float DropCostBase { get; set; } = 30.0f;
+    public float DropCostBase { get; set; }
 
     /// <summary>段差下落移動の落下高度乗数</summary>
-    public float DropCostHeightMultiplier { get; set; } = 0.6f;
+    public float DropCostHeightMultiplier { get; set; }
 }
 
 /// <summary>
@@ -85,23 +86,17 @@ public sealed class TileMapConfig {
     /// <summary>タイルセットテクスチャの相対パス</summary>
     public string TileSheetPath { get; set; } = string.Empty;
 
-    /// <summary>描画時のタイル単体幅（ピクセル）</summary>
-    public int RenderTileWidth { get; set; }
+    /// <summary>描画時のタイル単体サイズ (Vec2i)</summary>
+    public Vec2i RenderTileSize { get; set; }
 
-    /// <summary>描画時のタイル単体高さ（ピクセル）</summary>
-    public int RenderTileHeight { get; set; }
-
-    /// <summary>マップ原点 X 座標（左上）</summary>
-    public float OriginX { get; set; }
-
-    /// <summary>マップ原点 Y 座標（左上）</summary>
-    public float OriginY { get; set; }
+    /// <summary>マップ原点座標 (Vec2f)</summary>
+    public Vec2f Origin { get; set; }
 
     /// <summary>有効なプラットフォームとして判定する上面 Y 座標の上限（ピクセル）</summary>
-    public float MaxPlatformY { get; set; } = 720.0f;
+    public float MaxPlatformY { get; set; }
 
     /// <summary>有効なプラットフォームとして判定する最小幅（ピクセル）</summary>
-    public float MinPlatformWidth { get; set; } = 10.0f;
+    public float MinPlatformWidth { get; set; }
 
     /// <summary>2D タイル ID グリッドデータ（0 = 空白/空気）</summary>
     public List<List<int>> Data { get; set; } = [];
@@ -142,8 +137,8 @@ public sealed class ArenaConfig {
     public float BulletDespawnMaxY { get; set; }
 
     /// <summary>地上キャラクター（プレイヤー・Boss）の床面下限 Y 座標</summary>
-    public float FloorLimitY { get; set; } = 560.0f;
+    public float FloorLimitY { get; set; }
 
     /// <summary>物理更新の最大デルタタイム保護上限（秒）</summary>
-    public float MaxDeltaTime { get; set; } = 0.05f;
+    public float MaxDeltaTime { get; set; }
 }

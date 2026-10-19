@@ -37,24 +37,10 @@ public abstract class Pawn
     /// <summary>現在位置座標を取得します。</summary>
     public Vec2f Position => Entity.Get<Transform>().Position;
 
-    /// <summary>ワールド座標を一括設定します（テレポート・初期配置意図）。</summary>
-    public void SetPosition(float x, float y)
-    {
-        ref var t = ref Entity.GetMut<Transform>();
-        t.X = x;
-        t.Y = y;
-    }
-
     /// <summary>ワールド位置ベクトルを一括設定します。</summary>
     public void SetPosition(Vec2f pos)
     {
         Entity.GetMut<Transform>().Position = pos;
-    }
-
-    /// <summary>移動速度を一括設定します。</summary>
-    public void SetVelocity(float vx, float vy)
-    {
-        Entity.Set(new Velocity(vx, vy));
     }
 
     /// <summary>移動速度ベクトルを一括設定します。</summary>
@@ -64,9 +50,9 @@ public abstract class Pawn
     }
 
     /// <summary>空間変換パラメータ（座標・スケール）を一括設定します。</summary>
-    public void SetTransform(float x, float y, float scaleX = 1.0f, float scaleY = 1.0f)
+    public void SetTransform(Vec2f pos, Vec2f scale)
     {
-        Entity.Set(new Transform(x, y, scaleX, scaleY));
+        Entity.Set(new Transform(pos, scale));
     }
 
     #endregion

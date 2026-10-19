@@ -19,22 +19,21 @@ public static unsafe class PhysicsService {
     /// <returns>交差していれば true、それ以外は false</returns>
     public static bool Intersects(in Transform t1, CollisionShape s1, in Transform t2, CollisionShape s2)
     {
-        Vec2f p1 = new(t1.X + s1.OffsetX, t1.Y + s1.OffsetY);
-        Vec2f p2 = new(t2.X + s2.OffsetX, t2.Y + s2.OffsetY);
+        Vec2f p1 = t1.Position + s1.Offset;
+        Vec2f p2 = t2.Position + s2.Offset;
 
         return (s1.Type, s2.Type) switch {
             (CollisionShapeType.Circle, CollisionShapeType.Circle) =>
                 Intersects(new Circle2D(p1, s1.Radius), new Circle2D(p2, s2.Radius)),
 
             (CollisionShapeType.Box, CollisionShapeType.Box) =>
-                Intersects(new Box2D(p1, new Vec2f(s1.Width, s1.Height)),
-                    new Box2D(p2, new Vec2f(s2.Width, s2.Height))),
+                Intersects(new Box2D(p1, s1.Size), new Box2D(p2, s2.Size)),
 
             (CollisionShapeType.Circle, CollisionShapeType.Box) =>
-                Intersects(new Circle2D(p1, s1.Radius), new Box2D(p2, new Vec2f(s2.Width, s2.Height))),
+                Intersects(new Circle2D(p1, s1.Radius), new Box2D(p2, s2.Size)),
 
             (CollisionShapeType.Box, CollisionShapeType.Circle) =>
-                Intersects(new Box2D(p1, new Vec2f(s1.Width, s1.Height)), new Circle2D(p2, s2.Radius)),
+                Intersects(new Box2D(p1, s1.Size), new Circle2D(p2, s2.Radius)),
 
             (CollisionShapeType.Point, CollisionShapeType.Circle) =>
                 Intersects(p1, new Circle2D(p2, s2.Radius)),
@@ -43,13 +42,13 @@ public static unsafe class PhysicsService {
                 Intersects(p2, new Circle2D(p1, s1.Radius)),
 
             (CollisionShapeType.Point, CollisionShapeType.Box) =>
-                Intersects(p1, new Box2D(p2, new Vec2f(s2.Width, s2.Height))),
+                Intersects(p1, new Box2D(p2, s2.Size)),
 
             (CollisionShapeType.Box, CollisionShapeType.Point) =>
-                Intersects(p2, new Box2D(p1, new Vec2f(s1.Width, s1.Height))),
+                Intersects(p2, new Box2D(p1, s1.Size)),
 
             (CollisionShapeType.Point, CollisionShapeType.Point) =>
-                MathF.Abs(p1.X - p2.X) < 0.001f && MathF.Abs(p1.Y - p2.Y) < 0.001f,
+                (p1 - p2).LengthSquared() < 0.000001f,
 
             _ => AssertHelper.FailWithDefault($"[PhysicsService 警告] 未知または未サポートの衝突形状の組み合わせ: ({s1.Type}, {s2.Type})", false)
         };
@@ -161,20 +160,11 @@ public static unsafe class PhysicsService {
         out float adjustedPosY,
         out float adjustedVy)
     {
-        var pWidth = playerShape.Type == CollisionShapeType.Box ? playerShape.Width : playerShape.Radius * 2.0f;
-        var pHeight = playerShape.Type == CollisionShapeType.Box ? playerShape.Height : playerShape.Radius * 2.0f;
-        var platWidth = platformShape.Type == CollisionShapeType.Box
-            ? platformShape.Width
-            : platformShape.Radius * 2.0f;
-        var platHeight = platformShape.Type == CollisionShapeType.Box
-            ? platformShape.Height
-            : platformShape.Radius * 2.0f;
+        var pSize = playerShape.Type == CollisionShapeType.Box ? playerShape.Size : new Vec2f(playerShape.Radius * 2.0f, playerShape.Radius * 2.0f);
+        var platSize = platformShape.Type == CollisionShapeType.Box ? platformShape.Size : new Vec2f(platformShape.Radius * 2.0f, platformShape.Radius * 2.0f);
 
-        Box2D playerBox = new(new Vec2f(playerTrans.X + playerShape.OffsetX, nextY + playerShape.OffsetY),
-            new Vec2f(pWidth, pHeight));
-        Box2D platformBox =
-            new(new Vec2f(platformTrans.X + platformShape.OffsetX, platformTrans.Y + platformShape.OffsetY),
-                new Vec2f(platWidth, platHeight));
+        Box2D playerBox = new(new Vec2f(playerTrans.Position.X + playerShape.Offset.X, nextY + playerShape.Offset.Y), pSize);
+        Box2D platformBox = new(platformTrans.Position + platformShape.Offset, platSize);
 
         return CheckPlatformGround(prevY, nextY, playerBox, platformBox, out adjustedPosY, out adjustedVy);
     }
@@ -265,17 +255,15 @@ public static unsafe class PhysicsService {
         Vec2f basePos,
         Vec2f playerPos,
         float hoverTimer,
-        float hoverSpeedX,
-        float hoverSpeedY,
-        float hoverAmpX,
-        float hoverAmpY,
+        Vec2f hoverSpeed,
+        Vec2f hoverAmp,
         float playerPursuitWeight,
         float hoverLerpSpeed,
         float deltaTime)
     {
-        var targetX = basePos.X + MathF.Sin(hoverTimer * hoverSpeedX) * hoverAmpX +
+        var targetX = basePos.X + MathF.Sin(hoverTimer * hoverSpeed.X) * hoverAmp.X +
             (playerPos.X - basePos.X) * playerPursuitWeight;
-        var targetY = basePos.Y + MathF.Cos(hoverTimer * hoverSpeedY) * hoverAmpY;
+        var targetY = basePos.Y + MathF.Cos(hoverTimer * hoverSpeed.Y) * hoverAmp.Y;
         var lerpFactor = MathF.Min(1.0f, hoverLerpSpeed * deltaTime);
 
         var nextX = currentPos.X + (targetX - currentPos.X) * lerpFactor;

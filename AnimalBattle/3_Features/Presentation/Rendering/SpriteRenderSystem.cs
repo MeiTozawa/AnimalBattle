@@ -36,20 +36,16 @@ public static class SpriteRenderSystem {
                     if (!sprite.IsVisible || sprite.GraphHandle < 0) continue;
 
                     ref var trans = ref transforms[i];
-                    var drawX = (int)(trans.X + sprite.JitterOffsetX);
-                    var drawY = (int)(trans.Y + sprite.JitterOffsetY + sprite.SpringOffsetY);
-                    var scaleX = trans.ScaleX * sprite.ScaleX;
-                    var scaleY = trans.ScaleY * sprite.ScaleY;
+                    var drawPos = (trans.Position + sprite.JitterOffset).ToVec2i() + new Vec2i(0, (int)sprite.SpringOffsetY);
+                    var srcPos = new Vec2i(sprite.SrcRect.Left, sprite.SrcRect.Top);
+                    var srcSize = new Vec2i(sprite.SrcRect.Width, sprite.SrcRect.Height);
+                    var scale = new Vec2f(trans.Scale.X * sprite.Scale.X, trans.Scale.Y * sprite.Scale.Y);
 
-                    GameEngine.DrawRectRotaGraph3(
-                        drawX,
-                        drawY,
-                        sprite.SrcRect.Left,
-                        sprite.SrcRect.Top,
-                        sprite.SrcRect.Width,
-                        sprite.SrcRect.Height,
-                        scaleX,
-                        scaleY,
+                    GameEngine.DrawRectRotaGraph(
+                        drawPos,
+                        srcPos,
+                        srcSize,
+                        scale,
                         trans.Rotation,
                         sprite.GraphHandle,
                         true,
@@ -77,23 +73,19 @@ public static class SpriteRenderSystem {
                     if (!sprite.IsVisible || sprite.GraphHandle < 0) continue;
 
                     ref var trans = ref transforms[i];
-                    var drawX = (int)(trans.X + sprite.JitterOffsetX);
-                    var drawY = (int)(trans.Y + sprite.JitterOffsetY + sprite.SpringOffsetY);
-                    var scaleX = trans.ScaleX * sprite.ScaleX;
-                    var scaleY = trans.ScaleY * sprite.ScaleY;
+                    var drawPos = (trans.Position + sprite.JitterOffset).ToVec2i() + new Vec2i(0, (int)sprite.SpringOffsetY);
+                    var srcPos = new Vec2i(sprite.SrcRect.Left, sprite.SrcRect.Top);
+                    var srcSize = new Vec2i(sprite.SrcRect.Width, sprite.SrcRect.Height);
+                    var scale = new Vec2f(trans.Scale.X * sprite.Scale.X, trans.Scale.Y * sprite.Scale.Y);
 
                     GameEngine.SetDrawBright(sprite.Color.R, sprite.Color.G, sprite.Color.B);
                     GameEngine.SetDrawBlendMode(BlendMode.Add, 255);
 
-                    GameEngine.DrawRectRotaGraph3(
-                        drawX,
-                        drawY,
-                        sprite.SrcRect.Left,
-                        sprite.SrcRect.Top,
-                        sprite.SrcRect.Width,
-                        sprite.SrcRect.Height,
-                        scaleX,
-                        scaleY,
+                    GameEngine.DrawRectRotaGraph(
+                        drawPos,
+                        srcPos,
+                        srcSize,
+                        scale,
                         trans.Rotation,
                         sprite.GraphHandle,
                         true,
@@ -127,23 +119,19 @@ public static class SpriteRenderSystem {
                     if (!sprite.IsVisible || sprite.GraphHandle < 0) continue;
 
                     ref var trans = ref transforms[i];
-                    var drawX = (int)(trans.X + sprite.JitterOffsetX);
-                    var drawY = (int)(trans.Y + sprite.JitterOffsetY + sprite.SpringOffsetY);
-                    var scaleX = trans.ScaleX * sprite.ScaleX;
-                    var scaleY = trans.ScaleY * sprite.ScaleY;
+                    var drawPos = (trans.Position + sprite.JitterOffset).ToVec2i() + new Vec2i(0, (int)sprite.SpringOffsetY);
+                    var srcPos = new Vec2i(sprite.SrcRect.Left, sprite.SrcRect.Top);
+                    var srcSize = new Vec2i(sprite.SrcRect.Width, sprite.SrcRect.Height);
+                    var scale = new Vec2f(trans.Scale.X * sprite.Scale.X, trans.Scale.Y * sprite.Scale.Y);
 
                     GameEngine.SetDrawBright(flash.FlashColor.R, flash.FlashColor.G, flash.FlashColor.B);
                     GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
 
-                    GameEngine.DrawRectRotaGraph3(
-                        drawX,
-                        drawY,
-                        sprite.SrcRect.Left,
-                        sprite.SrcRect.Top,
-                        sprite.SrcRect.Width,
-                        sprite.SrcRect.Height,
-                        scaleX,
-                        scaleY,
+                    GameEngine.DrawRectRotaGraph(
+                        drawPos,
+                        srcPos,
+                        srcSize,
+                        scale,
                         trans.Rotation,
                         sprite.GraphHandle,
                         true,

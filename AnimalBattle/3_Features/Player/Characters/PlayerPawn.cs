@@ -50,7 +50,7 @@ public abstract class PlayerPawn : Pawn
 
         CharacterType = characterType;
 
-        Entity.Set(new Transform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY))
+        Entity.Set(new Transform(pCfg.Spawn, pCfg.Scale))
            .Set(new Animation(characterType, "Idle"))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 32, 32)));
     }
@@ -63,17 +63,17 @@ public abstract class PlayerPawn : Pawn
     {
         Debug.Assert(pCfg != null, "PlayerConfig は null であってはなりません。");
 
-        SetTransform(pCfg.SpawnX, pCfg.SpawnY, pCfg.ScaleX, pCfg.ScaleY);
-        SetVelocity(0.0f, 0.0f);
+        SetTransform(pCfg.Spawn, pCfg.Scale);
+        SetVelocity(Vec2f.Zero);
         ResetHealth(pCfg.MaxHp);
 
-        Entity.Set(new CollisionBox(pCfg.CollisionWidth, pCfg.CollisionHeight));
+        Entity.Set(new CollisionBox(pCfg.CollisionSize));
         Entity.Set(new Hurtbox(pCfg.GetHurtboxShape(), Faction.Friendly));
         Entity.Set(new InvincibleOnHit(pCfg.InvincibleDuration));
         Entity.Set(new HitFlashSettings(pCfg.HitFlashDuration));
 
         Entity.Set(JumpCapability.FromPlayerConfig(pCfg));
-        Entity.Set(new SpringScale(1.0f, 1.0f, pCfg.SpringFrequency, pCfg.SpringDampingRatio));
+        Entity.Set(new SpringScale(Vec2f.One, pCfg.SpringFrequency, pCfg.SpringDampingRatio));
         Entity.Set(new DashState());
         Entity.Set(new MovementIntent());
         Entity.Set(new WeaponIntent());

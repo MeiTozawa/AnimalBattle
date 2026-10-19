@@ -29,23 +29,22 @@ public sealed class Boss1Brain : BaseBossBrain {
 
     /// <summary>Boss 1 ブレインを初期化します。</summary>
     /// <param name="world">対象の Flecs ワールド。</param>
-    /// <param name="spawnX">スポーン X 座標。</param>
-    /// <param name="spawnY">スポーン Y 座標。</param>
+    /// <param name="spawn">スポーン座標。</param>
     /// <param name="configuration">設定プロバイダ。</param>
-    public Boss1Brain(World world, float spawnX, float spawnY, IBoss1Configuration? configuration = null)
+    public Boss1Brain(World world, Vec2f spawn, IBoss1Configuration? configuration = null)
     {
         Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
         _world = world;
         _configuration = configuration ?? new Boss1DefaultConfiguration(world);
-        BaseX = spawnX;
-        _currentPosition = new Vec2f(spawnX, spawnY);
-        _startPosition = new Vec2f(spawnX, spawnY);
-        _targetPosition = new Vec2f(spawnX, spawnY);
+        BaseX = spawn.X;
+        _currentPosition = spawn;
+        _startPosition = spawn;
+        _targetPosition = spawn;
         Phase = Phase.Phase1;
 
         InitializeAbilities();
         InitializeStateMachine();
-        Reset(spawnX, spawnY);
+        Reset(spawn);
     }
 
     /// <summary>浮遊基準 X 座標を取得します。</summary>
@@ -129,11 +128,12 @@ public sealed class Boss1Brain : BaseBossBrain {
     /// <summary>
     ///     ブレインの内部状態を初期位置へリセットします。
     /// </summary>
-    public void Reset(float x, float y)
+    public void Reset(Vec2f pos)
     {
-        _currentPosition = new Vec2f(x, y);
-        _startPosition = new Vec2f(x, y);
-        _targetPosition = new Vec2f(x, y);
+        _currentPosition = pos;
+        _startPosition = pos;
+        _targetPosition = pos;
+        BaseX = pos.X;
         _stateTimer = 0.0f;
         _hoverTimer = 0.0f;
         _attackIndex = 0;
@@ -220,10 +220,8 @@ public sealed class Boss1Brain : BaseBossBrain {
             basePos,
             playerPos,
             _hoverTimer,
-            phaseCfg.HoverSpeedX,
-            phaseCfg.HoverSpeedY,
-            phaseCfg.HoverAmpX,
-            phaseCfg.HoverAmpY,
+            phaseCfg.HoverSpeed,
+            phaseCfg.HoverAmp,
             phaseCfg.PlayerPursuitWeight,
             phaseCfg.HoverLerpSpeed,
             dt);
@@ -279,10 +277,8 @@ public sealed class Boss1Brain : BaseBossBrain {
                 basePos,
                 playerPos,
                 _hoverTimer,
-                phaseCfg.HoverSpeedX,
-                phaseCfg.HoverSpeedY,
-                phaseCfg.HoverAmpX,
-                phaseCfg.HoverAmpY,
+                phaseCfg.HoverSpeed,
+                phaseCfg.HoverAmp,
                 phaseCfg.PlayerPursuitWeight,
                 phaseCfg.HoverLerpSpeed,
                 dt);

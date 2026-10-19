@@ -32,14 +32,14 @@ public static class StartSceneSpawner {
         AssetManager.TryGetCharacterSpriteHandle(CharacterType.Cat, "Idle", out var catHandle);
         var catPreview = world.Entity("CatPreview")
             .ChildOf(root)
-            .Set(new Transform(catCardBounds.X + catCardBounds.Width / 2f, catCardBounds.Y + layout.PreviewCenterOffsetY, 3.5f, 3.5f))
+            .Set(new Transform(new Vec2f(catCardBounds.X + catCardBounds.Width / 2f, catCardBounds.Y + layout.PreviewCenterOffsetY), new Vec2f(3.5f, 3.5f)))
             .Set(new Sprite(catHandle, false, true, new Rect(0, 0, 32, 32)))
             .Set(new Animation { CharacterType = CharacterType.Cat, CurrentClip = "Idle", IsPlaying = true });
 
         AssetManager.TryGetCharacterSpriteHandle(CharacterType.Bunny, "Idle", out var bunnyHandle);
         var bunnyPreview = world.Entity("BunnyPreview")
             .ChildOf(root)
-            .Set(new Transform(bunnyCardBounds.X + bunnyCardBounds.Width / 2f, bunnyCardBounds.Y + layout.PreviewCenterOffsetY, 3.5f, 3.5f))
+            .Set(new Transform(new Vec2f(bunnyCardBounds.X + bunnyCardBounds.Width / 2f, bunnyCardBounds.Y + layout.PreviewCenterOffsetY), new Vec2f(3.5f, 3.5f)))
             .Set(new Sprite(bunnyHandle, false, true, new Rect(0, 0, 32, 32)))
             .Set(new Animation { CharacterType = CharacterType.Bunny, CurrentClip = "Idle", IsPlaying = true });
 

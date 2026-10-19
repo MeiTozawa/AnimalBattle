@@ -8,8 +8,9 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Systems.Render;
 
 /// <summary>
-///     自機弾および Boss 弾幕（通常弾・特殊弾幕）を高速一括描画する ECS システム。
-///     零 GC コールバックおよび視口カリングを活用し、海量弾幕を描画バッファへ直接記録します。
+///     弾丸エンティティの一括描画を行う ECS システム。
+///     弾丸の描画処理を独立したクエリ・パスに集約し、
+///     ビューポート外のカリングと一括描画コマンド投入を行います。
 /// </summary>
 public static class BulletBatchRenderSystem {
     private static int _clipMinX;
@@ -21,13 +22,13 @@ public static class BulletBatchRenderSystem {
     private static Color _pOuterColor;
     private static int _pInnerRadius;
     private static Color _pInnerColor;
-    private static int _pTrailOffset;
-    private static int _pTrailRadius1;
-    private static int _pTrailRadius2;
-    private static int _pTrailRadius3;
+    private static float _pTrailOffset;
     private static Color _pTrailColor1;
     private static Color _pTrailColor2;
     private static Color _pTrailColor3;
+    private static int _pTrailRadius1;
+    private static int _pTrailRadius2;
+    private static int _pTrailRadius3;
     private static float _pTrailOffset1;
     private static float _pTrailOffset2;
     private static float _pTrailOffset3;
@@ -38,7 +39,7 @@ public static class BulletBatchRenderSystem {
     private static Color _bCoreColor;
 
     /// <summary>
-    ///     弾幕バッチ描画システムを Flecs.NET ワールドへ登録します。
+    ///     弾丸描画システム（自機弾丸、Boss 弾丸）を Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <returns>登録済みワールド</returns>
@@ -61,16 +62,16 @@ public static class BulletBatchRenderSystem {
 
     private static void UpdateContext(BulletRenderConfig bulletCfg, ArenaConfig arenaCfg)
     {
-        _clipMinX = (int)arenaCfg.BulletDespawnMinX - bulletCfg.ViewportCullingMarginX;
-        _clipMaxX = (int)arenaCfg.BulletDespawnMaxX + bulletCfg.ViewportCullingMarginX;
-        _clipMinY = (int)arenaCfg.BulletDespawnMinY - bulletCfg.ViewportCullingMarginY;
-        _clipMaxY = (int)arenaCfg.BulletDespawnMaxY + bulletCfg.ViewportCullingMarginY;
+        _clipMinX = (int)arenaCfg.BulletDespawnMinX - bulletCfg.ViewportCullingMargin.X;
+        _clipMaxX = (int)arenaCfg.BulletDespawnMaxX + bulletCfg.ViewportCullingMargin.X;
+        _clipMinY = (int)arenaCfg.BulletDespawnMinY - bulletCfg.ViewportCullingMargin.Y;
+        _clipMaxY = (int)arenaCfg.BulletDespawnMaxY + bulletCfg.ViewportCullingMargin.Y;
 
         _pOuterRadius = (int)bulletCfg.PlayerBulletOuterRadius;
         _pOuterColor = bulletCfg.PlayerBulletOuterColor;
         _pInnerRadius = (int)bulletCfg.PlayerBulletInnerRadius;
         _pInnerColor = bulletCfg.PlayerBulletInnerColor;
-        _pTrailOffset = bulletCfg.PlayerBulletTrailHalfWidth;
+        _pTrailOffset = bulletCfg.PlayerBulletTrailHalfSize.X;
 
         var trailBase = bulletCfg.PlayerBulletTrailColor.A > 0 ? bulletCfg.PlayerBulletTrailColor : _pOuterColor;
         var tr = trailBase.R;
@@ -107,37 +108,22 @@ public static class BulletBatchRenderSystem {
 
         for (var i = 0; i < count; ++i)
         {
-            var px = (int)trans[i].X;
-            var py = (int)trans[i].Y;
-            if (px < _clipMinX || px > _clipMaxX || py < _clipMinY || py > _clipMaxY) continue;
+            var p = trans[i].Position.ToVec2i();
+            if (p.X < _clipMinX || p.X > _clipMaxX || p.Y < _clipMinY || p.Y > _clipMaxY) continue;
 
-            var vx = vel[i].Vx;
-            var vy = vel[i].Vy;
-            var speedSq = vx * vx + vy * vy;
+            var v = vel[i].Value;
+            var speedSq = v.LengthSquared();
             if (speedSq > 1.0f)
             {
-                var invSpeed = 1.0f / MathF.Sqrt(speedSq);
-                var dirX = vx * invSpeed;
-                var dirY = vy * invSpeed;
+                var dir = v.Normalized();
 
-                GameEngine.DrawCircle(
-                    (int)(px - dirX * _pTrailOffset3),
-                    (int)(py - dirY * _pTrailOffset3),
-                    _pTrailRadius3, _pTrailColor3, true);
-
-                GameEngine.DrawCircle(
-                    (int)(px - dirX * _pTrailOffset2),
-                    (int)(py - dirY * _pTrailOffset2),
-                    _pTrailRadius2, _pTrailColor2, true);
-
-                GameEngine.DrawCircle(
-                    (int)(px - dirX * _pTrailOffset1),
-                    (int)(py - dirY * _pTrailOffset1),
-                    _pTrailRadius1, _pTrailColor1, true);
+                GameEngine.DrawCircle((p.ToVec2f() - dir * _pTrailOffset3).RoundToVec2i(), _pTrailRadius3, _pTrailColor3, true);
+                GameEngine.DrawCircle((p.ToVec2f() - dir * _pTrailOffset2).RoundToVec2i(), _pTrailRadius2, _pTrailColor2, true);
+                GameEngine.DrawCircle((p.ToVec2f() - dir * _pTrailOffset1).RoundToVec2i(), _pTrailRadius1, _pTrailColor1, true);
             }
 
-            GameEngine.DrawCircle(px, py, _pOuterRadius, _pOuterColor, true);
-            GameEngine.DrawCircle(px, py, _pInnerRadius, _pInnerColor, true);
+            GameEngine.DrawCircle(p, _pOuterRadius, _pOuterColor, true);
+            GameEngine.DrawCircle(p, _pInnerRadius, _pInnerColor, true);
         }
     }
 
@@ -154,9 +140,8 @@ public static class BulletBatchRenderSystem {
 
         for (var i = 0; i < count; ++i)
         {
-            var bx = (int)trans[i].X;
-            var by = (int)trans[i].Y;
-            if (bx < _clipMinX || bx > _clipMaxX || by < _clipMinY || by > _clipMaxY) continue;
+            var bp = trans[i].Position.ToVec2i();
+            if (bp.X < _clipMinX || bp.X > _clipMaxX || bp.Y < _clipMinY || bp.Y > _clipMaxY) continue;
 
             var b = bullet[i];
             ref readonly var mod = ref modifier[i];
@@ -166,20 +151,19 @@ public static class BulletBatchRenderSystem {
 
             if (mod.Type == BulletType.Normal)
             {
-                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                GameEngine.DrawCircle(bx, by, coreRadius, _bCoreColor, true);
+                GameEngine.DrawCircle(bp, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bp, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bp, coreRadius, _bCoreColor, true);
             }
             else
             {
-                DrawSpecialBossBullet(bx, by, in b, in mod, radius, outlineRadius, coreRadius, _bOutlinePadding, _bCoreColor, bulletCfg);
+                DrawSpecialBossBullet(bp, in b, in mod, radius, outlineRadius, coreRadius, _bOutlinePadding, _bCoreColor, bulletCfg);
             }
         }
     }
 
     private static void DrawSpecialBossBullet(
-        int bx,
-        int by,
+        Vec2i bp,
         in Bullet b,
         in BulletModifier mod,
         int radius,
@@ -194,52 +178,51 @@ public static class BulletBatchRenderSystem {
             case BulletType.Magenta: {
                 var pulseAura = radius * (bulletCfg.SpecialMagentaAuraBaseRatio + bulletCfg.SpecialMagentaAuraPulseRatio * MathF.Sin(mod.ElapsedTimer * bulletCfg.SpecialMagentaPulseSpeed));
                 var auraColor = Color.FromArgb(bulletCfg.SpecialMagentaAuraAlpha, b.FillColor.R, b.FillColor.G, b.FillColor.B);
-                GameEngine.DrawCircle(bx, by, (int)pulseAura, auraColor, false);
-                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                GameEngine.DrawCircle(bp, (int)pulseAura, auraColor, false);
+                GameEngine.DrawCircle(bp, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bp, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bp, coreRadius, coreColor, true);
                 break;
             }
 
             case BulletType.Yellow: {
-                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                GameEngine.DrawCircle(bp, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bp, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bp, coreRadius, coreColor, true);
                 break;
             }
 
             case BulletType.Cyan: {
-                GameEngine.DrawCircle(bx, by, outlineRadius + bulletCfg.SpecialCyanRingPadding, bulletCfg.SpecialCyanRingColor, false);
-                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                GameEngine.DrawCircle(bp, outlineRadius + bulletCfg.SpecialCyanRingPadding, bulletCfg.SpecialCyanRingColor, false);
+                GameEngine.DrawCircle(bp, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bp, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bp, coreRadius, coreColor, true);
                 break;
             }
 
             case BulletType.Black: {
                 var pulseAura = radius * (bulletCfg.SpecialBlackAuraBaseRatio + bulletCfg.SpecialBlackAuraPulseRatio * MathF.Sin(mod.ElapsedTimer * bulletCfg.SpecialBlackPulseSpeed));
-                GameEngine.DrawCircle(bx, by, (int)pulseAura, bulletCfg.SpecialBlackAuraColor, false);
+                GameEngine.DrawCircle(bp, (int)pulseAura, bulletCfg.SpecialBlackAuraColor, false);
 
                 var orbitDist = radius * bulletCfg.SpecialBlackSatelliteOrbitRatio;
                 var angle = mod.ElapsedTimer * bulletCfg.SpecialBlackSatelliteOrbitSpeed;
-                var satX = (int)(bx + MathF.Cos(angle) * orbitDist);
-                var satY = (int)(by + MathF.Sin(angle) * orbitDist);
+                var satPos = (bp.ToVec2f() + new Vec2f(MathF.Cos(angle) * orbitDist, MathF.Sin(angle) * orbitDist)).RoundToVec2i();
                 var satRadius = Math.Max(bulletCfg.SpecialBlackSatelliteMinRadius, (int)(radius * bulletCfg.SpecialBlackSatelliteRadiusRatio));
                 var satOutline = satRadius + outlinePadding;
 
-                GameEngine.DrawCircle(satX, satY, satOutline, b.OutlineColor, true);
-                GameEngine.DrawCircle(satX, satY, satRadius, b.FillColor, true);
+                GameEngine.DrawCircle(satPos, satOutline, b.OutlineColor, true);
+                GameEngine.DrawCircle(satPos, satRadius, b.FillColor, true);
 
-                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                GameEngine.DrawCircle(bx, by, Math.Max(bulletCfg.SpecialBlackCoreInnerMinRadius, coreRadius / bulletCfg.SpecialBlackCoreInnerDivisor), bulletCfg.SpecialBlackCoreInnerColor, true);
+                GameEngine.DrawCircle(bp, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bp, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bp, Math.Max(bulletCfg.SpecialBlackCoreInnerMinRadius, coreRadius / bulletCfg.SpecialBlackCoreInnerDivisor), bulletCfg.SpecialBlackCoreInnerColor, true);
                 break;
             }
 
             default: {
-                GameEngine.DrawCircle(bx, by, outlineRadius, b.OutlineColor, true);
-                GameEngine.DrawCircle(bx, by, radius, b.FillColor, true);
-                GameEngine.DrawCircle(bx, by, coreRadius, coreColor, true);
+                GameEngine.DrawCircle(bp, outlineRadius, b.OutlineColor, true);
+                GameEngine.DrawCircle(bp, radius, b.FillColor, true);
+                GameEngine.DrawCircle(bp, coreRadius, coreColor, true);
                 break;
             }
         }

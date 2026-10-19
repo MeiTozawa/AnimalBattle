@@ -44,12 +44,11 @@ public static class BulletPhysicsSystem {
             ref var t = ref trans[i];
             ref readonly var v = ref vel[i];
 
-            var nextX = t.Position.X + v.Vx * dt;
-            var nextY = t.Position.Y + v.Vy * dt;
-            t.Position = new Vec2f(nextX, nextY);
+            var nextPos = t.Position + v.Value * dt;
+            t.Position = nextPos;
 
-            if (nextX < minX || nextX > maxX ||
-                nextY < minY || nextY > maxY)
+            if (nextPos.X < minX || nextPos.X > maxX ||
+                nextPos.Y < minY || nextPos.Y > maxY)
                 it.Entity(i).Add<RecycleTag>();
         }
     }
@@ -73,12 +72,11 @@ public static class BulletPhysicsSystem {
             ref var t = ref trans[i];
             ref readonly var v = ref vel[i];
 
-            var nextX = t.Position.X + v.Vx * dt;
-            var nextY = t.Position.Y + v.Vy * dt;
-            t.Position = new Vec2f(nextX, nextY);
+            var nextPos = t.Position + v.Value * dt;
+            t.Position = nextPos;
 
-            if (nextX < minX || nextX > maxX ||
-                nextY < minY || nextY > maxY)
+            if (nextPos.X < minX || nextPos.X > maxX ||
+                nextPos.Y < minY || nextPos.Y > maxY)
                 it.Entity(i).Add<RecycleTag>();
         }
     }

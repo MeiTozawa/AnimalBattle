@@ -83,11 +83,10 @@ public static class PlayerConfigSync
 
         // 衝突判定・被弾判定の更新
         ref var col = ref e.GetMut<CollisionBox>();
-        col.Width = newConfig.CollisionWidth;
-        col.Height = newConfig.CollisionHeight;
+        col.Size = newConfig.CollisionSize;
 
         ref var hurt = ref e.GetMut<Hurtbox>();
-        hurt.Shape = new CollisionShape.Circle(newConfig.HurtboxRadius, 0.0f, newConfig.HurtboxOffsetY);
+        hurt.Shape = newConfig.GetHurtboxShape();
 
         // スプリング拡縮設定の更新
         ref var spring = ref e.GetMut<SpringScale>();

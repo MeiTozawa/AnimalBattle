@@ -1,4 +1,5 @@
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Components;
 
@@ -17,11 +18,8 @@ public struct BunnyWeaponState
     /// <summary>近接打撃の攻撃力。</summary>
     public float AttackDamage;
 
-    /// <summary>近接打撃攻撃判定の横幅（px）。</summary>
-    public float AttackWidth;
-
-    /// <summary>近接打撃攻撃判定の縦幅（px）。</summary>
-    public float AttackHeight;
+    /// <summary>近接打撃攻撃判定のサイズ (Vec2f)。</summary>
+    public Vec2f AttackSize;
 
     /// <summary>近接打撃出現の水平オフセット射程距離（px）。</summary>
     public float AttackRange;
@@ -32,11 +30,8 @@ public struct BunnyWeaponState
     /// <summary>近接打撃時の前進突進距離（px）。</summary>
     public float AttackLungeDistance;
 
-    /// <summary>近接打撃時のスプリング変形倍率 X。</summary>
-    public float AttackStretchScaleX;
-
-    /// <summary>近接打撃時のスプリング変形倍率 Y。</summary>
-    public float AttackStretchScaleY;
+    /// <summary>近接打撃時のスプリング変形倍率 (Vec2f)。</summary>
+    public Vec2f AttackStretchScale;
 
     /// <summary>近接攻撃判定の残り有効秒数。0 より大きい場合は判定がアクティブ。</summary>
     public float AttackActiveRemaining;
@@ -54,13 +49,11 @@ public struct BunnyWeaponState
             CooldownRemaining = 0.0f,
             CooldownDuration = cfg.AttackCooldown,
             AttackDamage = cfg.AttackDamage,
-            AttackWidth = cfg.AttackWidth,
-            AttackHeight = cfg.AttackHeight,
+            AttackSize = cfg.AttackSize,
             AttackRange = cfg.AttackRange,
             AttackDuration = cfg.AttackDuration,
             AttackLungeDistance = cfg.AttackLungeDistance,
-            AttackStretchScaleX = cfg.AttackStretchScaleX,
-            AttackStretchScaleY = cfg.AttackStretchScaleY
+            AttackStretchScale = cfg.AttackStretchScale
         };
     }
 }

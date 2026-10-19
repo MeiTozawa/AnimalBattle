@@ -26,12 +26,13 @@ public static class SpriteJitterSystem
                 {
                     ref var jitter = ref jitters[i];
                     jitter.Timer += dt;
-                    jitter.CurrentOffsetX = MathF.Sin(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeX;
-                    jitter.CurrentOffsetY = MathF.Cos(jitter.Timer * jitter.Frequency * MathF.Tau) * jitter.AmplitudeY;
+                    var angle = jitter.Timer * jitter.Frequency * MathF.Tau;
+                    jitter.CurrentOffset = new Vec2f(
+                        MathF.Sin(angle) * jitter.Amplitude.X,
+                        MathF.Cos(angle) * jitter.Amplitude.Y);
 
                     ref var sprite = ref sprites[i];
-                    sprite.JitterOffsetX = jitter.CurrentOffsetX;
-                    sprite.JitterOffsetY = jitter.CurrentOffsetY;
+                    sprite.JitterOffset = jitter.CurrentOffset;
                 }
             });
 

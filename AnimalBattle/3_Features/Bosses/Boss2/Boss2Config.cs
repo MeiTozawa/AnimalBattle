@@ -1,3 +1,4 @@
+using AnimalBattle.Core;
 using ErrorOr;
 
 namespace AnimalBattle.Configs;
@@ -41,11 +42,8 @@ public sealed class Boss2PhaseConfig {
 ///     Config/boss2.toml から読み込まれる Boss 2 (Ground Crusher) の基本パラメータおよび各フェーズの FSM 設定クラス。
 /// </summary>
 public sealed class Boss2Config : BaseBossConfig {
-    /// <summary>近接斬撃エフェクトの基準前方生成オフセット X</summary>
-    public float SlashSpawnOffsetX { get; set; }
-
-    /// <summary>近接斬撃エフェクトの基準生成オフセット Y</summary>
-    public float SlashSpawnOffsetY { get; set; }
+    /// <summary>近接斬撃エフェクトの基準前方生成オフセット (Vec2f)</summary>
+    public Vec2f SlashSpawnOffset { get; set; }
 
     /// <summary>基本地面移動速度</summary>
     public float MoveSpeed { get; set; }
@@ -98,11 +96,8 @@ public sealed class Boss2Config : BaseBossConfig {
     /// <summary>プレイヤー空中判定の相対高度差閾値（ピクセル）</summary>
     public float AirborneHeightThreshold { get; set; }
 
-    /// <summary>近接攻撃発動の横方向判定距離（ピクセル）</summary>
-    public float MeleeTriggerRangeX { get; set; }
-
-    /// <summary>近接攻撃発動の縦方向判定距离（ピクセル）</summary>
-    public float MeleeTriggerRangeY { get; set; }
+    /// <summary>近接攻撃発動判定範囲 (Vec2f)</summary>
+    public Vec2f MeleeTriggerRange { get; set; }
 
     /// <summary>カイト対策で遠距離技（吼叫）を優先する直線距離閾値（ピクセル）</summary>
     public float AntiKitingRangedDistance { get; set; }

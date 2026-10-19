@@ -37,14 +37,13 @@ public static class BossConfigSync
             health.Current = Math.Clamp(ratio * newMax, 0.0f, newMax);
 
             ref var col = ref e.GetMut<CollisionBox>();
-            col.Width = newConfig.CollisionWidth;
-            col.Height = newConfig.CollisionHeight;
+            col.Size = newConfig.CollisionSize;
 
             ref var hurt = ref e.GetMut<Hurtbox>();
-            hurt.Shape = new CollisionShape.Circle(newConfig.HurtboxRadius, 0.0f, newConfig.HurtboxOffsetY);
+            hurt.Shape = newConfig.GetHurtboxShape();
 
             ref var hit = ref e.GetMut<Hitbox>();
-            hit.Shape = new CollisionShape.Circle(newConfig.BodyHitboxRadius, 0.0f, newConfig.BodyHitboxOffsetY);
+            hit.Shape = newConfig.GetHitboxShape();
             hit.Damage = newConfig.BodyContactDamage;
 
             ref var flash = ref e.GetMut<HitFlashSettings>();
@@ -79,14 +78,13 @@ public static class BossConfigSync
             health.Current = Math.Clamp(ratio * newMax, 0.0f, newMax);
 
             ref var col = ref e.GetMut<CollisionBox>();
-            col.Width = newConfig.CollisionWidth;
-            col.Height = newConfig.CollisionHeight;
+            col.Size = newConfig.CollisionSize;
 
             ref var hurt = ref e.GetMut<Hurtbox>();
-            hurt.Shape = new CollisionShape.Box(newConfig.HurtboxWidth, newConfig.HurtboxHeight, 0.0f, newConfig.HurtboxOffsetY);
+            hurt.Shape = newConfig.GetHurtboxShape();
 
             ref var hit = ref e.GetMut<Hitbox>();
-            hit.Shape = new CollisionShape.Box(newConfig.BodyHitboxWidth, newConfig.BodyHitboxHeight, 0.0f, newConfig.BodyHitboxOffsetY);
+            hit.Shape = newConfig.GetHitboxShape();
             hit.Damage = newConfig.BodyContactDamage;
 
             ref var flash = ref e.GetMut<HitFlashSettings>();

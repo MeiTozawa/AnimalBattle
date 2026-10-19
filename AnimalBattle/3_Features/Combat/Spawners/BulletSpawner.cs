@@ -18,10 +18,10 @@ public static class BulletSpawner
     /// <summary>
     ///     指定座標に Boss 通常弾幕エンティティを生成します。
     /// </summary>
-    public static void SpawnBossBullet(World world, float x, float y, float vx, float vy, float radius, Color fillColor,
+    public static void SpawnBossBullet(World world, Vec2f pos, Vec2f vel, float radius, Color fillColor,
         Color outlineColor, bool isIndestructible = false)
     {
-        SpawnBossSpecialBullet(world, x, y, vx, vy, radius, BulletType.Normal, fillColor, outlineColor, isIndestructible);
+        SpawnBossSpecialBullet(world, pos, vel, radius, BulletType.Normal, fillColor, outlineColor, isIndestructible);
     }
 
     /// <summary>
@@ -29,10 +29,8 @@ public static class BulletSpawner
     /// </summary>
     public static void SpawnBossSpecialBullet(
         World world,
-        float x,
-        float y,
-        float vx,
-        float vy,
+        Vec2f pos,
+        Vec2f vel,
         float radius,
         BulletType type,
         Color? fillColor = null,
@@ -47,9 +45,9 @@ public static class BulletSpawner
         // 統合された BossBullets プールから借出
         var entity = CombatPoolService.RentBossBullet();
         entity
-            .Set(new Transform(x, y))
-            .Set(new Velocity(vx, vy))
-            .Set(new BulletModifier(type, radius, vx, vy))
+            .Set(new Transform(pos))
+            .Set(new Velocity(vel))
+            .Set(new BulletModifier(type, radius, vel))
             .Set(bullet);
 
         if (type == BulletType.Yellow)
@@ -65,9 +63,9 @@ public static class BulletSpawner
             };
             var satEntity = CombatPoolService.RentBossBullet();
             satEntity
-                .Set(new Transform(x + orbitDist, y))
-                .Set(new Velocity(vx, vy))
-                .Set(new BulletModifier(BulletType.Yellow, satRadius, vx, vy))
+                .Set(new Transform(new Vec2f(pos.X + orbitDist, pos.Y)))
+                .Set(new Velocity(vel))
+                .Set(new BulletModifier(BulletType.Yellow, satRadius, vel))
                 .Set(satBullet)
                 .Set(new OrbitSatellite(true, entity, orbitDist, 0.0f, parentVersion));
         }
@@ -76,7 +74,7 @@ public static class BulletSpawner
     /// <summary>
     ///     Boss 被弾時に、現在の Phase に応じた数量の黑色弾幕を全方位ランダムに発射します。
     /// </summary>
-    public static void SpawnBossCounterAttack(World world, float bossX, float bossY, Phase phase)
+    public static void SpawnBossCounterAttack(World world, Vec2f bossPos, Phase phase)
     {
         var cfg = world.Get<SpecialBulletConfig>();
         var bulletCount = phase switch {
@@ -89,15 +87,12 @@ public static class BulletSpawner
         for (var i = 0; i < bulletCount; i++)
         {
             var angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
-            var vx = MathF.Cos(angle) * cfg.CounterBulletSpeed;
-            var vy = MathF.Sin(angle) * cfg.CounterBulletSpeed;
+            var vel = new Vec2f(MathF.Cos(angle) * cfg.CounterBulletSpeed, MathF.Sin(angle) * cfg.CounterBulletSpeed);
 
             SpawnBossSpecialBullet(
                 world,
-                bossX,
-                bossY,
-                vx,
-                vy,
+                bossPos,
+                vel,
                 cfg.CounterBulletRadius,
                 BulletType.Black,
                 isIndestructible: cfg.CounterBulletIsIndestructible);
@@ -108,15 +103,14 @@ public static class BulletSpawner
     ///     地面を這う衝撃波弾幕エンティティを生成します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド。</param>
-    /// <param name="x">生成 X 座標。</param>
-    /// <param name="y">生成 Y 座標。</param>
+    /// <param name="pos">生成座標 (Vec2f)。</param>
     /// <param name="vx">初速 X 成分。</param>
     /// <param name="radius">判定半径。</param>
     /// <param name="damage">威力ダメージ。</param>
     /// <param name="fillColor">塗りつぶしカラー。</param>
     /// <param name="outlineColor">外枠発光カラー。</param>
     /// <param name="isIndestructible">近接攻撃で破壊不能かどうかのフラグ。</param>
-    public static void SpawnGroundShockwave(World world, float x, float y, float vx, float radius, float damage,
+    public static void SpawnGroundShockwave(World world, Vec2f pos, float vx, float radius, float damage,
         Color fillColor, Color outlineColor, bool isIndestructible)
     {
         var bullet = new Bullet(radius, fillColor, outlineColor) {
@@ -125,8 +119,8 @@ public static class BulletSpawner
 
         var entity = CombatPoolService.RentBossBullet();
         entity
-            .Set(new Transform(x, y))
-            .Set(new Velocity(vx, 0.0f))
+            .Set(new Transform(pos))
+            .Set(new Velocity(new Vec2f(vx, 0.0f)))
             .Set(bullet)
             .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile));
     }

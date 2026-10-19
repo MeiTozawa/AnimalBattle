@@ -47,24 +47,14 @@ public static class CameraService
     public static float ShakeOffsetY => _shakeOffsetY;
 
     /// <summary>
-    ///     最終合成カメラ X 軸描画オフセット（ピクセル）。
+    ///     最終合成カメラ描画オフセット（ピクセル）。
     /// </summary>
-    public static int RenderOffsetX { get; private set; }
+    public static Vec2i RenderOffset { get; private set; }
 
     /// <summary>
-    ///     最終合成カメラ Y 軸描画オフセット（ピクセル）。
+    ///     カメラ描画オフセット（RenderOffset へのエイリアス）。
     /// </summary>
-    public static int RenderOffsetY { get; private set; }
-
-    /// <summary>
-    ///     従来のカメラ X 軸描画オフセット（RenderOffsetX へのエイリアス）。
-    /// </summary>
-    public static int OffsetX => RenderOffsetX;
-
-    /// <summary>
-    ///     従来のカメラ Y 軸描画オフセット（RenderOffsetY へのエイリアス）。
-    /// </summary>
-    public static int OffsetY => RenderOffsetY;
+    public static Vec2i Offset => RenderOffset;
 
     /// <summary>
     ///     Trauma を加算します（最大 1.0f にクランプ）。
@@ -78,14 +68,13 @@ public static class CameraService
     /// <summary>
     ///     受撃方向に応じた指向性インパルスを加算します。
     /// </summary>
-    /// <param name="dirX">X 軸方向</param>
-    /// <param name="dirY">Y 軸方向</param>
+    /// <param name="dir">方向ベクトル (<see cref="Vec2f" />)</param>
     /// <param name="power">強度係数</param>
-    public static void AddDirectionalImpulse(float dirX, float dirY, float power)
+    public static void AddDirectionalImpulse(Vec2f dir, float power)
     {
         var cfg = CurrentConfig;
-        _impulseX = Math.Clamp(_impulseX + dirX * power, -cfg.MaxOffsetX, cfg.MaxOffsetX);
-        _impulseY = Math.Clamp(_impulseY + dirY * power, -cfg.MaxOffsetY, cfg.MaxOffsetY);
+        _impulseX = Math.Clamp(_impulseX + dir.X * power, -cfg.MaxOffset.X, cfg.MaxOffset.X);
+        _impulseY = Math.Clamp(_impulseY + dir.Y * power, -cfg.MaxOffset.Y, cfg.MaxOffset.Y);
     }
 
     /// <summary>
@@ -95,28 +84,22 @@ public static class CameraService
     public static void Update(float deltaTime)
     {
         var cfg = CurrentConfig;
-        Update(deltaTime, cfg.ArenaCenterX, cfg.ArenaCenterY, 0.0f, 0.0f, cfg.ArenaCenterX, cfg.ArenaCenterY, cfg);
+        Update(deltaTime, cfg.ArenaCenter, Vec2f.Zero, cfg.ArenaCenter, cfg);
     }
 
     /// <summary>
     ///     プレイヤーと Boss の動的座標および速度を考慮したフレーム更新を実行します。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過秒数</param>
-    /// <param name="playerX">プレイヤーワールド X 座標</param>
-    /// <param name="playerY">プレイヤーワールド Y 座標</param>
-    /// <param name="playerVx">プレイヤー速度 Vx</param>
-    /// <param name="playerVy">プレイヤー速度 Vy</param>
-    /// <param name="bossX">Boss ワールド X 座標</param>
-    /// <param name="bossY">Boss ワールド Y 座標</param>
+    /// <param name="playerPos">プレイヤーワールド座標 (<see cref="Vec2f" />)</param>
+    /// <param name="playerVel">プレイヤー速度 (<see cref="Vec2f" />)</param>
+    /// <param name="bossPos">Boss ワールド座標 (<see cref="Vec2f" />)</param>
     /// <param name="config">カメラ設定（null の場合は CurrentConfig を使用）</param>
     public static void Update(
         float deltaTime,
-        float playerX,
-        float playerY,
-        float playerVx,
-        float playerVy,
-        float bossX,
-        float bossY,
+        Vec2f playerPos,
+        Vec2f playerVel,
+        Vec2f bossPos,
         AnimalBattle.Configs.CameraConfig? config = null)
     {
         if (config != null)
@@ -137,15 +120,12 @@ public static class CameraService
             totalWeight = 1.0f;
         }
 
-        var focusX = (playerX * pWeight + bossX * bWeight) / totalWeight;
-        var focusY = (playerY * pWeight + bossY * bWeight) / totalWeight;
-
-        var targetCamX = focusX + playerVx * cfg.LookAheadFactor;
-        var targetCamY = focusY + playerVy * cfg.LookAheadFactor;
+        var focus = (playerPos * pWeight + bossPos * bWeight) / totalWeight;
+        var targetCam = focus + playerVel * cfg.LookAheadFactor;
 
         // 中心変位に対するカメラ描画逆オフセット
-        var desiredPanX = Math.Clamp(cfg.ArenaCenterX - targetCamX, -cfg.MaxPanX, cfg.MaxPanX);
-        var desiredPanY = Math.Clamp(cfg.ArenaCenterY - targetCamY, -cfg.MaxPanY, cfg.MaxPanY);
+        var desiredPanX = Math.Clamp(cfg.ArenaCenter.X - targetCam.X, -cfg.MaxPan.X, cfg.MaxPan.X);
+        var desiredPanY = Math.Clamp(cfg.ArenaCenter.Y - targetCam.Y, -cfg.MaxPan.Y, cfg.MaxPan.Y);
 
         // 指数平滑化 Lerp による追従
         var lerpFactor = 1.0f - MathF.Exp(-cfg.FollowSpeed * deltaTime);
@@ -185,8 +165,8 @@ public static class CameraService
             var noiseX = MathF.Sin(_time * cfg.NoiseFrequency1) * 0.7f + MathF.Sin(_time * cfg.NoiseFrequency2) * 0.3f;
             var noiseY = MathF.Cos(_time * cfg.NoiseFrequency3) * 0.7f + MathF.Cos(_time * cfg.NoiseFrequency4) * 0.3f;
 
-            _shakeOffsetX = shake * cfg.MaxOffsetX * noiseX + _impulseX;
-            _shakeOffsetY = shake * cfg.MaxOffsetY * noiseY + _impulseY;
+            _shakeOffsetX = shake * cfg.MaxOffset.X * noiseX + _impulseX;
+            _shakeOffsetY = shake * cfg.MaxOffset.Y * noiseY + _impulseY;
         }
         else
         {
@@ -195,8 +175,9 @@ public static class CameraService
         }
 
         // 5. 最終描画オフセット合成
-        RenderOffsetX = (int)MathF.Round(_currentPanX + _shakeOffsetX);
-        RenderOffsetY = (int)MathF.Round(_currentPanY + _shakeOffsetY);
+        RenderOffset = new Vec2i(
+            (int)MathF.Round(_currentPanX + _shakeOffsetX),
+            (int)MathF.Round(_currentPanY + _shakeOffsetY));
     }
 
     /// <summary>
@@ -212,7 +193,6 @@ public static class CameraService
         _currentPanY = 0.0f;
         _shakeOffsetX = 0.0f;
         _shakeOffsetY = 0.0f;
-        RenderOffsetX = 0;
-        RenderOffsetY = 0;
+        RenderOffset = Vec2i.Zero;
     }
 }

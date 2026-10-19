@@ -1,3 +1,4 @@
+using System;
 using AnimalBattle.Combat;
 using AnimalBattle.Components;
 using AnimalBattle.Core;
@@ -81,51 +82,46 @@ public static class BunnyWeaponSystem
         // 3. 近接攻撃トリガーの判定と実行
         if (intent.ShootTriggered && weapon.CooldownRemaining <= 0.0f)
         {
-            var dirX = intent.AimDirectionX;
-            var dirY = intent.AimDirectionY;
+            var dir = intent.AimDirection;
 
             // 攻撃方向が未指定の場合は右向きをデフォルトとする
-            if (MathF.Abs(dirX) < 0.001f && MathF.Abs(dirY) < 0.001f)
+            if (dir.LengthSquared() < 0.0001f)
             {
-                dirX = 1.0f;
-            }
-
-            var spawnX = trans.X + dirX * weapon.AttackRange;
-            var spawnY = trans.Y + dirY * weapon.AttackRange;
-
-            SlashDirection slashDir;
-            if (MathF.Abs(dirX) >= MathF.Abs(dirY))
-            {
-                slashDir = dirX >= 0.0f ? SlashDirection.Right : SlashDirection.Left;
+                dir = new Vec2f(1.0f, 0.0f);
             }
             else
             {
-                slashDir = dirY >= 0.0f ? SlashDirection.Down : SlashDirection.Up;
+                dir = dir.Normalized();
+            }
+
+            var spawnPos = trans.Position + dir * weapon.AttackRange;
+
+            SlashDirection slashDir;
+            if (MathF.Abs(dir.X) >= MathF.Abs(dir.Y))
+            {
+                slashDir = dir.X >= 0.0f ? SlashDirection.Right : SlashDirection.Left;
+            }
+            else
+            {
+                slashDir = dir.Y >= 0.0f ? SlashDirection.Down : SlashDirection.Up;
             }
 
             weapon.AttackActiveRemaining = weapon.AttackDuration;
             MeleeSpawner.ActivatePlayerMeleeAttack(
                 meleeEntity,
-                spawnX,
-                spawnY,
-                weapon.AttackWidth,
-                weapon.AttackHeight,
+                spawnPos,
+                weapon.AttackSize,
                 weapon.AttackDamage,
                 slashDir);
 
             anim.Play("Attack");
 
             // 近接打撃前進インパルスおよびスプリング伸縮（bunny.toml 定義値から適用）
-            trans.X += dirX * weapon.AttackLungeDistance;
-            if (!col.IsGrounded)
-            {
-                trans.Y += dirY * weapon.AttackLungeDistance;
-            }
+            var lunge = new Vec2f(dir.X * weapon.AttackLungeDistance, col.IsGrounded ? 0.0f : dir.Y * weapon.AttackLungeDistance);
+            trans.Position += lunge;
 
-            spring.CurrentX = weapon.AttackStretchScaleX;
-            spring.CurrentY = weapon.AttackStretchScaleY;
-            spring.VelX = 0.0f;
-            spring.VelY = 0.0f;
+            spring.Current = weapon.AttackStretchScale;
+            spring.Velocity = Vec2f.Zero;
 
             SoundService.PlaySfx(SfxType.PlayerDash);
 

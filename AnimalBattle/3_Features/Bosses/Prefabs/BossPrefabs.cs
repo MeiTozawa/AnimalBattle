@@ -42,8 +42,8 @@ public static class BossPrefabs
             .Add<Boss1Tag>()
             .Set(new Health(b1Cfg.MaxHp))
             .Set(new HitFlashSettings(b1Cfg.HitFlashDuration))
-            .Set(new Transform(0.0f, 0.0f, b1Cfg.ScaleX, b1Cfg.ScaleY))
-            .Set(new CollisionBox(b1Cfg.CollisionWidth, b1Cfg.CollisionHeight))
+            .Set(new Transform(Vec2f.Zero, b1Cfg.Scale))
+            .Set(new CollisionBox(b1Cfg.CollisionSize))
             .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
             .Set(new Hitbox(b1Cfg.GetHitboxShape(), b1Cfg.BodyContactDamage, Faction.Hostile, false));
 
@@ -56,8 +56,8 @@ public static class BossPrefabs
             .Add<Boss2Tag>()
             .Set(new Health(b2Cfg.MaxHp))
             .Set(new HitFlashSettings(b2Cfg.HitFlashDuration))
-            .Set(new Transform(0.0f, 0.0f, b2Cfg.ScaleX, b2Cfg.ScaleY))
-            .Set(new CollisionBox(b2Cfg.CollisionWidth, b2Cfg.CollisionHeight))
+            .Set(new Transform(Vec2f.Zero, b2Cfg.Scale))
+            .Set(new CollisionBox(b2Cfg.CollisionSize))
             .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
             .Set(new Hitbox(b2Cfg.GetHitboxShape(), b2Cfg.BodyContactDamage, Faction.Hostile, false));
     }

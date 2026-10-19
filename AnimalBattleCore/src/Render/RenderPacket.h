@@ -2,6 +2,7 @@
 #define ANIMALBATTLE_CORE_RENDER_RENDER_PACKET_H_
 
 #include <cstdint>
+#include "Core/Vector2D.h"
 
 namespace ab {
 
@@ -30,10 +31,8 @@ struct DrawCircleBatchPacket {
 
 /// @brief 矩形描画コマンドデータ
 struct DrawBoxPacket {
-    int32_t x1;
-    int32_t y1;
-    int32_t x2;
-    int32_t y2;
+    Vec2i p1;
+    Vec2i p2;
     uint32_t color;
     uint8_t fill;
     uint8_t padding[3];
@@ -41,8 +40,7 @@ struct DrawBoxPacket {
 
 /// @brief 円描画コマンドデータ
 struct DrawCirclePacket {
-    int32_t center_x;
-    int32_t center_y;
+    Vec2i center;
     int32_t radius;
     uint32_t color;
     uint8_t fill;
@@ -51,8 +49,7 @@ struct DrawCirclePacket {
 
 /// @brief 20 バイト緊密配置の高密度円描画パケット（弾幕・パーティクルバッチ用）
 struct CompactCirclePacket {
-    int32_t center_x;
-    int32_t center_y;
+    Vec2i center;
     int32_t radius;
     uint32_t color;
     uint8_t fill;
@@ -62,18 +59,15 @@ static_assert(sizeof(CompactCirclePacket) == 20, "CompactCirclePacket size must 
 
 /// @brief 線分描画コマンドデータ
 struct DrawLinePacket {
-    int32_t x1;
-    int32_t y1;
-    int32_t x2;
-    int32_t y2;
+    Vec2i p1;
+    Vec2i p2;
     uint32_t color;
     int32_t thickness;
 };
 
 /// @brief 単純画像描画コマンドデータ
 struct DrawGraphPacket {
-    int32_t x;
-    int32_t y;
+    Vec2i pos;
     int32_t handle;
     uint8_t trans;
     uint8_t padding[3];
@@ -81,8 +75,7 @@ struct DrawGraphPacket {
 
 /// @brief 回転拡縮画像描画コマンドデータ
 struct DrawRotaGraphPacket {
-    int32_t center_x;
-    int32_t center_y;
+    Vec2i center;
     float scale;
     float angle;
     int32_t handle;
@@ -92,14 +85,10 @@ struct DrawRotaGraphPacket {
 
 /// @brief 矩形切り出し回転拡縮画像描画コマンドデータ（独立 X/Y 軸拡縮対応）
 struct DrawRectRotaGraphPacket {
-    int32_t center_x;
-    int32_t center_y;
-    int32_t src_x;
-    int32_t src_y;
-    int32_t src_w;
-    int32_t src_h;
-    float scale_x;
-    float scale_y;
+    Vec2i center;
+    Vec2i src_pos;
+    Vec2i src_size;
+    Vec2f scale;
     float angle;
     int32_t handle;
     uint8_t trans;
@@ -109,8 +98,7 @@ struct DrawRectRotaGraphPacket {
 
 /// @brief 文字列描画コマンドデータ（文字列実体は一括テキストバッファを参照）
 struct DrawStringPacket {
-    int32_t x;
-    int32_t y;
+    Vec2i pos;
     uint32_t color;
     int32_t text_offset;
     int32_t text_length;

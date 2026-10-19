@@ -37,23 +37,23 @@ public static class CommonPrefabs
 
         // 投射物基底原型
         BaseProjectile = world.Prefab(BaseProjectileName)
-            .Set(new Transform(0, 0))
-            .Set(new Velocity(0, 0));
+            .Set(new Transform(Vec2f.Zero))
+            .Set(new Velocity(Vec2f.Zero));
 
         // 近接判定基底原型
         BaseMeleeHitbox = world.Prefab(BaseMeleeHitboxName)
-            .Set(new Transform(0, 0))
+            .Set(new Transform(Vec2f.Zero))
             .Set(new HitHistory());
 
         // VFX 基底原型
         BaseVfx = world.Prefab(BaseVfxName)
-            .Set(new Transform(0, 0))
+            .Set(new Transform(Vec2f.Zero))
             .Add<VfxTag>();
 
         // キャラクター基底原型
         BaseCharacter = world.Prefab(BaseCharacterName)
-            .Set(new Transform(0, 0))
-            .Set(new Velocity(0, 0))
+            .Set(new Transform(Vec2f.Zero))
+            .Set(new Velocity(Vec2f.Zero))
             .Set(new GameplayTagState())
             .Set(new TimedEffectsState());
     }

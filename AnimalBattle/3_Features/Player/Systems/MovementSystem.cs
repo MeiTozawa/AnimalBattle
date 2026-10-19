@@ -1,8 +1,10 @@
+using System;
 using AnimalBattle.Abilities;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
+using AnimalBattle.Effects;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -122,10 +124,8 @@ public static class MovementSystem {
             TimedEffectService.ApplyEffect(ref timedEffects, ref tagState, GameplayTag.Untargetable, pCfg.DashInvincibleDuration, entity.Id);
 
             // スカッシュ＆ストレッチ突進変形演出
-            spring.CurrentX = pCfg.DashStretchScaleX;
-            spring.CurrentY = pCfg.DashStretchScaleY;
-            spring.VelX = 0.0f;
-            spring.VelY = 0.0f;
+            spring.Current = pCfg.DashStretchScale;
+            spring.Velocity = Vec2f.Zero;
 
             EventBus.Publish(new PlayerDashedEvent(dash.DirectionX));
         }
@@ -136,8 +136,7 @@ public static class MovementSystem {
             dash.Timer = MathF.Max(0.0f, dash.Timer - dt);
 
             // ダッシュ中速度維持（水平高速突進・重力無効化）
-            vel.Vx = dash.DirectionX * pCfg.DashSpeed;
-            vel.Vy = 0.0f;
+            vel.Value = new Vec2f(dash.DirectionX * pCfg.DashSpeed, 0.0f);
 
             // 残像（Ghost Trail）生成
             dash.GhostTrailTimer += dt;
@@ -148,10 +147,8 @@ public static class MovementSystem {
                 {
                     EffectSpawner.SpawnGhostTrail(
                         effectWorld.Value,
-                        trans.X,
-                        trans.Y,
-                        trans.ScaleX,
-                        trans.ScaleY,
+                        trans.Position,
+                        trans.Scale,
                         trans.Rotation,
                         sprite.GraphHandle,
                         sprite.SrcRect,
@@ -165,6 +162,7 @@ public static class MovementSystem {
         {
             // 1. 水平移動の加減速・摩擦制動の適用
             var targetVx = intent.MoveX * jump.MoveSpeed;
+            var currentVx = vel.Value.X;
             if (jump.GroundAcceleration > 0.0f)
             {
                 float accel;
@@ -175,7 +173,7 @@ public static class MovementSystem {
                         // 停止（接地自然減速）
                         accel = jump.GroundDeceleration;
                     }
-                    else if (MathF.Sign(targetVx) != MathF.Sign(vel.Vx) && MathF.Abs(vel.Vx) > float.Epsilon)
+                    else if (MathF.Sign(targetVx) != MathF.Sign(currentVx) && MathF.Abs(currentVx) > float.Epsilon)
                     {
                         // 反転（急停止制動）
                         accel = jump.TurnaroundDeceleration;
@@ -192,12 +190,14 @@ public static class MovementSystem {
                     accel = MathF.Abs(targetVx) > float.Epsilon ? jump.AirAcceleration : jump.AirDeceleration;
                 }
 
-                vel.Vx = PhysicsService.MoveTowards(vel.Vx, targetVx, accel * dt);
+                currentVx = PhysicsService.MoveTowards(currentVx, targetVx, accel * dt);
             }
             else
             {
-                vel.Vx = targetVx;
+                currentVx = targetVx;
             }
+
+            var currentVy = vel.Value.Y;
 
             // 2. 先行入力およびコヨーテタイムの更新
             if (intent.JumpTriggered)
@@ -225,7 +225,7 @@ public static class MovementSystem {
                 if (col.IsGrounded || jump.CoyoteTimer > 0.0f)
                 {
                     // 地面初段ジャンプ（接地またはコヨーテ猶予内）
-                    vel.Vy = jump.FirstJumpVelocity;
+                    currentVy = jump.FirstJumpVelocity;
                     col.IsGrounded = false;
                     jump.CoyoteTimer = 0.0f;
                     jump.JumpBufferTimer = 0.0f;
@@ -236,21 +236,19 @@ public static class MovementSystem {
                 else if (jump.RemainingJumps > 0)
                 {
                     // 空中二段ジャンプ
-                    vel.Vy = jump.SecondJumpVelocity;
+                    currentVy = jump.SecondJumpVelocity;
                     jump.RemainingJumps--;
                     jump.JumpBufferTimer = 0.0f;
                     didJump = true;
                     if (effectWorld.HasValue)
-                        EffectSpawner.SpawnJumpRingEffect(effectWorld.Value, trans.X, trans.Y + col.Height / 2.0f);
+                        EffectSpawner.SpawnJumpRingEffect(effectWorld.Value, new Vec2f(trans.Position.X, trans.Position.Y + col.Size.Y / 2.0f));
                     EventBus.Publish(new PlayerDoubleJumpedEvent());
                 }
 
                 if (didJump)
                 {
-                    spring.CurrentX = pCfg.JumpStretchScaleX;
-                    spring.CurrentY = pCfg.JumpStretchScaleY;
-                    spring.VelX = 0.0f;
-                    spring.VelY = 0.0f;
+                    spring.Current = pCfg.JumpStretchScale;
+                    spring.Velocity = Vec2f.Zero;
                 }
             }
 
@@ -258,41 +256,40 @@ public static class MovementSystem {
             var effectiveGravity = jump.Gravity;
 
             // キー解放時の上昇速度減衰（小ジャンプ制御）
-            if (vel.Vy < 0.0f && !intent.JumpHolding && jump.JumpCutDamping > 0.0f)
+            if (currentVy < 0.0f && !intent.JumpHolding && jump.JumpCutDamping > 0.0f)
             {
                 effectiveGravity /= jump.JumpCutDamping;
             }
-            else if (MathF.Abs(vel.Vy) < jump.ApexFloatVelocityThreshold && jump.ApexFloatGravityMultiplier > 0.0f)
+            else if (MathF.Abs(currentVy) < jump.ApexFloatVelocityThreshold && jump.ApexFloatGravityMultiplier > 0.0f)
             {
                 // 頂点付近の滞空時間延長（浮遊感・狙い撃ち猶予の付与）
                 effectiveGravity *= jump.ApexFloatGravityMultiplier;
             }
 
-            var currentVy = vel.Vy;
             PhysicsService.ApplyGravity(ref currentVy, effectiveGravity, jump.MaxFallSpeed, dt);
-            vel.Vy = currentVy;
+            vel.Value = new Vec2f(currentVx, currentVy);
         }
 
         // 4. 次フレーム目標座標の算出
-        var nextX = trans.X + vel.Vx * dt;
-        var nextY = trans.Y + vel.Vy * dt;
+        var nextPos = trans.Position + vel.Value * dt;
 
-        if (arenaCfg != null) nextX = PhysicsService.Clamp(nextX, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX);
+        if (arenaCfg != null)
+            nextPos = new Vec2f(PhysicsService.Clamp(nextPos.X, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX), nextPos.Y);
 
-        var currentY = trans.Y;
-        Box2D entityBox = new(nextX, nextY, col.Width, col.Height);
+        var currentY = trans.Position.Y;
+        Box2D entityBox = new(nextPos, col.Size);
 
         // 5. 足場プラットフォームとの片道衝突判定
         var hitPlatform = false;
         var platformGroundY = float.MaxValue;
         var platformVy = 0.0f;
 
-        platformQuery.Each((ref platTrans, ref platCol) =>
+        platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
         {
-            Box2D platformBox = new(platTrans.X, platTrans.Y, platCol.Width, platCol.Height);
+            Box2D platformBox = new(platTrans.Position, platCol.Size);
             if (PhysicsService.CheckPlatformGround(
                 currentY,
-                nextY,
+                nextPos.Y,
                 entityBox,
                 platformBox,
                 out var groundY,
@@ -306,12 +303,12 @@ public static class MovementSystem {
         });
 
         var isGrounded = hitPlatform;
-        var adjustedPosY = hitPlatform ? platformGroundY : nextY;
-        var adjustedVy = hitPlatform ? platformVy : vel.Vy;
+        var adjustedPosY = hitPlatform ? platformGroundY : nextPos.Y;
+        var adjustedVy = hitPlatform ? platformVy : vel.Value.Y;
 
         if (arenaCfg != null)
         {
-            var floorLimitY = arenaCfg.FloorLimitY - col.Height / 2.0f;
+            var floorLimitY = arenaCfg.FloorLimitY - col.Size.Y / 2.0f;
             if (adjustedPosY >= floorLimitY)
             {
                 isGrounded = true;
@@ -321,20 +318,17 @@ public static class MovementSystem {
         }
 
         // 接地瞬間時の押し潰し演出（落下速度が設定閾値以上の場合のみ適用）
-        if (!wasGrounded && isGrounded && vel.Vy >= jump.LandSquashVelocityThreshold)
+        if (!wasGrounded && isGrounded && vel.Value.Y >= jump.LandSquashVelocityThreshold)
         {
-            EventBus.Publish(new PlayerLandedEvent(vel.Vy));
-            spring.CurrentX = pCfg.LandSquashScaleX;
-            spring.CurrentY = pCfg.LandSquashScaleY;
-            spring.VelX = 0.0f;
-            spring.VelY = 0.0f;
+            EventBus.Publish(new PlayerLandedEvent(vel.Value.Y));
+            spring.Current = pCfg.LandSquashScale;
+            spring.Velocity = Vec2f.Zero;
         }
 
         if (isGrounded) jump.RemainingJumps = jump.MaxJumps;
 
-        trans.X = nextX;
-        trans.Y = adjustedPosY;
-        vel.Vy = adjustedVy;
+        trans.Position = new Vec2f(nextPos.X, adjustedPosY);
+        vel.Value = new Vec2f(vel.Value.X, adjustedVy);
         col.IsGrounded = isGrounded;
     }
 }

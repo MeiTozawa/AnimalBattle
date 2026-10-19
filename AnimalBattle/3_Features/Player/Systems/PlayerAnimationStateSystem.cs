@@ -48,11 +48,11 @@ public static class PlayerAnimationStateSystem
 
                     if (!col.IsGrounded)
                     {
-                        anim.Play(vel.Vy < 0.0f ? ClipJump : ClipFall);
+                        anim.Play(vel.Value.Y < 0.0f ? ClipJump : ClipFall);
                     }
                     else
                     {
-                        anim.Play(MathF.Abs(vel.Vx) > threshold ? ClipRun : ClipIdle);
+                        anim.Play(MathF.Abs(vel.Value.X) > threshold ? ClipRun : ClipIdle);
                     }
                 }
             });

@@ -37,10 +37,10 @@ public static class PlayerPrefabs
             .Set(new Health(catCfg.MaxHp))
             .Set(new InvincibleOnHit(catCfg.InvincibleDuration))
             .Set(new HitFlashSettings(catCfg.HitFlashDuration))
-            .Set(new CollisionBox(catCfg.CollisionWidth, catCfg.CollisionHeight))
+            .Set(new CollisionBox(catCfg.CollisionSize))
             .Set(new Hurtbox(catCfg.GetHurtboxShape(), Faction.Friendly))
-            .Set(new Transform(0.0f, 0.0f, catCfg.ScaleX, catCfg.ScaleY))
-            .Set(new SpringScale(1.0f, 1.0f, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
+            .Set(new Transform(Vec2f.Zero, catCfg.Scale))
+            .Set(new SpringScale(Vec2f.One, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
             .Set(JumpCapability.FromPlayerConfig(catCfg))
             .Set(CatWeaponState.FromConfig(catCfg));
 
@@ -53,10 +53,10 @@ public static class PlayerPrefabs
             .Set(new Health(bunnyCfg.MaxHp))
             .Set(new InvincibleOnHit(bunnyCfg.InvincibleDuration))
             .Set(new HitFlashSettings(bunnyCfg.HitFlashDuration))
-            .Set(new CollisionBox(bunnyCfg.CollisionWidth, bunnyCfg.CollisionHeight))
+            .Set(new CollisionBox(bunnyCfg.CollisionSize))
             .Set(new Hurtbox(bunnyCfg.GetHurtboxShape(), Faction.Friendly))
-            .Set(new Transform(0.0f, 0.0f, bunnyCfg.ScaleX, bunnyCfg.ScaleY))
-            .Set(new SpringScale(1.0f, 1.0f, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
+            .Set(new Transform(Vec2f.Zero, bunnyCfg.Scale))
+            .Set(new SpringScale(Vec2f.One, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
             .Set(JumpCapability.FromPlayerConfig(bunnyCfg))
             .Set(BunnyWeaponState.FromConfig(bunnyCfg));
     }

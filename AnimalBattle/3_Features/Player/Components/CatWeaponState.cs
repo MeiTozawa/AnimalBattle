@@ -1,4 +1,5 @@
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Components;
 
@@ -20,26 +21,17 @@ public struct CatWeaponState
     /// <summary>弾丸攻撃力。</summary>
     public float BulletDamage;
 
-    /// <summary>弾丸衝突判定の横幅（px）。</summary>
-    public float BulletWidth;
+    /// <summary>弾丸衝突判定のサイズ (Vec2f)。</summary>
+    public Vec2f BulletSize;
 
-    /// <summary>弾丸衝突判定の縦幅（px）。</summary>
-    public float BulletHeight;
-
-    /// <summary>発射口の水平オフセット距離（px）。</summary>
-    public float BulletSpawnOffset;
-
-    /// <summary>発射口の垂直オフセット距離（px）。</summary>
-    public float BulletSpawnOffsetY;
+    /// <summary>発射口の局所オフセット (Vec2f)。</summary>
+    public Vec2f BulletSpawnOffset;
 
     /// <summary>自機射撃微後退反動距離（px）。</summary>
     public float ShootRecoilDistance;
 
-    /// <summary>自機射撃時スプリング変形倍率 X。</summary>
-    public float ShootRecoilStretchX;
-
-    /// <summary>自機射撃時スプリング変形倍率 Y。</summary>
-    public float ShootRecoilStretchY;
+    /// <summary>自機射撃時スプリング変形倍率 (Vec2f)。</summary>
+    public Vec2f ShootRecoilStretch;
 
     /// <summary>
     ///     cat.toml から CatWeaponState を構築します。
@@ -55,13 +47,10 @@ public struct CatWeaponState
             CooldownDuration = cfg.ShootCooldown,
             BulletSpeed = cfg.BulletSpeed,
             BulletDamage = cfg.BulletDamage,
-            BulletWidth = cfg.BulletWidth,
-            BulletHeight = cfg.BulletHeight,
+            BulletSize = cfg.BulletSize,
             BulletSpawnOffset = cfg.BulletSpawnOffset,
-            BulletSpawnOffsetY = cfg.BulletSpawnOffsetY,
             ShootRecoilDistance = cfg.ShootRecoilDistance,
-            ShootRecoilStretchX = cfg.ShootRecoilStretchX,
-            ShootRecoilStretchY = cfg.ShootRecoilStretchY
+            ShootRecoilStretch = cfg.ShootRecoilStretch
         };
     }
 }

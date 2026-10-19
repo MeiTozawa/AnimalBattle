@@ -19,8 +19,7 @@ public static class EffectMovementSystem {
            .Each((it, i, ref trans, ref vel) =>
             {
                 var dt = it.DeltaTime();
-                trans.X += vel.Vx * dt;
-                trans.Y += vel.Vy * dt;
+                trans.Position += vel.Value * dt;
             });
 
         return world;

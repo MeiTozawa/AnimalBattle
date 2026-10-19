@@ -50,11 +50,8 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     /// <summary>現在 AI 状態の経過時間（秒）を取得します。</summary>
     public virtual float StateTimer => Brain.StateTimer;
 
-    /// <summary>AI 目標地点 X 座標を取得します。</summary>
-    public virtual float TargetX => Brain.TargetX;
-
-    /// <summary>AI 目標地点 Y 座標を取得します。</summary>
-    public virtual float TargetY => Brain.TargetY;
+    /// <summary>AI 目標地点座標を取得します。</summary>
+    public virtual Vec2f TargetPosition => Brain.TargetPosition;
 
     /// <summary>Boss が後隙による易傷状態であるかを取得します（Entity の GameplayTagState を単一真理源とする）。</summary>
     public virtual bool IsVulnerable => Entity.Get<GameplayTagState>().HasTag(GameplayTag.Vulnerable);
@@ -92,12 +89,10 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     protected void InitializeComponents(
         Entity entity,
         int spriteHandle,
-        float spawnX,
-        float spawnY,
-        float scaleX,
-        float scaleY)
+        Vec2f spawn,
+        Vec2f scale)
     {
-        entity.Set(new Transform(spawnX, spawnY, scaleX, scaleY))
+        entity.Set(new Transform(spawn, scale))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)));
 
         Brain.AbilitySystem.SetOwner(entity);
@@ -187,7 +182,7 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
     {
         EmitterAngleOffset = 0.0f;
         OnReset();
-        SetVelocity(0.0f, 0.0f);
+        SetVelocity(Vec2f.Zero);
         SetFlipX(false);
         SetVisible(true);
         ClearTransientEffects();

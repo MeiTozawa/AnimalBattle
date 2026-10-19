@@ -39,16 +39,13 @@ public static class BossTelegraphRenderSystem {
                 if (!boss.Entity.IsAlive() || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
 
                 var playerCfg = w.GetActivePlayerConfig();
-                var playerX = playerCfg.SpawnX;
-                var playerY = playerCfg.SpawnY;
+                var playerPos = playerCfg.Spawn;
 
                 playerQuery.Each((ref PlayerPawn player) =>
                 {
                     if (player.Entity.IsAlive())
                     {
-                        ref readonly var pt = ref player.Transform;
-                        playerX = pt.X;
-                        playerY = pt.Y;
+                        playerPos = player.Transform.Position;
                     }
                 });
 
@@ -61,14 +58,13 @@ public static class BossTelegraphRenderSystem {
 
                 ref readonly var bTrans = ref boss.Transform;
                 ref readonly var bSprite = ref boss.Sprite;
-                var bx = (int)(bTrans.X + bSprite.JitterOffsetX);
-                var by = (int)(bTrans.Y + bSprite.JitterOffsetY);
+                var bPos = (bTrans.Position + bSprite.JitterOffset).ToVec2i();
 
                 // 1. 予兆前揺（Telegraph）描画
                 if (boss.CurrentState.IsTelegraph)
                 {
                     var progress = boss.AbilitySystem.PhaseProgress;
-                    DrawBossTelegraph(boss, playerX, playerY, progress);
+                    DrawBossTelegraph(boss, playerPos, progress);
                 }
 
                 var flipX = !boss.FacingRight;
@@ -78,7 +74,7 @@ public static class BossTelegraphRenderSystem {
                 if (boss.IsVulnerable)
                 {
                     DrawBossVulnerableEffects(
-                        bx, by, bSprite.SrcRect, bTrans.ScaleX, bTrans.ScaleY, rotation,
+                        bPos, bSprite.SrcRect, bTrans.Scale, rotation,
                         bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
                 }
 
@@ -86,7 +82,7 @@ public static class BossTelegraphRenderSystem {
                 if (boss.CurrentState.IsPhaseTransition)
                 {
                     DrawBossPhaseTransitionEffects(
-                        bx, by, bSprite.SrcRect, bTrans.ScaleX, bTrans.ScaleY, rotation,
+                        bPos, bSprite.SrcRect, bTrans.Scale, rotation,
                         bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
                 }
             });
@@ -94,36 +90,25 @@ public static class BossTelegraphRenderSystem {
         return world;
     }
 
-    private static (float x, float y) ResolveTargetPosition(float targetX, float targetY, float playerX, float playerY)
-    {
-        return (
-            targetX != 0.0f || targetY != 0.0f ? targetX : playerX,
-            targetX != 0.0f || targetY != 0.0f ? targetY : playerY
-        );
-    }
-
     private static void DrawBossTelegraph(
         BaseBossAgent boss,
-        float playerX,
-        float playerY,
+        Vec2f playerPos,
         float progress)
     {
         var currentAbility = boss.AbilitySystem.CurrentAbility;
         if (currentAbility == null) return;
 
-        var (finalTargetX, finalTargetY) = ResolveTargetPosition(boss.TargetX, boss.TargetY, playerX, playerY);
+        var finalTarget = boss.TargetPosition != Vec2f.Zero ? boss.TargetPosition : playerPos;
         ref readonly var bTrans = ref boss.Transform;
-        var bHeight = boss.CollisionBox.Height;
-        AbilityTelegraphContext ctx = new(bTrans.X, bTrans.Y, finalTargetX, finalTargetY, boss.FacingRight, progress, boss.StateTimer, bHeight);
+        var bHeight = boss.CollisionBox.Size.Y;
+        AbilityTelegraphContext ctx = new(bTrans.Position, finalTarget, boss.FacingRight, progress, boss.StateTimer, bHeight);
         currentAbility.DrawTelegraph(in ctx);
     }
 
     private static void DrawBossVulnerableEffects(
-        int bx,
-        int by,
+        Vec2i bPos,
         in Rect srcRect,
-        float scaleX,
-        float scaleY,
+        Vec2f scale,
         double angle,
         int graphHandle,
         bool flipX,
@@ -133,15 +118,11 @@ public static class BossTelegraphRenderSystem {
         var pulse = 0.5f + 0.5f * MathF.Sin(stateTimer * bossFx.VulnerablePulseSpeed);
         var vulnAlpha = (int)(bossFx.VulnerableAuraBaseAlpha + bossFx.VulnerableAuraPulseAlpha * pulse);
         GameEngine.SetDrawBlendMode(BlendMode.Add, vulnAlpha);
-        GameEngine.DrawRectRotaGraph3(
-            bx,
-            by,
-            srcRect.X1,
-            srcRect.Y1,
-            srcRect.Width,
-            srcRect.Height,
-            scaleX * bossFx.VulnerableAuraScale,
-            scaleY * bossFx.VulnerableAuraScale,
+        GameEngine.DrawRectRotaGraph(
+            bPos,
+            new Vec2i(srcRect.X1, srcRect.Y1),
+            new Vec2i(srcRect.Width, srcRect.Height),
+            scale * bossFx.VulnerableAuraScale,
             angle,
             graphHandle,
             true,
@@ -150,17 +131,14 @@ public static class BossTelegraphRenderSystem {
 
         var bobbing = MathF.Sin(stateTimer * bossFx.ChanceMarkerBobbingSpeed) * bossFx.ChanceMarkerBobbingAmplitude;
         var textWidth = bossFx.ChanceMarkerText.Length * bossFx.ChanceMarkerCharWidth;
-        var textX = bx - textWidth / 2;
-        var textY = (int)(by - bossFx.ChanceMarkerOffsetY + bobbing);
-        GameEngine.DrawString(textX, textY, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
+        var textPos = new Vec2i(bPos.X - textWidth / 2, (int)(bPos.Y - bossFx.ChanceMarkerOffsetY + bobbing));
+        GameEngine.DrawString(textPos, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
     }
 
     private static void DrawBossPhaseTransitionEffects(
-        int bx,
-        int by,
+        Vec2i bPos,
         in Rect srcRect,
-        float scaleX,
-        float scaleY,
+        Vec2f scale,
         double angle,
         int graphHandle,
         bool flipX,
@@ -171,15 +149,11 @@ public static class BossTelegraphRenderSystem {
         var goldAlpha = (int)(bossFx.InvincibleAuraBaseAlpha + bossFx.InvincibleAuraPulseAlpha * pulse);
         GameEngine.SetDrawBright(bossFx.InvincibleAuraColor.R, bossFx.InvincibleAuraColor.G, bossFx.InvincibleAuraColor.B);
         GameEngine.SetDrawBlendMode(BlendMode.Add, goldAlpha);
-        GameEngine.DrawRectRotaGraph3(
-            bx,
-            by,
-            srcRect.X1,
-            srcRect.Y1,
-            srcRect.Width,
-            srcRect.Height,
-            scaleX * bossFx.InvincibleAuraScale,
-            scaleY * bossFx.InvincibleAuraScale,
+        GameEngine.DrawRectRotaGraph(
+            bPos,
+            new Vec2i(srcRect.X1, srcRect.Y1),
+            new Vec2i(srcRect.Width, srcRect.Height),
+            scale * bossFx.InvincibleAuraScale,
             angle,
             graphHandle,
             true,
@@ -193,14 +167,14 @@ public static class BossTelegraphRenderSystem {
 
         var shieldFillAlpha = (int)(bossFx.InvincibleFillBaseAlpha + bossFx.InvincibleFillPulseAlpha * pulse);
         GameEngine.SetDrawBlendMode(BlendMode.Add, shieldFillAlpha);
-        GameEngine.DrawCircle(bx, by, currentShieldRadius, ColorPalette.Gold, true);
+        GameEngine.DrawCircle(bPos, currentShieldRadius, ColorPalette.Gold, true);
 
         var shieldRingAlpha = (int)(bossFx.InvincibleRingBaseAlpha + bossFx.InvincibleRingPulseAlpha * pulse);
         GameEngine.SetDrawBlendMode(BlendMode.Add, shieldRingAlpha);
-        GameEngine.DrawCircle(bx, by, currentShieldRadius, ColorPalette.GoldLight, false);
+        GameEngine.DrawCircle(bPos, currentShieldRadius, ColorPalette.GoldLight, false);
         if (currentShieldRadius > 1)
         {
-            GameEngine.DrawCircle(bx, by, currentShieldRadius - 1, ColorPalette.Gold, false);
+            GameEngine.DrawCircle(bPos, currentShieldRadius - 1, ColorPalette.Gold, false);
         }
 
         var ripple1 = (stateTimer * bossFx.InvincibleRippleSpeed) % 1.0f;
@@ -209,7 +183,7 @@ public static class BossTelegraphRenderSystem {
         if (ripple1Alpha > 0)
         {
             GameEngine.SetDrawBlendMode(BlendMode.Add, ripple1Alpha);
-            GameEngine.DrawCircle(bx, by, ripple1Radius, ColorPalette.GoldLight, false);
+            GameEngine.DrawCircle(bPos, ripple1Radius, ColorPalette.GoldLight, false);
         }
 
         var ripple2 = (stateTimer * bossFx.InvincibleRippleSpeed + 0.5f) % 1.0f;
@@ -218,19 +192,19 @@ public static class BossTelegraphRenderSystem {
         if (ripple2Alpha > 0)
         {
             GameEngine.SetDrawBlendMode(BlendMode.Add, ripple2Alpha);
-            GameEngine.DrawCircle(bx, by, ripple2Radius, ColorPalette.White, false);
+            GameEngine.DrawCircle(bPos, ripple2Radius, ColorPalette.White, false);
         }
 
         var orbitAngle = stateTimer * bossFx.InvincibleOrbitSpeed;
         const float angleStep = MathF.PI * 0.5f;
 
-        Span<int> nodeXs = stackalloc int[4];
-        Span<int> nodeYs = stackalloc int[4];
+        Span<Vec2i> nodes = stackalloc Vec2i[4];
         for (var i = 0; i < 4; i++)
         {
             var theta = orbitAngle + i * angleStep;
-            nodeXs[i] = (int)(bx + MathF.Cos(theta) * currentShieldRadius);
-            nodeYs[i] = (int)(by + MathF.Sin(theta) * currentShieldRadius);
+            nodes[i] = new Vec2i(
+                (int)(bPos.X + MathF.Cos(theta) * currentShieldRadius),
+                (int)(bPos.Y + MathF.Sin(theta) * currentShieldRadius));
         }
 
         var prismAlpha = (int)(bossFx.InvinciblePrismAlphaBase + bossFx.InvinciblePrismAlphaPulse * pulse);
@@ -238,14 +212,14 @@ public static class BossTelegraphRenderSystem {
         for (var i = 0; i < 4; i++)
         {
             var next = (i + 1) % 4;
-            GameEngine.DrawLine(nodeXs[i], nodeYs[i], nodeXs[next], nodeYs[next], ColorPalette.GoldLight, bossFx.InvinciblePrismThickness);
+            GameEngine.DrawLine(nodes[i], nodes[next], ColorPalette.GoldLight, bossFx.InvinciblePrismThickness);
         }
 
         for (var i = 0; i < 4; i++)
         {
             GameEngine.SetDrawBlendMode(BlendMode.Add, bossFx.InvincibleNodeAlpha);
-            GameEngine.DrawCircle(nodeXs[i], nodeYs[i], bossFx.InvincibleNodeOuterRadius, ColorPalette.GoldLight, true);
-            GameEngine.DrawCircle(nodeXs[i], nodeYs[i], bossFx.InvincibleNodeInnerRadius, ColorPalette.White, true);
+            GameEngine.DrawCircle(nodes[i], bossFx.InvincibleNodeOuterRadius, ColorPalette.GoldLight, true);
+            GameEngine.DrawCircle(nodes[i], bossFx.InvincibleNodeInnerRadius, ColorPalette.White, true);
         }
 
         var crossAngle = stateTimer * bossFx.InvincibleCrossAngleSpeed;
@@ -255,9 +229,10 @@ public static class BossTelegraphRenderSystem {
         for (var i = 0; i < 4; i++)
         {
             var theta = crossAngle + i * angleStep;
-            var fx = (int)(bx + MathF.Cos(theta) * flareLength);
-            var fy = (int)(by + MathF.Sin(theta) * flareLength);
-            GameEngine.DrawLine(bx, by, fx, fy, ColorPalette.GoldLight, bossFx.InvincibleCrossThickness);
+            var flarePos = new Vec2i(
+                (int)(bPos.X + MathF.Cos(theta) * flareLength),
+                (int)(bPos.Y + MathF.Sin(theta) * flareLength));
+            GameEngine.DrawLine(bPos, flarePos, ColorPalette.GoldLight, bossFx.InvincibleCrossThickness);
         }
 
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);

@@ -1,4 +1,5 @@
 using System.Drawing;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Components;
 
@@ -29,17 +30,11 @@ public struct Sprite(
     /// <summary>スプライト描画色（色調補正 / Tint）</summary>
     public Color Color = color ?? Color.White;
 
-    /// <summary>局所振動（ジッター）変位 X（ピクセル）</summary>
-    public float JitterOffsetX = 0.0f;
+    /// <summary>局所振動（ジッター）変位 (Vec2f)</summary>
+    public Vec2f JitterOffset = Vec2f.Zero;
 
-    /// <summary>局所振動（ジッター）変位 Y（ピクセル）</summary>
-    public float JitterOffsetY = 0.0f;
-
-    /// <summary>スプリング拡縮変形倍率 X</summary>
-    public float ScaleX = 1.0f;
-
-    /// <summary>スプリング拡縮変形倍率 Y</summary>
-    public float ScaleY = 1.0f;
+    /// <summary>スプリング拡縮変形倍率 (Vec2f)</summary>
+    public Vec2f Scale = new(1.0f, 1.0f);
 
     /// <summary>スプリング拡縮による接地位置補正 Y（ピクセル）</summary>
     public float SpringOffsetY = 0.0f;

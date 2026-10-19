@@ -1,6 +1,7 @@
 using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
@@ -23,7 +24,7 @@ public sealed class Boss1Agent : BaseBossAgent
     {
         var world = entity.CsWorld();
         var b1Cfg = world.Get<Boss1Config>();
-        _brain = new Boss1Brain(world, b1Cfg.SpawnX, b1Cfg.SpawnY);
+        _brain = new Boss1Brain(world, b1Cfg.Spawn);
 
         BindBrainEvents(_brain);
         InitializeComponents(entity, spriteHandle);
@@ -49,10 +50,8 @@ public sealed class Boss1Agent : BaseBossAgent
         InitializeComponents(
             entity,
             spriteHandle,
-            b1Cfg.SpawnX,
-            b1Cfg.SpawnY,
-            b1Cfg.ScaleX,
-            b1Cfg.ScaleY);
+            b1Cfg.Spawn,
+            b1Cfg.Scale);
     }
 
     /// <inheritdoc />
@@ -71,8 +70,7 @@ public sealed class Boss1Agent : BaseBossAgent
         _brain.Update(deltaTime, playerPosition, 1, true, health.Current, health.Max);
 
         ref var trans = ref Entity.GetMut<Transform>();
-        trans.X = _brain.Position.X;
-        trans.Y = _brain.Position.Y;
+        trans.Position = _brain.Position;
         ref var sprite = ref Entity.GetMut<Sprite>();
         sprite.FlipX = !_brain.FacingRight;
 
@@ -93,16 +91,16 @@ public sealed class Boss1Agent : BaseBossAgent
     protected override void OnReset()
     {
         var b1Cfg = Entity.CsWorld().Get<Boss1Config>();
-        SetTransform(b1Cfg.SpawnX, b1Cfg.SpawnY, b1Cfg.ScaleX, b1Cfg.ScaleY);
+        SetTransform(b1Cfg.Spawn, b1Cfg.Scale);
         ref var t = ref Entity.GetMut<Transform>();
         t.Rotation = 0.0f;
         ResetHealth(b1Cfg.MaxHp);
-        Entity.Set(new CollisionBox(b1Cfg.CollisionWidth, b1Cfg.CollisionHeight));
+        Entity.Set(new CollisionBox(b1Cfg.CollisionSize));
         Entity.Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile));
         Entity.Set(new Hitbox(b1Cfg.GetHitboxShape(), b1Cfg.BodyContactDamage, Faction.Hostile, false));
         Entity.Set(new HitFlashSettings(b1Cfg.HitFlashDuration));
 
-        _brain.Reset(b1Cfg.SpawnX, b1Cfg.SpawnY);
+        _brain.Reset(b1Cfg.Spawn);
     }
 
     /// <inheritdoc />

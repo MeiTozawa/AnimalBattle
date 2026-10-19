@@ -12,7 +12,7 @@ public readonly record struct PlayerDoubleJumpedEvent;
 public readonly record struct PlayerLandedEvent(float FallVelocity);
 
 /// <summary>自機が射撃を行ったイベント</summary>
-public readonly record struct PlayerShotFiredEvent(float SpawnX, float SpawnY, float DirX, float DirY);
+public readonly record struct PlayerShotFiredEvent(Vec2f SpawnPos, Vec2f Direction);
 
 /// <summary>自機がダッシュを開始したイベント（Task 4 用）</summary>
 public readonly record struct PlayerDashedEvent(float DirX);
@@ -30,7 +30,7 @@ public readonly record struct PlayerHealthChangedEvent(float PreviousHealth, flo
 public readonly record struct BossBulletFiredEvent(StringId Ability);
 
 /// <summary>Boss が急降下衝撃波を発生させたイベント</summary>
-public readonly record struct BossDiveImpactEvent(float X, float Y);
+public readonly record struct BossDiveImpactEvent(Vec2f Position);
 
 /// <summary>Boss が大技予兆を発したイベント</summary>
 public readonly record struct BossWarningEvent;

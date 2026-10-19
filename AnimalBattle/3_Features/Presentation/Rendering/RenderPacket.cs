@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Render;
 
@@ -45,17 +46,11 @@ public enum RenderPacketType : ushort {
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct DrawBoxPacket {
-    /// <summary>矩形左上 X 座標</summary>
-    public int X1;
+    /// <summary>矩形左上座標</summary>
+    public Vec2i P1;
 
-    /// <summary>矩形左上 Y 座標</summary>
-    public int Y1;
-
-    /// <summary>矩形右下 X 座標</summary>
-    public int X2;
-
-    /// <summary>矩形右下 Y 座標</summary>
-    public int Y2;
+    /// <summary>矩形右下座標</summary>
+    public Vec2i P2;
 
     /// <summary>矩形描画カラー (0xAARRGGBB / 0x00RRGGBB)</summary>
     public uint Color;
@@ -73,11 +68,8 @@ public struct DrawBoxPacket {
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct DrawCirclePacket {
-    /// <summary>円中心 X 座標</summary>
-    public int CenterX;
-
-    /// <summary>円中心 Y 座標</summary>
-    public int CenterY;
+    /// <summary>円中心座標</summary>
+    public Vec2i Center;
 
     /// <summary>円半径</summary>
     public int Radius;
@@ -99,11 +91,8 @@ public struct DrawCirclePacket {
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct CompactCirclePacket {
-    /// <summary>円中心 X 座標</summary>
-    public int CenterX;
-
-    /// <summary>円中心 Y 座標</summary>
-    public int CenterY;
+    /// <summary>円中心座標</summary>
+    public Vec2i Center;
 
     /// <summary>円半径</summary>
     public int Radius;
@@ -118,10 +107,9 @@ public struct CompactCirclePacket {
     private byte _padding1;
     private byte _padding2;
 
-    public CompactCirclePacket(int centerX, int centerY, int radius, uint color, bool fill)
+    public CompactCirclePacket(Vec2i center, int radius, uint color, bool fill)
     {
-        CenterX = centerX;
-        CenterY = centerY;
+        Center = center;
         Radius = radius;
         Color = color;
         Fill = (byte)(fill ? 1 : 0);
@@ -136,17 +124,11 @@ public struct CompactCirclePacket {
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct DrawLinePacket {
-    /// <summary>線分始点 X 座標</summary>
-    public int X1;
+    /// <summary>線分始点座標</summary>
+    public Vec2i P1;
 
-    /// <summary>線分始点 Y 座標</summary>
-    public int Y1;
-
-    /// <summary>線分終点 X 座標</summary>
-    public int X2;
-
-    /// <summary>線分終点 Y 座標</summary>
-    public int Y2;
+    /// <summary>線分終点座標</summary>
+    public Vec2i P2;
 
     /// <summary>線分描画カラー</summary>
     public uint Color;
@@ -160,11 +142,8 @@ public struct DrawLinePacket {
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct DrawGraphPacket {
-    /// <summary>画像描画先 X 座標</summary>
-    public int X;
-
-    /// <summary>画像描画先 Y 座標</summary>
-    public int Y;
+    /// <summary>画像描画先座標</summary>
+    public Vec2i Pos;
 
     /// <summary>画像ハンドル</summary>
     public int Handle;
@@ -182,11 +161,8 @@ public struct DrawGraphPacket {
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct DrawRotaGraphPacket {
-    /// <summary>回転描画中心 X 座標</summary>
-    public int CenterX;
-
-    /// <summary>回転描画中心 Y 座標</summary>
-    public int CenterY;
+    /// <summary>回転描画中心座標</summary>
+    public Vec2i Center;
 
     /// <summary>拡大率</summary>
     public float Scale;
@@ -210,29 +186,17 @@ public struct DrawRotaGraphPacket {
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct DrawRectRotaGraphPacket {
-    /// <summary>矩形切り出し回転描画中心 X 座標</summary>
-    public int CenterX;
+    /// <summary>矩形切り出し回転描画中心座標</summary>
+    public Vec2i Center;
 
-    /// <summary>矩形切り出し回転描画中心 Y 座標</summary>
-    public int CenterY;
+    /// <summary>切り出し開始座標</summary>
+    public Vec2i SrcPos;
 
-    /// <summary>切り出し開始 X 座標</summary>
-    public int SrcX;
+    /// <summary>切り出しサイズ (幅・高さ)</summary>
+    public Vec2i SrcSize;
 
-    /// <summary>切り出し開始 Y 座標</summary>
-    public int SrcY;
-
-    /// <summary>切り出し幅</summary>
-    public int SrcW;
-
-    /// <summary>切り出し高さ</summary>
-    public int SrcH;
-
-    /// <summary>拡大率 X</summary>
-    public float ScaleX;
-
-    /// <summary>拡大率 Y</summary>
-    public float ScaleY;
+    /// <summary>拡大率 (X/Y 独立)</summary>
+    public Vec2f Scale;
 
     /// <summary>回転角度 (ラジアン)</summary>
     public float Angle;
@@ -255,11 +219,8 @@ public struct DrawRectRotaGraphPacket {
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct DrawStringPacket {
-    /// <summary>文字列描画 X 座標</summary>
-    public int X;
-
-    /// <summary>文字列描画 Y 座標</summary>
-    public int Y;
+    /// <summary>文字列描画座標</summary>
+    public Vec2i Pos;
 
     /// <summary>文字列描画カラー</summary>
     public uint Color;

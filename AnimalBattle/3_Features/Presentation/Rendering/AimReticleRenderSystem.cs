@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using System;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -29,33 +29,33 @@ public static class AimReticleRenderSystem {
 
                 ref readonly var state = ref w.Get<AimReticleState>();
                 var mouseScreen = InputService.GetMousePosition();
-                RenderReticle(mouseScreen.X, mouseScreen.Y, state.Expansion, w.Get<RenderConfig>().AimReticle);
+                RenderReticle(mouseScreen, state.Expansion, w.Get<RenderConfig>().AimReticle);
             });
 
         return world;
     }
 
-    private static void RenderReticle(int x, int y, float expansion, AimReticleRenderConfig cfg)
+    private static void RenderReticle(Vec2i center, float expansion, AimReticleRenderConfig cfg)
     {
         var radius = Math.Clamp((int)MathF.Round(cfg.BaseRadius + expansion), cfg.MinRadius, cfg.MaxRadius);
 
         // 1. 中心高輝度ドット（照準中心コア）
-        GameEngine.DrawCircle(x, y, cfg.CenterDotRadius, cfg.CenterDotColor, fill: true);
+        GameEngine.DrawCircle(center, cfg.CenterDotRadius, cfg.CenterDotColor, fill: true);
 
         // 2. 外周円環（タクティカルリング）
-        GameEngine.DrawCircle(x, y, radius, cfg.RingColor, fill: false);
+        GameEngine.DrawCircle(center, radius, cfg.RingColor, fill: false);
 
         // 3. 上下左右 4 方向の刻度ショートライン
         var inner = radius + cfg.TickGap;
         var outer = inner + cfg.TickLength;
 
         // 上
-        GameEngine.DrawLine(x, y - inner, x, y - outer, cfg.TickColor);
+        GameEngine.DrawLine(new Vec2i(center.X, center.Y - inner), new Vec2i(center.X, center.Y - outer), cfg.TickColor);
         // 下
-        GameEngine.DrawLine(x, y + inner, x, y + outer, cfg.TickColor);
+        GameEngine.DrawLine(new Vec2i(center.X, center.Y + inner), new Vec2i(center.X, center.Y + outer), cfg.TickColor);
         // 左
-        GameEngine.DrawLine(x - inner, y, x - outer, y, cfg.TickColor);
+        GameEngine.DrawLine(new Vec2i(center.X - inner, center.Y), new Vec2i(center.X - outer, center.Y), cfg.TickColor);
         // 右
-        GameEngine.DrawLine(x + inner, y, x + outer, y, cfg.TickColor);
+        GameEngine.DrawLine(new Vec2i(center.X + inner, center.Y), new Vec2i(center.X + outer, center.Y), cfg.TickColor);
     }
 }

@@ -166,18 +166,6 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     マウスカーソルの現在の画面座標を取得します。
-    /// </summary>
-    /// <param name="x">X 座標出力先</param>
-    /// <param name="y">Y 座標出力先</param>
-    public static void GetMousePoint(out int x, out int y)
-    {
-        var pos = GetMousePoint();
-        x = pos.X;
-        y = pos.Y;
-    }
-
-    /// <summary>
     ///     指定画像ハンドルの幅と高さを取得します。
     /// </summary>
     /// <param name="handle">画像ハンドル</param>
@@ -194,38 +182,18 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     指定画像ハンドルの幅と高さを取得します。
+    ///     カメラシェイク等によるグローバル描画オフセット（ピクセル）。
     /// </summary>
-    /// <param name="handle">画像ハンドル</param>
-    /// <param name="width">幅出力先</param>
-    /// <param name="height">高さ出力先</param>
-    public static void GetGraphSize(int handle, out int width, out int height)
-    {
-        var size = GetGraphSize(handle);
-        width = size.X;
-        height = size.Y;
-    }
-
-    /// <summary>
-    ///     カメラシェイク等によるグローバル描画オフセット X（ピクセル）。
-    /// </summary>
-    public static int CameraOffsetX { get; private set; }
-
-    /// <summary>
-    ///     カメラシェイク等によるグローバル描画オフセット Y（ピクセル）。
-    /// </summary>
-    public static int CameraOffsetY { get; private set; }
+    public static Vec2i CameraOffset { get; private set; }
 
     /// <summary>
     ///     グローバルカメラ描画オフセットを設定します。
     /// </summary>
-    /// <param name="x">X 軸オフセット</param>
-    /// <param name="y">Y 軸オフセット</param>
+    /// <param name="offset">オフセット (<see cref="Vec2i" />)</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetCameraOffset(int x, int y)
+    public static void SetCameraOffset(Vec2i offset)
     {
-        CameraOffsetX = x;
-        CameraOffsetY = y;
+        CameraOffset = offset;
     }
 
     /// <summary>
@@ -237,20 +205,7 @@ public static class GameEngine {
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawCircle(Vec2i center, int radius, Color color, bool fill)
     {
-        _commandBuffer.PushDrawCircle(center.X + CameraOffsetX, center.Y + CameraOffsetY, radius, color.ToUint(), fill);
-    }
-
-    /// <summary>
-    ///     円を画面上に描画します。
-    /// </summary>
-    /// <param name="x">中心 X 座標</param>
-    /// <param name="y">中心 Y 座標</param>
-    /// <param name="radius">半径 (px)</param>
-    /// <param name="color">描画カラー (<see cref="Color" />)</param>
-    /// <param name="fill">塗りつぶすかどうか</param>
-    public static void DrawCircle(int x, int y, int radius, Color color, bool fill)
-    {
-        _commandBuffer.PushDrawCircle(x + CameraOffsetX, y + CameraOffsetY, radius, color.ToUint(), fill);
+        _commandBuffer.PushDrawCircle(center + CameraOffset, radius, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -259,7 +214,7 @@ public static class GameEngine {
     /// <param name="circles">緊密配置された円パケットの読み取り専用スパン。</param>
     public static void DrawCirclesBatch(ReadOnlySpan<CompactCirclePacket> circles)
     {
-        if (CameraOffsetX == 0 && CameraOffsetY == 0)
+        if (CameraOffset == Vec2i.Zero)
         {
             _commandBuffer.PushCompactCirclesBatch(circles);
         }
@@ -268,7 +223,7 @@ public static class GameEngine {
             for (var i = 0; i < circles.Length; i++)
             {
                 var c = circles[i];
-                _commandBuffer.PushDrawCircle(c.CenterX + CameraOffsetX, c.CenterY + CameraOffsetY, c.Radius, c.Color, c.Fill != 0);
+                _commandBuffer.PushDrawCircle(c.Center + CameraOffset, c.Radius, c.Color, c.Fill != 0);
             }
         }
     }
@@ -282,21 +237,7 @@ public static class GameEngine {
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawBox(Vec2i p1, Vec2i p2, Color color, bool fill)
     {
-        _commandBuffer.PushDrawBox(p1.X + CameraOffsetX, p1.Y + CameraOffsetY, p2.X + CameraOffsetX, p2.Y + CameraOffsetY, color.ToUint(), fill);
-    }
-
-    /// <summary>
-    ///     矩形（ボックス）を画面上に描画します。
-    /// </summary>
-    /// <param name="x1">左上 X 座標</param>
-    /// <param name="y1">左上 Y 座標</param>
-    /// <param name="x2">右下 X 座標</param>
-    /// <param name="y2">右下 Y 座標</param>
-    /// <param name="color">描画カラー (<see cref="Color" />)</param>
-    /// <param name="fill">塗りつぶすかどうか</param>
-    public static void DrawBox(int x1, int y1, int x2, int y2, Color color, bool fill)
-    {
-        _commandBuffer.PushDrawBox(x1 + CameraOffsetX, y1 + CameraOffsetY, x2 + CameraOffsetX, y2 + CameraOffsetY, color.ToUint(), fill);
+        _commandBuffer.PushDrawBox(p1 + CameraOffset, p2 + CameraOffset, color.ToUint(), fill);
     }
 
     /// <summary>
@@ -308,21 +249,7 @@ public static class GameEngine {
     /// <param name="thickness">線の太さ</param>
     public static void DrawLine(Vec2i p1, Vec2i p2, Color color, int thickness = 1)
     {
-        _commandBuffer.PushDrawLine(p1.X + CameraOffsetX, p1.Y + CameraOffsetY, p2.X + CameraOffsetX, p2.Y + CameraOffsetY, color.ToUint(), thickness);
-    }
-
-    /// <summary>
-    ///     線分を画面上に描画します。
-    /// </summary>
-    /// <param name="x1">始点 X 座標</param>
-    /// <param name="y1">始点 Y 座標</param>
-    /// <param name="x2">終点 X 座標</param>
-    /// <param name="y2">終点 Y 座標</param>
-    /// <param name="color">描画カラー (<see cref="Color" />)</param>
-    /// <param name="thickness">線の太さ</param>
-    public static void DrawLine(int x1, int y1, int x2, int y2, Color color, int thickness = 1)
-    {
-        _commandBuffer.PushDrawLine(x1 + CameraOffsetX, y1 + CameraOffsetY, x2 + CameraOffsetX, y2 + CameraOffsetY, color.ToUint(), thickness);
+        _commandBuffer.PushDrawLine(p1 + CameraOffset, p2 + CameraOffset, color.ToUint(), thickness);
     }
 
     /// <summary>
@@ -333,31 +260,18 @@ public static class GameEngine {
     /// <param name="color">描画カラー (<see cref="Color" />)</param>
     public static void DrawString(Vec2i pos, string text, Color color)
     {
-        _commandBuffer.PushDrawString(pos.X + CameraOffsetX, pos.Y + CameraOffsetY, text, color.ToUint());
+        _commandBuffer.PushDrawString(pos + CameraOffset, text, color.ToUint());
     }
 
     /// <summary>
     ///     指定座標に文字列を描画します。
     /// </summary>
-    /// <param name="x">X 座標</param>
-    /// <param name="y">Y 座標</param>
-    /// <param name="text">描画文字列</param>
-    /// <param name="color">描画カラー (<see cref="Color" />)</param>
-    public static void DrawString(int x, int y, string text, Color color)
-    {
-        _commandBuffer.PushDrawString(x + CameraOffsetX, y + CameraOffsetY, text, color.ToUint());
-    }
-
-    /// <summary>
-    ///     指定座標に文字列を描画します。
-    /// </summary>
-    /// <param name="x">X 座標</param>
-    /// <param name="y">Y 座標</param>
+    /// <param name="pos">描画座標 (<see cref="Vec2i" />)</param>
     /// <param name="text">描画文字列 (<see cref="ReadOnlySpan{Char}" />)</param>
     /// <param name="color">描画カラー (<see cref="Color" />)</param>
-    public static void DrawString(int x, int y, ReadOnlySpan<char> text, Color color)
+    public static void DrawString(Vec2i pos, ReadOnlySpan<char> text, Color color)
     {
-        _commandBuffer.PushDrawString(x + CameraOffsetX, y + CameraOffsetY, text, color.ToUint());
+        _commandBuffer.PushDrawString(pos + CameraOffset, text, color.ToUint());
     }
 
     /// <summary>
@@ -368,19 +282,7 @@ public static class GameEngine {
     /// <param name="trans">透過を有効にするかどうか</param>
     public static void DrawGraph(Vec2i pos, int handle, bool trans)
     {
-        _commandBuffer.PushDrawGraph(pos.X + CameraOffsetX, pos.Y + CameraOffsetY, handle, trans);
-    }
-
-    /// <summary>
-    ///     指定画像ハンドルを画面上に描画します。
-    /// </summary>
-    /// <param name="x">描画先 X 座標</param>
-    /// <param name="y">描画先 Y 座標</param>
-    /// <param name="handle">画像ハンドル</param>
-    /// <param name="trans">透過を有効にするかどうか</param>
-    public static void DrawGraph(int x, int y, int handle, bool trans)
-    {
-        _commandBuffer.PushDrawGraph(x + CameraOffsetX, y + CameraOffsetY, handle, trans);
+        _commandBuffer.PushDrawGraph(pos + CameraOffset, handle, trans);
     }
 
     /// <summary>
@@ -393,92 +295,36 @@ public static class GameEngine {
     /// <param name="trans">透過描画を有効にするかどうか</param>
     public static void DrawRotaGraph(Vec2i center, double scale, double angle, int handle, bool trans)
     {
-        _commandBuffer.PushDrawRotaGraph(center.X + CameraOffsetX, center.Y + CameraOffsetY, (float)scale, (float)angle, handle, trans);
-    }
-
-    /// <summary>
-    ///     スプライトシートから指定矩形を切り出し、回転・拡縮・左右反転を行って描画します。
-    /// </summary>
-    /// <param name="center">描画中心座標 (<see cref="Vec2i" />)</param>
-    /// <param name="srcPos">切り出し開始座標 (<see cref="Vec2i" />)</param>
-    /// <param name="srcSize">切り出しサイズ (<see cref="Vec2i" />)</param>
-    /// <param name="scaleX">X 軸拡大率</param>
-    /// <param name="scaleY">Y 軸拡大率</param>
-    /// <param name="angle">回転角度 (ラジアン)</param>
-    /// <param name="handle">画像ハンドル</param>
-    /// <param name="trans">透過描画を有効にするかどうか</param>
-    /// <param name="turnX">左右反転描画を行うかどうか</param>
-    public static void DrawRectRotaGraph(
-        Vec2i center,
-        Vec2i srcPos,
-        Vec2i srcSize,
-        double scaleX,
-        double scaleY,
-        double angle,
-        int handle,
-        bool trans,
-        bool turnX)
-    {
-        _commandBuffer.PushDrawRectRotaGraph(
-            center.X + CameraOffsetX, center.Y + CameraOffsetY,
-            srcPos.X, srcPos.Y,
-            srcSize.X, srcSize.Y,
-            (float)scaleX, (float)scaleY, (float)angle,
-            handle,
-            trans,
-            turnX);
-    }
-
-    /// <summary>
-    ///     スプライトシートから指定矩形を切り出し、回転・等比拡縮・左右反転を行って描画します。
-    /// </summary>
-    public static void DrawRectRotaGraph(
-        Vec2i center,
-        Vec2i srcPos,
-        Vec2i srcSize,
-        double scale,
-        double angle,
-        int handle,
-        bool trans,
-        bool turnX)
-    {
-        DrawRectRotaGraph(center, srcPos, srcSize, scale, scale, angle, handle, trans, turnX);
+        _commandBuffer.PushDrawRotaGraph(center + CameraOffset, (float)scale, (float)angle, handle, trans);
     }
 
     /// <summary>
     ///     スプライトシートから指定矩形を切り出し、回転・独立 X/Y 軸拡縮・左右反転を行って描画します。
     /// </summary>
-    /// <param name="x">描画中心 X 座標</param>
-    /// <param name="y">描画中心 Y 座標</param>
-    /// <param name="srcX">切り出し開始 X 座標</param>
-    /// <param name="srcY">切り出し開始 Y 座標</param>
-    /// <param name="width">切り出し幅</param>
-    /// <param name="height">切り出し高さ</param>
-    /// <param name="scaleX">X 軸拡大率</param>
-    /// <param name="scaleY">Y 軸拡大率</param>
+    /// <param name="center">描画中心座標 (<see cref="Vec2i" />)</param>
+    /// <param name="srcPos">切り出し開始座標 (<see cref="Vec2i" />)</param>
+    /// <param name="srcSize">切り出しサイズ (<see cref="Vec2i" />)</param>
+    /// <param name="scale">拡大率 (<see cref="Vec2f" />)</param>
     /// <param name="angle">回転角度 (ラジアン)</param>
     /// <param name="handle">画像ハンドル</param>
     /// <param name="trans">透過描画を有効にするかどうか</param>
     /// <param name="turnX">左右反転描画を行うかどうか</param>
     public static void DrawRectRotaGraph(
-        int x,
-        int y,
-        int srcX,
-        int srcY,
-        int width,
-        int height,
-        double scaleX,
-        double scaleY,
+        Vec2i center,
+        Vec2i srcPos,
+        Vec2i srcSize,
+        Vec2f scale,
         double angle,
         int handle,
         bool trans,
         bool turnX)
     {
         _commandBuffer.PushDrawRectRotaGraph(
-            x + CameraOffsetX, y + CameraOffsetY,
-            srcX, srcY,
-            width, height,
-            (float)scaleX, (float)scaleY, (float)angle,
+            center + CameraOffset,
+            srcPos,
+            srcSize,
+            scale,
+            (float)angle,
             handle,
             trans,
             turnX);
@@ -488,39 +334,16 @@ public static class GameEngine {
     ///     スプライトシートから指定矩形を切り出し、回転・等比拡縮・左右反転を行って描画します。
     /// </summary>
     public static void DrawRectRotaGraph(
-        int x,
-        int y,
-        int srcX,
-        int srcY,
-        int width,
-        int height,
+        Vec2i center,
+        Vec2i srcPos,
+        Vec2i srcSize,
         double scale,
         double angle,
         int handle,
         bool trans,
         bool turnX)
     {
-        DrawRectRotaGraph(x, y, srcX, srcY, width, height, scale, scale, angle, handle, trans, turnX);
-    }
-
-    /// <summary>
-    ///     スプライトシートから指定矩形を切り出し、回転・独立 X/Y 軸拡縮・左右反転を行って描画します (DxLib DrawRectRotaGraph3 相当)。
-    /// </summary>
-    public static void DrawRectRotaGraph3(
-        int x,
-        int y,
-        int srcX,
-        int srcY,
-        int width,
-        int height,
-        double scaleX,
-        double scaleY,
-        double angle,
-        int handle,
-        bool trans,
-        bool turnX = false)
-    {
-        DrawRectRotaGraph(x, y, srcX, srcY, width, height, scaleX, scaleY, angle, handle, trans, turnX);
+        DrawRectRotaGraph(center, srcPos, srcSize, new Vec2f((float)scale, (float)scale), angle, handle, trans, turnX);
     }
 
     /// <summary>
@@ -530,39 +353,13 @@ public static class GameEngine {
         Vec2i center,
         Vec2i srcPos,
         Vec2i srcSize,
-        double scaleX,
-        double scaleY,
+        Vec2f scale,
         double angle,
         int handle,
         bool trans,
         bool turnX = false)
     {
-        DrawRectRotaGraph(center, srcPos, srcSize, scaleX, scaleY, angle, handle, trans, turnX);
-    }
-
-    /// <summary>
-    ///     画像ハンドルを中心に独立 X/Y 軸拡縮・回転して描画します (DxLib DrawRotaGraph3 相当)。
-    /// </summary>
-    /// <param name="x">描画中心 X 座標</param>
-    /// <param name="y">描画中心 Y 座標</param>
-    /// <param name="scaleX">X 軸拡大率</param>
-    /// <param name="scaleY">Y 軸拡大率</param>
-    /// <param name="angle">回転角度 (ラジアン)</param>
-    /// <param name="handle">画像ハンドル</param>
-    /// <param name="trans">透過描画を有効にするかどうか</param>
-    /// <param name="turnX">左右反転描画を行うかどうか</param>
-    public static void DrawRotaGraph3(
-        int x,
-        int y,
-        double scaleX,
-        double scaleY,
-        double angle,
-        int handle,
-        bool trans,
-        bool turnX = false)
-    {
-        GetGraphSize(handle, out var w, out var h);
-        DrawRectRotaGraph(x, y, 0, 0, w, h, scaleX, scaleY, angle, handle, trans, turnX);
+        DrawRectRotaGraph(center, srcPos, srcSize, scale, angle, handle, trans, turnX);
     }
 
     /// <summary>
@@ -570,14 +367,14 @@ public static class GameEngine {
     /// </summary>
     public static void DrawRotaGraph3(
         Vec2i center,
-        double scaleX,
-        double scaleY,
+        Vec2f scale,
         double angle,
         int handle,
         bool trans,
         bool turnX = false)
     {
-        DrawRotaGraph3(center.X, center.Y, scaleX, scaleY, angle, handle, trans, turnX);
+        var size = GetGraphSize(handle);
+        DrawRectRotaGraph(center, Vec2i.Zero, size, scale, angle, handle, trans, turnX);
     }
 
     /// <summary>

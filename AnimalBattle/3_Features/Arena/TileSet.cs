@@ -121,12 +121,11 @@ public sealed class TileSet(
     ///     指定された中心座標に単一タイルを描画します。
     /// </summary>
     /// <param name="tileId">1-based タイル ID</param>
-    /// <param name="centerX">描画中心 X 座標</param>
-    /// <param name="centerY">描画中心 Y 座標</param>
+    /// <param name="center">描画中心座標 (Vec2i)</param>
     /// <param name="scale">拡大縮小率</param>
     /// <param name="angle">回転角度（ラジアン）</param>
     /// <param name="flipX">左右反転フラグ</param>
-    public void DrawTile(int tileId, int centerX, int centerY, double scale, double angle, bool flipX)
+    public void DrawTile(int tileId, Vec2i center, double scale, double angle, bool flipX)
     {
         if (tileId <= 0) return;
         Debug.Assert(GraphHandle >= 0, "[TileSet 警告] タイルセットのグラフィックハンドルが無効です。");
@@ -136,12 +135,9 @@ public sealed class TileSet(
         if (src.Width <= 0 || src.Height <= 0) return;
 
         GameEngine.DrawRectRotaGraph(
-            centerX,
-            centerY,
-            src.X1,
-            src.Y1,
-            src.Width,
-            src.Height,
+            center,
+            new Vec2i(src.X1, src.Y1),
+            new Vec2i(src.Width, src.Height),
             scale,
             angle,
             GraphHandle,

@@ -4,6 +4,7 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
+using AnimalBattle.Effects;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -79,20 +80,18 @@ public static class PlayerDamageResolutionSystem
                     {
                         entity.Set(new HitstopState(hitstopDuration));
                         var jitterAmp = isHeavy ? pCfg.HitJitterHeavyAmplitude : pCfg.HitJitterLightAmplitude;
-                        entity.Set(new SpriteJitter(jitterAmp, 0.0f, pCfg.HitJitterFrequency));
+                        entity.Set(new SpriteJitter(new Vec2f(jitterAmp, 0.0f), pCfg.HitJitterFrequency));
                     }
 
                     // スプリング被弾スカッシュ変形の直接適用
-                    spring.CurrentX = pCfg.HitSquashScaleX;
-                    spring.CurrentY = pCfg.HitSquashScaleY;
-                    spring.VelX = 0.0f;
-                    spring.VelY = 0.0f;
+                    spring.Current = pCfg.HitSquashScale;
+                    spring.Velocity = Vec2f.Zero;
 
                     // ノックバック物理インパルスの直接適用
-                    vel.Vx = dmg.KnockbackX;
-                    if (dmg.KnockbackY < 0.0f)
+                    vel.Value = new Vec2f(dmg.Knockback.X, vel.Value.Y);
+                    if (dmg.Knockback.Y < 0.0f)
                     {
-                        vel.Vy = dmg.KnockbackY;
+                        vel.Value = new Vec2f(vel.Value.X, dmg.Knockback.Y);
                         col.IsGrounded = false;
                     }
 
@@ -107,7 +106,7 @@ public static class PlayerDamageResolutionSystem
                             entity.Get<PlayerMeleeWeapon>().Entity.Disable();
                         }
 
-                        EffectSpawner.SpawnPlayerDeathParticles(world, trans.X, trans.Y);
+                        EffectSpawner.SpawnPlayerDeathParticles(world, trans.Position);
                         CameraService.AddTrauma(cameraCfg.PlayerHeavyHitTrauma);
                         EventBus.Publish(new PlayerDiedEvent());
                     }
@@ -115,7 +114,7 @@ public static class PlayerDamageResolutionSystem
                     {
                         var trauma = isHeavy ? cameraCfg.PlayerHeavyHitTrauma : cameraCfg.PlayerHitTrauma;
                         CameraService.AddTrauma(trauma);
-                        CameraService.AddDirectionalImpulse(dmg.KnockbackX, dmg.KnockbackY, cameraCfg.DirectionalImpulseRatio);
+                        CameraService.AddDirectionalImpulse(dmg.Knockback, cameraCfg.DirectionalImpulseRatio);
                         EventBus.Publish(new PlayerDamagedEvent(dmg.Amount, hp.Current, isHeavy));
                     }
 

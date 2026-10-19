@@ -31,32 +31,38 @@ public static class SpringScaleSystem
                 {
                     ref var spring = ref springs[i];
 
+                    var curX = spring.Current.X;
+                    var velX = spring.Velocity.X;
                     UpdateDampedSpring(
-                        ref spring.CurrentX,
-                        ref spring.VelX,
-                        spring.TargetX,
+                        ref curX,
+                        ref velX,
+                        spring.Target.X,
                         spring.Frequency,
                         spring.DampingRatio,
                         safeDt);
 
+                    var curY = spring.Current.Y;
+                    var velY = spring.Velocity.Y;
                     UpdateDampedSpring(
-                        ref spring.CurrentY,
-                        ref spring.VelY,
-                        spring.TargetY,
+                        ref curY,
+                        ref velY,
+                        spring.Target.Y,
                         spring.Frequency,
                         spring.DampingRatio,
                         safeDt);
+
+                    spring.Current = new Vec2f(curX, curY);
+                    spring.Velocity = new Vec2f(velX, velY);
 
                     ref var sprite = ref sprites[i];
                     ref var trans = ref transforms[i];
 
-                    sprite.ScaleX = spring.CurrentX;
-                    sprite.ScaleY = spring.CurrentY;
+                    sprite.Scale = spring.Current;
 
                     if (sprite.SrcRect.Height > 0)
                     {
-                        var halfH = sprite.SrcRect.Height * trans.ScaleY * 0.5f;
-                        sprite.SpringOffsetY = halfH * (1.0f - spring.CurrentY);
+                        var halfH = sprite.SrcRect.Height * trans.Scale.Y * 0.5f;
+                        sprite.SpringOffsetY = halfH * (1.0f - spring.Current.Y);
                     }
                 }
             });

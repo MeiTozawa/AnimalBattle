@@ -1,3 +1,5 @@
+using AnimalBattle.Core;
+
 namespace AnimalBattle.Components;
 
 /// <summary>
@@ -8,20 +10,16 @@ namespace AnimalBattle.Components;
 /// </remarks>
 /// <param name="type">特殊種別。</param>
 /// <param name="baseRadius">基準半径。</param>
-/// <param name="baseVx">基準 X 速度。</param>
-/// <param name="baseVy">基準 Y 速度。</param>
-public struct BulletModifier(BulletType type, float baseRadius, float baseVx, float baseVy) {
+/// <param name="baseVel">基準速度ベクトル (Vec2f)。</param>
+public struct BulletModifier(BulletType type, float baseRadius, Vec2f baseVel) {
     /// <summary>弾幕の特殊種別。</summary>
     public BulletType Type = type;
 
     /// <summary>基準となる初期半径（ピクセル）。</summary>
     public float BaseRadius = baseRadius;
 
-    /// <summary>初期直進 X 速度。</summary>
-    public float BaseVx = baseVx;
-
-    /// <summary>初期直進 Y 速度。</summary>
-    public float BaseVy = baseVy;
+    /// <summary>初期直進速度ベクトル (Vec2f)。</summary>
+    public Vec2f BaseVel = baseVel;
 
     /// <summary>生成からの累積生存時間タイマー（秒）。</summary>
     public float ElapsedTimer = 0.0f;

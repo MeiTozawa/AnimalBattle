@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices;
+using AnimalBattle.Core;
+using AnimalBattle.Core.Geometry;
 
 namespace AnimalBattle.Components;
 
@@ -9,18 +11,12 @@ namespace AnimalBattle.Components;
 ///     指定されたサイズとオフセットで <see cref="CollisionBox" /> の新しいインスタンスを初期化します。
 /// </remarks>
 [StructLayout(LayoutKind.Sequential)]
-public struct CollisionBox(float width, float height, float offsetX = 0.0f, float offsetY = 0.0f) {
-    /// <summary>バウンディングボックス幅</summary>
-    public float Width = width;
+public struct CollisionBox(Vec2f size, Vec2f offset = default) {
+    /// <summary>バウンディングボックスサイズ (Vec2f)</summary>
+    public Vec2f Size = size;
 
-    /// <summary>バウンディングボックス高さ</summary>
-    public float Height = height;
-
-    /// <summary>X 軸オフセット</summary>
-    public float OffsetX = offsetX;
-
-    /// <summary>Y 軸オフセット</summary>
-    public float OffsetY = offsetY;
+    /// <summary>局所オフセット (Vec2f)</summary>
+    public Vec2f Offset = offset;
 
     /// <summary>接地フラグ</summary>
     public bool IsGrounded = false;
@@ -30,13 +26,7 @@ public struct CollisionBox(float width, float height, float offsetX = 0.0f, floa
     /// </summary>
     public readonly CollisionShape ToCollisionShape()
     {
-        return new CollisionShape {
-            Type = CollisionShapeType.Box,
-            Width = Width,
-            Height = Height,
-            OffsetX = OffsetX,
-            OffsetY = OffsetY
-        };
+        return new CollisionShape.Box(Size, Offset);
     }
 
     /// <summary>

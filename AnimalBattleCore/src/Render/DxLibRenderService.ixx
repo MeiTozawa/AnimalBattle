@@ -19,24 +19,23 @@ namespace ab {
     /// @brief DxLib を使用してダイレクトバッチ描画・カメラ変換を提供する具象レンダリングサービス
     export class DxLibRenderService : public IRenderService {
     private:
-        int viewport_width_ = 0;
-        int viewport_height_ = 0;
+        Vec2i viewport_size_{0, 0};
         bool camera_enabled_ = false;
-        float camera_x_ = 640.0f;
-        float camera_y_ = 360.0f;
+        Vec2f camera_pos_{640.0f, 360.0f};
         float camera_scale_ = 1.0f;
 
         [[nodiscard]] Vec2i ApplyCamera(Vec2i pos) const noexcept {
             if (!camera_enabled_) return pos;
             return Vec2i{
-                static_cast<int>((pos.x - camera_x_) * camera_scale_ + viewport_width_ / 2.0f),
-                static_cast<int>((pos.y - camera_y_) * camera_scale_ + viewport_height_ / 2.0f)
+                static_cast<int>((pos.x - camera_pos_.x) * camera_scale_ + viewport_size_.x / 2.0f),
+                static_cast<int>((pos.y - camera_pos_.y) * camera_scale_ + viewport_size_.y / 2.0f)
             };
         }
 
     public:
         DxLibRenderService() = default;
-        DxLibRenderService(int width, int height) : viewport_width_(width), viewport_height_(height) {}
+        DxLibRenderService(int width, int height) : viewport_size_{width, height} {}
+        DxLibRenderService(Vec2i viewport_size) : viewport_size_{viewport_size} {}
 
         // --- 画面・フレーム制御 ---
         bool ClearScreen() override { return ::ClearDrawScreen() == 0; }
@@ -50,22 +49,21 @@ namespace ab {
 
             if (camera_enabled_) {
                 const float scale = camera_scale_;
-                const float half_w = viewport_width_ / 2.0f;
-                const float half_h = viewport_height_ / 2.0f;
-                const float cx = camera_x_;
-                const float cy = camera_y_;
+                const float half_w = viewport_size_.x / 2.0f;
+                const float half_h = viewport_size_.y / 2.0f;
+                const Vec2f cpos = camera_pos_;
 
                 for (int i = 0; i < count; ++i) {
                     const auto& c = circles[i];
-                    int px = static_cast<int>((c.center_x - cx) * scale + half_w);
-                    int py = static_cast<int>((c.center_y - cy) * scale + half_h);
+                    int px = static_cast<int>((c.center.x - cpos.x) * scale + half_w);
+                    int py = static_cast<int>((c.center.y - cpos.y) * scale + half_h);
                     int r = static_cast<int>(c.radius * scale);
                     ::DrawCircle(px, py, r, c.color, c.fill != 0 ? TRUE : FALSE);
                 }
             } else {
                 for (int i = 0; i < count; ++i) {
                     const auto& c = circles[i];
-                    ::DrawCircle(c.center_x, c.center_y, c.radius, c.color, c.fill != 0 ? TRUE : FALSE);
+                    ::DrawCircle(c.center.x, c.center.y, c.radius, c.color, c.fill != 0 ? TRUE : FALSE);
                 }
             }
         }
@@ -90,42 +88,40 @@ namespace ab {
                     }
                     break;
                 case RenderPacketType::DrawBox:
-                    DrawBox(Rect<int>{Vec2i{p.box.x1, p.box.y1}, Vec2i{p.box.x2, p.box.y2}},
+                    DrawBox(Rect<int>{p.box.p1, p.box.p2},
                             p.box.color,
                             p.box.fill != 0);
                     break;
                 case RenderPacketType::DrawCircle:
-                    DrawCircle(Vec2i{p.circle.center_x, p.circle.center_y},
+                    DrawCircle(p.circle.center,
                                p.circle.radius,
                                p.circle.color,
                                p.circle.fill != 0);
                     break;
                 case RenderPacketType::DrawLine:
-                    DrawLine(Vec2i{p.line.x1, p.line.y1},
-                             Vec2i{p.line.x2, p.line.y2},
+                    DrawLine(p.line.p1,
+                             p.line.p2,
                              p.line.color,
                              p.line.thickness);
                     break;
                 case RenderPacketType::DrawGraph:
-                    DrawGraph(Vec2i{p.graph.x, p.graph.y},
+                    DrawGraph(p.graph.pos,
                               p.graph.handle,
                               p.graph.trans != 0);
                     break;
                 case RenderPacketType::DrawRotaGraph:
-                    DrawRotaGraph(Vec2i{p.rota_graph.center_x, p.rota_graph.center_y},
+                    DrawRotaGraph(p.rota_graph.center,
                                   static_cast<double>(p.rota_graph.scale),
                                   static_cast<double>(p.rota_graph.angle),
                                   p.rota_graph.handle,
                                   p.rota_graph.trans != 0);
                     break;
                 case RenderPacketType::DrawRectRotaGraph:
-                    DrawRectRotaGraph(Vec2i{p.rect_rota_graph.center_x, p.rect_rota_graph.center_y},
+                    DrawRectRotaGraph(p.rect_rota_graph.center,
                                       Rect<int>{
-                                          Vec2i{p.rect_rota_graph.src_x, p.rect_rota_graph.src_y},
-                                          Vec2i{p.rect_rota_graph.src_x + p.rect_rota_graph.src_w,
-                                                p.rect_rota_graph.src_y + p.rect_rota_graph.src_h}},
-                                      static_cast<double>(p.rect_rota_graph.scale_x),
-                                      static_cast<double>(p.rect_rota_graph.scale_y),
+                                          p.rect_rota_graph.src_pos,
+                                          p.rect_rota_graph.src_pos + p.rect_rota_graph.src_size},
+                                      p.rect_rota_graph.scale,
                                       static_cast<double>(p.rect_rota_graph.angle),
                                       p.rect_rota_graph.handle,
                                       p.rect_rota_graph.trans != 0,
@@ -135,7 +131,7 @@ namespace ab {
                     if (text_buffer != nullptr && p.string_data.text_offset >= 0 &&
                         p.string_data.text_offset < text_length) {
                         const wchar_t* str = text_buffer + p.string_data.text_offset;
-                        DrawString(Vec2i{p.string_data.x, p.string_data.y},
+                        DrawString(p.string_data.pos,
                                    str,
                                    p.string_data.color);
                     }
@@ -215,10 +211,10 @@ namespace ab {
             ::DrawRotaGraph(p.x, p.y, scale, angle, graph_handle, trans_flag ? TRUE : FALSE);
         }
         using IRenderService::DrawRectRotaGraph;
-        void DrawRectRotaGraph(Vec2i center, Rect<int> src, double ext_rate_x, double ext_rate_y, double angle, int graph_handle, bool trans_flag, bool turn_flag) override {
+        void DrawRectRotaGraph(Vec2i center, Rect<int> src, Vec2f scale, double angle, int graph_handle, bool trans_flag, bool turn_flag) override {
             Vec2i p = ApplyCamera(center);
-            double scale_x = camera_enabled_ ? (ext_rate_x * camera_scale_) : ext_rate_x;
-            double scale_y = camera_enabled_ ? (ext_rate_y * camera_scale_) : ext_rate_y;
+            double scale_x = camera_enabled_ ? (scale.x * camera_scale_) : scale.x;
+            double scale_y = camera_enabled_ ? (scale.y * camera_scale_) : scale.y;
             int src_w = src.Width();
             int src_h = src.Height();
             ::DrawRectRotaGraph3(p.x, p.y, src.p1.x, src.p1.y, src_w, src_h,
@@ -229,7 +225,7 @@ namespace ab {
 
         // --- カメラ・状態設定 ---
         void SetCameraEnabled(bool enabled) override { camera_enabled_ = enabled; }
-        void SetCameraState(float x, float y, float scale) override { camera_x_ = x; camera_y_ = y; camera_scale_ = scale; }
+        void SetCameraState(Vec2f pos, float scale) override { camera_pos_ = pos; camera_scale_ = scale; }
         void SetDrawBlendMode(BlendMode mode, int pal) override {
             int dx_mode;
             switch (mode) {

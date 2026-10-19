@@ -39,15 +39,11 @@ public static class VfxRenderSystem {
                     ref var t = ref trans[i];
                     GameEngine.SetDrawBright(sprite.Color.R, sprite.Color.G, sprite.Color.B);
                     GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
-                    GameEngine.DrawRectRotaGraph3(
-                        (int)t.X,
-                        (int)t.Y,
-                        sprite.SrcRect.Left,
-                        sprite.SrcRect.Top,
-                        sprite.SrcRect.Width,
-                        sprite.SrcRect.Height,
-                        t.ScaleX,
-                        t.ScaleY,
+                    GameEngine.DrawRectRotaGraph(
+                        (Vec2i)t.Position,
+                        new Vec2i(sprite.SrcRect.Left, sprite.SrcRect.Top),
+                        new Vec2i(sprite.SrcRect.Width, sprite.SrcRect.Height),
+                        t.Scale,
                         t.Rotation,
                         sprite.GraphHandle,
                         true,
@@ -80,7 +76,7 @@ public static class VfxRenderSystem {
                     ref var t = ref trans[i];
 
                     GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
-                    GameEngine.DrawCircle((int)t.X, (int)t.Y, (int)currentRadius, ring.Color, ring.IsFilled);
+                    GameEngine.DrawCircle((Vec2i)t.Position, (int)currentRadius, ring.Color, ring.IsFilled);
                     GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
                 }
             });
@@ -106,13 +102,12 @@ public static class VfxRenderSystem {
 
                     ref var b = ref bullets[i];
                     ref var t = ref trans[i];
-                    var px = (int)t.X;
-                    var py = (int)t.Y;
+                    var p = (Vec2i)t.Position;
                     var radius = (int)b.Radius;
 
                     GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
-                    GameEngine.DrawCircle(px, py, radius + bulletCfg.ParticleOutlinePadding, b.OutlineColor, true);
-                    GameEngine.DrawCircle(px, py, radius, b.FillColor, true);
+                    GameEngine.DrawCircle(p, radius + bulletCfg.ParticleOutlinePadding, b.OutlineColor, true);
+                    GameEngine.DrawCircle(p, radius, b.FillColor, true);
                     GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
                 }
             });

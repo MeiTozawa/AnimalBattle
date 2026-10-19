@@ -1,3 +1,5 @@
+using AnimalBattle.Core;
+
 namespace AnimalBattle.Components;
 
 /// <summary>
@@ -6,31 +8,23 @@ namespace AnimalBattle.Components;
 /// </summary>
 public struct SpriteJitter
 {
-    /// <summary>水平振動振幅（px）。</summary>
-    public float AmplitudeX;
+    /// <summary>振動振幅 (Vec2f)</summary>
+    public Vec2f Amplitude;
 
-    /// <summary>垂直振動振幅（px）。</summary>
-    public float AmplitudeY;
-
-    /// <summary>振動周波数（Hz）。</summary>
+    /// <summary>振動周波数（Hz）</summary>
     public float Frequency;
 
-    /// <summary>振動タイマー累積値（秒）。</summary>
+    /// <summary>振動タイマー累積値（秒）</summary>
     public float Timer;
 
-    /// <summary>現在の描画オフセット X（px）。</summary>
-    public float CurrentOffsetX;
+    /// <summary>現在の描画オフセット (Vec2f)</summary>
+    public Vec2f CurrentOffset;
 
-    /// <summary>現在の描画オフセット Y（px）。</summary>
-    public float CurrentOffsetY;
-
-    public SpriteJitter(float amplitudeX, float amplitudeY, float frequency)
+    public SpriteJitter(Vec2f amplitude, float frequency)
     {
-        AmplitudeX = amplitudeX;
-        AmplitudeY = amplitudeY;
+        Amplitude = amplitude;
         Frequency = frequency;
         Timer = 0.0f;
-        CurrentOffsetX = 0.0f;
-        CurrentOffsetY = 0.0f;
+        CurrentOffset = Vec2f.Zero;
     }
 }

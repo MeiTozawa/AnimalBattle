@@ -20,12 +20,9 @@ public static class MeleeSpawner
     /// </summary>
     public static void SpawnMeleeSlashHitbox(
         World world,
-        float x,
-        float y,
-        float vx,
-        float vy,
-        float width,
-        float height,
+        Vec2f pos,
+        Vec2f vel,
+        Vec2f size,
         float damage,
         float lifetime,
         Color color,
@@ -40,24 +37,21 @@ public static class MeleeSpawner
         var rowIndex = (int)direction;
         var cellSize = slashCfg.SpriteCellSize;
         var srcRect = Rect.FromWidthHeight(colIndex * cellSize, rowIndex * cellSize, cellSize, cellSize);
-        var scale = MathF.Max(width, height) / slashCfg.BossBaseReferenceSize;
+        var scale = MathF.Max(size.X, size.Y) / slashCfg.BossBaseReferenceSize;
 
-        // セル内の斬撃ピクセル重心偏りを逆補正して視覚中心を (x, y) に一致させる
-        var offsetX = direction switch {
-            SlashDirection.Right => slashCfg.CenterBiasOffset * scale,
-            SlashDirection.Left => -slashCfg.CenterBiasOffset * scale,
-            _ => 0.0f
-        };
-        var offsetY = direction switch {
-            SlashDirection.Down => slashCfg.CenterBiasOffset * scale,
-            SlashDirection.Up => -slashCfg.CenterBiasOffset * scale,
-            _ => 0.0f
+        // セル内の斬撃ピクセル重心偏りを逆補正して視覚中心を pos に一致させる
+        var offset = direction switch {
+            SlashDirection.Right => new Vec2f(slashCfg.CenterBiasOffset * scale, 0.0f),
+            SlashDirection.Left => new Vec2f(-slashCfg.CenterBiasOffset * scale, 0.0f),
+            SlashDirection.Down => new Vec2f(0.0f, slashCfg.CenterBiasOffset * scale),
+            SlashDirection.Up => new Vec2f(0.0f, -slashCfg.CenterBiasOffset * scale),
+            _ => Vec2f.Zero
         };
 
         CombatPoolService.RentAreaEffect()
-           .Set(new Transform(x + offsetX, y + offsetY, scale, scale))
-           .Set(new Velocity(vx, vy))
-           .Set(new Hitbox(new CollisionShape.Box(width, height, -offsetX, -offsetY), damage, Faction.Hostile, false))
+           .Set(new Transform(pos + offset, new Vec2f(scale, scale)))
+           .Set(new Velocity(vel))
+           .Set(new Hitbox(new CollisionShape.Box(size, -offset), damage, Faction.Hostile, false))
            .Set(new Sprite(slashHandle, false, true, srcRect, color))
            .Set(new FadeEffect(lifetime));
     }
@@ -68,10 +62,8 @@ public static class MeleeSpawner
     /// </summary>
     public static void ActivatePlayerMeleeAttack(
         Entity meleeEntity,
-        float x,
-        float y,
-        float width,
-        float height,
+        Vec2f pos,
+        Vec2f size,
         float damage,
         SlashDirection direction)
     {
@@ -84,23 +76,20 @@ public static class MeleeSpawner
         var rowIndex = (int)direction;
         var cellSize = slashCfg.SpriteCellSize;
         var srcRect = Rect.FromWidthHeight(colIndex * cellSize, rowIndex * cellSize, cellSize, cellSize);
-        var scale = MathF.Max(width, height) / slashCfg.PlayerBaseReferenceSize;
+        var scale = MathF.Max(size.X, size.Y) / slashCfg.PlayerBaseReferenceSize;
 
-        var offsetX = direction switch {
-            SlashDirection.Right => slashCfg.CenterBiasOffset * scale,
-            SlashDirection.Left => -slashCfg.CenterBiasOffset * scale,
-            _ => 0.0f
-        };
-        var offsetY = direction switch {
-            SlashDirection.Down => slashCfg.CenterBiasOffset * scale,
-            SlashDirection.Up => -slashCfg.CenterBiasOffset * scale,
-            _ => 0.0f
+        var offset = direction switch {
+            SlashDirection.Right => new Vec2f(slashCfg.CenterBiasOffset * scale, 0.0f),
+            SlashDirection.Left => new Vec2f(-slashCfg.CenterBiasOffset * scale, 0.0f),
+            SlashDirection.Down => new Vec2f(0.0f, slashCfg.CenterBiasOffset * scale),
+            SlashDirection.Up => new Vec2f(0.0f, -slashCfg.CenterBiasOffset * scale),
+            _ => Vec2f.Zero
         };
 
         meleeEntity
-           .Set(new Transform(x + offsetX, y + offsetY, scale, scale))
-           .Set(new Velocity(0.0f, 0.0f))
-           .Set(new Hitbox(new CollisionShape.Box(width, height, -offsetX, -offsetY), damage, Faction.Friendly, false))
+           .Set(new Transform(pos + offset, new Vec2f(scale, scale)))
+           .Set(new Velocity(Vec2f.Zero))
+           .Set(new Hitbox(new CollisionShape.Box(size, -offset), damage, Faction.Friendly, false))
            .Set(new HitHistory())
            .Set(new Sprite(slashHandle, false, true, srcRect, slashCfg.PlayerSlashColor))
            .Enable();

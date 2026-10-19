@@ -1,9 +1,11 @@
 using System;
 using AnimalBattle.Abilities;
+using AnimalBattle.Combat;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
+using AnimalBattle.Effects;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -75,15 +77,15 @@ public static class BossDamageResolutionSystem
                         {
                             entity.Set(new HitstopState(hitstopDuration));
                             var jitterAmp = isHeavy ? pCfg.HitJitterHeavyAmplitude : pCfg.HitJitterLightAmplitude;
-                            entity.Set(new SpriteJitter(jitterAmp, 0.0f, pCfg.HitJitterFrequency));
+                            entity.Set(new SpriteJitter(new Vec2f(jitterAmp, 0.0f), pCfg.HitJitterFrequency));
                         }
                     }
 
                     if (isVulnerable)
                     {
                         // 易傷特効クリティカル火花
-                        EffectSpawner.SpawnHitSparkEffect(world, trans.X - 8.0f, trans.Y - 8.0f);
-                        EffectSpawner.SpawnHitSparkEffect(world, trans.X + 8.0f, trans.Y + 8.0f);
+                        EffectSpawner.SpawnHitSparkEffect(world, trans.Position - new Vec2f(8.0f, 8.0f));
+                        EffectSpawner.SpawnHitSparkEffect(world, trans.Position + new Vec2f(8.0f, 8.0f));
                     }
 
                     // 死亡または生存時反撃・カメラ衝撃判定
@@ -93,7 +95,7 @@ public static class BossDamageResolutionSystem
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
                         BulletSpawner.ClearAllBossBullets(world);
-                        EffectSpawner.SpawnVictoryExplosions(world, trans.X, trans.Y);
+                        EffectSpawner.SpawnVictoryExplosions(world, trans.Position);
                         CameraService.AddTrauma(cameraCfg.VictoryExplosionTrauma);
                         EventBus.Publish(new BossDiedEvent());
                     }
@@ -107,7 +109,7 @@ public static class BossDamageResolutionSystem
                         EventBus.Publish(new BossDamagedEvent(finalDamage, hp.Current, isVulnerable));
 
                         // Boss 被弾反撃：現在の Phase に応じた数量の黑色弾幕を発射
-                        BulletSpawner.SpawnBossCounterAttack(world, trans.X, trans.Y, combat.Phase);
+                        BulletSpawner.SpawnBossCounterAttack(world, trans.Position, combat.Phase);
                     }
 
                     entity.Remove<IncomingDamage>();

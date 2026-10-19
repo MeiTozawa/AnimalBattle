@@ -1,6 +1,10 @@
+using System;
 using AnimalBattle.Abilities;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
+using AnimalBattle.Core.Geometry;
+using AnimalBattle.Effects;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -41,14 +45,10 @@ public static class CombatCollisionSystem {
                     var atkEntity = it.Entity(i);
                     var shouldDestroyAttacker = false;
 
-                    var aCenterX = trans.X + hitbox.Shape.OffsetX;
-                    var aCenterY = trans.Y + hitbox.Shape.OffsetY;
-                    var aHalfW = hitbox.Shape.Type == CollisionShapeType.Box
-                        ? hitbox.Shape.Width * 0.5f
-                        : hitbox.Shape.Radius;
-                    var aHalfH = hitbox.Shape.Type == CollisionShapeType.Box
-                        ? hitbox.Shape.Height * 0.5f
-                        : hitbox.Shape.Radius;
+                    var aCenter = trans.Position + hitbox.Shape.Offset;
+                    var aHalf = hitbox.Shape.Type == CollisionShapeType.Box
+                        ? hitbox.Shape.Size * 0.5f
+                        : new Vec2f(hitbox.Shape.Radius, hitbox.Shape.Radius);
 
                     for (var tIdx = 0; tIdx < context.TargetCount; tIdx++)
                     {
@@ -57,8 +57,9 @@ public static class CombatCollisionSystem {
                         if (hitbox.Faction == target.Faction) continue;
 
                         // AABB Broadphase 枝刈り（空間粗判定による早期リターン）
-                        if (MathF.Abs(aCenterX - target.CenterX) > aHalfW + target.HalfW ||
-                            MathF.Abs(aCenterY - target.CenterY) > aHalfH + target.HalfH)
+                        var diff = aCenter - target.Center;
+                        if (MathF.Abs(diff.X) > aHalf.X + target.HalfExtents.X ||
+                            MathF.Abs(diff.Y) > aHalf.Y + target.HalfExtents.Y)
                             continue;
 
                         var vicEntity = target.Entity;
@@ -93,21 +94,19 @@ public static class CombatCollisionSystem {
         in Hitbox localHitbox,
         ref bool shouldDestroyAttacker)
     {
-        var knockbackDir = vicTrans.X >= atkTrans.X ? 1.0f : -1.0f;
+        var knockbackDir = vicTrans.Position.X >= atkTrans.Position.X ? 1.0f : -1.0f;
         var isHeavy = localHitbox.Damage >= 2.0f;
         vicEntity.Set(new IncomingDamage {
             Amount = localHitbox.Damage,
             SourceFaction = localHitbox.Faction,
-            KnockbackX = knockbackDir * 180.0f,
-            KnockbackY = -90.0f,
+            Knockback = new Vec2f(knockbackDir * 180.0f, -90.0f),
             IsHeavyImpact = isHeavy
         });
-        EffectSpawner.SpawnHitSparkEffect(world, vicTrans.X + hurtbox.Shape.OffsetX,
-            vicTrans.Y + hurtbox.Shape.OffsetY);
+        EffectSpawner.SpawnHitSparkEffect(world, vicTrans.Position + hurtbox.Shape.Offset);
 
         if (localHitbox.Faction == Faction.Friendly)
         {
-            EffectSpawner.SpawnBulletImpactSplatter(world, atkTrans.X, atkTrans.Y, knockbackDir, 0.0f);
+            EffectSpawner.SpawnBulletImpactSplatter(world, atkTrans.Position, new Vec2f(knockbackDir, 0.0f));
         }
 
         if (localHitbox.DestroyOnHit) shouldDestroyAttacker = true;
@@ -115,10 +114,8 @@ public static class CombatCollisionSystem {
 
     internal struct HurtboxTarget {
         public Entity Entity;
-        public float CenterX;
-        public float CenterY;
-        public float HalfW;
-        public float HalfH;
+        public Vec2f Center;
+        public Vec2f HalfExtents;
         public Faction Faction;
         public CollisionShape Shape;
     }
@@ -160,17 +157,13 @@ public static class CombatCollisionSystem {
                 ref readonly var hb = ref hurtboxes[i];
                 ref readonly var t = ref trans[i];
 
-                var cX = t.X + hb.Shape.OffsetX;
-                var cY = t.Y + hb.Shape.OffsetY;
-                var halfW = hb.Shape.Type == CollisionShapeType.Box ? hb.Shape.Width * 0.5f : hb.Shape.Radius;
-                var halfH = hb.Shape.Type == CollisionShapeType.Box ? hb.Shape.Height * 0.5f : hb.Shape.Radius;
+                var c = t.Position + hb.Shape.Offset;
+                var half = hb.Shape.Type == CollisionShapeType.Box ? hb.Shape.Size * 0.5f : new Vec2f(hb.Shape.Radius, hb.Shape.Radius);
 
                 Targets[TargetCount++] = new HurtboxTarget {
                     Entity = vicEntity,
-                    CenterX = cX,
-                    CenterY = cY,
-                    HalfW = halfW,
-                    HalfH = halfH,
+                    Center = c,
+                    HalfExtents = half,
                     Faction = hb.Faction,
                     Shape = hb.Shape
                 };

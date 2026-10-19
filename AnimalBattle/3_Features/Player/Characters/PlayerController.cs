@@ -1,50 +1,46 @@
+using System;
 using AnimalBattle.Components;
 using AnimalBattle.Core;
+using Flecs.NET.Core;
 
 namespace AnimalBattle.Characters;
 
 /// <summary>
-///     自機プレイヤーコントローラー（入力解釈器）。
-///     ユーザーハードウェア入力を収集し、意図コンポーネント（CharacterMovementIntent / CharacterWeaponIntent）に変換して PlayerPawn へ注入します。
+///     プレイヤーのローカル入力（キーボード、マウス、ゲームパッド）を解読し、
+///     自機エンティティの意図コンポーネント（<see cref="MovementIntent" />, <see cref="WeaponIntent" />）へ注入する入力コントローラー。
+///     画面座標系からワールド座標系への照準逆算、およびキャラクター向きの決定を担当します。
 /// </summary>
 public sealed class PlayerController
 {
-    private PlayerPawn _pawn;
+    private readonly PlayerPawn _pawn;
 
     /// <summary>
-    ///     制御対象の自機躯体（PlayerPawn）を指定してコントローラーを初期化します。
+    ///     対象の受控プレイヤー躯体を指定してコントローラーを初期化します。
     /// </summary>
-    /// <param name="pawn">制御対象の PlayerPawn インスタンス。</param>
+    /// <param name="pawn">受控プレイヤー躯体。</param>
     public PlayerController(PlayerPawn pawn)
     {
-        System.Diagnostics.Debug.Assert(pawn != null, "PlayerPawn インスタンスは null であってはなりません。");
         _pawn = pawn;
     }
 
-    /// <summary>制御対象の PlayerPawn を取得または設定します。</summary>
-    public PlayerPawn Pawn
-    {
-        get => _pawn;
-        set
-        {
-            System.Diagnostics.Debug.Assert(value != null, "PlayerPawn インスタンスは null であってはなりません。");
-            _pawn = value;
-        }
-    }
-
     /// <summary>
-    ///     グローバル入力サービスからハードウェア入力をポーリングし、エンティティへ意図を反映します。
+    ///     フレームごとの入力をポーリングし、意図コンポーネントへ送信します。
     /// </summary>
     public void PollAndProcessInput()
     {
-        if (!_pawn.IsAlive) return;
-
-        var isLeft = InputService.IsHolding(InputAction.Left);
-        var isRight = InputService.IsHolding(InputAction.Right);
+        // 水平移動入力値（-1.0f: 左, 1.0f: 右, 0.0f: 静止）
         var moveX = 0.0f;
-        if (isLeft) moveX = -1.0f;
-        else if (isRight) moveX = 1.0f;
+        if (InputService.IsPressed(InputAction.Left) || InputService.IsHolding(InputAction.Left))
+        {
+            moveX -= 1.0f;
+        }
 
+        if (InputService.IsPressed(InputAction.Right) || InputService.IsHolding(InputAction.Right))
+        {
+            moveX += 1.0f;
+        }
+
+        // 跳躍・射撃・回避キーの状態取得
         var jumpPressed = InputService.IsPressed(InputAction.Jump);
         var jumpHolding = InputService.IsHolding(InputAction.Jump);
         var shootPressed = InputService.IsPressed(InputAction.Attack) || InputService.IsHolding(InputAction.Attack);
@@ -52,49 +48,35 @@ public sealed class PlayerController
 
         // マウス画面座標からカメラ逆オフセットでワールド座標を逆算
         var mouseScreen = InputService.GetMousePosition();
-        var mouseWorldX = mouseScreen.X - CameraService.RenderOffsetX;
-        var mouseWorldY = mouseScreen.Y - CameraService.RenderOffsetY;
+        var mouseWorld = mouseScreen.ToVec2f() - (Vec2f)CameraService.RenderOffset;
 
         var entity = _pawn.Entity;
         ref readonly var trans = ref entity.Get<Transform>();
         ref readonly var box = ref entity.Get<CollisionBox>();
 
         // プレイヤー中心（射撃起点）座標
-        var playerCenterX = trans.X;
-        var playerCenterY = trans.Y - box.Height * 0.5f;
+        var playerCenter = new Vec2f(trans.Position.X, trans.Position.Y - box.Size.Y * 0.5f);
 
-        var diffX = mouseWorldX - playerCenterX;
-        var diffY = mouseWorldY - playerCenterY;
-        var distSq = diffX * diffX + diffY * diffY;
+        var diff = mouseWorld - playerCenter;
+        var distSq = diff.LengthSquared();
 
         // キャラクター向き（FacingX）：マウスが自機中心より左右にあれば向き決定、微小差分時は前回の向きまたは移動入力を反映
         var currentFacing = entity.Get<MovementIntent>().FacingX;
         if (currentFacing == 0.0f) currentFacing = 1.0f;
 
         var facingX = currentFacing;
-        if (MathF.Abs(diffX) > 0.5f)
+        if (MathF.Abs(diff.X) > 0.5f)
         {
-            facingX = diffX < 0.0f ? -1.0f : 1.0f;
+            facingX = diff.X < 0.0f ? -1.0f : 1.0f;
         }
         else if (MathF.Abs(moveX) > 0.01f)
         {
             facingX = MathF.Sign(moveX);
         }
 
-        float dirX, dirY;
-        if (distSq > 0.0001f)
-        {
-            var invDist = 1.0f / MathF.Sqrt(distSq);
-            dirX = diffX * invDist;
-            dirY = diffY * invDist;
-        }
-        else
-        {
-            dirX = facingX;
-            dirY = 0.0f;
-        }
+        var aimDir = distSq > 0.0001f ? diff.Normalized() : new Vec2f(facingX, 0.0f);
 
-        SubmitInput(moveX, jumpPressed, jumpHolding, shootPressed, dashPressed, facingX, dirX, dirY);
+        SubmitInput(moveX, jumpPressed, jumpHolding, shootPressed, dashPressed, facingX, aimDir);
     }
 
     /// <summary>
@@ -106,17 +88,15 @@ public sealed class PlayerController
     /// <param name="shootPressed">射撃キー押下フラグ。</param>
     /// <param name="dashPressed">ダッシュ・回避キー押下フラグ。</param>
     /// <param name="facingX">キャラクター水平指向方向（-1.0f: 左, 1.0f: 右）。</param>
-    /// <param name="aimDirX">射撃水平瞄準ベクトル（省略時は facingX）。</param>
-    /// <param name="aimDirY">射撃垂直瞄準ベクトル（省略時は 0.0f）。</param>
-    private void SubmitInput(
+    /// <param name="aimDirection">射撃照準方向ベクトル（省略時は facingX 方向）。</param>
+    public void SubmitInput(
         float moveX,
         bool jumpPressed,
         bool jumpHolding,
         bool shootPressed,
         bool dashPressed,
         float facingX,
-        float? aimDirX = null,
-        float? aimDirY = null)
+        Vec2f? aimDirection = null)
     {
         var entity = _pawn.Entity;
         if (!entity.IsAlive()) return;
@@ -130,7 +110,6 @@ public sealed class PlayerController
 
         ref var weaponIntent = ref entity.GetMut<WeaponIntent>();
         weaponIntent.ShootTriggered = shootPressed;
-        weaponIntent.AimDirectionX = aimDirX ?? facingX;
-        weaponIntent.AimDirectionY = aimDirY ?? 0.0f;
+        weaponIntent.AimDirection = aimDirection ?? new Vec2f(facingX, 0.0f);
     }
 }

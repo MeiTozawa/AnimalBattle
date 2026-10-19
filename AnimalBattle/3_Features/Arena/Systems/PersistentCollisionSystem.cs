@@ -2,6 +2,8 @@ using System;
 using AnimalBattle.Abilities;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
+using AnimalBattle.Core.Geometry;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Systems;
@@ -43,14 +45,10 @@ public static class PersistentCollisionSystem
                     var atkEntity = it.Entity(i);
                     var shouldDestroyAttacker = false;
 
-                    var aCenterX = trans.X + hitbox.Shape.OffsetX;
-                    var aCenterY = trans.Y + hitbox.Shape.OffsetY;
-                    var aHalfW = hitbox.Shape.Type == CollisionShapeType.Box
-                        ? hitbox.Shape.Width * 0.5f
-                        : hitbox.Shape.Radius;
-                    var aHalfH = hitbox.Shape.Type == CollisionShapeType.Box
-                        ? hitbox.Shape.Height * 0.5f
-                        : hitbox.Shape.Radius;
+                    var aCenter = trans.Position + hitbox.Shape.Offset;
+                    var aHalf = hitbox.Shape.Type == CollisionShapeType.Box
+                        ? hitbox.Shape.Size * 0.5f
+                        : new Vec2f(hitbox.Shape.Radius, hitbox.Shape.Radius);
 
                     for (var tIdx = 0; tIdx < context.TargetCount; tIdx++)
                     {
@@ -63,8 +61,9 @@ public static class PersistentCollisionSystem
                         if (!hitbox.DestroyOnHit && history.HasHit(target.Entity.Id)) continue;
 
                         // AABB Broadphase 枝刈り（空間粗判定による早期リターン）
-                        if (MathF.Abs(aCenterX - target.CenterX) > aHalfW + target.HalfW ||
-                            MathF.Abs(aCenterY - target.CenterY) > aHalfH + target.HalfH)
+                        var diff = aCenter - target.Center;
+                        if (MathF.Abs(diff.X) > aHalf.X + target.HalfExtents.X ||
+                            MathF.Abs(diff.Y) > aHalf.Y + target.HalfExtents.Y)
                             continue;
 
                         var vicEntity = target.Entity;

@@ -1,3 +1,5 @@
+using AnimalBattle.Core;
+
 namespace AnimalBattle.Abilities;
 
 /// <summary>
@@ -5,10 +7,8 @@ namespace AnimalBattle.Abilities;
 ///     GAS 汎用層として施法者（Source）と対象（Target）の空間幾何情報および進行度を保持します。
 /// </summary>
 public readonly record struct AbilityTelegraphContext(
-    float SourceX,
-    float SourceY,
-    float TargetX,
-    float TargetY,
+    Vec2f SourcePos,
+    Vec2f TargetPos,
     bool FacingRight,
     float Progress,
     float StateTimer,

@@ -23,12 +23,6 @@ public interface IBossBrain
     /// <summary>AI 目標地点座標を取得します。</summary>
     Vec2f TargetPosition { get; }
 
-    /// <summary>AI 目標地点 X 座標を取得します。</summary>
-    float TargetX => TargetPosition.X;
-
-    /// <summary>AI 目標地点 Y 座標を取得します。</summary>
-    float TargetY => TargetPosition.Y;
-
     /// <summary>現在の Boss 座標を取得します。</summary>
     Vec2f Position { get; }
 

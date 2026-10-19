@@ -1,4 +1,8 @@
+using System.Collections.Generic;
+using System.Diagnostics;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using AnimalBattle.Maps.Navigation;
 using Flecs.NET.Core;
 
@@ -10,19 +14,15 @@ namespace AnimalBattle.Maps;
 /// <param name="tileSet">使用するタイルセット</param>
 /// <param name="columns">グリッド列数</param>
 /// <param name="rows">グリッド行数</param>
-/// <param name="renderTileWidth">描画時のタイル幅（ピクセル）</param>
-/// <param name="renderTileHeight">描画時のタイル高さ（ピクセル）</param>
-/// <param name="originX">マップ原点 X 座標</param>
-/// <param name="originY">マップ原点 Y 座標</param>
+/// <param name="renderTileSize">描画時のタイルサイズ（ピクセル）</param>
+/// <param name="origin">マップ原点座標</param>
 /// <param name="grid">2D タイル ID 配列</param>
 public sealed class TileMap(
     TileSet tileSet,
     int columns,
     int rows,
-    int renderTileWidth,
-    int renderTileHeight,
-    float originX,
-    float originY,
+    Vec2i renderTileSize,
+    Vec2f origin,
     int[,] grid) {
     /// <summary>関連付けられたタイルセット</summary>
     public TileSet TileSet { get; } = tileSet;
@@ -33,17 +33,11 @@ public sealed class TileMap(
     /// <summary>マップの縦方向グリッド行数</summary>
     public int Rows { get; } = rows;
 
-    /// <summary>描画時のタイル単体幅（ピクセル）</summary>
-    public int RenderTileWidth { get; } = renderTileWidth;
+    /// <summary>描画時のタイル単体サイズ（ピクセル）</summary>
+    public Vec2i RenderTileSize { get; } = renderTileSize;
 
-    /// <summary>描画時のタイル単体高さ（ピクセル）</summary>
-    public int RenderTileHeight { get; } = renderTileHeight;
-
-    /// <summary>マップ原点 X 座標（左上）</summary>
-    public float OriginX { get; } = originX;
-
-    /// <summary>マップ原点 Y 座標（左上）</summary>
-    public float OriginY { get; } = originY;
+    /// <summary>マップ原点座標（左上）</summary>
+    public Vec2f Origin { get; } = origin;
 
     /// <summary>プラットフォーム間跳躍ナビゲーショングラフ</summary>
     public PlatformNavigationGraph NavGraph { get; } = new();
@@ -73,10 +67,8 @@ public sealed class TileMap(
             tileSet,
             cols,
             rows,
-            config.RenderTileWidth,
-            config.RenderTileHeight,
-            config.OriginX,
-            config.OriginY,
+            config.RenderTileSize,
+            config.Origin,
             grid);
     }
 
@@ -107,13 +99,11 @@ public sealed class TileMap(
     /// <summary>
     ///     指定されたカメラ視口（Viewport）に基づいてカリングを行い、画面内タイルのみを描画します。
     /// </summary>
-    /// <param name="viewX">視口 左端 X</param>
-    /// <param name="viewY">視口 上端 Y</param>
-    /// <param name="viewW">視口 幅</param>
-    /// <param name="viewH">視口 高さ</param>
-    public void DrawCulled(float viewX, float viewY, float viewW, float viewH)
+    /// <param name="viewportPos">カメラ視口 左上座標 (Vec2f)</param>
+    /// <param name="viewportSize">カメラ視口 サイズ (Vec2f)</param>
+    public void DrawCulled(Vec2f viewportPos, Vec2f viewportSize)
     {
-        TileBatchRenderer.DrawCulled(this, viewX, viewY, viewW, viewH);
+        TileBatchRenderer.DrawCulled(this, viewportPos, viewportSize);
     }
 
     /// <summary>
@@ -127,8 +117,8 @@ public sealed class TileMap(
     {
         if (Columns <= 0 || Rows <= 0 || TileSet.TileWidth <= 0 || TileSet.TileHeight <= 0) return;
 
-        var scaleX = (float)RenderTileWidth / TileSet.TileWidth;
-        var scaleY = (float)RenderTileHeight / TileSet.TileHeight;
+        var scaleX = (float)RenderTileSize.X / TileSet.TileWidth;
+        var scaleY = (float)RenderTileSize.Y / TileSet.TileHeight;
 
         var colOffsetX = TileSet.CollisionRect.X1 * scaleX;
         var colOffsetY = TileSet.CollisionRect.Y1 * scaleY;
@@ -185,8 +175,8 @@ public sealed class TileMap(
         float colHeight,
         Entity parent)
     {
-        var leftX = OriginX + startCol * RenderTileWidth;
-        var topY = OriginY + row * RenderTileHeight;
+        var leftX = Origin.X + startCol * RenderTileSize.X;
+        var topY = Origin.Y + row * RenderTileSize.Y;
 
         var platformWidth = tileCount * colWidth;
         var platformHeight = colHeight;
@@ -206,8 +196,8 @@ public sealed class TileMap(
             nodes.Add(new PlatformNode(nodeId++, clampedLeft, clampedRight, topSurfaceY, platformHeight));
 
         var entity = world.Entity($"Platform_{row}_{startCol}")
-           .Set(new Transform(centerX, centerY))
-           .Set(new CollisionBox(platformWidth, platformHeight))
+           .Set(new Transform(new Vec2f(centerX, centerY)))
+           .Set(new CollisionBox(new Vec2f(platformWidth, platformHeight)))
            .Add<PlatformTag>();
 
         entity.ChildOf(parent);

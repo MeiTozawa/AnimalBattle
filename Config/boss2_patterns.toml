@@ -8,8 +8,7 @@ CastDuration = 0.35
 RecoveryTime = 0.50
 DefaultCooldown = 2.0
 DashSpeed = 360.0
-SlashRangeX = 100.0
-SlashRangeY = 75.0
+SlashRange = { x = 100.0, y = 75.0 }
 SlashRadius = 55.0
 SlashDamage = 1.0
 HitboxDuration = 0.28
@@ -120,8 +119,7 @@ DefaultCooldown = 3.0
 SecondSlashOffsetX = 15.0
 DashSpeed = 420.0
 SlashInterval = 0.45
-SlashRangeX = 105.0
-SlashRangeY = 80.0
+SlashRange = { x = 105.0, y = 80.0 }
 TelegraphRangeX = 250.0
 SlashDamage = 1.0
 HitboxDuration = 0.24
@@ -169,8 +167,7 @@ CastDuration = 1.30
 RecoveryTime = 1.20
 DefaultCooldown = 7.0
 ChargeSpeed = 620.0
-HitboxWidth = 100.0
-HitboxHeight = 60.0
+HitboxSize = { x = 100.0, y = 60.0 }
 HitboxDuration = 0.25
 HitboxColor = 0xFFFF1744
 ShrapnelCount = 8

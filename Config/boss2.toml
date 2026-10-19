@@ -1,32 +1,26 @@
 # Boss 2: Ground Crusher Golem Base Attributes
 BossName = "Boss2"
 MaxHp = 120.0
-SpawnX = 900.0
-SpawnY = 480.0
-ScaleX = 0.65
-ScaleY = 0.65
+Spawn = { x = 900.0, y = 480.0 }
+Scale = { x = 0.65, y = 0.65 }
 HitFlashDuration = 0.05
 
 # Boss Hurtbox (Collision check against player bullets)
 HurtboxShape = "Box"
-HurtboxWidth = 90.0
-HurtboxHeight = 110.0
-HurtboxOffsetY = 0.0
+HurtboxSize = { x = 90.0, y = 110.0 }
+HurtboxOffset = { x = 0.0, y = 0.0 }
 
 # Boss Body Contact Hitbox (Damage to player upon contact)
 HitboxShape = "Box"
-BodyHitboxWidth = 80.0
-BodyHitboxHeight = 100.0
-BodyHitboxOffsetY = 0.0
+BodyHitboxSize = { x = 80.0, y = 100.0 }
+BodyHitboxOffset = { x = 0.0, y = 0.0 }
 BodyContactDamage = 1.0
 
 # Terrain Collision Box
-CollisionWidth = 70.0
-CollisionHeight = 90.0
+CollisionSize = { x = 70.0, y = 90.0 }
 
 # Melee Attack Spawn Point Offset
-SlashSpawnOffsetX = 80.0
-SlashSpawnOffsetY = -10.0
+SlashSpawnOffset = { x = 80.0, y = -10.0 }
 
 # 地形物理・基本移動
 MoveSpeed = 160.0
@@ -50,8 +44,7 @@ WallCrashStunDuration = 1.2
 SamePlatformToleranceY = 60.0
 AirborneVelocityThreshold = 15.0
 AirborneHeightThreshold = 50.0
-MeleeTriggerRangeX = 175.0
-MeleeTriggerRangeY = 75.0
+MeleeTriggerRange = { x = 175.0, y = 75.0 }
 
 # カイト（遠距離逃走）対策パラメータ
 AntiKitingRangedDistance = 450.0

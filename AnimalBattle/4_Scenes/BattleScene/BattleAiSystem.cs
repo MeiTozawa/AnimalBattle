@@ -57,9 +57,9 @@ public static class BattleAiSystem {
                 var camCfg = w.Get<AnimalBattle.Configs.CameraConfig>();
                 CameraService.Update(
                     dt,
-                    pTrans.X, pTrans.Y,
-                    pVel.Vx, pVel.Vy,
-                    bTrans.X, bTrans.Y,
+                    pTrans.Position,
+                    pVel.Value,
+                    bTrans.Position,
                     camCfg);
             });
 

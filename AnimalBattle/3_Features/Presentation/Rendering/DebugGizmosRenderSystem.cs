@@ -63,16 +63,15 @@ public static class DebugGizmosRenderSystem {
     {
         colQuery.Each((e, ref trans, ref col) =>
         {
-            var x1 = (int)(trans.X - col.Width / 2.0f);
-            var y1 = (int)(trans.Y - col.Height / 2.0f);
-            var x2 = (int)(trans.X + col.Width / 2.0f);
-            var y2 = (int)(trans.Y + col.Height / 2.0f);
+            var halfSize = col.Size * 0.5f;
+            var p1 = (Vec2i)(trans.Position - halfSize);
+            var p2 = (Vec2i)(trans.Position + halfSize);
 
             var boxColor = e.Has<PlatformTag>() ? dbgCfg.PlatformHitboxColor : dbgCfg.PlayerTerrainBoxColor;
-            GameEngine.DrawBox(x1, y1, x2, y2, boxColor, false);
+            GameEngine.DrawBox(p1, p2, boxColor, false);
 
             if (e.Has<PlayerTag>())
-                GameEngine.DrawString(x1 + dbgCfg.PlayerInfoOffsetX, y1 + dbgCfg.PlayerInfoOffsetY, $"P({(int)trans.X},{(int)trans.Y}) [Grounded:{col.IsGrounded}]",
+                GameEngine.DrawString(p1 + dbgCfg.PlayerInfoOffset, $"P({(int)trans.Position.X},{(int)trans.Position.Y}) [Grounded:{col.IsGrounded}]",
                     boxColor);
         });
     }
@@ -90,9 +89,8 @@ public static class DebugGizmosRenderSystem {
                 _ => GetFallbackFactionColor(hurtbox.Faction, dbgCfg.BossHitboxColor)
             };
 
-            var worldCenterX = trans.X + hurtbox.Shape.OffsetX;
-            var worldCenterY = trans.Y + hurtbox.Shape.OffsetY;
-            DrawCollisionShape(hurtbox.Shape, worldCenterX, worldCenterY, hurtColor, dbgCfg);
+            var worldCenter = trans.Position + hurtbox.Shape.Offset;
+            DrawCollisionShape(hurtbox.Shape, worldCenter, hurtColor, dbgCfg);
         });
     }
 
@@ -109,33 +107,30 @@ public static class DebugGizmosRenderSystem {
                 _ => GetFallbackFactionColor(hitbox.Faction, dbgCfg.BossBulletHitboxColor)
             };
 
-            var worldCenterX = trans.X + hitbox.Shape.OffsetX;
-            var worldCenterY = trans.Y + hitbox.Shape.OffsetY;
-            DrawCollisionShape(hitbox.Shape, worldCenterX, worldCenterY, hitColor, dbgCfg);
+            var worldCenter = trans.Position + hitbox.Shape.Offset;
+            DrawCollisionShape(hitbox.Shape, worldCenter, hitColor, dbgCfg);
         });
     }
 
-    private static void DrawCollisionShape(CollisionShape shape, float worldCenterX, float worldCenterY, Color color, DebugRenderConfig dbgCfg)
+    private static void DrawCollisionShape(CollisionShape shape, Vec2f worldCenter, Color color, DebugRenderConfig dbgCfg)
     {
         switch (shape.Type)
         {
             case CollisionShapeType.Circle:
-                var cx = (int)worldCenterX;
-                var cy = (int)worldCenterY;
+                var center = (Vec2i)worldCenter;
                 var r = (int)shape.Radius;
-                GameEngine.DrawCircle(cx, cy, r, color, false);
+                GameEngine.DrawCircle(center, r, color, false);
             break;
 
             case CollisionShapeType.Box:
-                var x1 = (int)(worldCenterX - shape.Width / 2.0f);
-                var y1 = (int)(worldCenterY - shape.Height / 2.0f);
-                var x2 = (int)(worldCenterX + shape.Width / 2.0f);
-                var y2 = (int)(worldCenterY + shape.Height / 2.0f);
-                GameEngine.DrawBox(x1, y1, x2, y2, color, false);
+                var halfSize = shape.Size * 0.5f;
+                var p1 = (Vec2i)(worldCenter - halfSize);
+                var p2 = (Vec2i)(worldCenter + halfSize);
+                GameEngine.DrawBox(p1, p2, color, false);
             break;
 
             case CollisionShapeType.Point:
-                GameEngine.DrawCircle((int)worldCenterX, (int)worldCenterY, dbgCfg.PointShapeRadius, color, false);
+                GameEngine.DrawCircle((Vec2i)worldCenter, dbgCfg.PointShapeRadius, color, false);
             break;
 
             default:
@@ -155,19 +150,16 @@ public static class DebugGizmosRenderSystem {
 
         foreach (var node in graph.Nodes)
         {
-            var nx = (int)node.CenterX;
-            var ny = (int)node.TopY;
-            GameEngine.DrawCircle(nx, ny, dbgCfg.NavNodeRadius, nodeColor, true);
+            var center = new Vec2i((int)node.CenterX, (int)node.TopY);
+            GameEngine.DrawCircle(center, dbgCfg.NavNodeRadius, nodeColor, true);
         }
 
         foreach (var link in graph.Links)
         {
-            var fx = (int)link.TakeoffX;
-            var fy = (int)link.FromNode.TopY;
-            var tx = (int)link.LandingX;
-            var ty = (int)link.ToNode.TopY;
+            var p1 = new Vec2i((int)link.TakeoffX, (int)link.FromNode.TopY);
+            var p2 = new Vec2i((int)link.LandingX, (int)link.ToNode.TopY);
             var edgeColor = link.Action == NavActionType.Drop ? edgeDropColor : edgeJumpColor;
-            GameEngine.DrawLine(fx, fy, tx, ty, edgeColor);
+            GameEngine.DrawLine(p1, p2, edgeColor);
         }
     }
 

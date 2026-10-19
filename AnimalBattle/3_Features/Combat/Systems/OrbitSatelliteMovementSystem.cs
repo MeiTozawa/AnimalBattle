@@ -65,22 +65,22 @@ public static class OrbitSatelliteMovementSystem
                     var cos = MathF.Cos(angle);
                     var sin = MathF.Sin(angle);
 
-                    var satX = parentTrans.X + cos * sat.OrbitDistance;
-                    var satY = parentTrans.Y + sin * sat.OrbitDistance;
+                    var satOffset = new Vec2f(cos * sat.OrbitDistance, sin * sat.OrbitDistance);
+                    var satPos = parentTrans.Position + satOffset;
 
-                    if (satX < minX || satX > maxX || satY < minY || satY > maxY)
+                    if (satPos.X < minX || satPos.X > maxX || satPos.Y < minY || satPos.Y > maxY)
                     {
                         it.Entity(i).Add<RecycleTag>();
                         continue;
                     }
 
                     ref var t = ref trans[i];
-                    t.Position = new Vec2f(satX, satY);
+                    t.Position = satPos;
 
                     ref readonly var parentVel = ref sat.Parent.Get<Velocity>();
                     var tangentSpeed = sat.OrbitDistance * orbitSpeed;
                     ref var v = ref vel[i];
-                    v.Value = new Vec2f(parentVel.Vx - sin * tangentSpeed, parentVel.Vy + cos * tangentSpeed);
+                    v.Value = parentVel.Value + new Vec2f(-sin * tangentSpeed, cos * tangentSpeed);
                 }
             });
 

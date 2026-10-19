@@ -1,4 +1,5 @@
 using System.Drawing;
+using AnimalBattle.Core;
 using ErrorOr;
 
 namespace AnimalBattle.Configs;
@@ -22,29 +23,17 @@ public sealed class BossEffectsRenderConfig {
     /// <summary>照準レーザー線の太さ (px)</summary>
     public int LaserThickness { get; set; }
 
-    /// <summary>俯衝突進（DiveRam）予兆テキストの X オフセット (px)</summary>
-    public float DiveRamTextOffsetX { get; set; }
+    /// <summary>俯衝突進（DiveRam）予兆テキストの表示オフセット (px)</summary>
+    public Vec2f DiveRamTextOffset { get; set; }
 
-    /// <summary>俯衝突進（DiveRam）予兆テキストの Y オフセット (px)</summary>
-    public float DiveRamTextOffsetY { get; set; }
+    /// <summary>泰山圧頂（LeapSmash）予兆テキストの表示オフセット (px)</summary>
+    public Vec2f LeapSmashTextOffset { get; set; }
 
-    /// <summary>泰山圧頂（LeapSmash）予兆テキストの X オフセット (px)</summary>
-    public float LeapSmashTextOffsetX { get; set; }
+    /// <summary>撼地踏撃（Stomp）予兆テキストの表示オフセット (px)</summary>
+    public Vec2f StompTextOffset { get; set; }
 
-    /// <summary>泰山圧頂（LeapSmash）予兆テキストの Y オフセット (px)</summary>
-    public float LeapSmashTextOffsetY { get; set; }
-
-    /// <summary>撼地踏撃（Stomp）予兆テキストの X オフセット (px)</summary>
-    public float StompTextOffsetX { get; set; }
-
-    /// <summary>撼地踏撃（Stomp）予兆テキストの Y オフセット (px)</summary>
-    public float StompTextOffsetY { get; set; }
-
-    /// <summary>落雨落石（Skyfall）予兆テキストの X オフセット (px)</summary>
-    public float SkyfallTextOffsetX { get; set; }
-
-    /// <summary>落雨落石（Skyfall）予兆テキストの Y オフセット (px)</summary>
-    public float SkyfallTextOffsetY { get; set; }
+    /// <summary>落雨落石（Skyfall）予兆テキストの表示オフセット (px)</summary>
+    public Vec2f SkyfallTextOffset { get; set; }
 
     /// <summary>易傷・隙あり（Vulnerable）時の醒目攻撃チャンス表示テキスト</summary>
     public string ChanceMarkerText { get; set; } = string.Empty;
@@ -56,25 +45,25 @@ public sealed class BossEffectsRenderConfig {
     public Color ChanceMarkerColor { get; set; }
 
     /// <summary>易傷時のオーラ脈動角速度</summary>
-    public float VulnerablePulseSpeed { get; set; } = 10.0f;
+    public float VulnerablePulseSpeed { get; set; }
 
     /// <summary>易傷時のオーラ基礎アルファ値 (0～255)</summary>
-    public int VulnerableAuraBaseAlpha { get; set; } = 130;
+    public int VulnerableAuraBaseAlpha { get; set; }
 
     /// <summary>易傷時のオーラ脈動アルファ振幅</summary>
-    public int VulnerableAuraPulseAlpha { get; set; } = 110;
+    public int VulnerableAuraPulseAlpha { get; set; }
 
     /// <summary>易傷時のオーラ拡大量比率</summary>
-    public float VulnerableAuraScale { get; set; } = 1.04f;
+    public float VulnerableAuraScale { get; set; }
 
     /// <summary>易傷マーカー浮動揺れ角速度</summary>
-    public float ChanceMarkerBobbingSpeed { get; set; } = 8.0f;
+    public float ChanceMarkerBobbingSpeed { get; set; }
 
     /// <summary>易傷マーカー浮動揺れ振幅 (px)</summary>
-    public float ChanceMarkerBobbingAmplitude { get; set; } = 4.0f;
+    public float ChanceMarkerBobbingAmplitude { get; set; }
 
     /// <summary>易傷マーカー文字 1 文字あたりの推定幅 (px)</summary>
-    public int ChanceMarkerCharWidth { get; set; } = 7;
+    public int ChanceMarkerCharWidth { get; set; }
 
     /// <summary>無敵・フェーズ遷移シールドの基準半径 (px)</summary>
     public float InvincibleShieldRadius { get; set; }
@@ -163,7 +152,6 @@ public sealed class BossEffectsRenderConfig {
     /// <summary>Boss 浮遊時の揺れ角度振幅</summary>
     public double BossHoverAngleAmp { get; set; }
 
-
     /// <summary>Boss 浮遊時の揺れ角速度</summary>
     public float BossHoverAngleSpeed { get; set; }
 }
@@ -184,11 +172,8 @@ public sealed class BulletRenderConfig {
     /// <summary>プレイヤー弾内層コア色 (<see cref="Color" />)</summary>
     public Color PlayerBulletInnerColor { get; set; }
 
-    /// <summary>プレイヤー弾ビームトレイル半幅</summary>
-    public int PlayerBulletTrailHalfWidth { get; set; }
-
-    /// <summary>プレイヤー弾ビームトレイル半高</summary>
-    public int PlayerBulletTrailHalfHeight { get; set; }
+    /// <summary>プレイヤー弾ビームトレイル半サイズ (px)</summary>
+    public Vec2i PlayerBulletTrailHalfSize { get; set; }
 
     /// <summary>プレイヤー弾ビームトレイル色 (<see cref="Color" />)</summary>
     public Color PlayerBulletTrailColor { get; set; }
@@ -232,65 +217,62 @@ public sealed class BulletRenderConfig {
     /// <summary>Boss 弾外枠付加ピクセル半径</summary>
     public int BossBulletOutlinePadding { get; set; }
 
-    /// <summary>画面外カリング（描画除外）マージン X (ピクセル)</summary>
-    public int ViewportCullingMarginX { get; set; }
-
-    /// <summary>画面外カリング（描画除外）マージン Y (ピクセル)</summary>
-    public int ViewportCullingMarginY { get; set; }
+    /// <summary>画面外カリング（描画除外）マージン (ピクセル)</summary>
+    public Vec2i ViewportCullingMargin { get; set; }
 
     /// <summary>マゼンタ弾オーラ基礎半径比率</summary>
-    public float SpecialMagentaAuraBaseRatio { get; set; } = 1.35f;
+    public float SpecialMagentaAuraBaseRatio { get; set; }
 
     /// <summary>マゼンタ弾オーラ脈動比率</summary>
-    public float SpecialMagentaAuraPulseRatio { get; set; } = 0.15f;
+    public float SpecialMagentaAuraPulseRatio { get; set; }
 
     /// <summary>マゼンタ弾脈動角速度</summary>
-    public float SpecialMagentaPulseSpeed { get; set; } = 6.0f;
+    public float SpecialMagentaPulseSpeed { get; set; }
 
     /// <summary>マゼンタ弾オーラアルファ値 (0～255)</summary>
-    public int SpecialMagentaAuraAlpha { get; set; } = 65;
+    public int SpecialMagentaAuraAlpha { get; set; }
 
     /// <summary>シアン弾外周リング拡張幅 (px)</summary>
-    public int SpecialCyanRingPadding { get; set; } = 2;
+    public int SpecialCyanRingPadding { get; set; }
 
     /// <summary>シアン弾外周リング発光色 (<see cref="Color" />)</summary>
-    public Color SpecialCyanRingColor { get; set; } = Color.FromArgb(50, 0, 240, 255);
+    public Color SpecialCyanRingColor { get; set; }
 
     /// <summary>ブラック弾オーラ基礎半径比率</summary>
-    public float SpecialBlackAuraBaseRatio { get; set; } = 1.4f;
+    public float SpecialBlackAuraBaseRatio { get; set; }
 
     /// <summary>ブラック弾オーラ脈動比率</summary>
-    public float SpecialBlackAuraPulseRatio { get; set; } = 0.2f;
+    public float SpecialBlackAuraPulseRatio { get; set; }
 
     /// <summary>ブラック弾脈動角速度</summary>
-    public float SpecialBlackPulseSpeed { get; set; } = 6.0f;
+    public float SpecialBlackPulseSpeed { get; set; }
 
     /// <summary>ブラック弾オーラ色 (<see cref="Color" />)</summary>
-    public Color SpecialBlackAuraColor { get; set; } = Color.FromArgb(90, 220, 20, 80);
+    public Color SpecialBlackAuraColor { get; set; }
 
     /// <summary>ブラック弾衛星公転半径比率</summary>
-    public float SpecialBlackSatelliteOrbitRatio { get; set; } = 1.55f;
+    public float SpecialBlackSatelliteOrbitRatio { get; set; }
 
     /// <summary>ブラック弾衛星公転角速度</summary>
-    public float SpecialBlackSatelliteOrbitSpeed { get; set; } = 6.0f;
+    public float SpecialBlackSatelliteOrbitSpeed { get; set; }
 
     /// <summary>ブラック弾衛星半径比率</summary>
-    public float SpecialBlackSatelliteRadiusRatio { get; set; } = 0.55f;
+    public float SpecialBlackSatelliteRadiusRatio { get; set; }
 
     /// <summary>ブラック弾衛星最小ピクセル半径</summary>
-    public int SpecialBlackSatelliteMinRadius { get; set; } = 3;
+    public int SpecialBlackSatelliteMinRadius { get; set; }
 
     /// <summary>ブラック弾内層微小核最小ピクセル半径</summary>
-    public int SpecialBlackCoreInnerMinRadius { get; set; } = 2;
+    public int SpecialBlackCoreInnerMinRadius { get; set; }
 
     /// <summary>ブラック弾内層微小核半径除数</summary>
-    public int SpecialBlackCoreInnerDivisor { get; set; } = 2;
+    public int SpecialBlackCoreInnerDivisor { get; set; }
 
     /// <summary>ブラック弾内層微小核色 (<see cref="Color" />)</summary>
-    public Color SpecialBlackCoreInnerColor { get; set; } = Color.FromArgb(255, 255, 180, 200);
+    public Color SpecialBlackCoreInnerColor { get; set; }
 
     /// <summary>パーティクルエフェクト外枠ピクセル拡張幅</summary>
-    public int ParticleOutlinePadding { get; set; } = 1;
+    public int ParticleOutlinePadding { get; set; }
 }
 
 /// <summary>
@@ -308,11 +290,8 @@ public sealed class HudTextItem {
 ///     左上 HUD 操作案内表示の設定クラス。
 /// </summary>
 public sealed class HudRenderConfig {
-    /// <summary>タイトル X 座標</summary>
-    public int TitleX { get; set; }
-
-    /// <summary>タイトル Y 座標</summary>
-    public int TitleY { get; set; }
+    /// <summary>タイトル表示座標</summary>
+    public Vec2i TitlePos { get; set; }
 
     /// <summary>タイトル文字色 (<see cref="Color" />)</summary>
     public Color TitleColor { get; set; }
@@ -340,11 +319,8 @@ public sealed class HudRenderConfig {
     /// <summary>キャラクター切り替え操作案内文字色 (<see cref="Color" />)</summary>
     public Color CharacterSwitchGuideColor { get; set; }
 
-    /// <summary>二段ジャンプインジケータ X 座標</summary>
-    public int DoubleJumpX { get; set; }
-
-    /// <summary>二段ジャンプインジケータ Y 座標</summary>
-    public int DoubleJumpY { get; set; }
+    /// <summary>二段ジャンプインジケータ表示座標</summary>
+    public Vec2i DoubleJumpPos { get; set; }
 
     /// <summary>二段ジャンプ表示ラベル文字列</summary>
     public string DoubleJumpText { get; set; } = string.Empty;
@@ -353,13 +329,10 @@ public sealed class HudRenderConfig {
     public Color DoubleJumpActiveColor { get; set; }
 
     /// <summary>二段ジャンプ消費時シンボル色 (<see cref="Color" />)</summary>
-    public Color DoubleJumpInactiveColor { get; set; } = ColorPalette.Gray;
+    public Color DoubleJumpInactiveColor { get; set; }
 
-    /// <summary>プレイヤー HP 表示 X 座標</summary>
-    public int PlayerHpX { get; set; }
-
-    /// <summary>プレイヤー HP 表示 Y 座標</summary>
-    public int PlayerHpY { get; set; }
+    /// <summary>プレイヤー HP 表示座標</summary>
+    public Vec2i PlayerHpPos { get; set; }
 
     /// <summary>プレイヤー HP 表示ラベル文字列</summary>
     public string PlayerHpText { get; set; } = string.Empty;
@@ -368,36 +341,30 @@ public sealed class HudRenderConfig {
     public Color PlayerHpHighColor { get; set; }
 
     /// <summary>プレイヤー HP 中（2）文字色 (<see cref="Color" />)</summary>
-    public Color PlayerHpMidColor { get; set; } = ColorPalette.Gold;
+    public Color PlayerHpMidColor { get; set; }
 
     /// <summary>プレイヤー HP 低（1）文字色 (<see cref="Color" />)</summary>
-    public Color PlayerHpLowColor { get; set; } = ColorPalette.Red;
+    public Color PlayerHpLowColor { get; set; }
 
     /// <summary>プレイヤー HP 死亡（0）文字色 (<see cref="Color" />)</summary>
-    public Color PlayerHpDeadColor { get; set; } = ColorPalette.Gray;
+    public Color PlayerHpDeadColor { get; set; }
 
     /// <summary>プレイヤー HP 高判定閾値比率</summary>
-    public float PlayerHpHighThreshold { get; set; } = 0.66f;
+    public float PlayerHpHighThreshold { get; set; }
 
     /// <summary>プレイヤー HP 中判定閾値比率</summary>
-    public float PlayerHpMidThreshold { get; set; } = 0.33f;
+    public float PlayerHpMidThreshold { get; set; }
 }
 
 /// <summary>
 ///     画面下部 Boss HP バーおよび状態表示の設定クラス。
 /// </summary>
 public sealed class BossHpBarRenderConfig {
-    /// <summary>HP バー左上 X 座標</summary>
-    public int BarX1 { get; set; }
+    /// <summary>HP バー左上座標</summary>
+    public Vec2i BarPos1 { get; set; }
 
-    /// <summary>HP バー左上 Y 座標</summary>
-    public int BarY1 { get; set; }
-
-    /// <summary>HP バー右下 X 座標</summary>
-    public int BarX2 { get; set; }
-
-    /// <summary>HP バー右下 Y 座標</summary>
-    public int BarY2 { get; set; }
+    /// <summary>HP バー右下座標</summary>
+    public Vec2i BarPos2 { get; set; }
 
     /// <summary>Phase 1 HP ゲージ色 (<see cref="Color" />)</summary>
     public Color Phase1Color { get; set; }
@@ -426,29 +393,23 @@ public sealed class BossHpBarRenderConfig {
     /// <summary>ヘッダー文字の Y 座標オフセット</summary>
     public int HeaderOffsetY { get; set; }
 
-    /// <summary>Boss タイトル表示 X 軸オフセット (BarX1 からの相対距離)</summary>
-    public int TitleOffsetX { get; set; }
-
-    /// <summary>Boss タイトル表示 Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
-    public int TitleOffsetY { get; set; }
+    /// <summary>Boss タイトル表示オフセット (BarPos1 からの相対距離)</summary>
+    public Vec2i TitleOffset { get; set; }
 
     /// <summary>Boss タイトル文字色 (<see cref="Color" />)</summary>
     public Color TitleColor { get; set; }
 
-    /// <summary>HP 数値テキストの右端 X 軸オフセット (BarX2 から左方向へのオフセット)</summary>
+    /// <summary>HP 数値テキストの右端 X 軸オフセット (BarPos2.X から左方向へのオフセット)</summary>
     public int HpTextOffsetRight { get; set; }
 
-    /// <summary>HP 数値テキストの Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
+    /// <summary>HP 数値テキストの Y 軸オフセット (BarPos1.Y から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
     public int HpTextOffsetY { get; set; }
 
     /// <summary>HP 数値文字色 (<see cref="Color" />)</summary>
     public Color HpTextColor { get; set; }
 
-    /// <summary>状態バッジテキストの X 軸オフセット (BarX1 からの相対距離)</summary>
-    public int StateBadgeOffsetX { get; set; }
-
-    /// <summary>状態バッジテキストの Y 軸オフセット (BarY1 から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
-    public int StateBadgeOffsetY { get; set; }
+    /// <summary>状態バッジテキストのオフセット (BarPos1 からの相対距離)</summary>
+    public Vec2i StateBadgeOffset { get; set; }
 
     /// <summary>前隙予兆状態バッジ文字色 (<see cref="Color" />)</summary>
     public Color StateTelegraphingColor { get; set; }
@@ -466,27 +427,21 @@ public sealed class BossHpBarRenderConfig {
     public Color StateDefaultColor { get; set; }
 
     /// <summary>気絶・易傷状態バッジ文字色 (<see cref="Color" />)</summary>
-    public Color StateStunnedColor { get; set; } = ColorPalette.Gold;
+    public Color StateStunnedColor { get; set; }
 
     /// <summary>Phase 分割マーカー半幅 (px)</summary>
-    public int PhaseSplitWidth { get; set; } = 1;
+    public int PhaseSplitWidth { get; set; }
 }
 
 /// <summary>
 ///     敗北 (Game Over) および勝利 (Victory) モーダルダイアログの描画設定クラス。
 /// </summary>
 public sealed class ModalRenderConfig {
-    /// <summary>Game Over 矩形左上 X 座標</summary>
-    public int GameOverX1 { get; set; }
+    /// <summary>Game Over 矩形左上座標</summary>
+    public Vec2i GameOverPos1 { get; set; }
 
-    /// <summary>Game Over 矩形左上 Y 座標</summary>
-    public int GameOverY1 { get; set; }
-
-    /// <summary>Game Over 矩形右下 X 座標</summary>
-    public int GameOverX2 { get; set; }
-
-    /// <summary>Game Over 矩形右下 Y 座標</summary>
-    public int GameOverY2 { get; set; }
+    /// <summary>Game Over 矩形右下座標</summary>
+    public Vec2i GameOverPos2 { get; set; }
 
     /// <summary>Game Over 背景色 (<see cref="Color" />)</summary>
     public Color GameOverBgColor { get; set; }
@@ -497,11 +452,8 @@ public sealed class ModalRenderConfig {
     /// <summary>Game Over 内枠線色 (<see cref="Color" />)</summary>
     public Color GameOverInnerBorderColor { get; set; }
 
-    /// <summary>Game Over タイトル X 座標</summary>
-    public int GameOverTitleX { get; set; }
-
-    /// <summary>Game Over タイトル Y 座標</summary>
-    public int GameOverTitleY { get; set; }
+    /// <summary>Game Over タイトル表示座標</summary>
+    public Vec2i GameOverTitlePos { get; set; }
 
     /// <summary>Game Over タイトル文字色 (<see cref="Color" />)</summary>
     public Color GameOverTitleColor { get; set; }
@@ -509,11 +461,8 @@ public sealed class ModalRenderConfig {
     /// <summary>Game Over タイトル文字列</summary>
     public string GameOverTitleText { get; set; } = string.Empty;
 
-    /// <summary>Game Over リトライテキスト X 座標</summary>
-    public int GameOverRetryX { get; set; }
-
-    /// <summary>Game Over リトライテキスト Y 座標</summary>
-    public int GameOverRetryY { get; set; }
+    /// <summary>Game Over リトライテキスト表示座標</summary>
+    public Vec2i GameOverRetryPos { get; set; }
 
     /// <summary>Game Over リトライ文字色 (<see cref="Color" />)</summary>
     public Color GameOverRetryColor { get; set; }
@@ -521,17 +470,11 @@ public sealed class ModalRenderConfig {
     /// <summary>Game Over リトライ案内文字列</summary>
     public string GameOverRetryText { get; set; } = string.Empty;
 
-    /// <summary>Victory 矩形左上 X 座標</summary>
-    public int VictoryX1 { get; set; }
+    /// <summary>Victory 矩形左上座標</summary>
+    public Vec2i VictoryPos1 { get; set; }
 
-    /// <summary>Victory 矩形左上 Y 座標</summary>
-    public int VictoryY1 { get; set; }
-
-    /// <summary>Victory 矩形右下 X 座標</summary>
-    public int VictoryX2 { get; set; }
-
-    /// <summary>Victory 矩形右下 Y 座標</summary>
-    public int VictoryY2 { get; set; }
+    /// <summary>Victory 矩形右下座標</summary>
+    public Vec2i VictoryPos2 { get; set; }
 
     /// <summary>Victory 背景色 (<see cref="Color" />)</summary>
     public Color VictoryBgColor { get; set; }
@@ -542,11 +485,8 @@ public sealed class ModalRenderConfig {
     /// <summary>Victory 内枠線色 (<see cref="Color" />)</summary>
     public Color VictoryInnerBorderColor { get; set; }
 
-    /// <summary>Victory タイトル X 座標</summary>
-    public int VictoryTitleX { get; set; }
-
-    /// <summary>Victory タイトル Y 座標</summary>
-    public int VictoryTitleY { get; set; }
+    /// <summary>Victory タイトル表示座標</summary>
+    public Vec2i VictoryTitlePos { get; set; }
 
     /// <summary>Victory タイトル文字色 (<see cref="Color" />)</summary>
     public Color VictoryTitleColor { get; set; }
@@ -554,11 +494,8 @@ public sealed class ModalRenderConfig {
     /// <summary>Victory タイトル文字列</summary>
     public string VictoryTitleText { get; set; } = string.Empty;
 
-    /// <summary>Victory リトライテキスト X 座標</summary>
-    public int VictoryRetryX { get; set; }
-
-    /// <summary>Victory リトライテキスト Y 座標</summary>
-    public int VictoryRetryY { get; set; }
+    /// <summary>Victory リトライテキスト表示座標</summary>
+    public Vec2i VictoryRetryPos { get; set; }
 
     /// <summary>Victory リトライ文字色 (<see cref="Color" />)</summary>
     public Color VictoryRetryColor { get; set; }
@@ -567,7 +504,7 @@ public sealed class ModalRenderConfig {
     public string VictoryRetryText { get; set; } = string.Empty;
 
     /// <summary>モーダルダイアログ内枠線のパディング (px)</summary>
-    public int InnerBorderPadding { get; set; } = 2;
+    public int InnerBorderPadding { get; set; }
 }
 
 /// <summary>
@@ -609,47 +546,41 @@ public sealed class DebugRenderConfig {
     /// <summary>デバッグ状態インジケータ文字色 (<see cref="Color" />)</summary>
     public Color IndicatorColor { get; set; }
 
-    /// <summary>デバッグ状態インジケータ表示 X 座標</summary>
-    public int IndicatorX { get; set; } = 980;
-
-    /// <summary>デバッグ状態インジケータ表示 Y 座標</summary>
-    public int IndicatorY { get; set; } = 16;
+    /// <summary>デバッグ状態インジケータ表示座標</summary>
+    public Vec2i IndicatorPos { get; set; }
 
     /// <summary>デバッグ状態インジケータ表示文字列</summary>
-    public string IndicatorText { get; set; } = "[DEBUG MODE ACTIVE - F1 to toggle]";
+    public string IndicatorText { get; set; } = string.Empty;
 
     /// <summary>デバッグフェーズ切替操作案内テキスト</summary>
-    public string PhaseSwitchGuideText { get; set; } = "[F2] Phase 1   [F3] Phase 2   [F4] Phase 3";
+    public string PhaseSwitchGuideText { get; set; } = string.Empty;
 
     /// <summary>デバッグフェーズ切替操作案内文字色 (<see cref="Color" />)</summary>
-    public Color PhaseSwitchGuideColor { get; set; } = ColorPalette.Gold;
+    public Color PhaseSwitchGuideColor { get; set; }
 
     /// <summary>デバッグ操作案内表示 Y オフセット (px)</summary>
-    public int GuideOffsetY { get; set; } = 24;
+    public int GuideOffsetY { get; set; }
 
     /// <summary>中立陣営当たり判定色 (<see cref="Color" />)</summary>
-    public Color NeutralHitboxColor { get; set; } = ColorPalette.Gray;
+    public Color NeutralHitboxColor { get; set; }
 
-    /// <summary>自機デバッグ情報テキスト表示 X オフセット (px)</summary>
-    public int PlayerInfoOffsetX { get; set; } = -10;
-
-    /// <summary>自機デバッグ情報テキスト表示 Y オフセット (px)</summary>
-    public int PlayerInfoOffsetY { get; set; } = -16;
+    /// <summary>自機デバッグ情報テキスト表示オフセット (px)</summary>
+    public Vec2i PlayerInfoOffset { get; set; }
 
     /// <summary>点衝突形状描画半径 (px)</summary>
-    public int PointShapeRadius { get; set; } = 2;
+    public int PointShapeRadius { get; set; }
 
     /// <summary>ナビゲーションメッシュノード描画色 (<see cref="Color" />)</summary>
-    public Color NavNodeColor { get; set; } = ColorPalette.Cyan;
+    public Color NavNodeColor { get; set; }
 
     /// <summary>ナビゲーション自由落下リンク描画色 (<see cref="Color" />)</summary>
-    public Color NavEdgeDropColor { get; set; } = ColorPalette.Gold;
+    public Color NavEdgeDropColor { get; set; }
 
     /// <summary>ナビゲーションジャンプリンク描画色 (<see cref="Color" />)</summary>
-    public Color NavEdgeJumpColor { get; set; } = ColorPalette.Green;
+    public Color NavEdgeJumpColor { get; set; }
 
     /// <summary>ナビゲーションメッシュノード描画半径 (px)</summary>
-    public int NavNodeRadius { get; set; } = 4;
+    public int NavNodeRadius { get; set; }
 }
 
 /// <summary>
@@ -675,48 +606,42 @@ public sealed class AimReticleRenderConfig {
     public int TickGap { get; set; }
 
     /// <summary>中心照準ドット半径 (px)</summary>
-    public int CenterDotRadius { get; set; } = 1;
+    public int CenterDotRadius { get; set; }
 
     /// <summary>中心照準ドット表示色 (<see cref="Color" />)</summary>
-    public Color CenterDotColor { get; set; } = ColorPalette.White;
+    public Color CenterDotColor { get; set; }
 
     /// <summary>外周タクティカルリング表示色 (<see cref="Color" />)</summary>
-    public Color RingColor { get; set; } = ColorPalette.CyanLight;
+    public Color RingColor { get; set; }
 
     /// <summary>上下左右刻度ショートライン表示色 (<see cref="Color" />)</summary>
-    public Color TickColor { get; set; } = ColorPalette.CyanNeon;
+    public Color TickColor { get; set; }
 
     /// <summary>照準リング最小半径クランプ (px)</summary>
-    public int MinRadius { get; set; } = 1;
+    public int MinRadius { get; set; }
 
     /// <summary>照準リング最大半径クランプ (px)</summary>
-    public int MaxRadius { get; set; } = 100;
+    public int MaxRadius { get; set; }
 
     /// <summary>反動拡張上限倍率</summary>
-    public float RecoilExpansionClampRatio { get; set; } = 3.0f;
+    public float RecoilExpansionClampRatio { get; set; }
 }
 
 /// <summary>
 ///     描画視口およびカメラカリング領域設定クラス。
 /// </summary>
 public sealed class ViewportRenderConfig {
-    /// <summary>ビューポート左上 X 座標（ピクセル）</summary>
-    public float X { get; set; }
+    /// <summary>ビューポート左上座標（ピクセル）</summary>
+    public Vec2f Pos { get; set; }
 
-    /// <summary>ビューポート左上 Y 座標（ピクセル）</summary>
-    public float Y { get; set; }
-
-    /// <summary>ビューポート幅（ピクセル）</summary>
-    public float Width { get; set; }
-
-    /// <summary>ビューポート高さ（ピクセル）</summary>
-    public float Height { get; set; }
+    /// <summary>ビューポートサイズ（ピクセル）</summary>
+    public Vec2f Size { get; set; }
 
     /// <summary>タイルマップ未指定時のプラットフォーム代替塗りつぶし色</summary>
-    public Color PlatformFallbackFillColor { get; set; } = ColorPalette.DarkBg;
+    public Color PlatformFallbackFillColor { get; set; }
 
     /// <summary>タイルマップ未指定時のプラットフォーム代替枠線色</summary>
-    public Color PlatformFallbackBorderColor { get; set; } = ColorPalette.Cyan;
+    public Color PlatformFallbackBorderColor { get; set; }
 }
 
 /// <summary>
@@ -724,7 +649,7 @@ public sealed class ViewportRenderConfig {
 /// </summary>
 public sealed class PlayerRenderConfig {
     /// <summary>無敵時スプライト点滅周波数 (Hz)</summary>
-    public float InvincibleBlinkFrequency { get; set; } = 30.0f;
+    public float InvincibleBlinkFrequency { get; set; }
 }
 
 /// <summary>

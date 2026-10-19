@@ -3,22 +3,18 @@
 # ===================================================================
 MaxHp = 120.0
 HitFlashDuration = 0.05
-ScaleX = 0.65
-ScaleY = 0.65
+Scale = { x = 0.65, y = 0.65 }
 
 # 被弾判定ボックス (Hurtbox)
 HurtboxShape = "Box"
-HurtboxWidth = 90.0
-HurtboxHeight = 110.0
-HurtboxOffsetY = 0.0
+HurtboxSize = { x = 90.0, y = 110.0 }
+HurtboxOffset = { x = 0.0, y = 0.0 }
 
 # 接触ダメージ判定ボックス (Body Contact Hitbox)
 HitboxShape = "Box"
-BodyHitboxWidth = 80.0
-BodyHitboxHeight = 100.0
-BodyHitboxOffsetY = 0.0
+BodyHitboxSize = { x = 80.0, y = 100.0 }
+BodyHitboxOffset = { x = 0.0, y = 0.0 }
 BodyContactDamage = 1.0
 
 # 地形衝突ボックス
-CollisionWidth = 70.0
-CollisionHeight = 90.0
+CollisionSize = { x = 70.0, y = 90.0 }

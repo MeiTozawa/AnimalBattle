@@ -32,7 +32,7 @@ public static class VfxPrefabs
         var sparkCfg = cfg.SparkVfx;
         SparkVfx = world.Prefab(SparkVfxName)
             .IsA(CommonPrefabs.BaseVfx)
-            .Set(new Velocity(0, 0))
+            .Set(new Velocity(Vec2f.Zero))
             .Set(new Bullet(sparkCfg.DefaultRadius, Color.Empty, Color.Empty))
             .Set(new FadeEffect(sparkCfg.DefaultDuration));
 
@@ -47,8 +47,8 @@ public static class VfxPrefabs
         var areaCfg = cfg.AreaVfx;
         AreaVfx = world.Prefab(AreaVfxName)
             .IsA(CommonPrefabs.BaseVfx)
-            .Set(new Velocity(0, 0))
-            .Set(new Hitbox(new CollisionShape.Box(0, 0), areaCfg.Damage, Faction.Hostile, false))
+            .Set(new Velocity(Vec2f.Zero))
+            .Set(new Hitbox(new CollisionShape.Box(Vec2f.Zero), areaCfg.Damage, Faction.Hostile, false))
             .Set(new Sprite(-1))
             .Set(new FadeEffect(areaCfg.DefaultDuration));
     }

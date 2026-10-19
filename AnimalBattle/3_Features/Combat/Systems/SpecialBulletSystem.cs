@@ -41,27 +41,24 @@ public static class SpecialBulletSystem {
                     mod.ElapsedTimer += dt;
 
                     var type = mod.Type;
-                    var vx = mod.BaseVx;
-                    var vy = mod.BaseVy;
+                    var currentVel = mod.BaseVel;
 
-                    // 青弾と黒弾の法线正弦波揺動
+                    // 青弾と黒弾の法線正弦波揺動
                     if (type is BulletType.Cyan or BulletType.Black)
                     {
-                        var speedSq = mod.BaseVx * mod.BaseVx + mod.BaseVy * mod.BaseVy;
+                        var speedSq = mod.BaseVel.LengthSquared();
                         if (speedSq > 1.0f)
                         {
                             var invSpeed = 1.0f / MathF.Sqrt(speedSq);
-                            var nx = -mod.BaseVy * invSpeed;
-                            var ny = mod.BaseVx * invSpeed;
+                            var normal = new Vec2f(-mod.BaseVel.Y * invSpeed, mod.BaseVel.X * invSpeed);
 
                             var waveVelocity = cyanAmp * cyanFreq * MathF.Cos(mod.ElapsedTimer * cyanFreq);
-                            vx = mod.BaseVx + nx * waveVelocity;
-                            vy = mod.BaseVy + ny * waveVelocity;
+                            currentVel = mod.BaseVel + normal * waveVelocity;
                         }
                     }
 
                     ref var v = ref vel[i];
-                    v.Value = new Vec2f(vx, vy);
+                    v.Value = currentVel;
 
                     // 品紅弾と黒弾の拡縮脈動
                     if (type is BulletType.Magenta or BulletType.Black)

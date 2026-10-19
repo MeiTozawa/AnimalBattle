@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Configs;
 
@@ -154,5 +155,7 @@ public sealed class BakedConfigBundle {
 [JsonSerializable(typeof(StartSceneCardTextConfig))]
 [JsonSerializable(typeof(StartSceneMotionConfig))]
 [JsonSerializable(typeof(EaseType))]
+[JsonSerializable(typeof(Vec2f))]
+[JsonSerializable(typeof(Vec2i))]
 internal sealed partial class ConfigJsonContext : JsonSerializerContext {
 }

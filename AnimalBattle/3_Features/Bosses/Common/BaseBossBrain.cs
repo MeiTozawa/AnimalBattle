@@ -39,12 +39,6 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>AI 目標地点座標を取得します。</summary>
     public Vec2f TargetPosition => _targetPosition;
 
-    /// <summary>AI 目標地点 X 座標を取得します。</summary>
-    public float TargetX => _targetPosition.X;
-
-    /// <summary>AI 目標地点 Y 座標を取得します。</summary>
-    public float TargetY => _targetPosition.Y;
-
     /// <summary>現在発動中の技能識別タグを取得します。</summary>
     public virtual StringId CurrentSkillTag => _asc.CurrentAbility?.AbilityTag ?? StringId.Empty;
 

@@ -1,3 +1,4 @@
+using AnimalBattle.Core;
 using ErrorOr;
 
 namespace AnimalBattle.Core.Geometry;
@@ -22,26 +23,20 @@ public readonly record struct CollisionShape {
     /// <summary>円の半径（ピクセル）</summary>
     public float Radius { get; init; }
 
-    /// <summary>矩形の全幅（ピクセル）</summary>
-    public float Width { get; init; }
+    /// <summary>矩形の寸法 (Size.X: 幅, Size.Y: 高さ)</summary>
+    public Vec2f Size { get; init; }
 
-    /// <summary>矩形の全高（ピクセル）</summary>
-    public float Height { get; init; }
-
-    /// <summary>エンティティ中心座標 (Transform.X) からの X 軸局所オフセット</summary>
-    public float OffsetX { get; init; }
-
-    /// <summary>エンティティ中心座標 (Transform.Y) からの Y 軸局所オフセット</summary>
-    public float OffsetY { get; init; }
+    /// <summary>エンティティ中心座標からの局所オフセット</summary>
+    public Vec2f Offset { get; init; }
 
     /// <summary>
     ///     円形衝突形状ヘルパー構造体（暗黙変換により CollisionShape として代入可能）。
     /// </summary>
-    public readonly record struct Circle(float Radius, float OffsetX = 0.0f, float OffsetY = 0.0f) {
+    public readonly record struct Circle(float Radius, Vec2f Offset = default) {
         public static implicit operator CollisionShape(Circle c)
         {
             return new CollisionShape
-                { Type = CollisionShapeType.Circle, Radius = c.Radius, OffsetX = c.OffsetX, OffsetY = c.OffsetY };
+                { Type = CollisionShapeType.Circle, Radius = c.Radius, Offset = c.Offset };
         }
 
         public static implicit operator ErrorOr<CollisionShape>(Circle c)
@@ -53,12 +48,11 @@ public readonly record struct CollisionShape {
     /// <summary>
     ///     矩形 (AABB) 衝突形状ヘルパー構造体（暗黙変換により CollisionShape として代入可能）。
     /// </summary>
-    public readonly record struct Box(float Width, float Height, float OffsetX = 0.0f, float OffsetY = 0.0f) {
+    public readonly record struct Box(Vec2f Size, Vec2f Offset = default) {
         public static implicit operator CollisionShape(Box b)
         {
             return new CollisionShape {
-                Type = CollisionShapeType.Box, Width = b.Width, Height = b.Height, OffsetX = b.OffsetX,
-                OffsetY = b.OffsetY
+                Type = CollisionShapeType.Box, Size = b.Size, Offset = b.Offset
             };
         }
 
@@ -71,10 +65,10 @@ public readonly record struct CollisionShape {
     /// <summary>
     ///     点 (Point) 衝突形状ヘルパー構造体（暗黙変換により CollisionShape として代入可能）。
     /// </summary>
-    public readonly record struct Point(float OffsetX = 0.0f, float OffsetY = 0.0f) {
+    public readonly record struct Point(Vec2f Offset = default) {
         public static implicit operator CollisionShape(Point p)
         {
-            return new CollisionShape { Type = CollisionShapeType.Point, OffsetX = p.OffsetX, OffsetY = p.OffsetY };
+            return new CollisionShape { Type = CollisionShapeType.Point, Offset = p.Offset };
         }
 
         public static implicit operator ErrorOr<CollisionShape>(Point p)

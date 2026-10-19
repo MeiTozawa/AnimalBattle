@@ -1,4 +1,5 @@
 using System.Drawing;
+using AnimalBattle.Core;
 
 namespace AnimalBattle.Configs;
 
@@ -10,11 +11,8 @@ public abstract class MeleePatternConfigBase : SkillPatternConfigBase {
     /// <summary>前進・突進速度</summary>
     public float DashSpeed { get; set; }
 
-    /// <summary>斬撃判定 X 半径</summary>
-    public float SlashRangeX { get; set; }
-
-    /// <summary>斬撃判定 Y 半径</summary>
-    public float SlashRangeY { get; set; }
+    /// <summary>斬撃判定範囲 (Vec2f)</summary>
+    public Vec2f SlashRange { get; set; }
 
     /// <summary>斬撃円形半径</summary>
     public float SlashRadius { get; set; }

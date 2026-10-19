@@ -45,14 +45,12 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     /// <summary>Boss 2 ブレインを初期化します。</summary>
     /// <param name="world">対象の Flecs ワールド。</param>
-    /// <param name="spawnX">スポーン X 座標。</param>
-    /// <param name="spawnY">スポーン Y 座標。</param>
+    /// <param name="spawn">スポーン座標。</param>
     /// <param name="configuration">設定プロバイダ。</param>
     /// <param name="navGraphProvider">ナビゲーショングラフプロバイダ。</param>
     public Boss2Brain(
         World world,
-        float spawnX,
-        float spawnY,
+        Vec2f spawn,
         IBoss2Configuration? configuration = null,
         Func<PlatformNavigationGraph?>? navGraphProvider = null)
     {
@@ -60,13 +58,13 @@ public sealed class Boss2Brain : BaseBossBrain {
         _world = world;
         _configuration = configuration ?? new Boss2DefaultConfiguration(world);
         _navGraphProvider = navGraphProvider;
-        _currentPosition = new Vec2f(spawnX, spawnY);
-        _targetPosition = new Vec2f(spawnX, spawnY);
+        _currentPosition = spawn;
+        _targetPosition = spawn;
         Phase = Phase.Phase1;
 
         InitializeAbilities();
         InitializeStateMachine();
-        Reset(spawnX, spawnY);
+        Reset(spawn);
     }
 
     /// <summary>現在の Boss 移動速度を取得します。</summary>
@@ -215,11 +213,11 @@ public sealed class Boss2Brain : BaseBossBrain {
     /// <summary>
     ///     ブレインの内部状態を初期位置へリセットします。
     /// </summary>
-    public void Reset(float x, float y)
+    public void Reset(Vec2f pos)
     {
-        _currentPosition = new Vec2f(x, y);
-        _targetPosition = new Vec2f(x, y);
-        _leapStartPosition = new Vec2f(x, y);
+        _currentPosition = pos;
+        _targetPosition = pos;
+        _leapStartPosition = pos;
         _targetLandingSurfaceY = 0.0f;
         _currentVelocity = Vec2f.Zero;
         _facingRight = true;
