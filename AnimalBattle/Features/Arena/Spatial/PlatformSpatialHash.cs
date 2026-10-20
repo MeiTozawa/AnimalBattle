@@ -12,14 +12,32 @@ public sealed class PlatformSpatialHash(float cellSize = 256.0f)
     private readonly float _cellSize = cellSize > 0.0f ? cellSize : 256.0f;
     private readonly Dictionary<long, List<int>> _grid = new();
     private readonly Dictionary<int, Box2D> _boxes = new();
+    private readonly Stack<List<int>> _listPool = new();
+    private readonly HashSet<int> _visitedQueryIds = [];
+
+    /// <summary>
+    ///     登録済みプラットフォーム総数を取得します。
+    /// </summary>
+    public int Count => _boxes.Count;
+
+    /// <summary>
+    ///     空間グリッドの 1 セルあたりのサイズ（ピクセル）を取得します。
+    /// </summary>
+    public float CellSize => _cellSize;
 
     private static long GetKey(int cx, int cy) => ((long)cx << 32) | (uint)cy;
 
     /// <summary>
     ///     空間ハッシュ内の全登録データを消去します。
+    ///     セル内の List は破弃せずプールへ回収して再利用し、GC プレッシャーを排除します。
     /// </summary>
     public void Clear()
     {
+        foreach (var list in _grid.Values)
+        {
+            list.Clear();
+            _listPool.Push(list);
+        }
         _grid.Clear();
         _boxes.Clear();
     }
@@ -43,7 +61,7 @@ public sealed class PlatformSpatialHash(float cellSize = 256.0f)
             var key = GetKey(x, y);
             if (!_grid.TryGetValue(key, out var list))
             {
-                list = [];
+                list = _listPool.Count > 0 ? _listPool.Pop() : [];
                 _grid[key] = list;
             }
             list.Add(id);
@@ -52,12 +70,15 @@ public sealed class PlatformSpatialHash(float cellSize = 256.0f)
 
     /// <summary>
     ///     指定矩形領域と交差する可能性のあるプラットフォーム ID 群を抽出します。
+    ///     重複除外は HashSet による O(1) 判定を行い、List.Contains による O(N) 線形探索退化と GC アロケーションを防ぎます。
     /// </summary>
     /// <param name="queryBox">判定対象矩形</param>
     /// <param name="outCandidates">結果格納先リスト（呼び出し側で事前確保・再利用推奨）</param>
     public void Query(Box2D queryBox, List<int> outCandidates)
     {
         outCandidates.Clear();
+        _visitedQueryIds.Clear();
+
         var minX = (int)MathF.Floor(queryBox.Left / _cellSize);
         var maxX = (int)MathF.Floor(queryBox.Right / _cellSize);
         var minY = (int)MathF.Floor(queryBox.Top / _cellSize);
@@ -69,9 +90,13 @@ public sealed class PlatformSpatialHash(float cellSize = 256.0f)
             var key = GetKey(x, y);
             if (_grid.TryGetValue(key, out var list))
             {
-                foreach (var id in list)
+                for (var i = 0; i < list.Count; i++)
                 {
-                    if (!outCandidates.Contains(id)) outCandidates.Add(id);
+                    var id = list[i];
+                    if (_visitedQueryIds.Add(id))
+                    {
+                        outCandidates.Add(id);
+                    }
                 }
             }
         }
