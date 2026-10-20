@@ -27,9 +27,14 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
     /// <param name="source">対象文字列。</param>
     public StringId(string? source)
     {
-        Value = ComputeHash(source);
-        Debug.Assert(!string.IsNullOrEmpty(source), "StringId source is null or empty");
-        _stringPool.TryAdd(Value, source);
+        if (string.IsNullOrEmpty(source))
+        {
+            Value = 0;
+            return;
+        }
+
+        Value = ComputeHash(source.AsSpan());
+        RegisterToPool(Value, source);
     }
 
     /// <summary>
@@ -41,6 +46,27 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
         Value = value;
     }
 
+    private static void RegisterToPool(uint hash, string source)
+    {
+        if (_stringPool.TryGetValue(hash, out var existing))
+        {
+            if (!string.Equals(existing, source, StringComparison.OrdinalIgnoreCase))
+            {
+                Debug.Fail($"[StringId Hash Collision] Hash 0x{hash:X8} collision between '{existing}' and '{source}'.");
+            }
+            return;
+        }
+
+        if (!_stringPool.TryAdd(hash, source))
+        {
+            if (_stringPool.TryGetValue(hash, out var concurrentExisting) &&
+                !string.Equals(concurrentExisting, source, StringComparison.OrdinalIgnoreCase))
+            {
+                Debug.Fail($"[StringId Hash Collision] Hash 0x{hash:X8} collision between '{concurrentExisting}' and '{source}'.");
+            }
+        }
+    }
+
     /// <summary>
     ///     FNV-1a 32-bit アルゴリズムに基づき、大文字小文字を区別しないハッシュ値を算出します。
     /// </summary>
@@ -48,10 +74,25 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
     /// <returns>32-bit ハッシュ値。</returns>
     public static uint ComputeHash(string? text)
     {
-        if (string.IsNullOrEmpty(text)) return 0;
+        return ComputeHash(text.AsSpan());
+    }
 
-        return text.Select(char.ToLowerInvariant).
-            Aggregate(2166136261, (current, c) => (current ^ c) * 16777619);
+    /// <summary>
+    ///     FNV-1a 32-bit アルゴリズムに基づき、大文字小文字を区別しないハッシュ値を算出します（ゼロアロケーション）。
+    /// </summary>
+    /// <param name="text">計算対象の文字列スパン。</param>
+    /// <returns>32-bit ハッシュ値。</returns>
+    public static uint ComputeHash(ReadOnlySpan<char> text)
+    {
+        if (text.IsEmpty) return 0;
+
+        uint hash = 2166136261u;
+        for (int i = 0; i < text.Length; i++)
+        {
+            char c = char.ToLowerInvariant(text[i]);
+            hash = (hash ^ c) * 16777619u;
+        }
+        return hash;
     }
 
     /// <summary>文字列から <see cref="StringId" /> への暗黙的型変換を提供します。</summary>
@@ -81,6 +122,7 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
     /// <inheritdoc />
     public override string ToString()
     {
+        if (IsEmpty) return "None";
         return _stringPool.TryGetValue(Value, out var text) ? text : $"StringId(0x{Value:X8})";
     }
 }
