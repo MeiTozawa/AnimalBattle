@@ -42,13 +42,17 @@ public static class BulletSpawner
             IsIndestructible = isIndestructible
         };
 
+        var combatCfg = world.Get<CombatPrefabConfig>();
+        var damage = combatCfg.BossNormalBullet.Damage;
+
         // 統合された BossBullets プールから借出
         var entity = CombatPoolService.RentBossBullet();
         entity
             .Set(new Transform(pos))
             .Set(new Velocity(vel))
             .Set(new BulletModifier(type, radius, vel))
-            .Set(bullet);
+            .Set(bullet)
+            .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile));
 
         if (type == BulletType.Yellow)
         {
@@ -59,6 +63,7 @@ public static class BulletSpawner
             var satBullet = new Bullet(satRadius, satFill, satOutline) {
                 IsIndestructible = isIndestructible
             };
+            var satDamage = cfg.YellowSatelliteDamage > 0.0f ? cfg.YellowSatelliteDamage : damage;
             var satEntity = CombatPoolService.RentBossBullet();
             satEntity
                 .Add<OrbitOf>(entity)
@@ -66,7 +71,8 @@ public static class BulletSpawner
                 .Set(new Velocity(vel))
                 .Set(new BulletModifier(BulletType.Yellow, satRadius, vel))
                 .Set(satBullet)
-                .Set(new OrbitSatellite(orbitDist, 0.0f));
+                .Set(new OrbitSatellite(orbitDist, 0.0f))
+                .Set(new Hitbox(new CollisionShape.Circle(satRadius), satDamage, Faction.Hostile));
         }
     }
 

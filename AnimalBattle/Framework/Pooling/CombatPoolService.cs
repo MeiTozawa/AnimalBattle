@@ -1,9 +1,4 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using AnimalBattle.Combat;
-using AnimalBattle.Components;
-using AnimalBattle.Presentation;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Framework.Pooling;
 
