@@ -20,6 +20,10 @@ public static class BattleInputSystem
     private static bool _prevF2;
     private static bool _prevF3;
     private static bool _prevF4;
+    private static bool _prevKey1;
+    private static bool _prevKey2;
+    private static bool _prevKey3;
+    private static bool _prevKey4;
 
     private static Query _playerBulletsQuery;
     private static Query _vfxQuery;
@@ -140,6 +144,47 @@ public static class BattleInputSystem
         _prevF1 = isF1;
 
         if (!dbgCfg.IsActive) return;
+
+        // 1/2/3/4 キーによる Boss およびキャラクターの迅速切替
+        var isKey1 = GameEngine.CheckHitKey((int)InputButton.Key1);
+        var isKey2 = GameEngine.CheckHitKey((int)InputButton.Key2);
+        var isKey3 = GameEngine.CheckHitKey((int)InputButton.Key3);
+        var isKey4 = GameEngine.CheckHitKey((int)InputButton.Key4);
+
+        var justKey1 = isKey1 && !_prevKey1;
+        var justKey2 = isKey2 && !_prevKey2;
+        var justKey3 = isKey3 && !_prevKey3;
+        var justKey4 = isKey4 && !_prevKey4;
+
+        _prevKey1 = isKey1;
+        _prevKey2 = isKey2;
+        _prevKey3 = isKey3;
+        _prevKey4 = isKey4;
+
+        if (justKey1 || justKey2 || justKey3 || justKey4)
+        {
+            ref readonly var flow = ref world.Get<GameFlow>();
+            if (justKey1)
+            {
+                GameManager.Current.SwitchToBattle(flow.SelectedPlayer, BossType.Boss1);
+                return;
+            }
+            if (justKey2)
+            {
+                GameManager.Current.SwitchToBattle(flow.SelectedPlayer, BossType.Boss2);
+                return;
+            }
+            if (justKey3)
+            {
+                GameManager.Current.SwitchToBattle(CharacterType.Cat, flow.SelectedBoss);
+                return;
+            }
+            if (justKey4)
+            {
+                GameManager.Current.SwitchToBattle(CharacterType.Bunny, flow.SelectedBoss);
+                return;
+            }
+        }
 
         // ゲームオーバー（Boss 撃破または自機死亡）時はフェーズ切替を無効化
         if (world.Has<GameOverTag>()) return;
