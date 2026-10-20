@@ -20,6 +20,7 @@ public static class SpringScaleSystem
     {
         world.System<SpringScale, Sprite, Transform>("SpringScaleSystem")
             .Without<HitstopState>()
+            .Without<DeadTag>()
             .Iter(ExecuteSpringScale);
 
         return world;

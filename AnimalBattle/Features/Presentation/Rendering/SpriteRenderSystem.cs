@@ -18,11 +18,12 @@ public static class SpriteRenderSystem
     /// <returns>登録済みワールド</returns>
     public static World AddSpriteRenderSystem(this World world)
     {
-        // 1. 通常スプライト描画パス（近接加算・残影・回収タグを除外）
+        // 1. 通常スプライト描画パス（近接加算・残影・回収タグ・死亡エンティティを除外）
         world.System<Transform, Sprite>("SpriteRenderSystem")
             .Without<PlayerMeleeTag>()
             .Without<FadeEffect>()
             .Without<RecycleTag>()
+            .Without<DeadTag>()
             .Kind(Ecs.OnStore)
             .Iter(DrawStandardSprites);
 
@@ -30,12 +31,14 @@ public static class SpriteRenderSystem
         world.System<Transform, Sprite>("MeleeSpriteRenderSystem")
             .With<PlayerMeleeTag>()
             .Without<RecycleTag>()
+            .Without<DeadTag>()
             .Kind(Ecs.OnStore)
             .Iter(DrawMeleeSprites);
 
         // 3. 被弾フラッシュ（白光オーバーレイ）描画パス
         world.System<Transform, Sprite, HitFlashEffect>("HitFlashRenderSystem")
             .Without<RecycleTag>()
+            .Without<DeadTag>()
             .Kind(Ecs.OnStore)
             .Iter(DrawHitFlashSprites);
 

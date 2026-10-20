@@ -72,6 +72,7 @@ public static class BattleAiSystem
             {
                 if (!brain.IsDead) brain.Kill();
                 if (!e.Has<DeadTag>()) e.Add<DeadTag>();
+                sprite.IsVisible = false;
                 return;
             }
 

@@ -112,6 +112,7 @@ public static class PlayerDamageResolutionSystem
                 if (melee.IsAlive())
                 {
                     melee.Disable();
+                    melee.GetMut<Sprite>().IsVisible = false;
                 }
 
                 EffectSpawner.SpawnPlayerDeathParticles(world, trans.Position);

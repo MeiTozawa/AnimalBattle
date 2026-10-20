@@ -19,6 +19,7 @@ public static class SpriteAnimationSystem
         world.System<Components.Animation, Sprite>("SpriteAnimationSystem")
             .Kind(Ecs.OnUpdate)
             .Without<HitstopState>()
+            .Without<DeadTag>()
             .Each(UpdateSpriteAnimation);
 
         return world;

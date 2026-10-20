@@ -143,6 +143,7 @@ public static class BattleInputSystem
         state.TargetPosition = Vec2f.Zero;
         state.FacingRight = true;
 
+        boss.GetMut<Sprite>().IsVisible = true;
         if (boss.Has<DeadTag>()) boss.Remove<DeadTag>();
         if (boss.Has<HitFlashEffect>()) boss.Remove<HitFlashEffect>();
     }
@@ -171,7 +172,11 @@ public static class BattleInputSystem
         {
             player.Set(BunnyWeaponState.FromConfig(cfg));
             var melee = player.Target<EquippedWeapon>();
-            if (melee.IsAlive()) melee.Disable();
+            if (melee.IsAlive())
+            {
+                melee.Disable();
+                if (melee.Has<Sprite>()) melee.GetMut<Sprite>().IsVisible = true;
+            }
         }
 
         if (player.Has<Animation>())
@@ -179,6 +184,7 @@ public static class BattleInputSystem
             player.GetMut<Animation>().Play("Idle");
         }
 
+        if (player.Has<Sprite>()) player.GetMut<Sprite>().IsVisible = true;
         if (player.Has<DeadTag>()) player.Remove<DeadTag>();
         if (player.Has<HitFlashEffect>()) player.Remove<HitFlashEffect>();
     }

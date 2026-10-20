@@ -18,6 +18,7 @@ public static class InvincibleBlinkSystem {
     public static World AddInvincibleBlinkSystem(this World world)
     {
         world.System<Sprite, TimedEffectsState, GameplayTagState>("InvincibleBlinkSystem")
+            .Without<DeadTag>()
             .Kind(Ecs.PreUpdate)
             .Iter(ExecuteInvincibleBlink);
 
