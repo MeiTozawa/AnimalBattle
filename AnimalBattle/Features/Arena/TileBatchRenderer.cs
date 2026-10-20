@@ -57,9 +57,9 @@ public static class TileBatchRenderer
         CalculateVisibleBounds(map, viewportPos, viewportSize,
             out var minCol, out var maxCol, out var minRow, out var maxRow);
 
-        var scaleX = (double)map.RenderTileSize.X / map.TileSet.TileWidth;
-        var scaleY = (double)map.RenderTileSize.Y / map.TileSet.TileHeight;
-        var scale = (scaleX + scaleY) / 2.0;
+        var scaleX = (float)map.RenderTileSize.X / map.TileSet.TileWidth;
+        var scaleY = (float)map.RenderTileSize.Y / map.TileSet.TileHeight;
+        var scale = new Vec2f(scaleX, scaleY);
 
         for (var r = minRow; r <= maxRow; r++)
         for (var c = minCol; c <= maxCol; c++)

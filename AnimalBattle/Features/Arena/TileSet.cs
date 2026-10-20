@@ -92,7 +92,7 @@ public sealed class TileSet(
     public TileCollisionType GetCollisionType(int tileId)
     {
         if (tileId <= 0) return TileCollisionType.None;
-        return _collisionTypes.TryGetValue(tileId, out var type) ? type : TileCollisionType.OneWayPlatform;
+        return _collisionTypes.GetValueOrDefault(tileId, TileCollisionType.OneWayPlatform);
     }
 
     /// <summary>
@@ -118,14 +118,14 @@ public sealed class TileSet(
     }
 
     /// <summary>
-    ///     指定された中心座標に単一タイルを描画します。
+    ///     指定された中心座標に単一タイルを独立 X/Y 軸拡縮で描画します。
     /// </summary>
     /// <param name="tileId">1-based タイル ID</param>
     /// <param name="center">描画中心座標 (Vec2i)</param>
-    /// <param name="scale">拡大縮小率</param>
+    /// <param name="scale">拡大縮小率 (Vec2f)</param>
     /// <param name="angle">回転角度（ラジアン）</param>
     /// <param name="flipX">左右反転フラグ</param>
-    public void DrawTile(int tileId, Vec2i center, double scale, double angle, bool flipX)
+    public void DrawTile(int tileId, Vec2i center, Vec2f scale, double angle, bool flipX)
     {
         if (tileId <= 0) return;
         Debug.Assert(GraphHandle >= 0, "[TileSet 警告] タイルセットのグラフィックハンドルが無効です。");
