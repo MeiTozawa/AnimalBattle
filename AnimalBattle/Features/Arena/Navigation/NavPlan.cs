@@ -27,48 +27,18 @@ public enum NavStatus {
 ///     プラットフォームナビゲーショングラフが出力する単一フレームの意思決定プラン。
 ///     AI エンティティが現在実行すべき移動目標、跳躍指示、および運動学的速度を伝達します。
 /// </summary>
-/// <remarks>
-///     <see cref="NavPlan" /> の新しいインスタンスを初期化します。
-/// </remarks>
-public sealed class NavPlan(
-    NavStatus status,
-    float targetX,
-    float takeoffX,
-    float landingX,
-    float requiredVx,
-    float requiredVy,
-    PlatformNode? currentNode = null,
-    PlatformNode? targetNode = null,
-    PlatformLink? nextLink = null) {
-    /// <summary>現在のナビゲーション状態</summary>
-    public NavStatus Status { get; } = status;
-
-    /// <summary>現在ステップの水平移動目標 X 座標</summary>
-    public float TargetX { get; } = targetX;
-
-    /// <summary>次アクションの離陸・起跳 X 座標</summary>
-    public float TakeoffX { get; } = takeoffX;
-
-    /// <summary>次アクションの目標着地 X 座標</summary>
-    public float LandingX { get; } = landingX;
-
-    /// <summary>推奨される水平移動・飛行速度</summary>
-    public float RequiredVx { get; } = requiredVx;
-
-    /// <summary>推奨される垂直ジャンプ初速度（上向きは負値）</summary>
-    public float RequiredVy { get; } = requiredVy;
-
+public readonly record struct NavPlan(
+    NavStatus Status,
+    float TargetX,
+    float TakeoffX,
+    float LandingX,
+    float RequiredVx,
+    float RequiredVy,
+    PlatformNode? CurrentNode = null,
+    PlatformNode? TargetNode = null,
+    PlatformLink? NextLink = null) {
     /// <summary>現在フレームで直ちにジャンプをトリガーすべきかどうか</summary>
     public bool ShouldJump => Status == NavStatus.ExecuteJump;
-
-    /// <summary>自身が現在位置しているプラットフォームノード（どのプラットフォームにも属さない場合は null）</summary>
-    public PlatformNode? CurrentNode { get; } = currentNode;
-
-    /// <summary>目標プレイヤーが現在位置しているプラットフォームノード（どのプラットフォームにも属さない場合は null）</summary>
-    public PlatformNode? TargetNode { get; } = targetNode;
-
-    /// <summary>現在実行中または実行準備中のプラットフォーム間遷移リンク</summary>
-    public PlatformLink? NextLink { get; } = nextLink;
 
     /// <summary>
     ///     同一プラットフォーム内での直接歩行追従プランを生成します。

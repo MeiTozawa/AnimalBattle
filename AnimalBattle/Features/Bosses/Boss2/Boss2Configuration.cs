@@ -62,7 +62,7 @@ public readonly struct Boss2PhaseSettings(
     public float ChaseTimeout { get; } = chaseTimeout;
 }
 
-/// <summary>Boss2 戦闘判定および追跡・反風筝に関する設定値です。</summary>
+/// <summary>Boss2 戦闘判定および追跡・反風等に関する設定値です。</summary>
 public readonly struct Boss2CombatSettings(
     float collisionHeight,
     float jumpCooldownDuration,
@@ -100,13 +100,13 @@ public readonly struct Boss2CombatSettings(
     /// <summary>近接技トリガーの判定範囲 (Vec2f) です。</summary>
     public Vec2f MeleeTriggerRange { get; } = meleeTriggerRange;
 
-    /// <summary>反風筝遠距離技の発動距離（px）です。</summary>
+    /// <summary>反風等遠距離技の発動距離（px）です。</summary>
     public float AntiKitingRangedDistance { get; } = antiKitingRangedDistance;
 
-    /// <summary>反風筝中距離技の発動距離（px）です。</summary>
+    /// <summary>反風等中距離技の発動距離（px）です。</summary>
     public float AntiKitingMidDistance { get; } = antiKitingMidDistance;
 
-    /// <summary>反風筝強制発動タイムアウト倍率です。</summary>
+    /// <summary>反風等強制発動タイムアウト倍率です。</summary>
     public float AntiKitingEnforceMultiplier { get; } = antiKitingEnforceMultiplier;
 
     /// <summary>プレイヤーの判定高さ（px）です。</summary>
@@ -124,9 +124,7 @@ public interface IBoss2Configuration {
     /// <summary>目標ロック・飛翔技能タグを取得します。</summary>
     StringId TargetLockSkillTag { get; }
 
-
-
-    /// <summary>Boss2 戦闘判定および反風筝・衝突に関する設定を取得します。</summary>
+    /// <summary>Boss2 戦闘判定および反風等・衝突に関する設定を取得します。</summary>
     Boss2CombatSettings CombatSettings { get; }
 
     /// <summary>指定 Phase の検証済み設定を取得します。</summary>
@@ -143,40 +141,75 @@ public interface IBoss2Configuration {
 public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     private readonly Flecs.NET.Core.World _world;
 
+    private Boss2Config? _cachedConfig;
+    private float _cachedPlayerHeight = -1f;
+    private Boss2PhaseSettings _phase1Settings;
+    private Boss2PhaseSettings _phase2Settings;
+    private Boss2PhaseSettings _phase3Settings;
+    private Boss2CombatSettings _cachedCombatSettings;
+    private PhaseTransitionAbilityConfig _phaseTransition = default!;
+    private StringId _antiKitingMeleeSkillTag;
+    private StringId _antiKitingRangedSkillTag;
+    private StringId _targetLockSkillTag;
+
     public Boss2DefaultConfiguration(Flecs.NET.Core.World world)
     {
         Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
         _world = world;
     }
 
-    /// <inheritdoc />
-    public PhaseTransitionAbilityConfig PhaseTransition => _world.Get<Boss2Config>().PhaseTransition;
-
-    /// <inheritdoc />
-    public StringId AntiKitingMeleeSkillTag => new(_world.Get<Boss2Config>().AntiKitingMeleeSkill);
-
-    /// <inheritdoc />
-    public StringId AntiKitingRangedSkillTag => new(_world.Get<Boss2Config>().AntiKitingRangedSkill);
-
-    /// <inheritdoc />
-    public StringId TargetLockSkillTag => new(_world.Get<Boss2Config>().TargetLockSkill);
-
-    /// <inheritdoc />
-    public Boss2PhaseSettings GetPhase(Phase phase)
+    private void EnsureCached()
     {
         var toml = _world.Get<Boss2Config>();
+        var playerConfig = _world.GetActivePlayerConfig();
+        var playerHeight = playerConfig?.CollisionSize.Y ?? 0.0f;
 
-        var phaseCfg = phase switch {
-            Phase.Phase1 => toml.Phase1,
-            Phase.Phase2 => toml.Phase2,
-            Phase.Phase3 => toml.Phase3,
-            _ => AssertHelper.FailWithDefault($"[Boss2Configuration 警告] 未知のフェーズ (PhaseConfig): {phase}", toml.Phase1)
-        };
+        if (ReferenceEquals(_cachedConfig, toml) && MathF.Abs(_cachedPlayerHeight - playerHeight) < 0.001f)
+        {
+            return;
+        }
 
-        // 配置文件里的技能名称转成 StringId，避免在代码中硬编码
-        IReadOnlyList<StringId> skills = phaseCfg.Skills.Count > 0
-            ? phaseCfg.Skills.Select(s => new StringId(s)).ToList()
-            : [];
+        _cachedConfig = toml;
+        _cachedPlayerHeight = playerHeight;
+        _phaseTransition = toml.PhaseTransition;
+        _antiKitingMeleeSkillTag = new(toml.AntiKitingMeleeSkill);
+        _antiKitingRangedSkillTag = new(toml.AntiKitingRangedSkill);
+        _targetLockSkillTag = new(toml.TargetLockSkill);
+
+        _phase1Settings = CreatePhaseSettings(toml, toml.Phase1);
+        _phase2Settings = CreatePhaseSettings(toml, toml.Phase2);
+        _phase3Settings = CreatePhaseSettings(toml, toml.Phase3);
+
+        _cachedCombatSettings = new Boss2CombatSettings(
+            toml.CollisionSize.Y,
+            toml.JumpCooldownDuration,
+            toml.TakeoffVelocityThreshold,
+            toml.MoveThreshold,
+            toml.SamePlatformToleranceY,
+            toml.AirborneVelocityThreshold,
+            toml.AirborneHeightThreshold,
+            toml.MeleeTriggerRange,
+            toml.AntiKitingRangedDistance,
+            toml.AntiKitingMidDistance,
+            toml.AntiKitingEnforceMultiplier,
+            playerHeight);
+    }
+
+    private static Boss2PhaseSettings CreatePhaseSettings(Boss2Config toml, Boss2PhaseConfig phaseCfg)
+    {
+        StringId[] skills;
+        if (phaseCfg.Skills is { Count: > 0 })
+        {
+            skills = new StringId[phaseCfg.Skills.Count];
+            for (var i = 0; i < phaseCfg.Skills.Count; i++)
+            {
+                skills[i] = new StringId(phaseCfg.Skills[i]);
+            }
+        }
+        else
+        {
+            skills = [];
+        }
 
         var jumpForce = phaseCfg.JumpForce > 0 ? phaseCfg.JumpForce : toml.JumpForce;
         var chaseTimeout = phaseCfg.ChaseTimeout > 0 ? phaseCfg.ChaseTimeout : toml.ChaseTimeout;
@@ -198,29 +231,66 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
             chaseTimeout);
     }
 
-    private static IReadOnlyList<AttackDecisionRule> ConvertRules(List<AttackRuleConfig>? rules) =>
-        rules?.Select(AttackDecisionRule.FromConfig).ToArray() ?? [];
+    private static IReadOnlyList<AttackDecisionRule> ConvertRules(List<AttackRuleConfig>? rules)
+    {
+        if (rules is not { Count: > 0 }) return [];
+        var result = new AttackDecisionRule[rules.Count];
+        for (var i = 0; i < rules.Count; i++)
+        {
+            result[i] = AttackDecisionRule.FromConfig(rules[i]);
+        }
+        return result;
+    }
+
+    /// <inheritdoc />
+    public PhaseTransitionAbilityConfig PhaseTransition {
+        get {
+            EnsureCached();
+            return _phaseTransition;
+        }
+    }
+
+    /// <inheritdoc />
+    public StringId AntiKitingMeleeSkillTag {
+        get {
+            EnsureCached();
+            return _antiKitingMeleeSkillTag;
+        }
+    }
+
+    /// <inheritdoc />
+    public StringId AntiKitingRangedSkillTag {
+        get {
+            EnsureCached();
+            return _antiKitingRangedSkillTag;
+        }
+    }
+
+    /// <inheritdoc />
+    public StringId TargetLockSkillTag {
+        get {
+            EnsureCached();
+            return _targetLockSkillTag;
+        }
+    }
+
+    /// <inheritdoc />
+    public Boss2PhaseSettings GetPhase(Phase phase)
+    {
+        EnsureCached();
+        return phase switch {
+            Phase.Phase1 => _phase1Settings,
+            Phase.Phase2 => _phase2Settings,
+            Phase.Phase3 => _phase3Settings,
+            _ => AssertHelper.FailWithDefault($"[Boss2Configuration 警告] 未知のフェーズ (PhaseConfig): {phase}", _phase1Settings)
+        };
+    }
 
     /// <inheritdoc />
     public Boss2CombatSettings CombatSettings {
-        get
-        {
-            var toml = _world.Get<Boss2Config>();
-            var playerHeight = _world.GetActivePlayerConfig().CollisionSize.Y;
-
-            return new Boss2CombatSettings(
-                toml.CollisionSize.Y,
-                toml.JumpCooldownDuration,
-                toml.TakeoffVelocityThreshold,
-                toml.MoveThreshold,
-                toml.SamePlatformToleranceY,
-                toml.AirborneVelocityThreshold,
-                toml.AirborneHeightThreshold,
-                toml.MeleeTriggerRange,
-                toml.AntiKitingRangedDistance,
-                toml.AntiKitingMidDistance,
-                toml.AntiKitingEnforceMultiplier,
-                playerHeight);
+        get {
+            EnsureCached();
+            return _cachedCombatSettings;
         }
     }
 

@@ -73,34 +73,64 @@ public interface IBoss1Configuration {
 
 /// <summary>ワールドから設定を取得する Boss1 設定プロバイダです。</summary>
 public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
-    private readonly Flecs.NET.Core.World _world;
+    private readonly World _world;
 
-    public Boss1DefaultConfiguration(Flecs.NET.Core.World world)
+    private Boss1Config? _cachedConfig;
+    private Boss1PhaseSettings _phase1Settings;
+    private Boss1PhaseSettings _phase2Settings;
+    private Boss1PhaseSettings _phase3Settings;
+    private StringId _diveSkillTag;
+    private PhaseTransitionAbilityConfig _phaseTransition = default!;
+
+    public Boss1DefaultConfiguration(World world)
     {
         System.Diagnostics.Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
         _world = world;
     }
 
-    /// <inheritdoc />
-    public StringId DiveSkillTag => new(_world.Get<Boss1Config>().DiveSkill);
-
-    /// <inheritdoc />
-    public PhaseTransitionAbilityConfig PhaseTransition => _world.Get<Boss1Config>().PhaseTransition;
-
-    /// <inheritdoc />
-    public Boss1PhaseSettings GetPhase(Phase phase)
+    private void EnsureCached()
     {
         var b1Cfg = _world.Get<Boss1Config>();
-        var tomlPhase = phase switch {
-            Phase.Phase1 => b1Cfg.Phase1,
-            Phase.Phase2 => b1Cfg.Phase2,
-            Phase.Phase3 => b1Cfg.Phase3,
-            _ => AssertHelper.FailWithDefault($"[Boss1Configuration 警告] 未知のフェーズ: {phase}", b1Cfg.Phase1)
-        };
+        if (ReferenceEquals(_cachedConfig, b1Cfg)) return;
 
-        var order = tomlPhase.Skills.Count > 0
-            ? tomlPhase.Skills.Select(s => new StringId(s)).Where(id => !id.IsEmpty).ToArray()
-            : [];
+        _cachedConfig = b1Cfg;
+        _diveSkillTag = new StringId(b1Cfg.DiveSkill);
+        _phaseTransition = b1Cfg.PhaseTransition;
+        _phase1Settings = CreatePhaseSettings(b1Cfg.Phase1);
+        _phase2Settings = CreatePhaseSettings(b1Cfg.Phase2);
+        _phase3Settings = CreatePhaseSettings(b1Cfg.Phase3);
+    }
+
+    private static Boss1PhaseSettings CreatePhaseSettings(Boss1PhaseFsmConfig tomlPhase)
+    {
+        StringId[] order;
+        if (tomlPhase.Skills is { Count: > 0 })
+        {
+            var validCount = 0;
+            var temp = new StringId[tomlPhase.Skills.Count];
+            foreach (var t in tomlPhase.Skills)
+            {
+                var id = new StringId(t);
+                if (!id.IsEmpty)
+                {
+                    temp[validCount++] = id;
+                }
+            }
+
+            if (validCount == temp.Length)
+            {
+                order = temp;
+            }
+            else
+            {
+                order = new StringId[validCount];
+                Array.Copy(temp, order, validCount);
+            }
+        }
+        else
+        {
+            order = [];
+        }
 
         return new Boss1PhaseSettings(
             tomlPhase.HoverDuration,
@@ -115,6 +145,34 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
             tomlPhase.TransitionDuration,
             tomlPhase.TransitionFloatSpeed,
             order);
+    }
+
+    /// <inheritdoc />
+    public StringId DiveSkillTag {
+        get {
+            EnsureCached();
+            return _diveSkillTag;
+        }
+    }
+
+    /// <inheritdoc />
+    public PhaseTransitionAbilityConfig PhaseTransition {
+        get {
+            EnsureCached();
+            return _phaseTransition;
+        }
+    }
+
+    /// <inheritdoc />
+    public Boss1PhaseSettings GetPhase(Phase phase)
+    {
+        EnsureCached();
+        return phase switch {
+            Phase.Phase1 => _phase1Settings,
+            Phase.Phase2 => _phase2Settings,
+            Phase.Phase3 => _phase3Settings,
+            _ => AssertHelper.FailWithDefault($"[Boss1Configuration 警告] 未知のフェーズ: {phase}", _phase1Settings)
+        };
     }
 
     /// <inheritdoc />

@@ -143,7 +143,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         var buildResult = BossPatternLoader.BuildAbility(skill, config, cooldown);
         if (buildResult.IsError)
         {
-            Debug.Assert(false, $"Boss 2 技能時序の構築に失敗しました: {skill}");
+            Debug.Assert(false, $"Boss 2 技能時系列の構築に失敗しました: {skill}");
             return;
         }
 
@@ -350,10 +350,10 @@ public sealed class Boss2Brain : BaseBossBrain {
             plan = navGraph.FindPath(_currentPosition.X, bossFootY, playerPos.X, playerFootY, isGrounded, phaseCfg.MoveSpeed);
         }
 
-        if (plan is not null && plan.Status == NavStatus.ExecuteJump && _jumpCooldown <= 0.0f)
+        if (plan is { Status: NavStatus.ExecuteJump } jumpPlan && _jumpCooldown <= 0.0f)
         {
-            var jumpVy = plan.RequiredVy != 0.0f ? plan.RequiredVy : -phaseCfg.JumpForce;
-            var jumpVx = plan.RequiredVx;
+            var jumpVy = jumpPlan.RequiredVy != 0.0f ? jumpPlan.RequiredVy : -phaseCfg.JumpForce;
+            var jumpVx = jumpPlan.RequiredVx;
             _facingRight = jumpVx >= 0.0f;
             _currentVelocity = new Vec2f(jumpVx, jumpVy);
             _jumpCooldown = _configuration.CombatSettings.JumpCooldownDuration;
@@ -364,9 +364,9 @@ public sealed class Boss2Brain : BaseBossBrain {
         }
 
         float walkVx;
-        if (plan is not null)
+        if (plan is { } validPlan)
         {
-            walkVx = plan.RequiredVx;
+            walkVx = validPlan.RequiredVx;
             if (MathF.Abs(walkVx) > _configuration.CombatSettings.MoveThreshold)
                 _facingRight = walkVx > 0.0f;
         }
