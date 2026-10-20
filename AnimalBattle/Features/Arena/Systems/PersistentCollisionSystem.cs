@@ -50,58 +50,70 @@ public static class PersistentCollisionSystem
 
         Span<int> candidateIndices = stackalloc int[16];
 
-        for (var i = 0; i < count; i++)
+        // 被弾コンポーネント追加や破棄タグ付与などの構造変更によるイテレーション破壊と同一フレーム内の多段ヒットを防止するため、遅延実行モードを開始する
+        using (new DeferScope(world))
         {
-            ref var hitbox = ref hitboxes[i];
-            if (!hitbox.IsActive) continue;
-
-            ref var trans = ref atkTrans[i];
-            ref var history = ref histories[i];
-            var atkEntity = it.Entity(i);
-            var shouldDestroyAttacker = false;
-
-            var aCenterX = trans.Position.X + hitbox.Shape.Offset.X;
-            var aCenterY = trans.Position.Y + hitbox.Shape.Offset.Y;
-            var aHalfW = hitbox.Shape.Type == CollisionShapeType.Box
-                ? hitbox.Shape.Size.X * 0.5f
-                : hitbox.Shape.Radius;
-            var aHalfH = hitbox.Shape.Type == CollisionShapeType.Box
-                ? hitbox.Shape.Size.Y * 0.5f
-                : hitbox.Shape.Radius;
-
-            var matchCount = spatialIndex.QueryCandidates(
-                aCenterX, aCenterY, aHalfW, aHalfH, hitbox.Faction, candidateIndices);
-
-            for (var c = 0; c < matchCount; c++)
+            for (var i = 0; i < count; i++)
             {
-                ref readonly var target = ref spatialIndex.GetItem(candidateIndices[c]);
-                var vicEntity = target.Entity;
-                if (!vicEntity.IsAlive()) continue;
+                ref var hitbox = ref hitboxes[i];
+                if (!hitbox.IsActive) continue;
 
-                // 単発弾（DestroyOnHit = true）は履歴検査をスキップ
-                // 貫通・近接判定（DestroyOnHit = false）は同一対象への重複多段ヒットを防止
-                if (!hitbox.DestroyOnHit && history.HasHit(vicEntity.Id)) continue;
+                ref var trans = ref atkTrans[i];
+                ref var history = ref histories[i];
+                var atkEntity = it.Entity(i);
+                var shouldDestroyAttacker = false;
 
-                ref readonly var hp = ref vicEntity.Get<Health>();
-                if (hp.Current <= 0.0f) continue;
+                var aCenterX = trans.Position.X + hitbox.Shape.Offset.X;
+                var aCenterY = trans.Position.Y + hitbox.Shape.Offset.Y;
+                var aHalfW = hitbox.Shape.Type == CollisionShapeType.Box
+                    ? hitbox.Shape.Size.X * 0.5f
+                    : hitbox.Shape.Radius;
+                var aHalfH = hitbox.Shape.Type == CollisionShapeType.Box
+                    ? hitbox.Shape.Size.Y * 0.5f
+                    : hitbox.Shape.Radius;
 
-                ref var vicTrans = ref vicEntity.GetMut<Transform>();
-                ref var hurtbox = ref vicEntity.GetMut<Hurtbox>();
+                var matchCount = spatialIndex.QueryCandidates(
+                    aCenterX, aCenterY, aHalfW, aHalfH, hitbox.Faction, candidateIndices);
 
-                if (PhysicsService.Intersects(trans, hitbox.Shape, vicTrans, hurtbox.Shape))
+                for (var c = 0; c < matchCount; c++)
                 {
-                    if (!hitbox.DestroyOnHit)
-                    {
-                        history.TryRecordHit(vicEntity.Id);
-                    }
+                    ref readonly var target = ref spatialIndex.GetItem(candidateIndices[c]);
+                    var vicEntity = target.Entity;
+                    if (!vicEntity.IsAlive()) continue;
 
-                    CombatCollisionSystem.ApplyHit(world, vicEntity, ref vicTrans, in trans, ref hurtbox, in hitbox,
-                        ref shouldDestroyAttacker);
-                    if (shouldDestroyAttacker) break;
+                    // 単発弾（DestroyOnHit = true）は履歴検査をスキップ
+                    // 貫通・近接判定（DestroyOnHit = false）は同一対象への重複多段ヒットを防止
+                    if (!hitbox.DestroyOnHit && history.HasHit(vicEntity.Id)) continue;
+
+                    ref readonly var hp = ref vicEntity.Get<Health>();
+                    if (hp.Current <= 0.0f) continue;
+
+                    ref readonly var vicTrans = ref vicEntity.Get<Transform>();
+                    ref readonly var hurtbox = ref vicEntity.Get<Hurtbox>();
+
+                    if (PhysicsService.Intersects(trans, hitbox.Shape, vicTrans, hurtbox.Shape))
+                    {
+                        if (!hitbox.DestroyOnHit)
+                        {
+                            history.TryRecordHit(vicEntity.Id);
+                        }
+
+                        CombatCollisionSystem.ApplyHit(world, vicEntity, in vicTrans, in trans, in hurtbox, in hitbox,
+                            ref shouldDestroyAttacker);
+                        if (shouldDestroyAttacker)
+                        {
+                            hitbox.IsActive = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (shouldDestroyAttacker)
+                {
+                    hitbox.IsActive = false;
+                    atkEntity.Add<RecycleTag>();
                 }
             }
-
-            if (shouldDestroyAttacker) atkEntity.Add<RecycleTag>();
         }
     }
 }
