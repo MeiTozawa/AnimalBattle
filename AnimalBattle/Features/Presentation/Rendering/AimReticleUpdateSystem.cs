@@ -24,9 +24,10 @@ public static class AimReticleUpdateSystem
     {
         world.Set(new AimReticleState());
 
+        _subscribedWorld = world;
+
         if (!_isSubscribed)
         {
-            _subscribedWorld = world;
             EventBus.Subscribe<PlayerShotFiredEvent>(OnPlayerShotFired);
             _isSubscribed = true;
         }

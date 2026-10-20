@@ -95,9 +95,12 @@ public static class SoundService
 
     /// <summary>
     ///     EventBus の各ドメインイベントを購読します。
+    ///     多重登録を防止するため、既存の登録がある場合は事前に解除します。
     /// </summary>
-    private static void RegisterEventHandlers()
+    public static void RegisterEventHandlers()
     {
+        UnregisterEventHandlers();
+
         EventBus.Subscribe<PlayerJumpedEvent>(OnPlayerJumped);
         EventBus.Subscribe<PlayerDoubleJumpedEvent>(OnPlayerDoubleJumped);
         EventBus.Subscribe<PlayerLandedEvent>(OnPlayerLanded);
@@ -115,9 +118,9 @@ public static class SoundService
     }
 
     /// <summary>
-    ///     EventBus の購読を解除します。
+    ///     EventBus の全ドメインイベントの購読を解除します。
     /// </summary>
-    private static void UnregisterEventHandlers()
+    public static void UnregisterEventHandlers()
     {
         EventBus.Unsubscribe<PlayerJumpedEvent>(OnPlayerJumped);
         EventBus.Unsubscribe<PlayerDoubleJumpedEvent>(OnPlayerDoubleJumped);
@@ -156,6 +159,7 @@ public static class SoundService
 
     private static void OnCombatReset(CombatResetEvent e)
     {
+        StopBgm();
     }
 
     private static void OnBossBulletFired(BossBulletFiredEvent e) => PlaySfx(SfxType.BossBulletShoot);

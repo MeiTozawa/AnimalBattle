@@ -1,6 +1,9 @@
 namespace AnimalBattle.Configs;
 
 using System.Diagnostics;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using ErrorOr;
 using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +17,11 @@ using Tomlyn.Extensions.Configuration;
 public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
     where T : class, new()
 {
+    private const int DebounceDelayMs = 250;
+    private const int MaxRetryCount = 5;
+    private const int RetryDelayMs = 60;
+
+    private readonly object _lock = new();
     private readonly string _relativeFilePath;
     private readonly ConfigHolder<T> _holder;
     private readonly Action<IConfiguration, T> _binder;
@@ -21,6 +29,11 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
     private readonly IConfigPathResolver _resolver;
     private IDisposable? _changeTokenSubscription;
     private bool _isDisposed;
+
+#if DEBUG
+    private CancellationTokenSource? _debounceCts;
+    private int _isReloading;
+#endif
 
     /// <summary>
     /// <see cref="TomlHotReloadLoader{T}" /> の新しいインスタンスを初期化します。
@@ -87,36 +100,43 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
                 configRoot.GetReloadToken,
                 () =>
                 {
-                    try
-                    {
-                        var reloaded = new T();
-                        _binder(configRoot, reloaded);
+                    // 内部リロードによる再帰的トリガーをスキップ
+                    if (Volatile.Read(ref _isReloading) != 0) return;
 
-                        if (reloaded is IConfigLifecycle reloadedLifecycle)
+                    CancellationTokenSource cts;
+                    lock (_lock)
+                    {
+                        if (_isDisposed) return;
+                        _debounceCts?.Cancel();
+                        _debounceCts?.Dispose();
+                        _debounceCts = new CancellationTokenSource();
+                        cts = _debounceCts;
+                    }
+
+                    _ = Task.Run(async () =>
+                    {
+                        try
                         {
-                            var valid = reloadedLifecycle.Validate();
-                            if (valid.IsError)
+                            // エディタによる連続ファイルイベント（清空・書き込み・改名）を待機して集約
+                            await Task.Delay(DebounceDelayMs, cts.Token).ConfigureAwait(false);
+                            if (cts.Token.IsCancellationRequested) return;
+
+                            lock (_lock)
                             {
-                                Debug.WriteLine($"[C# 設定警告] {typeof(T).Name} のリロード検証に失敗したためスキップしました: {valid.FirstError.Description}");
-                                return;
+                                if (_isDisposed) return;
                             }
-                            reloadedLifecycle.PostProcess();
+
+                            await ReloadWithRetryAsync(configRoot, resolvedPath, cts.Token).ConfigureAwait(false);
                         }
-
-                        ConfigHotReloadDispatcher.Enqueue(world =>
+                        catch (OperationCanceledException)
                         {
-                            var updateResult = _holder.Update(reloaded);
-                            if (!updateResult.IsError)
-                            {
-                                Debug.WriteLine($"[C# 設定] {typeof(T).Name} が自動リロードされました: {resolvedPath}");
-                                _onReloaded?.Invoke(world, reloaded);
-                            }
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.Fail($"[C# 設定警告] {typeof(T).Name} のリロード中に例外が発生しました: {ex.Message}");
-                    }
+                            // 後続の保存イベントによって防抖（Debounce）キャンセルされたため正常終了
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"[C# 設定警告] {typeof(T).Name} の非同期リロード監視中に予期せぬエラーが発生しました: {ex.Message}");
+                        }
+                    }, cts.Token);
                 });
 #endif
 
@@ -129,12 +149,104 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
         }
     }
 
+#if DEBUG
+    private async Task ReloadWithRetryAsync(IConfigurationRoot configRoot, string resolvedPath, CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; attempt <= MaxRetryCount; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            try
+            {
+                // 1. ファイルの存在確認および排他ロック・一時的空ファイル（0バイト）の解消チェック
+                if (!File.Exists(resolvedPath))
+                {
+                    throw new FileNotFoundException("設定ファイルが見つかりません。", resolvedPath);
+                }
+
+                await using (var stream = new FileStream(resolvedPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    if (stream.Length == 0)
+                    {
+                        throw new IOException("設定ファイルが一時的に 0 バイト（エディタによるトランケート中）です。");
+                    }
+                }
+
+                // 2. configRoot の再読み込み（自らの RaiseChanged による再帰を防止）
+                Interlocked.Exchange(ref _isReloading, 1);
+                try
+                {
+                    configRoot.Reload();
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref _isReloading, 0);
+                }
+
+                // 3. バインディングとライフサイクル検証
+                var reloaded = new T();
+                _binder(configRoot, reloaded);
+
+                if (reloaded is IConfigLifecycle reloadedLifecycle)
+                {
+                    var valid = reloadedLifecycle.Validate();
+                    if (valid.IsError)
+                    {
+                        Debug.WriteLine($"[C# 設定警告] {typeof(T).Name} のリロード検証に失敗したためスキップしました: {valid.FirstError.Description}");
+                        return;
+                    }
+                    reloadedLifecycle.PostProcess();
+                }
+
+                // 4. メインスレッドディスパッチ
+                ConfigHotReloadDispatcher.Enqueue(world =>
+                {
+                    var updateResult = _holder.Update(reloaded);
+                    if (!updateResult.IsError)
+                    {
+                        Debug.WriteLine($"[C# 設定] {typeof(T).Name} が自動リロードされました: {resolvedPath}");
+                        _onReloaded?.Invoke(world, reloaded);
+                    }
+                });
+
+                return;
+            }
+            catch (IOException ex) when (attempt < MaxRetryCount)
+            {
+                Debug.WriteLine($"[C# 設定情報] {typeof(T).Name} のファイルアクセス競合を検知 (試行 {attempt}/{MaxRetryCount}): {ex.Message}。待機して再試行します...");
+                await Task.Delay(RetryDelayMs * attempt, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (attempt < MaxRetryCount && ex is not OperationCanceledException)
+            {
+                Debug.WriteLine($"[C# 設定情報] {typeof(T).Name} のリロード中間エラーを検知 (試行 {attempt}/{MaxRetryCount}): {ex.Message}。待機して再試行します...");
+                await Task.Delay(RetryDelayMs * attempt, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // 最大試行回数を超過した場合はクラッシュさせず警告ログを出力し、次回ファイル保存時の再試行へフォールバック
+                Debug.WriteLine($"[C# 設定警告] {typeof(T).Name} のリロードに失敗しました (次回保存時に再試行可能): {ex.Message}");
+                return;
+            }
+        }
+    }
+#endif
+
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_isDisposed) return;
+        lock (_lock)
+        {
+            if (_isDisposed) return;
+            _isDisposed = true;
+
+#if DEBUG
+            _debounceCts?.Cancel();
+            _debounceCts?.Dispose();
+            _debounceCts = null;
+#endif
+        }
+
         _changeTokenSubscription?.Dispose();
         _changeTokenSubscription = null;
-        _isDisposed = true;
     }
 }

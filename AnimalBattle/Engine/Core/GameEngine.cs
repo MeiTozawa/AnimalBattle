@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Runtime.CompilerServices;
 using AnimalBattle.Asset;
 using AnimalBattle.Bindings;
+using AnimalBattle.Events;
 
 namespace AnimalBattle.Core;
 
@@ -34,6 +35,7 @@ public static class GameEngine {
     public static void Shutdown()
     {
         SoundService.Shutdown();
+        EventBus.ClearAll();
         _commandBuffer.Dispose();
         NativeBindings.Engine_Shutdown();
     }

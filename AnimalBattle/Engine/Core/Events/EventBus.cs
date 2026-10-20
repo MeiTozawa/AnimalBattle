@@ -11,20 +11,53 @@ public static class EventBus<T> where T : struct
 {
     private static Action<T>? _handlers;
 
-    /// <summary>
-    ///     指定したイベント型のハンドラーを登録します。
-    /// </summary>
-    public static void Subscribe(Action<T> handler)
+    static EventBus()
     {
-        _handlers += handler;
+        EventBus.RegisterCleaner(Clear);
+    }
+
+    /// <summary>
+    ///     指定したイベント型のハンドラーを登録し、スコープ解除用トークンを返します。
+    ///     スレッドセーフなアトミック操作により登録されます。
+    /// </summary>
+    public static IDisposable Subscribe(Action<T> handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+
+        var current = _handlers;
+        while (true)
+        {
+            var updated = (Action<T>?)Delegate.Combine(current, handler);
+            var original = Interlocked.CompareExchange(ref _handlers, updated, current);
+            if (ReferenceEquals(original, current))
+            {
+                break;
+            }
+            current = original;
+        }
+
+        return new SubscriptionToken(handler);
     }
 
     /// <summary>
     ///     指定したイベント型のハンドラーの登録を解除します。
+    ///     スレッドセーフなアトミック操作により解除されます。
     /// </summary>
     public static void Unsubscribe(Action<T> handler)
     {
-        _handlers -= handler;
+        ArgumentNullException.ThrowIfNull(handler);
+
+        var current = _handlers;
+        while (true)
+        {
+            var updated = (Action<T>?)Delegate.Remove(current, handler);
+            var original = Interlocked.CompareExchange(ref _handlers, updated, current);
+            if (ReferenceEquals(original, current))
+            {
+                break;
+            }
+            current = original;
+        }
     }
 
     /// <summary>
@@ -41,7 +74,20 @@ public static class EventBus<T> where T : struct
     /// </summary>
     public static void Clear()
     {
-        _handlers = null;
+        Interlocked.Exchange(ref _handlers, null);
+    }
+
+    private sealed class SubscriptionToken(Action<T> handler) : IDisposable {
+        private Action<T>? _handler = handler;
+
+        public void Dispose()
+        {
+            var handler = Interlocked.Exchange(ref _handler, null);
+            if (handler != null)
+            {
+                Unsubscribe(handler);
+            }
+        }
     }
 }
 
@@ -50,6 +96,43 @@ public static class EventBus<T> where T : struct
 /// </summary>
 public static class EventBus
 {
+    private static readonly List<Action> _cleanerActions = new();
+    private static readonly Lock _registryLock = new();
+
+    internal static void RegisterCleaner(Action cleaner)
+    {
+        lock (_registryLock)
+        {
+            if (!_cleanerActions.Contains(cleaner))
+            {
+                _cleanerActions.Add(cleaner);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     すべてのイベント型に登録された全リスナー・ハンドラーを一括消去します。
+    ///     シーン遷移時、ゲーム終了時、あるいはテスト実行時の静的委托リークを完全に防止します。
+    /// </summary>
+    public static void ClearAll()
+    {
+        lock (_registryLock)
+        {
+            foreach (var cleaner in _cleanerActions)
+            {
+                cleaner();
+            }
+        }
+    }
+
+    /// <summary>
+    ///     指定したイベント型に登録された全ハンドラーを消去します。
+    /// </summary>
+    public static void Clear<T>() where T : struct
+    {
+        EventBus<T>.Clear();
+    }
+
     /// <summary>
     ///     イベントを発行します。
     /// </summary>
@@ -60,11 +143,11 @@ public static class EventBus
     }
 
     /// <summary>
-    ///     イベントハンドラーを購読します。
+    ///     イベントハンドラーを購読し、破棄時に自動 Unsubscribe するトークンを返します。
     /// </summary>
-    public static void Subscribe<T>(Action<T> handler) where T : struct
+    public static IDisposable Subscribe<T>(Action<T> handler) where T : struct
     {
-        EventBus<T>.Subscribe(handler);
+        return EventBus<T>.Subscribe(handler);
     }
 
     /// <summary>
