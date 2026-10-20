@@ -2,6 +2,7 @@ namespace AnimalBattle.Configs;
 
 using System.Diagnostics;
 using Flecs.NET.Core;
+using Microsoft.Extensions.Configuration;
 
 /// <summary>
 /// <see cref="IConfigRegistry"/> の標準実装。
@@ -14,7 +15,10 @@ public sealed class ConfigRegistry : IConfigRegistry
     private bool _isDisposed;
 
     /// <inheritdoc />
-    public ConfigHolder<T> RegisterToml<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)] T>(string relativePath, Action<World, T>? onReloaded = null) where T : class, new()
+    public ConfigHolder<T> RegisterToml<T>(
+        string relativePath,
+        Action<IConfiguration, T> binder,
+        Action<World, T>? onReloaded = null) where T : class, new()
     {
         var type = typeof(T);
         if (_holders.TryGetValue(type, out var existing))
@@ -23,7 +27,7 @@ public sealed class ConfigRegistry : IConfigRegistry
         }
 
         var holder = new ConfigHolder<T>(new T());
-        var loader = new TomlHotReloadLoader<T>(relativePath, holder, onReloaded);
+        var loader = new TomlHotReloadLoader<T>(relativePath, holder, binder, onReloaded);
         var initial = loader.LoadInitial();
         if (!initial.IsError)
         {

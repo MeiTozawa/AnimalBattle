@@ -1,7 +1,6 @@
 namespace AnimalBattle.Configs;
 
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using ErrorOr;
 using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
@@ -12,11 +11,12 @@ using Tomlyn.Extensions.Configuration;
 /// TOML 設定ファイルの読み込みおよびバックグラウンド変更監視を提供するローダー。
 /// </summary>
 /// <typeparam name="T">対象の設定クラスの型</typeparam>
-public sealed class TomlHotReloadLoader<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T> : IConfigLoader<T>
+public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
     where T : class, new()
 {
     private readonly string _relativeFilePath;
     private readonly ConfigHolder<T> _holder;
+    private readonly Action<IConfiguration, T> _binder;
     private readonly Action<World, T>? _onReloaded;
     private readonly IConfigPathResolver _resolver;
     private IDisposable? _changeTokenSubscription;
@@ -27,26 +27,28 @@ public sealed class TomlHotReloadLoader<[DynamicallyAccessedMembers(DynamicallyA
     /// </summary>
     /// <param name="relativeFilePath">設定ファイルの相対パスまたはファイル名</param>
     /// <param name="holder">更新対象のインメモリ設定コンテナ</param>
+    /// <param name="binder">具象型に対応する AOT 互換設定バインドデリゲート</param>
     /// <param name="onReloaded">ホットリロード適用時にメインスレッドで実行する追加同期処理</param>
     /// <param name="resolver">パス解決リゾルバー（省略時は標準リゾルバー）</param>
     public TomlHotReloadLoader(
         string relativeFilePath,
         ConfigHolder<T> holder,
+        Action<IConfiguration, T> binder,
         Action<World, T>? onReloaded = null,
         IConfigPathResolver? resolver = null)
     {
         Debug.Assert(!string.IsNullOrEmpty(relativeFilePath), "ファイルパスは空にできません。");
         Debug.Assert(holder != null, "ConfigHolder は null にできません。");
+        Debug.Assert(binder != null, "Binder は null にできません。");
 
         _relativeFilePath = relativeFilePath;
         _holder = holder;
+        _binder = binder;
         _onReloaded = onReloaded;
         _resolver = resolver ?? ConfigPathResolver.Instance;
     }
 
     /// <inheritdoc />
-    [UnconditionalSuppressMessage("Microsoft.Configuration.Binder", "SYSLIB1104",
-        Justification = "Generic binder fallback is intentional in config container class.")]
     public ErrorOr<T> LoadInitial()
     {
         var resolvedPath = _resolver.ResolveConfigPath(_relativeFilePath);
@@ -67,7 +69,7 @@ public sealed class TomlHotReloadLoader<[DynamicallyAccessedMembers(DynamicallyA
 
             var configRoot = builder.Build();
             var instance = new T();
-            configRoot.Bind(instance);
+            _binder(configRoot, instance);
 
             if (instance is IConfigLifecycle lifecycle)
             {
@@ -88,7 +90,7 @@ public sealed class TomlHotReloadLoader<[DynamicallyAccessedMembers(DynamicallyA
                     try
                     {
                         var reloaded = new T();
-                        configRoot.Bind(reloaded);
+                        _binder(configRoot, reloaded);
 
                         if (reloaded is IConfigLifecycle reloadedLifecycle)
                         {

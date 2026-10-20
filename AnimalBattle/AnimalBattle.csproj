@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <PublishAot>true</PublishAot>
-        <NoWarn>$(NoWarn);SYSLIB1104</NoWarn>
+        <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
 

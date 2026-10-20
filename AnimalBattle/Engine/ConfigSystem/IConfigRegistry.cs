@@ -1,6 +1,7 @@
 namespace AnimalBattle.Configs;
 
 using Flecs.NET.Core;
+using Microsoft.Extensions.Configuration;
 
 /// <summary>
 /// 全設定コンテナの動的登録、型安全な取得、および Flecs.NET ワールドへの一括注入を担う汎用登録センター。
@@ -10,7 +11,10 @@ public interface IConfigRegistry : IDisposable
     /// <summary>
     /// TOML 設定ファイルを監視するローダーを伴って設定コンテナを登録します。
     /// </summary>
-    ConfigHolder<T> RegisterToml<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.All)] T>(string relativePath, Action<World, T>? onReloaded = null) where T : class, new();
+    ConfigHolder<T> RegisterToml<T>(
+        string relativePath,
+        Action<IConfiguration, T> binder,
+        Action<World, T>? onReloaded = null) where T : class, new();
 
     /// <summary>
     /// 事前構築された設定インスタンスをそのまま登録します。

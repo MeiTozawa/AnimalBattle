@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Core;
 using Flecs.NET.Core;
+using Microsoft.Extensions.Configuration;
 
 /// <summary>
 /// 游戏业务层全量配置的集中注册与依赖装配器。
@@ -22,24 +23,24 @@ public static class GameConfigRegistrar
 #if DEBUG
         TypeDescriptor.AddAttributes(typeof(Color), new TypeConverterAttribute(typeof(FlexibleColorConverter)));
 
-        registry.RegisterToml<CatConfig>(ResourcePath.Config.Cat, (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCat(w, cfg));
-        registry.RegisterToml<BunnyConfig>(ResourcePath.Config.Bunny, (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncBunny(w, cfg));
-        registry.RegisterToml<CatPrefabConfig>(ResourcePath.Config.CatPrefab, (w, cfg) => { w.Set(cfg); AnimalBattle.Player.PlayerPrefabs.Register(w); });
-        registry.RegisterToml<BunnyPrefabConfig>(ResourcePath.Config.BunnyPrefab, (w, cfg) => { w.Set(cfg); AnimalBattle.Player.PlayerPrefabs.Register(w); });
-        registry.RegisterToml<Boss1Config>(ResourcePath.Config.Boss1, (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss1(w, cfg));
-        registry.RegisterToml<Boss2Config>(ResourcePath.Config.Boss2, (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss2(w, cfg));
-        registry.RegisterToml<Boss1PatternConfig>(ResourcePath.Config.Boss1Patterns);
-        registry.RegisterToml<Boss2PatternConfig>(ResourcePath.Config.Boss2Patterns);
-        registry.RegisterToml<Boss1PrefabConfig>(ResourcePath.Config.Boss1Prefab, (w, cfg) => { w.Set(cfg); AnimalBattle.Bosses.BossPrefabs.Register(w); });
-        registry.RegisterToml<Boss2PrefabConfig>(ResourcePath.Config.Boss2Prefab, (w, cfg) => { w.Set(cfg); AnimalBattle.Bosses.BossPrefabs.Register(w); });
-        registry.RegisterToml<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets);
-        registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (w, cfg) => { w.Set(cfg); TelegraphRenderHelper.CurrentArena = cfg; });
-        registry.RegisterToml<RenderConfig>(ResourcePath.Config.Render, (w, cfg) => { w.Set(cfg); TelegraphRenderHelper.CurrentEffects = cfg.BossEffects; });
-        registry.RegisterToml<CameraConfig>(ResourcePath.Config.Camera, (w, cfg) => { w.Set(cfg); AnimalBattle.Core.CameraService.CurrentConfig = cfg; });
-        registry.RegisterToml<TileSetConfig>(ResourcePath.Platform.SheetToml);
-        registry.RegisterToml<AudioConfig>(ResourcePath.Config.Audio, (w, cfg) => { w.Set(cfg); AnimalBattle.Core.SoundService.CurrentConfig = cfg; });
-        registry.RegisterToml<CombatPrefabConfig>(ResourcePath.Config.CombatPrefab);
-        registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene);
+        registry.RegisterToml<CatConfig>(ResourcePath.Config.Cat, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCat(w, cfg));
+        registry.RegisterToml<BunnyConfig>(ResourcePath.Config.Bunny, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncBunny(w, cfg));
+        registry.RegisterToml<CatPrefabConfig>(ResourcePath.Config.CatPrefab, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Player.PlayerPrefabs.Register(w); });
+        registry.RegisterToml<BunnyPrefabConfig>(ResourcePath.Config.BunnyPrefab, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Player.PlayerPrefabs.Register(w); });
+        registry.RegisterToml<Boss1Config>(ResourcePath.Config.Boss1, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss1(w, cfg));
+        registry.RegisterToml<Boss2Config>(ResourcePath.Config.Boss2, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss2(w, cfg));
+        registry.RegisterToml<Boss1PatternConfig>(ResourcePath.Config.Boss1Patterns, (root, cfg) => root.Bind(cfg));
+        registry.RegisterToml<Boss2PatternConfig>(ResourcePath.Config.Boss2Patterns, (root, cfg) => root.Bind(cfg));
+        registry.RegisterToml<Boss1PrefabConfig>(ResourcePath.Config.Boss1Prefab, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Bosses.BossPrefabs.Register(w); });
+        registry.RegisterToml<Boss2PrefabConfig>(ResourcePath.Config.Boss2Prefab, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Bosses.BossPrefabs.Register(w); });
+        registry.RegisterToml<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets, (root, cfg) => root.Bind(cfg));
+        registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); TelegraphRenderHelper.CurrentArena = cfg; });
+        registry.RegisterToml<RenderConfig>(ResourcePath.Config.Render, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); TelegraphRenderHelper.CurrentEffects = cfg.BossEffects; });
+        registry.RegisterToml<CameraConfig>(ResourcePath.Config.Camera, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.CameraService.CurrentConfig = cfg; });
+        registry.RegisterToml<TileSetConfig>(ResourcePath.Platform.SheetToml, (root, cfg) => root.Bind(cfg));
+        registry.RegisterToml<AudioConfig>(ResourcePath.Config.Audio, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.SoundService.CurrentConfig = cfg; });
+        registry.RegisterToml<CombatPrefabConfig>(ResourcePath.Config.CombatPrefab, (root, cfg) => root.Bind(cfg));
+        registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene, (root, cfg) => root.Bind(cfg));
 #else
         var loadResult = BinaryConfigLoader.Load();
         if (loadResult.IsError)
