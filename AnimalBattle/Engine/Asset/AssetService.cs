@@ -38,4 +38,22 @@ public static class AssetService {
         Debug.Assert(success, $"[AssetService 警告] グラフィックハンドルの解放に失敗しました (Handle: {handle})。");
         return success;
     }
+
+    /// <summary>
+    ///     指定画像ハンドルの幅と高さをネイティブエンジンから取得します。
+    ///     ※DxLib の画像サイズ取得 API はスレッドセーフではないため、メインスレッド（ロード時）のみ呼び出してください。
+    /// </summary>
+    /// <param name="handle">画像ハンドル</param>
+    /// <returns>画像サイズ (<see cref="Vec2i" />)</returns>
+    public static Vec2i GetGraphSize(int handle)
+    {
+        Debug.Assert(handle >= 0, $"[AssetService 警告] 無効なグラフィックハンドルです (Handle: {handle})。");
+        var size = Vec2i.Zero;
+        unsafe
+        {
+            NativeBindings.Engine_GetGraphSize(handle, &size);
+        }
+
+        return size;
+    }
 }

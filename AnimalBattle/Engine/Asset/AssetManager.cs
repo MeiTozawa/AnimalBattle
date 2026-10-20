@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using AnimalBattle.Configs;
 
 namespace AnimalBattle.Asset;
@@ -10,6 +11,7 @@ public sealed class AssetManager : IDisposable {
     private static readonly Dictionary<CharacterType, int> _characterSpriteHandles = [];
     private static readonly Dictionary<CharacterType, AnimationConfig> _characterConfigs = [];
     private static readonly Dictionary<string, int> _textureHandles = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<int, Vec2i> _graphSizes = [];
     private bool _isDisposed;
 
     /// <summary>
@@ -42,6 +44,7 @@ public sealed class AssetManager : IDisposable {
         _characterSpriteHandles.Clear();
         _characterConfigs.Clear();
         _textureHandles.Clear();
+        _graphSizes.Clear();
         IsInitialized = false;
     }
 
@@ -55,6 +58,7 @@ public sealed class AssetManager : IDisposable {
 
         foreach (var handle in _textureHandles.Values) AssetService.DeleteGraph(handle);
         _textureHandles.Clear();
+        _graphSizes.Clear();
         _characterConfigs.Clear();
         IsInitialized = false;
     }
@@ -98,6 +102,12 @@ public sealed class AssetManager : IDisposable {
         var fullPath = ResolveAssetPath(relPath);
         var handle = AssetService.LoadGraph(fullPath);
         Debug.Assert(handle >= 0, $"[AssetManager 警告] キャラクタースプライトのロードに失敗しました ({charType}): {fullPath}");
+        if (handle >= 0)
+        {
+            var size = AssetService.GetGraphSize(handle);
+            _graphSizes[handle] = size;
+        }
+
         _characterSpriteHandles[charType] = handle;
         _textureHandles[relPath] = handle;
         Debug.WriteLine(
@@ -132,6 +142,12 @@ public sealed class AssetManager : IDisposable {
         var fullPath = ResolveAssetPath(relativePath);
         var handle = AssetService.LoadGraph(fullPath);
         Debug.Assert(handle >= 0, $"[AssetManager 警告] テクスチャのロードに失敗しました ({relativePath}): {fullPath}");
+        if (handle >= 0)
+        {
+            var size = AssetService.GetGraphSize(handle);
+            _graphSizes[handle] = size;
+        }
+
         _textureHandles[relativePath] = handle;
         Debug.WriteLine($"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {handle})");
 
@@ -151,6 +167,44 @@ public sealed class AssetManager : IDisposable {
 
         handle = -1;
         return false;
+    }
+
+    /// <summary>
+    ///     テクスチャハンドルに対応する画像サイズを手動キャッシュ登録します。
+    /// </summary>
+    /// <param name="handle">グラフィックハンドル。</param>
+    /// <param name="size">画像サイズ (<see cref="Vec2i" />)。</param>
+    public static void CacheGraphSize(int handle, Vec2i size)
+    {
+        _graphSizes[handle] = size;
+    }
+
+    /// <summary>
+    ///     キャッシュ済みのテクスチャ画像サイズの取得を試行します。
+    /// </summary>
+    /// <param name="handle">グラフィックハンドル。</param>
+    /// <param name="size">画像サイズ (<see cref="Vec2i" />)。</param>
+    /// <returns>キャッシュが存在する場合は true、未キャッシュ時は false。</returns>
+    public static bool TryGetGraphSize(int handle, out Vec2i size)
+    {
+        return _graphSizes.TryGetValue(handle, out size);
+    }
+
+    /// <summary>
+    ///     キャッシュ済みのテクスチャ画像サイズを取得します。
+    ///     主スレッドロード時にキャッシュされた情報を返すため、並行論理スレッドから安全に呼び出し可能です。
+    /// </summary>
+    /// <param name="handle">グラフィックハンドル。</param>
+    /// <returns>画像サイズ (<see cref="Vec2i" />)。未キャッシュ時は Vec2i.Zero。</returns>
+    public static Vec2i GetGraphSize(int handle)
+    {
+        if (_graphSizes.TryGetValue(handle, out var size))
+        {
+            return size;
+        }
+
+        Debug.Fail($"[AssetManager 警告] ハンドル {handle} のテクスチャサイズがキャッシュされていません。主スレッドでの事前ロードを確認してください。");
+        return Vec2i.Zero;
     }
 
 

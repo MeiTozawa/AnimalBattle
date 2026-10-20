@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Runtime.CompilerServices;
+using AnimalBattle.Asset;
 using AnimalBattle.Bindings;
 
 namespace AnimalBattle.Core;
@@ -166,11 +167,17 @@ public static class GameEngine {
 
     /// <summary>
     ///     指定画像ハンドルの幅と高さを取得します。
+    ///     双スレッドレンダリング競態防止のため、AssetManager のキャッシュを優先参照します。
     /// </summary>
     /// <param name="handle">画像ハンドル</param>
     /// <returns>画像サイズ (<see cref="Vec2i" />)</returns>
     public static Vec2i GetGraphSize(int handle)
     {
+        if (AssetManager.TryGetGraphSize(handle, out var cachedSize))
+        {
+            return cachedSize;
+        }
+
         var size = Vec2i.Zero;
         unsafe
         {
@@ -374,6 +381,21 @@ public static class GameEngine {
     {
         var size = GetGraphSize(handle);
         DrawRectRotaGraph(center, Vec2i.Zero, size, scale, angle, handle, trans, turnX);
+    }
+
+    /// <summary>
+    ///     指定切り出しサイズを用いて画像ハンドルを中心に独立 X/Y 軸拡縮・回転して描画します。
+    /// </summary>
+    public static void DrawRotaGraph3(
+        Vec2i center,
+        Vec2i srcSize,
+        Vec2f scale,
+        double angle,
+        int handle,
+        bool trans,
+        bool turnX = false)
+    {
+        DrawRectRotaGraph(center, Vec2i.Zero, srcSize, scale, angle, handle, trans, turnX);
     }
 
     /// <summary>
