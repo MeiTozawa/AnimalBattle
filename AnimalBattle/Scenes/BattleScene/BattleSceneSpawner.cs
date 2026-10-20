@@ -46,17 +46,28 @@ public static class BattleSceneSpawner {
             .ChildOf(root)
             .IsA(PlayerPrefabs.GetPrefab(playerType))
             .Set(new Transform(playerCfg.Spawn, playerCfg.Scale))
+            .Set(new Velocity(Vec2f.Zero))
+            .Set(new Health(playerCfg.MaxHp))
+            .Set(new MovementIntent())
+            .Set(new WeaponIntent())
+            .Set(new DashState())
+            .Set(JumpCapability.FromPlayerConfig(playerCfg))
             .Set(new Animation(playerType, "Idle"))
             .Set(new Sprite(playerHandle, false, true, new Rect(0, 0, 32, 32)))
             .Set(new CharacterTypeComponent(playerType));
 
         if (playerType == CharacterType.Bunny)
         {
+            playerEntity.Set(BunnyWeaponState.FromConfig(playerCfg));
             var melee = world.Entity("PlayerSlashHitbox")
                 .ChildOf(playerEntity)
                 .IsA(CombatPrefabs.PlayerSlashHitbox);
             melee.Disable();
             playerEntity.Add<EquippedWeapon>(melee);
+        }
+        else if (playerType == CharacterType.Cat)
+        {
+            playerEntity.Set(CatWeaponState.FromConfig(playerCfg));
         }
 
         // 2. アリーナ・タイルマップの生成

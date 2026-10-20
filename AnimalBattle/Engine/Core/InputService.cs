@@ -224,7 +224,7 @@ public static unsafe partial class InputService {
 
         // Menu
         BindAction(InputContext.Menu, InputAction.Confirm, InputButton.KeySpace, InputButton.KeyReturn,
-            InputButton.Pad1, InputButton.MouseLeft);
+            InputButton.Pad1);
         BindAction(InputContext.Menu, InputAction.Cancel, InputButton.KeyEscape, InputButton.Pad2);
         BindAction(InputContext.Menu, InputAction.ToggleMenu, InputButton.KeyEscape, InputButton.PadStart,
             InputButton.Pad2);

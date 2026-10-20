@@ -63,22 +63,22 @@ UnselectedBadge = "[ クリックで選択 ]"
 [Texts.Cat]
 Title = "キャット (Cat)"
 Tag = "【 遠距離攻撃 】"
-Description = "鋭いダッシュ回避と遠距離弾幕射撃"
+Description = ""
 
 [Texts.Bunny]
 Title = "バニー (Bunny)"
 Tag = "【 近接攻撃 】"
-Description = "軽快な二段ジャンプと大剣近接斬撃"
+Description = ""
 
 [Texts.Boss1]
 Title = "ボス 1 (Boss 1)"
 Tag = "【 飛行浮遊 & 全方位弾幕 】"
-Description = "※ ホバーで飛行・浮遊動效"
+Description = ""
 
 [Texts.Boss2]
 Title = "ボス 2 (Boss 2)"
 Tag = "【 突撃突進 & 衝撃波重撃 】"
-Description = "※ ホバーで騰空・重撃動效"
+Description = ""
 
 [Motion]
 StepFrequency = 14.0

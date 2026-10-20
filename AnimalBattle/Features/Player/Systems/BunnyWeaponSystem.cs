@@ -7,13 +7,17 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Player.Systems;
 
 /// <summary>
-///     Bunny 蟆ら畑霑第磁謇捺茶豁ｦ蝎ｨ繧ｷ繧ｹ繝・Β縲・///     <see cref="BunnyWeaponState"/> 繧呈戟縺､繧ｨ繝ｳ繝・ぅ繝・ぅ縺ｮ <see cref="WeaponIntent"/> 繧呈ｶ郁ｲｻ縺励・///     霑第磁謇捺茶繧ｯ繝ｼ繝ｫ繝繧ｦ繝ｳ邂｡逅・∝ｸｸ鬧占ｿ第磁蛻､螳壹・譛牙柑蛹・辟｡蜉ｹ蛹門宛蠕｡縺翫ｈ縺ｳ蜑埼ｲ遯・ｲ繝ｻ繧ｹ繝励Μ繝ｳ繧ｰ貍泌・繧貞ｮ溯｡後＠縺ｾ縺吶・/// </summary>
+///     Bunny 専用近接打撃武器システム。
+///     <see cref="BunnyWeaponState"/> を持つエンティティの <see cref="WeaponIntent"/> を消費し、
+///     近接打撃クールダウン管理、常駐近接判定の有効化/無効化制御および前進突進・スプリング演出を実行します。
+/// </summary>
 public static class BunnyWeaponSystem
 {
     /// <summary>
-    ///     Bunny 霑第磁豁ｦ蝎ｨ繧ｷ繧ｹ繝・Β繧・Flecs.NET 繝ｯ繝ｼ繝ｫ繝峨∈逋ｻ骭ｲ縺励∪縺吶・    /// </summary>
-    /// <param name="world">逋ｻ骭ｲ蜈医・ Flecs.NET 繝ｯ繝ｼ繝ｫ繝・/param>
-    /// <returns>繝｡繧ｽ繝・ラ繝√ぉ繝ｼ繝ｳ逕ｨ縺ｮ <see cref="World"/></returns>
+    ///     Bunny 近接武器システムを Flecs.NET ワールドへ登録します。
+    /// </summary>
+    /// <param name="world">登録先の Flecs.NET ワールド</param>
+    /// <returns>メソッドチェーン用の <see cref="World"/></returns>
     public static World AddBunnyWeaponSystem(this World world)
     {
         world.System<Transform, WeaponIntent, BunnyWeaponState, SpringScale, Animation, CollisionBox>("BunnyWeaponSystem")
@@ -66,13 +70,14 @@ public static class BunnyWeaponSystem
         in CollisionBox col,
         float dt)
     {
-        // 1. 繧ｯ繝ｼ繝ｫ繝繧ｦ繝ｳ繧ｿ繧､繝槭・縺ｮ貂幄｡ｰ
+        // 1. クールダウンタイマーの減衰
         if (weapon.CooldownRemaining > 0.0f)
         {
             weapon.CooldownRemaining = Math.Max(0.0f, weapon.CooldownRemaining - dt);
         }
 
-        // 2. 霑第磁謾ｻ謦・い繧ｯ繝・ぅ繝匁凾髢薙・貂幄｡ｰ縺ｨ辟｡蜉ｹ蛹・        if (weapon.AttackActiveRemaining > 0.0f)
+        // 2. 近接攻撃アクティブ時間の減衰と無効化
+        if (weapon.AttackActiveRemaining > 0.0f)
         {
             weapon.AttackActiveRemaining -= dt;
             if (weapon.AttackActiveRemaining <= 0.0f)
@@ -82,11 +87,12 @@ public static class BunnyWeaponSystem
             }
         }
 
-        // 3. 霑第磁謾ｻ謦・ヨ繝ｪ繧ｬ繝ｼ縺ｮ蛻､螳壹→螳溯｡・        if (intent.ShootTriggered && weapon.CooldownRemaining <= 0.0f)
+        // 3. 近接攻撃トリガーの判定と実行
+        if (intent.ShootTriggered && weapon.CooldownRemaining <= 0.0f)
         {
             var dir = intent.AimDirection;
 
-            // 謾ｻ謦・婿蜷代′譛ｪ謖・ｮ壹・蝣ｴ蜷医・蜿ｳ蜷代″繧偵ョ繝輔か繝ｫ繝医→縺吶ｋ
+            // 攻撃方向が未指定の場合は右向きをデフォルトとする
             if (dir.LengthSquared() < 0.0001f)
             {
                 dir = new Vec2f(1.0f, 0.0f);

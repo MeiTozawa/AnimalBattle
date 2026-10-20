@@ -23,7 +23,7 @@ Spawn = { x = 320.0, y = 500.0 }
 
 # Bunny Melee Attack Configuration
 AttackDamage = 3.0
-AttackCooldown = 0.30
+AttackCooldown = 0.3
 AttackRange = 48.0
 AttackSize = { x = 88.0, y = 64.0 }
 AttackDuration = 0.15

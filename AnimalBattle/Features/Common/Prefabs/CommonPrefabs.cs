@@ -34,6 +34,14 @@ public static class CommonPrefabs
         world.Component<CollisionBox>().AutoOverride<CollisionBox>();
         world.Component<GameplayTagState>().AutoOverride<GameplayTagState>();
         world.Component<TimedEffectsState>().AutoOverride<TimedEffectsState>();
+        world.Component<MovementIntent>().AutoOverride<MovementIntent>();
+        world.Component<WeaponIntent>().AutoOverride<WeaponIntent>();
+        world.Component<DashState>().AutoOverride<DashState>();
+        world.Component<JumpCapability>().AutoOverride<JumpCapability>();
+        world.Component<BunnyWeaponState>().AutoOverride<BunnyWeaponState>();
+        world.Component<CatWeaponState>().AutoOverride<CatWeaponState>();
+        world.Component<Health>().AutoOverride<Health>();
+        world.Component<SpringScale>().AutoOverride<SpringScale>();
 
         // 投射物基底原型
         BaseProjectile = world.Prefab(BaseProjectileName)

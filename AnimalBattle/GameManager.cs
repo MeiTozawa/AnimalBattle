@@ -1,6 +1,7 @@
 using AnimalBattle.Ai;
 using AnimalBattle.Asset;
 using AnimalBattle.Common;
+using AnimalBattle.Core;
 using AnimalBattle.Player;
 using AnimalBattle.Bosses;
 using AnimalBattle.Combat;
@@ -78,6 +79,7 @@ public class GameManager : IDisposable {
     /// </summary>
     public void Initialize()
     {
+        InputService.ClearAndSetContext(InputContext.Menu);
         StartSceneSpawner.Spawn(_ecsWorld);
     }
 
@@ -107,6 +109,7 @@ public class GameManager : IDisposable {
         flow.SelectedPlayer = playerType;
         flow.SelectedBoss = bossType;
 
+        InputService.ClearAndSetContext(InputContext.InGame);
         BattleSceneSpawner.Spawn(_ecsWorld, playerType, bossType);
     }
 
@@ -130,6 +133,7 @@ public class GameManager : IDisposable {
         ref var flow = ref _ecsWorld.GetMut<GameFlow>();
         flow.State = GameState.Start;
 
+        InputService.ClearAndSetContext(InputContext.Menu);
         BattleSceneSpawner.Teardown(_ecsWorld);
         StartSceneSpawner.Spawn(_ecsWorld);
     }
