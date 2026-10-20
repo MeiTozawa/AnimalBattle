@@ -42,7 +42,10 @@ public static class GameConfigRegistrar
         registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene);
 #else
         var loadResult = BinaryConfigLoader.Load();
-        Debug.Assert(!loadResult.IsError, $"Release バイナリ設定の読み込みに失敗しました: {loadResult.FirstError.Description}");
+        if (loadResult.IsError)
+        {
+            throw new InvalidOperationException($"Release バイナリ設定の読み込みに失敗しました: {loadResult.FirstError.Description}");
+        }
         var b = loadResult.Value;
 
         registry.RegisterInstance(b.Cat);
@@ -60,7 +63,7 @@ public static class GameConfigRegistrar
         registry.RegisterInstance(b.Render);
         registry.RegisterInstance(b.Camera);
         registry.RegisterInstance(b.TileSet);
-        registry.RegisterInstance(new AudioConfig());
+        registry.RegisterInstance(b.Audio ?? new AudioConfig());
         registry.RegisterInstance(b.CombatPrefab);
         registry.RegisterInstance(b.StartScene ?? new StartSceneConfig());
 #endif

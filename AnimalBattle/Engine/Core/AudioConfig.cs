@@ -6,11 +6,11 @@ namespace AnimalBattle.Configs;
 public sealed class AudioConfig
 {
     /// <summary>マスター音量 (0.0 ～ 1.0)</summary>
-    public float MasterVolume { get; set; }
+    public float MasterVolume { get; set; } = 0.8f;
 
     /// <summary>効果音音量 (0.0 ～ 1.0)</summary>
-    public float SfxVolume { get; set; }
+    public float SfxVolume { get; set; } = 0.85f;
 
     /// <summary>BGM 音量 (0.0 ～ 1.0)</summary>
-    public float BgmVolume { get; set; }
+    public float BgmVolume { get; set; } = 0.6f;
 }

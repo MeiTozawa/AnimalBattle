@@ -53,6 +53,7 @@ _CONFIG_MAP = {
     "Render": _CONFIG_DIR / "render.toml",
     "Camera": _CONFIG_DIR / "camera.toml",
     "TileSet": _RESOURCE_DIR / "Platform" / "sheet.toml",
+    "Audio": _CONFIG_DIR / "audio.toml",
     "CombatPrefab": _CONFIG_DIR / "combat.prefab.toml",
     "CatPrefab": _CONFIG_DIR / "cat.prefab.toml",
     "BunnyPrefab": _CONFIG_DIR / "bunny.prefab.toml",

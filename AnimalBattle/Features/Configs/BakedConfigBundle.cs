@@ -77,6 +77,9 @@ public sealed class BakedConfigBundle {
     /// <summary>タイルセット設定</summary>
     public TileSetConfig TileSet { get; set; } = new();
 
+    /// <summary>音響設定 (audio.toml)</summary>
+    public AudioConfig Audio { get; set; } = new();
+
     /// <summary>戦闘原型設定 (combat.prefab.toml)</summary>
     public CombatPrefabConfig CombatPrefab { get; set; } = new();
 
@@ -145,6 +148,7 @@ public sealed class BakedConfigBundle {
 [JsonSerializable(typeof(PlayerRenderConfig))]
 [JsonSerializable(typeof(CameraConfig))]
 [JsonSerializable(typeof(TileSetConfig))]
+[JsonSerializable(typeof(AudioConfig))]
 [JsonSerializable(typeof(AnimationClipConfig))]
 [JsonSerializable(typeof(AnimationConfig))]
 [JsonSerializable(typeof(StartSceneConfig))]

@@ -41,6 +41,11 @@ public static class BinaryConfigLoader {
                     var version = reader.ReadUInt32();
                     if (version != ExpectedVersion)
                         return Error.Validation("Config.UnsupportedVersion", $"サポートされていないバイナリ設定バージョンです: {version}");
+
+                    var uncompressedSize = reader.ReadUInt32();
+                    var compressedSize = reader.ReadUInt32();
+                    if (compressedSize == 0 || uncompressedSize == 0)
+                        return Error.Validation("Config.InvalidPayloadSize", "バイナリ設定のデータサイズが無効です。");
                 }
 
                 using ZLibStream decompressor = new(stream, CompressionMode.Decompress);
