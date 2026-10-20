@@ -264,7 +264,7 @@ public static unsafe class PhysicsService {
         var targetX = basePos.X + MathF.Sin(hoverTimer * hoverSpeed.X) * hoverAmp.X +
             (playerPos.X - basePos.X) * playerPursuitWeight;
         var targetY = basePos.Y + MathF.Cos(hoverTimer * hoverSpeed.Y) * hoverAmp.Y;
-        var lerpFactor = MathF.Min(1.0f, hoverLerpSpeed * deltaTime);
+        var lerpFactor = 1.0f - MathF.Exp(-hoverLerpSpeed * deltaTime);
 
         var nextX = currentPos.X + (targetX - currentPos.X) * lerpFactor;
         var nextY = currentPos.Y + (targetY - currentPos.Y) * lerpFactor;
@@ -281,7 +281,7 @@ public static unsafe class PhysicsService {
         float returnSpeed,
         float deltaTime)
     {
-        var factor = MathF.Min(1.0f, returnSpeed * deltaTime);
+        var factor = 1.0f - MathF.Exp(-returnSpeed * deltaTime);
         var nextX = currentPos.X + (targetBasePos.X - currentPos.X) * factor;
         var nextY = currentPos.Y + (targetBasePos.Y - currentPos.Y) * factor;
         return new Vec2f(nextX, nextY);

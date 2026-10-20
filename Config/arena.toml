@@ -7,7 +7,6 @@ BulletDespawnMaxX = 1360.0
 BulletDespawnMinY = -80.0
 BulletDespawnMaxY = 800.0
 FloorLimitY = 560.0
-MaxDeltaTime = 0.05
 
 # 2D 空間ハッシュグリッド設定
 [SpatialHash]

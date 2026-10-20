@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 
 namespace AnimalBattle.Core;
@@ -115,8 +114,9 @@ public sealed class DualThreadGameLoop : IDisposable {
                 var rawDeltaTime = (float)((currentTime - lastTime) / tickFrequency);
                 lastTime = currentTime;
 
-                // 産業級メインループ防トンネル保護：最大単一ステップを 50ms (20 FPS 相当) に制限
-                var deltaTime = Math.Clamp(rawDeltaTime, 0.0f, 0.05f);
+                // 最大単一ステップを設定値に制限
+                const float maxDeltaLimit = 0.05f;
+                var deltaTime = Math.Clamp(rawDeltaTime, 0.0f, maxDeltaLimit);
 
                 // 1. 論理更新および描画コマンド記録
                 GameEngine.BeginRecording();
@@ -145,7 +145,7 @@ public sealed class DualThreadGameLoop : IDisposable {
                     break;
                 }
 
-                // 4. バッファスロットの乒乓切り替え
+                // 4. バッファスロットの卓球切り替え
                 GameEngine.SwapBuffers();
             }
         }

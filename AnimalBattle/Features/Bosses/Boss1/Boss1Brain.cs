@@ -30,7 +30,7 @@ public sealed class Boss1Brain : BaseBossBrain {
     /// <summary>Boss 1 ブレインを初期化します。</summary>
     /// <param name="world">対象の Flecs ワールド。</param>
     /// <param name="spawn">スポーン座標。</param>
-    /// <param name="configuration">設定プロバイダ。</param>
+    /// <param name="configuration">設定プロバイダー。</param>
     public Boss1Brain(World world, Vec2f spawn, IBoss1Configuration? configuration = null)
     {
         Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
@@ -195,8 +195,9 @@ public sealed class Boss1Brain : BaseBossBrain {
         var phaseCfg = _configuration.GetPhase(Phase);
 
         var targetY = phaseCfg.HoverBaseY;
+        var factor = 1.0f - MathF.Exp(-phaseCfg.TransitionFloatSpeed * dt);
         _currentPosition = _currentPosition with {
-            Y = _currentPosition.Y + (targetY - _currentPosition.Y) * Math.Clamp(dt * phaseCfg.TransitionFloatSpeed, 0.0f, 1.0f)
+            Y = _currentPosition.Y + (targetY - _currentPosition.Y) * factor
         };
     }
 

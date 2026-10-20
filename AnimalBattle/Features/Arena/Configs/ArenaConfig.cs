@@ -45,7 +45,7 @@ public sealed class NavigationGraphConfig {
     /// <summary>上方跳躍として判定する最小高度差（ピクセル）</summary>
     public float MinJumpDeltaY { get; set; }
 
-    /// <summary>下方下落として判定する高度差上限（ピクセル、负値）</summary>
+    /// <summary>下方下落として判定する高度差上限（ピクセル、負値）</summary>
     public float MinDropDeltaY { get; set; }
 
     /// <summary>プラットフォーム水平重なり判定の最小重なり幅（ピクセル）</summary>
@@ -144,7 +144,4 @@ public sealed class ArenaConfig {
 
     /// <summary>地上キャラクター（プレイヤー・Boss）の床面下限 Y 座標</summary>
     public float FloorLimitY { get; set; }
-
-    /// <summary>物理更新の最大デルタタイム保護上限（秒）</summary>
-    public float MaxDeltaTime { get; set; }
 }
