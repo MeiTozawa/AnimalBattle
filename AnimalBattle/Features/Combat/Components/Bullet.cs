@@ -1,0 +1,26 @@
+using System.Drawing;
+
+namespace AnimalBattle.Combat.Components;
+
+/// <summary>
+///     弾の半径、描画発光カラー、生存期間、および跳ね返り挙動を定義するコンポーネント。
+/// </summary>
+/// <remarks>
+///     <see cref="Bullet" /> の新しいインスタンスを初期化します。
+/// </remarks>
+/// <param name="radius">判定半径</param>
+/// <param name="fillColor">塗りつぶし色</param>
+/// <param name="outlineColor">発光枠色</param>
+public struct Bullet(float radius, Color fillColor, Color outlineColor) {
+    /// <summary>弾の当たり判定・描画半径（ピクセル）</summary>
+    public float Radius = radius;
+
+    /// <summary>弾内部の塗りつぶしカラー (<see cref="Color" />)</summary>
+    public Color FillColor = fillColor;
+
+    /// <summary>弾外周の発光アウトラインカラー (<see cref="Color" />)</summary>
+    public Color OutlineColor = outlineColor;    
+    
+    /// <summary>近接攻撃等で破壊・消去不可（地面衝撃波等）かどうかのフラグ。</summary>
+    public bool IsIndestructible;
+}

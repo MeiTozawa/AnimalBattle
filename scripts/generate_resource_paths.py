@@ -23,7 +23,7 @@ _SCRIPT_DIR    = Path(__file__).resolve().parent
 _PROJECT_ROOT  = _SCRIPT_DIR.parent
 _RESOURCE_ROOT = _PROJECT_ROOT / "Resource"
 _CONFIG_ROOT   = _PROJECT_ROOT / "Config"
-_OUTPUT_FILE   = _PROJECT_ROOT / "AnimalBattle" / "1_Engine" / "Asset" / "ResourcePath.g.cs"
+_OUTPUT_FILE   = _PROJECT_ROOT / "AnimalBattle" / "Engine" / "Asset" / "ResourcePath.g.cs"
 
 
 # ---- 識別子生成ヘルパー ------------------------------------------------------
