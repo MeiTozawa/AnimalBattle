@@ -1,5 +1,3 @@
-using AnimalBattle.Abilities.Skills;
-
 namespace AnimalBattle.Abilities;
 
 /// <summary>
@@ -25,18 +23,15 @@ public abstract class GameplayAbility {
     /// <summary>実行中に自身へ付与されるタグ（Activation Owned Tags）を取得します。</summary>
     public GameplayTag ActivationOwnedTags { get; init; } = GameplayTag.Casting;
 
-    /// <summary>現在の技能フェーズを取得します。</summary>
-    public virtual SkillPhase CurrentPhase => SkillPhase.None;
+    /// <summary>能力の実行経過時間（秒）を取得します。</summary>
+    public virtual float Elapsed => 0.0f;
 
-    /// <summary>現在フェーズ内の経過時間（秒）を取得します。</summary>
-    public virtual float PhaseElapsed => 0.0f;
+    /// <summary>能力の目標持続時間（秒）を取得します。</summary>
+    public virtual float Duration => 0.0f;
 
-    /// <summary>現在フェーズの目標持続時間（秒）を取得します。</summary>
-    public virtual float PhaseDuration => 0.0f;
-
-    /// <summary>現在フェーズの進行度（0.0 ～ 1.0）を取得します。</summary>
-    public virtual float PhaseProgress => PhaseDuration > 0.0f
-        ? Math.Clamp(PhaseElapsed / PhaseDuration, 0.0f, 1.0f)
+    /// <summary>能力の進行度（0.0 ～ 1.0）を取得します。</summary>
+    public virtual float Progress => Duration > 0.0f
+        ? Math.Clamp(Elapsed / Duration, 0.0f, 1.0f)
         : 0.0f;
 
     /// <summary>

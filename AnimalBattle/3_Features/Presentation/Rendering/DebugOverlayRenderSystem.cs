@@ -116,8 +116,8 @@ public static class DebugOverlayRenderSystem
             string timerText;
             if (boss.AbilitySystem.IsCasting)
             {
-                var pElapsed = boss.AbilitySystem.PhaseElapsed;
-                var pDuration = boss.AbilitySystem.PhaseDuration;
+                var pElapsed = boss.AbilitySystem.Elapsed;
+                var pDuration = boss.AbilitySystem.Duration;
                 timerText = pDuration > 0.0f
                     ? $"{pElapsed:F1}s/{pDuration:F1}s"
                     : $"{pElapsed:F1}s";

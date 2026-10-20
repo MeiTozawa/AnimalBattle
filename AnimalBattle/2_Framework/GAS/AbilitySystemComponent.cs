@@ -1,14 +1,11 @@
 using System.Diagnostics;
-using AnimalBattle.Abilities.Attack;
-using AnimalBattle.Abilities.Skills;
 using AnimalBattle.Core;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Abilities;
 
 /// <summary>
-///     エンティティの技能登録、冷却管理、および技能時序（タイムライン）推進を一元管理するオーケストレーター。
-///     ECS コンポーネントとしての責務から切り離され、主に Boss Brain 等の行動主体が保持・制御します。
+///     エンティティの技能登録、冷却管理、タグ制約、および時限効果を一元管理する汎用能力システムオーケストレーター。
+///     特定のゲーム演出・アクション（弾幕や判定等）から完全に分離された、純粋なフレームワーク層の GAS コンポーネントです。
 /// </summary>
 public sealed class AbilitySystemComponent {
     private const int MaxActiveEffects = 8;
@@ -18,9 +15,6 @@ public sealed class AbilitySystemComponent {
     private readonly ActiveGameplayEffect[] _activeEffects = new ActiveGameplayEffect[MaxActiveEffects];
     private readonly int[] _tagCounts = new int[MaxTagBits];
     private GameplayTag _activeTagsMask = GameplayTag.None;
-    private Entity _ownerEntity;
-    private bool _hasOwnerTagState;
-    private bool _hasOwnerTimedEffects;
 
     /// <summary>戦闘タグコンテナを取得します。</summary>
     public GameplayTagContainer Tags => new(_activeTagsMask);
@@ -31,52 +25,23 @@ public sealed class AbilitySystemComponent {
     /// <summary>冷却時間追跡器を取得します。</summary>
     public CooldownTracker Cooldowns => _cooldownTracker;
 
-    /// <summary>現在発動中の技能フェーズを取得します。</summary>
-    public SkillPhase CurrentPhase => CurrentAbility?.CurrentPhase ?? SkillPhase.None;
+    /// <summary>現在発動中の技能の経過時間（秒）を取得します。</summary>
+    public float Elapsed => CurrentAbility?.Elapsed ?? 0.0f;
 
-    /// <summary>現在フェーズ内の経過時間（秒）を取得します。</summary>
-    public float PhaseElapsed => CurrentAbility?.PhaseElapsed ?? 0.0f;
+    /// <summary>現在発動中の技能の目標持続時間（秒）を取得します。</summary>
+    public float Duration => CurrentAbility?.Duration ?? 0.0f;
 
-    /// <summary>現在フェーズの目標持続時間（秒）を取得します。</summary>
-    public float PhaseDuration => CurrentAbility?.PhaseDuration ?? 0.0f;
-
-    /// <summary>現在フェーズの進行度（0.0 ～ 1.0）を取得します。</summary>
-    public float PhaseProgress => CurrentAbility?.PhaseProgress ?? 0.0f;
+    /// <summary>現在発動中の技能の進行度（0.0 ～ 1.0）を取得します。</summary>
+    public float Progress => CurrentAbility?.Progress ?? 0.0f;
 
     /// <summary>現在何らかの技能を発動中かどうかを取得します。</summary>
     public bool IsCasting => CurrentAbility != null;
 
-    /// <summary>移動速度適用イベント。</summary>
-    public event Action<float, float>? OnExecuteMovement;
-
-    /// <summary>弾幕発射イベント。</summary>
-    public event Action<StringId, float, float>? OnEmitBullet;
-
-    /// <summary>近接判定生成イベント。</summary>
-    public event Action<StringId, float, float>? OnCreateHitbox;
-
-    /// <summary>画面振動イベント。</summary>
-    public event Action<float, float>? OnScreenShake;
+    /// <summary>戦闘タグ状態が変更された際に発火するイベント。</summary>
+    public event Action<GameplayTag>? OnTagsChanged;
 
     /// <summary>技能完了通知イベント。</summary>
     public event Action<StringId>? OnSkillCompleted;
-
-    /// <summary>所有者 Entity を関連付け、タグ状態を初期同期します（初期化時に一度だけ存在検査を実施）。</summary>
-    public void SetOwner(Entity owner)
-    {
-        _ownerEntity = owner;
-        _hasOwnerTagState = owner.IsAlive() && owner.Has<GameplayTagState>();
-        _hasOwnerTimedEffects = owner.IsAlive() && owner.Has<TimedEffectsState>();
-        SyncTagsToOwner();
-    }
-
-    private void SyncTagsToOwner()
-    {
-        if (_hasOwnerTagState && _ownerEntity.IsAlive())
-        {
-            _ownerEntity.GetMut<GameplayTagState>().ActiveMask = _activeTagsMask;
-        }
-    }
 
     /// <summary>能力を登録します。</summary>
     public void GiveAbility(GameplayAbility ability)
@@ -106,7 +71,7 @@ public sealed class AbilitySystemComponent {
                 }
             }
         }
-        SyncTagsToOwner();
+        OnTagsChanged?.Invoke(_activeTagsMask);
     }
 
     private void DecrementTagCounts(GameplayTag tags)
@@ -122,7 +87,7 @@ public sealed class AbilitySystemComponent {
                 }
             }
         }
-        SyncTagsToOwner();
+        OnTagsChanged?.Invoke(_activeTagsMask);
     }
 
     /// <summary>戦闘タグを付与します。</summary>
@@ -144,15 +109,7 @@ public sealed class AbilitySystemComponent {
     {
         if (duration <= 0.0f || grantedTags == GameplayTag.None) return false;
 
-        // 所有者 Entity に TimedEffectsState が存在する場合は直接適用（entity.Has なし）
-        if (_hasOwnerTimedEffects && _hasOwnerTagState && _ownerEntity.IsAlive())
-        {
-            ref var effects = ref _ownerEntity.GetMut<TimedEffectsState>();
-            ref var tags = ref _ownerEntity.GetMut<GameplayTagState>();
-            TimedEffectService.ApplyEffect(ref effects, ref tags, grantedTags, duration, sourceHandle);
-        }
-
-        // 内部フォールバックキャッシュ
+        // 既存エフェクトの延長判定
         for (var i = 0; i < MaxActiveEffects; i++)
         {
             ref var effect = ref _activeEffects[i];
@@ -164,6 +121,7 @@ public sealed class AbilitySystemComponent {
             }
         }
 
+        // 空きスロットへ配置
         for (var i = 0; i < MaxActiveEffects; i++)
         {
             ref var effect = ref _activeEffects[i];
@@ -175,6 +133,7 @@ public sealed class AbilitySystemComponent {
             }
         }
 
+        // 追い出し（最短残り時間）
         var shortestIdx = 0;
         var shortestRemaining = float.MaxValue;
         for (var i = 0; i < MaxActiveEffects; i++)
@@ -200,12 +159,6 @@ public sealed class AbilitySystemComponent {
     /// <summary>指定タグの残り時間を取得します。</summary>
     public float GetTagRemainingTime(GameplayTag tag)
     {
-        if (_hasOwnerTimedEffects && _ownerEntity.IsAlive())
-        {
-            ref readonly var effects = ref _ownerEntity.Get<TimedEffectsState>();
-            return TimedEffectService.GetTagRemainingTime(in effects, tag);
-        }
-
         if ((_activeTagsMask & tag) == GameplayTag.None) return 0.0f;
         var maxRemaining = 0.0f;
         for (var i = 0; i < MaxActiveEffects; i++)
@@ -228,28 +181,14 @@ public sealed class AbilitySystemComponent {
         }
         Array.Clear(_tagCounts);
         _activeTagsMask = GameplayTag.None;
-        SyncTagsToOwner();
+        OnTagsChanged?.Invoke(_activeTagsMask);
     }
 
-    /// <summary>指定タグをすべて保持しているか判定します（ホットパスでの entity.Has なし）。</summary>
-    public bool HasTag(GameplayTag tag)
-    {
-        if (_hasOwnerTagState && _ownerEntity.IsAlive())
-        {
-            return _ownerEntity.Get<GameplayTagState>().HasTag(tag);
-        }
-        return (_activeTagsMask & tag) == tag;
-    }
+    /// <summary>指定タグをすべて保持しているか判定します。</summary>
+    public bool HasTag(GameplayTag tag) => (_activeTagsMask & tag) == tag;
 
-    /// <summary>指定タグのいずれかを保持しているか判定します（ホットパスでの entity.Has なし）。</summary>
-    public bool HasAnyTag(GameplayTag tag)
-    {
-        if (_hasOwnerTagState && _ownerEntity.IsAlive())
-        {
-            return _ownerEntity.Get<GameplayTagState>().HasAnyTag(tag);
-        }
-        return (_activeTagsMask & tag) != GameplayTag.None;
-    }
+    /// <summary>指定タグのいずれかを保持しているか判定します。</summary>
+    public bool HasAnyTag(GameplayTag tag) => (_activeTagsMask & tag) != GameplayTag.None;
 
     /// <summary>時限タグの時間を減衰更新します。</summary>
     public void UpdateTimedTags(float dt)
@@ -353,33 +292,5 @@ public sealed class AbilitySystemComponent {
     {
         _cooldownTracker.Update(dt);
         CurrentAbility?.Update(dt, this, isGrounded);
-    }
-
-    /// <summary>アクションステップを実行・派発します。</summary>
-    public void DispatchAction(AttackActionStep step, float dir)
-    {
-        var currentTag = CurrentAbility?.AbilityTag ?? StringId.Empty;
-
-        switch (step.Kind)
-        {
-            case AttackActionKind.Movement:
-            case AttackActionKind.VelocityDive:
-            case AttackActionKind.EasingMovement:
-                OnExecuteMovement?.Invoke(step.Param0 * dir, step.Param1);
-                break;
-
-            case AttackActionKind.Bullet:
-                OnEmitBullet?.Invoke(currentTag, step.Param0 * dir, step.Param1);
-                break;
-
-            case AttackActionKind.Hitbox:
-            case AttackActionKind.OnGroundedHitbox:
-                OnCreateHitbox?.Invoke(currentTag, step.Param0 * dir, step.Param1);
-                break;
-
-            case AttackActionKind.ScreenShake:
-                OnScreenShake?.Invoke(step.Param0, step.Param1);
-                break;
-        }
     }
 }

@@ -95,7 +95,17 @@ public abstract class BaseBossAgent : Pawn, IDisposable {
         entity.Set(new Transform(spawn, scale))
            .Set(new Sprite(spriteHandle, false, true, new Rect(0, 0, 192, 192)));
 
-        Brain.AbilitySystem.SetOwner(entity);
+        Brain.AbilitySystem.OnTagsChanged += tags =>
+        {
+            if (entity.IsAlive() && entity.Has<GameplayTagState>())
+            {
+                entity.GetMut<GameplayTagState>().ActiveMask = tags;
+            }
+        };
+        if (entity.Has<GameplayTagState>())
+        {
+            entity.GetMut<GameplayTagState>().ActiveMask = Brain.AbilitySystem.Tags.RawTags;
+        }
     }
 
     /// <summary>

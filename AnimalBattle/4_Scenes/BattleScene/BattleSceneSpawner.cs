@@ -90,7 +90,7 @@ public static class BattleSceneSpawner {
         };
         boss.Reset();
 
-        boss.AbilitySystem.OnScreenShake += (intensity, duration) =>
+        boss.Brain.OnScreenShake += (intensity, duration) =>
         {
             var camCfg = world.Get<CameraConfig>();
             var trauma = intensity > 1.0f ? intensity * camCfg.AbilityShakeTraumaScale : intensity;

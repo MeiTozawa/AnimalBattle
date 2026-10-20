@@ -1,4 +1,5 @@
 using AnimalBattle.Abilities;
+using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
 
 using AnimalBattle.Configs;
@@ -33,6 +34,18 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>現在アクティブな能力システムコンポーネントを取得します。</summary>
     public AbilitySystemComponent AbilitySystem => _asc;
 
+    /// <summary>現在発動中の時間軸攻撃能力インスタンスを取得します。</summary>
+    public TimelineAttackAbility? CurrentTimelineAttack => _asc.CurrentAbility as TimelineAttackAbility;
+
+    /// <summary>現在発動中の時間軸攻撃フェーズを取得します。</summary>
+    public SkillPhase CurrentSkillPhase => CurrentTimelineAttack?.CurrentPhase ?? SkillPhase.None;
+
+    /// <summary>現在フェーズの経過時間（秒）を取得します。</summary>
+    public float PhaseElapsed => CurrentTimelineAttack?.PhaseElapsed ?? 0.0f;
+
+    /// <summary>現在フェーズの目標持続時間（秒）を取得します。</summary>
+    public float PhaseDuration => CurrentTimelineAttack?.PhaseDuration ?? 0.0f;
+
     /// <summary>現在の Boss 座標を取得します。</summary>
     public Vec2f Position => _currentPosition;
 
@@ -57,8 +70,45 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;
 
+    /// <summary>画面振動要求イベント。</summary>
+    public event Action<float, float>? OnScreenShake;
+
+    /// <summary>近接攻撃判定生成イベント。</summary>
+    public event Action<StringId, float, float>? OnCreateHitbox;
+
     /// <summary>現在の Boss 統一マクロ状態を取得します。</summary>
     public abstract BossState CurrentState { get; }
+
+    /// <summary>
+    ///     時序アクションステップを実行・処理します。
+    /// </summary>
+    public virtual void HandleTimelineAction(AttackActionStep step, float dir, StringId abilityTag)
+    {
+        switch (step.Kind)
+        {
+            case AttackActionKind.Movement:
+            case AttackActionKind.VelocityDive:
+            case AttackActionKind.EasingMovement:
+                ApplyMovementAction(step.Param0 * dir, step.Param1);
+                break;
+
+            case AttackActionKind.Bullet:
+                RaiseEmitBulletWave(abilityTag, _currentPosition, _targetPosition);
+                break;
+
+            case AttackActionKind.Hitbox:
+            case AttackActionKind.OnGroundedHitbox:
+                OnCreateHitbox?.Invoke(abilityTag, step.Param0 * dir, step.Param1);
+                break;
+
+            case AttackActionKind.ScreenShake:
+                OnScreenShake?.Invoke(step.Param0, step.Param1);
+                break;
+        }
+    }
+
+    /// <summary>時序による移動速度指定を適用します。</summary>
+    protected virtual void ApplyMovementAction(float vx, float vy) { }
 
     /// <summary>
     ///     弾幕発射イベントを発火します。

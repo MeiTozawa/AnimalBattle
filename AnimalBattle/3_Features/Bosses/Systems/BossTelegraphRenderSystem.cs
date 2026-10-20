@@ -75,7 +75,7 @@ public static class BossTelegraphRenderSystem
         // 1. 予兆前揺（Telegraph）描画
         if (boss.CurrentState.IsTelegraph)
         {
-            var progress = boss.AbilitySystem.PhaseProgress;
+            var progress = boss.AbilitySystem.Progress;
             DrawBossTelegraph(boss, playerPos, progress);
         }
 

@@ -2,15 +2,28 @@ namespace AnimalBattle.Configs;
 
 using System.Diagnostics;
 using ErrorOr;
+using Flecs.NET.Core;
 
 /// <summary>
 /// 純粋なインメモリ設定コンテナ。読み取り専用アクセス、バージョン番号、および更新通知を管理します。
 /// </summary>
 /// <typeparam name="T">対象の設定クラスの型</typeparam>
-public sealed class ConfigHolder<T> : IDisposable where T : class
+public sealed class ConfigHolder<T> : IConfigHolder where T : class
 {
     private readonly object _lock = new();
     private T _current;
+
+    /// <inheritdoc />
+    public Type ConfigType => typeof(T);
+
+    /// <inheritdoc />
+    public object BoxedValue => Value;
+
+    /// <inheritdoc />
+    public void InjectToWorld(World world)
+    {
+        world.Set(Value);
+    }
 
     /// <summary>
     /// 初期設定インスタンスで <see cref="ConfigHolder{T}" /> を初期化します。

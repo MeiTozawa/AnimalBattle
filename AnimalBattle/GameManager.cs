@@ -18,7 +18,7 @@ namespace AnimalBattle;
 /// </summary>
 public class GameManager : IDisposable {
     private World _ecsWorld;
-    private readonly ConfigService _configService;
+    private readonly IConfigRegistry _configRegistry;
     private bool _isDisposed;
     private bool _isUpdating;
     private Action? _pendingSceneTransition;
@@ -34,9 +34,9 @@ public class GameManager : IDisposable {
     public World EcsWorld => _ecsWorld;
 
     /// <summary>
-    ///     設定サービスインスタンスを取得します。
+    ///     設定レジストリインスタンスを取得します。
     /// </summary>
-    public ConfigService Configs => _configService;
+    public IConfigRegistry Configs => _configRegistry;
 
     /// <summary>
     ///     <see cref="GameManager" /> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
@@ -46,8 +46,8 @@ public class GameManager : IDisposable {
         _ecsWorld = World.Create();
         Current = this;
 
-        _configService = new ConfigService();
-        _configService.Initialize(_ecsWorld);
+        _configRegistry = new ConfigRegistry();
+        GameConfigRegistrar.RegisterAll(_configRegistry, _ecsWorld);
         AssetManager.Initialize();
 
         // 共有 ECS パイプラインモジュールおよび Prefab 原型の登録（決定論的トポロジカル順序）
@@ -172,7 +172,7 @@ public class GameManager : IDisposable {
         BattleSceneSpawner.Teardown(_ecsWorld);
 
         CombatPoolService.Current.Dispose();
-        _configService.Dispose();
+        _configRegistry.Dispose();
         _ecsWorld.Dispose();
 
         AssetManager.Shutdown();

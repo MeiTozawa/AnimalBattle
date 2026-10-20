@@ -14,22 +14,34 @@ public sealed class TimelineAttackAbility : GameplayAbility {
     /// <summary>時序推進ランナーを取得します。</summary>
     public SkillRunner Runner { get; } = new();
 
-    /// <inheritdoc />
-    public override SkillPhase CurrentPhase => Runner.CurrentPhase;
+    /// <summary>現在の技能フェーズを取得します。</summary>
+    public SkillPhase CurrentPhase => Runner.CurrentPhase;
 
-    /// <inheritdoc />
-    public override float PhaseElapsed => Runner.PhaseElapsed;
+    /// <summary>現在フェーズ内の経過時間（秒）を取得します。</summary>
+    public float PhaseElapsed => Runner.PhaseElapsed;
 
-    /// <inheritdoc />
-    public override float PhaseDuration => Runner.PhaseDuration;
+    /// <summary>現在フェーズの目標持続時間（秒）を取得します。</summary>
+    public float PhaseDuration => Runner.PhaseDuration;
 
-    /// <inheritdoc />
-    public override float PhaseProgress => Runner.PhaseDuration > 0.0f
+    /// <summary>現在フェーズの進行度（0.0 ～ 1.0）を取得します。</summary>
+    public float PhaseProgress => Runner.PhaseDuration > 0.0f
         ? Math.Clamp(Runner.PhaseElapsed / Runner.PhaseDuration, 0.0f, 1.0f)
         : 0.0f;
 
+    /// <inheritdoc />
+    public override float Elapsed => Runner.PhaseElapsed;
+
+    /// <inheritdoc />
+    public override float Duration => Runner.PhaseDuration;
+
+    /// <inheritdoc />
+    public override float Progress => PhaseProgress;
+
     /// <summary>前兆（Telegraph）描画処理デリゲートを取得または設定します。</summary>
     public Action<AbilityTelegraphContext>? TelegraphRenderer { get; init; }
+
+    /// <summary>アクションステップ実行コールバックを取得または設定します。</summary>
+    public Action<AttackActionStep, float>? ActionDispatcher { get; set; }
 
     /// <summary>
     ///     時序攻撃能力を初期化します（UE GAS 準拠：StringId 識別）。
@@ -70,7 +82,14 @@ public sealed class TimelineAttackAbility : GameplayAbility {
     /// <inheritdoc />
     public override void Update(float dt, AbilitySystemComponent asc, bool isGrounded = false)
     {
-        Runner.Update(dt, isGrounded, asc.DispatchAction);
+        if (ActionDispatcher != null)
+        {
+            Runner.Update(dt, isGrounded, ActionDispatcher);
+        }
+        else
+        {
+            Runner.Update(dt, isGrounded, static (_, _) => { });
+        }
         UpdatePhaseTags(asc, Runner.CurrentPhase);
 
         if (Runner.IsComplete)

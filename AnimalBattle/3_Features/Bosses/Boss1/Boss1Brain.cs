@@ -58,7 +58,7 @@ public sealed class Boss1Brain : BaseBossBrain {
 
             if (_stateMachine.CurrentState == _abilityState && _asc.IsCasting)
             {
-                return _asc.CurrentPhase switch {
+                return CurrentSkillPhase switch {
                     SkillPhase.Telegraph => Boss1State.Telegraph,
                     SkillPhase.Active => Boss1State.Execute,
                     SkillPhase.Recovery => Boss1State.Recovery,
@@ -98,7 +98,6 @@ public sealed class Boss1Brain : BaseBossBrain {
             }
         }
 
-        _asc.OnEmitBullet += (skill, _, _) => RaiseEmitBulletWave(skill, _currentPosition, _targetPosition);
         _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
 
@@ -112,7 +111,9 @@ public sealed class Boss1Brain : BaseBossBrain {
             return;
         }
 
-        _asc.GiveAbility(buildResult.Value);
+        var ability = buildResult.Value;
+        ability.ActionDispatcher = (step, dir) => HandleTimelineAction(step, dir, ability.AbilityTag);
+        _asc.GiveAbility(ability);
     }
 
     private void InitializeStateMachine()
@@ -256,9 +257,9 @@ public sealed class Boss1Brain : BaseBossBrain {
     {
         if (CurrentSkillTag == _configuration.DiveSkillTag)
         {
-            if (_asc.CurrentPhase == SkillPhase.Active)
+            if (CurrentSkillPhase == SkillPhase.Active)
             {
-                var progress = _asc.PhaseProgress;
+                var progress = CurrentTimelineAttack?.PhaseProgress ?? _asc.Progress;
                 var easeProgress = EasingMath.Evaluate(EaseType.InQuad, progress);
 
                 _currentPosition = new Vec2f(
