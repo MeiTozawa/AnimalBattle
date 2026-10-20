@@ -5,7 +5,6 @@ using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Characters;
-using AnimalBattle.Characters.Boss;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using Flecs.NET.Core;
@@ -17,10 +16,21 @@ namespace AnimalBattle.Systems.Render;
 ///     戦闘状態（GameState.Battle）時にスクリーン空間へ直接描画します。
 /// </summary>
 public static class HudRenderSystem {
-    private static Query<PlayerPawn> _playerQuery;
-    private static Query<BaseBossAgent> _bossQuery;
-    private static PlayerPawn? _cachedPlayer;
-    private static BaseBossAgent? _cachedBoss;
+    private readonly record struct PlayerHudData(
+        Health Health,
+        CharacterType CharacterType,
+        bool IsInvincible,
+        bool IsAlive);
+
+    private readonly record struct BossHudData(
+        Health Health,
+        BossCombatState CombatState,
+        (float Phase2Threshold, float Phase3Threshold) PhaseThresholds);
+
+    private static Query<Health, CharacterTypeComponent, GameplayTagState> _playerQuery;
+    private static Query<Health, BossCombatState> _bossQuery;
+    private static PlayerHudData? _cachedPlayer;
+    private static BossHudData? _cachedBoss;
 
     /// <summary>
     ///     HUD 描画システムを Flecs.NET ワールドへ登録します。
@@ -29,8 +39,12 @@ public static class HudRenderSystem {
     /// <returns>登録済みワールド</returns>
     public static World AddHudRenderSystem(this World world)
     {
-        _playerQuery = world.QueryBuilder<PlayerPawn>().Build();
-        _bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
+        _playerQuery = world.QueryBuilder<Health, CharacterTypeComponent, GameplayTagState>()
+            .With<PlayerTag>()
+            .Build();
+        _bossQuery = world.QueryBuilder<Health, BossCombatState>()
+            .With<BossTag>()
+            .Build();
 
         world.System("HudRenderSystem")
             .Kind(Ecs.OnStore)
@@ -63,16 +77,33 @@ public static class HudRenderSystem {
         Render(player, boss, in renderCfg);
     }
 
-    private static void FindPlayer(ref PlayerPawn p) => _cachedPlayer = p;
-    private static void FindBoss(ref BaseBossAgent b) => _cachedBoss = b;
+    private static void FindPlayer(ref Health hp, ref CharacterTypeComponent charType, ref GameplayTagState tags)
+    {
+        _cachedPlayer = new PlayerHudData(
+            hp,
+            charType.Value,
+            tags.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable),
+            hp.Current > 0.0f);
+    }
+
+    private static void FindBoss(Entity e, ref Health hp, ref BossCombatState state)
+    {
+        var w = e.CsWorld();
+        var (p2, p3) = state.BossType switch {
+            BossType.Boss1 => (w.Get<Boss1Config>().Phase2.HpThreshold, w.Get<Boss1Config>().Phase3.HpThreshold),
+            BossType.Boss2 => (w.Get<Boss2Config>().Phase2.HpThreshold, w.Get<Boss2Config>().Phase3.HpThreshold),
+            _ => (0.7f, 0.3f)
+        };
+        _cachedBoss = new BossHudData(hp, state, (p2, p3));
+    }
 
     /// <summary>
     ///     HUD および各種ステータス UI をスクリーン空間に描画します。
     /// </summary>
-    /// <param name="player">現在アクティブな自機 Pawn。</param>
-    /// <param name="boss">現在アクティブな首領 Agent。</param>
+    /// <param name="player">現在アクティブな自機データ。</param>
+    /// <param name="boss">現在アクティブな Boss データ。</param>
     /// <param name="renderCfg">描画設定。</param>
-    private static void Render(Pawn? player, BaseBossAgent? boss, in RenderConfig renderCfg)
+    private static void Render(in PlayerHudData? player, in BossHudData? boss, in RenderConfig renderCfg)
     {
         var hudCfg = renderCfg.Hud;
         var hpCfg = renderCfg.BossHpBar;
@@ -97,13 +128,13 @@ public static class HudRenderSystem {
         }
     }
 
-    private static void DrawPlayerStatus(Pawn? player, HudRenderConfig hudCfg)
+    private static void DrawPlayerStatus(in PlayerHudData? player, HudRenderConfig hudCfg)
     {
         if (player == null) return;
+        var p = player.Value;
 
-        ref readonly var playerHp = ref player.Health;
-        var maxHp = (int)Math.Max(1.0f, playerHp.Max);
-        var currentHp = Math.Clamp((int)playerHp.Current, 0, maxHp);
+        var maxHp = (int)Math.Max(1.0f, p.Health.Max);
+        var currentHp = Math.Clamp((int)p.Health.Current, 0, maxHp);
 
         var sb = new System.Text.StringBuilder("[ ");
         for (var i = 0; i < maxHp; i++)
@@ -121,25 +152,26 @@ public static class HudRenderSystem {
             _ => hudCfg.PlayerHpDeadColor
         };
 
-        var charName = player is PlayerPawn pp ? pp.CurrentCharacter.ToString() : "Cat";
-        var hpText = player.IsInvincible
+        var charName = p.CharacterType.ToString();
+        var hpText = p.IsInvincible
             ? $"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp}) [INVINCIBLE]"
             : $"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp})";
         GameEngine.DrawString(hudCfg.PlayerHpPos, hpText, hpColor);
     }
 
-    private static void DrawBossStatus(BaseBossAgent? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
+    private static void DrawBossStatus(in BossHudData? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
     {
         if (boss == null) return;
+        var b = boss.Value;
 
-        var phase = ToLegacyPhase(boss.Phase);
-        var bossTitle = GetBossTitle(boss.BossType, phase);
-        ref readonly var bossHp = ref boss.Health;
-        DrawBossHpBar(hpCfg, modalCfg, bossTitle, bossHp.Current, bossHp.Max, phase, boss.PhaseThresholds);
+        var phase = ToLegacyPhase(b.CombatState.Phase);
+        var bossTitle = GetBossTitle(b.CombatState.BossType, phase);
+        var bossHp = b.Health;
+        DrawBossHpBar(hpCfg, modalCfg, bossTitle, bossHp.Current, bossHp.Max, phase, b.PhaseThresholds);
     }
 
     /// <summary>
-    ///     Boss 称号および Phase を取得します（模式匹配で魔数配列を排除し 0-GC 描画）。
+    ///     Boss の称号およびフェーズ表記を取得します（パターンマッチにより固定文字列を返し 0-GC で描画）。
     /// </summary>
     private static string GetBossTitle(BossType bossType, int phase)
     {
@@ -155,9 +187,9 @@ public static class HudRenderSystem {
         };
     }
 
-    private static void DrawGameOverModal(Pawn? player, ModalRenderConfig modalCfg)
+    private static void DrawGameOverModal(in PlayerHudData? player, ModalRenderConfig modalCfg)
     {
-        if (player is not { IsAlive: false }) return;
+        if (player == null || player.Value.IsAlive) return;
         GameEngine.DrawBox(modalCfg.GameOverPos1, modalCfg.GameOverPos2, modalCfg.GameOverBgColor, true);
         GameEngine.DrawBox(modalCfg.GameOverPos1, modalCfg.GameOverPos2, modalCfg.GameOverOuterBorderColor, false);
         var pad = new Vec2i(modalCfg.InnerBorderPadding, modalCfg.InnerBorderPadding);
@@ -173,15 +205,15 @@ public static class HudRenderSystem {
         _ => AssertHelper.FailWithDefault("[HUD 警告] 未知のフェーズ", 1)
     };
 
-    internal static void GetBossStateInfo(BaseBossAgent boss, BossHpBarRenderConfig hpCfg,
+    internal static void GetBossStateInfo(BossCombatState combatState, IBossBrain? brain, BossHpBarRenderConfig hpCfg,
         out string stateName, out Color badgeColor)
     {
-        var state = boss.CurrentState;
-        var currentAbility = boss.AbilitySystem.CurrentAbility;
+        var state = combatState.State;
+        var currentAbility = brain?.AbilitySystem.CurrentAbility;
         var abilityName = currentAbility?.DisplayName;
         if (string.IsNullOrEmpty(abilityName))
         {
-            abilityName = !boss.CurrentSkillTag.IsEmpty ? boss.CurrentSkillTag.ToString() : "None";
+            abilityName = !combatState.CurrentSkillTag.IsEmpty ? combatState.CurrentSkillTag.ToString() : "None";
         }
 
         (stateName, badgeColor) = state switch {

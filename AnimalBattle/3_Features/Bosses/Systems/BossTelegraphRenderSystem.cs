@@ -1,8 +1,8 @@
 using System;
 using System.Drawing;
 using AnimalBattle.Abilities;
+using AnimalBattle.Ai;
 using AnimalBattle.Characters;
-using AnimalBattle.Characters.Boss;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -12,13 +12,21 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Systems.Render;
 
 /// <summary>
-///     Boss の前揺予兆線（Telegraph）、虚弱隙（Vulnerable）演出、およびフェーズ遷移無敵結界を描画する ECS システム。
+///     Boss の攻撃予兆線（Telegraph）、隙・脆弱（Vulnerable）演出、およびフェーズ遷移時の無敵演出を描画する ECS システム。
 /// </summary>
 public static class BossTelegraphRenderSystem
 {
-    private static Query<PlayerPawn> _playerQuery;
-    private static Query<BaseBossAgent> _bossQuery;
-    private static BaseBossAgent? _cachedBoss;
+    private readonly record struct BossTelegraphData(
+        Transform Transform,
+        Sprite Sprite,
+        CollisionBox CollisionBox,
+        GameplayTagState Tags,
+        BossCombatState CombatState,
+        IBossBrain Brain);
+
+    private static Query<Transform> _playerQuery;
+    private static Query<Transform, Sprite, CollisionBox, GameplayTagState, BossCombatState, BossBrainComponent> _bossQuery;
+    private static BossTelegraphData? _cachedBoss;
     private static Vec2f _cachedPlayerPos;
 
     /// <summary>
@@ -28,8 +36,13 @@ public static class BossTelegraphRenderSystem
     /// <returns>登録済みワールド</returns>
     public static World AddBossTelegraphRenderSystem(this World world)
     {
-        _playerQuery = world.QueryBuilder<PlayerPawn>().Build();
-        _bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
+        _playerQuery = world.QueryBuilder<Transform>()
+            .With<PlayerTag>()
+            .Build();
+        _bossQuery = world.QueryBuilder<Transform, Sprite, CollisionBox, GameplayTagState, BossCombatState, BossBrainComponent>()
+            .With<BossTag>()
+            .Without<DeadTag>()
+            .Build();
 
         world.System("BossTelegraphRenderSystem")
             .Kind(Ecs.OnStore)
@@ -53,7 +66,8 @@ public static class BossTelegraphRenderSystem
         _cachedBoss = null;
 
         if (boss == null) return;
-        if (!boss.Entity.IsAlive() || !boss.IsAlive || !boss.Sprite.IsVisible || boss.Sprite.GraphHandle < 0) return;
+        var b = boss.Value;
+        if (!b.Sprite.IsVisible || b.Sprite.GraphHandle < 0 || b.CombatState.State.IsDead) return;
 
         var playerCfg = w.GetActivePlayerConfig();
         _cachedPlayerPos = playerCfg.Spawn;
@@ -68,59 +82,56 @@ public static class BossTelegraphRenderSystem
         TelegraphRenderHelper.CurrentEffects = bossFx;
         TelegraphRenderHelper.CurrentArena = arenaCfg;
 
-        ref readonly var bTrans = ref boss.Transform;
-        ref readonly var bSprite = ref boss.Sprite;
-        var bPos = (bTrans.Position + bSprite.JitterOffset).ToVec2i();
+        var bPos = (b.Transform.Position + b.Sprite.JitterOffset).ToVec2i();
 
-        // 1. 予兆前揺（Telegraph）描画
-        if (boss.CurrentState.IsTelegraph)
+        // 1. 攻撃予兆（Telegraph）描画
+        if (b.CombatState.State.IsTelegraph)
         {
-            var progress = boss.AbilitySystem.Progress;
-            DrawBossTelegraph(boss, playerPos, progress);
+            var progress = b.Brain.AbilitySystem.Progress;
+            DrawBossTelegraph(b, playerPos, progress);
         }
 
-        var flipX = !boss.FacingRight;
-        var rotation = bTrans.Rotation;
+        var flipX = !b.CombatState.FacingRight;
+        var rotation = b.Transform.Rotation;
 
-        // 2. 虚弱（Vulnerable）状態の脈動オーラとマーカー
-        if (boss.IsVulnerable)
+        // 2. 隙・脆弱（Vulnerable）状態の脈動オーラとマーカー
+        if (b.Tags.HasTag(GameplayTag.Vulnerable))
         {
             DrawBossVulnerableEffects(
-                bPos, bSprite.SrcRect, bTrans.Scale, rotation,
-                bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
+                bPos, b.Sprite.SrcRect, b.Transform.Scale, rotation,
+                b.Sprite.GraphHandle, flipX, b.CombatState.StateTimer, bossFx);
         }
 
-        // 3. フェーズ遷移無敵結界演出
-        if (boss.CurrentState.IsPhaseTransition)
+        // 3. フェーズ遷移時の無敵シールド演出
+        if (b.CombatState.State.IsPhaseTransition)
         {
             DrawBossPhaseTransitionEffects(
-                bPos, bSprite.SrcRect, bTrans.Scale, rotation,
-                bSprite.GraphHandle, flipX, boss.StateTimer, bossFx);
+                bPos, b.Sprite.SrcRect, b.Transform.Scale, rotation,
+                b.Sprite.GraphHandle, flipX, b.CombatState.StateTimer, bossFx);
         }
     }
 
-    private static void FindBoss(ref BaseBossAgent b) => _cachedBoss = b;
-
-    private static void FindPlayerPosition(ref PlayerPawn player)
+    private static void FindBoss(ref Transform trans, ref Sprite sprite, ref CollisionBox col, ref GameplayTagState tags, ref BossCombatState state, ref BossBrainComponent brainComp)
     {
-        if (player.Entity.IsAlive())
-        {
-            _cachedPlayerPos = player.Transform.Position;
-        }
+        _cachedBoss = new BossTelegraphData(trans, sprite, col, tags, state, brainComp.Brain);
+    }
+
+    private static void FindPlayerPosition(ref Transform playerTrans)
+    {
+        _cachedPlayerPos = playerTrans.Position;
     }
 
     private static void DrawBossTelegraph(
-        BaseBossAgent boss,
+        in BossTelegraphData boss,
         Vec2f playerPos,
         float progress)
     {
-        var currentAbility = boss.AbilitySystem.CurrentAbility;
+        var currentAbility = boss.Brain.AbilitySystem.CurrentAbility;
         if (currentAbility == null) return;
 
-        var finalTarget = boss.TargetPosition != Vec2f.Zero ? boss.TargetPosition : playerPos;
-        ref readonly var bTrans = ref boss.Transform;
+        var finalTarget = boss.CombatState.TargetPosition != Vec2f.Zero ? boss.CombatState.TargetPosition : playerPos;
         var bHeight = boss.CollisionBox.Size.Y;
-        AbilityTelegraphContext ctx = new(bTrans.Position, finalTarget, boss.FacingRight, progress, boss.StateTimer, bHeight);
+        AbilityTelegraphContext ctx = new(boss.Transform.Position, finalTarget, boss.CombatState.FacingRight, progress, boss.CombatState.StateTimer, bHeight);
         currentAbility.DrawTelegraph(in ctx);
     }
 

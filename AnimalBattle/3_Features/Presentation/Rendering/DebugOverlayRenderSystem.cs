@@ -1,6 +1,7 @@
 using System.Drawing;
+using AnimalBattle.Ai;
 using AnimalBattle.Characters;
-using AnimalBattle.Characters.Boss;
+using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using Flecs.NET.Core;
@@ -8,16 +9,18 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Systems.Render;
 
 /// <summary>
-///     スクリーン空間における論理デバッグ HUD（Boss 状態機、二段ジャンプ、操作案内、デバッグ表示）を描画する ECS システム。
+///     スクリーン空間におけるデバッグ用 HUD（Boss ステートマシン、二段ジャンプ、操作案内、デバッグ表示）を描画する ECS システム。
 ///     CameraOffsetResetSystem の後に実行されるため、カメラ移動やシェイクの影響を受けずに画面固定で描画されます。
 /// </summary>
 public static class DebugOverlayRenderSystem
 {
-    private static Query<PlayerPawn> _playerQuery;
-    private static Query<BaseBossAgent> _bossQuery;
+    private readonly record struct BossDebugData(BossCombatState State, IBossBrain Brain);
 
-    private static PlayerPawn? _cachedPlayer;
-    private static BaseBossAgent? _cachedBoss;
+    private static Query<JumpCapability> _playerQuery;
+    private static Query<BossCombatState, BossBrainComponent> _bossQuery;
+
+    private static int? _cachedRemainingJumps;
+    private static BossDebugData? _cachedBoss;
 
     /// <summary>
     ///     デバッグ論理オーバーレイ描画システムを Flecs.NET ワールドへ登録します。
@@ -26,8 +29,13 @@ public static class DebugOverlayRenderSystem
     /// <returns>登録済みワールド</returns>
     public static World AddDebugOverlayRenderSystem(this World world)
     {
-        _playerQuery = world.QueryBuilder<PlayerPawn>().Build();
-        _bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
+        _playerQuery = world.QueryBuilder<JumpCapability>()
+            .With<PlayerTag>()
+            .Build();
+        _bossQuery = world.QueryBuilder<BossCombatState, BossBrainComponent>()
+            .With<BossTag>()
+            .Without<DeadTag>()
+            .Build();
 
         world.System("DebugOverlayRenderSystem")
             .Kind(Ecs.OnStore)
@@ -48,24 +56,24 @@ public static class DebugOverlayRenderSystem
         var dbgCfg = renderCfg.Debug;
         if (!dbgCfg.DebugMode || !dbgCfg.IsActive) return;
 
-        _cachedPlayer = null;
+        _cachedRemainingJumps = null;
         _cachedBoss = null;
 
         _playerQuery.Each(FindPlayer);
         _bossQuery.Each(FindBoss);
 
-        var player = _cachedPlayer;
+        var remainingJumps = _cachedRemainingJumps;
         var boss = _cachedBoss;
-        _cachedPlayer = null;
+        _cachedRemainingJumps = null;
         _cachedBoss = null;
 
-        DrawDebugOverlayHud(player, boss, in renderCfg);
+        DrawDebugOverlayHud(remainingJumps, boss, in renderCfg);
     }
 
-    private static void FindPlayer(ref PlayerPawn p) => _cachedPlayer = p;
-    private static void FindBoss(ref BaseBossAgent b) => _cachedBoss = b;
+    private static void FindPlayer(ref JumpCapability jump) => _cachedRemainingJumps = jump.RemainingJumps;
+    private static void FindBoss(ref BossCombatState state, ref BossBrainComponent brainComp) => _cachedBoss = new BossDebugData(state, brainComp.Brain);
 
-    private static void DrawDebugOverlayHud(PlayerPawn? player, BaseBossAgent? boss, in RenderConfig renderCfg)
+    private static void DrawDebugOverlayHud(int? remainingJumps, in BossDebugData? boss, in RenderConfig renderCfg)
     {
         var hudCfg = renderCfg.Hud;
         var hpCfg = renderCfg.BossHpBar;
@@ -78,10 +86,10 @@ public static class DebugOverlayRenderSystem
         }
 
         // 二段ジャンプ残数インジケータ（画面固定）
-        if (player != null)
+        if (remainingJumps.HasValue)
         {
-            var remainingJumps = player.RemainingJumps;
-            var jumpDots = remainingJumps switch {
+            var jumps = remainingJumps.Value;
+            var jumpDots = jumps switch {
                 >= 2 => "[ ●  ● ]",
                 1 => "[ ●  ○ ]",
                 _ => "[ ○  ○ ]"
@@ -89,7 +97,7 @@ public static class DebugOverlayRenderSystem
             var jumpText = string.IsNullOrEmpty(hudCfg.DoubleJumpText)
                 ? jumpDots
                 : $"{hudCfg.DoubleJumpText} {jumpDots}";
-            var jumpColor = remainingJumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
+            var jumpColor = jumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
             GameEngine.DrawString(hudCfg.DoubleJumpPos, jumpText, jumpColor);
         }
 
@@ -109,22 +117,23 @@ public static class DebugOverlayRenderSystem
             GameEngine.DrawString(new Vec2i(hudCfg.TitlePos.X, guideY + hudCfg.LineSpacing * lineIndex++), dbgCfg.PhaseSwitchGuideText, dbgCfg.PhaseSwitchGuideColor);
         }
 
-        // Boss 状態機詳細バッジとスキルタイマー（Boss HP バー上部・画面固定）
+        // Boss ステートマシン詳細バッジとスキルタイマー（Boss HP バー上部・画面固定）
         if (boss != null)
         {
-            HudRenderSystem.GetBossStateInfo(boss, hpCfg, out var stateName, out var stateBadgeColor);
+            var b = boss.Value;
+            HudRenderSystem.GetBossStateInfo(b.State, b.Brain, hpCfg, out var stateName, out var stateBadgeColor);
             string timerText;
-            if (boss.AbilitySystem.IsCasting)
+            if (b.Brain.AbilitySystem.IsCasting)
             {
-                var pElapsed = boss.AbilitySystem.Elapsed;
-                var pDuration = boss.AbilitySystem.Duration;
+                var pElapsed = b.Brain.AbilitySystem.Elapsed;
+                var pDuration = b.Brain.AbilitySystem.Duration;
                 timerText = pDuration > 0.0f
                     ? $"{pElapsed:F1}s/{pDuration:F1}s"
                     : $"{pElapsed:F1}s";
             }
             else
             {
-                timerText = $"{boss.StateTimer:F1}s";
+                timerText = $"{b.State.StateTimer:F1}s";
             }
 
             var badgePos = hpCfg.BarPos1 + (hpCfg.StateBadgeOffset != Vec2i.Zero 

@@ -129,7 +129,7 @@ public sealed class Boss1Brain : BaseBossBrain {
     /// <summary>
     ///     ブレインの内部状態を初期位置へリセットします。
     /// </summary>
-    public void Reset(Vec2f pos)
+    public override void Reset(Vec2f pos)
     {
         _currentPosition = pos;
         _startPosition = pos;

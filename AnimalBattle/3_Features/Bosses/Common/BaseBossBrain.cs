@@ -215,4 +215,7 @@ public abstract class BaseBossBrain : IBossBrain
         _asc.RemoveTag(GameplayTag.SuperArmor);
         OnPhaseTransitionCompleted();
     }
+
+    /// <inheritdoc />
+    public abstract void Reset(Vec2f pos);
 }

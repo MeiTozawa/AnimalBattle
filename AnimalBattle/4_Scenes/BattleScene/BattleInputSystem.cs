@@ -1,6 +1,5 @@
 using AnimalBattle.Ai;
 using AnimalBattle.Characters;
-using AnimalBattle.Characters.Boss;
 using AnimalBattle.Combat;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
@@ -27,9 +26,8 @@ public static class BattleInputSystem
 
     private static Query _playerBulletsQuery;
     private static Query _vfxQuery;
-    private static Query<PlayerController> _controllerQuery;
-    private static Query<PlayerPawn> _playerQuery;
-    private static Query<BaseBossAgent> _bossQuery;
+    private static Query _playerEntitiesQuery;
+    private static Query<Health, BossCombatState, BossBrainComponent> _bossQuery;
     private static Phase _targetDebugPhase;
 
     /// <summary>
@@ -47,9 +45,12 @@ public static class BattleInputSystem
             .With<VfxTag>()
             .Build();
 
-        _controllerQuery = world.QueryBuilder<PlayerController>().Build();
-        _playerQuery = world.QueryBuilder<PlayerPawn>().Build();
-        _bossQuery = world.QueryBuilder<BaseBossAgent>().Build();
+        _playerEntitiesQuery = world.QueryBuilder()
+            .With<PlayerTag>()
+            .Build();
+        _bossQuery = world.QueryBuilder<Health, BossCombatState, BossBrainComponent>()
+            .With<BossTag>()
+            .Build();
 
         world.System("BattleInputSystem")
             .Kind(Ecs.PreUpdate)
@@ -88,15 +89,8 @@ public static class BattleInputSystem
             ProcessDebugInput(w, dbgCfg, _bossQuery);
         }
 
-        // ゲームオーバー時は自機の操作入力を停止
+        // ゲームオーバー時は自機の操作入力を停止（PlayerInputSystem 側でも同様に判定）
         if (w.Has<GameOverTag>()) return;
-
-        _controllerQuery.Each(PollController);
-    }
-
-    private static void PollController(ref PlayerController controller)
-    {
-        controller.PollAndProcessInput();
     }
 
     private static void ResetCombat(World world)
@@ -112,28 +106,91 @@ public static class BattleInputSystem
         CameraService.Reset();
         world.Set(new AimReticleState());
 
-        _bossQuery.Each(ResetBoss);
-        _playerQuery.Iter(ResetPlayer);
+        _bossQuery.Each(ResetBossEntity);
+        _playerEntitiesQuery.Each(ResetPlayerEntity);
 
         EventBus.Publish(new CombatResetEvent());
     }
 
     private static void RecycleEntity(Entity e) => e.Add<RecycleTag>();
-    private static void ResetBoss(ref BaseBossAgent boss) => boss.Reset();
 
-    private static void ResetPlayer(Iter it, Field<PlayerPawn> pawns)
+    private static void ResetBossEntity(Entity boss, ref Health hp, ref BossCombatState state, ref BossBrainComponent brainComp)
     {
-        var count = it.Count();
-        var w = it.World();
-        for (var i = 0; i < count; i++)
+        var w = boss.CsWorld();
+        var bossType = state.BossType;
+        var (spawn, maxHp) = bossType switch {
+            BossType.Boss1 => (w.Get<Boss1Config>().Spawn, w.Get<Boss1Config>().MaxHp),
+            BossType.Boss2 => (w.Get<Boss2Config>().Spawn, w.Get<Boss2Config>().MaxHp),
+            _ => (Vec2f.Zero, 1000f)
+        };
+
+        if (boss.Has<Transform>())
         {
-            ref var player = ref pawns[i];
-            var cfg = w.GetPlayerConfig(player.CharacterType);
-            player.Reset(cfg);
+            ref var trans = ref boss.GetMut<Transform>();
+            trans.Position = spawn;
+            trans.Rotation = 0.0f;
         }
+
+        if (boss.Has<Velocity>())
+        {
+            boss.Set(new Velocity(Vec2f.Zero));
+        }
+
+        hp.Current = maxHp;
+        hp.Max = maxHp;
+
+        brainComp.Brain.Reset(spawn);
+        state.Phase = Phase.Phase1;
+        state.State = BossState.Unknown;
+        state.CurrentSkillTag = StringId.Empty;
+        state.StateTimer = 0.0f;
+        state.TargetPosition = Vec2f.Zero;
+        state.FacingRight = true;
+
+        if (boss.Has<DeadTag>()) boss.Remove<DeadTag>();
+        if (boss.Has<HitFlashEffect>()) boss.Remove<HitFlashEffect>();
     }
 
-    private static void ProcessDebugInput(World world, DebugRenderConfig dbgCfg, Query<BaseBossAgent> bossQuery)
+    private static void ResetPlayerEntity(Entity player)
+    {
+        var w = player.CsWorld();
+        var type = player.Has<CharacterTypeComponent>()
+            ? player.Get<CharacterTypeComponent>().Value
+            : CharacterType.Cat;
+        var cfg = w.GetPlayerConfig(type);
+
+        player.Set(new Transform(cfg.Spawn, cfg.Scale));
+        player.Set(new Velocity(Vec2f.Zero));
+        player.Set(new Health(cfg.MaxHp));
+        player.Set(new MovementIntent());
+        player.Set(new WeaponIntent());
+        player.Set(new DashState());
+        player.Set(JumpCapability.FromPlayerConfig(cfg));
+
+        if (player.Has<CatWeaponState>())
+        {
+            player.Set(CatWeaponState.FromConfig(cfg));
+        }
+        if (player.Has<BunnyWeaponState>())
+        {
+            player.Set(BunnyWeaponState.FromConfig(cfg));
+            if (player.Has<PlayerMeleeWeapon>())
+            {
+                var melee = player.Get<PlayerMeleeWeapon>().Entity;
+                if (melee.IsAlive()) melee.Disable();
+            }
+        }
+
+        if (player.Has<Animation>())
+        {
+            player.GetMut<Animation>().Play("Idle");
+        }
+
+        if (player.Has<DeadTag>()) player.Remove<DeadTag>();
+        if (player.Has<HitFlashEffect>()) player.Remove<HitFlashEffect>();
+    }
+
+    private static void ProcessDebugInput(World world, DebugRenderConfig dbgCfg, Query<Health, BossCombatState, BossBrainComponent> bossQuery)
     {
         var isF1 = GameEngine.CheckHitKey((int)InputButton.KeyF1) || GameEngine.CheckHitKey((int)InputButton.KeyH);
         if (isF1 && !_prevF1)
@@ -204,9 +261,25 @@ public static class BattleInputSystem
         _prevF4 = isF4;
     }
 
-    private static void ApplyDebugPhase(ref BaseBossAgent boss)
+    private static void ApplyDebugPhase(Entity boss, ref Health hp, ref BossCombatState state, ref BossBrainComponent brainComp)
     {
-        if (!boss.IsAlive || boss.IsDead || boss.Health.Current <= 0.0f || (boss.Entity.IsAlive() && boss.Entity.Has<DeadTag>())) return;
-        boss.DebugSetPhase(_targetDebugPhase);
+        if (!boss.IsAlive() || boss.Has<DeadTag>() || hp.Current <= 0.0f) return;
+        brainComp.Brain.DebugSetPhase(_targetDebugPhase);
+
+        var w = boss.CsWorld();
+        var (p2, p3) = state.BossType switch {
+            BossType.Boss1 => (w.Get<Boss1Config>().Phase2.HpThreshold, w.Get<Boss1Config>().Phase3.HpThreshold),
+            BossType.Boss2 => (w.Get<Boss2Config>().Phase2.HpThreshold, w.Get<Boss2Config>().Phase3.HpThreshold),
+            _ => (0.7f, 0.3f)
+        };
+        var ratio = _targetDebugPhase switch {
+            Phase.Phase1 => 1.0f,
+            Phase.Phase2 => p2,
+            Phase.Phase3 => p3,
+            _ => 1.0f
+        };
+        hp.Current = Math.Clamp((float)Math.Round(hp.Max * ratio), 1.0f, hp.Max);
+        BulletSpawner.ClearAllBossBullets(w);
+        state.Phase = _targetDebugPhase;
     }
 }

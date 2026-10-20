@@ -70,7 +70,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     /// <summary>現在の Boss 移動速度を取得します。</summary>
     public Vec2f Velocity => _currentVelocity;
 
-    /// <summary>泰山圧頂技能の目標着地サーフェス Y 座標（足場上面または床面）を取得します。</summary>
+    /// <summary>ヒップドロップ（LeapSmash）スキルの着地目標サーフェス Y 座標（足場上面または床面）を取得します。</summary>
     public float TargetLandingSurfaceY => _targetLandingSurfaceY;
 
     /// <inheritdoc />
@@ -214,7 +214,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     /// <summary>
     ///     ブレインの内部状態を初期位置へリセットします。
     /// </summary>
-    public void Reset(Vec2f pos)
+    public override void Reset(Vec2f pos)
     {
         _currentPosition = pos;
         _targetPosition = pos;

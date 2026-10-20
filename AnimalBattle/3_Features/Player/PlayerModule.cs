@@ -4,7 +4,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Player;
 
 /// <summary>
-///     プレイヤー自機の Prefab 原型および各種制御・兵装・アニメーション・被弾裁定システムを一括管理する Flecs モジュール。
+///     自機の Prefab 登録および入力・移動・武器・ダメージ判定システムを一括登録する Flecs モジュール。
 /// </summary>
 public readonly struct PlayerModule : IFlecsModule
 {
@@ -14,7 +14,8 @@ public readonly struct PlayerModule : IFlecsModule
 
         PlayerPrefabs.Register(world);
 
-        world.AddMovementSystem()
+        world.AddPlayerInputSystem()
+             .AddMovementSystem()
              .AddCatWeaponSystem()
              .AddBunnyWeaponSystem()
              .AddPlayerDamageResolutionSystem();

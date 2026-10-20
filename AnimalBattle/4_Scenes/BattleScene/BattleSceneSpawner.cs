@@ -18,7 +18,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Scenes;
 
 /// <summary>
-///     戦闘シーンの全エンティティツリー（自機、首領、アリーナ足場・タイルマップ）を構築・解体するライフサイクル装配クラス。
+///     戦闘シーンの全エンティティツリー（自機、Boss、足場・タイルマップ）の生成・破棄を行うスポナークラス。
 /// </summary>
 public static class BattleSceneSpawner {
     public const string RootName = "BattleSceneRoot";
@@ -26,11 +26,11 @@ public static class BattleSceneSpawner {
     public const string Boss2Name = "Boss2";
 
     /// <summary>
-    ///     戦闘シーンのルートエンティティおよび自機・首領・アリーナをワールドへ装配します。
+    ///     戦闘シーンのルートエンティティおよび自機・Boss・アリーナを生成してワールドへ配置します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="playerType">選択されたプレイヤーキャラクター種別</param>
-    /// <param name="bossType">選択された首領種別</param>
+    /// <param name="bossType">選択された Boss 種別</param>
     public static void Spawn(World world, CharacterType playerType, BossType bossType)
     {
         Teardown(world);
@@ -44,19 +44,20 @@ public static class BattleSceneSpawner {
         var playerCfg = world.GetPlayerConfig(playerType);
         var playerEntity = world.Entity("Player1")
             .ChildOf(root)
-            .IsA(PlayerPrefabs.GetPrefab(playerType));
+            .IsA(PlayerPrefabs.GetPrefab(playerType))
+            .Set(new Transform(playerCfg.Spawn, playerCfg.Scale))
+            .Set(new Animation(playerType, "Idle"))
+            .Set(new Sprite(playerHandle, false, true, new Rect(0, 0, 32, 32)))
+            .Set(new CharacterTypeComponent(playerType));
 
-        PlayerPawn player = playerType switch
+        if (playerType == CharacterType.Bunny)
         {
-            CharacterType.Bunny => new Bunny(playerEntity, playerCfg, playerHandle),
-            CharacterType.Cat => new Cat(playerEntity, playerCfg, playerHandle),
-            _ => AssertHelper.FailWithDefault($"未対応のキャラクター種別です: {playerType}", (PlayerPawn)new Cat(playerEntity, playerCfg, playerHandle))
-        };
-        player.Reset(playerCfg);
-        PlayerController controller = new(player);
-
-        playerEntity.Set(player);
-        playerEntity.Set(controller);
+            var melee = world.Entity("PlayerSlashHitbox")
+                .ChildOf(playerEntity)
+                .IsA(CombatPrefabs.PlayerSlashHitbox);
+            melee.Disable();
+            playerEntity.Set(new PlayerMeleeWeapon(melee));
+        }
 
         // 2. アリーナ・タイルマップの生成
         var arenaCfg = world.Get<ArenaConfig>();
@@ -68,7 +69,7 @@ public static class BattleSceneSpawner {
         tileMap.BuildPlatformColliders(world, root);
         root.Set(tileMap);
 
-        // 3. 首領エンティティの生成
+        // 3. Boss エンティティの生成
         var bossName = bossType == BossType.Boss2 ? Boss2Name : Boss1Name;
         var (texPath, _) = bossType switch {
             BossType.Boss1 => (ResourcePath.Characters.Character031_3Png, "Boss 1"),
@@ -83,21 +84,86 @@ public static class BattleSceneSpawner {
             .ChildOf(root)
             .IsA(BossPrefabs.GetPrefab(bossType));
 
-        BaseBossAgent boss = bossType switch {
-            BossType.Boss1 => new Boss1Agent(bossEntity, bossHandle),
-            BossType.Boss2 => new Boss2Agent(bossEntity, bossHandle, () => tileMap.NavGraph),
-            _ => new Boss1Agent(bossEntity, bossHandle)
+        var (spawn, scale) = bossType switch {
+            BossType.Boss1 => (world.Get<Boss1Config>().Spawn, world.Get<Boss1Config>().Scale),
+            BossType.Boss2 => (world.Get<Boss2Config>().Spawn, world.Get<Boss2Config>().Scale),
+            _ => (Vec2f.Zero, Vec2f.One)
         };
-        boss.Reset();
 
-        boss.Brain.OnScreenShake += (intensity, duration) =>
+        IBossBrain brain = bossType switch {
+            BossType.Boss1 => new Boss1Brain(world, spawn),
+            BossType.Boss2 => new Boss2Brain(world, spawn, null, () => tileMap.NavGraph),
+            _ => new Boss1Brain(world, spawn)
+        };
+
+        bossEntity
+            .Set(new Transform(spawn, scale))
+            .Set(new Sprite(bossHandle, false, true, new Rect(0, 0, 192, 192)))
+            .Set(new BossCombatState(bossType, Phase.Phase1))
+            .Set(new BossBrainComponent(brain));
+
+        brain.AbilitySystem.OnTagsChanged += tags =>
+        {
+            if (bossEntity.IsAlive() && bossEntity.Has<GameplayTagState>())
+            {
+                bossEntity.GetMut<GameplayTagState>().ActiveMask = tags;
+            }
+        };
+        if (bossEntity.Has<GameplayTagState>())
+        {
+            bossEntity.GetMut<GameplayTagState>().ActiveMask = brain.AbilitySystem.Tags.RawTags;
+        }
+
+        brain.OnScreenShake += (intensity, duration) =>
         {
             var camCfg = world.Get<CameraConfig>();
             var trauma = intensity > 1.0f ? intensity * camCfg.AbilityShakeTraumaScale : intensity;
             CameraService.AddTrauma(trauma);
         };
 
-        bossEntity.Set(boss);
+        brain.OnClearBullets += () =>
+        {
+            BulletSpawner.ClearAllBossBullets(world);
+        };
+
+        var emitterAngleOffset = 0.0f;
+        brain.OnEmitBulletWave += (skill, origin, target) =>
+        {
+            if (bossType == BossType.Boss1)
+            {
+                BulletEmitter.EmitBoss1(world, skill, origin, target, ref emitterAngleOffset);
+            }
+            else if (bossType == BossType.Boss2)
+            {
+                var colHeight = bossEntity.Get<CollisionBox>().Size.Y;
+                var forwardDir = brain.FacingRight ? 1.0f : -1.0f;
+                BulletEmitter.EmitBoss2(world, skill, origin, target, forwardDir, colHeight);
+            }
+        };
+
+        if (brain is Boss2Brain b2Brain)
+        {
+            b2Brain.OnCreateHitbox += (skill, offsetX, offsetY) =>
+            {
+                var patternCfg = world.Get<Boss2PatternConfig>();
+                ref readonly var trans = ref bossEntity.Get<Transform>();
+                var forwardDir = brain.FacingRight ? 1.0f : -1.0f;
+                var colHeight = bossEntity.Get<CollisionBox>().Size.Y;
+                var vx = b2Brain.Velocity.X;
+                if (patternCfg.TryGetSkill(skill, out var pattern))
+                {
+                    pattern.SpawnHitbox(
+                        world,
+                        trans.Position,
+                        forwardDir,
+                        vx,
+                        colHeight,
+                        offsetX,
+                        offsetY,
+                        brain.TargetPosition);
+                }
+            };
+        }
 
         world.Set(new AimReticleState());
         CameraService.Reset();
@@ -146,7 +212,7 @@ public static class BattleSceneSpawner {
         }
         EventBus.Publish(new CombatResetEvent());
 
-        // 3. 戦闘シーンルート配下の全エンティティ（自機、首領、足場、タイルマップ等）を一括カスケード破棄
+        // 3. 戦闘シーンルート配下の全エンティティ（自機、Boss、足場、タイルマップ等）を一括破棄
         var root = world.Lookup(RootName);
         if (root.IsAlive())
         {
