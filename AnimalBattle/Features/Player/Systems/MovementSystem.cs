@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using AnimalBattle.Abilities;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
+using AnimalBattle.Maps;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Player.Systems;
@@ -13,22 +15,22 @@ namespace AnimalBattle.Player.Systems;
 ///     <see cref="MovementIntent" /> を消費し、重力、跳躍インパルス、足場衝突および画面境界を統一的に処理します。
 /// </summary>
 public static class MovementSystem {
-    private static Query<Transform, CollisionBox> _platformQuery;
+    private static Query<TileMap> _tileMapQuery;
     private static ArenaConfig? _arenaCfg;
+    private static TileMap? _cachedTileMap;
+    private static readonly List<int> _candidatePlatforms = new(16);
 
     /// <summary>
     ///     キネマティック運動物理システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    /// <param name="platformQuery">足場プラットフォーム検索クエリ（省略時は内部生成）</param>
     /// <param name="arenaCfg">アリーナ境界設定（省略時は World 単例）</param>
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddMovementSystem(
         this World world,
-        Query<Transform, CollisionBox>? platformQuery = null,
         ArenaConfig? arenaCfg = null)
     {
-        _platformQuery = platformQuery ?? world.QueryBuilder<Transform, CollisionBox>().With<PlatformTag>().Build();
+        _tileMapQuery = world.QueryBuilder<TileMap>().Build();
         _arenaCfg = arenaCfg;
 
         world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability, DashState, Sprite, SpringScale, TimedEffectsState, GameplayTagState>("MovementSystem")
@@ -39,6 +41,8 @@ public static class MovementSystem {
 
         return world;
     }
+
+    private static void FindTileMap(ref TileMap tm) => _cachedTileMap = tm;
 
     private static void ExecuteMovement(
         Iter it,
@@ -60,7 +64,11 @@ public static class MovementSystem {
         var world = it.World();
         var cfg = _arenaCfg ?? world.Get<ArenaConfig>();
         var pCfg = world.GetActivePlayerConfig();
-        var pQuery = _platformQuery!;
+
+        _cachedTileMap = null;
+        _tileMapQuery.Each(FindTileMap);
+        var tileMap = _cachedTileMap;
+        _cachedTileMap = null;
 
         for (var i = 0; i < count; i++)
         {
@@ -76,7 +84,7 @@ public static class MovementSystem {
             ref var tag = ref tags[i];
 
             var entity = it.Entity(i);
-            ExecuteKinematics(entity, ref effect, ref tag, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, pQuery, cfg, pCfg, world);
+            ExecuteKinematics(entity, ref effect, ref tag, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, tileMap, cfg, pCfg, world);
         }
     }
 
@@ -93,7 +101,7 @@ public static class MovementSystem {
         ref Sprite sprite,
         ref SpringScale spring,
         float dt,
-        Query<Transform, CollisionBox> platformQuery,
+        TileMap? tileMap,
         ArenaConfig arenaCfg,
         PlayerConfig pCfg,
         World? effectWorld)
@@ -293,23 +301,39 @@ public static class MovementSystem {
         var platformGroundY = float.MaxValue;
         var platformVy = 0.0f;
 
-        platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
+        if (tileMap != null)
         {
-            Box2D platformBox = new(platTrans.Position, platCol.Size);
-            if (PhysicsService.CheckPlatformGround(
-                currentY,
-                nextPos.Y,
-                entityBox,
-                platformBox,
-                out var groundY,
-                out var vy))
-                if (!hitPlatform || groundY < platformGroundY)
+            var sweepTop = MathF.Min(currentY, nextPos.Y) - col.Size.Y * 0.5f;
+            var sweepBottom = MathF.Max(currentY, nextPos.Y) + col.Size.Y * 0.5f;
+            var sweepCenter = new Vec2f(nextPos.X, (sweepTop + sweepBottom) * 0.5f);
+            var sweepSize = new Vec2f(col.Size.X, sweepBottom - sweepTop);
+            Box2D sweepQueryBox = new(sweepCenter, sweepSize);
+
+            _candidatePlatforms.Clear();
+            tileMap.SpatialHash.Query(sweepQueryBox, _candidatePlatforms);
+
+            for (var p = 0; p < _candidatePlatforms.Count; p++)
+            {
+                if (tileMap.SpatialHash.TryGetBox(_candidatePlatforms[p], out var platformBox))
                 {
-                    hitPlatform = true;
-                    platformGroundY = groundY;
-                    platformVy = vy;
+                    if (PhysicsService.CheckPlatformGround(
+                        currentY,
+                        nextPos.Y,
+                        entityBox,
+                        platformBox,
+                        out var groundY,
+                        out var vy))
+                    {
+                        if (!hitPlatform || groundY < platformGroundY)
+                        {
+                            hitPlatform = true;
+                            platformGroundY = groundY;
+                            platformVy = vy;
+                        }
+                    }
                 }
-        });
+            }
+        }
 
         var isGrounded = hitPlatform;
         var adjustedPosY = hitPlatform ? platformGroundY : nextPos.Y;

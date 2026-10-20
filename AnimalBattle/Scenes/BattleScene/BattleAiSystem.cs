@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
@@ -6,6 +7,7 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Core.Geometry;
+using AnimalBattle.Maps;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Scenes.Battle;
@@ -16,13 +18,15 @@ namespace AnimalBattle.Scenes.Battle;
 /// </summary>
 public static class BattleAiSystem
 {
-    private static Query<Transform, CollisionBox> _platformQuery;
+    private static Query<TileMap> _tileMapQuery;
     private static Query<Transform, Velocity> _playerQuery;
     private static Query<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent> _bossQuery;
 
     private static Vec2f _cachedPlayerPos;
     private static Vec2f _cachedPlayerVel;
+    private static TileMap? _cachedTileMap;
     private static bool _hasPlayer;
+    private static readonly List<int> _candidateBossPlatforms = new(16);
 
     /// <summary>
     ///     Boss AI 思考および動的カメラ追従システムを Flecs.NET ワールドへ登録します。
@@ -31,9 +35,7 @@ public static class BattleAiSystem
     /// <returns>登録済みワールド</returns>
     public static World AddBattleAiSystem(this World world)
     {
-        _platformQuery = world.QueryBuilder<Transform, CollisionBox>()
-            .With<PlatformTag>()
-            .Build();
+        _tileMapQuery = world.QueryBuilder<TileMap>().Build();
 
         _playerQuery = world.QueryBuilder<Transform, Velocity>()
             .With<PlayerTag>()
@@ -50,6 +52,8 @@ public static class BattleAiSystem
         return world;
     }
 
+    private static void FindTileMap(ref TileMap tm) => _cachedTileMap = tm;
+
     private static void ExecuteBattleAi(Iter it)
     {
         var w = it.World();
@@ -62,6 +66,11 @@ public static class BattleAiSystem
 
         var dt = it.DeltaTime();
         var camCfg = w.Get<CameraConfig>();
+
+        _cachedTileMap = null;
+        _tileMapQuery.Each(FindTileMap);
+        var tileMap = _cachedTileMap;
+        _cachedTileMap = null;
 
         _bossQuery.Each((Entity e, ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Health hp, ref Sprite sprite, ref BossCombatState state, ref BossBrainComponent brainComp) =>
         {
@@ -101,7 +110,7 @@ public static class BattleAiSystem
                 }
                 vel.Value = currentLinear;
 
-                UpdateBoss2MovementAndCollision(e, b2Brain, ref trans, ref vel, ref col, dt, w, _platformQuery, isControlledAirborne);
+                UpdateBoss2MovementAndCollision(e, b2Brain, ref trans, ref vel, ref col, dt, w, tileMap, isControlledAirborne);
                 sprite.FlipX = !b2Brain.FacingRight;
             }
 
@@ -131,7 +140,7 @@ public static class BattleAiSystem
         ref CollisionBox col,
         float dt,
         World world,
-        Query<Transform, CollisionBox> platformQuery,
+        TileMap? tileMap,
         bool isControlledAirborne)
     {
         var b2Cfg = world.Get<Boss2Config>();
@@ -166,33 +175,43 @@ public static class BattleAiSystem
 
         // 制御空中移動時かつ上昇・滞空（vel.Linear.Y <= 0）の間は足場着地判定をスキップ
         var ignorePlatforms = isControlledAirborne && linear.Y <= 0.0f;
-        if (!ignorePlatforms)
+        if (!ignorePlatforms && tileMap != null)
         {
             var isLeapSmash = brain.CurrentSkillTag == brain.Configuration.TargetLockSkillTag;
             var targetLandingSurfaceY = brain.TargetLandingSurfaceY;
 
-            platformQuery.Each((ref Transform platTrans, ref CollisionBox platCol) =>
+            var sweepTop = MathF.Min(currentY, nextY) - colSize.Y * 0.5f;
+            var sweepBottom = MathF.Max(currentY, nextY) + colSize.Y * 0.5f;
+            var sweepCenter = new Vec2f(nextX, (sweepTop + sweepBottom) * 0.5f);
+            var sweepSize = new Vec2f(colSize.X, sweepBottom - sweepTop);
+            Box2D sweepQueryBox = new(sweepCenter, sweepSize);
+
+            _candidateBossPlatforms.Clear();
+            tileMap.SpatialHash.Query(sweepQueryBox, _candidateBossPlatforms);
+
+            for (var p = 0; p < _candidateBossPlatforms.Count; p++)
             {
-                var platSize = platCol.Size;
-                var platTopY = platTrans.Position.Y - platSize.Y * 0.5f;
-
-                // ヒップドロップ（LeapSmash）急降下中：目標着地サーフェス（足場上面または床）より上層の足場は貫通（スキップ）
-                if (isLeapSmash && targetLandingSurfaceY > 0.0f && platTopY < targetLandingSurfaceY - 5.0f)
+                if (tileMap.SpatialHash.TryGetBox(_candidateBossPlatforms[p], out var platformBox))
                 {
-                    return;
-                }
+                    var platTopY = platformBox.Top;
 
-                Box2D platformBox = new(platTrans.Position, platSize);
-                if (PhysicsService.CheckPlatformGround(currentY, nextY, bossBox, platformBox, out var groundY, out var pVy))
-                {
-                    if (!hitPlatform || groundY < platformGroundY)
+                    // ヒップドロップ（LeapSmash）急降下中：目標着地サーフェス（足場上面または床）より上層の足場は貫通（スキップ）
+                    if (isLeapSmash && targetLandingSurfaceY > 0.0f && platTopY < targetLandingSurfaceY - 5.0f)
                     {
-                        hitPlatform = true;
-                        platformGroundY = groundY;
-                        platformVy = pVy;
+                        continue;
+                    }
+
+                    if (PhysicsService.CheckPlatformGround(currentY, nextY, bossBox, platformBox, out var groundY, out var pVy))
+                    {
+                        if (!hitPlatform || groundY < platformGroundY)
+                        {
+                            hitPlatform = true;
+                            platformGroundY = groundY;
+                            platformVy = pVy;
+                        }
                     }
                 }
-            });
+            }
         }
 
         var isGrounded = hitPlatform;

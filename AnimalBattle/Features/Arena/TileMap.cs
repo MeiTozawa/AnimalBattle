@@ -4,6 +4,7 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Maps.Navigation;
+using AnimalBattle.Maps.Spatial;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Maps;
@@ -41,6 +42,9 @@ public sealed class TileMap(
 
     /// <summary>プラットフォーム間跳躍ナビゲーショングラフ</summary>
     public PlatformNavigationGraph NavGraph { get; } = new();
+
+    /// <summary>プラットフォーム足場用の 2D 空間ハッシュグリッド。</summary>
+    public PlatformSpatialHash SpatialHash { get; } = new(cellSize: 256.0f);
 
     /// <summary>
     ///     <see cref="TileMapConfig" /> 設定データおよび <see cref="TileSet" /> から <see cref="TileMap" /> を構築します。
@@ -115,6 +119,7 @@ public sealed class TileMap(
     /// <param name="parent">所属させる親エンティティ（省略可）</param>
     public void BuildPlatformColliders(World world, Entity parent)
     {
+        SpatialHash.Clear();
         if (Columns <= 0 || Rows <= 0 || TileSet.TileWidth <= 0 || TileSet.TileHeight <= 0) return;
 
         var scaleX = (float)RenderTileSize.X / TileSet.TileWidth;
@@ -127,6 +132,7 @@ public sealed class TileMap(
 
         List<PlatformNode> nodes = [];
         var nodeId = 0;
+        var platformId = 0;
 
         for (var r = 0; r < Rows; r++)
         {
@@ -150,7 +156,7 @@ public sealed class TileMap(
                 }
 
                 var tileCount = c - startCol;
-                RegisterPlatformNodeAndEntity(world, nodes, ref nodeId, r, startCol, tileCount, colOffsetX, colOffsetY,
+                RegisterPlatformNodeAndEntity(world, nodes, ref nodeId, ref platformId, r, startCol, tileCount, colOffsetX, colOffsetY,
                     colWidth, colHeight, parent);
             }
         }
@@ -166,6 +172,7 @@ public sealed class TileMap(
         World world,
         List<PlatformNode> nodes,
         ref int nodeId,
+        ref int platformId,
         int row,
         int startCol,
         int tileCount,
@@ -194,6 +201,9 @@ public sealed class TileMap(
 
         if (topSurfaceY <= arenaCfg.TileMap.MaxPlatformY && clampedRight > clampedLeft + arenaCfg.TileMap.MinPlatformWidth)
             nodes.Add(new PlatformNode(nodeId++, clampedLeft, clampedRight, topSurfaceY, platformHeight));
+
+        var platformBox = new Box2D(new Vec2f(centerX, centerY), new Vec2f(platformWidth, platformHeight));
+        SpatialHash.Insert(platformId++, platformBox);
 
         var entity = world.Entity($"Platform_{row}_{startCol}")
            .Set(new Transform(new Vec2f(centerX, centerY)))
