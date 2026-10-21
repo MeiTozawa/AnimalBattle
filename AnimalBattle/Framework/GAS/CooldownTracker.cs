@@ -1,11 +1,40 @@
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using AnimalBattle.Core;
+
 namespace AnimalBattle.Abilities;
+
+/// <summary>
+///     個別能力の冷却スロットデータ（POD）。
+/// </summary>
+public struct CooldownSlot
+{
+    /// <summary>能力識別タグ。</summary>
+    public StringId Tag;
+
+    /// <summary>残り冷却秒数。</summary>
+    public float Remaining;
+}
+
+/// <summary>
+///     冷却スロットを保持する純粋なインライン定長データコンポーネント（POD、定長 16 スロット）。
+///     .NET の InlineArray により、ヒープ割り当てなしで直接インデックスアクセスが可能です。
+/// </summary>
+[InlineArray(MaxSlots)]
+public struct CooldownSlots
+{
+    public const int MaxSlots = 16;
+
+    private CooldownSlot _element0;
+}
 
 /// <summary>
 ///     能力ごとの冷却時間を一元管理する高速追跡器です。
 ///     ヒープ割り当てを生じさせない零 GC 構造として動作します。
 /// </summary>
 public sealed class CooldownTracker {
-    private readonly Dictionary<StringId, float> _stringCooldowns = new();
+    private CooldownSlots _slots;
+    private int _count;
 
     /// <summary>直前に実行された能力識別タグを取得します。</summary>
     public StringId LastExecutedTag { get; private set; } = StringId.Empty;
@@ -15,16 +44,20 @@ public sealed class CooldownTracker {
 
     /// <summary>
     ///     経過時間に基づいてすべての能力の冷却時間を減衰更新します。
+    ///     インライン配列の直接インデックス走査により、辞書反復時の InvalidOperationException や二次ハッシュ検索を完全に排除します。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過秒数。</param>
     public void Update(float deltaTime)
     {
-        if (deltaTime <= 0.0f || _stringCooldowns.Count == 0) return;
+        if (deltaTime <= 0.0f || _count == 0) return;
 
-        foreach (var key in _stringCooldowns.Keys)
+        for (var i = 0; i < _count; i++)
         {
-            var current = _stringCooldowns[key];
-            if (current > 0.0f) _stringCooldowns[key] = MathF.Max(0.0f, current - deltaTime);
+            ref var slot = ref _slots[i];
+            if (slot.Remaining > 0.0f)
+            {
+                slot.Remaining = MathF.Max(0.0f, slot.Remaining - deltaTime);
+            }
         }
     }
 
@@ -45,7 +78,26 @@ public sealed class CooldownTracker {
 
         if (cooldown > 0.0f)
         {
-            _stringCooldowns[tag] = cooldown;
+            for (var i = 0; i < _count; i++)
+            {
+                ref var slot = ref _slots[i];
+                if (slot.Tag == tag)
+                {
+                    slot.Remaining = cooldown;
+                    return;
+                }
+            }
+
+            if (_count < CooldownSlots.MaxSlots)
+            {
+                ref var slot = ref _slots[_count++];
+                slot.Tag = tag;
+                slot.Remaining = cooldown;
+            }
+            else
+            {
+                Debug.Assert(false, $"[CooldownTracker] 冷却スロットの最大数（{CooldownSlots.MaxSlots}）を超過しました: {tag}");
+            }
         }
     }
 
@@ -55,6 +107,16 @@ public sealed class CooldownTracker {
     public bool IsReady(StringId tag)
     {
         if (tag.IsEmpty) return true;
-        return !_stringCooldowns.TryGetValue(tag, out var remaining) || remaining <= 0.0f;
+
+        for (var i = 0; i < _count; i++)
+        {
+            ref readonly var slot = ref _slots[i];
+            if (slot.Tag == tag)
+            {
+                return slot.Remaining <= 0.0f;
+            }
+        }
+
+        return true;
     }
 }
