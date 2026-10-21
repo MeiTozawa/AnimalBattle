@@ -15,6 +15,9 @@ public interface IBossSkillPatternConfig {
     /// <summary>技能表示名</summary>
     string SkillName { get; set; }
 
+    /// <summary>キャッシュされた技能識別子</summary>
+    StringId SkillId { get; }
+
     /// <summary>前隙予兆時間</summary>
     float WindUpTime { get; set; }
 

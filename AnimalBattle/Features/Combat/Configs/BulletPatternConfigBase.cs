@@ -35,9 +35,10 @@ public abstract class BulletPatternConfigBase : SkillPatternConfigBase {
     /// </summary>
     protected void PublishBulletFired()
     {
-        if (!string.IsNullOrWhiteSpace(SkillName))
+        var skillId = SkillId;
+        if (!skillId.IsEmpty)
         {
-            EventBus.Publish(new BossBulletFiredEvent(new StringId(SkillName)));
+            EventBus.Publish(new BossBulletFiredEvent(skillId));
         }
     }
 }

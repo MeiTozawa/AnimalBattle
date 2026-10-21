@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Text.Json.Serialization;
 using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
@@ -12,9 +13,30 @@ namespace AnimalBattle.Configs;
 ///     Boss 技能パターン設定の共通基底クラス。
 ///     時序、予兆、冷却などの基本パラメータを保持し、規定の仮想実装を提供します。
 /// </summary>
-public abstract class SkillPatternConfigBase : IBossSkillPatternConfig {
+public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigLifecycle {
+    private string _skillName = string.Empty;
+    private StringId _cachedSkillId;
+
     /// <summary>技能表示名</summary>
-    public string SkillName { get; set; } = string.Empty;
+    public string SkillName
+    {
+        get => _skillName;
+        set
+        {
+            _skillName = value;
+            _cachedSkillId = string.IsNullOrWhiteSpace(value) ? StringId.Empty : new StringId(value);
+        }
+    }
+
+    /// <summary>キャッシュされた技能識別子</summary>
+    [JsonIgnore]
+    public StringId SkillId => _cachedSkillId;
+
+    /// <inheritdoc />
+    public virtual ErrorOr<Success> Validate() => Result.Success;
+
+    /// <inheritdoc />
+    public virtual void PostProcess() { }
 
     /// <summary>前隙予兆時間（秒）</summary>
     public float WindUpTime { get; set; }

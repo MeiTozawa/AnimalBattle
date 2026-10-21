@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using AnimalBattle.Combat;
 using AnimalBattle.Core;
+using ErrorOr;
 
 namespace AnimalBattle.Configs;
 
@@ -9,7 +10,7 @@ namespace AnimalBattle.Configs;
 ///     各 Boss が保持する技能設定プロパティを検出し、StringId による高速引き当てキャッシュを提供します。
 /// </summary>
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
-public abstract class BossPatternConfigContainerBase {
+public abstract class BossPatternConfigContainerBase : IConfigLifecycle {
     private Dictionary<StringId, IBossSkillPatternConfig>? _skillCache;
 
     /// <summary>
@@ -19,6 +20,22 @@ public abstract class BossPatternConfigContainerBase {
     {
         _skillCache ??= BuildSkillCache();
         return _skillCache.TryGetValue(skill, out pattern);
+    }
+
+    /// <inheritdoc />
+    public virtual ErrorOr<Success> Validate() => Result.Success;
+
+    /// <inheritdoc />
+    public virtual void PostProcess()
+    {
+        _skillCache ??= BuildSkillCache();
+        foreach (var skill in _skillCache.Values)
+        {
+            if (skill is IConfigLifecycle lifecycle)
+            {
+                lifecycle.PostProcess();
+            }
+        }
     }
 
     /// <summary>
