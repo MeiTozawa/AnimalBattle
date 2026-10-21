@@ -94,11 +94,19 @@ public static class DebugOverlayRenderSystem
                 1 => "[ ●  ○ ]",
                 _ => "[ ○  ○ ]"
             };
-            var jumpText = string.IsNullOrEmpty(hudCfg.DoubleJumpText)
-                ? jumpDots
-                : $"{hudCfg.DoubleJumpText} {jumpDots}";
             var jumpColor = jumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
-            GameEngine.DrawString(hudCfg.DoubleJumpPos, jumpText, jumpColor);
+            if (string.IsNullOrEmpty(hudCfg.DoubleJumpText))
+            {
+                GameEngine.DrawString(hudCfg.DoubleJumpPos, jumpDots, jumpColor);
+            }
+            else
+            {
+                Span<char> jumpBuf = stackalloc char[64];
+                if (jumpBuf.TryWrite($"{hudCfg.DoubleJumpText} {jumpDots}", out var written))
+                {
+                    GameEngine.DrawString(hudCfg.DoubleJumpPos, jumpBuf[..written], jumpColor);
+                }
+            }
         }
 
         // デバッグ操作案内（Boss切替、キャラ切替、フェーズ切替）（画面固定）
@@ -121,25 +129,34 @@ public static class DebugOverlayRenderSystem
         if (boss != null)
         {
             var b = boss.Value;
-            HudRenderSystem.GetBossStateInfo(b.State, b.Brain, hpCfg, out var stateName, out var stateBadgeColor);
-            string timerText;
+            Span<char> stateBuf = stackalloc char[96];
+            HudRenderSystem.FormatBossStateInfo(stateBuf, out var stateLen, b.State, b.Brain, hpCfg, out var stateBadgeColor);
+            var stateSpan = stateBuf[..stateLen];
+
+            Span<char> badgeBuf = stackalloc char[160];
+            int badgeLen;
             if (b.Brain.AbilitySystem.IsCasting)
             {
                 var pElapsed = b.Brain.AbilitySystem.Elapsed;
                 var pDuration = b.Brain.AbilitySystem.Duration;
-                timerText = pDuration > 0.0f
-                    ? $"{pElapsed:F1}s/{pDuration:F1}s"
-                    : $"{pElapsed:F1}s";
+                if (pDuration > 0.0f)
+                {
+                    badgeBuf.TryWrite($"{stateSpan} ({pElapsed:F1}s/{pDuration:F1}s)", out badgeLen);
+                }
+                else
+                {
+                    badgeBuf.TryWrite($"{stateSpan} ({pElapsed:F1}s)", out badgeLen);
+                }
             }
             else
             {
-                timerText = $"{b.State.StateTimer:F1}s";
+                badgeBuf.TryWrite($"{stateSpan} ({b.State.StateTimer:F1}s)", out badgeLen);
             }
 
             var badgePos = hpCfg.BarPos1 + (hpCfg.StateBadgeOffset != Vec2i.Zero 
                 ? hpCfg.StateBadgeOffset 
                 : new Vec2i(0, -hpCfg.HeaderOffsetY));
-            GameEngine.DrawString(badgePos, $"{stateName} ({timerText})", stateBadgeColor);
+            GameEngine.DrawString(badgePos, badgeBuf[..badgeLen], stateBadgeColor);
         }
     }
 }

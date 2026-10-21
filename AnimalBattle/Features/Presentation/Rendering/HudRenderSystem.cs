@@ -7,6 +7,8 @@ using AnimalBattle.Ai.Boss2;
 using AnimalBattle.Characters;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
+using AnimalBattle.Presentation.Animation;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Presentation.Rendering;
@@ -136,13 +138,18 @@ public static class HudRenderSystem {
         var maxHp = (int)Math.Max(1.0f, p.Health.Max);
         var currentHp = Math.Clamp((int)p.Health.Current, 0, maxHp);
 
-        var sb = new System.Text.StringBuilder("[ ");
-        for (var i = 0; i < maxHp; i++)
+        Span<char> symbolsBuf = stackalloc char[128];
+        var symLen = 0;
+        symbolsBuf[symLen++] = '[';
+        symbolsBuf[symLen++] = ' ';
+        for (var i = 0; i < maxHp && symLen + 3 < symbolsBuf.Length - 1; i++)
         {
-            sb.Append(i < currentHp ? "●  " : "○  ");
+            symbolsBuf[symLen++] = i < currentHp ? '●' : '○';
+            symbolsBuf[symLen++] = ' ';
+            symbolsBuf[symLen++] = ' ';
         }
-        sb.Append(']');
-        var symbols = sb.ToString();
+        symbolsBuf[symLen++] = ']';
+        var symbols = symbolsBuf[..symLen];
 
         var hpRatio = (float)currentHp / maxHp;
         var hpColor = hpRatio switch {
@@ -152,11 +159,18 @@ public static class HudRenderSystem {
             _ => hudCfg.PlayerHpDeadColor
         };
 
-        var charName = p.CharacterType.ToString();
-        var hpText = p.IsInvincible
-            ? $"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp}) [INVINCIBLE]"
-            : $"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp})";
-        GameEngine.DrawString(hudCfg.PlayerHpPos, hpText, hpColor);
+        var charName = EnumStringLut.Get(p.CharacterType);
+        Span<char> textBuf = stackalloc char[160];
+        int charsWritten;
+        if (p.IsInvincible)
+        {
+            textBuf.TryWrite($"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp}) [INVINCIBLE]", out charsWritten);
+        }
+        else
+        {
+            textBuf.TryWrite($"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp})", out charsWritten);
+        }
+        GameEngine.DrawString(hudCfg.PlayerHpPos, textBuf[..charsWritten], hpColor);
     }
 
     private static void DrawBossStatus(in BossHudData? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
@@ -205,8 +219,13 @@ public static class HudRenderSystem {
         _ => AssertHelper.FailWithDefault("[HUD 警告] 未知のフェーズ", 1)
     };
 
-    internal static void GetBossStateInfo(BossCombatState combatState, IBossBrain? brain, BossHpBarRenderConfig hpCfg,
-        out string stateName, out Color badgeColor)
+    internal static void FormatBossStateInfo(
+        Span<char> destination,
+        out int charsWritten,
+        BossCombatState combatState,
+        IBossBrain? brain,
+        BossHpBarRenderConfig hpCfg,
+        out Color badgeColor)
     {
         var state = combatState.State;
         var currentAbility = brain?.AbilitySystem.CurrentAbility;
@@ -216,30 +235,96 @@ public static class HudRenderSystem {
             abilityName = !combatState.CurrentSkillTag.IsEmpty ? combatState.CurrentSkillTag.ToString() : "None";
         }
 
-        (stateName, badgeColor) = state switch {
-            { IsDead: true } => ("[STATE: DEFEATED]", ColorPalette.Gray),
-            { IsPhaseTransition: true } => ("[STATE: PHASE TRANSITION (INVINCIBLE)]", hpCfg.StatePhaseTransitionColor),
-            { IsRecovery: true } => ("[STATE: RECOVERING]", hpCfg.StateRecoveringColor),
-            _ when state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.WallCrashStun =>
-                ("[STATE: STUNNED (VULNERABLE)]", hpCfg.StateStunnedColor),
-            { IsTelegraph: true } => ($"[STATE: TELEGRAPHING (WIND-UP: {abilityName})]", hpCfg.StateTelegraphingColor),
-            { IsExecute: true } => ($"[STATE: EXECUTING ({abilityName})]", hpCfg.StateCastingColor),
-            _ => state.BossType switch {
-                BossType.Boss1 => state.AsBoss1() switch {
-                    Boss1State.Hover => ("[STATE: HOVERING (IDLE)]", hpCfg.StateDefaultColor),
-                    Boss1State.AttackSelection => ("[STATE: ATTACK SELECTION]", hpCfg.StateDefaultColor),
-                    _ => (AssertHelper.FailWithDefault("[HUD 警告] 未知のステート", "[STATE: UNKNOWN]"), hpCfg.StateDefaultColor)
-                },
-                BossType.Boss2 => state.AsBoss2() switch {
-                    Boss2State.Idle => ("[STATE: IDLE / ALERT]", hpCfg.StateDefaultColor),
-                    Boss2State.PatrolChase => ($"[STATE: CHASE (NEXT: {abilityName})]", hpCfg.StateDefaultColor),
-                    Boss2State.MoveToTakeoff => ("[STATE: NAVIGATING TO TAKEOFF]", hpCfg.StateDefaultColor),
-                    Boss2State.PlatformTraverse => ("[STATE: PLATFORM TRAVERSE (AIRBORNE)]", hpCfg.StateDefaultColor),
-                    _ => (AssertHelper.FailWithDefault("[HUD 警告] 未知のステート", "[STATE: UNKNOWN]"), hpCfg.StateDefaultColor)
-                },
-                _ => (AssertHelper.FailWithDefault("[HUD 警告] 未知のステート", "[STATE: UNKNOWN]"), hpCfg.StateDefaultColor)
-            }
+        badgeColor = state switch {
+            { IsDead: true } => ColorPalette.Gray,
+            { IsPhaseTransition: true } => hpCfg.StatePhaseTransitionColor,
+            { IsRecovery: true } => hpCfg.StateRecoveringColor,
+            _ when state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.WallCrashStun => hpCfg.StateStunnedColor,
+            { IsTelegraph: true } => hpCfg.StateTelegraphingColor,
+            { IsExecute: true } => hpCfg.StateCastingColor,
+            _ => hpCfg.StateDefaultColor
         };
+
+        if (state.IsDead)
+        {
+            destination.TryWrite($"[STATE: DEFEATED]", out charsWritten);
+            return;
+        }
+        if (state.IsPhaseTransition)
+        {
+            destination.TryWrite($"[STATE: PHASE TRANSITION (INVINCIBLE)]", out charsWritten);
+            return;
+        }
+        if (state.IsRecovery)
+        {
+            destination.TryWrite($"[STATE: RECOVERING]", out charsWritten);
+            return;
+        }
+        if (state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.WallCrashStun)
+        {
+            destination.TryWrite($"[STATE: STUNNED (VULNERABLE)]", out charsWritten);
+            return;
+        }
+        if (state.IsTelegraph)
+        {
+            destination.TryWrite($"[STATE: TELEGRAPHING (WIND-UP: {abilityName})]", out charsWritten);
+            return;
+        }
+        if (state.IsExecute)
+        {
+            destination.TryWrite($"[STATE: EXECUTING ({abilityName})]", out charsWritten);
+            return;
+        }
+
+        switch (state.BossType)
+        {
+            case BossType.Boss1:
+                switch (state.AsBoss1())
+                {
+                    case Boss1State.Hover:
+                        destination.TryWrite($"[STATE: HOVERING (IDLE)]", out charsWritten);
+                        return;
+                    case Boss1State.AttackSelection:
+                        destination.TryWrite($"[STATE: ATTACK SELECTION]", out charsWritten);
+                        return;
+                    default:
+                        AssertHelper.FailWithDefault("[HUD 警告] 未知のステート", 0);
+                        destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
+                        return;
+                }
+            case BossType.Boss2:
+                switch (state.AsBoss2())
+                {
+                    case Boss2State.Idle:
+                        destination.TryWrite($"[STATE: IDLE / ALERT]", out charsWritten);
+                        return;
+                    case Boss2State.PatrolChase:
+                        destination.TryWrite($"[STATE: CHASE (NEXT: {abilityName})]", out charsWritten);
+                        return;
+                    case Boss2State.MoveToTakeoff:
+                        destination.TryWrite($"[STATE: NAVIGATING TO TAKEOFF]", out charsWritten);
+                        return;
+                    case Boss2State.PlatformTraverse:
+                        destination.TryWrite($"[STATE: PLATFORM TRAVERSE (AIRBORNE)]", out charsWritten);
+                        return;
+                    default:
+                        AssertHelper.FailWithDefault("[HUD 警告] 未知のステート", 0);
+                        destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
+                        return;
+                }
+            default:
+                AssertHelper.FailWithDefault("[HUD 警告] 未知のステート", 0);
+                destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
+                return;
+        }
+    }
+
+    internal static void GetBossStateInfo(BossCombatState combatState, IBossBrain? brain, BossHpBarRenderConfig hpCfg,
+        out string stateName, out Color badgeColor)
+    {
+        Span<char> buf = stackalloc char[128];
+        FormatBossStateInfo(buf, out var written, combatState, brain, hpCfg, out badgeColor);
+        stateName = buf[..written].ToString();
     }
 
     private static void DrawBossHpBar(
@@ -256,7 +341,8 @@ public static class HudRenderSystem {
         var totalWidth = barP2.X - barP1.X;
 
         // Boss 情報ヘッダー (HP バー上部)
-        var hpText = $"HP: {currentHp:F0} / {maxHp:F0}";
+        Span<char> hpBuf = stackalloc char[64];
+        hpBuf.TryWrite($"HP: {currentHp:F0} / {maxHp:F0}", out var hpCharsWritten);
 
         var titlePos = barP1 + (hpCfg.TitleOffset != Vec2i.Zero
             ? hpCfg.TitleOffset
@@ -265,7 +351,7 @@ public static class HudRenderSystem {
 
         var hpX = barP2.X - (hpCfg.HpTextOffsetRight != 0 ? hpCfg.HpTextOffsetRight : 170);
         var hpY = barP1.Y - (hpCfg.HpTextOffsetY != 0 ? hpCfg.HpTextOffsetY : hpCfg.HeaderOffsetY);
-        GameEngine.DrawString(new Vec2i(hpX, hpY), hpText, hpCfg.HpTextColor);
+        GameEngine.DrawString(new Vec2i(hpX, hpY), hpBuf[..hpCharsWritten], hpCfg.HpTextColor);
 
         // Boss HP バー背景および枠線
         var bgPad = new Vec2i(hpCfg.BgPadding, hpCfg.BgPadding);

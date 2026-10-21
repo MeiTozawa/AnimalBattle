@@ -1,6 +1,7 @@
 using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
+using AnimalBattle.Presentation.Animation;
 
 namespace AnimalBattle.Core;
 
@@ -9,6 +10,20 @@ namespace AnimalBattle.Core;
 ///     ホットパスにおける <see cref="Enum.ToString()" /> のリフレクション辞書検索とヒープ文字列割り当てを完全に排除します。
 /// </summary>
 public static class EnumStringLut {
+    /// <summary>キャラクター種類の識別文字列を取得します。</summary>
+    public static string Get(CharacterType characterType) => characterType switch {
+        CharacterType.Cat => nameof(CharacterType.Cat),
+        CharacterType.Bunny => nameof(CharacterType.Bunny),
+        _ => "Unknown"
+    };
+
+    /// <summary>Boss 種類の識別文字列を取得します。</summary>
+    public static string Get(BossType bossType) => bossType switch {
+        BossType.Boss1 => nameof(BossType.Boss1),
+        BossType.Boss2 => nameof(BossType.Boss2),
+        _ => "Unknown"
+    };
+
     /// <summary>Boss 1 状態の識別文字列を取得します。</summary>
     public static string Get(Boss1State state) => state switch {
         Boss1State.Hover => nameof(Boss1State.Hover),
