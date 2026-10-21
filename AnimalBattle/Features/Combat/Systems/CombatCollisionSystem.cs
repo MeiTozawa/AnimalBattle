@@ -115,13 +115,41 @@ public static class CombatCollisionSystem
     {
         var knockbackDir = vicTrans.Position.X >= atkTrans.Position.X ? 1.0f : -1.0f;
         var isHeavy = localHitbox.Damage >= 2.0f;
-        vicEntity.Set(new IncomingDamage
+
+        // 同一フレーム内で複数弾・近接攻撃が連続ヒットした際のダメージ上書き消失（Damage Overwrite Bug）を防止するため、
+        // 既存の IncomingDamage が存在する場合は Amount を累加し、IsHeavyImpact を論理和で合成する。
+        // ※ ECS システムイテレーションおよび DeferScope による遅延キューイング中であっても即時参照・更新できるよう一時的に DeferSuspend する
+        var isDeferred = world.IsDeferred();
+        if (isDeferred) world.DeferSuspend();
+        try
         {
-            Amount = localHitbox.Damage,
-            SourceFaction = localHitbox.Faction,
-            Knockback = new Vec2f(knockbackDir * 180.0f, -90.0f),
-            IsHeavyImpact = isHeavy
-        });
+            if (vicEntity.Has<IncomingDamage>())
+            {
+                var existing = vicEntity.Get<IncomingDamage>();
+                vicEntity.Set(new IncomingDamage
+                {
+                    Amount = existing.Amount + localHitbox.Damage,
+                    SourceFaction = existing.SourceFaction,
+                    Knockback = isHeavy ? new Vec2f(knockbackDir * 180.0f, -90.0f) : existing.Knockback,
+                    IsHeavyImpact = existing.IsHeavyImpact | isHeavy
+                });
+            }
+            else
+            {
+                vicEntity.Set(new IncomingDamage
+                {
+                    Amount = localHitbox.Damage,
+                    SourceFaction = localHitbox.Faction,
+                    Knockback = new Vec2f(knockbackDir * 180.0f, -90.0f),
+                    IsHeavyImpact = isHeavy
+                });
+            }
+        }
+        finally
+        {
+            if (isDeferred) world.DeferResume();
+        }
+
         EffectSpawner.SpawnHitSparkEffect(world, vicTrans.Position + hurtbox.Shape.Offset);
 
         if (localHitbox.Faction == Faction.Friendly)
