@@ -5,6 +5,7 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
+using AnimalBattle.Framework.Pooling;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Scenes.Battle;
@@ -96,9 +97,9 @@ public static class BattleInputSystem
             world.Remove<GameOverTag>();
         }
 
-        BulletSpawner.ClearAllBossBullets(world);
-        _playerBulletsQuery.Each(RecycleEntity);
-        _vfxQuery.Each(RecycleEntity);
+        BulletSpawner.ClearAllBossBulletsImmediate(world);
+        _playerBulletsQuery.Each(CombatPoolService.Recycle);
+        _vfxQuery.Each(CombatPoolService.Recycle);
         CameraService.Reset();
         world.Set(new AimReticleState());
 
@@ -108,10 +109,12 @@ public static class BattleInputSystem
         EventBus.Publish(new CombatResetEvent());
     }
 
-    private static void RecycleEntity(Entity e) => e.Add<RecycleTag>();
+    private static void RecycleEntity(Entity e) => CombatPoolService.Recycle(e);
 
-    private static void ResetBossEntity(Entity boss, ref Health hp, ref BossCombatState state, ref BossBrainComponent brainComp)
+    internal static void ResetBossEntity(Entity boss, ref Health hp, ref BossCombatState state, ref BossBrainComponent brainComp)
     {
+        if (!boss.IsAlive()) return;
+
         var w = boss.CsWorld();
         var bossType = state.BossType;
         var (spawn, maxHp) = bossType switch {
@@ -119,18 +122,12 @@ public static class BattleInputSystem
             BossType.Boss2 => (w.Get<Boss2Config>().Spawn, w.Get<Boss2Config>().MaxHp),
             _ => (Vec2f.Zero, 1000f)
         };
+        
+        ref var trans = ref boss.GetMut<Transform>();
+        trans.Position = spawn;
+        trans.Rotation = 0.0f;
 
-        if (boss.Has<Transform>())
-        {
-            ref var trans = ref boss.GetMut<Transform>();
-            trans.Position = spawn;
-            trans.Rotation = 0.0f;
-        }
-
-        if (boss.Has<Velocity>())
-        {
-            boss.Set(new Velocity(Vec2f.Zero));
-        }
+        boss.Set(new Velocity(Vec2f.Zero));
 
         hp.Current = maxHp;
         hp.Max = maxHp;
@@ -143,13 +140,25 @@ public static class BattleInputSystem
         state.TargetPosition = Vec2f.Zero;
         state.FacingRight = true;
 
-        boss.GetMut<Sprite>().IsVisible = true;
+        boss.Set(new GameplayTagState());
+        boss.Set(new TimedEffectsState());
+
+        if (boss.Has<HitstopState>()) boss.Remove<HitstopState>();
+        if (boss.Has<SpriteJitter>()) boss.Remove<SpriteJitter>();
+        if (boss.Has<IncomingDamage>()) boss.Remove<IncomingDamage>();
+        
+        ref var sprite = ref boss.GetMut<Sprite>();
+        sprite.IsVisible = true;
+        sprite.JitterOffset = Vec2f.Zero;
+
         if (boss.Has<DeadTag>()) boss.Remove<DeadTag>();
         if (boss.Has<HitFlashEffect>()) boss.Remove<HitFlashEffect>();
     }
 
-    private static void ResetPlayerEntity(Entity player)
+    internal static void ResetPlayerEntity(Entity player)
     {
+        if (!player.IsAlive()) return;
+
         var w = player.CsWorld();
         var type = player.Has<CharacterTypeComponent>()
             ? player.Get<CharacterTypeComponent>().Value
@@ -163,6 +172,14 @@ public static class BattleInputSystem
         player.Set(new WeaponIntent());
         player.Set(new DashState());
         player.Set(JumpCapability.FromPlayerConfig(cfg));
+        player.Set(new GameplayTagState());
+        player.Set(new TimedEffectsState());
+        player.Set(new InvincibleBlinkState());
+        player.Set(new SpringScale(Vec2f.One, cfg.SpringFrequency, cfg.SpringDampingRatio));
+
+        if (player.Has<HitstopState>()) player.Remove<HitstopState>();
+        if (player.Has<SpriteJitter>()) player.Remove<SpriteJitter>();
+        if (player.Has<IncomingDamage>()) player.Remove<IncomingDamage>();
 
         if (player.Has<CatWeaponState>())
         {
@@ -175,16 +192,19 @@ public static class BattleInputSystem
             if (melee.IsAlive())
             {
                 melee.Disable();
+                melee.Set(new HitHistory());
                 if (melee.Has<Sprite>()) melee.GetMut<Sprite>().IsVisible = true;
             }
         }
+        
+        player.GetMut<Animation>().Play("Idle");
 
-        if (player.Has<Animation>())
-        {
-            player.GetMut<Animation>().Play("Idle");
-        }
+        ref var sprite = ref player.GetMut<Sprite>();
+        sprite.IsVisible = true;
+        sprite.JitterOffset = Vec2f.Zero;
+        sprite.Scale = Vec2f.One;
+        sprite.SpringOffsetY = 0.0f;
 
-        if (player.Has<Sprite>()) player.GetMut<Sprite>().IsVisible = true;
         if (player.Has<DeadTag>()) player.Remove<DeadTag>();
         if (player.Has<HitFlashEffect>()) player.Remove<HitFlashEffect>();
     }
