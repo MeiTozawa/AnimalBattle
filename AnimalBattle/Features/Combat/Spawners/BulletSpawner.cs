@@ -148,4 +148,17 @@ public static class BulletSpawner
            .Build();
         query.Each(e => e.Add<RecycleTag>());
     }
+
+    /// <summary>
+    ///     フィールド上に存在するすべての Boss 弾幕を即座にプールへ回収・返却します。
+    ///     シーン破棄時（Teardown）や戦闘リセット（ResetCombat）など、
+    ///     シミュレーションループ外または確定的な同期リセット点で即時プール返却を実行します。
+    /// </summary>
+    public static void ClearAllBossBulletsImmediate(World world)
+    {
+        using var query = world.QueryBuilder()
+           .With<BossBulletTag>()
+           .Build();
+        query.Each(CombatPoolService.Recycle);
+    }
 }

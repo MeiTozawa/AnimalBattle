@@ -13,6 +13,7 @@ using AnimalBattle.Events;
 using AnimalBattle.Maps;
 using AnimalBattle.Player;
 using AnimalBattle.Bosses;
+using AnimalBattle.Framework.Pooling;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Scenes.Battle;
@@ -204,10 +205,10 @@ public static class BattleSceneSpawner {
         GameEngine.SetCameraOffset(Vec2i.Zero);
 
         // 2. 残存弾幕、近接判定および VFX の一括回収・プール返却
-        BulletSpawner.ClearAllBossBullets(world);
+        BulletSpawner.ClearAllBossBulletsImmediate(world);
         using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
         {
-            playerBullets.Each(e => e.Add<RecycleTag>());
+            playerBullets.Each(CombatPoolService.Recycle);
         }
         using (var playerMelee = world.QueryBuilder().With<PlayerMeleeTag>().Build())
         {
@@ -219,7 +220,7 @@ public static class BattleSceneSpawner {
         }
         using (var vfx = world.QueryBuilder().With<VfxTag>().Build())
         {
-            vfx.Each(e => e.Add<RecycleTag>());
+            vfx.Each(CombatPoolService.Recycle);
         }
         EventBus.Publish(new CombatResetEvent());
 

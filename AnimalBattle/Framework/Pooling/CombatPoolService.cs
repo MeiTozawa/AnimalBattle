@@ -92,6 +92,7 @@ public sealed class CombatPoolService : IDisposable
         if (!entity.IsAlive()) return;
 
         entity.Remove<OrbitOf>(Ecs.Wildcard);
+        entity.Remove<RecycleTag>();
 
         if (entity.Has<PoolLeaseState>())
         {
