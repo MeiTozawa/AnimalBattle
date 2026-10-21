@@ -30,6 +30,14 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private int _circleCount0;
     private int _circleCount1;
 
+    // 前・後台ダブルバッファの独立容量（スレッドセーフな独立拡縮用）
+    private int _packetCapacity0;
+    private int _packetCapacity1;
+    private int _textCapacity0;
+    private int _textCapacity1;
+    private int _circleCapacity0;
+    private int _circleCapacity1;
+
     // 現在のフレームで書き込み対象となっているアクティブバッファへのポインタ及びアクティブカウンター
     private RenderPacket* _packetBuffer;
     private char* _textBuffer;
@@ -62,9 +70,17 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public RenderCommandBuffer(int initialPacketCapacity = DefaultPacketCapacity,
         int initialTextCapacity = DefaultTextCapacity)
     {
-        PacketCapacity = Math.Max(64, initialPacketCapacity);
-        TextCapacity = Math.Max(64, initialTextCapacity);
-        CircleCapacity = Math.Max(64, initialPacketCapacity);
+        var initPacketCap = Math.Max(64, initialPacketCapacity);
+        var initTextCap = Math.Max(64, initialTextCapacity);
+        var initCircleCap = Math.Max(64, initialPacketCapacity);
+
+        _packetCapacity0 = initPacketCap;
+        _packetCapacity1 = initPacketCap;
+        _textCapacity0 = initTextCap;
+        _textCapacity1 = initTextCap;
+        _circleCapacity0 = initCircleCap;
+        _circleCapacity1 = initCircleCap;
+
         _packetCount0 = 0;
         _packetCount1 = 0;
         _textLength0 = 0;
@@ -78,16 +94,19 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         IsDisposed = false;
         _writeIndex = 0;
 
-        var packetBytes = (nuint)(sizeof(RenderPacket) * PacketCapacity);
-        var textBytes = (nuint)(sizeof(char) * TextCapacity);
-        var circleBytes = (nuint)(sizeof(CompactCirclePacket) * CircleCapacity);
+        var packetBytes0 = (nuint)(sizeof(RenderPacket) * _packetCapacity0);
+        var packetBytes1 = (nuint)(sizeof(RenderPacket) * _packetCapacity1);
+        var textBytes0 = (nuint)(sizeof(char) * _textCapacity0);
+        var textBytes1 = (nuint)(sizeof(char) * _textCapacity1);
+        var circleBytes0 = (nuint)(sizeof(CompactCirclePacket) * _circleCapacity0);
+        var circleBytes1 = (nuint)(sizeof(CompactCirclePacket) * _circleCapacity1);
 
-        _packetBuffer0 = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes, 64);
-        _packetBuffer1 = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes, 64);
-        _textBuffer0 = (char*)NativeMemory.AlignedAlloc(textBytes, 64);
-        _textBuffer1 = (char*)NativeMemory.AlignedAlloc(textBytes, 64);
-        _circleBuffer0 = (CompactCirclePacket*)NativeMemory.AlignedAlloc(circleBytes, 64);
-        _circleBuffer1 = (CompactCirclePacket*)NativeMemory.AlignedAlloc(circleBytes, 64);
+        _packetBuffer0 = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes0, 64);
+        _packetBuffer1 = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes1, 64);
+        _textBuffer0 = (char*)NativeMemory.AlignedAlloc(textBytes0, 64);
+        _textBuffer1 = (char*)NativeMemory.AlignedAlloc(textBytes1, 64);
+        _circleBuffer0 = (CompactCirclePacket*)NativeMemory.AlignedAlloc(circleBytes0, 64);
+        _circleBuffer1 = (CompactCirclePacket*)NativeMemory.AlignedAlloc(circleBytes1, 64);
 
         _packetBuffer = _packetBuffer0;
         _textBuffer = _textBuffer0;
@@ -100,9 +119,19 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public int CircleCount => _currentCircleCount;
 
     /// <summary>
-    ///     緊密配置円バッファの最大収容可能要素数。
+    ///     緊密配置円バッファの最大収容可能要素数（現在のアクティブ書き込みバッファ）。
     /// </summary>
-    public int CircleCapacity { get; private set; }
+    public int CircleCapacity => _writeIndex == 0 ? _circleCapacity0 : _circleCapacity1;
+
+    /// <summary>
+    ///     スロット 0 の緊密配置円バッファ容量。
+    /// </summary>
+    public int CircleCapacity0 => _circleCapacity0;
+
+    /// <summary>
+    ///     スロット 1 の緊密配置円バッファ容量。
+    /// </summary>
+    public int CircleCapacity1 => _circleCapacity1;
 
     /// <summary>
     ///     現在アクティブな書き込みバッファに格納されている描画コマンド数。
@@ -115,14 +144,34 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public int TextLength => _currentTextLength;
 
     /// <summary>
-    ///     描画コマンドバッファの最大収容可能要素数。
+    ///     描画コマンドバッファの最大収容可能要素数（現在のアクティブ書き込みバッファ）。
     /// </summary>
-    public int PacketCapacity { get; private set; }
+    public int PacketCapacity => _writeIndex == 0 ? _packetCapacity0 : _packetCapacity1;
 
     /// <summary>
-    ///     文字列バッファの最大収容可能文字数。
+    ///     スロット 0 の描画コマンドバッファ容量。
     /// </summary>
-    public int TextCapacity { get; private set; }
+    public int PacketCapacity0 => _packetCapacity0;
+
+    /// <summary>
+    ///     スロット 1 の描画コマンドバッファ容量。
+    /// </summary>
+    public int PacketCapacity1 => _packetCapacity1;
+
+    /// <summary>
+    ///     文字列バッファの最大収容可能文字数（現在のアクティブ書き込みバッファ）。
+    /// </summary>
+    public int TextCapacity => _writeIndex == 0 ? _textCapacity0 : _textCapacity1;
+
+    /// <summary>
+    ///     スロット 0 の文字列バッファ容量。
+    /// </summary>
+    public int TextCapacity0 => _textCapacity0;
+
+    /// <summary>
+    ///     スロット 1 の文字列バッファ容量。
+    /// </summary>
+    public int TextCapacity1 => _textCapacity1;
 
     /// <summary>
     ///     リソースが破棄済みであるか否かを取得します。
@@ -598,6 +647,13 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         _textBuffer = null;
         _circleBuffer = null;
 
+        _packetCapacity0 = 0;
+        _packetCapacity1 = 0;
+        _textCapacity0 = 0;
+        _textCapacity1 = 0;
+        _circleCapacity0 = 0;
+        _circleCapacity1 = 0;
+
         IsDisposed = true;
     }
 
@@ -606,13 +662,24 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
         if (IsDisposed) return;
         var required = _currentPacketCount + extraCount;
-        if (required <= PacketCapacity) return;
-        var newCapacity = Math.Max(PacketCapacity * 2, required);
+        var currentCapacity = _writeIndex == 0 ? _packetCapacity0 : _packetCapacity1;
+        if (required <= currentCapacity) return;
+
+        var newCapacity = Math.Max(currentCapacity * 2, required);
         var byteCount = (nuint)(sizeof(RenderPacket) * newCapacity);
-        _packetBuffer0 = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer0, byteCount, 64);
-        _packetBuffer1 = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer1, byteCount, 64);
-        _packetBuffer = _writeIndex == 0 ? _packetBuffer0 : _packetBuffer1;
-        PacketCapacity = newCapacity;
+
+        if (_writeIndex == 0)
+        {
+            _packetBuffer0 = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer0, byteCount, 64);
+            _packetBuffer = _packetBuffer0;
+            _packetCapacity0 = newCapacity;
+        }
+        else
+        {
+            _packetBuffer1 = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer1, byteCount, 64);
+            _packetBuffer = _packetBuffer1;
+            _packetCapacity1 = newCapacity;
+        }
     }
 
     private void EnsureTextCapacity(int extraLength)
@@ -620,14 +687,23 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
         if (IsDisposed) return;
         var required = _currentTextLength + extraLength;
-        if (required > TextCapacity)
+        var currentCapacity = _writeIndex == 0 ? _textCapacity0 : _textCapacity1;
+        if (required <= currentCapacity) return;
+
+        var newCapacity = Math.Max(currentCapacity * 2, required);
+        var byteCount = (nuint)(sizeof(char) * newCapacity);
+
+        if (_writeIndex == 0)
         {
-            var newCapacity = Math.Max(TextCapacity * 2, required);
-            var byteCount = (nuint)(sizeof(char) * newCapacity);
             _textBuffer0 = (char*)NativeMemory.AlignedRealloc(_textBuffer0, byteCount, 64);
+            _textBuffer = _textBuffer0;
+            _textCapacity0 = newCapacity;
+        }
+        else
+        {
             _textBuffer1 = (char*)NativeMemory.AlignedRealloc(_textBuffer1, byteCount, 64);
-            _textBuffer = _writeIndex == 0 ? _textBuffer0 : _textBuffer1;
-            TextCapacity = newCapacity;
+            _textBuffer = _textBuffer1;
+            _textCapacity1 = newCapacity;
         }
     }
 
@@ -636,12 +712,23 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
         if (IsDisposed) return;
         var required = _currentCircleCount + extraCount;
-        if (required <= CircleCapacity) return;
-        var newCapacity = Math.Max(CircleCapacity * 2, required);
+        var currentCapacity = _writeIndex == 0 ? _circleCapacity0 : _circleCapacity1;
+        if (required <= currentCapacity) return;
+
+        var newCapacity = Math.Max(currentCapacity * 2, required);
         var byteCount = (nuint)(sizeof(CompactCirclePacket) * newCapacity);
-        _circleBuffer0 = (CompactCirclePacket*)NativeMemory.AlignedRealloc(_circleBuffer0, byteCount, 64);
-        _circleBuffer1 = (CompactCirclePacket*)NativeMemory.AlignedRealloc(_circleBuffer1, byteCount, 64);
-        _circleBuffer = _writeIndex == 0 ? _circleBuffer0 : _circleBuffer1;
-        CircleCapacity = newCapacity;
+
+        if (_writeIndex == 0)
+        {
+            _circleBuffer0 = (CompactCirclePacket*)NativeMemory.AlignedRealloc(_circleBuffer0, byteCount, 64);
+            _circleBuffer = _circleBuffer0;
+            _circleCapacity0 = newCapacity;
+        }
+        else
+        {
+            _circleBuffer1 = (CompactCirclePacket*)NativeMemory.AlignedRealloc(_circleBuffer1, byteCount, 64);
+            _circleBuffer = _circleBuffer1;
+            _circleCapacity1 = newCapacity;
+        }
     }
 }
