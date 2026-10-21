@@ -27,8 +27,10 @@ public readonly struct AttackActionStep(
     /// <summary>Execute 開始からの発動遅延時間（秒）を取得します。</summary>
     public float TriggerTime { get; } = triggerTime;
 
+    private static readonly int _attackActionKindLength = Enum.GetValues<AttackActionKind>().Length;
+
     /// <summary>アクションの設定値が実行可能かどうかを取得します。</summary>
-    public bool IsValid => (int)Kind >= 1 && (int)Kind <= Enum.GetValues<AttackActionKind>().Length
+    public bool IsValid => (int)Kind > 0 && (int)Kind <= _attackActionKindLength
      && Index >= 0
      && IsFinite(Param0)
      && IsFinite(Param1)
