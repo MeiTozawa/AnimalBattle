@@ -11,27 +11,32 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Player.Systems;
 
 /// <summary>
+///     World 単位で独立して保持されるキネマティック運動物理システム用コンテキスト。
+/// </summary>
+internal sealed class MovementSystemContext
+{
+    public required Query<TileMap> TileMapQuery { get; init; }
+    public TileMap? CachedTileMap;
+    public readonly List<int> CandidatePlatforms = new(16);
+}
+
+/// <summary>
 ///     汎用キネマティック運動物理システム。
 ///     <see cref="MovementIntent" /> を消費し、重力、跳躍インパルス、足場衝突および画面境界を統一的に処理します。
 /// </summary>
 public static class MovementSystem {
-    private static Query<TileMap> _tileMapQuery;
-    private static ArenaConfig? _arenaCfg;
-    private static TileMap? _cachedTileMap;
-    private static readonly List<int> _candidatePlatforms = new(16);
-
     /// <summary>
     ///     キネマティック運動物理システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    /// <param name="arenaCfg">アリーナ境界設定（省略時は World 単例）</param>
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
-    public static World AddMovementSystem(
-        this World world,
-        ArenaConfig? arenaCfg = null)
+    public static World AddMovementSystem(this World world)
     {
-        _tileMapQuery = world.QueryBuilder<TileMap>().Build();
-        _arenaCfg = arenaCfg;
+        var tileMapQuery = world.QueryBuilder<TileMap>().Build();
+        world.Set(new MovementSystemContext
+        {
+            TileMapQuery = tileMapQuery
+        });
 
         world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability, DashState, Sprite, SpringScale, TimedEffectsState, GameplayTagState>("MovementSystem")
            .Kind(Ecs.OnUpdate)
@@ -41,8 +46,6 @@ public static class MovementSystem {
 
         return world;
     }
-
-    private static void FindTileMap(ref TileMap tm) => _cachedTileMap = tm;
 
     private static void ExecuteMovement(
         Iter it,
@@ -62,13 +65,14 @@ public static class MovementSystem {
 
         var dt = it.DeltaTime();
         var world = it.World();
-        var cfg = _arenaCfg ?? world.Get<ArenaConfig>();
+        var ctx = world.Get<MovementSystemContext>();
+        ref readonly var cfg = ref world.Get<ArenaConfig>();
         var pCfg = world.GetActivePlayerConfig();
 
-        _cachedTileMap = null;
-        _tileMapQuery.Each(FindTileMap);
-        var tileMap = _cachedTileMap;
-        _cachedTileMap = null;
+        ctx.CachedTileMap = null;
+        ctx.TileMapQuery.Each((ref TileMap tm) => ctx.CachedTileMap = tm);
+        var tileMap = ctx.CachedTileMap;
+        ctx.CachedTileMap = null;
 
         for (var i = 0; i < count; i++)
         {
@@ -84,7 +88,7 @@ public static class MovementSystem {
             ref var tag = ref tags[i];
 
             var entity = it.Entity(i);
-            ExecuteKinematics(entity, ref effect, ref tag, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, tileMap, cfg, pCfg, world);
+            ExecuteKinematics(entity, ref effect, ref tag, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, tileMap, cfg, pCfg, world, ctx.CandidatePlatforms);
         }
     }
 
@@ -104,7 +108,8 @@ public static class MovementSystem {
         TileMap? tileMap,
         ArenaConfig arenaCfg,
         PlayerConfig pCfg,
-        World? effectWorld)
+        World? effectWorld,
+        List<int> candidatePlatforms)
     {
         var wasGrounded = col.IsGrounded;
 
@@ -291,7 +296,7 @@ public static class MovementSystem {
         var nextPos = trans.Position + vel.Value * dt;
 
         if (arenaCfg != null)
-            nextPos = new Vec2f(PhysicsService.Clamp(nextPos.X, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX), nextPos.Y);
+            nextPos = nextPos with { X = PhysicsService.Clamp(nextPos.X, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX) };
 
         var currentY = trans.Position.Y;
         Box2D entityBox = new(nextPos, col.Size);
@@ -309,12 +314,12 @@ public static class MovementSystem {
             var sweepSize = new Vec2f(col.Size.X, sweepBottom - sweepTop);
             Box2D sweepQueryBox = new(sweepCenter, sweepSize);
 
-            _candidatePlatforms.Clear();
-            tileMap.SpatialHash.Query(sweepQueryBox, _candidatePlatforms);
+            candidatePlatforms.Clear();
+            tileMap.SpatialHash.Query(sweepQueryBox, candidatePlatforms);
 
-            for (var p = 0; p < _candidatePlatforms.Count; p++)
+            foreach (var t in candidatePlatforms)
             {
-                if (tileMap.SpatialHash.TryGetBox(_candidatePlatforms[p], out var platformBox))
+                if (tileMap.SpatialHash.TryGetBox(t, out var platformBox))
                 {
                     if (PhysicsService.CheckPlatformGround(
                         currentY,

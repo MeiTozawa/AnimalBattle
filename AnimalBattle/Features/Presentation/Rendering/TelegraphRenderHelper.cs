@@ -13,14 +13,14 @@ namespace AnimalBattle.Presentation.Rendering;
 /// </summary>
 public static class TelegraphRenderHelper {
     /// <summary>
-    ///     現在の首領演出描画設定。描画システムまたは ConfigService から設定されます。
+    ///     設定未指定時に使用される安全なデフォルト演出設定。
     /// </summary>
-    public static BossEffectsRenderConfig CurrentEffects { get; set; } = null!;
+    private static readonly BossEffectsRenderConfig DefaultEffects = new();
 
     /// <summary>
-    ///     現在の戦闘アリーナ設定。描画システムまたは ConfigService から設定されます。
+    ///     設定未指定時に使用される安全なデフォルトアリーナ設定。
     /// </summary>
-    public static ArenaConfig CurrentArena { get; set; } = null!;
+    private static readonly ArenaConfig DefaultArena = new();
 
     /// <summary>
     ///     自機狙い・スナイパー用の照準レーザー線および照準クロスヘアを描画します。
@@ -31,6 +31,7 @@ public static class TelegraphRenderHelper {
     /// <param name="laserCount">照射レーザー本数</param>
     /// <param name="progress">前隙進行度 (0.0 ～ 1.0)</param>
     /// <param name="color">レーザーカラー</param>
+    /// <param name="effects">演出設定（省略時はデフォルト）</param>
     /// <param name="isPrecisionSniper">高精度スナイパー演出（加算発光・長距離ロック）を行うか</param>
     public static void DrawAimingLasers(
         Vec2f start,
@@ -39,15 +40,15 @@ public static class TelegraphRenderHelper {
         int laserCount,
         float progress,
         Color color,
+        BossEffectsRenderConfig? effects = null,
         bool isPrecisionSniper = false)
     {
-        Debug.Assert(CurrentEffects != null, "TelegraphRenderHelper.CurrentEffects が初期化されていません。");
-
+        var eff = effects ?? DefaultEffects;
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
-        var alpha = (int)(CurrentEffects.LaserAlpha * (0.4f + 0.6f * clampedProgress));
+        var alpha = (int)(eff.LaserAlpha * (0.4f + 0.6f * clampedProgress));
         var thickness = isPrecisionSniper
-            ? Math.Max(2, CurrentEffects.LaserThickness + (clampedProgress > 0.8f ? 1 : 0))
-            : CurrentEffects.LaserThickness;
+            ? Math.Max(2, eff.LaserThickness + (clampedProgress > 0.8f ? 1 : 0))
+            : eff.LaserThickness;
         var maxDistance = 1400.0f;
 
         GameEngine.SetDrawBlendMode(BlendMode.Alpha, alpha);
@@ -87,20 +88,21 @@ public static class TelegraphRenderHelper {
     /// <param name="facingRight">Boss が右を向いているか</param>
     /// <param name="progress">前隙進行度 (0.0 ～ 1.0)</param>
     /// <param name="color">危険ゾーンカラー</param>
+    /// <param name="effects">演出設定（省略時はデフォルト）</param>
     public static void DrawMeleeDangerBox(
         Vec2f bPos,
         Vec2f range,
         bool facingRight,
         float progress,
-        Color color)
+        Color color,
+        BossEffectsRenderConfig? effects = null)
     {
-        Debug.Assert(CurrentEffects != null, "TelegraphRenderHelper.CurrentEffects が初期化されていません。");
-
+        var eff = effects ?? DefaultEffects;
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
         TelegraphGeometry.CalculateMeleeDangerRect(bPos, range, facingRight, out var p1, out var p2);
 
         // 半透明危険ゾーン背景
-        GameEngine.SetDrawBlendMode(BlendMode.Alpha, CurrentEffects.DangerBoxAlpha);
+        GameEngine.SetDrawBlendMode(BlendMode.Alpha, eff.DangerBoxAlpha);
         GameEngine.DrawBox(p1, p2, color, true);
 
         // チャージ進行度に応じた内部充填バー（Boss 側から外側へ向けて充填）
@@ -124,7 +126,7 @@ public static class TelegraphRenderHelper {
         var textX = facingRight ? p2.X - 24 : p1.X + 8;
         var textY = p1.Y + (p2.Y - p1.Y) / 2 - 6;
         var arrow = facingRight ? ">>>" : "<<<";
-        GameEngine.DrawString(new Vec2i(textX, textY), arrow, CurrentEffects.WarningTextColor);
+        GameEngine.DrawString(new Vec2i(textX, textY), arrow, eff.WarningTextColor);
     }
 
     /// <summary>
@@ -135,23 +137,26 @@ public static class TelegraphRenderHelper {
     /// <param name="facingRight">突進方向（右向きか）</param>
     /// <param name="progress">前隙進行度 (0.0 ～ 1.0)</param>
     /// <param name="color">危険軌道カラー</param>
+    /// <param name="effects">演出設定（省略時はデフォルト）</param>
+    /// <param name="arena">アリーナ設定（省略時はデフォルト）</param>
     public static void DrawChargeDangerTrack(
         Vec2f bPos,
         float height,
         bool facingRight,
         float progress,
-        Color color)
+        Color color,
+        BossEffectsRenderConfig? effects = null,
+        ArenaConfig? arena = null)
     {
-        Debug.Assert(CurrentEffects != null, "TelegraphRenderHelper.CurrentEffects が初期化されていません。");
-        Debug.Assert(CurrentArena != null, "TelegraphRenderHelper.CurrentArena が初期化されていません。");
-
+        var eff = effects ?? DefaultEffects;
+        var ar = arena ?? DefaultArena;
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
 
-        TelegraphGeometry.CalculateChargeTrackRect(bPos, height, facingRight, CurrentArena.BoundaryMinX,
-            CurrentArena.BoundaryMaxX, out var p1, out var p2);
+        TelegraphGeometry.CalculateChargeTrackRect(bPos, height, facingRight, ar.BoundaryMinX,
+            ar.BoundaryMaxX, out var p1, out var p2);
 
         // 半透明突進帯
-        GameEngine.SetDrawBlendMode(BlendMode.Alpha, CurrentEffects.ChargeTrackAlpha);
+        GameEngine.SetDrawBlendMode(BlendMode.Alpha, eff.ChargeTrackAlpha);
         GameEngine.DrawBox(p1, p2, color, true);
 
         // 突進チャージ内部充填バー（Boss から突進方向へ向けて充填）
@@ -175,7 +180,7 @@ public static class TelegraphRenderHelper {
         var arrow = facingRight ? ">>>>>>>>" : "<<<<<<<<";
         var textY = p1.Y + (p2.Y - p1.Y) / 2 - 6;
         var textX = facingRight ? (int)bPos.X + 20 : (int)bPos.X - 76;
-        GameEngine.DrawString(new Vec2i(textX, textY), arrow, CurrentEffects.WarningTextColor);
+        GameEngine.DrawString(new Vec2i(textX, textY), arrow, eff.WarningTextColor);
 
         // Boss 自身の突進チャージ脈動（加算ブレンド）
         var pulseAlpha = (int)(80.0f + 140.0f * clampedProgress);
@@ -192,6 +197,7 @@ public static class TelegraphRenderHelper {
     /// <param name="impactRadius">着地衝撃波半径</param>
     /// <param name="progress">前隙進行度 (0.0 ～ 1.0)</param>
     /// <param name="color">予兆カラー</param>
+    /// <param name="effects">演出設定（省略時はデフォルト）</param>
     /// <param name="playerCollisionHeight">プレイヤー衝突高さ</param>
     public static void DrawDiveRamTelegraph(
         Vec2f bPos,
@@ -199,16 +205,16 @@ public static class TelegraphRenderHelper {
         float impactRadius,
         float progress,
         Color color,
+        BossEffectsRenderConfig? effects = null,
         float playerCollisionHeight = 32.0f)
     {
-        Debug.Assert(CurrentEffects != null, "TelegraphRenderHelper.CurrentEffects が初期化されていません。");
-
+        var eff = effects ?? DefaultEffects;
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
 
         // Boss から着地地点へのダイブ軌道線（進行度に応じたアルファ脈動）
-        var laserAlpha = (int)(CurrentEffects.LaserAlpha * (0.5f + 0.5f * clampedProgress));
+        var laserAlpha = (int)(eff.LaserAlpha * (0.5f + 0.5f * clampedProgress));
         GameEngine.SetDrawBlendMode(BlendMode.Alpha, laserAlpha);
-        GameEngine.DrawLine((Vec2i)bPos, (Vec2i)target, color, CurrentEffects.LaserThickness);
+        GameEngine.DrawLine((Vec2i)bPos, (Vec2i)target, color, eff.LaserThickness);
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
 
         // 着地危険領域 (プレイヤーの衝突箱高さを基準に算出)
@@ -219,7 +225,7 @@ public static class TelegraphRenderHelper {
         var p2 = new Vec2i(targetI.X + halfWidth, targetI.Y + halfHeight);
 
         // 半透明危険ゾーン背景（進行度に応じてアルファ増大）
-        var boxAlpha = (int)(CurrentEffects.DangerBoxAlpha * (0.6f + 0.4f * clampedProgress));
+        var boxAlpha = (int)(eff.DangerBoxAlpha * (0.6f + 0.4f * clampedProgress));
         GameEngine.SetDrawBlendMode(BlendMode.Alpha, boxAlpha);
         GameEngine.DrawBox(p1, p2, color, true);
 
@@ -250,10 +256,10 @@ public static class TelegraphRenderHelper {
 
         // 警告テキスト
         var textPos = new Vec2i(
-            (int)(target.X - CurrentEffects.DiveRamTextOffset.X),
-            (int)(p1.Y - CurrentEffects.DiveRamTextOffset.Y)
+            (int)(target.X - eff.DiveRamTextOffset.X),
+            (int)(p1.Y - eff.DiveRamTextOffset.Y)
         );
-        GameEngine.DrawString(textPos, "▼ DIVE ▼", CurrentEffects.WarningTextColor);
+        GameEngine.DrawString(textPos, "▼ DIVE ▼", eff.WarningTextColor);
     }
 
     /// <summary>
@@ -263,21 +269,22 @@ public static class TelegraphRenderHelper {
     /// <param name="groundY">地面 Y 座標</param>
     /// <param name="progress">前隙進行度 (0.0 ～ 1.0)</param>
     /// <param name="color">予兆カラー</param>
+    /// <param name="effects">演出設定（省略時はデフォルト）</param>
     public static void DrawGroundShockwaveRails(
         Vec2f bPos,
         float groundY,
         float progress,
-        Color color)
+        Color color,
+        BossEffectsRenderConfig? effects = null)
     {
-        Debug.Assert(CurrentEffects != null, "TelegraphRenderHelper.CurrentEffects が初期化されていません。");
-
+        var eff = effects ?? DefaultEffects;
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
         var halfSpan = 200.0f + 150.0f * clampedProgress;
 
         TelegraphGeometry.CalculateGroundRails(bPos, groundY, halfSpan, out var p1, out var p2);
 
         // 地表半透明帯
-        GameEngine.SetDrawBlendMode(BlendMode.Alpha, CurrentEffects.DangerBoxAlpha);
+        GameEngine.SetDrawBlendMode(BlendMode.Alpha, eff.DangerBoxAlpha);
         GameEngine.DrawBox(p1, p2, color, true);
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
 
@@ -287,15 +294,15 @@ public static class TelegraphRenderHelper {
 
         // 左右拡散案内矢印 (設定ファイルからオフセットを適用)
         var textLeftPos = new Vec2i(
-            (int)(p1.X + CurrentEffects.StompTextOffset.X),
-            (int)(p1.Y - CurrentEffects.StompTextOffset.Y)
+            (int)(p1.X + eff.StompTextOffset.X),
+            (int)(p1.Y - eff.StompTextOffset.Y)
         );
         var textRightPos = new Vec2i(
-            (int)(p2.X - 65 - CurrentEffects.StompTextOffset.X),
-            (int)(p1.Y - CurrentEffects.StompTextOffset.Y)
+            (int)(p2.X - 65 - eff.StompTextOffset.X),
+            (int)(p1.Y - eff.StompTextOffset.Y)
         );
-        GameEngine.DrawString(textLeftPos, "<<< STOMP", CurrentEffects.WarningTextColor);
-        GameEngine.DrawString(textRightPos, "STOMP >>>", CurrentEffects.WarningTextColor);
+        GameEngine.DrawString(textLeftPos, "<<< STOMP", eff.WarningTextColor);
+        GameEngine.DrawString(textRightPos, "STOMP >>>", eff.WarningTextColor);
     }
 
     /// <summary>
@@ -304,17 +311,18 @@ public static class TelegraphRenderHelper {
     /// <param name="target">着地目標座標</param>
     /// <param name="progress">前隙進行度 (0.0 ～ 1.0)</param>
     /// <param name="color">予兆カラー</param>
+    /// <param name="effects">演出設定（省略時はデフォルト）</param>
     /// <param name="playerCollisionHeight">プレイヤー衝突高さ</param>
     /// <param name="bossBodyHitboxWidth">首領衝突幅</param>
     public static void DrawLeapSmashTelegraph(
         Vec2f target,
         float progress,
         Color color,
+        BossEffectsRenderConfig? effects = null,
         float playerCollisionHeight = 32.0f,
         float bossBodyHitboxWidth = 70.0f)
     {
-        Debug.Assert(CurrentEffects != null, "TelegraphRenderHelper.CurrentEffects が初期化されていません。");
-
+        var eff = effects ?? DefaultEffects;
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
 
         var targetI = (Vec2i)target;
@@ -324,7 +332,7 @@ public static class TelegraphRenderHelper {
         var p2 = new Vec2i(targetI.X + halfWidth, targetI.Y + halfHeight);
 
         // 地面半透明危険ゾーン
-        GameEngine.SetDrawBlendMode(BlendMode.Alpha, (int)(CurrentEffects.DangerBoxAlpha * (0.6f + 0.4f * clampedProgress)));
+        GameEngine.SetDrawBlendMode(BlendMode.Alpha, (int)(eff.DangerBoxAlpha * (0.6f + 0.4f * clampedProgress)));
         GameEngine.DrawBox(p1, p2, color, true);
 
         // 進行度に応じた水平充填
@@ -349,10 +357,10 @@ public static class TelegraphRenderHelper {
         // 垂直照準ガイド
         GameEngine.DrawLine(new Vec2i(targetI.X, 0), targetI, color);
         var textPos = new Vec2i(
-            (int)(target.X - CurrentEffects.LeapSmashTextOffset.X),
-            (int)(p1.Y - CurrentEffects.LeapSmashTextOffset.Y)
+            (int)(target.X - eff.LeapSmashTextOffset.X),
+            (int)(p1.Y - eff.LeapSmashTextOffset.Y)
         );
-        GameEngine.DrawString(textPos, "▼ SMASH ▼", CurrentEffects.WarningTextColor);
+        GameEngine.DrawString(textPos, "▼ SMASH ▼", eff.WarningTextColor);
     }
 
     /// <summary>
@@ -365,6 +373,7 @@ public static class TelegraphRenderHelper {
     /// <param name="progress">前隙進行度 (0.0 ～ 1.0)</param>
     /// <param name="color">予兆カラー</param>
     /// <param name="markerText">光柱上部表示テキスト</param>
+    /// <param name="effects">演出設定（省略時はデフォルト）</param>
     public static void DrawSkyfallColumns(
         float minX,
         float maxX,
@@ -372,12 +381,12 @@ public static class TelegraphRenderHelper {
         float groundY,
         float progress,
         Color color,
-        string markerText)
+        string markerText,
+        BossEffectsRenderConfig? effects = null)
     {
-        Debug.Assert(CurrentEffects != null, "TelegraphRenderHelper.CurrentEffects が初期化されていません。");
-
+        var eff = effects ?? DefaultEffects;
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
-        var alpha = (int)(CurrentEffects.DangerBoxAlpha * (0.4f + 0.6f * clampedProgress));
+        var alpha = (int)(eff.DangerBoxAlpha * (0.4f + 0.6f * clampedProgress));
         var step = (maxX - minX) / Math.Max(1, columnCount + 1);
 
         GameEngine.SetDrawBlendMode(BlendMode.Alpha, alpha);
@@ -403,10 +412,10 @@ public static class TelegraphRenderHelper {
             GameEngine.DrawLine(p1, new Vec2i(p1.X, p2.Y), color);
             GameEngine.DrawLine(new Vec2i(p2.X, p1.Y), p2, color);
             var textPos = new Vec2i(
-                (int)(cx - CurrentEffects.SkyfallTextOffset.X),
-                (int)(p1.Y - CurrentEffects.SkyfallTextOffset.Y)
+                (int)(cx - eff.SkyfallTextOffset.X),
+                (int)(p1.Y - eff.SkyfallTextOffset.Y)
             );
-            GameEngine.DrawString(textPos, markerText, CurrentEffects.WarningTextColor);
+            GameEngine.DrawString(textPos, markerText, eff.WarningTextColor);
         }
     }
 
@@ -419,19 +428,20 @@ public static class TelegraphRenderHelper {
     /// <param name="spikeLength">スパイク長さ (px)</param>
     /// <param name="progress">前隙進行度 (0.0 ～ 1.0)</param>
     /// <param name="color">スパイクカラー</param>
+    /// <param name="effects">演出設定（省略時はデフォルト）</param>
     public static void DrawRadialThreatSpikes(
         Vec2f bPos,
         int spikeCount,
         float baseAngle,
         float spikeLength,
         float progress,
-        Color color)
+        Color color,
+        BossEffectsRenderConfig? effects = null)
     {
-        Debug.Assert(CurrentEffects != null, "TelegraphRenderHelper.CurrentEffects が初期化されていません。");
-
+        var eff = effects ?? DefaultEffects;
         var clampedProgress = Math.Clamp(progress, 0.0f, 1.0f);
         var currentLength = spikeLength * (0.5f + 0.5f * clampedProgress);
-        var alpha = (int)(CurrentEffects.LaserAlpha * (0.5f + 0.5f * clampedProgress));
+        var alpha = (int)(eff.LaserAlpha * (0.5f + 0.5f * clampedProgress));
         var angleStep = MathF.PI * 2.0f / spikeCount;
 
         GameEngine.SetDrawBlendMode(BlendMode.Alpha, alpha);

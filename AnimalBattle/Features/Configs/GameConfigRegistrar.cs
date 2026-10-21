@@ -34,8 +34,8 @@ public static class GameConfigRegistrar
         registry.RegisterToml<Boss1PrefabConfig>(ResourcePath.Config.Boss1Prefab, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Bosses.BossPrefabs.Register(w); });
         registry.RegisterToml<Boss2PrefabConfig>(ResourcePath.Config.Boss2Prefab, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Bosses.BossPrefabs.Register(w); });
         registry.RegisterToml<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets, (root, cfg) => root.Bind(cfg));
-        registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); TelegraphRenderHelper.CurrentArena = cfg; });
-        registry.RegisterToml<RenderConfig>(ResourcePath.Config.Render, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); TelegraphRenderHelper.CurrentEffects = cfg.BossEffects; });
+        registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
+        registry.RegisterToml<RenderConfig>(ResourcePath.Config.Render, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
         registry.RegisterToml<CameraConfig>(ResourcePath.Config.Camera, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.CameraService.CurrentConfig = cfg; });
         registry.RegisterToml<TileSetConfig>(ResourcePath.Platform.SheetToml, (root, cfg) => root.Bind(cfg));
         registry.RegisterToml<AudioConfig>(ResourcePath.Config.Audio, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.SoundService.CurrentConfig = cfg; });
@@ -72,14 +72,6 @@ public static class GameConfigRegistrar
         registry.InjectAllToWorld(world);
 
         // 静的サービスへの現在値反映
-        if (registry.Contains<ArenaConfig>())
-        {
-            TelegraphRenderHelper.CurrentArena = registry.Get<ArenaConfig>();
-        }
-        if (registry.Contains<RenderConfig>())
-        {
-            TelegraphRenderHelper.CurrentEffects = registry.Get<RenderConfig>().BossEffects;
-        }
         if (registry.Contains<CameraConfig>())
         {
             AnimalBattle.Core.CameraService.CurrentConfig = registry.Get<CameraConfig>();

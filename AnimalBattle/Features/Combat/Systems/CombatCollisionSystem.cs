@@ -39,7 +39,7 @@ public static class CombatCollisionSystem
     /// </summary>
     public static void ExecuteSingleHit(Iter it, Field<Transform> atkTrans, Field<Hitbox> hitboxes)
     {
-        var spatialIndex = HurtboxSpatialIndexSystem.SpatialIndex;
+        var spatialIndex = it.World().Get<HurtboxSpatialResource>().Index;
         if (spatialIndex.ItemCount == 0) return;
 
         var count = it.Count();

@@ -11,11 +11,11 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Bosses.Systems;
 
 /// <summary>
-///     Boss の攻撃予兆線（Telegraph）、隙・脆弱（Vulnerable）演出、およびフェーズ遷移時の無敵演出を描画する ECS システム。
+///     World 単位で独立して保持される Boss 予兆演出描画用コンテキスト。
 /// </summary>
-public static class BossTelegraphRenderSystem
+internal sealed class BossTelegraphRenderContext
 {
-    private readonly record struct BossTelegraphData(
+    public readonly record struct BossTelegraphData(
         Transform Transform,
         Sprite Sprite,
         CollisionBox CollisionBox,
@@ -23,11 +23,17 @@ public static class BossTelegraphRenderSystem
         BossCombatState CombatState,
         IBossBrain Brain);
 
-    private static Query<Transform> _playerQuery;
-    private static Query<Transform, Sprite, CollisionBox, GameplayTagState, BossCombatState, BossBrainComponent> _bossQuery;
-    private static BossTelegraphData? _cachedBoss;
-    private static Vec2f _cachedPlayerPos;
+    public required Query<Transform> PlayerQuery { get; init; }
+    public required Query<Transform, Sprite, CollisionBox, GameplayTagState, BossCombatState, BossBrainComponent> BossQuery { get; init; }
+    public BossTelegraphData? CachedBoss;
+    public Vec2f CachedPlayerPos;
+}
 
+/// <summary>
+///     Boss の攻撃予兆線（Telegraph）、隙・脆弱（Vulnerable）演出、およびフェーズ遷移時の無敵演出を描画する ECS システム。
+/// </summary>
+public static class BossTelegraphRenderSystem
+{
     /// <summary>
     ///     Boss 予兆・特殊状態描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -35,13 +41,19 @@ public static class BossTelegraphRenderSystem
     /// <returns>登録済みワールド</returns>
     public static World AddBossTelegraphRenderSystem(this World world)
     {
-        _playerQuery = world.QueryBuilder<Transform>()
+        var playerQuery = world.QueryBuilder<Transform>()
             .With<PlayerTag>()
             .Build();
-        _bossQuery = world.QueryBuilder<Transform, Sprite, CollisionBox, GameplayTagState, BossCombatState, BossBrainComponent>()
+        var bossQuery = world.QueryBuilder<Transform, Sprite, CollisionBox, GameplayTagState, BossCombatState, BossBrainComponent>()
             .With<BossTag>()
             .Without<DeadTag>()
             .Build();
+
+        world.Set(new BossTelegraphRenderContext
+        {
+            PlayerQuery = playerQuery,
+            BossQuery = bossQuery
+        });
 
         world.System("BossTelegraphRenderSystem")
             .Kind(Ecs.OnStore)
@@ -59,27 +71,31 @@ public static class BossTelegraphRenderSystem
         ref readonly var flow = ref w.Get<GameFlow>();
         if (flow.State != GameState.Battle) return;
 
-        _cachedBoss = null;
-        _bossQuery.Each(FindBoss);
-        var boss = _cachedBoss;
-        _cachedBoss = null;
+        var ctx = w.Get<BossTelegraphRenderContext>();
+        ctx.CachedBoss = null;
+        ctx.BossQuery.Each((ref Transform trans, ref Sprite sprite, ref CollisionBox col, ref GameplayTagState tags, ref BossCombatState state, ref BossBrainComponent brainComp) =>
+        {
+            ctx.CachedBoss = new BossTelegraphRenderContext.BossTelegraphData(trans, sprite, col, tags, state, brainComp.Brain);
+        });
+        var boss = ctx.CachedBoss;
+        ctx.CachedBoss = null;
 
         if (boss == null) return;
         var b = boss.Value;
         if (!b.Sprite.IsVisible || b.Sprite.GraphHandle < 0 || b.CombatState.State.IsDead) return;
 
         var playerCfg = w.GetActivePlayerConfig();
-        _cachedPlayerPos = playerCfg.Spawn;
-        _playerQuery.Each(FindPlayerPosition);
+        ctx.CachedPlayerPos = playerCfg.Spawn;
+        ctx.PlayerQuery.Each((ref Transform playerTrans) =>
+        {
+            ctx.CachedPlayerPos = playerTrans.Position;
+        });
 
-        var playerPos = _cachedPlayerPos;
+        var playerPos = ctx.CachedPlayerPos;
 
         ref readonly var renderCfg = ref w.Get<RenderConfig>();
         var bossFx = renderCfg.BossEffects;
         ref readonly var arenaCfg = ref w.Get<ArenaConfig>();
-
-        TelegraphRenderHelper.CurrentEffects = bossFx;
-        TelegraphRenderHelper.CurrentArena = arenaCfg;
 
         var bPos = (b.Transform.Position + b.Sprite.JitterOffset).ToVec2i();
 
@@ -87,7 +103,7 @@ public static class BossTelegraphRenderSystem
         if (b.CombatState.State.IsTelegraph)
         {
             var progress = b.Brain.AbilitySystem.Progress;
-            DrawBossTelegraph(b, playerPos, progress);
+            DrawBossTelegraph(b, playerPos, progress, bossFx, arenaCfg);
         }
 
         var flipX = !b.CombatState.FacingRight;
@@ -110,27 +126,19 @@ public static class BossTelegraphRenderSystem
         }
     }
 
-    private static void FindBoss(ref Transform trans, ref Sprite sprite, ref CollisionBox col, ref GameplayTagState tags, ref BossCombatState state, ref BossBrainComponent brainComp)
-    {
-        _cachedBoss = new BossTelegraphData(trans, sprite, col, tags, state, brainComp.Brain);
-    }
-
-    private static void FindPlayerPosition(ref Transform playerTrans)
-    {
-        _cachedPlayerPos = playerTrans.Position;
-    }
-
     private static void DrawBossTelegraph(
-        in BossTelegraphData boss,
+        in BossTelegraphRenderContext.BossTelegraphData boss,
         Vec2f playerPos,
-        float progress)
+        float progress,
+        BossEffectsRenderConfig bossFx,
+        ArenaConfig arenaCfg)
     {
         var currentAbility = boss.Brain.AbilitySystem.CurrentAbility;
         if (currentAbility == null) return;
 
         var finalTarget = boss.CombatState.TargetPosition != Vec2f.Zero ? boss.CombatState.TargetPosition : playerPos;
         var bHeight = boss.CollisionBox.Size.Y;
-        AbilityTelegraphContext ctx = new(boss.Transform.Position, finalTarget, boss.CombatState.FacingRight, progress, boss.CombatState.StateTimer, bHeight);
+        AbilityTelegraphContext ctx = new(boss.Transform.Position, finalTarget, boss.CombatState.FacingRight, progress, boss.CombatState.StateTimer, bHeight, bossFx, arenaCfg);
         currentAbility.DrawTelegraph(in ctx);
     }
 

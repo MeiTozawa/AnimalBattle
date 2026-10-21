@@ -8,14 +8,11 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Combat.Systems;
 
 /// <summary>
-///     Bunny 自機プレイヤーの近接攻撃判定 (<see cref="PlayerMeleeTag"/>) と
-///     敵弾幕 (<see cref="BossBulletTag"/>) の衝突交差を判定し、弾幕を斬落消去するシステム。
-///     地面衝撃波等の破壊不可弾 (<see cref="Bullet.IsIndestructible"/>) は対象外とし、消去時は <see cref="RecycleTag"/> を
-///     付与してフレーム末尾で安全回収すると共に、被弾火花演出と音響効果を再生します。
+///     World 単位で独立して保持される近接消弾システム用コンテキスト。
 /// </summary>
-public static class MeleeBulletCancelSystem
+internal sealed class MeleeBulletCancelContext
 {
-    private struct MeleeTarget
+    public struct MeleeTarget
     {
         public Transform Transform;
         public CollisionShape Shape;
@@ -23,12 +20,21 @@ public static class MeleeBulletCancelSystem
         public Vec2f HalfExtents;
     }
 
-    private static Query<Transform, Hitbox> _meleeQuery;
-    private static Query<Transform, Hitbox, Bullet> _bulletQuery;
-    private static readonly MeleeTarget[] _melees = new MeleeTarget[8];
-    private static int _meleeCount;
-    private static bool _sfxPlayedThisFrame;
+    public required Query<Transform, Hitbox> MeleeQuery { get; init; }
+    public required Query<Transform, Hitbox, Bullet> BulletQuery { get; init; }
+    public readonly MeleeTarget[] Melees = new MeleeTarget[8];
+    public int MeleeCount;
+    public bool SfxPlayedThisFrame;
+}
 
+/// <summary>
+///     Bunny 自機プレイヤーの近接攻撃判定 (<see cref="PlayerMeleeTag"/>) と
+///     敵弾幕 (<see cref="BossBulletTag"/>) の衝突交差を判定し、弾幕を斬落消去するシステム。
+///     地面衝撃波等の破壊不可弾 (<see cref="Bullet.IsIndestructible"/>) は対象外とし、消去時は <see cref="RecycleTag"/> を
+///     付与してフレーム末尾で安全回収すると共に、被弾火花演出と音響効果を再生します。
+/// </summary>
+public static class MeleeBulletCancelSystem
+{
     /// <summary>
     ///     近接消弾システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -36,15 +42,21 @@ public static class MeleeBulletCancelSystem
     /// <returns>メソッドチェーン用の <see cref="World"/></returns>
     public static World AddMeleeBulletCancelSystem(this World world)
     {
-        _meleeQuery = world.QueryBuilder<Transform, Hitbox>()
+        var meleeQuery = world.QueryBuilder<Transform, Hitbox>()
             .With<PlayerMeleeTag>()
             .Without<RecycleTag>()
             .Build();
 
-        _bulletQuery = world.QueryBuilder<Transform, Hitbox, Bullet>()
+        var bulletQuery = world.QueryBuilder<Transform, Hitbox, Bullet>()
             .With<BossBulletTag>()
             .Without<RecycleTag>()
             .Build();
+
+        world.Set(new MeleeBulletCancelContext
+        {
+            MeleeQuery = meleeQuery,
+            BulletQuery = bulletQuery
+        });
 
         world.System("MeleeBulletCancelSystem")
             .Kind(Ecs.OnUpdate)
@@ -58,20 +70,22 @@ public static class MeleeBulletCancelSystem
     /// </summary>
     public static void Execute(Iter it)
     {
-        _meleeCount = 0;
-        _meleeQuery.Iter(CollectMelees);
-        if (_meleeCount == 0) return;
+        var ctx = it.World().Get<MeleeBulletCancelContext>();
+        ctx.MeleeCount = 0;
+        ctx.MeleeQuery.Iter(CollectMelees);
+        if (ctx.MeleeCount == 0) return;
 
-        _sfxPlayedThisFrame = false;
-        _bulletQuery.Iter(ProcessBullets);
+        ctx.SfxPlayedThisFrame = false;
+        ctx.BulletQuery.Iter(ProcessBullets);
     }
 
     private static void CollectMelees(Iter it, Field<Transform> trans, Field<Hitbox> hitboxes)
     {
+        var ctx = it.World().Get<MeleeBulletCancelContext>();
         var count = it.Count();
         for (var i = 0; i < count; i++)
         {
-            if (_meleeCount >= _melees.Length) break;
+            if (ctx.MeleeCount >= ctx.Melees.Length) break;
             ref readonly var h = ref hitboxes[i];
             if (!h.IsActive) continue;
 
@@ -79,7 +93,7 @@ public static class MeleeBulletCancelSystem
             var half = h.Shape.Type == CollisionShapeType.Box ? h.Shape.Size * 0.5f : new Vec2f(h.Shape.Radius, h.Shape.Radius);
             var c = t.Position + h.Shape.Offset;
 
-            _melees[_meleeCount++] = new MeleeTarget
+            ctx.Melees[ctx.MeleeCount++] = new MeleeBulletCancelContext.MeleeTarget
             {
                 Transform = t,
                 Shape = h.Shape,
@@ -91,6 +105,7 @@ public static class MeleeBulletCancelSystem
 
     private static void ProcessBullets(Iter it, Field<Transform> bTransforms, Field<Hitbox> bHitboxes, Field<Bullet> bBullets)
     {
+        var ctx = it.World().Get<MeleeBulletCancelContext>();
         var count = it.Count();
         var world = it.World();
 
@@ -107,9 +122,9 @@ public static class MeleeBulletCancelSystem
             var bCenter = bt.Position + bHitbox.Shape.Offset;
             var bHalf = bHitbox.Shape.Type == CollisionShapeType.Box ? bHitbox.Shape.Size * 0.5f : new Vec2f(bHitbox.Shape.Radius, bHitbox.Shape.Radius);
 
-            for (var m = 0; m < _meleeCount; m++)
+            for (var m = 0; m < ctx.MeleeCount; m++)
             {
-                ref readonly var melee = ref _melees[m];
+                ref readonly var melee = ref ctx.Melees[m];
 
                 // AABB 粗判定による早期枝刈り
                 var diff = melee.Center - bCenter;
@@ -125,10 +140,10 @@ public static class MeleeBulletCancelSystem
                     bEntity.Add<RecycleTag>();
                     EffectSpawner.SpawnHitSparkEffect(world, bt.Position);
 
-                    if (!_sfxPlayedThisFrame)
+                    if (!ctx.SfxPlayedThisFrame)
                     {
                         SoundService.PlaySfx(SfxType.BossHit);
-                        _sfxPlayedThisFrame = true;
+                        ctx.SfxPlayedThisFrame = true;
                     }
                     break;
                 }

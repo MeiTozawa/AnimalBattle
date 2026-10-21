@@ -42,7 +42,7 @@ public static class PersistentCollisionSystem
         Field<Hitbox> hitboxes,
         Field<HitHistory> histories)
     {
-        var spatialIndex = HurtboxSpatialIndexSystem.SpatialIndex;
+        var spatialIndex = it.World().Get<HurtboxSpatialResource>().Index;
         if (spatialIndex.ItemCount == 0) return;
 
         var count = it.Count();
