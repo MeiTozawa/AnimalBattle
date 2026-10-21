@@ -52,7 +52,8 @@ public static class BulletSpawner
             .Set(new Velocity(vel))
             .Set(new BulletModifier(type, radius, vel))
             .Set(bullet)
-            .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile));
+            .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile))
+            .Set(new OrbitSatellite(0.0f, 0.0f));
 
         if (type == BulletType.Yellow)
         {
@@ -122,12 +123,15 @@ public static class BulletSpawner
             IsIndestructible = isIndestructible
         };
 
+        var vel = new Vec2f(vx, 0.0f);
         var entity = CombatPoolService.RentBossBullet();
         entity
             .Set(new Transform(pos))
-            .Set(new Velocity(new Vec2f(vx, 0.0f)))
+            .Set(new Velocity(vel))
+            .Set(new BulletModifier(BulletType.Normal, radius, vel))
             .Set(bullet)
-            .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile));
+            .Set(new Hitbox(new CollisionShape.Circle(radius), damage, Faction.Hostile))
+            .Set(new OrbitSatellite(0.0f, 0.0f));
     }
 
     /// <summary>

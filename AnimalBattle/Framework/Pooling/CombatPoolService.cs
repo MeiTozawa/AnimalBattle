@@ -91,6 +91,8 @@ public sealed class CombatPoolService : IDisposable
     {
         if (!entity.IsAlive()) return;
 
+        entity.Remove<OrbitOf>(Ecs.Wildcard);
+
         if (entity.Has<PoolLeaseState>())
         {
             var poolId = entity.Get<PoolLeaseState>().PoolId;
@@ -120,21 +122,45 @@ public sealed class CombatPoolService : IDisposable
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
+        if (e.Has<Hitbox>())
+        {
+            ref var hitbox = ref e.GetMut<Hitbox>();
+            hitbox.IsActive = true;
+        }
     }
 
     private static void ResetBossBulletEntity(Entity e)
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
-
-        ref var bullet = ref e.GetMut<Bullet>();
-        bullet.IsIndestructible = false;
-
-        ref var mod = ref e.GetMut<BulletModifier>();
-        mod.Type = BulletType.Normal;
-        mod.ElapsedTimer = 0.0f;
-
         e.Remove<OrbitOf>(Ecs.Wildcard);
+
+        e.Set(new Transform(Vec2f.Zero));
+        e.Set(new Velocity(Vec2f.Zero));
+
+        if (e.Has<Bullet>())
+        {
+            ref var bullet = ref e.GetMut<Bullet>();
+            bullet.IsIndestructible = false;
+        }
+
+        if (e.Has<Hitbox>())
+        {
+            ref var hitbox = ref e.GetMut<Hitbox>();
+            hitbox.IsActive = true;
+            hitbox.Faction = Faction.Hostile;
+            hitbox.DestroyOnHit = true;
+        }
+
+        if (e.Has<BulletModifier>())
+        {
+            ref var mod = ref e.GetMut<BulletModifier>();
+            mod.Type = BulletType.Normal;
+            mod.ElapsedTimer = 0.0f;
+            mod.BaseRadius = 0.0f;
+            mod.BaseVel = Vec2f.Zero;
+        }
+
         if (e.Has<OrbitSatellite>())
         {
             ref var sat = ref e.GetMut<OrbitSatellite>();

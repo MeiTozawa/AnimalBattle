@@ -31,6 +31,7 @@ public static class CombatRecycleSystem {
         {
             var entity = it.Entity(i);
             entity.Remove<RecycleTag>();
+            entity.Remove<OrbitOf>(Ecs.Wildcard);
             CombatPoolService.Recycle(entity);
         }
     }

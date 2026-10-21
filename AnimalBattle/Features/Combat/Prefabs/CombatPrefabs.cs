@@ -28,6 +28,12 @@ public static class CombatPrefabs
     {
         var cfg = world.Get<CombatPrefabConfig>();
 
+        // 実行時インスタンスコンポーネントに AutoOverride を付与し、Archetype 安定化およびインスタンス固有メモリを保証
+        world.Component<Bullet>().AutoOverride<Bullet>();
+        world.Component<Hitbox>().AutoOverride<Hitbox>();
+        world.Component<BulletModifier>().AutoOverride<BulletModifier>();
+        world.Component<OrbitSatellite>().AutoOverride<OrbitSatellite>();
+
         // --- 1. 自機通常弾 ---
         var playerBulletCfg = cfg.PlayerBullet;
         PlayerBullet = world.Prefab(PlayerBulletName)
