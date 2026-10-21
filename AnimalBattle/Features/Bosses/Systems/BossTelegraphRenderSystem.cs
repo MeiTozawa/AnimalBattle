@@ -184,7 +184,11 @@ public static class BossTelegraphRenderSystem
     {
         var pulse = 0.5f + 0.5f * MathF.Sin(stateTimer * bossFx.InvinciblePulseSpeed);
         var goldAlpha = (int)(bossFx.InvincibleAuraBaseAlpha + bossFx.InvincibleAuraPulseAlpha * pulse);
-        GameEngine.SetDrawBright(bossFx.InvincibleAuraColor.R, bossFx.InvincibleAuraColor.G, bossFx.InvincibleAuraColor.B);
+        var auraColor = bossFx.InvincibleAuraColor;
+        var r = auraColor is { R: 0, G: 0, B: 0 } ? 255 : auraColor.R;
+        var g = auraColor is { R: 0, G: 0, B: 0 } ? 215 : auraColor.G;
+        var b = auraColor is { R: 0, G: 0, B: 0 } ? 0 : auraColor.B;
+        GameEngine.SetDrawBright(r, g, b);
         GameEngine.SetDrawBlendMode(BlendMode.Add, goldAlpha);
         GameEngine.DrawRectRotaGraph(
             bPos,

@@ -3,7 +3,7 @@
 [HeavySlash]
 SkillName = "Heavy Cleave Slash"
 WindUpTime = 0.45
-TelegraphColor = 0xFFFF5722
+TelegraphColor = "#FF5722"
 CastDuration = 0.35
 RecoveryTime = 0.50
 DefaultCooldown = 2.0
@@ -12,7 +12,7 @@ SlashRange = { x = 100.0, y = 75.0 }
 SlashRadius = 55.0
 SlashDamage = 1.0
 HitboxDuration = 0.28
-SlashColor = 0xFFFF7043
+SlashColor = "#FF7043"
 ArmorTags = ["SuperArmor"]
 RecoveryTags = []
 
@@ -43,7 +43,7 @@ StrParam = ""
 [GroundStomp]
 SkillName = "Ground Stomp Shockwave"
 WindUpTime = 0.50
-TelegraphColor = 0xFFFFC107
+TelegraphColor = "#FFC107"
 CastDuration = 0.40
 RecoveryTime = 0.50
 DefaultCooldown = 5.0
@@ -53,8 +53,8 @@ ShockwaveOffsetX = 30.0
 ShockwaveSpeed = 420.0
 ShockwaveRadius = 80.0
 ShockwaveDamage = 1.0
-FillColor = 0xFFFF9800
-OutlineColor = 0xFFFFE082
+FillColor = "#FF9800"
+OutlineColor = "#FFE082"
 IsIndestructible = true
 ArmorTags = ["SuperArmor"]
 RecoveryTags = []
@@ -78,7 +78,7 @@ StrParam = ""
 [LeapSmash]
 SkillName = "Titan Leap Smash"
 WindUpTime = 0.40
-TelegraphColor = 0xFFFF3D00
+TelegraphColor = "#FF3D00"
 CastDuration = 1.60
 RecoveryTime = 0.80
 DefaultCooldown = 6.0
@@ -95,8 +95,8 @@ ShrapnelAngleSpanRatio = 0.70
 ShrapnelOffsetY = 15.0
 ShrapnelSpeed = 260.0
 ShrapnelRadius = 40
-ShrapnelFillColor = 0xFFFF6D00
-ShrapnelOutlineColor = 0xFFFFD180
+ShrapnelFillColor = "#FF6D00"
+ShrapnelOutlineColor = "#FFD180"
 IsIndestructible = true
 ArmorTags = ["Invincible"]
 RecoveryTags = ["Vulnerable"]
@@ -112,7 +112,7 @@ StrParam = "SmashImpact"
 [DoubleCleave]
 SkillName = "Twin Cleave Fury"
 WindUpTime = 0.35
-TelegraphColor = 0xFFFF1744
+TelegraphColor = "#FF1744"
 CastDuration = 0.70
 RecoveryTime = 0.55
 DefaultCooldown = 3.0
@@ -123,7 +123,7 @@ SlashRange = { x = 105.0, y = 80.0 }
 TelegraphRangeX = 250.0
 SlashDamage = 1.0
 HitboxDuration = 0.24
-SlashColor = 0xFFFF1744
+SlashColor = "#FF1744"
 ArmorTags = ["SuperArmor"]
 RecoveryTags = []
 
@@ -162,19 +162,19 @@ StrParam = "Slash2"
 [FrenzyCharge]
 SkillName = "Frenzy Rampage Charge"
 WindUpTime = 0.55
-TelegraphColor = 0xFFD50000
+TelegraphColor = "#D50000"
 CastDuration = 1.30
 RecoveryTime = 1.20
 DefaultCooldown = 7.0
 ChargeSpeed = 620.0
 HitboxSize = { x = 100.0, y = 60.0 }
 HitboxDuration = 0.25
-HitboxColor = 0xFFFF1744
+HitboxColor = "#FF1744"
 ShrapnelCount = 8
 ShrapnelSpeed = 240.0
 ShrapnelRadius = 8.0
-ShrapnelFillColor = 0xFFFF5252
-ShrapnelOutlineColor = 0xFFFF8A80
+ShrapnelFillColor = "#FF5252"
+ShrapnelOutlineColor = "#FF8A80"
 IsIndestructible = false
 ArmorTags = ["SuperArmor"]
 RecoveryTags = ["Stunned", "Vulnerable"]
@@ -190,7 +190,7 @@ StrParam = ""
 [EarthquakeRoar]
 SkillName = "Cataclysm Earthquake Roar"
 WindUpTime = 0.60
-TelegraphColor = 0xFF00E5FF
+TelegraphColor = "#00E5FF"
 TelegraphColumnCount = 5
 TelegraphColumnHeight = 650.0
 TelegraphWarningText = "▼ ROCK ▼"
@@ -202,8 +202,8 @@ MinX = 80.0
 MaxX = 1200.0
 RockSpeed = 360.0
 RockRadius = 9.0
-RockFillColor = 0xFF00E5FF
-RockOutlineColor = 0xFFE0F7FA
+RockFillColor = "#00E5FF"
+RockOutlineColor = "#E0F7FA"
 BulletType = "Cyan"
 IsIndestructible = false
 ArmorTags = ["SuperArmor"]

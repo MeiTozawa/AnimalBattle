@@ -134,7 +134,7 @@ public static class BattleInputSystem
 
         brainComp.Brain.Reset(spawn);
         state.Phase = Phase.Phase1;
-        state.State = BossState.Unknown;
+        state.State = brainComp.Brain.CurrentState;
         state.CurrentSkillTag = StringId.Empty;
         state.StateTimer = 0.0f;
         state.TargetPosition = Vec2f.Zero;

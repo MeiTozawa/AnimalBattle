@@ -139,19 +139,26 @@ public sealed class CombatPoolService : IDisposable
         e.Set(new Transform(Vec2f.Zero));
         e.Set(new Velocity(Vec2f.Zero));
 
-        if (e.Has<Bullet>())
+        var world = e.CsWorld();
+        var defaultRadius = 0.0f;
+        var defaultDamage = 0.0f;
+        if (world.Has<CombatPrefabConfig>())
         {
-            ref var bullet = ref e.GetMut<Bullet>();
-            bullet.IsIndestructible = false;
+            var cfg = world.Get<CombatPrefabConfig>().BossNormalBullet;
+            defaultRadius = cfg.Radius;
+            defaultDamage = cfg.Damage;
         }
 
-        if (e.Has<Hitbox>())
-        {
-            ref var hitbox = ref e.GetMut<Hitbox>();
-            hitbox.IsActive = true;
-            hitbox.Faction = Faction.Hostile;
-            hitbox.DestroyOnHit = true;
-        }
+        ref var bullet = ref e.GetMut<Bullet>();
+        bullet.Radius = defaultRadius;
+        bullet.IsIndestructible = false;
+
+        ref var hitbox = ref e.GetMut<Hitbox>();
+        hitbox.Shape = new CollisionShape.Circle(defaultRadius);
+        hitbox.Damage = defaultDamage;
+        hitbox.IsActive = true;
+        hitbox.Faction = Faction.Hostile;
+        hitbox.DestroyOnHit = true;
 
         if (e.Has<BulletModifier>())
         {
@@ -174,5 +181,9 @@ public sealed class CombatPoolService : IDisposable
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
+        if (!e.Has<Hitbox>()) 
+            return;
+        ref var hitbox = ref e.GetMut<Hitbox>();
+        hitbox.IsActive = false;
     }
 }

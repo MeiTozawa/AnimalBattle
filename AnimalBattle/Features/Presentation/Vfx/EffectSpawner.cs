@@ -44,7 +44,7 @@ public static class EffectSpawner
         CombatPoolService.RentAreaEffect()
            .Set(new Transform(pos, scale, rotation))
            .Set(new Velocity(Vec2f.Zero))
-           .Set(new Hitbox(default, 0.0f, Faction.Friendly, false))
+           .Set(new Hitbox(default, 0.0f, Faction.Friendly, false, isActive: false))
            .Set(new Sprite(graphHandle, flipX, true, srcRect, color))
            .Set(new FadeEffect(duration, pCfg.DashGhostTrailAlpha, 0.0f));
     }

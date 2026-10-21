@@ -6,6 +6,7 @@ using AnimalBattle.Abilities.Skills;
 using AnimalBattle.Core;
 using ErrorOr;
 using Flecs.NET.Core;
+using Microsoft.Extensions.Configuration;
 
 namespace AnimalBattle.Configs;
 
@@ -16,6 +17,8 @@ namespace AnimalBattle.Configs;
 public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigLifecycle {
     private string _skillName = string.Empty;
     private StringId _cachedSkillId;
+    private string _telegraphColorHex = string.Empty;
+    private Color _telegraphColor;
 
     /// <summary>技能表示名</summary>
     public string SkillName
@@ -41,8 +44,22 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigL
     /// <summary>前隙予兆時間（秒）</summary>
     public float WindUpTime { get; set; }
 
+    /// <summary>予兆エフェクトカラー Hex 文字列</summary>
+    [ConfigurationKeyName("TelegraphColor")]
+    [JsonPropertyName("TelegraphColor")]
+    public string TelegraphColorHex
+    {
+        get => _telegraphColorHex;
+        set
+        {
+            _telegraphColorHex = value;
+            _telegraphColor = value.ToColor();
+        }
+    }
+
     /// <summary>予兆エフェクトカラー</summary>
-    public Color TelegraphColor { get; set; }
+    [JsonIgnore]
+    public Color TelegraphColor => _telegraphColor;
 
     /// <summary>発動持続時間（秒）</summary>
     public float CastDuration { get; set; }

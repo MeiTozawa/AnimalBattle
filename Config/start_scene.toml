@@ -37,19 +37,19 @@ CardDescLeftOffset = 10
 PreviewCenterOffsetY = 160
 
 [Colors]
-BgColor = 0xFF12141C
-CardBgColor = 0xFF1C202D
-CardHoverBgColor = 0xFF262C3E
-BorderDefaultColor = 0xFF464E64
-PlayerSelectedColor = 0xFF32C8F0
-BossSelectedColor = 0xFFF05050
-ConfirmBtnDefaultColor = 0xFF234B78
-ConfirmBtnHoverColor = 0xFF3282D2
-ConfirmBtnBorderDefaultColor = 0xFF3C78B4
-ConfirmBtnBorderHoverColor = 0xFF64C8FF
-TextWhite = 0xFFF0F5FF
-TextMuted = 0xFFA0AABE
-TextGold = 0xFFFFD750
+BgColor = "#12141C"
+CardBgColor = "#1C202D"
+CardHoverBgColor = "#262C3E"
+BorderDefaultColor = "#464E64"
+PlayerSelectedColor = "#32C8F0"
+BossSelectedColor = "#F05050"
+ConfirmBtnDefaultColor = "#234B78"
+ConfirmBtnHoverColor = "#3282D2"
+ConfirmBtnBorderDefaultColor = "#3C78B4"
+ConfirmBtnBorderHoverColor = "#64C8FF"
+TextWhite = "#F0F5FF"
+TextMuted = "#A0AABE"
+TextGold = "#FFD750"
 
 [Texts]
 HeaderTitle = "ANIMAL BATTLE - キャラクター＆ボス選択"

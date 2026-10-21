@@ -1,5 +1,7 @@
 using System.Drawing;
+using System.Text.Json.Serialization;
 using AnimalBattle.Core;
+using Microsoft.Extensions.Configuration;
 
 namespace AnimalBattle.Configs;
 
@@ -8,6 +10,9 @@ namespace AnimalBattle.Configs;
 ///     突進速度、斬撃判定範囲、威力および持続時間を保持します。
 /// </summary>
 public abstract class MeleePatternConfigBase : SkillPatternConfigBase {
+    private string _slashColorHex = string.Empty;
+    private Color _slashColor;
+
     /// <summary>前進・突進速度</summary>
     public float DashSpeed { get; set; }
 
@@ -23,6 +28,20 @@ public abstract class MeleePatternConfigBase : SkillPatternConfigBase {
     /// <summary>攻撃判定の残留持続時間（秒）</summary>
     public float HitboxDuration { get; set; }
 
+    /// <summary>斬撃エフェクトカラー Hex 文字列</summary>
+    [ConfigurationKeyName("SlashColor")]
+    [JsonPropertyName("SlashColor")]
+    public string SlashColorHex
+    {
+        get => _slashColorHex;
+        set
+        {
+            _slashColorHex = value;
+            _slashColor = value.ToColor();
+        }
+    }
+
     /// <summary>斬撃エフェクトカラー</summary>
-    public Color SlashColor { get; set; }
+    [JsonIgnore]
+    public Color SlashColor => _slashColor;
 }

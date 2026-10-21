@@ -1,14 +1,14 @@
 [Viewport]
 Pos = { x = 0.0, y = 0.0 }
 Size = { x = 1280.0, y = 720.0 }
-PlatformFallbackFillColor = 0xFF141926
-PlatformFallbackBorderColor = 0xFF00E5FF
+PlatformFallbackFillColor = "#141926"
+PlatformFallbackBorderColor = "#00E5FF"
 
 [BossEffects]
 DangerBoxAlpha = 100
 LaserAlpha = 140
 ChargeTrackAlpha = 85
-WarningTextColor = 0xFFFF8080
+WarningTextColor = "#FF8080"
 LaserThickness = 2
 
 # 予兆警告テキストの表示オフセット
@@ -20,7 +20,7 @@ SkyfallTextOffset = { x = 20.0, y = 20.0 }
 # 易傷・反撃チャンス醒目标志設定
 ChanceMarkerText = "▼ ATTACK! ▼"
 ChanceMarkerOffsetY = 70.0
-ChanceMarkerColor = 0xFFFFD700
+ChanceMarkerColor = "#FFD700"
 
 # 隙あり（Vulnerable）時の演出パラメータ
 VulnerablePulseSpeed = 10.0
@@ -37,7 +37,7 @@ InvincibleAuraScale = 1.07
 InvinciblePulseSpeed = 10.0
 InvincibleAuraBaseAlpha = 115
 InvincibleAuraPulseAlpha = 100
-InvincibleAuraColor = 0xFFFFD700
+InvincibleAuraColor = "#FFD700"
 InvincibleBreathSpeed = 6.0
 InvincibleBreathAmplitude = 3.5
 InvincibleFillBaseAlpha = 45
@@ -69,11 +69,11 @@ InvincibleBlinkFrequency = 30.0
 
 [Bullets]
 PlayerBulletOuterRadius = 6.0
-PlayerBulletOuterColor = 0xFF00FFFF
+PlayerBulletOuterColor = "#00FFFF"
 PlayerBulletInnerRadius = 3.0
-PlayerBulletInnerColor = 0xFFFFFFFF
+PlayerBulletInnerColor = "#FFFFFF"
 PlayerBulletTrailHalfSize = { x = 7, y = 2 }
-PlayerBulletTrailColor = 0xFF80FFFF
+PlayerBulletTrailColor = "#80FFFF"
 
 # プレイヤー弾 3 段階トレイル減衰パラメータ
 PlayerBulletTrailAlpha1 = 180
@@ -88,7 +88,7 @@ PlayerBulletTrailOffsetRatio3 = 1.30
 
 BossBulletCoreRadiusRatio = 0.45
 BossBulletCoreMinRadius = 2
-BossBulletCoreColor = 0xFFFFFFFF
+BossBulletCoreColor = "#FFFFFF"
 BossBulletOutlinePadding = 2
 ViewportCullingMargin = { x = 50, y = 50 }
 
@@ -99,52 +99,52 @@ SpecialMagentaPulseSpeed = 6.0
 SpecialMagentaAuraAlpha = 65
 
 SpecialCyanRingPadding = 2
-SpecialCyanRingColor = 0x3200F0FF
+SpecialCyanRingColor = "#3200F0FF"
 
 SpecialBlackAuraBaseRatio = 1.4
 SpecialBlackAuraPulseRatio = 0.2
 SpecialBlackPulseSpeed = 6.0
-SpecialBlackAuraColor = 0x5ADC1450
+SpecialBlackAuraColor = "#5ADC1450"
 SpecialBlackSatelliteOrbitRatio = 1.55
 SpecialBlackSatelliteOrbitSpeed = 6.0
 SpecialBlackSatelliteRadiusRatio = 0.55
 SpecialBlackSatelliteMinRadius = 3
 SpecialBlackCoreInnerMinRadius = 2
 SpecialBlackCoreInnerDivisor = 2
-SpecialBlackCoreInnerColor = 0xFFFFB4C8
+SpecialBlackCoreInnerColor = "#FFB4C8"
 
 ParticleOutlinePadding = 1
 
 [Hud]
 TitlePos = { x = 20, y = 16 }
-TitleColor = 0xFFFFD700
+TitleColor = "#FFD700"
 TitleText = "=== BULLET BATTLE (TOML FSM) ==="
 
 LineSpacing = 18
 Text = [
-    { Text = "[A/D/Left/Right]: Move (Instant Stop)", Color = 0xFFCCCCCC },
-    { Text = "[Space/K]: Jump & Air Double Jump", Color = 0xFFCCCCCC },
-    { Text = "[J/Z] + Direction: 8-Way Aim & Shoot", Color = 0xFFCCCCCC },
-    { Text = "[R]: Instant Restart (1-Frame Reset)", Color = 0xFFFF8080 },
+    { Text = "[A/D/Left/Right]: Move (Instant Stop)", Color = "#CCCCCC" },
+    { Text = "[Space/K]: Jump & Air Double Jump", Color = "#CCCCCC" },
+    { Text = "[J/Z] + Direction: 8-Way Aim & Shoot", Color = "#CCCCCC" },
+    { Text = "[R]: Instant Restart (1-Frame Reset)", Color = "#FF8080" },
 ]
 
 BossSwitchGuideText = "[1] Boss 1   [2] Boss 2"
-BossSwitchGuideColor = 0xFFFFF275
+BossSwitchGuideColor = "#FFF275"
 
 CharacterSwitchGuideText = "[3] Cat (Ranged)   [4] Bunny (Melee)"
-CharacterSwitchGuideColor = 0xFF80FFA0
+CharacterSwitchGuideColor = "#80FFA0"
 
 DoubleJumpPos = { x = 20, y = 168 }
 DoubleJumpText = "DOUBLE JUMP:"
-DoubleJumpActiveColor = 0xFF00E5FF
-DoubleJumpInactiveColor = 0xFF888888
+DoubleJumpActiveColor = "#00E5FF"
+DoubleJumpInactiveColor = "#888888"
 
 PlayerHpPos = { x = 20, y = 188 }
 PlayerHpText = "PLAYER HP:  "
-PlayerHpHighColor = 0xFF00FF88
-PlayerHpMidColor = 0xFFFFD700
-PlayerHpLowColor = 0xFFFF3333
-PlayerHpDeadColor = 0xFF888888
+PlayerHpHighColor = "#00FF88"
+PlayerHpMidColor = "#FFD700"
+PlayerHpLowColor = "#FF3333"
+PlayerHpDeadColor = "#888888"
 PlayerHpHighThreshold = 0.66
 PlayerHpMidThreshold = 0.33
 
@@ -152,60 +152,60 @@ PlayerHpMidThreshold = 0.33
 BarPos1 = { x = 240, y = 662 }
 BarPos2 = { x = 1040, y = 688 }
 
-Phase1Color = 0xFF00E5FF
-Phase2Color = 0xFFBA55D3
-Phase3Color = 0xFFFF1744
+Phase1Color = "#00E5FF"
+Phase2Color = "#BA55D3"
+Phase3Color = "#FF1744"
 
 BgPadding = 4
-BgColor = 0xDD0A0D14
-BorderColor = 0xFFFFFFFF
+BgColor = "#DD0A0D14"
+BorderColor = "#FFFFFF"
 TopHighlightThickness = 3
-TopHighlightColor = 0xFFFFFFFF
+TopHighlightColor = "#FFFFFF"
 
 HeaderOffsetY = 22
 
 # Boss Title
 TitleOffset = { x = 0, y = 22 }
-TitleColor = 0xFFFFD700
+TitleColor = "#FFD700"
 
 StateBadgeOffset = { x = 250, y = 22 }
 
 HpTextOffsetRight = 100
 HpTextOffsetY = 22
-HpTextColor = 0xFFFFFFFF
+HpTextColor = "#FFFFFF"
 
-StateTelegraphingColor = 0xFFFF5555
-StateCastingColor = 0xFFFFD700
-StateRecoveringColor = 0xFF00FF88
-StatePhaseTransitionColor = 0xFFFF88FF
-StateDefaultColor = 0xFF88CCFF
-StateStunnedColor = 0xFFFFD700
+StateTelegraphingColor = "#FF5555"
+StateCastingColor = "#FFD700"
+StateRecoveringColor = "#00FF88"
+StatePhaseTransitionColor = "#FF88FF"
+StateDefaultColor = "#88CCFF"
+StateStunnedColor = "#FFD700"
 PhaseSplitWidth = 1
 
 [Modals]
 GameOverPos1 = { x = 360, y = 260 }
 GameOverPos2 = { x = 920, y = 440 }
-GameOverBgColor = 0xDD2A0505
-GameOverOuterBorderColor = 0xFFFF3333
-GameOverInnerBorderColor = 0xFFFF8888
+GameOverBgColor = "#DD2A0505"
+GameOverOuterBorderColor = "#FF3333"
+GameOverInnerBorderColor = "#FF8888"
 GameOverTitlePos = { x = 540, y = 305 }
-GameOverTitleColor = 0xFFFF3333
+GameOverTitleColor = "#FF3333"
 GameOverTitleText = "=== GAME OVER ==="
 GameOverRetryPos = { x = 460, y = 360 }
-GameOverRetryColor = 0xFFFFFFFF
+GameOverRetryColor = "#FFFFFF"
 GameOverRetryText = "Press  [ R ]  for Instant Retry!"
 
 # 胜利通关弹窗
 VictoryPos1 = { x = 340, y = 250 }
 VictoryPos2 = { x = 940, y = 450 }
-VictoryBgColor = 0xEE2A2A00
-VictoryOuterBorderColor = 0xFFFFD700
-VictoryInnerBorderColor = 0xFFFFF275
+VictoryBgColor = "#EE2A2A00"
+VictoryOuterBorderColor = "#FFD700"
+VictoryInnerBorderColor = "#FFF275"
 VictoryTitlePos = { x = 440, y = 295 }
-VictoryTitleColor = 0xFFFFD700
+VictoryTitleColor = "#FFD700"
 VictoryTitleText = "★ ★ ★ VICTORY! BOSS DEFEATED! ★ ★ ★"
 VictoryRetryPos = { x = 460, y = 350 }
-VictoryRetryColor = 0xFFFFFFFF
+VictoryRetryColor = "#FFFFFF"
 VictoryRetryText = "Congratulations! Press [ R ] to Play Again!"
 InnerBorderPadding = 2
 
@@ -218,9 +218,9 @@ SpringDampingRatio = 0.65
 TickLength = 4
 TickGap = 2
 CenterDotRadius = 1
-CenterDotColor = 0xFFFFFFFF
-RingColor = 0xFF80FFFF
-TickColor = 0xFF00FFFF
+CenterDotColor = "#FFFFFF"
+RingColor = "#80FFFF"
+TickColor = "#00FFFF"
 MinRadius = 1
 MaxRadius = 100
 RecoilExpansionClampRatio = 3.0
@@ -231,22 +231,22 @@ IsActive = true
 Enabled = false
 IndicatorPos = { x = 980, y = 16 }
 IndicatorText = "[DEBUG MODE ACTIVE - F1 to toggle]"
-IndicatorColor = 0xFFFFD700
+IndicatorColor = "#FFD700"
 PhaseSwitchGuideText = "[F2] Phase 1   [F3] Phase 2   [F4] Phase 3"
-PhaseSwitchGuideColor = 0xFFFFD700
+PhaseSwitchGuideColor = "#FFD700"
 GuideOffsetY = 24
-PlayerTerrainBoxColor = 0xFF00FF88
-PlayerHurtboxColor = 0xFFFF0033
-BossHitboxColor = 0xFFFF1744
-BossBulletHitboxColor = 0xFFFFD700
-PlayerBulletHitboxColor = 0xFF00FFFF
-PlatformHitboxColor = 0xFF88CCFF
-NeutralHitboxColor = 0xFF888888
+PlayerTerrainBoxColor = "#00FF88"
+PlayerHurtboxColor = "#FF0033"
+BossHitboxColor = "#FF1744"
+BossBulletHitboxColor = "#FFD700"
+PlayerBulletHitboxColor = "#00FFFF"
+PlatformHitboxColor = "#88CCFF"
+NeutralHitboxColor = "#888888"
 PlayerInfoOffset = { x = -10, y = -16 }
 PointShapeRadius = 2
-NavNodeColor = 0xFF00E5FF
-NavEdgeDropColor = 0xFFFFD700
-NavEdgeJumpColor = 0xFF00FF88
+NavNodeColor = "#00E5FF"
+NavEdgeDropColor = "#FFD700"
+NavEdgeJumpColor = "#00FF88"
 NavNodeRadius = 4
 
 [VisualEffects]
@@ -279,4 +279,4 @@ BossBaseReferenceSize = 28.0
 PlayerBaseReferenceSize = 36.0
 CenterBiasOffset = -18.0
 PlayerSlashAlpha = 255.0
-PlayerSlashColor = 0xFFFFF0C8
+PlayerSlashColor = "#FFF0C8"

@@ -1,6 +1,8 @@
 using System.Drawing;
+using System.Text.Json.Serialization;
 using AnimalBattle.Core;
 using ErrorOr;
+using Microsoft.Extensions.Configuration;
 
 namespace AnimalBattle.Presentation.Rendering;
 
@@ -17,8 +19,21 @@ public sealed class BossEffectsRenderConfig {
     /// <summary>突進軌道レーン (Charge Track) の半透明アルファ値 (0～255)</summary>
     public int ChargeTrackAlpha { get; set; }
 
+    private string _warningTextColorHex = string.Empty;
+    private Color _warningTextColor;
+
+    /// <summary>警告テキスト・マーカー表示色 Hex 文字列</summary>
+    [ConfigurationKeyName("WarningTextColor")]
+    [JsonPropertyName("WarningTextColor")]
+    public string WarningTextColorHex
+    {
+        get => _warningTextColorHex;
+        set { _warningTextColorHex = value; _warningTextColor = value.ToColor(); }
+    }
+
     /// <summary>警告テキスト・マーカー表示色 (<see cref="Color" />)</summary>
-    public Color WarningTextColor { get; set; }
+    [JsonIgnore]
+    public Color WarningTextColor => _warningTextColor;
 
     /// <summary>照準レーザー線の太さ (px)</summary>
     public int LaserThickness { get; set; }
@@ -41,8 +56,21 @@ public sealed class BossEffectsRenderConfig {
     /// <summary>易傷時の醒目攻撃チャンス表示 Y 軸オフセット (px)</summary>
     public float ChanceMarkerOffsetY { get; set; }
 
+    private string _chanceMarkerColorHex = string.Empty;
+    private Color _chanceMarkerColor;
+
+    /// <summary>易傷時の醒目攻撃チャンス表示色 Hex 文字列</summary>
+    [ConfigurationKeyName("ChanceMarkerColor")]
+    [JsonPropertyName("ChanceMarkerColor")]
+    public string ChanceMarkerColorHex
+    {
+        get => _chanceMarkerColorHex;
+        set { _chanceMarkerColorHex = value; _chanceMarkerColor = value.ToColor(); }
+    }
+
     /// <summary>易傷時の醒目攻撃チャンス表示色 (<see cref="Color" />)</summary>
-    public Color ChanceMarkerColor { get; set; }
+    [JsonIgnore]
+    public Color ChanceMarkerColor => _chanceMarkerColor;
 
     /// <summary>易傷時のオーラ脈動角速度</summary>
     public float VulnerablePulseSpeed { get; set; }
@@ -80,8 +108,21 @@ public sealed class BossEffectsRenderConfig {
     /// <summary>金身オーラ脈動振幅アルファ値</summary>
     public int InvincibleAuraPulseAlpha { get; set; }
 
+    private string _invincibleAuraColorHex = string.Empty;
+    private Color _invincibleAuraColor;
+
+    /// <summary>金身オーラ発光色 Hex 文字列</summary>
+    [ConfigurationKeyName("InvincibleAuraColor")]
+    [JsonPropertyName("InvincibleAuraColor")]
+    public string InvincibleAuraColorHex
+    {
+        get => _invincibleAuraColorHex;
+        set { _invincibleAuraColorHex = value; _invincibleAuraColor = value.ToColor(); }
+    }
+
     /// <summary>金身オーラ発光色 (<see cref="Color" />)</summary>
-    public Color InvincibleAuraColor { get; set; }
+    [JsonIgnore]
+    public Color InvincibleAuraColor => _invincibleAuraColor;
 
     /// <summary>シールド結界呼吸周波数</summary>
     public float InvincibleBreathSpeed { get; set; }
@@ -163,20 +204,59 @@ public sealed class BulletRenderConfig {
     /// <summary>プレイヤー弾外層グロー半径</summary>
     public float PlayerBulletOuterRadius { get; set; }
 
+    private string _playerBulletOuterColorHex = string.Empty;
+    private Color _playerBulletOuterColor;
+
+    /// <summary>プレイヤー弾外層グロー色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerBulletOuterColor")]
+    [JsonPropertyName("PlayerBulletOuterColor")]
+    public string PlayerBulletOuterColorHex
+    {
+        get => _playerBulletOuterColorHex;
+        set { _playerBulletOuterColorHex = value; _playerBulletOuterColor = value.ToColor(); }
+    }
+
     /// <summary>プレイヤー弾外層グロー色 (<see cref="Color" />)</summary>
-    public Color PlayerBulletOuterColor { get; set; }
+    [JsonIgnore]
+    public Color PlayerBulletOuterColor => _playerBulletOuterColor;
 
     /// <summary>プレイヤー弾内層コア半径</summary>
     public float PlayerBulletInnerRadius { get; set; }
 
+    private string _playerBulletInnerColorHex = string.Empty;
+    private Color _playerBulletInnerColor;
+
+    /// <summary>プレイヤー弾内層コア色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerBulletInnerColor")]
+    [JsonPropertyName("PlayerBulletInnerColor")]
+    public string PlayerBulletInnerColorHex
+    {
+        get => _playerBulletInnerColorHex;
+        set { _playerBulletInnerColorHex = value; _playerBulletInnerColor = value.ToColor(); }
+    }
+
     /// <summary>プレイヤー弾内層コア色 (<see cref="Color" />)</summary>
-    public Color PlayerBulletInnerColor { get; set; }
+    [JsonIgnore]
+    public Color PlayerBulletInnerColor => _playerBulletInnerColor;
 
     /// <summary>プレイヤー弾ビームトレイル半サイズ (px)</summary>
     public Vec2i PlayerBulletTrailHalfSize { get; set; }
 
+    private string _playerBulletTrailColorHex = string.Empty;
+    private Color _playerBulletTrailColor;
+
+    /// <summary>プレイヤー弾ビームトレイル色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerBulletTrailColor")]
+    [JsonPropertyName("PlayerBulletTrailColor")]
+    public string PlayerBulletTrailColorHex
+    {
+        get => _playerBulletTrailColorHex;
+        set { _playerBulletTrailColorHex = value; _playerBulletTrailColor = value.ToColor(); }
+    }
+
     /// <summary>プレイヤー弾ビームトレイル色 (<see cref="Color" />)</summary>
-    public Color PlayerBulletTrailColor { get; set; }
+    [JsonIgnore]
+    public Color PlayerBulletTrailColor => _playerBulletTrailColor;
 
     /// <summary>プレイヤー弾トレイル第1階層のアルファ値 (0～255)</summary>
     public int PlayerBulletTrailAlpha1 { get; set; }
@@ -211,8 +291,21 @@ public sealed class BulletRenderConfig {
     /// <summary>Boss 弾内層ホワイトコア最小ピクセル半径</summary>
     public int BossBulletCoreMinRadius { get; set; }
 
+    private string _bossBulletCoreColorHex = string.Empty;
+    private Color _bossBulletCoreColor;
+
+    /// <summary>Boss 弾内層ホワイトコア色 Hex 文字列</summary>
+    [ConfigurationKeyName("BossBulletCoreColor")]
+    [JsonPropertyName("BossBulletCoreColor")]
+    public string BossBulletCoreColorHex
+    {
+        get => _bossBulletCoreColorHex;
+        set { _bossBulletCoreColorHex = value; _bossBulletCoreColor = value.ToColor(); }
+    }
+
     /// <summary>Boss 弾内層ホワイトコア色 (<see cref="Color" />)</summary>
-    public Color BossBulletCoreColor { get; set; }
+    [JsonIgnore]
+    public Color BossBulletCoreColor => _bossBulletCoreColor;
 
     /// <summary>Boss 弾外枠付加ピクセル半径</summary>
     public int BossBulletOutlinePadding { get; set; }
@@ -235,8 +328,21 @@ public sealed class BulletRenderConfig {
     /// <summary>シアン弾外周リング拡張幅 (px)</summary>
     public int SpecialCyanRingPadding { get; set; }
 
+    private string _specialCyanRingColorHex = string.Empty;
+    private Color _specialCyanRingColor;
+
+    /// <summary>シアン弾外周リング発光色 Hex 文字列</summary>
+    [ConfigurationKeyName("SpecialCyanRingColor")]
+    [JsonPropertyName("SpecialCyanRingColor")]
+    public string SpecialCyanRingColorHex
+    {
+        get => _specialCyanRingColorHex;
+        set { _specialCyanRingColorHex = value; _specialCyanRingColor = value.ToColor(); }
+    }
+
     /// <summary>シアン弾外周リング発光色 (<see cref="Color" />)</summary>
-    public Color SpecialCyanRingColor { get; set; }
+    [JsonIgnore]
+    public Color SpecialCyanRingColor => _specialCyanRingColor;
 
     /// <summary>ブラック弾オーラ基礎半径比率</summary>
     public float SpecialBlackAuraBaseRatio { get; set; }
@@ -247,8 +353,21 @@ public sealed class BulletRenderConfig {
     /// <summary>ブラック弾脈動角速度</summary>
     public float SpecialBlackPulseSpeed { get; set; }
 
+    private string _specialBlackAuraColorHex = string.Empty;
+    private Color _specialBlackAuraColor;
+
+    /// <summary>ブラック弾オーラ色 Hex 文字列</summary>
+    [ConfigurationKeyName("SpecialBlackAuraColor")]
+    [JsonPropertyName("SpecialBlackAuraColor")]
+    public string SpecialBlackAuraColorHex
+    {
+        get => _specialBlackAuraColorHex;
+        set { _specialBlackAuraColorHex = value; _specialBlackAuraColor = value.ToColor(); }
+    }
+
     /// <summary>ブラック弾オーラ色 (<see cref="Color" />)</summary>
-    public Color SpecialBlackAuraColor { get; set; }
+    [JsonIgnore]
+    public Color SpecialBlackAuraColor => _specialBlackAuraColor;
 
     /// <summary>ブラック弾衛星公転半径比率</summary>
     public float SpecialBlackSatelliteOrbitRatio { get; set; }
@@ -268,8 +387,21 @@ public sealed class BulletRenderConfig {
     /// <summary>ブラック弾内層微小核半径除数</summary>
     public int SpecialBlackCoreInnerDivisor { get; set; }
 
+    private string _specialBlackCoreInnerColorHex = string.Empty;
+    private Color _specialBlackCoreInnerColor;
+
+    /// <summary>ブラック弾内層微小核色 Hex 文字列</summary>
+    [ConfigurationKeyName("SpecialBlackCoreInnerColor")]
+    [JsonPropertyName("SpecialBlackCoreInnerColor")]
+    public string SpecialBlackCoreInnerColorHex
+    {
+        get => _specialBlackCoreInnerColorHex;
+        set { _specialBlackCoreInnerColorHex = value; _specialBlackCoreInnerColor = value.ToColor(); }
+    }
+
     /// <summary>ブラック弾内層微小核色 (<see cref="Color" />)</summary>
-    public Color SpecialBlackCoreInnerColor { get; set; }
+    [JsonIgnore]
+    public Color SpecialBlackCoreInnerColor => _specialBlackCoreInnerColor;
 
     /// <summary>パーティクルエフェクト外枠ピクセル拡張幅</summary>
     public int ParticleOutlinePadding { get; set; }
@@ -282,8 +414,21 @@ public sealed class HudTextItem {
     /// <summary>案内テキスト文字列</summary>
     public string Text { get; set; } = string.Empty;
 
+    private string _colorHex = string.Empty;
+    private Color _color;
+
+    /// <summary>文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("Color")]
+    [JsonPropertyName("Color")]
+    public string ColorHex
+    {
+        get => _colorHex;
+        set { _colorHex = value; _color = value.ToColor(); }
+    }
+
     /// <summary>文字色 (<see cref="Color" />)</summary>
-    public Color Color { get; set; }
+    [JsonIgnore]
+    public Color Color => _color;
 }
 
 /// <summary>
@@ -293,8 +438,21 @@ public sealed class HudRenderConfig {
     /// <summary>タイトル表示座標</summary>
     public Vec2i TitlePos { get; set; }
 
+    private string _titleColorHex = string.Empty;
+    private Color _titleColor;
+
+    /// <summary>タイトル文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("TitleColor")]
+    [JsonPropertyName("TitleColor")]
+    public string TitleColorHex
+    {
+        get => _titleColorHex;
+        set { _titleColorHex = value; _titleColor = value.ToColor(); }
+    }
+
     /// <summary>タイトル文字色 (<see cref="Color" />)</summary>
-    public Color TitleColor { get; set; }
+    [JsonIgnore]
+    public Color TitleColor => _titleColor;
 
     /// <summary>タイトル文字列</summary>
     public string TitleText { get; set; } = string.Empty;
@@ -310,14 +468,40 @@ public sealed class HudRenderConfig {
     /// <summary>Boss 切り替え操作案内テキスト</summary>
     public string BossSwitchGuideText { get; set; } = string.Empty;
 
+    private string _bossSwitchGuideColorHex = string.Empty;
+    private Color _bossSwitchGuideColor;
+
+    /// <summary>Boss 切り替え操作案内文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("BossSwitchGuideColor")]
+    [JsonPropertyName("BossSwitchGuideColor")]
+    public string BossSwitchGuideColorHex
+    {
+        get => _bossSwitchGuideColorHex;
+        set { _bossSwitchGuideColorHex = value; _bossSwitchGuideColor = value.ToColor(); }
+    }
+
     /// <summary>Boss 切り替え操作案内文字色 (<see cref="Color" />)</summary>
-    public Color BossSwitchGuideColor { get; set; }
+    [JsonIgnore]
+    public Color BossSwitchGuideColor => _bossSwitchGuideColor;
 
     /// <summary>キャラクター切り替え操作案内テキスト</summary>
     public string CharacterSwitchGuideText { get; set; } = string.Empty;
 
+    private string _characterSwitchGuideColorHex = string.Empty;
+    private Color _characterSwitchGuideColor;
+
+    /// <summary>キャラクター切り替え操作案内文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("CharacterSwitchGuideColor")]
+    [JsonPropertyName("CharacterSwitchGuideColor")]
+    public string CharacterSwitchGuideColorHex
+    {
+        get => _characterSwitchGuideColorHex;
+        set { _characterSwitchGuideColorHex = value; _characterSwitchGuideColor = value.ToColor(); }
+    }
+
     /// <summary>キャラクター切り替え操作案内文字色 (<see cref="Color" />)</summary>
-    public Color CharacterSwitchGuideColor { get; set; }
+    [JsonIgnore]
+    public Color CharacterSwitchGuideColor => _characterSwitchGuideColor;
 
     /// <summary>二段ジャンプインジケータ表示座標</summary>
     public Vec2i DoubleJumpPos { get; set; }
@@ -325,11 +509,37 @@ public sealed class HudRenderConfig {
     /// <summary>二段ジャンプ表示ラベル文字列</summary>
     public string DoubleJumpText { get; set; } = string.Empty;
 
+    private string _doubleJumpActiveColorHex = string.Empty;
+    private Color _doubleJumpActiveColor;
+
+    /// <summary>二段ジャンプ有効時シンボル色 Hex 文字列</summary>
+    [ConfigurationKeyName("DoubleJumpActiveColor")]
+    [JsonPropertyName("DoubleJumpActiveColor")]
+    public string DoubleJumpActiveColorHex
+    {
+        get => _doubleJumpActiveColorHex;
+        set { _doubleJumpActiveColorHex = value; _doubleJumpActiveColor = value.ToColor(); }
+    }
+
     /// <summary>二段ジャンプ有効時シンボル色 (<see cref="Color" />)</summary>
-    public Color DoubleJumpActiveColor { get; set; }
+    [JsonIgnore]
+    public Color DoubleJumpActiveColor => _doubleJumpActiveColor;
+
+    private string _doubleJumpInactiveColorHex = string.Empty;
+    private Color _doubleJumpInactiveColor;
+
+    /// <summary>二段ジャンプ消費時シンボル色 Hex 文字列</summary>
+    [ConfigurationKeyName("DoubleJumpInactiveColor")]
+    [JsonPropertyName("DoubleJumpInactiveColor")]
+    public string DoubleJumpInactiveColorHex
+    {
+        get => _doubleJumpInactiveColorHex;
+        set { _doubleJumpInactiveColorHex = value; _doubleJumpInactiveColor = value.ToColor(); }
+    }
 
     /// <summary>二段ジャンプ消費時シンボル色 (<see cref="Color" />)</summary>
-    public Color DoubleJumpInactiveColor { get; set; }
+    [JsonIgnore]
+    public Color DoubleJumpInactiveColor => _doubleJumpInactiveColor;
 
     /// <summary>プレイヤー HP 表示座標</summary>
     public Vec2i PlayerHpPos { get; set; }
@@ -337,17 +547,69 @@ public sealed class HudRenderConfig {
     /// <summary>プレイヤー HP 表示ラベル文字列</summary>
     public string PlayerHpText { get; set; } = string.Empty;
 
+    private string _playerHpHighColorHex = string.Empty;
+    private Color _playerHpHighColor;
+
+    /// <summary>プレイヤー HP 高（3以上）文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerHpHighColor")]
+    [JsonPropertyName("PlayerHpHighColor")]
+    public string PlayerHpHighColorHex
+    {
+        get => _playerHpHighColorHex;
+        set { _playerHpHighColorHex = value; _playerHpHighColor = value.ToColor(); }
+    }
+
     /// <summary>プレイヤー HP 高（3以上）文字色 (<see cref="Color" />)</summary>
-    public Color PlayerHpHighColor { get; set; }
+    [JsonIgnore]
+    public Color PlayerHpHighColor => _playerHpHighColor;
+
+    private string _playerHpMidColorHex = string.Empty;
+    private Color _playerHpMidColor;
+
+    /// <summary>プレイヤー HP 中（2）文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerHpMidColor")]
+    [JsonPropertyName("PlayerHpMidColor")]
+    public string PlayerHpMidColorHex
+    {
+        get => _playerHpMidColorHex;
+        set { _playerHpMidColorHex = value; _playerHpMidColor = value.ToColor(); }
+    }
 
     /// <summary>プレイヤー HP 中（2）文字色 (<see cref="Color" />)</summary>
-    public Color PlayerHpMidColor { get; set; }
+    [JsonIgnore]
+    public Color PlayerHpMidColor => _playerHpMidColor;
+
+    private string _playerHpLowColorHex = string.Empty;
+    private Color _playerHpLowColor;
+
+    /// <summary>プレイヤー HP 低（1）文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerHpLowColor")]
+    [JsonPropertyName("PlayerHpLowColor")]
+    public string PlayerHpLowColorHex
+    {
+        get => _playerHpLowColorHex;
+        set { _playerHpLowColorHex = value; _playerHpLowColor = value.ToColor(); }
+    }
 
     /// <summary>プレイヤー HP 低（1）文字色 (<see cref="Color" />)</summary>
-    public Color PlayerHpLowColor { get; set; }
+    [JsonIgnore]
+    public Color PlayerHpLowColor => _playerHpLowColor;
+
+    private string _playerHpDeadColorHex = string.Empty;
+    private Color _playerHpDeadColor;
+
+    /// <summary>プレイヤー HP 死亡（0）文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerHpDeadColor")]
+    [JsonPropertyName("PlayerHpDeadColor")]
+    public string PlayerHpDeadColorHex
+    {
+        get => _playerHpDeadColorHex;
+        set { _playerHpDeadColorHex = value; _playerHpDeadColor = value.ToColor(); }
+    }
 
     /// <summary>プレイヤー HP 死亡（0）文字色 (<see cref="Color" />)</summary>
-    public Color PlayerHpDeadColor { get; set; }
+    [JsonIgnore]
+    public Color PlayerHpDeadColor => _playerHpDeadColor;
 
     /// <summary>プレイヤー HP 高判定閾値比率</summary>
     public float PlayerHpHighThreshold { get; set; }
@@ -366,29 +628,107 @@ public sealed class BossHpBarRenderConfig {
     /// <summary>HP バー右下座標</summary>
     public Vec2i BarPos2 { get; set; }
 
+    private string _phase1ColorHex = string.Empty;
+    private Color _phase1Color;
+
+    /// <summary>Phase 1 HP ゲージ色 Hex 文字列</summary>
+    [ConfigurationKeyName("Phase1Color")]
+    [JsonPropertyName("Phase1Color")]
+    public string Phase1ColorHex
+    {
+        get => _phase1ColorHex;
+        set { _phase1ColorHex = value; _phase1Color = value.ToColor(); }
+    }
+
     /// <summary>Phase 1 HP ゲージ色 (<see cref="Color" />)</summary>
-    public Color Phase1Color { get; set; }
+    [JsonIgnore]
+    public Color Phase1Color => _phase1Color;
+
+    private string _phase2ColorHex = string.Empty;
+    private Color _phase2Color;
+
+    /// <summary>Phase 2 HP ゲージ色 Hex 文字列</summary>
+    [ConfigurationKeyName("Phase2Color")]
+    [JsonPropertyName("Phase2Color")]
+    public string Phase2ColorHex
+    {
+        get => _phase2ColorHex;
+        set { _phase2ColorHex = value; _phase2Color = value.ToColor(); }
+    }
 
     /// <summary>Phase 2 HP ゲージ色 (<see cref="Color" />)</summary>
-    public Color Phase2Color { get; set; }
+    [JsonIgnore]
+    public Color Phase2Color => _phase2Color;
+
+    private string _phase3ColorHex = string.Empty;
+    private Color _phase3Color;
+
+    /// <summary>Phase 3 HP ゲージ色 Hex 文字列</summary>
+    [ConfigurationKeyName("Phase3Color")]
+    [JsonPropertyName("Phase3Color")]
+    public string Phase3ColorHex
+    {
+        get => _phase3ColorHex;
+        set { _phase3ColorHex = value; _phase3Color = value.ToColor(); }
+    }
 
     /// <summary>Phase 3 HP ゲージ色 (<see cref="Color" />)</summary>
-    public Color Phase3Color { get; set; }
+    [JsonIgnore]
+    public Color Phase3Color => _phase3Color;
 
     /// <summary>HP バー背景外枠パディング</summary>
     public int BgPadding { get; set; }
 
+    private string _bgColorHex = string.Empty;
+    private Color _bgColor;
+
+    /// <summary>HP バー暗色背景色 Hex 文字列</summary>
+    [ConfigurationKeyName("BgColor")]
+    [JsonPropertyName("BgColor")]
+    public string BgColorHex
+    {
+        get => _bgColorHex;
+        set { _bgColorHex = value; _bgColor = value.ToColor(); }
+    }
+
     /// <summary>HP バー暗色背景色 (<see cref="Color" />)</summary>
-    public Color BgColor { get; set; }
+    [JsonIgnore]
+    public Color BgColor => _bgColor;
+
+    private string _borderColorHex = string.Empty;
+    private Color _borderColor;
+
+    /// <summary>HP バー外枠線色 Hex 文字列</summary>
+    [ConfigurationKeyName("BorderColor")]
+    [JsonPropertyName("BorderColor")]
+    public string BorderColorHex
+    {
+        get => _borderColorHex;
+        set { _borderColorHex = value; _borderColor = value.ToColor(); }
+    }
 
     /// <summary>HP バー外枠線色 (<see cref="Color" />)</summary>
-    public Color BorderColor { get; set; }
+    [JsonIgnore]
+    public Color BorderColor => _borderColor;
 
     /// <summary>HP バー上面ハイライト厚み</summary>
     public int TopHighlightThickness { get; set; }
 
+    private string _topHighlightColorHex = string.Empty;
+    private Color _topHighlightColor;
+
+    /// <summary>HP バー上面ハイライト色 Hex 文字列</summary>
+    [ConfigurationKeyName("TopHighlightColor")]
+    [JsonPropertyName("TopHighlightColor")]
+    public string TopHighlightColorHex
+    {
+        get => _topHighlightColorHex;
+        set { _topHighlightColorHex = value; _topHighlightColor = value.ToColor(); }
+    }
+
     /// <summary>HP バー上面ハイライト色 (<see cref="Color" />)</summary>
-    public Color TopHighlightColor { get; set; }
+    [JsonIgnore]
+    public Color TopHighlightColor => _topHighlightColor;
 
     /// <summary>ヘッダー文字の Y 座標オフセット</summary>
     public int HeaderOffsetY { get; set; }
@@ -396,8 +736,21 @@ public sealed class BossHpBarRenderConfig {
     /// <summary>Boss タイトル表示オフセット (BarPos1 からの相対距離)</summary>
     public Vec2i TitleOffset { get; set; }
 
+    private string _titleColorHex = string.Empty;
+    private Color _titleColor;
+
+    /// <summary>Boss タイトル文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("TitleColor")]
+    [JsonPropertyName("TitleColor")]
+    public string TitleColorHex
+    {
+        get => _titleColorHex;
+        set { _titleColorHex = value; _titleColor = value.ToColor(); }
+    }
+
     /// <summary>Boss タイトル文字色 (<see cref="Color" />)</summary>
-    public Color TitleColor { get; set; }
+    [JsonIgnore]
+    public Color TitleColor => _titleColor;
 
     /// <summary>HP 数値テキストの右端 X 軸オフセット (BarPos2.X から左方向へのオフセット)</summary>
     public int HpTextOffsetRight { get; set; }
@@ -405,29 +758,120 @@ public sealed class BossHpBarRenderConfig {
     /// <summary>HP 数値テキストの Y 軸オフセット (BarPos1.Y から上方向へのオフセット、未指定時は HeaderOffsetY を使用)</summary>
     public int HpTextOffsetY { get; set; }
 
+    private string _hpTextColorHex = string.Empty;
+    private Color _hpTextColor;
+
+    /// <summary>HP 数値文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("HpTextColor")]
+    [JsonPropertyName("HpTextColor")]
+    public string HpTextColorHex
+    {
+        get => _hpTextColorHex;
+        set { _hpTextColorHex = value; _hpTextColor = value.ToColor(); }
+    }
+
     /// <summary>HP 数値文字色 (<see cref="Color" />)</summary>
-    public Color HpTextColor { get; set; }
+    [JsonIgnore]
+    public Color HpTextColor => _hpTextColor;
 
     /// <summary>状態バッジテキストのオフセット (BarPos1 からの相対距離)</summary>
     public Vec2i StateBadgeOffset { get; set; }
 
+    private string _stateTelegraphingColorHex = string.Empty;
+    private Color _stateTelegraphingColor;
+
+    /// <summary>前隙予兆状態バッジ文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("StateTelegraphingColor")]
+    [JsonPropertyName("StateTelegraphingColor")]
+    public string StateTelegraphingColorHex
+    {
+        get => _stateTelegraphingColorHex;
+        set { _stateTelegraphingColorHex = value; _stateTelegraphingColor = value.ToColor(); }
+    }
+
     /// <summary>前隙予兆状態バッジ文字色 (<see cref="Color" />)</summary>
-    public Color StateTelegraphingColor { get; set; }
+    [JsonIgnore]
+    public Color StateTelegraphingColor => _stateTelegraphingColor;
+
+    private string _stateCastingColorHex = string.Empty;
+    private Color _stateCastingColor;
+
+    /// <summary>発動中状態バッジ文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("StateCastingColor")]
+    [JsonPropertyName("StateCastingColor")]
+    public string StateCastingColorHex
+    {
+        get => _stateCastingColorHex;
+        set { _stateCastingColorHex = value; _stateCastingColor = value.ToColor(); }
+    }
 
     /// <summary>発動中状態バッジ文字色 (<see cref="Color" />)</summary>
-    public Color StateCastingColor { get; set; }
+    [JsonIgnore]
+    public Color StateCastingColor => _stateCastingColor;
+
+    private string _stateRecoveringColorHex = string.Empty;
+    private Color _stateRecoveringColor;
+
+    /// <summary>隙あり虚弱状態バッジ文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("StateRecoveringColor")]
+    [JsonPropertyName("StateRecoveringColor")]
+    public string StateRecoveringColorHex
+    {
+        get => _stateRecoveringColorHex;
+        set { _stateRecoveringColorHex = value; _stateRecoveringColor = value.ToColor(); }
+    }
 
     /// <summary>隙あり虚弱状態バッジ文字色 (<see cref="Color" />)</summary>
-    public Color StateRecoveringColor { get; set; }
+    [JsonIgnore]
+    public Color StateRecoveringColor => _stateRecoveringColor;
+
+    private string _statePhaseTransitionColorHex = string.Empty;
+    private Color _statePhaseTransitionColor;
+
+    /// <summary>フェーズ遷移演出状態バッジ文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("StatePhaseTransitionColor")]
+    [JsonPropertyName("StatePhaseTransitionColor")]
+    public string StatePhaseTransitionColorHex
+    {
+        get => _statePhaseTransitionColorHex;
+        set { _statePhaseTransitionColorHex = value; _statePhaseTransitionColor = value.ToColor(); }
+    }
 
     /// <summary>フェーズ遷移演出状態バッジ文字色 (<see cref="Color" />)</summary>
-    public Color StatePhaseTransitionColor { get; set; }
+    [JsonIgnore]
+    public Color StatePhaseTransitionColor => _statePhaseTransitionColor;
+
+    private string _stateDefaultColorHex = string.Empty;
+    private Color _stateDefaultColor;
+
+    /// <summary>通常巡航状態バッジ文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("StateDefaultColor")]
+    [JsonPropertyName("StateDefaultColor")]
+    public string StateDefaultColorHex
+    {
+        get => _stateDefaultColorHex;
+        set { _stateDefaultColorHex = value; _stateDefaultColor = value.ToColor(); }
+    }
 
     /// <summary>通常巡航状態バッジ文字色 (<see cref="Color" />)</summary>
-    public Color StateDefaultColor { get; set; }
+    [JsonIgnore]
+    public Color StateDefaultColor => _stateDefaultColor;
+
+    private string _stateStunnedColorHex = string.Empty;
+    private Color _stateStunnedColor;
+
+    /// <summary>気絶・易傷状態バッジ文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("StateStunnedColor")]
+    [JsonPropertyName("StateStunnedColor")]
+    public string StateStunnedColorHex
+    {
+        get => _stateStunnedColorHex;
+        set { _stateStunnedColorHex = value; _stateStunnedColor = value.ToColor(); }
+    }
 
     /// <summary>気絶・易傷状態バッジ文字色 (<see cref="Color" />)</summary>
-    public Color StateStunnedColor { get; set; }
+    [JsonIgnore]
+    public Color StateStunnedColor => _stateStunnedColor;
 
     /// <summary>Phase 分割マーカー半幅 (px)</summary>
     public int PhaseSplitWidth { get; set; }
@@ -443,20 +887,72 @@ public sealed class ModalRenderConfig {
     /// <summary>Game Over 矩形右下座標</summary>
     public Vec2i GameOverPos2 { get; set; }
 
+    private string _gameOverBgColorHex = string.Empty;
+    private Color _gameOverBgColor;
+
+    /// <summary>Game Over 背景色 Hex 文字列</summary>
+    [ConfigurationKeyName("GameOverBgColor")]
+    [JsonPropertyName("GameOverBgColor")]
+    public string GameOverBgColorHex
+    {
+        get => _gameOverBgColorHex;
+        set { _gameOverBgColorHex = value; _gameOverBgColor = value.ToColor(); }
+    }
+
     /// <summary>Game Over 背景色 (<see cref="Color" />)</summary>
-    public Color GameOverBgColor { get; set; }
+    [JsonIgnore]
+    public Color GameOverBgColor => _gameOverBgColor;
+
+    private string _gameOverOuterBorderColorHex = string.Empty;
+    private Color _gameOverOuterBorderColor;
+
+    /// <summary>Game Over 外枠線色 Hex 文字列</summary>
+    [ConfigurationKeyName("GameOverOuterBorderColor")]
+    [JsonPropertyName("GameOverOuterBorderColor")]
+    public string GameOverOuterBorderColorHex
+    {
+        get => _gameOverOuterBorderColorHex;
+        set { _gameOverOuterBorderColorHex = value; _gameOverOuterBorderColor = value.ToColor(); }
+    }
 
     /// <summary>Game Over 外枠線色 (<see cref="Color" />)</summary>
-    public Color GameOverOuterBorderColor { get; set; }
+    [JsonIgnore]
+    public Color GameOverOuterBorderColor => _gameOverOuterBorderColor;
+
+    private string _gameOverInnerBorderColorHex = string.Empty;
+    private Color _gameOverInnerBorderColor;
+
+    /// <summary>Game Over 内枠線色 Hex 文字列</summary>
+    [ConfigurationKeyName("GameOverInnerBorderColor")]
+    [JsonPropertyName("GameOverInnerBorderColor")]
+    public string GameOverInnerBorderColorHex
+    {
+        get => _gameOverInnerBorderColorHex;
+        set { _gameOverInnerBorderColorHex = value; _gameOverInnerBorderColor = value.ToColor(); }
+    }
 
     /// <summary>Game Over 内枠線色 (<see cref="Color" />)</summary>
-    public Color GameOverInnerBorderColor { get; set; }
+    [JsonIgnore]
+    public Color GameOverInnerBorderColor => _gameOverInnerBorderColor;
 
     /// <summary>Game Over タイトル表示座標</summary>
     public Vec2i GameOverTitlePos { get; set; }
 
+    private string _gameOverTitleColorHex = string.Empty;
+    private Color _gameOverTitleColor;
+
+    /// <summary>Game Over タイトル文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("GameOverTitleColor")]
+    [JsonPropertyName("GameOverTitleColor")]
+    public string GameOverTitleColorHex
+    {
+        get => _gameOverTitleColorHex;
+        set { _gameOverTitleColorHex = value; _gameOverTitleColor = value.ToColor(); }
+    }
+
     /// <summary>Game Over タイトル文字色 (<see cref="Color" />)</summary>
-    public Color GameOverTitleColor { get; set; }
+    [JsonIgnore]
+    public Color GameOverTitleColor => _gameOverTitleColor;
 
     /// <summary>Game Over タイトル文字列</summary>
     public string GameOverTitleText { get; set; } = string.Empty;
@@ -464,8 +960,21 @@ public sealed class ModalRenderConfig {
     /// <summary>Game Over リトライテキスト表示座標</summary>
     public Vec2i GameOverRetryPos { get; set; }
 
+    private string _gameOverRetryColorHex = string.Empty;
+    private Color _gameOverRetryColor;
+
+    /// <summary>Game Over リトライ文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("GameOverRetryColor")]
+    [JsonPropertyName("GameOverRetryColor")]
+    public string GameOverRetryColorHex
+    {
+        get => _gameOverRetryColorHex;
+        set { _gameOverRetryColorHex = value; _gameOverRetryColor = value.ToColor(); }
+    }
+
     /// <summary>Game Over リトライ文字色 (<see cref="Color" />)</summary>
-    public Color GameOverRetryColor { get; set; }
+    [JsonIgnore]
+    public Color GameOverRetryColor => _gameOverRetryColor;
 
     /// <summary>Game Over リトライ案内文字列</summary>
     public string GameOverRetryText { get; set; } = string.Empty;
@@ -476,20 +985,72 @@ public sealed class ModalRenderConfig {
     /// <summary>Victory 矩形右下座標</summary>
     public Vec2i VictoryPos2 { get; set; }
 
+    private string _victoryBgColorHex = string.Empty;
+    private Color _victoryBgColor;
+
+    /// <summary>Victory 背景色 Hex 文字列</summary>
+    [ConfigurationKeyName("VictoryBgColor")]
+    [JsonPropertyName("VictoryBgColor")]
+    public string VictoryBgColorHex
+    {
+        get => _victoryBgColorHex;
+        set { _victoryBgColorHex = value; _victoryBgColor = value.ToColor(); }
+    }
+
     /// <summary>Victory 背景色 (<see cref="Color" />)</summary>
-    public Color VictoryBgColor { get; set; }
+    [JsonIgnore]
+    public Color VictoryBgColor => _victoryBgColor;
+
+    private string _victoryOuterBorderColorHex = string.Empty;
+    private Color _victoryOuterBorderColor;
+
+    /// <summary>Victory 外枠線色 Hex 文字列</summary>
+    [ConfigurationKeyName("VictoryOuterBorderColor")]
+    [JsonPropertyName("VictoryOuterBorderColor")]
+    public string VictoryOuterBorderColorHex
+    {
+        get => _victoryOuterBorderColorHex;
+        set { _victoryOuterBorderColorHex = value; _victoryOuterBorderColor = value.ToColor(); }
+    }
 
     /// <summary>Victory 外枠線色 (<see cref="Color" />)</summary>
-    public Color VictoryOuterBorderColor { get; set; }
+    [JsonIgnore]
+    public Color VictoryOuterBorderColor => _victoryOuterBorderColor;
+
+    private string _victoryInnerBorderColorHex = string.Empty;
+    private Color _victoryInnerBorderColor;
+
+    /// <summary>Victory 内枠線色 Hex 文字列</summary>
+    [ConfigurationKeyName("VictoryInnerBorderColor")]
+    [JsonPropertyName("VictoryInnerBorderColor")]
+    public string VictoryInnerBorderColorHex
+    {
+        get => _victoryInnerBorderColorHex;
+        set { _victoryInnerBorderColorHex = value; _victoryInnerBorderColor = value.ToColor(); }
+    }
 
     /// <summary>Victory 内枠線色 (<see cref="Color" />)</summary>
-    public Color VictoryInnerBorderColor { get; set; }
+    [JsonIgnore]
+    public Color VictoryInnerBorderColor => _victoryInnerBorderColor;
 
     /// <summary>Victory タイトル表示座標</summary>
     public Vec2i VictoryTitlePos { get; set; }
 
+    private string _victoryTitleColorHex = string.Empty;
+    private Color _victoryTitleColor;
+
+    /// <summary>Victory タイトル文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("VictoryTitleColor")]
+    [JsonPropertyName("VictoryTitleColor")]
+    public string VictoryTitleColorHex
+    {
+        get => _victoryTitleColorHex;
+        set { _victoryTitleColorHex = value; _victoryTitleColor = value.ToColor(); }
+    }
+
     /// <summary>Victory タイトル文字色 (<see cref="Color" />)</summary>
-    public Color VictoryTitleColor { get; set; }
+    [JsonIgnore]
+    public Color VictoryTitleColor => _victoryTitleColor;
 
     /// <summary>Victory タイトル文字列</summary>
     public string VictoryTitleText { get; set; } = string.Empty;
@@ -497,8 +1058,21 @@ public sealed class ModalRenderConfig {
     /// <summary>Victory リトライテキスト表示座標</summary>
     public Vec2i VictoryRetryPos { get; set; }
 
+    private string _victoryRetryColorHex = string.Empty;
+    private Color _victoryRetryColor;
+
+    /// <summary>Victory リトライ文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("VictoryRetryColor")]
+    [JsonPropertyName("VictoryRetryColor")]
+    public string VictoryRetryColorHex
+    {
+        get => _victoryRetryColorHex;
+        set { _victoryRetryColorHex = value; _victoryRetryColor = value.ToColor(); }
+    }
+
     /// <summary>Victory リトライ文字色 (<see cref="Color" />)</summary>
-    public Color VictoryRetryColor { get; set; }
+    [JsonIgnore]
+    public Color VictoryRetryColor => _victoryRetryColor;
 
     /// <summary>Victory リトライ案内文字列</summary>
     public string VictoryRetryText { get; set; } = string.Empty;
@@ -525,26 +1099,117 @@ public sealed class DebugRenderConfig {
     /// <summary>起動時にデバッグ描画を有効にするか</summary>
     public bool Enabled { get; set; }
 
+    private string _playerTerrainBoxColorHex = string.Empty;
+    private Color _playerTerrainBoxColor;
+
+    /// <summary>プレイヤー地形衝突ボックス枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerTerrainBoxColor")]
+    [JsonPropertyName("PlayerTerrainBoxColor")]
+    public string PlayerTerrainBoxColorHex
+    {
+        get => _playerTerrainBoxColorHex;
+        set { _playerTerrainBoxColorHex = value; _playerTerrainBoxColor = value.ToColor(); }
+    }
+
     /// <summary>プレイヤー地形衝突ボックス枠色 (<see cref="Color" />)</summary>
-    public Color PlayerTerrainBoxColor { get; set; }
+    [JsonIgnore]
+    public Color PlayerTerrainBoxColor => _playerTerrainBoxColor;
+
+    private string _playerHurtboxColorHex = string.Empty;
+    private Color _playerHurtboxColor;
+
+    /// <summary>プレイヤー被弾判定円色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerHurtboxColor")]
+    [JsonPropertyName("PlayerHurtboxColor")]
+    public string PlayerHurtboxColorHex
+    {
+        get => _playerHurtboxColorHex;
+        set { _playerHurtboxColorHex = value; _playerHurtboxColor = value.ToColor(); }
+    }
 
     /// <summary>プレイヤー被弾判定円色 (<see cref="Color" />)</summary>
-    public Color PlayerHurtboxColor { get; set; }
+    [JsonIgnore]
+    public Color PlayerHurtboxColor => _playerHurtboxColor;
+
+    private string _bossHitboxColorHex = string.Empty;
+    private Color _bossHitboxColor;
+
+    /// <summary>Boss 攻撃・被弾衝突ボックス枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("BossHitboxColor")]
+    [JsonPropertyName("BossHitboxColor")]
+    public string BossHitboxColorHex
+    {
+        get => _bossHitboxColorHex;
+        set { _bossHitboxColorHex = value; _bossHitboxColor = value.ToColor(); }
+    }
 
     /// <summary>Boss 攻撃・被弾衝突ボックス枠色 (<see cref="Color" />)</summary>
-    public Color BossHitboxColor { get; set; }
+    [JsonIgnore]
+    public Color BossHitboxColor => _bossHitboxColor;
+
+    private string _bossBulletHitboxColorHex = string.Empty;
+    private Color _bossBulletHitboxColor;
+
+    /// <summary>Boss 弾幕判定円枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("BossBulletHitboxColor")]
+    [JsonPropertyName("BossBulletHitboxColor")]
+    public string BossBulletHitboxColorHex
+    {
+        get => _bossBulletHitboxColorHex;
+        set { _bossBulletHitboxColorHex = value; _bossBulletHitboxColor = value.ToColor(); }
+    }
 
     /// <summary>Boss 弾幕判定円枠色 (<see cref="Color" />)</summary>
-    public Color BossBulletHitboxColor { get; set; }
+    [JsonIgnore]
+    public Color BossBulletHitboxColor => _bossBulletHitboxColor;
+
+    private string _playerBulletHitboxColorHex = string.Empty;
+    private Color _playerBulletHitboxColor;
+
+    /// <summary>プレイヤー銃弾判定ボックス枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerBulletHitboxColor")]
+    [JsonPropertyName("PlayerBulletHitboxColor")]
+    public string PlayerBulletHitboxColorHex
+    {
+        get => _playerBulletHitboxColorHex;
+        set { _playerBulletHitboxColorHex = value; _playerBulletHitboxColor = value.ToColor(); }
+    }
 
     /// <summary>プレイヤー銃弾判定ボックス枠色 (<see cref="Color" />)</summary>
-    public Color PlayerBulletHitboxColor { get; set; }
+    [JsonIgnore]
+    public Color PlayerBulletHitboxColor => _playerBulletHitboxColor;
+
+    private string _platformHitboxColorHex = string.Empty;
+    private Color _platformHitboxColor;
+
+    /// <summary>足場衝突境界枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlatformHitboxColor")]
+    [JsonPropertyName("PlatformHitboxColor")]
+    public string PlatformHitboxColorHex
+    {
+        get => _platformHitboxColorHex;
+        set { _platformHitboxColorHex = value; _platformHitboxColor = value.ToColor(); }
+    }
 
     /// <summary>足場衝突境界枠色 (<see cref="Color" />)</summary>
-    public Color PlatformHitboxColor { get; set; }
+    [JsonIgnore]
+    public Color PlatformHitboxColor => _platformHitboxColor;
+
+    private string _indicatorColorHex = string.Empty;
+    private Color _indicatorColor;
+
+    /// <summary>デバッグ状態インジケータ文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("IndicatorColor")]
+    [JsonPropertyName("IndicatorColor")]
+    public string IndicatorColorHex
+    {
+        get => _indicatorColorHex;
+        set { _indicatorColorHex = value; _indicatorColor = value.ToColor(); }
+    }
 
     /// <summary>デバッグ状態インジケータ文字色 (<see cref="Color" />)</summary>
-    public Color IndicatorColor { get; set; }
+    [JsonIgnore]
+    public Color IndicatorColor => _indicatorColor;
 
     /// <summary>デバッグ状態インジケータ表示座標</summary>
     public Vec2i IndicatorPos { get; set; }
@@ -555,14 +1220,40 @@ public sealed class DebugRenderConfig {
     /// <summary>デバッグフェーズ切替操作案内テキスト</summary>
     public string PhaseSwitchGuideText { get; set; } = string.Empty;
 
+    private string _phaseSwitchGuideColorHex = string.Empty;
+    private Color _phaseSwitchGuideColor;
+
+    /// <summary>デバッグフェーズ切替操作案内文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("PhaseSwitchGuideColor")]
+    [JsonPropertyName("PhaseSwitchGuideColor")]
+    public string PhaseSwitchGuideColorHex
+    {
+        get => _phaseSwitchGuideColorHex;
+        set { _phaseSwitchGuideColorHex = value; _phaseSwitchGuideColor = value.ToColor(); }
+    }
+
     /// <summary>デバッグフェーズ切替操作案内文字色 (<see cref="Color" />)</summary>
-    public Color PhaseSwitchGuideColor { get; set; }
+    [JsonIgnore]
+    public Color PhaseSwitchGuideColor => _phaseSwitchGuideColor;
 
     /// <summary>デバッグ操作案内表示 Y オフセット (px)</summary>
     public int GuideOffsetY { get; set; }
 
+    private string _neutralHitboxColorHex = string.Empty;
+    private Color _neutralHitboxColor;
+
+    /// <summary>中立陣営当たり判定色 Hex 文字列</summary>
+    [ConfigurationKeyName("NeutralHitboxColor")]
+    [JsonPropertyName("NeutralHitboxColor")]
+    public string NeutralHitboxColorHex
+    {
+        get => _neutralHitboxColorHex;
+        set { _neutralHitboxColorHex = value; _neutralHitboxColor = value.ToColor(); }
+    }
+
     /// <summary>中立陣営当たり判定色 (<see cref="Color" />)</summary>
-    public Color NeutralHitboxColor { get; set; }
+    [JsonIgnore]
+    public Color NeutralHitboxColor => _neutralHitboxColor;
 
     /// <summary>自機デバッグ情報テキスト表示オフセット (px)</summary>
     public Vec2i PlayerInfoOffset { get; set; }
@@ -570,14 +1261,53 @@ public sealed class DebugRenderConfig {
     /// <summary>点衝突形状描画半径 (px)</summary>
     public int PointShapeRadius { get; set; }
 
+    private string _navNodeColorHex = string.Empty;
+    private Color _navNodeColor;
+
+    /// <summary>ナビゲーションメッシュノード描画色 Hex 文字列</summary>
+    [ConfigurationKeyName("NavNodeColor")]
+    [JsonPropertyName("NavNodeColor")]
+    public string NavNodeColorHex
+    {
+        get => _navNodeColorHex;
+        set { _navNodeColorHex = value; _navNodeColor = value.ToColor(); }
+    }
+
     /// <summary>ナビゲーションメッシュノード描画色 (<see cref="Color" />)</summary>
-    public Color NavNodeColor { get; set; }
+    [JsonIgnore]
+    public Color NavNodeColor => _navNodeColor;
+
+    private string _navEdgeDropColorHex = string.Empty;
+    private Color _navEdgeDropColor;
+
+    /// <summary>ナビゲーション自由落下リンク描画色 Hex 文字列</summary>
+    [ConfigurationKeyName("NavEdgeDropColor")]
+    [JsonPropertyName("NavEdgeDropColor")]
+    public string NavEdgeDropColorHex
+    {
+        get => _navEdgeDropColorHex;
+        set { _navEdgeDropColorHex = value; _navEdgeDropColor = value.ToColor(); }
+    }
 
     /// <summary>ナビゲーション自由落下リンク描画色 (<see cref="Color" />)</summary>
-    public Color NavEdgeDropColor { get; set; }
+    [JsonIgnore]
+    public Color NavEdgeDropColor => _navEdgeDropColor;
+
+    private string _navEdgeJumpColorHex = string.Empty;
+    private Color _navEdgeJumpColor;
+
+    /// <summary>ナビゲーションジャンプリンク描画色 Hex 文字列</summary>
+    [ConfigurationKeyName("NavEdgeJumpColor")]
+    [JsonPropertyName("NavEdgeJumpColor")]
+    public string NavEdgeJumpColorHex
+    {
+        get => _navEdgeJumpColorHex;
+        set { _navEdgeJumpColorHex = value; _navEdgeJumpColor = value.ToColor(); }
+    }
 
     /// <summary>ナビゲーションジャンプリンク描画色 (<see cref="Color" />)</summary>
-    public Color NavEdgeJumpColor { get; set; }
+    [JsonIgnore]
+    public Color NavEdgeJumpColor => _navEdgeJumpColor;
 
     /// <summary>ナビゲーションメッシュノード描画半径 (px)</summary>
     public int NavNodeRadius { get; set; }
@@ -608,14 +1338,53 @@ public sealed class AimReticleRenderConfig {
     /// <summary>中心照準ドット半径 (px)</summary>
     public int CenterDotRadius { get; set; }
 
+    private string _centerDotColorHex = string.Empty;
+    private Color _centerDotColor;
+
+    /// <summary>中心照準ドット表示色 Hex 文字列</summary>
+    [ConfigurationKeyName("CenterDotColor")]
+    [JsonPropertyName("CenterDotColor")]
+    public string CenterDotColorHex
+    {
+        get => _centerDotColorHex;
+        set { _centerDotColorHex = value; _centerDotColor = value.ToColor(); }
+    }
+
     /// <summary>中心照準ドット表示色 (<see cref="Color" />)</summary>
-    public Color CenterDotColor { get; set; }
+    [JsonIgnore]
+    public Color CenterDotColor => _centerDotColor;
+
+    private string _ringColorHex = string.Empty;
+    private Color _ringColor;
+
+    /// <summary>外周タクティカルリング表示色 Hex 文字列</summary>
+    [ConfigurationKeyName("RingColor")]
+    [JsonPropertyName("RingColor")]
+    public string RingColorHex
+    {
+        get => _ringColorHex;
+        set { _ringColorHex = value; _ringColor = value.ToColor(); }
+    }
 
     /// <summary>外周タクティカルリング表示色 (<see cref="Color" />)</summary>
-    public Color RingColor { get; set; }
+    [JsonIgnore]
+    public Color RingColor => _ringColor;
+
+    private string _tickColorHex = string.Empty;
+    private Color _tickColor;
+
+    /// <summary>上下左右刻度ショートライン表示色 Hex 文字列</summary>
+    [ConfigurationKeyName("TickColor")]
+    [JsonPropertyName("TickColor")]
+    public string TickColorHex
+    {
+        get => _tickColorHex;
+        set { _tickColorHex = value; _tickColor = value.ToColor(); }
+    }
 
     /// <summary>上下左右刻度ショートライン表示色 (<see cref="Color" />)</summary>
-    public Color TickColor { get; set; }
+    [JsonIgnore]
+    public Color TickColor => _tickColor;
 
     /// <summary>照準リング最小半径クランプ (px)</summary>
     public int MinRadius { get; set; }
@@ -637,11 +1406,37 @@ public sealed class ViewportRenderConfig {
     /// <summary>ビューポートサイズ（ピクセル）</summary>
     public Vec2f Size { get; set; }
 
+    private string _platformFallbackFillColorHex = string.Empty;
+    private Color _platformFallbackFillColor;
+
+    /// <summary>タイルマップ未指定時のプラットフォーム代替塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlatformFallbackFillColor")]
+    [JsonPropertyName("PlatformFallbackFillColor")]
+    public string PlatformFallbackFillColorHex
+    {
+        get => _platformFallbackFillColorHex;
+        set { _platformFallbackFillColorHex = value; _platformFallbackFillColor = value.ToColor(); }
+    }
+
     /// <summary>タイルマップ未指定時のプラットフォーム代替塗りつぶし色</summary>
-    public Color PlatformFallbackFillColor { get; set; }
+    [JsonIgnore]
+    public Color PlatformFallbackFillColor => _platformFallbackFillColor;
+
+    private string _platformFallbackBorderColorHex = string.Empty;
+    private Color _platformFallbackBorderColor;
+
+    /// <summary>タイルマップ未指定時のプラットフォーム代替枠線色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlatformFallbackBorderColor")]
+    [JsonPropertyName("PlatformFallbackBorderColor")]
+    public string PlatformFallbackBorderColorHex
+    {
+        get => _platformFallbackBorderColorHex;
+        set { _platformFallbackBorderColorHex = value; _platformFallbackBorderColor = value.ToColor(); }
+    }
 
     /// <summary>タイルマップ未指定時のプラットフォーム代替枠線色</summary>
-    public Color PlatformFallbackBorderColor { get; set; }
+    [JsonIgnore]
+    public Color PlatformFallbackBorderColor => _platformFallbackBorderColor;
 }
 
 /// <summary>
@@ -689,7 +1484,22 @@ public sealed class SlashEffectRenderConfig {
     public float PlayerBaseReferenceSize { get; set; }
     public float CenterBiasOffset { get; set; }
     public float PlayerSlashAlpha { get; set; }
-    public Color PlayerSlashColor { get; set; }
+
+    private string _playerSlashColorHex = string.Empty;
+    private Color _playerSlashColor;
+
+    /// <summary>自機近接斬撃エフェクト色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerSlashColor")]
+    [JsonPropertyName("PlayerSlashColor")]
+    public string PlayerSlashColorHex
+    {
+        get => _playerSlashColorHex;
+        set { _playerSlashColorHex = value; _playerSlashColor = value.ToColor(); }
+    }
+
+    /// <summary>自機近接斬撃エフェクト色 (<see cref="Color" />)</summary>
+    [JsonIgnore]
+    public Color PlayerSlashColor => _playerSlashColor;
 }
 
 /// <summary>

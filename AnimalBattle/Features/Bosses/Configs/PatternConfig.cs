@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Text.Json.Serialization;
 using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
@@ -6,6 +7,7 @@ using AnimalBattle.Combat;
 using AnimalBattle.Core;
 using ErrorOr;
 using Flecs.NET.Core;
+using Microsoft.Extensions.Configuration;
 
 namespace AnimalBattle.Configs;
 
@@ -51,11 +53,38 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
     /// <summary>着地炸裂弾半径</summary>
     public float ImpactBulletRadius { get; set; }
 
+    private string _impactFillColorHex = string.Empty;
+    private Color _impactFillColor;
+    private string _impactOutlineColorHex = string.Empty;
+    private Color _impactOutlineColor;
+    private string _trailColorHex = string.Empty;
+    private Color _trailColor;
+
+    /// <summary>着地炸裂弾塗りつぶしカラー Hex 文字列</summary>
+    [ConfigurationKeyName("ImpactFillColor")]
+    [JsonPropertyName("ImpactFillColor")]
+    public string ImpactFillColorHex
+    {
+        get => _impactFillColorHex;
+        set { _impactFillColorHex = value; _impactFillColor = value.ToColor(); }
+    }
+
     /// <summary>着地炸裂弾塗りつぶしカラー</summary>
-    public Color ImpactFillColor { get; set; }
+    [JsonIgnore]
+    public Color ImpactFillColor => _impactFillColor;
+
+    /// <summary>着地炸裂弾外枠カラー Hex 文字列</summary>
+    [ConfigurationKeyName("ImpactOutlineColor")]
+    [JsonPropertyName("ImpactOutlineColor")]
+    public string ImpactOutlineColorHex
+    {
+        get => _impactOutlineColorHex;
+        set { _impactOutlineColorHex = value; _impactOutlineColor = value.ToColor(); }
+    }
 
     /// <summary>着地炸裂弾外枠カラー</summary>
-    public Color ImpactOutlineColor { get; set; }
+    [JsonIgnore]
+    public Color ImpactOutlineColor => _impactOutlineColor;
 
     /// <summary>着地炸裂弾の発生 Y オフセット (px)</summary>
     public float ImpactOffsetY { get; set; }
@@ -63,8 +92,18 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
     /// <summary>着地炸裂弾の特殊弾種別（Magenta, Cyan, Yellow, Black, Normal）</summary>
     public string BulletType { get; set; } = string.Empty;
 
+    /// <summary>突進残影トレイルカラー Hex 文字列</summary>
+    [ConfigurationKeyName("TrailColor")]
+    [JsonPropertyName("TrailColor")]
+    public string TrailColorHex
+    {
+        get => _trailColorHex;
+        set { _trailColorHex = value; _trailColor = value.ToColor(); }
+    }
+
     /// <summary>突進残影トレイルカラー</summary>
-    public Color TrailColor { get; set; }
+    [JsonIgnore]
+    public Color TrailColor => _trailColor;
 
     /// <summary>突進補間に使用するイージング種別</summary>
     public EaseType EaseType { get; set; }
@@ -135,17 +174,66 @@ public sealed class DoubleSpiralConfig : BulletPatternConfigBase {
     /// <summary>発射ごとの角度変化量（ラジアン）</summary>
     public float AngleStep { get; set; }
 
+    private string _fillColor1Hex = string.Empty;
+    private Color _fillColor1;
+    private string _outlineColor1Hex = string.Empty;
+    private Color _outlineColor1;
+    private string _fillColor2Hex = string.Empty;
+    private Color _fillColor2;
+    private string _outlineColor2Hex = string.Empty;
+    private Color _outlineColor2;
+
+    /// <summary>第 1 弾の塗りつぶしカラー Hex 文字列</summary>
+    [ConfigurationKeyName("FillColor1")]
+    [JsonPropertyName("FillColor1")]
+    public string FillColor1Hex
+    {
+        get => _fillColor1Hex;
+        set { _fillColor1Hex = value; _fillColor1 = value.ToColor(); }
+    }
+
     /// <summary>第 1 弾の塗りつぶしカラー</summary>
-    public Color FillColor1 { get; set; }
+    [JsonIgnore]
+    public Color FillColor1 => _fillColor1;
+
+    /// <summary>第 1 弾の外枠カラー Hex 文字列</summary>
+    [ConfigurationKeyName("OutlineColor1")]
+    [JsonPropertyName("OutlineColor1")]
+    public string OutlineColor1Hex
+    {
+        get => _outlineColor1Hex;
+        set { _outlineColor1Hex = value; _outlineColor1 = value.ToColor(); }
+    }
 
     /// <summary>第 1 弾の外枠カラー</summary>
-    public Color OutlineColor1 { get; set; }
+    [JsonIgnore]
+    public Color OutlineColor1 => _outlineColor1;
+
+    /// <summary>第 2 弾の塗りつぶしカラー Hex 文字列</summary>
+    [ConfigurationKeyName("FillColor2")]
+    [JsonPropertyName("FillColor2")]
+    public string FillColor2Hex
+    {
+        get => _fillColor2Hex;
+        set { _fillColor2Hex = value; _fillColor2 = value.ToColor(); }
+    }
 
     /// <summary>第 2 弾の塗りつぶしカラー</summary>
-    public Color FillColor2 { get; set; }
+    [JsonIgnore]
+    public Color FillColor2 => _fillColor2;
+
+    /// <summary>第 2 弾の外枠カラー Hex 文字列</summary>
+    [ConfigurationKeyName("OutlineColor2")]
+    [JsonPropertyName("OutlineColor2")]
+    public string OutlineColor2Hex
+    {
+        get => _outlineColor2Hex;
+        set { _outlineColor2Hex = value; _outlineColor2 = value.ToColor(); }
+    }
 
     /// <summary>第 2 弾の外枠カラー</summary>
-    public Color OutlineColor2 { get; set; }
+    [JsonIgnore]
+    public Color OutlineColor2 => _outlineColor2;
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -300,11 +388,36 @@ public sealed class GroundStompConfig : SkillPatternConfigBase {
     /// <summary>衝撃波ダメージ</summary>
     public float ShockwaveDamage { get; set; }
 
+    private string _fillColorHex = string.Empty;
+    private Color _fillColor;
+    private string _outlineColorHex = string.Empty;
+    private Color _outlineColor;
+
+    /// <summary>衝撃波塗りつぶしカラー Hex 文字列</summary>
+    [ConfigurationKeyName("FillColor")]
+    [JsonPropertyName("FillColor")]
+    public string FillColorHex
+    {
+        get => _fillColorHex;
+        set { _fillColorHex = value; _fillColor = value.ToColor(); }
+    }
+
     /// <summary>衝撃波塗りつぶしカラー</summary>
-    public Color FillColor { get; set; }
+    [JsonIgnore]
+    public Color FillColor => _fillColor;
+
+    /// <summary>衝撃波外枠カラー Hex 文字列</summary>
+    [ConfigurationKeyName("OutlineColor")]
+    [JsonPropertyName("OutlineColor")]
+    public string OutlineColorHex
+    {
+        get => _outlineColorHex;
+        set { _outlineColorHex = value; _outlineColor = value.ToColor(); }
+    }
 
     /// <summary>衝撃波外枠カラー</summary>
-    public Color OutlineColor { get; set; }
+    [JsonIgnore]
+    public Color OutlineColor => _outlineColor;
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -363,11 +476,36 @@ public sealed class LeapSmashConfig : SkillPatternConfigBase {
     /// <summary>破片弾半径</summary>
     public float ShrapnelRadius { get; set; }
 
+    private string _shrapnelFillColorHex = string.Empty;
+    private Color _shrapnelFillColor;
+    private string _shrapnelOutlineColorHex = string.Empty;
+    private Color _shrapnelOutlineColor;
+
+    /// <summary>破片塗りつぶしカラー Hex 文字列</summary>
+    [ConfigurationKeyName("ShrapnelFillColor")]
+    [JsonPropertyName("ShrapnelFillColor")]
+    public string ShrapnelFillColorHex
+    {
+        get => _shrapnelFillColorHex;
+        set { _shrapnelFillColorHex = value; _shrapnelFillColor = value.ToColor(); }
+    }
+
     /// <summary>破片塗りつぶしカラー</summary>
-    public Color ShrapnelFillColor { get; set; }
+    [JsonIgnore]
+    public Color ShrapnelFillColor => _shrapnelFillColor;
+
+    /// <summary>破片外枠カラー Hex 文字列</summary>
+    [ConfigurationKeyName("ShrapnelOutlineColor")]
+    [JsonPropertyName("ShrapnelOutlineColor")]
+    public string ShrapnelOutlineColorHex
+    {
+        get => _shrapnelOutlineColorHex;
+        set { _shrapnelOutlineColorHex = value; _shrapnelOutlineColor = value.ToColor(); }
+    }
 
     /// <summary>破片外枠カラー</summary>
-    public Color ShrapnelOutlineColor { get; set; }
+    [JsonIgnore]
+    public Color ShrapnelOutlineColor => _shrapnelOutlineColor;
 
     /// <summary>着地叩きつけ近接判定半径</summary>
     public float SlashRadius { get; set; }
@@ -459,8 +597,25 @@ public sealed class FrenzyChargeConfig : SkillPatternConfigBase {
     /// <summary>突進攻撃判定持続時間（秒）</summary>
     public float HitboxDuration { get; set; }
 
+    private string _hitboxColorHex = string.Empty;
+    private Color _hitboxColor;
+    private string _shrapnelFillColorHex = string.Empty;
+    private Color _shrapnelFillColor;
+    private string _shrapnelOutlineColorHex = string.Empty;
+    private Color _shrapnelOutlineColor;
+
+    /// <summary>突進攻撃判定エフェクトカラー Hex 文字列</summary>
+    [ConfigurationKeyName("HitboxColor")]
+    [JsonPropertyName("HitboxColor")]
+    public string HitboxColorHex
+    {
+        get => _hitboxColorHex;
+        set { _hitboxColorHex = value; _hitboxColor = value.ToColor(); }
+    }
+
     /// <summary>突進攻撃判定エフェクトカラー</summary>
-    public Color HitboxColor { get; set; }
+    [JsonIgnore]
+    public Color HitboxColor => _hitboxColor;
 
     /// <summary>壁激突時の破片数</summary>
     public int ShrapnelCount { get; set; }
@@ -471,11 +626,31 @@ public sealed class FrenzyChargeConfig : SkillPatternConfigBase {
     /// <summary>破片半径</summary>
     public float ShrapnelRadius { get; set; }
 
+    /// <summary>破片塗りつぶしカラー Hex 文字列</summary>
+    [ConfigurationKeyName("ShrapnelFillColor")]
+    [JsonPropertyName("ShrapnelFillColor")]
+    public string ShrapnelFillColorHex
+    {
+        get => _shrapnelFillColorHex;
+        set { _shrapnelFillColorHex = value; _shrapnelFillColor = value.ToColor(); }
+    }
+
     /// <summary>破片塗りつぶしカラー</summary>
-    public Color ShrapnelFillColor { get; set; }
+    [JsonIgnore]
+    public Color ShrapnelFillColor => _shrapnelFillColor;
+
+    /// <summary>破片外枠カラー Hex 文字列</summary>
+    [ConfigurationKeyName("ShrapnelOutlineColor")]
+    [JsonPropertyName("ShrapnelOutlineColor")]
+    public string ShrapnelOutlineColorHex
+    {
+        get => _shrapnelOutlineColorHex;
+        set { _shrapnelOutlineColorHex = value; _shrapnelOutlineColor = value.ToColor(); }
+    }
 
     /// <summary>破片外枠カラー</summary>
-    public Color ShrapnelOutlineColor { get; set; }
+    [JsonIgnore]
+    public Color ShrapnelOutlineColor => _shrapnelOutlineColor;
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)
@@ -517,11 +692,36 @@ public sealed class EarthquakeRoarConfig : SkillPatternConfigBase {
     /// <summary>落石半径</summary>
     public float RockRadius { get; set; }
 
+    private string _rockFillColorHex = string.Empty;
+    private Color _rockFillColor;
+    private string _rockOutlineColorHex = string.Empty;
+    private Color _rockOutlineColor;
+
+    /// <summary>落石塗りつぶしカラー Hex 文字列</summary>
+    [ConfigurationKeyName("RockFillColor")]
+    [JsonPropertyName("RockFillColor")]
+    public string RockFillColorHex
+    {
+        get => _rockFillColorHex;
+        set { _rockFillColorHex = value; _rockFillColor = value.ToColor(); }
+    }
+
     /// <summary>落石塗りつぶしカラー</summary>
-    public Color RockFillColor { get; set; }
+    [JsonIgnore]
+    public Color RockFillColor => _rockFillColor;
+
+    /// <summary>落石外枠カラー Hex 文字列</summary>
+    [ConfigurationKeyName("RockOutlineColor")]
+    [JsonPropertyName("RockOutlineColor")]
+    public string RockOutlineColorHex
+    {
+        get => _rockOutlineColorHex;
+        set { _rockOutlineColorHex = value; _rockOutlineColor = value.ToColor(); }
+    }
 
     /// <summary>落石外枠カラー</summary>
-    public Color RockOutlineColor { get; set; }
+    [JsonIgnore]
+    public Color RockOutlineColor => _rockOutlineColor;
 
     /// <summary>落石の特殊弾種別（Magenta, Cyan, Yellow, Black, Normal）</summary>
     public string BulletType { get; set; } = string.Empty;

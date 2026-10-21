@@ -22,7 +22,7 @@ public interface IBossSkillPatternConfig {
     float WindUpTime { get; set; }
 
     /// <summary>予兆エフェクトカラー</summary>
-    Color TelegraphColor { get; set; }
+    Color TelegraphColor { get; }
 
     /// <summary>発動持続時間</summary>
     float CastDuration { get; set; }
