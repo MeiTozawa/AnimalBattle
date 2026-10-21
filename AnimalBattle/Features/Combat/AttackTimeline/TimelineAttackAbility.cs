@@ -73,15 +73,20 @@ public sealed class TimelineAttackAbility : GameplayAbility {
         TelegraphRenderer?.Invoke(ctx);
     }
 
+    private SkillPhase _appliedPhase = SkillPhase.None;
+
     /// <inheritdoc />
     public override void Activate(AbilitySystemComponent asc, in AbilityActivationContext ctx)
     {
+        ClearPhaseTags(asc);
         Runner.Start(Timeline, ctx.Direction);
+        UpdatePhaseTags(asc, Runner.CurrentPhase);
     }
 
     /// <inheritdoc />
     public override void Update(float dt, AbilitySystemComponent asc, bool isGrounded = false)
     {
+        var prevPhase = Runner.CurrentPhase;
         if (ActionDispatcher != null)
         {
             Runner.Update(dt, isGrounded, ActionDispatcher);
@@ -90,7 +95,11 @@ public sealed class TimelineAttackAbility : GameplayAbility {
         {
             Runner.Update(dt, isGrounded, static (_, _) => { });
         }
-        UpdatePhaseTags(asc, Runner.CurrentPhase);
+
+        if (prevPhase != Runner.CurrentPhase)
+        {
+            UpdatePhaseTags(asc, Runner.CurrentPhase);
+        }
 
         if (Runner.IsComplete)
         {
@@ -114,34 +123,68 @@ public sealed class TimelineAttackAbility : GameplayAbility {
 
     private void UpdatePhaseTags(AbilitySystemComponent asc, SkillPhase phase)
     {
+        if (_appliedPhase == phase)
+        {
+            return;
+        }
+
         ClearPhaseTags(asc);
+
+        _appliedPhase = phase;
 
         switch (phase)
         {
             case SkillPhase.Telegraph:
                 asc.AddTag(GameplayTag.Telegraph);
-            break;
+                break;
 
             case SkillPhase.Active:
-                asc.AddTag(GameplayTag.Active);
+                var activeTags = GameplayTag.Active;
                 if (Timeline.ArmorTag != GameplayTag.None)
                 {
-                    asc.AddTag(Timeline.ArmorTag);
+                    activeTags |= Timeline.ArmorTag;
                 }
-            break;
+                asc.AddTag(activeTags);
+                break;
 
             case SkillPhase.Recovery:
-                asc.AddTag(GameplayTag.Recovery);
+                var recoveryTags = GameplayTag.Recovery;
                 if (Timeline.RecoveryTag != GameplayTag.None)
                 {
-                    asc.AddTag(Timeline.RecoveryTag);
+                    recoveryTags |= Timeline.RecoveryTag;
                 }
-            break;
+                asc.AddTag(recoveryTags);
+                break;
         }
     }
 
     private void ClearPhaseTags(AbilitySystemComponent asc)
     {
-        asc.RemoveTag(GameplayTag.Telegraph | GameplayTag.Active | GameplayTag.Recovery | Timeline.ArmorTag | Timeline.RecoveryTag);
+        switch (_appliedPhase)
+        {
+            case SkillPhase.Telegraph:
+                asc.RemoveTag(GameplayTag.Telegraph);
+                break;
+
+            case SkillPhase.Active:
+                var activeRemoval = GameplayTag.Active;
+                if (Timeline.ArmorTag != GameplayTag.None)
+                {
+                    activeRemoval |= Timeline.ArmorTag;
+                }
+                asc.RemoveTag(activeRemoval);
+                break;
+
+            case SkillPhase.Recovery:
+                var recoveryRemoval = GameplayTag.Recovery;
+                if (Timeline.RecoveryTag != GameplayTag.None)
+                {
+                    recoveryRemoval |= Timeline.RecoveryTag;
+                }
+                asc.RemoveTag(recoveryRemoval);
+                break;
+        }
+
+        _appliedPhase = SkillPhase.None;
     }
 }
