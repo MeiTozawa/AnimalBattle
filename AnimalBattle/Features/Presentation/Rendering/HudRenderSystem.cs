@@ -107,6 +107,7 @@ public static class HudRenderSystem {
     /// <param name="renderCfg">描画設定。</param>
     private static void Render(in PlayerHudData? player, in BossHudData? boss, in RenderConfig renderCfg)
     {
+        Debug.Assert(GameEngine.CameraOffset == Vec2i.Zero, "[HudRenderSystem] HUDはスクリーン空間固定で描画される必要があり、CameraOffsetはゼロでなければなりません。");
         var hudCfg = renderCfg.Hud;
         var hpCfg = renderCfg.BossHpBar;
         var modalCfg = renderCfg.Modals;

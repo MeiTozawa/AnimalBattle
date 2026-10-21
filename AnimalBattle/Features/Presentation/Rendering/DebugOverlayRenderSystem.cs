@@ -75,6 +75,7 @@ public static class DebugOverlayRenderSystem
 
     private static void DrawDebugOverlayHud(int? remainingJumps, in BossDebugData? boss, in RenderConfig renderCfg)
     {
+        Debug.Assert(GameEngine.CameraOffset == Vec2i.Zero, "[DebugOverlayRenderSystem] デバッグオーバーレイはスクリーン空間固定で描画される必要があります。");
         var hudCfg = renderCfg.Hud;
         var hpCfg = renderCfg.BossHpBar;
         var dbgCfg = renderCfg.Debug;

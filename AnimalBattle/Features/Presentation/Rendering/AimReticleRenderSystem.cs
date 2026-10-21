@@ -43,6 +43,7 @@ public static class AimReticleRenderSystem
 
     private static void RenderReticle(Vec2i center, float expansion, AimReticleRenderConfig cfg)
     {
+        Debug.Assert(GameEngine.CameraOffset == Vec2i.Zero, "[AimReticleRenderSystem] 照準器はスクリーン空間固定で描画される必要があります。");
         var radius = Math.Clamp((int)MathF.Round(cfg.BaseRadius + expansion), cfg.MinRadius, cfg.MaxRadius);
 
         // 1. 中心高輝度ドット（照準中心コア）
