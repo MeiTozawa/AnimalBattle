@@ -28,22 +28,18 @@ internal static unsafe partial class NativeBindings {
     public static partial void Engine_Shutdown();
 
     [LibraryImport(_dllName, EntryPoint = "Engine_ProcessMessages")]
-    [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Engine_ProcessMessages();
 
     [LibraryImport(_dllName, EntryPoint = "Engine_BeginDraw")]
-    [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Engine_BeginDraw();
 
     [LibraryImport(_dllName, EntryPoint = "Engine_EndDraw")]
-    [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Engine_EndDraw();
 
     [LibraryImport(_dllName, EntryPoint = "Engine_SubmitRenderCommands")]
-    [SuppressGCTransition]
     public static partial void Engine_SubmitRenderCommands(
         RenderPacket* packets,
         int packetCount,
@@ -53,7 +49,6 @@ internal static unsafe partial class NativeBindings {
         int circleCount);
 
     [LibraryImport(_dllName, EntryPoint = "Engine_SubmitCompactCircles")]
-    [SuppressGCTransition]
     public static partial void Engine_SubmitCompactCircles(
         CompactCirclePacket* circles,
         int circleCount);
@@ -191,7 +186,6 @@ internal static unsafe partial class NativeBindings {
     public static partial int Engine_LoadGraph(string path);
 
     [LibraryImport(_dllName, EntryPoint = "Engine_DeleteGraph")]
-    [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Engine_DeleteGraph(int handle);
 
@@ -207,27 +201,22 @@ internal static unsafe partial class NativeBindings {
     public static partial int Sound_Load(string filePath);
 
     [LibraryImport(_dllName, EntryPoint = "Sound_Play")]
-    [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Sound_Play(int soundHandle, int playType, [MarshalAs(UnmanagedType.U1)] bool topPositionFlag);
 
     [LibraryImport(_dllName, EntryPoint = "Sound_Stop")]
-    [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Sound_Stop(int soundHandle);
 
     [LibraryImport(_dllName, EntryPoint = "Sound_SetVolume")]
-    [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Sound_SetVolume(int soundHandle, int volumeRatio);
 
     [LibraryImport(_dllName, EntryPoint = "Sound_Delete")]
-    [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Sound_Delete(int soundHandle);
 
     [LibraryImport(_dllName, EntryPoint = "Sound_IsPlaying")]
-    [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Sound_IsPlaying(int soundHandle);
 

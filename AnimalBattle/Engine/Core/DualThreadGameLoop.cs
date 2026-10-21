@@ -1,14 +1,22 @@
+using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 
 namespace AnimalBattle.Core;
 
 /// <summary>
 ///     ゲーム論理更新（Flecs ECS、物理・弾幕計算）と DxLib 描画提示（WinMsg、Submit、ScreenFlip/VSync）を
-///     完全並行にパイプライン実行するロックステップ双スレッドゲームループ協調クラス。
+///     真の 2 段パイプライン（Pipelined Double Buffering）で完全並行実行する双スレッドゲームループ協調クラス。
+///     論理スレッドが次フレーム (N+1) をバックバッファへ記録するのと並行して、
+///     メインスレッドが前フレーム (N) のフロントバッファを GPU/DxLib へ提示します。
 /// </summary>
 public sealed class DualThreadGameLoop : IDisposable {
-    private readonly AutoResetEvent _frameReadyEvent = new(false);
-    private readonly AutoResetEvent _frameConsumedEvent = new(false);
+    // 起動時の第 0 プリロールフレーム準備完了通知
+    private readonly AutoResetEvent _firstFrameReadyEvent = new(false);
+    // 論理スレッドによる次フレームのバックバッファ記録完了通知 (Logic -> Main)
+    private readonly AutoResetEvent _logicFrameDoneEvent = new(false);
+    // メインスレッドによるフロントバッファ消費＆SwapBuffers完了通知 (Main -> Logic)
+    private readonly AutoResetEvent _nextLogicFrameEvent = new(false);
+
     private Thread? _logicThread;
     private volatile bool _isRunning = true;
     private volatile Exception? _fatalException;
@@ -37,9 +45,30 @@ public sealed class DualThreadGameLoop : IDisposable {
         var frameCount = 0;
         try
         {
+            // 1. パイプライン充填：第 0 プリロールフレームの記録および初回 Swap 完了を待機
             while (_isRunning)
             {
-                // 1. Windows メッセージポンプおよび DirectInput 状態更新 (メインスレッド専任)
+                if (_firstFrameReadyEvent.WaitOne(100))
+                {
+                    break;
+                }
+
+                if (!_isRunning || _fatalException != null || GameEngine.IsExitRequested())
+                {
+                    break;
+                }
+            }
+
+            if (!_isRunning || _fatalException != null)
+            {
+                return;
+            }
+
+            // 2. 定常パイプライン並行ループ
+            // メインスレッドが前フレーム (N) を描画・提示している間に、論理スレッドは並行して次フレーム (N+1) を記録します。
+            while (_isRunning)
+            {
+                // A. Windows メッセージポンプおよび DirectInput 状態更新 (メインスレッド専任)
                 if (!GameEngine.ProcessMessage())
                 {
                     Debug.WriteLine($"[終了] ウィンドウメッセージ処理が終了を返しました (フレーム数: {frameCount})");
@@ -54,10 +83,18 @@ public sealed class DualThreadGameLoop : IDisposable {
                     break;
                 }
 
-                // 2. 論理スレッドによるフレーム記録完了を待機（100ms 短期ポーリングでデッドロック防止）
+                // B. DxLib 描画パイプライン実行 (メインスレッド専任：Front Buffer 描画＆VSync)
+                // ※ この間、論理スレッドはバックグラウンドで並行して次フレームの ECS / 物理 / 描画記録を実行中
+                GameEngine.BeginDraw();
+                GameEngine.SubmitFront();
+                GameEngine.EndDraw();
+
+                frameCount++;
+
+                // C. フレーム境界バリア同期：論理スレッドによるバックバッファ記録完了を合流待機
                 while (_isRunning)
                 {
-                    if (_frameReadyEvent.WaitOne(100))
+                    if (_logicFrameDoneEvent.WaitOne(100))
                     {
                         break;
                     }
@@ -73,15 +110,13 @@ public sealed class DualThreadGameLoop : IDisposable {
                     break;
                 }
 
-                // 3. DxLib 描画パイプライン実行 (メインスレッド専任)
-                GameEngine.BeginDraw();
-                GameEngine.SubmitFront();
-                GameEngine.EndDraw();
+                // D. 双方が完了した安全な同期ポイントでバッファ切り替え（メインスレッドが一意に所有）
+                // 論理スレッドが記録した BackBuffer が次フレームの FrontBuffer となり、
+                // 今回描画し終えた旧 FrontBuffer が次フレームの BackBuffer として再利用可能になります。
+                GameEngine.SwapBuffers();
 
-                frameCount++;
-
-                // 4. 前台バッファの消費完了を論理スレッドへ通知（スロットの再利用を許可）
-                _frameConsumedEvent.Set();
+                // E. 次フレームの論理更新を開始するよう論理スレッドを起床
+                _nextLogicFrameEvent.Set();
             }
         }
         finally
@@ -108,6 +143,20 @@ public sealed class DualThreadGameLoop : IDisposable {
             var lastTime = stopwatch.ElapsedTicks;
             var tickFrequency = (double)Stopwatch.Frequency;
 
+            // ---------------------------------------------------------
+            // パイプライン立ち上げ：第 0 プリロールフレームの生成
+            // ---------------------------------------------------------
+            GameEngine.BeginRecording();
+            scene.Update(0.0f);
+            GameEngine.FinishRecording();
+
+            // 第 0 フレームデータを FrontBuffer へ昇格させ、メインスレッドへ描画開始を許可
+            GameEngine.SwapBuffers();
+            _firstFrameReadyEvent.Set();
+
+            // ---------------------------------------------------------
+            // 定常並行パイプラインループ (フレーム N+1 の先行記録)
+            // ---------------------------------------------------------
             while (_isRunning)
             {
                 var currentTime = stopwatch.ElapsedTicks;
@@ -118,18 +167,19 @@ public sealed class DualThreadGameLoop : IDisposable {
                 const float maxDeltaLimit = 0.05f;
                 var deltaTime = Math.Clamp(rawDeltaTime, 0.0f, maxDeltaLimit);
 
-                // 1. 論理更新および描画コマンド記録
+                // 1. 論理更新および次フレーム描画コマンドのバックバッファ記録
+                // ※ メインスレッドが前フレームのフロントバッファを描画・VSync しているのと完全並行に動作
                 GameEngine.BeginRecording();
                 scene.Update(deltaTime);
                 GameEngine.FinishRecording();
 
-                // 2. メインスレッドへ描画準備完了を通知
-                _frameReadyEvent.Set();
+                // 2. メインスレッドへ「次フレームのバックバッファ記録完了」を通知
+                _logicFrameDoneEvent.Set();
 
-                // 3. 前フレームのバッファがメインスレッドによって消費・反転されるのを待機
+                // 3. メインスレッドが前フレームの描画提示を終え、SwapBuffers を完了するのを待機
                 while (_isRunning)
                 {
-                    if (_frameConsumedEvent.WaitOne(100))
+                    if (_nextLogicFrameEvent.WaitOne(100))
                     {
                         break;
                     }
@@ -144,24 +194,23 @@ public sealed class DualThreadGameLoop : IDisposable {
                 {
                     break;
                 }
-
-                // 4. バッファスロットの卓球切り替え
-                GameEngine.SwapBuffers();
             }
         }
         catch (Exception ex)
         {
             _fatalException = ex;
             _isRunning = false;
-            _frameReadyEvent.Set(); // メインスレッドの待機を直ちに解除
+            _firstFrameReadyEvent.Set(); // メインスレッド待機解除
+            _logicFrameDoneEvent.Set();  // メインスレッド待機解除
         }
     }
 
     private void RequestShutdown()
     {
         _isRunning = false;
-        _frameConsumedEvent.Set(); // 待機中の論理スレッドを確実に起床
-        _frameReadyEvent.Set();    // 待機中のメインスレッドを確実に起床
+        _firstFrameReadyEvent.Set(); // 待機中のメインスレッドを確実に起床
+        _logicFrameDoneEvent.Set();  // 待機中のメインスレッドを確実に起床
+        _nextLogicFrameEvent.Set();  // 待機中の論理スレッドを確実に起床
     }
 
     /// <inheritdoc />
@@ -173,8 +222,9 @@ public sealed class DualThreadGameLoop : IDisposable {
         {
             _logicThread.Join(2000);
         }
-        _frameReadyEvent.Dispose();
-        _frameConsumedEvent.Dispose();
+        _firstFrameReadyEvent.Dispose();
+        _logicFrameDoneEvent.Dispose();
+        _nextLogicFrameEvent.Dispose();
         _isDisposed = true;
     }
 }
