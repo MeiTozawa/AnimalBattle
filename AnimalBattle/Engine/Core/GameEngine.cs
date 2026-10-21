@@ -195,6 +195,34 @@ public static class GameEngine {
     public static Vec2i CameraOffset { get; private set; }
 
     /// <summary>
+    ///     カメラオフセットをスコープ安全に管理する RAII 構造体。
+    ///     スコープ終了時に自動的に元のオフセットへ復元します。
+    /// </summary>
+    public readonly ref struct CameraScope
+    {
+        private readonly Vec2i _previousOffset;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal CameraScope(Vec2i newOffset)
+        {
+            _previousOffset = CameraOffset;
+            CameraOffset = newOffset;
+        }
+    }
+
+    /// <summary>
+    ///     指定オフセットを適用した描画スコープを開始します。
+    ///     using 文と併用することで、例外発生時や描画完了時に確実にオフセットを復元します。
+    /// </summary>
+    /// <param name="offset">適用するカメラ描画オフセット (<see cref="Vec2i" />)</param>
+    /// <returns>スコープ破棄時に状態を復元する <see cref="CameraScope" /></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static CameraScope BeginCameraScope(Vec2i offset)
+    {
+        return new CameraScope(offset);
+    }
+
+    /// <summary>
     ///     グローバルカメラ描画オフセットを設定します。
     /// </summary>
     /// <param name="offset">オフセット (<see cref="Vec2i" />)</param>
@@ -217,23 +245,14 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     高密度円描画コマンド群をバッチメモリコピーで一括追加します（20 バイト緊密配置ストリーム）。
+    ///     高密度円描画コマンド群を一括追加します（20 バイト緊密配置ストリーム）。
+    ///     カメラオフセットを考慮した高速流し込みパイプラインへ直接委託されます。
     /// </summary>
     /// <param name="circles">緊密配置された円パケットの読み取り専用スパン。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DrawCirclesBatch(ReadOnlySpan<CompactCirclePacket> circles)
     {
-        if (CameraOffset == Vec2i.Zero)
-        {
-            _commandBuffer.PushCompactCirclesBatch(circles);
-        }
-        else
-        {
-            for (var i = 0; i < circles.Length; i++)
-            {
-                var c = circles[i];
-                _commandBuffer.PushDrawCircle(c.Center + CameraOffset, c.Radius, c.Color, c.Fill != 0);
-            }
-        }
+        _commandBuffer.PushCompactCirclesBatch(circles, CameraOffset);
     }
 
     /// <summary>
