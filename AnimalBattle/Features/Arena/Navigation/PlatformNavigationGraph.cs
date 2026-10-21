@@ -22,6 +22,18 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     private readonly List<PlatformNode> _nodes = new();
     private readonly List<PlatformLink> _reusablePath = new();
 
+    /// <summary>現在実行中の跳躍・下落リンク（空中滞空時のナビゲーション維持用）</summary>
+    private PlatformLink? _activeLink;
+
+    /// <summary>現在実行中の跳躍・下落リンクを取得します。</summary>
+    public PlatformLink? ActiveLink => _activeLink;
+
+    /// <summary>現在のアクティブリンクをリセットします。</summary>
+    public void ResetActiveLink()
+    {
+        _activeLink = null;
+    }
+
     /// <summary>すべての登録済みプラットフォームノード</summary>
     public IReadOnlyList<PlatformNode> Nodes => _nodes;
 
@@ -47,6 +59,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         _nodes.Clear();
         _links.Clear();
         _adjacency.Clear();
+        _activeLink = null;
 
         var safeGravity = MathF.Max(1.0f, gravity);
         var safeJumpForce = MathF.Max(0.0f, jumpForce);
@@ -119,10 +132,30 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         const float velocityEpsilon = 0.001f;
         const float flightTimeEpsilon = 0.001f;
 
-        var flightDist = link.LandingX - link.TakeoffX;
-        var tFlight = MathF.Abs(link.RequiredJumpVx) > velocityEpsilon
-            ? MathF.Abs(flightDist / link.RequiredJumpVx)
-            : 1.0f;
+        float tFlight;
+        if (link.Action == NavActionType.Drop)
+        {
+            // 下落（Drop）：滞空時間は高度差と重力加速度による自由落下時間 t = sqrt(2 * h / g)
+            var dropHeight = link.ToNode.TopY - link.FromNode.TopY;
+            tFlight = dropHeight > 0.0f ? MathF.Sqrt(2.0f * dropHeight / safeGravity) : 0.0f;
+        }
+        else
+        {
+            // 上方・斜め跳躍（Jump）：着地目標高度 TopY に到達する物理滞空時間を鉛直運動方程式から厳密算出
+            var deltaY = link.ToNode.TopY - link.FromNode.TopY;
+            var disc = link.RequiredJumpVy * link.RequiredJumpVy + 2.0f * safeGravity * deltaY;
+            if (disc >= 0.0f)
+            {
+                tFlight = (-link.RequiredJumpVy + MathF.Sqrt(disc)) / safeGravity;
+            }
+            else
+            {
+                var flightDist = link.LandingX - link.TakeoffX;
+                tFlight = MathF.Abs(link.RequiredJumpVx) > velocityEpsilon
+                    ? MathF.Abs(flightDist / link.RequiredJumpVx)
+                    : 1.0f;
+            }
+        }
 
         if (tFlight <= flightTimeEpsilon) return false;
 
@@ -131,7 +164,19 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         for (var step = 1; step < sampleSteps; step++)
         {
             var t = step * dt;
-            var sampleX = link.TakeoffX + link.RequiredJumpVx * t;
+            float sampleX;
+            if (link.Action == NavActionType.Drop)
+            {
+                // 下落時：水平移動速度で足場端から外側へ踏み出し、LandingX を超えないようクランプ
+                sampleX = link.LandingX < link.TakeoffX
+                    ? MathF.Max(link.LandingX, link.TakeoffX + link.RequiredJumpVx * t)
+                    : MathF.Min(link.LandingX, link.TakeoffX + link.RequiredJumpVx * t);
+            }
+            else
+            {
+                sampleX = link.TakeoffX + link.RequiredJumpVx * t;
+            }
+
             var sampleY = link.FromNode.TopY + (link.RequiredJumpVy * t + 0.5f * safeGravity * t * t);
             Vec2f samplePoint = new(sampleX, sampleY);
 
@@ -177,6 +222,35 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     }
 
     /// <summary>
+    ///     指定された X 座標直下に存在する最も近いプラットフォームノードを検索します（空中落下フォールバック用）。
+    /// </summary>
+    /// <param name="x">中心 X 座標</param>
+    /// <param name="footY">足元 Y 座標</param>
+    /// <param name="marginX">水平許容マージン（省略時は設定値を採用）</param>
+    /// <returns>直下のプラットフォーム、存在しない場合は null</returns>
+    public PlatformNode? FindPlatformBelow(float x, float footY, float? marginX = null)
+    {
+        var marX = marginX ?? Config.BossNodeMarginX;
+        PlatformNode? bestNode = null;
+        var bestDistY = float.MaxValue;
+
+        foreach (var node in _nodes)
+        {
+            if (node.ContainsX(x, marX))
+            {
+                var dy = node.TopY - footY;
+                if (dy >= -Config.BossNodeToleranceY && dy < bestDistY)
+                {
+                    bestDistY = dy;
+                    bestNode = node;
+                }
+            }
+        }
+
+        return bestNode;
+    }
+
+    /// <summary>
     ///     現在位置からプレイヤー目標位置への次フレームナビゲーションプランを計算します。
     /// </summary>
     /// <param name="currentX">Boss の中心 X 座標</param>
@@ -185,6 +259,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     /// <param name="targetFootY">プレイヤーの足元 Y 座標</param>
     /// <param name="isGrounded">Boss が接地中かどうか</param>
     /// <param name="moveSpeed">巡航移動速度</param>
+    /// <param name="activeLink">外部指定のアクティブリンク（省略時は内部保持リンクを採用）</param>
     /// <returns>計算されたナビゲーションプラン (<see cref="NavPlan" />)</returns>
     public NavPlan FindPath(
         float currentX,
@@ -192,43 +267,84 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         float targetX,
         float targetFootY,
         bool isGrounded,
-        float moveSpeed)
+        float moveSpeed,
+        PlatformLink? activeLink = null)
     {
+        var currentActiveLink = activeLink ?? _activeLink;
+
+        // 1. 空中滞空中の場合：着地目標地点に向かって水平推力を維持（接地判定・ノード特定を先行させない）
+        if (!isGrounded)
+        {
+            var targetNodeInAir = FindNodeAt(targetX, targetFootY, Config.TargetToleranceY, Config.TargetMarginX);
+
+            if (currentActiveLink != null)
+            {
+                // 起点・終点プラットフォームのいずれよりも下方に転落した場合はリンク破棄
+                var lowestY = MathF.Max(currentActiveLink.FromNode.TopY, currentActiveLink.ToNode.TopY);
+                if (currentFootY > lowestY + Config.BossNodeToleranceY)
+                {
+                    _activeLink = null;
+                }
+                else
+                {
+                    return new NavPlan(
+                        NavStatus.InAir,
+                        currentActiveLink.LandingX,
+                        currentActiveLink.TakeoffX,
+                        currentActiveLink.LandingX,
+                        currentActiveLink.RequiredJumpVx,
+                        0.0f,
+                        currentActiveLink.FromNode,
+                        targetNodeInAir ?? currentActiveLink.ToNode,
+                        currentActiveLink);
+                }
+            }
+
+            // アクティブリンクなし、またはリンク破棄後の空中フォールバック
+            var fallbackNode = FindPlatformBelow(currentX, currentFootY);
+            var dxInAir = targetX - currentX;
+            var vxInAir = MathF.Abs(dxInAir) > Config.TakeoffTriggerDistance
+                ? MathF.Sign(dxInAir) * moveSpeed
+                : 0.0f;
+
+            return new NavPlan(
+                NavStatus.InAir,
+                targetX,
+                currentX,
+                targetX,
+                vxInAir,
+                0.0f,
+                fallbackNode,
+                targetNodeInAir);
+        }
+
+        // 接地状態復帰時はアクティブリンクをリセット
+        _activeLink = null;
+
         var currentNode = FindNodeAt(currentX, currentFootY, Config.BossNodeToleranceY, Config.BossNodeMarginX);
         var targetNode = FindNodeAt(targetX, targetFootY, Config.TargetToleranceY, Config.TargetMarginX);
 
-        // 1. 同一プラットフォーム上にいる場合は直接歩行追従
+        // 2. 同一プラットフォーム上にいる場合は直接歩行追従
         if (currentNode != null && targetNode != null && currentNode.Id == targetNode.Id)
             return NavPlan.CreateDirectWalk(currentX, targetX, moveSpeed, currentNode, targetNode, Config.TakeoffTriggerDistance);
 
-        // 2. プラットフォームノードが特定できない場合のフォールバック
+        // 3. プラットフォームノードが特定できない場合のフォールバック
         if (currentNode == null || targetNode == null)
             return NavPlan.CreateNoPath(currentX, targetX, moveSpeed, currentNode, targetNode);
 
-        // 3. A* 経路探索
+        // 4. A* 経路探索
         if (!TrySearchAStar(currentNode, targetNode, currentX, targetX, out var path) || path.Count == 0)
             return NavPlan.CreateNoPath(currentX, targetX, moveSpeed, currentNode, targetNode);
 
         var firstLink = path[0];
-
-        // 4. 空中滞空中の場合：着地目標地点に向かって水平推力を維持
-        if (!isGrounded)
-            return new NavPlan(
-                NavStatus.InAir,
-                firstLink.LandingX,
-                firstLink.TakeoffX,
-                firstLink.LandingX,
-                firstLink.RequiredJumpVx,
-                0.0f,
-                currentNode,
-                targetNode,
-                firstLink);
 
         // 5. 接地中：動作種別（Jump / Drop）に応じた到達・単方向推進判定
         if (firstLink.Action == NavActionType.Jump)
         {
             var distToTakeoff = MathF.Abs(currentX - firstLink.TakeoffX);
             if (distToTakeoff <= Config.TakeoffTriggerDistance)
+            {
+                _activeLink = firstLink;
                 return new NavPlan(
                     NavStatus.ExecuteJump,
                     firstLink.LandingX,
@@ -239,6 +355,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                     currentNode,
                     targetNode,
                     firstLink);
+            }
 
             float walkDir = MathF.Sign(firstLink.TakeoffX - currentX);
             return new NavPlan(
@@ -270,6 +387,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                     targetNode,
                     firstLink);
 
+            _activeLink = firstLink;
             return new NavPlan(
                 NavStatus.ExecuteDrop,
                 firstLink.LandingX,
@@ -296,6 +414,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                 targetNode,
                 firstLink);
 
+        _activeLink = firstLink;
         return new NavPlan(
             NavStatus.ExecuteDrop,
             firstLink.LandingX,
