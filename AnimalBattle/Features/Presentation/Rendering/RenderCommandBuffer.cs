@@ -509,17 +509,52 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     高密度円描画コマンド群をバッチメモリコピーで一括追加します。
+    ///     高密度円描画コマンド群を一括追加します。
+    ///     オフセットがゼロの場合はメモリ一括コピーを行い、オフセットが存在する場合は
+    ///     単一の容量検証後に連続メモリ上で直接座標補正書き込みを行います。
     /// </summary>
-    public void PushCompactCirclesBatch(ReadOnlySpan<CompactCirclePacket> circles)
+    /// <param name="circles">緊密配置された円パケットのスパン。</param>
+    /// <param name="offset">適用するカメラ描画オフセット (<see cref="Vec2i" />)。</param>
+    public void PushCompactCirclesBatch(ReadOnlySpan<CompactCirclePacket> circles, Vec2i offset)
     {
         if (circles.IsEmpty) return;
         EnsureCircleCapacity(circles.Length);
         fixed (CompactCirclePacket* src = circles)
         {
-            Buffer.MemoryCopy(src, _circleBuffer + _currentCircleCount, (long)(sizeof(CompactCirclePacket) * (CircleCapacity - _currentCircleCount)), (long)(sizeof(CompactCirclePacket) * circles.Length));
+            var dst = _circleBuffer + _currentCircleCount;
+            if (offset == Vec2i.Zero)
+            {
+                Buffer.MemoryCopy(
+                    src,
+                    dst,
+                    (long)(sizeof(CompactCirclePacket) * (CircleCapacity - _currentCircleCount)),
+                    (long)(sizeof(CompactCirclePacket) * circles.Length));
+            }
+            else
+            {
+                var len = circles.Length;
+                for (var i = 0; i < len; i++)
+                {
+                    dst[i] = new CompactCirclePacket(
+                        src[i].Center + offset,
+                        src[i].Radius,
+                        src[i].Color,
+                        src[i].Fill != 0);
+                }
+            }
         }
+
         _currentCircleCount += circles.Length;
+    }
+
+    /// <summary>
+    ///     高密度円描画コマンド群をバッチメモリコピーで一括追加します（オフセットなし）。
+    /// </summary>
+    /// <param name="circles">緊密配置された円パケットのスパン。</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void PushCompactCirclesBatch(ReadOnlySpan<CompactCirclePacket> circles)
+    {
+        PushCompactCirclesBatch(circles, Vec2i.Zero);
     }
 
     /// <summary>
