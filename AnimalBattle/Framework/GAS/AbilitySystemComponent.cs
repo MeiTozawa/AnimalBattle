@@ -4,15 +4,13 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Abilities;
 
 /// <summary>
-///     エンティティの技能登録、冷却管理、タグ制約、および時限効果を一元管理する汎用能力システムオーケストレーター。
+///     エンティティの技能登録、冷却管理、タグ制約を一元管理する汎用能力システムオーケストレーター。
 ///     特定のゲーム演出・アクション（弾幕や判定等）から完全に分離された、純粋なフレームワーク層の GAS コンポーネントです。
 /// </summary>
 public sealed class AbilitySystemComponent {
-    private const int MaxActiveEffects = 8;
     private const int MaxTagBits = 16;
     private readonly Dictionary<StringId, GameplayAbility> _abilities = new();
     private readonly CooldownTracker _cooldownTracker = new();
-    private readonly ActiveGameplayEffect[] _activeEffects = new ActiveGameplayEffect[MaxActiveEffects];
     private readonly int[] _tagCounts = new int[MaxTagBits];
     private GameplayTag _activeTagsMask = GameplayTag.None;
 
@@ -104,81 +102,9 @@ public sealed class AbilitySystemComponent {
         DecrementTagCounts(tag);
     }
 
-    /// <summary>時限エフェクトを適用します。</summary>
-    public bool ApplyGameplayEffect(GameplayTag grantedTags, float duration, ulong sourceHandle = 0)
-    {
-        if (duration <= 0.0f || grantedTags == GameplayTag.None) return false;
-
-        // 既存エフェクトの延長判定
-        for (var i = 0; i < MaxActiveEffects; i++)
-        {
-            ref var effect = ref _activeEffects[i];
-            if (effect.IsActive && effect.SourceHandle == sourceHandle && effect.GrantedTags == grantedTags)
-            {
-                effect.Remaining = MathF.Max(effect.Remaining, duration);
-                effect.TotalDuration = MathF.Max(effect.TotalDuration, duration);
-                return true;
-            }
-        }
-
-        // 空きスロットへ配置
-        for (var i = 0; i < MaxActiveEffects; i++)
-        {
-            ref var effect = ref _activeEffects[i];
-            if (!effect.IsActive)
-            {
-                effect = new ActiveGameplayEffect(grantedTags, duration, sourceHandle);
-                IncrementTagCounts(grantedTags);
-                return true;
-            }
-        }
-
-        // 追い出し（最短残り時間）
-        var shortestIdx = 0;
-        var shortestRemaining = float.MaxValue;
-        for (var i = 0; i < MaxActiveEffects; i++)
-        {
-            if (_activeEffects[i].Remaining < shortestRemaining)
-            {
-                shortestRemaining = _activeEffects[i].Remaining;
-                shortestIdx = i;
-            }
-        }
-
-        ref var victim = ref _activeEffects[shortestIdx];
-        DecrementTagCounts(victim.GrantedTags);
-        victim = new ActiveGameplayEffect(grantedTags, duration, sourceHandle);
-        IncrementTagCounts(grantedTags);
-        return true;
-    }
-
-    /// <summary>時限タグを付与します。</summary>
-    public bool AddTimedTag(GameplayTag tag, float duration, ulong sourceHandle = 0) =>
-        ApplyGameplayEffect(tag, duration, sourceHandle);
-
-    /// <summary>指定タグの残り時間を取得します。</summary>
-    public float GetTagRemainingTime(GameplayTag tag)
-    {
-        if ((_activeTagsMask & tag) == GameplayTag.None) return 0.0f;
-        var maxRemaining = 0.0f;
-        for (var i = 0; i < MaxActiveEffects; i++)
-        {
-            ref readonly var effect = ref _activeEffects[i];
-            if (effect.IsActive && (effect.GrantedTags & tag) != GameplayTag.None)
-            {
-                maxRemaining = MathF.Max(maxRemaining, effect.Remaining);
-            }
-        }
-        return maxRemaining;
-    }
-
     /// <summary>すべての戦闘タグをクリアします。</summary>
     public void ClearTags()
     {
-        for (var i = 0; i < MaxActiveEffects; i++)
-        {
-            _activeEffects[i] = default;
-        }
         Array.Clear(_tagCounts);
         _activeTagsMask = GameplayTag.None;
         OnTagsChanged?.Invoke(_activeTagsMask);
@@ -190,24 +116,7 @@ public sealed class AbilitySystemComponent {
     /// <summary>指定タグのいずれかを保持しているか判定します。</summary>
     public bool HasAnyTag(GameplayTag tag) => (_activeTagsMask & tag) != GameplayTag.None;
 
-    /// <summary>時限タグの時間を減衰更新します。</summary>
-    public void UpdateTimedTags(float dt)
-    {
-        if (dt <= 0.0f) return;
 
-        for (var i = 0; i < MaxActiveEffects; i++)
-        {
-            ref var effect = ref _activeEffects[i];
-            if (!effect.IsActive) continue;
-
-            effect.Remaining -= dt;
-            if (effect.Remaining <= 0.0f)
-            {
-                effect.IsActive = false;
-                DecrementTagCounts(effect.GrantedTags);
-            }
-        }
-    }
 
     /// <summary>技能識別タグを指定して発動を試行します。</summary>
     public bool TryActivateAbility(StringId abilityTag, float direction = 1.0f)

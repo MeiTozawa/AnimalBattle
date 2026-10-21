@@ -42,7 +42,7 @@ public static class TimedEffectService
                 slot.Remaining = duration;
                 slot.TotalDuration = duration;
                 slot.SourceHandle = sourceHandle;
-                tagState.ActiveMask |= grantedTags;
+                tagState.TimedMask |= grantedTags;
                 return;
             }
         }
@@ -88,7 +88,7 @@ public static class TimedEffectService
     }
 
     /// <summary>
-    ///     全アクティブスロットからタグマスクを再計算します。
+    ///     全アクティブスロットから時限タグマスクを再計算します（ActionMask を一切破壊しません）。
     /// </summary>
     public static void RecalculateTagMask(ref TimedEffectsState effects, ref GameplayTagState tagState)
     {
@@ -101,6 +101,6 @@ public static class TimedEffectService
                 mask |= slot.GrantedTags;
             }
         }
-        tagState.ActiveMask = mask;
+        tagState.TimedMask = mask;
     }
 }

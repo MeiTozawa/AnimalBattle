@@ -118,13 +118,10 @@ public static class BattleSceneSpawner {
         {
             if (bossEntity.IsAlive() && bossEntity.Has<GameplayTagState>())
             {
-                bossEntity.GetMut<GameplayTagState>().ActiveMask = tags;
+                bossEntity.GetMut<GameplayTagState>().ActionMask = tags;
             }
         };
-        if (bossEntity.Has<GameplayTagState>())
-        {
-            bossEntity.GetMut<GameplayTagState>().ActiveMask = brain.AbilitySystem.Tags.RawTags;
-        }
+        bossEntity.GetMut<GameplayTagState>().ActionMask = brain.AbilitySystem.Tags.RawTags;
 
         brain.OnScreenShake += (intensity, duration) =>
         {

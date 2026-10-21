@@ -140,7 +140,7 @@ public static class BattleInputSystem
         state.TargetPosition = Vec2f.Zero;
         state.FacingRight = true;
 
-        boss.Set(new GameplayTagState());
+        boss.Set(new GameplayTagState(brainComp.Brain.AbilitySystem.Tags.RawTags));
         boss.Set(new TimedEffectsState());
 
         if (boss.Has<HitstopState>()) boss.Remove<HitstopState>();
