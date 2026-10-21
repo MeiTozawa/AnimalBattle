@@ -42,6 +42,7 @@ public static class CommonPrefabs
         world.Component<CatWeaponState>().AutoOverride<CatWeaponState>();
         world.Component<Health>().AutoOverride<Health>();
         world.Component<SpringScale>().AutoOverride<SpringScale>();
+        world.Component<InvincibleBlinkState>().AutoOverride<InvincibleBlinkState>();
 
         // 投射物基底原型
         BaseProjectile = world.Prefab(BaseProjectileName)
@@ -63,6 +64,7 @@ public static class CommonPrefabs
             .Set(new Transform(Vec2f.Zero))
             .Set(new Velocity(Vec2f.Zero))
             .Set(new GameplayTagState())
-            .Set(new TimedEffectsState());
+            .Set(new TimedEffectsState())
+            .Set(new InvincibleBlinkState());
     }
 }
