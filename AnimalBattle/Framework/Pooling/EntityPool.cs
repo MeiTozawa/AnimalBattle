@@ -33,6 +33,10 @@ public sealed class EntityPool : IDisposable {
     private World _world;
     private Entity[] _allAllocated;
     private bool[] _managedRentalFlags;
+    private int[] _activePrev;
+    private int[] _activeNext;
+    private int _activeHead = -1;
+    private int _activeTail = -1;
     private bool _isDisposed;
     private Entity[] _pool;
 
@@ -72,6 +76,12 @@ public sealed class EntityPool : IDisposable {
         _pool = new Entity[initialCapacity];
         _allAllocated = new Entity[initialCapacity];
         _managedRentalFlags = new bool[initialCapacity];
+        _activePrev = new int[initialCapacity];
+        _activeNext = new int[initialCapacity];
+        Array.Fill(_activePrev, -1);
+        Array.Fill(_activeNext, -1);
+        _activeHead = -1;
+        _activeTail = -1;
         AvailableCount = 0;
         TotalAllocated = 0;
 
@@ -106,6 +116,8 @@ public sealed class EntityPool : IDisposable {
 
             AvailableCount = 0;
             TotalAllocated = 0;
+            _activeHead = -1;
+            _activeTail = -1;
             _isDisposed = true;
         }
     }
@@ -138,41 +150,121 @@ public sealed class EntityPool : IDisposable {
     {
         if (_pool.Length < required)
         {
+            var oldLen = _pool.Length;
             var newCap = Math.Max(_pool.Length * 2, required);
             Array.Resize(ref _pool, newCap);
             Array.Resize(ref _allAllocated, newCap);
             Array.Resize(ref _managedRentalFlags, newCap);
+            Array.Resize(ref _activePrev, newCap);
+            Array.Resize(ref _activeNext, newCap);
+            Array.Fill(_activePrev, -1, oldLen, newCap - oldLen);
+            Array.Fill(_activeNext, -1, oldLen, newCap - oldLen);
         }
+    }
+
+    private void AddToActiveTail(int slot)
+    {
+        _activePrev[slot] = _activeTail;
+        _activeNext[slot] = -1;
+        if (_activeTail != -1)
+        {
+            _activeNext[_activeTail] = slot;
+        }
+        else
+        {
+            _activeHead = slot;
+        }
+        _activeTail = slot;
+    }
+
+    private void RemoveFromActiveList(int slot)
+    {
+        if (slot < 0 || slot >= _activePrev.Length) return;
+
+        var prev = _activePrev[slot];
+        var next = _activeNext[slot];
+
+        if (prev == -1 && next == -1 && _activeHead != slot && _activeTail != slot)
+        {
+            return;
+        }
+
+        if (prev != -1)
+            _activeNext[prev] = next;
+        else if (_activeHead == slot)
+            _activeHead = next;
+
+        if (next != -1)
+            _activePrev[next] = prev;
+        else if (_activeTail == slot)
+            _activeTail = prev;
+
+        _activePrev[slot] = -1;
+        _activeNext[slot] = -1;
     }
 
     /// <summary>
     ///     プールからエンティティを貸し出します。
     ///     空きがある場合はプールから取り出して有効化（Enable）し、
-    ///     実行時枯渇時は単一の即時アクティブエンティティを原地生成して返却します（Disable/Enable の反転を回避）。
+    ///     容量に余裕がある枯渇時は即座にアクティブなエンティティを原地生成して返却します。
+    ///     最大容量上限に到達した場合は、Ring Buffer 策略（FIFO）に基づき最も古く借出されたアクティブエンティティを
+    ///     強制回収・上書き再利用して返却します（default による全局汚染・クラッシュを根絶）。
     /// </summary>
-    /// <returns>有効化されたエンティティ（上限到達時は無効な空エンティティ）。</returns>
+    /// <returns>有効化されたエンティティ。</returns>
     public Entity Rent()
     {
         Debug.Assert(!_isDisposed, "[EntityPool] 破棄済みのプールからエンティティを借出することはできません。");
+        if (_isDisposed) return default;
+
         if (AvailableCount == 0)
         {
             if (TotalAllocated >= MaxCapacity)
             {
-                // 最大容量上限に到達：OOM 防止のため熔断（サーキットブレーカー発動）
+                // 最大容量上限に到達：OOM 防止とゲーム継続稼働のため、
+                // Ring Buffer 策略（FIFO）に基づき最も古く借出されたアクティブエンティティを強制上書き回収・再利用
                 Metrics.OverflowCount++;
-                return default;
+
+                var slot = _activeHead;
+                if (slot < 0 || slot >= TotalAllocated)
+                {
+                    slot = 0;
+                }
+
+                RemoveFromActiveList(slot);
+                AddToActiveTail(slot);
+
+                var recycledEntity = _allAllocated[slot];
+                if (!recycledEntity.IsAlive())
+                {
+                    recycledEntity = CreateBaseEntity();
+                    recycledEntity.Set(new PoolLeaseState { PoolId = PoolId, IsRented = true, Version = 1, SlotIndex = slot });
+                    _onInit?.Invoke(recycledEntity);
+                    _allAllocated[slot] = recycledEntity;
+                }
+                else
+                {
+                    ref var lease = ref recycledEntity.GetMut<PoolLeaseState>();
+                    lease.IsRented = true;
+                    lease.Version++;
+                }
+
+                _managedRentalFlags[slot] = true;
+                _onReset?.Invoke(recycledEntity);
+                recycledEntity.Enable();
+                return recycledEntity;
             }
 
             // 実行時動的拡張：Disable() -> プール格納 -> Enable() の反転を廃止し、
             // デフォルトでアクティブな単一エンティティを原地生成して即座に貸出
             EnsureArrayCapacity(TotalAllocated + 1);
-            var slot = TotalAllocated++;
+            var newSlot = TotalAllocated++;
             var newEntity = CreateBaseEntity();
-            newEntity.Set(new PoolLeaseState { PoolId = PoolId, IsRented = true, Version = 1, SlotIndex = slot });
+            newEntity.Set(new PoolLeaseState { PoolId = PoolId, IsRented = true, Version = 1, SlotIndex = newSlot });
             _onInit?.Invoke(newEntity);
 
-            _allAllocated[slot] = newEntity;
-            _managedRentalFlags[slot] = true;
+            _allAllocated[newSlot] = newEntity;
+            _managedRentalFlags[newSlot] = true;
+            AddToActiveTail(newSlot);
 
             Metrics.ActiveRentals++;
             if (Metrics.ActiveRentals > Metrics.PeakUsage) Metrics.PeakUsage = Metrics.ActiveRentals;
@@ -186,7 +278,9 @@ public sealed class EntityPool : IDisposable {
         ref var leaseState = ref e.GetMut<PoolLeaseState>();
         leaseState.IsRented = true;
         leaseState.Version++;
-        _managedRentalFlags[leaseState.SlotIndex] = true;
+        var rentSlot = leaseState.SlotIndex;
+        _managedRentalFlags[rentSlot] = true;
+        AddToActiveTail(rentSlot);
 
         Metrics.ActiveRentals++;
         if (Metrics.ActiveRentals > Metrics.PeakUsage) Metrics.PeakUsage = Metrics.ActiveRentals;
@@ -231,6 +325,7 @@ public sealed class EntityPool : IDisposable {
             }
 
             _managedRentalFlags[slot] = false;
+            RemoveFromActiveList(slot);
         }
 
         state.IsRented = false;
