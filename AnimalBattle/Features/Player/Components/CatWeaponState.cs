@@ -27,8 +27,8 @@ public struct CatWeaponState
     /// <summary>発射口の局所オフセット (Vec2f)。</summary>
     public Vec2f BulletSpawnOffset;
 
-    /// <summary>自機射撃微後退反動距離（px）。</summary>
-    public float ShootRecoilDistance;
+    /// <summary>自機射撃微後退反動インパルス初速度（px/s）。</summary>
+    public float ShootRecoilImpulse;
 
     /// <summary>自機射撃時スプリング変形倍率 (Vec2f)。</summary>
     public Vec2f ShootRecoilStretch;
@@ -49,7 +49,7 @@ public struct CatWeaponState
             BulletDamage = cfg.BulletDamage,
             BulletSize = cfg.BulletSize,
             BulletSpawnOffset = cfg.BulletSpawnOffset,
-            ShootRecoilDistance = cfg.ShootRecoilDistance,
+            ShootRecoilImpulse = cfg.ShootRecoilImpulse,
             ShootRecoilStretch = cfg.ShootRecoilStretch
         };
     }

@@ -99,14 +99,14 @@ public class PlayerConfig : IConfigLifecycle {
     /// <summary>近接攻撃持続時間（秒）</summary>
     public float AttackDuration { get; set; }
 
-    /// <summary>近接攻撃時の前進インパルス距離（px）</summary>
-    public float AttackLungeDistance { get; set; }
+    /// <summary>近接攻撃時の前進インパルス初速度（px/s）</summary>
+    public float AttackLungeImpulse { get; set; }
 
     /// <summary>近接攻撃時のスプリング変形倍率</summary>
     public Vec2f AttackStretchScale { get; set; }
 
-    /// <summary>射撃出膛時の自機微後退距離（ピクセル）</summary>
-    public float ShootRecoilDistance { get; set; }
+    /// <summary>射撃出膛時の自機微後退反動インパルス初速度（px/s）</summary>
+    public float ShootRecoilImpulse { get; set; }
 
     /// <summary>射撃反動時のスプリング倍率</summary>
     public Vec2f ShootRecoilStretch { get; set; }

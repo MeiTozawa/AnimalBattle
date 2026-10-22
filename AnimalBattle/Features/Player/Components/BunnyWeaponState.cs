@@ -27,8 +27,8 @@ public struct BunnyWeaponState
     /// <summary>近接打撃判定持続時間（秒）。</summary>
     public float AttackDuration;
 
-    /// <summary>近接打撃時の前進突進距離（px）。</summary>
-    public float AttackLungeDistance;
+    /// <summary>近接打撃時の前進突進インパルス初速度（px/s）。</summary>
+    public float AttackLungeImpulse;
 
     /// <summary>近接打撃時のスプリング変形倍率 (Vec2f)。</summary>
     public Vec2f AttackStretchScale;
@@ -52,7 +52,7 @@ public struct BunnyWeaponState
             AttackSize = cfg.AttackSize,
             AttackRange = cfg.AttackRange,
             AttackDuration = cfg.AttackDuration,
-            AttackLungeDistance = cfg.AttackLungeDistance,
+            AttackLungeImpulse = cfg.AttackLungeImpulse,
             AttackStretchScale = cfg.AttackStretchScale
         };
     }

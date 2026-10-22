@@ -27,7 +27,7 @@ AttackCooldown = 0.3
 AttackRange = 48.0
 AttackSize = { x = 88.0, y = 64.0 }
 AttackDuration = 0.15
-AttackLungeDistance = 3.0
+AttackLungeImpulse = 180.0
 AttackStretchScale = { x = 1.15, y = 0.88 }
 
 # 隙あり（Vulnerable / 易傷）状態の Boss に対するダメージ倍率
