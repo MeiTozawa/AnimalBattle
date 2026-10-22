@@ -81,22 +81,22 @@ internal static class Program {
                 break;
             }
 
-            // 2. 経過時間 (deltaTime) の計測
+            // 2. フレーム間の経過時間を秒単位で計測
             var currentTime = stopwatch.ElapsedTicks;
             var rawDeltaTime = (float)((currentTime - lastTime) / tickFrequency);
             lastTime = currentTime;
 
-            // 最大単一ステップを設定値に制限 (50ms)
+            // 急激なフレーム落ちによるトンネリング現象を防ぐため、1ステップの最大時間を50ミリ秒に制限します
             const float maxDeltaLimit = 0.05f;
             var deltaTime = Math.Clamp(rawDeltaTime, 0.0f, maxDeltaLimit);
 
             // 3. 入力スナップショットの取得と描画コマンド記録開始
             GameEngine.BeginRecording();
 
-            // 4. ゲーム論理更新 (ECS システム、物理、弾幕計算、描画コマンド発行)
+            // 4. ECSシステム、物理演算、弾幕計算および描画コマンド発行を含むゲーム論理更新
             gameManager.Update(deltaTime);
 
-            // 5. 描画開始、コマンド一括提出、画面提示 (ScreenFlip)
+            // 5. 描画開始、コマンド一括提出および画面フリップによる垂直同期提示
             GameEngine.BeginDraw();
             GameEngine.Submit();
             GameEngine.EndDraw();

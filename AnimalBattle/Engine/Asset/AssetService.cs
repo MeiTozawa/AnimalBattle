@@ -66,7 +66,7 @@ public static class AssetService {
     /// 双スレッドレンダリング競合を防止するため、キャッシュされた画像サイズを安全に返却します。
     /// </summary>
     /// <param name="handle">画像ハンドル</param>
-    /// <returns>画像サイズ (<see cref="Vec2i" />)</returns>
+    /// <returns>幅と高さを保持する画像サイズ</returns>
     public static Vec2i GetGraphSize(int handle)
     {
         if (_graphSizes.TryGetValue(handle, out var cachedSize))

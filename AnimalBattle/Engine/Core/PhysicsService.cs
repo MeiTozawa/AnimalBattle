@@ -4,13 +4,13 @@ using AnimalBattle.Bindings;
 namespace AnimalBattle.Core;
 
 /// <summary>
-///     C++ Native 物理エンジン (<see cref="NativeBindings" />) への高効率なアクセスを提供する静的物理サービス。
+///     C++ネイティブ物理エンジンへの高効率なアクセスを提供する静的物理サービスです。
 /// </summary>
 public static unsafe class PhysicsService {
     // --- 2D 幾何形状交差判定 ---
 
     /// <summary>
-    ///     2 つの Transform と CollisionShape 間の幾何学的交差（衝突）判定をパターンマッチングで網羅的に判定します。
+    ///     2つのTransformとCollisionShape間の幾何学的交差判定をパターンマッチングで網羅的に判定します。
     /// </summary>
     /// <param name="t1">第 1 エンティティの位置</param>
     /// <param name="s1">第 1 エンティティの形状バリアント</param>
@@ -66,7 +66,7 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
-    ///     2 つの軸平行矩形 (AABB) 衝突形状の交差を判定します。
+    ///     2つの軸平行境界ボックスの交差を判定します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Box2D b1, Box2D b2)
@@ -78,7 +78,7 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
-    ///     円形と軸平行矩形 (AABB) 衝突形状の交差を判定します。
+    ///     円形と軸平行境界ボックスの交差を判定します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Circle2D circle, Box2D box)
@@ -91,7 +91,7 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
-    ///     軸平行矩形 (AABB) と円形衝突形状の交差を判定します。
+    ///     軸平行境界ボックスと円形衝突形状の交差を判定します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Box2D box, Circle2D circle)
@@ -110,7 +110,7 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
-    ///     点と軸平行矩形 (AABB) 衝突形状の交差を判定します。
+    ///     点と軸平行境界ボックスの交差を判定します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Intersects(Vec2f point, Box2D box)
@@ -122,7 +122,7 @@ public static unsafe class PhysicsService {
     // --- 地形・足場判定 ---
 
     /// <summary>
-    ///     ワンウェイ足場（すり抜け床）との着地判定および補正 Y 座標の計算を行います。
+    ///     すり抜け床との着地判定および補正Y座標の計算を行います。
     /// </summary>
     public static bool CheckPlatformGround(
         float prevY,
@@ -148,7 +148,7 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
-    ///     統一幾何形状 <see cref="CollisionShape" /> を用いたワンウェイ足場（すり抜け床）着地判定を行います。
+    ///     統一幾何形状を用いたすり抜け床着地判定を行います。
     /// </summary>
     public static bool CheckPlatformGround(
         float prevY,
@@ -209,7 +209,7 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
-    ///     角度と移動速度から速度ベクトル (Vec2f) を算出します。
+    ///     角度と移動速度から速度ベクトルを算出します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vec2f DirectionToVector(float angleRad, float speed)
@@ -227,7 +227,7 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
-    ///     2 値間を線形補間 (Lerp) します。
+    ///     2値間を線形補間します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Lerp(float a, float b, float t)
@@ -236,7 +236,7 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
-    ///     現在値を目標値へ指定の最大変化量 (maxDelta) を超えない範囲で移動させます。
+    ///     現在値を目標値へ指定の最大変化量を超えない範囲で線形移動させます。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float MoveTowards(float current, float target, float maxDelta)
@@ -247,7 +247,7 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
-    ///     Boss のホバリング調和軌道（2軸正弦・余弦波動＋プレイヤー追従重み＋平滑 Lerp 補間）をインライン計算します。
+    ///     正弦波と余弦波にプレイヤー追従加重を合成したボスのホバリング調和軌道をインライン計算します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vec2f CalculateBossHoverPosition(
@@ -272,7 +272,7 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
-    ///     Boss の帰還・初期位置復帰軌道（目標アンカーへの指数平滑補間）をインライン計算します。
+    ///     目標アンカーへの指数平滑補間によるボスの初期位置復帰軌道をインライン計算します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vec2f CalculateBossReturnPosition(

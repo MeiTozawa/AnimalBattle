@@ -42,7 +42,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
     /// <param name="holder">更新対象のインメモリ設定コンテナ</param>
     /// <param name="binder">具象型に対応する AOT 互換設定バインドデリゲート</param>
     /// <param name="onReloaded">ホットリロード適用時にメインスレッドで実行する追加同期処理</param>
-    /// <param name="resolver">パス解決リゾルバー（省略時は標準リゾルバー）</param>
+    /// <param name="resolver">省略時に標準リゾルバーを使用するパス解決器</param>
     public TomlHotReloadLoader(
         string relativeFilePath,
         ConfigHolder<T> holder,
@@ -143,7 +143,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
         {
             try
             {
-                // エディタによる連続ファイル保存シーケンス（トランケート・書き込み・解放）を待機して集約
+                // エディタによるファイル保存シーケンスのトランケートや解放を待機して変更イベントを集約します
                 await Task.Delay(DebounceDelayMs, cts.Token).ConfigureAwait(false);
                 if (cts.Token.IsCancellationRequested) return;
 
@@ -173,7 +173,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
 
             try
             {
-                // 1. ファイルの存在確認および排他ロック・一時的空ファイル（0バイト）の解消チェック
+                // 1. ファイルの存在確認および排他ロックや一時的空ファイルの解消を確認します
                 if (!File.Exists(resolvedPath))
                 {
                     throw new FileNotFoundException("設定ファイルが見つかりません。", resolvedPath);
@@ -183,11 +183,11 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
                 {
                     if (stream.Length == 0)
                     {
-                        throw new IOException("設定ファイルが一時的に 0 バイト（エディタによるトランケート中）です。");
+                        throw new IOException("設定ファイルがエディタ書き込みにより一時的に空です。");
                     }
                 }
 
-                // 2. configRoot の再読み込み（自らの RaiseChanged による再帰を防止）
+                // 2. 自らのRaiseChangedによる再帰を防ぎつつconfigRootを再読み込みします
                 Interlocked.Exchange(ref _isReloading, 1);
                 try
                 {

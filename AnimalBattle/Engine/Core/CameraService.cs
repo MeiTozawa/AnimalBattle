@@ -1,8 +1,7 @@
 namespace AnimalBattle.Core;
 
 /// <summary>
-///     Trauma（心的外傷）モデルに基づく画面振動および
-///     プレイヤー・Boss 間の中点加重・速度前瞻による動的構図制御を提供するカメラサービスクラス。
+///     被弾衝撃度に応じた画面振動とプレイヤーおよびボス間の動的構図制御を提供するカメラサービスクラスです。
 /// </summary>
 public static class CameraService
 {
@@ -22,42 +21,42 @@ public static class CameraService
     public static AnimalBattle.Configs.CameraConfig CurrentConfig { get; set; } = new();
 
     /// <summary>
-    ///     現在の Trauma 値（0.0f ～ 1.0f）。
+    ///     0.0fから1.0fの範囲に収まる現在のTrauma値。
     /// </summary>
     public static float Trauma => _trauma;
 
     /// <summary>
-    ///     現在のカメラ平滑パン X 軸オフセット（ピクセル）。
+    ///     ピクセル単位のカメラ平滑パンX軸オフセット。
     /// </summary>
     public static float PanOffsetX => _currentPanX;
 
     /// <summary>
-    ///     現在のカメラ平滑パン Y 軸オフセット（ピクセル）。
+    ///     ピクセル単位のカメラ平滑パンY軸オフセット。
     /// </summary>
     public static float PanOffsetY => _currentPanY;
 
     /// <summary>
-    ///     現在の画面シェイク X 軸オフセット（ピクセル）。
+    ///     ピクセル単位の画面シェイクX軸オフセット。
     /// </summary>
     public static float ShakeOffsetX => _shakeOffsetX;
 
     /// <summary>
-    ///     現在の画面シェイク Y 軸オフセット（ピクセル）。
+    ///     ピクセル単位の画面シェイクY軸オフセット。
     /// </summary>
     public static float ShakeOffsetY => _shakeOffsetY;
 
     /// <summary>
-    ///     最終合成カメラ描画オフセット（ピクセル）。
+    ///     ピクセル単位の最終合成カメラ描画オフセット。
     /// </summary>
     public static Vec2i RenderOffset { get; private set; }
 
     /// <summary>
-    ///     カメラ描画オフセット（RenderOffset へのエイリアス）。
+    ///     RenderOffsetへの参照を返却するカメラ描画オフセットエイリアス。
     /// </summary>
     public static Vec2i Offset => RenderOffset;
 
     /// <summary>
-    ///     Trauma を加算します（最大 1.0f にクランプ）。
+    ///     Traumaを加算して最大1.0fへクランプします。
     /// </summary>
     /// <param name="amount">加算量</param>
     public static void AddTrauma(float amount)
@@ -68,7 +67,7 @@ public static class CameraService
     /// <summary>
     ///     受撃方向に応じた指向性インパルスを加算します。
     /// </summary>
-    /// <param name="dir">方向ベクトル (<see cref="Vec2f" />)</param>
+    /// <param name="dir">方向ベクトル</param>
     /// <param name="power">強度係数</param>
     public static void AddDirectionalImpulse(Vec2f dir, float power)
     {
@@ -88,13 +87,13 @@ public static class CameraService
     }
 
     /// <summary>
-    ///     プレイヤーと Boss の動的座標および速度を考慮したフレーム更新を実行します。
+    ///     プレイヤーとボスの動的座標および速度を考慮したフレーム更新を実行します。
     /// </summary>
     /// <param name="deltaTime">前フレームからの経過秒数</param>
-    /// <param name="playerPos">プレイヤーワールド座標 (<see cref="Vec2f" />)</param>
-    /// <param name="playerVel">プレイヤー速度 (<see cref="Vec2f" />)</param>
-    /// <param name="bossPos">Boss ワールド座標 (<see cref="Vec2f" />)</param>
-    /// <param name="config">カメラ設定（null の場合は CurrentConfig を使用）</param>
+    /// <param name="playerPos">プレイヤーのワールド座標</param>
+    /// <param name="playerVel">プレイヤーの移動速度</param>
+    /// <param name="bossPos">ボスのワールド座標</param>
+    /// <param name="config">カメラ設定。省略時はCurrentConfigを使用します</param>
     public static void Update(
         float deltaTime,
         Vec2f playerPos,
@@ -109,12 +108,13 @@ public static class CameraService
 
         var cfg = CurrentConfig;
 
-        // 1. 動的構図ターゲット計算 (加権中点 + 前瞻速度)
+        // 1. 動的構図ターゲット計算としてプレイヤーとボスの加重中点に速度先読みを加算します
         var pWeight = cfg.PlayerFocusWeight;
         var bWeight = cfg.BossFocusWeight;
         var totalWeight = pWeight + bWeight;
         if (totalWeight <= 0.001f)
         {
+            // ゼロ除算を防止するため重みの合計値が極小の場合はプレイヤーを優先します
             pWeight = 1.0f;
             bWeight = 0.0f;
             totalWeight = 1.0f;
@@ -161,7 +161,9 @@ public static class CameraService
         if (_trauma > 0.0f || _impulseX != 0.0f || _impulseY != 0.0f)
         {
             _time += deltaTime;
+            // 小規模な衝撃では画面を静かに揺らし、大ダメージ時のみ激しく崩すため二乗カーブを採用します
             var shake = _trauma * _trauma;
+            // 単一周期による規則的な往復揺れを防ぎ有機的な手ブレを表現するため、異なる周波数を7対3の比率で合成します
             var noiseX = MathF.Sin(_time * cfg.NoiseFrequency1) * 0.7f + MathF.Sin(_time * cfg.NoiseFrequency2) * 0.3f;
             var noiseY = MathF.Cos(_time * cfg.NoiseFrequency3) * 0.7f + MathF.Cos(_time * cfg.NoiseFrequency4) * 0.3f;
 

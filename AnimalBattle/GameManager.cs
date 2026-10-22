@@ -14,8 +14,8 @@ using Flecs.NET.Core;
 namespace AnimalBattle;
 
 /// <summary>
-///     ゲームの全体ライフサイクル、共有 ECS ワールド、および GameFlow 状態遷移を統括するマネージャークラス。
-///     純粋な ECS アーキテクチャに従い、フレーム更新（Progress）内で全シミュレーションおよび描画パイプラインを駆動します。
+///     ゲームの全体ライフサイクル、共有ECSワールド、および進行状態遷移を統括するマネージャークラスです。
+///     フレーム更新Progress内で全シミュレーションおよび描画パイプラインを順序立てて駆動します。
 /// </summary>
 public class GameManager : IDisposable {
     private World _ecsWorld;
@@ -30,9 +30,7 @@ public class GameManager : IDisposable {
     /// </summary>
     public static GameManager Current { get; private set; } = null!;
 
-    /// <summary>
-    ///     共有 Flecs.NET ECS ワールドを取得します。
-    /// </summary>
+    /// <summary>ゲーム全域で共有するECSワールドであり、Dispose呼び出し時まで破棄されません。</summary>
     public World EcsWorld => _ecsWorld;
 
     /// <summary>
@@ -61,7 +59,7 @@ public class GameManager : IDisposable {
         _ecsWorld.Set<IAssetManager>(_assetManager);
         _ecsWorld.Set(_assetManager);
 
-        // 共有 ECS パイプラインモジュールおよび Prefab 原型の登録（決定論的トポロジカル順序）
+        // 共有パイプラインモジュールおよびプレハブテンプレートの決定論的登録
         _ecsWorld.Import<CommonModule>();
         _ecsWorld.Import<EffectModule>();
         _ecsWorld.Import<CombatFeedbackModule>();
@@ -70,7 +68,7 @@ public class GameManager : IDisposable {
         _ecsWorld.Import<CombatModule>();
         _ecsWorld.Import<PlayerModule>();
         _ecsWorld.Import<BossModule>();
-        _ecsWorld.Import<RenderModule>(); // 原生描画モジュール (Ecs.OnStore)
+        _ecsWorld.Import<RenderModule>(); // ネイティブ描画モジュール
         _ecsWorld.Import<StartSceneModule>();
         _ecsWorld.Import<BattleSceneModule>();
 
@@ -85,7 +83,7 @@ public class GameManager : IDisposable {
     }
 
     /// <summary>
-    ///     ゲームを初期化し、開始選人シーンに入場します。
+    ///     ゲームエンジンを初期化し、キャラクター選択画面へ入場します。
     /// </summary>
     public void Initialize()
     {
@@ -95,10 +93,10 @@ public class GameManager : IDisposable {
 
     /// <summary>
     ///     戦闘シーンへ遷移します。
-    ///     システム実行中（ECS ステージ中）の場合は、Progress 終了後の安全な同期ポイントへ遅延実行されます。
+    ///     システム実行中はECSステージの不整合を防ぐため、Progress終了後の同期ポイントへ処理を遅延させます。
     /// </summary>
     /// <param name="playerType">選択されたプレイヤーキャラクター</param>
-    /// <param name="bossType">選択された首領</param>
+    /// <param name="bossType">出撃対象のボス種別</param>
     public void SwitchToBattle(CharacterType playerType, BossType bossType)
     {
         if (_isUpdating)
@@ -124,8 +122,8 @@ public class GameManager : IDisposable {
     }
 
     /// <summary>
-    ///     開始選人シーンへ復帰します。
-    ///     システム実行中（ECS ステージ中）の場合は、Progress 終了後の安全な同期ポイントへ遅延実行されます。
+    ///     キャラクター選択画面へ復帰します。
+    ///     システム実行中はECSステージの不整合を防ぐため、Progress終了後の同期ポイントへ処理を遅延させます。
     /// </summary>
     public void SwitchToStart()
     {
@@ -160,7 +158,7 @@ public class GameManager : IDisposable {
         _isUpdating = true;
         try
         {
-            // PreUpdate -> OnUpdate -> OnValidate -> PostUpdate -> OnStore (RenderModule)
+            // PreUpdateからOnStoreまでの各フェーズを順次駆動します
             _ecsWorld.Progress(deltaTime);
         }
         finally
@@ -168,7 +166,7 @@ public class GameManager : IDisposable {
             _isUpdating = false;
         }
 
-        // システム更新完了後：ステージ外（非同期安全）で保留中のシーン遷移を実行
+        // システム実行中の構造変更による不整合を防ぐため、Progress完了後に保留中のシーン遷移を実行します
         if (_pendingSceneTransition != null)
         {
             var transition = _pendingSceneTransition;

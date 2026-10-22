@@ -1,16 +1,16 @@
 namespace AnimalBattle.Configs;
 
 /// <summary>
-///     BGM、効果音、マスター音量などの音響パラメータを保持する設定データモデル。
+///     BGMや効果音およびマスター音量の音響パラメータを保持する設定データモデルです。
 /// </summary>
 public sealed class AudioConfig
 {
-    /// <summary>マスター音量 (0.0 ～ 1.0)</summary>
+    /// <summary>ゼロから1.0の範囲で指定するマスター音量</summary>
     public float MasterVolume { get; set; } = 0.8f;
 
-    /// <summary>効果音音量 (0.0 ～ 1.0)</summary>
+    /// <summary>ゼロから1.0の範囲で指定する効果音音量</summary>
     public float SfxVolume { get; set; } = 0.85f;
 
-    /// <summary>BGM 音量 (0.0 ～ 1.0)</summary>
+    /// <summary>ゼロから1.0の範囲で指定するBGM音量</summary>
     public float BgmVolume { get; set; } = 0.6f;
 }

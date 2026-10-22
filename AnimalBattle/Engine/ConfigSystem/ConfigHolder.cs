@@ -39,10 +39,10 @@ public sealed class ConfigHolder<T> : IConfigHolder where T : class
         }
     }
 
-    /// <summary>現在有効な設定スナップショットを取得します（ロックフリー・O(1)参照）。</summary>
+    /// <summary>現在有効な設定スナップショットをロックフリーかつ定数時間で取得します。</summary>
     public T Value => _current;
 
-    /// <summary>設定バージョン番号（リロード成功ごとにインクリメント）。</summary>
+    /// <summary>リロード成功ごとにインクリメントされる設定バージョン番号です。</summary>
     public uint Version => (uint)Volatile.Read(ref _version);
 
     /// <summary>設定変更通知イベント。</summary>
@@ -52,7 +52,7 @@ public sealed class ConfigHolder<T> : IConfigHolder where T : class
     /// 設定インスタンスを検証し、妥当であればアトミックに更新します。
     /// </summary>
     /// <param name="newConfig">新しい設定インスタンス</param>
-    /// <returns>更新成功時は Success、検証失敗時は Error</returns>
+    /// <returns>更新成功時はSuccess、検証失敗時はErrorを返します</returns>
     public ErrorOr<Success> Update(T newConfig)
     {
         Debug.Assert(newConfig != null, "更新対象の設定インスタンスは null にできません。");

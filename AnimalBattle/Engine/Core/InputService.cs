@@ -16,7 +16,7 @@ public static unsafe partial class InputService {
     public static bool IsCursorVisible => _isCursorVisible;
 
     /// <summary>
-    ///     OS マウスカーソルの表示／非表示を切り替えます（多重呼び出し安全な冪等制御）。
+    ///     OS マウスカーソルの表示状態を切り替えます。多重呼び出しに対しても安全に動作します。
     /// </summary>
     /// <param name="visible">表示する場合は true、非表示にする場合は false。</param>
     public static void SetCursorVisible(bool visible)
@@ -26,7 +26,7 @@ public static unsafe partial class InputService {
         NativeBindings.Engine_SetMouseDispFlag(visible);
     }
     /// <summary>
-    ///     入力状態を明示的に更新します（通常は Engine_ProcessMessages で自動実行されます）。
+    ///     入力状態を明示的に更新します。通常は Engine_ProcessMessages 内で自動実行されます。
     /// </summary>
     public static void Update()
     {
@@ -34,7 +34,7 @@ public static unsafe partial class InputService {
     }
 
     /// <summary>
-    ///     指定されたアクションがこのフレームで押されたか（立ち上がりエッジ）を判定します。
+    ///     指定されたアクションがこのフレームで押下開始されたかを判定します。
     /// </summary>
     /// <param name="action">判定対象のアクション</param>
     /// <returns>押された瞬間であれば true</returns>
@@ -44,7 +44,7 @@ public static unsafe partial class InputService {
     }
 
     /// <summary>
-    ///     指定されたアクションが押され続けているか（ホールド中）を判定します。
+    ///     指定されたアクションが押下継続中であるかを判定します。
     /// </summary>
     /// <param name="action">判定対象のアクション</param>
     /// <returns>押されている状態であれば true</returns>
@@ -54,7 +54,7 @@ public static unsafe partial class InputService {
     }
 
     /// <summary>
-    ///     指定されたアクションがこのフレームで離されたか（立ち下がりエッジ）を判定します。
+    ///     指定されたアクションがこのフレームで解放されたかを判定します。
     /// </summary>
     /// <param name="action">判定対象のアクション</param>
     /// <returns>離された瞬間であれば true</returns>
@@ -110,7 +110,7 @@ public static unsafe partial class InputService {
     /// <summary>
     ///     マウスカーソルの現在座標を取得します。
     /// </summary>
-    /// <returns>画面上の座標 (<see cref="Vec2i" />)</returns>
+    /// <returns>画面上の現在座標</returns>
     public static Vec2i GetMousePosition()
     {
         var pos = Vec2i.Zero;
@@ -121,7 +121,7 @@ public static unsafe partial class InputService {
     /// <summary>
     ///     前フレームからのマウスカーソルの移動量を取得します。
     /// </summary>
-    /// <returns>移動デルタ (<see cref="Vec2i" />)</returns>
+    /// <returns>移動デルタベクトル</returns>
     public static Vec2i GetMouseDelta()
     {
         var delta = Vec2i.Zero;
@@ -141,8 +141,8 @@ public static unsafe partial class InputService {
     /// <summary>
     ///     マウスカーソルが指定した矩形領域内にあるかを判定します。
     /// </summary>
-    /// <param name="p1">矩形左上座標 (<see cref="Vec2i" />)</param>
-    /// <param name="p2">矩形右下座標 (<see cref="Vec2i" />)</param>
+    /// <param name="p1">矩形左上座標</param>
+    /// <param name="p2">矩形右下座標</param>
     /// <returns>領域内にあれば true</returns>
     public static bool IsMouseOver(Vec2i p1, Vec2i p2)
     {
@@ -197,7 +197,7 @@ public static unsafe partial class InputService {
     }
 
     /// <summary>
-    ///     C# 層からゲームの標準アクションマッピング（InGame, Menu, VolumeControl, Cutscene, Pause）を登録します。
+    ///     C#層からゲームの標準アクションマッピングを一括登録します。
     /// </summary>
     public static void RegisterDefaultActions()
     {
