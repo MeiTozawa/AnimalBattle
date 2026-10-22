@@ -13,20 +13,12 @@ Damage = 1.0
 [BossNormalBullet]
 Radius = 8.0
 Damage = 1.0
-FillColor = "#FF0040"
-OutlineColor = "#FFFFFF"
 
 [BossMagentaBullet]
-Radius = 12.0
 Damage = 1.0
-FillColor = "#FF00FF"
-OutlineColor = "#FFFFFF"
 
 [BossYellowBullet]
-Radius = 14.0
 Damage = 1.0
-FillColor = "#FFFF00"
-OutlineColor = "#FFAA00"
 
 [BossYellowSatellite]
 MinRadius = 3.0
@@ -35,16 +27,10 @@ OrbitDistanceMultiplier = 1.5
 Damage = 1.0
 
 [BossBlueBullet]
-Radius = 10.0
 Damage = 1.0
-FillColor = "#00D4FF"
-OutlineColor = "#FFFFFF"
 
 [BossBlackBullet]
-Radius = 8.0
 Damage = 1.2
-FillColor = "#202020"
-OutlineColor = "#555555"
 
 # --- 近接斬撃判定原型 ---
 [PlayerSlashHitbox]

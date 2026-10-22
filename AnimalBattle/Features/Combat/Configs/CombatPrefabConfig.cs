@@ -59,26 +59,18 @@ public sealed class BossNormalBulletPrefabConfig
 {
     public float Radius { get; set; }
     public float Damage { get; set; }
-    public string FillColor { get; set; }
-    public string OutlineColor { get; set; }
 }
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 public sealed class BossMagentaBulletPrefabConfig
 {
-    public float Radius { get; set; }
     public float Damage { get; set; }
-    public string FillColor { get; set; }
-    public string OutlineColor { get; set; }
 }
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 public sealed class BossYellowBulletPrefabConfig
 {
-    public float Radius { get; set; }
     public float Damage { get; set; }
-    public string FillColor { get; set; }
-    public string OutlineColor { get; set; }
 }
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
@@ -93,19 +85,13 @@ public sealed class BossYellowSatellitePrefabConfig
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 public sealed class BossBlueBulletPrefabConfig
 {
-    public float Radius { get; set; }
     public float Damage { get; set; }
-    public string FillColor { get; set; }
-    public string OutlineColor { get; set; }
 }
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 public sealed class BossBlackBulletPrefabConfig
 {
-    public float Radius { get; set; }
     public float Damage { get; set; }
-    public string FillColor { get; set; }
-    public string OutlineColor { get; set; }
 }
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]

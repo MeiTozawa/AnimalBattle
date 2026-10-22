@@ -43,10 +43,7 @@ public static class CombatPrefabs
 
         // --- 2. Boss 統一弾幕基底（超集 Archetype：通常・品紅・黄・衛星・青・黒の全種別を同一 Archetype で共用） ---
         var bossNormalCfg = cfg.BossNormalBullet;
-        var (normalFill, normalOutline) = BulletPalette.ResolveBulletColors(
-            BulletType.Normal,
-            ColorTranslator.FromHtml(bossNormalCfg.FillColor),
-            ColorTranslator.FromHtml(bossNormalCfg.OutlineColor));
+        var (normalFill, normalOutline) = BulletPalette.ResolveBulletColors(BulletType.Normal);
 
         BossBulletBase = world.Prefab(BossBulletBaseName)
             .IsA(CommonPrefabs.BaseProjectile) 
