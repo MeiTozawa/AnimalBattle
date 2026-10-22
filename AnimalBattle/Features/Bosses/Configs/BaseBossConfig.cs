@@ -15,6 +15,9 @@ public abstract class BaseBossConfig {
     /// <summary>Boss の最大 HP</summary>
     public float MaxHp { get; set; }
 
+    /// <summary>被弾時ホワイトフラッシュ持続時間（秒）</summary>
+    public float HitFlashDuration { get; set; }
+
     /// <summary>Boss の出現座標</summary>
     public Vec2f Spawn { get; set; }
 

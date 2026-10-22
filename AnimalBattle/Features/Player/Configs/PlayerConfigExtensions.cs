@@ -41,35 +41,4 @@ public static class PlayerConfigExtensions
         ref readonly var flow = ref world.Get<GameFlow>();
         return world.GetPlayerConfig(flow.SelectedPlayer);
     }
-
-    /// <summary>
-    ///     指定されたキャラクター種別に対応するプレイヤー原型設定を取得します。
-    /// </summary>
-    /// <param name="world">対象の Flecs.NET ワールド。</param>
-    /// <param name="characterType">プレイヤーキャラクター種別。</param>
-    /// <returns>対応する <see cref="PlayerPrefabConfig"/> インスタンス。</returns>
-    public static PlayerPrefabConfig GetPlayerPrefabConfig(this World world, CharacterType characterType)
-    {
-        Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
-
-        return characterType switch
-        {
-            CharacterType.Cat => world.Get<CatPrefabConfig>(),
-            CharacterType.Bunny => world.Get<BunnyPrefabConfig>(),
-            _ => AssertHelper.FailWithDefault($"未対応のキャラクター種別です: {characterType}", (PlayerPrefabConfig)world.Get<CatPrefabConfig>())
-        };
-    }
-
-    /// <summary>
-    ///     現在アクティブなプレイヤー原型設定を取得します。
-    /// </summary>
-    /// <param name="world">対象の Flecs.NET ワールド。</param>
-    /// <returns>現在選択中の <see cref="PlayerPrefabConfig"/> インスタンス。</returns>
-    public static PlayerPrefabConfig GetActivePlayerPrefabConfig(this World world)
-    {
-        Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
-
-        ref readonly var flow = ref world.Get<GameFlow>();
-        return world.GetPlayerPrefabConfig(flow.SelectedPlayer);
-    }
 }

@@ -1,5 +1,6 @@
 namespace AnimalBattle.Player;
 
+using System;
 using System.Diagnostics;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
@@ -64,100 +65,18 @@ public static class PlayerConfigSync
         });
     }
 
-    /// <summary>
-    /// Cat (猫) 原型設定の変更をワールド、Prefab、および活体エンティティへ反映します。
-    /// </summary>
-    /// <param name="world">対象の Flecs.NET ワールド</param>
-    /// <param name="newConfig">更新後の Cat 原型設定</param>
-    public static void SyncCatPrefab(World world, CatPrefabConfig newConfig)
+    private static void RehydratePlayerEntity(Entity e, PlayerConfig newConfig)
     {
-        Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
-        Debug.Assert(newConfig != null, "CatPrefabConfig は null にできません。");
-
-        // 1. ワールド単例の更新
-        world.Set(newConfig);
-
-        // 2. Prefab 原型の再登録
-        PlayerPrefabs.Register(world);
-
-        // 3. 活体エンティティの無損再水和
-        ref readonly var flow = ref world.Get<GameFlow>();
-        if (flow.SelectedPlayer != CharacterType.Cat) return;
-
-        using var query = world.QueryBuilder().With<PlayerTag>().Build();
-        query.Each((Entity e) =>
-        {
-            RehydratePlayerPrefabEntity(e, newConfig);
-        });
-    }
-
-    /// <summary>
-    /// Bunny (ウサギ) 原型設定の変更をワールド、Prefab、および活体エンティティへ反映します。
-    /// </summary>
-    /// <param name="world">対象の Flecs.NET ワールド</param>
-    /// <param name="newConfig">更新後の Bunny 原型設定</param>
-    public static void SyncBunnyPrefab(World world, BunnyPrefabConfig newConfig)
-    {
-        Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
-        Debug.Assert(newConfig != null, "BunnyPrefabConfig は null にできません。");
-
-        // 1. ワールド単例の更新
-        world.Set(newConfig);
-
-        // 2. Prefab 原型の再登録
-        PlayerPrefabs.Register(world);
-
-        // 3. 活体エンティティの無損再水和
-        ref readonly var flow = ref world.Get<GameFlow>();
-        if (flow.SelectedPlayer != CharacterType.Bunny) return;
-
-        using var query = world.QueryBuilder().With<PlayerTag>().Build();
-        query.Each((Entity e) =>
-        {
-            RehydratePlayerPrefabEntity(e, newConfig);
-        });
-    }
-
-    private static void RehydratePlayerPrefabEntity(Entity e, PlayerPrefabConfig newConfig)
-    {
-        // 生命値の比例更新
+        // 生命値の比例更新（現在割合を維持したまま MaxHP を更新）
         ref var health = ref e.GetMut<Health>();
         var ratio = health.Max > 0.0f ? health.Current / health.Max : 1.0f;
         var newMax = newConfig.MaxHp;
         health.Max = newMax;
         health.Current = Math.Clamp(ratio * newMax, 0.0f, newMax);
 
-        // 衝突判定・被弾判定の更新
-        ref var col = ref e.GetMut<CollisionBox>();
-        col.Size = newConfig.CollisionSize;
-
-        ref var hurt = ref e.GetMut<Hurtbox>();
-        hurt.Shape = newConfig.GetHurtboxShape();
-
-        // スケールおよびスプリング設定の更新
+        // スケール更新
         ref var trans = ref e.GetMut<Transform>();
         trans.Scale = newConfig.Scale;
-
-        ref var spring = ref e.GetMut<SpringScale>();
-        spring.Frequency = newConfig.SpringFrequency;
-        spring.DampingRatio = newConfig.SpringDampingRatio;
-
-        // 無敵時間および被弾フラッシュの更新
-        ref var inv = ref e.GetMut<InvincibleOnHit>();
-        inv.Duration = newConfig.InvincibleDuration;
-
-        ref var flash = ref e.GetMut<HitFlashSettings>();
-        flash.Duration = newConfig.HitFlashDuration;
-    }
-
-    private static void RehydratePlayerEntity(Entity e, PlayerConfig newConfig)
-    {
-        // 生命値の比例更新（現在割合を維持したまま MaxHP を更新）
-        ref var health = ref e.GetMut<Health>();
-        var ratio = health.Max > 0.0f ? health.Current / health.Max : 1.0f;
-        var newMax = (float)newConfig.MaxHp;
-        health.Max = newMax;
-        health.Current = Math.Clamp(ratio * newMax, 0.0f, newMax);
 
         // 跳躍能力の更新（現在の跳躍状態を保持しつつ上限・物理パラメータを同期）
         ref var jump = ref e.GetMut<JumpCapability>();

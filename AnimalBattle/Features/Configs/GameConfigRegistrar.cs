@@ -25,14 +25,10 @@ public static class GameConfigRegistrar
 
         registry.RegisterToml<CatConfig>(ResourcePath.Config.Cat, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCat(w, cfg));
         registry.RegisterToml<BunnyConfig>(ResourcePath.Config.Bunny, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncBunny(w, cfg));
-        registry.RegisterToml<CatPrefabConfig>(ResourcePath.Config.CatPrefab, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCatPrefab(w, cfg));
-        registry.RegisterToml<BunnyPrefabConfig>(ResourcePath.Config.BunnyPrefab, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncBunnyPrefab(w, cfg));
         registry.RegisterToml<Boss1Config>(ResourcePath.Config.Boss1, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss1(w, cfg));
         registry.RegisterToml<Boss2Config>(ResourcePath.Config.Boss2, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss2(w, cfg));
         registry.RegisterToml<Boss1PatternConfig>(ResourcePath.Config.Boss1Patterns, (root, cfg) => root.Bind(cfg));
         registry.RegisterToml<Boss2PatternConfig>(ResourcePath.Config.Boss2Patterns, (root, cfg) => root.Bind(cfg));
-        registry.RegisterToml<Boss1PrefabConfig>(ResourcePath.Config.Boss1Prefab, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss1Prefab(w, cfg));
-        registry.RegisterToml<Boss2PrefabConfig>(ResourcePath.Config.Boss2Prefab, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss2Prefab(w, cfg));
         registry.RegisterToml<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets, (root, cfg) => root.Bind(cfg));
         registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
         registry.RegisterToml<RenderConfig>(ResourcePath.Config.Render, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
@@ -51,14 +47,10 @@ public static class GameConfigRegistrar
 
         registry.RegisterInstance(b.Cat);
         registry.RegisterInstance(b.Bunny);
-        registry.RegisterInstance(b.CatPrefab);
-        registry.RegisterInstance(b.BunnyPrefab);
         registry.RegisterInstance(b.Boss1);
         registry.RegisterInstance(b.Boss2);
         registry.RegisterInstance(b.Boss1Pattern);
         registry.RegisterInstance(b.Boss2Pattern);
-        registry.RegisterInstance(b.Boss1Prefab);
-        registry.RegisterInstance(b.Boss2Prefab);
         registry.RegisterInstance(b.SpecialBullet);
         registry.RegisterInstance(b.Arena);
         registry.RegisterInstance(b.Render);

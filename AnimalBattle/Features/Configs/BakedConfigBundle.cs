@@ -83,18 +83,6 @@ public sealed class BakedConfigBundle {
     /// <summary>戦闘原型設定 (combat.prefab.toml)</summary>
     public CombatPrefabConfig CombatPrefab { get; set; } = new();
 
-    /// <summary>Cat プレイヤー原型設定 (cat.prefab.toml)</summary>
-    public CatPrefabConfig CatPrefab { get; set; } = new();
-
-    /// <summary>Bunny プレイヤー原型設定 (bunny.prefab.toml)</summary>
-    public BunnyPrefabConfig BunnyPrefab { get; set; } = new();
-
-    /// <summary>Boss 1 原型設定 (boss1.prefab.toml)</summary>
-    public Boss1PrefabConfig Boss1Prefab { get; set; } = new();
-
-    /// <summary>Boss 2 原型設定 (boss2.prefab.toml)</summary>
-    public Boss2PrefabConfig Boss2Prefab { get; set; } = new();
-
     /// <summary>スタート・選人シーン設定 (start_scene.toml)</summary>
     public StartSceneConfig StartScene { get; set; } = new();
 }
@@ -136,12 +124,6 @@ public sealed class BakedConfigBundle {
 [JsonSerializable(typeof(SpecialBulletConfig))]
 [JsonSerializable(typeof(ArenaConfig))]
 [JsonSerializable(typeof(CombatPrefabConfig))]
-[JsonSerializable(typeof(PlayerPrefabConfig))]
-[JsonSerializable(typeof(CatPrefabConfig))]
-[JsonSerializable(typeof(BunnyPrefabConfig))]
-[JsonSerializable(typeof(BossPrefabConfig))]
-[JsonSerializable(typeof(Boss1PrefabConfig))]
-[JsonSerializable(typeof(Boss2PrefabConfig))]
 
 [JsonSerializable(typeof(TileMapConfig))]
 [JsonSerializable(typeof(RenderConfig))]

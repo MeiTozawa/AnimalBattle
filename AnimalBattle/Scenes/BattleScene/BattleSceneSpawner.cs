@@ -44,13 +44,12 @@ public static class BattleSceneSpawner {
         Debug.Assert(hasPlayerHandle, "プレイヤーの初期スプライトハンドルが見つかりません。");
 
         var playerCfg = world.GetPlayerConfig(playerType);
-        var playerPrefabCfg = world.GetPlayerPrefabConfig(playerType);
         var playerEntity = world.Entity("Player1")
             .ChildOf(root)
             .IsA(PlayerPrefabs.GetPrefab(playerType))
-            .Set(new Transform(playerCfg.Spawn, playerPrefabCfg.Scale))
+            .Set(new Transform(playerCfg.Spawn, playerCfg.Scale))
             .Set(new Velocity(Vec2f.Zero))
-            .Set(new Health(playerPrefabCfg.MaxHp))
+            .Set(new Health(playerCfg.MaxHp))
             .Set(new MovementIntent())
             .Set(new WeaponIntent())
             .Set(new DashState())
@@ -99,8 +98,8 @@ public static class BattleSceneSpawner {
             .IsA(BossPrefabs.GetPrefab(bossType));
 
         var (spawn, scale) = bossType switch {
-            BossType.Boss1 => (world.Get<Boss1Config>().Spawn, world.Get<Boss1PrefabConfig>().Scale),
-            BossType.Boss2 => (world.Get<Boss2Config>().Spawn, world.Get<Boss2PrefabConfig>().Scale),
+            BossType.Boss1 => (world.Get<Boss1Config>().Spawn, world.Get<Boss1Config>().Scale),
+            BossType.Boss2 => (world.Get<Boss2Config>().Spawn, world.Get<Boss2Config>().Scale),
             _ => (Vec2f.Zero, Vec2f.One)
         };
 

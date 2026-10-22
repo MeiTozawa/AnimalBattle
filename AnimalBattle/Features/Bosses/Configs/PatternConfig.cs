@@ -758,18 +758,6 @@ public sealed class SpecialBulletConfig {
     /// <summary>黄弾公転衛星の回転角速度（ラジアン/秒）</summary>
     public float YellowOrbitSpeed { get; set; }
 
-    /// <summary>黄弾公転衛星の軌道半径倍率</summary>
-    public float YellowOrbitDistanceMultiplier { get; set; }
-
-    /// <summary>黄弾公転衛星の半径倍率</summary>
-    public float YellowSatelliteRadiusMultiplier { get; set; }
-
-    /// <summary>黄弾公転衛星の接触ダメージ</summary>
-    public float YellowSatelliteDamage { get; set; }
-
-    /// <summary>黄弾公転衛星の最小半径クランプ (px)</summary>
-    public float YellowSatelliteMinRadius { get; set; }
-
     /// <summary>Boss 被弾反撃黒弾の移動速度 (px/s)</summary>
     public float CounterBulletSpeed { get; set; }
 

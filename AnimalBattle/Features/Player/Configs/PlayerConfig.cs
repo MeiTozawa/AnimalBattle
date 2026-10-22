@@ -10,7 +10,7 @@ namespace AnimalBattle.Configs;
 /// </summary>
 public class PlayerConfig : IConfigLifecycle {
     /// <summary>プレイヤーの最大 HP</summary>
-    public int MaxHp { get; set; }
+    public float MaxHp { get; set; }
 
     /// <summary>被弾後の無敵時間（秒）</summary>
     public float InvincibleDuration { get; set; }

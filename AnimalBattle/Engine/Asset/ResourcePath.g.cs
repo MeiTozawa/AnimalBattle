@@ -144,17 +144,11 @@ public static class ResourcePath
         /// <summary>audio.toml 設定ファイル名。</summary>
         public const string Audio = "audio.toml";
 
-        /// <summary>boss1.prefab.toml 設定ファイル名。</summary>
-        public const string Boss1Prefab = "boss1.prefab.toml";
-
         /// <summary>boss1.toml 設定ファイル名。</summary>
         public const string Boss1 = "boss1.toml";
 
         /// <summary>boss1_patterns.toml 設定ファイル名。</summary>
         public const string Boss1Patterns = "boss1_patterns.toml";
-
-        /// <summary>boss2.prefab.toml 設定ファイル名。</summary>
-        public const string Boss2Prefab = "boss2.prefab.toml";
 
         /// <summary>boss2.toml 設定ファイル名。</summary>
         public const string Boss2 = "boss2.toml";
@@ -162,17 +156,11 @@ public static class ResourcePath
         /// <summary>boss2_patterns.toml 設定ファイル名。</summary>
         public const string Boss2Patterns = "boss2_patterns.toml";
 
-        /// <summary>bunny.prefab.toml 設定ファイル名。</summary>
-        public const string BunnyPrefab = "bunny.prefab.toml";
-
         /// <summary>bunny.toml 設定ファイル名。</summary>
         public const string Bunny = "bunny.toml";
 
         /// <summary>camera.toml 設定ファイル名。</summary>
         public const string Camera = "camera.toml";
-
-        /// <summary>cat.prefab.toml 設定ファイル名。</summary>
-        public const string CatPrefab = "cat.prefab.toml";
 
         /// <summary>cat.toml 設定ファイル名。</summary>
         public const string Cat = "cat.toml";
@@ -195,17 +183,11 @@ public static class ResourcePath
         /// <summary>audio.toml の相対パス。</summary>
         public const string AudioToml = @"Config\audio.toml";
 
-        /// <summary>boss1.prefab.toml の相対パス。</summary>
-        public const string Boss1PrefabToml = @"Config\boss1.prefab.toml";
-
         /// <summary>boss1.toml の相対パス。</summary>
         public const string Boss1Toml = @"Config\boss1.toml";
 
         /// <summary>boss1_patterns.toml の相対パス。</summary>
         public const string Boss1PatternsToml = @"Config\boss1_patterns.toml";
-
-        /// <summary>boss2.prefab.toml の相対パス。</summary>
-        public const string Boss2PrefabToml = @"Config\boss2.prefab.toml";
 
         /// <summary>boss2.toml の相対パス。</summary>
         public const string Boss2Toml = @"Config\boss2.toml";
@@ -213,17 +195,11 @@ public static class ResourcePath
         /// <summary>boss2_patterns.toml の相対パス。</summary>
         public const string Boss2PatternsToml = @"Config\boss2_patterns.toml";
 
-        /// <summary>bunny.prefab.toml の相対パス。</summary>
-        public const string BunnyPrefabToml = @"Config\bunny.prefab.toml";
-
         /// <summary>bunny.toml の相対パス。</summary>
         public const string BunnyToml = @"Config\bunny.toml";
 
         /// <summary>camera.toml の相対パス。</summary>
         public const string CameraToml = @"Config\camera.toml";
-
-        /// <summary>cat.prefab.toml の相対パス。</summary>
-        public const string CatPrefabToml = @"Config\cat.prefab.toml";
 
         /// <summary>cat.toml の相対パス。</summary>
         public const string CatToml = @"Config\cat.toml";

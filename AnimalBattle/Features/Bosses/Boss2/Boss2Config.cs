@@ -60,9 +60,6 @@ public sealed class Boss2Config : BaseBossConfig {
     /// <summary>プレイヤー追跡時に遠隔技へ移行するまでの基本タイムアウト時間（秒）</summary>
     public float ChaseTimeout { get; set; }
 
-    /// <summary>被弾時ホワイトフラッシュ持続時間（秒）</summary>
-    public float HitFlashDuration { get; set; }
-
     /// <summary>最大落下速度</summary>
     public float MaxFallSpeed { get; set; }
 

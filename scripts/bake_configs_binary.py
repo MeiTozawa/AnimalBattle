@@ -55,10 +55,6 @@ _CONFIG_MAP = {
     "TileSet": _RESOURCE_DIR / "Platform" / "sheet.toml",
     "Audio": _CONFIG_DIR / "audio.toml",
     "CombatPrefab": _CONFIG_DIR / "combat.prefab.toml",
-    "CatPrefab": _CONFIG_DIR / "cat.prefab.toml",
-    "BunnyPrefab": _CONFIG_DIR / "bunny.prefab.toml",
-    "Boss1Prefab": _CONFIG_DIR / "boss1.prefab.toml",
-    "Boss2Prefab": _CONFIG_DIR / "boss2.prefab.toml",
     "StartScene": _CONFIG_DIR / "start_scene.toml",
 }
 
