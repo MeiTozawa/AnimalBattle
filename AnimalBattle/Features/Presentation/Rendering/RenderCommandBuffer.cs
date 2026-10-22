@@ -6,15 +6,14 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
-///     <see cref="NativeMemory.AlignedAlloc" /> により 64 バイト Cache Line 境界に整列された非托管連続物理メモリ上で
-///     1 フレーム内の描画コマンドおよび文字列データを蓄積し、C++ コアエンジンへ一括転送する零 GC 描画指令バッファ。
-///     fixed ピン留め不要・GC アロケーションゼロで動作し、<see cref="IDisposable" /> による厳格な RAII 寿命管理を提供します。
+///     64バイトCache Line境界に整列されたアンマネージド連続物理メモリ上で1フレーム内の描画コマンドを蓄積し、コアエンジンへ一括転送する描画コマンドバッファです。
+///     ガベージコレクションによるメモリ停止を完全排除し、IDisposableによる決定論的な寿命管理を提供します。
 /// </summary>
 public sealed unsafe class RenderCommandBuffer : IDisposable {
     private const int DefaultPacketCapacity = 16384;
     private const int DefaultTextCapacity = 8192;
 
-    // 前・後台ダブルバッファの物理ポインタ
+    // フロントバッファとバックバッファの物理ポインタ
     private RenderPacket* _packetBuffer0;
     private RenderPacket* _packetBuffer1;
     private char* _textBuffer0;
@@ -22,7 +21,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private CompactCirclePacket* _circleBuffer0;
     private CompactCirclePacket* _circleBuffer1;
 
-    // 前・後台ダブルバッファの独立要素カウント
+    // 各バッファスロットの独立要素カウント
     private int _packetCount0;
     private int _packetCount1;
     private int _textLength0;
@@ -30,7 +29,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private int _circleCount0;
     private int _circleCount1;
 
-    // 前・後台ダブルバッファの独立容量（スレッドセーフな独立拡縮用）
+    // スレッドセーフな独立拡縮を実現するためフロントバッファとバックバッファで容量を個別に管理します
     private int _packetCapacity0;
     private int _packetCapacity1;
     private int _textCapacity0;
@@ -49,7 +48,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private int _currentTextLength;
     private int _currentCircleCount;
 
-    // 描画パイプライン状態シャドウキャッシュ（冗長な状態設定コマンドを排除し、GPU パイプラインストールを防止）
+    // 冗長な状態設定コマンドを排除して描画パイプラインの停止を防止するシャドウキャッシュ
     private const int DefaultBlendMode = 0;
     private const int DefaultBlendPal = 0;
     private const int DefaultBrightR = 255;
@@ -63,10 +62,10 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private int _activeBrightB = DefaultBrightB;
 
     /// <summary>
-    ///     指定された初期容量で 64 バイト物理整列のダブルバッファ非托管メモリを確保し、描画コマンドバッファを初期化します。
+    ///     指定された初期容量で64バイト物理整列のダブルバッファアンマネージドメモリを確保し、描画コマンドバッファを初期化します。
     /// </summary>
-    /// <param name="initialPacketCapacity">初期コマンドバッファ容量。</param>
-    /// <param name="initialTextCapacity">初期テキストバッファ容量。</param>
+    /// <param name="initialPacketCapacity">初期コマンドバッファ容量</param>
+    /// <param name="initialTextCapacity">初期テキストバッファ容量</param>
     public RenderCommandBuffer(int initialPacketCapacity = DefaultPacketCapacity,
         int initialTextCapacity = DefaultTextCapacity)
     {
@@ -119,7 +118,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public int CircleCount => _currentCircleCount;
 
     /// <summary>
-    ///     緊密配置円バッファの最大収容可能要素数（現在のアクティブ書き込みバッファ）。
+    ///     現在アクティブな書き込みバッファにおける円バッチの最大収容可能要素数です。
     /// </summary>
     public int CircleCapacity => _writeIndex == 0 ? _circleCapacity0 : _circleCapacity1;
 
@@ -144,7 +143,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public int TextLength => _currentTextLength;
 
     /// <summary>
-    ///     描画コマンドバッファの最大収容可能要素数（現在のアクティブ書き込みバッファ）。
+    ///     現在アクティブな書き込みバッファにおける描画コマンドバッファの最大収容可能要素数です。
     /// </summary>
     public int PacketCapacity => _writeIndex == 0 ? _packetCapacity0 : _packetCapacity1;
 
@@ -159,7 +158,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     public int PacketCapacity1 => _packetCapacity1;
 
     /// <summary>
-    ///     文字列バッファの最大収容可能文字数（現在のアクティブ書き込みバッファ）。
+    ///     現在アクティブな書き込みバッファにおける文字列バッファの最大収容可能文字数です。
     /// </summary>
     public int TextCapacity => _writeIndex == 0 ? _textCapacity0 : _textCapacity1;
 
@@ -179,22 +178,22 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private bool IsDisposed { get; set; }
 
     /// <summary>
-    ///     描画コマンドバッファの先頭物理アドレス（アライメント検証用）。
+    ///     アライメント検証用の描画コマンドバッファ先頭物理アドレスです。
     /// </summary>
     internal void* PacketBufferPtr => _packetBuffer;
 
     /// <summary>
-    ///     文字列バッファの先頭物理アドレス（アライメント検証用）。
+    ///     アライメント検証用の文字列バッファ先頭物理アドレスです。
     /// </summary>
     internal void* TextBufferPtr => _textBuffer;
 
     /// <summary>
-    ///     高密度円コマンドバッファの先頭物理アドレス（アライメント検証用）。
+    ///     アライメント検証用の高密度円コマンドバッファ先頭物理アドレスです。
     /// </summary>
     internal void* CircleBufferPtr => _circleBuffer;
 
     /// <summary>
-    ///     確保されている非托管物理メモリを解放します。
+    ///     確保されているアンマネージド物理メモリを安全に解放します。
     /// </summary>
     public void Dispose()
     {
@@ -213,10 +212,10 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     矩形描画コマンドをバッファへ追加します。
     /// </summary>
-    /// <param name="p1">左上座標 (<see cref="Vec2i" />)。</param>
-    /// <param name="p2">右下座標 (<see cref="Vec2i" />)。</param>
-    /// <param name="color">描画カラー。</param>
-    /// <param name="fill">塗りつぶしフラグ。</param>
+    /// <param name="p1">左上座標</param>
+    /// <param name="p2">右下座標</param>
+    /// <param name="color">描画カラー</param>
+    /// <param name="fill">塗りつぶしフラグ</param>
     public void PushDrawBox(Vec2i p1, Vec2i p2, uint color, bool fill)
     {
         EnsurePendingCircleBatchFlushed();
@@ -235,10 +234,10 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     円描画コマンドをバッファへ追加します。20 バイトの緊密配置円バッファへ高速転送されます。
     /// </summary>
-    /// <param name="center">中心座標 (<see cref="Vec2i" />)。</param>
-    /// <param name="radius">半径 (px)。</param>
-    /// <param name="color">描画カラー。</param>
-    /// <param name="fill">塗りつぶしフラグ。</param>
+    /// <param name="center">中心座標</param>
+    /// <param name="radius">ピクセル単位の半径</param>
+    /// <param name="color">描画カラー</param>
+    /// <param name="fill">塗りつぶしフラグ</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushDrawCircle(Vec2i center, int radius, uint color, bool fill)
     {
@@ -248,10 +247,10 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     線分描画コマンドをバッファへ追加します。
     /// </summary>
-    /// <param name="p1">始点座標 (<see cref="Vec2i" />)。</param>
-    /// <param name="p2">終点座標 (<see cref="Vec2i" />)。</param>
-    /// <param name="color">描画カラー。</param>
-    /// <param name="thickness">線の太さ。</param>
+    /// <param name="p1">始点座標</param>
+    /// <param name="p2">終点座標</param>
+    /// <param name="color">描画カラー</param>
+    /// <param name="thickness">線の太さ</param>
     public void PushDrawLine(Vec2i p1, Vec2i p2, uint color, int thickness)
     {
         EnsurePendingCircleBatchFlushed();
@@ -270,9 +269,9 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     画像描画コマンドをバッファへ追加します。
     /// </summary>
-    /// <param name="pos">描画先座標 (<see cref="Vec2i" />)。</param>
-    /// <param name="handle">画像ハンドル。</param>
-    /// <param name="trans">透過フラグ。</param>
+    /// <param name="pos">描画先座標</param>
+    /// <param name="handle">画像ハンドル</param>
+    /// <param name="trans">透過フラグ</param>
     public void PushDrawGraph(Vec2i pos, int handle, bool trans)
     {
         EnsurePendingCircleBatchFlushed();
@@ -290,11 +289,11 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     回転拡縮画像描画コマンドをバッファへ追加します。
     /// </summary>
-    /// <param name="center">中心座標 (<see cref="Vec2i" />)。</param>
-    /// <param name="scale">拡大率。</param>
-    /// <param name="angle">回転角度 (ラジアン)。</param>
-    /// <param name="handle">画像ハンドル。</param>
-    /// <param name="trans">透過フラグ。</param>
+    /// <param name="center">中心座標</param>
+    /// <param name="scale">拡大率</param>
+    /// <param name="angle">ラジアン単位の回転角度</param>
+    /// <param name="handle">画像ハンドル</param>
+    /// <param name="trans">透過フラグ</param>
     public void PushDrawRotaGraph(Vec2i center, float scale, float angle, int handle, bool trans)
     {
         EnsurePendingCircleBatchFlushed();
@@ -312,16 +311,16 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     矩形切り出し回転拡縮画像描画コマンド（独立 X/Y 軸拡縮）をバッファへ追加します。
+    ///     独立した縦横スケール指定に対応した矩形切り出し回転拡縮画像をバッファへ追加します。
     /// </summary>
-    /// <param name="center">描画中心座標 (<see cref="Vec2i" />)。</param>
-    /// <param name="srcPos">切り出し開始座標 (<see cref="Vec2i" />)。</param>
-    /// <param name="srcSize">切り出しサイズ (<see cref="Vec2i" />)。</param>
-    /// <param name="scale">拡大率 (<see cref="Vec2f" />)。</param>
-    /// <param name="angle">回転角度 (ラジアン)。</param>
-    /// <param name="handle">画像ハンドル。</param>
-    /// <param name="trans">透過フラグ。</param>
-    /// <param name="turnX">左右反転フラグ。</param>
+    /// <param name="center">描画中心座標</param>
+    /// <param name="srcPos">切り出し開始座標</param>
+    /// <param name="srcSize">切り出しサイズ</param>
+    /// <param name="scale">拡大率</param>
+    /// <param name="angle">ラジアン単位の回転角度</param>
+    /// <param name="handle">画像ハンドル</param>
+    /// <param name="trans">透過フラグ</param>
+    /// <param name="turnX">左右反転フラグ</param>
     public void PushDrawRectRotaGraph(
         Vec2i center,
         Vec2i srcPos,
@@ -352,9 +351,9 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     文字列描画コマンドをバッファへ追加します。
     /// </summary>
-    /// <param name="pos">描画先座標 (<see cref="Vec2i" />)。</param>
-    /// <param name="text">描画文字列。</param>
-    /// <param name="color">描画カラー。</param>
+    /// <param name="pos">描画先座標</param>
+    /// <param name="text">描画文字列</param>
+    /// <param name="color">描画カラー</param>
     public void PushDrawString(Vec2i pos, ReadOnlySpan<char> text, uint color)
     {
         EnsurePendingCircleBatchFlushed();
@@ -429,7 +428,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     蓄積された描画コマンドを 1 回の P/Invoke で C++ ネイティブエンジンへ一括提出します（単一スレッド動作互換用）。
+    ///     蓄積された描画コマンドを1回のP/InvokeでC++ネイティブエンジンへ一括提出します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Submit()
@@ -452,8 +451,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     レンダリングスレッド用：前台バッファ（Front Buffer、1 - WriteIndex）に格納されたコマンド群を
-    ///     C++ ネイティブエンジンへ一括提出します。現在の書き込みバッファには一切干渉しません。
+    ///     描画スレッド向け処理としてフロントバッファに格納された確定コマンド群をC++ネイティブエンジンへ一括提出します。
+    ///     論理スレッドが並行して書き込むバックバッファには一切干渉しません。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SubmitFront()
@@ -495,12 +494,12 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     20 バイト緊密配置の高密度円描画コマンドをバッファへ追加します（48 バイト汎用パケットをバイパス）。
+    ///     48バイト汎用パケットを経由せず20バイト緊密配置の高密度円描画コマンドをバッファへ直接追加します。
     /// </summary>
-    /// <param name="center">中心座標 (<see cref="Vec2i" />)。</param>
-    /// <param name="radius">半径 (px)。</param>
-    /// <param name="color">描画カラー。</param>
-    /// <param name="fill">塗りつぶしフラグ。</param>
+    /// <param name="center">中心座標</param>
+    /// <param name="radius">ピクセル単位の半径</param>
+    /// <param name="color">描画カラー</param>
+    /// <param name="fill">塗りつぶしフラグ</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushCompactCircle(Vec2i center, int radius, uint color, bool fill)
     {
@@ -513,8 +512,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     ///     オフセットがゼロの場合はメモリ一括コピーを行い、オフセットが存在する場合は
     ///     単一の容量検証後に連続メモリ上で直接座標補正書き込みを行います。
     /// </summary>
-    /// <param name="circles">緊密配置された円パケットのスパン。</param>
-    /// <param name="offset">適用するカメラ描画オフセット (<see cref="Vec2i" />)。</param>
+    /// <param name="circles">緊密配置された円パケットのスパン</param>
+    /// <param name="offset">適用するカメラ描画オフセット</param>
     public void PushCompactCirclesBatch(ReadOnlySpan<CompactCirclePacket> circles, Vec2i offset)
     {
         if (circles.IsEmpty) return;
@@ -545,9 +544,9 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     高密度円描画コマンド群をバッチメモリコピーで一括追加します（オフセットなし）。
+    ///     カメラオフセットを加算せずに高密度円描画コマンド群をバッチメモリコピーで一括追加します。
     /// </summary>
-    /// <param name="circles">緊密配置された円パケットのスパン。</param>
+    /// <param name="circles">緊密配置された円パケットのスパン</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushCompactCirclesBatch(ReadOnlySpan<CompactCirclePacket> circles)
     {
@@ -555,13 +554,12 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     ダブルバッファの書き込み対象インデックス (0 または 1)。
+    ///     ダブルバッファの書き込み対象インデックスであり、ゼロまたは1を保持します。
     /// </summary>
     public int WriteIndex => _writeIndex;
 
     /// <summary>
-    ///     論理スレッド用：現在の書き込みバッファ（Back Buffer）のカウンターおよびパイプライン状態を初期化し、
-    ///     新規フレームの描画コマンド記録を開始します。
+    ///     論理スレッド向け処理として書き込み対象のバックバッファのカウンターとパイプライン状態を初期化し、新規フレームの描画コマンド記録を開始します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginRecording()
@@ -606,7 +604,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     前・後台バッファのスロットインデックスを乒乓（Ping-Pong）切り替えします。
+    ///     フロントバッファとバックバッファのスロットインデックスを交互に切り替えます。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SwapBuffers()
@@ -617,7 +615,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     前・後台バッファを乒乓（Ping-Pong）切り替えし、次フレームの記録バッファを準備します（GC 発生なし、単一スレッド互換用）。
+    ///     バッファスロットを反転切り替えし、次フレームの記録バッファをゼロアロケーションで準備します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Swap()
@@ -627,7 +625,7 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     描画バッファのカウンターおよびパイプラインシャドウ状態をリセットし、次フレームの記録に備えます（GC 発生なし、単一スレッド互換用）。
+    ///     描画バッファのカウンターおよびパイプラインシャドウ状態をリセットし、次フレームの記録に備えます。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Reset()

@@ -280,7 +280,7 @@ __declspec(dllexport) bool Input_IsMouseOver(ab::Vec2i p1, ab::Vec2i p2) noexcep
     return false;
 }
 
-// --- Raw Input APIs (Legacy & Low-level) ---
+// --- Raw Input APIs Legacy and Low-level ---
 
 __declspec(dllexport) bool Input_IsKeyHit(int key_code) noexcept {
     auto* input_service = ab::GetInputService();

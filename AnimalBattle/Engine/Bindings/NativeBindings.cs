@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace AnimalBattle.Bindings;
 
 /// <summary>
-///     Native C++ コアライブラリ (AnimalBattleCore.dll) との P/Invoke バインディングを提供する静的クラス。
+///     C++ネイティブコアライブラリAnimalBattleCoreとの相互運用性を提供する静的バインディングクラスです。
 /// </summary>
 internal static unsafe partial class NativeBindings {
     private const string _dllName = "AnimalBattleCore.dll";

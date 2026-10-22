@@ -52,7 +52,7 @@ bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept {
             g_hdc = ::GetDC(g_hwnd);
         }
 
-        // AnimalBattleCore へ具象サービスポインタを登録
+        // 各種具象サービスインスタンスのポインタをグローバルコンテキストへ登録します
         SetRenderService(g_render_service.get());
         SetInputService(g_input_service.get());
         SetPhysicsService(g_physics_service.get());

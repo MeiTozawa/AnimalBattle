@@ -8,6 +8,7 @@
 namespace ab {
 
 /// @brief 2次元汎用ベクトル構造体
+/// @tparam T 整数型または浮動小数点型を指定します
 template <typename T>
 requires std::integral<T> || std::floating_point<T>
 struct Vector2D {

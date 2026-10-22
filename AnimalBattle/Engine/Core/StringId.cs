@@ -5,9 +5,8 @@ using System.Runtime.InteropServices;
 namespace AnimalBattle.Core;
 
 /// <summary>
-/// 高速文字列識別子を表す 4 バイトの純粋な非托管（Unmanaged）値型構造体。
-/// FNV-1a による大文字小文字を区別しないハッシュ計算、O(1) の単一命令比較、
-/// およびデバッグ用の文字列逆引き機能を提供します。
+/// 4バイトのアンマネージド値型としてメモリ効率と高速比較を両立した文字列識別子構造体です。
+/// FNV-1aによる大文字小文字を区別しないハッシュ計算と単一CPU命令による即値比較を提供します。
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct StringId : IEquatable<StringId>, IComparable<StringId> {
@@ -19,16 +18,16 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
     /// <summary>空の識別子です。</summary>
     public static readonly StringId Empty = new(0);
 
-    /// <summary>識別子が空（未設定またはハッシュ値 0）であるかどうかを取得します。</summary>
+    /// <summary>識別子が未設定またはゼロハッシュであるかを判定します。</summary>
     public readonly bool IsEmpty => Value == 0;
 
-    /// <summary>ハッシュ値（4 バイト）です。</summary>
+    /// <summary>4バイトのハッシュ値本体です。</summary>
     public readonly uint Value;
 
     /// <summary>
     /// 文字列から <see cref="StringId" /> を初期化します。
     /// </summary>
-    /// <param name="source">対象文字列。</param>
+    /// <param name="source">対象文字列</param>
     public StringId(string? source)
     {
         if (string.IsNullOrEmpty(source))
@@ -46,7 +45,7 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
     /// <summary>
     /// 生のハッシュ値から <see cref="StringId" /> を初期化します。
     /// </summary>
-    /// <param name="value">ハッシュ値。</param>
+    /// <param name="value">ハッシュ値</param>
     public StringId(uint value)
     {
         Value = value;
@@ -55,7 +54,7 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
 #if DEBUG
     private static void RegisterToPool(uint hash, string source)
     {
-        // 実行時の動的文字列生成による無制限なメモリリークを防止
+        // 実行時の動的文字列生成による無制限なメモリリークを防止します
         if (_stringPool.Count >= MaxPoolCapacity) return;
 
         if (_stringPool.TryGetValue(hash, out var existing))
@@ -77,7 +76,7 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
         }
     }
 
-    /// <summary>デバッグ用に識別子の文字列表現を登録します（最大容量制限付き）。</summary>
+    /// <summary>デバッグ用に識別子の文字代表を最大容量制限付きプールへ登録します。</summary>
     public static void RegisterForDebug(string source)
     {
         if (string.IsNullOrEmpty(source)) return;
@@ -89,18 +88,18 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
     /// <summary>
     /// FNV-1a 32-bit アルゴリズムに基づき、大文字小文字を区別しないハッシュ値を算出します。
     /// </summary>
-    /// <param name="text">計算対象の文字列。</param>
-    /// <returns>32-bit ハッシュ値。</returns>
+    /// <param name="text">計算対象の文字列</param>
+    /// <returns>32-bit ハッシュ値</returns>
     public static uint ComputeHash(string? text)
     {
         return ComputeHash(text.AsSpan());
     }
 
     /// <summary>
-    /// FNV-1a 32-bit アルゴリズムに基づき、大文字小文字を区別しないハッシュ値を算出します（ゼロアロケーション）。
+    /// 大文字小文字を区別せずにゼロアロケーションでハッシュ値を算出します。
     /// </summary>
-    /// <param name="text">計算対象の文字列スパン。</param>
-    /// <returns>32-bit ハッシュ値。</returns>
+    /// <param name="text">計算対象の文字列スパン</param>
+    /// <returns>32-bit ハッシュ値</returns>
     public static uint ComputeHash(ReadOnlySpan<char> text)
     {
         if (text.IsEmpty) return 0;
@@ -109,7 +108,7 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
         for (int i = 0; i < text.Length; i++)
         {
             char c = char.ToLowerInvariant(text[i]);
-            // UTF-16 の下位バイト・上位バイトを順次 FNV-1a 拡散し、8-bit 雪崩効果を維持
+            // 下位バイトと上位バイトを個別に畳み込みハッシュの衝突耐性を高めます
             hash = (hash ^ (byte)(c & 0xFF)) * 16777619u;
             hash = (hash ^ (byte)(c >> 8)) * 16777619u;
         }

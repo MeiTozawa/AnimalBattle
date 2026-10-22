@@ -23,7 +23,8 @@ enum class RenderPacketType : uint16_t {
 
 #pragma pack(push, 4)
 
-/// @brief 円描画バッチ（連続する CompactCirclePacket の範囲）コマンドデータ
+/// @brief 円描画バッチコマンドデータ
+/// @note 連続するCompactCirclePacket配列の先頭インデックスと要素数を保持します
 struct DrawCircleBatchPacket {
     int32_t offset;
     int32_t count;
@@ -47,7 +48,8 @@ struct DrawCirclePacket {
     uint8_t padding[3];
 };
 
-/// @brief 20 バイト緊密配置の高密度円描画パケット（弾幕・パーティクルバッチ用）
+/// @brief 弾幕バッチ描画専用の高密度円パケット構造体
+/// @note メモリ帯域圧迫を抑えL1キャッシュヒット率を高める目的で20バイトに切り詰めています
 struct CompactCirclePacket {
     Vec2i center;
     int32_t radius;
@@ -83,7 +85,8 @@ struct DrawRotaGraphPacket {
     uint8_t padding[3];
 };
 
-/// @brief 矩形切り出し回転拡縮画像描画コマンドデータ（独立 X/Y 軸拡縮対応）
+/// @brief 矩形切り出し回転拡縮画像描画コマンドデータ
+/// @note 独立した水平垂直スケール指定に対応しています
 struct DrawRectRotaGraphPacket {
     Vec2i center;
     Vec2i src_pos;
@@ -96,7 +99,8 @@ struct DrawRectRotaGraphPacket {
     uint8_t padding[2];
 };
 
-/// @brief 文字列描画コマンドデータ（文字列実体は一括テキストバッファを参照）
+/// @brief 文字列描画コマンドデータ
+/// @note 文字列の実体データは共有テキストバッファを参照します
 struct DrawStringPacket {
     Vec2i pos;
     uint32_t color;
@@ -117,7 +121,8 @@ struct SetBrightPacket {
     int32_t b;
 };
 
-/// @brief C# - C++ 間でやり取りされる 48 バイト固定長の描画コマンドパケット
+/// @brief 言語境界を越えて受け渡す固定長描画コマンドパケット
+/// @note C#側のアンマネージドメモリとゼロコピーで双方向転送するため、48バイト均一サイズにアライメントしています
 struct RenderPacket {
     RenderPacketType type;
     uint16_t reserved;

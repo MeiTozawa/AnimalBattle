@@ -37,7 +37,7 @@ public enum RenderPacketType : ushort {
     /// <summary>描画輝度設定</summary>
     SetDrawBright = 9,
 
-    /// <summary>高密度円描画バッチ（連続する CompactCirclePacket 範囲）</summary>
+    /// <summary>連続するCompactCirclePacket領域を対象とする円描画バッチコマンド</summary>
     DrawCircleBatch = 10
 }
 
@@ -52,10 +52,10 @@ public struct DrawBoxPacket {
     /// <summary>矩形右下座標</summary>
     public Vec2i P2;
 
-    /// <summary>矩形描画カラー (0xAARRGGBB / 0x00RRGGBB)</summary>
+    /// <summary>32ビットARGB形式の矩形描画カラー</summary>
     public uint Color;
 
-    /// <summary>塗りつぶしフラグ (1: 塗りつぶし, 0: 枠線)</summary>
+    /// <summary>塗りつぶし時は1、枠線のみ描画時はゼロを指定するフラグ</summary>
     public byte Fill;
 
     private byte _padding0;
@@ -77,7 +77,7 @@ public struct DrawCirclePacket {
     /// <summary>円描画カラー</summary>
     public uint Color;
 
-    /// <summary>円塗りつぶしフラグ (1: 塗りつぶし, 0: 枠線)</summary>
+    /// <summary>塗りつぶし時は1、枠線のみ描画時はゼロを指定するフラグ</summary>
     public byte Fill;
 
     private byte _padding0;
@@ -86,7 +86,7 @@ public struct DrawCirclePacket {
 }
 
 /// <summary>
-///     20 バイト緊密配置の高密度円描画パケット（弾幕・パーティクルバッチ用）。
+///     弾幕やパーティクルの大量描画においてL1キャッシュ効率を最大化する20バイト配置の円描画パケットです。
 ///     48 バイトの汎用 RenderPacket を介さず、連続メモリ上で高密度ストリーミング転送されます。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -100,7 +100,7 @@ public struct CompactCirclePacket {
     /// <summary>円描画カラー</summary>
     public uint Color;
 
-    /// <summary>円塗りつぶしフラグ (1: 塗りつぶし, 0: 枠線)</summary>
+    /// <summary>塗りつぶし時は1、枠線のみ描画時はゼロを指定するフラグ</summary>
     public byte Fill;
 
     private byte _padding0;
@@ -167,7 +167,7 @@ public struct DrawRotaGraphPacket {
     /// <summary>拡大率</summary>
     public float Scale;
 
-    /// <summary>回転角度 (ラジアン)</summary>
+    /// <summary>ラジアン単位の回転角度</summary>
     public float Angle;
 
     /// <summary>画像ハンドル</summary>
@@ -192,13 +192,13 @@ public struct DrawRectRotaGraphPacket {
     /// <summary>切り出し開始座標</summary>
     public Vec2i SrcPos;
 
-    /// <summary>切り出しサイズ (幅・高さ)</summary>
+    /// <summary>切り出し領域の幅および高さ</summary>
     public Vec2i SrcSize;
 
-    /// <summary>拡大率 (X/Y 独立)</summary>
+    /// <summary>水平および垂直方向の独立した拡縮率</summary>
     public Vec2f Scale;
 
-    /// <summary>回転角度 (ラジアン)</summary>
+    /// <summary>ラジアン単位の回転角度</summary>
     public float Angle;
 
     /// <summary>画像ハンドル</summary>
@@ -215,7 +215,7 @@ public struct DrawRectRotaGraphPacket {
 }
 
 /// <summary>
-///     文字列描画コマンドデータ（文字列実体は一括テキストバッファを参照）。
+///     文字列描画コマンドデータであり、文字列の実体は一括テキストバッファを参照します。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct DrawStringPacket {
@@ -228,7 +228,7 @@ public struct DrawStringPacket {
     /// <summary>一括テキストバッファ内の文字オフセット</summary>
     public int TextOffset;
 
-    /// <summary>文字列の長さ (文字数)</summary>
+    /// <summary>描画対象文字列の文字数</summary>
     public int TextLength;
 }
 
@@ -240,7 +240,7 @@ public struct SetBlendModePacket {
     /// <summary>ブレンドモード値</summary>
     public int Mode;
 
-    /// <summary>ブレンドパラメータ (アルファ値等: 0～255)</summary>
+    /// <summary>ゼロから255の範囲で指定するブレンドアルファ値</summary>
     public int Pal;
 }
 
@@ -249,13 +249,13 @@ public struct SetBlendModePacket {
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public struct SetBrightPacket {
-    /// <summary>赤輝度 (0～255)</summary>
+    /// <summary>ゼロから255の範囲で指定する赤成分輝度</summary>
     public int R;
 
-    /// <summary>緑輝度 (0～255)</summary>
+    /// <summary>ゼロから255の範囲で指定する緑成分輝度</summary>
     public int G;
 
-    /// <summary>青輝度 (0～255)</summary>
+    /// <summary>ゼロから255の範囲で指定する青成分輝度</summary>
     public int B;
 }
 
@@ -272,15 +272,15 @@ public struct DrawCircleBatchPacket {
 }
 
 /// <summary>
-///     C# - C++ 間で一括転送される 48 バイト固定長の Blittable 描画コマンドパケット。
-///     各種描画コマンドデータは共用体（Explicit Layout Union）として同一オフセットに配置されます。
+///     言語境界を越えて受け渡す固定長描画コマンドパケットです。
+///     アンマネージドメモリとのゼロコピー転送を実現するため48バイト均一サイズにアライメントしています。
 /// </summary>
 [StructLayout(LayoutKind.Explicit, Size = 48)]
 public struct RenderPacket {
     /// <summary>コマンド種別</summary>
     [FieldOffset(0)] public RenderPacketType Type;
 
-    /// <summary>予約領域（アライメント用）</summary>
+    /// <summary>アライメント調整用の予約領域</summary>
     [FieldOffset(2)] public ushort Reserved;
 
     /// <summary>矩形描画コマンドデータ</summary>
