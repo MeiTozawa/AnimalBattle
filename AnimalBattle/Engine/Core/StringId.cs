@@ -1,16 +1,20 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace AnimalBattle.Core;
 
 /// <summary>
-///     高速文字列識別子を表す 4 バイトの純粋な非托管（Unmanaged）値型構造体。
-///     FNV-1a による大文字小文字を区別しないハッシュ計算、O(1) の単一命令比較、
-///     およびデバッグ用の文字列逆引きプールを提供します。
+/// 高速文字列識別子を表す 4 バイトの純粋な非托管（Unmanaged）値型構造体。
+/// FNV-1a による大文字小文字を区別しないハッシュ計算、O(1) の単一命令比較、
+/// およびデバッグ用の文字列逆引き機能を提供します。
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct StringId : IEquatable<StringId>, IComparable<StringId> {
+#if DEBUG
+    private const int MaxPoolCapacity = 1024;
     private static readonly ConcurrentDictionary<uint, string> _stringPool = new();
+#endif
 
     /// <summary>空の識別子です。</summary>
     public static readonly StringId Empty = new(0);
@@ -22,7 +26,7 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
     public readonly uint Value;
 
     /// <summary>
-    ///     文字列から <see cref="StringId" /> を初期化します。
+    /// 文字列から <see cref="StringId" /> を初期化します。
     /// </summary>
     /// <param name="source">対象文字列。</param>
     public StringId(string? source)
@@ -34,11 +38,13 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
         }
 
         Value = ComputeHash(source.AsSpan());
+#if DEBUG
         RegisterToPool(Value, source);
+#endif
     }
 
     /// <summary>
-    ///     生のハッシュ値から <see cref="StringId" /> を初期化します。
+    /// 生のハッシュ値から <see cref="StringId" /> を初期化します。
     /// </summary>
     /// <param name="value">ハッシュ値。</param>
     public StringId(uint value)
@@ -46,8 +52,12 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
         Value = value;
     }
 
+#if DEBUG
     private static void RegisterToPool(uint hash, string source)
     {
+        // 実行時の動的文字列生成による無制限なメモリリークを防止
+        if (_stringPool.Count >= MaxPoolCapacity) return;
+
         if (_stringPool.TryGetValue(hash, out var existing))
         {
             if (!string.Equals(existing, source, StringComparison.OrdinalIgnoreCase))
@@ -67,8 +77,17 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
         }
     }
 
+    /// <summary>デバッグ用に識別子の文字列表現を登録します（最大容量制限付き）。</summary>
+    public static void RegisterForDebug(string source)
+    {
+        if (string.IsNullOrEmpty(source)) return;
+        var hash = ComputeHash(source.AsSpan());
+        RegisterToPool(hash, source);
+    }
+#endif
+
     /// <summary>
-    ///     FNV-1a 32-bit アルゴリズムに基づき、大文字小文字を区別しないハッシュ値を算出します。
+    /// FNV-1a 32-bit アルゴリズムに基づき、大文字小文字を区別しないハッシュ値を算出します。
     /// </summary>
     /// <param name="text">計算対象の文字列。</param>
     /// <returns>32-bit ハッシュ値。</returns>
@@ -78,7 +97,7 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
     }
 
     /// <summary>
-    ///     FNV-1a 32-bit アルゴリズムに基づき、大文字小文字を区別しないハッシュ値を算出します（ゼロアロケーション）。
+    /// FNV-1a 32-bit アルゴリズムに基づき、大文字小文字を区別しないハッシュ値を算出します（ゼロアロケーション）。
     /// </summary>
     /// <param name="text">計算対象の文字列スパン。</param>
     /// <returns>32-bit ハッシュ値。</returns>
@@ -90,7 +109,9 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
         for (int i = 0; i < text.Length; i++)
         {
             char c = char.ToLowerInvariant(text[i]);
-            hash = (hash ^ c) * 16777619u;
+            // UTF-16 の下位バイト・上位バイトを順次 FNV-1a 拡散し、8-bit 雪崩効果を維持
+            hash = (hash ^ (byte)(c & 0xFF)) * 16777619u;
+            hash = (hash ^ (byte)(c >> 8)) * 16777619u;
         }
         return hash;
     }
@@ -123,6 +144,9 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
     public override string ToString()
     {
         if (IsEmpty) return "None";
-        return _stringPool.TryGetValue(Value, out var text) ? text : $"StringId(0x{Value:X8})";
+#if DEBUG
+        if (_stringPool.TryGetValue(Value, out var text)) return text;
+#endif
+        return $"StringId(0x{Value:X8})";
     }
 }
