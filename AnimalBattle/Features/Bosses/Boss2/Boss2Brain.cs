@@ -37,6 +37,9 @@ public sealed class Boss2Brain : BaseBossBrain {
     private TraverseStage _traverseStage = TraverseStage.Ascent;
     private float _traverseTimer;
     private float _jumpCooldown;
+    private float _repathCooldown;
+    private Vec2f _lastRepathPlayerPos;
+    private NavPlan? _cachedNavPlan;
 
     private Vec2f _currentVelocity;
     private Vec2f _leapStartPosition;
@@ -336,18 +339,38 @@ public sealed class Boss2Brain : BaseBossBrain {
         }
 
         _stateTimer += dt;
+        _repathCooldown -= dt;
         _targetPosition = playerPos;
         var phaseCfg = _configuration.GetPhase(Phase);
         var dx = playerPos.X - _currentPosition.X;
         var dy = playerPos.Y - _currentPosition.Y;
 
-        var navGraph = _navGraphProvider?.Invoke();
+        var isSamePlatform = MathF.Abs(dy) <= _configuration.CombatSettings.SamePlatformToleranceY;
+
         NavPlan? plan = null;
-        if (navGraph is not null && navGraph.Nodes.Count > 0)
+        if (isSamePlatform)
         {
-            var bossFootY = _currentPosition.Y + _configuration.CombatSettings.CollisionHeight / 2.0f;
-            var playerFootY = playerPos.Y + _configuration.CombatSettings.PlayerCollisionHeight / 2.0f;
-            plan = navGraph.FindPath(_currentPosition.X, bossFootY, playerPos.X, playerFootY, isGrounded, phaseCfg.MoveSpeed);
+            // 同一足場上の場合は A* グラフ探索を短絡し、直接水平移動
+            _cachedNavPlan = null;
+        }
+        else
+        {
+            var playerMovedDistSq = (playerPos - _lastRepathPlayerPos).LengthSquared();
+            // 探索冷却が終了しているか、プレイヤーが大きく移動 (64px以上) した場合のみ A* 経路を再探索
+            if (_cachedNavPlan == null || _repathCooldown <= 0.0f || playerMovedDistSq > 64.0f * 64.0f)
+            {
+                var navGraph = _navGraphProvider?.Invoke();
+                if (navGraph is not null && navGraph.Nodes.Count > 0)
+                {
+                    var bossFootY = _currentPosition.Y + _configuration.CombatSettings.CollisionHeight / 2.0f;
+                    var playerFootY = playerPos.Y + _configuration.CombatSettings.PlayerCollisionHeight / 2.0f;
+                    _cachedNavPlan = navGraph.FindPath(_currentPosition.X, bossFootY, playerPos.X, playerFootY, isGrounded, phaseCfg.MoveSpeed);
+                    _lastRepathPlayerPos = playerPos;
+                    _repathCooldown = 0.25f; // 250ms (毎秒 4 回以下に制限)
+                }
+            }
+
+            plan = _cachedNavPlan;
         }
 
         if (plan is { Status: NavStatus.ExecuteJump } jumpPlan && _jumpCooldown <= 0.0f)
@@ -357,6 +380,7 @@ public sealed class Boss2Brain : BaseBossBrain {
             _facingRight = jumpVx >= 0.0f;
             _currentVelocity = new Vec2f(jumpVx, jumpVy);
             _jumpCooldown = _configuration.CombatSettings.JumpCooldownDuration;
+            _cachedNavPlan = null; // 跳躍実行によりプラン消費
             _stateMachine.ChangeState(_platformTraverseState);
             _traverseStage = TraverseStage.Ascent;
             _traverseTimer = 0.0f;
