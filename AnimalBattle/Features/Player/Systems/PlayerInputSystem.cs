@@ -1,4 +1,5 @@
 using System;
+using AnimalBattle.Common.Components;
 using AnimalBattle.Components;
 using AnimalBattle.Core;
 using Flecs.NET.Core;
@@ -8,7 +9,7 @@ namespace AnimalBattle.Player.Systems;
 /// <summary>
 ///     自機のローカル入力（キーボード、マウス、ゲームパッド）を解読し、
 ///     意図コンポーネント（<see cref="MovementIntent" />, <see cref="WeaponIntent" />）へ注入する純粋 ECS システム。
-///     <see cref="PlayerController" /> の責務を完全に代替し、PreUpdate フェーズで無状態に駆動します。
+///     通常入力受付（GameOverTag 未保持）とゲーム終了時リセット（GameOverTag 保持）の2系統に分離して駆動します。
 /// </summary>
 public static class PlayerInputSystem
 {
@@ -19,13 +20,40 @@ public static class PlayerInputSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddPlayerInputSystem(this World world)
     {
+        // 1. 通常ゲームプレイ時の入力受付システム（GameOverTag 未保持時のみ稼働）
         world.System<MovementIntent, WeaponIntent, Transform, CollisionBox>("PlayerInputSystem")
             .With<PlayerTag>()
             .Without<DeadTag>()
+            .Without<GameOverTag>()
             .Kind(Ecs.PreUpdate)
             .Iter(ExecutePlayerInput);
 
+        // 2. ゲーム終了時（Victory/Defeat）の入力意図ゼロクリアシステム（GameOverTag 保持時のみ稼働）
+        world.System<MovementIntent, WeaponIntent>("PlayerGameOverInputResetSystem")
+            .With<PlayerTag>()
+            .With<GameOverTag>()
+            .Kind(Ecs.PreUpdate)
+            .Iter(ExecuteGameOverInputReset);
+
         return world;
+    }
+
+    private static void ExecuteGameOverInputReset(
+        Iter it,
+        Field<MovementIntent> moveIntents,
+        Field<WeaponIntent> weaponIntents)
+    {
+        var count = it.Count();
+        for (var i = 0; i < count; i++)
+        {
+            ref var m = ref moveIntents[i];
+            ref var w = ref weaponIntents[i];
+            m.MoveX = 0.0f;
+            m.JumpTriggered = false;
+            m.JumpHolding = false;
+            m.DashTriggered = false;
+            w.ShootTriggered = false;
+        }
     }
 
     private static void ExecutePlayerInput(
@@ -41,7 +69,6 @@ public static class PlayerInputSystem
         var world = it.World();
         ref readonly var flow = ref world.Get<GameFlow>();
         if (flow.State != GameState.Battle) return;
-        if (world.Has<GameOverTag>()) return;
 
         // 水平移動入力値（-1.0f: 左, 1.0f: 右, 0.0f: 静止）
         var moveX = 0.0f;

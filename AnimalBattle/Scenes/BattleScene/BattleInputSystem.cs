@@ -201,6 +201,7 @@ public static class BattleInputSystem
         sprite.SpringOffsetY = 0.0f;
 
         if (player.Has<DeadTag>()) player.Remove<DeadTag>();
+        if (player.Has<GameOverTag>()) player.Remove<GameOverTag>();
         if (player.Has<HitFlashEffect>()) player.Remove<HitFlashEffect>();
     }
 

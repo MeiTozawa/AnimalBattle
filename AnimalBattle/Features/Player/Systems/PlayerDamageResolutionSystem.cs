@@ -106,6 +106,7 @@ public static class PlayerDamageResolutionSystem
             {
                 world.Add<GameOverTag>();
                 entity.Add<DeadTag>();
+                entity.Add<GameOverTag>();
                 sprite.IsVisible = false;
                 var melee = entity.Target<EquippedWeapon>();
                 if (melee.IsAlive())
