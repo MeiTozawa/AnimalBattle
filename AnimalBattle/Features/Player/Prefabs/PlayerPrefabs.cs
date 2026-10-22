@@ -30,33 +30,37 @@ public static class PlayerPrefabs
 
         // --- Cat プレイヤー ---
         var catCfg = world.Get<CatConfig>();
+        var catPrefabCfg = world.Get<CatPrefabConfig>();
         Debug.Assert(catCfg != null, "CatConfig はワールドに登録されている必要があります。");
+        Debug.Assert(catPrefabCfg != null, "CatPrefabConfig はワールドに登録されている必要があります。");
 
         CatPlayer = world.Prefab(CatPlayerName)
             .IsA(PlayerBase)
-            .Set(new Health(catCfg.MaxHp))
-            .Set(new InvincibleOnHit(catCfg.InvincibleDuration))
-            .Set(new HitFlashSettings(catCfg.HitFlashDuration))
-            .Set(new CollisionBox(catCfg.CollisionSize))
-            .Set(new Hurtbox(catCfg.GetHurtboxShape(), Faction.Friendly))
-            .Set(new Transform(Vec2f.Zero, catCfg.Scale))
-            .Set(new SpringScale(Vec2f.One, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
+            .Set(new Health(catPrefabCfg.MaxHp))
+            .Set(new InvincibleOnHit(catPrefabCfg.InvincibleDuration))
+            .Set(new HitFlashSettings(catPrefabCfg.HitFlashDuration))
+            .Set(new CollisionBox(catPrefabCfg.CollisionSize))
+            .Set(new Hurtbox(catPrefabCfg.GetHurtboxShape(), Faction.Friendly))
+            .Set(new Transform(Vec2f.Zero, catPrefabCfg.Scale))
+            .Set(new SpringScale(Vec2f.One, catPrefabCfg.SpringFrequency, catPrefabCfg.SpringDampingRatio))
             .Set(JumpCapability.FromPlayerConfig(catCfg))
             .Set(CatWeaponState.FromConfig(catCfg));
 
         // --- Bunny プレイヤー ---
         var bunnyCfg = world.Get<BunnyConfig>();
+        var bunnyPrefabCfg = world.Get<BunnyPrefabConfig>();
         Debug.Assert(bunnyCfg != null, "BunnyConfig はワールドに登録されている必要があります。");
+        Debug.Assert(bunnyPrefabCfg != null, "BunnyPrefabConfig はワールドに登録されている必要があります。");
 
         BunnyPlayer = world.Prefab(BunnyPlayerName)
             .IsA(PlayerBase)
-            .Set(new Health(bunnyCfg.MaxHp))
-            .Set(new InvincibleOnHit(bunnyCfg.InvincibleDuration))
-            .Set(new HitFlashSettings(bunnyCfg.HitFlashDuration))
-            .Set(new CollisionBox(bunnyCfg.CollisionSize))
-            .Set(new Hurtbox(bunnyCfg.GetHurtboxShape(), Faction.Friendly))
-            .Set(new Transform(Vec2f.Zero, bunnyCfg.Scale))
-            .Set(new SpringScale(Vec2f.One, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
+            .Set(new Health(bunnyPrefabCfg.MaxHp))
+            .Set(new InvincibleOnHit(bunnyPrefabCfg.InvincibleDuration))
+            .Set(new HitFlashSettings(bunnyPrefabCfg.HitFlashDuration))
+            .Set(new CollisionBox(bunnyPrefabCfg.CollisionSize))
+            .Set(new Hurtbox(bunnyPrefabCfg.GetHurtboxShape(), Faction.Friendly))
+            .Set(new Transform(Vec2f.Zero, bunnyPrefabCfg.Scale))
+            .Set(new SpringScale(Vec2f.One, bunnyPrefabCfg.SpringFrequency, bunnyPrefabCfg.SpringDampingRatio))
             .Set(JumpCapability.FromPlayerConfig(bunnyCfg))
             .Set(BunnyWeaponState.FromConfig(bunnyCfg));
     }

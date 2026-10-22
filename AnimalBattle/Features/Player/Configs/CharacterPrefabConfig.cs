@@ -19,9 +19,18 @@ public class PlayerPrefabConfig
     public string HurtboxShape { get; set; }
     public float HurtboxRadius { get; set; }
     public Vec2f HurtboxOffset { get; set; }
+    public Vec2f HurtboxSize { get; set; }
     public Vec2f Scale { get; set; }
     public float SpringFrequency { get; set; }
     public float SpringDampingRatio { get; set; }
+
+    /// <summary>
+    /// 設定値に基づくプレイヤー被弾判定形状を生成します。
+    /// </summary>
+    public CollisionShape GetHurtboxShape()
+    {
+        return CollisionShapeFactory.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxSize, HurtboxOffset);
+    }
 }
 
 /// <summary>
@@ -50,4 +59,20 @@ public class BossPrefabConfig
 
     // 地形衝突ボックス
     public Vec2f CollisionSize { get; set; }
+
+    /// <summary>
+    /// 設定値に基づく Boss 被弾判定形状を生成します。
+    /// </summary>
+    public CollisionShape GetHurtboxShape()
+    {
+        return CollisionShapeFactory.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxSize, HurtboxOffset);
+    }
+
+    /// <summary>
+    /// 設定値に基づく Boss 接触攻撃判定形状を生成します。
+    /// </summary>
+    public CollisionShape GetHitboxShape()
+    {
+        return CollisionShapeFactory.CreateWithFallback(HitboxShape, BodyHitboxRadius, BodyHitboxSize, BodyHitboxOffset);
+    }
 }

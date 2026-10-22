@@ -34,32 +34,32 @@ public static class BossPrefabs
             .Set(new BossCombatState(Phase.Phase1));
 
         // --- Boss 1 ---
-        var b1Cfg = world.Get<Boss1Config>();
-        Debug.Assert(b1Cfg != null, "Boss1Config はワールドに登録されている必要があります。");
+        var b1PrefabCfg = world.Get<Boss1PrefabConfig>();
+        Debug.Assert(b1PrefabCfg != null, "Boss1PrefabConfig はワールドに登録されている必要があります。");
 
         Boss1 = world.Prefab(Boss1Name)
             .IsA(BossBase)
             .Add<Boss1Tag>()
-            .Set(new Health(b1Cfg.MaxHp))
-            .Set(new HitFlashSettings(b1Cfg.HitFlashDuration))
-            .Set(new Transform(Vec2f.Zero, b1Cfg.Scale))
-            .Set(new CollisionBox(b1Cfg.CollisionSize))
-            .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
-            .Set(new Hitbox(b1Cfg.GetHitboxShape(), b1Cfg.BodyContactDamage, Faction.Hostile, false));
+            .Set(new Health(b1PrefabCfg.MaxHp))
+            .Set(new HitFlashSettings(b1PrefabCfg.HitFlashDuration))
+            .Set(new Transform(Vec2f.Zero, b1PrefabCfg.Scale))
+            .Set(new CollisionBox(b1PrefabCfg.CollisionSize))
+            .Set(new Hurtbox(b1PrefabCfg.GetHurtboxShape(), Faction.Hostile))
+            .Set(new Hitbox(b1PrefabCfg.GetHitboxShape(), b1PrefabCfg.BodyContactDamage, Faction.Hostile, false));
 
         // --- Boss 2 ---
-        var b2Cfg = world.Get<Boss2Config>();
-        Debug.Assert(b2Cfg != null, "Boss2Config はワールドに登録されている必要があります。");
+        var b2PrefabCfg = world.Get<Boss2PrefabConfig>();
+        Debug.Assert(b2PrefabCfg != null, "Boss2PrefabConfig はワールドに登録されている必要があります。");
 
         Boss2 = world.Prefab(Boss2Name)
             .IsA(BossBase)
             .Add<Boss2Tag>()
-            .Set(new Health(b2Cfg.MaxHp))
-            .Set(new HitFlashSettings(b2Cfg.HitFlashDuration))
-            .Set(new Transform(Vec2f.Zero, b2Cfg.Scale))
-            .Set(new CollisionBox(b2Cfg.CollisionSize))
-            .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
-            .Set(new Hitbox(b2Cfg.GetHitboxShape(), b2Cfg.BodyContactDamage, Faction.Hostile, false));
+            .Set(new Health(b2PrefabCfg.MaxHp))
+            .Set(new HitFlashSettings(b2PrefabCfg.HitFlashDuration))
+            .Set(new Transform(Vec2f.Zero, b2PrefabCfg.Scale))
+            .Set(new CollisionBox(b2PrefabCfg.CollisionSize))
+            .Set(new Hurtbox(b2PrefabCfg.GetHurtboxShape(), Faction.Hostile))
+            .Set(new Hitbox(b2PrefabCfg.GetHitboxShape(), b2PrefabCfg.BodyContactDamage, Faction.Hostile, false));
     }
 
     /// <summary>
