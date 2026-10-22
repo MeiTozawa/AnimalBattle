@@ -1,3 +1,5 @@
+/slidev/
+
 # IDE cache/options directory
 .vs/
 .idea/
@@ -77,6 +79,7 @@ AnimalBattle/*.dll
 
 #AI agent files
 docs/
+.gemini/
 .kiro/
 .worktrees/
 .private-journal/
