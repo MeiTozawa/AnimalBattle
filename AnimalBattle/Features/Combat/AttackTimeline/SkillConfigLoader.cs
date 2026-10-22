@@ -22,7 +22,7 @@ public static class SkillConfigLoader {
     /// <param name="defaultCount">周期弾幕の弾数。</param>
     /// <param name="defaultSpread">周期弾幕の拡散角度。</param>
     /// <param name="armorTag">出招中のアーマー種別。</param>
-    /// <param name="poiseThreshold">靭性閾値。</param>
+    /// <param name="recoveryTag">後隙硬直中に付与されるタグ。</param>
     /// <returns>成功時は <see cref="AttackDefinition" />、検証失敗時は <see cref="Error" />。</returns>
     public static ErrorOr<AttackDefinition> BuildAttackDefinition(
         StringId skillTag,
@@ -36,8 +36,7 @@ public static class SkillConfigLoader {
         int defaultCount = 0,
         float defaultSpread = 0.0f,
         GameplayTag armorTag = GameplayTag.None,
-        GameplayTag recoveryTag = GameplayTag.None,
-        float poiseThreshold = 0.0f)
+        GameplayTag recoveryTag = GameplayTag.None)
     {
         // 業務バリデーション
         if (castDuration <= 0.0f || windUpTime < 0.0f || recoveryTime < 0.0f)
@@ -76,8 +75,7 @@ public static class SkillConfigLoader {
             effectiveRange,
             actions.ToArray(),
             armorTag,
-            recoveryTag,
-            poiseThreshold);
+            recoveryTag);
 
         if (!definition.IsValid) return Error.Validation("Skill.InvalidDefinition", $"技能 '{skillTag}' の内部定義検証に失敗しました。");
 

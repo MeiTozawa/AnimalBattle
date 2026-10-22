@@ -47,10 +47,6 @@ public sealed class SkillRunner {
     public GameplayTag CurrentArmorTag =>
         CurrentPhase == SkillPhase.Active && Definition is not null ? Definition.ArmorTag : GameplayTag.None;
 
-    /// <summary>現在有効な靭性閾値を取得します。</summary>
-    public float PoiseThreshold =>
-        CurrentPhase == SkillPhase.Active && Definition is not null ? Definition.PoiseThreshold : 0.0f;
-
     /// <summary>
     ///     指定した攻撃定義で技能実行を開始します。
     /// </summary>

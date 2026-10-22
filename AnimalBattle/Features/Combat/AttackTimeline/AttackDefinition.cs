@@ -15,8 +15,7 @@ public sealed class AttackDefinition {
         float range,
         IReadOnlyList<AttackActionStep>? actions = null,
         GameplayTag armorTag = GameplayTag.None,
-        GameplayTag recoveryTag = GameplayTag.None,
-        float poiseThreshold = 0.0f)
+        GameplayTag recoveryTag = GameplayTag.None)
     {
         SkillTag = skillTag;
         TelegraphDuration = telegraphDuration;
@@ -25,7 +24,6 @@ public sealed class AttackDefinition {
         Range = range;
         ArmorTag = armorTag;
         RecoveryTag = recoveryTag;
-        PoiseThreshold = poiseThreshold;
 
         var actionCount = actions?.Count ?? 0;
         _actions = new AttackActionStep[actionCount];
@@ -55,9 +53,6 @@ public sealed class AttackDefinition {
     /// <summary>後隙（Recovery）中に自身へ付与されるタグ（Vulnerable 等）を取得します。</summary>
     public GameplayTag RecoveryTag { get; }
 
-    /// <summary>破防に必要な靭性ダメージ閾値を取得します。</summary>
-    public float PoiseThreshold { get; }
-
     /// <summary>設定アクションステップ数を取得します。</summary>
     public int ActionCount => _actions.Length;
 
@@ -68,8 +63,6 @@ public sealed class AttackDefinition {
      && IsNonNegativeFinite(RecoveryDuration)
      && IsFinite(Range)
      && Range >= 0
-     && PoiseThreshold >= 0.0f
-     && IsFinite(PoiseThreshold)
      && IsAllActionsValid();
 
     /// <summary>指定 index のアクションステップを取得します。</summary>
