@@ -23,7 +23,7 @@ public static class CatWeaponSystem
     /// <returns>メソッドチェーン用の <see cref="World"/></returns>
     public static World AddCatWeaponSystem(this World world)
     {
-        world.System<Transform, WeaponIntent, CatWeaponState, SpringScale>("CatWeaponSystem")
+        world.System<Transform, Velocity, WeaponIntent, CatWeaponState, SpringScale, CollisionBox>("CatWeaponSystem")
             .Kind(Ecs.OnUpdate)
             .Without<DeadTag>()
             .Iter(ExecuteCatWeaponSystem);
@@ -34,9 +34,11 @@ public static class CatWeaponSystem
     private static void ExecuteCatWeaponSystem(
         Iter it,
         Field<Transform> transforms,
+        Field<Velocity> velocities,
         Field<WeaponIntent> intents,
         Field<CatWeaponState> weapons,
-        Field<SpringScale> springs)
+        Field<SpringScale> springs,
+        Field<CollisionBox> collisionBoxes)
     {
         var count = it.Count();
         if (count == 0) return;
@@ -47,21 +49,25 @@ public static class CatWeaponSystem
         for (var i = 0; i < count; i++)
         {
             ref var trans = ref transforms[i];
+            ref var vel = ref velocities[i];
             ref var intent = ref intents[i];
             ref var weapon = ref weapons[i];
             ref var spring = ref springs[i];
+            ref readonly var col = ref collisionBoxes[i];
             var entity = it.Entity(i);
 
-            ExecuteCatWeapon(entity, ref trans, ref intent, ref weapon, ref spring, dt, world);
+            ExecuteCatWeapon(entity, ref trans, ref vel, ref intent, ref weapon, ref spring, in col, dt, world);
         }
     }
 
     private static void ExecuteCatWeapon(
         Entity entity,
         ref Transform trans,
+        ref Velocity vel,
         ref WeaponIntent intent,
         ref CatWeaponState weapon,
         ref SpringScale spring,
+        in CollisionBox col,
         float dt,
         World world)
     {
@@ -87,20 +93,24 @@ public static class CatWeaponSystem
             }
 
             var spawnPos = trans.Position + new Vec2f(0.0f, weapon.BulletSpawnOffset.Y) + dir * weapon.BulletSpawnOffset.X;
-            var vel = dir * weapon.BulletSpeed;
+            var bulletVel = dir * weapon.BulletSpeed;
 
             // 事前確保されたエンティティプールから自機弾丸を貸出
             var bulletEntity = CombatPoolService.RentPlayerBullet();
             bulletEntity
                 .Set(new Transform(spawnPos))
-                .Set(new Velocity(vel))
+                .Set(new Velocity(bulletVel))
                 .Set(new Hitbox(new CollisionShape.Box(weapon.BulletSize), weapon.BulletDamage));
 
             // 銃口閃光（Muzzle Flash）エフェクト生成
             EffectSpawner.SpawnMuzzleFlash(world, spawnPos);
 
-            // 自機射撃微後退反動（Recoil Impulse & Squash/Stretch）
-            trans.Position -= dir * weapon.ShootRecoilDistance;
+            // 自機射撃反動（直接座標書き換えを廃止し、MovementSystem 側で処理される外力物理インパルスとして付与）
+            var recoilSpeed = weapon.ShootRecoilImpulse;
+            var recoilDir = -dir;
+            var recoilY = (col.IsGrounded && recoilDir.Y > 0.0f) ? 0.0f : recoilDir.Y * recoilSpeed;
+            var recoilImpulse = new Vec2f(recoilDir.X * recoilSpeed, recoilY);
+            vel.Knockback += recoilImpulse;
 
             spring.Current = weapon.ShootRecoilStretch;
             spring.Velocity = Vec2f.Zero;
