@@ -6,8 +6,7 @@ using AnimalBattle.Presentation.Animation;
 namespace AnimalBattle.Core;
 
 /// <summary>
-///     グローバルな列挙体文字列ルックアップテーブル（LUT）。
-///     ホットパスにおける <see cref="Enum.ToString()" /> のリフレクション辞書検索とヒープ文字列割り当てを完全に排除します。
+///     HUD およびデバッグ表示用の列挙体文字列変換ヘルパー。
 /// </summary>
 public static class EnumStringLut {
     /// <summary>キャラクター種類の識別文字列を取得します。</summary>

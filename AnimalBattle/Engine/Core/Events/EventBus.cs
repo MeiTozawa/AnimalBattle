@@ -3,8 +3,7 @@ using System.Runtime.CompilerServices;
 namespace AnimalBattle.Events;
 
 /// <summary>
-///     型ごとにディスパッチを直接静的バインドするゼロオーバーヘッド・型安全ゲーム内イベントバス。
-///     ヒープ割り当ておよびディクショナリルックアップを排除し、高速なイベント通知を提供します。
+///     型ごとにハンドラーを静的バインドする型安全なゲーム内イベントバス。
 /// </summary>
 /// <typeparam name="T">イベント構造体型</typeparam>
 public static class EventBus<T> where T : struct
@@ -62,6 +61,7 @@ public static class EventBus<T> where T : struct
 
     /// <summary>
     ///     イベントを発行し、登録された全リスナーへ同期通知します。
+    ///     （※ Action&lt;T&gt; へのディスパッチにより値渡しで伝播されます）
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Publish(in T evt)

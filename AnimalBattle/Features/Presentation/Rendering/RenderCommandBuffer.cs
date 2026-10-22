@@ -535,11 +535,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
                 var len = circles.Length;
                 for (var i = 0; i < len; i++)
                 {
-                    dst[i] = new CompactCirclePacket(
-                        src[i].Center + offset,
-                        src[i].Radius,
-                        src[i].Color,
-                        src[i].Fill != 0);
+                    dst[i] = src[i];
+                    dst[i].Center += offset;
                 }
             }
         }
