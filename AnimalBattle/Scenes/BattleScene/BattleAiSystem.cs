@@ -24,8 +24,12 @@ public static class BattleAiSystem
 
     private static Vec2f _cachedPlayerPos;
     private static Vec2f _cachedPlayerVel;
+    private static ulong _cachedPlayerEntityId;
+    private static bool _isPlayerAlive;
+    private static bool _hasPlayerEverSpawned;
+    private static Vec2f _cachedBossPos;
+    private static bool _hasBoss;
     private static TileMap? _cachedTileMap;
-    private static bool _hasPlayer;
     private static readonly List<int> _candidateBossPlatforms = new(16);
 
     /// <summary>
@@ -37,12 +41,16 @@ public static class BattleAiSystem
     {
         _tileMapQuery = world.QueryBuilder<TileMap>().Build();
 
+        // プレイヤーエンティティの追跡用クエリ
         _playerQuery = world.QueryBuilder<Transform, Velocity>()
             .With<PlayerTag>()
             .Build();
 
+        // Boss 更新用クエリ（HitstopState 中の凍結および DeadTag 除外を徹底）
         _bossQuery = world.QueryBuilder<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent>()
             .With<BossTag>()
+            .Without<HitstopState>()
+            .Without<DeadTag>()
             .Build();
 
         world.System("BattleAiSystem")
@@ -60,9 +68,22 @@ public static class BattleAiSystem
         ref readonly var flow = ref w.Get<GameFlow>();
         if (flow.State != GameState.Battle) return;
 
-        _hasPlayer = false;
-        _playerQuery.Each(FindPlayer);
-        if (!_hasPlayer) return;
+        // プレイヤーの生存・座標状態を更新
+        _isPlayerAlive = false;
+        var foundPlayerThisFrame = false;
+
+        _playerQuery.Each((Entity pe, ref Transform t, ref Velocity v) =>
+        {
+            foundPlayerThisFrame = true;
+            _hasPlayerEverSpawned = true;
+            _cachedPlayerPos = t.Position;
+            _cachedPlayerVel = v.Value;
+            _cachedPlayerEntityId = pe.Id;
+            // プレイヤーが DeadTag または GameOverTag を保持していなければ生存と判定
+            _isPlayerAlive = !pe.Has<DeadTag>() && !pe.Has<GameOverTag>();
+        });
+
+        if (!foundPlayerThisFrame && !_hasPlayerEverSpawned) return;
 
         var dt = it.DeltaTime();
         var camCfg = w.Get<CameraConfig>();
@@ -85,10 +106,14 @@ public static class BattleAiSystem
                 return;
             }
 
+            _hasBoss = true;
+            _cachedBossPos = trans.Position;
+
             if (state.BossType == BossType.Boss1 && brain is Boss1Brain b1Brain)
             {
                 var b1Cfg = w.Get<Boss1Config>();
-                b1Brain.Update(dt, _cachedPlayerPos, 1, true, hp.Current, hp.Max);
+                // 生存フラグおよびプレイヤーエンティティIDを動的に渡す
+                b1Brain.Update(dt, _cachedPlayerPos, _cachedPlayerEntityId, _isPlayerAlive, hp.Current, hp.Max);
 
                 // 外力ノックバック速度の減衰処理
                 if (vel.Knockback != Vec2f.Zero)
@@ -120,7 +145,8 @@ public static class BattleAiSystem
             else if (state.BossType == BossType.Boss2 && brain is Boss2Brain b2Brain)
             {
                 var isGrounded = col.IsGrounded;
-                b2Brain.Update(dt, _cachedPlayerPos, _cachedPlayerVel, true, isGrounded, hp.Current, hp.Max, trans.Position);
+                // 生存フラグを動的に渡す
+                b2Brain.Update(dt, _cachedPlayerPos, _cachedPlayerVel, _isPlayerAlive, isGrounded, hp.Current, hp.Max, trans.Position);
 
                 var currentLinear = vel.Value;
                 currentLinear = new Vec2f(b2Brain.Velocity.X, currentLinear.Y);
@@ -143,15 +169,18 @@ public static class BattleAiSystem
             state.StateTimer = brain.StateTimer;
             state.TargetPosition = brain.TargetPosition;
             state.FacingRight = brain.FacingRight;
+        });
 
-            // カメラ追従
+        // カメラ追従および振動の更新（Boss が Hitstop 中や死亡後であっても振動減衰・構図追従を滞りなく継続）
+        if (_hasBoss)
+        {
             CameraService.Update(
                 dt,
                 _cachedPlayerPos,
                 _cachedPlayerVel,
-                trans.Position,
+                _cachedBossPos,
                 camCfg);
-        });
+        }
     }
 
     private static void UpdateBoss2MovementAndCollision(
@@ -273,12 +302,5 @@ public static class BattleAiSystem
         trans.Position = new Vec2f(nextX, adjustedPosY);
         vel.Value = new Vec2f(linear.X, adjustedVy);
         col.IsGrounded = isGrounded;
-    }
-
-    private static void FindPlayer(ref Transform t, ref Velocity v)
-    {
-        _cachedPlayerPos = t.Position;
-        _cachedPlayerVel = v.Value;
-        _hasPlayer = true;
     }
 }
