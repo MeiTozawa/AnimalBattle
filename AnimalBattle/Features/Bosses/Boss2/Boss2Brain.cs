@@ -107,9 +107,6 @@ public sealed class Boss2Brain : BaseBossBrain {
         }
     }
 
-    /// <inheritdoc />
-    public override BossState CurrentState => BossState.From(State);
-
     protected override void ApplyMovementAction(float vx, float vy)
     {
         _currentVelocity = new Vec2f(vx, vy);

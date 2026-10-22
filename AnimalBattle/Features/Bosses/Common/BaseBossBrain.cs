@@ -76,9 +76,6 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>近接攻撃判定生成イベント。</summary>
     public event Action<StringId, float, float>? OnCreateHitbox;
 
-    /// <summary>現在の Boss 統一マクロ状態を取得します。</summary>
-    public abstract BossState CurrentState { get; }
-
     /// <summary>
     ///     時序アクションステップを実行・処理します。
     /// </summary>

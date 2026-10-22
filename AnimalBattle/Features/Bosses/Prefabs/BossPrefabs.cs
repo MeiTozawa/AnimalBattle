@@ -31,7 +31,7 @@ public static class BossPrefabs
         BossBase = world.Prefab(BossBaseName)
             .IsA(CommonPrefabs.BaseCharacter)
             .Add<BossTag>()
-            .Set(new BossCombatState(Phase.Phase1));
+            .Set(new BossCombatState(BossType.Boss1));
 
         // --- Boss 1 ---
         var b1Cfg = world.Get<Boss1Config>();

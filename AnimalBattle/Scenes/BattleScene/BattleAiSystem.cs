@@ -139,7 +139,6 @@ public static class BattleAiSystem
 
             // BossCombatState の同期
             state.Phase = brain.Phase;
-            state.State = brain.CurrentState;
             state.CurrentSkillTag = brain.CurrentSkillTag;
             state.StateTimer = brain.StateTimer;
             state.TargetPosition = brain.TargetPosition;

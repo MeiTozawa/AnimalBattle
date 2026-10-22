@@ -70,9 +70,6 @@ public sealed class Boss1Brain : BaseBossBrain {
         }
     }
 
-    /// <inheritdoc />
-    public override BossState CurrentState => BossState.From(State);
-
     /// <summary>浮遊アニメーション用の累積タイマーを取得します。</summary>
     public float HoverTimer => _hoverTimer;
 

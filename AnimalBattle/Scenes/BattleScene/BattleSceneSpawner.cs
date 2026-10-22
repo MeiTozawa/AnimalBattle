@@ -112,7 +112,7 @@ public static class BattleSceneSpawner {
         bossEntity
             .Set(new Transform(spawn, scale))
             .Set(new Sprite(bossHandle, false, true, new Rect(0, 0, 192, 192)))
-            .Set(new BossCombatState(bossType, Phase.Phase1) { State = brain.CurrentState })
+            .Set(new BossCombatState(bossType, Phase.Phase1))
             .Set(new BossBrainComponent(brain));
 
         brain.AbilitySystem.OnTagsChanged += tags =>

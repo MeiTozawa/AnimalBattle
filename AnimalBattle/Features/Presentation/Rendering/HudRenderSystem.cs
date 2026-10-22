@@ -228,7 +228,6 @@ public static class HudRenderSystem {
         BossHpBarRenderConfig hpCfg,
         out Color badgeColor)
     {
-        var state = combatState.State;
         var currentAbility = brain?.AbilitySystem.CurrentAbility;
         var abilityName = currentAbility?.DisplayName;
         if (string.IsNullOrEmpty(abilityName))
@@ -236,51 +235,51 @@ public static class HudRenderSystem {
             abilityName = !combatState.CurrentSkillTag.IsEmpty ? combatState.CurrentSkillTag.ToString() : "None";
         }
 
-        badgeColor = state switch {
-            { IsDead: true } => ColorPalette.Gray,
-            { IsPhaseTransition: true } => hpCfg.StatePhaseTransitionColor,
-            { IsRecovery: true } => hpCfg.StateRecoveringColor,
-            _ when state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.Stunned => hpCfg.StateStunnedColor,
-            { IsTelegraph: true } => hpCfg.StateTelegraphingColor,
-            { IsExecute: true } => hpCfg.StateCastingColor,
-            _ => hpCfg.StateDefaultColor
-        };
+        var tags = brain?.AbilitySystem.Tags ?? default;
+        var isDead = brain?.IsDead ?? false;
 
-        if (state.IsDead)
+        if (isDead)
         {
+            badgeColor = ColorPalette.Gray;
             destination.TryWrite($"[STATE: DEFEATED]", out charsWritten);
             return;
         }
-        if (state.IsPhaseTransition)
+        if (tags.HasTag(GameplayTag.Phasing))
         {
+            badgeColor = hpCfg.StatePhaseTransitionColor;
             destination.TryWrite($"[STATE: PHASE TRANSITION (INVINCIBLE)]", out charsWritten);
             return;
         }
-        if (state.IsRecovery)
+        if (tags.HasTag(GameplayTag.Recovery))
         {
+            badgeColor = hpCfg.StateRecoveringColor;
             destination.TryWrite($"[STATE: RECOVERING]", out charsWritten);
             return;
         }
-        if (state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.Stunned)
+        if (tags.HasTag(GameplayTag.Stunned))
         {
+            badgeColor = hpCfg.StateStunnedColor;
             destination.TryWrite($"[STATE: STUNNED (VULNERABLE)]", out charsWritten);
             return;
         }
-        if (state.IsTelegraph)
+        if (tags.HasTag(GameplayTag.Telegraph))
         {
+            badgeColor = hpCfg.StateTelegraphingColor;
             destination.TryWrite($"[STATE: TELEGRAPHING (WIND-UP: {abilityName})]", out charsWritten);
             return;
         }
-        if (state.IsExecute)
+        if (tags.HasTag(GameplayTag.Active))
         {
+            badgeColor = hpCfg.StateCastingColor;
             destination.TryWrite($"[STATE: EXECUTING ({abilityName})]", out charsWritten);
             return;
         }
 
-        switch (state.BossType)
+        badgeColor = hpCfg.StateDefaultColor;
+        switch (brain)
         {
-            case BossType.Boss1:
-                switch (state.AsBoss1())
+            case Boss1Brain b1:
+                switch (b1.State)
                 {
                     case Boss1State.Hover:
                         destination.TryWrite($"[STATE: HOVERING (IDLE)]", out charsWritten);
@@ -289,12 +288,11 @@ public static class HudRenderSystem {
                         destination.TryWrite($"[STATE: ATTACK SELECTION]", out charsWritten);
                         return;
                     default:
-                        AssertHelper.FailWithDefault("[HUD 警告] 未知のステート", 0);
                         destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
                         return;
                 }
-            case BossType.Boss2:
-                switch (state.AsBoss2())
+            case Boss2Brain b2:
+                switch (b2.State)
                 {
                     case Boss2State.Idle:
                         destination.TryWrite($"[STATE: IDLE / ALERT]", out charsWritten);
@@ -309,23 +307,13 @@ public static class HudRenderSystem {
                         destination.TryWrite($"[STATE: PLATFORM TRAVERSE (AIRBORNE)]", out charsWritten);
                         return;
                     default:
-                        AssertHelper.FailWithDefault("[HUD 警告] 未知のステート", 0);
                         destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
                         return;
                 }
             default:
-                AssertHelper.FailWithDefault("[HUD 警告] 未知のステート", 0);
                 destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
                 return;
         }
-    }
-
-    internal static void GetBossStateInfo(BossCombatState combatState, IBossBrain? brain, BossHpBarRenderConfig hpCfg,
-        out string stateName, out Color badgeColor)
-    {
-        Span<char> buf = stackalloc char[128];
-        FormatBossStateInfo(buf, out var written, combatState, brain, hpCfg, out badgeColor);
-        stateName = buf[..written].ToString();
     }
 
     private static void DrawBossHpBar(

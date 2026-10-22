@@ -11,9 +11,6 @@ public interface IBossBrain
     /// <summary>現在の戦闘フェーズを取得します。</summary>
     Phase Phase { get; }
 
-    /// <summary>現在の Boss 統一マクロ状態を取得します。</summary>
-    BossState CurrentState { get; }
-
     /// <summary>現在発動中の技能識別タグを取得します。</summary>
     StringId CurrentSkillTag { get; }
 

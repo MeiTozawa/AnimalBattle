@@ -79,7 +79,7 @@ public static class BossTelegraphRenderSystem
 
         if (boss == null) return;
         var b = boss.Value;
-        if (!b.Sprite.IsVisible || b.Sprite.GraphHandle < 0 || b.CombatState.State.IsDead) return;
+        if (!b.Sprite.IsVisible || b.Sprite.GraphHandle < 0) return;
 
         var playerCfg = w.GetActivePlayerConfig();
         ctx.CachedPlayerPos = playerCfg.Spawn;
@@ -93,8 +93,8 @@ public static class BossTelegraphRenderSystem
 
         var bPos = (b.Transform.Position + b.Sprite.JitterOffset).ToVec2i();
 
-        // 1. 攻撃予兆（Telegraph）描画
-        if (b.CombatState.State.IsTelegraph)
+        // 1. 攻撃予兆（Telegraph）描画（GameplayTag.Telegraph 駆動）
+        if (b.Tags.HasTag(GameplayTag.Telegraph))
         {
             var progress = b.Brain.AbilitySystem.Progress;
             DrawBossTelegraph(b, playerPos, progress, bossFx, arenaCfg);
@@ -111,8 +111,8 @@ public static class BossTelegraphRenderSystem
                 b.Sprite.GraphHandle, flipX, b.CombatState.StateTimer, bossFx);
         }
 
-        // 3. フェーズ遷移時の無敵シールド演出
-        if (b.CombatState.State.IsPhaseTransition)
+        // 3. フェーズ遷移時の無敵シールド演出（GameplayTag.Phasing 駆動）
+        if (b.Tags.HasTag(GameplayTag.Phasing))
         {
             DrawBossPhaseTransitionEffects(
                 bPos, b.Sprite.SrcRect, b.Transform.Scale, rotation,
