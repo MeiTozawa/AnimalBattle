@@ -27,10 +27,10 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
     private readonly Action<IConfiguration, T> _binder;
     private readonly Action<World, T>? _onReloaded;
     private readonly IConfigPathResolver _resolver;
-    private IDisposable? _changeTokenSubscription;
     private bool _isDisposed;
 
 #if DEBUG
+    private FileSystemWatcher? _fileWatcher;
     private CancellationTokenSource? _debounceCts;
     private int _isReloading;
 #endif
@@ -77,8 +77,9 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
             var fileName = Path.GetFileName(resolvedPath);
 
             var builder = new ConfigurationBuilder();
+            // 外部エディタによる保存時の二重パースとファイルロック競合を防止するため、内部の自動リロードは無効化
             builder.SetBasePath(directory)
-                   .AddTomlFile(fileName, optional: true, reloadOnChange: true);
+                   .AddTomlFile(fileName, optional: true, reloadOnChange: false);
 
             var configRoot = builder.Build();
             var instance = new T();
@@ -96,48 +97,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
             }
 
 #if DEBUG
-            _changeTokenSubscription = ChangeToken.OnChange(
-                configRoot.GetReloadToken,
-                () =>
-                {
-                    // 内部リロードによる再帰的トリガーをスキップ
-                    if (Volatile.Read(ref _isReloading) != 0) return;
-
-                    CancellationTokenSource cts;
-                    lock (_lock)
-                    {
-                        if (_isDisposed) return;
-                        _debounceCts?.Cancel();
-                        _debounceCts?.Dispose();
-                        _debounceCts = new CancellationTokenSource();
-                        cts = _debounceCts;
-                    }
-
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            // エディタによる連続ファイルイベント（清空・書き込み・改名）を待機して集約
-                            await Task.Delay(DebounceDelayMs, cts.Token).ConfigureAwait(false);
-                            if (cts.Token.IsCancellationRequested) return;
-
-                            lock (_lock)
-                            {
-                                if (_isDisposed) return;
-                            }
-
-                            await ReloadWithRetryAsync(configRoot, resolvedPath, cts.Token).ConfigureAwait(false);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            // 後続の保存イベントによって防抖（Debounce）キャンセルされたため正常終了
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine($"[C# 設定警告] {typeof(T).Name} の非同期リロード監視中に予期せぬエラーが発生しました: {ex.Message}");
-                        }
-                    }, cts.Token);
-                });
+            SetupWatcher(directory, fileName, resolvedPath, configRoot);
 #endif
 
             return instance;
@@ -150,6 +110,61 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
     }
 
 #if DEBUG
+    private void SetupWatcher(string directory, string fileName, string resolvedPath, IConfigurationRoot configRoot)
+    {
+        _fileWatcher = new FileSystemWatcher(directory, fileName)
+        {
+            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
+            EnableRaisingEvents = true
+        };
+
+        FileSystemEventHandler onEvent = (_, _) => TriggerDebouncedReload(configRoot, resolvedPath);
+        _fileWatcher.Changed += onEvent;
+        _fileWatcher.Created += onEvent;
+        _fileWatcher.Renamed += (_, _) => TriggerDebouncedReload(configRoot, resolvedPath);
+    }
+
+    private void TriggerDebouncedReload(IConfigurationRoot configRoot, string resolvedPath)
+    {
+        // 内部リロード実行中の再帰的トリガーを防止
+        if (Volatile.Read(ref _isReloading) != 0) return;
+
+        CancellationTokenSource cts;
+        lock (_lock)
+        {
+            if (_isDisposed) return;
+            _debounceCts?.Cancel();
+            _debounceCts?.Dispose();
+            _debounceCts = new CancellationTokenSource();
+            cts = _debounceCts;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // エディタによる連続ファイル保存シーケンス（トランケート・書き込み・解放）を待機して集約
+                await Task.Delay(DebounceDelayMs, cts.Token).ConfigureAwait(false);
+                if (cts.Token.IsCancellationRequested) return;
+
+                lock (_lock)
+                {
+                    if (_isDisposed) return;
+                }
+
+                await ReloadWithRetryAsync(configRoot, resolvedPath, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // 後続のファイル保存イベントにより安全にキャンセル
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[C# 設定警告] {typeof(T).Name} の非同期リロード中に予期せぬエラーが発生しました: {ex.Message}");
+            }
+        }, cts.Token);
+    }
+
     private async Task ReloadWithRetryAsync(IConfigurationRoot configRoot, string resolvedPath, CancellationToken cancellationToken)
     {
         for (var attempt = 1; attempt <= MaxRetryCount; attempt++)
@@ -240,13 +255,12 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
             _isDisposed = true;
 
 #if DEBUG
+            _fileWatcher?.Dispose();
+            _fileWatcher = null;
             _debounceCts?.Cancel();
             _debounceCts?.Dispose();
             _debounceCts = null;
 #endif
         }
-
-        _changeTokenSubscription?.Dispose();
-        _changeTokenSubscription = null;
     }
 }
