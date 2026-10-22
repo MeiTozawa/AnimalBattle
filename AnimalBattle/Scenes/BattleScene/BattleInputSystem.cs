@@ -88,10 +88,8 @@ public static class BattleInputSystem
 
     private static void ResetCombat(World world)
     {
-        if (world.Has<GameOverTag>())
-        {
-            world.Remove<GameOverTag>();
-        }
+        // ゲームオーバー状態の解除（Remove は冪等のため事前の Has チェック不要）
+        world.Remove<GameOverTag>();
 
         BulletSpawner.ClearAllBossBulletsImmediate(world);
         _playerBulletsQuery.Each(CombatPoolService.Recycle);
@@ -138,16 +136,16 @@ public static class BattleInputSystem
         boss.Set(new GameplayTagState(brainComp.Brain.AbilitySystem.Tags.RawTags));
         boss.Set(new TimedEffectsState());
 
-        if (boss.Has<HitstopState>()) boss.Remove<HitstopState>();
-        if (boss.Has<SpriteJitter>()) boss.Remove<SpriteJitter>();
-        if (boss.Has<IncomingDamage>()) boss.Remove<IncomingDamage>();
+        // 一時状態・エフェクト・死亡タグの一括安全削除（Flecs 原生 API による冪等操作）
+        boss.Remove<HitstopState>()
+            .Remove<SpriteJitter>()
+            .Remove<IncomingDamage>()
+            .Remove<DeadTag>()
+            .Remove<HitFlashEffect>();
         
         ref var sprite = ref boss.GetMut<Sprite>();
         sprite.IsVisible = true;
         sprite.JitterOffset = Vec2f.Zero;
-
-        if (boss.Has<DeadTag>()) boss.Remove<DeadTag>();
-        if (boss.Has<HitFlashEffect>()) boss.Remove<HitFlashEffect>();
     }
 
     internal static void ResetPlayerEntity(Entity player)
@@ -172,9 +170,13 @@ public static class BattleInputSystem
         player.Set(new InvincibleBlinkState());
         player.Set(new SpringScale(Vec2f.One, cfg.SpringFrequency, cfg.SpringDampingRatio));
 
-        if (player.Has<HitstopState>()) player.Remove<HitstopState>();
-        if (player.Has<SpriteJitter>()) player.Remove<SpriteJitter>();
-        if (player.Has<IncomingDamage>()) player.Remove<IncomingDamage>();
+        // 一時状態・エフェクト・死亡・ゲームオーバータグの一括安全削除（Flecs 原生 API による冪等操作）
+        player.Remove<HitstopState>()
+            .Remove<SpriteJitter>()
+            .Remove<IncomingDamage>()
+            .Remove<DeadTag>()
+            .Remove<GameOverTag>()
+            .Remove<HitFlashEffect>();
 
         if (player.Has<CatWeaponState>())
         {
@@ -200,9 +202,6 @@ public static class BattleInputSystem
         sprite.Scale = Vec2f.One;
         sprite.SpringOffsetY = 0.0f;
 
-        if (player.Has<DeadTag>()) player.Remove<DeadTag>();
-        if (player.Has<GameOverTag>()) player.Remove<GameOverTag>();
-        if (player.Has<HitFlashEffect>()) player.Remove<HitFlashEffect>();
     }
 
     private static void ProcessDebugInput(World world, DebugRenderConfig dbgCfg, Query<Health, BossCombatState, BossBrainComponent> bossQuery)

@@ -51,6 +51,9 @@ public static class PlayerDamageResolutionSystem
         ref readonly var cameraCfg = ref world.Get<CameraConfig>();
         var pCfg = world.GetActivePlayerConfig();
 
+        // GameOver 状態のループ不変式判定をループ外へ巻き上げ
+        var isGameOver = world.Has<GameOverTag>();
+
         for (var i = 0; i < count; i++)
         {
             var entity = it.Entity(i);
@@ -67,7 +70,7 @@ public static class PlayerDamageResolutionSystem
             ref var effectState = ref timedEffects[i];
 
             // ゲームオーバー済み、無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
-            if (world.Has<GameOverTag>() || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
+            if (isGameOver || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
             {
                 entity.Remove<IncomingDamage>();
                 continue;

@@ -190,10 +190,8 @@ public static class BattleSceneSpawner {
     /// <param name="world">対象の Flecs.NET ワールド</param>
     public static void Teardown(World world)
     {
-        if (world.Has<GameOverTag>())
-        {
-            world.Remove<GameOverTag>();
-        }
+        // ゲームオーバー状態の解除（Remove は冪等のため事前の Has チェック不要）
+        world.Remove<GameOverTag>();
 
         // 1. サウンド・カーソル・カメラ・照準器の復元
         SoundService.StopBgm();

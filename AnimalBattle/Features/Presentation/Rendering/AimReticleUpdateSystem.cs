@@ -33,13 +33,10 @@ public static class AimReticleUpdateSystem
         {
             Subscription = EventBus.Subscribe<PlayerShotFiredEvent>(_ =>
             {
-                if (world.Has<AimReticleState>())
-                {
-                    var cfg = world.Get<RenderConfig>().AimReticle;
-                    ref var state = ref world.GetMut<AimReticleState>();
-                    state.Expansion = cfg.RecoilExpansion;
-                    state.ExpansionVelocity = 0.0f;
-                }
+                var cfg = world.Get<RenderConfig>().AimReticle;
+                ref var state = ref world.GetMut<AimReticleState>();
+                state.Expansion = cfg.RecoilExpansion;
+                state.ExpansionVelocity = 0.0f;
             })
         });
 
