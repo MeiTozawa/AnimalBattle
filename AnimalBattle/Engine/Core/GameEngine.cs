@@ -69,6 +69,15 @@ public static class GameEngine {
     }
 
     /// <summary>
+    ///     単一スレッド用：現在記録された描画コマンドを C++ へ直接提出します。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Submit()
+    {
+        _commandBuffer.Submit();
+    }
+
+    /// <summary>
     ///     レンダリングスレッド用：前台バッファ（Front Buffer）に蓄積された描画コマンドを C++ へ一括提出します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
