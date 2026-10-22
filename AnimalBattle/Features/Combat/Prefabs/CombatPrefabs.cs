@@ -16,10 +16,12 @@ public static class CombatPrefabs
     public const string PlayerBulletName = "PlayerBulletPrefab";
     public const string BossBulletBaseName = "BossBulletBasePrefab";
     public const string PlayerSlashHitboxName = "PlayerSlashHitboxPrefab";
+    public const string BossSlashHitboxName = "BossSlashHitboxPrefab";
 
     public static Entity PlayerBullet { get; private set; }
     public static Entity BossBulletBase { get; private set; }
     public static Entity PlayerSlashHitbox { get; private set; }
+    public static Entity BossSlashHitbox { get; private set; }
 
     /// <summary>
     ///     戦闘関連の Prefab 原型を登録します。
@@ -33,6 +35,7 @@ public static class CombatPrefabs
         world.Component<Hitbox>().AutoOverride<Hitbox>();
         world.Component<BulletModifier>().AutoOverride<BulletModifier>();
         world.Component<OrbitSatellite>().AutoOverride<OrbitSatellite>();
+        world.Component<HitboxLifetime>().AutoOverride<HitboxLifetime>();
 
         // --- 1. 自機通常弾 ---
         var playerBulletCfg = cfg.PlayerBullet;
@@ -59,5 +62,14 @@ public static class CombatPrefabs
             .IsA(CommonPrefabs.BaseMeleeHitbox)
             .Add<PlayerMeleeTag>()
             .Set(new Hitbox(new CollisionShape.Box(slashCfg.Size), slashCfg.Damage, Faction.Friendly));
+
+        // --- 4. Boss 2 近接斬撃攻撃判定実体 ---
+        var bossSlashCfg = cfg.BossSlashHitbox;
+        BossSlashHitbox = world.Prefab(BossSlashHitboxName)
+            .IsA(CommonPrefabs.BaseMeleeHitbox)
+            .Set(new Velocity(Vec2f.Zero))
+            .Set(new Hitbox(new CollisionShape.Box(Vec2f.Zero), bossSlashCfg?.Damage ?? 1.0f, Faction.Hostile, false))
+            .Set(new Sprite(-1))
+            .Set(new HitboxLifetime(bossSlashCfg?.DefaultDuration ?? 0.25f));
     }
 }

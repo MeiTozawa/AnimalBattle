@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using AnimalBattle.Components;
 
 namespace AnimalBattle.Framework.Pooling;
 
@@ -30,17 +31,21 @@ public sealed class CombatPoolService : IDisposable
     /// <summary>判定付与エリア演出用エンティティプールを取得します。</summary>
     public EntityPool AreaEffects { get; }
 
+    /// <summary>Boss 近接斬撃判定用エンティティプールを取得します。</summary>
+    public EntityPool BossSlashHitboxes { get; }
+
     /// <summary>
     ///     戦闘エンティティプールサービスを初期化し、各種 Prefab に対応する同構プールを事前確保します。
     /// </summary>
     /// <param name="world">エンティティが所属する Flecs.NET ワールド。</param>
     public CombatPoolService(World world)
     {
-        PlayerBullets = RegisterPool(new EntityPool(world, CombatPrefabs.PlayerBullet, 64, ResetPlayerBulletEntity));
-        BossBullets   = RegisterPool(new EntityPool(world, CombatPrefabs.BossBulletBase, 256, ResetBossBulletEntity));
-        SparkEffects  = RegisterPool(new EntityPool(world, VfxPrefabs.SparkVfx, 256, ResetEffectEntity));
-        RingEffects   = RegisterPool(new EntityPool(world, VfxPrefabs.RingVfx, 64, ResetEffectEntity));
-        AreaEffects   = RegisterPool(new EntityPool(world, VfxPrefabs.AreaVfx, 32, ResetEffectEntity));
+        PlayerBullets     = RegisterPool(new EntityPool(world, CombatPrefabs.PlayerBullet, 64, ResetPlayerBulletEntity));
+        BossBullets       = RegisterPool(new EntityPool(world, CombatPrefabs.BossBulletBase, 256, ResetBossBulletEntity));
+        SparkEffects      = RegisterPool(new EntityPool(world, VfxPrefabs.SparkVfx, 256, ResetEffectEntity));
+        RingEffects       = RegisterPool(new EntityPool(world, VfxPrefabs.RingVfx, 64, ResetEffectEntity));
+        AreaEffects       = RegisterPool(new EntityPool(world, VfxPrefabs.AreaVfx, 32, ResetEffectEntity));
+        BossSlashHitboxes = RegisterPool(new EntityPool(world, CombatPrefabs.BossSlashHitbox, 16, ResetBossSlashHitboxEntity));
     }
 
     private EntityPool RegisterPool(EntityPool pool)
@@ -80,6 +85,10 @@ public sealed class CombatPoolService : IDisposable
     /// <summary>エリア演出用エンティティをプールから借出します。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Entity RentAreaEffect() => Current.AreaEffects.Rent();
+
+    /// <summary>Boss 近接斬撃判定エンティティをプールから借出します。</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Entity RentBossSlashHitbox() => Current.BossSlashHitboxes.Rent();
 
     /// <summary>
     ///     エンティティを安全に回収します。
@@ -185,5 +194,26 @@ public sealed class CombatPoolService : IDisposable
             return;
         ref var hitbox = ref e.GetMut<Hitbox>();
         hitbox.IsActive = false;
+    }
+
+    private static void ResetBossSlashHitboxEntity(Entity e)
+    {
+        e.Remove<RecycleTag>();
+        e.Remove<HitFlashEffect>();
+        if (e.Has<HitHistory>())
+        {
+            ref var hist = ref e.GetMut<HitHistory>();
+            hist.ResetHits();
+        }
+        if (e.Has<Hitbox>())
+        {
+            ref var hitbox = ref e.GetMut<Hitbox>();
+            hitbox.IsActive = true;
+        }
+        if (e.Has<HitboxLifetime>())
+        {
+            ref var lt = ref e.GetMut<HitboxLifetime>();
+            lt.ElapsedTimer = 0.0f;
+        }
     }
 }

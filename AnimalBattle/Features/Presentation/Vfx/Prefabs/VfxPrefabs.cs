@@ -43,12 +43,10 @@ public static class VfxPrefabs
             .Set(new RingEffect(ringCfg.InitialRadius, ringCfg.MaxRadius, Color.Empty))
             .Set(new FadeEffect(ringCfg.DefaultDuration));
 
-        // --- 3. 判定付与エリア演出 ---
+        // --- 3. スプライト残影演出 ---
         var areaCfg = cfg.AreaVfx;
         AreaVfx = world.Prefab(AreaVfxName)
             .IsA(CommonPrefabs.BaseVfx)
-            .Set(new Velocity(Vec2f.Zero))
-            .Set(new Hitbox(new CollisionShape.Box(Vec2f.Zero), areaCfg.Damage, Faction.Hostile, false))
             .Set(new Sprite(-1))
             .Set(new FadeEffect(areaCfg.DefaultDuration));
     }

@@ -36,6 +36,9 @@ public sealed class CombatPrefabConfig
     /// <summary>自機近接斬撃判定の原型設定。</summary>
     public PlayerSlashHitboxPrefabConfig PlayerSlashHitbox { get; set; }
 
+    /// <summary>Boss 2 近接斬撃判定の原型設定。</summary>
+    public BossSlashHitboxPrefabConfig BossSlashHitbox { get; set; }
+
     /// <summary>点粒子スパーク演出の原型設定。</summary>
     public SparkVfxPrefabConfig SparkVfx { get; set; }
 
@@ -121,4 +124,11 @@ public sealed class AreaVfxPrefabConfig
 {
     public float DefaultDuration { get; set; }
     public float Damage { get; set; }
+}
+
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+public sealed class BossSlashHitboxPrefabConfig
+{
+    public float Damage { get; set; } = 1.0f;
+    public float DefaultDuration { get; set; } = 0.25f;
 }

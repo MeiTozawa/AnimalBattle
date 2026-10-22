@@ -1,3 +1,4 @@
+using AnimalBattle.Combat.Systems;
 using AnimalBattle.Systems;
 using Flecs.NET.Core;
 
@@ -22,6 +23,7 @@ public readonly struct CombatModule : IFlecsModule
              .AddHurtboxSpatialIndexSystem()       // 5. 食らい判定空間ハッシュ構築
              .AddCombatCollisionSystem()           // 6. 単発弾幕の衝突判定
              .AddPersistentCollisionSystem()       // 7. 持続判定
-             .AddCombatRecycleSystem();            // 8. 画面外・被弾等で RecycleTag が付与されたエンティティを一括回収
+             .AddMeleeLifetimeSystem()             // 8. 近接攻撃判定の持続時間減衰と回収タグ付与
+             .AddCombatRecycleSystem();            // 9. 画面外・被弾等で RecycleTag が付与されたエンティティを一括回収
     }
 }

@@ -49,12 +49,13 @@ public static class MeleeSpawner
             _ => Vec2f.Zero
         };
 
-        CombatPoolService.RentAreaEffect()
+        CombatPoolService.RentBossSlashHitbox()
            .Set(new Transform(pos + offset, new Vec2f(scale, scale)))
            .Set(new Velocity(vel))
            .Set(new Hitbox(new CollisionShape.Box(size, -offset), damage, Faction.Hostile, false))
+           .Set(new HitHistory())
            .Set(new Sprite(slashHandle, false, true, srcRect, color))
-           .Set(new FadeEffect(lifetime));
+           .Set(new HitboxLifetime(lifetime));
     }
 
     /// <summary>

@@ -37,6 +37,10 @@ Damage = 1.2
 Damage = 3.0
 Size = { x = 64.0, y = 64.0 }
 
+[BossSlashHitbox]
+Damage = 1.0
+DefaultDuration = 0.25
+
 # --- 特効演出原型群 ---
 [SparkVfx]
 DefaultRadius = 2.5
