@@ -16,6 +16,7 @@ namespace AnimalBattle.Presentation.Rendering;
 internal sealed class DebugGizmosRenderContext
 {
     public required Query<Transform, CollisionBox> PlatformQuery { get; init; }
+    public required Query<Transform, CollisionBox> PlayerQuery { get; init; }
     public required Query<Transform, Hitbox> HitboxQuery { get; init; }
     public required Query<Transform, Hurtbox> HurtboxQuery { get; init; }
     public required Query<TileMap> TileMapQuery { get; init; }
@@ -34,14 +35,21 @@ public static class DebugGizmosRenderSystem
     /// <returns>登録済みワールド</returns>
     public static World AddDebugGizmosRenderSystem(this World world)
     {
+        // 足場地形および自機のコリジョンボックスクエリを With タグにより厳格分離
         var platformQuery = world.QueryBuilder<Transform, CollisionBox>()
             .With<PlatformTag>()
+            .Build();
+
+        var playerQuery = world.QueryBuilder<Transform, CollisionBox>()
+            .With<PlayerTag>()
             .Build();
 
         var hitboxQuery = world.QueryBuilder<Transform, Hitbox>()
             .Build();
 
+        // 死亡済みユニットの Hurtbox 描画をクエリ層で除外
         var hurtboxQuery = world.QueryBuilder<Transform, Hurtbox>()
+            .Without<DeadTag>()
             .Build();
 
         var tileMapQuery = world.QueryBuilder<TileMap>().Build();
@@ -49,6 +57,7 @@ public static class DebugGizmosRenderSystem
         world.Set(new DebugGizmosRenderContext
         {
             PlatformQuery = platformQuery,
+            PlayerQuery = playerQuery,
             HitboxQuery = hitboxQuery,
             HurtboxQuery = hurtboxQuery,
             TileMapQuery = tileMapQuery
@@ -80,35 +89,44 @@ public static class DebugGizmosRenderSystem
         TileMap? tileMap = null;
         ctx.TileMapQuery.Each((ref TileMap tm) => tileMap = tm);
 
-        DrawCollisionBoxes(ctx.PlatformQuery, dbgCfg);
+        DrawPlatformCollisionBoxes(ctx.PlatformQuery, dbgCfg);
+        DrawPlayerCollisionBoxes(ctx.PlayerQuery, dbgCfg);
         DrawHurtboxes(ctx.HurtboxQuery, dbgCfg);
         DrawHitboxes(ctx.HitboxQuery, dbgCfg);
         DrawPlatformNavGraph(tileMap, dbgCfg);
     }
 
-    private static void DrawCollisionBoxes(Query<Transform, CollisionBox> colQuery, DebugRenderConfig dbgCfg)
+    private static void DrawPlatformCollisionBoxes(Query<Transform, CollisionBox> platformQuery, DebugRenderConfig dbgCfg)
     {
-        colQuery.Each((Entity e, ref Transform trans, ref CollisionBox col) =>
+        // 足場地形枠描画（クエリ分離により Entity.Has による分岐を完全排除）
+        platformQuery.Each((ref Transform trans, ref CollisionBox col) =>
         {
             var halfSize = col.Size * 0.5f;
             var p1 = (Vec2i)(trans.Position - halfSize);
             var p2 = (Vec2i)(trans.Position + halfSize);
+            GameEngine.DrawBox(p1, p2, dbgCfg.PlatformHitboxColor, false);
+        });
+    }
 
-            var boxColor = e.Has<PlatformTag>() ? dbgCfg.PlatformHitboxColor : dbgCfg.PlayerTerrainBoxColor;
-            GameEngine.DrawBox(p1, p2, boxColor, false);
-
-            if (e.Has<PlayerTag>())
-                GameEngine.DrawString(p1 + dbgCfg.PlayerInfoOffset, $"P({(int)trans.Position.X},{(int)trans.Position.Y}) [Grounded:{col.IsGrounded}]",
-                    boxColor);
+    private static void DrawPlayerCollisionBoxes(Query<Transform, CollisionBox> playerQuery, DebugRenderConfig dbgCfg)
+    {
+        // 自機地形枠および接地状態情報描画
+        playerQuery.Each((ref Transform trans, ref CollisionBox col) =>
+        {
+            var halfSize = col.Size * 0.5f;
+            var p1 = (Vec2i)(trans.Position - halfSize);
+            var p2 = (Vec2i)(trans.Position + halfSize);
+            GameEngine.DrawBox(p1, p2, dbgCfg.PlayerTerrainBoxColor, false);
+            GameEngine.DrawString(p1 + dbgCfg.PlayerInfoOffset, $"P({(int)trans.Position.X},{(int)trans.Position.Y}) [Grounded:{col.IsGrounded}]",
+                dbgCfg.PlayerTerrainBoxColor);
         });
     }
 
     private static void DrawHurtboxes(Query<Transform, Hurtbox> hurtboxQuery, DebugRenderConfig dbgCfg)
     {
-        hurtboxQuery.Each((Entity e, ref Transform trans, ref Hurtbox hurtbox) =>
+        // 被弾判定枠描画（クエリで Without<DeadTag> を適用済みなためループ内の死亡判定は不要）
+        hurtboxQuery.Each((ref Transform trans, ref Hurtbox hurtbox) =>
         {
-            if (e.Has<Health>() && e.Get<Health>().Current <= 0.0f) return;
-
             var hurtColor = hurtbox.Faction switch
             {
                 Faction.Friendly => dbgCfg.PlayerHurtboxColor,

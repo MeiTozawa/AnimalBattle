@@ -117,33 +117,18 @@ public static class CombatCollisionSystem
         var isHeavy = localHitbox.Damage >= 2.0f;
 
         // 同一フレーム内で複数弾・近接攻撃が連続ヒットした際のダメージ上書き消失（Damage Overwrite Bug）を防止するため、
-        // 既存の IncomingDamage が存在する場合は Amount を累加し、IsHeavyImpact を論理和で合成する。
+        // Ensure<IncomingDamage>() により存在しない場合は初期化しつつ、Amount を累加し IsHeavyImpact を論理和で合成する。
         // ※ ECS システムイテレーションおよび DeferScope による遅延キューイング中であっても即時参照・更新できるよう一時的に DeferSuspend する
         var isDeferred = world.IsDeferred();
         if (isDeferred) world.DeferSuspend();
         try
         {
-            if (vicEntity.Has<IncomingDamage>())
-            {
-                var existing = vicEntity.Get<IncomingDamage>();
-                vicEntity.Set(new IncomingDamage
-                {
-                    Amount = existing.Amount + localHitbox.Damage,
-                    SourceFaction = existing.SourceFaction,
-                    Knockback = isHeavy ? new Vec2f(knockbackDir * 180.0f, -90.0f) : existing.Knockback,
-                    IsHeavyImpact = existing.IsHeavyImpact | isHeavy
-                });
-            }
-            else
-            {
-                vicEntity.Set(new IncomingDamage
-                {
-                    Amount = localHitbox.Damage,
-                    SourceFaction = localHitbox.Faction,
-                    Knockback = new Vec2f(knockbackDir * 180.0f, -90.0f),
-                    IsHeavyImpact = isHeavy
-                });
-            }
+            ref var incoming = ref vicEntity.Ensure<IncomingDamage>();
+            var isFirstHit = incoming.Amount <= 0.0f;
+            incoming.Amount += localHitbox.Damage;
+            incoming.SourceFaction = isFirstHit ? localHitbox.Faction : incoming.SourceFaction;
+            incoming.Knockback = (isFirstHit || isHeavy) ? new Vec2f(knockbackDir * 180.0f, -90.0f) : incoming.Knockback;
+            incoming.IsHeavyImpact |= isHeavy;
         }
         finally
         {

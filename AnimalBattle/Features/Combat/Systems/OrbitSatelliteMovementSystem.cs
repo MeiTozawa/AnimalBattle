@@ -56,10 +56,15 @@ public static class OrbitSatelliteMovementSystem
                 continue;
             }
 
-            if (parent.Has<PoolLeaseState>() && !parent.Get<PoolLeaseState>().IsRented)
+            // プール所属エンティティの場合の貸出フラグ確認（二重探索を回避）
+            if (parent.Has<PoolLeaseState>())
             {
-                e.Add<RecycleTag>();
-                continue;
+                ref readonly var lease = ref parent.Get<PoolLeaseState>();
+                if (!lease.IsRented)
+                {
+                    e.Add<RecycleTag>();
+                    continue;
+                }
             }
 
             ref var sat = ref satellites[i];
