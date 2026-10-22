@@ -86,5 +86,9 @@ public static class BossConfigSync
         // 被弾フラッシュの更新
         ref var flash = ref e.GetMut<HitFlashSettings>();
         flash.Duration = newConfig.HitFlashDuration;
+
+        // ノックバック可否設定の同期
+        ref var combat = ref e.GetMut<BossCombatState>();
+        combat.CanBeKnockedBack = newConfig.CanBeKnockedBack;
     }
 }

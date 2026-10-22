@@ -60,6 +60,9 @@ public sealed class Boss1Config : BaseBossConfig {
     /// <summary>急降下突進技能識別名</summary>
     public string DiveSkill { get; set; } = string.Empty;
 
+    /// <summary>浮遊移動の上限天井 Y 座標</summary>
+    public float CeilingLimitY { get; set; }
+
     /// <summary>Phase 1 状態機設定</summary>
     public Boss1PhaseFsmConfig Phase1 { get; set; } = new();
 

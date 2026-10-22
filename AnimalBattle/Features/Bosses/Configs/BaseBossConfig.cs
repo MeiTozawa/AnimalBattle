@@ -54,6 +54,12 @@ public abstract class BaseBossConfig {
     /// <summary>Boss 身体接触・突進命中時の与ダメージ量</summary>
     public float BodyContactDamage { get; set; }
 
+    /// <summary>Boss がノックバック外力を受けるかどうかの設定値</summary>
+    public bool CanBeKnockedBack { get; set; } = true;
+
+    /// <summary>Boss のノックバック外力減衰加速度ピクセル毎秒毎秒</summary>
+    public float KnockbackDeceleration { get; set; } = 1200.0f;
+
     /// <summary>
     ///     設定に基づいた Boss 被弾判定 <see cref="CollisionShape" /> を取得します。
     /// </summary>

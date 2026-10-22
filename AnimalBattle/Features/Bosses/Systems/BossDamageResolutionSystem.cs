@@ -95,8 +95,8 @@ public static class BossDamageResolutionSystem
                     entity.Set(new SpriteJitter(new Vec2f(jitterAmp, 0.0f), pCfg.HitJitterFrequency));
                 }
 
-                // ノックバック外力速度の設定
-                vel.Knockback = dmg.Knockback;
+                // ノックバック外力速度の設定：設定でノックバックが無効化されている場合は適用しません
+                vel.Knockback = combat.CanBeKnockedBack ? dmg.Knockback : Vec2f.Zero;
             }
 
             if (isVulnerable)

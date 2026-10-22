@@ -22,6 +22,11 @@ CollisionSize = { x = 120.0, y = 120.0 }
 # 特殊行動技能タグ設定
 DiveSkill = "DiveRam"
 
+# 物理運動および外力制限設定
+CeilingLimitY = 50.0
+CanBeKnockedBack = true
+KnockbackDeceleration = 1200.0
+
 # Phase 1 状態機械設定
 [Phase1]
 HpThreshold = 1.0

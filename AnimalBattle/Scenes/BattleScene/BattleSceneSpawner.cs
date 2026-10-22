@@ -109,10 +109,16 @@ public static class BattleSceneSpawner {
             _ => new Boss1Brain(world, spawn)
         };
 
+        var canBeKnockedBack = bossType switch {
+            BossType.Boss1 => world.Get<Boss1Config>().CanBeKnockedBack,
+            BossType.Boss2 => world.Get<Boss2Config>().CanBeKnockedBack,
+            _ => true
+        };
+
         bossEntity
             .Set(new Transform(spawn, scale))
             .Set(new Sprite(bossHandle, false, true, new Rect(0, 0, 192, 192)))
-            .Set(new BossCombatState(bossType, Phase.Phase1))
+            .Set(new BossCombatState(bossType, Phase.Phase1) { CanBeKnockedBack = canBeKnockedBack })
             .Set(new BossBrainComponent(brain));
 
         brain.AbilitySystem.OnTagsChanged += tags =>

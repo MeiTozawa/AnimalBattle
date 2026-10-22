@@ -284,6 +284,29 @@ public sealed class Boss1Brain : BaseBossBrain {
         }
     }
 
+    /// <summary>
+    ///     外力ノックバックによる微小変位を現在座標へ加算します。
+    /// </summary>
+    /// <param name="delta">フレーム変位量</param>
+    public void ApplyKnockback(Vec2f delta)
+    {
+        _currentPosition += delta;
+    }
+
+    /// <summary>
+    ///     現在座標を指定された矩形境界内に制限します。
+    /// </summary>
+    /// <param name="minX">最小 X 座標</param>
+    /// <param name="maxX">最大 X 座標</param>
+    /// <param name="minY">最小 Y 座標</param>
+    /// <param name="maxY">最大 Y 座標</param>
+    public void ClampPosition(float minX, float maxX, float minY, float maxY)
+    {
+        _currentPosition = new Vec2f(
+            Math.Clamp(_currentPosition.X, minX, maxX),
+            Math.Clamp(_currentPosition.Y, minY, maxY));
+    }
+
     private void OnAbilityCompleted()
     {
         _stateTimer = 0.0f;

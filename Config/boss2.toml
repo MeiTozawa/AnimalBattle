@@ -22,6 +22,10 @@ CollisionSize = { x = 70.0, y = 90.0 }
 # Melee Attack Spawn Point Offset
 SlashSpawnOffset = { x = 80.0, y = -10.0 }
 
+# 物理運動および外力制限設定
+CanBeKnockedBack = false
+KnockbackDeceleration = 1200.0
+
 # 地形物理・基本移動
 MoveSpeed = 160.0
 JumpForce = 640.0

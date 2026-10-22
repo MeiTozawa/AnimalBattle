@@ -25,4 +25,7 @@ public struct BossCombatState(BossType bossType = BossType.Boss1, Phase phase = 
 
     /// <summary>Boss が右向きかどうか。</summary>
     public bool FacingRight = true;
+
+    /// <summary>Boss がノックバック外力を受けるかどうかの設定値。</summary>
+    public bool CanBeKnockedBack = true;
 }
