@@ -7,14 +7,19 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
+///     World 単位で独立して保持される照準器物理更新システム用コンテキスト。
+/// </summary>
+internal sealed class AimReticleUpdateContext
+{
+    public required IDisposable Subscription { get; init; }
+}
+
+/// <summary>
 ///     照準器（AimReticle）のスプリング物理拡縮状態（反動・減衰）を更新する ECS システム。
 ///     射撃イベントを購読して反動拡縮を付与し、PreUpdate フェーズで物理方程式に従い静止状態へ減衰させます。
 /// </summary>
 public static class AimReticleUpdateSystem
 {
-    private static bool _isSubscribed;
-    private static World _subscribedWorld;
-
     /// <summary>
     ///     照準器物理更新システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -24,13 +29,19 @@ public static class AimReticleUpdateSystem
     {
         world.Set(new AimReticleState());
 
-        _subscribedWorld = world;
-
-        if (!_isSubscribed)
+        world.Set(new AimReticleUpdateContext
         {
-            EventBus.Subscribe<PlayerShotFiredEvent>(OnPlayerShotFired);
-            _isSubscribed = true;
-        }
+            Subscription = EventBus.Subscribe<PlayerShotFiredEvent>(_ =>
+            {
+                if (world.Has<AimReticleState>())
+                {
+                    var cfg = world.Get<RenderConfig>().AimReticle;
+                    ref var state = ref world.GetMut<AimReticleState>();
+                    state.Expansion = cfg.RecoilExpansion;
+                    state.ExpansionVelocity = 0.0f;
+                }
+            })
+        });
 
         // レティクル拡縮スプリング物理更新 (PreUpdate)
         world.System("AimReticleUpdateSystem")
@@ -38,17 +49,6 @@ public static class AimReticleUpdateSystem
             .Iter(ExecuteAimReticleUpdate);
 
         return world;
-    }
-
-    private static void OnPlayerShotFired(PlayerShotFiredEvent _)
-    {
-        if (_subscribedWorld.Has<AimReticleState>())
-        {
-            var cfg = _subscribedWorld.Get<RenderConfig>().AimReticle;
-            ref var state = ref _subscribedWorld.GetMut<AimReticleState>();
-            state.Expansion = cfg.RecoilExpansion;
-            state.ExpansionVelocity = 0.0f;
-        }
     }
 
     /// <summary>

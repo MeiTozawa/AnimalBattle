@@ -13,25 +13,31 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Scenes.Battle;
 
 /// <summary>
+///     World 単位で独立して保持される Boss AI およびカメラ更新用コンテキスト。
+/// </summary>
+internal sealed class BattleAiSystemContext
+{
+    public required Query<TileMap> TileMapQuery { get; init; }
+    public required Query<Transform, Velocity> PlayerQuery { get; init; }
+    public required Query<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent> BossQuery { get; init; }
+
+    public Vec2f CachedPlayerPos;
+    public Vec2f CachedPlayerVel;
+    public ulong CachedPlayerEntityId;
+    public bool IsPlayerAlive;
+    public bool HasPlayerEverSpawned;
+    public Vec2f CachedBossPos;
+    public bool HasBoss;
+    public TileMap? CachedTileMap;
+    public readonly List<int> CandidateBossPlatforms = new(16);
+}
+
+/// <summary>
 ///     戦闘シーンにおける Boss AI の意思決定および動的カメラ追従を処理する純粋 ECS システム。
 ///     GameState.Battle 状態時にアクティブとなり、OnUpdate フェーズで自機と Boss の状態同期・AI更新を実行します。
 /// </summary>
 public static class BattleAiSystem
 {
-    private static Query<TileMap> _tileMapQuery;
-    private static Query<Transform, Velocity> _playerQuery;
-    private static Query<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent> _bossQuery;
-
-    private static Vec2f _cachedPlayerPos;
-    private static Vec2f _cachedPlayerVel;
-    private static ulong _cachedPlayerEntityId;
-    private static bool _isPlayerAlive;
-    private static bool _hasPlayerEverSpawned;
-    private static Vec2f _cachedBossPos;
-    private static bool _hasBoss;
-    private static TileMap? _cachedTileMap;
-    private static readonly List<int> _candidateBossPlatforms = new(16);
-
     /// <summary>
     ///     Boss AI 思考および動的カメラ追従システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -39,19 +45,26 @@ public static class BattleAiSystem
     /// <returns>登録済みワールド</returns>
     public static World AddBattleAiSystem(this World world)
     {
-        _tileMapQuery = world.QueryBuilder<TileMap>().Build();
+        var tileMapQuery = world.QueryBuilder<TileMap>().Build();
 
         // プレイヤーエンティティの追跡用クエリ
-        _playerQuery = world.QueryBuilder<Transform, Velocity>()
+        var playerQuery = world.QueryBuilder<Transform, Velocity>()
             .With<PlayerTag>()
             .Build();
 
         // Boss 更新用クエリ（HitstopState 中の凍結および DeadTag 除外を徹底）
-        _bossQuery = world.QueryBuilder<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent>()
+        var bossQuery = world.QueryBuilder<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent>()
             .With<BossTag>()
             .Without<HitstopState>()
             .Without<DeadTag>()
             .Build();
+
+        world.Set(new BattleAiSystemContext
+        {
+            TileMapQuery = tileMapQuery,
+            PlayerQuery = playerQuery,
+            BossQuery = bossQuery
+        });
 
         world.System("BattleAiSystem")
             .Kind(Ecs.OnUpdate)
@@ -60,40 +73,42 @@ public static class BattleAiSystem
         return world;
     }
 
-    private static void FindTileMap(ref TileMap tm) => _cachedTileMap = tm;
-
     private static void ExecuteBattleAi(Iter it)
     {
         var w = it.World();
         ref readonly var flow = ref w.Get<GameFlow>();
         if (flow.State != GameState.Battle) return;
 
+        var ctx = w.Get<BattleAiSystemContext>();
+
         // プレイヤーの生存・座標状態を更新
-        _isPlayerAlive = false;
+        ctx.IsPlayerAlive = false;
         var foundPlayerThisFrame = false;
 
-        _playerQuery.Each((Entity pe, ref Transform t, ref Velocity v) =>
+        ctx.PlayerQuery.Each((Entity pe, ref Transform t, ref Velocity v) =>
         {
             foundPlayerThisFrame = true;
-            _hasPlayerEverSpawned = true;
-            _cachedPlayerPos = t.Position;
-            _cachedPlayerVel = v.Value;
-            _cachedPlayerEntityId = pe.Id;
+            ctx.HasPlayerEverSpawned = true;
+            ctx.CachedPlayerPos = t.Position;
+            ctx.CachedPlayerVel = v.Value;
+            ctx.CachedPlayerEntityId = pe.Id;
             // プレイヤーが DeadTag または GameOverTag を保持していなければ生存と判定
-            _isPlayerAlive = !pe.Has<DeadTag>() && !pe.Has<GameOverTag>();
+            ctx.IsPlayerAlive = !pe.Has<DeadTag>() && !pe.Has<GameOverTag>();
         });
 
-        if (!foundPlayerThisFrame && !_hasPlayerEverSpawned) return;
+        if (!foundPlayerThisFrame && !ctx.HasPlayerEverSpawned) return;
 
         var dt = it.DeltaTime();
         var camCfg = w.Get<CameraConfig>();
 
-        _cachedTileMap = null;
-        _tileMapQuery.Each(FindTileMap);
-        var tileMap = _cachedTileMap;
-        _cachedTileMap = null;
+        ctx.CachedTileMap = null;
+        ctx.TileMapQuery.Each((ref TileMap tm) => ctx.CachedTileMap = tm);
+        var tileMap = ctx.CachedTileMap;
+        ctx.CachedTileMap = null;
 
-        _bossQuery.Each((Entity e, ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Health hp, ref Sprite sprite, ref BossCombatState state, ref BossBrainComponent brainComp) =>
+        ctx.HasBoss = false;
+
+        ctx.BossQuery.Each((Entity e, ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Health hp, ref Sprite sprite, ref BossCombatState state, ref BossBrainComponent brainComp) =>
         {
             var brain = brainComp.Brain;
 
@@ -106,14 +121,14 @@ public static class BattleAiSystem
                 return;
             }
 
-            _hasBoss = true;
-            _cachedBossPos = trans.Position;
+            ctx.HasBoss = true;
+            ctx.CachedBossPos = trans.Position;
 
             if (state.BossType == BossType.Boss1 && brain is Boss1Brain b1Brain)
             {
                 var b1Cfg = w.Get<Boss1Config>();
                 // 生存フラグおよびプレイヤーエンティティIDを動的に渡す
-                b1Brain.Update(dt, _cachedPlayerPos, _cachedPlayerEntityId, _isPlayerAlive, hp.Current, hp.Max);
+                b1Brain.Update(dt, ctx.CachedPlayerPos, ctx.CachedPlayerEntityId, ctx.IsPlayerAlive, hp.Current, hp.Max);
 
                 // 外力ノックバック速度の減衰処理
                 if (vel.Knockback != Vec2f.Zero)
@@ -146,7 +161,7 @@ public static class BattleAiSystem
             {
                 var isGrounded = col.IsGrounded;
                 // 生存フラグを動的に渡す
-                b2Brain.Update(dt, _cachedPlayerPos, _cachedPlayerVel, _isPlayerAlive, isGrounded, hp.Current, hp.Max, trans.Position);
+                b2Brain.Update(dt, ctx.CachedPlayerPos, ctx.CachedPlayerVel, ctx.IsPlayerAlive, isGrounded, hp.Current, hp.Max, trans.Position);
 
                 var currentLinear = vel.Value;
                 currentLinear = new Vec2f(b2Brain.Velocity.X, currentLinear.Y);
@@ -159,7 +174,7 @@ public static class BattleAiSystem
                 }
                 vel.Value = currentLinear;
 
-                UpdateBoss2MovementAndCollision(e, b2Brain, ref trans, ref vel, ref col, dt, w, tileMap, isControlledAirborne);
+                UpdateBoss2MovementAndCollision(e, b2Brain, ref trans, ref vel, ref col, dt, w, tileMap, isControlledAirborne, ctx.CandidateBossPlatforms);
                 sprite.FlipX = !b2Brain.FacingRight;
             }
 
@@ -172,13 +187,13 @@ public static class BattleAiSystem
         });
 
         // カメラ追従および振動の更新（Boss が Hitstop 中や死亡後であっても振動減衰・構図追従を滞りなく継続）
-        if (_hasBoss)
+        if (ctx.HasBoss)
         {
             CameraService.Update(
                 dt,
-                _cachedPlayerPos,
-                _cachedPlayerVel,
-                _cachedBossPos,
+                ctx.CachedPlayerPos,
+                ctx.CachedPlayerVel,
+                ctx.CachedBossPos,
                 camCfg);
         }
     }
@@ -192,7 +207,8 @@ public static class BattleAiSystem
         float dt,
         World world,
         TileMap? tileMap,
-        bool isControlledAirborne)
+        bool isControlledAirborne,
+        List<int> candidateBossPlatforms)
     {
         var b2Cfg = world.Get<Boss2Config>();
         var arenaCfg = world.Get<ArenaConfig>();
@@ -254,12 +270,12 @@ public static class BattleAiSystem
             var sweepSize = new Vec2f(colSize.X, sweepBottom - sweepTop);
             Box2D sweepQueryBox = new(sweepCenter, sweepSize);
 
-            _candidateBossPlatforms.Clear();
-            tileMap.SpatialHash.Query(sweepQueryBox, _candidateBossPlatforms);
+            candidateBossPlatforms.Clear();
+            tileMap.SpatialHash.Query(sweepQueryBox, candidateBossPlatforms);
 
-            for (var p = 0; p < _candidateBossPlatforms.Count; p++)
+            for (var p = 0; p < candidateBossPlatforms.Count; p++)
             {
-                if (tileMap.SpatialHash.TryGetBox(_candidateBossPlatforms[p], out var platformBox))
+                if (tileMap.SpatialHash.TryGetBox(candidateBossPlatforms[p], out var platformBox))
                 {
                     var platTopY = platformBox.Top;
 

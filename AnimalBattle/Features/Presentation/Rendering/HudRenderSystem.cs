@@ -14,6 +14,15 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
+///     World 単位で独立して保持される HUD 描画システム用コンテキスト。
+/// </summary>
+internal sealed class HudRenderSystemContext
+{
+    public required Query<Health, CharacterTypeComponent, GameplayTagState> PlayerQuery { get; init; }
+    public required Query<Health, BossCombatState> BossQuery { get; init; }
+}
+
+/// <summary>
 ///     自機ステータス（HP、二段ジャンプ残数）、Boss 大 HP バー、および操作ガイドを描画する ECS システム。
 ///     戦闘状態（GameState.Battle）時にスクリーン空間へ直接描画します。
 /// </summary>
@@ -29,11 +38,6 @@ public static class HudRenderSystem {
         BossCombatState CombatState,
         (float Phase2Threshold, float Phase3Threshold) PhaseThresholds);
 
-    private static Query<Health, CharacterTypeComponent, GameplayTagState> _playerQuery;
-    private static Query<Health, BossCombatState> _bossQuery;
-    private static PlayerHudData? _cachedPlayer;
-    private static BossHudData? _cachedBoss;
-
     /// <summary>
     ///     HUD 描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -41,12 +45,18 @@ public static class HudRenderSystem {
     /// <returns>登録済みワールド</returns>
     public static World AddHudRenderSystem(this World world)
     {
-        _playerQuery = world.QueryBuilder<Health, CharacterTypeComponent, GameplayTagState>()
+        var playerQuery = world.QueryBuilder<Health, CharacterTypeComponent, GameplayTagState>()
             .With<PlayerTag>()
             .Build();
-        _bossQuery = world.QueryBuilder<Health, BossCombatState>()
+        var bossQuery = world.QueryBuilder<Health, BossCombatState>()
             .With<BossTag>()
             .Build();
+
+        world.Set(new HudRenderSystemContext
+        {
+            PlayerQuery = playerQuery,
+            BossQuery = bossQuery
+        });
 
         world.System("HudRenderSystem")
             .Kind(Ecs.OnStore)
@@ -64,39 +74,34 @@ public static class HudRenderSystem {
         ref readonly var flow = ref w.Get<GameFlow>();
         if (flow.State != GameState.Battle) return;
 
-        _cachedPlayer = null;
-        _cachedBoss = null;
-        _playerQuery.Each(FindPlayer);
-        _bossQuery.Each(FindBoss);
+        var ctx = w.Get<HudRenderSystemContext>();
 
-        var player = _cachedPlayer;
-        var boss = _cachedBoss;
-        _cachedPlayer = null;
-        _cachedBoss = null;
+        PlayerHudData? player = null;
+        BossHudData? boss = null;
+
+        ctx.PlayerQuery.Each((ref Health hp, ref CharacterTypeComponent charType, ref GameplayTagState tags) =>
+        {
+            player = new PlayerHudData(
+                hp,
+                charType.Value,
+                tags.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable),
+                hp.Current > 0.0f);
+        });
+
+        ctx.BossQuery.Each((Entity e, ref Health hp, ref BossCombatState state) =>
+        {
+            var world = e.CsWorld();
+            var (p2, p3) = state.BossType switch {
+                BossType.Boss1 => (world.Get<Boss1Config>().Phase2.HpThreshold, world.Get<Boss1Config>().Phase3.HpThreshold),
+                BossType.Boss2 => (world.Get<Boss2Config>().Phase2.HpThreshold, world.Get<Boss2Config>().Phase3.HpThreshold),
+                _ => (0.7f, 0.3f)
+            };
+            boss = new BossHudData(hp, state, (p2, p3));
+        });
 
         ref readonly var renderCfg = ref w.Get<RenderConfig>();
 
         Render(player, boss, in renderCfg);
-    }
-
-    private static void FindPlayer(ref Health hp, ref CharacterTypeComponent charType, ref GameplayTagState tags)
-    {
-        _cachedPlayer = new PlayerHudData(
-            hp,
-            charType.Value,
-            tags.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable),
-            hp.Current > 0.0f);
-    }
-
-    private static void FindBoss(Entity e, ref Health hp, ref BossCombatState state)
-    {
-        var w = e.CsWorld();
-        var (p2, p3) = state.BossType switch {
-            BossType.Boss1 => (w.Get<Boss1Config>().Phase2.HpThreshold, w.Get<Boss1Config>().Phase3.HpThreshold),
-            BossType.Boss2 => (w.Get<Boss2Config>().Phase2.HpThreshold, w.Get<Boss2Config>().Phase3.HpThreshold),
-            _ => (0.7f, 0.3f)
-        };
-        _cachedBoss = new BossHudData(hp, state, (p2, p3));
     }
 
     /// <summary>

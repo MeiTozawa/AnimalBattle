@@ -11,18 +11,22 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
+///     World 単位で独立して保持されるデバッグギズモ描画システム用コンテキスト。
+/// </summary>
+internal sealed class DebugGizmosRenderContext
+{
+    public required Query<Transform, CollisionBox> PlatformQuery { get; init; }
+    public required Query<Transform, Hitbox> HitboxQuery { get; init; }
+    public required Query<Transform, Hurtbox> HurtboxQuery { get; init; }
+    public required Query<TileMap> TileMapQuery { get; init; }
+}
+
+/// <summary>
 ///     衝突枠（CollisionBox）、攻撃判定枠（Hitbox）、被弾枠（Hurtbox）、およびナビゲーショングラフを描画する ECS システム。
 ///     render.toml の DebugMode かつ IsActive 有効時にワールド空間（カメラオフセット適用中）に Gizmos を描画します。
 /// </summary>
 public static class DebugGizmosRenderSystem
 {
-    private static Query<Transform, CollisionBox> _platformQuery;
-    private static Query<Transform, Hitbox> _hitboxQuery;
-    private static Query<Transform, Hurtbox> _hurtboxQuery;
-    private static Query<TileMap> _tileMapQuery;
-    private static TileMap? _cachedTileMap;
-    private static DebugRenderConfig _currentDbgCfg = null!;
-
     /// <summary>
     ///     デバッグギズモ描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -30,17 +34,25 @@ public static class DebugGizmosRenderSystem
     /// <returns>登録済みワールド</returns>
     public static World AddDebugGizmosRenderSystem(this World world)
     {
-        _platformQuery = world.QueryBuilder<Transform, CollisionBox>()
+        var platformQuery = world.QueryBuilder<Transform, CollisionBox>()
             .With<PlatformTag>()
             .Build();
 
-        _hitboxQuery = world.QueryBuilder<Transform, Hitbox>()
+        var hitboxQuery = world.QueryBuilder<Transform, Hitbox>()
             .Build();
 
-        _hurtboxQuery = world.QueryBuilder<Transform, Hurtbox>()
+        var hurtboxQuery = world.QueryBuilder<Transform, Hurtbox>()
             .Build();
 
-        _tileMapQuery = world.QueryBuilder<TileMap>().Build();
+        var tileMapQuery = world.QueryBuilder<TileMap>().Build();
+
+        world.Set(new DebugGizmosRenderContext
+        {
+            PlatformQuery = platformQuery,
+            HitboxQuery = hitboxQuery,
+            HurtboxQuery = hurtboxQuery,
+            TileMapQuery = tileMapQuery
+        });
 
         world.System("DebugGizmosRenderSystem")
             .Kind(Ecs.OnStore)
@@ -63,82 +75,70 @@ public static class DebugGizmosRenderSystem
         // DebugMode が無効または非アクティブな場合は空間ギズモ描画をスキップ
         if (!dbgCfg.DebugMode || !dbgCfg.IsActive) return;
 
-        _currentDbgCfg = dbgCfg;
-        _cachedTileMap = null;
-        _tileMapQuery.Each(FindTileMap);
-        var tileMap = _cachedTileMap;
-        _cachedTileMap = null;
+        var ctx = w.Get<DebugGizmosRenderContext>();
 
-        DrawCollisionBoxes(_platformQuery);
-        DrawHurtboxes(_hurtboxQuery, dbgCfg);
-        DrawHitboxes(_hitboxQuery, dbgCfg);
+        TileMap? tileMap = null;
+        ctx.TileMapQuery.Each((ref TileMap tm) => tileMap = tm);
+
+        DrawCollisionBoxes(ctx.PlatformQuery, dbgCfg);
+        DrawHurtboxes(ctx.HurtboxQuery, dbgCfg);
+        DrawHitboxes(ctx.HitboxQuery, dbgCfg);
         DrawPlatformNavGraph(tileMap, dbgCfg);
     }
 
-    private static void FindTileMap(ref TileMap tm) => _cachedTileMap = tm;
-
-    private static void DrawCollisionBoxes(Query<Transform, CollisionBox> colQuery)
+    private static void DrawCollisionBoxes(Query<Transform, CollisionBox> colQuery, DebugRenderConfig dbgCfg)
     {
-        colQuery.Each(DrawSingleCollisionBox);
-    }
+        colQuery.Each((Entity e, ref Transform trans, ref CollisionBox col) =>
+        {
+            var halfSize = col.Size * 0.5f;
+            var p1 = (Vec2i)(trans.Position - halfSize);
+            var p2 = (Vec2i)(trans.Position + halfSize);
 
-    private static void DrawSingleCollisionBox(Entity e, ref Transform trans, ref CollisionBox col)
-    {
-        var dbgCfg = _currentDbgCfg;
-        var halfSize = col.Size * 0.5f;
-        var p1 = (Vec2i)(trans.Position - halfSize);
-        var p2 = (Vec2i)(trans.Position + halfSize);
+            var boxColor = e.Has<PlatformTag>() ? dbgCfg.PlatformHitboxColor : dbgCfg.PlayerTerrainBoxColor;
+            GameEngine.DrawBox(p1, p2, boxColor, false);
 
-        var boxColor = e.Has<PlatformTag>() ? dbgCfg.PlatformHitboxColor : dbgCfg.PlayerTerrainBoxColor;
-        GameEngine.DrawBox(p1, p2, boxColor, false);
-
-        if (e.Has<PlayerTag>())
-            GameEngine.DrawString(p1 + dbgCfg.PlayerInfoOffset, $"P({(int)trans.Position.X},{(int)trans.Position.Y}) [Grounded:{col.IsGrounded}]",
-                boxColor);
+            if (e.Has<PlayerTag>())
+                GameEngine.DrawString(p1 + dbgCfg.PlayerInfoOffset, $"P({(int)trans.Position.X},{(int)trans.Position.Y}) [Grounded:{col.IsGrounded}]",
+                    boxColor);
+        });
     }
 
     private static void DrawHurtboxes(Query<Transform, Hurtbox> hurtboxQuery, DebugRenderConfig dbgCfg)
     {
-        hurtboxQuery.Each(DrawSingleHurtbox);
-    }
-
-    private static void DrawSingleHurtbox(Entity e, ref Transform trans, ref Hurtbox hurtbox)
-    {
-        if (e.Has<Health>() && e.Get<Health>().Current <= 0.0f) return;
-
-        var dbgCfg = _currentDbgCfg;
-        var hurtColor = hurtbox.Faction switch
+        hurtboxQuery.Each((Entity e, ref Transform trans, ref Hurtbox hurtbox) =>
         {
-            Faction.Friendly => dbgCfg.PlayerHurtboxColor,
-            Faction.Hostile => dbgCfg.BossHitboxColor,
-            Faction.Neutral => dbgCfg.NeutralHitboxColor,
-            _ => GetFallbackFactionColor(hurtbox.Faction, dbgCfg.BossHitboxColor)
-        };
+            if (e.Has<Health>() && e.Get<Health>().Current <= 0.0f) return;
 
-        var worldCenter = trans.Position + hurtbox.Shape.Offset;
-        DrawCollisionShape(hurtbox.Shape, worldCenter, hurtColor, dbgCfg);
+            var hurtColor = hurtbox.Faction switch
+            {
+                Faction.Friendly => dbgCfg.PlayerHurtboxColor,
+                Faction.Hostile => dbgCfg.BossHitboxColor,
+                Faction.Neutral => dbgCfg.NeutralHitboxColor,
+                _ => GetFallbackFactionColor(hurtbox.Faction, dbgCfg.BossHitboxColor)
+            };
+
+            var worldCenter = trans.Position + hurtbox.Shape.Offset;
+            DrawCollisionShape(hurtbox.Shape, worldCenter, hurtColor, dbgCfg);
+        });
     }
 
     private static void DrawHitboxes(Query<Transform, Hitbox> hitboxQuery, DebugRenderConfig dbgCfg)
     {
-        hitboxQuery.Each(DrawSingleHitbox);
-    }
-
-    private static void DrawSingleHitbox(Entity e, ref Transform trans, ref Hitbox hitbox)
-    {
-        if (!hitbox.IsActive) return;
-
-        var dbgCfg = _currentDbgCfg;
-        var hitColor = hitbox.Faction switch
+        hitboxQuery.Each((Entity e, ref Transform trans, ref Hitbox hitbox) =>
         {
-            Faction.Friendly => dbgCfg.PlayerBulletHitboxColor,
-            Faction.Hostile => dbgCfg.BossBulletHitboxColor,
-            Faction.Neutral => dbgCfg.NeutralHitboxColor,
-            _ => GetFallbackFactionColor(hitbox.Faction, dbgCfg.BossBulletHitboxColor)
-        };
+            if (!hitbox.IsActive) return;
 
-        var worldCenter = trans.Position + hitbox.Shape.Offset;
-        DrawCollisionShape(hitbox.Shape, worldCenter, hitColor, dbgCfg);
+            var hitColor = hitbox.Faction switch
+            {
+                Faction.Friendly => dbgCfg.PlayerBulletHitboxColor,
+                Faction.Hostile => dbgCfg.BossBulletHitboxColor,
+                Faction.Neutral => dbgCfg.NeutralHitboxColor,
+                _ => GetFallbackFactionColor(hitbox.Faction, dbgCfg.BossBulletHitboxColor)
+            };
+
+            var worldCenter = trans.Position + hitbox.Shape.Offset;
+            DrawCollisionShape(hitbox.Shape, worldCenter, hitColor, dbgCfg);
+        });
     }
 
     private static void DrawCollisionShape(CollisionShape shape, Vec2f worldCenter, Color color, DebugRenderConfig dbgCfg)
