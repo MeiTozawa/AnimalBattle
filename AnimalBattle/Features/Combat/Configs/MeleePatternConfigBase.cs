@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Text.Json.Serialization;
 using AnimalBattle.Core;
 using Microsoft.Extensions.Configuration;
 
@@ -30,7 +29,6 @@ public abstract class MeleePatternConfigBase : SkillPatternConfigBase {
 
     /// <summary>斬撃エフェクトカラー Hex 文字列</summary>
     [ConfigurationKeyName("SlashColor")]
-    [JsonPropertyName("SlashColor")]
     public string SlashColorHex
     {
         get => _slashColorHex;
@@ -42,6 +40,5 @@ public abstract class MeleePatternConfigBase : SkillPatternConfigBase {
     }
 
     /// <summary>斬撃エフェクトカラー</summary>
-    [JsonIgnore]
     public Color SlashColor => _slashColor;
 }

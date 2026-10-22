@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Text.Json.Serialization;
 using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
@@ -62,7 +61,6 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
 
     /// <summary>着地炸裂弾塗りつぶしカラー Hex 文字列</summary>
     [ConfigurationKeyName("ImpactFillColor")]
-    [JsonPropertyName("ImpactFillColor")]
     public string ImpactFillColorHex
     {
         get => _impactFillColorHex;
@@ -70,12 +68,10 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
     }
 
     /// <summary>着地炸裂弾塗りつぶしカラー</summary>
-    [JsonIgnore]
     public Color ImpactFillColor => _impactFillColor;
 
     /// <summary>着地炸裂弾外枠カラー Hex 文字列</summary>
     [ConfigurationKeyName("ImpactOutlineColor")]
-    [JsonPropertyName("ImpactOutlineColor")]
     public string ImpactOutlineColorHex
     {
         get => _impactOutlineColorHex;
@@ -83,7 +79,6 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
     }
 
     /// <summary>着地炸裂弾外枠カラー</summary>
-    [JsonIgnore]
     public Color ImpactOutlineColor => _impactOutlineColor;
 
     /// <summary>着地炸裂弾の発生 Y オフセット (px)</summary>
@@ -94,7 +89,6 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
 
     /// <summary>突進残影トレイルカラー Hex 文字列</summary>
     [ConfigurationKeyName("TrailColor")]
-    [JsonPropertyName("TrailColor")]
     public string TrailColorHex
     {
         get => _trailColorHex;
@@ -102,7 +96,6 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
     }
 
     /// <summary>突進残影トレイルカラー</summary>
-    [JsonIgnore]
     public Color TrailColor => _trailColor;
 
     /// <summary>突進補間に使用するイージング種別</summary>
@@ -185,7 +178,6 @@ public sealed class DoubleSpiralConfig : BulletPatternConfigBase {
 
     /// <summary>第 1 弾の塗りつぶしカラー Hex 文字列</summary>
     [ConfigurationKeyName("FillColor1")]
-    [JsonPropertyName("FillColor1")]
     public string FillColor1Hex
     {
         get => _fillColor1Hex;
@@ -193,12 +185,10 @@ public sealed class DoubleSpiralConfig : BulletPatternConfigBase {
     }
 
     /// <summary>第 1 弾の塗りつぶしカラー</summary>
-    [JsonIgnore]
     public Color FillColor1 => _fillColor1;
 
     /// <summary>第 1 弾の外枠カラー Hex 文字列</summary>
     [ConfigurationKeyName("OutlineColor1")]
-    [JsonPropertyName("OutlineColor1")]
     public string OutlineColor1Hex
     {
         get => _outlineColor1Hex;
@@ -206,12 +196,10 @@ public sealed class DoubleSpiralConfig : BulletPatternConfigBase {
     }
 
     /// <summary>第 1 弾の外枠カラー</summary>
-    [JsonIgnore]
     public Color OutlineColor1 => _outlineColor1;
 
     /// <summary>第 2 弾の塗りつぶしカラー Hex 文字列</summary>
     [ConfigurationKeyName("FillColor2")]
-    [JsonPropertyName("FillColor2")]
     public string FillColor2Hex
     {
         get => _fillColor2Hex;
@@ -219,12 +207,10 @@ public sealed class DoubleSpiralConfig : BulletPatternConfigBase {
     }
 
     /// <summary>第 2 弾の塗りつぶしカラー</summary>
-    [JsonIgnore]
     public Color FillColor2 => _fillColor2;
 
     /// <summary>第 2 弾の外枠カラー Hex 文字列</summary>
     [ConfigurationKeyName("OutlineColor2")]
-    [JsonPropertyName("OutlineColor2")]
     public string OutlineColor2Hex
     {
         get => _outlineColor2Hex;
@@ -232,7 +218,6 @@ public sealed class DoubleSpiralConfig : BulletPatternConfigBase {
     }
 
     /// <summary>第 2 弾の外枠カラー</summary>
-    [JsonIgnore]
     public Color OutlineColor2 => _outlineColor2;
 
     /// <inheritdoc />
@@ -395,7 +380,6 @@ public sealed class GroundStompConfig : SkillPatternConfigBase {
 
     /// <summary>衝撃波塗りつぶしカラー Hex 文字列</summary>
     [ConfigurationKeyName("FillColor")]
-    [JsonPropertyName("FillColor")]
     public string FillColorHex
     {
         get => _fillColorHex;
@@ -403,12 +387,10 @@ public sealed class GroundStompConfig : SkillPatternConfigBase {
     }
 
     /// <summary>衝撃波塗りつぶしカラー</summary>
-    [JsonIgnore]
     public Color FillColor => _fillColor;
 
     /// <summary>衝撃波外枠カラー Hex 文字列</summary>
     [ConfigurationKeyName("OutlineColor")]
-    [JsonPropertyName("OutlineColor")]
     public string OutlineColorHex
     {
         get => _outlineColorHex;
@@ -416,7 +398,6 @@ public sealed class GroundStompConfig : SkillPatternConfigBase {
     }
 
     /// <summary>衝撃波外枠カラー</summary>
-    [JsonIgnore]
     public Color OutlineColor => _outlineColor;
 
     /// <inheritdoc />
@@ -483,7 +464,6 @@ public sealed class LeapSmashConfig : SkillPatternConfigBase {
 
     /// <summary>破片塗りつぶしカラー Hex 文字列</summary>
     [ConfigurationKeyName("ShrapnelFillColor")]
-    [JsonPropertyName("ShrapnelFillColor")]
     public string ShrapnelFillColorHex
     {
         get => _shrapnelFillColorHex;
@@ -491,12 +471,10 @@ public sealed class LeapSmashConfig : SkillPatternConfigBase {
     }
 
     /// <summary>破片塗りつぶしカラー</summary>
-    [JsonIgnore]
     public Color ShrapnelFillColor => _shrapnelFillColor;
 
     /// <summary>破片外枠カラー Hex 文字列</summary>
     [ConfigurationKeyName("ShrapnelOutlineColor")]
-    [JsonPropertyName("ShrapnelOutlineColor")]
     public string ShrapnelOutlineColorHex
     {
         get => _shrapnelOutlineColorHex;
@@ -504,7 +482,6 @@ public sealed class LeapSmashConfig : SkillPatternConfigBase {
     }
 
     /// <summary>破片外枠カラー</summary>
-    [JsonIgnore]
     public Color ShrapnelOutlineColor => _shrapnelOutlineColor;
 
     /// <summary>着地叩きつけ近接判定半径</summary>
@@ -602,7 +579,6 @@ public sealed class FrenzyChargeConfig : SkillPatternConfigBase {
 
     /// <summary>突進攻撃判定エフェクトカラー Hex 文字列</summary>
     [ConfigurationKeyName("HitboxColor")]
-    [JsonPropertyName("HitboxColor")]
     public string HitboxColorHex
     {
         get => _hitboxColorHex;
@@ -610,7 +586,6 @@ public sealed class FrenzyChargeConfig : SkillPatternConfigBase {
     }
 
     /// <summary>突進攻撃判定エフェクトカラー</summary>
-    [JsonIgnore]
     public Color HitboxColor => _hitboxColor;
 
     /// <inheritdoc />
@@ -660,7 +635,6 @@ public sealed class EarthquakeRoarConfig : SkillPatternConfigBase {
 
     /// <summary>落石塗りつぶしカラー Hex 文字列</summary>
     [ConfigurationKeyName("RockFillColor")]
-    [JsonPropertyName("RockFillColor")]
     public string RockFillColorHex
     {
         get => _rockFillColorHex;
@@ -668,12 +642,10 @@ public sealed class EarthquakeRoarConfig : SkillPatternConfigBase {
     }
 
     /// <summary>落石塗りつぶしカラー</summary>
-    [JsonIgnore]
     public Color RockFillColor => _rockFillColor;
 
     /// <summary>落石外枠カラー Hex 文字列</summary>
     [ConfigurationKeyName("RockOutlineColor")]
-    [JsonPropertyName("RockOutlineColor")]
     public string RockOutlineColorHex
     {
         get => _rockOutlineColorHex;
@@ -681,7 +653,6 @@ public sealed class EarthquakeRoarConfig : SkillPatternConfigBase {
     }
 
     /// <summary>落石外枠カラー</summary>
-    [JsonIgnore]
     public Color RockOutlineColor => _rockOutlineColor;
 
     /// <summary>落石の特殊弾種別（Magenta, Cyan, Yellow, Black, Normal）</summary>

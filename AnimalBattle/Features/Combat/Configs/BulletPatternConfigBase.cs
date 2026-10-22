@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Text.Json.Serialization;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
 using Microsoft.Extensions.Configuration;
@@ -30,7 +29,6 @@ public abstract class BulletPatternConfigBase : SkillPatternConfigBase {
 
     /// <summary>弾の塗りつぶしカラー Hex 文字列</summary>
     [ConfigurationKeyName("FillColor")]
-    [JsonPropertyName("FillColor")]
     public string FillColorHex
     {
         get => _fillColorHex;
@@ -42,12 +40,10 @@ public abstract class BulletPatternConfigBase : SkillPatternConfigBase {
     }
 
     /// <summary>弾の塗りつぶしカラー</summary>
-    [JsonIgnore]
     public Color FillColor => _fillColor;
 
     /// <summary>弾の外枠カラー Hex 文字列</summary>
     [ConfigurationKeyName("OutlineColor")]
-    [JsonPropertyName("OutlineColor")]
     public string OutlineColorHex
     {
         get => _outlineColorHex;
@@ -59,7 +55,6 @@ public abstract class BulletPatternConfigBase : SkillPatternConfigBase {
     }
 
     /// <summary>弾の外枠カラー</summary>
-    [JsonIgnore]
     public Color OutlineColor => _outlineColor;
 
     /// <summary>弾種別名（Magenta, Cyan, Yellow, Black, Normal）</summary>

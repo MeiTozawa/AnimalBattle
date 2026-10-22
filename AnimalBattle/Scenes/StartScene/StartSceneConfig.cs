@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Text.Json.Serialization;
 using AnimalBattle.Core;
 using Microsoft.Extensions.Configuration;
 
@@ -102,157 +101,131 @@ public sealed class StartSceneColorsConfig {
     private string _bgColorHex = string.Empty;
     private Color _bgColor;
     [ConfigurationKeyName("BgColor")]
-    [JsonPropertyName("BgColor")]
     public string BgColorHex
     {
         get => _bgColorHex;
         set { _bgColorHex = value; _bgColor = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color BgColor => _bgColor;
 
     private string _cardBgColorHex = string.Empty;
     private Color _cardBgColor;
     [ConfigurationKeyName("CardBgColor")]
-    [JsonPropertyName("CardBgColor")]
     public string CardBgColorHex
     {
         get => _cardBgColorHex;
         set { _cardBgColorHex = value; _cardBgColor = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color CardBgColor => _cardBgColor;
 
     private string _cardHoverBgColorHex = string.Empty;
     private Color _cardHoverBgColor;
     [ConfigurationKeyName("CardHoverBgColor")]
-    [JsonPropertyName("CardHoverBgColor")]
     public string CardHoverBgColorHex
     {
         get => _cardHoverBgColorHex;
         set { _cardHoverBgColorHex = value; _cardHoverBgColor = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color CardHoverBgColor => _cardHoverBgColor;
 
     private string _borderDefaultColorHex = string.Empty;
     private Color _borderDefaultColor;
     [ConfigurationKeyName("BorderDefaultColor")]
-    [JsonPropertyName("BorderDefaultColor")]
     public string BorderDefaultColorHex
     {
         get => _borderDefaultColorHex;
         set { _borderDefaultColorHex = value; _borderDefaultColor = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color BorderDefaultColor => _borderDefaultColor;
 
     private string _playerSelectedColorHex = string.Empty;
     private Color _playerSelectedColor;
     [ConfigurationKeyName("PlayerSelectedColor")]
-    [JsonPropertyName("PlayerSelectedColor")]
     public string PlayerSelectedColorHex
     {
         get => _playerSelectedColorHex;
         set { _playerSelectedColorHex = value; _playerSelectedColor = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color PlayerSelectedColor => _playerSelectedColor;
 
     private string _bossSelectedColorHex = string.Empty;
     private Color _bossSelectedColor;
     [ConfigurationKeyName("BossSelectedColor")]
-    [JsonPropertyName("BossSelectedColor")]
     public string BossSelectedColorHex
     {
         get => _bossSelectedColorHex;
         set { _bossSelectedColorHex = value; _bossSelectedColor = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color BossSelectedColor => _bossSelectedColor;
 
     private string _confirmBtnDefaultColorHex = string.Empty;
     private Color _confirmBtnDefaultColor;
     [ConfigurationKeyName("ConfirmBtnDefaultColor")]
-    [JsonPropertyName("ConfirmBtnDefaultColor")]
     public string ConfirmBtnDefaultColorHex
     {
         get => _confirmBtnDefaultColorHex;
         set { _confirmBtnDefaultColorHex = value; _confirmBtnDefaultColor = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color ConfirmBtnDefaultColor => _confirmBtnDefaultColor;
 
     private string _confirmBtnHoverColorHex = string.Empty;
     private Color _confirmBtnHoverColor;
     [ConfigurationKeyName("ConfirmBtnHoverColor")]
-    [JsonPropertyName("ConfirmBtnHoverColor")]
     public string ConfirmBtnHoverColorHex
     {
         get => _confirmBtnHoverColorHex;
         set { _confirmBtnHoverColorHex = value; _confirmBtnHoverColor = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color ConfirmBtnHoverColor => _confirmBtnHoverColor;
 
     private string _confirmBtnBorderDefaultColorHex = string.Empty;
     private Color _confirmBtnBorderDefaultColor;
     [ConfigurationKeyName("ConfirmBtnBorderDefaultColor")]
-    [JsonPropertyName("ConfirmBtnBorderDefaultColor")]
     public string ConfirmBtnBorderDefaultColorHex
     {
         get => _confirmBtnBorderDefaultColorHex;
         set { _confirmBtnBorderDefaultColorHex = value; _confirmBtnBorderDefaultColor = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color ConfirmBtnBorderDefaultColor => _confirmBtnBorderDefaultColor;
 
     private string _confirmBtnBorderHoverColorHex = string.Empty;
     private Color _confirmBtnBorderHoverColor;
     [ConfigurationKeyName("ConfirmBtnBorderHoverColor")]
-    [JsonPropertyName("ConfirmBtnBorderHoverColor")]
     public string ConfirmBtnBorderHoverColorHex
     {
         get => _confirmBtnBorderHoverColorHex;
         set { _confirmBtnBorderHoverColorHex = value; _confirmBtnBorderHoverColor = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color ConfirmBtnBorderHoverColor => _confirmBtnBorderHoverColor;
 
     private string _textWhiteHex = string.Empty;
     private Color _textWhite;
     [ConfigurationKeyName("TextWhite")]
-    [JsonPropertyName("TextWhite")]
     public string TextWhiteHex
     {
         get => _textWhiteHex;
         set { _textWhiteHex = value; _textWhite = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color TextWhite => _textWhite;
 
     private string _textMutedHex = string.Empty;
     private Color _textMuted;
     [ConfigurationKeyName("TextMuted")]
-    [JsonPropertyName("TextMuted")]
     public string TextMutedHex
     {
         get => _textMutedHex;
         set { _textMutedHex = value; _textMuted = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color TextMuted => _textMuted;
 
     private string _textGoldHex = string.Empty;
     private Color _textGold;
     [ConfigurationKeyName("TextGold")]
-    [JsonPropertyName("TextGold")]
     public string TextGoldHex
     {
         get => _textGoldHex;
         set { _textGoldHex = value; _textGold = value.ToColor(); }
     }
-    [JsonIgnore]
     public Color TextGold => _textGold;
 }
 

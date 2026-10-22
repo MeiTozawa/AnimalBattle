@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Text.Json.Serialization;
 using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
@@ -32,7 +31,6 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigL
     }
 
     /// <summary>キャッシュされた技能識別子</summary>
-    [JsonIgnore]
     public StringId SkillId => _cachedSkillId;
 
     /// <inheritdoc />
@@ -46,7 +44,6 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigL
 
     /// <summary>予兆エフェクトカラー Hex 文字列</summary>
     [ConfigurationKeyName("TelegraphColor")]
-    [JsonPropertyName("TelegraphColor")]
     public string TelegraphColorHex
     {
         get => _telegraphColorHex;
@@ -58,7 +55,6 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigL
     }
 
     /// <summary>予兆エフェクトカラー</summary>
-    [JsonIgnore]
     public Color TelegraphColor => _telegraphColor;
 
     /// <summary>発動持続時間（秒）</summary>

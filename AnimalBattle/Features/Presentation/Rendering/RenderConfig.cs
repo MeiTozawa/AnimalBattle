@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Text.Json.Serialization;
 using AnimalBattle.Core;
 using ErrorOr;
 using Microsoft.Extensions.Configuration;
@@ -24,7 +23,6 @@ public sealed class BossEffectsRenderConfig {
 
     /// <summary>警告テキスト・マーカー表示色 Hex 文字列</summary>
     [ConfigurationKeyName("WarningTextColor")]
-    [JsonPropertyName("WarningTextColor")]
     public string WarningTextColorHex
     {
         get => _warningTextColorHex;
@@ -32,7 +30,6 @@ public sealed class BossEffectsRenderConfig {
     }
 
     /// <summary>警告テキスト・マーカー表示色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color WarningTextColor => _warningTextColor;
 
     /// <summary>照準レーザー線の太さ (px)</summary>
@@ -61,7 +58,6 @@ public sealed class BossEffectsRenderConfig {
 
     /// <summary>易傷時の醒目攻撃チャンス表示色 Hex 文字列</summary>
     [ConfigurationKeyName("ChanceMarkerColor")]
-    [JsonPropertyName("ChanceMarkerColor")]
     public string ChanceMarkerColorHex
     {
         get => _chanceMarkerColorHex;
@@ -69,7 +65,6 @@ public sealed class BossEffectsRenderConfig {
     }
 
     /// <summary>易傷時の醒目攻撃チャンス表示色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color ChanceMarkerColor => _chanceMarkerColor;
 
     /// <summary>易傷時のオーラ脈動角速度</summary>
@@ -113,7 +108,6 @@ public sealed class BossEffectsRenderConfig {
 
     /// <summary>金身オーラ発光色 Hex 文字列</summary>
     [ConfigurationKeyName("InvincibleAuraColor")]
-    [JsonPropertyName("InvincibleAuraColor")]
     public string InvincibleAuraColorHex
     {
         get => _invincibleAuraColorHex;
@@ -121,7 +115,6 @@ public sealed class BossEffectsRenderConfig {
     }
 
     /// <summary>金身オーラ発光色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color InvincibleAuraColor => _invincibleAuraColor;
 
     /// <summary>シールド結界呼吸周波数</summary>
@@ -209,7 +202,6 @@ public sealed class BulletRenderConfig {
 
     /// <summary>プレイヤー弾外層グロー色 Hex 文字列</summary>
     [ConfigurationKeyName("PlayerBulletOuterColor")]
-    [JsonPropertyName("PlayerBulletOuterColor")]
     public string PlayerBulletOuterColorHex
     {
         get => _playerBulletOuterColorHex;
@@ -217,7 +209,6 @@ public sealed class BulletRenderConfig {
     }
 
     /// <summary>プレイヤー弾外層グロー色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlayerBulletOuterColor => _playerBulletOuterColor;
 
     /// <summary>プレイヤー弾内層コア半径</summary>
@@ -228,7 +219,6 @@ public sealed class BulletRenderConfig {
 
     /// <summary>プレイヤー弾内層コア色 Hex 文字列</summary>
     [ConfigurationKeyName("PlayerBulletInnerColor")]
-    [JsonPropertyName("PlayerBulletInnerColor")]
     public string PlayerBulletInnerColorHex
     {
         get => _playerBulletInnerColorHex;
@@ -236,7 +226,6 @@ public sealed class BulletRenderConfig {
     }
 
     /// <summary>プレイヤー弾内層コア色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlayerBulletInnerColor => _playerBulletInnerColor;
 
     /// <summary>プレイヤー弾ビームトレイル半サイズ (px)</summary>
@@ -247,7 +236,6 @@ public sealed class BulletRenderConfig {
 
     /// <summary>プレイヤー弾ビームトレイル色 Hex 文字列</summary>
     [ConfigurationKeyName("PlayerBulletTrailColor")]
-    [JsonPropertyName("PlayerBulletTrailColor")]
     public string PlayerBulletTrailColorHex
     {
         get => _playerBulletTrailColorHex;
@@ -255,7 +243,6 @@ public sealed class BulletRenderConfig {
     }
 
     /// <summary>プレイヤー弾ビームトレイル色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlayerBulletTrailColor => _playerBulletTrailColor;
 
     /// <summary>プレイヤー弾トレイル第1階層のアルファ値 (0～255)</summary>
@@ -296,7 +283,6 @@ public sealed class BulletRenderConfig {
 
     /// <summary>Boss 弾内層ホワイトコア色 Hex 文字列</summary>
     [ConfigurationKeyName("BossBulletCoreColor")]
-    [JsonPropertyName("BossBulletCoreColor")]
     public string BossBulletCoreColorHex
     {
         get => _bossBulletCoreColorHex;
@@ -304,7 +290,6 @@ public sealed class BulletRenderConfig {
     }
 
     /// <summary>Boss 弾内層ホワイトコア色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color BossBulletCoreColor => _bossBulletCoreColor;
 
     /// <summary>Boss 弾外枠付加ピクセル半径</summary>
@@ -333,7 +318,6 @@ public sealed class BulletRenderConfig {
 
     /// <summary>シアン弾外周リング発光色 Hex 文字列</summary>
     [ConfigurationKeyName("SpecialCyanRingColor")]
-    [JsonPropertyName("SpecialCyanRingColor")]
     public string SpecialCyanRingColorHex
     {
         get => _specialCyanRingColorHex;
@@ -341,7 +325,6 @@ public sealed class BulletRenderConfig {
     }
 
     /// <summary>シアン弾外周リング発光色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color SpecialCyanRingColor => _specialCyanRingColor;
 
     /// <summary>ブラック弾オーラ基礎半径比率</summary>
@@ -358,7 +341,6 @@ public sealed class BulletRenderConfig {
 
     /// <summary>ブラック弾オーラ色 Hex 文字列</summary>
     [ConfigurationKeyName("SpecialBlackAuraColor")]
-    [JsonPropertyName("SpecialBlackAuraColor")]
     public string SpecialBlackAuraColorHex
     {
         get => _specialBlackAuraColorHex;
@@ -366,7 +348,6 @@ public sealed class BulletRenderConfig {
     }
 
     /// <summary>ブラック弾オーラ色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color SpecialBlackAuraColor => _specialBlackAuraColor;
 
     /// <summary>ブラック弾衛星公転半径比率</summary>
@@ -392,7 +373,6 @@ public sealed class BulletRenderConfig {
 
     /// <summary>ブラック弾内層微小核色 Hex 文字列</summary>
     [ConfigurationKeyName("SpecialBlackCoreInnerColor")]
-    [JsonPropertyName("SpecialBlackCoreInnerColor")]
     public string SpecialBlackCoreInnerColorHex
     {
         get => _specialBlackCoreInnerColorHex;
@@ -400,7 +380,6 @@ public sealed class BulletRenderConfig {
     }
 
     /// <summary>ブラック弾内層微小核色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color SpecialBlackCoreInnerColor => _specialBlackCoreInnerColor;
 
     /// <summary>パーティクルエフェクト外枠ピクセル拡張幅</summary>
@@ -419,7 +398,6 @@ public sealed class HudTextItem {
 
     /// <summary>文字色 Hex 文字列</summary>
     [ConfigurationKeyName("Color")]
-    [JsonPropertyName("Color")]
     public string ColorHex
     {
         get => _colorHex;
@@ -427,7 +405,6 @@ public sealed class HudTextItem {
     }
 
     /// <summary>文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color Color => _color;
 }
 
@@ -443,7 +420,6 @@ public sealed class HudRenderConfig {
 
     /// <summary>タイトル文字色 Hex 文字列</summary>
     [ConfigurationKeyName("TitleColor")]
-    [JsonPropertyName("TitleColor")]
     public string TitleColorHex
     {
         get => _titleColorHex;
@@ -451,7 +427,6 @@ public sealed class HudRenderConfig {
     }
 
     /// <summary>タイトル文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color TitleColor => _titleColor;
 
     /// <summary>タイトル文字列</summary>
@@ -473,7 +448,6 @@ public sealed class HudRenderConfig {
 
     /// <summary>Boss 切り替え操作案内文字色 Hex 文字列</summary>
     [ConfigurationKeyName("BossSwitchGuideColor")]
-    [JsonPropertyName("BossSwitchGuideColor")]
     public string BossSwitchGuideColorHex
     {
         get => _bossSwitchGuideColorHex;
@@ -481,7 +455,6 @@ public sealed class HudRenderConfig {
     }
 
     /// <summary>Boss 切り替え操作案内文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color BossSwitchGuideColor => _bossSwitchGuideColor;
 
     /// <summary>キャラクター切り替え操作案内テキスト</summary>
@@ -492,7 +465,6 @@ public sealed class HudRenderConfig {
 
     /// <summary>キャラクター切り替え操作案内文字色 Hex 文字列</summary>
     [ConfigurationKeyName("CharacterSwitchGuideColor")]
-    [JsonPropertyName("CharacterSwitchGuideColor")]
     public string CharacterSwitchGuideColorHex
     {
         get => _characterSwitchGuideColorHex;
@@ -500,7 +472,6 @@ public sealed class HudRenderConfig {
     }
 
     /// <summary>キャラクター切り替え操作案内文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color CharacterSwitchGuideColor => _characterSwitchGuideColor;
 
     /// <summary>二段ジャンプインジケータ表示座標</summary>
@@ -514,7 +485,6 @@ public sealed class HudRenderConfig {
 
     /// <summary>二段ジャンプ有効時シンボル色 Hex 文字列</summary>
     [ConfigurationKeyName("DoubleJumpActiveColor")]
-    [JsonPropertyName("DoubleJumpActiveColor")]
     public string DoubleJumpActiveColorHex
     {
         get => _doubleJumpActiveColorHex;
@@ -522,7 +492,6 @@ public sealed class HudRenderConfig {
     }
 
     /// <summary>二段ジャンプ有効時シンボル色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color DoubleJumpActiveColor => _doubleJumpActiveColor;
 
     private string _doubleJumpInactiveColorHex = string.Empty;
@@ -530,7 +499,6 @@ public sealed class HudRenderConfig {
 
     /// <summary>二段ジャンプ消費時シンボル色 Hex 文字列</summary>
     [ConfigurationKeyName("DoubleJumpInactiveColor")]
-    [JsonPropertyName("DoubleJumpInactiveColor")]
     public string DoubleJumpInactiveColorHex
     {
         get => _doubleJumpInactiveColorHex;
@@ -538,7 +506,6 @@ public sealed class HudRenderConfig {
     }
 
     /// <summary>二段ジャンプ消費時シンボル色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color DoubleJumpInactiveColor => _doubleJumpInactiveColor;
 
     /// <summary>プレイヤー HP 表示座標</summary>
@@ -552,7 +519,6 @@ public sealed class HudRenderConfig {
 
     /// <summary>プレイヤー HP 高（3以上）文字色 Hex 文字列</summary>
     [ConfigurationKeyName("PlayerHpHighColor")]
-    [JsonPropertyName("PlayerHpHighColor")]
     public string PlayerHpHighColorHex
     {
         get => _playerHpHighColorHex;
@@ -560,7 +526,6 @@ public sealed class HudRenderConfig {
     }
 
     /// <summary>プレイヤー HP 高（3以上）文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlayerHpHighColor => _playerHpHighColor;
 
     private string _playerHpMidColorHex = string.Empty;
@@ -568,7 +533,6 @@ public sealed class HudRenderConfig {
 
     /// <summary>プレイヤー HP 中（2）文字色 Hex 文字列</summary>
     [ConfigurationKeyName("PlayerHpMidColor")]
-    [JsonPropertyName("PlayerHpMidColor")]
     public string PlayerHpMidColorHex
     {
         get => _playerHpMidColorHex;
@@ -576,7 +540,6 @@ public sealed class HudRenderConfig {
     }
 
     /// <summary>プレイヤー HP 中（2）文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlayerHpMidColor => _playerHpMidColor;
 
     private string _playerHpLowColorHex = string.Empty;
@@ -584,7 +547,6 @@ public sealed class HudRenderConfig {
 
     /// <summary>プレイヤー HP 低（1）文字色 Hex 文字列</summary>
     [ConfigurationKeyName("PlayerHpLowColor")]
-    [JsonPropertyName("PlayerHpLowColor")]
     public string PlayerHpLowColorHex
     {
         get => _playerHpLowColorHex;
@@ -592,7 +554,6 @@ public sealed class HudRenderConfig {
     }
 
     /// <summary>プレイヤー HP 低（1）文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlayerHpLowColor => _playerHpLowColor;
 
     private string _playerHpDeadColorHex = string.Empty;
@@ -600,7 +561,6 @@ public sealed class HudRenderConfig {
 
     /// <summary>プレイヤー HP 死亡（0）文字色 Hex 文字列</summary>
     [ConfigurationKeyName("PlayerHpDeadColor")]
-    [JsonPropertyName("PlayerHpDeadColor")]
     public string PlayerHpDeadColorHex
     {
         get => _playerHpDeadColorHex;
@@ -608,7 +568,6 @@ public sealed class HudRenderConfig {
     }
 
     /// <summary>プレイヤー HP 死亡（0）文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlayerHpDeadColor => _playerHpDeadColor;
 
     /// <summary>プレイヤー HP 高判定閾値比率</summary>
@@ -633,7 +592,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>Phase 1 HP ゲージ色 Hex 文字列</summary>
     [ConfigurationKeyName("Phase1Color")]
-    [JsonPropertyName("Phase1Color")]
     public string Phase1ColorHex
     {
         get => _phase1ColorHex;
@@ -641,7 +599,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>Phase 1 HP ゲージ色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color Phase1Color => _phase1Color;
 
     private string _phase2ColorHex = string.Empty;
@@ -649,7 +606,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>Phase 2 HP ゲージ色 Hex 文字列</summary>
     [ConfigurationKeyName("Phase2Color")]
-    [JsonPropertyName("Phase2Color")]
     public string Phase2ColorHex
     {
         get => _phase2ColorHex;
@@ -657,7 +613,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>Phase 2 HP ゲージ色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color Phase2Color => _phase2Color;
 
     private string _phase3ColorHex = string.Empty;
@@ -665,7 +620,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>Phase 3 HP ゲージ色 Hex 文字列</summary>
     [ConfigurationKeyName("Phase3Color")]
-    [JsonPropertyName("Phase3Color")]
     public string Phase3ColorHex
     {
         get => _phase3ColorHex;
@@ -673,7 +627,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>Phase 3 HP ゲージ色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color Phase3Color => _phase3Color;
 
     /// <summary>HP バー背景外枠パディング</summary>
@@ -684,7 +637,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>HP バー暗色背景色 Hex 文字列</summary>
     [ConfigurationKeyName("BgColor")]
-    [JsonPropertyName("BgColor")]
     public string BgColorHex
     {
         get => _bgColorHex;
@@ -692,7 +644,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>HP バー暗色背景色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color BgColor => _bgColor;
 
     private string _borderColorHex = string.Empty;
@@ -700,7 +651,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>HP バー外枠線色 Hex 文字列</summary>
     [ConfigurationKeyName("BorderColor")]
-    [JsonPropertyName("BorderColor")]
     public string BorderColorHex
     {
         get => _borderColorHex;
@@ -708,7 +658,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>HP バー外枠線色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color BorderColor => _borderColor;
 
     /// <summary>HP バー上面ハイライト厚み</summary>
@@ -719,7 +668,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>HP バー上面ハイライト色 Hex 文字列</summary>
     [ConfigurationKeyName("TopHighlightColor")]
-    [JsonPropertyName("TopHighlightColor")]
     public string TopHighlightColorHex
     {
         get => _topHighlightColorHex;
@@ -727,7 +675,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>HP バー上面ハイライト色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color TopHighlightColor => _topHighlightColor;
 
     /// <summary>ヘッダー文字の Y 座標オフセット</summary>
@@ -741,7 +688,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>Boss タイトル文字色 Hex 文字列</summary>
     [ConfigurationKeyName("TitleColor")]
-    [JsonPropertyName("TitleColor")]
     public string TitleColorHex
     {
         get => _titleColorHex;
@@ -749,7 +695,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>Boss タイトル文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color TitleColor => _titleColor;
 
     /// <summary>HP 数値テキストの右端 X 軸オフセット (BarPos2.X から左方向へのオフセット)</summary>
@@ -763,7 +708,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>HP 数値文字色 Hex 文字列</summary>
     [ConfigurationKeyName("HpTextColor")]
-    [JsonPropertyName("HpTextColor")]
     public string HpTextColorHex
     {
         get => _hpTextColorHex;
@@ -771,7 +715,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>HP 数値文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color HpTextColor => _hpTextColor;
 
     /// <summary>状態バッジテキストのオフセット (BarPos1 からの相対距離)</summary>
@@ -782,7 +725,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>前隙予兆状態バッジ文字色 Hex 文字列</summary>
     [ConfigurationKeyName("StateTelegraphingColor")]
-    [JsonPropertyName("StateTelegraphingColor")]
     public string StateTelegraphingColorHex
     {
         get => _stateTelegraphingColorHex;
@@ -790,7 +732,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>前隙予兆状態バッジ文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color StateTelegraphingColor => _stateTelegraphingColor;
 
     private string _stateCastingColorHex = string.Empty;
@@ -798,7 +739,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>発動中状態バッジ文字色 Hex 文字列</summary>
     [ConfigurationKeyName("StateCastingColor")]
-    [JsonPropertyName("StateCastingColor")]
     public string StateCastingColorHex
     {
         get => _stateCastingColorHex;
@@ -806,7 +746,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>発動中状態バッジ文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color StateCastingColor => _stateCastingColor;
 
     private string _stateRecoveringColorHex = string.Empty;
@@ -814,7 +753,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>隙あり虚弱状態バッジ文字色 Hex 文字列</summary>
     [ConfigurationKeyName("StateRecoveringColor")]
-    [JsonPropertyName("StateRecoveringColor")]
     public string StateRecoveringColorHex
     {
         get => _stateRecoveringColorHex;
@@ -822,7 +760,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>隙あり虚弱状態バッジ文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color StateRecoveringColor => _stateRecoveringColor;
 
     private string _statePhaseTransitionColorHex = string.Empty;
@@ -830,7 +767,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>フェーズ遷移演出状態バッジ文字色 Hex 文字列</summary>
     [ConfigurationKeyName("StatePhaseTransitionColor")]
-    [JsonPropertyName("StatePhaseTransitionColor")]
     public string StatePhaseTransitionColorHex
     {
         get => _statePhaseTransitionColorHex;
@@ -838,7 +774,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>フェーズ遷移演出状態バッジ文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color StatePhaseTransitionColor => _statePhaseTransitionColor;
 
     private string _stateDefaultColorHex = string.Empty;
@@ -846,7 +781,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>通常巡航状態バッジ文字色 Hex 文字列</summary>
     [ConfigurationKeyName("StateDefaultColor")]
-    [JsonPropertyName("StateDefaultColor")]
     public string StateDefaultColorHex
     {
         get => _stateDefaultColorHex;
@@ -854,7 +788,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>通常巡航状態バッジ文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color StateDefaultColor => _stateDefaultColor;
 
     private string _stateStunnedColorHex = string.Empty;
@@ -862,7 +795,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>気絶・易傷状態バッジ文字色 Hex 文字列</summary>
     [ConfigurationKeyName("StateStunnedColor")]
-    [JsonPropertyName("StateStunnedColor")]
     public string StateStunnedColorHex
     {
         get => _stateStunnedColorHex;
@@ -870,7 +802,6 @@ public sealed class BossHpBarRenderConfig {
     }
 
     /// <summary>気絶・易傷状態バッジ文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color StateStunnedColor => _stateStunnedColor;
 
     /// <summary>Phase 分割マーカー半幅 (px)</summary>
@@ -892,7 +823,6 @@ public sealed class ModalRenderConfig {
 
     /// <summary>Game Over 背景色 Hex 文字列</summary>
     [ConfigurationKeyName("GameOverBgColor")]
-    [JsonPropertyName("GameOverBgColor")]
     public string GameOverBgColorHex
     {
         get => _gameOverBgColorHex;
@@ -900,7 +830,6 @@ public sealed class ModalRenderConfig {
     }
 
     /// <summary>Game Over 背景色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color GameOverBgColor => _gameOverBgColor;
 
     private string _gameOverOuterBorderColorHex = string.Empty;
@@ -908,7 +837,6 @@ public sealed class ModalRenderConfig {
 
     /// <summary>Game Over 外枠線色 Hex 文字列</summary>
     [ConfigurationKeyName("GameOverOuterBorderColor")]
-    [JsonPropertyName("GameOverOuterBorderColor")]
     public string GameOverOuterBorderColorHex
     {
         get => _gameOverOuterBorderColorHex;
@@ -916,7 +844,6 @@ public sealed class ModalRenderConfig {
     }
 
     /// <summary>Game Over 外枠線色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color GameOverOuterBorderColor => _gameOverOuterBorderColor;
 
     private string _gameOverInnerBorderColorHex = string.Empty;
@@ -924,7 +851,6 @@ public sealed class ModalRenderConfig {
 
     /// <summary>Game Over 内枠線色 Hex 文字列</summary>
     [ConfigurationKeyName("GameOverInnerBorderColor")]
-    [JsonPropertyName("GameOverInnerBorderColor")]
     public string GameOverInnerBorderColorHex
     {
         get => _gameOverInnerBorderColorHex;
@@ -932,7 +858,6 @@ public sealed class ModalRenderConfig {
     }
 
     /// <summary>Game Over 内枠線色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color GameOverInnerBorderColor => _gameOverInnerBorderColor;
 
     /// <summary>Game Over タイトル表示座標</summary>
@@ -943,7 +868,6 @@ public sealed class ModalRenderConfig {
 
     /// <summary>Game Over タイトル文字色 Hex 文字列</summary>
     [ConfigurationKeyName("GameOverTitleColor")]
-    [JsonPropertyName("GameOverTitleColor")]
     public string GameOverTitleColorHex
     {
         get => _gameOverTitleColorHex;
@@ -951,7 +875,6 @@ public sealed class ModalRenderConfig {
     }
 
     /// <summary>Game Over タイトル文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color GameOverTitleColor => _gameOverTitleColor;
 
     /// <summary>Game Over タイトル文字列</summary>
@@ -965,7 +888,6 @@ public sealed class ModalRenderConfig {
 
     /// <summary>Game Over リトライ文字色 Hex 文字列</summary>
     [ConfigurationKeyName("GameOverRetryColor")]
-    [JsonPropertyName("GameOverRetryColor")]
     public string GameOverRetryColorHex
     {
         get => _gameOverRetryColorHex;
@@ -973,7 +895,6 @@ public sealed class ModalRenderConfig {
     }
 
     /// <summary>Game Over リトライ文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color GameOverRetryColor => _gameOverRetryColor;
 
     /// <summary>Game Over リトライ案内文字列</summary>
@@ -990,7 +911,6 @@ public sealed class ModalRenderConfig {
 
     /// <summary>Victory 背景色 Hex 文字列</summary>
     [ConfigurationKeyName("VictoryBgColor")]
-    [JsonPropertyName("VictoryBgColor")]
     public string VictoryBgColorHex
     {
         get => _victoryBgColorHex;
@@ -998,7 +918,6 @@ public sealed class ModalRenderConfig {
     }
 
     /// <summary>Victory 背景色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color VictoryBgColor => _victoryBgColor;
 
     private string _victoryOuterBorderColorHex = string.Empty;
@@ -1006,7 +925,6 @@ public sealed class ModalRenderConfig {
 
     /// <summary>Victory 外枠線色 Hex 文字列</summary>
     [ConfigurationKeyName("VictoryOuterBorderColor")]
-    [JsonPropertyName("VictoryOuterBorderColor")]
     public string VictoryOuterBorderColorHex
     {
         get => _victoryOuterBorderColorHex;
@@ -1014,7 +932,6 @@ public sealed class ModalRenderConfig {
     }
 
     /// <summary>Victory 外枠線色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color VictoryOuterBorderColor => _victoryOuterBorderColor;
 
     private string _victoryInnerBorderColorHex = string.Empty;
@@ -1022,7 +939,6 @@ public sealed class ModalRenderConfig {
 
     /// <summary>Victory 内枠線色 Hex 文字列</summary>
     [ConfigurationKeyName("VictoryInnerBorderColor")]
-    [JsonPropertyName("VictoryInnerBorderColor")]
     public string VictoryInnerBorderColorHex
     {
         get => _victoryInnerBorderColorHex;
@@ -1030,7 +946,6 @@ public sealed class ModalRenderConfig {
     }
 
     /// <summary>Victory 内枠線色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color VictoryInnerBorderColor => _victoryInnerBorderColor;
 
     /// <summary>Victory タイトル表示座標</summary>
@@ -1041,7 +956,6 @@ public sealed class ModalRenderConfig {
 
     /// <summary>Victory タイトル文字色 Hex 文字列</summary>
     [ConfigurationKeyName("VictoryTitleColor")]
-    [JsonPropertyName("VictoryTitleColor")]
     public string VictoryTitleColorHex
     {
         get => _victoryTitleColorHex;
@@ -1049,7 +963,6 @@ public sealed class ModalRenderConfig {
     }
 
     /// <summary>Victory タイトル文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color VictoryTitleColor => _victoryTitleColor;
 
     /// <summary>Victory タイトル文字列</summary>
@@ -1063,7 +976,6 @@ public sealed class ModalRenderConfig {
 
     /// <summary>Victory リトライ文字色 Hex 文字列</summary>
     [ConfigurationKeyName("VictoryRetryColor")]
-    [JsonPropertyName("VictoryRetryColor")]
     public string VictoryRetryColorHex
     {
         get => _victoryRetryColorHex;
@@ -1071,7 +983,6 @@ public sealed class ModalRenderConfig {
     }
 
     /// <summary>Victory リトライ文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color VictoryRetryColor => _victoryRetryColor;
 
     /// <summary>Victory リトライ案内文字列</summary>
@@ -1104,7 +1015,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>プレイヤー地形衝突ボックス枠色 Hex 文字列</summary>
     [ConfigurationKeyName("PlayerTerrainBoxColor")]
-    [JsonPropertyName("PlayerTerrainBoxColor")]
     public string PlayerTerrainBoxColorHex
     {
         get => _playerTerrainBoxColorHex;
@@ -1112,7 +1022,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>プレイヤー地形衝突ボックス枠色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlayerTerrainBoxColor => _playerTerrainBoxColor;
 
     private string _playerHurtboxColorHex = string.Empty;
@@ -1120,7 +1029,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>プレイヤー被弾判定円色 Hex 文字列</summary>
     [ConfigurationKeyName("PlayerHurtboxColor")]
-    [JsonPropertyName("PlayerHurtboxColor")]
     public string PlayerHurtboxColorHex
     {
         get => _playerHurtboxColorHex;
@@ -1128,7 +1036,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>プレイヤー被弾判定円色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlayerHurtboxColor => _playerHurtboxColor;
 
     private string _bossHitboxColorHex = string.Empty;
@@ -1136,7 +1043,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>Boss 攻撃・被弾衝突ボックス枠色 Hex 文字列</summary>
     [ConfigurationKeyName("BossHitboxColor")]
-    [JsonPropertyName("BossHitboxColor")]
     public string BossHitboxColorHex
     {
         get => _bossHitboxColorHex;
@@ -1144,7 +1050,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>Boss 攻撃・被弾衝突ボックス枠色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color BossHitboxColor => _bossHitboxColor;
 
     private string _bossBulletHitboxColorHex = string.Empty;
@@ -1152,7 +1057,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>Boss 弾幕判定円枠色 Hex 文字列</summary>
     [ConfigurationKeyName("BossBulletHitboxColor")]
-    [JsonPropertyName("BossBulletHitboxColor")]
     public string BossBulletHitboxColorHex
     {
         get => _bossBulletHitboxColorHex;
@@ -1160,7 +1064,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>Boss 弾幕判定円枠色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color BossBulletHitboxColor => _bossBulletHitboxColor;
 
     private string _playerBulletHitboxColorHex = string.Empty;
@@ -1168,7 +1071,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>プレイヤー銃弾判定ボックス枠色 Hex 文字列</summary>
     [ConfigurationKeyName("PlayerBulletHitboxColor")]
-    [JsonPropertyName("PlayerBulletHitboxColor")]
     public string PlayerBulletHitboxColorHex
     {
         get => _playerBulletHitboxColorHex;
@@ -1176,7 +1078,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>プレイヤー銃弾判定ボックス枠色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlayerBulletHitboxColor => _playerBulletHitboxColor;
 
     private string _platformHitboxColorHex = string.Empty;
@@ -1184,7 +1085,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>足場衝突境界枠色 Hex 文字列</summary>
     [ConfigurationKeyName("PlatformHitboxColor")]
-    [JsonPropertyName("PlatformHitboxColor")]
     public string PlatformHitboxColorHex
     {
         get => _platformHitboxColorHex;
@@ -1192,7 +1092,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>足場衝突境界枠色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlatformHitboxColor => _platformHitboxColor;
 
     private string _indicatorColorHex = string.Empty;
@@ -1200,7 +1099,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>デバッグ状態インジケータ文字色 Hex 文字列</summary>
     [ConfigurationKeyName("IndicatorColor")]
-    [JsonPropertyName("IndicatorColor")]
     public string IndicatorColorHex
     {
         get => _indicatorColorHex;
@@ -1208,7 +1106,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>デバッグ状態インジケータ文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color IndicatorColor => _indicatorColor;
 
     /// <summary>デバッグ状態インジケータ表示座標</summary>
@@ -1225,7 +1122,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>デバッグフェーズ切替操作案内文字色 Hex 文字列</summary>
     [ConfigurationKeyName("PhaseSwitchGuideColor")]
-    [JsonPropertyName("PhaseSwitchGuideColor")]
     public string PhaseSwitchGuideColorHex
     {
         get => _phaseSwitchGuideColorHex;
@@ -1233,7 +1129,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>デバッグフェーズ切替操作案内文字色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PhaseSwitchGuideColor => _phaseSwitchGuideColor;
 
     /// <summary>デバッグ操作案内表示 Y オフセット (px)</summary>
@@ -1244,7 +1139,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>中立陣営当たり判定色 Hex 文字列</summary>
     [ConfigurationKeyName("NeutralHitboxColor")]
-    [JsonPropertyName("NeutralHitboxColor")]
     public string NeutralHitboxColorHex
     {
         get => _neutralHitboxColorHex;
@@ -1252,7 +1146,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>中立陣営当たり判定色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color NeutralHitboxColor => _neutralHitboxColor;
 
     /// <summary>自機デバッグ情報テキスト表示オフセット (px)</summary>
@@ -1266,7 +1159,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>ナビゲーションメッシュノード描画色 Hex 文字列</summary>
     [ConfigurationKeyName("NavNodeColor")]
-    [JsonPropertyName("NavNodeColor")]
     public string NavNodeColorHex
     {
         get => _navNodeColorHex;
@@ -1274,7 +1166,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>ナビゲーションメッシュノード描画色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color NavNodeColor => _navNodeColor;
 
     private string _navEdgeDropColorHex = string.Empty;
@@ -1282,7 +1173,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>ナビゲーション自由落下リンク描画色 Hex 文字列</summary>
     [ConfigurationKeyName("NavEdgeDropColor")]
-    [JsonPropertyName("NavEdgeDropColor")]
     public string NavEdgeDropColorHex
     {
         get => _navEdgeDropColorHex;
@@ -1290,7 +1180,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>ナビゲーション自由落下リンク描画色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color NavEdgeDropColor => _navEdgeDropColor;
 
     private string _navEdgeJumpColorHex = string.Empty;
@@ -1298,7 +1187,6 @@ public sealed class DebugRenderConfig {
 
     /// <summary>ナビゲーションジャンプリンク描画色 Hex 文字列</summary>
     [ConfigurationKeyName("NavEdgeJumpColor")]
-    [JsonPropertyName("NavEdgeJumpColor")]
     public string NavEdgeJumpColorHex
     {
         get => _navEdgeJumpColorHex;
@@ -1306,7 +1194,6 @@ public sealed class DebugRenderConfig {
     }
 
     /// <summary>ナビゲーションジャンプリンク描画色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color NavEdgeJumpColor => _navEdgeJumpColor;
 
     /// <summary>ナビゲーションメッシュノード描画半径 (px)</summary>
@@ -1343,7 +1230,6 @@ public sealed class AimReticleRenderConfig {
 
     /// <summary>中心照準ドット表示色 Hex 文字列</summary>
     [ConfigurationKeyName("CenterDotColor")]
-    [JsonPropertyName("CenterDotColor")]
     public string CenterDotColorHex
     {
         get => _centerDotColorHex;
@@ -1351,7 +1237,6 @@ public sealed class AimReticleRenderConfig {
     }
 
     /// <summary>中心照準ドット表示色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color CenterDotColor => _centerDotColor;
 
     private string _ringColorHex = string.Empty;
@@ -1359,7 +1244,6 @@ public sealed class AimReticleRenderConfig {
 
     /// <summary>外周タクティカルリング表示色 Hex 文字列</summary>
     [ConfigurationKeyName("RingColor")]
-    [JsonPropertyName("RingColor")]
     public string RingColorHex
     {
         get => _ringColorHex;
@@ -1367,7 +1251,6 @@ public sealed class AimReticleRenderConfig {
     }
 
     /// <summary>外周タクティカルリング表示色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color RingColor => _ringColor;
 
     private string _tickColorHex = string.Empty;
@@ -1375,7 +1258,6 @@ public sealed class AimReticleRenderConfig {
 
     /// <summary>上下左右刻度ショートライン表示色 Hex 文字列</summary>
     [ConfigurationKeyName("TickColor")]
-    [JsonPropertyName("TickColor")]
     public string TickColorHex
     {
         get => _tickColorHex;
@@ -1383,7 +1265,6 @@ public sealed class AimReticleRenderConfig {
     }
 
     /// <summary>上下左右刻度ショートライン表示色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color TickColor => _tickColor;
 
     /// <summary>照準リング最小半径クランプ (px)</summary>
@@ -1411,7 +1292,6 @@ public sealed class ViewportRenderConfig {
 
     /// <summary>タイルマップ未指定時のプラットフォーム代替塗りつぶし色 Hex 文字列</summary>
     [ConfigurationKeyName("PlatformFallbackFillColor")]
-    [JsonPropertyName("PlatformFallbackFillColor")]
     public string PlatformFallbackFillColorHex
     {
         get => _platformFallbackFillColorHex;
@@ -1419,7 +1299,6 @@ public sealed class ViewportRenderConfig {
     }
 
     /// <summary>タイルマップ未指定時のプラットフォーム代替塗りつぶし色</summary>
-    [JsonIgnore]
     public Color PlatformFallbackFillColor => _platformFallbackFillColor;
 
     private string _platformFallbackBorderColorHex = string.Empty;
@@ -1427,7 +1306,6 @@ public sealed class ViewportRenderConfig {
 
     /// <summary>タイルマップ未指定時のプラットフォーム代替枠線色 Hex 文字列</summary>
     [ConfigurationKeyName("PlatformFallbackBorderColor")]
-    [JsonPropertyName("PlatformFallbackBorderColor")]
     public string PlatformFallbackBorderColorHex
     {
         get => _platformFallbackBorderColorHex;
@@ -1435,7 +1313,6 @@ public sealed class ViewportRenderConfig {
     }
 
     /// <summary>タイルマップ未指定時のプラットフォーム代替枠線色</summary>
-    [JsonIgnore]
     public Color PlatformFallbackBorderColor => _platformFallbackBorderColor;
 }
 
@@ -1490,7 +1367,6 @@ public sealed class SlashEffectRenderConfig {
 
     /// <summary>自機近接斬撃エフェクト色 Hex 文字列</summary>
     [ConfigurationKeyName("PlayerSlashColor")]
-    [JsonPropertyName("PlayerSlashColor")]
     public string PlayerSlashColorHex
     {
         get => _playerSlashColorHex;
@@ -1498,7 +1374,6 @@ public sealed class SlashEffectRenderConfig {
     }
 
     /// <summary>自機近接斬撃エフェクト色 (<see cref="Color" />)</summary>
-    [JsonIgnore]
     public Color PlayerSlashColor => _playerSlashColor;
 }
 
