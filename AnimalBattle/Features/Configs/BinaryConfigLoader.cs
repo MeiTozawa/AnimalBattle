@@ -26,7 +26,7 @@ public static class BinaryConfigLoader {
         try
         {
             resolver ??= ConfigPathResolver.Instance;
-            var stream = resolver.OpenBinaryStream(overridePath);
+            var stream = OpenStream(overridePath, resolver);
             if (stream == null)
                 return Error.NotFound("Config.BinaryNotFound", "バイナリ設定ファイル (baked_configs.bin) が見つかりません。");
 
@@ -65,5 +65,27 @@ public static class BinaryConfigLoader {
             Debug.Fail($"[BinaryConfigLoader 警告] バイナリ設定の読み込み中に例外が発生しました: {ex.Message}", ex.ToString());
             return Error.Failure("Config.Exception", $"バイナリ設定の読み込み中に例外が発生しました: {ex.Message}");
         }
+    }
+
+    private static Stream? OpenStream(string? overridePath, IConfigPathResolver resolver)
+    {
+        // 明示的なパス指定がある場合はそれを優先
+        if (!string.IsNullOrEmpty(overridePath) && File.Exists(overridePath))
+        {
+            return File.OpenRead(overridePath);
+        }
+
+        // リゾルバー経由で物理ファイルを探索
+        var physicalPath = resolver.ResolveConfigPath("baked_configs.bin");
+        if (!string.IsNullOrEmpty(physicalPath) && File.Exists(physicalPath))
+        {
+            return File.OpenRead(physicalPath);
+        }
+
+        // 物理ファイルが存在しない場合は埋め込みリソースから取得
+        var assembly = typeof(BinaryConfigLoader).Assembly;
+        return assembly.GetManifestResourceStream("baked_configs.bin")
+            ?? assembly.GetManifestResourceStream("AnimalBattle.Resource.baked_configs.bin")
+            ?? assembly.GetManifestResourceStream("AnimalBattle.baked_configs.bin");
     }
 }
