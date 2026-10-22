@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 using AnimalBattle.Abilities;
 using AnimalBattle.Combat.Spatial;
+using AnimalBattle.Combat.Systems;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -10,15 +12,15 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Systems;
 
 /// <summary>
-///     多フレーム持続判定・近接攻撃専用の衝突判定 ECS システム。
-///     <see cref="HitHistory" /> を保持する攻撃判定（近接斬撃や貫通攻撃）を対象とし、
-///     同一エンティティに対する毎フレームの多段ヒット（重複ダメージ）を防止しつつ、
-///     <see cref="Hurtbox" /> との幾何学的交差判定およびダメージ適用を行います。
+/// 多フレーム持続判定・近接攻撃専用の衝突判定 ECS システム。
+/// <see cref="HitHistory" /> を保持する攻撃判定（近接斬撃や貫通攻撃）を対象とし、
+/// 同一エンティティに対する毎フレームの多段ヒット（重複ダメージ）を防止しつつ、
+/// <see cref="Hurtbox" /> との幾何学的交差判定およびダメージ適用を行います。
 /// </summary>
 public static class PersistentCollisionSystem
 {
     /// <summary>
-    ///     持続・近接衝突判定システムを Flecs.NET ワールドへ登録します。
+    /// 持続・近接衝突判定システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
@@ -33,8 +35,8 @@ public static class PersistentCollisionSystem
     }
 
     /// <summary>
-    ///     持続・近接攻撃判定パイプライン（名前付き静的メソッド）。
-    ///     空間ハッシュから候補 Hurtbox を O(1) 抽出して幾何相交および多段ヒット防止判定を行います。
+    /// 持続・近接攻撃判定パイプライン（名前付き静的メソッド）。
+    /// 空間ハッシュから候補 Hurtbox を O(1) 抽出して幾何相交および多段ヒット防止判定を行います。
     /// </summary>
     public static void ExecutePersistentHit(
         Iter it,
@@ -50,7 +52,7 @@ public static class PersistentCollisionSystem
 
         Span<int> candidateIndices = stackalloc int[16];
 
-        // 被弾コンポーネント追加や破棄タグ付与などの構造変更によるイテレーション破壊と同一フレーム内の多段ヒットを防止するため、遅延実行モードを開始する
+        // 被弾コンポーネント追加や構造変更によるイテレーション破壊を防止するため、遅延実行モードを開始する
         using (new DeferScope(world))
         {
             for (var i = 0; i < count; i++)
@@ -58,9 +60,15 @@ public static class PersistentCollisionSystem
                 ref var hitbox = ref hitboxes[i];
                 if (!hitbox.IsActive) continue;
 
+                // 単発弾幕（DestroyOnHit = true）が混入した場合は誤判定防止のためスキップ
+                if (hitbox.DestroyOnHit)
+                {
+                    Debug.Fail($"[PersistentCollisionSystem 警告] DestroyOnHit == true の単発弾丸に HitHistory が付与されています: {it.Entity(i)}");
+                    continue;
+                }
+
                 ref var trans = ref atkTrans[i];
                 ref var history = ref histories[i];
-                var atkEntity = it.Entity(i);
                 var shouldDestroyAttacker = false;
 
                 var aCenterX = trans.Position.X + hitbox.Shape.Offset.X;
@@ -81,9 +89,8 @@ public static class PersistentCollisionSystem
                     var vicEntity = target.Entity;
                     if (!vicEntity.IsAlive()) continue;
 
-                    // 単発弾（DestroyOnHit = true）は履歴検査をスキップ
-                    // 貫通・近接判定（DestroyOnHit = false）は同一対象への重複多段ヒットを防止
-                    if (!hitbox.DestroyOnHit && history.HasHit(vicEntity.Id)) continue;
+                    // 持続・近接判定専用：同一対象への多段重複ヒットを防止
+                    if (history.HasHit(vicEntity.Id)) continue;
 
                     ref readonly var hp = ref vicEntity.Get<Health>();
                     if (hp.Current <= 0.0f) continue;
@@ -93,25 +100,10 @@ public static class PersistentCollisionSystem
 
                     if (PhysicsService.Intersects(trans, hitbox.Shape, vicTrans, hurtbox.Shape))
                     {
-                        if (!hitbox.DestroyOnHit)
-                        {
-                            history.TryRecordHit(vicEntity.Id);
-                        }
-
+                        history.TryRecordHit(vicEntity.Id);
                         CombatCollisionSystem.ApplyHit(world, vicEntity, in vicTrans, in trans, in hurtbox, in hitbox,
                             ref shouldDestroyAttacker);
-                        if (shouldDestroyAttacker)
-                        {
-                            hitbox.IsActive = false;
-                            break;
-                        }
                     }
-                }
-
-                if (shouldDestroyAttacker)
-                {
-                    hitbox.IsActive = false;
-                    atkEntity.Add<RecycleTag>();
                 }
             }
         }
