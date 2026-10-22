@@ -52,6 +52,8 @@ public static class VfxRenderSystem
         if (w.Get<GameFlow>().State != GameState.Battle) return;
 
         var count = it.Count();
+        if (count == 0) return;
+
         for (var i = 0; i < count; i++)
         {
             ref var fade = ref fades[i];
@@ -71,9 +73,11 @@ public static class VfxRenderSystem
                 sprite.GraphHandle,
                 true,
                 sprite.FlipX);
-            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-            GameEngine.SetDrawBright(255, 255, 255);
         }
+
+        // パイプライン状態をデフォルトへ復元
+        GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+        GameEngine.SetDrawBright(255, 255, 255);
     }
 
     /// <summary>
@@ -85,6 +89,8 @@ public static class VfxRenderSystem
         if (w.Get<GameFlow>().State != GameState.Battle) return;
 
         var count = it.Count();
+        if (count == 0) return;
+
         for (var i = 0; i < count; i++)
         {
             ref var fade = ref fades[i];
@@ -98,8 +104,10 @@ public static class VfxRenderSystem
 
             GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
             GameEngine.DrawCircle((Vec2i)t.Position, (int)currentRadius, ring.Color, ring.IsFilled);
-            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
         }
+
+        // パイプライン状態をデフォルトへ復元
+        GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
     }
 
     /// <summary>
@@ -111,6 +119,8 @@ public static class VfxRenderSystem
         if (w.Get<GameFlow>().State != GameState.Battle) return;
 
         var count = it.Count();
+        if (count == 0) return;
+
         var bulletCfg = w.Get<RenderConfig>().Bullets;
 
         for (var i = 0; i < count; i++)
@@ -127,7 +137,9 @@ public static class VfxRenderSystem
             GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
             GameEngine.DrawCircle(p, radius + bulletCfg.ParticleOutlinePadding, b.OutlineColor, true);
             GameEngine.DrawCircle(p, radius, b.FillColor, true);
-            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
         }
+
+        // パイプライン状態をデフォルトへ復元（同等アルファ値の連続円描画バッチを維持）
+        GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
     }
 }

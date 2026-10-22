@@ -113,10 +113,11 @@ public static class SpriteRenderSystem
                 sprite.GraphHandle,
                 true,
                 sprite.FlipX);
-
-            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-            GameEngine.SetDrawBright(255, 255, 255);
         }
+
+        // パイプライン状態をデフォルトへ復元
+        GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+        GameEngine.SetDrawBright(255, 255, 255);
     }
 
     /// <summary>
@@ -158,9 +159,10 @@ public static class SpriteRenderSystem
                 sprite.GraphHandle,
                 true,
                 sprite.FlipX);
-
-            GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
-            GameEngine.SetDrawBright(255, 255, 255);
         }
+
+        // パイプライン状態をデフォルトへ復元
+        GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+        GameEngine.SetDrawBright(255, 255, 255);
     }
 }
