@@ -5,7 +5,7 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Abilities;
 
 /// <summary>
-///     個別能力の冷却スロットデータ（POD）。
+///     個別能力の冷却スロットデータです。
 /// </summary>
 public struct CooldownSlot
 {
@@ -17,7 +17,7 @@ public struct CooldownSlot
 }
 
 /// <summary>
-///     冷却スロットを保持する純粋なインライン定長データコンポーネント（POD、定長 16 スロット）。
+///     16要素のインライン固定長スロットを保持する冷却データコンポーネントです。
 ///     .NET の InlineArray により、ヒープ割り当てなしで直接インデックスアクセスが可能です。
 /// </summary>
 [InlineArray(MaxSlots)]
@@ -102,7 +102,7 @@ public sealed class CooldownTracker {
     }
 
     /// <summary>
-    ///     指定能力タグが使用可能（個別冷却完了）かどうかを判定します。
+    ///     指定能力タグの冷却が完了し使用可能かを判定します。
     /// </summary>
     public bool IsReady(StringId tag)
     {

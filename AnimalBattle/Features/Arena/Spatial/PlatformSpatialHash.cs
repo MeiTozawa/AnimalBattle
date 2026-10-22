@@ -3,9 +3,9 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Maps.Spatial;
 
 /// <summary>
-///     プラットフォーム足場用の軽量 2D 空間ハッシュグリッド。
-///     毎フレーム全プラットフォームを線形探索（O(N)）するオーバーヘッドを排除し、
-///     局所グリッドセル内の候補プラットフォームのみを O(1) で高速抽出します。
+///     プラットフォーム足場用の軽量な2次元空間ハッシュグリッドです。
+///     毎フレーム全足場を総当たり走査する計算量を排除し、
+///     局所グリッドセル内の候補足場のみを即座に抽出します。
 /// </summary>
 public sealed class PlatformSpatialHash(float cellSize = 256.0f)
 {
@@ -21,15 +21,16 @@ public sealed class PlatformSpatialHash(float cellSize = 256.0f)
     public int Count => _boxes.Count;
 
     /// <summary>
-    ///     空間グリッドの 1 セルあたりのサイズ（ピクセル）を取得します。
+    ///     空間グリッドの1セルあたりのピクセルサイズを取得します。
     /// </summary>
     public float CellSize => _cellSize;
 
+    // 負のグリッド座標による符号ビットの上位侵入を防ぐため、Y座標をuint型へキャストした後に合成します
     private static long GetKey(int cx, int cy) => ((long)cx << 32) | (uint)cy;
 
     /// <summary>
     ///     空間ハッシュ内の全登録データを消去します。
-    ///     セル内の List は破弃せずプールへ回収して再利用し、GC プレッシャーを排除します。
+    ///     セル内のListは破棄せずプールへ回収して再利用し、メモリ割り当てを排除します。
     /// </summary>
     public void Clear()
     {
@@ -45,7 +46,7 @@ public sealed class PlatformSpatialHash(float cellSize = 256.0f)
     /// <summary>
     ///     指定されたプラットフォーム ID とその境界矩形を空間ハッシュへ登録します。
     /// </summary>
-    /// <param name="id">プラットフォーム識別 ID</param>
+    /// <param name="id">プラットフォーム識別ID</param>
     /// <param name="box">足場境界矩形</param>
     public void Insert(int id, Box2D box)
     {
@@ -70,10 +71,10 @@ public sealed class PlatformSpatialHash(float cellSize = 256.0f)
 
     /// <summary>
     ///     指定矩形領域と交差する可能性のあるプラットフォーム ID 群を抽出します。
-    ///     重複除外は HashSet による O(1) 判定を行い、List.Contains による O(N) 線形探索退化と GC アロケーションを防ぎます。
+    ///     重複除外をHashSetによる定数時間判定で行い、線形探索による遅延やメモリ確保を防ぎます。
     /// </summary>
     /// <param name="queryBox">判定対象矩形</param>
-    /// <param name="outCandidates">結果格納先リスト（呼び出し側で事前確保・再利用推奨）</param>
+    /// <param name="outCandidates">結果を格納する呼び出し元再利用リスト</param>
     public void Query(Box2D queryBox, List<int> outCandidates)
     {
         outCandidates.Clear();

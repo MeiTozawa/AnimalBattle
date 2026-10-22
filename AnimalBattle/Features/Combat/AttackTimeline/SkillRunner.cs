@@ -3,7 +3,7 @@ using AnimalBattle.Abilities.Attack;
 namespace AnimalBattle.Abilities.Skills;
 
 /// <summary>
-///     単一の技能実行タイムライン（前隙・判定・後隙）を一元管理する軽量ランナーです。
+///     予兆・判定・硬直のタイムラインを一元管理する軽量ランナーです。
 ///     ヒープ割り当てを行わず、高精度な時系列コンポーネント発火と状態問い合わせを提供します。
 /// </summary>
 public sealed class SkillRunner {
@@ -23,13 +23,13 @@ public sealed class SkillRunner {
     /// <summary>現在の技能フェーズを取得します。</summary>
     public SkillPhase CurrentPhase { get; private set; } = SkillPhase.None;
 
-    /// <summary>技能開始からの総経過時間（秒）を取得します。</summary>
+    /// <summary>能力開始からの総経過時間を秒単位で取得します。</summary>
     public float Elapsed { get; private set; }
 
-    /// <summary>現在フェーズ内の経過時間（秒）を取得します。</summary>
+    /// <summary>現在フェーズ内の経過時間を秒単位で取得します。</summary>
     public float PhaseElapsed { get; private set; }
 
-    /// <summary>現在フェーズの目標持続時間（秒）を取得します。</summary>
+    /// <summary>現在フェーズの目標持続時間を秒単位で取得します。</summary>
     public float PhaseDuration {
         get
         {
@@ -51,7 +51,7 @@ public sealed class SkillRunner {
     ///     指定した攻撃定義で技能実行を開始します。
     /// </summary>
     /// <param name="definition">攻撃定義。</param>
-    /// <param name="facingDirection">キャラの向き（正: 右向き、負: 左向き）。</param>
+    /// <param name="facingDirection">キャラクターの水平向き。正の値で右、負の値で左を示します</param>
     public void Start(AttackDefinition definition, float facingDirection = 1.0f)
     {
         Debug.Assert(definition is not null, "[SkillRunner 警告] null の攻撃定義で Start が呼び出されました。");
@@ -84,9 +84,9 @@ public sealed class SkillRunner {
     /// <summary>
     ///     毎フレームの技能タイムラインを更新し、到達したアクションステップをコールバックへ通知します。
     /// </summary>
-    /// <param name="dt">デルタ時間（秒）。</param>
+    /// <param name="dt">秒単位のデルタ時間</param>
     /// <param name="isGrounded">接地状態フラグ。</param>
-    /// <param name="onTrigger">アクション発火時の通知コールバック（action, facingDir）。</param>
+    /// <param name="onTrigger">アクション発火時の通知コールバック</param>
     public void Update(float dt, bool isGrounded = false, Action<AttackActionStep, float>? onTrigger = null)
     {
         if (Definition is null || CurrentPhase is SkillPhase.None or SkillPhase.Completed) return;
@@ -171,7 +171,7 @@ public sealed class SkillRunner {
                 continue;
             }
 
-            // 時系列駆動判定（浮動小数点微小誤差を許容）
+            // 浮動小数点微小誤差を許容してタイムライン駆動判定を実行します
             if (PhaseElapsed + 0.0001f >= step.TriggerTime)
             {
                 _triggeredMask |= mask;

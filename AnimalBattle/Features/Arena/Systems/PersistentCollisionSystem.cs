@@ -13,8 +13,8 @@ namespace AnimalBattle.Systems;
 
 /// <summary>
 /// 多フレーム持続判定・近接攻撃専用の衝突判定 ECS システム。
-/// <see cref="HitHistory" /> を保持する攻撃判定（近接斬撃や貫通攻撃）を対象とし、
-/// 同一エンティティに対する毎フレームの多段ヒット（重複ダメージ）を防止しつつ、
+/// HitHistoryを保持する近接斬撃や貫通攻撃判定を対象とし、
+/// 同一エンティティに対する毎フレームの重複ダメージを防止しつつ、
 /// <see cref="Hurtbox" /> との幾何学的交差判定およびダメージ適用を行います。
 /// </summary>
 public static class PersistentCollisionSystem
@@ -35,8 +35,8 @@ public static class PersistentCollisionSystem
     }
 
     /// <summary>
-    /// 持続・近接攻撃判定パイプライン（名前付き静的メソッド）。
-    /// 空間ハッシュから候補 Hurtbox を O(1) 抽出して幾何相交および多段ヒット防止判定を行います。
+    /// 持続および近接攻撃判定パイプラインです。
+    /// 空間ハッシュから候補Hurtboxを抽出して幾何交差および重複ヒット防止判定を行います。
     /// </summary>
     public static void ExecutePersistentHit(
         Iter it,
@@ -60,7 +60,7 @@ public static class PersistentCollisionSystem
                 ref var hitbox = ref hitboxes[i];
                 if (!hitbox.IsActive) continue;
 
-                // 単発弾幕（DestroyOnHit = true）が混入した場合は誤判定防止のためスキップ
+                // 単発弾幕が混入した場合は誤判定防止のためスキップします
                 if (hitbox.DestroyOnHit)
                 {
                     Debug.Fail($"[PersistentCollisionSystem 警告] DestroyOnHit == true の単発弾丸に HitHistory が付与されています: {it.Entity(i)}");

@@ -8,7 +8,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Combat.Spatial;
 
 /// <summary>
-///     受撃ボックス（Hurtbox）の空間キャッシュアイテム。
+///     被弾判定ボックスの空間キャッシュアイテムです。
 ///     空間ハッシュセル内に登録され、粗判定および詳細幾何相交判定に供されます。
 /// </summary>
 public struct HurtboxItem
@@ -24,8 +24,8 @@ public struct HurtboxItem
 }
 
 /// <summary>
-///     受撃ボックス専用の高密度・零 GC 2D 空間ハッシュグリッド（Spatial Hash Grid）。
-///     従来の全エンティティ線形二重ループ（O(N*M)）を空間近傍インデックス化により O(N) へ削減します。
+///     被弾判定ボックス専用の高密度2次元空間ハッシュグリッドです。
+///     二重ループ走査を空間近傍インデックスにより線形走査へ削減します。
 /// </summary>
 public sealed class HurtboxSpatialIndex
 {
@@ -52,15 +52,15 @@ public sealed class HurtboxSpatialIndex
     public int ItemCount => _itemCount;
 
     /// <summary>
-    ///     空間グリッドの 1 セルあたりのサイズ（ピクセル）を取得します。
+    ///     空間グリッドの1セルあたりのピクセルサイズを取得します。
     /// </summary>
     public float CellSize => _cellSize;
 
     /// <summary>
     ///     空間ハッシュインデックスを初期化します。
     /// </summary>
-    /// <param name="cellSize">正方形セルの幅・高さ（ピクセル）</param>
-    /// <param name="tableSize">セルハッシュバケット数（2 の冪乗）</param>
+    /// <param name="cellSize">正方形セルの幅および高さ</param>
+    /// <param name="tableSize">2の冪乗で指定するセルハッシュバケット数</param>
     /// <param name="initialCapacity">初期許容 Hurtbox エンティティ数</param>
     public HurtboxSpatialIndex(float cellSize, int tableSize, int initialCapacity)
     {
@@ -88,7 +88,7 @@ public sealed class HurtboxSpatialIndex
     }
 
     /// <summary>
-    ///     フレーム開始時に空間ハッシュ内の全登録データを高速消去（ゼロアロケーション）します。
+    ///     フレーム開始時に空間ハッシュ内の全登録データをゼロアロケーションで消去します。
     /// </summary>
     public void Clear()
     {
@@ -200,7 +200,7 @@ public sealed class HurtboxSpatialIndex
                 {
                     item.QueryId = _currentQueryId;
 
-                    // 1. 陣営フィルタリング（同陣営同士はスキップ）
+                    // 1. 同陣営同士の衝突判定をスキップします
                     // 2. AABB Broadphase 初次粗判定
                     if (item.Faction != attackerFaction &&
                         MathF.Abs(aCenterX - item.CenterX) <= aHalfW + item.HalfW &&

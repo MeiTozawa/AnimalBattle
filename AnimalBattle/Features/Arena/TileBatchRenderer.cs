@@ -3,21 +3,21 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Maps;
 
 /// <summary>
-///     タイルマップ描画時の視錐台（Viewport）カリングおよびバッチ処理ヘルパークラス。
+///     タイルマップ描画時のビューポートカリングおよびバッチ処理を提供するヘルパークラスです。
 ///     画面外の不可視タイルを CPU 走査および描画コマンドバッファ圧入から除外します。
 /// </summary>
 public static class TileBatchRenderer
 {
     /// <summary>
-    ///     指定された視口（Viewport）矩形に基づいて、描画対象となるグリッド行列の最小・最大インデックスを計算します。
+    ///     指定されたビューポート矩形に基づいて描画対象となるグリッド行列の最小および最大インデックスを計算します。
     /// </summary>
     /// <param name="map">対象のタイルマップ</param>
-    /// <param name="viewportPos">カメラ視口 左上座標 (Vec2f)</param>
-    /// <param name="viewportSize">カメラ視口 サイズ (Vec2f)</param>
-    /// <param name="minCol">可視列 最小インデックス (0-based)</param>
-    /// <param name="maxCol">可視列 最大インデックス (0-based)</param>
-    /// <param name="minRow">可視行 最小インデックス (0-based)</param>
-    /// <param name="maxRow">可視行 最大インデックス (0-based)</param>
+    /// <param name="viewportPos">カメラのビューポート左上座標</param>
+    /// <param name="viewportSize">カメラのビューポートサイズ</param>
+    /// <param name="minCol">ゼロ基準の可視列最小インデックス</param>
+    /// <param name="maxCol">ゼロ基準の可視列最大インデックス</param>
+    /// <param name="minRow">ゼロ基準の可視行最小インデックス</param>
+    /// <param name="maxRow">ゼロ基準の可視行最大インデックス</param>
     public static void CalculateVisibleBounds(
         TileMap map,
         Vec2f viewportPos,
@@ -49,8 +49,8 @@ public static class TileBatchRenderer
     ///     カメラ視口に基づいてカリングされた可視タイルのみを抽出して描画コマンドバッファへ投入します。
     /// </summary>
     /// <param name="map">対象のタイルマップ</param>
-    /// <param name="viewportPos">カメラ視口 左上座標 (Vec2f)</param>
-    /// <param name="viewportSize">カメラ視口 サイズ (Vec2f)</param>
+    /// <param name="viewportPos">カメラのビューポート左上座標</param>
+    /// <param name="viewportSize">カメラのビューポートサイズ</param>
     public static void DrawCulled(TileMap map, Vec2f viewportPos, Vec2f viewportSize)
     {
         if (map.TileSet.TileWidth <= 0 || map.TileSet.TileHeight <= 0) return;

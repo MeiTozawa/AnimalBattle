@@ -4,26 +4,26 @@ using AnimalBattle.Abilities.Skills;
 namespace AnimalBattle.Abilities;
 
 /// <summary>
-///     前隙（Telegraph）、判定（Active）、後隙（Recovery）の三段階時序を持つ戦闘招式能力です。
-///     自身の前兆視覚表現（TelegraphRenderer）を内包し、表現層の switch-case 依存を排除します。
+///     予兆、判定、硬直の三段階タイムラインを持つ攻撃アビリティです。
+///     予兆演出の描画処理を内包し、外部の条件分岐依存を排除します。
 /// </summary>
 public sealed class TimelineAttackAbility : GameplayAbility {
-    /// <summary>検証済みの不変時序定義を取得します。</summary>
+    /// <summary>検証済みの不変タイムライン定義を取得します。</summary>
     public AttackDefinition Timeline { get; }
 
-    /// <summary>時序推進ランナーを取得します。</summary>
+    /// <summary>タイムライン進行ランナーを取得します。</summary>
     public SkillRunner Runner { get; } = new();
 
     /// <summary>現在の技能フェーズを取得します。</summary>
     public SkillPhase CurrentPhase => Runner.CurrentPhase;
 
-    /// <summary>現在フェーズ内の経過時間（秒）を取得します。</summary>
+    /// <summary>現在フェーズ内の経過時間を秒単位で取得します。</summary>
     public float PhaseElapsed => Runner.PhaseElapsed;
 
-    /// <summary>現在フェーズの目標持続時間（秒）を取得します。</summary>
+    /// <summary>現在フェーズの目標持続時間を秒単位で取得します。</summary>
     public float PhaseDuration => Runner.PhaseDuration;
 
-    /// <summary>現在フェーズの進行度（0.0 ～ 1.0）を取得します。</summary>
+    /// <summary>現在フェーズの進行度をゼロから1.0の範囲で取得します。</summary>
     public float PhaseProgress => Runner.PhaseDuration > 0.0f
         ? Math.Clamp(Runner.PhaseElapsed / Runner.PhaseDuration, 0.0f, 1.0f)
         : 0.0f;
@@ -37,14 +37,14 @@ public sealed class TimelineAttackAbility : GameplayAbility {
     /// <inheritdoc />
     public override float Progress => PhaseProgress;
 
-    /// <summary>前兆（Telegraph）描画処理デリゲートを取得または設定します。</summary>
+    /// <summary>予兆描画処理デリゲートを取得または設定します。</summary>
     public Action<AbilityTelegraphContext>? TelegraphRenderer { get; init; }
 
     /// <summary>アクションステップ実行コールバックを取得または設定します。</summary>
     public Action<AttackActionStep, float>? ActionDispatcher { get; set; }
 
     /// <summary>
-    ///     時序攻撃能力を初期化します（UE GAS 準拠：StringId 識別）。
+    ///     文字列識別子に基づいてタイムライン攻撃能力を初期化します。
     /// </summary>
     public TimelineAttackAbility(
         StringId tag,

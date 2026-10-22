@@ -5,7 +5,7 @@ namespace AnimalBattle.Abilities;
 
 /// <summary>
 ///     エンティティの技能登録、冷却管理、タグ制約を一元管理する汎用能力システムオーケストレーター。
-///     特定のゲーム演出・アクション（弾幕や判定等）から完全に分離された、純粋なフレームワーク層の GAS コンポーネントです。
+///     ゲーム演出や弾幕などの具象ロジックから分離されたフレームワーク層のアビリティシステムコンポーネントです。
 /// </summary>
 public sealed class AbilitySystemComponent {
     private const int MaxTagBits = 16;
@@ -23,13 +23,13 @@ public sealed class AbilitySystemComponent {
     /// <summary>冷却時間追跡器を取得します。</summary>
     public CooldownTracker Cooldowns => _cooldownTracker;
 
-    /// <summary>現在発動中の技能の経過時間（秒）を取得します。</summary>
+    /// <summary>現在発動中の能力の経過時間を秒単位で取得します。</summary>
     public float Elapsed => CurrentAbility?.Elapsed ?? 0.0f;
 
-    /// <summary>現在発動中の技能の目標持続時間（秒）を取得します。</summary>
+    /// <summary>現在発動中の能力の目標持続時間を秒単位で取得します。</summary>
     public float Duration => CurrentAbility?.Duration ?? 0.0f;
 
-    /// <summary>現在発動中の技能の進行度（0.0 ～ 1.0）を取得します。</summary>
+    /// <summary>現在発動中の能力の進行度をゼロから1.0の範囲で取得します。</summary>
     public float Progress => CurrentAbility?.Progress ?? 0.0f;
 
     /// <summary>現在何らかの技能を発動中かどうかを取得します。</summary>
@@ -196,7 +196,7 @@ public sealed class AbilitySystemComponent {
         CurrentAbility = null;
     }
 
-    /// <summary>毎フレームの技能時序推進と冷却時間更新を実行します。</summary>
+    /// <summary>毎フレームのタイムライン進行とクールダウン更新を実行します。</summary>
     public void Update(float dt, bool isGrounded = false)
     {
         _cooldownTracker.Update(dt);

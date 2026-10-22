@@ -70,7 +70,7 @@ public static class TimedEffectService
     }
 
     /// <summary>
-    ///     指定されたタグの最大残り時間を取得します（読み取り専用アクセス）。
+    ///     指定されたタグの最大残り時間を秒単位で取得します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float GetTagRemainingTime(in TimedEffectsState effects, GameplayTag tag)
@@ -88,7 +88,7 @@ public static class TimedEffectService
     }
 
     /// <summary>
-    ///     全アクティブスロットから時限タグマスクを再計算します（ActionMask を一切破壊しません）。
+    ///     ActionMaskを保持したまま全アクティブスロットから時限タグマスクを再計算します。
     /// </summary>
     public static void RecalculateTagMask(ref TimedEffectsState effects, ref GameplayTagState tagState)
     {

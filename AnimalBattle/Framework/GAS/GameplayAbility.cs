@@ -1,17 +1,17 @@
 namespace AnimalBattle.Abilities;
 
 /// <summary>
-///     戦闘技能・能力の実行ライフサイクル、タグ制約、および時序推進を定義する多態基底クラスです。
-///     UE GAS 準拠：能力識別は AbilityTag（StringId）によって動的に行われ、全域 Enum に依存しません。
+///     戦闘能力の実行ライフサイクル、タグ制約、およびタイムライン進行を定義する抽象基底クラスです。
+///     能力識別はAbilityTagによって動的に行われ、グローバルな列挙型に依存しません。
 /// </summary>
 public abstract class GameplayAbility {
-    /// <summary>能力の識別タグ（UE の AbilityTags に相当）を取得または初期化します。</summary>
+    /// <summary>能力の識別タグを取得または初期化します。</summary>
     public StringId AbilityTag { get; init; } = StringId.Empty;
 
     /// <summary>HUD やログ等で表示される能力表示名を取得または初期化します。</summary>
     public string DisplayName { get; init; } = string.Empty;
 
-    /// <summary>基本冷却時間（秒）を取得または設定します。</summary>
+    /// <summary>基本冷却時間を秒単位で取得または設定します。</summary>
     public float Cooldown { get; set; }
 
     /// <summary>発動に必要な必須タグ制約を取得します。</summary>
@@ -20,16 +20,16 @@ public abstract class GameplayAbility {
     /// <summary>発動を禁止する排他タグを取得します。</summary>
     public GameplayTag BlockedTags { get; init; } = GameplayTag.Stunned;
 
-    /// <summary>実行中に自身へ付与されるタグ（Activation Owned Tags）を取得します。</summary>
+    /// <summary>発動中に自身へ付与される実行中タグを取得します。</summary>
     public GameplayTag ActivationOwnedTags { get; init; } = GameplayTag.Casting;
 
-    /// <summary>能力の実行経過時間（秒）を取得します。</summary>
+    /// <summary>能力の実行経過時間を秒単位で取得します。</summary>
     public virtual float Elapsed => 0.0f;
 
-    /// <summary>能力の目標持続時間（秒）を取得します。</summary>
+    /// <summary>能力の目標持続時間を秒単位で取得します。</summary>
     public virtual float Duration => 0.0f;
 
-    /// <summary>能力の進行度（0.0 ～ 1.0）を取得します。</summary>
+    /// <summary>能力の進行度をゼロから1.0の範囲で取得します。</summary>
     public virtual float Progress => Duration > 0.0f
         ? Math.Clamp(Elapsed / Duration, 0.0f, 1.0f)
         : 0.0f;
@@ -56,7 +56,7 @@ public abstract class GameplayAbility {
     public abstract void Activate(AbilitySystemComponent asc, in AbilityActivationContext ctx);
 
     /// <summary>
-    ///     毎フレームの技能時序推進とロジック更新を実行します。
+    ///     毎フレームのタイムライン進行とロジック更新を実行します。
     /// </summary>
     public virtual void Update(float dt, AbilitySystemComponent asc, bool isGrounded = false) { }
 
@@ -71,7 +71,7 @@ public abstract class GameplayAbility {
     public virtual void CancelAbility(AbilitySystemComponent asc) { }
 
     /// <summary>
-    ///     技能の前兆（Telegraph）演出を描画します。
+    ///     能力の予兆演出を描画します。
     ///     UE GAS 準拠：技能自身がその視覚表現の責務を持ちます。
     /// </summary>
     public virtual void DrawTelegraph(in AbilityTelegraphContext ctx) { }

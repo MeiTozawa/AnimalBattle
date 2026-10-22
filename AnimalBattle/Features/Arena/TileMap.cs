@@ -15,7 +15,7 @@ namespace AnimalBattle.Maps;
 /// <param name="tileSet">使用するタイルセット</param>
 /// <param name="columns">グリッド列数</param>
 /// <param name="rows">グリッド行数</param>
-/// <param name="renderTileSize">描画時のタイルサイズ（ピクセル）</param>
+/// <param name="renderTileSize">描画時のタイルピクセルサイズ</param>
 /// <param name="origin">マップ原点座標</param>
 /// <param name="grid">2D タイル ID 配列</param>
 public sealed class TileMap(
@@ -34,10 +34,10 @@ public sealed class TileMap(
     /// <summary>マップの縦方向グリッド行数</summary>
     public int Rows { get; } = rows;
 
-    /// <summary>描画時のタイル単体サイズ（ピクセル）</summary>
+    /// <summary>描画時のタイルピクセルサイズ</summary>
     public Vec2i RenderTileSize { get; } = renderTileSize;
 
-    /// <summary>マップ原点座標（左上）</summary>
+    /// <summary>マップの左上原点座標</summary>
     public Vec2f Origin { get; } = origin;
 
     /// <summary>プラットフォーム間跳躍ナビゲーショングラフ</summary>
@@ -77,10 +77,10 @@ public sealed class TileMap(
     }
 
     /// <summary>
-    ///     指定グリッド座標のタイル ID を取得します。範囲外の場合は 0（空気/空白）を返します。
+    ///     指定グリッド座標のタイルIDを取得します。範囲外の場合は空白を示すゼロを返します。
     /// </summary>
-    /// <param name="col">列インデックス (0-based)</param>
-    /// <param name="row">行インデックス (0-based)</param>
+    /// <param name="col">ゼロ基準の列インデックス</param>
+    /// <param name="row">ゼロ基準の行インデックス</param>
     /// <returns>タイル ID</returns>
     public int GetTile(int col, int row)
     {
@@ -92,8 +92,8 @@ public sealed class TileMap(
     /// <summary>
     ///     指定グリッド座標にタイル ID を設定します。
     /// </summary>
-    /// <param name="col">列インデックス (0-based)</param>
-    /// <param name="row">行インデックス (0-based)</param>
+    /// <param name="col">ゼロ基準の列インデックス</param>
+    /// <param name="row">ゼロ基準の行インデックス</param>
     /// <param name="tileId">設定するタイル ID</param>
     public void SetTile(int col, int row, int tileId)
     {
@@ -101,22 +101,22 @@ public sealed class TileMap(
     }
 
     /// <summary>
-    ///     指定されたカメラ視口（Viewport）に基づいてカリングを行い、画面内タイルのみを描画します。
+    ///     指定されたカメラビューポートに基づいてカリングを行い、画面内タイルのみを描画します。
     /// </summary>
-    /// <param name="viewportPos">カメラ視口 左上座標 (Vec2f)</param>
-    /// <param name="viewportSize">カメラ視口 サイズ (Vec2f)</param>
+    /// <param name="viewportPos">カメラのビューポート左上座標</param>
+    /// <param name="viewportSize">カメラのビューポートサイズ</param>
     public void DrawCulled(Vec2f viewportPos, Vec2f viewportSize)
     {
         TileBatchRenderer.DrawCulled(this, viewportPos, viewportSize);
     }
 
     /// <summary>
-    ///     タイルマップのグリッドデータおよびタイルセットの衝突領域（CollisionRect）に基づいて、
+    ///     タイルマップのグリッドデータおよびタイルセットの衝突領域に基づいて、
     ///     水平方向に連続するブロックを結合したプラットフォームコライダーエンティティ群を生成し、
-    ///     ナビゲーショングラフ (<see cref="PlatformNavigationGraph" />) を自動構築します。
+    ///     ナビゲーショングラフを自動構築します。
     /// </summary>
     /// <param name="world">登録先の Flecs.NET ワールド</param>
-    /// <param name="parent">所属させる親エンティティ（省略可）</param>
+    /// <param name="parent">所属させる親エンティティ。省略可能です</param>
     public void BuildPlatformColliders(World world, Entity parent)
     {
         SpatialHash.Clear();

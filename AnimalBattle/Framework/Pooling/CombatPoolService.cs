@@ -5,8 +5,8 @@ namespace AnimalBattle.Framework.Pooling;
 
 /// <summary>
 ///     弾幕・エフェクト・近接判定等の戦闘エンティティプールを集中管理するシーン級ドメインサービス。
-///     Flecs Prefab と 1 対 1 に紐づく同構プール（Isomorphic Pool）マトリクスを保持し、
-///     実行時の Archetype 変動（Table Move）を完全に排除したゼロ GC 借出・返却を提供します。
+///     プレハブ定義と1対1に対応するプールマトリクスを保持し、
+///     実行時のテーブル移動を排除してゼロアロケーションでの貸出と返却を提供します。
 /// </summary>
 public sealed class CombatPoolService : IDisposable
 {
@@ -92,7 +92,7 @@ public sealed class CombatPoolService : IDisposable
 
     /// <summary>
     ///     エンティティを安全に回収します。
-    ///     PoolId に基づき所属元の同構プールへ O(1) で即時返却（Disable）し、非プールエンティティは Destruct します。
+    ///     PoolIdに基づき所属元プールへ即時返却し、プール外エンティティは安全に破棄します。
     /// </summary>
     /// <param name="entity">回収するエンティティ。</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
