@@ -11,7 +11,9 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Scenes.Battle;
 
 /// <summary>
-///     謌ｦ髣倥す繝ｼ繝ｳ縺ｫ縺翫￠繧句・蜉帛女莉倥∬・讖滓桃菴懊√♀繧医・謌ｦ髣倥Μ繧ｻ繝・ヨ繝ｻ繧ｷ繝ｼ繝ｳ蠕ｩ蟶ｰ繧貞昇繧・ECS 繧ｷ繧ｹ繝・Β縲・///     GameState.Battle 迥ｶ諷区凾縺ｫ縺ｮ縺ｿ繧｢繧ｯ繝・ぅ繝悶→縺ｪ繧翫￣reUpdate 繝輔ぉ繝ｼ繧ｺ縺ｧ繝励Ξ繧､繝､繝ｼ縺ｮ蜈･蜉帙ｒ蜃ｦ逅・＠縺ｾ縺吶・/// </summary>
+///     戦闘シーンにおける入力受付、自機操作、および戦闘リセット・シーン復帰を司る ECS システム。
+///     GameState.Battle 状態時にのみアクティブとなり、PreUpdate フェーズでプレイヤーの入力を処理します。
+/// </summary>
 public static class BattleInputSystem
 {
     private static bool _prevF1;
@@ -24,11 +26,11 @@ public static class BattleInputSystem
     private static Query _playerEntitiesQuery;
     private static Query<Health, BossCombatState, BossBrainComponent> _bossQuery;
     private static Phase _targetDebugPhase;
-
     /// <summary>
-    ///     謌ｦ髣伜・蜉帛・逅・す繧ｹ繝・Β繧・Flecs.NET 繝ｯ繝ｼ繝ｫ繝峨∈逋ｻ骭ｲ縺励∪縺吶・    /// </summary>
-    /// <param name="world">蟇ｾ雎｡縺ｮ Flecs.NET 繝ｯ繝ｼ繝ｫ繝・/param>
-    /// <returns>逋ｻ骭ｲ貂医∩繝ｯ繝ｼ繝ｫ繝・/returns>
+    ///     戦闘入力処理システムを Flecs.NET ワールドへ登録します。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド</param>
+    /// <returns>登録済みワールド</returns>
     public static World AddBattleInputSystem(this World world)
     {
         _playerBulletsQuery = world.QueryBuilder()
@@ -52,29 +54,29 @@ public static class BattleInputSystem
 
         return world;
     }
-
     /// <summary>
-    ///     謌ｦ髣倥す繝ｼ繝ｳ縺ｮ蜈･蜉帛女莉倥ヱ繧､繝励Λ繧､繝ｳ・亥錐蜑堺ｻ倥″髱咏噪繝｡繧ｽ繝・ラ・峨・    /// </summary>
+    ///     戦闘シーンの入力受付パイプライン。
+    /// </summary>
     public static void ExecuteBattleInput(Iter it)
     {
         var w = it.World();
         ref readonly var flow = ref w.Get<GameFlow>();
         if (flow.State != GameState.Battle) return;
-
-        // ESC 繧ｭ繝ｼ縺ｧ繧ｿ繧､繝医Ν・城∈莠ｺ逕ｻ髱｢縺ｸ蠕ｩ蟶ｰ
+        // ESC キーでタイトルまたはキャラクター選択画面へ復帰
+        // ESC キーでタイトルまたはキャラクター選択画面へ復帰
         if (InputService.IsPressed(InputAction.Cancel))
         {
             GameManager.Current.SwitchToStart();
             return;
         }
-
-        // R 繧ｭ繝ｼ縺ｧ謌ｦ髣倥Μ繧ｻ繝・ヨ
+        // R キーで戦闘リセット
+        // R キーで戦闘リセット
         if (InputService.IsPressed(InputAction.Restart))
         {
             ResetCombat(w);
         }
 
-        // デバッグ入力（F1 トグル、F2〜F4 フェーズ切替）の処理
+        // デバッグ入力：F1 トグル、F2〜F4 フェーズ切替の処理
         var renderCfg = w.Get<RenderConfig>();
         var dbgCfg = renderCfg.Debug;
         if (dbgCfg.DebugMode)
@@ -82,13 +84,13 @@ public static class BattleInputSystem
             ProcessDebugInput(w, dbgCfg, _bossQuery);
         }
 
-        // ゲームオーバー時は自機の操作入力を停止（PlayerInputSystem 側でも同様に判定）
+        // ゲームオーバー時は自機の操作入力を停止：PlayerInputSystem 側でも同様に判定
         if (w.Has<GameOverTag>()) return;
     }
 
     private static void ResetCombat(World world)
     {
-        // ゲームオーバー状態の解除（Remove は冪等のため事前の Has チェック不要）
+        // ゲームオーバー状態の解除：Remove は冪等のため事前の Has チェック不要
         world.Remove<GameOverTag>();
 
         BulletSpawner.ClearAllBossBulletsImmediate(world);
@@ -136,7 +138,7 @@ public static class BattleInputSystem
         boss.Set(new GameplayTagState(brainComp.Brain.AbilitySystem.Tags.RawTags));
         boss.Set(new TimedEffectsState());
 
-        // 一時状態・エフェクト・死亡タグの一括安全削除（Flecs 原生 API による冪等操作）
+        // 一時状態・エフェクト・死亡タグの一括安全削除：Flecs ネイティブ API による冪等操作
         boss.Remove<HitstopState>()
             .Remove<SpriteJitter>()
             .Remove<IncomingDamage>()
@@ -170,7 +172,7 @@ public static class BattleInputSystem
         player.Set(new InvincibleBlinkState());
         player.Set(new SpringScale(Vec2f.One, cfg.SpringFrequency, cfg.SpringDampingRatio));
 
-        // 一時状態・エフェクト・死亡・ゲームオーバータグの一括安全削除（Flecs 原生 API による冪等操作）
+        // 一時状態・エフェクト・死亡・ゲームオーバータグの一括安全削除：Flecs ネイティブ API による冪等操作
         player.Remove<HitstopState>()
             .Remove<SpriteJitter>()
             .Remove<IncomingDamage>()
@@ -216,7 +218,7 @@ public static class BattleInputSystem
 
         if (!dbgCfg.IsActive) return;
 
-        // 1/2/3/4 キーによる Boss およびキャラクターの迅速切替（InputAction 抽象経由）
+        // 1/2/3/4 キーによる Boss およびキャラクターの迅速切替：InputAction 抽象経由
         ref readonly var flow = ref world.Get<GameFlow>();
         if (InputService.IsPressed(InputAction.SelectBoss1))
         {
@@ -239,7 +241,8 @@ public static class BattleInputSystem
             return;
         }
 
-        // 繧ｲ繝ｼ繝繧ｪ繝ｼ繝舌・・・oss 謦・ｴ縺ｾ縺溘・閾ｪ讖滓ｭｻ莠｡・画凾縺ｯ繝輔ぉ繝ｼ繧ｺ蛻・崛繧堤┌蜉ｹ蛹・        if (world.Has<GameOverTag>()) return;
+        // ゲームオーバー時はフェーズ切り替えを無効化します
+        if (world.Has<GameOverTag>()) return;
 
         var isF2 = GameEngine.CheckHitKey((int)InputButton.KeyF2);
         var isF3 = GameEngine.CheckHitKey((int)InputButton.KeyF3);

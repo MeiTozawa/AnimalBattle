@@ -4,14 +4,14 @@ namespace AnimalBattle.Common.Components;
 
 /// <summary>
 ///     移動速度およびノックバック速度を表すコンポーネント。
-///     Native C++ の ab::Velocity とメモリレイアウトが完全一致（16 bytes）します。
+///     Native C++ の ab::Velocity とメモリレイアウトが完全一致：16 bytesします。
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 public struct Velocity {
-    /// <summary>移動速度 (Vec2f)</summary>
+    /// <summary>移動速度 Vec2f型</summary>
     public Vec2f Value;
 
-    /// <summary>ノックバック速度 (Vec2f)</summary>
+    /// <summary>ノックバック速度 Vec2f型</summary>
     public Vec2f Knockback;
 
     /// <summary>

@@ -40,10 +40,10 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>現在発動中の時間軸攻撃フェーズを取得します。</summary>
     public SkillPhase CurrentSkillPhase => CurrentTimelineAttack?.CurrentPhase ?? SkillPhase.None;
 
-    /// <summary>現在フェーズの経過時間（秒）を取得します。</summary>
+    /// <summary>現在フェーズの経過時間秒単位を取得します。</summary>
     public float PhaseElapsed => CurrentTimelineAttack?.PhaseElapsed ?? 0.0f;
 
-    /// <summary>現在フェーズの目標持続時間（秒）を取得します。</summary>
+    /// <summary>現在フェーズの目標持続時間秒単位を取得します。</summary>
     public float PhaseDuration => CurrentTimelineAttack?.PhaseDuration ?? 0.0f;
 
     /// <summary>現在の Boss 座標を取得します。</summary>
@@ -55,13 +55,13 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>現在発動中の技能識別タグを取得します。</summary>
     public virtual StringId CurrentSkillTag => _asc.CurrentAbility?.AbilityTag ?? StringId.Empty;
 
-    /// <summary>現在 AI 状態の経過時間（秒）を取得します。</summary>
+    /// <summary>現在 AI 状態の経過時間秒単位を取得します。</summary>
     public virtual float StateTimer => _stateTimer;
 
     /// <summary>死亡状態かどうかを取得します。</summary>
     public bool IsDead => _isDead;
 
-    /// <summary>Boss が右向きであるかを取得します（派生クラスでオーバーライド可能）。</summary>
+    /// <summary>Boss が右向きであるかを取得します：派生クラスでオーバーライド可能。</summary>
     public virtual bool FacingRight => true;
 
     /// <summary>弾幕波次発射イベント。</summary>
@@ -77,7 +77,7 @@ public abstract class BaseBossBrain : IBossBrain
     public event Action<StringId, float, float>? OnCreateHitbox;
 
     /// <summary>
-    ///     時序アクションステップを実行・処理します。
+    ///     タイムラインアクションステップを実行・処理します。
     /// </summary>
     public virtual void HandleTimelineAction(AttackActionStep step, float dir, StringId abilityTag)
     {
@@ -104,7 +104,7 @@ public abstract class BaseBossBrain : IBossBrain
         }
     }
 
-    /// <summary>時序による移動速度指定を適用します。</summary>
+    /// <summary>タイムラインによる移動速度指定を適用します。</summary>
     protected virtual void ApplyMovementAction(float vx, float vy) { }
 
     /// <summary>
@@ -124,7 +124,7 @@ public abstract class BaseBossBrain : IBossBrain
     }
 
     /// <summary>
-    ///     共通ブレイン基盤（GAS フェーズ遷移能力登録・イベント購読）を初期化します。
+    ///     共通ブレイン基盤：GAS フェーズ遷移能力登録・イベント購読を初期化します。
     /// </summary>
     protected void InitializeBaseBrain(PhaseTransitionAbilityConfig phaseConfig)
     {
@@ -139,13 +139,13 @@ public abstract class BaseBossBrain : IBossBrain
         };
     }
 
-    /// <summary>フェーズ遷移開始時の追加処理フック（派生クラスで拡張）。</summary>
+    /// <summary>フェーズ遷移開始時の追加処理フック：派生クラスで拡張。</summary>
     protected virtual void OnPhaseTransitionEntered(Phase newPhase) { }
 
-    /// <summary>フェーズ遷移完了時の追加処理フック（派生クラスで拡張）。</summary>
+    /// <summary>フェーズ遷移完了時の追加処理フック：派生クラスで拡張。</summary>
     protected virtual void OnPhaseTransitionCompleted() { }
 
-    /// <summary>死亡状態突入時の追加処理フック（派生クラスで拡張）。</summary>
+    /// <summary>死亡状態突入時の追加処理フック：派生クラスで拡張。</summary>
     protected virtual void OnDeadEntered() { }
 
     /// <summary>

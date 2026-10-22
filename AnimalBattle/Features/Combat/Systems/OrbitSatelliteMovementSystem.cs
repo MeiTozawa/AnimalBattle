@@ -7,13 +7,16 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Combat.Systems;
 
 /// <summary>
-///     蜻ｨ蝗櫁｡帶弌蠑ｾ蟷包ｼ・see cref="OrbitSatellite" />・峨・蜈ｬ霆｢霆碁％蠎ｧ讓吶♀繧医・謗･邱夐溷ｺｦ繧定ｨ育ｮ励☆繧句腰荳雋ｬ莉ｻ ECS 繧ｷ繧ｹ繝・Β縲・///     隕ｪ蠑ｾ縺梧ｶ域ｻ・∫┌蜉ｹ蛹悶√∪縺溘・繝励・繝ｫ縺ｸ霑泌唆繝ｻ蜀榊茜逕ｨ縺輔ｌ縺溷ｴ蜷医∬｡帶弌蠑ｾ繧定・蜍慕噪縺ｫ蝗槫庶繝励・繝ｫ縺ｸ霑泌唆縺励∪縺吶・/// </summary>
+///     周回衛星弾幕の公転軌道座標および接線速度を計算する単一責任 ECS システム。
+///     親弾が消滅またはプールへ返却された場合、衛星弾を自動的に回収プールへ返却します。
+/// </summary>
 public static class OrbitSatelliteMovementSystem
 {
     /// <summary>
-    ///     蜻ｨ蝗櫁｡帶弌蠑ｾ蟷慕ｧｻ蜍輔す繧ｹ繝・Β繧・Flecs.NET 繝ｯ繝ｼ繝ｫ繝峨∈逋ｻ骭ｲ縺励∪縺吶・    /// </summary>
-    /// <param name="world">蟇ｾ雎｡縺ｮ Flecs.NET 繝ｯ繝ｼ繝ｫ繝・/param>
-    /// <returns>繝｡繧ｽ繝・ラ繝√ぉ繝ｼ繝ｳ逕ｨ縺ｮ <see cref="World" /></returns>
+    ///     周回衛星弾幕移動システムを Flecs.NET ワールドへ登録します。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド</param>
+    /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddOrbitSatelliteMovementSystem(this World world)
     {
         world.System<Transform, Velocity, OrbitSatellite, BulletModifier>("OrbitSatelliteMovementSystem")
@@ -56,7 +59,7 @@ public static class OrbitSatelliteMovementSystem
                 continue;
             }
 
-            // プール所属エンティティの場合の貸出フラグ確認（二重探索を回避）
+            // プール所属エンティティの場合の貸出フラグ確認：二重探索を回避
             if (parent.Has<PoolLeaseState>())
             {
                 ref readonly var lease = ref parent.Get<PoolLeaseState>();

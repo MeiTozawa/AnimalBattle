@@ -1,6 +1,6 @@
 namespace AnimalBattle.Abilities.Attack;
 
-/// <summary>設定から解決済みの攻撃タイムラインアクション（ステップ）を表す検証済み初期化データです。</summary>
+/// <summary>設定から解決済みの攻撃タイムラインアクション：ステップを表す検証済み初期化データです。</summary>
 /// <remarks>攻撃アクションステップを生成します。</remarks>
 public readonly struct AttackActionStep(
     AttackActionKind kind,
@@ -15,16 +15,16 @@ public readonly struct AttackActionStep(
     /// <summary>攻撃内で一意なアクション index を取得します。</summary>
     public int Index { get; } = index;
 
-    /// <summary>主要パラメータ 0（X座標オフセット / 目標高度 / 弾速 等）を取得します。</summary>
+    /// <summary>主要パラメータ 0：X座標オフセット / 目標高度 / 弾速 等を取得します。</summary>
     public float Param0 { get; } = param0;
 
-    /// <summary>主要パラメータ 1（Y座標オフセット / 所要時間 / 弾数 等）を取得します。</summary>
+    /// <summary>主要パラメータ 1：Y座標オフセット / 所要時間 / 弾数 等を取得します。</summary>
     public float Param1 { get; } = param1;
 
-    /// <summary>補助パラメータ 2（滞空時間 / 拡散角度 / 振動強度 等）を取得します。</summary>
+    /// <summary>補助パラメータ 2：滞空時間 / 拡散角度 / 振動強度 等を取得します。</summary>
     public float Param2 { get; } = param2;
 
-    /// <summary>Execute 開始からの発動遅延時間（秒）を取得します。</summary>
+    /// <summary>Execute 開始からの発動遅延時間秒単位を取得します。</summary>
     public float TriggerTime { get; } = triggerTime;
 
     private static readonly int _attackActionKindLength = Enum.GetValues<AttackActionKind>().Length;

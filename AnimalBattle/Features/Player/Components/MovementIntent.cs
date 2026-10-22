@@ -6,19 +6,19 @@ namespace AnimalBattle.Player.Components;
 /// </summary>
 public struct MovementIntent
 {
-    /// <summary>水平移動入力値（-1.0f: 左, 1.0f: 右, 0.0f: 静止）。</summary>
+    /// <summary>水平移動入力値：-1.0f: 左, 1.0f: 右, 0.0f: 静止。</summary>
     public float MoveX;
 
     /// <summary>今フレームで跳躍キーが押下されたかどうか。</summary>
     public bool JumpTriggered;
 
-    /// <summary>跳躍キーが押し続けられているかどうか（可変高度跳躍用）。</summary>
+    /// <summary>跳躍キーが押し続けられているかどうか：可変高度跳躍用。</summary>
     public bool JumpHolding;
 
     /// <summary>今フレームでダッシュ・回避キーが押下されたかどうか。</summary>
     public bool DashTriggered;
 
-    /// <summary>水平指向方向（-1.0f: 左向き, 1.0f: 右向き）。</summary>
+    /// <summary>水平指向方向：-1.0f: 左向き, 1.0f: 右向き。</summary>
     public float FacingX;
 
     /// <summary>

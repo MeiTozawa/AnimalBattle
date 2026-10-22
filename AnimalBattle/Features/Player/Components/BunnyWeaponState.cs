@@ -4,7 +4,7 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Player.Components;
 
 /// <summary>
-///     Bunny (ウサギ) 近接攻撃武器状態コンポーネント。
+///     Bunny近接攻撃武器状態コンポーネント。
 ///     クールダウン、近接打撃攻撃力、判定寸法、射程、持続時間、前進突進距離およびスプリング伸縮演出パラメータを保持します。
 /// </summary>
 public struct BunnyWeaponState
@@ -18,19 +18,19 @@ public struct BunnyWeaponState
     /// <summary>近接打撃の攻撃力。</summary>
     public float AttackDamage;
 
-    /// <summary>近接打撃攻撃判定のサイズ (Vec2f)。</summary>
+    /// <summary>近接打撃攻撃判定のサイズ Vec2f型。</summary>
     public Vec2f AttackSize;
 
-    /// <summary>近接打撃出現の水平オフセット射程距離（px）。</summary>
+    /// <summary>近接打撃出現の水平オフセット射程距離：px。</summary>
     public float AttackRange;
 
-    /// <summary>近接打撃判定持続時間（秒）。</summary>
+    /// <summary>近接打撃判定持続時間秒単位。</summary>
     public float AttackDuration;
 
-    /// <summary>近接打撃時の前進突進インパルス初速度（px/s）。</summary>
+    /// <summary>近接打撃時の前進突進インパルス初速度：px/s。</summary>
     public float AttackLungeImpulse;
 
-    /// <summary>近接打撃時のスプリング変形倍率 (Vec2f)。</summary>
+    /// <summary>近接打撃時のスプリング変形倍率 Vec2f型。</summary>
     public Vec2f AttackStretchScale;
 
     /// <summary>近接攻撃判定の残り有効秒数。0 より大きい場合は判定がアクティブ。</summary>

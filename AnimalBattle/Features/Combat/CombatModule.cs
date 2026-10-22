@@ -16,7 +16,7 @@ public readonly struct CombatModule : IFlecsModule
         CombatPrefabs.Register(world);
 
         world.AddTimedTagSystem()
-             .AddSpecialBulletSystem()            // 1. 特殊弾幕の変調（法線正弦波速度・判定拡縮）を先行計算
+             .AddSpecialBulletSystem()            // 1. 特殊弾幕の変調：法線正弦波速度・判定拡縮を先行計算
              .AddBulletPhysicsSystem()             // 2. 最新の変調速度を用いて座標を更新し、画面外判定を実施
              .AddOrbitSatelliteMovementSystem()    // 3. 更新された親弾の最新座標に基づいて衛星弾を公転配置
              .AddMeleeBulletCancelSystem()         // 4. 近接斬落判定

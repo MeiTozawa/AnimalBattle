@@ -23,8 +23,8 @@ internal sealed class HudRenderSystemContext
 }
 
 /// <summary>
-///     自機ステータス（HP、二段ジャンプ残数）、Boss 大 HP バー、および操作ガイドを描画する ECS システム。
-///     戦闘状態（GameState.Battle）時にスクリーン空間へ直接描画します。
+///     自機ステータス：HP、二段ジャンプ残数、Boss 大 HP バー、および操作ガイドを描画する ECS システム。
+///     戦闘状態：GameState.Battle時にスクリーン空間へ直接描画します。
 /// </summary>
 public static class HudRenderSystem {
     private readonly record struct PlayerHudData(
@@ -66,7 +66,7 @@ public static class HudRenderSystem {
     }
 
     /// <summary>
-    ///     HUD 描画パイプライン（名前付き静的メソッド）。
+    ///     HUD 描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteHudRender(Iter it)
     {
@@ -191,7 +191,7 @@ public static class HudRenderSystem {
     }
 
     /// <summary>
-    ///     Boss の称号およびフェーズ表記を取得します（パターンマッチにより固定文字列を返し 0-GC で描画）。
+    ///     Boss の称号およびフェーズ表記を取得します：パターンマッチにより固定文字列を返し 0-GC で描画。
     /// </summary>
     private static string GetBossTitle(BossType bossType, int phase)
     {
@@ -334,7 +334,7 @@ public static class HudRenderSystem {
         var barP2 = hpCfg.BarPos2;
         var totalWidth = barP2.X - barP1.X;
 
-        // Boss 情報ヘッダー (HP バー上部)
+        // ボス情報ヘッダー：HPバー上部
         Span<char> hpBuf = stackalloc char[64];
         hpBuf.TryWrite($"HP: {currentHp:F0} / {maxHp:F0}", out var hpCharsWritten);
 
@@ -380,7 +380,7 @@ public static class HudRenderSystem {
                 hpCfg.TopHighlightColor, true);
         }
 
-        // Phase 分割マーカー（設定ファイル駆動の HpThreshold に基づく動的描画）
+        // Phase 分割マーカー：設定ファイル駆動の HpThreshold に基づく動的描画
         var p2Ratio = Math.Clamp(phaseThresholds.Phase2Threshold, 0.0f, 1.0f);
         var p3Ratio = Math.Clamp(phaseThresholds.Phase3Threshold, 0.0f, 1.0f);
 

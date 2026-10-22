@@ -4,7 +4,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Vfx;
 
 /// <summary>
-///     ヒットストップ（時間凍結）および被弾局所振動（ジッター）などの戦闘手応え・演出フィードバックシステムを一括管理するモジュール。
+///     ヒットストップ：時間凍結および被弾局所振動：ジッターなどの戦闘手応え・演出フィードバックシステムを一括管理するモジュール。
 /// </summary>
 public readonly struct CombatFeedbackModule : IFlecsModule
 {

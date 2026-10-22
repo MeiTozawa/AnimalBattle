@@ -5,9 +5,9 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Player.Systems;
 
 /// <summary>
-///     二階減衰調和振動スプリング（解析解 / 閉形式解）に基づくスケール変形更新システム。
+///     二階減衰調和振動スプリング：解析解 / 閉形式解に基づくスケール変形更新システム。
 ///     明示的オイラー法の数値発散を完全に排除し、任意のフレームレート・デルタタイムで無条件に安定して滑らかに目標値へ収束します。
-///     ヒットストップ（<see cref="HitstopState" />）中のエンティティは更新をスキップします。
+///     ヒットストップ<see cref="HitstopState" />中のエンティティは更新をスキップします。
 /// </summary>
 public static class SpringScaleSystem
 {
@@ -79,14 +79,14 @@ public static class SpringScaleSystem
     }
 
     /// <summary>
-    ///     二階減衰調和振動子の厳密解析解（Ryan Juckett 方式）を用いて位置と速度を無条件安定更新します。
+    ///     二階減衰調和振動子の厳密解析解：Ryan Juckett 方式を用いて位置と速度を無条件安定更新します。
     /// </summary>
     /// <param name="current">現在の変位値</param>
     /// <param name="velocity">現在の速度</param>
     /// <param name="target">目標静止値</param>
-    /// <param name="frequency">固有振動数 (Hz)</param>
+    /// <param name="frequency">固有振動数</param>
     /// <param name="dampingRatio">減衰比</param>
-    /// <param name="dt">経過時間 (秒)</param>
+    /// <param name="dt">経過時間 秒単位</param>
     private static void UpdateDampedSpring(
         ref float current,
         ref float velocity,
@@ -107,7 +107,7 @@ public static class SpringScaleSystem
 
         if (dampingRatio < 1.0f)
         {
-            // 減衰不足（Underdamped: 振動しながら目標値へ収束）
+            // 減衰不足：Underdamped: 振動しながら目標値へ収束
             var omegaD = omega * MathF.Sqrt(1.0f - dampingRatio * dampingRatio);
             var gamma = dampingRatio * omega;
             var exp = MathF.Exp(-gamma * dt);
@@ -122,7 +122,7 @@ public static class SpringScaleSystem
         }
         else if (MathF.Abs(dampingRatio - 1.0f) < 0.0001f)
         {
-            // 臨界減衰（Critically Damped: 振動せず最短時間で目標値へ収束）
+            // 臨界減衰：Critically Damped: 振動せず最短時間で目標値へ収束
             var exp = MathF.Exp(-omega * dt);
             var newP = exp * (p + (velocity + omega * p) * dt);
             var newV = exp * (velocity - omega * (velocity + omega * p) * dt);
@@ -132,7 +132,7 @@ public static class SpringScaleSystem
         }
         else
         {
-            // 過減衰（Overdamped: 抵抗が強く緩やかに目標値へ収束）
+            // 過減衰：Overdamped: 抵抗が強く緩やかに目標値へ収束
             var omegaD = omega * MathF.Sqrt(dampingRatio * dampingRatio - 1.0f);
             var gamma1 = -dampingRatio * omega + omegaD;
             var gamma2 = -dampingRatio * omega - omegaD;

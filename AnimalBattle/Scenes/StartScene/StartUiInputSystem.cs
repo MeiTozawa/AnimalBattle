@@ -9,13 +9,13 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Scenes.Start;
 
 /// <summary>
-///     ゲーム開始・選人画面の入力判定およびホバー・選択状態更新を司る ECS システム。
-///     GameState.Start 状態時にのみアクティブとなり、マウスホバー動效・選人切り替え・戦闘開始を処理します。
+///     ゲーム開始・キャラクター選択画面の入力判定およびホバー・選択状態更新を司る ECS システム。
+///     GameState.Start 状態時にのみアクティブとなり、マウスホバー演出・キャラクター選択切り替え・戦闘開始を処理します。
 /// </summary>
 public static class StartUiInputSystem
 {
     /// <summary>
-    ///     開始選人画面の入力判定システムを Flecs.NET ワールドへ登録します。
+    ///     開始キャラクター選択画面の入力判定システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <returns>登録済みワールド</returns>
@@ -29,7 +29,7 @@ public static class StartUiInputSystem
     }
 
     /// <summary>
-    ///     開始選人画面の入力判定パイプライン（名前付き静的メソッド）。
+    ///     開始キャラクター選択画面の入力判定パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteStartUiInput(Iter it, Field<StartUiState> uiStates)
     {
@@ -101,7 +101,7 @@ public static class StartUiInputSystem
                 flow.SelectedPlayer = CharacterType.Bunny;
             }
 
-            // --- 3. Boss 1 カード判定 (飛行浮遊動效) ---
+            // --- 3. Boss 1 カード判定 飛行浮遊アニメーション ---
             uiState.IsBoss1Hovered = boss1CardBounds.Contains(mousePos.X, mousePos.Y);
             if (uiState.IsBoss1Hovered)
             {
@@ -113,7 +113,7 @@ public static class StartUiInputSystem
                 uiState.Boss1FlyTimer = Math.Max(0f, uiState.Boss1FlyTimer - dt * motion.Boss1FlyDecaySpeed);
             }
 
-            // --- 4. Boss 2 カード判定 (騰空・重撃下砸動效) ---
+            // --- 4. Boss 2 カード判定 跳躍重撃アニメーション ---
             uiState.IsBoss2Hovered = boss2CardBounds.Contains(mousePos.X, mousePos.Y);
             if (uiState.IsBoss2Hovered)
             {

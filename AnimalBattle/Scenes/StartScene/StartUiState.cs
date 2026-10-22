@@ -3,7 +3,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Scenes.Start;
 
 /// <summary>
-///     ゲーム開始・選人画面の対話状態および動效タイマーを保持するコンポーネント。
+///     ゲーム開始・キャラクター選択画面の対話状態およびアニメーションタイマーを保持するコンポーネント。
 /// </summary>
 public struct StartUiState {
     public Entity CatPreviewEntity;

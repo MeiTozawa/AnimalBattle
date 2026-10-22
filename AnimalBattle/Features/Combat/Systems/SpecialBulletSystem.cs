@@ -7,7 +7,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Combat.Systems;
 
 /// <summary>
-///     特殊弾幕（青弾・品紅弾・黒弾）の周期アニメーションと動的変調（正弦波揺動・拡縮脈動）を制御する単一責任 ECS システム。
+///     特殊弾幕：青弾・品紅弾・黒弾の周期アニメーションと動的変調：正弦波揺動・拡縮脈動を制御する単一責任 ECS システム。
 /// </summary>
 public static class SpecialBulletSystem {
     /// <summary>
@@ -19,7 +19,7 @@ public static class SpecialBulletSystem {
     {
         world.System<Velocity, BulletModifier, Bullet, Hitbox>("SpecialBulletSystem")
            .With<BossBulletTag>()
-           .Without<OrbitOf>(Ecs.Wildcard) // 子衛星弾（OrbitSatelliteMovementSystem 側で制御）を除外
+           .Without<OrbitOf>(Ecs.Wildcard) // 子衛星弾：OrbitSatelliteMovementSystem 側で制御を除外
            .Without<RecycleTag>()           // 回収済みエンティティを除外
            .Kind(Ecs.OnUpdate)
            .Iter(ExecuteSpecialBulletUpdate);
@@ -47,7 +47,7 @@ public static class SpecialBulletSystem {
         for (var i = 0; i < count; ++i)
         {
             ref var mod = ref modifier[i];
-            // 軌道・拡縮変調の対象外（通常弾・黄色弾）はスキップ（黄色衛星弾のタイマー二重加算および速度上書きを防止）
+            // 軌道・拡縮変調の対象外：通常弾・黄色弾はスキップ：黄色衛星弾のタイマー二重加算および速度上書きを防止
             if (mod.Type is not (BulletType.Cyan or BulletType.Magenta or BulletType.Black)) continue;
 
             mod.ElapsedTimer += dt;

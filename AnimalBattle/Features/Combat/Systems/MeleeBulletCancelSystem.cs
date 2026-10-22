@@ -28,9 +28,9 @@ internal sealed class MeleeBulletCancelContext
 }
 
 /// <summary>
-///     Bunny 自機プレイヤーの近接攻撃判定 (<see cref="PlayerMeleeTag"/>) と
-///     敵弾幕 (<see cref="BossBulletTag"/>) の衝突交差を判定し、弾幕を斬落消去するシステム。
-///     地面衝撃波等の破壊不可弾 (<see cref="Bullet.IsIndestructible"/>) は対象外とし、消去時は <see cref="RecycleTag"/> を
+///     Bunny 自機プレイヤーの近接攻撃判定 <see cref="PlayerMeleeTag"/> と
+///     敵弾幕 <see cref="BossBulletTag"/> の衝突交差を判定し、弾幕を斬落消去するシステム。
+///     地面衝撃波等の破壊不可弾 <see cref="Bullet.IsIndestructible"/> は対象外とし、消去時は <see cref="RecycleTag"/> を
 ///     付与してフレーム末尾で安全回収すると共に、被弾火花演出と音響効果を再生します。
 /// </summary>
 public static class MeleeBulletCancelSystem
@@ -66,7 +66,7 @@ public static class MeleeBulletCancelSystem
     }
 
     /// <summary>
-    ///     近接攻撃判定と敵弾幕の相殺消去パイプライン（名前付き静的メソッド）。
+    ///     近接攻撃判定と敵弾幕の相殺消去パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void Execute(Iter it)
     {

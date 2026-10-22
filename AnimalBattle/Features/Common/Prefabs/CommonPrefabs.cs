@@ -6,8 +6,8 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Common;
 
 /// <summary>
-///     全ゲーム領域で共有される基底抽象 Prefab（原型）の登録と管理。
-///     インスタンス化時の Archetype 安定化（AutoOverride）を保証します。
+///     全ゲーム領域で共有される基底抽象 Prefab：プレハブの登録と管理。
+///     インスタンス化時の Archetype 安定化：AutoOverrideを保証します。
 /// </summary>
 public static class CommonPrefabs
 {
@@ -44,22 +44,22 @@ public static class CommonPrefabs
         world.Component<SpringScale>().AutoOverride<SpringScale>();
         world.Component<InvincibleBlinkState>().AutoOverride<InvincibleBlinkState>();
 
-        // 投射物基底原型
+        // 投射物基底プレハブ
         BaseProjectile = world.Prefab(BaseProjectileName)
             .Set(new Transform(Vec2f.Zero))
             .Set(new Velocity(Vec2f.Zero));
 
-        // 近接判定基底原型
+        // 近接判定基底プレハブ
         BaseMeleeHitbox = world.Prefab(BaseMeleeHitboxName)
             .Set(new Transform(Vec2f.Zero))
             .Set(new HitHistory());
 
-        // VFX 基底原型
+        // VFX 基底プレハブ
         BaseVfx = world.Prefab(BaseVfxName)
             .Set(new Transform(Vec2f.Zero))
             .Add<VfxTag>();
 
-        // キャラクター基底原型
+        // キャラクター基底プレハブ
         BaseCharacter = world.Prefab(BaseCharacterName)
             .Set(new Transform(Vec2f.Zero))
             .Set(new Velocity(Vec2f.Zero))

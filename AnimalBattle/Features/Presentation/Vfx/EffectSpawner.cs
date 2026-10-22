@@ -10,7 +10,7 @@ namespace AnimalBattle.Presentation.Vfx;
 
 /// <summary>
 ///     純粋な視覚演出・パーティクル・残像エフェクトの生成を一元管理する静的サービスです。
-///     ダメージ判定（Hitbox）を持たない瞬態エフェクトエンティティの生成を担当します。
+///     ダメージ判定：Hitboxを持たない瞬態エフェクトエンティティの生成を担当します。
 /// </summary>
 public static class EffectSpawner
 {
@@ -27,7 +27,7 @@ public static class EffectSpawner
     }
 
     /// <summary>
-    ///     ダッシュ高速移動時の半透明速度残像（Ghost Trail）エフェクトを生成します。
+    ///     ダッシュ高速移動時の半透明速度残像：Ghost Trailエフェクトを生成します。
     /// </summary>
     public static void SpawnGhostTrail(
         World world,
@@ -48,7 +48,7 @@ public static class EffectSpawner
     }
 
     /// <summary>
-    ///     射撃出膛時のマズルフラッシュ（銃口閃光）エフェクトを生成します。
+    ///     射撃出膛時のマズルフラッシュ：銃口閃光エフェクトを生成します。
     /// </summary>
     public static void SpawnMuzzleFlash(World world, Vec2f pos)
     {
@@ -80,7 +80,7 @@ public static class EffectSpawner
     }
 
     /// <summary>
-    ///     弾丸が Boss に命中・撃砕された際の飛散破片パーティクル群（Impact Splatter）を生成します。
+    ///     弾丸が Boss に命中・撃砕された際の飛散破片パーティクル群：Impact Splatterを生成します。
     /// </summary>
     public static void SpawnBulletImpactSplatter(World world, Vec2f pos, Vec2f hitDir)
     {
@@ -141,7 +141,7 @@ public static class EffectSpawner
     }
 
     /// <summary>
-    ///     Phase 遷移時・着地衝撃時の清屏衝撃波エフェクト（視覚リング）を生成します。
+    ///     Phase 遷移時・着地衝撃時の清屏衝撃波エフェクト：視覚リングを生成します。
     /// </summary>
     public static void SpawnShockwave(World world, Vec2f pos)
     {

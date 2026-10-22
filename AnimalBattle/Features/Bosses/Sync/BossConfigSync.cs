@@ -24,7 +24,7 @@ public static class BossConfigSync
         // 1. ワールド単例の更新
         world.Set(newConfig);
 
-        // 2. Prefab 原型の再登録
+        // 2. Prefab プレハブの再登録
         BossPrefabs.Register(world);
 
         // 3. 活体 Boss1 エンティティの再水和
@@ -48,7 +48,7 @@ public static class BossConfigSync
         // 1. ワールド単例の更新
         world.Set(newConfig);
 
-        // 2. Prefab 原型の再登録
+        // 2. Prefab プレハブの再登録
         BossPrefabs.Register(world);
 
         // 3. 活体 Boss2 エンティティの再水和

@@ -13,7 +13,7 @@ public struct IncomingDamage
     /// <summary>攻撃元の所属陣営。</summary>
     public Faction SourceFaction;
 
-    /// <summary>ノックバック初速度 (Vec2f)。</summary>
+    /// <summary>ノックバック初速度 Vec2f型。</summary>
     public Vec2f Knockback;
 
     /// <summary>強打撃・易傷クリティカル判定フラグ。</summary>

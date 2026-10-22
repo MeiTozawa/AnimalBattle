@@ -31,7 +31,7 @@ public static class BossDamageResolutionSystem
     }
 
     /// <summary>
-    ///     Boss 被弾ダメージ裁定パイプライン（名前付き静的メソッド）。
+    ///     Boss 被弾ダメージ裁定パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteBossDamageResolution(
         Iter it,
@@ -66,14 +66,14 @@ public static class BossDamageResolutionSystem
             ref readonly var tagState = ref tags[i];
             ref var vel = ref velocities[i];
 
-            // ゲームオーバー済み、完全無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
+            // ゲームオーバー済み、完全無敵または不可命中状態：GAS Invincible / Untargetable 保持時、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
             if (isGameOver || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
             {
                 entity.Remove<IncomingDamage>();
                 continue;
             }
 
-            // 易傷倍率の評価（GameplayTag.Vulnerable 駆動）
+            // 易傷倍率の評価：GameplayTag.Vulnerable 駆動
             var isVulnerable = tagState.HasTag(GameplayTag.Vulnerable);
             var multiplier = isVulnerable ? pCfg.VulnerableDamageMultiplier : 1.0f;
             var finalDamage = dmg.Amount * multiplier;
@@ -82,7 +82,7 @@ public static class BossDamageResolutionSystem
             // 被弾白閃演出の注入
             entity.Set(new HitFlashEffect(flashCfg.Duration, flashCfg.Color));
 
-            // ヒットストップ、受撃局所振動およびノックバックの適用（SuperArmor 剛体タグ未保持時または易傷時に適用）
+            // ヒットストップ、受撃局所振動およびノックバックの適用：SuperArmor 剛体タグ未保持時または易傷時に適用
             var hasSuperArmor = tagState.HasTag(GameplayTag.SuperArmor);
             if (!hasSuperArmor || isVulnerable)
             {

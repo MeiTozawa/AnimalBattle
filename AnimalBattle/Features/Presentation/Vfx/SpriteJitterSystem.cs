@@ -6,7 +6,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Vfx;
 
 /// <summary>
-///     受撃局所振動（<see cref="SpriteJitter" />）の変位オフセット計算を制御する ECS システム。
+///     受撃局所振動<see cref="SpriteJitter" />の変位オフセット計算を制御する ECS システム。
 /// </summary>
 public static class SpriteJitterSystem
 {
@@ -25,7 +25,7 @@ public static class SpriteJitterSystem
     }
 
     /// <summary>
-    ///     スプライト局所振動オフセット計算パイプライン（名前付き静的メソッド）。
+    ///     スプライト局所振動オフセット計算パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteSpriteJitter(Iter it, Field<SpriteJitter> jitters, Field<Sprite> sprites)
     {

@@ -11,7 +11,7 @@ namespace AnimalBattle.Configs;
 
 /// <summary>
 ///     Boss 技能パターン設定の共通基底クラス。
-///     時序、予兆、冷却などの基本パラメータを保持し、規定の仮想実装を提供します。
+///     タイムライン、予兆、冷却などの基本パラメータを保持し、規定の仮想実装を提供します。
 /// </summary>
 public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigLifecycle {
     private string _skillName = string.Empty;
@@ -39,7 +39,7 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigL
     /// <inheritdoc />
     public virtual void PostProcess() { }
 
-    /// <summary>前隙予兆時間（秒）</summary>
+    /// <summary>前隙予兆時間秒単位</summary>
     public float WindUpTime { get; set; }
 
     /// <summary>予兆エフェクトカラー Hex 文字列</summary>
@@ -57,13 +57,13 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigL
     /// <summary>予兆エフェクトカラー</summary>
     public Color TelegraphColor => _telegraphColor;
 
-    /// <summary>発動持続時間（秒）</summary>
+    /// <summary>発動持続時間秒単位</summary>
     public float CastDuration { get; set; }
 
-    /// <summary>後隙硬直時間（秒）</summary>
+    /// <summary>後隙硬直時間秒単位</summary>
     public float RecoveryTime { get; set; }
 
-    /// <summary>基本冷却時間（秒）</summary>
+    /// <summary>基本冷却時間秒単位</summary>
     public float DefaultCooldown { get; set; }
 
     /// <summary>有効射程距離</summary>
@@ -75,13 +75,13 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigL
     /// <summary>キーフレームイベント一覧</summary>
     public List<SkillEventConfig> Events { get; set; } = [];
 
-    /// <summary>出招・判定中に自身へ付与されるアーマータグ一覧（例: ["SuperArmor"] または ["Invincible"]）</summary>
+    /// <summary>出招・判定中に自身へ付与されるアーマータグ一覧例として["SuperArmor"] または ["Invincible"]</summary>
     public List<string> ArmorTags { get; set; } = [];
 
     /// <summary>パース済みのアーマータグフラグを取得します。</summary>
     public GameplayTag ParsedArmorTag => GameplayTagHelper.ParseTags(ArmorTags);
 
-    /// <summary>後隙（Recovery）中に自身へ付与されるタグ一覧（例: ["Vulnerable"]）</summary>
+    /// <summary>後隙：Recovery中に自身へ付与されるタグ一覧例として["Vulnerable"]</summary>
     public List<string> RecoveryTags { get; set; } = [];
 
     /// <summary>パース済みの後隙タグフラグを取得します。</summary>

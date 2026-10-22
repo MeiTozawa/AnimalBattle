@@ -2,7 +2,7 @@ namespace AnimalBattle.Abilities.Attack;
 
 /// <summary>
 ///     技能の意思決定条件を定義する検証済みルール構造体です。
-///     UE GAS 準拠：技能識別子は StringId（動的タグ）として管理されます。
+///     UE GAS 準拠：技能識別子は StringId：動的タグとして管理されます。
 /// </summary>
 public readonly struct AttackDecisionRule {
     /// <summary>対象の技能識別タグを取得します。</summary>

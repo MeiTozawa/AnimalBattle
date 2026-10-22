@@ -8,7 +8,7 @@ namespace AnimalBattle.Configs;
 
 /// <summary>
 ///     Boss 技能パターン設定の共通インターフェース。
-///     時序定義、前兆演出、弾幕および判定生成を自身に内包し、
+///     タイムライン定義、前兆演出、弾幕および判定生成を自身に内包し、
 ///     コード内での技能名ハードコードおよび switch-case を完全に排除します。
 /// </summary>
 public interface IBossSkillPatternConfig {
@@ -30,14 +30,14 @@ public interface IBossSkillPatternConfig {
     /// <summary>後隙硬直時間</summary>
     float RecoveryTime { get; set; }
 
-    /// <summary>基本冷却時間（秒）</summary>
+    /// <summary>基本冷却時間秒単位</summary>
     float DefaultCooldown { get; set; }
 
-    /// <summary>時序キーフレームイベント一覧</summary>
+    /// <summary>タイムラインキーフレームイベント一覧</summary>
     List<SkillEventConfig> Events { get; set; }
 
 
-    /// <summary>技能識別タグに対応する不変攻撃時序定義をビルドします。</summary>
+    /// <summary>技能識別タグに対応する不変攻撃タイムライン定義をビルドします。</summary>
     ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag);
 
     /// <summary>前兆演出レンダラーを生成します。</summary>

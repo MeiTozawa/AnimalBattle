@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 namespace AnimalBattle.Scenes.Start;
 
 /// <summary>
-///     カード矩形領域設定（位置・サイズ）。
+///     カード矩形領域設定：位置・サイズ。
 /// </summary>
 public sealed class CardLayoutConfig {
     public Vec2i Pos { get; set; }
@@ -15,7 +15,7 @@ public sealed class CardLayoutConfig {
 }
 
 /// <summary>
-///     カード個別のテキスト設定（タイトル・特徴タグ・説明文）。
+///     カード個別のテキスト設定：タイトル・特徴タグ・説明文。
 /// </summary>
 public sealed class StartSceneCardTextConfig {
     public string Title { get; set; } = string.Empty;
@@ -42,7 +42,7 @@ public sealed class StartSceneTextsConfig {
 }
 
 /// <summary>
-///     StartScene のマウスホバー動效・物理アニメーション定数設定クラス。
+///     StartScene のマウスホバー演出および物理アニメーション定数設定クラス。
 /// </summary>
 public sealed class StartSceneMotionConfig {
     public float StepFrequency { get; set; }
@@ -230,7 +230,7 @@ public sealed class StartSceneColorsConfig {
 }
 
 /// <summary>
-///     ゲーム開始・選人シーン (StartScene) の全設定を管理するルート設定モデル。
+///     ゲーム開始・キャラクター選択画面 の全設定を管理するルート設定モデル。
 /// </summary>
 public sealed class StartSceneConfig {
     public StartSceneLayoutConfig Layout { get; set; } = new();

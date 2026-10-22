@@ -30,7 +30,7 @@ public static class PlayerConfigExtensions
     }
 
     /// <summary>
-    ///     現在アクティブ（GameFlow.SelectedPlayer）なプレイヤー設定を取得します。
+    ///     現在アクティブ：GameFlow.SelectedPlayerなプレイヤー設定を取得します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド。</param>
     /// <returns>現在選択中の <see cref="PlayerConfig"/> インスタンス。</returns>

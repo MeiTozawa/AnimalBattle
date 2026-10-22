@@ -27,15 +27,15 @@ public struct Sprite(
     /// <summary>表示フラグ</summary>
     public bool IsVisible = isVisible;
 
-    /// <summary>スプライト描画色（色調補正 / Tint）</summary>
+    /// <summary>スプライト描画色：色調補正 / Tint</summary>
     public Color Color = color ?? Color.White;
 
-    /// <summary>局所振動（ジッター）変位 (Vec2f)</summary>
+    /// <summary>局所振動：ジッター変位 Vec2f型</summary>
     public Vec2f JitterOffset = Vec2f.Zero;
 
-    /// <summary>スプリング拡縮変形倍率 (Vec2f)</summary>
+    /// <summary>スプリング拡縮変形倍率 Vec2f型</summary>
     public Vec2f Scale = new(1.0f, 1.0f);
 
-    /// <summary>スプリング拡縮による接地位置補正 Y（ピクセル）</summary>
+    /// <summary>スプリング拡縮による接地位置補正 Yピクセル単位</summary>
     public float SpringOffsetY = 0.0f;
 }

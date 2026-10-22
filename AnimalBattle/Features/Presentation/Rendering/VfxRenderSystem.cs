@@ -7,8 +7,8 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
-///     残影スプライト、環状衝撃波（RingEffect）、および弾丸破片パーティクルを描画する ECS エフェクト描画システム。
-///     加算合成（BlendMode.Add）およびアルファ減衰（FadeEffect）を統合適用します。
+///     残影スプライト、環状衝撃波：RingEffect、および弾丸破片パーティクルを描画する ECS エフェクト描画システム。
+///     加算合成：BlendMode.Addおよびアルファ減衰：FadeEffectを統合適用します。
 /// </summary>
 public static class VfxRenderSystem
 {
@@ -44,7 +44,7 @@ public static class VfxRenderSystem
     }
 
     /// <summary>
-    ///     スプライト残影フェード描画パイプライン（名前付き静的メソッド）。
+    ///     スプライト残影フェード描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void DrawSpriteFadeEffects(Iter it, Field<Transform> trans, Field<Sprite> sprites, Field<FadeEffect> fades)
     {
@@ -81,7 +81,7 @@ public static class VfxRenderSystem
     }
 
     /// <summary>
-    ///     環状衝撃波リング描画パイプライン（名前付き静的メソッド）。
+    ///     環状衝撃波リング描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void DrawRingEffects(Iter it, Field<Transform> trans, Field<RingEffect> rings, Field<FadeEffect> fades)
     {
@@ -111,7 +111,7 @@ public static class VfxRenderSystem
     }
 
     /// <summary>
-    ///     破片パーティクル描画パイプライン（名前付き静的メソッド）。
+    ///     破片パーティクル描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void DrawParticleEffects(Iter it, Field<Transform> trans, Field<Bullet> bullets, Field<FadeEffect> fades)
     {
@@ -139,7 +139,7 @@ public static class VfxRenderSystem
             GameEngine.DrawCircle(p, radius, b.FillColor, true);
         }
 
-        // パイプライン状態をデフォルトへ復元（同等アルファ値の連続円描画バッチを維持）
+        // パイプライン状態をデフォルトへ復元：同等アルファ値の連続円描画バッチを維持
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
     }
 }

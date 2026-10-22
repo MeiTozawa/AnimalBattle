@@ -9,7 +9,7 @@ namespace AnimalBattle.Abilities.Skills;
 /// </summary>
 public static class SkillConfigLoader {
     /// <summary>
-    ///     パラメータ群およびキーフレームイベント一覧から不変時序定義をビルドします。
+    ///     パラメータ群およびキーフレームイベント一覧から不変タイムライン定義をビルドします。
     /// </summary>
     /// <param name="skillTag">技能識別タグ。</param>
     /// <param name="windUpTime">前隙予兆時間。</param>

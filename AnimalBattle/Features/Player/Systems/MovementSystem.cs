@@ -93,7 +93,7 @@ public static class MovementSystem {
     }
 
     /// <summary>
-    ///     TileMap インスタンスを無割当（Zero Allocation）で抽出します。
+    ///     TileMap インスタンスを無割当：Zero Allocationで抽出します。
     /// </summary>
     private static void ExtractTileMap(Iter it, Field<TileMap> tileMaps)
     {
@@ -128,7 +128,7 @@ public static class MovementSystem {
             dash.Cooldown = MathF.Max(0.0f, dash.Cooldown - dt);
         }
 
-        // 意図に基づくスプライト反転の単方向同期（Presentation Sync）
+        // 意図に基づくスプライト反転の単方向同期：Presentation Sync
         if (intent.FacingX != 0.0f)
         {
             sprite.FlipX = intent.FacingX < 0.0f;
@@ -141,7 +141,7 @@ public static class MovementSystem {
             dash.Cooldown = pCfg.DashCooldown;
             dash.GhostTrailTimer = 0.0f;
 
-            // 突進方向決定（移動入力優先、入力なし時は意図上の水平向き）
+            // 突進方向決定：移動入力優先、入力なし時は意図上の水平向き
             if (MathF.Abs(intent.MoveX) > 0.01f)
             {
                 dash.DirectionX = MathF.Sign(intent.MoveX);
@@ -151,7 +151,7 @@ public static class MovementSystem {
                 dash.DirectionX = intent.FacingX < 0.0f ? -1.0f : 1.0f;
             }
 
-            // ダッシュ不可命中フレーム付与（弾幕・敵接触をすり抜ける）
+            // ダッシュ不可命中フレーム付与：弾幕・敵接触をすり抜ける
             TimedEffectService.ApplyEffect(ref timedEffects, ref tagState, GameplayTag.Untargetable, pCfg.DashInvincibleDuration, entity.Id);
 
             // スカッシュ＆ストレッチ突進変形演出
@@ -166,11 +166,11 @@ public static class MovementSystem {
         {
             dash.Timer = MathF.Max(0.0f, dash.Timer - dt);
 
-            // ダッシュ中速度維持（水平高速突進・重力無効化）
+            // ダッシュ中速度維持：水平高速突進・重力無効化
             vel.Value = new Vec2f(dash.DirectionX * pCfg.DashSpeed, 0.0f);
             vel.Knockback = Vec2f.Zero;
 
-            // 残像（Ghost Trail）生成
+            // 残像：Ghost Trail生成
             dash.GhostTrailTimer += dt;
             if (dash.GhostTrailTimer >= pCfg.DashGhostTrailInterval)
             {
@@ -202,12 +202,12 @@ public static class MovementSystem {
                 {
                     if (MathF.Abs(targetVx) < float.Epsilon)
                     {
-                        // 停止（接地自然減速）
+                        // 停止：接地自然減速
                         accel = jump.GroundDeceleration;
                     }
                     else if (MathF.Sign(targetVx) != MathF.Sign(currentVx) && MathF.Abs(currentVx) > float.Epsilon)
                     {
-                        // 反転（急停止制動）
+                        // 反転：急停止制動
                         accel = jump.TurnaroundDeceleration;
                     }
                     else
@@ -218,7 +218,7 @@ public static class MovementSystem {
                 }
                 else
                 {
-                    // 空中制御（入力有無に応じた加減速）
+                    // 空中制御：入力有無に応じた加減速
                     accel = MathF.Abs(targetVx) > float.Epsilon ? jump.AirAcceleration : jump.AirDeceleration;
                 }
 
@@ -256,7 +256,7 @@ public static class MovementSystem {
                 var didJump = false;
                 if (col.IsGrounded || jump.CoyoteTimer > 0.0f)
                 {
-                    // 地面初段ジャンプ（接地またはコヨーテ猶予内）
+                    // 地面初段ジャンプ：接地またはコヨーテ猶予内
                     currentVy = jump.FirstJumpVelocity;
                     col.IsGrounded = false;
                     jump.CoyoteTimer = 0.0f;
@@ -287,14 +287,14 @@ public static class MovementSystem {
             // 3. 重力加速度および可変高度・頂点滞空の適用
             var effectiveGravity = jump.Gravity;
 
-            // キー解放時の上昇速度減衰（小ジャンプ制御）
+            // キー解放時の上昇速度減衰：小ジャンプ制御
             if (currentVy < 0.0f && !intent.JumpHolding && jump.JumpCutDamping > 0.0f)
             {
                 effectiveGravity /= jump.JumpCutDamping;
             }
             else if (MathF.Abs(currentVy) < jump.ApexFloatVelocityThreshold && jump.ApexFloatGravityMultiplier > 0.0f)
             {
-                // 頂点付近の滞空時間延長（浮遊感・狙い撃ち猶予の付与）
+                // 頂点付近の滞空時間延長：浮遊感・狙い撃ち猶予の付与
                 effectiveGravity *= jump.ApexFloatGravityMultiplier;
             }
 
@@ -318,7 +318,7 @@ public static class MovementSystem {
             }
         }
 
-        // 4. 次フレーム目標座標の算出（自主移動速度と外力ノックバックの合算）
+        // 4. 次フレーム目標座標の算出：自主移動速度と外力ノックバックの合算
         var totalVel = vel.Value + vel.Knockback;
         var nextPos = trans.Position + totalVel * dt;
 
@@ -382,7 +382,7 @@ public static class MovementSystem {
             }
         }
 
-        // 接地瞬間時の押し潰し演出（落下速度が設定閾値以上の場合のみ適用）
+        // 接地瞬間時の押し潰し演出：落下速度が設定閾値以上の場合のみ適用
         if (!wasGrounded && isGrounded && vel.Value.Y >= jump.LandSquashVelocityThreshold)
         {
             EventBus.Publish(new PlayerLandedEvent(vel.Value.Y));

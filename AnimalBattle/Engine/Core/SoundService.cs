@@ -6,7 +6,7 @@ using AnimalBattle.Events;
 namespace AnimalBattle.Core;
 
 /// <summary>
-///     ゲーム内で再生される効果音（SFX）の種類を定義する列挙型。
+///     ゲーム内で再生される効果音 SFX の種類を定義する列挙型。
 /// </summary>
 public enum SfxType
 {

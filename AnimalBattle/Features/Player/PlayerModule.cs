@@ -14,10 +14,10 @@ public readonly struct PlayerModule : IFlecsModule
 
         PlayerPrefabs.Register(world);
 
-        world.AddPlayerInputSystem()               // 1. 入力意図取得 (PreUpdate)
-             .AddCatWeaponSystem()                 // 2. 射撃反動インパルス生成 (OnUpdate)
-             .AddBunnyWeaponSystem()               // 3. 近接突進インパルス生成 (OnUpdate)
-             .AddMovementSystem()                  // 4. 統合物理積分・足場衝突判定・境界 Clamp (OnUpdate)
-             .AddPlayerDamageResolutionSystem();   // 5. 被弾ダメージ・ヒットストップ処理 (OnValidate)
+        world.AddPlayerInputSystem()               // 1. 入力意図取得
+             .AddCatWeaponSystem()                 // 2. 射撃反動インパルス生成
+             .AddBunnyWeaponSystem()               // 3. 近接突進インパルス生成
+             .AddMovementSystem()                  // 4. 統合物理積分・足場衝突判定・境界 Clamp
+             .AddPlayerDamageResolutionSystem();   // 5. 被弾ダメージ・ヒットストップ処理
     }
 }

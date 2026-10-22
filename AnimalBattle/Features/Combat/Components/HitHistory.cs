@@ -4,7 +4,7 @@ namespace AnimalBattle.Combat.Components;
 
 /// <summary>
 ///     貫通・近接攻撃等の多フレーム持続判定において、同一対象への重複多段ヒットを防止するための 16 スロット命中履歴コンポーネント。
-///     Unity DOTS の [InternalBufferCapacity(16)] 準拠で 128 バイト固定長インライン展開され、GC 割り当てを一切発生させません。
+///     Unity DOTS の [InternalBufferCapacity] 準拠で 128 バイト固定長インライン展開され、GC 割り当てを一切発生させません。
 /// </summary>
 public unsafe struct HitHistory
 {

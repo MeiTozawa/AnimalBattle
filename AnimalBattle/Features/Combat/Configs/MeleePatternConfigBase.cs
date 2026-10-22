@@ -15,7 +15,7 @@ public abstract class MeleePatternConfigBase : SkillPatternConfigBase {
     /// <summary>前進・突進速度</summary>
     public float DashSpeed { get; set; }
 
-    /// <summary>斬撃判定範囲 (Vec2f)</summary>
+    /// <summary>斬撃判定範囲 Vec2f型</summary>
     public Vec2f SlashRange { get; set; }
 
     /// <summary>斬撃円形半径</summary>
@@ -24,7 +24,7 @@ public abstract class MeleePatternConfigBase : SkillPatternConfigBase {
     /// <summary>斬撃命中ダメージ</summary>
     public float SlashDamage { get; set; }
 
-    /// <summary>攻撃判定の残留持続時間（秒）</summary>
+    /// <summary>攻撃判定の残留持続時間秒単位</summary>
     public float HitboxDuration { get; set; }
 
     /// <summary>斬撃エフェクトカラー Hex 文字列</summary>

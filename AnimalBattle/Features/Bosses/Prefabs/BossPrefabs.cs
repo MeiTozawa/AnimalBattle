@@ -10,7 +10,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Bosses;
 
 /// <summary>
-///     Boss（Boss1 & Boss2）の Prefab 原型登録およびインスタンス化。
+///     Boss：Boss1 & Boss2の Prefab プレハブ登録およびインスタンス化。
 /// </summary>
 public static class BossPrefabs
 {
@@ -23,7 +23,7 @@ public static class BossPrefabs
     public static Entity Boss2 { get; private set; }
 
     /// <summary>
-    ///     Boss 共通基底および各 Boss の Prefab 原型を登録します。
+    ///     Boss 共通基底および各 Boss の Prefab プレハブを登録します。
     /// </summary>
     public static void Register(World world)
     {
@@ -63,7 +63,7 @@ public static class BossPrefabs
     }
 
     /// <summary>
-    ///     指定された BossType の Prefab 原型を取得します。
+    ///     指定された BossType の Prefab プレハブを取得します。
     /// </summary>
     public static Entity GetPrefab(BossType type)
     {

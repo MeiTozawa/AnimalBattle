@@ -6,7 +6,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Player.Systems;
 
 /// <summary>
-///     自機の運動状態（接地・跳躍・落下・走行）に応じて適切なアニメーションクリップを選択するシステム。
+///     自機の運動状態：接地・跳躍・落下・走行に応じて適切なアニメーションクリップを選択するシステム。
 /// </summary>
 public static class PlayerAnimationStateSystem
 {

@@ -3,10 +3,10 @@ using AnimalBattle.Abilities;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-///     フェーズ遷移能力（PhaseTransitionAbility）の TOML 設定データクラス。
+///     フェーズ遷移能力：PhaseTransitionAbilityの TOML 設定データクラス。
 /// </summary>
 public sealed class PhaseTransitionAbilityConfig {
-    /// <summary>遷移演出の持続時間（秒）</summary>
+    /// <summary>遷移演出の持続時間秒単位</summary>
     public float Duration { get; set; } = 1.0f;
 
     /// <summary>発動中に自身へ付与されるタグ名リスト</summary>

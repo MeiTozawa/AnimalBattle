@@ -3,18 +3,18 @@ using System.Runtime.InteropServices;
 namespace AnimalBattle.Common.Components;
 
 /// <summary>
-///     2D トランスフォーム（位置・拡大率・回転）を表すコンポーネント。
-///     Native C++ の ab::Transform とメモリレイアウトが完全一致（20 bytes）します。
+///     2D トランスフォーム：位置・拡大率・回転を表すコンポーネント。
+///     Native C++ の ab::Transform とメモリレイアウトが完全一致：20 bytesします。
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 public struct Transform {
-    /// <summary>位置座標 (Vec2f)</summary>
+    /// <summary>位置座標 Vec2f型</summary>
     public Vec2f Position;
 
-    /// <summary>拡大率 (Vec2f)</summary>
+    /// <summary>拡大率 Vec2f型</summary>
     public Vec2f Scale;
 
-    /// <summary>回転角度（ラジアン）</summary>
+    /// <summary>回転角度ラジアン単位</summary>
     public float Rotation;
 
     /// <summary>

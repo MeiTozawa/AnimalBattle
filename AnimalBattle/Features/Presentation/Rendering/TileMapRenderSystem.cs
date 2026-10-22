@@ -37,7 +37,7 @@ public static class TileMapRenderSystem
     }
 
     /// <summary>
-    ///     タイルマップ描画パイプライン（名前付き静的メソッド）。
+    ///     タイルマップ描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteTileMapRender(Iter it)
     {
@@ -57,7 +57,7 @@ public static class TileMapRenderSystem
     private static void DrawTileMap(ref TileMap tileMap)
     {
         _renderedTileMap = true;
-        // カメラ移動・シェイク（CameraService.RenderOffset）を考慮してスクリーン視口をワールド座標系へ変換
+        // カメラ移動・シェイク：CameraService.RenderOffsetを考慮してスクリーン視口をワールド座標系へ変換
         var camOffset = CameraService.RenderOffset;
         var worldViewportPos = _cachedViewport.Pos - (Vec2f)camOffset;
         tileMap.DrawCulled(worldViewportPos, _cachedViewport.Size);

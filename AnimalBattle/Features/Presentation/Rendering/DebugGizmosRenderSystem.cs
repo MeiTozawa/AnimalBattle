@@ -23,8 +23,8 @@ internal sealed class DebugGizmosRenderContext
 }
 
 /// <summary>
-///     衝突枠（CollisionBox）、攻撃判定枠（Hitbox）、被弾枠（Hurtbox）、およびナビゲーショングラフを描画する ECS システム。
-///     render.toml の DebugMode かつ IsActive 有効時にワールド空間（カメラオフセット適用中）に Gizmos を描画します。
+///     衝突枠：CollisionBox、攻撃判定枠：Hitbox、被弾枠：Hurtbox、およびナビゲーショングラフを描画する ECS システム。
+///     render.toml の DebugMode かつ IsActive 有効時にワールド空間：カメラオフセット適用中に Gizmos を描画します。
 /// </summary>
 public static class DebugGizmosRenderSystem
 {
@@ -71,7 +71,7 @@ public static class DebugGizmosRenderSystem
     }
 
     /// <summary>
-    ///     デバッグギズモ描画パイプライン（名前付き静的メソッド）。
+    ///     デバッグギズモ描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteDebugGizmosRender(Iter it)
     {
@@ -98,7 +98,7 @@ public static class DebugGizmosRenderSystem
 
     private static void DrawPlatformCollisionBoxes(Query<Transform, CollisionBox> platformQuery, DebugRenderConfig dbgCfg)
     {
-        // 足場地形枠描画（クエリ分離により Entity.Has による分岐を完全排除）
+        // 足場地形枠描画：クエリ分離により Entity.Has による分岐を完全排除
         platformQuery.Each((ref Transform trans, ref CollisionBox col) =>
         {
             var halfSize = col.Size * 0.5f;
@@ -124,7 +124,7 @@ public static class DebugGizmosRenderSystem
 
     private static void DrawHurtboxes(Query<Transform, Hurtbox> hurtboxQuery, DebugRenderConfig dbgCfg)
     {
-        // 被弾判定枠描画（クエリで Without<DeadTag> を適用済みなためループ内の死亡判定は不要）
+        // 被弾判定枠描画：クエリで Without<DeadTag> を適用済みなためループ内の死亡判定は不要
         hurtboxQuery.Each((ref Transform trans, ref Hurtbox hurtbox) =>
         {
             var hurtColor = hurtbox.Faction switch

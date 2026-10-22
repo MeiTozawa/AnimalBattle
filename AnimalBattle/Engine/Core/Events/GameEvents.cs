@@ -14,7 +14,7 @@ public readonly record struct PlayerLandedEvent(float FallVelocity);
 /// <summary>自機が射撃を行ったイベント</summary>
 public readonly record struct PlayerShotFiredEvent(Vec2f SpawnPos, Vec2f Direction);
 
-/// <summary>自機がダッシュを開始したイベント（Task 4 用）</summary>
+/// <summary>自機がダッシュを開始したイベント：Task 4 用</summary>
 public readonly record struct PlayerDashedEvent(float DirX);
 
 /// <summary>自機が被弾ダメージを受けたイベント</summary>
@@ -23,7 +23,7 @@ public readonly record struct PlayerDamagedEvent(float DamageAmount, float Curre
 /// <summary>自機が死亡したイベント</summary>
 public readonly record struct PlayerDiedEvent;
 
-/// <summary>自機の体力が変化したイベント（残血警報等のリアクティブ判定用）</summary>
+/// <summary>自機の体力が変化したイベント：残血警報等のリアクティブ判定用</summary>
 public readonly record struct PlayerHealthChangedEvent(float PreviousHealth, float CurrentHealth, float MaxHealth);
 
 /// <summary>Boss が弾幕波次を発射したイベント</summary>

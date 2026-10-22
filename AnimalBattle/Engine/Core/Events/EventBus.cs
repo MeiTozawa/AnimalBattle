@@ -61,7 +61,7 @@ public static class EventBus<T> where T : struct
 
     /// <summary>
     ///     イベントを発行し、登録された全リスナーへ同期通知します。
-    ///     （※ Action&lt;T&gt; へのディスパッチにより値渡しで伝播されます）
+    ///     ：※ Action&lt;T&gt; へのディスパッチにより値渡しで伝播されます
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Publish(in T evt)

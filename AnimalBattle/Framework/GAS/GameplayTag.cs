@@ -21,7 +21,7 @@ public enum GameplayTag : ulong {
     /// <summary>攻撃後隙硬直中。</summary>
     Recovery = 1UL << 3,
 
-    /// <summary>剛体（スーパーアーマー）。</summary>
+    /// <summary>剛体：スーパーアーマー。</summary>
     SuperArmor = 1UL << 4,
 
     /// <summary>完全無敵。</summary>

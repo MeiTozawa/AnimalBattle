@@ -4,7 +4,7 @@ using System.Globalization;
 namespace AnimalBattle.Core;
 
 /// <summary>
-///     <see cref="Color" />、<see cref="uint" /> (32 ビット ARGB)、および 16 進数・カラー名・数値文字列間の
+///     <see cref="Color" />、<see cref="uint" /> 32ビットARGB形式、および 16 進数・カラー名・数値文字列間の
 ///     明示的型変換を提供する拡張メソッドクラス。
 /// </summary>
 public static class ColorExtensions {
@@ -19,10 +19,10 @@ public static class ColorExtensions {
     }
 
     /// <summary>
-    ///     <see cref="Color" /> を 32 ビット符号なし整数 (ARGB) へ明示的に変換します。
+    ///     <see cref="Color" /> を 32 ビット符号なし整数 ARGB形式 へ明示的に変換します。
     /// </summary>
     /// <param name="color">対象の <see cref="Color" /></param>
-    /// <returns>32 ビット符号なし ARGB 値 (<see cref="uint" />)</returns>
+    /// <returns>32 ビット符号なし ARGB 値 <see cref="uint" /></returns>
     public static uint ToUint(this Color color)
     {
         return (uint)color.ToArgb();

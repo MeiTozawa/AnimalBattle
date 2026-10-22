@@ -25,7 +25,7 @@ public enum CharacterType
 /// </summary>
 internal static class AnimationRegistry
 {
-    /// <summary>キャラクタースプライトパス (resource/ からの相対パス)。</summary>
+    /// <summary>キャラクタースプライトパス resourceディレクトリからの相対パス。</summary>
     internal static readonly IReadOnlyDictionary<CharacterType, string> CharacterSprites =
         new Dictionary<CharacterType, string>
         {

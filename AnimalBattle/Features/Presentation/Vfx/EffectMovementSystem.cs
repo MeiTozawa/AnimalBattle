@@ -5,7 +5,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Vfx;
 
 /// <summary>
-///     視覚演出エンティティ（VfxTag）の等速直線運動（位置更新）を一括処理する ECS System。
+///     視覚演出エンティティ：VfxTagの等速直線運動：位置更新を一括処理する ECS System。
 /// </summary>
 public static class EffectMovementSystem
 {
@@ -25,7 +25,7 @@ public static class EffectMovementSystem
     }
 
     /// <summary>
-    ///     エフェクト位置更新処理（名前付き静的メソッド）。
+    ///     エフェクト位置更新処理：名前付き静的メソッド。
     /// </summary>
     public static void UpdateEffectMovement(Iter it, int i, ref Transform trans, ref Velocity vel)
     {

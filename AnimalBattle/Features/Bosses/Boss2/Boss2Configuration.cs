@@ -49,16 +49,16 @@ public readonly struct Boss2PhaseSettings(
     /// <summary>この Phase で評価される攻撃意思決定ルールです。</summary>
     public IReadOnlyList<AttackDecisionRule> Rules { get; } = rules ?? [];
 
-    /// <summary>跳躍上昇の最大許容時間（秒）です。</summary>
+    /// <summary>跳躍上昇の最大許容時間秒単位です。</summary>
     public float MaxAscentDuration { get; } = maxAscentDuration;
 
-    /// <summary>着地後の硬直待機時間（秒）です。</summary>
+    /// <summary>着地後の硬直待機時間秒単位です。</summary>
     public float LandingRecoveryDuration { get; } = landingRecoveryDuration;
 
-    /// <summary>足場間跳躍への移行を開始する水平距離閾値（px）です。</summary>
+    /// <summary>足場間跳躍への移行を開始する水平距離閾値：pxです。</summary>
     public float TakeoffDistance { get; } = takeoffDistance;
 
-    /// <summary>プレイヤー追跡時に遠隔技へ移行するまでのタイムアウト時間（秒）です。</summary>
+    /// <summary>プレイヤー追跡時に遠隔技へ移行するまでのタイムアウト時間秒単位です。</summary>
     public float ChaseTimeout { get; } = chaseTimeout;
 }
 
@@ -76,40 +76,40 @@ public readonly struct Boss2CombatSettings(
     float antiKitingMidDistance,
     float antiKitingEnforceMultiplier,
     float playerCollisionHeight) {
-    /// <summary>衝突判定の高さ（px）です。</summary>
+    /// <summary>衝突判定の高さ：pxです。</summary>
     public float CollisionHeight { get; } = collisionHeight;
 
-    /// <summary>跳躍後の再跳躍冷却時間（秒）です。</summary>
+    /// <summary>跳躍後の再跳躍冷却時間秒単位です。</summary>
     public float JumpCooldownDuration { get; } = jumpCooldownDuration;
 
-    /// <summary>離陸速度閾値（px/s）です。</summary>
+    /// <summary>離陸速度閾値：px/sです。</summary>
     public float TakeoffVelocityThreshold { get; } = takeoffVelocityThreshold;
 
-    /// <summary>水平移動判定の閾値（px）です。</summary>
+    /// <summary>水平移動判定の閾値：pxです。</summary>
     public float MoveThreshold { get; } = moveThreshold;
 
-    /// <summary>同プラットフォーム判定の Y 許容誤差（px）です。</summary>
+    /// <summary>同プラットフォーム判定の Y 許容誤差：pxです。</summary>
     public float SamePlatformToleranceY { get; } = samePlatformToleranceY;
 
-    /// <summary>プレイヤー滞空判定の Y 速度閾値（px/s）です。</summary>
+    /// <summary>プレイヤー滞空判定の Y 速度閾値：px/sです。</summary>
     public float AirborneVelocityThreshold { get; } = airborneVelocityThreshold;
 
-    /// <summary>プレイヤー滞空判定の高度差閾値（px）です。</summary>
+    /// <summary>プレイヤー滞空判定の高度差閾値：pxです。</summary>
     public float AirborneHeightThreshold { get; } = airborneHeightThreshold;
 
-    /// <summary>近接技トリガーの判定範囲 (Vec2f) です。</summary>
+    /// <summary>近接技トリガーの判定範囲 Vec2f型 です。</summary>
     public Vec2f MeleeTriggerRange { get; } = meleeTriggerRange;
 
-    /// <summary>反風等遠距離技の発動距離（px）です。</summary>
+    /// <summary>反風等遠距離技の発動距離：pxです。</summary>
     public float AntiKitingRangedDistance { get; } = antiKitingRangedDistance;
 
-    /// <summary>反風等中距離技の発動距離（px）です。</summary>
+    /// <summary>反風等中距離技の発動距離：pxです。</summary>
     public float AntiKitingMidDistance { get; } = antiKitingMidDistance;
 
     /// <summary>反風等強制発動タイムアウト倍率です。</summary>
     public float AntiKitingEnforceMultiplier { get; } = antiKitingEnforceMultiplier;
 
-    /// <summary>プレイヤーの判定高さ（px）です。</summary>
+    /// <summary>プレイヤーの判定高さ：pxです。</summary>
     public float PlayerCollisionHeight { get; } = playerCollisionHeight;
 }
 

@@ -10,17 +10,17 @@ public sealed class AnimationConfig {
     /// <summary>キャラクター/エフェクトの表示名</summary>
     public string DisplayName { get; set; } = string.Empty;
 
-    /// <summary>デフォルトのセル幅（ピクセル）</summary>
+    /// <summary>デフォルトのセル幅ピクセル単位</summary>
     public int CellWidth { get; set; }
 
-    /// <summary>デフォルトのセル高さ（ピクセル）</summary>
+    /// <summary>デフォルトのセル高さピクセル単位</summary>
     public int CellHeight { get; set; }
 
     /// <summary>クリップ一覧</summary>
     public List<AnimationClipConfig> Clips { get; set; } = [];
 
     /// <summary>
-    ///     <see cref="StringId" /> をキーとしてキャッシュされたクリップ設定を O(1) で検索します。
+    ///     <see cref="StringId" /> をキーとしてキャッシュされたクリップ設定を O で検索します。
     /// </summary>
     /// <param name="clipId">検索対象のクリップ識別子。</param>
     /// <returns>合致するクリップ設定、未登録時は null。</returns>

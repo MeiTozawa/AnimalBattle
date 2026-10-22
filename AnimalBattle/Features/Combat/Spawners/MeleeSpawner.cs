@@ -10,13 +10,13 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Combat;
 
 /// <summary>
-///     近接斬撃攻撃の判定ボリューム（Hitbox）および付随する視覚エフェクトスプライトの生成・制御を担当する静的サービスです。
-///     自機近接斬撃判定は常駐エンティティの .Enable() / .Disable() により制御され、ゼロアロケーションで実行されます。
+///     近接斬撃攻撃の判定ボリューム：Hitboxおよび付随する視覚エフェクトスプライトの生成・制御を担当する静的サービスです。
+///     自機近接斬撃判定は常駐エンティティの 有効化と無効化の切り替えにより制御され、ゼロアロケーションで実行されます。
 /// </summary>
 public static class MeleeSpawner
 {
     /// <summary>
-    ///     敵性近接斬撃判定（矩形 Hitbox ＋ 斬撃スプライト視覚エフェクト）を生成します。
+    ///     敵性近接斬撃判定：矩形 Hitbox ＋ 斬撃スプライト視覚エフェクトを生成します。
     /// </summary>
     public static void SpawnMeleeSlashHitbox(
         World world,
@@ -59,7 +59,7 @@ public static class MeleeSpawner
     }
 
     /// <summary>
-    ///     自機常駐の近接攻撃判定（矩形 Hitbox ＋ 斬撃スプライト視覚エフェクト）を設定し、有効化（.Enable()）します。
+    ///     自機常駐の近接攻撃判定：矩形 Hitbox ＋ 斬撃スプライト視覚エフェクトを設定し、有効化します。
     ///     頻繁な生成・破棄を行わず常駐エンティティの有効/無効切り替えによってゼロアロケーションを実現します。
     /// </summary>
     public static void ActivatePlayerMeleeAttack(

@@ -7,7 +7,7 @@ using AnimalBattle.Events;
 namespace AnimalBattle.Core;
 
 /// <summary>
-///     Native C++ コアライブラリ (AnimalBattleCore.dll / DxLib) のウィンドウ初期化、メインループ、
+///     Native C++ コアライブラリ AnimalBattleCoreおよびDxLib のウィンドウ初期化、メインループ、
 ///     描画、キー入力、および終了処理を統括する静的ラッパークラス。
 ///     描画色には <see cref="Color" /> を採用しています。
 /// </summary>
@@ -17,8 +17,8 @@ public static class GameEngine {
     /// <summary>
     ///     ウィンドウサイズとモードを指定してネイティブエンジンを初期化します。
     /// </summary>
-    /// <param name="width">画面幅 (px)</param>
-    /// <param name="height">画面高さ (px)</param>
+    /// <param name="width">画面幅 ピクセル単位</param>
+    /// <param name="height">画面高さ ピクセル単位</param>
     /// <param name="windowMode">ウィンドウモードで起動するかどうか</param>
     public static void Initialize(int width, int height, bool windowMode = true)
     {
@@ -60,7 +60,7 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     論理スレッド用：描画コマンド記録を完了し、前台バッファへ公開します。
+    ///     論理スレッド用：描画コマンド記録を完了し、フロントバッファバッファへ公開します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void FinishRecording()
@@ -78,7 +78,7 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     レンダリングスレッド用：前台バッファ（Front Buffer）に蓄積された描画コマンドを C++ へ一括提出します。
+    ///     レンダリングスレッド用：フロントバッファバッファ：Front Bufferに蓄積された描画コマンドを C++ へ一括提出します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SubmitFront()
@@ -87,7 +87,7 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     前・後台バッファのスロットを切り替えます。
+    ///     フロント・バックバッファのスロットを切り替えます。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SwapBuffers()
@@ -105,7 +105,7 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     レンダリングスレッド用：バックバッファの画面反転（ScreenFlip / VSync）を実行します。
+    ///     レンダリングスレッド用：バックバッファの画面反転：ScreenFlip / VSyncを実行します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool EndDraw()
@@ -145,7 +145,7 @@ public static class GameEngine {
     /// <summary>
     ///     ジョイパッドの入力状態を取得します。
     /// </summary>
-    /// <param name="padIndex">ジョイパッド番号 (0～3)</param>
+    /// <param name="padIndex">ジョイパッド番号 0から3の範囲</param>
     /// <returns>ビットマスクによる入力状態</returns>
     public static int GetJoypadInputState(int padIndex)
     {
@@ -164,7 +164,7 @@ public static class GameEngine {
     /// <summary>
     ///     マウスカーソルの現在の画面座標を取得します。
     /// </summary>
-    /// <returns>マウス座標 (<see cref="Vec2i" />)</returns>
+    /// <returns>マウス座標 <see cref="Vec2i" /></returns>
     public static Vec2i GetMousePoint()
     {
         var pos = Vec2i.Zero;
@@ -181,14 +181,14 @@ public static class GameEngine {
     ///     双スレッドレンダリング競態防止のため、AssetService のキャッシュから参照します。
     /// </summary>
     /// <param name="handle">画像ハンドル</param>
-    /// <returns>画像サイズ (<see cref="Vec2i" />)</returns>
+    /// <returns>画像サイズ <see cref="Vec2i" /></returns>
     public static Vec2i GetGraphSize(int handle)
     {
         return AssetService.GetGraphSize(handle);
     }
 
     /// <summary>
-    ///     カメラシェイク等によるグローバル描画オフセット（ピクセル）。
+    ///     カメラシェイク等によるグローバル描画オフセットピクセル単位。
     /// </summary>
     public static Vec2i CameraOffset { get; private set; }
 
@@ -212,7 +212,7 @@ public static class GameEngine {
     ///     指定オフセットを適用した描画スコープを開始します。
     ///     using 文と併用することで、例外発生時や描画完了時に確実にオフセットを復元します。
     /// </summary>
-    /// <param name="offset">適用するカメラ描画オフセット (<see cref="Vec2i" />)</param>
+    /// <param name="offset">適用するカメラ描画オフセット <see cref="Vec2i" /></param>
     /// <returns>スコープ破棄時に状態を復元する <see cref="CameraScope" /></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static CameraScope BeginCameraScope(Vec2i offset)
@@ -223,7 +223,7 @@ public static class GameEngine {
     /// <summary>
     ///     グローバルカメラ描画オフセットを設定します。
     /// </summary>
-    /// <param name="offset">オフセット (<see cref="Vec2i" />)</param>
+    /// <param name="offset">オフセット <see cref="Vec2i" /></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SetCameraOffset(Vec2i offset)
     {
@@ -233,9 +233,9 @@ public static class GameEngine {
     /// <summary>
     ///     円を画面上に描画します。
     /// </summary>
-    /// <param name="center">中心座標 (<see cref="Vec2i" />)</param>
-    /// <param name="radius">半径 (px)</param>
-    /// <param name="color">描画カラー (<see cref="Color" />)</param>
+    /// <param name="center">中心座標 <see cref="Vec2i" /></param>
+    /// <param name="radius">半径 ピクセル単位</param>
+    /// <param name="color">描画カラー <see cref="Color" /></param>
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawCircle(Vec2i center, int radius, Color color, bool fill)
     {
@@ -243,7 +243,7 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     高密度円描画コマンド群を一括追加します（20 バイト緊密配置ストリーム）。
+    ///     高密度円描画コマンド群を一括追加します：20 バイト緊密配置ストリーム。
     ///     カメラオフセットを考慮した高速流し込みパイプラインへ直接委託されます。
     /// </summary>
     /// <param name="circles">緊密配置された円パケットの読み取り専用スパン。</param>
@@ -254,11 +254,11 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     矩形（ボックス）を画面上に描画します。
+    ///     矩形：ボックスを画面上に描画します。
     /// </summary>
-    /// <param name="p1">左上座標 (<see cref="Vec2i" />)</param>
-    /// <param name="p2">右下座標 (<see cref="Vec2i" />)</param>
-    /// <param name="color">描画カラー (<see cref="Color" />)</param>
+    /// <param name="p1">左上座標 <see cref="Vec2i" /></param>
+    /// <param name="p2">右下座標 <see cref="Vec2i" /></param>
+    /// <param name="color">描画カラー <see cref="Color" /></param>
     /// <param name="fill">塗りつぶすかどうか</param>
     public static void DrawBox(Vec2i p1, Vec2i p2, Color color, bool fill)
     {
@@ -268,9 +268,9 @@ public static class GameEngine {
     /// <summary>
     ///     線分を画面上に描画します。
     /// </summary>
-    /// <param name="p1">始点座標 (<see cref="Vec2i" />)</param>
-    /// <param name="p2">終点座標 (<see cref="Vec2i" />)</param>
-    /// <param name="color">描画カラー (<see cref="Color" />)</param>
+    /// <param name="p1">始点座標 <see cref="Vec2i" /></param>
+    /// <param name="p2">終点座標 <see cref="Vec2i" /></param>
+    /// <param name="color">描画カラー <see cref="Color" /></param>
     /// <param name="thickness">線の太さ</param>
     public static void DrawLine(Vec2i p1, Vec2i p2, Color color, int thickness = 1)
     {
@@ -280,9 +280,9 @@ public static class GameEngine {
     /// <summary>
     ///     指定座標に文字列を描画します。
     /// </summary>
-    /// <param name="pos">描画座標 (<see cref="Vec2i" />)</param>
+    /// <param name="pos">描画座標 <see cref="Vec2i" /></param>
     /// <param name="text">描画文字列</param>
-    /// <param name="color">描画カラー (<see cref="Color" />)</param>
+    /// <param name="color">描画カラー <see cref="Color" /></param>
     public static void DrawString(Vec2i pos, string text, Color color)
     {
         _commandBuffer.PushDrawString(pos + CameraOffset, text, color.ToUint());
@@ -291,9 +291,9 @@ public static class GameEngine {
     /// <summary>
     ///     指定座標に文字列を描画します。
     /// </summary>
-    /// <param name="pos">描画座標 (<see cref="Vec2i" />)</param>
-    /// <param name="text">描画文字列 (<see cref="ReadOnlySpan{Char}" />)</param>
-    /// <param name="color">描画カラー (<see cref="Color" />)</param>
+    /// <param name="pos">描画座標 <see cref="Vec2i" /></param>
+    /// <param name="text">描画文字列 <see cref="ReadOnlySpan{Char}" /></param>
+    /// <param name="color">描画カラー <see cref="Color" /></param>
     public static void DrawString(Vec2i pos, ReadOnlySpan<char> text, Color color)
     {
         _commandBuffer.PushDrawString(pos + CameraOffset, text, color.ToUint());
@@ -302,7 +302,7 @@ public static class GameEngine {
     /// <summary>
     ///     指定画像ハンドルを画面上に描画します。
     /// </summary>
-    /// <param name="pos">描画先座標 (<see cref="Vec2i" />)</param>
+    /// <param name="pos">描画先座標 <see cref="Vec2i" /></param>
     /// <param name="handle">画像ハンドル</param>
     /// <param name="trans">透過を有効にするかどうか</param>
     public static void DrawGraph(Vec2i pos, int handle, bool trans)
@@ -313,9 +313,9 @@ public static class GameEngine {
     /// <summary>
     ///     画像ハンドルを中心に回転・拡大縮小して描画します。
     /// </summary>
-    /// <param name="center">描画中心座標 (<see cref="Vec2i" />)</param>
+    /// <param name="center">描画中心座標 <see cref="Vec2i" /></param>
     /// <param name="scale">拡大率</param>
-    /// <param name="angle">回転角度 (ラジアン)</param>
+    /// <param name="angle">回転角度 ラジアン単位</param>
     /// <param name="handle">画像ハンドル</param>
     /// <param name="trans">透過描画を有効にするかどうか</param>
     public static void DrawRotaGraph(Vec2i center, double scale, double angle, int handle, bool trans)
@@ -326,11 +326,11 @@ public static class GameEngine {
     /// <summary>
     ///     スプライトシートから指定矩形を切り出し、回転・独立 X/Y 軸拡縮・左右反転を行って描画します。
     /// </summary>
-    /// <param name="center">描画中心座標 (<see cref="Vec2i" />)</param>
-    /// <param name="srcPos">切り出し開始座標 (<see cref="Vec2i" />)</param>
-    /// <param name="srcSize">切り出しサイズ (<see cref="Vec2i" />)</param>
-    /// <param name="scale">拡大率 (<see cref="Vec2f" />)</param>
-    /// <param name="angle">回転角度 (ラジアン)</param>
+    /// <param name="center">描画中心座標 <see cref="Vec2i" /></param>
+    /// <param name="srcPos">切り出し開始座標 <see cref="Vec2i" /></param>
+    /// <param name="srcSize">切り出しサイズ <see cref="Vec2i" /></param>
+    /// <param name="scale">拡大率 <see cref="Vec2f" /></param>
+    /// <param name="angle">回転角度 ラジアン単位</param>
     /// <param name="handle">画像ハンドル</param>
     /// <param name="trans">透過描画を有効にするかどうか</param>
     /// <param name="turnX">左右反転描画を行うかどうか</param>
@@ -372,7 +372,7 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     スプライトシートから指定矩形を切り出し、回転・独立 X/Y 軸拡縮・左右反転を行って描画します (DxLib DrawRectRotaGraph3 相当)。
+    ///     スプライトシートから指定矩形を切り出し、回転・独立 X/Y 軸拡縮・左右反転を行って描画します DxLibのDrawRectRotaGraph3相当。
     /// </summary>
     public static void DrawRectRotaGraph3(
         Vec2i center,
@@ -388,7 +388,7 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     画像ハンドルを中心に独立 X/Y 軸拡縮・回転して描画します (DxLib DrawRotaGraph3 相当)。
+    ///     画像ハンドルを中心に独立 X/Y 軸拡縮・回転して描画します DxLibのDrawRotaGraph3相当。
     /// </summary>
     public static void DrawRotaGraph3(
         Vec2i center,
@@ -420,19 +420,19 @@ public static class GameEngine {
     /// <summary>
     ///     描画ブレンドモードおよびパラメータを設定します。
     /// </summary>
-    /// <param name="mode">ブレンドモード (<see cref="BlendMode" />)</param>
-    /// <param name="pal">ブレンドパラメータ (アルファ値 / 輝度など: 0～255)</param>
+    /// <param name="mode">ブレンドモード <see cref="BlendMode" /></param>
+    /// <param name="pal">ブレンドパラメータ 0から255の範囲のアルファ値または輝度</param>
     public static void SetDrawBlendMode(BlendMode mode, int pal = 255)
     {
         _commandBuffer.PushSetDrawBlendMode((int)mode, pal);
     }
 
     /// <summary>
-    ///     描画輝度（RGB 明るさ）を設定します。
+    ///     描画輝度：RGB 明るさを設定します。
     /// </summary>
-    /// <param name="r">赤色輝度 (0～255)</param>
-    /// <param name="g">緑色輝度 (0～255)</param>
-    /// <param name="b">青色輝度 (0～255)</param>
+    /// <param name="r">赤色輝度 0から255の範囲</param>
+    /// <param name="g">緑色輝度 0から255の範囲</param>
+    /// <param name="b">青色輝度 0から255の範囲</param>
     public static void SetDrawBright(int r, int g, int b)
     {
         _commandBuffer.PushSetDrawBright(r, g, b);
@@ -443,13 +443,13 @@ public static class GameEngine {
 ///     描画合成ブレンドモード。
 /// </summary>
 public enum BlendMode {
-    /// <summary>ノーブレンド（通常描画）</summary>
+    /// <summary>ノーブレンド：通常描画</summary>
     NoBlend = 0,
 
-    /// <summary>アルファブレンド（透過合成）</summary>
+    /// <summary>アルファブレンド：透過合成</summary>
     Alpha = 1,
 
-    /// <summary>加算ブレンド（発光・閃白合成）</summary>
+    /// <summary>加算ブレンド：発光・閃白合成</summary>
     Add = 2,
 
     /// <summary>減算ブレンド</summary>

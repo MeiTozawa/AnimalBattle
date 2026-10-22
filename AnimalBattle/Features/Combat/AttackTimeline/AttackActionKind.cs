@@ -1,6 +1,6 @@
 namespace AnimalBattle.Abilities.Attack;
 
-/// <summary>攻撃の各実行アクション（タイムラインステップ）の種類を定義します。</summary>
+/// <summary>攻撃の各実行アクション：タイムラインステップの種類を定義します。</summary>
 public enum AttackActionKind {
     /// <summary>弾を発射するアクションです。</summary>
     Bullet = 1,

@@ -8,12 +8,12 @@ namespace AnimalBattle.Core.Geometry;
 /// </summary>
 public static class CollisionShapeFactory {
     /// <summary>
-    ///     形状文字列（"Circle", "Box", "Point"）および寸法・オフセットから衝突形状インスタンスの生成を行います。
+    ///     形状文字列："Circle", "Box", "Point"および寸法・オフセットから衝突形状インスタンスの生成を行います。
     ///     未対応の形状種別や寸法不正時は <see cref="Error" /> を返します。
     /// </summary>
-    /// <param name="shapeKind">形状種別文字列（"Circle", "Box", "Point"）</param>
-    /// <param name="radius">円形半径（Circle 時に使用、> 0 である必要があります）</param>
-    /// <param name="size">矩形サイズ（Box 時に使用、X, Y > 0 である必要があります）</param>
+    /// <param name="shapeKind">形状種別文字列："Circle", "Box", "Point"</param>
+    /// <param name="radius">円形半径：Circle 時に使用、> 0 である必要があります</param>
+    /// <param name="size">矩形サイズ：Box 時に使用、X, Y > 0 である必要があります</param>
     /// <param name="offset">局所オフセット</param>
     /// <returns>成功時は <see cref="CollisionShape" />、失敗時は <see cref="Error" /></returns>
     public static ErrorOr<CollisionShape> Create(

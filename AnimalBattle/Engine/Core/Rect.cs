@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace AnimalBattle.Core;
 
 /// <summary>
-///     2次元の矩形領域（左、上、右、下 / X1, Y1, X2, Y2）を表す整数構造体。
+///     2次元の矩形領域：左、上、右、下 / X1, Y1, X2, Y2を表す整数構造体。
 /// </summary>
 /// <remarks>
 ///     左、上、右、下の各境界座標を指定して <see cref="Rect" /> の新しいインスタンスを初期化します。
@@ -72,17 +72,17 @@ public struct Rect(int left, int top, int right, int bottom) {
     }
 
     /// <summary>
-    ///     矩形の幅 (Right - Left) を取得します。
+    ///     矩形の幅 右端座標から左端座標を減算した値 を取得します。
     /// </summary>
     public readonly int Width => Right - Left;
 
     /// <summary>
-    ///     矩形の高さ (Bottom - Top) を取得します。
+    ///     矩形の高さ 下端座標から上端座標を減算した値 を取得します。
     /// </summary>
     public readonly int Height => Bottom - Top;
 
     /// <summary>
-    ///     指定された座標 (x, y) が矩形領域内に含まれるか判定します。
+    ///     指定された座標 指定座標 が矩形領域内に含まれるか判定します。
     /// </summary>
     public readonly bool Contains(int x, int y)
     {

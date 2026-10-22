@@ -14,7 +14,7 @@ namespace AnimalBattle.Configs;
 ///     TOML で定義される単一キーフレームイベント設定クラス。
 /// </summary>
 public sealed class SkillEventConfig {
-    /// <summary>発動遅延時間（秒）</summary>
+    /// <summary>発動遅延時間秒単位</summary>
     public float Time { get; set; }
 
     /// <summary>イベント種別名</summary>
@@ -81,10 +81,10 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
     /// <summary>着地炸裂弾外枠カラー</summary>
     public Color ImpactOutlineColor => _impactOutlineColor;
 
-    /// <summary>着地炸裂弾の発生 Y オフセット (px)</summary>
+    /// <summary>着地炸裂弾の発生 Y オフセット ピクセル単位</summary>
     public float ImpactOffsetY { get; set; }
 
-    /// <summary>着地炸裂弾の特殊弾種別（Magenta, Cyan, Yellow, Black, Normal）</summary>
+    /// <summary>着地炸裂弾の特殊弾種別：Magenta, Cyan, Yellow, Black, Normal</summary>
     public string BulletType { get; set; } = string.Empty;
 
     /// <summary>突進残影トレイルカラー Hex 文字列</summary>
@@ -118,7 +118,7 @@ public sealed class DiveRamConfig : SkillPatternConfigBase {
 ///     自機狙い 3 連射技能の設定クラス。
 /// </summary>
 public sealed class Aimed3ShotConfig : BulletPatternConfigBase {
-    /// <summary>拡散角度（ラジアン）</summary>
+    /// <summary>拡散角度ラジアン単位</summary>
     public float SpreadAngle { get; set; }
 
     /// <inheritdoc />
@@ -141,7 +141,7 @@ public sealed class Aimed3ShotConfig : BulletPatternConfigBase {
 ///     16 方向全方位リング弾幕技能の設定クラス。
 /// </summary>
 public sealed class RingBurstConfig : BulletPatternConfigBase {
-    /// <summary>弾間の角度間隔（ラジアン）</summary>
+    /// <summary>弾間の角度間隔ラジアン単位</summary>
     public float AngleStep { get; set; }
 
     /// <inheritdoc />
@@ -164,7 +164,7 @@ public sealed class RingBurstConfig : BulletPatternConfigBase {
 ///     双螺旋回転弾幕技能の設定クラス。
 /// </summary>
 public sealed class DoubleSpiralConfig : BulletPatternConfigBase {
-    /// <summary>発射ごとの角度変化量（ラジアン）</summary>
+    /// <summary>発射ごとの角度変化量ラジアン単位</summary>
     public float AngleStep { get; set; }
 
     private string _fillColor1Hex = string.Empty;
@@ -278,7 +278,7 @@ public sealed class RainDropConfig : BulletPatternConfigBase {
 ///     全方位交差波弾幕技能の設定クラス。
 /// </summary>
 public sealed class CrossChaosConfig : BulletPatternConfigBase {
-    /// <summary>発射ごとの角度変化量（ラジアン）</summary>
+    /// <summary>発射ごとの角度変化量ラジアン単位</summary>
     public float AngleStep { get; set; }
 
     /// <inheritdoc />
@@ -527,7 +527,7 @@ public sealed class DoubleCleaveConfig : MeleePatternConfigBase {
     /// <summary>2 回目の斬撃追加前方オフセット X</summary>
     public float SecondSlashOffsetX { get; set; }
 
-    /// <summary>2 回目の斬撃までのインターバル（秒）</summary>
+    /// <summary>2 回目の斬撃までのインターバル秒単位</summary>
     public float SlashInterval { get; set; }
 
     /// <summary>前兆危険矩形 X 範囲</summary>
@@ -568,10 +568,10 @@ public sealed class FrenzyChargeConfig : SkillPatternConfigBase {
     /// <summary>全画面高速突進速度</summary>
     public float ChargeSpeed { get; set; }
 
-    /// <summary>突進攻撃判定サイズ (Vec2f)</summary>
+    /// <summary>突進攻撃判定サイズ Vec2f型</summary>
     public Vec2f HitboxSize { get; set; }
 
-    /// <summary>突進攻撃判定持続時間（秒）</summary>
+    /// <summary>突進攻撃判定持続時間秒単位</summary>
     public float HitboxDuration { get; set; }
 
     private string _hitboxColorHex = string.Empty;
@@ -610,7 +610,7 @@ public sealed class EarthquakeRoarConfig : SkillPatternConfigBase {
     /// <summary>予兆警告テキスト</summary>
     public string TelegraphWarningText { get; set; } = string.Empty;
 
-    /// <summary>咆哮波状落石の投下間隔（秒）</summary>
+    /// <summary>咆哮波状落石の投下間隔秒単位</summary>
     public float Interval { get; set; }
 
     /// <summary>1 回あたりの落石投下数</summary>
@@ -655,7 +655,7 @@ public sealed class EarthquakeRoarConfig : SkillPatternConfigBase {
     /// <summary>落石外枠カラー</summary>
     public Color RockOutlineColor => _rockOutlineColor;
 
-    /// <summary>落石の特殊弾種別（Magenta, Cyan, Yellow, Black, Normal）</summary>
+    /// <summary>落石の特殊弾種別：Magenta, Cyan, Yellow, Black, Normal</summary>
     public string BulletType { get; set; } = string.Empty;
 
     /// <inheritdoc />
@@ -687,13 +687,13 @@ public sealed class SpecialBulletConfig {
     /// <summary>品紅弾および黒弾の呼吸拡縮脈動周波数</summary>
     public float MagentaPulseFrequency { get; set; }
 
-    /// <summary>黄弾公転衛星の回転角速度（ラジアン/秒）</summary>
+    /// <summary>黄弾公転衛星の回転角速度：ラジアン/秒</summary>
     public float YellowOrbitSpeed { get; set; }
 
-    /// <summary>Boss 被弾反撃黒弾の移動速度 (px/s)</summary>
+    /// <summary>Boss 被弾反撃黒弾の移動速度 ピクセル毎秒単位</summary>
     public float CounterBulletSpeed { get; set; }
 
-    /// <summary>Boss 被弾反撃黒弾の判定半径 (px)</summary>
+    /// <summary>Boss 被弾反撃黒弾の判定半径 ピクセル単位</summary>
     public float CounterBulletRadius { get; set; }
 
     /// <summary>Phase 1 時の反撃黒弾発射数</summary>

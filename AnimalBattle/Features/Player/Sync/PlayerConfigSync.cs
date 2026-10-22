@@ -12,7 +12,7 @@ using Flecs.NET.Core;
 public static class PlayerConfigSync
 {
     /// <summary>
-    /// Cat (猫) 設定の変更をワールド、Prefab、および活体エンティティへ反映します。
+    /// Cat設定の変更をワールド、プレハブ、および生存エンティティへ反映します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="newConfig">更新後の Cat 設定</param>
@@ -24,7 +24,7 @@ public static class PlayerConfigSync
         // 1. ワールド単例の更新
         world.Set(newConfig);
 
-        // 2. Prefab 原型の再登録
+        // 2. Prefab プレハブの再登録
         PlayerPrefabs.Register(world);
 
         // 3. 活体エンティティの無損再水和
@@ -39,7 +39,7 @@ public static class PlayerConfigSync
     }
 
     /// <summary>
-    /// Bunny (ウサギ) 設定の変更をワールド、Prefab、および活体エンティティへ反映します。
+    /// Bunny設定の変更をワールド、プレハブ、および生存エンティティへ反映します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="newConfig">更新後の Bunny 設定</param>
@@ -51,7 +51,7 @@ public static class PlayerConfigSync
         // 1. ワールド単例の更新
         world.Set(newConfig);
 
-        // 2. Prefab 原型の再登録
+        // 2. Prefab プレハブの再登録
         PlayerPrefabs.Register(world);
 
         // 3. 活体エンティティの無損再水和
@@ -67,7 +67,7 @@ public static class PlayerConfigSync
 
     private static void RehydratePlayerEntity(Entity e, PlayerConfig newConfig)
     {
-        // 生命値の比例更新（現在割合を維持したまま MaxHP を更新）
+        // 生命値の比例更新：現在割合を維持したまま MaxHP を更新
         ref var health = ref e.GetMut<Health>();
         var ratio = health.Max > 0.0f ? health.Current / health.Max : 1.0f;
         var newMax = newConfig.MaxHp;
@@ -78,7 +78,7 @@ public static class PlayerConfigSync
         ref var trans = ref e.GetMut<Transform>();
         trans.Scale = newConfig.Scale;
 
-        // 跳躍能力の更新（現在の跳躍状態を保持しつつ上限・物理パラメータを同期）
+        // 跳躍能力の更新：現在の跳躍状態を保持しつつ上限・物理パラメータを同期
         ref var jump = ref e.GetMut<JumpCapability>();
         var updatedJump = JumpCapability.FromPlayerConfig(newConfig);
         updatedJump.RemainingJumps = Math.Min(jump.RemainingJumps, updatedJump.MaxJumps);

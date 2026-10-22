@@ -31,7 +31,7 @@ public struct Animation(
     /// <summary>現在のフレームインデックス</summary>
     public int CurrentFrameIndex = 0;
 
-    /// <summary>アニメーション再生タイマー（秒）</summary>
+    /// <summary>アニメーション再生タイマー秒単位</summary>
     public float Timer = 0.0f;
 
     /// <summary>再生状態フラグ</summary>

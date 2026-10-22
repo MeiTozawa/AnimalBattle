@@ -15,7 +15,7 @@ public abstract class BulletPatternConfigBase : SkillPatternConfigBase {
     private string _outlineColorHex = string.Empty;
     private Color _outlineColor;
 
-    /// <summary>発射間隔（秒）</summary>
+    /// <summary>発射間隔秒単位</summary>
     public float Interval { get; set; }
 
     /// <summary>弾速</summary>
@@ -57,7 +57,7 @@ public abstract class BulletPatternConfigBase : SkillPatternConfigBase {
     /// <summary>弾の外枠カラー</summary>
     public Color OutlineColor => _outlineColor;
 
-    /// <summary>弾種別名（Magenta, Cyan, Yellow, Black, Normal）</summary>
+    /// <summary>弾種別名：Magenta, Cyan, Yellow, Black, Normal</summary>
     public string BulletType { get; set; } = string.Empty;
 
     /// <summary>

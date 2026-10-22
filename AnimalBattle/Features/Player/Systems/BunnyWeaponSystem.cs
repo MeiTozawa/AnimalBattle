@@ -127,7 +127,7 @@ public static class BunnyWeaponSystem
 
             anim.Play("Attack");
 
-            // 近接打撃前進突進（直接座標書き換えを廃止し、MovementSystem 側で処理される外力物理インパルスとして付与）
+            // 近接打撃前進突進：直接座標書き換えを廃止し、MovementSystem 側で処理される外力物理インパルスとして付与
             var lungeSpeed = weapon.AttackLungeImpulse;
             var lungeY = col.IsGrounded ? 0.0f : dir.Y * lungeSpeed;
             var lungeImpulse = new Vec2f(dir.X * lungeSpeed, lungeY);

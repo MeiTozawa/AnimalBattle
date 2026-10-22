@@ -8,16 +8,16 @@ namespace AnimalBattle.Presentation.Vfx.Components;
 /// </summary>
 public struct SpriteJitter
 {
-    /// <summary>振動振幅 (Vec2f)</summary>
+    /// <summary>振動振幅 Vec2f型</summary>
     public Vec2f Amplitude;
 
-    /// <summary>振動周波数（Hz）</summary>
+    /// <summary>振動周波数：Hz</summary>
     public float Frequency;
 
-    /// <summary>振動タイマー累積値（秒）</summary>
+    /// <summary>振動タイマー累積値秒単位</summary>
     public float Timer;
 
-    /// <summary>現在の描画オフセット (Vec2f)</summary>
+    /// <summary>現在の描画オフセット Vec2f型</summary>
     public Vec2f CurrentOffset;
 
     public SpriteJitter(Vec2f amplitude, float frequency)

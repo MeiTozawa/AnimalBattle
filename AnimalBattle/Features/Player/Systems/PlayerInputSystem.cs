@@ -7,9 +7,9 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Player.Systems;
 
 /// <summary>
-///     自機のローカル入力（キーボード、マウス、ゲームパッド）を解読し、
-///     意図コンポーネント（<see cref="MovementIntent" />, <see cref="WeaponIntent" />）へ注入する純粋 ECS システム。
-///     通常入力受付（GameOverTag 未保持）とゲーム終了時リセット（GameOverTag 保持）の2系統に分離して駆動します。
+///     自機のローカル入力：キーボード、マウス、ゲームパッドを解読し、
+///     意図コンポーネント：<see cref="MovementIntent" />, <see cref="WeaponIntent" />へ注入する純粋 ECS システム。
+///     通常入力受付：GameOverTag 未保持とゲーム終了時リセット：GameOverTag 保持の2系統に分離して駆動します。
 /// </summary>
 public static class PlayerInputSystem
 {
@@ -20,7 +20,7 @@ public static class PlayerInputSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddPlayerInputSystem(this World world)
     {
-        // 1. 通常ゲームプレイ時の入力受付システム（GameOverTag 未保持時のみ稼働）
+        // 1. 通常ゲームプレイ時の入力受付システム：GameOverTag 未保持時のみ稼働
         world.System<MovementIntent, WeaponIntent, Transform, CollisionBox>("PlayerInputSystem")
             .With<PlayerTag>()
             .Without<DeadTag>()
@@ -28,7 +28,7 @@ public static class PlayerInputSystem
             .Kind(Ecs.PreUpdate)
             .Iter(ExecutePlayerInput);
 
-        // 2. ゲーム終了時（Victory/Defeat）の入力意図ゼロクリアシステム（GameOverTag 保持時のみ稼働）
+        // 2. ゲーム終了時：Victory/Defeatの入力意図ゼロクリアシステム：GameOverTag 保持時のみ稼働
         world.System<MovementIntent, WeaponIntent>("PlayerGameOverInputResetSystem")
             .With<PlayerTag>()
             .With<GameOverTag>()
@@ -70,7 +70,7 @@ public static class PlayerInputSystem
         ref readonly var flow = ref world.Get<GameFlow>();
         if (flow.State != GameState.Battle) return;
 
-        // 水平移動入力値（-1.0f: 左, 1.0f: 右, 0.0f: 静止）
+        // 水平移動入力値：-1.0f: 左, 1.0f: 右, 0.0f: 静止
         var moveX = 0.0f;
         if (InputService.IsPressed(InputAction.Left) || InputService.IsHolding(InputAction.Left))
         {
@@ -99,12 +99,12 @@ public static class PlayerInputSystem
             ref readonly var trans = ref transforms[i];
             ref readonly var box = ref collisionBoxes[i];
 
-            // プレイヤー中心（射撃起点）座標
+            // プレイヤー中心：射撃起点座標
             var playerCenter = new Vec2f(trans.Position.X, trans.Position.Y - box.Size.Y * 0.5f);
             var diff = mouseWorld - playerCenter;
             var distSq = diff.LengthSquared();
 
-            // キャラクター向き（FacingX）：マウスが自機中心より左右にあれば向き決定、微小差分時は前回の向きまたは移動入力を反映
+            // キャラクター向き：FacingX：マウスが自機中心より左右にあれば向き決定、微小差分時は前回の向きまたは移動入力を反映
             var currentFacing = moveIntent.FacingX;
             if (currentFacing == 0.0f) currentFacing = 1.0f;
 

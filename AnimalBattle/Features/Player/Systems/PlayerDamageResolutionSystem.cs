@@ -69,7 +69,7 @@ public static class PlayerDamageResolutionSystem
             ref var tagState = ref tags[i];
             ref var effectState = ref timedEffects[i];
 
-            // ゲームオーバー済み、無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
+            // ゲームオーバー済み、無敵または不可命中状態：GAS Invincible / Untargetable 保持時、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
             if (isGameOver || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
             {
                 entity.Remove<IncomingDamage>();

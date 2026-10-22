@@ -5,20 +5,20 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
-///     自機・首領・選人プレビューおよび近接攻撃等の汎用 Sprite 描画を行う ECS システム群。
+///     自機・ボス・キャラクター選択プレビューおよび近接攻撃等の汎用 Sprite 描画を行う ECS システム群。
 ///     被弾点滅、近接攻撃加算合成、およびスプライト基本描画を独立した専用クエリ・パスに分離し、
 ///     ホットループ内での entity.Has 分岐を完全に排除した純粋データ駆動型レンダラーです。
 /// </summary>
 public static class SpriteRenderSystem
 {
     /// <summary>
-    ///     汎用スプライト描画システム群（基本、近接加算、被弾フラッシュ）を Flecs.NET ワールドへ登録します。
+    ///     汎用スプライト描画システム群：基本、近接加算、被弾フラッシュを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <returns>登録済みワールド</returns>
     public static World AddSpriteRenderSystem(this World world)
     {
-        // 1. 通常スプライト描画パス（近接加算・残影・回収タグ・死亡エンティティを除外）
+        // 1. 通常スプライト描画パス：近接加算・残影・回収タグ・死亡エンティティを除外
         world.System<Transform, Sprite>("SpriteRenderSystem")
             .Without<PlayerMeleeTag>()
             .Without<FadeEffect>()
@@ -35,7 +35,7 @@ public static class SpriteRenderSystem
             .Kind(Ecs.OnStore)
             .Iter(DrawMeleeSprites);
 
-        // 3. 被弾フラッシュ（白光オーバーレイ）描画パス
+        // 3. 被弾フラッシュ：白光オーバーレイ描画パス
         world.System<Transform, Sprite, HitFlashEffect>("HitFlashRenderSystem")
             .Without<RecycleTag>()
             .Without<DeadTag>()
@@ -46,7 +46,7 @@ public static class SpriteRenderSystem
     }
 
     /// <summary>
-    ///     通常スプライト描画パイプライン（名前付き静的メソッド）。
+    ///     通常スプライト描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void DrawStandardSprites(Iter it, Field<Transform> transforms, Field<Sprite> sprites)
     {
@@ -79,7 +79,7 @@ public static class SpriteRenderSystem
     }
 
     /// <summary>
-    ///     近接攻撃スプライト加算合成描画パイプライン（名前付き静的メソッド）。
+    ///     近接攻撃スプライト加算合成描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void DrawMeleeSprites(Iter it, Field<Transform> transforms, Field<Sprite> sprites)
     {
@@ -121,7 +121,7 @@ public static class SpriteRenderSystem
     }
 
     /// <summary>
-    ///     被弾白閃オーバーレイ描画パイプライン（名前付き静的メソッド）。
+    ///     被弾白閃オーバーレイ描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void DrawHitFlashSprites(Iter it, Field<Transform> transforms, Field<Sprite> sprites, Field<HitFlashEffect> flashes)
     {

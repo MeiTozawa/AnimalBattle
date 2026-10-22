@@ -4,7 +4,7 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Framework.Fsm;
 
 /// <summary>
-///     ゼロGC・アトミック遷移を提供するフラット有限状態マシン（FSM）。
+///     ゼロGC・アトミック遷移を提供するフラット有限状態マシン：FSM。
 /// </summary>
 public class StateMachine : IState {
     private readonly List<IState> _states = [];
@@ -33,7 +33,7 @@ public class StateMachine : IState {
         _currentState ??= state;
     }
 
-    /// <summary>互換性のための状態追加メソッド（AddState へ委譲）。</summary>
+    /// <summary>互換性のための状態追加メソッド：AddState へ委譲。</summary>
     public void AddSubState(IState state) => AddState(state);
 
     /// <summary>初期状態を明示的に設定します。</summary>

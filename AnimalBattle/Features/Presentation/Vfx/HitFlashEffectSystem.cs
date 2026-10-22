@@ -3,7 +3,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Vfx;
 
 /// <summary>
-///     被弾時ホワイトフラッシュ（白閃）演出の持続時間タイマーおよび自動破棄を制御する ECS System。
+///     被弾時ホワイトフラッシュ：白閃演出の持続時間タイマーおよび自動破棄を制御する ECS System。
 /// </summary>
 public static class HitFlashEffectSystem
 {
@@ -22,7 +22,7 @@ public static class HitFlashEffectSystem
     }
 
     /// <summary>
-    ///     受撃フラッシュ演出タイマー更新処理（名前付き静的メソッド）。
+    ///     受撃フラッシュ演出タイマー更新処理：名前付き静的メソッド。
     /// </summary>
     public static void UpdateHitFlashEffect(Iter it, int i, ref HitFlashEffect flash)
     {

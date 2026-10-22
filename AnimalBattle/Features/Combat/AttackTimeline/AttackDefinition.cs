@@ -47,10 +47,10 @@ public sealed class AttackDefinition {
     /// <summary>攻撃範囲を取得します。</summary>
     public float Range { get; }
 
-    /// <summary>出招実行時のアーマー・耐性タグ（SuperArmor, Invincible 等）を取得します。</summary>
+    /// <summary>出招実行時のアーマー・耐性タグ：SuperArmor, Invincible 等を取得します。</summary>
     public GameplayTag ArmorTag { get; }
 
-    /// <summary>後隙（Recovery）中に自身へ付与されるタグ（Vulnerable 等）を取得します。</summary>
+    /// <summary>後隙：Recovery中に自身へ付与されるタグ：Vulnerable 等を取得します。</summary>
     public GameplayTag RecoveryTag { get; }
 
     /// <summary>設定アクションステップ数を取得します。</summary>

@@ -15,13 +15,13 @@ public readonly struct RenderModule : IFlecsModule {
     {
         world.Module<RenderModule>();
 
-        // 照準器スプリング物理更新 (PreUpdate)
+        // 照準器スプリング物理更新
         world.AddAimReticleUpdateSystem();
 
         // 1. ワールド空間描画前のカメラオフセット適用
         world.AddCameraOffsetApplySystem();
 
-        // 2. ワールド空間描画（タイルマップ、キャラクター、弾幕、予兆、VFX、デバッグ枠）
+        // 2. ワールド空間描画：タイルマップ、キャラクター、弾幕、予兆、VFX、デバッグ枠
         world.AddTileMapRenderSystem()
              .AddSpriteRenderSystem()
              .AddBulletBatchRenderSystem()
@@ -29,10 +29,10 @@ public readonly struct RenderModule : IFlecsModule {
              .AddVfxRenderSystem()
              .AddDebugGizmosRenderSystem();
 
-        // 3. スクリーン空間描画前のカメラオフセットリセット (HUD / 照準器 / UI へのシェイク波及防止)
+        // 3. スクリーン空間描画前のカメラオフセットリセット HUDや照準器およびUIへのシェイク波及を防止します
         world.AddCameraOffsetResetSystem();
 
-        // 4. スクリーン空間描画（HUD、照準器、デバッグオーバーレイ）
+        // 4. スクリーン空間描画：HUD、照準器、デバッグオーバーレイ
         world.AddHudRenderSystem()
              .AddAimReticleRenderSystem()
              .AddDebugOverlayRenderSystem();

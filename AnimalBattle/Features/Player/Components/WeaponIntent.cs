@@ -11,7 +11,7 @@ public struct WeaponIntent
     /// <summary>今フレームで射撃トリガーが引かれたかどうか。</summary>
     public bool ShootTriggered;
 
-    /// <summary>照準方向ベクトル (Vec2f)</summary>
+    /// <summary>照準方向ベクトル Vec2f型</summary>
     public Vec2f AimDirection;
 
     /// <summary>

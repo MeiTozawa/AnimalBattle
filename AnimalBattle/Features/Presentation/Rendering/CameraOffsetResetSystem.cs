@@ -4,7 +4,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
-///     スクリーン空間描画（HUD、照準器、UI）直前にカメラオフセットを (0, 0) にリセットする純粋 ECS システム。
+///     スクリーン空間描画：HUD、照準器、UI直前にカメラオフセットを ゼロ座標 にリセットする純粋 ECS システム。
 ///     画面固定 UI へのカメラ振動・追従の波及を遮断します。
 /// </summary>
 public static class CameraOffsetResetSystem
@@ -24,7 +24,7 @@ public static class CameraOffsetResetSystem
     }
 
     /// <summary>
-    ///     カメラオフセットリセット処理（名前付き静的メソッド）。
+    ///     カメラオフセットリセット処理：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteCameraOffsetReset(Iter it)
     {

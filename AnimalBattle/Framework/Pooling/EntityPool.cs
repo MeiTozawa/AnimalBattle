@@ -290,7 +290,7 @@ public sealed class EntityPool : IDisposable {
 
     /// <summary>
     ///     使用済みのエンティティをプールへ返却して非アクティブ化します。
-    ///     C# 側の托管状態ビットにより、System 実行中の Deferred 段階における同一フレーム内の二重返却を即座に遮断します。
+    ///     C# 側のマネージド状態ビットにより、System 実行中の Deferred 段階における同一フレーム内の二重返却を即座に遮断します。
     /// </summary>
     /// <param name="entity">返却するエンティティ。</param>
     public void Return(Entity entity)

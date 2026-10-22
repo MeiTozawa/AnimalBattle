@@ -6,46 +6,46 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-///     戦闘関連の全 ECS 原型（Prefab）の静的パラメータ設定。
-///     TOML (combat.prefab.toml) よりデシリアライズされます。
+///     戦闘関連の全 ECS プレハブ：Prefabの静的パラメータ設定。
+///     TOML よりデシリアライズされます。
 /// </summary>
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 public sealed class CombatPrefabConfig
 {
-    /// <summary>自機通常弾の原型設定。</summary>
+    /// <summary>自機通常弾のプレハブ設定。</summary>
     public PlayerBulletPrefabConfig PlayerBullet { get; set; }
 
-    /// <summary>Boss 通常弾の原型設定。</summary>
+    /// <summary>Boss 通常弾のプレハブ設定。</summary>
     public BossNormalBulletPrefabConfig BossNormalBullet { get; set; }
 
-    /// <summary>Boss 品紅特殊弾の原型設定。</summary>
+    /// <summary>Boss 品紅特殊弾のプレハブ設定。</summary>
     public BossMagentaBulletPrefabConfig BossMagentaBullet { get; set; }
 
-    /// <summary>Boss 黄特殊弾の原型設定。</summary>
+    /// <summary>Boss 黄特殊弾のプレハブ設定。</summary>
     public BossYellowBulletPrefabConfig BossYellowBullet { get; set; }
 
-    /// <summary>Boss 黄特殊弾の衛星弾原型設定。</summary>
+    /// <summary>Boss 黄特殊弾の衛星弾プレハブ設定。</summary>
     public BossYellowSatellitePrefabConfig BossYellowSatellite { get; set; }
 
-    /// <summary>Boss 青特殊弾の原型設定。</summary>
+    /// <summary>Boss 青特殊弾のプレハブ設定。</summary>
     public BossBlueBulletPrefabConfig BossBlueBullet { get; set; }
 
-    /// <summary>Boss 黒特殊弾の原型設定。</summary>
+    /// <summary>Boss 黒特殊弾のプレハブ設定。</summary>
     public BossBlackBulletPrefabConfig BossBlackBullet { get; set; }
 
-    /// <summary>自機近接斬撃判定の原型設定。</summary>
+    /// <summary>自機近接斬撃判定のプレハブ設定。</summary>
     public PlayerSlashHitboxPrefabConfig PlayerSlashHitbox { get; set; }
 
-    /// <summary>Boss 2 近接斬撃判定の原型設定。</summary>
+    /// <summary>Boss 2 近接斬撃判定のプレハブ設定。</summary>
     public BossSlashHitboxPrefabConfig BossSlashHitbox { get; set; }
 
-    /// <summary>点粒子スパーク演出の原型設定。</summary>
+    /// <summary>点粒子スパーク演出のプレハブ設定。</summary>
     public SparkVfxPrefabConfig SparkVfx { get; set; }
 
-    /// <summary>リング拡散演出の原型設定。</summary>
+    /// <summary>リング拡散演出のプレハブ設定。</summary>
     public RingVfxPrefabConfig RingVfx { get; set; }
 
-    /// <summary>判定付与エリア演出の原型設定。</summary>
+    /// <summary>判定付与エリア演出のプレハブ設定。</summary>
     public AreaVfxPrefabConfig AreaVfx { get; set; }
 }
 

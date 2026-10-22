@@ -3,17 +3,17 @@ using System.Runtime.InteropServices;
 namespace AnimalBattle.Core;
 
 /// <summary>
-///     2次元浮動小数点ベクトル構造体（Native C++ の Vec2f とメモリレイアウト完全一致: X: 4byte, Y: 4byte）。
+///     2次元浮動小数点ベクトル構造体：Native C++ の Vec2f とメモリレイアウト完全一致: X: 4byte, Y: 4byte。
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct Vec2f(float X, float Y) {
-    /// <summary>デフォルト初期化 (0, 0)</summary>
+    /// <summary>デフォルト初期化 ゼロ座標</summary>
     public Vec2f() : this(0.0f, 0.0f) { }
 
-    /// <summary>ゼロベクトル (0, 0)</summary>
+    /// <summary>ゼロベクトル ゼロ座標</summary>
     public static readonly Vec2f Zero = new(0.0f, 0.0f);
 
-    /// <summary>単位ベクトル (1, 1)</summary>
+    /// <summary>単位ベクトル 単位スケール</summary>
     public static readonly Vec2f One = new(1.0f, 1.0f);
 
     /// <summary>ベクトル加算</summary>
@@ -28,7 +28,7 @@ public readonly record struct Vec2f(float X, float Y) {
         return new Vec2f(a.X - b.X, a.Y - b.Y);
     }
 
-    /// <summary>単項マイナス（符号反転）</summary>
+    /// <summary>単項マイナス：符号反転</summary>
     public static Vec2f operator -(Vec2f a)
     {
         return new Vec2f(-a.X, -a.Y);
@@ -65,13 +65,13 @@ public readonly record struct Vec2f(float X, float Y) {
         return len > 0.00001f ? this / len : Zero;
     }
 
-    /// <summary>Vec2i への変換（整数切り捨て）</summary>
+    /// <summary>Vec2i への変換：整数切り捨て</summary>
     public readonly Vec2i ToVec2i()
     {
         return new Vec2i((int)X, (int)Y);
     }
 
-    /// <summary>Vec2i への明示的型変換（整数切り捨て）</summary>
+    /// <summary>Vec2i への明示的型変換：整数切り捨て</summary>
     public static explicit operator Vec2i(Vec2f v) => v.ToVec2i();
 
     /// <summary>Vec2i への四捨五入変換</summary>
@@ -82,13 +82,13 @@ public readonly record struct Vec2f(float X, float Y) {
 }
 
 /// <summary>
-///     2次元円形幾何衝突形状（中心座標 + 半径）。
+///     2次元円形幾何衝突形状：中心座標 + 半径。
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct Circle2D(Vec2f Center, float Radius);
 
 /// <summary>
-///     2次元軸平行矩形 (AABB) 衝突形状（中心座標 + サイズ）。
+///     2次元軸平行矩形 AABB形式 衝突形状：中心座標 + サイズ。
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct Box2D(Vec2f Center, Vec2f Size) {
@@ -106,17 +106,17 @@ public readonly record struct Box2D(Vec2f Center, Vec2f Size) {
 }
 
 /// <summary>
-///     2次元整数ベクトル構造体（Native C++ の Vec2i とメモリレイアウト完全一致: X: 4byte, Y: 4byte）。
+///     2次元整数ベクトル構造体：Native C++ の Vec2i とメモリレイアウト完全一致: X: 4byte, Y: 4byte。
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct Vec2i(int X, int Y) {
-    /// <summary>デフォルト初期化 (0, 0)</summary>
+    /// <summary>デフォルト初期化 ゼロ座標</summary>
     public Vec2i() : this(0, 0) { }
 
-    /// <summary>ゼロベクトル (0, 0)</summary>
+    /// <summary>ゼロベクトル ゼロ座標</summary>
     public static readonly Vec2i Zero = new(0, 0);
 
-    /// <summary>単位ベクトル (1, 1)</summary>
+    /// <summary>単位ベクトル 単位スケール</summary>
     public static readonly Vec2i One = new(1, 1);
 
     /// <summary>ベクトル加算</summary>
@@ -131,7 +131,7 @@ public readonly record struct Vec2i(int X, int Y) {
         return new Vec2i(a.X - b.X, a.Y - b.Y);
     }
 
-    /// <summary>単項マイナス（符号反転）</summary>
+    /// <summary>単項マイナス：符号反転</summary>
     public static Vec2i operator -(Vec2i a)
     {
         return new Vec2i(-a.X, -a.Y);

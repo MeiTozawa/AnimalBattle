@@ -13,10 +13,10 @@ namespace AnimalBattle.Maps.Navigation;
 /// <param name="topY">上面 Y 座標</param>
 /// <param name="height">プラットフォーム高さ</param>
 public sealed class PlatformNode(int id, float leftX, float rightX, float topY, float height) {
-    /// <summary>プラットフォームの一意な識別番号 (0-based)</summary>
+    /// <summary>プラットフォームの一意な識別番号 ゼロ基準</summary>
     public int Id { get; } = id;
 
-    /// <summary>プラットフォーム上面（着地基準面）の Y 座標</summary>
+    /// <summary>プラットフォーム上面：着地基準面の Y 座標</summary>
     public float TopY { get; } = topY;
 
     /// <summary>プラットフォームの左端 X 座標</summary>
@@ -25,7 +25,7 @@ public sealed class PlatformNode(int id, float leftX, float rightX, float topY, 
     /// <summary>プラットフォームの右端 X 座標</summary>
     public float RightX { get; } = rightX;
 
-    /// <summary>プラットフォームの厚み（高さ）</summary>
+    /// <summary>プラットフォームの厚み：高さ</summary>
     public float Height { get; } = height;
 
     /// <summary>プラットフォームの中心 X 座標</summary>
@@ -38,7 +38,7 @@ public sealed class PlatformNode(int id, float leftX, float rightX, float topY, 
     ///     指定された X 座標がプラットフォームの水平範囲内に含まれているかを判定します。
     /// </summary>
     /// <param name="x">検査する X 座標</param>
-    /// <param name="margin">許容マージン（ピクセル）</param>
+    /// <param name="margin">許容マージンピクセル単位</param>
     /// <returns>範囲内に含まれている場合は true</returns>
     public bool ContainsX(float x, float margin = 0.0f)
     {

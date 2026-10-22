@@ -1,7 +1,7 @@
 namespace AnimalBattle.Core.Geometry;
 
 /// <summary>
-///     Boss 攻撃予兆（Telegraph）の幾何学的計算（レーザー照準、危険矩形、突進軌道、地表衝撃波、放射光線等）を提供する静的ヘルパークラス。
+///     Boss 攻撃予兆：Telegraphの幾何学的計算：レーザー照準、危険矩形、突進軌道、地表衝撃波、放射光線等を提供する静的ヘルパークラス。
 /// </summary>
 public static class TelegraphGeometry {
     /// <summary>
@@ -9,8 +9,8 @@ public static class TelegraphGeometry {
     /// </summary>
     /// <param name="start">開始座標</param>
     /// <param name="target">目標座標</param>
-    /// <param name="angleOffset">角度オフセット（ラジアン）</param>
-    /// <param name="maxDistance">最大照射距離 (px)</param>
+    /// <param name="angleOffset">角度オフセットラジアン単位</param>
+    /// <param name="maxDistance">最大照射距離 ピクセル単位</param>
     /// <returns>算出された終点座標</returns>
     public static Vec2f CalculateAimLaserEndpoint(
         Vec2f start,
@@ -32,7 +32,7 @@ public static class TelegraphGeometry {
     ///     近接斬撃判定矩形の境界座標を算出します。
     /// </summary>
     /// <param name="bPos">Boss 中心座標</param>
-    /// <param name="range">斬撃有効半径 (X: 半径, Y: 半径)</param>
+    /// <param name="range">斬撃有効半径 水平および垂直半径</param>
     /// <param name="facingRight">Boss が右向きか</param>
     /// <param name="p1">矩形左上座標</param>
     /// <param name="p2">矩形右下座標</param>
@@ -67,7 +67,7 @@ public static class TelegraphGeometry {
     /// </summary>
     /// <param name="bPos">Boss 中心座標</param>
     /// <param name="height">突進高さ</param>
-    /// <param name="facingRight">突進方向（右向きか）</param>
+    /// <param name="facingRight">突進方向：右向きか</param>
     /// <param name="arenaMinX">アリーナ最小 X 境界</param>
     /// <param name="arenaMaxX">アリーナ最大 X 境界</param>
     /// <param name="p1">矩形左上座標</param>
@@ -129,7 +129,7 @@ public static class TelegraphGeometry {
     ///     放射スパイク光線の始点・終点座標を算出します。
     /// </summary>
     /// <param name="center">中心座標</param>
-    /// <param name="angle">照射角度（ラジアン）</param>
+    /// <param name="angle">照射角度ラジアン単位</param>
     /// <param name="length">光線長さ</param>
     /// <param name="p1">始点座標</param>
     /// <param name="p2">終点座標</param>

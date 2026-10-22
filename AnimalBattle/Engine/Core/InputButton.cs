@@ -6,7 +6,7 @@ namespace AnimalBattle.Core;
 public enum InputButton {
     None = 0,
 
-    // --- キーボード (DxLib DirectInput キーコード互換: 1 ~ 255) ---
+    // --- キーボード DxLibキーコード互換 ---
     KeyEscape = 0x01,
     Key1 = 0x02,
     Key2 = 0x03,
@@ -63,12 +63,12 @@ public enum InputButton {
     KeyF3 = 0x3D,
     KeyF4 = 0x3E,
 
-    // --- マウスボタン (300 ~ 399) ---
+    // --- マウスボタン 300から399の範囲 ---
     MouseLeft = 300,
     MouseRight = 301,
     MouseMiddle = 302,
 
-    // --- ゲームパッド (400 ~ 499, DxLib PAD_INPUT_* に対応) ---
+    // --- ゲームパッド DxLibゲームパッド入力対応 ---
     PadDown = 400,
     PadLeft = 401,
     PadRight = 402,

@@ -4,7 +4,7 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Player.Components;
 
 /// <summary>
-///     Cat (猫) 遠隔射撃武器状態コンポーネント。
+///     Cat遠隔射撃武器状態コンポーネント。
 ///     クールダウン、弾速、弾丸攻撃力、発射口オフセットおよび射撃反動パラメータを保持します。
 /// </summary>
 public struct CatWeaponState
@@ -15,22 +15,22 @@ public struct CatWeaponState
     /// <summary>射撃クールダウンの基本持続秒数。</summary>
     public float CooldownDuration;
 
-    /// <summary>弾丸の飛翔速度（px/s）。</summary>
+    /// <summary>弾丸の飛翔速度：px/s。</summary>
     public float BulletSpeed;
 
     /// <summary>弾丸攻撃力。</summary>
     public float BulletDamage;
 
-    /// <summary>弾丸衝突判定のサイズ (Vec2f)。</summary>
+    /// <summary>弾丸衝突判定のサイズ Vec2f型。</summary>
     public Vec2f BulletSize;
 
-    /// <summary>発射口の局所オフセット (Vec2f)。</summary>
+    /// <summary>発射口の局所オフセット Vec2f型。</summary>
     public Vec2f BulletSpawnOffset;
 
-    /// <summary>自機射撃微後退反動インパルス初速度（px/s）。</summary>
+    /// <summary>自機射撃微後退反動インパルス初速度：px/s。</summary>
     public float ShootRecoilImpulse;
 
-    /// <summary>自機射撃時スプリング変形倍率 (Vec2f)。</summary>
+    /// <summary>自機射撃時スプリング変形倍率 Vec2f型。</summary>
     public Vec2f ShootRecoilStretch;
 
     /// <summary>

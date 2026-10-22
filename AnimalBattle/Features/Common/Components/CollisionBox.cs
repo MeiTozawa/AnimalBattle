@@ -12,10 +12,10 @@ namespace AnimalBattle.Common.Components;
 /// </remarks>
 [StructLayout(LayoutKind.Sequential)]
 public struct CollisionBox(Vec2f size, Vec2f offset = default) {
-    /// <summary>バウンディングボックスサイズ (Vec2f)</summary>
+    /// <summary>バウンディングボックスサイズ Vec2f型</summary>
     public Vec2f Size = size;
 
-    /// <summary>局所オフセット (Vec2f)</summary>
+    /// <summary>局所オフセット Vec2f型</summary>
     public Vec2f Offset = offset;
 
     /// <summary>接地フラグ</summary>

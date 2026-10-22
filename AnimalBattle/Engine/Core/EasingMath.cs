@@ -10,11 +10,11 @@ public static class EasingMath {
     private const float _pi = MathF.PI;
 
     /// <summary>
-    ///     指定されたイージング型および進捗割合 <paramref name="progress" /> (0.0f～1.0f) から補間数値を純粋 C# で高速評価します。
+    ///     指定されたイージング型および進捗割合 <paramref name="progress" /> 0.0fから1.0fの範囲 から補間数値を純粋 C# で高速評価します。
     /// </summary>
     /// <param name="ease">イージング型。</param>
-    /// <param name="progress">進捗率（0.0f～1.0f）。</param>
-    /// <returns>イージングが適用された補間値（通常 0.0f～1.0f）。</returns>
+    /// <param name="progress">進捗率0.0fから1.0fの範囲。</param>
+    /// <returns>イージングが適用された補間値：通常 0.0f～1.0f。</returns>
     /// <exception cref="ArgumentOutOfRangeException">未定義の <see cref="EaseType" /> が指定された場合にスローされます。</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Evaluate(EaseType ease, float progress)

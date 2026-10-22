@@ -7,8 +7,8 @@ namespace AnimalBattle.Maps;
 ///     すべてのパラメータを外部設定または明示的な引数から受け取り、内部でデフォルト値を持ちません。
 /// </summary>
 /// <param name="graphHandle">テクスチャ画像ハンドル</param>
-/// <param name="tileWidth">タイル単体の幅（ピクセル）</param>
-/// <param name="tileHeight">タイル単体の高さ（ピクセル）</param>
+/// <param name="tileWidth">タイル単体の幅ピクセル単位</param>
+/// <param name="tileHeight">タイル単体の高さピクセル単位</param>
 /// <param name="columns">テクスチャシート横方向タイル列数</param>
 /// <param name="rows">テクスチャシート縦方向タイル行数</param>
 /// <param name="leftBlock">左端ブロックのタイル ID</param>
@@ -47,10 +47,10 @@ public sealed class TileSet(
     /// <summary>Native テクスチャグラフィックハンドル</summary>
     public int GraphHandle { get; } = graphHandle;
 
-    /// <summary>タイル単体の幅（ピクセル）</summary>
+    /// <summary>タイル単体の幅ピクセル単位</summary>
     public int TileWidth { get; } = tileWidth;
 
-    /// <summary>タイル単体の高さ（ピクセル）</summary>
+    /// <summary>タイル単体の高さピクセル単位</summary>
     public int TileHeight { get; } = tileHeight;
 
     /// <summary>テクスチャシート内の横方向タイル列数</summary>
@@ -59,13 +59,13 @@ public sealed class TileSet(
     /// <summary>テクスチャシート内の縦方向タイル行数</summary>
     public int Rows { get; } = rows;
 
-    /// <summary>左端ブロックのタイル ID (1-based)</summary>
+    /// <summary>左端ブロックのタイル ID 1基準</summary>
     public int LeftBlock { get; } = leftBlock;
 
-    /// <summary>中間ブロックのタイル ID (1-based)</summary>
+    /// <summary>中間ブロックのタイル ID 1基準</summary>
     public int MiddleBlock { get; } = middleBlock;
 
-    /// <summary>右端ブロックのタイル ID (1-based)</summary>
+    /// <summary>右端ブロックのタイル ID 1基準</summary>
     public int RightBlock { get; } = rightBlock;
 
     /// <summary>プラットフォームタイルの衝突判定領域矩形</summary>
@@ -96,10 +96,10 @@ public sealed class TileSet(
     }
 
     /// <summary>
-    ///     1-based のタイル ID からスプライトシート上の UV 切り出し矩形 (<see cref="Rect" />) を取得します。
+    ///     1-based のタイル ID からスプライトシート上の UV 切り出し矩形 <see cref="Rect" /> を取得します。
     ///     ID が 0 以下の場合は空の矩形を返します。
     /// </summary>
-    /// <param name="tileId">1-based タイル ID (0 は空白/空気)</param>
+    /// <param name="tileId">1-based タイル ID ゼロは空白</param>
     /// <returns>スプライトシート切り出し領域</returns>
     public Rect GetSourceRect(int tileId)
     {
@@ -121,9 +121,9 @@ public sealed class TileSet(
     ///     指定された中心座標に単一タイルを独立 X/Y 軸拡縮で描画します。
     /// </summary>
     /// <param name="tileId">1-based タイル ID</param>
-    /// <param name="center">描画中心座標 (Vec2i)</param>
-    /// <param name="scale">拡大縮小率 (Vec2f)</param>
-    /// <param name="angle">回転角度（ラジアン）</param>
+    /// <param name="center">描画中心座標 Vec2i型</param>
+    /// <param name="scale">拡大縮小率 Vec2f型</param>
+    /// <param name="angle">回転角度ラジアン単位</param>
     /// <param name="flipX">左右反転フラグ</param>
     public void DrawTile(int tileId, Vec2i center, Vec2f scale, double angle, bool flipX)
     {

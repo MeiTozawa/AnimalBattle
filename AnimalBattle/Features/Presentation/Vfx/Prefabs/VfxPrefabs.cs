@@ -9,7 +9,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Vfx;
 
 /// <summary>
-///     視覚演出（VFX）ドメインの Prefab 登録および管理。
+///     視覚演出：VFXドメインの Prefab 登録および管理。
 /// </summary>
 public static class VfxPrefabs
 {
@@ -22,7 +22,7 @@ public static class VfxPrefabs
     public static Entity AreaVfx { get; private set; }
 
     /// <summary>
-    ///     全 VFX 関連の Prefab 原型を登録します。
+    ///     全 VFX 関連の Prefab プレハブを登録します。
     /// </summary>
     public static void Register(World world)
     {

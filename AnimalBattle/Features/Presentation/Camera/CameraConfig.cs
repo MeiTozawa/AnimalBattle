@@ -13,7 +13,7 @@ public sealed class CameraConfig
     /// <summary>指向性衝撃インパルスの 1 秒あたりの減衰速度</summary>
     public float ImpulseDecaySpeed { get; set; }
 
-    /// <summary>カメラ最大振動オフセット（ピクセル）</summary>
+    /// <summary>カメラ最大振動オフセットピクセル単位</summary>
     public Vec2f MaxOffset { get; set; }
 
     /// <summary>X 軸ノイズ第 1 周波数</summary>
@@ -28,13 +28,13 @@ public sealed class CameraConfig
     /// <summary>Y 軸ノイズ第 2 周波数</summary>
     public float NoiseFrequency4 { get; set; }
 
-    /// <summary>アリーナ基準中心座標（ピクセル）</summary>
+    /// <summary>アリーナ基準中心座標ピクセル単位</summary>
     public Vec2f ArenaCenter { get; set; }
 
-    /// <summary>プレイヤー速度に基づくカメラ前瞻オフセット係数</summary>
+    /// <summary>プレイヤー速度に基づくカメラ先読みオフセット係数</summary>
     public float LookAheadFactor { get; set; }
 
-    /// <summary>カメラ追従平滑化速度（ラープ係数）</summary>
+    /// <summary>カメラ追従平滑化速度：ラープ係数</summary>
     public float FollowSpeed { get; set; }
 
     /// <summary>デュアルターゲット構図におけるプレイヤーの注視点重み</summary>
@@ -43,7 +43,7 @@ public sealed class CameraConfig
     /// <summary>デュアルターゲット構図における Boss の注視点重み</summary>
     public float BossFocusWeight { get; set; }
 
-    /// <summary>カメラ最大パン移動量（ピクセル）</summary>
+    /// <summary>カメラ最大パン移動量ピクセル単位</summary>
     public Vec2f MaxPan { get; set; }
 
     /// <summary>技能画面振動強度から Trauma への変換スケール</summary>

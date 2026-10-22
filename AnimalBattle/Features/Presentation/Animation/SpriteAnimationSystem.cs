@@ -5,7 +5,7 @@ namespace AnimalBattle.Presentation.Animation;
 
 /// <summary>
 ///     全ての <see cref="Animation" /> と <see cref="Sprite" /> を持つエンティティのフレーム進行、
-///     クリップタイマー更新、および UV 切り出し領域 (SrcRect) のリアルタイム計算を行う純粋な ECS System。
+///     クリップタイマー更新、および UV 切り出し領域 のリアルタイム計算を行う純粋な ECS System。
 /// </summary>
 public static class SpriteAnimationSystem
 {
@@ -26,7 +26,7 @@ public static class SpriteAnimationSystem
     }
 
     /// <summary>
-    ///     スプライトアニメーション更新処理（名前付き静的メソッド）。
+    ///     スプライトアニメーション更新処理：名前付き静的メソッド。
     /// </summary>
     public static void UpdateSpriteAnimation(Iter it, int i, ref Components.Animation anim, ref Sprite sprite)
     {

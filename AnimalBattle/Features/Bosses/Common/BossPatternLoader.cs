@@ -11,7 +11,7 @@ namespace AnimalBattle.Ai;
 /// </summary>
 public static class BossPatternLoader {
     /// <summary>
-    ///     指定技能タグの不変攻撃時序定義をビルドします。
+    ///     指定技能タグの不変攻撃タイムライン定義をビルドします。
     /// </summary>
     public static ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skill, BossPatternConfigContainerBase config)
     {

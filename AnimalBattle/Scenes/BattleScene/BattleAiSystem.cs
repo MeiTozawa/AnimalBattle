@@ -52,7 +52,7 @@ public static class BattleAiSystem
             .With<PlayerTag>()
             .Build();
 
-        // Boss 更新用クエリ（HitstopState 中の凍結および DeadTag 除外を徹底）
+        // Boss 更新用クエリ：HitstopState 中の凍結および DeadTag 除外を徹底
         var bossQuery = world.QueryBuilder<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent>()
             .With<BossTag>()
             .Without<HitstopState>()
@@ -112,7 +112,7 @@ public static class BattleAiSystem
         {
             var brain = brainComp.Brain;
 
-            // 死亡判定（クエリで Without<DeadTag> が保証されているため Has ガードは不要）
+            // 死亡判定：クエリで Without<DeadTag> が保証されているため Has ガードは不要
             if (hp.Current <= 0.0f)
             {
                 if (!brain.IsDead) brain.Kill();
@@ -186,7 +186,7 @@ public static class BattleAiSystem
             state.FacingRight = brain.FacingRight;
         });
 
-        // カメラ追従および振動の更新（Boss が Hitstop 中や死亡後であっても振動減衰・構図追従を滞りなく継続）
+        // カメラ追従および振動の更新：Boss が Hitstop 中や死亡後であっても振動減衰・構図追従を滞りなく継続
         if (ctx.HasBoss)
         {
             CameraService.Update(
@@ -257,7 +257,7 @@ public static class BattleAiSystem
         var platformGroundY = float.MaxValue;
         var platformVy = 0.0f;
 
-        // 制御空中移動時かつ上昇・滞空（vel.Linear.Y <= 0）の間は足場着地判定をスキップ
+        // 制御空中移動時かつ上昇・滞空：vel.Linear.Y <= 0の間は足場着地判定をスキップ
         var ignorePlatforms = isControlledAirborne && linear.Y <= 0.0f;
         if (!ignorePlatforms && tileMap != null)
         {
@@ -279,7 +279,7 @@ public static class BattleAiSystem
                 {
                     var platTopY = platformBox.Top;
 
-                    // ヒップドロップ（LeapSmash）急降下中：目標着地サーフェス（足場上面または床）より上層の足場は貫通（スキップ）
+                    // ヒップドロップ：LeapSmash急降下中：目標着地サーフェス：足場上面または床より上層の足場は貫通：スキップ
                     if (isLeapSmash && targetLandingSurfaceY > 0.0f && platTopY < targetLandingSurfaceY - 5.0f)
                     {
                         continue;

@@ -73,7 +73,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     /// <summary>現在の Boss 移動速度を取得します。</summary>
     public Vec2f Velocity => _currentVelocity;
 
-    /// <summary>ヒップドロップ（LeapSmash）スキルの着地目標サーフェス Y 座標（足場上面または床面）を取得します。</summary>
+    /// <summary>ヒップドロップ LeapSmash スキルの着地目標サーフェス Y 座標：足場上面または床面を取得します。</summary>
     public float TargetLandingSurfaceY => _targetLandingSurfaceY;
 
     /// <inheritdoc />
@@ -353,7 +353,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         else
         {
             var playerMovedDistSq = (playerPos - _lastRepathPlayerPos).LengthSquared();
-            // 探索冷却が終了しているか、プレイヤーが大きく移動 (64px以上) した場合のみ A* 経路を再探索
+            // 探索クールダウンが終了しているか、プレイヤーが 64px 以上大きく移動した場合のみ A* 経路を再探索
             if (_cachedNavPlan == null || _repathCooldown <= 0.0f || playerMovedDistSq > 64.0f * 64.0f)
             {
                 var navGraph = _navGraphProvider?.Invoke();

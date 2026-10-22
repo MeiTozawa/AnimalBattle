@@ -5,7 +5,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Vfx;
 
 /// <summary>
-///     ヒットストップ（時間凍結）のタイマー減衰および解除を制御する ECS システム。
+///     ヒットストップ：時間凍結のタイマー減衰および解除を制御する ECS システム。
 /// </summary>
 public static class HitstopSystem
 {
@@ -24,7 +24,7 @@ public static class HitstopSystem
     }
 
     /// <summary>
-    ///     ヒットストップ状態減衰・解除処理（名前付き静的メソッド）。
+    ///     ヒットストップ状態減衰・解除処理：名前付き静的メソッド。
     /// </summary>
     public static void UpdateHitstopState(Iter it, int i, ref HitstopState hitstop, ref Sprite sprite)
     {

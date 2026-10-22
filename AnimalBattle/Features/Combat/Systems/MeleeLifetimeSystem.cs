@@ -5,7 +5,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Combat.Systems;
 
 /// <summary>
-///     近接攻撃判定等の持続時間を監視し、満了時に安全に回収タグ（RecycleTag）を付与する ECS システム。
+///     近接攻撃判定等の持続時間を監視し、満了時に安全に回収タグ：RecycleTagを付与する ECS システム。
 /// </summary>
 public static class MeleeLifetimeSystem
 {
@@ -23,7 +23,7 @@ public static class MeleeLifetimeSystem
     }
 
     /// <summary>
-    ///     近接判定寿命更新パイプライン（名前付き静的メソッド）。
+    ///     近接判定寿命更新パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteMeleeLifetime(Iter it, Field<HitboxLifetime> lifetimes)
     {

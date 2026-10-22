@@ -19,7 +19,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Scenes.Battle;
 
 /// <summary>
-///     戦闘シーンの全エンティティツリー（自機、Boss、足場・タイルマップ）の生成・破棄を行うスポナークラス。
+///     戦闘シーンの全エンティティツリー：自機、Boss、足場・タイルマップの生成・破棄を行うスポナークラス。
 /// </summary>
 public static class BattleSceneSpawner {
     public const string RootName = "BattleSceneRoot";
@@ -190,7 +190,7 @@ public static class BattleSceneSpawner {
     /// <param name="world">対象の Flecs.NET ワールド</param>
     public static void Teardown(World world)
     {
-        // ゲームオーバー状態の解除（Remove は冪等のため事前の Has チェック不要）
+        // ゲームオーバー状態の解除：Remove は冪等のため事前の Has チェック不要
         world.Remove<GameOverTag>();
 
         // 1. サウンド・カーソル・カメラ・照準器の復元
@@ -220,7 +220,7 @@ public static class BattleSceneSpawner {
         }
         EventBus.Publish(new CombatResetEvent());
 
-        // 3. 戦闘シーンルート配下の全エンティティ（自機、Boss、足場、タイルマップ等）を一括破棄
+        // 3. 戦闘シーンルート配下の全エンティティ：自機、Boss、足場、タイルマップ等を一括破棄
         var root = world.Lookup(RootName);
         if (root.IsAlive())
         {

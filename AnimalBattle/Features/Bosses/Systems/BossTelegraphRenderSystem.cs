@@ -30,7 +30,7 @@ internal sealed class BossTelegraphRenderContext
 }
 
 /// <summary>
-///     Boss の攻撃予兆線（Telegraph）、隙・脆弱（Vulnerable）演出、およびフェーズ遷移時の無敵演出を描画する ECS システム。
+///     Boss の攻撃予兆線：Telegraph、隙・脆弱：Vulnerable演出、およびフェーズ遷移時の無敵演出を描画する ECS システム。
 /// </summary>
 public static class BossTelegraphRenderSystem
 {
@@ -63,7 +63,7 @@ public static class BossTelegraphRenderSystem
     }
 
     /// <summary>
-    ///     Boss 予兆線および特殊状態描画パイプライン（名前付き静的メソッド）。
+    ///     Boss 予兆線および特殊状態描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteBossTelegraphRender(Iter it)
     {
@@ -93,7 +93,7 @@ public static class BossTelegraphRenderSystem
 
         var bPos = (b.Transform.Position + b.Sprite.JitterOffset).ToVec2i();
 
-        // 1. 攻撃予兆（Telegraph）描画（GameplayTag.Telegraph 駆動）
+        // 1. 攻撃予兆：Telegraph描画：GameplayTag.Telegraph 駆動
         if (b.Tags.HasTag(GameplayTag.Telegraph))
         {
             var progress = b.Brain.AbilitySystem.Progress;
@@ -103,7 +103,7 @@ public static class BossTelegraphRenderSystem
         var flipX = !b.CombatState.FacingRight;
         var rotation = b.Transform.Rotation;
 
-        // 2. 隙・脆弱（Vulnerable）状態の脈動オーラとマーカー
+        // 2. 隙・脆弱：Vulnerable状態の脈動オーラとマーカー
         if (b.Tags.HasTag(GameplayTag.Vulnerable))
         {
             DrawBossVulnerableEffects(
@@ -111,7 +111,7 @@ public static class BossTelegraphRenderSystem
                 b.Sprite.GraphHandle, flipX, b.CombatState.StateTimer, bossFx);
         }
 
-        // 3. フェーズ遷移時の無敵シールド演出（GameplayTag.Phasing 駆動）
+        // 3. フェーズ遷移時の無敵シールド演出：GameplayTag.Phasing 駆動
         if (b.Tags.HasTag(GameplayTag.Phasing))
         {
             DrawBossPhaseTransitionEffects(
@@ -121,7 +121,7 @@ public static class BossTelegraphRenderSystem
     }
 
     /// <summary>
-    ///     Boss 描画データを無割当（Zero Allocation）で抽出します。
+    ///     Boss 描画データを無割当：Zero Allocationで抽出します。
     /// </summary>
     private static void CollectBoss(
         Iter it,
@@ -144,7 +144,7 @@ public static class BossTelegraphRenderSystem
     }
 
     /// <summary>
-    ///     プレイヤー座標を無割当（Zero Allocation）で抽出します。
+    ///     プレイヤー座標を無割当：Zero Allocationで抽出します。
     /// </summary>
     private static void CollectPlayer(Iter it, Field<Transform> playerTrans)
     {

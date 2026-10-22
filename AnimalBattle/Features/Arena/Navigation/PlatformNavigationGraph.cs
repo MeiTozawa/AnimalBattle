@@ -5,7 +5,7 @@ namespace AnimalBattle.Maps.Navigation;
 
 /// <summary>
 ///     2D プラットフォームナビゲーションのトポロジーグラフおよび A* 経路探索エンジン。
-///     TileMap のプラットフォーム群から空間接続関係（跳躍/下落リンク）を自動構築し、
+///     TileMap のプラットフォーム群から空間接続関係：跳躍/下落リンクを自動構築し、
 ///     Boss AI にリアルタイムのプラットフォーム間追従・跳躍ナビゲーションプランを提供します。
 /// </summary>
 public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null) {
@@ -15,14 +15,14 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     private readonly Dictionary<int, List<PlatformLink>> _adjacency = new();
     private readonly Dictionary<PlatformLink, PlatformLink?> _aStarCameFrom = new();
 
-    // A* 経路探索用の一時バッファ（毎フレームの GC 堆割り当てを完全に防止）
+    // A* 経路探索用の一時バッファ：毎フレームの GC 堆割り当てを完全に防止
     private readonly Dictionary<PlatformLink, float> _aStarGScore = new();
     private readonly PriorityQueue<PlatformLink, float> _aStarOpenSet = new();
     private readonly List<PlatformLink> _links = new();
     private readonly List<PlatformNode> _nodes = new();
     private readonly List<PlatformLink> _reusablePath = new();
 
-    /// <summary>現在実行中の跳躍・下落リンク（空中滞空時のナビゲーション維持用）</summary>
+    /// <summary>現在実行中の跳躍・下落リンク：空中滞空時のナビゲーション維持用</summary>
     private PlatformLink? _activeLink;
 
     /// <summary>現在実行中の跳躍・下落リンクを取得します。</summary>
@@ -44,9 +44,9 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     ///     プラットフォームノード群および物理パラメータからナビゲーショングラフを構築します。
     /// </summary>
     /// <param name="nodes">プラットフォームノード一覧</param>
-    /// <param name="jumpForce">Boss の基準ジャンプ初速度 (正数、例: 600.0f)</param>
-    /// <param name="gravity">ワールド重力加速度 (正数、例: 980.0f)</param>
-    /// <param name="moveSpeed">地上巡航移動速度 (例: 220.0f)</param>
+    /// <param name="jumpForce">Boss の基準ジャンプ初速度 正の値で指定するジャンプ初速度</param>
+    /// <param name="gravity">ワールド重力加速度 正の値で指定する重力加速度</param>
+    /// <param name="moveSpeed">地上巡航移動速度 例として220.0f</param>
     /// <param name="config">オプションのナビゲーショングラフ設定</param>
     public void Build(
         IReadOnlyList<PlatformNode> nodes,
@@ -95,7 +95,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     /// <param name="jumpForce">Boss の基準ジャンプ初速度</param>
     /// <param name="gravity">ワールド重力加速度</param>
     /// <param name="moveSpeed">地上巡航移動速度</param>
-    /// <param name="sampleSteps">放物線軌道の離散サンプリング分割数 (0 の場合は設定値を採用)</param>
+    /// <param name="sampleSteps">放物線軌道の離散サンプリング分割数 ゼロ指定時は設定値を採用</param>
     /// <param name="config">オプションのナビゲーショングラフ設定</param>
     public void BuildWithObstacles(
         IReadOnlyList<PlatformNode> nodes,
@@ -135,13 +135,13 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         float tFlight;
         if (link.Action == NavActionType.Drop)
         {
-            // 下落（Drop）：滞空時間は高度差と重力加速度による自由落下時間 t = sqrt(2 * h / g)
+            // 落下滞空時間は高度差と重力加速度による自由落下時間 t = sqrt
             var dropHeight = link.ToNode.TopY - link.FromNode.TopY;
             tFlight = dropHeight > 0.0f ? MathF.Sqrt(2.0f * dropHeight / safeGravity) : 0.0f;
         }
         else
         {
-            // 上方・斜め跳躍（Jump）：着地目標高度 TopY に到達する物理滞空時間を鉛直運動方程式から厳密算出
+            // 上方・斜め跳躍：Jump：着地目標高度 TopY に到達する物理滞空時間を鉛直運動方程式から厳密算出
             var deltaY = link.ToNode.TopY - link.FromNode.TopY;
             var disc = link.RequiredJumpVy * link.RequiredJumpVy + 2.0f * safeGravity * deltaY;
             if (disc >= 0.0f)
@@ -193,12 +193,12 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     }
 
     /// <summary>
-    ///     指定された足元座標 (x, footY) が位置するプラットフォームノードを検索します。
+    ///     指定された足元座標 が位置するプラットフォームノードを検索します。
     /// </summary>
     /// <param name="x">中心 X 座標</param>
     /// <param name="footY">足元 Y 座標</param>
-    /// <param name="toleranceY">垂直許容誤差（省略時は設定値を採用）</param>
-    /// <param name="marginX">水平許容マージン（半身はみ出し許容用、省略時は設定値を採用）</param>
+    /// <param name="toleranceY">垂直許容誤差：省略時は設定値を採用</param>
+    /// <param name="marginX">水平許容マージン：半身はみ出し許容用、省略時は設定値を採用</param>
     /// <returns>該当するプラットフォーム、存在しない場合は null</returns>
     public PlatformNode? FindNodeAt(float x, float footY, float? toleranceY = null, float? marginX = null)
     {
@@ -222,11 +222,11 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     }
 
     /// <summary>
-    ///     指定された X 座標直下に存在する最も近いプラットフォームノードを検索します（空中落下フォールバック用）。
+    ///     指定された X 座標直下に存在する最も近いプラットフォームノードを検索します：空中落下フォールバック用。
     /// </summary>
     /// <param name="x">中心 X 座標</param>
     /// <param name="footY">足元 Y 座標</param>
-    /// <param name="marginX">水平許容マージン（省略時は設定値を採用）</param>
+    /// <param name="marginX">水平許容マージン：省略時は設定値を採用</param>
     /// <returns>直下のプラットフォーム、存在しない場合は null</returns>
     public PlatformNode? FindPlatformBelow(float x, float footY, float? marginX = null)
     {
@@ -259,8 +259,8 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     /// <param name="targetFootY">プレイヤーの足元 Y 座標</param>
     /// <param name="isGrounded">Boss が接地中かどうか</param>
     /// <param name="moveSpeed">巡航移動速度</param>
-    /// <param name="activeLink">外部指定のアクティブリンク（省略時は内部保持リンクを採用）</param>
-    /// <returns>計算されたナビゲーションプラン (<see cref="NavPlan" />)</returns>
+    /// <param name="activeLink">外部指定のアクティブリンク：省略時は内部保持リンクを採用</param>
+    /// <returns>計算されたナビゲーションプラン <see cref="NavPlan" /></returns>
     public NavPlan FindPath(
         float currentX,
         float currentFootY,
@@ -272,7 +272,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     {
         var currentActiveLink = activeLink ?? _activeLink;
 
-        // 1. 空中滞空中の場合：着地目標地点に向かって水平推力を維持（接地判定・ノード特定を先行させない）
+        // 1. 空中滞空中の場合：着地目標地点に向かって水平推力を維持：接地判定・ノード特定を先行させない
         if (!isGrounded)
         {
             var targetNodeInAir = FindNodeAt(targetX, targetFootY, Config.TargetToleranceY, Config.TargetMarginX);
@@ -338,7 +338,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
 
         var firstLink = path[0];
 
-        // 5. 接地中：動作種別（Jump / Drop）に応じた到達・単方向推進判定
+        // 5. 接地中：動作種別：Jump / Dropに応じた到達・単方向推進判定
         if (firstLink.Action == NavActionType.Jump)
         {
             var distToTakeoff = MathF.Abs(currentX - firstLink.TakeoffX);
@@ -444,12 +444,12 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
             return false;
         }
 
-        // 各リンクごとの最小到達累積コスト G(link)
+        // 各リンクごとの最小到達累積コスト G
         _aStarGScore.Clear();
         _aStarCameFrom.Clear();
         _aStarOpenSet.Clear();
 
-        // 終端目標地点（goal, targetX）への最良到達解
+        // 終端目標地点：goal, targetXへの最良到達解
         PlatformLink? bestGoalLink = null;
         var bestGoalCost = float.MaxValue;
 
@@ -558,11 +558,11 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         var safeJumpForce = MathF.Max(0.0f, jumpForce);
         var deltaY = a.TopY - b.TopY;
 
-        // 1. 上方跳躍 (nodeB が nodeA より高い位置にある)
+        // 1. 上方跳躍：nodeBがnodeAより高い位置にある場合
         if (deltaY > Config.MinJumpDeltaY && deltaY <= maxJumpHeight)
         {
-            // 鉛直運動方程式: y(t) = v0*t - 0.5*g*t^2 = deltaY
-            // g*t^2 - 2*v0*t + 2*deltaY = 0 -> t = (v0 ± sqrt(v0^2 - 2*g*deltaY)) / g
+            // 鉛直運動方程式: y = v0*t - 0.5*g*t^2 = deltaY
+            // 放物線方程式から滞空時間を算出します
             var discriminant = safeJumpForce * safeJumpForce - 2.0f * safeGravity * deltaY;
             if (!(discriminant >= 0.0f)) return;
 
@@ -663,7 +663,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                 }
             }
         }
-        // 2. 下方落下 (nodeB が nodeA より低い位置にある)
+        // 2. 下方落下：nodeBがnodeAより低い位置にある場合
         else if (deltaY < Config.MinDropDeltaY)
         {
             var dropHeight = -deltaY;

@@ -7,8 +7,8 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
-///     照準器（AimReticle）のスクリーン幾何学描画を制御する純粋 ECS 描画システム。
-///     戦闘状態（GameState.Battle）時にのみマウス位置へタクティカルリングとクロスラインを描画します。
+///     照準器：AimReticleのスクリーン幾何学描画を制御する純粋 ECS 描画システム。
+///     戦闘状態：GameState.Battle時にのみマウス位置へタクティカルリングとクロスラインを描画します。
 /// </summary>
 public static class AimReticleRenderSystem
 {
@@ -19,7 +19,7 @@ public static class AimReticleRenderSystem
     /// <returns>登録済みワールド</returns>
     public static World AddAimReticleRenderSystem(this World world)
     {
-        // レティクル画面描画 (OnStore)
+        // レティクル画面描画
         world.System("AimReticleRenderSystem")
             .Kind(Ecs.OnStore)
             .Iter(ExecuteAimReticleRender);
@@ -28,7 +28,7 @@ public static class AimReticleRenderSystem
     }
 
     /// <summary>
-    ///     照準器描画パイプライン（名前付き静的メソッド）。
+    ///     照準器描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteAimReticleRender(Iter it)
     {
@@ -46,10 +46,10 @@ public static class AimReticleRenderSystem
         Debug.Assert(GameEngine.CameraOffset == Vec2i.Zero, "[AimReticleRenderSystem] 照準器はスクリーン空間固定で描画される必要があります。");
         var radius = Math.Clamp((int)MathF.Round(cfg.BaseRadius + expansion), cfg.MinRadius, cfg.MaxRadius);
 
-        // 1. 中心高輝度ドット（照準中心コア）
+        // 1. 中心高輝度ドット：照準中心コア
         GameEngine.DrawCircle(center, cfg.CenterDotRadius, cfg.CenterDotColor, fill: true);
 
-        // 2. 外周円環（タクティカルリング）
+        // 2. 外周円環：タクティカルリング
         GameEngine.DrawCircle(center, radius, cfg.RingColor, fill: false);
 
         // 3. 上下左右 4 方向の刻度ショートライン

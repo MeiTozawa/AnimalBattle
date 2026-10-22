@@ -9,13 +9,13 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Scenes.Start;
 
 /// <summary>
-///     ゲーム開始・選人画面の UI 描画（タイトルヘッダー、自機・首領カード動效、確定ボタン）を統括する純粋 ECS 描画システム。
+///     ゲーム開始・キャラクター選択画面の UI 描画：タイトルヘッダー、自機・ボスカード演出、確定ボタンを統括する純粋 ECS 描画システム。
 ///     GameState.Start 状態時にのみアクティブとなり、OnStore フェーズで画面へ UI を描画します。
 /// </summary>
 public static class StartUiRenderSystem
 {
     /// <summary>
-    ///     開始選人画面の UI 描画システムを Flecs.NET ワールドへ登録します。
+    ///     開始キャラクター選択画面の UI 描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <returns>登録済みワールド</returns>
@@ -29,7 +29,7 @@ public static class StartUiRenderSystem
     }
 
     /// <summary>
-    ///     開始選人画面の UI 描画パイプライン（名前付き静的メソッド）。
+    ///     開始キャラクター選択画面の UI 描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteStartUiRender(Iter it, Field<StartUiState> uiStates)
     {
@@ -81,7 +81,7 @@ public static class StartUiRenderSystem
                 colors.PlayerSelectedColor,
                 cfg);
 
-            // 4. Boss 1 カード描画 (飛行浮遊動效)
+            // 4. Boss 1 カード描画 飛行浮遊アニメーション
             DrawBoss1Card(
                 boss1CardBounds,
                 texts.Boss1,
@@ -90,7 +90,7 @@ public static class StartUiRenderSystem
                 uiState.Boss1TextureHandle,
                 cfg);
 
-            // 5. Boss 2 カード描画 (騰空下砸動效)
+            // 5. Boss 2 カード描画 跳躍叩きつけアニメーション
             DrawBoss2Card(
                 boss2CardBounds,
                 texts.Boss2,

@@ -4,11 +4,11 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Combat.Systems;
 
 /// <summary>
-///     蠑ｾ縺ｮ遲蛾溽峩邱夂ｧｻ蜍輔♀繧医・逕ｻ髱｢螟匁ｶ域ｻ・愛螳壹ｒ荳諡ｬ蛻ｶ蠕｡縺吶ｋ ECS System縲・
+///     弾の等速直線移動および画面外デスポーン判定を一括制御する ECS システム。
 /// </summary>
 public static class BulletPhysicsSystem {
     /// <summary>
-    ///     蠑ｾ迚ｩ逅・す繧ｹ繝・Β繧・Flecs.NET 繝ｯ繝ｼ繝ｫ繝峨∈逋ｻ骭ｲ縺励∪縺吶・
+    ///     弾物理システムを Flecs.NET ワールドへ登録します。
     /// </summary>
     public static World AddBulletPhysicsSystem(this World world)
     {

@@ -8,7 +8,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Scenes.Start;
 
 /// <summary>
-///     ゲーム開始・選人シーンのエンティティツリー（自機プレビューおよび UI 状態）を生成・解体するライフサイクル装配クラス。
+///     ゲーム開始・キャラクター選択画面のエンティティツリー：自機プレビューおよび UI 状態を生成・解体するライフサイクル装配クラス。
 /// </summary>
 public static class StartSceneSpawner {
     private const string RootName = "StartSceneRoot";
@@ -29,7 +29,7 @@ public static class StartSceneSpawner {
         var catCardBounds = layout.CatCard.ToRectangle();
         var bunnyCardBounds = layout.BunnyCard.ToRectangle();
 
-        // 1. 自機プレビューエンティティの生成 (AnimationModule / SpriteAnimationSystem の恩恵を享受)
+        // 1. 自機プレビューエンティティの生成 アニメーションシステムの機能を利用します
         assets.TryGetCharacterSpriteHandle(CharacterType.Cat, "Idle", out var catHandle);
         var catPreview = world.Entity("CatPreview")
             .ChildOf(root)
@@ -44,7 +44,7 @@ public static class StartSceneSpawner {
             .Set(new Sprite(bunnyHandle, false, true, new Rect(0, 0, 32, 32)))
             .Set(new Animation { CharacterType = CharacterType.Bunny, CurrentClip = "Idle", IsPlaying = true });
 
-        // 2. 首領テクスチャハンドルの取得と UI 状態コンポーネントの設定
+        // 2. ボステクスチャハンドルの取得と UI 状態コンポーネントの設定
         assets.TryGetTexture(ResourcePath.Characters.Character031_3Png, out var boss1TextureHandle);
         assets.TryGetTexture(ResourcePath.Characters.Character027_3Png, out var boss2TextureHandle);
 

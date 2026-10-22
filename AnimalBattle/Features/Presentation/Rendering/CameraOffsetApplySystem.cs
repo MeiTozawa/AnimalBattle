@@ -6,7 +6,7 @@ namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
 ///     ワールド空間描画直前にカメラオフセットを DxLib 描画コンテキストへ適用する純粋 ECS システム。
-///     戦闘状態（GameState.Battle）時にのみカメラ座標を適用し、それ以外では (0, 0) を設定します。
+///     戦闘状態：GameState.Battle時にのみカメラ座標を適用し、それ以外では ゼロ座標 を設定します。
 /// </summary>
 public static class CameraOffsetApplySystem
 {
@@ -25,7 +25,7 @@ public static class CameraOffsetApplySystem
     }
 
     /// <summary>
-    ///     カメラオフセット適用処理（名前付き静的メソッド）。
+    ///     カメラオフセット適用処理：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteCameraOffsetApply(Iter it)
     {

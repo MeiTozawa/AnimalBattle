@@ -109,7 +109,7 @@ def generate_code() -> str:
         "namespace AnimalBattle.Asset;",
         "",
         "/// <summary>",
-        "/// プロジェクト内の各種リソース（画像、スプライトシート、XML定義、TOML設定ファイル等）の相対パス定数を提供する自動生成静的クラス。",
+        "/// プロジェクト内の各種リソース：画像、スプライトシート、XML定義、TOML設定ファイル等の相対パス定数を提供する自動生成静的クラス。",
         "/// リソース指定を一元管理します。",
         "/// </summary>",
         "public static class ResourcePath",

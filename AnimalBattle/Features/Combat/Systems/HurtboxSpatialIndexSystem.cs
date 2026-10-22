@@ -37,7 +37,7 @@ public sealed class HurtboxSpatialResource
 }
 
 /// <summary>
-///     受撃ボックス（Hurtbox）の 2D 空間ハッシュグリッド登録システム。
+///     受撃ボックス：Hurtboxの 2D 空間ハッシュグリッド登録システム。
 ///     毎フレーム衝突判定パイプラインの開始前に、有効な被弾エンティティを空間ハッシュへ一括挿入します。
 /// </summary>
 public static class HurtboxSpatialIndexSystem
@@ -70,7 +70,7 @@ public static class HurtboxSpatialIndexSystem
     }
 
     /// <summary>
-    ///     空間ハッシュインデックスの毎フレーム更新処理（名前付き静的メソッド）。
+    ///     空間ハッシュインデックスの毎フレーム更新処理：名前付き静的メソッド。
     ///     インデックスをクリアし、有効な受撃ボックスを一括走査して登録します。
     /// </summary>
     public static void Execute(Iter it)
@@ -80,7 +80,7 @@ public static class HurtboxSpatialIndexSystem
         ref readonly var arenaCfg = ref world.Get<ArenaConfig>();
         var hashCfg = arenaCfg.SpatialHash;
 
-        // 熱再読み込み（ホットリロード）検知：CellSize または TableSize が変更された場合は空間ハッシュを再構築
+        // 熱再読み込み：ホットリロード検知：CellSize または TableSize が変更された場合は空間ハッシュを再構築
         if (MathF.Abs(res.CachedCellSize - hashCfg.CellSize) > 0.001f || res.CachedTableSize != hashCfg.TableSize)
         {
             res.Index = new HurtboxSpatialIndex(hashCfg.CellSize, hashCfg.TableSize, hashCfg.InitialCapacity);

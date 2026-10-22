@@ -139,7 +139,7 @@ public static class BossDecisionEvaluator {
         // 1. 冷却時間判定
         if (!cooldownTracker.IsReady(rule.SkillTag)) return false;
 
-        // 2. UE GAS タグ阻害およびアビリティ制約判定（ASC 指定時）
+        // 2. UE GAS タグ阻害およびアビリティ制約判定：ASC 指定時
         if (asc != null && asc.TryGetAbility(rule.SkillTag, out var ability) && ability != null)
         {
             // BlockedTags を持っている場合、または RequiredTags を満たさない場合は除外

@@ -7,7 +7,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Player.Systems;
 
 /// <summary>
-///     無敵時間（Untargetable タグ）中のキャラクターの点滅演出（Sprite.IsVisible の周期反転）を制御する ECS システム。
+///     無敵時間：Untargetable タグ中のキャラクターの点滅演出：Sprite.IsVisible の周期反転を制御する ECS システム。
 ///     エッジトリガー方式の状態追跡により、無敵以外の通常状態や演出・死亡時の可視性強制上書きを防止します。
 /// </summary>
 public static class InvincibleBlinkSystem {
@@ -60,7 +60,7 @@ public static class InvincibleBlinkSystem {
                 blinkState.IsBlinking = false;
                 sprite.IsVisible = true;
             }
-            // 通常エンティティ（IsBlinking == false）：外部の不可視・演出・死亡状態を維持するため Sprite.IsVisible に一切触れない
+            // 通常エンティティ：IsBlinking == false：外部の不可視・演出・死亡状態を維持するため Sprite.IsVisible に一切触れない
         }
     }
 }

@@ -5,7 +5,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Vfx;
 
 /// <summary>
-///     イージング関数に基づく透明度フェードイン・フェードアウトの進行を制御し、持続時間満了時にエンティティを自動破棄（または無効化）する ECS System。
+///     イージング関数に基づく透明度フェードイン・フェードアウトの進行を制御し、持続時間満了時にエンティティを自動破棄：または無効化する ECS System。
 ///     局所的かつ軽量な演出更新のため、余分なバッファ割当や P/Invoke を行わず単一パスで直接処理します。
 /// </summary>
 public static class FadeEffectSystem
@@ -25,7 +25,7 @@ public static class FadeEffectSystem
     }
 
     /// <summary>
-    ///     フェード演出更新パイプライン（名前付き静的メソッド）。
+    ///     フェード演出更新パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteFadeEffect(Iter it, Field<FadeEffect> fade)
     {

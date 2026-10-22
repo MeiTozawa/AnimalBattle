@@ -102,10 +102,10 @@ public static class CatWeaponSystem
                 .Set(new Velocity(bulletVel))
                 .Set(new Hitbox(new CollisionShape.Box(weapon.BulletSize), weapon.BulletDamage));
 
-            // 銃口閃光（Muzzle Flash）エフェクト生成
+            // 銃口閃光：Muzzle Flashエフェクト生成
             EffectSpawner.SpawnMuzzleFlash(world, spawnPos);
 
-            // 自機射撃反動（直接座標書き換えを廃止し、MovementSystem 側で処理される外力物理インパルスとして付与）
+            // 自機射撃反動：直接座標書き換えを廃止し、MovementSystem 側で処理される外力物理インパルスとして付与
             var recoilSpeed = weapon.ShootRecoilImpulse;
             var recoilDir = -dir;
             var recoilY = (col.IsGrounded && recoilDir.Y > 0.0f) ? 0.0f : recoilDir.Y * recoilSpeed;

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 namespace AnimalBattle.Abilities;
 
 /// <summary>
-///     時限エフェクトの単一スロットデータ（POD）。
+///     時限エフェクトの単一スロットデータ純粋データ。
 /// </summary>
 public struct TimedEffectSlot
 {
@@ -24,7 +24,7 @@ public struct TimedEffectSlot
 }
 
 /// <summary>
-///     時限エフェクトスロットを保持する純粋なインライン定長データコンポーネント（POD、定長 6 スロット）。
+///     時限エフェクトスロットを保持する純粋なインライン定長データコンポーネント：POD、定長 6 スロット。
 ///     .NET の InlineArray により、ヒープ割り当てなしで直接インデックスアクセスが可能です。
 /// </summary>
 [InlineArray(MaxSlots)]
@@ -40,7 +40,7 @@ public struct TimedEffectsState
 /// </summary>
 public static class TimedEffectsStateExtensions
 {
-    /// <summary>読み取り専用スロット参照を取得します（デフォルト）。</summary>
+    /// <summary>読み取り専用スロット参照を取得します：デフォルト。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref readonly TimedEffectSlot GetSlot(this in TimedEffectsState effects, int index) =>
         ref effects[index];

@@ -10,9 +10,9 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Combat.Systems;
 
 /// <summary>
-///     Bevy スタイルのコンポーネント駆動 (Component-Driven) 戦闘衝突判定システム。
-///     攻撃判定 <see cref="Hitbox" />（有効状態 IsActive 検査含む）と 被弾判定 <see cref="Hurtbox" /> 間の幾何学的交差、
-///     陣営判定（<see cref="Faction" />）、HP 減算、無敵時間、撃破演出を一括処理します。
+///     Bevy スタイルのコンポーネント駆動 戦闘衝突判定システム。
+///     攻撃判定 <see cref="Hitbox" />：有効状態 IsActive 検査含むと 被弾判定 <see cref="Hurtbox" /> 間の幾何学的交差、
+///     陣営判定<see cref="Faction" />、HP 減算、無敵時間、撃破演出を一括処理します。
 /// </summary>
 public static class CombatCollisionSystem
 {
@@ -23,7 +23,7 @@ public static class CombatCollisionSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddCombatCollisionSystem(this World world)
     {
-        // 通常単発攻撃判定パイプライン（弾幕等：HitHistory なし）
+        // 通常単発攻撃判定パイプライン：弾幕等：HitHistory なし
         world.System<Transform, Hitbox>("CombatCollisionSystem")
             .Without<HitHistory>()
             .Without<RecycleTag>()
@@ -34,8 +34,8 @@ public static class CombatCollisionSystem
     }
 
     /// <summary>
-    ///     単発弾幕・投射物の衝突判定パイプライン（名前付き静的メソッド）。
-    ///     空間ハッシュから候補 Hurtbox を O(1) 抽出して幾何相交を判定します。
+    ///     単発弾幕・投射物の衝突判定パイプライン：名前付き静的メソッド。
+    ///     空間ハッシュから候補 Hurtbox を O 抽出して幾何相交を判定します。
     /// </summary>
     public static void ExecuteSingleHit(Iter it, Field<Transform> atkTrans, Field<Hitbox> hitboxes)
     {
@@ -116,8 +116,8 @@ public static class CombatCollisionSystem
         var knockbackDir = vicTrans.Position.X >= atkTrans.Position.X ? 1.0f : -1.0f;
         var isHeavy = localHitbox.Damage >= 2.0f;
 
-        // 同一フレーム内で複数弾・近接攻撃が連続ヒットした際のダメージ上書き消失（Damage Overwrite Bug）を防止するため、
-        // Ensure<IncomingDamage>() により存在しない場合は初期化しつつ、Amount を累加し IsHeavyImpact を論理和で合成する。
+        // 同一フレーム内で複数弾・近接攻撃が連続ヒットした際のダメージ上書き消失：Damage Overwrite Bugを防止するため、
+        // IncomingDamageの存在を保証しつつ、Amountを累加しIsHeavyImpactを論理和で合成します。
         // ※ ECS システムイテレーションおよび DeferScope による遅延キューイング中であっても即時参照・更新できるよう一時的に DeferSuspend する
         var isDeferred = world.IsDeferred();
         if (isDeferred) world.DeferSuspend();

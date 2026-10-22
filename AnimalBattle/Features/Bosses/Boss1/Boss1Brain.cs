@@ -10,7 +10,7 @@ namespace AnimalBattle.Ai.Boss1;
 
 /// <summary>
 ///     Boss 1 の統合意思決定・行動制御ブレインです。
-///     フラット FSM および AbilitySystemComponentを通じて時序・判定・状態遷移を一元管理します。
+///     フラット FSM および AbilitySystemComponentを通じてタイムライン・判定・状態遷移を一元管理します。
 /// </summary>
 public sealed class Boss1Brain : BaseBossBrain {
     private static readonly StringId StateHover = "Hover";

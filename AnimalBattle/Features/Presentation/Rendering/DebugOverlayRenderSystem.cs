@@ -9,7 +9,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
-///     スクリーン空間におけるデバッグ用 HUD（Boss ステートマシン、二段ジャンプ、操作案内、デバッグ表示）を描画する ECS システム。
+///     スクリーン空間におけるデバッグ用 HUD：Boss ステートマシン、二段ジャンプ、操作案内、デバッグ表示を描画する ECS システム。
 ///     CameraOffsetResetSystem の後に実行されるため、カメラ移動やシェイクの影響を受けずに画面固定で描画されます。
 /// </summary>
 public static class DebugOverlayRenderSystem
@@ -45,7 +45,7 @@ public static class DebugOverlayRenderSystem
     }
 
     /// <summary>
-    ///     デバッグ論理オーバーレイ描画パイプライン（名前付き静的メソッド）。
+    ///     デバッグ論理オーバーレイ描画パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteDebugOverlayRender(Iter it)
     {
@@ -80,13 +80,13 @@ public static class DebugOverlayRenderSystem
         var hpCfg = renderCfg.BossHpBar;
         var dbgCfg = renderCfg.Debug;
 
-        // 右上デバッグアクティブ表示（画面固定）
+        // 右上デバッグアクティブ表示：画面固定
         if (!string.IsNullOrEmpty(dbgCfg.IndicatorText))
         {
             GameEngine.DrawString(dbgCfg.IndicatorPos, dbgCfg.IndicatorText, dbgCfg.IndicatorColor);
         }
 
-        // 二段ジャンプ残数インジケータ（画面固定）
+        // 二段ジャンプ残数インジケータ：画面固定
         if (remainingJumps.HasValue)
         {
             var jumps = remainingJumps.Value;
@@ -110,7 +110,7 @@ public static class DebugOverlayRenderSystem
             }
         }
 
-        // デバッグ操作案内（Boss切替、キャラ切替、フェーズ切替）（画面固定）
+        // デバッグ操作案内：Boss切替、キャラ切替、フェーズ切替：画面固定
         var guideY = hudCfg.PlayerHpPos.Y + dbgCfg.GuideOffsetY;
         var lineIndex = 0;
         if (!string.IsNullOrEmpty(hudCfg.BossSwitchGuideText))
@@ -126,7 +126,7 @@ public static class DebugOverlayRenderSystem
             GameEngine.DrawString(new Vec2i(hudCfg.TitlePos.X, guideY + hudCfg.LineSpacing * lineIndex++), dbgCfg.PhaseSwitchGuideText, dbgCfg.PhaseSwitchGuideColor);
         }
 
-        // Boss ステートマシン詳細バッジとスキルタイマー（Boss HP バー上部・画面固定）
+        // Boss ステートマシン詳細バッジとスキルタイマー：Boss HP バー上部・画面固定
         if (boss != null)
         {
             var b = boss.Value;

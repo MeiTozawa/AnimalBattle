@@ -8,7 +8,7 @@ using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
 
 /// <summary>
-///     ゲーム全域の設定登録および Flecs World への依存性注入を統括するレジストラ。
+///     ゲーム全体の設定登録および Flecs World への依存性注入を統括するレジストラ。
 /// </summary>
 public static class GameConfigRegistrar
 {
@@ -23,7 +23,7 @@ public static class GameConfigRegistrar
         // Debug / Release 共通：Color 型コンバータ登録
         TypeDescriptor.AddAttributes(typeof(Color), new TypeConverterAttribute(typeof(FlexibleColorConverter)));
 
-        // TOML 設定ファイルからの自動バインド登録（.NET Configuration Binding Generator 駆動）
+        // TOML 設定ファイルからの自動バインド登録：.NET Configuration Binding Generator 駆動
         registry.RegisterToml<CatConfig>(ResourcePath.Config.Cat, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCat(w, cfg));
         registry.RegisterToml<BunnyConfig>(ResourcePath.Config.Bunny, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncBunny(w, cfg));
         registry.RegisterToml<Boss1Config>(ResourcePath.Config.Boss1, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss1(w, cfg));

@@ -5,7 +5,7 @@ namespace AnimalBattle.Abilities.Skills;
 
 /// <summary>
 ///     TOML 設定に基づいて動的にタグを付与・回収するフェーズ遷移専用能力。
-///     実行中は設定された ActivationOwnedTags（Invincible / Phasing）を自動保持し、
+///     実行中は設定された ActivationOwnedTags：Invincible / Phasingを自動保持し、
 ///     終了時に GAS によって対称的に安全解除されます。
 /// </summary>
 public sealed class PhaseTransitionAbility : GameplayAbility {
@@ -26,7 +26,7 @@ public sealed class PhaseTransitionAbility : GameplayAbility {
     }
 
     /// <summary>
-    ///     個別フェーズの時序時間および完了コールバックを構成します。
+    ///     個別フェーズのタイムライン時間および完了コールバックを構成します。
     /// </summary>
     public void Configure(float duration, Action? onCompleted = null)
     {

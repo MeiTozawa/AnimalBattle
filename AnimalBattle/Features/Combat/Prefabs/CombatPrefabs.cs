@@ -9,7 +9,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Combat;
 
 /// <summary>
-///     戦闘ドメイン（自機弾・Boss統一弾幕・近接斬撃判定）の Prefab 登録およびインスタンス化。
+///     戦闘ドメイン：自機弾・Boss統一弾幕・近接斬撃判定の Prefab 登録およびインスタンス化。
 /// </summary>
 public static class CombatPrefabs
 {
@@ -24,7 +24,7 @@ public static class CombatPrefabs
     public static Entity BossSlashHitbox { get; private set; }
 
     /// <summary>
-    ///     戦闘関連の Prefab 原型を登録します。
+    ///     戦闘関連の Prefab プレハブを登録します。
     /// </summary>
     public static void Register(World world)
     {
@@ -44,7 +44,7 @@ public static class CombatPrefabs
             .Add<PlayerBulletTag>()
             .Set(new Hitbox(new CollisionShape.Box(playerBulletCfg.Size), playerBulletCfg.Damage, Faction.Friendly));
 
-        // --- 2. Boss 統一弾幕基底（超集 Archetype：通常・品紅・黄・衛星・青・黒の全種別を同一 Archetype で共用） ---
+        // --- 2. Boss 統一弾幕基底：超集 Archetype：通常・品紅・黄・衛星・青・黒の全種別を同一 Archetype で共用 ---
         var bossNormalCfg = cfg.BossNormalBullet;
         var (normalFill, normalOutline) = BulletPalette.ResolveBulletColors(BulletType.Normal);
 

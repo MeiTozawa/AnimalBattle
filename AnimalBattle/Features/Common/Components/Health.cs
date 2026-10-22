@@ -1,7 +1,7 @@
 namespace AnimalBattle.Common.Components;
 
 /// <summary>
-///     エンティティの生命値コンポーネント（純粋なデータ構造体）。
+///     エンティティの生命値コンポーネント：純粋なデータ構造体。
 ///     ECS 設計原則に従い、振る舞い・メソッドを持たずデータのみを保持します。
 /// </summary>
 public struct Health

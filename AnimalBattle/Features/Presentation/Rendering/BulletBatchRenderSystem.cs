@@ -60,7 +60,7 @@ public static class BulletBatchRenderSystem {
     private static Color _bCoreColor;
 
     /// <summary>
-    ///     弾丸描画システム（自機弾丸、Boss 弾丸）を Flecs.NET ワールドへ登録します。
+    ///     弾丸描画システム：自機弾丸、Boss 弾丸を Flecs.NET ワールドへ登録します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <returns>登録済みワールド</returns>

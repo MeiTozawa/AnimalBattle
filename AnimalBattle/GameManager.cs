@@ -30,7 +30,7 @@ public class GameManager : IDisposable {
     /// </summary>
     public static GameManager Current { get; private set; } = null!;
 
-    /// <summary>ゲーム全域で共有するECSワールドであり、Dispose呼び出し時まで破棄されません。</summary>
+    /// <summary>ゲーム全体で共有するECSワールドであり、Dispose呼び出し時まで破棄されません。</summary>
     public World EcsWorld => _ecsWorld;
 
     /// <summary>

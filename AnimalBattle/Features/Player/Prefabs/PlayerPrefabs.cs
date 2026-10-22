@@ -3,7 +3,7 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Player;
 
 /// <summary>
-///     プレイヤー自機（Cat & Bunny）の Prefab 原型登録およびインスタンス化。
+///     プレイヤー自機：Cat & Bunnyの Prefab プレハブ登録およびインスタンス化。
 /// </summary>
 public static class PlayerPrefabs
 {
@@ -16,7 +16,7 @@ public static class PlayerPrefabs
     public static Entity BunnyPlayer { get; private set; }
 
     /// <summary>
-    ///     プレイヤー共通基底および各キャラクターの Prefab 原型を登録します。
+    ///     プレイヤー共通基底および各キャラクターの Prefab プレハブを登録します。
     /// </summary>
     public static void Register(World world)
     {
@@ -62,7 +62,7 @@ public static class PlayerPrefabs
     }
 
     /// <summary>
-    ///     指定された CharacterType の Prefab 原型を取得します。
+    ///     指定された CharacterType の Prefab プレハブを取得します。
     /// </summary>
     public static Entity GetPrefab(CharacterType type)
     {

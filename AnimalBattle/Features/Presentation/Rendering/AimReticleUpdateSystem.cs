@@ -15,7 +15,7 @@ internal sealed class AimReticleUpdateContext
 }
 
 /// <summary>
-///     照準器（AimReticle）のスプリング物理拡縮状態（反動・減衰）を更新する ECS システム。
+///     照準器：AimReticleのスプリング物理拡縮状態：反動・減衰を更新する ECS システム。
 ///     射撃イベントを購読して反動拡縮を付与し、PreUpdate フェーズで物理方程式に従い静止状態へ減衰させます。
 /// </summary>
 public static class AimReticleUpdateSystem
@@ -40,7 +40,7 @@ public static class AimReticleUpdateSystem
             })
         });
 
-        // レティクル拡縮スプリング物理更新 (PreUpdate)
+        // レティクル拡縮スプリング物理更新
         world.System("AimReticleUpdateSystem")
             .Kind(Ecs.PreUpdate)
             .Iter(ExecuteAimReticleUpdate);
@@ -49,7 +49,7 @@ public static class AimReticleUpdateSystem
     }
 
     /// <summary>
-    ///     レティクル拡縮スプリング物理更新パイプライン（名前付き静的メソッド）。
+    ///     レティクル拡縮スプリング物理更新パイプライン：名前付き静的メソッド。
     /// </summary>
     public static void ExecuteAimReticleUpdate(Iter it)
     {
@@ -81,7 +81,7 @@ public static class AimReticleUpdateSystem
 
         if (dampingRatio < 1.0f)
         {
-            // 減衰不足（Underdamped）
+            // 減衰不足：Underdamped
             var omegaD = omega * MathF.Sqrt(1.0f - dampingRatio * dampingRatio);
             var gamma = dampingRatio * omega;
             var exp = MathF.Exp(-gamma * safeDt);
@@ -96,7 +96,7 @@ public static class AimReticleUpdateSystem
         }
         else if (MathF.Abs(dampingRatio - 1.0f) < 0.0001f)
         {
-            // 臨界減衰（Critically Damped）
+            // 臨界減衰：Critically Damped
             var exp = MathF.Exp(-omega * safeDt);
             var newP = exp * (p + (state.ExpansionVelocity + omega * p) * safeDt);
             var newV = exp * (state.ExpansionVelocity - omega * (state.ExpansionVelocity + omega * p) * safeDt);
@@ -106,7 +106,7 @@ public static class AimReticleUpdateSystem
         }
         else
         {
-            // 過減衰（Overdamped）
+            // 過減衰：Overdamped
             var omegaD = omega * MathF.Sqrt(dampingRatio * dampingRatio - 1.0f);
             var gamma1 = -dampingRatio * omega + omegaD;
             var gamma2 = -dampingRatio * omega - omegaD;

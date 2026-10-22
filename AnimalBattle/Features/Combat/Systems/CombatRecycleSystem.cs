@@ -3,10 +3,10 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Combat.Systems;
 
 /// <summary>
-///     <see cref="RecycleTag" /> が付与されたエンティティをフレーム末尾（<see cref="Ecs.PostUpdate" />）で
+///     <see cref="RecycleTag" /> が付与されたエンティティをフレーム末尾<see cref="Ecs.PostUpdate" />で
 ///     一括回収する単一責任クリーンアップシステム。
-///     各シミュレーションシステムが実行中に即時回収することによる時序競合やデータ破壊を防止し、
-///     確定論的な一括返却（Batch Recycle）を実行します。
+///     各シミュレーションシステムが実行中に即時回収することによるタイムライン競合やデータ破壊を防止し、
+///     確定論的な一括返却：Batch Recycleを実行します。
 /// </summary>
 public static class CombatRecycleSystem {
     /// <summary>

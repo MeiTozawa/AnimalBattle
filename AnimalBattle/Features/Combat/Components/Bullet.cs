@@ -12,15 +12,15 @@ namespace AnimalBattle.Combat.Components;
 /// <param name="fillColor">塗りつぶし色</param>
 /// <param name="outlineColor">発光枠色</param>
 public struct Bullet(float radius, Color fillColor, Color outlineColor) {
-    /// <summary>弾の当たり判定・描画半径（ピクセル）</summary>
+    /// <summary>弾の当たり判定・描画半径ピクセル単位</summary>
     public float Radius = radius;
 
-    /// <summary>弾内部の塗りつぶしカラー (<see cref="Color" />)</summary>
+    /// <summary>弾内部の塗りつぶしカラー <see cref="Color" /></summary>
     public Color FillColor = fillColor;
 
-    /// <summary>弾外周の発光アウトラインカラー (<see cref="Color" />)</summary>
+    /// <summary>弾外周の発光アウトラインカラー <see cref="Color" /></summary>
     public Color OutlineColor = outlineColor;    
     
-    /// <summary>近接攻撃等で破壊・消去不可（地面衝撃波等）かどうかのフラグ。</summary>
+    /// <summary>近接攻撃等で破壊・消去不可：地面衝撃波等かどうかのフラグ。</summary>
     public bool IsIndestructible;
 }
