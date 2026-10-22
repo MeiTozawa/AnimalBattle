@@ -7,9 +7,8 @@ namespace AnimalBattle.Configs;
 
 /// <summary>
 ///     Boss 技能パターン設定コンテナの共通基底クラス。
-///     各 Boss が保持する技能設定プロパティを検出し、StringId による高速引き当てキャッシュを提供します。
+///     StringId による高速引き当てキャッシュを提供します。
 /// </summary>
-[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
 public abstract class BossPatternConfigContainerBase : IConfigLifecycle {
     private Dictionary<StringId, IBossSkillPatternConfig>? _skillCache;
 
@@ -50,19 +49,16 @@ public abstract class BossPatternConfigContainerBase : IConfigLifecycle {
         return defaultType;
     }
 
-    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2075",
-        Justification = "Pattern config containers have their public properties preserved.")]
+    /// <summary>
+    ///     サブクラス固有の技能設定をキャッシュ辞書へ登録します。
+    ///     AOT 環境でトリミング耐性とゼロリフレクションを保証するため、派生クラスで実装されます。
+    /// </summary>
+    protected abstract void PopulateSkills(Dictionary<StringId, IBossSkillPatternConfig> cache);
+
     private Dictionary<StringId, IBossSkillPatternConfig> BuildSkillCache()
     {
         var cache = new Dictionary<StringId, IBossSkillPatternConfig>();
-        foreach (var prop in GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
-        {
-            if (typeof(IBossSkillPatternConfig).IsAssignableFrom(prop.PropertyType) &&
-                prop.GetValue(this) is IBossSkillPatternConfig skillConfig)
-            {
-                cache[new StringId(prop.Name)] = skillConfig;
-            }
-        }
+        PopulateSkills(cache);
         return cache;
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using AnimalBattle.Components;
 using AnimalBattle.Core;
@@ -63,6 +64,15 @@ public sealed class HurtboxSpatialIndex
     /// <param name="initialCapacity">初期許容 Hurtbox エンティティ数</param>
     public HurtboxSpatialIndex(float cellSize, int tableSize, int initialCapacity)
     {
+        Debug.Assert(cellSize > 0.0f && !float.IsNaN(cellSize) && !float.IsInfinity(cellSize), "[HurtboxSpatialIndex] セルサイズは正の有限値である必要があります。");
+        Debug.Assert(tableSize > 0, "[HurtboxSpatialIndex] テーブルサイズは 0 より大きい必要があります。");
+        Debug.Assert(initialCapacity > 0, "[HurtboxSpatialIndex] 初期容量は 0 より大きい必要があります。");
+
+        // 安全なフォールバック
+        if (cellSize <= 0.0f || float.IsNaN(cellSize) || float.IsInfinity(cellSize)) cellSize = 64.0f;
+        if (tableSize <= 0) tableSize = 64;
+        if (initialCapacity <= 0) initialCapacity = 16;
+
         _cellSize = cellSize;
         _invCellSize = 1.0f / cellSize;
 

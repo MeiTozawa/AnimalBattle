@@ -120,8 +120,16 @@ public sealed class SkillRunner {
 
                 if (PhaseElapsed >= def.ExecuteDuration)
                 {
-                    CurrentPhase = SkillPhase.Recovery;
                     PhaseElapsed -= def.ExecuteDuration;
+                    if (def.RecoveryDuration > 0.0f)
+                    {
+                        CurrentPhase = SkillPhase.Recovery;
+                    }
+                    else
+                    {
+                        CurrentPhase = SkillPhase.Completed;
+                        PhaseElapsed = 0.0f;
+                    }
                 }
 
             break;

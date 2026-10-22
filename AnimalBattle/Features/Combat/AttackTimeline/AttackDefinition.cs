@@ -63,9 +63,9 @@ public sealed class AttackDefinition {
 
     /// <summary>三段階とアクションステップの設定が実行可能かどうかを取得します。</summary>
     public bool IsValid => !SkillTag.IsEmpty
-     && IsPositiveFinite(TelegraphDuration)
+     && IsNonNegativeFinite(TelegraphDuration)
      && IsPositiveFinite(ExecuteDuration)
-     && IsPositiveFinite(RecoveryDuration)
+     && IsNonNegativeFinite(RecoveryDuration)
      && IsFinite(Range)
      && Range >= 0
      && PoiseThreshold >= 0.0f
@@ -102,6 +102,11 @@ public sealed class AttackDefinition {
     private static bool IsPositiveFinite(float value)
     {
         return IsFinite(value) && value > 0;
+    }
+
+    private static bool IsNonNegativeFinite(float value)
+    {
+        return IsFinite(value) && value >= 0.0f;
     }
 
     private static bool IsFinite(float value)

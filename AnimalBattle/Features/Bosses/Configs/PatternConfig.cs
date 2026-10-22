@@ -803,6 +803,17 @@ public sealed class Boss1PatternConfig : BossPatternConfigContainerBase {
     /// <summary>高速レーザースナイパー弾幕技能設定</summary>
     public FastSniperConfig FastSniper { get; set; } = new();
 
+    /// <inheritdoc />
+    protected override void PopulateSkills(Dictionary<StringId, IBossSkillPatternConfig> cache)
+    {
+        cache[new StringId(nameof(DiveRam))] = DiveRam;
+        cache[new StringId(nameof(Aimed3Shot))] = Aimed3Shot;
+        cache[new StringId(nameof(RingBurst))] = RingBurst;
+        cache[new StringId(nameof(DoubleSpiral))] = DoubleSpiral;
+        cache[new StringId(nameof(RainDrop))] = RainDrop;
+        cache[new StringId(nameof(CrossChaos))] = CrossChaos;
+        cache[new StringId(nameof(FastSniper))] = FastSniper;
+    }
 }
 
 /// <summary>
@@ -827,4 +838,14 @@ public sealed class Boss2PatternConfig : BossPatternConfigContainerBase {
     /// <summary>Boss 2 滅地狂吼技能設定</summary>
     public EarthquakeRoarConfig EarthquakeRoar { get; set; } = new();
 
+    /// <inheritdoc />
+    protected override void PopulateSkills(Dictionary<StringId, IBossSkillPatternConfig> cache)
+    {
+        cache[new StringId(nameof(HeavySlash))] = HeavySlash;
+        cache[new StringId(nameof(GroundStomp))] = GroundStomp;
+        cache[new StringId(nameof(LeapSmash))] = LeapSmash;
+        cache[new StringId(nameof(DoubleCleave))] = DoubleCleave;
+        cache[new StringId(nameof(FrenzyCharge))] = FrenzyCharge;
+        cache[new StringId(nameof(EarthquakeRoar))] = EarthquakeRoar;
+    }
 }

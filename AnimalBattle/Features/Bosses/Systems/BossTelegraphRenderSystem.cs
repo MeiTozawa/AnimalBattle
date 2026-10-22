@@ -73,10 +73,7 @@ public static class BossTelegraphRenderSystem
 
         var ctx = w.Get<BossTelegraphRenderContext>();
         ctx.CachedBoss = null;
-        ctx.BossQuery.Each((ref Transform trans, ref Sprite sprite, ref CollisionBox col, ref GameplayTagState tags, ref BossCombatState state, ref BossBrainComponent brainComp) =>
-        {
-            ctx.CachedBoss = new BossTelegraphRenderContext.BossTelegraphData(trans, sprite, col, tags, state, brainComp.Brain);
-        });
+        ctx.BossQuery.Iter(CollectBoss);
         var boss = ctx.CachedBoss;
         ctx.CachedBoss = null;
 
@@ -86,10 +83,7 @@ public static class BossTelegraphRenderSystem
 
         var playerCfg = w.GetActivePlayerConfig();
         ctx.CachedPlayerPos = playerCfg.Spawn;
-        ctx.PlayerQuery.Each((ref Transform playerTrans) =>
-        {
-            ctx.CachedPlayerPos = playerTrans.Position;
-        });
+        ctx.PlayerQuery.Iter(CollectPlayer);
 
         var playerPos = ctx.CachedPlayerPos;
 
@@ -124,6 +118,39 @@ public static class BossTelegraphRenderSystem
                 bPos, b.Sprite.SrcRect, b.Transform.Scale, rotation,
                 b.Sprite.GraphHandle, flipX, b.CombatState.StateTimer, bossFx);
         }
+    }
+
+    /// <summary>
+    ///     Boss 描画データを無割当（Zero Allocation）で抽出します。
+    /// </summary>
+    private static void CollectBoss(
+        Iter it,
+        Field<Transform> trans,
+        Field<Sprite> sprites,
+        Field<CollisionBox> cols,
+        Field<GameplayTagState> tags,
+        Field<BossCombatState> states,
+        Field<BossBrainComponent> brains)
+    {
+        if (!it.Any()) return;
+        var ctx = it.World().Get<BossTelegraphRenderContext>();
+        ctx.CachedBoss = new BossTelegraphRenderContext.BossTelegraphData(
+            trans[0],
+            sprites[0],
+            cols[0],
+            tags[0],
+            states[0],
+            brains[0].Brain);
+    }
+
+    /// <summary>
+    ///     プレイヤー座標を無割当（Zero Allocation）で抽出します。
+    /// </summary>
+    private static void CollectPlayer(Iter it, Field<Transform> playerTrans)
+    {
+        if (!it.Any()) return;
+        var ctx = it.World().Get<BossTelegraphRenderContext>();
+        ctx.CachedPlayerPos = playerTrans[0].Position;
     }
 
     private static void DrawBossTelegraph(

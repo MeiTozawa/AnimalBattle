@@ -8,12 +8,12 @@ using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
 
 /// <summary>
-/// 游戏业务层全量配置的集中注册与依赖装配器。
+///     ゲーム全域の設定登録および Flecs World への依存性注入を統括するレジストラ。
 /// </summary>
 public static class GameConfigRegistrar
 {
     /// <summary>
-    /// 向通用的 <see cref="IConfigRegistry"/> 注册游戏所有领域的配置，并统一注入到 Flecs World。
+    ///     全設定を <see cref="IConfigRegistry"/> に登録し、Flecs World へ一括注入します。
     /// </summary>
     public static void RegisterAll(IConfigRegistry registry, World world)
     {
@@ -21,6 +21,7 @@ public static class GameConfigRegistrar
         Debug.Assert(world != null, "World は null にできません。");
 
 #if DEBUG
+        // Debug 実行時：TOML ホットリロード用に ConfigurationBinder および TypeDescriptor を使用
         TypeDescriptor.AddAttributes(typeof(Color), new TypeConverterAttribute(typeof(FlexibleColorConverter)));
 
         registry.RegisterToml<CatConfig>(ResourcePath.Config.Cat, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCat(w, cfg));
@@ -38,11 +39,10 @@ public static class GameConfigRegistrar
         registry.RegisterToml<CombatPrefabConfig>(ResourcePath.Config.CombatPrefab, (root, cfg) => root.Bind(cfg));
         registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene, (root, cfg) => root.Bind(cfg));
 #else
+        // Release / Native AOT 実行時：リフレクションを完全排除し、Source Generator 経由でバイナリ設定を展開
         var loadResult = BinaryConfigLoader.Load();
-        if (loadResult.IsError)
-        {
-            throw new InvalidOperationException($"Release バイナリ設定の読み込みに失敗しました: {loadResult.FirstError.Description}");
-        }
+        Debug.Assert(!loadResult.IsError, $"[GameConfigRegistrar] Release バイナリ設定の読み込みに失敗しました: {loadResult.FirstError.Description}");
+        if (loadResult.IsError) return;
         var b = loadResult.Value;
 
         registry.RegisterInstance(b.Cat);

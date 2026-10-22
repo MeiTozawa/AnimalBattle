@@ -70,7 +70,7 @@ public static class MovementSystem {
         var pCfg = world.GetActivePlayerConfig();
 
         ctx.CachedTileMap = null;
-        ctx.TileMapQuery.Each((ref TileMap tm) => ctx.CachedTileMap = tm);
+        ctx.TileMapQuery.Iter(ExtractTileMap);
         var tileMap = ctx.CachedTileMap;
         ctx.CachedTileMap = null;
 
@@ -90,6 +90,15 @@ public static class MovementSystem {
             var entity = it.Entity(i);
             ExecuteKinematics(entity, ref effect, ref tag, ref trans, ref vel, ref col, in intent, ref jump, ref dash, ref sprite, ref spring, dt, tileMap, cfg, pCfg, world, ctx.CandidatePlatforms);
         }
+    }
+
+    /// <summary>
+    ///     TileMap インスタンスを無割当（Zero Allocation）で抽出します。
+    /// </summary>
+    private static void ExtractTileMap(Iter it, Field<TileMap> tileMaps)
+    {
+        if (it.Count() == 0) return;
+        it.World().Get<MovementSystemContext>().CachedTileMap = tileMaps[0];
     }
 
     private static void ExecuteKinematics(

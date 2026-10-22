@@ -40,7 +40,7 @@ public static class SkillConfigLoader {
         float poiseThreshold = 0.0f)
     {
         // 業務バリデーション
-        if (castDuration <= 0.0f || windUpTime <= 0.0f || recoveryTime <= 0.0f)
+        if (castDuration <= 0.0f || windUpTime < 0.0f || recoveryTime < 0.0f)
             return Error.Validation(
                 "Skill.InvalidDuration",
                 $"技能 '{skillTag}' の時間設定が不正です。");
