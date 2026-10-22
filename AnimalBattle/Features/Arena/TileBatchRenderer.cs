@@ -38,10 +38,11 @@ public static class TileBatchRenderer
         var relRight = relLeft + viewportSize.X;
         var relBottom = relTop + viewportSize.Y;
 
-        minCol = Math.Clamp((int)MathF.Floor(relLeft / map.RenderTileSize.X), 0, map.Columns - 1);
-        maxCol = Math.Clamp((int)MathF.Ceiling(relRight / map.RenderTileSize.X), 0, map.Columns - 1);
-        minRow = Math.Clamp((int)MathF.Floor(relTop / map.RenderTileSize.Y), 0, map.Rows - 1);
-        maxRow = Math.Clamp((int)MathF.Ceiling(relBottom / map.RenderTileSize.Y), 0, map.Rows - 1);
+        // 画面端の描画欠け・チラつきを防止するため 1 タイルの保護マージンを適用
+        minCol = Math.Clamp((int)MathF.Floor(relLeft / map.RenderTileSize.X) - 1, 0, map.Columns - 1);
+        maxCol = Math.Clamp((int)MathF.Ceiling(relRight / map.RenderTileSize.X) + 1, 0, map.Columns - 1);
+        minRow = Math.Clamp((int)MathF.Floor(relTop / map.RenderTileSize.Y) - 1, 0, map.Rows - 1);
+        maxRow = Math.Clamp((int)MathF.Ceiling(relBottom / map.RenderTileSize.Y) + 1, 0, map.Rows - 1);
     }
 
     /// <summary>

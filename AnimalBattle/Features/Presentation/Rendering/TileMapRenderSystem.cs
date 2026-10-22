@@ -57,7 +57,10 @@ public static class TileMapRenderSystem
     private static void DrawTileMap(ref TileMap tileMap)
     {
         _renderedTileMap = true;
-        tileMap.DrawCulled(_cachedViewport.Pos, _cachedViewport.Size);
+        // カメラ移動・シェイク（CameraService.RenderOffset）を考慮してスクリーン視口をワールド座標系へ変換
+        var camOffset = CameraService.RenderOffset;
+        var worldViewportPos = _cachedViewport.Pos - (Vec2f)camOffset;
+        tileMap.DrawCulled(worldViewportPos, _cachedViewport.Size);
     }
 
     private static void DrawFallbackPlatform(ref Transform trans, ref CollisionBox col)
