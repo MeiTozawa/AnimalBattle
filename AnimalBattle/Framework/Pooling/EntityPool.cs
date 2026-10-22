@@ -132,7 +132,7 @@ public sealed class EntityPool : IDisposable {
         {
             var e = CreateBaseEntity();
             var slot = TotalAllocated++;
-            e.Set(new PoolLeaseState { PoolId = PoolId, IsRented = false, Version = 0, SlotIndex = slot });
+            e.Set(new PoolLeaseState { PoolId = PoolId, IsRented = false, SlotIndex = slot });
             e.Disable();
             _onInit?.Invoke(e);
             _managedRentalFlags[slot] = false;
@@ -237,7 +237,7 @@ public sealed class EntityPool : IDisposable {
                 if (!recycledEntity.IsAlive())
                 {
                     recycledEntity = CreateBaseEntity();
-                    recycledEntity.Set(new PoolLeaseState { PoolId = PoolId, IsRented = true, Version = 1, SlotIndex = slot });
+                    recycledEntity.Set(new PoolLeaseState { PoolId = PoolId, IsRented = true, SlotIndex = slot });
                     _onInit?.Invoke(recycledEntity);
                     _allAllocated[slot] = recycledEntity;
                 }
@@ -245,7 +245,6 @@ public sealed class EntityPool : IDisposable {
                 {
                     ref var lease = ref recycledEntity.GetMut<PoolLeaseState>();
                     lease.IsRented = true;
-                    lease.Version++;
                 }
 
                 _managedRentalFlags[slot] = true;
@@ -259,7 +258,7 @@ public sealed class EntityPool : IDisposable {
             EnsureArrayCapacity(TotalAllocated + 1);
             var newSlot = TotalAllocated++;
             var newEntity = CreateBaseEntity();
-            newEntity.Set(new PoolLeaseState { PoolId = PoolId, IsRented = true, Version = 1, SlotIndex = newSlot });
+            newEntity.Set(new PoolLeaseState { PoolId = PoolId, IsRented = true, SlotIndex = newSlot });
             _onInit?.Invoke(newEntity);
 
             _allAllocated[newSlot] = newEntity;
@@ -277,7 +276,6 @@ public sealed class EntityPool : IDisposable {
         var e = _pool[--AvailableCount];
         ref var leaseState = ref e.GetMut<PoolLeaseState>();
         leaseState.IsRented = true;
-        leaseState.Version++;
         var rentSlot = leaseState.SlotIndex;
         _managedRentalFlags[rentSlot] = true;
         AddToActiveTail(rentSlot);
