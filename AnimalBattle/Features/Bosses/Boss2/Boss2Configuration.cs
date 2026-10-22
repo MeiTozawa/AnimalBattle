@@ -156,8 +156,10 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     {
         Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
         _world = world;
+        EnsureCached(); // 初期化時にキャッシュ構築
     }
 
+    /// <summary>設定インスタンス更新時のみキャッシュを再構築します。</summary>
     private void EnsureCached()
     {
         var toml = _world.Get<Boss2Config>();
@@ -243,36 +245,16 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     }
 
     /// <inheritdoc />
-    public PhaseTransitionAbilityConfig PhaseTransition {
-        get {
-            EnsureCached();
-            return _phaseTransition;
-        }
-    }
+    public PhaseTransitionAbilityConfig PhaseTransition => _phaseTransition;
 
     /// <inheritdoc />
-    public StringId AntiKitingMeleeSkillTag {
-        get {
-            EnsureCached();
-            return _antiKitingMeleeSkillTag;
-        }
-    }
+    public StringId AntiKitingMeleeSkillTag => _antiKitingMeleeSkillTag;
 
     /// <inheritdoc />
-    public StringId AntiKitingRangedSkillTag {
-        get {
-            EnsureCached();
-            return _antiKitingRangedSkillTag;
-        }
-    }
+    public StringId AntiKitingRangedSkillTag => _antiKitingRangedSkillTag;
 
     /// <inheritdoc />
-    public StringId TargetLockSkillTag {
-        get {
-            EnsureCached();
-            return _targetLockSkillTag;
-        }
-    }
+    public StringId TargetLockSkillTag => _targetLockSkillTag;
 
     /// <inheritdoc />
     public Boss2PhaseSettings GetPhase(Phase phase)
@@ -287,12 +269,7 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     }
 
     /// <inheritdoc />
-    public Boss2CombatSettings CombatSettings {
-        get {
-            EnsureCached();
-            return _cachedCombatSettings;
-        }
-    }
+    public Boss2CombatSettings CombatSettings => _cachedCombatSettings;
 
     /// <inheritdoc />
     public float GetSkillDefaultCooldown(StringId skill)

@@ -86,8 +86,10 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     {
         System.Diagnostics.Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
         _world = world;
+        EnsureCached(); // 初期化時にキャッシュ構築
     }
 
+    /// <summary>設定インスタンス更新時のみキャッシュを再構築します。</summary>
     private void EnsureCached()
     {
         var b1Cfg = _world.Get<Boss1Config>();
@@ -148,20 +150,10 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     }
 
     /// <inheritdoc />
-    public StringId DiveSkillTag {
-        get {
-            EnsureCached();
-            return _diveSkillTag;
-        }
-    }
+    public StringId DiveSkillTag => _diveSkillTag;
 
     /// <inheritdoc />
-    public PhaseTransitionAbilityConfig PhaseTransition {
-        get {
-            EnsureCached();
-            return _phaseTransition;
-        }
-    }
+    public PhaseTransitionAbilityConfig PhaseTransition => _phaseTransition;
 
     /// <inheritdoc />
     public Boss1PhaseSettings GetPhase(Phase phase)
