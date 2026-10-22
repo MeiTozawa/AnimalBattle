@@ -10,8 +10,8 @@ using Flecs.NET.Core;
 /// <typeparam name="T">対象の設定クラスの型</typeparam>
 public sealed class ConfigHolder<T> : IConfigHolder where T : class
 {
-    private readonly object _lock = new();
-    private T _current;
+    private volatile T _current;
+    private int _version;
 
     /// <inheritdoc />
     public Type ConfigType => typeof(T);
@@ -39,17 +39,11 @@ public sealed class ConfigHolder<T> : IConfigHolder where T : class
         }
     }
 
-    /// <summary>現在有効な設定スナップショットを取得します。</summary>
-    public T Value
-    {
-        get
-        {
-            lock (_lock) return _current;
-        }
-    }
+    /// <summary>現在有効な設定スナップショットを取得します（ロックフリー・O(1)参照）。</summary>
+    public T Value => _current;
 
     /// <summary>設定バージョン番号（リロード成功ごとにインクリメント）。</summary>
-    public uint Version { get; private set; }
+    public uint Version => (uint)Volatile.Read(ref _version);
 
     /// <summary>設定変更通知イベント。</summary>
     public event Action<T>? OnChanged;
@@ -73,11 +67,9 @@ public sealed class ConfigHolder<T> : IConfigHolder where T : class
             lifecycle.PostProcess();
         }
 
-        lock (_lock)
-        {
-            _current = newConfig;
-            Version++;
-        }
+        // 検証完了後に参照をアトミックに差し替え
+        _current = newConfig;
+        Interlocked.Increment(ref _version);
 
         OnChanged?.Invoke(_current);
         return Result.Success;
