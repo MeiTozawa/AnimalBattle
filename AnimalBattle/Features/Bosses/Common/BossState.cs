@@ -61,8 +61,8 @@ public readonly record struct BossState(BossType BossType, byte RawValue) : IEqu
     /// <summary>Boss2 の攻撃判定実行状態です（全技能共通）。</summary>
     public static readonly BossState Boss2_Execute = From(Boss2State.Execute);
 
-    /// <summary>Boss2 の壁激突気絶状態です。</summary>
-    public static readonly BossState Boss2_WallCrashStun = From(Boss2State.WallCrashStun);
+    /// <summary>Boss2 の気絶（スタン）状態です。</summary>
+    public static readonly BossState Boss2_Stunned = From(Boss2State.Stunned);
 
     /// <summary>Boss2 の攻撃後隙状態です（全技能共通）。</summary>
     public static readonly BossState Boss2_Recovery = From(Boss2State.Recovery);

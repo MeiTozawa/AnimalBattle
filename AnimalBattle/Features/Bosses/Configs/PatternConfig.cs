@@ -599,10 +599,6 @@ public sealed class FrenzyChargeConfig : SkillPatternConfigBase {
 
     private string _hitboxColorHex = string.Empty;
     private Color _hitboxColor;
-    private string _shrapnelFillColorHex = string.Empty;
-    private Color _shrapnelFillColor;
-    private string _shrapnelOutlineColorHex = string.Empty;
-    private Color _shrapnelOutlineColor;
 
     /// <summary>突進攻撃判定エフェクトカラー Hex 文字列</summary>
     [ConfigurationKeyName("HitboxColor")]
@@ -616,41 +612,6 @@ public sealed class FrenzyChargeConfig : SkillPatternConfigBase {
     /// <summary>突進攻撃判定エフェクトカラー</summary>
     [JsonIgnore]
     public Color HitboxColor => _hitboxColor;
-
-    /// <summary>壁激突時の破片数</summary>
-    public int ShrapnelCount { get; set; }
-
-    /// <summary>破片速度</summary>
-    public float ShrapnelSpeed { get; set; }
-
-    /// <summary>破片半径</summary>
-    public float ShrapnelRadius { get; set; }
-
-    /// <summary>破片塗りつぶしカラー Hex 文字列</summary>
-    [ConfigurationKeyName("ShrapnelFillColor")]
-    [JsonPropertyName("ShrapnelFillColor")]
-    public string ShrapnelFillColorHex
-    {
-        get => _shrapnelFillColorHex;
-        set { _shrapnelFillColorHex = value; _shrapnelFillColor = value.ToColor(); }
-    }
-
-    /// <summary>破片塗りつぶしカラー</summary>
-    [JsonIgnore]
-    public Color ShrapnelFillColor => _shrapnelFillColor;
-
-    /// <summary>破片外枠カラー Hex 文字列</summary>
-    [ConfigurationKeyName("ShrapnelOutlineColor")]
-    [JsonPropertyName("ShrapnelOutlineColor")]
-    public string ShrapnelOutlineColorHex
-    {
-        get => _shrapnelOutlineColorHex;
-        set { _shrapnelOutlineColorHex = value; _shrapnelOutlineColor = value.ToColor(); }
-    }
-
-    /// <summary>破片外枠カラー</summary>
-    [JsonIgnore]
-    public Color ShrapnelOutlineColor => _shrapnelOutlineColor;
 
     /// <inheritdoc />
     public override ErrorOr<AttackDefinition> BuildAttackDefinition(StringId skillTag)

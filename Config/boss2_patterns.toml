@@ -170,12 +170,6 @@ ChargeSpeed = 620.0
 HitboxSize = { x = 100.0, y = 60.0 }
 HitboxDuration = 0.25
 HitboxColor = "#FF1744"
-ShrapnelCount = 8
-ShrapnelSpeed = 240.0
-ShrapnelRadius = 8.0
-ShrapnelFillColor = "#FF5252"
-ShrapnelOutlineColor = "#FF8A80"
-IsIndestructible = false
 ArmorTags = ["SuperArmor"]
 RecoveryTags = ["Stunned", "Vulnerable"]
 

@@ -87,7 +87,7 @@ public sealed class Boss2Brain : BaseBossBrain {
         get {
             if (_isDead) return Boss2State.Dead;
             if (_asc.HasTag(GameplayTag.Phasing)) return Boss2State.PhaseTransition;
-            if (_asc.HasTag(GameplayTag.Stunned)) return Boss2State.WallCrashStun;
+            if (_asc.HasTag(GameplayTag.Stunned)) return Boss2State.Stunned;
 
             if (_stateMachine.CurrentState == _abilityState && _asc.IsCasting)
             {

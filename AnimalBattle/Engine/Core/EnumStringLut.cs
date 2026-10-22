@@ -44,7 +44,7 @@ public static class EnumStringLut {
         Boss2State.PlatformTraverse => nameof(Boss2State.PlatformTraverse),
         Boss2State.Telegraph => nameof(Boss2State.Telegraph),
         Boss2State.Execute => nameof(Boss2State.Execute),
-        Boss2State.WallCrashStun => nameof(Boss2State.WallCrashStun),
+        Boss2State.Stunned => nameof(Boss2State.Stunned),
         Boss2State.Recovery => nameof(Boss2State.Recovery),
         Boss2State.PhaseTransition => nameof(Boss2State.PhaseTransition),
         Boss2State.Dead => nameof(Boss2State.Dead),

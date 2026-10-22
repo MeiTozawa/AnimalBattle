@@ -240,7 +240,7 @@ public static class HudRenderSystem {
             { IsDead: true } => ColorPalette.Gray,
             { IsPhaseTransition: true } => hpCfg.StatePhaseTransitionColor,
             { IsRecovery: true } => hpCfg.StateRecoveringColor,
-            _ when state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.WallCrashStun => hpCfg.StateStunnedColor,
+            _ when state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.Stunned => hpCfg.StateStunnedColor,
             { IsTelegraph: true } => hpCfg.StateTelegraphingColor,
             { IsExecute: true } => hpCfg.StateCastingColor,
             _ => hpCfg.StateDefaultColor
@@ -261,7 +261,7 @@ public static class HudRenderSystem {
             destination.TryWrite($"[STATE: RECOVERING]", out charsWritten);
             return;
         }
-        if (state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.WallCrashStun)
+        if (state.BossType == BossType.Boss2 && state.AsBoss2() == Boss2State.Stunned)
         {
             destination.TryWrite($"[STATE: STUNNED (VULNERABLE)]", out charsWritten);
             return;

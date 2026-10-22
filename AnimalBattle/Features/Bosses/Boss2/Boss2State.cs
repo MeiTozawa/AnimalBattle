@@ -25,8 +25,8 @@ public enum Boss2State : byte {
     /// <summary>攻撃判定実行状態です（全技能共通）。</summary>
     Execute = 6,
 
-    /// <summary>壁激突気絶状態です。</summary>
-    WallCrashStun = 7,
+    /// <summary>気絶（スタン）状態です。</summary>
+    Stunned = 7,
 
     /// <summary>攻撃後隙状態です（全技能共通）。</summary>
     Recovery = 8,

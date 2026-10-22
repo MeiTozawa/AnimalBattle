@@ -40,7 +40,6 @@ MoveThreshold = 6.0
 JumpCooldownDuration = 1.0
 
 # 戦闘・スタン・判定パラメータ
-WallCrashStunDuration = 1.2
 SamePlatformToleranceY = 60.0
 AirborneVelocityThreshold = 15.0
 AirborneHeightThreshold = 50.0
@@ -190,10 +189,5 @@ PreferAirborneBonus = 2.0
 Duration = 1.0
 ActivationOwnedTags = ["Invincible", "Phasing", "Casting"]
 BlockedTags = []
-
-# 壁激突気絶（スタン）設定
-[WallCrashStun]
-Duration = 1.2
-GrantedTags = ["Stunned", "Vulnerable"]
 
 
