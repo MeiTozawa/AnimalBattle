@@ -115,20 +115,6 @@ __declspec(dllexport) void Engine_SubmitRenderCommands(
     render_service->SubmitPackets(packets, packet_count, text_buffer, text_length, circles, circle_count);
 }
 
-__declspec(dllexport) void Engine_SubmitCompactCircles(
-    const ab::CompactCirclePacket* circles,
-    int circle_count) noexcept {
-    if (circles == nullptr || circle_count <= 0) {
-        return;
-    }
-    auto* render_service = ab::GetRenderService();
-    if (render_service == nullptr) {
-        return;
-    }
-
-    render_service->SubmitCompactCircles(circles, circle_count);
-}
-
 __declspec(dllexport) void Engine_RequestExit() noexcept {
     g_is_exit_requested = true;
 }

@@ -48,11 +48,6 @@ internal static unsafe partial class NativeBindings {
         CompactCirclePacket* circles,
         int circleCount);
 
-    [LibraryImport(_dllName, EntryPoint = "Engine_SubmitCompactCircles")]
-    public static partial void Engine_SubmitCompactCircles(
-        CompactCirclePacket* circles,
-        int circleCount);
-
     [LibraryImport(_dllName, EntryPoint = "Engine_RequestExit")]
     [SuppressGCTransition]
     public static partial void Engine_RequestExit();
