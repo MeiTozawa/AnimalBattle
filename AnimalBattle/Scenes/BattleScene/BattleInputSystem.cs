@@ -18,10 +18,6 @@ public static class BattleInputSystem
     private static bool _prevF2;
     private static bool _prevF3;
     private static bool _prevF4;
-    private static bool _prevKey1;
-    private static bool _prevKey2;
-    private static bool _prevKey3;
-    private static bool _prevKey4;
 
     private static Query _playerBulletsQuery;
     private static Query _vfxQuery;
@@ -221,45 +217,27 @@ public static class BattleInputSystem
 
         if (!dbgCfg.IsActive) return;
 
-        // 1/2/3/4 繧ｭ繝ｼ縺ｫ繧医ｋ Boss 縺翫ｈ縺ｳ繧ｭ繝｣繝ｩ繧ｯ繧ｿ繝ｼ縺ｮ霑・溷・譖ｿ
-        var isKey1 = GameEngine.CheckHitKey((int)InputButton.Key1);
-        var isKey2 = GameEngine.CheckHitKey((int)InputButton.Key2);
-        var isKey3 = GameEngine.CheckHitKey((int)InputButton.Key3);
-        var isKey4 = GameEngine.CheckHitKey((int)InputButton.Key4);
-
-        var justKey1 = isKey1 && !_prevKey1;
-        var justKey2 = isKey2 && !_prevKey2;
-        var justKey3 = isKey3 && !_prevKey3;
-        var justKey4 = isKey4 && !_prevKey4;
-
-        _prevKey1 = isKey1;
-        _prevKey2 = isKey2;
-        _prevKey3 = isKey3;
-        _prevKey4 = isKey4;
-
-        if (justKey1 || justKey2 || justKey3 || justKey4)
+        // 1/2/3/4 キーによる Boss およびキャラクターの迅速切替（InputAction 抽象経由）
+        ref readonly var flow = ref world.Get<GameFlow>();
+        if (InputService.IsPressed(InputAction.SelectBoss1))
         {
-            ref readonly var flow = ref world.Get<GameFlow>();
-            if (justKey1)
-            {
-                GameManager.Current.SwitchToBattle(flow.SelectedPlayer, BossType.Boss1);
-                return;
-            }
-            if (justKey2)
-            {
-                GameManager.Current.SwitchToBattle(flow.SelectedPlayer, BossType.Boss2);
-                return;
-            }
-            if (justKey3)
-            {
-                GameManager.Current.SwitchToBattle(CharacterType.Cat, flow.SelectedBoss);
-                return;
-            }
-            if (justKey4)
-            {
-                GameManager.Current.SwitchToBattle(CharacterType.Bunny, flow.SelectedBoss);
-                return;
-            }
+            GameManager.Current.SwitchToBattle(flow.SelectedPlayer, BossType.Boss1);
+            return;
+        }
+        if (InputService.IsPressed(InputAction.SelectBoss2))
+        {
+            GameManager.Current.SwitchToBattle(flow.SelectedPlayer, BossType.Boss2);
+            return;
+        }
+        if (InputService.IsPressed(InputAction.SelectCharacter1))
+        {
+            GameManager.Current.SwitchToBattle(CharacterType.Cat, flow.SelectedBoss);
+            return;
+        }
+        if (InputService.IsPressed(InputAction.SelectCharacter2))
+        {
+            GameManager.Current.SwitchToBattle(CharacterType.Bunny, flow.SelectedBoss);
+            return;
         }
 
         // 繧ｲ繝ｼ繝繧ｪ繝ｼ繝舌・・・oss 謦・ｴ縺ｾ縺溘・閾ｪ讖滓ｭｻ莠｡・画凾縺ｯ繝輔ぉ繝ｼ繧ｺ蛻・崛繧堤┌蜉ｹ蛹・        if (world.Has<GameOverTag>()) return;
