@@ -28,8 +28,9 @@ public static class MeleeSpawner
         Color color,
         SlashDirection direction = SlashDirection.Right)
     {
+        var assets = world.Get<AssetManager>();
         var hasTexture =
-            AssetManager.TryGetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng, out var slashHandle);
+            assets.TryGetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng, out var slashHandle);
         Debug.Assert(hasTexture, $"近接斬撃エフェクトテクスチャがロードされていません: {ResourcePath.Characters.SwordShieldEffectSpritesPng}");
 
         var slashCfg = world.Get<RenderConfig>().SlashEffect;
@@ -67,8 +68,9 @@ public static class MeleeSpawner
         float damage,
         SlashDirection direction)
     {
+        var assets = meleeEntity.CsWorld().Get<AssetManager>();
         var hasTexture =
-            AssetManager.TryGetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng, out var slashHandle);
+            assets.TryGetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng, out var slashHandle);
         Debug.Assert(hasTexture, $"近接斬撃エフェクトテクスチャがロードされていません: {ResourcePath.Characters.SwordShieldEffectSpritesPng}");
 
         var slashCfg = meleeEntity.CsWorld().Get<RenderConfig>().SlashEffect;

@@ -37,9 +37,10 @@ public static class BattleSceneSpawner {
         Teardown(world);
 
         var root = world.Entity(RootName).Add<BattleSceneTag>();
+        var assets = world.Get<AssetManager>();
 
         // 1. 自機エンティティの生成
-        var hasPlayerHandle = AssetManager.TryGetCharacterSpriteHandle(playerType, "Idle", out var playerHandle);
+        var hasPlayerHandle = assets.TryGetCharacterSpriteHandle(playerType, "Idle", out var playerHandle);
         Debug.Assert(hasPlayerHandle, "プレイヤーの初期スプライトハンドルが見つかりません。");
 
         var playerCfg = world.GetPlayerConfig(playerType);
@@ -74,7 +75,7 @@ public static class BattleSceneSpawner {
         // 2. アリーナ・タイルマップの生成
         var arenaCfg = world.Get<ArenaConfig>();
         var tileMapCfg = arenaCfg.TileMap;
-        var sheetHandle = AssetManager.LoadTexture(tileMapCfg.TileSheetPath);
+        var sheetHandle = assets.LoadTexture(tileMapCfg.TileSheetPath);
         Debug.Assert(sheetHandle >= 0, $"タイルシートが読み取れません: {tileMapCfg.TileSheetPath}");
         TileSet tileSet = new(sheetHandle, world.Get<TileSetConfig>());
         var tileMap = TileMap.FromConfig(tileMapCfg, tileSet);
@@ -89,7 +90,7 @@ public static class BattleSceneSpawner {
             _ => (ResourcePath.Characters.Character031_3Png, "Boss 1")
         };
 
-        var hasBossHandle = AssetManager.TryGetTexture(texPath, out var bossHandle);
+        var hasBossHandle = assets.TryGetTexture(texPath, out var bossHandle);
         Debug.Assert(hasBossHandle, $"Boss テクスチャが見つかりません: {texPath}");
 
         var bossEntity = world.Entity(bossName)

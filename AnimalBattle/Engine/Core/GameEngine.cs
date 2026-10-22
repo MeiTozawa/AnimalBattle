@@ -169,24 +169,13 @@ public static class GameEngine {
 
     /// <summary>
     ///     指定画像ハンドルの幅と高さを取得します。
-    ///     双スレッドレンダリング競態防止のため、AssetManager のキャッシュを優先参照します。
+    ///     双スレッドレンダリング競態防止のため、AssetService のキャッシュから参照します。
     /// </summary>
     /// <param name="handle">画像ハンドル</param>
     /// <returns>画像サイズ (<see cref="Vec2i" />)</returns>
     public static Vec2i GetGraphSize(int handle)
     {
-        if (AssetManager.TryGetGraphSize(handle, out var cachedSize))
-        {
-            return cachedSize;
-        }
-
-        var size = Vec2i.Zero;
-        unsafe
-        {
-            NativeBindings.Engine_GetGraphSize(handle, &size);
-        }
-
-        return size;
+        return AssetService.GetGraphSize(handle);
     }
 
     /// <summary>

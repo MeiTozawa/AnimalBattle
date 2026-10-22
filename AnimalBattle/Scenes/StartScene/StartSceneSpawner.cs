@@ -24,19 +24,20 @@ public static class StartSceneSpawner {
         InputService.SetCursorVisible(true);
 
         var root = world.Entity(RootName).Add<StartSceneTag>();
+        var assets = world.Get<AssetManager>();
         var layout = world.Get<StartSceneConfig>().Layout;
         var catCardBounds = layout.CatCard.ToRectangle();
         var bunnyCardBounds = layout.BunnyCard.ToRectangle();
 
         // 1. 自機プレビューエンティティの生成 (AnimationModule / SpriteAnimationSystem の恩恵を享受)
-        AssetManager.TryGetCharacterSpriteHandle(CharacterType.Cat, "Idle", out var catHandle);
+        assets.TryGetCharacterSpriteHandle(CharacterType.Cat, "Idle", out var catHandle);
         var catPreview = world.Entity("CatPreview")
             .ChildOf(root)
             .Set(new Transform(new Vec2f(catCardBounds.X + catCardBounds.Width / 2f, catCardBounds.Y + layout.PreviewCenterOffsetY), new Vec2f(3.5f, 3.5f)))
             .Set(new Sprite(catHandle, false, true, new Rect(0, 0, 32, 32)))
             .Set(new Animation { CharacterType = CharacterType.Cat, CurrentClip = "Idle", IsPlaying = true });
 
-        AssetManager.TryGetCharacterSpriteHandle(CharacterType.Bunny, "Idle", out var bunnyHandle);
+        assets.TryGetCharacterSpriteHandle(CharacterType.Bunny, "Idle", out var bunnyHandle);
         var bunnyPreview = world.Entity("BunnyPreview")
             .ChildOf(root)
             .Set(new Transform(new Vec2f(bunnyCardBounds.X + bunnyCardBounds.Width / 2f, bunnyCardBounds.Y + layout.PreviewCenterOffsetY), new Vec2f(3.5f, 3.5f)))
@@ -44,8 +45,8 @@ public static class StartSceneSpawner {
             .Set(new Animation { CharacterType = CharacterType.Bunny, CurrentClip = "Idle", IsPlaying = true });
 
         // 2. 首領テクスチャハンドルの取得と UI 状態コンポーネントの設定
-        AssetManager.TryGetTexture(ResourcePath.Characters.Character031_3Png, out var boss1TextureHandle);
-        AssetManager.TryGetTexture(ResourcePath.Characters.Character027_3Png, out var boss2TextureHandle);
+        assets.TryGetTexture(ResourcePath.Characters.Character031_3Png, out var boss1TextureHandle);
+        assets.TryGetTexture(ResourcePath.Characters.Character027_3Png, out var boss2TextureHandle);
 
         root.Set(new StartUiState {
             CatPreviewEntity = catPreview,
