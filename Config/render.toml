@@ -165,10 +165,10 @@ TopHighlightColor = "#FFFFFF"
 HeaderOffsetY = 22
 
 # Boss Title
-TitleOffset = { x = 0, y = 22 }
+TitleOffset = { x = 0, y = 0 }
 TitleColor = "#FFD700"
 
-StateBadgeOffset = { x = 250, y = 22 }
+StateBadgeOffset = { x = 0, y = 35 }
 
 HpTextOffsetRight = 100
 HpTextOffsetY = 22
@@ -229,7 +229,7 @@ RecoilExpansionClampRatio = 3.0
 DebugMode = true
 IsActive = true
 Enabled = false
-IndicatorPos = { x = 980, y = 16 }
+IndicatorPos = { x = 950, y = 16 }
 IndicatorText = "[DEBUG MODE ACTIVE - F1 to toggle]"
 IndicatorColor = "#FFD700"
 PhaseSwitchGuideText = "[F2] Phase 1   [F3] Phase 2   [F4] Phase 3"
