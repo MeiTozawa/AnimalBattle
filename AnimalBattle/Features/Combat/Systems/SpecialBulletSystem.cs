@@ -19,6 +19,8 @@ public static class SpecialBulletSystem {
     {
         world.System<Velocity, BulletModifier, Bullet, Hitbox>("SpecialBulletSystem")
            .With<BossBulletTag>()
+           .Without<OrbitOf>(Ecs.Wildcard) // 子衛星弾（OrbitSatelliteMovementSystem 側で制御）を除外
+           .Without<RecycleTag>()           // 回収済みエンティティを除外
            .Kind(Ecs.OnUpdate)
            .Iter(ExecuteSpecialBulletUpdate);
 
@@ -45,7 +47,8 @@ public static class SpecialBulletSystem {
         for (var i = 0; i < count; ++i)
         {
             ref var mod = ref modifier[i];
-            if (mod.Type == BulletType.Normal) continue;
+            // 軌道・拡縮変調の対象外（通常弾・黄色弾）はスキップ（黄色衛星弾のタイマー二重加算および速度上書きを防止）
+            if (mod.Type is not (BulletType.Cyan or BulletType.Magenta or BulletType.Black)) continue;
 
             mod.ElapsedTimer += dt;
 
