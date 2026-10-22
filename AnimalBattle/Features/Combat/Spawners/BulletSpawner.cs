@@ -43,7 +43,15 @@ public static class BulletSpawner
         };
 
         var combatCfg = world.Get<CombatPrefabConfig>();
-        var damage = combatCfg.BossNormalBullet.Damage;
+        Debug.Assert(combatCfg != null, "CombatPrefabConfig はワールドに登録されている必要があります。");
+
+        var damage = type switch {
+            BulletType.Magenta => combatCfg.BossMagentaBullet.Damage,
+            BulletType.Yellow => combatCfg.BossYellowBullet.Damage,
+            BulletType.Cyan => combatCfg.BossBlueBullet.Damage,
+            BulletType.Black => combatCfg.BossBlackBullet.Damage,
+            _ => combatCfg.BossNormalBullet.Damage
+        };
 
         // 統合された BossBullets プールから借出
         var entity = CombatPoolService.RentBossBullet();
@@ -57,14 +65,16 @@ public static class BulletSpawner
 
         if (type == BulletType.Yellow)
         {
-            var cfg = world.Get<SpecialBulletConfig>();
-            var satRadius = MathF.Max(cfg.YellowSatelliteMinRadius, radius * cfg.YellowSatelliteRadiusMultiplier);
-            var orbitDist = radius * cfg.YellowOrbitDistanceMultiplier;
+            var satCfg = combatCfg.BossYellowSatellite;
+            Debug.Assert(satCfg != null, "BossYellowSatellite 設定が存在する必要があります。");
+
+            var satRadius = MathF.Max(satCfg.MinRadius, radius * satCfg.RadiusMultiplier);
+            var orbitDist = radius * satCfg.OrbitDistanceMultiplier;
             var (satFill, satOutline) = BulletPalette.ResolveBulletColors(BulletType.Yellow, fillColor, outlineColor);
             var satBullet = new Bullet(satRadius, satFill, satOutline) {
                 IsIndestructible = isIndestructible
             };
-            var satDamage = cfg.YellowSatelliteDamage > 0.0f ? cfg.YellowSatelliteDamage : damage;
+            var satDamage = satCfg.Damage;
             var satEntity = CombatPoolService.RentBossBullet();
             satEntity
                 .Add<OrbitOf>(entity)
