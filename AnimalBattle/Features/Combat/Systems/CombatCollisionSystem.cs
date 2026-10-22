@@ -116,9 +116,9 @@ public static class CombatCollisionSystem
         var knockbackDir = vicTrans.Position.X >= atkTrans.Position.X ? 1.0f : -1.0f;
         var isHeavy = localHitbox.Damage >= 2.0f;
 
-        // 同一フレーム内で複数弾・近接攻撃が連続ヒットした際のダメージ上書き消失：Damage Overwrite Bugを防止するため、
-        // IncomingDamageの存在を保証しつつ、Amountを累加しIsHeavyImpactを論理和で合成します。
-        // ※ ECS システムイテレーションおよび DeferScope による遅延キューイング中であっても即時参照・更新できるよう一時的に DeferSuspend する
+        // 同一フレーム内で複数弾や近接攻撃が連続ヒットした際のダメージ上書き消失を防止するため
+        // Ensure で IncomingDamage の存在を保証しつつ、Amount を累加し IsHeavyImpact を論理和で合成します
+        // ECS システムイテレーションおよび DeferScope による遅延キューイング中であっても即時更新できるよう DeferSuspend します
         var isDeferred = world.IsDeferred();
         if (isDeferred) world.DeferSuspend();
         try
