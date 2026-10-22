@@ -22,7 +22,7 @@ public static class BossDamageResolutionSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddBossDamageResolutionSystem(this World world)
     {
-        world.System<Health, IncomingDamage, HitFlashSettings, Transform, BossCombatState, Sprite, GameplayTagState>("BossDamageResolutionSystem")
+        world.System<Health, IncomingDamage, HitFlashSettings, Transform, BossCombatState, Sprite, GameplayTagState, Velocity>("BossDamageResolutionSystem")
             .With<BossTag>()
             .Kind(Ecs.OnValidate)
             .Iter(ExecuteBossDamageResolution);
@@ -41,7 +41,8 @@ public static class BossDamageResolutionSystem
         Field<Transform> transforms,
         Field<BossCombatState> combats,
         Field<Sprite> sprites,
-        Field<GameplayTagState> tags)
+        Field<GameplayTagState> tags,
+        Field<Velocity> velocities)
     {
         var count = it.Count();
         if (count == 0) return;
@@ -60,6 +61,7 @@ public static class BossDamageResolutionSystem
             ref readonly var combat = ref combats[i];
             ref var sprite = ref sprites[i];
             ref readonly var tagState = ref tags[i];
+            ref var vel = ref velocities[i];
 
             // ゲームオーバー済み、完全無敵または不可命中状態（GAS Invincible / Untargetable 保持時）、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
             if (world.Has<GameOverTag>() || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
@@ -77,9 +79,9 @@ public static class BossDamageResolutionSystem
             // 被弾白閃演出の注入
             entity.Set(new HitFlashEffect(flashCfg.Duration, flashCfg.Color));
 
-            // ヒットストップおよび受撃局所振動の適用（SuperArmor 剛体タグ未保持時のみ適用）
+            // ヒットストップ、受撃局所振動およびノックバックの適用（SuperArmor 剛体タグ未保持時または易傷時に適用）
             var hasSuperArmor = tagState.HasTag(GameplayTag.SuperArmor);
-            if (!hasSuperArmor)
+            if (!hasSuperArmor || isVulnerable)
             {
                 var isHeavy = isVulnerable || dmg.IsHeavyImpact;
                 var hitstopDuration = isHeavy ? pCfg.HitstopHeavyDuration : pCfg.HitstopLightDuration;
@@ -89,6 +91,9 @@ public static class BossDamageResolutionSystem
                     var jitterAmp = isHeavy ? pCfg.HitJitterHeavyAmplitude : pCfg.HitJitterLightAmplitude;
                     entity.Set(new SpriteJitter(new Vec2f(jitterAmp, 0.0f), pCfg.HitJitterFrequency));
                 }
+
+                // ノックバック外力速度の設定
+                vel.Knockback = dmg.Knockback;
             }
 
             if (isVulnerable)

@@ -94,11 +94,10 @@ public static class PlayerDamageResolutionSystem
             spring.Current = pCfg.HitSquashScale;
             spring.Velocity = Vec2f.Zero;
 
-            // ノックバック物理インパルスの直接適用
-            vel.Value = new Vec2f(dmg.Knockback.X, vel.Value.Y);
+            // ノックバック物理インパルスの付与
+            vel.Knockback = dmg.Knockback;
             if (dmg.Knockback.Y < 0.0f)
             {
-                vel.Value = new Vec2f(vel.Value.X, dmg.Knockback.Y);
                 col.IsGrounded = false;
             }
 

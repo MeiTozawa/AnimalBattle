@@ -87,8 +87,31 @@ public static class BattleAiSystem
 
             if (state.BossType == BossType.Boss1 && brain is Boss1Brain b1Brain)
             {
+                var b1Cfg = w.Get<Boss1Config>();
                 b1Brain.Update(dt, _cachedPlayerPos, 1, true, hp.Current, hp.Max);
-                trans.Position = b1Brain.Position;
+
+                // 外力ノックバック速度の減衰処理
+                if (vel.Knockback != Vec2f.Zero)
+                {
+                    var fsmCfg = b1Brain.Phase switch {
+                        Phase.Phase2 => b1Cfg.Phase2,
+                        Phase.Phase3 => b1Cfg.Phase3,
+                        _ => b1Cfg.Phase1
+                    };
+                    var decay = fsmCfg.RecoverFlybackSpeed;
+                    if (decay > 0.0f)
+                    {
+                        var kx = PhysicsService.MoveTowards(vel.Knockback.X, 0.0f, decay * dt);
+                        var ky = PhysicsService.MoveTowards(vel.Knockback.Y, 0.0f, decay * dt);
+                        vel.Knockback = new Vec2f(kx, ky);
+                    }
+                    else
+                    {
+                        vel.Knockback = Vec2f.Zero;
+                    }
+                }
+
+                trans.Position = b1Brain.Position + vel.Knockback;
                 sprite.FlipX = !b1Brain.FacingRight;
 
                 var fx = w.Get<RenderConfig>().BossEffects;
@@ -162,8 +185,25 @@ public static class BattleAiSystem
         var minX = arenaCfg.BoundaryMinX + colSize.X * 0.5f;
         var maxX = arenaCfg.BoundaryMaxX - colSize.X * 0.5f;
 
-        var nextX = Math.Clamp(trans.Position.X + linear.X * dt, minX, maxX);
-        var nextY = trans.Position.Y + linear.Y * dt;
+        // 外力ノックバック速度の減衰処理
+        if (vel.Knockback != Vec2f.Zero)
+        {
+            var decay = b2Cfg.Gravity > 0.0f ? b2Cfg.Gravity : b2Cfg.MoveSpeed;
+            if (decay > 0.0f)
+            {
+                var kx = PhysicsService.MoveTowards(vel.Knockback.X, 0.0f, decay * dt);
+                var ky = PhysicsService.MoveTowards(vel.Knockback.Y, 0.0f, decay * dt);
+                vel.Knockback = new Vec2f(kx, ky);
+            }
+            else
+            {
+                vel.Knockback = Vec2f.Zero;
+            }
+        }
+
+        var totalLinear = linear + vel.Knockback;
+        var nextX = Math.Clamp(trans.Position.X + totalLinear.X * dt, minX, maxX);
+        var nextY = trans.Position.Y + totalLinear.Y * dt;
         var nextPos = new Vec2f(nextX, nextY);
 
         var currentY = trans.Position.Y;
@@ -224,6 +264,11 @@ public static class BattleAiSystem
             isGrounded = true;
             adjustedPosY = floorLimitY;
             adjustedVy = 0.0f;
+        }
+
+        if (isGrounded && vel.Knockback.Y > 0.0f)
+        {
+            vel.Knockback = new Vec2f(vel.Knockback.X, 0.0f);
         }
 
         trans.Position = new Vec2f(nextX, adjustedPosY);

@@ -159,6 +159,7 @@ public static class MovementSystem {
 
             // ダッシュ中速度維持（水平高速突進・重力無効化）
             vel.Value = new Vec2f(dash.DirectionX * pCfg.DashSpeed, 0.0f);
+            vel.Knockback = Vec2f.Zero;
 
             // 残像（Ghost Trail）生成
             dash.GhostTrailTimer += dt;
@@ -292,8 +293,25 @@ public static class MovementSystem {
             vel.Value = new Vec2f(currentVx, currentVy);
         }
 
-        // 4. 次フレーム目標座標の算出
-        var nextPos = trans.Position + vel.Value * dt;
+        // 外力ノックバック速度の減衰処理
+        if (vel.Knockback != Vec2f.Zero)
+        {
+            var decay = col.IsGrounded ? jump.GroundDeceleration : jump.AirDeceleration;
+            if (decay > 0.0f)
+            {
+                var kx = PhysicsService.MoveTowards(vel.Knockback.X, 0.0f, decay * dt);
+                var ky = PhysicsService.MoveTowards(vel.Knockback.Y, 0.0f, decay * dt);
+                vel.Knockback = new Vec2f(kx, ky);
+            }
+            else
+            {
+                vel.Knockback = Vec2f.Zero;
+            }
+        }
+
+        // 4. 次フレーム目標座標の算出（自主移動速度と外力ノックバックの合算）
+        var totalVel = vel.Value + vel.Knockback;
+        var nextPos = trans.Position + totalVel * dt;
 
         if (arenaCfg != null)
             nextPos = nextPos with { X = PhysicsService.Clamp(nextPos.X, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX) };
@@ -363,7 +381,14 @@ public static class MovementSystem {
             spring.Velocity = Vec2f.Zero;
         }
 
-        if (isGrounded) jump.RemainingJumps = jump.MaxJumps;
+        if (isGrounded)
+        {
+            jump.RemainingJumps = jump.MaxJumps;
+            if (vel.Knockback.Y > 0.0f)
+            {
+                vel.Knockback = new Vec2f(vel.Knockback.X, 0.0f);
+            }
+        }
 
         trans.Position = new Vec2f(nextPos.X, adjustedPosY);
         vel.Value = new Vec2f(vel.Value.X, adjustedVy);
