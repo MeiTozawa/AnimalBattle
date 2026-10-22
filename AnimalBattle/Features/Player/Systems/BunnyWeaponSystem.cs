@@ -20,7 +20,7 @@ public static class BunnyWeaponSystem
     /// <returns>メソッドチェーン用の <see cref="World"/></returns>
     public static World AddBunnyWeaponSystem(this World world)
     {
-        world.System<Transform, WeaponIntent, BunnyWeaponState, SpringScale, Animation, CollisionBox>("BunnyWeaponSystem")
+        world.System<Transform, Velocity, WeaponIntent, BunnyWeaponState, SpringScale, Animation, CollisionBox>("BunnyWeaponSystem")
             .With<EquippedWeapon>(Ecs.Wildcard)
             .Kind(Ecs.OnUpdate)
             .Without<DeadTag>()
@@ -32,6 +32,7 @@ public static class BunnyWeaponSystem
     private static void ExecuteBunnyWeaponSystem(
         Iter it,
         Field<Transform> transforms,
+        Field<Velocity> velocities,
         Field<WeaponIntent> intents,
         Field<BunnyWeaponState> weapons,
         Field<SpringScale> springs,
@@ -50,18 +51,20 @@ public static class BunnyWeaponSystem
             if (!melee.IsAlive()) continue;
 
             ref var trans = ref transforms[i];
+            ref var vel = ref velocities[i];
             ref var intent = ref intents[i];
             ref var weapon = ref weapons[i];
             ref var spring = ref springs[i];
             ref var anim = ref anims[i];
             ref readonly var col = ref collisions[i];
 
-            ExecuteBunnyWeapon(ref trans, ref intent, ref weapon, ref spring, melee, ref anim, in col, dt);
+            ExecuteBunnyWeapon(ref trans, ref vel, ref intent, ref weapon, ref spring, melee, ref anim, in col, dt);
         }
     }
 
     private static void ExecuteBunnyWeapon(
         ref Transform trans,
+        ref Velocity vel,
         ref WeaponIntent intent,
         ref BunnyWeaponState weapon,
         ref SpringScale spring,
@@ -124,9 +127,11 @@ public static class BunnyWeaponSystem
 
             anim.Play("Attack");
 
-            // 近接打撃前進インパルスおよびスプリング伸縮（bunny.toml 定義値から適用）
-            var lunge = new Vec2f(dir.X * weapon.AttackLungeDistance, col.IsGrounded ? 0.0f : dir.Y * weapon.AttackLungeDistance);
-            trans.Position += lunge;
+            // 近接打撃前進突進（直接座標書き換えを廃止し、MovementSystem 側で処理される外力物理インパルスとして付与）
+            var lungeSpeed = weapon.AttackLungeImpulse;
+            var lungeY = col.IsGrounded ? 0.0f : dir.Y * lungeSpeed;
+            var lungeImpulse = new Vec2f(dir.X * lungeSpeed, lungeY);
+            vel.Knockback += lungeImpulse;
 
             spring.Current = weapon.AttackStretchScale;
             spring.Velocity = Vec2f.Zero;
