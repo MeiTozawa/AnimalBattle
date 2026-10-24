@@ -227,7 +227,7 @@ RecoilExpansionClampRatio = 3.0
 
 [Debug]
 DebugMode = true
-IsActive = true
+IsActive = false
 Enabled = false
 IndicatorPos = { x = 950, y = 16 }
 IndicatorText = "[DEBUG MODE ACTIVE - F1 to toggle]"

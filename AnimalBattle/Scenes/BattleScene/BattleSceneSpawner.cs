@@ -224,7 +224,6 @@ public static class BattleSceneSpawner {
         {
             vfx.Each(CombatPoolService.Recycle);
         }
-        EventBus.Publish(new CombatResetEvent());
 
         // 3. 戦闘シーンルート配下の全エンティティ：自機、Boss、足場、タイルマップ等を一括破棄
         var root = world.Lookup(RootName);

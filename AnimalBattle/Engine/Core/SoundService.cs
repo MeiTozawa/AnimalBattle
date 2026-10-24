@@ -38,7 +38,7 @@ public static class SoundService
     private static bool _isInitialized;
 
     /// <summary>現在アクティブな音声設定。</summary>
-    public static AnimalBattle.Configs.AudioConfig CurrentConfig { get; set; } = new();
+    public static AudioConfig CurrentConfig { get; set; } = new();
 
     /// <summary>
     ///     サウンドサービスが初期化済みかどうかを取得します。
@@ -159,7 +159,7 @@ public static class SoundService
 
     private static void OnCombatReset(CombatResetEvent e)
     {
-        StopBgm();
+        ResetBgm();
     }
 
     private static void OnBossBulletFired(BossBulletFiredEvent e) => PlaySfx(SfxType.BossBulletShoot);
@@ -192,14 +192,25 @@ public static class SoundService
     ///     戦闘 BGM の再生を開始します。
     /// </summary>
     /// <param name="loop">ループ再生を行うかどうか</param>
-    public static void PlayBgm(bool loop = true)
+    /// <param name="restart">先頭位置から再生し直すかどうか</param>
+    public static void PlayBgm(bool loop = true, bool restart = true)
     {
         if (_bgmHandle < 0) return;
 
         var audioConfig = CurrentConfig;
         var finalVolume = Math.Clamp(audioConfig.MasterVolume * audioConfig.BgmVolume * 255.0f, 0.0f, 255.0f);
         NativeBindings.Sound_SetVolume(_bgmHandle, (int)finalVolume);
-        NativeBindings.Sound_Play(_bgmHandle, loop ? 2 : 1, false); // DX_PLAYTYPE_LOOP : DX_PLAYTYPE_BACK
+        NativeBindings.Sound_Play(_bgmHandle, loop ? 2 : 1, restart); // DX_PLAYTYPE_LOOP : DX_PLAYTYPE_BACK
+    }
+
+    /// <summary>
+    ///     戦闘 BGM を停止し、再生位置を先頭に戻して再開（リセット）します。
+    /// </summary>
+    /// <param name="loop">ループ再生を行うかどうか</param>
+    public static void ResetBgm(bool loop = true)
+    {
+        StopBgm();
+        PlayBgm(loop, restart: true);
     }
 
     /// <summary>
