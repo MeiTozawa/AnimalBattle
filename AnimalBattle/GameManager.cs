@@ -8,7 +8,7 @@ using AnimalBattle.Combat;
 using AnimalBattle.Presentation;
 using AnimalBattle.Framework.Pooling;
 using AnimalBattle.Scenes;
-using AnimalBattle.Systems;
+
 using Flecs.NET.Core;
 
 namespace AnimalBattle;
@@ -20,7 +20,7 @@ namespace AnimalBattle;
 public class GameManager : IDisposable {
     private World _ecsWorld;
     private readonly IConfigRegistry _configRegistry;
-    private readonly AssetManager _assetManager;
+    private readonly IAssetManager _assetManager;
     private bool _isDisposed;
     private bool _isUpdating;
     private Action? _pendingSceneTransition;
@@ -41,7 +41,7 @@ public class GameManager : IDisposable {
     /// <summary>
     ///     アセットマネージャーインスタンスを取得します。
     /// </summary>
-    public AssetManager Assets => _assetManager;
+    public IAssetManager Assets => _assetManager;
 
     /// <summary>
     ///     <see cref="GameManager" /> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
@@ -57,7 +57,7 @@ public class GameManager : IDisposable {
         _assetManager = new AssetManager();
         _assetManager.Initialize();
         _ecsWorld.Set<IAssetManager>(_assetManager);
-        _ecsWorld.Set(_assetManager);
+
 
         // 共有パイプラインモジュールおよびプレハブテンプレートの決定論的登録
         _ecsWorld.Import<CommonModule>();

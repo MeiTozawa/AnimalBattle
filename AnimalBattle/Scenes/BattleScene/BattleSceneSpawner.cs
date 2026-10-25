@@ -37,7 +37,7 @@ public static class BattleSceneSpawner {
         Teardown(world);
 
         var root = world.Entity(RootName).Add<BattleSceneTag>();
-        var assets = world.Get<AssetManager>();
+        var assets = world.Get<IAssetManager>();
 
         // 1. 自機エンティティの生成
         var hasPlayerHandle = assets.TryGetCharacterSpriteHandle(playerType, "Idle", out var playerHandle);

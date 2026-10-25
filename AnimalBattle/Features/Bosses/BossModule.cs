@@ -1,4 +1,4 @@
-using AnimalBattle.Systems;
+using AnimalBattle.Bosses.Systems;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Bosses;

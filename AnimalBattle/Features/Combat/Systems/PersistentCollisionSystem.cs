@@ -2,14 +2,14 @@ using System;
 using System.Diagnostics;
 using AnimalBattle.Abilities;
 using AnimalBattle.Combat.Spatial;
-using AnimalBattle.Combat.Systems;
+
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Core.Geometry;
 using Flecs.NET.Core;
 
-namespace AnimalBattle.Systems;
+namespace AnimalBattle.Combat.Systems;
 
 /// <summary>
 /// 多フレーム持続判定・近接攻撃専用の衝突判定 ECS システム。

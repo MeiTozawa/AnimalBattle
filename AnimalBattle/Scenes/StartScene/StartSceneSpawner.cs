@@ -24,7 +24,7 @@ public static class StartSceneSpawner {
         InputService.SetCursorVisible(true);
 
         var root = world.Entity(RootName).Add<StartSceneTag>();
-        var assets = world.Get<AssetManager>();
+        var assets = world.Get<IAssetManager>();
         var layout = world.Get<StartSceneConfig>().Layout;
         var catCardBounds = layout.CatCard.ToRectangle();
         var bunnyCardBounds = layout.BunnyCard.ToRectangle();

@@ -37,4 +37,7 @@ public interface IAssetManager : IDisposable
 
     /// <summary>キャラクターアニメーション設定の取得を試行します。</summary>
     bool TryGetCharacterConfig(CharacterType type, out AnimationConfig config);
+
+    /// <summary>アニメーションクリップ識別子と再生経過時間からスプライトシート上の切り出し矩形 UV SrcRect を計算します。</summary>
+    Rect CalculateSrcRect(AnimationConfig config, StringId clipId, float animTimer, out bool isFinished);
 }

@@ -8,10 +8,19 @@ namespace AnimalBattle.Asset;
 /// 純粋なスプライト UV 切り出し計算を提供するアセットサービス。
 /// </summary>
 public sealed class AssetManager : IAssetManager {
+    private readonly IAssetPathResolver _pathResolver;
     private readonly Dictionary<CharacterType, int> _characterSpriteHandles = [];
     private readonly Dictionary<CharacterType, AnimationConfig> _characterConfigs = [];
     private readonly Dictionary<string, int> _textureHandles = new(StringComparer.OrdinalIgnoreCase);
     private bool _isDisposed;
+
+    /// <summary>
+    /// <see cref="AssetManager"/> の新しいインスタンスを初期化します。
+    /// </summary>
+    public AssetManager()
+    {
+        _pathResolver = AssetPathResolver.Instance;
+    }
 
     /// <inheritdoc />
     public bool HasCharacterSprite => _characterSpriteHandles.Count > 0;
@@ -165,15 +174,8 @@ public sealed class AssetManager : IAssetManager {
         return false;
     }
 
-    /// <summary>
-    /// アニメーションクリップ識別子と再生経過時間からスプライトシート上の切り出し矩形 UV SrcRect を定数時間で計算します。
-    /// </summary>
-    /// <param name="config">アニメーション設定</param>
-    /// <param name="clipId">再生対象クリップ識別子</param>
-    /// <param name="animTimer">再生経過時間秒数</param>
-    /// <param name="isFinished">非ループ再生が完了したかどうかの出力</param>
-    /// <returns>スプライトシート切り出し領域</returns>
-    public static Rect CalculateSrcRect(AnimationConfig config, StringId clipId, float animTimer, out bool isFinished)
+    /// <inheritdoc />
+    public Rect CalculateSrcRect(AnimationConfig config, StringId clipId, float animTimer, out bool isFinished)
     {
         isFinished = false;
         var clip = config.FindClip(clipId);
@@ -210,10 +212,10 @@ public sealed class AssetManager : IAssetManager {
     /// <summary>
     /// リソース相対パスから実体ファイルの絶対パスを探索・解決します。
     /// </summary>
-    /// <param name="relPath">リソース相対パス</param>
+    /// <param name="relativePath">リソース相対パス</param>
     /// <returns>解決された絶対パス、見つからない場合は入力パス</returns>
-    public static string ResolveAssetPath(string relPath)
+    public string ResolveAssetPath(string relativePath)
     {
-        return AssetPathResolver.Instance.ResolveAssetPath(relPath);
+        return _pathResolver.ResolveAssetPath(relativePath);
     }
 }

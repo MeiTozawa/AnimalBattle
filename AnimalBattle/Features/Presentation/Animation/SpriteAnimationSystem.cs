@@ -34,7 +34,7 @@ public static class SpriteAnimationSystem
 
         anim.Timer += it.DeltaTime();
 
-        var assets = it.World().Get<AssetManager>();
+        var assets = it.World().Get<IAssetManager>();
         if (!assets.TryGetCharacterConfig(anim.CharacterType, out var charConfig))
         {
             Debug.Fail($"キャラクターのアニメーション設定が登録されていません: {anim.CharacterType}");
@@ -54,7 +54,7 @@ public static class SpriteAnimationSystem
 
         sprite.GraphHandle = handle;
         sprite.SrcRect =
-            AssetManager.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out var isFinished);
+            assets.CalculateSrcRect(charConfig, anim.CurrentClip, anim.Timer, out var isFinished);
         anim.IsFinished = isFinished;
     }
 }

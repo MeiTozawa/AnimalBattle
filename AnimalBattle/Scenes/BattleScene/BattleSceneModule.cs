@@ -1,5 +1,5 @@
 using AnimalBattle.Abilities;
-using AnimalBattle.Systems;
+
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Scenes.Battle;
