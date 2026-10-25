@@ -26,6 +26,8 @@ internal sealed class BattleAiSystemContext : IDisposable
     public ulong CachedPlayerEntityId;
     public bool IsPlayerAlive;
     public bool HasPlayerEverSpawned;
+    public bool FoundPlayerThisFrame;
+    public float CachedDeltaTime;
     public Vec2f CachedBossPos;
     public bool HasBoss;
     public TileMap? CachedTileMap;
@@ -90,33 +92,102 @@ public static class BattleAiSystem
 
         // プレイヤーの生存・座標状態を更新
         ctx.IsPlayerAlive = false;
-        var foundPlayerThisFrame = false;
+        ctx.FoundPlayerThisFrame = false;
 
-        ctx.PlayerQuery.Each((Entity pe, ref Transform t, ref Velocity v) =>
-        {
-            foundPlayerThisFrame = true;
-            ctx.HasPlayerEverSpawned = true;
-            ctx.CachedPlayerPos = t.Position;
-            ctx.CachedPlayerVel = v.Value;
-            ctx.CachedPlayerEntityId = pe.Id;
-            // プレイヤーが DeadTag を保持しておらず、ワールドがゲームオーバー状態でなければ生存と判定
-            ctx.IsPlayerAlive = !pe.Has<DeadTag>() && !w.Has<GameOverTag>();
-        });
+        ctx.PlayerQuery.Iter(CollectPlayerState);
 
-        if (!foundPlayerThisFrame && !ctx.HasPlayerEverSpawned) return;
+        if (!ctx.FoundPlayerThisFrame && !ctx.HasPlayerEverSpawned) return;
 
         var dt = it.DeltaTime();
         var camCfg = w.Get<CameraConfig>();
 
+        ctx.CachedDeltaTime = dt;
         ctx.CachedTileMap = null;
-        ctx.TileMapQuery.Each((ref TileMap tm) => ctx.CachedTileMap = tm);
-        var tileMap = ctx.CachedTileMap;
-        ctx.CachedTileMap = null;
+        ctx.TileMapQuery.Iter(ExtractTileMap);
 
         ctx.HasBoss = false;
+        ctx.BossQuery.Iter(UpdateBossAi);
+        ctx.CachedTileMap = null;
 
-        ctx.BossQuery.Each((Entity e, ref Transform trans, ref Velocity vel, ref CollisionBox col, ref Health hp, ref Sprite sprite, ref BossCombatState state, ref BossBrainComponent brainComp) =>
+        // カメラ追従および振動の更新：Boss が Hitstop 中や死亡後であっても振動減衰・構図追従を滞りなく継続
+        if (ctx.HasBoss)
         {
+            CameraService.Update(
+                dt,
+                ctx.CachedPlayerPos,
+                ctx.CachedPlayerVel,
+                ctx.CachedBossPos,
+                camCfg);
+        }
+    }
+
+    /// <summary>
+    ///     プレイヤー状態を無割当：Zero Allocationで収集します。
+    /// </summary>
+    private static void CollectPlayerState(Iter it, Field<Transform> transforms, Field<Velocity> velocities)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var w = it.World();
+        var ctx = w.Get<BattleAiSystemContext>();
+        var gameOver = w.Has<GameOverTag>();
+
+        for (var i = 0; i < count; i++)
+        {
+            var pe = it.Entity(i);
+            ctx.FoundPlayerThisFrame = true;
+            ctx.HasPlayerEverSpawned = true;
+            ctx.CachedPlayerPos = transforms[i].Position;
+            ctx.CachedPlayerVel = velocities[i].Value;
+            ctx.CachedPlayerEntityId = pe.Id;
+            // プレイヤーが DeadTag を保持しておらず、ワールドがゲームオーバー状態でなければ生存と判定
+            ctx.IsPlayerAlive = !pe.Has<DeadTag>() && !gameOver;
+        }
+    }
+
+    /// <summary>
+    ///     TileMap インスタンスを無割当：Zero Allocationで抽出します。
+    /// </summary>
+    private static void ExtractTileMap(Iter it, Field<TileMap> tileMaps)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+        it.World().Get<BattleAiSystemContext>().CachedTileMap = tileMaps[count - 1];
+    }
+
+    /// <summary>
+    ///     Boss AI および物理挙動を無割当：Zero Allocationで更新します。
+    /// </summary>
+    private static void UpdateBossAi(
+        Iter it,
+        Field<Transform> transforms,
+        Field<Velocity> velocities,
+        Field<CollisionBox> cols,
+        Field<Health> hps,
+        Field<Sprite> sprites,
+        Field<BossCombatState> states,
+        Field<BossBrainComponent> brainComps)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var w = it.World();
+        var ctx = w.Get<BattleAiSystemContext>();
+        var dt = ctx.CachedDeltaTime;
+        var tileMap = ctx.CachedTileMap;
+
+        for (var i = 0; i < count; i++)
+        {
+            var e = it.Entity(i);
+            ref var trans = ref transforms[i];
+            ref var vel = ref velocities[i];
+            ref var col = ref cols[i];
+            ref var hp = ref hps[i];
+            ref var sprite = ref sprites[i];
+            ref var state = ref states[i];
+            ref var brainComp = ref brainComps[i];
+
             var brain = brainComp.Brain;
 
             // 死亡判定：クエリで Without<DeadTag> が保証されているため Has ガードは不要
@@ -125,7 +196,7 @@ public static class BattleAiSystem
                 if (!brain.IsDead) brain.Kill();
                 e.Add<DeadTag>();
                 sprite.IsVisible = false;
-                return;
+                continue;
             }
 
             ctx.HasBoss = true;
@@ -189,17 +260,6 @@ public static class BattleAiSystem
             state.StateTimer = brain.StateTimer;
             state.TargetPosition = brain.TargetPosition;
             state.FacingRight = brain.FacingRight;
-        });
-
-        // カメラ追従および振動の更新：Boss が Hitstop 中や死亡後であっても振動減衰・構図追従を滞りなく継続
-        if (ctx.HasBoss)
-        {
-            CameraService.Update(
-                dt,
-                ctx.CachedPlayerPos,
-                ctx.CachedPlayerVel,
-                ctx.CachedBossPos,
-                camCfg);
         }
     }
 

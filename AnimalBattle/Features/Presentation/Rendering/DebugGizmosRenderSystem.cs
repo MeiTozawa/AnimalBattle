@@ -21,6 +21,8 @@ internal sealed class DebugGizmosRenderContext : IDisposable
     public required Query<Transform, Hitbox> HitboxQuery { get; init; }
     public required Query<Transform, Hurtbox> HurtboxQuery { get; init; }
     public required Query<TileMap> TileMapQuery { get; init; }
+    public TileMap? CachedTileMap;
+    public DebugRenderConfig? CachedDbgCfg;
 
     public void Dispose()
     {
@@ -95,48 +97,87 @@ public static class DebugGizmosRenderSystem
         if (!dbgCfg.DebugMode || !dbgCfg.IsActive) return;
 
         var ctx = w.Get<DebugGizmosRenderContext>();
+        ctx.CachedTileMap = null;
+        ctx.CachedDbgCfg = dbgCfg;
 
-        TileMap? tileMap = null;
-        ctx.TileMapQuery.Each((ref TileMap tm) => tileMap = tm);
+        ctx.TileMapQuery.Iter(ExtractTileMap);
+        var tileMap = ctx.CachedTileMap;
+        ctx.CachedTileMap = null;
 
-        DrawPlatformCollisionBoxes(ctx.PlatformQuery, dbgCfg);
-        DrawPlayerCollisionBoxes(ctx.PlayerQuery, dbgCfg);
-        DrawHurtboxes(ctx.HurtboxQuery, dbgCfg);
-        DrawHitboxes(ctx.HitboxQuery, dbgCfg);
+        ctx.PlatformQuery.Iter(DrawPlatformCollisionBoxes);
+        ctx.PlayerQuery.Iter(DrawPlayerCollisionBoxes);
+        ctx.HurtboxQuery.Iter(DrawHurtboxes);
+        ctx.HitboxQuery.Iter(DrawHitboxes);
         DrawPlatformNavGraph(tileMap, dbgCfg);
+
+        ctx.CachedDbgCfg = null;
     }
 
-    private static void DrawPlatformCollisionBoxes(Query<Transform, CollisionBox> platformQuery, DebugRenderConfig dbgCfg)
+    /// <summary>
+    ///     TileMap インスタンスを無割当：Zero Allocationで抽出します。
+    /// </summary>
+    private static void ExtractTileMap(Iter it, Field<TileMap> tileMaps)
     {
+        var count = it.Count();
+        if (count == 0) return;
+        it.World().Get<DebugGizmosRenderContext>().CachedTileMap = tileMaps[count - 1];
+    }
+
+    private static void DrawPlatformCollisionBoxes(Iter it, Field<Transform> transforms, Field<CollisionBox> cols)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var dbgCfg = it.World().Get<DebugGizmosRenderContext>().CachedDbgCfg;
+        if (dbgCfg == null) return;
+
         // 足場地形枠描画：クエリ分離により Entity.Has による分岐を完全排除
-        platformQuery.Each((ref Transform trans, ref CollisionBox col) =>
+        for (var i = 0; i < count; i++)
         {
+            ref readonly var trans = ref transforms[i];
+            ref readonly var col = ref cols[i];
             var halfSize = col.Size * 0.5f;
             var p1 = (Vec2i)(trans.Position - halfSize);
             var p2 = (Vec2i)(trans.Position + halfSize);
             GameEngine.DrawBox(p1, p2, dbgCfg.PlatformHitboxColor, false);
-        });
+        }
     }
 
-    private static void DrawPlayerCollisionBoxes(Query<Transform, CollisionBox> playerQuery, DebugRenderConfig dbgCfg)
+    private static void DrawPlayerCollisionBoxes(Iter it, Field<Transform> transforms, Field<CollisionBox> cols)
     {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var dbgCfg = it.World().Get<DebugGizmosRenderContext>().CachedDbgCfg;
+        if (dbgCfg == null) return;
+
         // 自機地形枠および接地状態情報描画
-        playerQuery.Each((ref Transform trans, ref CollisionBox col) =>
+        for (var i = 0; i < count; i++)
         {
+            ref readonly var trans = ref transforms[i];
+            ref readonly var col = ref cols[i];
             var halfSize = col.Size * 0.5f;
             var p1 = (Vec2i)(trans.Position - halfSize);
             var p2 = (Vec2i)(trans.Position + halfSize);
             GameEngine.DrawBox(p1, p2, dbgCfg.PlayerTerrainBoxColor, false);
             GameEngine.DrawString(p1 + dbgCfg.PlayerInfoOffset, $"P({(int)trans.Position.X},{(int)trans.Position.Y}) [Grounded:{col.IsGrounded}]",
                 dbgCfg.PlayerTerrainBoxColor);
-        });
+        }
     }
 
-    private static void DrawHurtboxes(Query<Transform, Hurtbox> hurtboxQuery, DebugRenderConfig dbgCfg)
+    private static void DrawHurtboxes(Iter it, Field<Transform> transforms, Field<Hurtbox> hurtboxes)
     {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var dbgCfg = it.World().Get<DebugGizmosRenderContext>().CachedDbgCfg;
+        if (dbgCfg == null) return;
+
         // 被弾判定枠描画：クエリで Without<DeadTag> を適用済みなためループ内の死亡判定は不要
-        hurtboxQuery.Each((ref Transform trans, ref Hurtbox hurtbox) =>
+        for (var i = 0; i < count; i++)
         {
+            ref readonly var trans = ref transforms[i];
+            ref readonly var hurtbox = ref hurtboxes[i];
             var hurtColor = hurtbox.Faction switch
             {
                 Faction.Friendly => dbgCfg.PlayerHurtboxColor,
@@ -147,15 +188,23 @@ public static class DebugGizmosRenderSystem
 
             var worldCenter = trans.Position + hurtbox.Shape.Offset;
             DrawCollisionShape(hurtbox.Shape, worldCenter, hurtColor, dbgCfg);
-        });
+        }
     }
 
-    private static void DrawHitboxes(Query<Transform, Hitbox> hitboxQuery, DebugRenderConfig dbgCfg)
+    private static void DrawHitboxes(Iter it, Field<Transform> transforms, Field<Hitbox> hitboxes)
     {
-        hitboxQuery.Each((Entity e, ref Transform trans, ref Hitbox hitbox) =>
-        {
-            if (!hitbox.IsActive) return;
+        var count = it.Count();
+        if (count == 0) return;
 
+        var dbgCfg = it.World().Get<DebugGizmosRenderContext>().CachedDbgCfg;
+        if (dbgCfg == null) return;
+
+        for (var i = 0; i < count; i++)
+        {
+            ref readonly var hitbox = ref hitboxes[i];
+            if (!hitbox.IsActive) continue;
+
+            ref readonly var trans = ref transforms[i];
             var hitColor = hitbox.Faction switch
             {
                 Faction.Friendly => dbgCfg.PlayerBulletHitboxColor,
@@ -166,7 +215,7 @@ public static class DebugGizmosRenderSystem
 
             var worldCenter = trans.Position + hitbox.Shape.Offset;
             DrawCollisionShape(hitbox.Shape, worldCenter, hitColor, dbgCfg);
-        });
+        }
     }
 
     private static void DrawCollisionShape(CollisionShape shape, Vec2f worldCenter, Color color, DebugRenderConfig dbgCfg)

@@ -19,8 +19,21 @@ namespace AnimalBattle.Presentation.Rendering;
 /// </summary>
 internal sealed class HudRenderSystemContext : IDisposable
 {
+    public readonly record struct PlayerHudData(
+        Health Health,
+        CharacterType CharacterType,
+        bool IsInvincible,
+        bool IsAlive);
+
+    public readonly record struct BossHudData(
+        Health Health,
+        BossCombatState CombatState,
+        (float Phase2Threshold, float Phase3Threshold) PhaseThresholds);
+
     public required Query<Health, CharacterTypeComponent, GameplayTagState> PlayerQuery { get; init; }
     public required Query<Health, BossCombatState> BossQuery { get; init; }
+    public PlayerHudData? CachedPlayer;
+    public BossHudData? CachedBoss;
 
     public void Dispose()
     {
@@ -34,17 +47,6 @@ internal sealed class HudRenderSystemContext : IDisposable
 ///     戦闘状態：GameState.Battle時にスクリーン空間へ直接描画します。
 /// </summary>
 public static class HudRenderSystem {
-    private readonly record struct PlayerHudData(
-        Health Health,
-        CharacterType CharacterType,
-        bool IsInvincible,
-        bool IsAlive);
-
-    private readonly record struct BossHudData(
-        Health Health,
-        BossCombatState CombatState,
-        (float Phase2Threshold, float Phase3Threshold) PhaseThresholds);
-
     /// <summary>
     ///     HUD 描画システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -82,33 +84,63 @@ public static class HudRenderSystem {
         if (flow.State != GameState.Battle) return;
 
         var ctx = w.Get<HudRenderSystemContext>();
+        ctx.CachedPlayer = null;
+        ctx.CachedBoss = null;
 
-        PlayerHudData? player = null;
-        BossHudData? boss = null;
+        ctx.PlayerQuery.Iter(CollectPlayer);
+        ctx.BossQuery.Iter(CollectBoss);
 
-        ctx.PlayerQuery.Each((ref Health hp, ref CharacterTypeComponent charType, ref GameplayTagState tags) =>
-        {
-            player = new PlayerHudData(
-                hp,
-                charType.Value,
-                tags.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable),
-                hp.Current > 0.0f);
-        });
-
-        ctx.BossQuery.Each((Entity e, ref Health hp, ref BossCombatState state) =>
-        {
-            var world = e.CsWorld();
-            var (p2, p3) = state.BossType switch {
-                BossType.Boss1 => (world.Get<Boss1Config>().Phase2.HpThreshold, world.Get<Boss1Config>().Phase3.HpThreshold),
-                BossType.Boss2 => (world.Get<Boss2Config>().Phase2.HpThreshold, world.Get<Boss2Config>().Phase3.HpThreshold),
-                _ => (0.7f, 0.3f)
-            };
-            boss = new BossHudData(hp, state, (p2, p3));
-        });
+        var player = ctx.CachedPlayer;
+        var boss = ctx.CachedBoss;
+        ctx.CachedPlayer = null;
+        ctx.CachedBoss = null;
 
         ref readonly var renderCfg = ref w.Get<RenderConfig>();
 
         Render(player, boss, in renderCfg);
+    }
+
+    /// <summary>
+    ///     自機 HUD データを無割当：Zero Allocationで抽出します。
+    /// </summary>
+    private static void CollectPlayer(
+        Iter it,
+        Field<Health> hps,
+        Field<CharacterTypeComponent> charTypes,
+        Field<GameplayTagState> tags)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var ctx = it.World().Get<HudRenderSystemContext>();
+        var idx = count - 1;
+        ref readonly var hp = ref hps[idx];
+        ctx.CachedPlayer = new HudRenderSystemContext.PlayerHudData(
+            hp,
+            charTypes[idx].Value,
+            tags[idx].HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable),
+            hp.Current > 0.0f);
+    }
+
+    /// <summary>
+    ///     Boss HUD データを無割当：Zero Allocationで抽出します。
+    /// </summary>
+    private static void CollectBoss(Iter it, Field<Health> hps, Field<BossCombatState> states)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var world = it.World();
+        var ctx = world.Get<HudRenderSystemContext>();
+        var idx = count - 1;
+        ref readonly var state = ref states[idx];
+        var (p2, p3) = state.BossType switch
+        {
+            BossType.Boss1 => (world.Get<Boss1Config>().Phase2.HpThreshold, world.Get<Boss1Config>().Phase3.HpThreshold),
+            BossType.Boss2 => (world.Get<Boss2Config>().Phase2.HpThreshold, world.Get<Boss2Config>().Phase3.HpThreshold),
+            _ => (0.7f, 0.3f)
+        };
+        ctx.CachedBoss = new HudRenderSystemContext.BossHudData(hps[idx], state, (p2, p3));
     }
 
     /// <summary>
@@ -117,7 +149,10 @@ public static class HudRenderSystem {
     /// <param name="player">現在アクティブな自機データ。</param>
     /// <param name="boss">現在アクティブな Boss データ。</param>
     /// <param name="renderCfg">描画設定。</param>
-    private static void Render(in PlayerHudData? player, in BossHudData? boss, in RenderConfig renderCfg)
+    private static void Render(
+        in HudRenderSystemContext.PlayerHudData? player,
+        in HudRenderSystemContext.BossHudData? boss,
+        in RenderConfig renderCfg)
     {
         Debug.Assert(GameEngine.CameraOffset == Vec2i.Zero, "[HudRenderSystem] HUDはスクリーン空間固定で描画される必要があり、CameraOffsetはゼロでなければなりません。");
         var hudCfg = renderCfg.Hud;
@@ -143,7 +178,7 @@ public static class HudRenderSystem {
         }
     }
 
-    private static void DrawPlayerStatus(in PlayerHudData? player, HudRenderConfig hudCfg)
+    private static void DrawPlayerStatus(in HudRenderSystemContext.PlayerHudData? player, HudRenderConfig hudCfg)
     {
         if (player == null) return;
         var p = player.Value;
@@ -186,7 +221,7 @@ public static class HudRenderSystem {
         GameEngine.DrawString(hudCfg.PlayerHpPos, textBuf[..charsWritten], hpColor);
     }
 
-    private static void DrawBossStatus(in BossHudData? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
+    private static void DrawBossStatus(in HudRenderSystemContext.BossHudData? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
     {
         if (boss == null) return;
         var b = boss.Value;
@@ -214,7 +249,7 @@ public static class HudRenderSystem {
         };
     }
 
-    private static void DrawGameOverModal(in PlayerHudData? player, ModalRenderConfig modalCfg)
+    private static void DrawGameOverModal(in HudRenderSystemContext.PlayerHudData? player, ModalRenderConfig modalCfg)
     {
         if (player == null || player.Value.IsAlive) return;
         GameEngine.DrawBox(modalCfg.GameOverPos1, modalCfg.GameOverPos2, modalCfg.GameOverBgColor, true);
