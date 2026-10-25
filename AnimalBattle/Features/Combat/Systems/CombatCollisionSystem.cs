@@ -114,21 +114,44 @@ public static class CombatCollisionSystem
         ref bool shouldDestroyAttacker)
     {
         var knockbackDir = vicTrans.Position.X >= atkTrans.Position.X ? 1.0f : -1.0f;
-        var isHeavy = localHitbox.Damage >= 2.0f;
+
+        // グローバル戦闘物理設定の取得
+        var physicsCfg = world.Get<CombatPrefabConfig>().Physics;
+        var baseKnockback = localHitbox.Knockback != Vec2f.Zero ? localHitbox.Knockback : physicsCfg.DefaultKnockback;
+        var isHeavy = localHitbox.IsHeavy || (localHitbox.Damage >= physicsCfg.HeavyDamageThreshold);
+        var targetKnockback = baseKnockback with { X = knockbackDir * baseKnockback.X };
 
         // 同一フレーム内で複数弾や近接攻撃が連続ヒットした際のダメージ上書き消失を防止するため
-        // Ensure で IncomingDamage の存在を保証しつつ、Amount を累加し IsHeavyImpact を論理和で合成します
+        // Has による確定的な存在判定を行い、未受撃なら Set、受撃済みなら GetMut で累積します
         // ECS システムイテレーションおよび DeferScope による遅延キューイング中であっても即時更新できるよう DeferSuspend します
         var isDeferred = world.IsDeferred();
         if (isDeferred) world.DeferSuspend();
         try
         {
-            ref var incoming = ref vicEntity.Ensure<IncomingDamage>();
-            var isFirstHit = incoming.Amount <= 0.0f;
-            incoming.Amount += localHitbox.Damage;
-            incoming.SourceFaction = isFirstHit ? localHitbox.Faction : incoming.SourceFaction;
-            incoming.Knockback = (isFirstHit || isHeavy) ? new Vec2f(knockbackDir * 180.0f, -90.0f) : incoming.Knockback;
-            incoming.IsHeavyImpact |= isHeavy;
+            if (!vicEntity.Has<IncomingDamage>())
+            {
+                // 初回被弾：Set で構造体を確定的に初期化。非托管メモリの未初期化ゴミ値や Amount <= 0 の判定漏洞を完全に排除
+                vicEntity.Set(new IncomingDamage
+                {
+                    Amount = localHitbox.Damage,
+                    SourceFaction = localHitbox.Faction,
+                    Knockback = targetKnockback,
+                    IsHeavyImpact = isHeavy
+                });
+            }
+            else
+            {
+                // 同一フレーム内の多段ヒット：ダメージを累加し、重撃フラグを論理和合成
+                ref var incoming = ref vicEntity.GetMut<IncomingDamage>();
+                incoming.Amount += localHitbox.Damage;
+                incoming.IsHeavyImpact |= isHeavy;
+
+                // ノックバック仲裁：今回のヒットが重撃の場合は重撃インパルスを優先反映
+                if (isHeavy)
+                {
+                    incoming.Knockback = targetKnockback;
+                }
+            }
         }
         finally
         {

@@ -44,7 +44,7 @@ public static class CombatPrefabs
         PlayerBullet = world.Prefab(PlayerBulletName)
             .IsA(CommonPrefabs.BaseProjectile)
             .Add<PlayerBulletTag>()
-            .Set(new Hitbox(new CollisionShape.Box(playerBulletCfg.Size), playerBulletCfg.Damage, Faction.Friendly));
+            .Set(new Hitbox(new CollisionShape.Box(playerBulletCfg.Size), playerBulletCfg.Damage, Faction.Friendly, knockback: playerBulletCfg.Knockback, isHeavy: playerBulletCfg.IsHeavy));
 
         // --- 2. Boss 統一弾幕基底：超集 Archetype：通常・品紅・黄・衛星・青・黒の全種別を同一 Archetype で共用 ---
         var bossNormalCfg = cfg.BossNormalBullet;
@@ -63,15 +63,16 @@ public static class CombatPrefabs
         PlayerSlashHitbox = world.Prefab(PlayerSlashHitboxName)
             .IsA(CommonPrefabs.BaseMeleeHitbox)
             .Add<PlayerMeleeTag>()
-            .Set(new Hitbox(new CollisionShape.Box(slashCfg.Size), slashCfg.Damage, Faction.Friendly));
+            .Set(new Hitbox(new CollisionShape.Box(slashCfg.Size), slashCfg.Damage, Faction.Friendly, destroyOnHit: false, knockback: slashCfg.Knockback, isHeavy: slashCfg.IsHeavy))
+            .Set(new HitboxLifetime(slashCfg.DefaultDuration));
 
         // --- 4. Boss 2 近接斬撃攻撃判定実体 ---
         var bossSlashCfg = cfg.BossSlashHitbox;
         BossSlashHitbox = world.Prefab(BossSlashHitboxName)
             .IsA(CommonPrefabs.BaseMeleeHitbox)
             .Set(new Velocity(Vec2f.Zero))
-            .Set(new Hitbox(new CollisionShape.Box(Vec2f.Zero), bossSlashCfg?.Damage ?? 1.0f, Faction.Hostile, false))
+            .Set(new Hitbox(new CollisionShape.Box(Vec2f.Zero), bossSlashCfg.Damage, Faction.Hostile, false, knockback: bossSlashCfg.Knockback, isHeavy: bossSlashCfg.IsHeavy))
             .Set(new Sprite(-1))
-            .Set(new HitboxLifetime(bossSlashCfg?.DefaultDuration ?? 0.25f));
+            .Set(new HitboxLifetime(bossSlashCfg.DefaultDuration));
     }
 }

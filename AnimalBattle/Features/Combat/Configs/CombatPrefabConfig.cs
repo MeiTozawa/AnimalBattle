@@ -12,6 +12,9 @@ namespace AnimalBattle.Configs;
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 public sealed class CombatPrefabConfig
 {
+    /// <summary>戦闘判定・物理衝撃および重撃判定のグローバル設定。</summary>
+    public CombatPhysicsConfig Physics { get; set; }
+
     /// <summary>自機通常弾のプレハブ設定。</summary>
     public PlayerBulletPrefabConfig PlayerBullet { get; set; }
 
@@ -49,12 +52,27 @@ public sealed class CombatPrefabConfig
     public AreaVfxPrefabConfig AreaVfx { get; set; }
 }
 
+/// <summary>
+///     グローバル戦闘物理および重撃閾値設定。
+/// </summary>
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+public sealed class CombatPhysicsConfig
+{
+    /// <summary>被弾時デフォルトノックバック初速度。</summary>
+    public Vec2f DefaultKnockback { get; set; }
+
+    /// <summary>重撃判定（強制ヒットストップ／カメラインパルス誘発）ダメージ閾値。</summary>
+    public float HeavyDamageThreshold { get; set; }
+}
+
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 public sealed class PlayerBulletPrefabConfig
 {
     public string Shape { get; set; }
     public Vec2f Size { get; set; }
     public float Damage { get; set; }
+    public Vec2f Knockback { get; set; }
+    public bool IsHeavy { get; set; }
 }
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
@@ -102,6 +120,9 @@ public sealed class PlayerSlashHitboxPrefabConfig
 {
     public float Damage { get; set; }
     public Vec2f Size { get; set; }
+    public float DefaultDuration { get; set; }
+    public Vec2f Knockback { get; set; }
+    public bool IsHeavy { get; set; }
 }
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
@@ -129,6 +150,8 @@ public sealed class AreaVfxPrefabConfig
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 public sealed class BossSlashHitboxPrefabConfig
 {
-    public float Damage { get; set; } = 1.0f;
-    public float DefaultDuration { get; set; } = 0.25f;
+    public float Damage { get; set; }
+    public float DefaultDuration { get; set; }
+    public Vec2f Knockback { get; set; }
+    public bool IsHeavy { get; set; }
 }

@@ -3,11 +3,18 @@
 # 投射物（弾幕）、近战判定、演出（VFX）の ECS 原型パラメータ
 # ===================================================================
 
+# --- 物理衝突・戦闘衝撃設定 ---
+[Physics]
+DefaultKnockback = { x = 180.0, y = -90.0 }
+HeavyDamageThreshold = 2.0
+
 # --- 自機通常弾原型 ---
 [PlayerBullet]
 Shape = "Box"
 Size = { x = 12.0, y = 8.0 }
 Damage = 1.0
+Knockback = { x = 180.0, y = -90.0 }
+IsHeavy = false
 
 # --- Boss 弾幕原型群 ---
 [BossNormalBullet]
@@ -36,10 +43,15 @@ Damage = 1.2
 [PlayerSlashHitbox]
 Damage = 3.0
 Size = { x = 64.0, y = 64.0 }
+DefaultDuration = 0.20
+Knockback = { x = 240.0, y = -120.0 }
+IsHeavy = true
 
 [BossSlashHitbox]
 Damage = 1.0
 DefaultDuration = 0.25
+Knockback = { x = 200.0, y = -100.0 }
+IsHeavy = true
 
 # --- 特効演出原型群 ---
 [SparkVfx]
