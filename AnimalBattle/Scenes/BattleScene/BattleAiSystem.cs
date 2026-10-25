@@ -99,7 +99,7 @@ public static class BattleAiSystem
             ctx.CachedPlayerPos = t.Position;
             ctx.CachedPlayerVel = v.Value;
             ctx.CachedPlayerEntityId = pe.Id;
-            // プレイヤーが DeadTag または GameOverTag を保持していなければ生存と判定
+            // プレイヤーが DeadTag を保持しておらず、ワールドがゲームオーバー状態でなければ生存と判定
             ctx.IsPlayerAlive = !pe.Has<DeadTag>() && !w.Has<GameOverTag>();
         });
 

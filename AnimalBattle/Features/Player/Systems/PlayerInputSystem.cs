@@ -48,13 +48,8 @@ public static class PlayerInputSystem
         {
             for (var i = 0; i < count; i++)
             {
-                ref var m = ref moveIntents[i];
-                ref var w = ref weaponIntents[i];
-                m.MoveX = 0.0f;
-                m.JumpTriggered = false;
-                m.JumpHolding = false;
-                m.DashTriggered = false;
-                w.ShootTriggered = false;
+                moveIntents[i].Reset();
+                weaponIntents[i].Reset();
             }
             return;
         }

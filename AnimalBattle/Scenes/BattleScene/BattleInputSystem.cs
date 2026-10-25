@@ -174,7 +174,6 @@ public static class BattleInputSystem
             .Remove<SpriteJitter>()
             .Remove<IncomingDamage>()
             .Remove<DeadTag>()
-            .Remove<GameOverTag>()
             .Remove<HitFlashEffect>();
         
         ref var sprite = ref boss.GetMut<Sprite>();
@@ -204,12 +203,11 @@ public static class BattleInputSystem
         player.Set(new InvincibleBlinkState());
         player.Set(new SpringScale(Vec2f.One, cfg.SpringFrequency, cfg.SpringDampingRatio));
 
-        // 一時状態・エフェクト・死亡・ゲームオーバータグの一括安全削除：Flecs ネイティブ API による冪等操作
+        // 一時状態・エフェクト・死亡タグの一括安全削除：Flecs ネイティブ API による冪等操作
         player.Remove<HitstopState>()
             .Remove<SpriteJitter>()
             .Remove<IncomingDamage>()
             .Remove<DeadTag>()
-            .Remove<GameOverTag>()
             .Remove<HitFlashEffect>();
 
         if (player.Has<CatWeaponState>())
