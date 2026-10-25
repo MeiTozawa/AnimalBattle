@@ -50,7 +50,7 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     論理スレッド用：新規フレームの描画コマンド記録を開始します。
+    ///     入力スナップショットを確定し、新規フレームの描画コマンド記録を開始します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void BeginRecording()
@@ -60,7 +60,7 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     現在記録された描画コマンドを C++ ネイティブエンジンへ一括提出します。
+    ///     現在記録された描画コマンドをネイティブエンジンへ一括提出します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Submit()
@@ -69,7 +69,7 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     レンダリングスレッド用：画面クリアおよび描画準備を開始します。
+    ///     画面クリアおよび描画準備を開始します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool BeginDraw()
@@ -78,15 +78,13 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     レンダリングスレッド用：バックバッファの画面反転：ScreenFlip / VSyncを実行します。
+    ///     バックバッファの画面反転（ScreenFlip / VSync）を実行します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool EndDraw()
     {
         return NativeBindings.Engine_EndDraw();
     }
-
-
 
     /// <summary>
     ///     アプリケーション終了要求を発行します。
