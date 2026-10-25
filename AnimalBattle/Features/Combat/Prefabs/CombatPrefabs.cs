@@ -70,6 +70,7 @@ public static class CombatPrefabs
         var bossSlashCfg = cfg.BossSlashHitbox;
         BossSlashHitbox = world.Prefab(BossSlashHitboxName)
             .IsA(CommonPrefabs.BaseMeleeHitbox)
+            .Add<BossMeleeTag>()
             .Set(new Velocity(Vec2f.Zero))
             .Set(new Hitbox(new CollisionShape.Box(Vec2f.Zero), bossSlashCfg.Damage, Faction.Hostile, false, knockback: bossSlashCfg.Knockback, isHeavy: bossSlashCfg.IsHeavy))
             .Set(new Sprite(-1))
