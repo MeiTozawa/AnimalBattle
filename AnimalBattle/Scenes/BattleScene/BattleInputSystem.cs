@@ -125,6 +125,7 @@ public static class BattleInputSystem
         world.Remove<GameOverTag>();
 
         BulletSpawner.ClearAllBossBulletsImmediate(world);
+        MeleeSpawner.ClearAllBossMeleeImmediate(world);
         ctx.PlayerBulletsQuery.Each(CombatPoolService.Recycle);
         ctx.VfxQuery.Each(CombatPoolService.Recycle);
         CameraService.Reset();
@@ -308,6 +309,7 @@ public static class BattleInputSystem
         };
         hp.Current = Math.Clamp((float)Math.Round(hp.Max * ratio), 1.0f, hp.Max);
         BulletSpawner.ClearAllBossBullets(w);
+        MeleeSpawner.ClearAllBossMelee(w);
         state.Phase = _targetDebugPhase;
     }
 }

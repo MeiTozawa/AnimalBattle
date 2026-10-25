@@ -97,4 +97,32 @@ public static class MeleeSpawner
            .Set(new Sprite(slashHandle, false, true, srcRect, slashCfg.PlayerSlashColor))
            .Enable();
     }
+
+    /// <summary>
+    ///     フィールド上に残存するすべての Boss 近接斬撃判定を一括消去します。
+    ///     シミュレーション実行中のタイムライン競合および二重返却を防止するため、
+    ///     即時返却ではなく <see cref="RecycleTag" /> を付与し、
+    ///     フレーム末尾の <see cref="CombatRecycleSystem" /> へ回収を一元委譲します。
+    /// </summary>
+    public static void ClearAllBossMelee(World world)
+    {
+        using var query = world.QueryBuilder()
+            .With<BossMeleeTag>()
+            .Without<RecycleTag>()
+            .Build();
+        query.Each(static (Entity e) => e.Add<RecycleTag>());
+    }
+
+    /// <summary>
+    ///     フィールド上に残存するすべての Boss 近接斬撃判定を即座にプールへ回収・返却します。
+    ///     シーン破棄時：Teardownや戦闘リセット：ResetCombatなど、
+    ///     確定的な同期リセット点で即時プール返却を実行します。
+    /// </summary>
+    public static void ClearAllBossMeleeImmediate(World world)
+    {
+        using var query = world.QueryBuilder()
+            .With<BossMeleeTag>()
+            .Build();
+        query.Each(CombatPoolService.Recycle);
+    }
 }

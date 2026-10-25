@@ -140,6 +140,7 @@ public static class BattleSceneSpawner {
         brain.OnClearBullets += () =>
         {
             BulletSpawner.ClearAllBossBullets(world);
+            MeleeSpawner.ClearAllBossMelee(world);
         };
 
         var emitterAngleOffset = 0.0f;
@@ -208,6 +209,7 @@ public static class BattleSceneSpawner {
 
         // 2. 残存弾幕、近接判定および VFX の一括回収・プール返却
         BulletSpawner.ClearAllBossBulletsImmediate(world);
+        MeleeSpawner.ClearAllBossMeleeImmediate(world);
         using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
         {
             playerBullets.Each(CombatPoolService.Recycle);

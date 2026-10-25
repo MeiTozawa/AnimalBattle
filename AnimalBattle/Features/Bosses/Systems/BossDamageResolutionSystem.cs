@@ -113,6 +113,7 @@ public static class BossDamageResolutionSystem
                 entity.Add<DeadTag>();
                 sprite.IsVisible = false;
                 BulletSpawner.ClearAllBossBullets(world);
+                MeleeSpawner.ClearAllBossMelee(world);
                 EffectSpawner.SpawnVictoryExplosions(world, trans.Position);
                 CameraService.AddTrauma(cameraCfg.VictoryExplosionTrauma);
                 EventBus.Publish(new BossDiedEvent());
