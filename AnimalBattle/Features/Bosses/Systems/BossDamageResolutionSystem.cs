@@ -116,8 +116,6 @@ public static class BossDamageResolutionSystem
                 EffectSpawner.SpawnVictoryExplosions(world, trans.Position);
                 CameraService.AddTrauma(cameraCfg.VictoryExplosionTrauma);
                 EventBus.Publish(new BossDiedEvent());
-                // 自機エンティティに GameOverTag を付与し、入力受付停止および意図ゼロクリアへ遷移
-                world.QueryBuilder().With<PlayerTag>().Build().Each((Entity p) => p.Add<GameOverTag>());
             }
             else
             {

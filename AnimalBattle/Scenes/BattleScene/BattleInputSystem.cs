@@ -177,7 +177,6 @@ public static class BattleInputSystem
             .Remove<SpriteJitter>()
             .Remove<IncomingDamage>()
             .Remove<DeadTag>()
-            .Remove<GameOverTag>()
             .Remove<HitFlashEffect>();
 
         if (player.Has<CatWeaponState>())
