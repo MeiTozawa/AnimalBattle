@@ -13,7 +13,7 @@ namespace AnimalBattle.Bosses.Systems;
 /// <summary>
 ///     World 単位で独立して保持される Boss 予兆演出描画用コンテキスト。
 /// </summary>
-internal sealed class BossTelegraphRenderContext
+internal sealed class BossTelegraphRenderContext : IDisposable
 {
     public readonly record struct BossTelegraphData(
         Transform Transform,
@@ -27,6 +27,12 @@ internal sealed class BossTelegraphRenderContext
     public required Query<Transform, Sprite, CollisionBox, GameplayTagState, BossCombatState, BossBrainComponent> BossQuery { get; init; }
     public BossTelegraphData? CachedBoss;
     public Vec2f CachedPlayerPos;
+
+    public void Dispose()
+    {
+        PlayerQuery.Dispose();
+        BossQuery.Dispose();
+    }
 }
 
 /// <summary>

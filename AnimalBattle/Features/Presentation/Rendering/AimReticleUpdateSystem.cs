@@ -9,9 +9,30 @@ namespace AnimalBattle.Presentation.Rendering;
 /// <summary>
 ///     World 単位で独立して保持される照準器物理更新システム用コンテキスト。
 /// </summary>
-internal sealed class AimReticleUpdateContext
+internal sealed class AimReticleUpdateContext : IDisposable
 {
-    public required IDisposable Subscription { get; init; }
+    private readonly World _world;
+    public IDisposable? Subscription { get; private set; }
+
+    public AimReticleUpdateContext(World world)
+    {
+        _world = world;
+        Subscription = EventBus.Subscribe<PlayerShotFiredEvent>(OnPlayerShotFired);
+    }
+
+    private void OnPlayerShotFired(PlayerShotFiredEvent _)
+    {
+        var cfg = _world.Get<RenderConfig>().AimReticle;
+        ref var state = ref _world.GetMut<AimReticleState>();
+        state.Expansion = cfg.RecoilExpansion;
+        state.ExpansionVelocity = 0.0f;
+    }
+
+    public void Dispose()
+    {
+        Subscription?.Dispose();
+        Subscription = null;
+    }
 }
 
 /// <summary>
@@ -28,17 +49,7 @@ public static class AimReticleUpdateSystem
     public static World AddAimReticleUpdateSystem(this World world)
     {
         world.Set(new AimReticleState());
-
-        world.Set(new AimReticleUpdateContext
-        {
-            Subscription = EventBus.Subscribe<PlayerShotFiredEvent>(_ =>
-            {
-                var cfg = world.Get<RenderConfig>().AimReticle;
-                ref var state = ref world.GetMut<AimReticleState>();
-                state.Expansion = cfg.RecoilExpansion;
-                state.ExpansionVelocity = 0.0f;
-            })
-        });
+        world.Set(new AimReticleUpdateContext(world));
 
         // レティクル拡縮スプリング物理更新
         world.System("AimReticleUpdateSystem")

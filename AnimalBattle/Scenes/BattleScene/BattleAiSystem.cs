@@ -15,7 +15,7 @@ namespace AnimalBattle.Scenes.Battle;
 /// <summary>
 ///     World 単位で独立して保持される Boss AI およびカメラ更新用コンテキスト。
 /// </summary>
-internal sealed class BattleAiSystemContext
+internal sealed class BattleAiSystemContext : IDisposable
 {
     public required Query<TileMap> TileMapQuery { get; init; }
     public required Query<Transform, Velocity> PlayerQuery { get; init; }
@@ -30,6 +30,13 @@ internal sealed class BattleAiSystemContext
     public bool HasBoss;
     public TileMap? CachedTileMap;
     public readonly List<int> CandidateBossPlatforms = new(16);
+
+    public void Dispose()
+    {
+        TileMapQuery.Dispose();
+        PlayerQuery.Dispose();
+        BossQuery.Dispose();
+    }
 }
 
 /// <summary>

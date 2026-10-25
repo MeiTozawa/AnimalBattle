@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using AnimalBattle.Ai;
 using AnimalBattle.Characters;
@@ -9,6 +10,21 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
+///     World 単位で独立して保持されるデバッグ論理オーバーレイ描画システム用コンテキスト。
+/// </summary>
+internal sealed class DebugOverlayRenderContext : IDisposable
+{
+    public required Query<JumpCapability> PlayerQuery { get; init; }
+    public required Query<BossCombatState, BossBrainComponent> BossQuery { get; init; }
+
+    public void Dispose()
+    {
+        PlayerQuery.Dispose();
+        BossQuery.Dispose();
+    }
+}
+
+/// <summary>
 ///     スクリーン空間におけるデバッグ用 HUD：Boss ステートマシン、二段ジャンプ、操作案内、デバッグ表示を描画する ECS システム。
 ///     CameraOffsetResetSystem の後に実行されるため、カメラ移動やシェイクの影響を受けずに画面固定で描画されます。
 /// </summary>
@@ -16,8 +32,8 @@ public static class DebugOverlayRenderSystem
 {
     private readonly record struct BossDebugData(BossCombatState State, IBossBrain Brain);
 
-    private static Query<JumpCapability> _playerQuery;
-    private static Query<BossCombatState, BossBrainComponent> _bossQuery;
+
+
 
     private static int? _cachedRemainingJumps;
     private static BossDebugData? _cachedBoss;
@@ -29,13 +45,19 @@ public static class DebugOverlayRenderSystem
     /// <returns>登録済みワールド</returns>
     public static World AddDebugOverlayRenderSystem(this World world)
     {
-        _playerQuery = world.QueryBuilder<JumpCapability>()
+        var playerQuery = world.QueryBuilder<JumpCapability>()
             .With<PlayerTag>()
             .Build();
-        _bossQuery = world.QueryBuilder<BossCombatState, BossBrainComponent>()
+        var bossQuery = world.QueryBuilder<BossCombatState, BossBrainComponent>()
             .With<BossTag>()
             .Without<DeadTag>()
             .Build();
+
+        world.Set(new DebugOverlayRenderContext
+        {
+            PlayerQuery = playerQuery,
+            BossQuery = bossQuery
+        });
 
         world.System("DebugOverlayRenderSystem")
             .Kind(Ecs.OnStore)
@@ -59,8 +81,9 @@ public static class DebugOverlayRenderSystem
         _cachedRemainingJumps = null;
         _cachedBoss = null;
 
-        _playerQuery.Each(FindPlayer);
-        _bossQuery.Each(FindBoss);
+        var ctx = w.Get<DebugOverlayRenderContext>();
+        ctx.PlayerQuery.Each(FindPlayer);
+        ctx.BossQuery.Each(FindBoss);
 
         var remainingJumps = _cachedRemainingJumps;
         var boss = _cachedBoss;

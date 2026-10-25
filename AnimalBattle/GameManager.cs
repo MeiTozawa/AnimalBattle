@@ -1,15 +1,4 @@
 using AnimalBattle.Ai;
-using AnimalBattle.Asset;
-using AnimalBattle.Common;
-using AnimalBattle.Core;
-using AnimalBattle.Player;
-using AnimalBattle.Bosses;
-using AnimalBattle.Combat;
-using AnimalBattle.Presentation;
-using AnimalBattle.Framework.Pooling;
-using AnimalBattle.Scenes;
-
-using Flecs.NET.Core;
 
 namespace AnimalBattle;
 
@@ -182,15 +171,32 @@ public class GameManager : IDisposable {
 
         StartSceneSpawner.Teardown(_ecsWorld);
         BattleSceneSpawner.Teardown(_ecsWorld);
-
+        
+        DisposeSystemContexts(_ecsWorld);
         CombatPoolService.Current.Dispose();
         _configRegistry.Dispose();
         _ecsWorld.Dispose();
 
         _assetManager.Dispose();
+        EventBus.ClearAll();
 
         if (Current == this) Current = null!;
         _isDisposed = true;
         GC.SuppressFinalize(this);
+    }
+
+    private static void DisposeSystemContexts(World world)
+    {
+        world.Get<BattleInputSystemContext>().Dispose();
+        world.Get<BattleAiSystemContext>().Dispose();
+        world.Get<MovementSystemContext>().Dispose();
+        world.Get<MeleeBulletCancelContext>().Dispose();
+        world.Get<HurtboxSpatialResource>().Dispose();
+        world.Get<HudRenderSystemContext>().Dispose();
+        world.Get<DebugOverlayRenderContext>().Dispose();
+        world.Get<DebugGizmosRenderContext>().Dispose();
+        world.Get<TileMapRenderContext>().Dispose();
+        world.Get<BossTelegraphRenderContext>().Dispose();
+        world.Get<AimReticleUpdateContext>().Dispose();
     }
 }

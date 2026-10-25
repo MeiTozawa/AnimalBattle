@@ -9,7 +9,7 @@ namespace AnimalBattle.Combat.Systems;
 /// <summary>
 ///     World 単位で独立して保持される受撃ボックス空間ハッシュリソース。
 /// </summary>
-public sealed class HurtboxSpatialResource
+public sealed class HurtboxSpatialResource : IDisposable
 {
     /// <summary>空間ハッシュグリッドの実体</summary>
     public HurtboxSpatialIndex Index { get; set; }
@@ -33,6 +33,11 @@ public sealed class HurtboxSpatialResource
         Query = query;
         CachedCellSize = cellSize;
         CachedTableSize = tableSize;
+    }
+
+    public void Dispose()
+    {
+        Query.Dispose();
     }
 }
 

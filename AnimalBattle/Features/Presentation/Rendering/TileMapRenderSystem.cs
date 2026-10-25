@@ -1,3 +1,4 @@
+using System;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -7,12 +8,27 @@ using Flecs.NET.Core;
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
+///     World 単位で独立して保持されるタイルマップ描画システム用コンテキスト。
+/// </summary>
+internal sealed class TileMapRenderContext : IDisposable
+{
+    public required Query<Transform, CollisionBox> PlatformQuery { get; init; }
+    public required Query<TileMap> TileMapQuery { get; init; }
+
+    public void Dispose()
+    {
+        PlatformQuery.Dispose();
+        TileMapQuery.Dispose();
+    }
+}
+
+/// <summary>
 ///     アリーナ足場およびタイルマップの視口カリング描画を行う ECS システム。
 /// </summary>
 public static class TileMapRenderSystem
 {
-    private static Query<Transform, CollisionBox> _platformQuery;
-    private static Query<TileMap> _tileMapQuery;
+
+
     private static bool _renderedTileMap;
     private static ViewportRenderConfig _cachedViewport = null!;
 
@@ -23,11 +39,17 @@ public static class TileMapRenderSystem
     /// <returns>登録済みワールド</returns>
     public static World AddTileMapRenderSystem(this World world)
     {
-        _platformQuery = world.QueryBuilder<Transform, CollisionBox>()
+        var platformQuery = world.QueryBuilder<Transform, CollisionBox>()
             .With<PlatformTag>()
             .Build();
 
-        _tileMapQuery = world.QueryBuilder<TileMap>().Build();
+        var tileMapQuery = world.QueryBuilder<TileMap>().Build();
+
+        world.Set(new TileMapRenderContext
+        {
+            PlatformQuery = platformQuery,
+            TileMapQuery = tileMapQuery
+        });
 
         world.System("TileMapRenderSystem")
             .Kind(Ecs.OnStore)
@@ -44,13 +66,14 @@ public static class TileMapRenderSystem
         var w = it.World();
         if (w.Get<GameFlow>().State != GameState.Battle) return;
 
+        var ctx = w.Get<TileMapRenderContext>();
         _cachedViewport = w.Get<RenderConfig>().Viewport;
         _renderedTileMap = false;
-        _tileMapQuery.Each(DrawTileMap);
+        ctx.TileMapQuery.Each(DrawTileMap);
 
         if (!_renderedTileMap)
         {
-            _platformQuery.Each(DrawFallbackPlatform);
+            ctx.PlatformQuery.Each(DrawFallbackPlatform);
         }
     }
 

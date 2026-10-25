@@ -13,11 +13,16 @@ namespace AnimalBattle.Player.Systems;
 /// <summary>
 ///     World 単位で独立して保持されるキネマティック運動物理システム用コンテキスト。
 /// </summary>
-internal sealed class MovementSystemContext
+internal sealed class MovementSystemContext : IDisposable
 {
     public required Query<TileMap> TileMapQuery { get; init; }
     public TileMap? CachedTileMap;
     public readonly List<int> CandidatePlatforms = new(16);
+
+    public void Dispose()
+    {
+        TileMapQuery.Dispose();
+    }
 }
 
 /// <summary>

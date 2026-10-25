@@ -110,6 +110,9 @@ public static class BossDamageResolutionSystem
             if (hp.Current <= 0.0f)
             {
                 world.Add<GameOverTag>();
+                // 自機エンティティに GameOverTag を付与し、入力受付停止および意図ゼロクリアへ遷移
+                using var playerQuery = world.QueryBuilder().With<PlayerTag>().Build();
+                playerQuery.Each((Entity p) => p.Add<GameOverTag>());
                 entity.Add<DeadTag>();
                 sprite.IsVisible = false;
                 BulletSpawner.ClearAllBossBullets(world);

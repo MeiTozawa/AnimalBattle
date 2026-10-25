@@ -10,7 +10,7 @@ namespace AnimalBattle.Combat.Systems;
 /// <summary>
 ///     World 単位で独立して保持される近接消弾システム用コンテキスト。
 /// </summary>
-internal sealed class MeleeBulletCancelContext
+internal sealed class MeleeBulletCancelContext : IDisposable
 {
     public struct MeleeTarget
     {
@@ -25,6 +25,12 @@ internal sealed class MeleeBulletCancelContext
     public readonly MeleeTarget[] Melees = new MeleeTarget[8];
     public int MeleeCount;
     public bool SfxPlayedThisFrame;
+
+    public void Dispose()
+    {
+        MeleeQuery.Dispose();
+        BulletQuery.Dispose();
+    }
 }
 
 /// <summary>

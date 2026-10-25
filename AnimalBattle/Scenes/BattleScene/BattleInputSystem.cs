@@ -8,7 +8,28 @@ using AnimalBattle.Events;
 using AnimalBattle.Framework.Pooling;
 using Flecs.NET.Core;
 
+using System;
+
 namespace AnimalBattle.Scenes.Battle;
+
+/// <summary>
+///     World 単位で独立して保持される戦闘入力処理システム用コンテキスト。
+/// </summary>
+internal sealed class BattleInputSystemContext : IDisposable
+{
+    public required Query PlayerBulletsQuery { get; init; }
+    public required Query VfxQuery { get; init; }
+    public required Query PlayerEntitiesQuery { get; init; }
+    public required Query<Health, BossCombatState, BossBrainComponent> BossQuery { get; init; }
+
+    public void Dispose()
+    {
+        PlayerBulletsQuery.Dispose();
+        VfxQuery.Dispose();
+        PlayerEntitiesQuery.Dispose();
+        BossQuery.Dispose();
+    }
+}
 
 /// <summary>
 ///     戦闘シーンにおける入力受付、自機操作、および戦闘リセット・シーン復帰を司る ECS システム。
@@ -21,10 +42,10 @@ public static class BattleInputSystem
     private static bool _prevF3;
     private static bool _prevF4;
 
-    private static Query _playerBulletsQuery;
-    private static Query _vfxQuery;
-    private static Query _playerEntitiesQuery;
-    private static Query<Health, BossCombatState, BossBrainComponent> _bossQuery;
+
+
+
+
     private static Phase _targetDebugPhase;
     /// <summary>
     ///     戦闘入力処理システムを Flecs.NET ワールドへ登録します。
@@ -33,20 +54,28 @@ public static class BattleInputSystem
     /// <returns>登録済みワールド</returns>
     public static World AddBattleInputSystem(this World world)
     {
-        _playerBulletsQuery = world.QueryBuilder()
+        var playerBulletsQuery = world.QueryBuilder()
             .With<PlayerBulletTag>()
             .Build();
 
-        _vfxQuery = world.QueryBuilder()
+        var vfxQuery = world.QueryBuilder()
             .With<VfxTag>()
             .Build();
 
-        _playerEntitiesQuery = world.QueryBuilder()
+        var playerEntitiesQuery = world.QueryBuilder()
             .With<PlayerTag>()
             .Build();
-        _bossQuery = world.QueryBuilder<Health, BossCombatState, BossBrainComponent>()
+        var bossQuery = world.QueryBuilder<Health, BossCombatState, BossBrainComponent>()
             .With<BossTag>()
             .Build();
+
+        world.Set(new BattleInputSystemContext
+        {
+            PlayerBulletsQuery = playerBulletsQuery,
+            VfxQuery = vfxQuery,
+            PlayerEntitiesQuery = playerEntitiesQuery,
+            BossQuery = bossQuery
+        });
 
         world.System("BattleInputSystem")
             .Kind(Ecs.PreUpdate)
@@ -62,6 +91,8 @@ public static class BattleInputSystem
         var w = it.World();
         ref readonly var flow = ref w.Get<GameFlow>();
         if (flow.State != GameState.Battle) return;
+
+        var ctx = w.Get<BattleInputSystemContext>();
         // ESC キーでタイトルまたはキャラクター選択画面へ復帰
         // ESC キーでタイトルまたはキャラクター選択画面へ復帰
         if (InputService.IsPressed(InputAction.Cancel))
@@ -73,7 +104,7 @@ public static class BattleInputSystem
         // R キーで戦闘リセット
         if (InputService.IsPressed(InputAction.Restart))
         {
-            ResetCombat(w);
+            ResetCombat(w, ctx);
         }
 
         // デバッグ入力：F1 トグル、F2〜F4 フェーズ切替の処理
@@ -81,26 +112,26 @@ public static class BattleInputSystem
         var dbgCfg = renderCfg.Debug;
         if (dbgCfg.DebugMode)
         {
-            ProcessDebugInput(w, dbgCfg, _bossQuery);
+            ProcessDebugInput(w, dbgCfg, ctx.BossQuery);
         }
 
         // ゲームオーバー時は自機の操作入力を停止：PlayerInputSystem 側でも同様に判定
         if (w.Has<GameOverTag>()) return;
     }
 
-    private static void ResetCombat(World world)
+    private static void ResetCombat(World world, BattleInputSystemContext ctx)
     {
         // ゲームオーバー状態の解除：Remove は冪等のため事前の Has チェック不要
         world.Remove<GameOverTag>();
 
         BulletSpawner.ClearAllBossBulletsImmediate(world);
-        _playerBulletsQuery.Each(CombatPoolService.Recycle);
-        _vfxQuery.Each(CombatPoolService.Recycle);
+        ctx.PlayerBulletsQuery.Each(CombatPoolService.Recycle);
+        ctx.VfxQuery.Each(CombatPoolService.Recycle);
         CameraService.Reset();
         world.Set(new AimReticleState());
 
-        _bossQuery.Each(ResetBossEntity);
-        _playerEntitiesQuery.Each(ResetPlayerEntity);
+        ctx.BossQuery.Each(ResetBossEntity);
+        ctx.PlayerEntitiesQuery.Each(ResetPlayerEntity);
 
         EventBus.Publish(new CombatResetEvent());
     }
@@ -143,6 +174,7 @@ public static class BattleInputSystem
             .Remove<SpriteJitter>()
             .Remove<IncomingDamage>()
             .Remove<DeadTag>()
+            .Remove<GameOverTag>()
             .Remove<HitFlashEffect>();
         
         ref var sprite = ref boss.GetMut<Sprite>();
@@ -177,6 +209,7 @@ public static class BattleInputSystem
             .Remove<SpriteJitter>()
             .Remove<IncomingDamage>()
             .Remove<DeadTag>()
+            .Remove<GameOverTag>()
             .Remove<HitFlashEffect>();
 
         if (player.Has<CatWeaponState>())

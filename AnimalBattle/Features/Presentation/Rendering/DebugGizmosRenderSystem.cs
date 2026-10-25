@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Components;
@@ -13,13 +14,22 @@ namespace AnimalBattle.Presentation.Rendering;
 /// <summary>
 ///     World 単位で独立して保持されるデバッグギズモ描画システム用コンテキスト。
 /// </summary>
-internal sealed class DebugGizmosRenderContext
+internal sealed class DebugGizmosRenderContext : IDisposable
 {
     public required Query<Transform, CollisionBox> PlatformQuery { get; init; }
     public required Query<Transform, CollisionBox> PlayerQuery { get; init; }
     public required Query<Transform, Hitbox> HitboxQuery { get; init; }
     public required Query<Transform, Hurtbox> HurtboxQuery { get; init; }
     public required Query<TileMap> TileMapQuery { get; init; }
+
+    public void Dispose()
+    {
+        PlatformQuery.Dispose();
+        PlayerQuery.Dispose();
+        HitboxQuery.Dispose();
+        HurtboxQuery.Dispose();
+        TileMapQuery.Dispose();
+    }
 }
 
 /// <summary>

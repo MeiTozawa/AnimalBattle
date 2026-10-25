@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Abilities;
@@ -16,10 +17,16 @@ namespace AnimalBattle.Presentation.Rendering;
 /// <summary>
 ///     World 単位で独立して保持される HUD 描画システム用コンテキスト。
 /// </summary>
-internal sealed class HudRenderSystemContext
+internal sealed class HudRenderSystemContext : IDisposable
 {
     public required Query<Health, CharacterTypeComponent, GameplayTagState> PlayerQuery { get; init; }
     public required Query<Health, BossCombatState> BossQuery { get; init; }
+
+    public void Dispose()
+    {
+        PlayerQuery.Dispose();
+        BossQuery.Dispose();
+    }
 }
 
 /// <summary>
