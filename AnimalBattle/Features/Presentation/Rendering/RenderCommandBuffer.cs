@@ -13,37 +13,16 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private const int DefaultPacketCapacity = 16384;
     private const int DefaultTextCapacity = 8192;
 
-    // フロントバッファとバックバッファの物理ポインタ
-    private RenderPacket* _packetBuffer0;
-    private RenderPacket* _packetBuffer1;
-    private char* _textBuffer0;
-    private char* _textBuffer1;
-    private CompactCirclePacket* _circleBuffer0;
-    private CompactCirclePacket* _circleBuffer1;
-
-    // 各バッファスロットの独立要素カウント
-    private int _packetCount0;
-    private int _packetCount1;
-    private int _textLength0;
-    private int _textLength1;
-    private int _circleCount0;
-    private int _circleCount1;
-
-    // スレッドセーフな独立拡縮を実現するためフロントバッファとバックバッファで容量を個別に管理します
-    private int _packetCapacity0;
-    private int _packetCapacity1;
-    private int _textCapacity0;
-    private int _textCapacity1;
-    private int _circleCapacity0;
-    private int _circleCapacity1;
-
-    // 現在のフレームで書き込み対象となっているアクティブバッファへのポインタ及びアクティブカウンター
+    // 64バイト物理整列された単一アンマネージド描画バッファ
     private RenderPacket* _packetBuffer;
     private char* _textBuffer;
     private CompactCirclePacket* _circleBuffer;
-    private int _writeIndex;
-    private int _circleBatchStart;
 
+    private int _packetCapacity;
+    private int _textCapacity;
+    private int _circleCapacity;
+
+    private int _circleBatchStart;
     private int _currentPacketCount;
     private int _currentTextLength;
     private int _currentCircleCount;
@@ -62,115 +41,61 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     private int _activeBrightB = DefaultBrightB;
 
     /// <summary>
-    ///     指定された初期容量で64バイト物理整列のダブルバッファアンマネージドメモリを確保し、描画コマンドバッファを初期化します。
+    ///     指定された初期容量で64バイト物理整列のアンマネージドメモリを確保し、単一描画コマンドバッファを初期化します。
     /// </summary>
     /// <param name="initialPacketCapacity">初期コマンドバッファ容量</param>
     /// <param name="initialTextCapacity">初期テキストバッファ容量</param>
     public RenderCommandBuffer(int initialPacketCapacity = DefaultPacketCapacity,
         int initialTextCapacity = DefaultTextCapacity)
     {
-        var initPacketCap = Math.Max(64, initialPacketCapacity);
-        var initTextCap = Math.Max(64, initialTextCapacity);
-        var initCircleCap = Math.Max(64, initialPacketCapacity);
+        _packetCapacity = Math.Max(64, initialPacketCapacity);
+        _textCapacity = Math.Max(64, initialTextCapacity);
+        _circleCapacity = Math.Max(64, initialPacketCapacity);
 
-        _packetCapacity0 = initPacketCap;
-        _packetCapacity1 = initPacketCap;
-        _textCapacity0 = initTextCap;
-        _textCapacity1 = initTextCap;
-        _circleCapacity0 = initCircleCap;
-        _circleCapacity1 = initCircleCap;
-
-        _packetCount0 = 0;
-        _packetCount1 = 0;
-        _textLength0 = 0;
-        _textLength1 = 0;
-        _circleCount0 = 0;
-        _circleCount1 = 0;
         _currentPacketCount = 0;
         _currentTextLength = 0;
         _currentCircleCount = 0;
         _circleBatchStart = 0;
         IsDisposed = false;
-        _writeIndex = 0;
 
-        var packetBytes0 = (nuint)(sizeof(RenderPacket) * _packetCapacity0);
-        var packetBytes1 = (nuint)(sizeof(RenderPacket) * _packetCapacity1);
-        var textBytes0 = (nuint)(sizeof(char) * _textCapacity0);
-        var textBytes1 = (nuint)(sizeof(char) * _textCapacity1);
-        var circleBytes0 = (nuint)(sizeof(CompactCirclePacket) * _circleCapacity0);
-        var circleBytes1 = (nuint)(sizeof(CompactCirclePacket) * _circleCapacity1);
+        var packetBytes = (nuint)(sizeof(RenderPacket) * _packetCapacity);
+        var textBytes = (nuint)(sizeof(char) * _textCapacity);
+        var circleBytes = (nuint)(sizeof(CompactCirclePacket) * _circleCapacity);
 
-        _packetBuffer0 = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes0, 64);
-        _packetBuffer1 = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes1, 64);
-        _textBuffer0 = (char*)NativeMemory.AlignedAlloc(textBytes0, 64);
-        _textBuffer1 = (char*)NativeMemory.AlignedAlloc(textBytes1, 64);
-        _circleBuffer0 = (CompactCirclePacket*)NativeMemory.AlignedAlloc(circleBytes0, 64);
-        _circleBuffer1 = (CompactCirclePacket*)NativeMemory.AlignedAlloc(circleBytes1, 64);
-
-        _packetBuffer = _packetBuffer0;
-        _textBuffer = _textBuffer0;
-        _circleBuffer = _circleBuffer0;
+        _packetBuffer = (RenderPacket*)NativeMemory.AlignedAlloc(packetBytes, 64);
+        _textBuffer = (char*)NativeMemory.AlignedAlloc(textBytes, 64);
+        _circleBuffer = (CompactCirclePacket*)NativeMemory.AlignedAlloc(circleBytes, 64);
     }
 
     /// <summary>
-    ///     現在アクティブな書き込みバッファに格納されている緊密配置円コマンド数。
+    ///     現在のバッファに格納されている緊密配置円コマンド数。
     /// </summary>
     public int CircleCount => _currentCircleCount;
 
     /// <summary>
-    ///     現在アクティブな書き込みバッファにおける円バッチの最大収容可能要素数です。
+    ///     現在のバッファにおける円バッチの最大収容可能要素数です。
     /// </summary>
-    public int CircleCapacity => _writeIndex == 0 ? _circleCapacity0 : _circleCapacity1;
+    public int CircleCapacity => _circleCapacity;
 
     /// <summary>
-    ///     スロット 0 の緊密配置円バッファ容量。
-    /// </summary>
-    public int CircleCapacity0 => _circleCapacity0;
-
-    /// <summary>
-    ///     スロット 1 の緊密配置円バッファ容量。
-    /// </summary>
-    public int CircleCapacity1 => _circleCapacity1;
-
-    /// <summary>
-    ///     現在アクティブな書き込みバッファに格納されている描画コマンド数。
+    ///     現在のバッファに格納されている描画コマンド数。
     /// </summary>
     public int PacketCount => _currentPacketCount;
 
     /// <summary>
-    ///     現在アクティブな書き込みバッファに格納されている文字列バッファの文字数。
+    ///     現在のバッファに格納されている文字列バッファの文字数。
     /// </summary>
     public int TextLength => _currentTextLength;
 
     /// <summary>
-    ///     現在アクティブな書き込みバッファにおける描画コマンドバッファの最大収容可能要素数です。
+    ///     現在のバッファにおける描画コマンドバッファの最大収容可能要素数です。
     /// </summary>
-    public int PacketCapacity => _writeIndex == 0 ? _packetCapacity0 : _packetCapacity1;
+    public int PacketCapacity => _packetCapacity;
 
     /// <summary>
-    ///     スロット 0 の描画コマンドバッファ容量。
+    ///     現在のバッファにおける文字列バッファの最大収容可能文字数です。
     /// </summary>
-    public int PacketCapacity0 => _packetCapacity0;
-
-    /// <summary>
-    ///     スロット 1 の描画コマンドバッファ容量。
-    /// </summary>
-    public int PacketCapacity1 => _packetCapacity1;
-
-    /// <summary>
-    ///     現在アクティブな書き込みバッファにおける文字列バッファの最大収容可能文字数です。
-    /// </summary>
-    public int TextCapacity => _writeIndex == 0 ? _textCapacity0 : _textCapacity1;
-
-    /// <summary>
-    ///     スロット 0 の文字列バッファ容量。
-    /// </summary>
-    public int TextCapacity0 => _textCapacity0;
-
-    /// <summary>
-    ///     スロット 1 の文字列バッファ容量。
-    /// </summary>
-    public int TextCapacity1 => _textCapacity1;
+    public int TextCapacity => _textCapacity;
 
     /// <summary>
     ///     リソースが破棄済みであるか否かを取得します。
@@ -435,41 +360,11 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     {
         Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
         if (IsDisposed) return;
-        FinishRecording();
+        EnsurePendingCircleBatchFlushed();
 
-        var packets = _writeIndex == 0 ? _packetBuffer0 : _packetBuffer1;
-        var pCount = _writeIndex == 0 ? _packetCount0 : _packetCount1;
-        var texts = _writeIndex == 0 ? _textBuffer0 : _textBuffer1;
-        var tLength = _writeIndex == 0 ? _textLength0 : _textLength1;
-        var circles = _writeIndex == 0 ? _circleBuffer0 : _circleBuffer1;
-        var cCount = _writeIndex == 0 ? _circleCount0 : _circleCount1;
-
-        if (pCount > 0 || cCount > 0)
+        if (_currentPacketCount > 0 || _currentCircleCount > 0)
         {
-            NativeBindings.Engine_SubmitRenderCommands(packets, pCount, texts, tLength, circles, cCount);
-        }
-    }
-
-    /// <summary>
-    ///     描画スレッド向け処理としてフロントバッファに格納された確定コマンド群をC++ネイティブエンジンへ一括提出します。
-    ///     論理スレッドが並行して書き込むバックバッファには一切干渉しません。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitFront()
-    {
-        Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
-        if (IsDisposed) return;
-        var frontIndex = 1 - _writeIndex;
-        var packets = frontIndex == 0 ? _packetBuffer0 : _packetBuffer1;
-        var pCount = frontIndex == 0 ? _packetCount0 : _packetCount1;
-        var texts = frontIndex == 0 ? _textBuffer0 : _textBuffer1;
-        var tLength = frontIndex == 0 ? _textLength0 : _textLength1;
-        var circles = frontIndex == 0 ? _circleBuffer0 : _circleBuffer1;
-        var cCount = frontIndex == 0 ? _circleCount0 : _circleCount1;
-
-        if (pCount > 0 || cCount > 0)
-        {
-            NativeBindings.Engine_SubmitRenderCommands(packets, pCount, texts, tLength, circles, cCount);
+            NativeBindings.Engine_SubmitRenderCommands(_packetBuffer, _currentPacketCount, _textBuffer, _currentTextLength, _circleBuffer, _currentCircleCount);
         }
     }
 
@@ -554,21 +449,13 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     ダブルバッファの書き込み対象インデックスであり、ゼロまたは1を保持します。
-    /// </summary>
-    public int WriteIndex => _writeIndex;
-
-    /// <summary>
-    ///     論理スレッド向け処理として書き込み対象のバックバッファのカウンターとパイプライン状態を初期化し、新規フレームの描画コマンド記録を開始します。
+    ///     バッファのカウンターとパイプライン状態を初期化し、新規フレームの描画コマンド記録を開始します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginRecording()
     {
         Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
         if (IsDisposed) return;
-        _packetBuffer = _writeIndex == 0 ? _packetBuffer0 : _packetBuffer1;
-        _textBuffer = _writeIndex == 0 ? _textBuffer0 : _textBuffer1;
-        _circleBuffer = _writeIndex == 0 ? _circleBuffer0 : _circleBuffer1;
         _currentPacketCount = 0;
         _currentTextLength = 0;
         _currentCircleCount = 0;
@@ -580,109 +467,31 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         _activeBrightB = DefaultBrightB;
     }
 
-    /// <summary>
-    ///     論理スレッド用：現在の書き込みバッファの記録を完了し、未フラッシュの円バッチを確定させて要素数を確定・公開します。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void FinishRecording()
-    {
-        Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
-        if (IsDisposed) return;
-        EnsurePendingCircleBatchFlushed();
-        if (_writeIndex == 0)
-        {
-            _packetCount0 = _currentPacketCount;
-            _textLength0 = _currentTextLength;
-            _circleCount0 = _currentCircleCount;
-        }
-        else
-        {
-            _packetCount1 = _currentPacketCount;
-            _textLength1 = _currentTextLength;
-            _circleCount1 = _currentCircleCount;
-        }
-    }
-
-    /// <summary>
-    ///     フロントバッファとバックバッファのスロットインデックスを交互に切り替えます。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SwapBuffers()
-    {
-        Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
-        if (IsDisposed) return;
-        _writeIndex ^= 1;
-    }
-
-    /// <summary>
-    ///     バッファスロットを反転切り替えし、次フレームの記録バッファをゼロアロケーションで準備します。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Swap()
-    {
-        SwapBuffers();
-        BeginRecording();
-    }
-
-    /// <summary>
-    ///     描画バッファのカウンターおよびパイプラインシャドウ状態をリセットし、次フレームの記録に備えます。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Reset()
-    {
-        Swap();
-    }
-
     private void Dispose(bool disposing)
     {
         if (IsDisposed) return;
 
-        if (_packetBuffer0 != null)
+        if (_packetBuffer != null)
         {
-            NativeMemory.AlignedFree(_packetBuffer0);
-            _packetBuffer0 = null;
+            NativeMemory.AlignedFree(_packetBuffer);
+            _packetBuffer = null;
         }
 
-        if (_packetBuffer1 != null)
+        if (_textBuffer != null)
         {
-            NativeMemory.AlignedFree(_packetBuffer1);
-            _packetBuffer1 = null;
+            NativeMemory.AlignedFree(_textBuffer);
+            _textBuffer = null;
         }
 
-        if (_textBuffer0 != null)
+        if (_circleBuffer != null)
         {
-            NativeMemory.AlignedFree(_textBuffer0);
-            _textBuffer0 = null;
+            NativeMemory.AlignedFree(_circleBuffer);
+            _circleBuffer = null;
         }
 
-        if (_textBuffer1 != null)
-        {
-            NativeMemory.AlignedFree(_textBuffer1);
-            _textBuffer1 = null;
-        }
-
-        if (_circleBuffer0 != null)
-        {
-            NativeMemory.AlignedFree(_circleBuffer0);
-            _circleBuffer0 = null;
-        }
-
-        if (_circleBuffer1 != null)
-        {
-            NativeMemory.AlignedFree(_circleBuffer1);
-            _circleBuffer1 = null;
-        }
-
-        _packetBuffer = null;
-        _textBuffer = null;
-        _circleBuffer = null;
-
-        _packetCapacity0 = 0;
-        _packetCapacity1 = 0;
-        _textCapacity0 = 0;
-        _textCapacity1 = 0;
-        _circleCapacity0 = 0;
-        _circleCapacity1 = 0;
+        _packetCapacity = 0;
+        _textCapacity = 0;
+        _circleCapacity = 0;
 
         IsDisposed = true;
     }
@@ -692,24 +501,13 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
         if (IsDisposed) return;
         var required = _currentPacketCount + extraCount;
-        var currentCapacity = _writeIndex == 0 ? _packetCapacity0 : _packetCapacity1;
-        if (required <= currentCapacity) return;
+        if (required <= _packetCapacity) return;
 
-        var newCapacity = Math.Max(currentCapacity * 2, required);
+        var newCapacity = Math.Max(_packetCapacity * 2, required);
         var byteCount = (nuint)(sizeof(RenderPacket) * newCapacity);
 
-        if (_writeIndex == 0)
-        {
-            _packetBuffer0 = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer0, byteCount, 64);
-            _packetBuffer = _packetBuffer0;
-            _packetCapacity0 = newCapacity;
-        }
-        else
-        {
-            _packetBuffer1 = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer1, byteCount, 64);
-            _packetBuffer = _packetBuffer1;
-            _packetCapacity1 = newCapacity;
-        }
+        _packetBuffer = (RenderPacket*)NativeMemory.AlignedRealloc(_packetBuffer, byteCount, 64);
+        _packetCapacity = newCapacity;
     }
 
     private void EnsureTextCapacity(int extraLength)
@@ -717,24 +515,13 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
         if (IsDisposed) return;
         var required = _currentTextLength + extraLength;
-        var currentCapacity = _writeIndex == 0 ? _textCapacity0 : _textCapacity1;
-        if (required <= currentCapacity) return;
+        if (required <= _textCapacity) return;
 
-        var newCapacity = Math.Max(currentCapacity * 2, required);
+        var newCapacity = Math.Max(_textCapacity * 2, required);
         var byteCount = (nuint)(sizeof(char) * newCapacity);
 
-        if (_writeIndex == 0)
-        {
-            _textBuffer0 = (char*)NativeMemory.AlignedRealloc(_textBuffer0, byteCount, 64);
-            _textBuffer = _textBuffer0;
-            _textCapacity0 = newCapacity;
-        }
-        else
-        {
-            _textBuffer1 = (char*)NativeMemory.AlignedRealloc(_textBuffer1, byteCount, 64);
-            _textBuffer = _textBuffer1;
-            _textCapacity1 = newCapacity;
-        }
+        _textBuffer = (char*)NativeMemory.AlignedRealloc(_textBuffer, byteCount, 64);
+        _textCapacity = newCapacity;
     }
 
     private void EnsureCircleCapacity(int extraCount)
@@ -742,23 +529,12 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
         Debug.Assert(!IsDisposed, "[RenderCommandBuffer] 破棄済みのバッファに対して操作を実行しようとしました。");
         if (IsDisposed) return;
         var required = _currentCircleCount + extraCount;
-        var currentCapacity = _writeIndex == 0 ? _circleCapacity0 : _circleCapacity1;
-        if (required <= currentCapacity) return;
+        if (required <= _circleCapacity) return;
 
-        var newCapacity = Math.Max(currentCapacity * 2, required);
+        var newCapacity = Math.Max(_circleCapacity * 2, required);
         var byteCount = (nuint)(sizeof(CompactCirclePacket) * newCapacity);
 
-        if (_writeIndex == 0)
-        {
-            _circleBuffer0 = (CompactCirclePacket*)NativeMemory.AlignedRealloc(_circleBuffer0, byteCount, 64);
-            _circleBuffer = _circleBuffer0;
-            _circleCapacity0 = newCapacity;
-        }
-        else
-        {
-            _circleBuffer1 = (CompactCirclePacket*)NativeMemory.AlignedRealloc(_circleBuffer1, byteCount, 64);
-            _circleBuffer = _circleBuffer1;
-            _circleCapacity1 = newCapacity;
-        }
+        _circleBuffer = (CompactCirclePacket*)NativeMemory.AlignedRealloc(_circleBuffer, byteCount, 64);
+        _circleCapacity = newCapacity;
     }
 }

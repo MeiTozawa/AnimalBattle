@@ -60,39 +60,12 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     論理スレッド用：描画コマンド記録を完了し、フロントバッファバッファへ公開します。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void FinishRecording()
-    {
-        _commandBuffer.FinishRecording();
-    }
-
-    /// <summary>
-    ///     単一スレッド用：現在記録された描画コマンドを C++ へ直接提出します。
+    ///     現在記録された描画コマンドを C++ ネイティブエンジンへ一括提出します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Submit()
     {
         _commandBuffer.Submit();
-    }
-
-    /// <summary>
-    ///     レンダリングスレッド用：フロントバッファバッファ：Front Bufferに蓄積された描画コマンドを C++ へ一括提出します。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SubmitFront()
-    {
-        _commandBuffer.SubmitFront();
-    }
-
-    /// <summary>
-    ///     フロント・バックバッファのスロットを切り替えます。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SwapBuffers()
-    {
-        _commandBuffer.SwapBuffers();
     }
 
     /// <summary>

@@ -23,9 +23,6 @@ public interface IAssetManager : IDisposable
     /// <summary>キャッシュ済みのテクスチャハンドルの取得を試行します。</summary>
     bool TryGetTexture(string relativePath, out int handle);
 
-    /// <summary>画像サイズを手動キャッシュ登録します。</summary>
-    void CacheGraphSize(int handle, Vec2i size);
-
     /// <summary>キャッシュ済みのテクスチャ画像サイズの取得を試行します。</summary>
     bool TryGetGraphSize(int handle, out Vec2i size);
 
@@ -40,4 +37,7 @@ public interface IAssetManager : IDisposable
 
     /// <summary>アニメーションクリップ識別子と再生経過時間からスプライトシート上の切り出し矩形 UV SrcRect を計算します。</summary>
     Rect CalculateSrcRect(AnimationConfig config, StringId clipId, float animTimer, out bool isFinished);
+
+    /// <summary>リソース相対パスから実体ファイルの絶対パスを探索・解決します。</summary>
+    string ResolveAssetPath(string relativePath);
 }

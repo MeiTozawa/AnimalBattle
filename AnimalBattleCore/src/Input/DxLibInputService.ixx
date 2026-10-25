@@ -2,7 +2,6 @@ module;
 
 #include <array>
 #include <cstdint>
-#include <mutex>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -70,11 +69,9 @@ int GetPadButtonMask(InputButton button) noexcept {
 
 }  // namespace
 
-    /// @brief DxLib を使用して入力サンプリング・コンテキストスタック・アクションマッピングを提供する具象入力サービス
+    /// @brief DxLib を使用して入力サンプリング・コンテキストスタック・アクションマッピングを提供する具象入力サービス (単一メインスレッドで駆動する決定論的無ロック設計)
     export class DxLibInputService : public IInputService {
     private:
-        mutable std::mutex state_mutex_{};
-
         // ハードウェアサンプリング状態 (メインスレッドの Update が収集・累積)
         std::array<char, 256> raw_current_keys_{};
         std::array<char, 256> raw_previous_keys_{};
@@ -97,7 +94,7 @@ int GetPadButtonMask(InputButton button) noexcept {
 
         InputDevice active_device_ = InputDevice::Keyboard;
 
-        // 論理フレーム入力スナップショット (論理スレッドが BeginFrame でアトミックにラッチ取得し、フレーム中不変)
+        // 論理フレーム入力スナップショット (論理フレーム開始時にスナップショット確定、フレーム中不変)
         std::array<char, 256> frame_current_keys_{};
         std::array<char, 256> frame_pressed_keys_{};
         std::array<char, 256> frame_released_keys_{};
@@ -120,8 +117,7 @@ int GetPadButtonMask(InputButton button) noexcept {
 
         template <typename Func>
         bool CheckActionState(ActionId action, Func&& evaluator) const {
-            std::lock_guard lock(state_mutex_);
-            ContextId current_context = GetCurrentContextUnsafe();
+            ContextId current_context = GetCurrentContext();
             auto context_it = action_mappings_.find(current_context);
             if (context_it == action_mappings_.end()) {
                 return false;
@@ -140,10 +136,6 @@ int GetPadButtonMask(InputButton button) noexcept {
             return false;
         }
 
-        ContextId GetCurrentContextUnsafe() const noexcept {
-            return context_stack_.empty() ? DEFAULT_CONTEXT : context_stack_.back();
-        }
-
     public:
         DxLibInputService() = default;
 
@@ -158,60 +150,54 @@ int GetPadButtonMask(InputButton button) noexcept {
             int wheel_vol = ::GetMouseWheelRotVol();
             int new_pad = ::GetJoypadInputState(1);
 
-            {
-                std::lock_guard lock(state_mutex_);
-
-                for (int i = 0; i < 256; ++i) {
-                    char curr = new_keys[i];
-                    char prev = raw_current_keys_[i];
-                    if (curr != 0 && prev == 0) {
-                        latched_pressed_keys_[i] = 1;
-                    }
-                    if (curr == 0 && prev != 0) {
-                        latched_released_keys_[i] = 1;
-                    }
-                    raw_previous_keys_[i] = prev;
-                    raw_current_keys_[i] = curr;
+            for (int i = 0; i < 256; ++i) {
+                char curr = new_keys[i];
+                char prev = raw_current_keys_[i];
+                if (curr != 0 && prev == 0) {
+                    latched_pressed_keys_[i] = 1;
                 }
+                if (curr == 0 && prev != 0) {
+                    latched_released_keys_[i] = 1;
+                }
+                raw_previous_keys_[i] = prev;
+                raw_current_keys_[i] = curr;
+            }
 
-                int mouse_pressed = new_mouse & ~raw_mouse_buttons_;
-                int mouse_released = ~new_mouse & raw_mouse_buttons_;
-                latched_mouse_pressed_ |= mouse_pressed;
-                latched_mouse_released_ |= mouse_released;
-                raw_previous_mouse_buttons_ = raw_mouse_buttons_;
-                raw_mouse_buttons_ = new_mouse;
-                raw_previous_mouse_pos_ = raw_mouse_pos_;
-                raw_mouse_pos_ = new_mouse_pos;
-                latched_mouse_wheel_delta_ += wheel_vol;
+            int mouse_pressed = new_mouse & ~raw_mouse_buttons_;
+            int mouse_released = ~new_mouse & raw_mouse_buttons_;
+            latched_mouse_pressed_ |= mouse_pressed;
+            latched_mouse_released_ |= mouse_released;
+            raw_previous_mouse_buttons_ = raw_mouse_buttons_;
+            raw_mouse_buttons_ = new_mouse;
+            raw_previous_mouse_pos_ = raw_mouse_pos_;
+            raw_mouse_pos_ = new_mouse_pos;
+            latched_mouse_wheel_delta_ += wheel_vol;
 
-                int pad_pressed = new_pad & ~raw_pad_state_;
-                int pad_released = ~new_pad & raw_pad_state_;
-                latched_pad_pressed_ |= pad_pressed;
-                latched_pad_released_ |= pad_released;
-                raw_previous_pad_state_ = raw_pad_state_;
-                raw_pad_state_ = new_pad;
+            int pad_pressed = new_pad & ~raw_pad_state_;
+            int pad_released = ~new_pad & raw_pad_state_;
+            latched_pad_pressed_ |= pad_pressed;
+            latched_pad_released_ |= pad_released;
+            raw_previous_pad_state_ = raw_pad_state_;
+            raw_pad_state_ = new_pad;
 
-                if (new_pad != 0) {
-                    active_device_ = InputDevice::Gamepad;
-                } else if (new_mouse != 0 || wheel_vol != 0 ||
-                           new_mouse_pos.x != raw_previous_mouse_pos_.x ||
-                           new_mouse_pos.y != raw_previous_mouse_pos_.y) {
-                    active_device_ = InputDevice::Mouse;
-                } else {
-                    for (int i = 0; i < 256; ++i) {
-                        if (new_keys[i] != 0) {
-                            active_device_ = InputDevice::Keyboard;
-                            break;
-                        }
+            if (new_pad != 0) {
+                active_device_ = InputDevice::Gamepad;
+            } else if (new_mouse != 0 || wheel_vol != 0 ||
+                       new_mouse_pos.x != raw_previous_mouse_pos_.x ||
+                       new_mouse_pos.y != raw_previous_mouse_pos_.y) {
+                active_device_ = InputDevice::Mouse;
+            } else {
+                for (int i = 0; i < 256; ++i) {
+                    if (new_keys[i] != 0) {
+                        active_device_ = InputDevice::Keyboard;
+                        break;
                     }
                 }
             }
         }
 
-        // --- 論理フレーム入力スナップショット確定 (論理スレッド専任: BeginRecording 時に同期) ---
+        // --- 論理フレーム入力スナップショット確定 (BeginRecording 時に同期) ---
         void Snapshot() override {
-            std::lock_guard lock(state_mutex_);
-
             frame_current_keys_ = raw_current_keys_;
             frame_pressed_keys_ = latched_pressed_keys_;
             latched_pressed_keys_.fill(0);
@@ -312,43 +298,36 @@ int GetPadButtonMask(InputButton button) noexcept {
 
         // --- コンテキスト管理 ---
         void PushContext(ContextId context) override {
-            std::lock_guard lock(state_mutex_);
             if (context_stack_.empty() || context_stack_.back() != context) {
                 context_stack_.push_back(context);
             }
         }
 
         void PopContext() override {
-            std::lock_guard lock(state_mutex_);
             if (context_stack_.size() > 1) {
                 context_stack_.pop_back();
             }
         }
 
         void ClearAndSetContext(ContextId context) override {
-            std::lock_guard lock(state_mutex_);
             context_stack_.clear();
             context_stack_.push_back(context);
         }
 
         ContextId GetCurrentContext() const noexcept override {
-            std::lock_guard lock(state_mutex_);
-            return GetCurrentContextUnsafe();
+            return context_stack_.empty() ? DEFAULT_CONTEXT : context_stack_.back();
         }
 
         // --- バインディング管理 ---
         void BindAction(ContextId context, ActionId action, std::vector<InputButton> buttons) override {
-            std::lock_guard lock(state_mutex_);
             action_mappings_[context][action] = std::move(buttons);
         }
 
         void AddActionButton(ContextId context, ActionId action, InputButton button) override {
-            std::lock_guard lock(state_mutex_);
             action_mappings_[context][action].push_back(button);
         }
 
         void ClearActions(ContextId context) override {
-            std::lock_guard lock(state_mutex_);
             action_mappings_.erase(context);
         }
 

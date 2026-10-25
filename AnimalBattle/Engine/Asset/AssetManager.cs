@@ -1,17 +1,17 @@
-using System.Collections.Concurrent;
 using AnimalBattle.Configs;
 
 namespace AnimalBattle.Asset;
 
 /// <summary>
 /// <see cref="AnimationRegistry" /> および <see cref="ResourcePath" /> を参照してキャラクタースプライトや各種テクスチャをロード・管理し、
-/// 純粋なスプライト UV 切り出し計算を提供するアセットサービス。
+/// 画像サイズキャッシュおよび純粋なスプライト UV 切り出し計算を提供する具象アセットマネージャー。
 /// </summary>
 public sealed class AssetManager : IAssetManager {
     private readonly IAssetPathResolver _pathResolver;
     private readonly Dictionary<CharacterType, int> _characterSpriteHandles = [];
     private readonly Dictionary<CharacterType, AnimationConfig> _characterConfigs = [];
     private readonly Dictionary<string, int> _textureHandles = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<int, Vec2i> _graphSizes = [];
     private bool _isDisposed;
 
     /// <summary>
@@ -44,6 +44,7 @@ public sealed class AssetManager : IAssetManager {
         foreach (var handle in _textureHandles.Values) AssetService.DeleteGraph(handle);
         _textureHandles.Clear();
         _characterConfigs.Clear();
+        _graphSizes.Clear();
     }
 
     /// <inheritdoc />
@@ -83,6 +84,10 @@ public sealed class AssetManager : IAssetManager {
 
         _characterSpriteHandles[charType] = handle;
         _textureHandles[relPath] = handle;
+        if (handle >= 0)
+        {
+            _graphSizes[handle] = AssetService.GetGraphSize(handle);
+        }
         Debug.WriteLine(
             $"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {handle})");
     }
@@ -112,6 +117,10 @@ public sealed class AssetManager : IAssetManager {
         Debug.Assert(handle >= 0, $"[AssetManager 警告] テクスチャのロードに失敗しました ({relativePath}): {fullPath}");
 
         _textureHandles[relativePath] = handle;
+        if (handle >= 0)
+        {
+            _graphSizes[handle] = AssetService.GetGraphSize(handle);
+        }
         Debug.WriteLine($"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {handle})");
 
         return handle;
@@ -128,21 +137,25 @@ public sealed class AssetManager : IAssetManager {
     }
 
     /// <inheritdoc />
-    public void CacheGraphSize(int handle, Vec2i size)
-    {
-        // 内部キャッシュは AssetService が一元管理
-    }
-
-    /// <inheritdoc />
     public bool TryGetGraphSize(int handle, out Vec2i size)
     {
-        return AssetService.TryGetGraphSize(handle, out size);
+        return _graphSizes.TryGetValue(handle, out size);
     }
 
     /// <inheritdoc />
     public Vec2i GetGraphSize(int handle)
     {
-        return AssetService.GetGraphSize(handle);
+        if (_graphSizes.TryGetValue(handle, out var size))
+        {
+            return size;
+        }
+
+        var nativeSize = AssetService.GetGraphSize(handle);
+        if (handle >= 0)
+        {
+            _graphSizes[handle] = nativeSize;
+        }
+        return nativeSize;
     }
 
     /// <inheritdoc />
@@ -209,11 +222,7 @@ public sealed class AssetManager : IAssetManager {
         return new Rect(x1, y1, x2, y2);
     }
 
-    /// <summary>
-    /// リソース相対パスから実体ファイルの絶対パスを探索・解決します。
-    /// </summary>
-    /// <param name="relativePath">リソース相対パス</param>
-    /// <returns>解決された絶対パス、見つからない場合は入力パス</returns>
+    /// <inheritdoc />
     public string ResolveAssetPath(string relativePath)
     {
         return _pathResolver.ResolveAssetPath(relativePath);
