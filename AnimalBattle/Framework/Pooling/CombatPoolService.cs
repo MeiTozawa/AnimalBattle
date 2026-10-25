@@ -132,6 +132,11 @@ public sealed class CombatPoolService : IDisposable
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
+        e.Remove<OrbitOf>(Ecs.Wildcard);
+
+        e.Set(new Transform(Vec2f.Zero));
+        e.Set(new Velocity(Vec2f.Zero));
+
         if (e.Has<Hitbox>())
         {
             ref var hitbox = ref e.GetMut<Hitbox>();
@@ -190,16 +195,34 @@ public sealed class CombatPoolService : IDisposable
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
-        if (!e.Has<Hitbox>()) 
-            return;
-        ref var hitbox = ref e.GetMut<Hitbox>();
-        hitbox.IsActive = false;
+        e.Remove<OrbitOf>(Ecs.Wildcard);
+
+        e.Set(new Transform(Vec2f.Zero));
+        e.Set(new Velocity(Vec2f.Zero));
+
+        if (e.Has<FadeEffect>())
+        {
+            ref var fade = ref e.GetMut<FadeEffect>();
+            fade.ElapsedTimer = 0.0f;
+            fade.CurrentAlpha = fade.StartAlpha;
+        }
+
+        if (e.Has<Hitbox>())
+        {
+            ref var hitbox = ref e.GetMut<Hitbox>();
+            hitbox.IsActive = false;
+        }
     }
 
     private static void ResetBossSlashHitboxEntity(Entity e)
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
+        e.Remove<OrbitOf>(Ecs.Wildcard);
+
+        e.Set(new Transform(Vec2f.Zero));
+        e.Set(new Velocity(Vec2f.Zero));
+
         if (e.Has<HitHistory>())
         {
             ref var hist = ref e.GetMut<HitHistory>();

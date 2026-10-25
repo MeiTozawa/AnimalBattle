@@ -224,7 +224,20 @@ public sealed class EntityPool : IDisposable {
                 // FIFO方式に基づき最も古く貸出されたアクティブエンティティを強制回収して再利用します
                 Metrics.OverflowCount++;
 
+                // 安全 FIFO 抢占：跳过已经挂上 RecycleTag 待回收的实体，防止帧末被 CombatRecycleSystem 误杀
                 var slot = _activeHead;
+                var curr = _activeHead;
+                while (curr != -1)
+                {
+                    var cand = _allAllocated[curr];
+                    if (cand.IsAlive() && !cand.Has<RecycleTag>())
+                    {
+                        slot = curr;
+                        break;
+                    }
+                    curr = _activeNext[curr];
+                }
+
                 if (slot < 0 || slot >= TotalAllocated)
                 {
                     slot = 0;
@@ -270,6 +283,7 @@ public sealed class EntityPool : IDisposable {
             Metrics.ExpansionCount++;
 
             _onReset?.Invoke(newEntity);
+            newEntity.Enable();
             return newEntity;
         }
 
