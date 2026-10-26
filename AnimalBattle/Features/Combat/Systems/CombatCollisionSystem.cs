@@ -1,5 +1,4 @@
 using System;
-using AnimalBattle.Abilities;
 using AnimalBattle.Combat.Spatial;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
@@ -121,41 +120,33 @@ public static class CombatCollisionSystem
         var isHeavy = localHitbox.IsHeavy || (localHitbox.Damage >= physicsCfg.HeavyDamageThreshold);
         var targetKnockback = baseKnockback with { X = knockbackDir * baseKnockback.X };
 
-        // 同一フレーム内で複数弾や近接攻撃が連続ヒットした際のダメージ上書き消失を防止するため
-        // Has による確定的な存在判定を行い、未受撃なら Set、受撃済みなら GetMut で累積します
-        // ECS システムイテレーションおよび DeferScope による遅延キューイング中であっても即時更新できるよう DeferSuspend します
-        var isDeferred = world.IsDeferred();
-        if (isDeferred) world.DeferSuspend();
-        try
+        // 常駐 IncomingDamage へのインライン書き込み（Archetype 変更や遅延キューを発生させず即時反映）
+        ref var incoming = ref vicEntity.GetMut<IncomingDamage>();
+        if (incoming.Amount <= 0.0f)
         {
-            if (!vicEntity.Has<IncomingDamage>())
+            incoming.Amount = localHitbox.Damage;
+            incoming.SourceFaction = localHitbox.Faction;
+            incoming.Knockback = targetKnockback;
+            incoming.IsHeavyImpact = isHeavy;
+        }
+        else
+        {
+            // 敵対判定（Boss攻撃等）から自機への同一フレーム多重被弾は最大値を採用して多重被弾死を防止
+            // プレイヤーからの弾幕は同一フレームの散弾累加を許可
+            if (localHitbox.Faction == Faction.Hostile)
             {
-                // 初回被弾：Set で構造体を確定的に初期化。非托管メモリの未初期化ゴミ値や Amount <= 0 の判定漏洞を完全に排除
-                vicEntity.Set(new IncomingDamage
-                {
-                    Amount = localHitbox.Damage,
-                    SourceFaction = localHitbox.Faction,
-                    Knockback = targetKnockback,
-                    IsHeavyImpact = isHeavy
-                });
+                incoming.Amount = MathF.Max(incoming.Amount, localHitbox.Damage);
             }
             else
             {
-                // 同一フレーム内の多段ヒット：ダメージを累加し、重撃フラグを論理和合成
-                ref var incoming = ref vicEntity.GetMut<IncomingDamage>();
                 incoming.Amount += localHitbox.Damage;
-                incoming.IsHeavyImpact |= isHeavy;
-
-                // ノックバック仲裁：今回のヒットが重撃の場合は重撃インパルスを優先反映
-                if (isHeavy)
-                {
-                    incoming.Knockback = targetKnockback;
-                }
             }
-        }
-        finally
-        {
-            if (isDeferred) world.DeferResume();
+
+            incoming.IsHeavyImpact |= isHeavy;
+            if (isHeavy)
+            {
+                incoming.Knockback = targetKnockback;
+            }
         }
 
         EffectSpawner.SpawnHitSparkEffect(world, vicTrans.Position + hurtbox.Shape.Offset);

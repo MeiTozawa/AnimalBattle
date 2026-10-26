@@ -1,8 +1,6 @@
 using System;
 using System.Diagnostics;
-using AnimalBattle.Abilities;
 using AnimalBattle.Combat.Spatial;
-
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;

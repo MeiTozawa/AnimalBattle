@@ -11,7 +11,7 @@ namespace AnimalBattle.Bosses.Systems;
 
 /// <summary>
 ///     Boss 敵対ユニット専用の被弾ダメージ裁定および無敵時間管理を行う単一責任 ECS システム。
-///     <see cref="IncomingDamage" /> 意図コンポーネントを消費し、易傷倍率、反撃弾幕、撃破演出およびカメラ衝撃を処理します。
+///     常駐 <see cref="IncomingDamage" /> 意図コンポーネントを消費し、易傷倍率、反撃弾幕、撃破演出およびカメラ衝撃を処理します。
 /// </summary>
 public static class BossDamageResolutionSystem
 {
@@ -58,7 +58,11 @@ public static class BossDamageResolutionSystem
         {
             var entity = it.Entity(i);
             ref var hp = ref hps[i];
-            ref readonly var dmg = ref damages[i];
+            ref var dmg = ref damages[i];
+
+            // 未受撃（本フレームでの被弾意図なし）または無効なダメージの場合は即座にスキップ
+            if (dmg.Amount <= 0.0f) continue;
+
             ref readonly var flashCfg = ref flashConfigs[i];
             ref readonly var trans = ref transforms[i];
             ref readonly var combat = ref combats[i];
@@ -67,9 +71,9 @@ public static class BossDamageResolutionSystem
             ref var vel = ref velocities[i];
 
             // ゲームオーバー済み、完全無敵または不可命中状態：GAS Invincible / Untargetable 保持時、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
-            if (isGameOver || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
+            if (isGameOver || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f)
             {
-                entity.Remove<IncomingDamage>();
+                dmg = default;
                 continue;
             }
 
@@ -131,7 +135,7 @@ public static class BossDamageResolutionSystem
                 BulletSpawner.SpawnBossCounterAttack(world, trans.Position, combat.Phase);
             }
 
-            entity.Remove<IncomingDamage>();
+            dmg = default;
         }
     }
 }

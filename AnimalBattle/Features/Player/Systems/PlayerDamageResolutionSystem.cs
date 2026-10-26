@@ -10,7 +10,7 @@ namespace AnimalBattle.Player.Systems;
 
 /// <summary>
 ///     プレイヤー自機専用の被弾ダメージ裁定 ECS システム。
-///     <see cref="PlayerTag" /> を持つエンティティの <see cref="IncomingDamage" /> を消費し、
+///     常駐 <see cref="IncomingDamage" /> を毎フレーム走査・消費し、
 ///     HP 減少、無敵時間、ヒットストップ、被弾スカッシュ、ノックバックおよびカメラ衝撃を処理します。
 /// </summary>
 public static class PlayerDamageResolutionSystem
@@ -58,7 +58,11 @@ public static class PlayerDamageResolutionSystem
         {
             var entity = it.Entity(i);
             ref var hp = ref hps[i];
-            ref readonly var dmg = ref damages[i];
+            ref var dmg = ref damages[i];
+
+            // 未受撃（本フレームでの被弾意図なし）または無効なダメージの場合は即座にスキップ
+            if (dmg.Amount <= 0.0f) continue;
+
             ref readonly var invCfg = ref invConfigs[i];
             ref readonly var flashCfg = ref flashConfigs[i];
             ref readonly var trans = ref transforms[i];
@@ -69,10 +73,10 @@ public static class PlayerDamageResolutionSystem
             ref var tagState = ref tags[i];
             ref var effectState = ref timedEffects[i];
 
-            // ゲームオーバー済み、無敵または不可命中状態：GAS Invincible / Untargetable 保持時、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
-            if (isGameOver || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f || dmg.Amount <= 0.0f)
+            // ゲームオーバー済み、無敵状態（GAS Invincible / Untargetable 保持時）、または死亡済みの場合はダメージを消費（リセット）してスキップ
+            if (isGameOver || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f)
             {
-                entity.Remove<IncomingDamage>();
+                dmg = default;
                 continue;
             }
 
@@ -129,7 +133,7 @@ public static class PlayerDamageResolutionSystem
                 EventBus.Publish(new PlayerDamagedEvent(dmg.Amount, hp.Current, isHeavy));
             }
 
-            entity.Remove<IncomingDamage>();
+            dmg = default;
         }
     }
 }

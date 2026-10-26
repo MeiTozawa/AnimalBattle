@@ -173,7 +173,7 @@ public static class BattleInputSystem
         // 一時状態・エフェクト・死亡タグの一括安全削除：Flecs ネイティブ API による冪等操作
         boss.Remove<HitstopState>()
             .Remove<SpriteJitter>()
-            .Remove<IncomingDamage>()
+            .Set(new IncomingDamage())
             .Remove<DeadTag>()
             .Remove<HitFlashEffect>();
         
@@ -207,7 +207,7 @@ public static class BattleInputSystem
         // 一時状態・エフェクト・死亡タグの一括安全削除：Flecs ネイティブ API による冪等操作
         player.Remove<HitstopState>()
             .Remove<SpriteJitter>()
-            .Remove<IncomingDamage>()
+            .Set(new IncomingDamage())
             .Remove<DeadTag>()
             .Remove<HitFlashEffect>();
 
