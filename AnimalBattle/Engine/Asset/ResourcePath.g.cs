@@ -71,9 +71,6 @@ public static class ResourcePath
 
         /// <summary>sheet.png のファイルパス。</summary>
         public const string SheetPng = @"Platform\sheet.png";
-
-        /// <summary>sheet.toml のファイルパス。</summary>
-        public const string SheetToml = @"Platform\sheet.toml";
     }
 
     /// <summary>
@@ -171,6 +168,9 @@ public static class ResourcePath
         /// <summary>render.toml 設定ファイル名。</summary>
         public const string Render = "render.toml";
 
+        /// <summary>sheet.toml 設定ファイル名。</summary>
+        public const string Sheet = "sheet.toml";
+
         /// <summary>special_bullets.toml 設定ファイル名。</summary>
         public const string SpecialBullets = "special_bullets.toml";
 
@@ -209,6 +209,9 @@ public static class ResourcePath
 
         /// <summary>render.toml の相対パス。</summary>
         public const string RenderToml = @"Config\render.toml";
+
+        /// <summary>sheet.toml の相対パス。</summary>
+        public const string SheetToml = @"Config\sheet.toml";
 
         /// <summary>special_bullets.toml の相対パス。</summary>
         public const string SpecialBulletsToml = @"Config\special_bullets.toml";

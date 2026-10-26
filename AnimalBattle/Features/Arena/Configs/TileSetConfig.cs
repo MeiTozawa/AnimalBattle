@@ -3,7 +3,7 @@ using ErrorOr;
 namespace AnimalBattle.Configs;
 
 /// <summary>
-///     Resource/Platform/sheet.toml 等から読み込まれるタイルセット設定クラス。
+///     Config/sheet.toml 等から読み込まれるタイルセット設定クラス。
 /// </summary>
 public sealed class TileSetConfig {
     /// <summary>タイル単体の幅ピクセル単位</summary>
