@@ -37,7 +37,7 @@ Damage = 1.0
 Damage = 1.0
 
 [BossBlackBullet]
-Damage = 1.2
+Damage = 1.0
 
 # --- 近接斬撃判定原型 ---
 [PlayerSlashHitbox]

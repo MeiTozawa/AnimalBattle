@@ -118,14 +118,14 @@ ParticleOutlinePadding = 1
 [Hud]
 TitlePos = { x = 20, y = 16 }
 TitleColor = "#FFD700"
-TitleText = "=== BULLET BATTLE (TOML FSM) ==="
+TitleText = "=== BULLET BATTLE ==="
 
 LineSpacing = 18
 Text = [
-    { Text = "[A/D/Left/Right]: Move (Instant Stop)", Color = "#CCCCCC" },
+    { Text = "[A/D]: Move ", Color = "#CCCCCC" },
     { Text = "[Space]: Jump & Air Double Jump", Color = "#CCCCCC" },
     { Text = "[Left Click]: Aim & Shoot", Color = "#CCCCCC" },
-    { Text = "[R]: Instant Restart (1-Frame Reset)", Color = "#FF8080" },
+    { Text = "[R]: Instant Restart", Color = "#FF8080" },
 ]
 
 BossSwitchGuideText = "[1] Boss 1   [2] Boss 2"
