@@ -64,9 +64,63 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
     /// <inheritdoc />
     public ErrorOr<T> LoadInitial()
     {
+#if !DEBUG
+        using var stream = EmbeddedConfigProvider.OpenStream(_relativeFilePath);
+        if (stream == null)
+        {
+            Debug.Fail($"[C# 設定警告] 組み込み TOML 設定リソースが見つかりませんでした: {_relativeFilePath}");
+            return Error.NotFound("Config.NotFound", $"組み込み TOML 設定リソースが見つかりません ({_relativeFilePath})。");
+        }
+
+        try
+        {
+            var builder = new ConfigurationBuilder();
+            builder.AddTomlStream(stream);
+
+            var configRoot = builder.Build();
+            var instance = new T();
+            _binder(configRoot, instance);
+
+            if (instance is IConfigLifecycle lifecycle)
+            {
+                var valid = lifecycle.Validate();
+                if (valid.IsError)
+                {
+                    Debug.Fail($"[C# 設定警告] {typeof(T).Name} の初期検証に失敗しました: {valid.FirstError.Description}");
+                    return valid.FirstError;
+                }
+                lifecycle.PostProcess();
+            }
+
+            return instance;
+        }
+        catch (Exception ex)
+        {
+            Debug.Fail($"[C# 設定警告] 組み込み TOML 読み込み中に例外が発生しました: {ex.Message}");
+            return Error.Failure("Config.Exception", ex.Message);
+        }
+#else
         var resolvedPath = _resolver.ResolveConfigPath(_relativeFilePath);
         if (string.IsNullOrEmpty(resolvedPath) || !File.Exists(resolvedPath))
         {
+            // Debug 実行時でも外部ファイルが配置されていない場合は組み込みリソースへフォールバック
+            using var fallbackStream = EmbeddedConfigProvider.OpenStream(_relativeFilePath);
+            if (fallbackStream != null)
+            {
+                var builder = new ConfigurationBuilder();
+                builder.AddTomlStream(fallbackStream);
+                var configRoot = builder.Build();
+                var instance = new T();
+                _binder(configRoot, instance);
+                if (instance is IConfigLifecycle lifecycle)
+                {
+                    var valid = lifecycle.Validate();
+                    if (valid.IsError) return valid.FirstError;
+                    lifecycle.PostProcess();
+                }
+                return instance;
+            }
+
             Debug.Fail($"[C# 設定警告] TOML 設定ファイルが見つかりませんでした: {_relativeFilePath}");
             return Error.NotFound("Config.NotFound", $"TOML 設定ファイルが見つかりません ({_relativeFilePath})。");
         }
@@ -96,9 +150,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
                 lifecycle.PostProcess();
             }
 
-#if DEBUG
             SetupWatcher(directory, fileName, resolvedPath, configRoot);
-#endif
 
             return instance;
         }
@@ -107,6 +159,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
             Debug.Fail($"[C# 設定警告] TOML 読み込み中に例外が発生しました: {ex.Message}");
             return Error.Failure("Config.Exception", ex.Message);
         }
+#endif
     }
 
 #if DEBUG
