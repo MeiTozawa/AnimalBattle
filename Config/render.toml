@@ -126,6 +126,7 @@ Text = [
     { Text = "[Space]: Jump & Air Double Jump", Color = "#CCCCCC" },
     { Text = "[Left Click]: Aim & Shoot", Color = "#CCCCCC" },
     { Text = "[R]: Instant Restart", Color = "#FF8080" },
+    { Text = "[ESC]: Back to the Home", Color = "#FF8080" },
 ]
 
 BossSwitchGuideText = "[1] Boss 1   [2] Boss 2"
