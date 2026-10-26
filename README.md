@@ -60,7 +60,7 @@ The easiest way to configure and build the entire solution is via the bundled [`
 ```cmd
 build.bat "C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用"
 ```
-*(If you pass `C:\DxLib_VC`, the script will automatically detect and use the `VC` subfolder if present).*
+*(If you pass `C:\DxLib_VC`, the script will automatically detect and use the `プロジェクトに追加すべきファイル_VC用` or `VC` subfolder if present).*
 
 #### Option 2: Set the `DXLIB_DIR` environment variable
 ```cmd
