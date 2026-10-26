@@ -46,7 +46,7 @@ Before building the project, ensure the following tools and dependencies are ins
 
 > [!IMPORTANT]
 > **DxLib Directory Structure**:
-> Download the **DxLib for Visual Studio / C++** package (`DxLib_VC.zip`). When unzipped, it contains a folder named `VC` (or `プロジェクトに追加すべきファイル_VC用`), which directly houses `DxLib.h`, `DxCompileConfig.h`, and `DxLibW.lib`. You will need to provide the path to this folder (e.g. `C:\DxLib_VC\VC`).
+> Download the **DxLib for Visual Studio / C++** package (`DxLib_VC.zip`). When unzipped, it contains a folder named `プロジェクトに追加すべきファイル_VC用`, which directly houses `DxLib.h`, `DxCompileConfig.h`, and `DxLibW.lib`. You will need to provide the path to this folder (e.g. `C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用`).
 
 ---
 
@@ -58,13 +58,13 @@ The easiest way to configure and build the entire solution is via the bundled [`
 
 #### Option 1: Provide DxLib path as an argument
 ```cmd
-build.bat "C:\DxLib_VC\VC"
+build.bat "C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用"
 ```
 *(If you pass `C:\DxLib_VC`, the script will automatically detect and use the `VC` subfolder if present).*
 
 #### Option 2: Set the `DXLIB_DIR` environment variable
 ```cmd
-set DXLIB_DIR=C:\DxLib_VC\VC
+set DXLIB_DIR=C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用
 build.bat
 ```
 
@@ -98,7 +98,7 @@ If you prefer building manually or want to configure your IDE (CLion, Visual Stu
    ```
 3. Configure CMake with Ninja and specify your DxLib directory:
    ```cmd
-   cmake -B cmake-build-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DDXLIB_DIR="C:/DxLib_VC/VC"
+   cmake -B cmake-build-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DDXLIB_DIR="C:/DxLib_VC/プロジェクトに追加すべきファイル_VC用"
    ```
    *Note: Use forward slashes `/` in the `DXLIB_DIR` CMake parameter.*
 4. Compile the native DLL:
@@ -113,7 +113,7 @@ If you prefer building manually or want to configure your IDE (CLion, Visual Stu
 #### Configuring in IDEs (CLion / VS Code / Visual Studio)
 * Set the CMake generator to **Ninja**.
 * Set the C++ toolchain to **MSVC (Visual Studio x64)** (MSVC is required for full C++23 Module support in this project).
-* Add `-DDXLIB_DIR=C:/DxLib_VC/VC` to your CMake options or inside `CMakeUserPresets.json`.
+* Add `-DDXLIB_DIR=C:/DxLib_VC/プロジェクトに追加すべきファイル_VC用` to your CMake options or inside `CMakeUserPresets.json`.
 
 ---
 
@@ -184,7 +184,6 @@ AnimalBattle/
 │   └── Player/                       # Player movement, speed, and dash parameters
 │
 ├── Resource/                         # Game assets (sprites, textures, audio, fonts)
-├── docs/                             # Architecture manuals, design docs, and diagrams
 ├── scripts/                          # Build automation and code-generation utilities
 │   ├── generate_resource_paths.py    # Generates typed C# asset paths (ResourcePath.g.cs)
 │   └── verify_comments.py            # Code comment integrity verification
@@ -200,7 +199,7 @@ AnimalBattle/
 
 ### 1. `fatal error: DxLib.h: No such file or directory`
 * **Cause**: `DXLIB_DIR` was not specified or points to the wrong folder.
-* **Fix**: Ensure `DXLIB_DIR` points to the folder containing `DxLib.h` (e.g., `C:\DxLib_VC\VC`). If your DxLib root is `C:\DxLib_VC`, pass `C:\DxLib_VC\VC`.
+* **Fix**: Ensure `DXLIB_DIR` points to the folder containing `DxLib.h` (e.g., `C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用`). If your DxLib root is `C:\DxLib_VC`, pass `C:\DxLib_VC\プロジェクトに追加すべきファイル_VC用`.
 
 ### 2. Ambiguous symbol or module errors with GCC / MinGW
 * **Cause**: `AnimalBattleCore` utilizes C++23 Modules (`FILE_SET cxx_modules`). Current versions of MinGW GCC have known limitations with module export resolution for this codebase.

@@ -18,7 +18,6 @@
 *.userprefs
 Log.txt
 build_tests.bat
-build.bat
 .clangd
 
 # Build results
@@ -74,7 +73,6 @@ imgui.ini
 /cmake-build-release/
 /cmake-build-test/
 CMakeUserPresets.json
-build.bat
 AnimalBattle/*.dll
 
 #AI agent files
