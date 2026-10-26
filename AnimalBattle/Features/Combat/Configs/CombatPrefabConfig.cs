@@ -120,7 +120,6 @@ public sealed class PlayerSlashHitboxPrefabConfig
 {
     public float Damage { get; set; }
     public Vec2f Size { get; set; }
-    public float DefaultDuration { get; set; }
     public Vec2f Knockback { get; set; }
     public bool IsHeavy { get; set; }
 }

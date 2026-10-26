@@ -58,13 +58,12 @@ public static class CombatPrefabs
             .Set(new BulletModifier(BulletType.Normal, bossNormalCfg.Radius, Vec2f.Zero)) 
             .Set(new OrbitSatellite(0.0f, 0.0f));
 
-        // --- 3. 自機近接斬撃判定 ---
+        // --- 3. 自機近接斬撃判定：常駐エンティティであり持続時間は BunnyWeaponSystem が有効無効を制御するため HitboxLifetime は付与しない ---
         var slashCfg = cfg.PlayerSlashHitbox;
         PlayerSlashHitbox = world.Prefab(PlayerSlashHitboxName)
             .IsA(CommonPrefabs.BaseMeleeHitbox)
             .Add<PlayerMeleeTag>()
-            .Set(new Hitbox(new CollisionShape.Box(slashCfg.Size), slashCfg.Damage, Faction.Friendly, destroyOnHit: false, knockback: slashCfg.Knockback, isHeavy: slashCfg.IsHeavy))
-            .Set(new HitboxLifetime(slashCfg.DefaultDuration));
+            .Set(new Hitbox(new CollisionShape.Box(slashCfg.Size), slashCfg.Damage, Faction.Friendly, destroyOnHit: false, knockback: slashCfg.Knockback, isHeavy: slashCfg.IsHeavy));
 
         // --- 4. Boss 2 近接斬撃攻撃判定実体 ---
         var bossSlashCfg = cfg.BossSlashHitbox;
