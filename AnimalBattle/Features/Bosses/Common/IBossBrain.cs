@@ -29,9 +29,6 @@ public interface IBossBrain
     /// <summary>死亡状態かどうかを取得します。</summary>
     bool IsDead { get; }
 
-    /// <summary>弾幕波次発射イベント。</summary>
-    event Action<StringId, Vec2f, Vec2f>? OnEmitBulletWave;
-
     /// <summary>全弾幕消去イベント。</summary>
     event Action? OnClearBullets;
 

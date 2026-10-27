@@ -108,9 +108,6 @@ public sealed class Boss2Config : BaseBossConfig {
     /// <summary>カイト対策遠隔技能識別名</summary>
     public string AntiKitingRangedSkill { get; set; } = string.Empty;
 
-    /// <summary>目標ロック・飛翔技能識別名</summary>
-    public string TargetLockSkill { get; set; } = string.Empty;
-
     /// <summary>Phase 1 状態機設定</summary>
     public Boss2PhaseConfig Phase1 { get; set; } = new();
 

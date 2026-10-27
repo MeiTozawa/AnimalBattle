@@ -54,9 +54,6 @@ public sealed class Boss1PhaseFsmConfig {
 ///     Config/boss1.toml から読み込まれる Boss 1 の基本パラメータおよび各フェーズの FSM 設定クラス。
 /// </summary>
 public sealed class Boss1Config : BaseBossConfig {
-    /// <summary>急降下突進技能識別名</summary>
-    public string DiveSkill { get; set; } = string.Empty;
-
     /// <summary>浮遊移動の上限天井 Y 座標</summary>
     public float CeilingLimitY { get; set; }
 

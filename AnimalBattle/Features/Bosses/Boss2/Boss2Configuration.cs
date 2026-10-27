@@ -117,9 +117,6 @@ public interface IBoss2Configuration {
     /// <summary>カイト対策遠隔技能タグを取得します。</summary>
     StringId AntiKitingRangedSkillTag { get; }
 
-    /// <summary>目標ロック・飛翔技能タグを取得します。</summary>
-    StringId TargetLockSkillTag { get; }
-
     /// <summary>Boss2 戦闘判定および反風等・衝突に関する設定を取得します。</summary>
     Boss2CombatSettings CombatSettings { get; }
 
@@ -146,7 +143,6 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
     private PhaseTransitionAbilityConfig _phaseTransition = default!;
     private StringId _antiKitingMeleeSkillTag;
     private StringId _antiKitingRangedSkillTag;
-    private StringId _targetLockSkillTag;
 
     public Boss2DefaultConfiguration(Flecs.NET.Core.World world)
     {
@@ -172,7 +168,6 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
         _phaseTransition = toml.PhaseTransition;
         _antiKitingMeleeSkillTag = new(toml.AntiKitingMeleeSkill);
         _antiKitingRangedSkillTag = new(toml.AntiKitingRangedSkill);
-        _targetLockSkillTag = new(toml.TargetLockSkill);
 
         _phase1Settings = CreatePhaseSettings(toml, toml.Phase1);
         _phase2Settings = CreatePhaseSettings(toml, toml.Phase2);
@@ -248,9 +243,6 @@ public sealed class Boss2DefaultConfiguration : IBoss2Configuration {
 
     /// <inheritdoc />
     public StringId AntiKitingRangedSkillTag => _antiKitingRangedSkillTag;
-
-    /// <inheritdoc />
-    public StringId TargetLockSkillTag => _targetLockSkillTag;
 
     /// <inheritdoc />
     public Boss2PhaseSettings GetPhase(Phase phase)

@@ -55,9 +55,6 @@ public readonly struct Boss1PhaseSettings(
 
 /// <summary>Boss1 State_Module が読む設定の注入境界です。</summary>
 public interface IBoss1Configuration {
-    /// <summary>急降下突進技能識別タグを取得します。</summary>
-    StringId DiveSkillTag { get; }
-
     /// <summary>指定 Phase の検証済み設定を取得します。</summary>
     Boss1PhaseSettings GetPhase(Phase phase);
 
@@ -76,7 +73,6 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
     private Boss1PhaseSettings _phase1Settings;
     private Boss1PhaseSettings _phase2Settings;
     private Boss1PhaseSettings _phase3Settings;
-    private StringId _diveSkillTag;
     private PhaseTransitionAbilityConfig _phaseTransition = default!;
 
     public Boss1DefaultConfiguration(World world)
@@ -93,7 +89,6 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
         if (ReferenceEquals(_cachedConfig, b1Cfg)) return;
 
         _cachedConfig = b1Cfg;
-        _diveSkillTag = new StringId(b1Cfg.DiveSkill);
         _phaseTransition = b1Cfg.PhaseTransition;
         _phase1Settings = CreatePhaseSettings(b1Cfg.Phase1);
         _phase2Settings = CreatePhaseSettings(b1Cfg.Phase2);
@@ -145,9 +140,6 @@ public sealed class Boss1DefaultConfiguration : IBoss1Configuration {
             tomlPhase.TransitionFloatSpeed,
             order);
     }
-
-    /// <inheritdoc />
-    public StringId DiveSkillTag => _diveSkillTag;
 
     /// <inheritdoc />
     public PhaseTransitionAbilityConfig PhaseTransition => _phaseTransition;

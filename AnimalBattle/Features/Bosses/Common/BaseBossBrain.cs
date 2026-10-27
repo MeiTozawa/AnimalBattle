@@ -16,7 +16,21 @@ public abstract class BaseBossBrain : IBossBrain
     protected readonly AbilitySystemComponent _asc = new();
     protected readonly StateMachine _stateMachine = new(StateCombat);
 
+    protected readonly World _world;
+    protected float _angleOffset;
     protected PhaseTransitionAbility _phaseTransitionAbility = null!;
+
+    /// <summary>共通ブレイン基盤を初期化します。</summary>
+    protected BaseBossBrain(World world)
+    {
+        _world = world;
+    }
+
+    /// <summary>現在の施術者移動速度を取得します。</summary>
+    public virtual Vec2f Velocity => Vec2f.Zero;
+
+    /// <summary>施術者の衝突判定高さを取得します。</summary>
+    public virtual float BodyHeight => 48.0f;
 
     protected float _stateTimer;
     protected bool _isDead;
@@ -60,38 +74,40 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>Boss が右向きであるかを取得します：派生クラスでオーバーライド可能。</summary>
     public virtual bool FacingRight => true;
 
-    /// <summary>弾幕波次発射イベント。</summary>
-    public event Action<StringId, Vec2f, Vec2f>? OnEmitBulletWave;
-
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;
 
     /// <summary>画面振動要求イベント。</summary>
     public event Action<float, float>? OnScreenShake;
 
-    /// <summary>近接攻撃判定生成イベント。</summary>
-    public event Action<StringId, float, float>? OnCreateHitbox;
-
     /// <summary>
     ///     タイムラインアクションステップを実行・処理します。
     /// </summary>
     public virtual void HandleTimelineAction(AttackActionStep step, float dir, StringId abilityTag)
     {
+        if (step.Effect != null)
+        {
+            var ctx = new SkillExecutionContext
+            {
+                World = _world,
+                SkillTag = abilityTag,
+                Origin = _currentPosition,
+                TargetPos = _targetPosition,
+                ForwardDir = dir,
+                CasterVelocity = Velocity,
+                BodyHeight = BodyHeight,
+                SetVelocity = ApplyVelocityAction
+            };
+            SkillEffectDispatcher.Execute(in ctx, step.Effect, ref _angleOffset);
+            return;
+        }
+
         switch (step.Kind)
         {
             case AttackActionKind.Movement:
             case AttackActionKind.VelocityDive:
             case AttackActionKind.EasingMovement:
                 ApplyMovementAction(step.Param0 * dir, step.Param1);
-                break;
-
-            case AttackActionKind.Bullet:
-                RaiseEmitBulletWave(abilityTag, _currentPosition, _targetPosition);
-                break;
-
-            case AttackActionKind.Hitbox:
-            case AttackActionKind.OnGroundedHitbox:
-                OnCreateHitbox?.Invoke(abilityTag, step.Param0 * dir, step.Param1);
                 break;
 
             case AttackActionKind.ScreenShake:
@@ -103,13 +119,9 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>タイムラインによる移動速度指定を適用します。</summary>
     protected virtual void ApplyMovementAction(float vx, float vy) { }
 
-    /// <summary>
-    ///     弾幕発射イベントを発火します。
-    /// </summary>
-    protected void RaiseEmitBulletWave(StringId skill, Vec2f origin, Vec2f target)
-    {
-        OnEmitBulletWave?.Invoke(skill, origin, target);
-    }
+    /// <summary>技能エフェクトハンドラーからの速度変更要求を適用します。</summary>
+    protected virtual void ApplyVelocityAction(Vec2f vel) => ApplyMovementAction(vel.X, vel.Y);
+
 
     /// <summary>
     ///     弾幕消去イベントを発火します。

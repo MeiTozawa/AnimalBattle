@@ -11,7 +11,6 @@ public sealed class Boss1Brain : BaseBossBrain {
     private static readonly StringId StateHover = "Hover";
     private static readonly StringId StateAbility = "Ability";
 
-    private readonly World _world;
     private readonly IBoss1Configuration _configuration;
 
     private State _hoverState = null!;
@@ -26,10 +25,9 @@ public sealed class Boss1Brain : BaseBossBrain {
     /// <param name="world">対象の Flecs ワールド。</param>
     /// <param name="spawn">スポーン座標。</param>
     /// <param name="configuration">設定プロバイダー。</param>
-    public Boss1Brain(World world, Vec2f spawn, IBoss1Configuration? configuration = null)
+    public Boss1Brain(World world, Vec2f spawn, IBoss1Configuration? configuration = null) : base(world)
     {
         Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
-        _world = world;
         _configuration = configuration ?? new Boss1DefaultConfiguration(world);
         BaseX = spawn.X;
         _currentPosition = spawn;
@@ -41,6 +39,9 @@ public sealed class Boss1Brain : BaseBossBrain {
         InitializeStateMachine();
         Reset(spawn);
     }
+
+    /// <inheritdoc />
+    public override float BodyHeight => _world.Get<Boss1Config>().CollisionSize.Y;
 
     /// <summary>浮遊基準 X 座標を取得します。</summary>
     public float BaseX { get; set; }
@@ -96,7 +97,7 @@ public sealed class Boss1Brain : BaseBossBrain {
     private void RegisterSkill(StringId skill, Boss1PatternConfig config)
     {
         var cooldown = _configuration.GetSkillDefaultCooldown(skill);
-        var buildResult = BossPatternLoader.BuildAbility(skill, config, cooldown);
+        var buildResult = SkillBuilder.BuildAbility(skill, config, cooldown);
         if (buildResult.IsError)
         {
             Log.Error("Boss1Brain", $"Boss 1 のスキル構築に失敗しました: {skill} ({buildResult.FirstError.Description})");
@@ -249,16 +250,16 @@ public sealed class Boss1Brain : BaseBossBrain {
 
     private void UpdateAbilityMotion(float dt, Vec2f playerPos)
     {
-        if (CurrentSkillTag == _configuration.DiveSkillTag)
+        if (CurrentTimelineAttack?.Motion.Kind == SkillMotionKind.EaseToTarget)
         {
             if (CurrentSkillPhase == SkillPhase.Active)
             {
                 var progress = CurrentTimelineAttack?.PhaseProgress ?? _asc.Progress;
-                var easeProgress = EasingMath.Evaluate(EaseType.InQuad, progress);
-
-                _currentPosition = new Vec2f(
-                    _startPosition.X + (_targetPosition.X - _startPosition.X) * easeProgress,
-                    _startPosition.Y + (_targetPosition.Y - _startPosition.Y) * easeProgress);
+                _currentPosition = SkillMotionDriver.EvaluateEaseToTarget(
+                    _startPosition,
+                    _targetPosition,
+                    CurrentTimelineAttack!.Motion.EaseType,
+                    progress);
             }
         }
         else

@@ -20,7 +20,6 @@ public sealed class Boss2Brain : BaseBossBrain {
         Landing
     }
 
-    private readonly World _world;
     private readonly IBoss2Configuration _configuration;
     private readonly Func<PlatformNavigationGraph?>? _navGraphProvider;
 
@@ -50,10 +49,9 @@ public sealed class Boss2Brain : BaseBossBrain {
         World world,
         Vec2f spawn,
         IBoss2Configuration? configuration = null,
-        Func<PlatformNavigationGraph?>? navGraphProvider = null)
+        Func<PlatformNavigationGraph?>? navGraphProvider = null) : base(world)
     {
         Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
-        _world = world;
         _configuration = configuration ?? new Boss2DefaultConfiguration(world);
         _navGraphProvider = navGraphProvider;
         _currentPosition = spawn;
@@ -66,7 +64,11 @@ public sealed class Boss2Brain : BaseBossBrain {
     }
 
     /// <summary>現在の Boss 移動速度を取得します。</summary>
-    public Vec2f Velocity => _currentVelocity;
+    /// <inheritdoc />
+    public override Vec2f Velocity => _currentVelocity;
+
+    /// <inheritdoc />
+    public override float BodyHeight => _world.Get<Boss2Config>().CollisionSize.Y;
 
     /// <summary>ヒップドロップ LeapSmash スキルの着地目標サーフェス Y 座標：足場上面または床面を取得します。</summary>
     public float TargetLandingSurfaceY => _targetLandingSurfaceY;
@@ -135,7 +137,7 @@ public sealed class Boss2Brain : BaseBossBrain {
     private void RegisterSkill(StringId skill, Boss2PatternConfig config)
     {
         var cooldown = _configuration.GetSkillDefaultCooldown(skill);
-        var buildResult = BossPatternLoader.BuildAbility(skill, config, cooldown);
+        var buildResult = SkillBuilder.BuildAbility(skill, config, cooldown);
         if (buildResult.IsError)
         {
             Log.Error("Boss2Brain", $"Boss 2 のスキル構築に失敗しました: {skill} ({buildResult.FirstError.Description})");
@@ -421,7 +423,7 @@ public sealed class Boss2Brain : BaseBossBrain {
             if (_asc.TryActivateAbility(chosenSkill, dir))
             {
                 _targetPosition = new Vec2f(_currentPosition.X + dx, _currentPosition.Y + dy);
-                if (chosenSkill == _configuration.TargetLockSkillTag)
+                if (CurrentTimelineAttack?.Motion.Kind == SkillMotionKind.LeapSmash)
                 {
                     _leapStartPosition = _currentPosition;
                     LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
@@ -438,7 +440,7 @@ public sealed class Boss2Brain : BaseBossBrain {
             if (_asc.TryActivateAbility(antiKiteSkill, dir))
             {
                 _targetPosition = new Vec2f(_currentPosition.X + dx, _currentPosition.Y + dy);
-                if (antiKiteSkill == _configuration.TargetLockSkillTag)
+                if (CurrentTimelineAttack?.Motion.Kind == SkillMotionKind.LeapSmash)
                 {
                     _leapStartPosition = _currentPosition;
                     LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
@@ -493,7 +495,7 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     private void UpdateAbility(float dt, bool isGrounded, Vec2f playerPos)
     {
-        if (CurrentSkillTag == _configuration.TargetLockSkillTag)
+        if (CurrentTimelineAttack?.Motion.Kind == SkillMotionKind.LeapSmash)
         {
             UpdateLeapSmashMotion(dt, isGrounded, playerPos);
         }
@@ -505,13 +507,9 @@ public sealed class Boss2Brain : BaseBossBrain {
 
     private void UpdateLeapSmashMotion(float dt, bool isGrounded, Vec2f playerPos)
     {
-        if (!_asc.IsCasting) return;
+        if (!_asc.IsCasting || CurrentTimelineAttack == null) return;
 
-        var patternCfg = _world.Get<Boss2PatternConfig>().LeapSmash;
-        var flyDuration = patternCfg.FlyDuration;
-        var peakY = patternCfg.PeakAltitudeY;
-        var hangDuration = patternCfg.ApexHangDuration;
-        var descentSpeed = patternCfg.DescentSpeed;
+        var motion = CurrentTimelineAttack.Motion;
 
         if (CurrentSkillPhase == SkillPhase.Telegraph)
         {
@@ -529,44 +527,23 @@ public sealed class Boss2Brain : BaseBossBrain {
         if (CurrentSkillPhase == SkillPhase.Active)
         {
             var elapsed = PhaseElapsed;
+            _currentVelocity = SkillMotionDriver.EvaluateLeapSmashVelocity(
+                elapsed,
+                dt,
+                _leapStartPosition,
+                _targetPosition,
+                _currentPosition,
+                motion.FlyDuration,
+                motion.PeakAltitudeY,
+                motion.ApexHangDuration,
+                motion.DescentSpeed,
+                isGrounded);
 
-            // 1. 上昇飛翔フェーズ (0.0 ～ FlyDuration)
-            if (elapsed < flyDuration)
+            if (elapsed < motion.FlyDuration)
             {
-                var progress = Math.Clamp(elapsed / flyDuration, 0.0f, 1.0f);
-                var easeProgress = MathF.Sin(progress * MathF.PI * 0.5f); // Smooth Sine EaseOut
-
-                var desiredX = _leapStartPosition.X + (_targetPosition.X - _leapStartPosition.X) * easeProgress;
-                var desiredY = _leapStartPosition.Y + (peakY - _leapStartPosition.Y) * easeProgress;
-
-                var vx = dt > 0.0f ? (desiredX - _currentPosition.X) / dt : 0.0f;
-                var vy = dt > 0.0f ? (desiredY - _currentPosition.Y) / dt : 0.0f;
-                _currentVelocity = new Vec2f(vx, vy);
-
                 var dx = _targetPosition.X - _currentPosition.X;
                 if (MathF.Abs(dx) > _configuration.CombatSettings.MoveThreshold)
                     _facingRight = dx > 0.0f;
-            }
-            // 2. 最高点懸停フェーズ (FlyDuration ～ FlyDuration + ApexHangDuration)
-            else if (elapsed < flyDuration + hangDuration)
-            {
-                var desiredX = _targetPosition.X;
-                var desiredY = peakY;
-                var vx = dt > 0.0f ? (desiredX - _currentPosition.X) / dt : 0.0f;
-                var vy = dt > 0.0f ? (desiredY - _currentPosition.Y) / dt : 0.0f;
-                _currentVelocity = new Vec2f(vx, vy);
-            }
-            // 3. 垂直急降下叩きつけフェーズ
-            else
-            {
-                if (isGrounded && elapsed > flyDuration + hangDuration + 0.05f)
-                {
-                    _currentVelocity = Vec2f.Zero;
-                }
-                else
-                {
-                    _currentVelocity = new Vec2f(0.0f, descentSpeed);
-                }
             }
             return;
         }
@@ -592,37 +569,11 @@ public sealed class Boss2Brain : BaseBossBrain {
             : 48.0f;
         var playerFootY = playerCenterY + playerCollisionHeight * 0.5f;
 
-        _targetLandingSurfaceY = CalculateTargetLandingSurfaceY(playerX, playerFootY);
+        _targetLandingSurfaceY = SkillMotionDriver.CalculateTargetLandingSurfaceY(
+            _world,
+            _navGraphProvider?.Invoke(),
+            playerX,
+            playerFootY);
         _targetPosition = new Vec2f(playerX, _targetLandingSurfaceY - playerCollisionHeight * 0.5f);
-    }
-
-    private float CalculateTargetLandingSurfaceY(float targetX, float playerFootY)
-    {
-        var arenaCfg = _world.Get<ArenaConfig>();
-        var floorY = arenaCfg.FloorLimitY;
-        var navGraph = _navGraphProvider?.Invoke();
-
-        var bestSurfaceY = floorY;
-
-        if (navGraph is not null && navGraph.Nodes.Count > 0)
-        {
-            const float tolerance = 5.0f;
-
-            foreach (var node in navGraph.Nodes)
-            {
-                if (node.ContainsX(targetX, 15.0f))
-                {
-                    if (node.TopY >= playerFootY - tolerance)
-                    {
-                        if (node.TopY < bestSurfaceY)
-                        {
-                            bestSurfaceY = node.TopY;
-                        }
-                    }
-                }
-            }
-        }
-
-        return bestSurfaceY;
     }
 }

@@ -235,7 +235,7 @@ public static class BattleAiSystem
                 var currentLinear = vel.Value;
                 currentLinear = new Vec2f(b2Brain.Velocity.X, currentLinear.Y);
                 var isControlledAirborne = b2Brain.State == Boss2State.PlatformTraverse
-                    || (b2Brain.AbilitySystem.IsCasting && b2Brain.CurrentSkillTag == b2Brain.Configuration.TargetLockSkillTag);
+                    || (b2Brain.AbilitySystem.IsCasting && b2Brain.CurrentTimelineAttack?.Motion.Kind == SkillMotionKind.LeapSmash);
 
                 if (isControlledAirborne || isGrounded)
                 {
@@ -312,7 +312,7 @@ public static class BattleAiSystem
         var ignorePlatforms = isControlledAirborne && linear.Y <= 0.0f;
         if (!ignorePlatforms && tileMap != null)
         {
-            var isLeapSmash = brain.CurrentSkillTag == brain.Configuration.TargetLockSkillTag;
+            var isLeapSmash = brain.CurrentTimelineAttack?.Motion.Kind == SkillMotionKind.LeapSmash;
             var targetLandingSurfaceY = brain.TargetLandingSurfaceY;
 
             var sweepTop = MathF.Min(currentY, nextY) - colSize.Y * 0.5f;
