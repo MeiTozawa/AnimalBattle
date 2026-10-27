@@ -211,21 +211,36 @@ public static class BattleInputSystem
             .Remove<HitFlashEffect>()
             .Remove<InvincibleBlinkEffect>();
 
-        var weaponCfg = w.GetWeaponConfig(cfg.Weapon);
-        if (weaponCfg is MeleeWeaponConfig meleeCfg)
-        {
-            player.Set(BunnyWeaponState.FromConfig(meleeCfg));
-            var melee = player.Target<EquippedWeapon>();
-            if (melee.IsAlive())
-            {
-                melee.Disable();
-                melee.Set(new HitHistory());
-            }
-        }
-        else if (weaponCfg is RangedWeaponConfig rangedCfg)
-        {
-            player.Set(CatWeaponState.FromConfig(rangedCfg));
-        }
+        var weaponCfg = w.GetWeaponConfig(cfg.Weapon);
+
+        if (weaponCfg is MeleeWeaponConfig meleeCfg)
+
+        {
+
+            player.Set(MeleeWeaponComponent.FromConfig(meleeCfg));
+
+            var melee = player.Target<EquippedWeapon>();
+
+            if (melee.IsAlive())
+
+            {
+
+                melee.Disable();
+
+                melee.Set(new HitHistory());
+
+            }
+
+        }
+
+        else if (weaponCfg is RangedWeaponConfig rangedCfg)
+
+        {
+
+            player.Set(RangedWeaponComponent.FromConfig(rangedCfg));
+
+        }
+
         ref var sprite = ref player.GetMut<Sprite>();
         sprite.IsVisible = true;
         sprite.JitterOffset = Vec2f.Zero;

@@ -41,8 +41,9 @@ public static class PlayerPrefabs
             .Set(new Hurtbox(catCfg.GetHurtboxShape(), Faction.Friendly))
             .Set(new Transform(Vec2f.Zero, catCfg.Scale))
             .Set(new SpringScale(Vec2f.One, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
-            .Set(JumpCapability.FromPlayerConfig(catCfg))
-            .Set(CatWeaponState.FromConfig((RangedWeaponConfig)world.GetWeaponConfig(catCfg.Weapon)));
+            .Set(JumpCapability.FromPlayerConfig(catCfg));
+        AttachConfiguredWeapon(CatPlayer, world, catCfg.Weapon);
+
 
         // --- Bunny プレイヤー ---
         var bunnyCfg = world.Get<BunnyConfig>();
@@ -57,13 +58,40 @@ public static class PlayerPrefabs
             .Set(new Hurtbox(bunnyCfg.GetHurtboxShape(), Faction.Friendly))
             .Set(new Transform(Vec2f.Zero, bunnyCfg.Scale))
             .Set(new SpringScale(Vec2f.One, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
-            .Set(JumpCapability.FromPlayerConfig(bunnyCfg))
-            .Set(BunnyWeaponState.FromConfig((MeleeWeaponConfig)world.GetWeaponConfig(bunnyCfg.Weapon)));
+            .Set(JumpCapability.FromPlayerConfig(bunnyCfg));
+        AttachConfiguredWeapon(BunnyPlayer, world, bunnyCfg.Weapon);
+
     }
 
     /// <summary>
     ///     指定された CharacterType の Prefab プレハブを取得します。
     /// </summary>
+    private static void AttachConfiguredWeapon(Entity prefab, World world, string weaponName)
+
+    {
+
+        var weaponCfg = world.GetWeaponConfig(weaponName);
+
+        if (weaponCfg is RangedWeaponConfig rangedCfg)
+
+        {
+
+            prefab.Set(RangedWeaponComponent.FromConfig(rangedCfg));
+
+        }
+
+        else if (weaponCfg is MeleeWeaponConfig meleeCfg)
+
+        {
+
+            prefab.Set(MeleeWeaponComponent.FromConfig(meleeCfg));
+
+        }
+
+    }
+
+
+
     public static Entity GetPrefab(CharacterType type)
     {
         return type switch {

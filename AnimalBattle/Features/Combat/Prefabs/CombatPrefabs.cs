@@ -61,7 +61,7 @@ public static class CombatPrefabs
             .Set(new BulletModifier(BulletType.Normal, bossNormalCfg.Radius, Vec2f.Zero)) 
             .Set(new OrbitSatellite(0.0f, 0.0f));
 
-        // --- 3. 自機近接斬撃判定：常駐エンティティであり持続時間は BunnyWeaponSystem が有効無効を制御するため HitboxLifetime は付与しない ---
+        // --- 3. 自機近接斬撃判定：常駐エンティティであり持続時間は MeleeWeaponSystem が有効無効を制御するため HitboxLifetime は付与しない ---
         var slashCfg = cfg.PlayerSlashHitbox;
         PlayerSlashHitbox = world.Prefab(PlayerSlashHitboxName)
             .IsA(CommonPrefabs.BaseMeleeHitbox)
