@@ -1,210 +1,160 @@
-# Boss 1 (Ancient Cat Overlord) Skills & Bullet Patterns Configuration
+# Boss 1 (Ancient Cat Overlord) Skills Configuration (Data-Driven Unified Primitives)
 
 [DiveRam]
 SkillName = "Meteor Dive Ram"
 WindUpTime = 0.55
-TelegraphColor = "#FF1493"
 CastDuration = 0.45
 RecoveryTime = 0.80
 DefaultCooldown = 5.0
 EffectiveRange = 650.0
-DashSpeed = 960.0
-ImpactRadius = 40.0
-ImpactOffsetY = 16.0
-ImpactBulletCount = 8
-ImpactBulletSpeed = 210.0
-ImpactBulletRadius = 7.0
-ImpactFillColor = "#FF1493"
-ImpactOutlineColor = "#FF80AB"
-TrailColor = "#FF5555"
-EaseType = "InQuad"
-IsIndestructible = false
 ArmorTags = ["SuperArmor"]
 RecoveryTags = ["Vulnerable"]
 
-[[DiveRam.Events]]
-Time = 0.0
-Type = "movement"
-Param0 = 960.0
-Param1 = 0.45
-Param2 = 0.0
-StrParam = "InQuad"
+[DiveRam.Telegraph]
+Kind = "DiveTrajectory"
+Color = "#FF1493"
+Radius = 40.0
 
-[[DiveRam.Events]]
-Time = 0.45
-Type = "bullet"
-Param0 = 210.0
-Param1 = 8.0
-Param2 = 6.283185
-StrParam = "Magenta"
+[DiveRam.Motion]
+Kind = "EaseToTarget"
+EaseType = "InQuad"
+TrailColor = "#FF5555"
 
-[[DiveRam.Events]]
+[[DiveRam.Effects]]
 Time = 0.45
-Type = "ScreenShake"
-Param0 = 8.0
-Param1 = 0.3
-Param2 = 0.0
-StrParam = ""
+Kind = "Bullet"
+Bullet = { Pattern = "ImpactRing", Count = 8, Speed = 210.0, Radius = 7.0, OffsetY = 16.0, BulletType = "Magenta", FillColor = "#FF1493", OutlineColor = "#FF80AB" }
+
+[[DiveRam.Effects]]
+Time = 0.45
+Kind = "ScreenShake"
+ShakeIntensity = 8.0
+ShakeDuration = 0.3
 
 [Aimed3Shot]
 SkillName = "Aimed 3-Way Shot"
 WindUpTime = 0.40
-TelegraphColor = "#00E5FF"
 CastDuration = 0.90
 RecoveryTime = 1.20
 DefaultCooldown = 3.0
 EffectiveRange = 600.0
-Interval = 0.45
-BulletSpeed = 372.0
+
+[Aimed3Shot.Telegraph]
+Kind = "AimLaser"
+Color = "#00E5FF"
 SpreadAngle = 0.16
-BulletRadius = 8.0
-BulletCount = 3
-FillColor = "#00E5FF"
-OutlineColor = "#E0F7FA"
-BulletType = "Cyan"
-IsIndestructible = false
-RecoveryTags = []
+Count = 3
+IsSniper = false
 
-[[Aimed3Shot.Events]]
+[[Aimed3Shot.Effects]]
 Time = 0.0
-Type = "bullet"
-Param0 = 372.0
-Param1 = 3.0
-Param2 = 0.16
-StrParam = "Cyan"
-
-[[Aimed3Shot.Events]]
-Time = 0.45
-Type = "bullet"
-Param0 = 372.0
-Param1 = 3.0
-Param2 = 0.16
-StrParam = "Cyan"
+Interval = 0.45
+RepeatCount = 2
+Kind = "Bullet"
+Bullet = { Pattern = "AimedSpread", Count = 3, Speed = 372.0, Radius = 8.0, SpreadAngle = 0.16, BulletType = "Cyan", FillColor = "#00E5FF", OutlineColor = "#E0F7FA" }
 
 [RingBurst]
 SkillName = "16-Way Ring Burst"
 WindUpTime = 0.55
-TelegraphColor = "#FF1493"
 CastDuration = 1.00
 RecoveryTime = 1.50
 DefaultCooldown = 4.0
 EffectiveRange = 700.0
-Interval = 0.50
-BulletSpeed = 228.0
-AngleStep = 0.25
-BulletRadius = 9.0
-BulletCount = 16
-FillColor = "#FF1493"
-OutlineColor = "#FF80AB"
-BulletType = "Magenta"
-IsIndestructible = false
-RecoveryTags = []
 
-[[RingBurst.Events]]
+[RingBurst.Telegraph]
+Kind = "RadialSpikes"
+Color = "#FF1493"
+Count = 16
+Radius = 75.0
+SpinSpeed = 0.0
+
+[[RingBurst.Effects]]
 Time = 0.0
-Type = "bullet"
-Param0 = 228.0
-Param1 = 16.0
-Param2 = 6.283185
-StrParam = "Magenta"
-
-[[RingBurst.Events]]
-Time = 0.50
-Type = "bullet"
-Param0 = 228.0
-Param1 = 16.0
-Param2 = 6.283185
-StrParam = "Magenta"
+Interval = 0.50
+RepeatCount = 2
+Kind = "Bullet"
+Bullet = { Pattern = "RadialRing", Count = 16, Speed = 228.0, Radius = 9.0, AngleStep = 0.25, BulletType = "Magenta", FillColor = "#FF1493", OutlineColor = "#FF80AB" }
 
 [DoubleSpiral]
 SkillName = "Twin Spiral Barrage"
 WindUpTime = 0.45
-TelegraphColor = "#FFD700"
 CastDuration = 1.60
 RecoveryTime = 1.40
 DefaultCooldown = 4.5
 EffectiveRange = 800.0
-BulletSpeed = 288.0
-AngleStep = 0.22
+
+[DoubleSpiral.Telegraph]
+Kind = "RadialSpikes"
+Color = "#FFD700"
+Count = 2
+Radius = 90.0
+SpinSpeed = 4.0
+
+[[DoubleSpiral.Effects]]
+Time = 0.0
 Interval = 0.075
-BulletRadius = 7.5
-FillColor1 = "#FFD700"
-OutlineColor1 = "#FFF275"
-FillColor2 = "#FFEA00"
-OutlineColor2 = "#FFFF8D"
-BulletType = "Yellow"
-IsIndestructible = false
-RecoveryTags = []
+Kind = "Bullet"
+Bullet = { Pattern = "DoubleSpiral", Speed = 288.0, Radius = 7.5, AngleStep = 0.22, BulletType = "Yellow", FillColor = "#FFD700", OutlineColor = "#FFF275", FillColor2 = "#FFEA00", OutlineColor2 = "#FFFF8D" }
 
 [RainDrop]
 SkillName = "Skyfall Rain Barrage"
 WindUpTime = 0.35
-TelegraphColor = "#00E5FF"
-TelegraphColumnCount = 6
-TelegraphColumnHeight = 650.0
-TelegraphWarningText = "▼ RAIN ▼"
 CastDuration = 1.80
 RecoveryTime = 1.60
 DefaultCooldown = 6.0
 EffectiveRange = 750.0
-BulletSpeed = 312.0
+
+[RainDrop.Telegraph]
+Kind = "SkyfallColumns"
+Color = "#00E5FF"
+Count = 6
+Height = 650.0
+WarningText = "▼ RAIN ▼"
+
+[[RainDrop.Effects]]
+Time = 0.0
 Interval = 0.32
-BulletRadius = 7.0
-MinX = 60.0
-MaxX = 1220.0
-FillColor = "#00E5FF"
-OutlineColor = "#E0F7FA"
-BulletType = "Cyan"
-IsIndestructible = false
-RecoveryTags = []
+Kind = "Bullet"
+Bullet = { Pattern = "Skyfall", Count = 1, Speed = 312.0, Radius = 7.0, MinX = 60.0, MaxX = 1220.0, BulletType = "Cyan", FillColor = "#00E5FF", OutlineColor = "#E0F7FA" }
 
 [CrossChaos]
 SkillName = "Cross Chaos Waves"
 WindUpTime = 0.35
-TelegraphColor = "#FF1493"
 CastDuration = 2.00
 RecoveryTime = 1.30
 DefaultCooldown = 5.0
 EffectiveRange = 850.0
-BulletSpeed = 312.0
-AngleStep = 0.18
+
+[CrossChaos.Telegraph]
+Kind = "RadialSpikes"
+Color = "#FF1493"
+Count = 4
+Radius = 110.0
+SpinSpeed = 2.5
+
+[[CrossChaos.Effects]]
+Time = 0.0
 Interval = 0.10
-BulletRadius = 8.5
-FillColor = "#FF1493"
-OutlineColor = "#FF80AB"
-BulletType = "Magenta"
-IsIndestructible = false
-RecoveryTags = []
+Kind = "Bullet"
+Bullet = { Pattern = "CrossWave", Count = 4, Speed = 312.0, Radius = 8.5, AngleStep = 0.18, BulletType = "Magenta", FillColor = "#FF1493", OutlineColor = "#FF80AB" }
 
 [FastSniper]
 SkillName = "Laser Fast Sniper"
 WindUpTime = 0.50
-TelegraphColor = "#FF1744"
 CastDuration = 0.60
 RecoveryTime = 1.30
 DefaultCooldown = 3.5
 EffectiveRange = 900.0
-Interval = 0.30
-BulletSpeed = 510.0
-BulletRadius = 6.5
-FillColor = "#111116"
-OutlineColor = "#FF1744"
-BulletType = "Black"
-IsIndestructible = false
-RecoveryTags = []
 
-[[FastSniper.Events]]
+[FastSniper.Telegraph]
+Kind = "AimLaser"
+Color = "#FF1744"
+Count = 1
+IsSniper = true
+
+[[FastSniper.Effects]]
 Time = 0.0
-Type = "bullet"
-Param0 = 510.0
-Param1 = 1.0
-Param2 = 0.0
-StrParam = "Black"
-
-[[FastSniper.Events]]
-Time = 0.30
-Type = "bullet"
-Param0 = 510.0
-Param1 = 1.0
-Param2 = 0.0
-StrParam = "Black"
+Interval = 0.30
+RepeatCount = 2
+Kind = "Bullet"
+Bullet = { Pattern = "AimedSpread", Count = 1, Speed = 510.0, Radius = 6.5, BulletType = "Black", FillColor = "#111116", OutlineColor = "#FF1744" }

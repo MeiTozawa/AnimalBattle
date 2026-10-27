@@ -32,8 +32,8 @@ public static class GameConfigRegistrar
         registry.RegisterToml<BunnyWeaponConfig>(ResourcePath.Config.Bunnyweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncBunnyWeapon(w, cfg));
         registry.RegisterToml<Boss1Config>(ResourcePath.Config.Boss1, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss1(w, cfg));
         registry.RegisterToml<Boss2Config>(ResourcePath.Config.Boss2, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss2(w, cfg));
-        registry.RegisterToml<Boss1PatternConfig>(ResourcePath.Config.Boss1Patterns, (root, cfg) => root.Bind(cfg));
-        registry.RegisterToml<Boss2PatternConfig>(ResourcePath.Config.Boss2Patterns, (root, cfg) => root.Bind(cfg));
+        registry.RegisterToml<Boss1PatternConfig>(ResourcePath.Config.Boss1Patterns, (root, cfg) => root.Bind(cfg.Skills));
+        registry.RegisterToml<Boss2PatternConfig>(ResourcePath.Config.Boss2Patterns, (root, cfg) => root.Bind(cfg.Skills));
         registry.RegisterToml<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets, (root, cfg) => root.Bind(cfg));
         registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
         registry.RegisterToml<RenderConfig>(ResourcePath.Config.Render, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));

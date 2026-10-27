@@ -56,9 +56,6 @@ AntiKitingEnforceMultiplier = 1.5
 AntiKitingMeleeSkill = "GroundStomp"
 AntiKitingRangedSkill = "LeapSmash"
 
-# 特殊技能挙動バインド
-TargetLockSkill = "LeapSmash"
-
 # Phase 1 状態機械設定
 [Phase1]
 HpThreshold = 1.0

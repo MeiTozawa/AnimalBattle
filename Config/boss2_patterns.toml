@@ -1,204 +1,164 @@
-# Boss 2 (Ground Crusher Golem) Skills & Melee Patterns Configuration
+# Boss 2 (Ground Crusher Golem) Skills Configuration (Data-Driven Unified Primitives)
 
 [HeavySlash]
 SkillName = "Heavy Cleave Slash"
 WindUpTime = 0.45
-TelegraphColor = "#FF5722"
 CastDuration = 0.35
 RecoveryTime = 0.50
 DefaultCooldown = 2.0
-DashSpeed = 360.0
-SlashRange = { x = 100.0, y = 75.0 }
-SlashRadius = 55.0
-SlashDamage = 1.0
-HitboxDuration = 0.28
-SlashColor = "#FF7043"
+EffectiveRange = 100.0
 ArmorTags = ["SuperArmor"]
-RecoveryTags = []
 
-[[HeavySlash.Events]]
+[HeavySlash.Telegraph]
+Kind = "MeleeDangerBox"
+Color = "#FF5722"
+Size = { x = 100.0, y = 75.0 }
+
+[[HeavySlash.Effects]]
 Time = 0.0
-Type = "movement"
-Param0 = 360.0
-Param1 = 0.2
-Param2 = 0.0
-StrParam = ""
+Kind = "Velocity"
+Velocity = { x = 360.0, y = 0.0 }
 
-[[HeavySlash.Events]]
+[[HeavySlash.Effects]]
 Time = 0.05
-Type = "hitbox"
-Param0 = 0.0
-Param1 = 0.0
-Param2 = 1.0
-StrParam = "Slash"
+Kind = "Hitbox"
+Hitbox = { DirectionMode = "Forward", Size = { x = 100.0, y = 75.0 }, Damage = 1.0, Duration = 0.28, Color = "#FF7043", UseBossSlashOffset = true }
 
-[[HeavySlash.Events]]
+[[HeavySlash.Effects]]
 Time = 0.05
-Type = "ScreenShake"
-Param0 = 5.0
-Param1 = 0.2
-Param2 = 0.0
-StrParam = ""
+Kind = "ScreenShake"
+ShakeIntensity = 5.0
+ShakeDuration = 0.2
 
 [GroundStomp]
 SkillName = "Ground Stomp Shockwave"
 WindUpTime = 0.50
-TelegraphColor = "#FFC107"
 CastDuration = 0.40
 RecoveryTime = 0.50
 DefaultCooldown = 5.0
-HitboxOffsetY = 35.0
-GroundOffsetY = 10.0
-ShockwaveOffsetX = 30.0
-ShockwaveSpeed = 420.0
-ShockwaveRadius = 80.0
-ShockwaveDamage = 1.0
-FillColor = "#FF9800"
-OutlineColor = "#FFE082"
-IsIndestructible = true
+EffectiveRange = 420.0
 ArmorTags = ["SuperArmor"]
-RecoveryTags = []
 
-[[GroundStomp.Events]]
-Time = 0.0
-Type = "hitbox"
-Param0 = 30.0
-Param1 = 0.0
-Param2 = 1.0
-StrParam = "Shockwave"
+[GroundStomp.Telegraph]
+Kind = "GroundShockwave"
+Color = "#FFC107"
 
-[[GroundStomp.Events]]
+[[GroundStomp.Effects]]
 Time = 0.0
-Type = "ScreenShake"
-Param0 = 7.0
-Param1 = 0.25
-Param2 = 0.0
-StrParam = ""
+Kind = "Bullet"
+Bullet = { Pattern = "GroundShockwave", Speed = 420.0, Radius = 80.0, Damage = 1.0, OffsetX = 30.0, GroundOffsetY = 10.0, FillColor = "#FF9800", OutlineColor = "#FFE082", IsIndestructible = true }
+
+[[GroundStomp.Effects]]
+Time = 0.0
+Kind = "ScreenShake"
+ShakeIntensity = 7.0
+ShakeDuration = 0.25
 
 [LeapSmash]
 SkillName = "Titan Leap Smash"
 WindUpTime = 0.40
-TelegraphColor = "#FF3D00"
 CastDuration = 1.60
 RecoveryTime = 0.80
 DefaultCooldown = 6.0
-JumpForce = 680.0
-FlyDuration = 0.45
-PeakAltitudeY = 130.0
-ApexHangDuration = 0.5
-DescentSpeed = 1200.0
-SlashRadius = 80.0
-SlashDamage = 1.0
-ShrapnelCount = 6
-ShrapnelAngleStartRatio = 0.15
-ShrapnelAngleSpanRatio = 0.70
-ShrapnelOffsetY = 15.0
-ShrapnelSpeed = 260.0
-ShrapnelRadius = 40
-ShrapnelFillColor = "#FF6D00"
-ShrapnelOutlineColor = "#FFD180"
-IsIndestructible = true
+EffectiveRange = 680.0
 ArmorTags = ["Invincible"]
 RecoveryTags = ["Vulnerable"]
 
-[[LeapSmash.Events]]
+[LeapSmash.Telegraph]
+Kind = "TargetLock"
+Color = "#FF3D00"
+
+[LeapSmash.Motion]
+Kind = "LeapSmash"
+FlyDuration = 0.45
+PeakAltitudeY = 130.0
+ApexHangDuration = 0.50
+DescentSpeed = 1200.0
+
+[[LeapSmash.Effects]]
 Time = 0.10
-Type = "ongroundedhitbox"
-Param0 = 0.0
-Param1 = 0.0
-Param2 = 1.0
-StrParam = "SmashImpact"
+Trigger = "OnGrounded"
+Kind = "Hitbox"
+Hitbox = { DirectionMode = "DownOnGround", Size = { x = 160.0, y = 120.0 }, Damage = 1.0, Duration = 0.25, Color = "#FF6D00" }
+
+[[LeapSmash.Effects]]
+Time = 0.10
+Trigger = "OnGrounded"
+Kind = "Bullet"
+Bullet = { Pattern = "ShrapnelFan", Count = 6, Speed = 260.0, Radius = 40.0, AngleStartRatio = 0.15, AngleSpanRatio = 0.70, OffsetY = 15.0, FillColor = "#FF6D00", OutlineColor = "#FFD180", IsIndestructible = true }
 
 [DoubleCleave]
 SkillName = "Twin Cleave Fury"
 WindUpTime = 0.35
-TelegraphColor = "#FF1744"
 CastDuration = 0.70
 RecoveryTime = 0.55
 DefaultCooldown = 3.0
-SecondSlashOffsetX = 15.0
-DashSpeed = 420.0
-SlashInterval = 0.45
-SlashRange = { x = 105.0, y = 80.0 }
-TelegraphRangeX = 250.0
-SlashDamage = 1.0
-HitboxDuration = 0.24
-SlashColor = "#FF1744"
+EffectiveRange = 250.0
 ArmorTags = ["SuperArmor"]
-RecoveryTags = []
 
-[[DoubleCleave.Events]]
+[DoubleCleave.Telegraph]
+Kind = "MeleeDangerBox"
+Color = "#FF1744"
+Size = { x = 250.0, y = 80.0 }
+
+[[DoubleCleave.Effects]]
 Time = 0.0
-Type = "hitbox"
-Param0 = 0.0
-Param1 = 0.0
-Param2 = 1.0
-StrParam = "Slash1"
+Kind = "Hitbox"
+Hitbox = { DirectionMode = "Forward", Size = { x = 105.0, y = 80.0 }, Damage = 1.0, Duration = 0.24, Color = "#FF1744", UseBossSlashOffset = true }
 
-[[DoubleCleave.Events]]
+[[DoubleCleave.Effects]]
 Time = 0.20
-Type = "movement"
-Param0 = 420.0
-Param1 = 0.0
-Param2 = 0.0
-StrParam = ""
+Kind = "Velocity"
+Velocity = { x = 420.0, y = 0.0 }
 
-[[DoubleCleave.Events]]
+[[DoubleCleave.Effects]]
 Time = 0.45
-Type = "movement"
-Param0 = 0.0
-Param1 = 0.0
-Param2 = 0.0
-StrParam = ""
+Kind = "Velocity"
+Velocity = { x = 0.0, y = 0.0 }
 
-[[DoubleCleave.Events]]
+[[DoubleCleave.Effects]]
 Time = 0.45
-Type = "hitbox"
-Param0 = 15.0
-Param1 = 0.0
-Param2 = 1.0
-StrParam = "Slash2"
+Kind = "Hitbox"
+Hitbox = { DirectionMode = "Forward", Size = { x = 105.0, y = 80.0 }, Offset = { x = 15.0, y = 0.0 }, Damage = 1.0, Duration = 0.24, Color = "#FF1744", UseBossSlashOffset = true }
 
 [FrenzyCharge]
 SkillName = "Frenzy Rampage Charge"
 WindUpTime = 0.55
-TelegraphColor = "#D50000"
 CastDuration = 1.30
 RecoveryTime = 1.20
 DefaultCooldown = 7.0
-ChargeSpeed = 620.0
-HitboxSize = { x = 100.0, y = 60.0 }
-HitboxDuration = 0.25
-HitboxColor = "#FF1744"
+EffectiveRange = 620.0
 ArmorTags = ["SuperArmor"]
 RecoveryTags = ["Stunned", "Vulnerable"]
 
-[[FrenzyCharge.Events]]
+[FrenzyCharge.Telegraph]
+Kind = "ChargeTrack"
+Color = "#D50000"
+Height = 60.0
+
+[[FrenzyCharge.Effects]]
 Time = 0.0
-Type = "movement"
-Param0 = 620.0
-Param1 = 1.3
-Param2 = 0.0
-StrParam = ""
+Kind = "Velocity"
+Velocity = { x = 620.0, y = 0.0 }
 
 [EarthquakeRoar]
 SkillName = "Cataclysm Earthquake Roar"
 WindUpTime = 0.60
-TelegraphColor = "#00E5FF"
-TelegraphColumnCount = 5
-TelegraphColumnHeight = 650.0
-TelegraphWarningText = "▼ ROCK ▼"
 CastDuration = 1.80
 RecoveryTime = 0.60
 DefaultCooldown = 10.0
-Interval = 0.25
-MinX = 80.0
-MaxX = 1200.0
-RockSpeed = 360.0
-RockRadius = 9.0
-RockFillColor = "#00E5FF"
-RockOutlineColor = "#E0F7FA"
-BulletType = "Cyan"
-IsIndestructible = false
+EffectiveRange = 1200.0
 ArmorTags = ["SuperArmor"]
-RecoveryTags = []
+
+[EarthquakeRoar.Telegraph]
+Kind = "SkyfallColumns"
+Color = "#00E5FF"
+Count = 5
+Height = 650.0
+WarningText = "▼ ROCK ▼"
+
+[[EarthquakeRoar.Effects]]
+Time = 0.0
+Interval = 0.25
+Kind = "Bullet"
+Bullet = { Pattern = "Skyfall", Count = 1, Speed = 360.0, Radius = 9.0, MinX = 80.0, MaxX = 1200.0, BulletType = "Cyan", FillColor = "#00E5FF", OutlineColor = "#E0F7FA" }

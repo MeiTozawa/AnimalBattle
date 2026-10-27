@@ -6,7 +6,7 @@ namespace AnimalBattle.Skills;
 /// <summary>
 /// 全技能設定を保持し、高速な識別子引き当てを提供する統合技能ライブラリコンテナ。
 /// </summary>
-public sealed class SkillLibraryConfig : IConfigLifecycle
+public class SkillLibraryConfig : IConfigLifecycle
 {
     private Dictionary<StringId, SkillConfig>? _cache;
 
