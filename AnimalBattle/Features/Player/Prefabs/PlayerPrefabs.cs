@@ -42,7 +42,7 @@ public static class PlayerPrefabs
             .Set(new Transform(Vec2f.Zero, catCfg.Scale))
             .Set(new SpringScale(Vec2f.One, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
             .Set(JumpCapability.FromPlayerConfig(catCfg))
-            .Set(CatWeaponState.FromConfig(catCfg));
+            .Set(CatWeaponState.FromConfig((RangedWeaponConfig)world.GetWeaponConfig(catCfg.Weapon)));
 
         // --- Bunny プレイヤー ---
         var bunnyCfg = world.Get<BunnyConfig>();
@@ -58,7 +58,7 @@ public static class PlayerPrefabs
             .Set(new Transform(Vec2f.Zero, bunnyCfg.Scale))
             .Set(new SpringScale(Vec2f.One, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
             .Set(JumpCapability.FromPlayerConfig(bunnyCfg))
-            .Set(BunnyWeaponState.FromConfig(bunnyCfg));
+            .Set(BunnyWeaponState.FromConfig((MeleeWeaponConfig)world.GetWeaponConfig(bunnyCfg.Weapon)));
     }
 
     /// <summary>

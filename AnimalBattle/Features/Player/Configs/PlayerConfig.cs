@@ -60,62 +60,8 @@ public class PlayerConfig : IConfigLifecycle {
     /// <summary>初期出現およびリスポーン座標</summary>
     public Vec2f Spawn { get; set; }
 
-    /// <summary>手銃射撃のクールダウン間隔秒単位</summary>
-    public float ShootCooldown { get; set; }
-
-    /// <summary>手銃弾の飛行速度</summary>
-    public float BulletSpeed { get; set; }
-
-    /// <summary>銃弾生成時のプレイヤー中心からのオフセット</summary>
-    public Vec2f BulletSpawnOffset { get; set; }
-
-    /// <summary>プレイヤー銃弾攻撃判定 の幾何形状種別："Box" または "Circle"</summary>
-    public string BulletHitboxShape { get; set; } = string.Empty;
-
-    /// <summary>銃弾当たり判定サイズ：BulletHitboxShape == "Box" 時に使用</summary>
-    public Vec2f BulletSize { get; set; }
-
-    /// <summary>銃弾当たり判定円半径：BulletHitboxShape == "Circle" 時に使用</summary>
-    public float BulletRadius { get; set; }
-
-    /// <summary>銃弾判定の局所オフセット</summary>
-    public Vec2f BulletHitboxOffset { get; set; }
-
-    /// <summary>銃弾 1 発あたりの与ダメージ量</summary>
-    public float BulletDamage { get; set; }
-
-    /// <summary>近接攻撃力：Bunny</summary>
-    public float AttackDamage { get; set; }
-
-    /// <summary>近接攻撃クールダウン間隔秒単位</summary>
-    public float AttackCooldown { get; set; }
-
-    /// <summary>近接攻撃前方出現オフセット：px</summary>
-    public float AttackRange { get; set; }
-
-    /// <summary>近接攻撃判定サイズ：px</summary>
-    public Vec2f AttackSize { get; set; }
-
-    /// <summary>近接攻撃持続時間秒単位</summary>
-    public float AttackDuration { get; set; }
-
-    /// <summary>近接攻撃時の前進インパルス初速度：px/s</summary>
-    public float AttackLungeImpulse { get; set; }
-
-    /// <summary>近接攻撃時のスプリング変形倍率</summary>
-    public Vec2f AttackStretchScale { get; set; }
-
-    /// <summary>射撃出膛時の自機微後退反動インパルス初速度：px/s</summary>
-    public float ShootRecoilImpulse { get; set; }
-
-    /// <summary>射撃反動時のスプリング倍率</summary>
-    public Vec2f ShootRecoilStretch { get; set; }
-
-    /// <summary>銃口閃光：マズルフラッシュ持続時間秒単位</summary>
-    public float MuzzleFlashDuration { get; set; }
-
-    /// <summary>銃口閃光：マズルフラッシュ初期半径ピクセル単位</summary>
-    public float MuzzleFlashRadius { get; set; }
+    /// <summary>装備武器設定名（例: "CatWeapon", "BunnyWeapon"）</summary>
+    public string Weapon { get; set; } = string.Empty;
 
     /// <summary>弾丸命中撃砕破片の最小飛散個数</summary>
     public int ImpactSplatterMinCount { get; set; }
@@ -264,14 +210,5 @@ public class PlayerConfig : IConfigLifecycle {
     public CollisionShape GetHurtboxShape()
     {
         return CollisionShapeFactory.CreateWithFallback(HurtboxShape, HurtboxRadius, HurtboxSize, HurtboxOffset);
-    }
-
-    /// <summary>
-    ///     設定に基づいたプレイヤー銃弾攻撃判定 <see cref="CollisionShape" /> を取得します。
-    /// </summary>
-    /// <returns>構築された銃弾攻撃衝突形状バリアント</returns>
-    public CollisionShape GetBulletHitboxShape()
-    {
-        return CollisionShapeFactory.CreateWithFallback(BulletHitboxShape, BulletRadius, BulletSize, BulletHitboxOffset);
     }
 }

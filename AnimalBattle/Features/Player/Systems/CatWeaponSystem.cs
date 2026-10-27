@@ -103,7 +103,7 @@ public static class CatWeaponSystem
                 .Set(new Hitbox(new CollisionShape.Box(weapon.BulletSize), weapon.BulletDamage));
 
             // 銃口閃光：Muzzle Flashエフェクト生成
-            EffectSpawner.SpawnMuzzleFlash(world, spawnPos);
+            EffectSpawner.SpawnMuzzleFlash(world, spawnPos, weapon.MuzzleFlashRadius, weapon.MuzzleFlashDuration);
 
             // 自機射撃反動：直接座標書き換えを廃止し、MovementSystem 側で処理される外力物理インパルスとして付与
             var recoilSpeed = weapon.ShootRecoilImpulse;

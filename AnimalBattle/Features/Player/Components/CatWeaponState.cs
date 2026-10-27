@@ -9,48 +9,31 @@ namespace AnimalBattle.Player.Components;
 /// </summary>
 public struct CatWeaponState
 {
-    /// <summary>射撃クールダウンの残り秒数。</summary>
     public float CooldownRemaining;
-
-    /// <summary>射撃クールダウンの基本持続秒数。</summary>
     public float CooldownDuration;
-
-    /// <summary>弾丸の飛翔速度：px/s。</summary>
     public float BulletSpeed;
-
-    /// <summary>弾丸攻撃力。</summary>
     public float BulletDamage;
-
-    /// <summary>弾丸衝突判定のサイズ Vec2f型。</summary>
     public Vec2f BulletSize;
-
-    /// <summary>発射口の局所オフセット Vec2f型。</summary>
     public Vec2f BulletSpawnOffset;
-
-    /// <summary>自機射撃微後退反動インパルス初速度：px/s。</summary>
     public float ShootRecoilImpulse;
-
-    /// <summary>自機射撃時スプリング変形倍率 Vec2f型。</summary>
     public Vec2f ShootRecoilStretch;
+    public float MuzzleFlashDuration;
+    public float MuzzleFlashRadius;
 
-    /// <summary>
-    ///     cat.toml から CatWeaponState を構築します。
-    /// </summary>
-    /// <param name="cfg">Cat のプレイヤー設定。</param>
-    /// <returns>初期化された CatWeaponState。</returns>
-    public static CatWeaponState FromConfig(PlayerConfig cfg)
+    public static CatWeaponState FromConfig(RangedWeaponConfig cfg)
     {
-        System.Diagnostics.Debug.Assert(cfg != null, "PlayerConfig は null であってはなりません。");
         return new CatWeaponState
         {
             CooldownRemaining = 0.0f,
-            CooldownDuration = cfg.ShootCooldown,
+            CooldownDuration = cfg.Cooldown,
             BulletSpeed = cfg.BulletSpeed,
             BulletDamage = cfg.BulletDamage,
             BulletSize = cfg.BulletSize,
             BulletSpawnOffset = cfg.BulletSpawnOffset,
             ShootRecoilImpulse = cfg.ShootRecoilImpulse,
-            ShootRecoilStretch = cfg.ShootRecoilStretch
+            ShootRecoilStretch = cfg.ShootRecoilStretch,
+            MuzzleFlashDuration = cfg.MuzzleFlashDuration,
+            MuzzleFlashRadius = cfg.MuzzleFlashRadius
         };
     }
 }

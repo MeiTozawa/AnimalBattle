@@ -156,11 +156,17 @@ public static class ResourcePath
         /// <summary>bunny.toml 設定ファイル名。</summary>
         public const string Bunny = "bunny.toml";
 
+        /// <summary>BunnyWeapon.toml 設定ファイル名。</summary>
+        public const string Bunnyweapon = "BunnyWeapon.toml";
+
         /// <summary>camera.toml 設定ファイル名。</summary>
         public const string Camera = "camera.toml";
 
         /// <summary>cat.toml 設定ファイル名。</summary>
         public const string Cat = "cat.toml";
+
+        /// <summary>CatWeapon.toml 設定ファイル名。</summary>
+        public const string Catweapon = "CatWeapon.toml";
 
         /// <summary>combat.prefab.toml 設定ファイル名。</summary>
         public const string CombatPrefab = "combat.prefab.toml";
@@ -198,11 +204,17 @@ public static class ResourcePath
         /// <summary>bunny.toml の相対パス。</summary>
         public const string BunnyToml = @"Config\bunny.toml";
 
+        /// <summary>BunnyWeapon.toml の相対パス。</summary>
+        public const string BunnyweaponToml = @"Config\BunnyWeapon.toml";
+
         /// <summary>camera.toml の相対パス。</summary>
         public const string CameraToml = @"Config\camera.toml";
 
         /// <summary>cat.toml の相対パス。</summary>
         public const string CatToml = @"Config\cat.toml";
+
+        /// <summary>CatWeapon.toml の相対パス。</summary>
+        public const string CatweaponToml = @"Config\CatWeapon.toml";
 
         /// <summary>combat.prefab.toml の相対パス。</summary>
         public const string CombatPrefabToml = @"Config\combat.prefab.toml";

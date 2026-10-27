@@ -26,6 +26,10 @@ public static class GameConfigRegistrar
         // TOML 設定ファイルからの自動バインド登録：.NET Configuration Binding Generator 駆動
         registry.RegisterToml<CatConfig>(ResourcePath.Config.Cat, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCat(w, cfg));
         registry.RegisterToml<BunnyConfig>(ResourcePath.Config.Bunny, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncBunny(w, cfg));
+
+        registry.RegisterToml<CatWeaponConfig>(ResourcePath.Config.Catweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCatWeapon(w, cfg));
+
+        registry.RegisterToml<BunnyWeaponConfig>(ResourcePath.Config.Bunnyweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncBunnyWeapon(w, cfg));
         registry.RegisterToml<Boss1Config>(ResourcePath.Config.Boss1, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss1(w, cfg));
         registry.RegisterToml<Boss2Config>(ResourcePath.Config.Boss2, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBoss2(w, cfg));
         registry.RegisterToml<Boss1PatternConfig>(ResourcePath.Config.Boss1Patterns, (root, cfg) => root.Bind(cfg));

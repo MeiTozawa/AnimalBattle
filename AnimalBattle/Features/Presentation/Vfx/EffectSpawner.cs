@@ -50,14 +50,13 @@ public static class EffectSpawner
     /// <summary>
     ///     射撃出膛時のマズルフラッシュ：銃口閃光エフェクトを生成します。
     /// </summary>
-    public static void SpawnMuzzleFlash(World world, Vec2f pos)
+    public static void SpawnMuzzleFlash(World world, Vec2f pos, float radius, float duration)
     {
-        var pCfg = world.GetActivePlayerConfig();
         CombatPoolService.RentSparkEffect()
            .Set(new Transform(pos))
            .Set(new Velocity(Vec2f.Zero))
-           .Set(new Bullet(pCfg.MuzzleFlashRadius, ColorPalette.MuzzleFlashFill, ColorPalette.White))
-           .Set(new FadeEffect(pCfg.MuzzleFlashDuration));
+           .Set(new Bullet(radius, ColorPalette.MuzzleFlashFill, ColorPalette.White))
+           .Set(new FadeEffect(duration));
     }
 
     /// <summary>

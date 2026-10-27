@@ -60,21 +60,20 @@ public static class BattleSceneSpawner {
             .Set(new Sprite(playerHandle, false, true, new Rect(0, 0, 32, 32)))
             .Set(new CharacterTypeComponent(playerType));
 
-        if (playerType == CharacterType.Bunny)
-        {
-            playerEntity.Set(BunnyWeaponState.FromConfig(playerCfg));
-            var melee = world.Entity("PlayerSlashHitbox")
-                .ChildOf(playerEntity)
-                .IsA(CombatPrefabs.PlayerSlashHitbox);
-            melee.Disable();
-            playerEntity.Add<EquippedWeapon>(melee);
-        }
-        else if (playerType == CharacterType.Cat)
-        {
-            playerEntity.Set(CatWeaponState.FromConfig(playerCfg));
-        }
-
-        // 2. アリーナ・タイルマップの生成
+        var weaponCfg = world.GetWeaponConfig(playerCfg.Weapon);
+        if (weaponCfg is MeleeWeaponConfig meleeCfg)
+        {
+            playerEntity.Set(BunnyWeaponState.FromConfig(meleeCfg));
+            var melee = world.Entity("PlayerSlashHitbox")
+                .ChildOf(playerEntity)
+                .IsA(CombatPrefabs.PlayerSlashHitbox);
+            melee.Disable();
+            playerEntity.Add<EquippedWeapon>(melee);
+        }
+        else if (weaponCfg is RangedWeaponConfig rangedCfg)
+        {
+            playerEntity.Set(CatWeaponState.FromConfig(rangedCfg));
+        }
         var arenaCfg = world.Get<ArenaConfig>();
         var tileMapCfg = arenaCfg.TileMap;
         var sheetHandle = assets.LoadTexture(tileMapCfg.TileSheetPath);

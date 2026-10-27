@@ -4,56 +4,34 @@ using AnimalBattle.Core;
 namespace AnimalBattle.Player.Components;
 
 /// <summary>
-///     Bunny近接攻撃武器状態コンポーネント。
-///     クールダウン、近接打撃攻撃力、判定寸法、射程、持続時間、前進突進距離およびスプリング伸縮演出パラメータを保持します。
+///     Bunny近接攻撃状態コンポーネント。
+///     近接クールダウン、攻撃力、判定サイズ、持続時間、突進インパルスおよびスプリング変形を保持します。
 /// </summary>
 public struct BunnyWeaponState
 {
-    /// <summary>近接攻撃クールダウンの残り秒数。</summary>
     public float CooldownRemaining;
-
-    /// <summary>近接攻撃クールダウンの基本持続秒数。</summary>
     public float CooldownDuration;
-
-    /// <summary>近接打撃の攻撃力。</summary>
     public float AttackDamage;
-
-    /// <summary>近接打撃攻撃判定のサイズ Vec2f型。</summary>
     public Vec2f AttackSize;
-
-    /// <summary>近接打撃出現の水平オフセット射程距離：px。</summary>
     public float AttackRange;
-
-    /// <summary>近接打撃判定持続時間秒単位。</summary>
     public float AttackDuration;
-
-    /// <summary>近接打撃時の前進突進インパルス初速度：px/s。</summary>
     public float AttackLungeImpulse;
-
-    /// <summary>近接打撃時のスプリング変形倍率 Vec2f型。</summary>
     public Vec2f AttackStretchScale;
-
-    /// <summary>近接攻撃判定の残り有効秒数。0 より大きい場合は判定がアクティブ。</summary>
     public float AttackActiveRemaining;
 
-    /// <summary>
-    ///     bunny.toml から BunnyWeaponState を構築します。
-    /// </summary>
-    /// <param name="cfg">Bunny のプレイヤー設定。</param>
-    /// <returns>初期化された BunnyWeaponState。</returns>
-    public static BunnyWeaponState FromConfig(PlayerConfig cfg)
+    public static BunnyWeaponState FromConfig(MeleeWeaponConfig cfg)
     {
-        System.Diagnostics.Debug.Assert(cfg != null, "PlayerConfig は null であってはなりません。");
         return new BunnyWeaponState
         {
             CooldownRemaining = 0.0f,
-            CooldownDuration = cfg.AttackCooldown,
-            AttackDamage = cfg.AttackDamage,
-            AttackSize = cfg.AttackSize,
-            AttackRange = cfg.AttackRange,
-            AttackDuration = cfg.AttackDuration,
-            AttackLungeImpulse = cfg.AttackLungeImpulse,
-            AttackStretchScale = cfg.AttackStretchScale
+            CooldownDuration = cfg.Cooldown,
+            AttackDamage = cfg.Damage,
+            AttackSize = cfg.Size,
+            AttackRange = cfg.Range,
+            AttackDuration = cfg.Duration,
+            AttackLungeImpulse = cfg.LungeImpulse,
+            AttackStretchScale = cfg.StretchScale,
+            AttackActiveRemaining = 0.0f
         };
     }
 }

@@ -20,22 +20,8 @@ HurtboxOffset = { x = 0.0, y = 16.0 }
 
 Scale = { x = 2.0, y = 2.0 }
 Spawn = { x = 320.0, y = 500.0 }
+Weapon = "CatWeapon"
 
-# Shoot & Bullet Configuration
-ShootCooldown = 0.16
-BulletSpeed = 960.0
-BulletSpawnOffset = { x = 24.0, y = -4.0 }
-
-# Player Bullet Hitbox
-BulletHitboxShape = "Box"
-BulletSize = { x = 12.0, y = 8.0 }
-BulletDamage = 1.0
-
-# --- 射撃出膛感・反動 (Recoil) 設定 ---
-ShootRecoilImpulse = 120.0
-ShootRecoilStretch = { x = 0.88, y = 1.12 }
-MuzzleFlashDuration = 0.04
-MuzzleFlashRadius = 6.0
 
 # --- 命中撃砕破片 (Impact Splatter) 設定 ---
 ImpactSplatterMinCount = 4
