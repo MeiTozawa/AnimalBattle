@@ -17,8 +17,8 @@ public sealed class SkillEventConfig {
     /// <summary>発動遅延時間秒単位</summary>
     public float Time { get; set; }
 
-    /// <summary>イベント種別名</summary>
-    public string Type { get; set; } = string.Empty;
+    /// <summary>イベント種別</summary>
+    public AttackActionKind Type { get; set; }
 
     /// <summary>パラメータ 0</summary>
     public float Param0 { get; set; }

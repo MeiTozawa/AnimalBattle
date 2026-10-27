@@ -53,8 +53,7 @@ public static class SkillConfigLoader {
         if (events != null && events.Count > 0)
             foreach (var ev in events)
             {
-                var kind = ResolveActionKind(ev.Type);
-                actions.Add(new AttackActionStep(kind, index++, ev.Param0, ev.Param1, ev.Param2, ev.Time));
+                actions.Add(new AttackActionStep(ev.Type, index++, ev.Param0, ev.Param1, ev.Param2, ev.Time));
             }
         else if (defaultInterval > 0.0f && defaultSpeed > 0.0f)
             // 旧来パラメータに基づく周期的弾幕自動生成フォールバック
@@ -80,27 +79,5 @@ public static class SkillConfigLoader {
         if (!definition.IsValid) return Error.Validation("Skill.InvalidDefinition", $"技能 '{skillTag}' の内部定義検証に失敗しました。");
 
         return definition;
-    }
-
-    private static AttackActionKind ResolveActionKind(string? typeName)
-    {
-        if (string.IsNullOrWhiteSpace(typeName)) return FallbackUnknownType("<empty>");
-
-        return typeName.Trim().ToLowerInvariant() switch {
-            "bullet" => AttackActionKind.Bullet,
-            "hitbox" => AttackActionKind.Hitbox,
-            "movement" => AttackActionKind.Movement,
-            "easingmovement" => AttackActionKind.EasingMovement,
-            "velocitydive" => AttackActionKind.VelocityDive,
-            "ongroundedhitbox" => AttackActionKind.OnGroundedHitbox,
-            "shake" or "screenshake" => AttackActionKind.ScreenShake,
-            _ => FallbackUnknownType(typeName)
-        };
-    }
-
-    private static AttackActionKind FallbackUnknownType(string typeName)
-    {
-        Debug.Assert(false, $"[SkillConfigLoader] 未知のイベント種別です: '{typeName}'。Bullet としてフォールバックします。");
-        return AttackActionKind.Bullet;
     }
 }

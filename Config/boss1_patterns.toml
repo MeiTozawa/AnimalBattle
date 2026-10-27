@@ -40,7 +40,7 @@ StrParam = "Magenta"
 
 [[DiveRam.Events]]
 Time = 0.45
-Type = "shake"
+Type = "ScreenShake"
 Param0 = 8.0
 Param1 = 0.3
 Param2 = 0.0
