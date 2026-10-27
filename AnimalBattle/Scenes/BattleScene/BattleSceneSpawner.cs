@@ -1,21 +1,8 @@
 using AnimalBattle.Logging;
-using System.Diagnostics;
 using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
-using AnimalBattle.Asset;
-using AnimalBattle.Characters;
-using AnimalBattle.Characters.Boss;
-using AnimalBattle.Combat;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Events;
 using AnimalBattle.Maps;
-using AnimalBattle.Player;
-using AnimalBattle.Bosses;
-using AnimalBattle.Framework.Pooling;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Scenes.Battle;
 

@@ -1,7 +1,5 @@
 using AnimalBattle.Logging;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Abilities;
 

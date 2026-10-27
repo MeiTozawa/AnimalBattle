@@ -6,8 +6,6 @@ using System;
 
 using System.Diagnostics;
 
-using AnimalBattle.Components;
-
 using AnimalBattle.Configs;
 
 using Flecs.NET.Core;

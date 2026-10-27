@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using AnimalBattle.Configs;
 
 namespace AnimalBattle.Maps.Navigation;
 

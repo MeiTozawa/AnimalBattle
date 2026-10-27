@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using AnimalBattle.Bindings;
 
 namespace AnimalBattle.Core;
 

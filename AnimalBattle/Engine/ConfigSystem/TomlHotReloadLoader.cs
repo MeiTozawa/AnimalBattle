@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using ErrorOr;
 using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Primitives;
 using Tomlyn.Extensions.Configuration;
 
 /// <summary>

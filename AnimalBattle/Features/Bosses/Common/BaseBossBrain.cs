@@ -1,9 +1,5 @@
-using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
-
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Ai;
 

@@ -1,10 +1,5 @@
-using System;
 using System.Drawing;
 using System.Runtime.CompilerServices;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Presentation.Rendering;
 

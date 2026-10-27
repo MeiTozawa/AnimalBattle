@@ -1,6 +1,3 @@
-using AnimalBattle.Core;
-using ErrorOr;
-
 namespace AnimalBattle.Configs;
 
 /// <summary>

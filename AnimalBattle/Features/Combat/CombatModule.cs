@@ -1,7 +1,4 @@
 using AnimalBattle.Combat.Events;
-using AnimalBattle.Combat.Systems;
-
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Combat;
 

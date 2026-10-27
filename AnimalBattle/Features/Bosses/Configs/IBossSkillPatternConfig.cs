@@ -1,7 +1,5 @@
 using System.Drawing;
-using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
-using AnimalBattle.Core;
 using ErrorOr;
 
 namespace AnimalBattle.Configs;

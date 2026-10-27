@@ -1,13 +1,7 @@
-using System;
-using System.Diagnostics;
 using System.Drawing;
 using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Geometry;
 using AnimalBattle.Maps;
 using AnimalBattle.Maps.Navigation;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Presentation.Rendering;
 

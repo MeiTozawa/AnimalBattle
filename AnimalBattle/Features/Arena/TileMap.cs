@@ -1,12 +1,7 @@
 using AnimalBattle.Logging;
-using System.Collections.Generic;
-using System.Diagnostics;
 using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
 using AnimalBattle.Maps.Navigation;
 using AnimalBattle.Maps.Spatial;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Maps;
 

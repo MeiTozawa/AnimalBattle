@@ -1,16 +1,7 @@
-using System;
-using System.Diagnostics;
 using System.Drawing;
-using AnimalBattle.Abilities;
 using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
-using AnimalBattle.Characters;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Presentation.Animation;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Presentation.Rendering;
 

@@ -1,14 +1,7 @@
-using System;
-using System.Collections.Generic;
 using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss1;
 using AnimalBattle.Ai.Boss2;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Geometry;
 using AnimalBattle.Maps;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Scenes.Battle;
 

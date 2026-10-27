@@ -1,6 +1,3 @@
-
-using Flecs.NET.Core;
-
 namespace AnimalBattle.Scenes.Start;
 
 /// <summary>

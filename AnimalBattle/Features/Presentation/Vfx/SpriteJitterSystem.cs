@@ -1,8 +1,3 @@
-using System;
-using AnimalBattle.Components;
-using AnimalBattle.Core;
-using Flecs.NET.Core;
-
 namespace AnimalBattle.Presentation.Vfx;
 
 /// <summary>

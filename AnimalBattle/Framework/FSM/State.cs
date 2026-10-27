@@ -1,5 +1,3 @@
-using AnimalBattle.Core;
-
 namespace AnimalBattle.Framework.Fsm;
 
 /// <summary>

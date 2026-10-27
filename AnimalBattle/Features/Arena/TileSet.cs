@@ -1,5 +1,3 @@
-using AnimalBattle.Configs;
-
 namespace AnimalBattle.Maps;
 
 /// <summary>

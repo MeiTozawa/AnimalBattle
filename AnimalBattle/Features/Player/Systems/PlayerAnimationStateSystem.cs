@@ -1,8 +1,3 @@
-using System;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using Flecs.NET.Core;
-
 namespace AnimalBattle.Player.Systems;
 
 /// <summary>

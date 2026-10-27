@@ -1,6 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using AnimalBattle.Combat;
-using AnimalBattle.Core;
 using ErrorOr;
 
 namespace AnimalBattle.Configs;

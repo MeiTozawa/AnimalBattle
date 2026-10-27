@@ -1,7 +1,3 @@
-using AnimalBattle.Abilities;
-
-using Flecs.NET.Core;
-
 namespace AnimalBattle.Scenes.Battle;
 
 /// <summary>

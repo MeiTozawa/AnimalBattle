@@ -1,6 +1,4 @@
 using AnimalBattle.Logging;
-using System.Diagnostics;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Presentation.Animation;
 

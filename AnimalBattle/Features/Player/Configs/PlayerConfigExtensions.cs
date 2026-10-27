@@ -1,7 +1,6 @@
 namespace AnimalBattle.Configs;
 
 using System.Diagnostics;
-using AnimalBattle.Components;
 using AnimalBattle.Core;
 using Flecs.NET.Core;
 

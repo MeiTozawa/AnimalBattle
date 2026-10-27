@@ -1,6 +1,5 @@
 namespace AnimalBattle.Asset;
 
-using AnimalBattle.Configs;
 using AnimalBattle.Core;
 
 /// <summary>

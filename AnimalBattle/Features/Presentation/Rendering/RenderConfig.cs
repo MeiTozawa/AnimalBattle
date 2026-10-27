@@ -1,6 +1,4 @@
 using System.Drawing;
-using AnimalBattle.Core;
-using ErrorOr;
 using Microsoft.Extensions.Configuration;
 
 namespace AnimalBattle.Presentation.Rendering;

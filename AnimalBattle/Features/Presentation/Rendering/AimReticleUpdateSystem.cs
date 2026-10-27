@@ -1,9 +1,3 @@
-using System;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Events;
-using Flecs.NET.Core;
-
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>

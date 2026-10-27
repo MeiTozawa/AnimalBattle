@@ -1,5 +1,4 @@
 using AnimalBattle.Logging;
-using AnimalBattle.Core;
 using ErrorOr;
 
 namespace AnimalBattle.Core.Geometry;

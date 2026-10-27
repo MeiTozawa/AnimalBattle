@@ -1,8 +1,4 @@
 using AnimalBattle.Logging;
-using System.Diagnostics;
-using AnimalBattle.Asset;
-using AnimalBattle.Bindings;
-using AnimalBattle.Events;
 
 namespace AnimalBattle.Core;
 

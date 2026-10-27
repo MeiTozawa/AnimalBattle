@@ -1,11 +1,5 @@
 using System.Drawing;
 using AnimalBattle.Ai;
-using AnimalBattle.Framework.Pooling;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Geometry;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Combat;
 

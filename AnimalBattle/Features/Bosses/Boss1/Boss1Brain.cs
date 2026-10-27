@@ -1,11 +1,5 @@
 using AnimalBattle.Logging;
-using System.Diagnostics;
-using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Skills;
-
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Ai.Boss1;
 

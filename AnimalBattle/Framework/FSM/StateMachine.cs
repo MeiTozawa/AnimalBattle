@@ -1,6 +1,3 @@
-using System.Diagnostics;
-using AnimalBattle.Core;
-
 namespace AnimalBattle.Framework.Fsm;
 
 /// <summary>

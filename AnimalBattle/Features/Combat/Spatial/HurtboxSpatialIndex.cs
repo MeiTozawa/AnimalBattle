@@ -1,9 +1,4 @@
-using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using AnimalBattle.Components;
-using AnimalBattle.Core;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Combat.Spatial;
 

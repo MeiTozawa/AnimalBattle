@@ -1,9 +1,4 @@
-using System;
-using System.Diagnostics;
 using System.Drawing;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Geometry;
 
 namespace AnimalBattle.Presentation.Rendering;
 

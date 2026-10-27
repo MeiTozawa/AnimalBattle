@@ -1,5 +1,3 @@
-using AnimalBattle.Core;
-using AnimalBattle.Core.Geometry;
 using ErrorOr;
 
 namespace AnimalBattle.Configs;

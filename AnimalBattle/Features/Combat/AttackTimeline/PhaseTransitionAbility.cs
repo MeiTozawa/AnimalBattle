@@ -1,6 +1,3 @@
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-
 namespace AnimalBattle.Abilities.Skills;
 
 /// <summary>

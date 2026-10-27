@@ -1,8 +1,5 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using AnimalBattle.Bindings;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Presentation.Rendering;
 

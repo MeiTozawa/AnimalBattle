@@ -1,6 +1,4 @@
 using System.Runtime.InteropServices;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Geometry;
 
 namespace AnimalBattle.Common.Components;
 

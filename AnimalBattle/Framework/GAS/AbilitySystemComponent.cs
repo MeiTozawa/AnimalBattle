@@ -1,6 +1,4 @@
 using AnimalBattle.Logging;
-using System.Diagnostics;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Abilities;
 

@@ -1,14 +1,3 @@
-using System;
-using AnimalBattle.Combat;
-using AnimalBattle.Components;
-using AnimalBattle.Core;
-using AnimalBattle.Core.Geometry;
-using AnimalBattle.Events;
-using AnimalBattle.Framework.Pooling;
-using AnimalBattle.Player.Components;
-using AnimalBattle.Presentation.Vfx;
-using Flecs.NET.Core;
-
 namespace AnimalBattle.Player.Systems;
 
 /// <summary>

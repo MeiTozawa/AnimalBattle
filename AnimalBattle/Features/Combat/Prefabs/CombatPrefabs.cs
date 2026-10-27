@@ -1,12 +1,5 @@
-using System.Drawing;
-using AnimalBattle.Combat;
 using AnimalBattle.Combat.Events;
-using AnimalBattle.Common;
-using AnimalBattle.Combat.Components;
 using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core.Geometry;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Combat;
 

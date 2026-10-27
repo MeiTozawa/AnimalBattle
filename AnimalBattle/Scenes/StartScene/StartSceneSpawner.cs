@@ -1,10 +1,3 @@
-using System.Drawing;
-using AnimalBattle.Asset;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using Flecs.NET.Core;
-
 namespace AnimalBattle.Scenes.Start;
 
 /// <summary>

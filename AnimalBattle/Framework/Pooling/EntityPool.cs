@@ -1,7 +1,3 @@
-using System.Diagnostics;
-using AnimalBattle.Components;
-using Flecs.NET.Core;
-
 namespace AnimalBattle.Framework.Pooling;
 
 /// <summary>

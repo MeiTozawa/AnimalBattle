@@ -1,6 +1,3 @@
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-
 namespace AnimalBattle.Ai.Boss1;
 
 /// <summary>Boss1 の移動に必要な Phase 設定の不変 snapshot です。</summary>

@@ -1,5 +1,4 @@
 using AnimalBattle.Abilities.Attack;
-using AnimalBattle.Core;
 using ErrorOr;
 
 namespace AnimalBattle.Abilities.Skills;

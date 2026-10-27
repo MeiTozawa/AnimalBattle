@@ -1,6 +1,3 @@
-using AnimalBattle.Core;
-using AnimalBattle.Core.Geometry;
-
 #nullable disable
 
 namespace AnimalBattle.Configs;

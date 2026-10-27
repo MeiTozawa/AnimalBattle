@@ -1,5 +1,3 @@
-using ErrorOr;
-
 namespace AnimalBattle.Configs;
 
 /// <summary>

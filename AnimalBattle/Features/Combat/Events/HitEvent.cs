@@ -1,6 +1,3 @@
-using AnimalBattle.Core;
-using Flecs.NET.Core;
-
 namespace AnimalBattle.Combat.Events;
 
 /// <summary>

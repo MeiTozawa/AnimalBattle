@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using AnimalBattle.Components;
-using AnimalBattle.Presentation.Vfx;
 
 namespace AnimalBattle.Framework.Pooling;
 

@@ -1,5 +1,3 @@
-using AnimalBattle.Core;
-
 namespace AnimalBattle.Abilities.Attack;
 
 /// <summary>攻撃の Telegraph、Execute、Recovery と各アクションステップを保持する検証済み定義です。</summary>

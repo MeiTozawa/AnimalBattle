@@ -1,5 +1,4 @@
 using System.Drawing;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Combat;
 

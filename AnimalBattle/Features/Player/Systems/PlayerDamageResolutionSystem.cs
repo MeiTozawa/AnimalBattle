@@ -1,13 +1,4 @@
-using System;
-using AnimalBattle.Abilities;
 using AnimalBattle.Combat.Events;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Events;
-using AnimalBattle.Presentation.Rendering;
-using AnimalBattle.Presentation.Vfx;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Player.Systems;
 

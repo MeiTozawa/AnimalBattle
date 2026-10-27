@@ -1,7 +1,4 @@
-using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
 using ErrorOr;
 
 namespace AnimalBattle.Ai;

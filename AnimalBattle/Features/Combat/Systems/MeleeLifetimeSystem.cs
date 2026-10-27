@@ -1,6 +1,4 @@
 using AnimalBattle.Components;
-using AnimalBattle.Framework.Pooling;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Combat.Systems;
 

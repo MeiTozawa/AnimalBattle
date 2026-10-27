@@ -1,9 +1,3 @@
-using AnimalBattle.Abilities;
-using AnimalBattle.Combat.Components;
-using AnimalBattle.Components;
-using AnimalBattle.Framework.Pooling;
-using Flecs.NET.Core;
-
 namespace AnimalBattle.Common;
 
 /// <summary>

@@ -1,9 +1,6 @@
 using AnimalBattle.Logging;
 using System.Drawing;
 using System.Runtime.CompilerServices;
-using AnimalBattle.Asset;
-using AnimalBattle.Bindings;
-using AnimalBattle.Events;
 
 namespace AnimalBattle.Core;
 

@@ -1,10 +1,7 @@
 using System.Drawing;
-using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
-using AnimalBattle.Core;
 using ErrorOr;
-using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
 
 namespace AnimalBattle.Configs;

@@ -1,6 +1,4 @@
 using System.Drawing;
-using AnimalBattle.Core;
-using AnimalBattle.Events;
 using Microsoft.Extensions.Configuration;
 
 namespace AnimalBattle.Configs;
@@ -30,10 +28,7 @@ public abstract class BulletPatternConfigBase : SkillPatternConfigBase {
     public string FillColorHex
     {
         get => string.Empty;
-        set
-        {
-            _fillColor = value.ToColor();
-        }
+        set => _fillColor = value.ToColor();
     }
 
     /// <summary>弾の塗りつぶしカラー</summary>
@@ -44,10 +39,7 @@ public abstract class BulletPatternConfigBase : SkillPatternConfigBase {
     public string OutlineColorHex
     {
         get => string.Empty;
-        set
-        {
-            _outlineColor = value.ToColor();
-        }
+        set => _outlineColor = value.ToColor();
     }
 
     /// <summary>弾の外枠カラー</summary>

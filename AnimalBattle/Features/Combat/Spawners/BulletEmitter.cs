@@ -1,11 +1,3 @@
-using System.Diagnostics;
-using System.Drawing;
-using AnimalBattle.Ai;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Events;
-using Flecs.NET.Core;
-
 namespace AnimalBattle.Combat;
 
 /// <summary>

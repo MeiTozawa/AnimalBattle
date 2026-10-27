@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Presentation.Rendering;
 

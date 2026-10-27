@@ -1,5 +1,4 @@
 using AnimalBattle.Ai;
-using AnimalBattle.Core;
 
 namespace AnimalBattle.Bosses.Components;
 

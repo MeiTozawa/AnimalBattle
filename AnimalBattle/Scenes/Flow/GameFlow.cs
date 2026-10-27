@@ -1,5 +1,4 @@
 using AnimalBattle.Ai;
-using AnimalBattle.Configs;
 
 namespace AnimalBattle.Scenes;
 

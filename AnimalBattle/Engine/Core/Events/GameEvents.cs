@@ -1,5 +1,3 @@
-using AnimalBattle.Core;
-
 namespace AnimalBattle.Events;
 
 /// <summary>自機が地面からジャンプしたイベント</summary>

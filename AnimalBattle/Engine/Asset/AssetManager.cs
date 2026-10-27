@@ -1,5 +1,4 @@
 using AnimalBattle.Logging;
-using AnimalBattle.Configs;
 
 namespace AnimalBattle.Asset;
 

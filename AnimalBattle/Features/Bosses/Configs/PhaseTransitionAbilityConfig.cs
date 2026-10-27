@@ -1,5 +1,3 @@
-using AnimalBattle.Abilities;
-
 namespace AnimalBattle.Configs;
 
 /// <summary>

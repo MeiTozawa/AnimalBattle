@@ -1,5 +1,3 @@
-using AnimalBattle.Core;
-
 namespace AnimalBattle.Presentation.Vfx.Components;
 
 /// <summary>

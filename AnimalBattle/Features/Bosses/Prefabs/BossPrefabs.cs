@@ -1,11 +1,4 @@
-using System.Diagnostics;
 using AnimalBattle.Ai;
-using AnimalBattle.Combat;
-using AnimalBattle.Common;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
-using AnimalBattle.Core.Geometry;
-using Flecs.NET.Core;
 
 namespace AnimalBattle.Bosses;
 
