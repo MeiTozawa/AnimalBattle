@@ -21,7 +21,8 @@ public enum SkillEffectKind
     Bullet,
     Hitbox,
     Velocity,
-    ScreenShake
+    ScreenShake,
+    Summon
 }
 
 /// <summary>
@@ -185,6 +186,18 @@ public sealed class HitboxEmitConfig
     /// <summary>パース済み判定エフェクトカラー</summary>
     public Color Color => _color;
 }
+
+public sealed class SummonEmitConfig
+{
+    /// <summary>発生座標オフセット（px）</summary>
+    public Vec2f SpawnPosition { get; set; }
+
+    /// <summary>与ダメージ</summary>
+    public Entity Character { get; set; }
+
+
+}
+
 
 /// <summary>
 /// タイムラインで実行される単一アクションステップ設定クラス。
