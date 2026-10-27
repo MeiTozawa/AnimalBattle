@@ -1,4 +1,5 @@
 using System;
+using AnimalBattle.Combat.Events;
 using AnimalBattle.Combat.Spatial;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
@@ -120,34 +121,16 @@ public static class CombatCollisionSystem
         var isHeavy = localHitbox.IsHeavy || (localHitbox.Damage >= physicsCfg.HeavyDamageThreshold);
         var targetKnockback = baseKnockback with { X = knockbackDir * baseKnockback.X };
 
-        // 常駐 IncomingDamage へのインライン書き込み（Archetype 変更や遅延キューを発生させず即時反映）
-        ref var incoming = ref vicEntity.GetMut<IncomingDamage>();
-        if (incoming.Amount <= 0.0f)
+        // 被弾イベントを DamageInbox へ無ロック追記（受撃エンティティの Archetype 変更や遅延キューを全廃）
+        var inbox = world.GetMut<DamageInbox>();
+        inbox.Enqueue(new HitEvent
         {
-            incoming.Amount = localHitbox.Damage;
-            incoming.SourceFaction = localHitbox.Faction;
-            incoming.Knockback = targetKnockback;
-            incoming.IsHeavyImpact = isHeavy;
-        }
-        else
-        {
-            // 敵対判定（Boss攻撃等）から自機への同一フレーム多重被弾は最大値を採用して多重被弾死を防止
-            // プレイヤーからの弾幕は同一フレームの散弾累加を許可
-            if (localHitbox.Faction == Faction.Hostile)
-            {
-                incoming.Amount = MathF.Max(incoming.Amount, localHitbox.Damage);
-            }
-            else
-            {
-                incoming.Amount += localHitbox.Damage;
-            }
-
-            incoming.IsHeavyImpact |= isHeavy;
-            if (isHeavy)
-            {
-                incoming.Knockback = targetKnockback;
-            }
-        }
+            Victim = vicEntity,
+            Damage = localHitbox.Damage,
+            SourceFaction = localHitbox.Faction,
+            Knockback = targetKnockback,
+            IsHeavy = isHeavy
+        });
 
         EffectSpawner.SpawnHitSparkEffect(world, vicTrans.Position + hurtbox.Shape.Offset);
 
