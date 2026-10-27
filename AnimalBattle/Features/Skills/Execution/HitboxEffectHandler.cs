@@ -32,12 +32,7 @@ public sealed class HitboxEffectHandler : ISkillEffectHandler
         }
         else
         {
-            var offX = cfg.Offset.X;
-            if (cfg.UseBossSlashOffset)
-            {
-                var b2Cfg = world.Get<Boss2Config>();
-                offX = ctx.ForwardDir * (b2Cfg.SlashSpawnOffset.X + MathF.Abs(cfg.Offset.X));
-            }
+            var offX = ctx.ForwardDir * MathF.Abs(cfg.Offset.X);
             var offY = cfg.Offset.Y;
             var dir = ctx.ForwardDir > 0.0f ? SlashDirection.Right : SlashDirection.Left;
 

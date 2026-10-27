@@ -108,6 +108,8 @@ EffectiveRange = 750.0
 Kind = "SkyfallColumns"
 Color = "#00E5FF"
 Count = 6
+MinX = 60.0
+MaxX = 1220.0
 Height = 650.0
 WarningText = "▼ RAIN ▼"
 

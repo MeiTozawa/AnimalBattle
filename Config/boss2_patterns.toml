@@ -22,7 +22,7 @@ Velocity = { x = 360.0, y = 0.0 }
 [[HeavySlash.Effects]]
 Time = 0.05
 Kind = "Hitbox"
-Hitbox = { DirectionMode = "Forward", Size = { x = 100.0, y = 75.0 }, Damage = 1.0, Duration = 0.28, Color = "#FF7043", UseBossSlashOffset = true }
+Hitbox = { DirectionMode = "Forward", Size = { x = 100.0, y = 75.0 }, Offset = { x = 32.0, y = 0.0 }, Damage = 1.0, Duration = 0.28, Color = "#FF7043" }
 
 [[HeavySlash.Effects]]
 Time = 0.05
@@ -104,7 +104,7 @@ Size = { x = 250.0, y = 80.0 }
 [[DoubleCleave.Effects]]
 Time = 0.0
 Kind = "Hitbox"
-Hitbox = { DirectionMode = "Forward", Size = { x = 105.0, y = 80.0 }, Damage = 1.0, Duration = 0.24, Color = "#FF1744", UseBossSlashOffset = true }
+Hitbox = { DirectionMode = "Forward", Size = { x = 105.0, y = 80.0 }, Offset = { x = 32.0, y = 0.0 }, Damage = 1.0, Duration = 0.24, Color = "#FF1744" }
 
 [[DoubleCleave.Effects]]
 Time = 0.20
@@ -119,7 +119,7 @@ Velocity = { x = 0.0, y = 0.0 }
 [[DoubleCleave.Effects]]
 Time = 0.45
 Kind = "Hitbox"
-Hitbox = { DirectionMode = "Forward", Size = { x = 105.0, y = 80.0 }, Offset = { x = 15.0, y = 0.0 }, Damage = 1.0, Duration = 0.24, Color = "#FF1744", UseBossSlashOffset = true }
+Hitbox = { DirectionMode = "Forward", Size = { x = 105.0, y = 80.0 }, Offset = { x = 47.0, y = 0.0 }, Damage = 1.0, Duration = 0.24, Color = "#FF1744" }
 
 [FrenzyCharge]
 SkillName = "Frenzy Rampage Charge"
@@ -154,6 +154,8 @@ ArmorTags = ["SuperArmor"]
 Kind = "SkyfallColumns"
 Color = "#00E5FF"
 Count = 5
+MinX = 80.0
+MaxX = 1200.0
 Height = 650.0
 WarningText = "▼ ROCK ▼"
 

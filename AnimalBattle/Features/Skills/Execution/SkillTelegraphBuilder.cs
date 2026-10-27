@@ -24,8 +24,14 @@ public static class SkillTelegraphBuilder
                     ctx.SourcePos, Math.Max(1, cfg.Count), spinAngle, cfg.Radius > 0.0f ? cfg.Radius : 75.0f, ctx.Progress, cfg.Color, ctx.Effects);
             },
 
-            TelegraphKind.SkyfallColumns => ctx => TelegraphRenderHelper.DrawSkyfallColumns(
-                cfg.MinX, cfg.MaxX, Math.Max(1, cfg.Count), cfg.Height > 0.0f ? cfg.Height : 650.0f, ctx.Progress, cfg.Color, cfg.WarningText, ctx.Effects),
+            TelegraphKind.SkyfallColumns => ctx =>
+            {
+                var minX = cfg.MinX != 0.0f ? cfg.MinX : (ctx.Arena?.BoundaryMinX ?? 80.0f);
+                var maxX = cfg.MaxX != 0.0f ? cfg.MaxX : (ctx.Arena?.BoundaryMaxX ?? 1200.0f);
+                var groundY = cfg.Height > 0.0f ? cfg.Height : (ctx.Arena?.FloorLimitY ?? 650.0f);
+                TelegraphRenderHelper.DrawSkyfallColumns(
+                    minX, maxX, Math.Max(1, cfg.Count), groundY, ctx.Progress, cfg.Color, cfg.WarningText, ctx.Effects);
+            },
 
             TelegraphKind.DiveTrajectory => ctx => TelegraphRenderHelper.DrawDiveRamTelegraph(
                 ctx.SourcePos, ctx.TargetPos, cfg.Radius > 0.0f ? cfg.Radius : 40.0f, ctx.Progress, cfg.Color, ctx.Effects),

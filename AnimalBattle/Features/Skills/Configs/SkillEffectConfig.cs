@@ -184,9 +184,6 @@ public sealed class HitboxEmitConfig
 
     /// <summary>パース済み判定エフェクトカラー</summary>
     public Color Color => _color;
-
-    /// <summary>Boss 共通の近接オフセット設定を加算するかどうか</summary>
-    public bool UseBossSlashOffset { get; set; } = true;
 }
 
 /// <summary>
