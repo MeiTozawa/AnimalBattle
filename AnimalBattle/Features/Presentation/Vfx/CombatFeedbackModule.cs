@@ -1,4 +1,3 @@
-
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Presentation.Vfx;
@@ -17,7 +16,6 @@ public readonly struct CombatFeedbackModule : IFlecsModule
         world.Module<CombatFeedbackModule>();
 
         world.AddHitstopSystem()
-             .AddSpriteJitterSystem()
-             .AddInvincibleBlinkSystem();
+             .AddSpriteJitterSystem();
     }
 }

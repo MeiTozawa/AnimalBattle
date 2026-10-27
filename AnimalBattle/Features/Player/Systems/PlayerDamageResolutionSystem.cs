@@ -5,6 +5,8 @@ using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
+using AnimalBattle.Presentation.Rendering;
+using AnimalBattle.Presentation.Vfx;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Player.Systems;
@@ -112,11 +114,13 @@ public static class PlayerDamageResolutionSystem
             ref var sprite = ref sprites[i];
             ref var effectState = ref timedEffects[i];
 
-            // HP 減算および不可命中無敵時間・被弾白閃エフェクトの注入
+            // HP 減算および不可命中無敵時間・被弾白閃・無敵点滅エフェクトの注入
             var prevHp = hp.Current;
             hp.Current = MathF.Max(0.0f, hp.Current - totalDamage);
             TimedEffectService.ApplyEffect(ref effectState, ref tagState, GameplayTag.Untargetable, invCfg.Duration, entity.Id);
             entity.Set(new HitFlashEffect(flashCfg.Duration, flashCfg.Color));
+            var blinkFreq = world.Get<RenderConfig>().Player.InvincibleBlinkFrequency;
+            entity.Set(new InvincibleBlinkEffect(invCfg.Duration, blinkFreq));
             EventBus.Publish(new PlayerHealthChangedEvent(prevHp, hp.Current, hp.Max));
 
             // ヒットストップ時間および微小振動の付与

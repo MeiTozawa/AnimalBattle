@@ -6,6 +6,8 @@ using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
 using AnimalBattle.Maps;
+using AnimalBattle.Presentation.Rendering;
+using AnimalBattle.Presentation.Vfx;
 using Flecs.NET.Core;
 
 namespace AnimalBattle.Player.Systems;
@@ -156,8 +158,10 @@ public static class MovementSystem {
                 dash.DirectionX = intent.FacingX < 0.0f ? -1.0f : 1.0f;
             }
 
-            // ダッシュ不可命中フレーム付与：弾幕・敵接触をすり抜ける
+            // ダッシュ不可命中フレーム付与：弾幕・敵接触をすり抜け、点滅演出を注入
             TimedEffectService.ApplyEffect(ref timedEffects, ref tagState, GameplayTag.Untargetable, pCfg.DashInvincibleDuration, entity.Id);
+            var blinkFreq = entity.CsWorld().Get<RenderConfig>().Player.InvincibleBlinkFrequency;
+            entity.Set(new InvincibleBlinkEffect(pCfg.DashInvincibleDuration, blinkFreq));
 
             // スカッシュ＆ストレッチ突進変形演出
             spring.Current = pCfg.DashStretchScale;
