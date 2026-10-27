@@ -6,6 +6,7 @@ using AnimalBattle.Configs;
 using AnimalBattle.Core;
 using AnimalBattle.Events;
 using AnimalBattle.Framework.Pooling;
+using AnimalBattle.Presentation.Vfx;
 using Flecs.NET.Core;
 
 using System;
@@ -174,7 +175,8 @@ public static class BattleInputSystem
         boss.Remove<HitstopState>()
             .Remove<SpriteJitter>()
             .Remove<DeadTag>()
-            .Remove<HitFlashEffect>();
+            .Remove<HitFlashEffect>()
+            .Remove<InvincibleBlinkEffect>();
         
         ref var sprite = ref boss.GetMut<Sprite>();
         sprite.IsVisible = true;
@@ -200,14 +202,14 @@ public static class BattleInputSystem
         player.Set(JumpCapability.FromPlayerConfig(cfg));
         player.Set(new GameplayTagState());
         player.Set(new TimedEffectsState());
-        player.Set(new InvincibleBlinkState());
         player.Set(new SpringScale(Vec2f.One, cfg.SpringFrequency, cfg.SpringDampingRatio));
 
         // 一時状態・エフェクト・死亡タグの一括安全削除：Flecs ネイティブ API による冪等操作
         player.Remove<HitstopState>()
             .Remove<SpriteJitter>()
             .Remove<DeadTag>()
-            .Remove<HitFlashEffect>();
+            .Remove<HitFlashEffect>()
+            .Remove<InvincibleBlinkEffect>();
 
         if (player.Has<CatWeaponState>())
         {

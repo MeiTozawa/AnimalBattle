@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using AnimalBattle.Components;
+using AnimalBattle.Presentation.Vfx;
 
 namespace AnimalBattle.Framework.Pooling;
 
@@ -132,6 +133,7 @@ public sealed class CombatPoolService : IDisposable
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
+        e.Remove<InvincibleBlinkEffect>();
         e.Remove<OrbitOf>(Ecs.Wildcard);
 
         e.Set(new Transform(Vec2f.Zero));
@@ -148,6 +150,7 @@ public sealed class CombatPoolService : IDisposable
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
+        e.Remove<InvincibleBlinkEffect>();
         e.Remove<OrbitOf>(Ecs.Wildcard);
 
         e.Set(new Transform(Vec2f.Zero));
@@ -195,6 +198,7 @@ public sealed class CombatPoolService : IDisposable
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
+        e.Remove<InvincibleBlinkEffect>();
         e.Remove<OrbitOf>(Ecs.Wildcard);
 
         e.Set(new Transform(Vec2f.Zero));
@@ -218,6 +222,7 @@ public sealed class CombatPoolService : IDisposable
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();
+        e.Remove<InvincibleBlinkEffect>();
         e.Remove<OrbitOf>(Ecs.Wildcard);
 
         e.Set(new Transform(Vec2f.Zero));
