@@ -44,7 +44,6 @@ public static class CommonPrefabs
         world.Component<Health>().AutoOverride<Health>();
         world.Component<SpringScale>().AutoOverride<SpringScale>();
         world.Component<InvincibleBlinkState>().AutoOverride<InvincibleBlinkState>();
-        world.Component<IncomingDamage>().AutoOverride<IncomingDamage>();
 
         // 投射物基底プレハブ
         BaseProjectile = world.Prefab(BaseProjectileName)
@@ -67,7 +66,6 @@ public static class CommonPrefabs
             .Set(new Velocity(Vec2f.Zero))
             .Set(new GameplayTagState())
             .Set(new TimedEffectsState())
-            .Set(new InvincibleBlinkState())
-            .Set(new IncomingDamage());
+            .Set(new InvincibleBlinkState());
     }
 }

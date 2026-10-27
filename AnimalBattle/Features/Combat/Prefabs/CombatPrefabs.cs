@@ -41,7 +41,6 @@ public static class CombatPrefabs
         world.Component<BulletModifier>().AutoOverride<BulletModifier>();
         world.Component<OrbitSatellite>().AutoOverride<OrbitSatellite>();
         world.Component<HitboxLifetime>().AutoOverride<HitboxLifetime>();
-        world.Component<IncomingDamage>().Ctor(static (ref IncomingDamage dmg, TypeInfo _) => dmg = default);
 
         // --- 1. 自機通常弾 ---
         var playerBulletCfg = cfg.PlayerBullet;
