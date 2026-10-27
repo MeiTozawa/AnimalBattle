@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using System.Diagnostics;
 using AnimalBattle.Asset;
 using AnimalBattle.Bindings;
@@ -56,8 +57,10 @@ public static class SoundService
         // BGM ロード
         var bgmPath = AssetPathResolver.Instance.ResolveAssetPath(ResourcePath.Sound.BgmBattleMp3);
         Debug.Assert(File.Exists(bgmPath), $"BGM 音声ファイルが見つかりません: {bgmPath}");
+        if (!File.Exists(bgmPath)) Log.Error("SoundService", $"BGM ファイルが見つかりません: {bgmPath}");
         _bgmHandle = NativeBindings.Sound_Load(bgmPath);
         Debug.Assert(_bgmHandle >= 0, $"BGM 音声ファイルの読み込みに失敗しました (DxLib エラー): {bgmPath}");
+        if (_bgmHandle < 0) Log.Error("SoundService", $"BGM ファイルの読み込みに失敗しました (DxLib エラー): {bgmPath}");
 
         // 各 SFX とファイルパスのマッピング
         ReadOnlySpan<(SfxType Type, string RelPath)> sfxDefinitions = [
@@ -81,16 +84,18 @@ public static class SoundService
         {
             var fullPath = AssetPathResolver.Instance.ResolveAssetPath(relPath);
             Debug.Assert(File.Exists(fullPath), $"SFX 音声ファイルが見つかりません: {fullPath} (SfxType: {type})");
+            if (!File.Exists(fullPath)) Log.Error("SoundService", $"SFX ファイルが見つかりません: {fullPath} (SfxType: {type})");
 
             var handle = NativeBindings.Sound_Load(fullPath);
             Debug.Assert(handle >= 0, $"SFX 音声ファイルの読み込みに失敗しました (DxLib エラー): {fullPath} (SfxType: {type})");
+            if (handle < 0) Log.Error("SoundService", $"SFX ファイルの読み込みに失敗しました (DxLib エラー): {fullPath} (SfxType: {type})");
 
             SfxHandles[type] = handle;
         }
 
         RegisterEventHandlers();
         _isInitialized = true;
-        Debug.WriteLine($"[SoundService] サウンドエンジン初期化完了: BGM 1 件、SFX {SfxHandles.Count} 件をロードし、EventBus へ購読しました。");
+        Log.Info("SoundService", $"[SoundService] サウンドエンジン初期化完了: BGM 1 件、SFX {SfxHandles.Count} 件をロードし、EventBus へ購読しました。");
     }
 
     /// <summary>
@@ -251,6 +256,6 @@ public static class SoundService
         SfxHandles.Clear();
 
         _isInitialized = false;
-        Debug.WriteLine("[SoundService] サウンドエンジンをシャットダウンし、全音声メモリを解放しました。");
+        Log.Info("SoundService", "[SoundService] サウンドエンジンをシャットダウンし、全音声メモリを解放しました。");
     }
 }

@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using AnimalBattle.Configs;
 
 namespace AnimalBattle.Asset;
@@ -88,7 +89,7 @@ public sealed class AssetManager : IAssetManager {
         {
             _graphSizes[handle] = AssetService.GetGraphSize(handle);
         }
-        Debug.WriteLine(
+        Log.Info("AssetManager", 
             $"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {handle})");
     }
 
@@ -121,7 +122,7 @@ public sealed class AssetManager : IAssetManager {
         {
             _graphSizes[handle] = AssetService.GetGraphSize(handle);
         }
-        Debug.WriteLine($"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {handle})");
+        Log.Info("AssetManager", $"[C# アセット] テクスチャを正常にロードしました: {relativePath} -> {fullPath} (Handle: {handle})");
 
         return handle;
     }

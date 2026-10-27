@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using System.Diagnostics;
 using AnimalBattle.Abilities;
 using AnimalBattle.Abilities.Skills;
@@ -104,7 +105,8 @@ public sealed class Boss1Brain : BaseBossBrain {
         var buildResult = BossPatternLoader.BuildAbility(skill, config, cooldown);
         if (buildResult.IsError)
         {
-            Debug.Assert(false, $"Boss 1 技能時序の構築に失敗しました: {skill}");
+            Log.Error("Boss1Brain", $"Boss 1 のスキル構築に失敗しました: {skill} ({buildResult.FirstError.Description})");
+            Debug.Assert(false, $"Boss 1 のスキルの構築に失敗しました: {skill}");
             return;
         }
 

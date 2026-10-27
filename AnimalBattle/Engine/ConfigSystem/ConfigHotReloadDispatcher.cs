@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 namespace AnimalBattle.Configs;
 
 using System.Collections.Concurrent;
@@ -37,6 +38,7 @@ public static class ConfigHotReloadDispatcher
             }
             catch (Exception ex)
             {
+                Log.Error("ConfigHotReload", $"設定ホットリロードの適用中に例外が発生しました: {ex.Message}", ex);
                 Debug.Fail($"[C# 設定警告] 設定ホットリロード適用中に例外が発生しました: {ex.Message}");
             }
         }

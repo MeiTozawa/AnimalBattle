@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using AnimalBattle.Core;
@@ -96,6 +97,7 @@ public sealed class CooldownTracker {
             }
             else
             {
+                Log.Error("CooldownTracker", $"クールダウンスロットの最大数 ({CooldownSlots.MaxSlots}) を超過しました: {tag}");
                 Debug.Assert(false, $"[CooldownTracker] 冷却スロットの最大数（{CooldownSlots.MaxSlots}）を超過しました: {tag}");
             }
         }

@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using AnimalBattle.Asset;
@@ -24,9 +25,11 @@ public static class GameEngine {
     {
         var initSuccess = NativeBindings.Engine_Init(IntPtr.Zero, width, height);
         Debug.Assert(initSuccess, "Native エンジンの初期化に失敗しました。");
+        if (!initSuccess) Log.Error("GameEngine", "ネイティブエンジンの初期化に失敗しました。");
 
         InputService.RegisterDefaultActions();
         SoundService.Initialize();
+        Log.Info("GameEngine", $"エンジンの初期化が完了しました ({width}x{height}, ウィンドウモード: {windowMode})。");
     }
 
     /// <summary>
@@ -34,6 +37,7 @@ public static class GameEngine {
     /// </summary>
     public static void Shutdown()
     {
+        Log.Info("GameEngine", "エンジンをシャットダウンします。");
         SoundService.Shutdown();
         EventBus.ClearAll();
         _commandBuffer.Dispose();

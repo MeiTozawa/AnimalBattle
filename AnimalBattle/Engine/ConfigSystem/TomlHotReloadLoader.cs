@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 namespace AnimalBattle.Configs;
 
 using System.Diagnostics;
@@ -68,6 +69,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
         using var stream = EmbeddedConfigProvider.OpenStream(_relativeFilePath);
         if (stream == null)
         {
+            Log.Error("TomlHotReloadLoader", $"組み込み TOML 設定リソースが見つかりません: {_relativeFilePath}");
             Debug.Fail($"[C# 設定警告] 組み込み TOML 設定リソースが見つかりませんでした: {_relativeFilePath}");
             return Error.NotFound("Config.NotFound", $"組み込み TOML 設定リソースが見つかりません ({_relativeFilePath})。");
         }
@@ -86,6 +88,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
                 var valid = lifecycle.Validate();
                 if (valid.IsError)
                 {
+                    Log.Error("TomlHotReloadLoader", $"{typeof(T).Name} の検証に失敗しました: {valid.FirstError.Description}");
                     Debug.Fail($"[C# 設定警告] {typeof(T).Name} の初期検証に失敗しました: {valid.FirstError.Description}");
                     return valid.FirstError;
                 }
@@ -96,6 +99,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
         }
         catch (Exception ex)
         {
+            Log.Error("TomlHotReloadLoader", $"組み込み TOML の読み込み中に例外が発生しました ({_relativeFilePath}): {ex.Message}", ex);
             Debug.Fail($"[C# 設定警告] 組み込み TOML 読み込み中に例外が発生しました: {ex.Message}");
             return Error.Failure("Config.Exception", ex.Message);
         }
@@ -115,12 +119,17 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
                 if (instance is IConfigLifecycle lifecycle)
                 {
                     var valid = lifecycle.Validate();
-                    if (valid.IsError) return valid.FirstError;
+                    if (valid.IsError)
+                    {
+                        Log.Error("TomlHotReloadLoader", $"{typeof(T).Name} の検証に失敗しました: {valid.FirstError.Description}");
+                        return valid.FirstError;
+                    }
                     lifecycle.PostProcess();
                 }
                 return instance;
             }
 
+            Log.Error("TomlHotReloadLoader", $"TOML 設定ファイルが見つかりません: {_relativeFilePath}");
             Debug.Fail($"[C# 設定警告] TOML 設定ファイルが見つかりませんでした: {_relativeFilePath}");
             return Error.NotFound("Config.NotFound", $"TOML 設定ファイルが見つかりません ({_relativeFilePath})。");
         }
@@ -144,6 +153,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
                 var valid = lifecycle.Validate();
                 if (valid.IsError)
                 {
+                    Log.Error("TomlHotReloadLoader", $"{typeof(T).Name} の検証に失敗しました: {valid.FirstError.Description}");
                     Debug.Fail($"[C# 設定警告] {typeof(T).Name} の初期検証に失敗しました: {valid.FirstError.Description}");
                     return valid.FirstError;
                 }
@@ -156,6 +166,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
         }
         catch (Exception ex)
         {
+            Log.Error("TomlHotReloadLoader", $"TOML 読み込み中に例外が発生しました ({_relativeFilePath}): {ex.Message}", ex);
             Debug.Fail($"[C# 設定警告] TOML 読み込み中に例外が発生しました: {ex.Message}");
             return Error.Failure("Config.Exception", ex.Message);
         }
@@ -213,7 +224,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[C# 設定警告] {typeof(T).Name} の非同期リロード中に予期せぬエラーが発生しました: {ex.Message}");
+                Log.Warn("TomlHotReloadLoader", $"[C# 設定警告] {typeof(T).Name} の非同期リロード中に予期せぬエラーが発生しました: {ex.Message}");
             }
         }, cts.Token);
     }
@@ -260,7 +271,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
                     var valid = reloadedLifecycle.Validate();
                     if (valid.IsError)
                     {
-                        Debug.WriteLine($"[C# 設定警告] {typeof(T).Name} のリロード検証に失敗したためスキップしました: {valid.FirstError.Description}");
+                        Log.Warn("TomlHotReloadLoader", $"[C# 設定警告] {typeof(T).Name} のリロード検証に失敗したためスキップしました: {valid.FirstError.Description}");
                         return;
                     }
                     reloadedLifecycle.PostProcess();
@@ -272,7 +283,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
                     var updateResult = _holder.Update(reloaded);
                     if (!updateResult.IsError)
                     {
-                        Debug.WriteLine($"[C# 設定] {typeof(T).Name} が自動リロードされました: {resolvedPath}");
+                        Log.Info("TomlHotReloadLoader", $"[C# 設定] {typeof(T).Name} が自動リロードされました: {resolvedPath}");
                         _onReloaded?.Invoke(world, reloaded);
                     }
                 });
@@ -281,18 +292,18 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
             }
             catch (IOException ex) when (attempt < MaxRetryCount)
             {
-                Debug.WriteLine($"[C# 設定情報] {typeof(T).Name} のファイルアクセス競合を検知 (試行 {attempt}/{MaxRetryCount}): {ex.Message}。待機して再試行します...");
+                Log.Warn("TomlHotReloadLoader", $"[C# 設定情報] {typeof(T).Name} のファイルアクセス競合を検知 (試行 {attempt}/{MaxRetryCount}): {ex.Message}。待機して再試行します...");
                 await Task.Delay(RetryDelayMs * attempt, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (attempt < MaxRetryCount && ex is not OperationCanceledException)
             {
-                Debug.WriteLine($"[C# 設定情報] {typeof(T).Name} のリロード中間エラーを検知 (試行 {attempt}/{MaxRetryCount}): {ex.Message}。待機して再試行します...");
+                Log.Warn("TomlHotReloadLoader", $"[C# 設定情報] {typeof(T).Name} のリロード中間エラーを検知 (試行 {attempt}/{MaxRetryCount}): {ex.Message}。待機して再試行します...");
                 await Task.Delay(RetryDelayMs * attempt, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 // 最大試行回数を超過した場合はクラッシュさせず警告ログを出力し、次回ファイル保存時の再試行へフォールバック
-                Debug.WriteLine($"[C# 設定警告] {typeof(T).Name} のリロードに失敗しました (次回保存時に再試行可能): {ex.Message}");
+                Log.Warn("TomlHotReloadLoader", $"[C# 設定警告] {typeof(T).Name} のリロードに失敗しました (次回保存時に再試行可能): {ex.Message}");
                 return;
             }
         }

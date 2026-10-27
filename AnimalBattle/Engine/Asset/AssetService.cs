@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using AnimalBattle.Bindings;
 
 namespace AnimalBattle.Asset;
@@ -18,10 +19,15 @@ public static class AssetService {
         if (string.IsNullOrWhiteSpace(filePath)) return -1;
 
         Debug.Assert(File.Exists(filePath), $"[AssetService 警告] 画像アセットファイルが存在しません: {filePath}");
-        if (!File.Exists(filePath)) return -1;
+        if (!File.Exists(filePath))
+        {
+            Log.Error("AssetService", $"画像アセットファイルが存在しません: {filePath}");
+            return -1;
+        }
 
         var handle = NativeBindings.Engine_LoadGraph(filePath);
         Debug.Assert(handle >= 0, $"[AssetService 警告] ネイティブエンジンによる画像ロードに失敗しました (Handle: {handle}): {filePath}");
+        if (handle < 0) Log.Error("AssetService", $"ネイティブエンジンによる画像ロードに失敗しました (Handle: {handle}): {filePath}");
         return handle;
     }
 
@@ -35,6 +41,7 @@ public static class AssetService {
         Debug.Assert(handle >= 0, $"[AssetService 警告] 無効なグラフィックハンドルです (Handle: {handle})。");
         var success = NativeBindings.Engine_DeleteGraph(handle);
         Debug.Assert(success, $"[AssetService 警告] グラフィックハンドルの解放に失敗しました (Handle: {handle})。");
+        if (!success) Log.Warn("AssetService", $"グラフィックハンドルの解放に失敗しました (Handle: {handle})。");
         return success;
     }
 

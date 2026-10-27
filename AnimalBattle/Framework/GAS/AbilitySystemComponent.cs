@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using System.Diagnostics;
 using AnimalBattle.Core;
 
@@ -123,6 +124,7 @@ public sealed class AbilitySystemComponent {
     {
         if (!_abilities.TryGetValue(abilityTag, out var ability))
         {
+            Log.Warn("AbilitySystem", $"未登録のタグのアビリティを発動しようとしました: {abilityTag}");
             Debug.Assert(false, $"[ASC] 未登録のタグを発動しようとしました: {abilityTag}");
             return false;
         }

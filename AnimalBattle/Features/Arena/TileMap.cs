@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using System.Collections.Generic;
 using System.Diagnostics;
 using AnimalBattle.Components;
@@ -164,7 +165,7 @@ public sealed class TileMap(
         var b2Cfg = world.Get<Boss2Config>();
         var arenaCfg = world.Get<ArenaConfig>();
         NavGraph.Build(nodes, b2Cfg.JumpForce, b2Cfg.Gravity, b2Cfg.MoveSpeed, arenaCfg.NavigationGraph);
-        Debug.WriteLine(
+        Log.Info("TileMap", 
             $"[TileMap ナビゲーション] プラットフォームナビゲーショングラフを正常に構築しました: {NavGraph.Nodes.Count} ノード, {NavGraph.Links.Count} リンク (跳躍/落下遷移)");
     }
 

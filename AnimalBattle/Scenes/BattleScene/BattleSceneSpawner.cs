@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using System.Diagnostics;
 using AnimalBattle.Ai;
 using AnimalBattle.Ai.Boss1;
@@ -42,6 +43,7 @@ public static class BattleSceneSpawner {
         // 1. 自機エンティティの生成
         var hasPlayerHandle = assets.TryGetCharacterSpriteHandle(playerType, "Idle", out var playerHandle);
         Debug.Assert(hasPlayerHandle, "プレイヤーの初期スプライトハンドルが見つかりません。");
+        if (!hasPlayerHandle) Log.Error("BattleSceneSpawner", $"プレイヤーの初期スプライトハンドルが見つかりません: {playerType}");
 
         var playerCfg = world.GetPlayerConfig(playerType);
         var playerEntity = world.Entity("Player1")
@@ -92,6 +94,7 @@ public static class BattleSceneSpawner {
 
         var hasBossHandle = assets.TryGetTexture(texPath, out var bossHandle);
         Debug.Assert(hasBossHandle, $"Boss テクスチャが見つかりません: {texPath}");
+        if (!hasBossHandle) Log.Error("BattleSceneSpawner", $"Boss テクスチャが見つかりません: {texPath}");
 
         var bossEntity = world.Entity(bossName)
             .ChildOf(root)

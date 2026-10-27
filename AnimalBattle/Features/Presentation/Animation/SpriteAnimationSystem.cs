@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using System.Diagnostics;
 using Flecs.NET.Core;
 
@@ -44,7 +45,7 @@ public static class SpriteAnimationSystem
         var hasHandle = assets.TryGetCharacterSpriteHandle(anim.CharacterType, anim.CurrentClip, out var handle);
         if (!hasHandle || handle < 0)
         {
-            Debug.WriteLine($"[SpriteAnimationSystem 警告] スプライトハンドルの取得に失敗しました ({anim.CharacterType} / {anim.CurrentClip})。Idle にフォールバックします。");
+            Log.Warn("SpriteAnimationSystem", $"[SpriteAnimationSystem 警告] スプライトハンドルの取得に失敗しました ({anim.CharacterType} / {anim.CurrentClip})。Idle にフォールバックします。");
             anim.Play("Idle");
             if (!assets.TryGetCharacterSpriteHandle(anim.CharacterType, "Idle", out handle) || handle < 0)
             {

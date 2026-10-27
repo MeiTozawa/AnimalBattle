@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using System.Diagnostics;
 using AnimalBattle.Core;
 
@@ -40,8 +41,6 @@ internal static class Program {
                 ================================================================================
                 """;
 
-            Console.Error.WriteLine(crashLog);
-
             try
             {
                 var crashFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash.log");
@@ -52,11 +51,12 @@ internal static class Program {
                 // クラッシュログ保存時の副次例外は握りつぶして本体の終了処理を優先
             }
 
+            Log.Error("Program", "致命的クラッシュ例外が発生しました。", ex);
             Debug.Fail($"[致命的クラッシュ例外]: {ex.Message}", ex.ToString());
         }
         finally
         {
-            Debug.WriteLine("ネイティブエンジンを終了中...");
+            Log.Info("Program", "ネイティブエンジンを終了中...");
             GameEngine.Shutdown();
         }
 

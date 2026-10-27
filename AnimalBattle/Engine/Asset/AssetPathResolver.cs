@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using System.Diagnostics;
 
 namespace AnimalBattle.Asset;
@@ -21,7 +22,7 @@ public sealed class AssetPathResolver(string? baseDirectory = null) : IAssetPath
         // 相対パス文字列の事前検証
         if (relativePath.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
         {
-            Debug.WriteLine($"[AssetPathResolver 警告] 不正な文字を含む相対パスです: {relativePath}");
+            Log.Warn("AssetPathResolver", $"[AssetPathResolver 警告] 不正な文字を含む相対パスです: {relativePath}");
             return relativePath;
         }
 
@@ -48,7 +49,7 @@ public sealed class AssetPathResolver(string? baseDirectory = null) : IAssetPath
             }
         }
 
-        Debug.WriteLine($"[AssetPathResolver 警告] リソースが見つからないため元の相対パスを返却します: {relativePath}");
+        Log.Warn("AssetPathResolver", $"[AssetPathResolver 警告] リソースが見つからないため元の相対パスを返却します: {relativePath}");
         return relativePath;
     }
 

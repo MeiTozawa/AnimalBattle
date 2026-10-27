@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 namespace AnimalBattle.Configs;
 
 using System.Diagnostics;
@@ -35,6 +36,7 @@ public sealed class ConfigRegistry : IConfigRegistry
         }
         else
         {
+            Log.Error("ConfigRegistry", $"設定の読み込みに失敗しました ({relativePath}): {initial.FirstError.Description}");
             Debug.Fail($"設定の読み込みに失敗しました ({relativePath}): {initial.FirstError.Description}");
         }
 

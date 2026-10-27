@@ -1,3 +1,4 @@
+using AnimalBattle.Logging;
 using AnimalBattle.Core;
 using ErrorOr;
 
@@ -69,6 +70,7 @@ public static class CollisionShapeFactory {
     {
         var result = Create(shapeKind, radius, size, offset);
         Debug.Assert(!result.IsError, $"[CollisionShapeFactory 警告] 衝突形状の生成に失敗しました ({result.FirstError.Type}): {result.FirstError.Description}");
+        if (result.IsError) Log.Warn("CollisionShapeFactory", $"衝突形状の生成に失敗したためフォールバックします ({result.FirstError.Type}): {result.FirstError.Description}");
         if (!result.IsError) return result.Value;
 
         return new CollisionShape.Circle(8.0f, offset);
