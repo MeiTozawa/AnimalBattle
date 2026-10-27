@@ -41,6 +41,8 @@ public static class CommonPrefabs
         world.Component<JumpCapability>().AutoOverride<JumpCapability>();
         world.Component<BunnyWeaponState>().AutoOverride<BunnyWeaponState>();
         world.Component<CatWeaponState>().AutoOverride<CatWeaponState>();
+        world.Component<RangedWeaponComponent>().AutoOverride<RangedWeaponComponent>();
+        world.Component<MeleeWeaponComponent>().AutoOverride<MeleeWeaponComponent>();
         world.Component<Health>().AutoOverride<Health>();
         world.Component<SpringScale>().AutoOverride<SpringScale>();
 
