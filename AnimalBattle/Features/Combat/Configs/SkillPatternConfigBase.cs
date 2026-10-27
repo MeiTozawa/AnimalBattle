@@ -16,7 +16,6 @@ namespace AnimalBattle.Configs;
 public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigLifecycle {
     private string _skillName = string.Empty;
     private StringId _cachedSkillId;
-    private string _telegraphColorHex = string.Empty;
     private Color _telegraphColor;
 
     /// <summary>技能表示名</summary>
@@ -46,10 +45,9 @@ public abstract class SkillPatternConfigBase : IBossSkillPatternConfig, IConfigL
     [ConfigurationKeyName("TelegraphColor")]
     public string TelegraphColorHex
     {
-        get => _telegraphColorHex;
+        get => string.Empty;
         set
         {
-            _telegraphColorHex = value;
             _telegraphColor = value.ToColor();
         }
     }

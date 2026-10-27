@@ -9,7 +9,6 @@ namespace AnimalBattle.Configs;
 ///     突進速度、斬撃判定範囲、威力および持続時間を保持します。
 /// </summary>
 public abstract class MeleePatternConfigBase : SkillPatternConfigBase {
-    private string _slashColorHex = string.Empty;
     private Color _slashColor;
 
     /// <summary>前進・突進速度</summary>
@@ -31,10 +30,9 @@ public abstract class MeleePatternConfigBase : SkillPatternConfigBase {
     [ConfigurationKeyName("SlashColor")]
     public string SlashColorHex
     {
-        get => _slashColorHex;
+        get => string.Empty;
         set
         {
-            _slashColorHex = value;
             _slashColor = value.ToColor();
         }
     }

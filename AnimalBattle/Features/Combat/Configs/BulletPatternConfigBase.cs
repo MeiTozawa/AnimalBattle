@@ -10,9 +10,7 @@ namespace AnimalBattle.Configs;
 ///     弾速、弾数、弾種別などの射撃パラメータを保持します。
 /// </summary>
 public abstract class BulletPatternConfigBase : SkillPatternConfigBase {
-    private string _fillColorHex = string.Empty;
     private Color _fillColor;
-    private string _outlineColorHex = string.Empty;
     private Color _outlineColor;
 
     /// <summary>発射間隔秒単位</summary>
@@ -31,10 +29,9 @@ public abstract class BulletPatternConfigBase : SkillPatternConfigBase {
     [ConfigurationKeyName("FillColor")]
     public string FillColorHex
     {
-        get => _fillColorHex;
+        get => string.Empty;
         set
         {
-            _fillColorHex = value;
             _fillColor = value.ToColor();
         }
     }
@@ -46,10 +43,9 @@ public abstract class BulletPatternConfigBase : SkillPatternConfigBase {
     [ConfigurationKeyName("OutlineColor")]
     public string OutlineColorHex
     {
-        get => _outlineColorHex;
+        get => string.Empty;
         set
         {
-            _outlineColorHex = value;
             _outlineColor = value.ToColor();
         }
     }
