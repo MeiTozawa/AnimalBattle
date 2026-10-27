@@ -11,6 +11,9 @@ public sealed class TimelineAttackAbility : GameplayAbility {
     /// <summary>検証済みの不変タイムライン定義を取得します。</summary>
     public AttackDefinition Timeline { get; }
 
+    /// <summary>この技能の固有位移パラメータ設定を取得します。</summary>
+    public SkillMotionConfig Motion { get; init; } = new();
+
     /// <summary>タイムライン進行ランナーを取得します。</summary>
     public SkillRunner Runner { get; } = new();
 
