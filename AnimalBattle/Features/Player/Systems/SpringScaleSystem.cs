@@ -15,6 +15,7 @@ public static class SpringScaleSystem
     public static World AddSpringScaleSystem(this World world)
     {
         world.System<SpringScale, Sprite, Transform>("SpringScaleSystem")
+            .Kind(Ecs.PostUpdate)
             .Without<HitstopState>()
             .Without<DeadTag>()
             .Iter(ExecuteSpringScale);
@@ -37,6 +38,12 @@ public static class SpringScaleSystem
         for (var i = 0; i < count; i++)
         {
             ref var spring = ref springs[i];
+
+            if (spring.SkipNextUpdate)
+            {
+                spring.SkipNextUpdate = false;
+                continue;
+            }
 
             var curX = spring.Current.X;
             var velX = spring.Velocity.X;

@@ -387,6 +387,13 @@ public static class MovementSystem {
             EventBus.Publish(new PlayerLandedEvent(vel.Value.Y));
             spring.Current = pCfg.LandSquashScale;
             spring.Velocity = Vec2f.Zero;
+            spring.SkipNextUpdate = true;
+            sprite.Scale = spring.Current;
+            if (sprite.SrcRect.Height > 0)
+            {
+                var halfH = sprite.SrcRect.Height * trans.Scale.Y * 0.5f;
+                sprite.SpringOffsetY = halfH * (1.0f - spring.Current.Y);
+            }
         }
 
         if (isGrounded)

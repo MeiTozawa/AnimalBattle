@@ -22,6 +22,11 @@ public struct SpringScale
     public float DampingRatio;
 
     /// <summary>
+    ///     着地等の瞬間変形時に、同一フレーム内でのスプリング物理更新をスキップして初動変形を1フレーム確実に描画するためのフラグ。
+    /// </summary>
+    public bool SkipNextUpdate;
+
+    /// <summary>
     ///     初期スケールと振動パラメータを指定してコンポーネントを構築します。
     /// </summary>
     /// <param name="defaultScale">初期スケール Vec2f型</param>
