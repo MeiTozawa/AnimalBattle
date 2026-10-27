@@ -1,5 +1,6 @@
 using System.Drawing;
 using AnimalBattle.Combat;
+using AnimalBattle.Combat.Events;
 using AnimalBattle.Common;
 using AnimalBattle.Combat.Components;
 using AnimalBattle.Components;
@@ -30,6 +31,9 @@ public static class CombatPrefabs
     public static void Register(World world)
     {
         var cfg = world.Get<CombatPrefabConfig>();
+
+        // ワールド常駐型被弾イベントバッファの初期化
+        world.Set(new DamageInbox());
 
         // 実行時インスタンスコンポーネントに AutoOverride を付与し、Archetype 安定化およびインスタンス固有メモリを保証
         world.Component<Bullet>().AutoOverride<Bullet>();
