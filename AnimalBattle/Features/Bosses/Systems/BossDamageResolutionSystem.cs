@@ -1,6 +1,7 @@
 using System;
 using AnimalBattle.Abilities;
 using AnimalBattle.Combat;
+using AnimalBattle.Combat.Events;
 using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Core;
@@ -11,7 +12,7 @@ namespace AnimalBattle.Bosses.Systems;
 
 /// <summary>
 ///     Boss 敵対ユニット専用の被弾ダメージ裁定および無敵時間管理を行う単一責任 ECS システム。
-///     常駐 <see cref="IncomingDamage" /> 意図コンポーネントを消費し、易傷倍率、反撃弾幕、撃破演出およびカメラ衝撃を処理します。
+///     <see cref="DamageInbox" /> 内のイベントを集約・消費し、易傷倍率、反撃弾幕、撃破演出およびカメラ衝撃を処理します。
 /// </summary>
 public static class BossDamageResolutionSystem
 {
@@ -22,7 +23,7 @@ public static class BossDamageResolutionSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddBossDamageResolutionSystem(this World world)
     {
-        world.System<Health, IncomingDamage, HitFlashSettings, Transform, BossCombatState, Sprite, GameplayTagState, Velocity>("BossDamageResolutionSystem")
+        world.System<Health, HitFlashSettings, Transform, BossCombatState, Sprite, GameplayTagState, Velocity>("BossDamageResolutionSystem")
             .With<BossTag>()
             .Kind(Ecs.OnValidate)
             .Iter(ExecuteBossDamageResolution);
@@ -36,7 +37,6 @@ public static class BossDamageResolutionSystem
     public static void ExecuteBossDamageResolution(
         Iter it,
         Field<Health> hps,
-        Field<IncomingDamage> damages,
         Field<HitFlashSettings> flashConfigs,
         Field<Transform> transforms,
         Field<BossCombatState> combats,
@@ -48,6 +48,10 @@ public static class BossDamageResolutionSystem
         if (count == 0) return;
 
         var world = it.World();
+        ref var inbox = ref world.GetMut<DamageInbox>();
+        var events = inbox.AsSpan();
+        if (events.IsEmpty) return;
+
         var pCfg = world.GetActivePlayerConfig();
         ref readonly var cameraCfg = ref world.Get<CameraConfig>();
 
@@ -57,30 +61,49 @@ public static class BossDamageResolutionSystem
         for (var i = 0; i < count; i++)
         {
             var entity = it.Entity(i);
-            ref var hp = ref hps[i];
-            ref var dmg = ref damages[i];
 
-            // 未受撃（本フレームでの被弾意図なし）または無効なダメージの場合は即座にスキップ
-            if (dmg.Amount <= 0.0f) continue;
+            // 被弾イベントを集約（散弾などの多段ヒットを同一フレーム内で累加）
+            var totalDamage = 0.0f;
+            var targetKnockback = Vec2f.Zero;
+            var isHeavy = false;
+            var hasHit = false;
+
+            for (var j = 0; j < events.Length; j++)
+            {
+                ref readonly var evt = ref events[j];
+                if (evt.Victim != entity) continue;
+
+                hasHit = true;
+                totalDamage += evt.Damage;
+                isHeavy |= evt.IsHeavy;
+                if (evt.IsHeavy || targetKnockback == Vec2f.Zero)
+                {
+                    targetKnockback = evt.Knockback;
+                }
+            }
+
+            // 未受撃または無効なダメージの場合は即座にスキップ
+            if (!hasHit || totalDamage <= 0.0f) continue;
+
+            ref var hp = ref hps[i];
+            ref readonly var tagState = ref tags[i];
+
+            // ゲームオーバー済み、完全無敵または不可命中状態：GAS Invincible / Untargetable 保持時、死亡済みの場合はスキップ
+            if (isGameOver || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f)
+            {
+                continue;
+            }
 
             ref readonly var flashCfg = ref flashConfigs[i];
             ref readonly var trans = ref transforms[i];
             ref readonly var combat = ref combats[i];
             ref var sprite = ref sprites[i];
-            ref readonly var tagState = ref tags[i];
             ref var vel = ref velocities[i];
-
-            // ゲームオーバー済み、完全無敵または不可命中状態：GAS Invincible / Untargetable 保持時、死亡済み、またはダメージが 0 以下の場合は意図を破棄してスキップ
-            if (isGameOver || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f)
-            {
-                dmg = default;
-                continue;
-            }
 
             // 易傷倍率の評価：GameplayTag.Vulnerable 駆動
             var isVulnerable = tagState.HasTag(GameplayTag.Vulnerable);
             var multiplier = isVulnerable ? pCfg.VulnerableDamageMultiplier : 1.0f;
-            var finalDamage = dmg.Amount * multiplier;
+            var finalDamage = totalDamage * multiplier;
             hp.Current = MathF.Max(0.0f, hp.Current - finalDamage);
 
             // 被弾白閃演出の注入
@@ -90,17 +113,17 @@ public static class BossDamageResolutionSystem
             var hasSuperArmor = tagState.HasTag(GameplayTag.SuperArmor);
             if (!hasSuperArmor || isVulnerable)
             {
-                var isHeavy = isVulnerable || dmg.IsHeavyImpact;
-                var hitstopDuration = isHeavy ? pCfg.HitstopHeavyDuration : pCfg.HitstopLightDuration;
+                var heavy = isVulnerable || isHeavy;
+                var hitstopDuration = heavy ? pCfg.HitstopHeavyDuration : pCfg.HitstopLightDuration;
                 if (hitstopDuration > 0.0f)
                 {
                     entity.Set(new HitstopState(hitstopDuration));
-                    var jitterAmp = isHeavy ? pCfg.HitJitterHeavyAmplitude : pCfg.HitJitterLightAmplitude;
+                    var jitterAmp = heavy ? pCfg.HitJitterHeavyAmplitude : pCfg.HitJitterLightAmplitude;
                     entity.Set(new SpriteJitter(new Vec2f(jitterAmp, 0.0f), pCfg.HitJitterFrequency));
                 }
 
                 // ノックバック外力速度の設定：設定でノックバックが無効化されている場合は適用しません
-                vel.Knockback = combat.CanBeKnockedBack ? dmg.Knockback : Vec2f.Zero;
+                vel.Knockback = combat.CanBeKnockedBack ? targetKnockback : Vec2f.Zero;
             }
 
             if (isVulnerable)
@@ -134,8 +157,6 @@ public static class BossDamageResolutionSystem
                 // Boss 被弾反撃：現在の Phase に応じた数量の黑色弾幕を発射
                 BulletSpawner.SpawnBossCounterAttack(world, trans.Position, combat.Phase);
             }
-
-            dmg = default;
         }
     }
 }

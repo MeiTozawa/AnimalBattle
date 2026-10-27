@@ -1,3 +1,4 @@
+using AnimalBattle.Combat.Events;
 using AnimalBattle.Combat.Systems;
 
 using Flecs.NET.Core;
@@ -25,6 +26,25 @@ public readonly struct CombatModule : IFlecsModule
              .AddCombatCollisionSystem()           // 7. 単発弾幕の衝突判定
              .AddPersistentCollisionSystem()       // 8. 持続判定
              .AddMeleeLifetimeSystem()             // 9. 近接攻撃判定の持続時間減衰と回収タグ付与
-             .AddCombatRecycleSystem();            // 10. 画面外・被弾等で RecycleTag が付与されたエンティティを一括回収
+             .AddCombatRecycleSystem()             // 10. 画面外・被弾等で RecycleTag が付与されたエンティティを一括回収
+             .AddDamageInboxClearSystem();         // 11. 被弾イベントバッファのフレーム末尾クリア
+    }
+}
+
+/// <summary>
+///     被弾イベントバッファクリアシステムの拡張メソッド。
+/// </summary>
+public static class DamageInboxClearExtensions
+{
+    /// <summary>
+    ///     被弾イベントバッファクリアシステムを Flecs.NET ワールドへ登録します。
+    /// </summary>
+    public static World AddDamageInboxClearSystem(this World world)
+    {
+        world.System("DamageInboxClearSystem")
+            .Kind(Ecs.PostUpdate)
+            .Iter(static it => it.World().GetMut<DamageInbox>().Clear());
+
+        return world;
     }
 }
