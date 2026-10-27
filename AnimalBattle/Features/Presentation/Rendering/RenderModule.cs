@@ -21,9 +21,10 @@ public readonly struct RenderModule : IFlecsModule {
         // 1. ワールド空間描画前のカメラオフセット適用
         world.AddCameraOffsetApplySystem();
 
-        // 2. ワールド空間描画：タイルマップ、キャラクター、弾幕、予兆、VFX、デバッグ枠
+        // 2. ワールド空間描画：タイルマップ、通常スプライト、無敵点滅スプライト、弾幕、予兆、VFX、デバッグ枠
         world.AddTileMapRenderSystem()
              .AddSpriteRenderSystem()
+             .AddInvincibleBlinkRenderSystem()
              .AddBulletBatchRenderSystem()
              .AddBossTelegraphRenderSystem()
              .AddVfxRenderSystem()
