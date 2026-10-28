@@ -24,9 +24,10 @@ public readonly struct CombatModule : IFlecsModule
              .AddCombatCollisionSystem()           // 7. 単発弾幕の衝突判定
              .AddPersistentCollisionSystem()       // 8. 持続判定
              .AddMeleeLifetimeSystem()             // 9. 近接攻撃判定の持続時間減衰と回収タグ付与
-             .AddDamageResolutionSystem()          // 10. 全戦闘ユニット共通の被弾ダメージ裁定・撃退・死亡処理
-             .AddCombatRecycleSystem()             // 11. 画面外・被弾等で RecycleTag が付与されたエンティティを一括回収
-             .AddDamageInboxClearSystem();         // 12. 被弾イベントバッファのフレーム末尾クリア
+             .AddDummyPhysicsSystem()              // 10. 手触り検証用木桩の物理移動・足場衝突判定
+             .AddDamageResolutionSystem()          // 11. 全戦闘ユニット共通の被弾ダメージ裁定・撃退・死亡処理
+             .AddCombatRecycleSystem()             // 12. 画面外・被弾等で RecycleTag が付与されたエンティティを一括回収
+             .AddDamageInboxClearSystem();         // 13. 被弾イベントバッファのフレーム末尾クリア
     }
 }
 

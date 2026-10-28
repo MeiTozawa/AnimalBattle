@@ -1,0 +1,14 @@
+# ===================================================================
+# トレーニング木桩（Training Dummy）設定 (Dummy Configuration)
+# 手触り検証用ターゲットの初期ステータスおよび物理パラメータ
+# ===================================================================
+
+Spawn = { x = 640.0, y = 200.0 }
+CollisionSize = { x = 48.0, y = 64.0 }
+Health = 99999.0
+HitFlashDuration = 0.12
+Gravity = 1200.0
+MaxFallSpeed = 1200.0
+KnockbackDeceleration = 900.0
+GroundFrictionDeceleration = 800.0
+AirDragDeceleration = 150.0

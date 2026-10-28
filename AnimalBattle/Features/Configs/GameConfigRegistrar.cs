@@ -3,7 +3,6 @@ namespace AnimalBattle.Configs;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using AnimalBattle.Core;
 using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
 
@@ -41,6 +40,7 @@ public static class GameConfigRegistrar
         registry.RegisterToml<TileSetConfig>(ResourcePath.Config.Sheet, (root, cfg) => root.Bind(cfg));
         registry.RegisterToml<AudioConfig>(ResourcePath.Config.Audio, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.SoundService.CurrentConfig = cfg; });
         registry.RegisterToml<CombatPrefabConfig>(ResourcePath.Config.CombatPrefab, (root, cfg) => root.Bind(cfg));
+        registry.RegisterToml<DummyConfig>(ResourcePath.Config.Dummy, (root, cfg) => root.Bind(cfg));
         registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene, (root, cfg) => root.Bind(cfg));
 
         registry.InjectAllToWorld(world);
@@ -48,11 +48,11 @@ public static class GameConfigRegistrar
         // 静的サービスへの現在値反映
         if (registry.Contains<CameraConfig>())
         {
-            AnimalBattle.Core.CameraService.CurrentConfig = registry.Get<CameraConfig>();
+            CameraService.CurrentConfig = registry.Get<CameraConfig>();
         }
         if (registry.Contains<AudioConfig>())
         {
-            AnimalBattle.Core.SoundService.CurrentConfig = registry.Get<AudioConfig>();
+            SoundService.CurrentConfig = registry.Get<AudioConfig>();
         }
     }
 }

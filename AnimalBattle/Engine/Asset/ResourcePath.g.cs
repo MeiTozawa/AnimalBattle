@@ -171,6 +171,9 @@ public static class ResourcePath
         /// <summary>combat.prefab.toml 設定ファイル名。</summary>
         public const string CombatPrefab = "combat.prefab.toml";
 
+        /// <summary>dummy.toml 設定ファイル名。</summary>
+        public const string Dummy = "dummy.toml";
+
         /// <summary>render.toml 設定ファイル名。</summary>
         public const string Render = "render.toml";
 
@@ -218,6 +221,9 @@ public static class ResourcePath
 
         /// <summary>combat.prefab.toml の相対パス。</summary>
         public const string CombatPrefabToml = @"Config\combat.prefab.toml";
+
+        /// <summary>dummy.toml の相対パス。</summary>
+        public const string DummyToml = @"Config\dummy.toml";
 
         /// <summary>render.toml の相対パス。</summary>
         public const string RenderToml = @"Config\render.toml";
