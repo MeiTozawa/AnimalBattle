@@ -63,6 +63,8 @@ public enum InputButton {
     KeyF3 = 0x3D,
     KeyF4 = 0x3E,
     KeyF5 = 0x3F,
+    KeyF6 = 0x40,
+    KeyF7 = 0x41,
 
     // --- マウスボタン 300から399の範囲 ---
     MouseLeft = 300,

@@ -32,6 +32,8 @@ public static class BattleInputSystem
     private static bool _prevF3;
     private static bool _prevF4;
     private static bool _prevF5;
+    private static bool _prevF6;
+    private static bool _prevF7;
 
     private static Phase _targetDebugPhase;
 
@@ -232,6 +234,22 @@ public static class BattleInputSystem
         }
         _prevF1 = isF1;
 
+        // F6 キー：地面近接追撃怪のデバッグ生成
+        var isF6 = GameEngine.CheckHitKey((int)InputButton.KeyF6);
+        if (isF6 && !_prevF6)
+        {
+            SpawnDebugMinion(world, isFlying: false);
+        }
+        _prevF6 = isF6;
+
+        // F7 キー：空中浮遊弾幕怪のデバッグ生成
+        var isF7 = GameEngine.CheckHitKey((int)InputButton.KeyF7);
+        if (isF7 && !_prevF7)
+        {
+            SpawnDebugMinion(world, isFlying: true);
+        }
+        _prevF7 = isF7;
+
         if (!dbgCfg.IsActive) return;
 
         // 1/2/3/4 キーによる Boss およびキャラクターの迅速切替：InputAction 抽象経由
@@ -257,7 +275,7 @@ public static class BattleInputSystem
             return;
         }
 
-        // F5 キー：手触り検証用の空シーン（BossType.Empty）へ即時切替
+        // F5 キー：手触り検証用の空シーン BossType.Empty へ即時切替
         var isF5 = GameEngine.CheckHitKey((int)InputButton.KeyF5);
         if (isF5 && !_prevF5)
         {
@@ -306,5 +324,36 @@ public static class BattleInputSystem
         BulletSpawner.ClearAllBossBullets(w);
         MeleeSpawner.ClearAllBossMelee(w);
         state.Phase = _targetDebugPhase;
+    }
+
+    private static void SpawnDebugMinion(World world, bool isFlying)
+    {
+        var root = world.Lookup(BattleSceneSpawner.RootName);
+        if (!root.IsAlive()) return;
+
+        var playerPos = new Vec2f(640.0f, 360.0f);
+        var facing = 1.0f;
+
+        using var playerQuery = world.QueryBuilder<Transform, Sprite>()
+            .With<PlayerTag>()
+            .Without<DeadTag>()
+            .Build();
+
+        playerQuery.Each((ref Transform pt, ref Sprite ps) =>
+        {
+            playerPos = pt.Position;
+            facing = ps.FlipX ? -1.0f : 1.0f;
+        });
+
+        if (isFlying)
+        {
+            var spawnPos = playerPos + new Vec2f(facing * 160.0f, -120.0f);
+            MinionSpawner.SpawnFlyingMinion(world, root, spawnPos);
+        }
+        else
+        {
+            var spawnPos = playerPos + new Vec2f(facing * 160.0f, 0.0f);
+            MinionSpawner.SpawnGroundMinion(world, root, spawnPos);
+        }
     }
 }
