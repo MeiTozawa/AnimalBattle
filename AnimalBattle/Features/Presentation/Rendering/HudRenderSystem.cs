@@ -165,13 +165,13 @@ public static class HudRenderSystem {
 
     private static void DrawControlHelp(HudRenderConfig hudCfg)
     {
-        GameEngine.DrawString(hudCfg.TitlePos, hudCfg.TitleText, hudCfg.TitleColor);
+        GameEngine.DrawLeftString(hudCfg.TitlePos, hudCfg.TitleText, hudCfg.TitleColor);
 
         var lineIndex = 1;
         foreach (var item in hudCfg.Text)
         {
             var drawPos = new Vec2i(hudCfg.TitlePos.X, hudCfg.TitlePos.Y + hudCfg.LineSpacing * lineIndex);
-            GameEngine.DrawString(drawPos, item.Text, item.Color);
+            GameEngine.DrawLeftString(drawPos, item.Text, item.Color);
             lineIndex++;
         }
     }
@@ -216,7 +216,7 @@ public static class HudRenderSystem {
         {
             textBuf.TryWrite($"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp})", out charsWritten);
         }
-        GameEngine.DrawString(hudCfg.PlayerHpPos, textBuf[..charsWritten], hpColor);
+        GameEngine.DrawLeftString(hudCfg.PlayerHpPos, textBuf[..charsWritten], hpColor);
     }
 
     private static void DrawBossStatus(in HudRenderSystemContext.BossHudData? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
@@ -235,8 +235,8 @@ public static class HudRenderSystem {
     /// </summary>
     private static void DrawTrainingModeBanner()
     {
-        GameEngine.DrawString(new Vec2i(460, 20), "[DEBUG TRAINING MODE - DUMMY TARGET]", ColorPalette.GoldLight);
-        GameEngine.DrawString(new Vec2i(460, 38), "1: Boss1 | 2: Boss2 | 3/4: Character | F5: Reload", ColorPalette.GrayLight);
+        GameEngine.DrawLeftString(new Vec2i(460, 20), "[DEBUG TRAINING MODE - DUMMY TARGET]", ColorPalette.GoldLight);
+        GameEngine.DrawLeftString(new Vec2i(460, 38), "1: Boss1 | 2: Boss2 | 3/4: Character | F5: Reload", ColorPalette.GrayLight);
     }
 
     /// <summary>
@@ -264,8 +264,9 @@ public static class HudRenderSystem {
         GameEngine.DrawBox(modalCfg.GameOverPos1, modalCfg.GameOverPos2, modalCfg.GameOverOuterBorderColor, false);
         var pad = new Vec2i(modalCfg.InnerBorderPadding, modalCfg.InnerBorderPadding);
         GameEngine.DrawBox(modalCfg.GameOverPos1 + pad, modalCfg.GameOverPos2 - pad, modalCfg.GameOverInnerBorderColor, false);
-        GameEngine.DrawString(modalCfg.GameOverTitlePos, modalCfg.GameOverTitleText, modalCfg.GameOverTitleColor);
-        GameEngine.DrawString(modalCfg.GameOverRetryPos, modalCfg.GameOverRetryText, modalCfg.GameOverRetryColor);
+        var modalCenterX = (modalCfg.GameOverPos1.X + modalCfg.GameOverPos2.X) / 2;
+        GameEngine.DrawCenterString(new Vec2i(modalCenterX, modalCfg.GameOverTitlePos.Y), modalCfg.GameOverTitleText, modalCfg.GameOverTitleColor);
+        GameEngine.DrawCenterString(new Vec2i(modalCenterX, modalCfg.GameOverRetryPos.Y), modalCfg.GameOverRetryText, modalCfg.GameOverRetryColor);
     }
 
     private static int ToLegacyPhase(Phase phase) => phase switch {
@@ -391,11 +392,10 @@ public static class HudRenderSystem {
         var titlePos = barP1 + (hpCfg.TitleOffset != Vec2i.Zero
             ? hpCfg.TitleOffset
             : new Vec2i(0, -hpCfg.HeaderOffsetY));
-        GameEngine.DrawString(titlePos, bossTitle, hpCfg.TitleColor);
+        GameEngine.DrawLeftString(titlePos, bossTitle, hpCfg.TitleColor);
 
-        var hpX = barP2.X - (hpCfg.HpTextOffsetRight != 0 ? hpCfg.HpTextOffsetRight : 170);
         var hpY = barP1.Y - (hpCfg.HpTextOffsetY != 0 ? hpCfg.HpTextOffsetY : hpCfg.HeaderOffsetY);
-        GameEngine.DrawString(new Vec2i(hpX, hpY), hpBuf[..hpCharsWritten], hpCfg.HpTextColor);
+        GameEngine.DrawRightString(new Vec2i(barP2.X, hpY), hpBuf[..hpCharsWritten], hpCfg.HpTextColor);
 
         // Boss HP バー背景および枠線
         var bgPad = new Vec2i(hpCfg.BgPadding, hpCfg.BgPadding);
@@ -446,7 +446,8 @@ public static class HudRenderSystem {
         GameEngine.DrawBox(modalCfg.VictoryPos1, modalCfg.VictoryPos2, modalCfg.VictoryOuterBorderColor, false);
         var vicPad = new Vec2i(modalCfg.InnerBorderPadding, modalCfg.InnerBorderPadding);
         GameEngine.DrawBox(modalCfg.VictoryPos1 + vicPad, modalCfg.VictoryPos2 - vicPad, modalCfg.VictoryInnerBorderColor, false);
-        GameEngine.DrawString(modalCfg.VictoryTitlePos, modalCfg.VictoryTitleText, modalCfg.VictoryTitleColor);
-        GameEngine.DrawString(modalCfg.VictoryRetryPos, modalCfg.VictoryRetryText, modalCfg.VictoryRetryColor);
+        var vicCenterX = (modalCfg.VictoryPos1.X + modalCfg.VictoryPos2.X) / 2;
+        GameEngine.DrawCenterString(new Vec2i(vicCenterX, modalCfg.VictoryTitlePos.Y), modalCfg.VictoryTitleText, modalCfg.VictoryTitleColor);
+        GameEngine.DrawCenterString(new Vec2i(vicCenterX, modalCfg.VictoryRetryPos.Y), modalCfg.VictoryRetryText, modalCfg.VictoryRetryColor);
     }
 }

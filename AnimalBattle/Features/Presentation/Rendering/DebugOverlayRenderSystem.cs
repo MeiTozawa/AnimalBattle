@@ -99,7 +99,7 @@ public static class DebugOverlayRenderSystem
         // 右上デバッグアクティブ表示：画面固定
         if (!string.IsNullOrEmpty(dbgCfg.IndicatorText))
         {
-            GameEngine.DrawString(dbgCfg.IndicatorPos, dbgCfg.IndicatorText, dbgCfg.IndicatorColor);
+            GameEngine.DrawLeftString(dbgCfg.IndicatorPos, dbgCfg.IndicatorText, dbgCfg.IndicatorColor);
         }
 
         // 二段ジャンプ残数インジケータ：画面固定
@@ -114,14 +114,14 @@ public static class DebugOverlayRenderSystem
             var jumpColor = jumps > 0 ? hudCfg.DoubleJumpActiveColor : hudCfg.DoubleJumpInactiveColor;
             if (string.IsNullOrEmpty(hudCfg.DoubleJumpText))
             {
-                GameEngine.DrawString(hudCfg.DoubleJumpPos, jumpDots, jumpColor);
+                GameEngine.DrawLeftString(hudCfg.DoubleJumpPos, jumpDots, jumpColor);
             }
             else
             {
                 Span<char> jumpBuf = stackalloc char[64];
                 if (jumpBuf.TryWrite($"{hudCfg.DoubleJumpText} {jumpDots}", out var written))
                 {
-                    GameEngine.DrawString(hudCfg.DoubleJumpPos, jumpBuf[..written], jumpColor);
+                    GameEngine.DrawLeftString(hudCfg.DoubleJumpPos, jumpBuf[..written], jumpColor);
                 }
             }
         }
@@ -131,15 +131,15 @@ public static class DebugOverlayRenderSystem
         var lineIndex = 0;
         if (!string.IsNullOrEmpty(hudCfg.BossSwitchGuideText))
         {
-            GameEngine.DrawString(new Vec2i(hudCfg.TitlePos.X, guideY + hudCfg.LineSpacing * lineIndex++), hudCfg.BossSwitchGuideText, hudCfg.BossSwitchGuideColor);
+            GameEngine.DrawLeftString(new Vec2i(hudCfg.TitlePos.X, guideY + hudCfg.LineSpacing * lineIndex++), hudCfg.BossSwitchGuideText, hudCfg.BossSwitchGuideColor);
         }
         if (!string.IsNullOrEmpty(hudCfg.CharacterSwitchGuideText))
         {
-            GameEngine.DrawString(new Vec2i(hudCfg.TitlePos.X, guideY + hudCfg.LineSpacing * lineIndex++), hudCfg.CharacterSwitchGuideText, hudCfg.CharacterSwitchGuideColor);
+            GameEngine.DrawLeftString(new Vec2i(hudCfg.TitlePos.X, guideY + hudCfg.LineSpacing * lineIndex++), hudCfg.CharacterSwitchGuideText, hudCfg.CharacterSwitchGuideColor);
         }
         if (!string.IsNullOrEmpty(dbgCfg.PhaseSwitchGuideText))
         {
-            GameEngine.DrawString(new Vec2i(hudCfg.TitlePos.X, guideY + hudCfg.LineSpacing * lineIndex++), dbgCfg.PhaseSwitchGuideText, dbgCfg.PhaseSwitchGuideColor);
+            GameEngine.DrawLeftString(new Vec2i(hudCfg.TitlePos.X, guideY + hudCfg.LineSpacing * lineIndex++), dbgCfg.PhaseSwitchGuideText, dbgCfg.PhaseSwitchGuideColor);
         }
 
         // Boss ステートマシン詳細バッジとスキルタイマー：Boss HP バー上部・画面固定
@@ -173,7 +173,7 @@ public static class DebugOverlayRenderSystem
             var badgePos = hpCfg.BarPos1 + (hpCfg.StateBadgeOffset != Vec2i.Zero 
                 ? hpCfg.StateBadgeOffset 
                 : new Vec2i(0, -hpCfg.HeaderOffsetY));
-            GameEngine.DrawString(badgePos, badgeBuf[..badgeLen], stateBadgeColor);
+            GameEngine.DrawLeftString(badgePos, badgeBuf[..badgeLen], stateBadgeColor);
         }
     }
 }

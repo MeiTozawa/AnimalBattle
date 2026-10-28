@@ -117,11 +117,12 @@ public static class TelegraphRenderHelper {
         // 外枠線
         GameEngine.DrawBox(p1, p2, color, false);
 
-        // 斬撃方向案内テキスト：ASCII 矢印によるフォント互換性確保
-        var textX = facingRight ? p2.X - 24 : p1.X + 8;
-        var textY = p1.Y + (p2.Y - p1.Y) / 2 - 6;
-        var arrow = facingRight ? ">>>" : "<<<";
-        GameEngine.DrawString(new Vec2i(textX, textY), arrow, eff.WarningTextColor);
+        // 斬撃方向案内テキスト：左右配置と垂直中央揃え
+        var centerY = p1.Y + (p2.Y - p1.Y) / 2;
+        if (facingRight)
+            GameEngine.DrawRightString(new Vec2i(p2.X - 8, centerY), ">>>", eff.WarningTextColor);
+        else
+            GameEngine.DrawLeftString(new Vec2i(p1.X + 8, centerY), "<<<", eff.WarningTextColor);
     }
 
     /// <summary>
@@ -172,10 +173,11 @@ public static class TelegraphRenderHelper {
         GameEngine.DrawLine(new Vec2i(p1.X, p2.Y), p2, color);
 
         // 進行方向案内矢印：Boss の身前から突進方向へ表示
-        var arrow = facingRight ? ">>>>>>>>" : "<<<<<<<<";
-        var textY = p1.Y + (p2.Y - p1.Y) / 2 - 6;
-        var textX = facingRight ? (int)bPos.X + 20 : (int)bPos.X - 76;
-        GameEngine.DrawString(new Vec2i(textX, textY), arrow, eff.WarningTextColor);
+        var centerY = p1.Y + (p2.Y - p1.Y) / 2;
+        if (facingRight)
+            GameEngine.DrawLeftString(new Vec2i((int)bPos.X + 20, centerY), ">>>>>>>>", eff.WarningTextColor);
+        else
+            GameEngine.DrawRightString(new Vec2i((int)bPos.X - 20, centerY), "<<<<<<<<", eff.WarningTextColor);
 
         // Boss 自身の突進チャージ脈動：加算ブレンド
         var pulseAlpha = (int)(80.0f + 140.0f * clampedProgress);
@@ -249,12 +251,12 @@ public static class TelegraphRenderHelper {
             false);
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
 
-        // 警告テキスト
+        // 警告テキスト：ターゲット中心に水平垂直中央揃え
         var textPos = new Vec2i(
-            (int)(target.X - eff.DiveRamTextOffset.X),
+            (int)target.X,
             (int)(p1.Y - eff.DiveRamTextOffset.Y)
         );
-        GameEngine.DrawString(textPos, "▼ DIVE ▼", eff.WarningTextColor);
+        GameEngine.DrawCenterString(textPos, "▼ DIVE ▼", eff.WarningTextColor);
     }
 
     /// <summary>
@@ -287,17 +289,18 @@ public static class TelegraphRenderHelper {
         GameEngine.DrawLine(p1, new Vec2i(p2.X, p1.Y), color);
         GameEngine.DrawLine(new Vec2i(p1.X, p2.Y), p2, color);
 
-        // 左右拡散案内矢印 設定ファイルからオフセットを適用します
+        // 左右拡散案内矢印：左揃えおよび右揃えで配置
+        var textY = (int)(p1.Y - eff.StompTextOffset.Y);
         var textLeftPos = new Vec2i(
             (int)(p1.X + eff.StompTextOffset.X),
-            (int)(p1.Y - eff.StompTextOffset.Y)
+            textY
         );
         var textRightPos = new Vec2i(
-            (int)(p2.X - 65 - eff.StompTextOffset.X),
-            (int)(p1.Y - eff.StompTextOffset.Y)
+            (int)(p2.X - eff.StompTextOffset.X),
+            textY
         );
-        GameEngine.DrawString(textLeftPos, "<<< STOMP", eff.WarningTextColor);
-        GameEngine.DrawString(textRightPos, "STOMP >>>", eff.WarningTextColor);
+        GameEngine.DrawLeftString(textLeftPos, "<<< STOMP", eff.WarningTextColor);
+        GameEngine.DrawRightString(textRightPos, "STOMP >>>", eff.WarningTextColor);
     }
 
     /// <summary>
@@ -352,10 +355,10 @@ public static class TelegraphRenderHelper {
         // 垂直照準ガイド
         GameEngine.DrawLine(new Vec2i(targetI.X, 0), targetI, color);
         var textPos = new Vec2i(
-            (int)(target.X - eff.LeapSmashTextOffset.X),
+            (int)target.X,
             (int)(p1.Y - eff.LeapSmashTextOffset.Y)
         );
-        GameEngine.DrawString(textPos, "▼ SMASH ▼", eff.WarningTextColor);
+        GameEngine.DrawCenterString(textPos, "▼ SMASH ▼", eff.WarningTextColor);
     }
 
     /// <summary>
@@ -407,10 +410,10 @@ public static class TelegraphRenderHelper {
             GameEngine.DrawLine(p1, new Vec2i(p1.X, p2.Y), color);
             GameEngine.DrawLine(new Vec2i(p2.X, p1.Y), p2, color);
             var textPos = new Vec2i(
-                (int)(cx - eff.SkyfallTextOffset.X),
+                cx,
                 (int)(p1.Y - eff.SkyfallTextOffset.Y)
             );
-            GameEngine.DrawString(textPos, markerText, eff.WarningTextColor);
+            GameEngine.DrawCenterString(textPos, markerText, eff.WarningTextColor);
         }
     }
 

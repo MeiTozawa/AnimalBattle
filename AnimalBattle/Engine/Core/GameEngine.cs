@@ -250,25 +250,56 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     指定座標に文字列を描画します。
+    ///     指定座標と配置基準に従って文字列を描画します。
     /// </summary>
-    /// <param name="pos">描画座標 <see cref="Vec2i" /></param>
-    /// <param name="text">描画文字列</param>
+    /// <param name="pos">描画基準座標 <see cref="Vec2i" /></param>
+    /// <param name="text">描画文字列 <see cref="ReadOnlySpan{Char}" /></param>
     /// <param name="color">描画カラー <see cref="Color" /></param>
-    public static void DrawString(Vec2i pos, string text, Color color)
+    /// <param name="alignment">配置基準。省略時は左上基準</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DrawString(
+        Vec2i pos,
+        ReadOnlySpan<char> text,
+        Color color,
+        TextAlignment alignment = TextAlignment.TopLeft)
     {
-        _commandBuffer.PushDrawString(pos + CameraOffset, text, color.ToUint());
+        _commandBuffer.PushDrawString(pos + CameraOffset, text, color.ToUint(), alignment);
     }
 
     /// <summary>
-    ///     指定座標に文字列を描画します。
+    ///     水平中央・垂直中央揃えで文字列を描画します。
     /// </summary>
-    /// <param name="pos">描画座標 <see cref="Vec2i" /></param>
+    /// <param name="pos">中心座標 <see cref="Vec2i" /></param>
     /// <param name="text">描画文字列 <see cref="ReadOnlySpan{Char}" /></param>
     /// <param name="color">描画カラー <see cref="Color" /></param>
-    public static void DrawString(Vec2i pos, ReadOnlySpan<char> text, Color color)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DrawCenterString(Vec2i pos, ReadOnlySpan<char> text, Color color)
     {
-        _commandBuffer.PushDrawString(pos + CameraOffset, text, color.ToUint());
+        DrawString(pos, text, color, TextAlignment.Center);
+    }
+
+    /// <summary>
+    ///     左揃え・垂直中央揃えで文字列を描画します。
+    /// </summary>
+    /// <param name="pos">左端中央座標 <see cref="Vec2i" /></param>
+    /// <param name="text">描画文字列 <see cref="ReadOnlySpan{Char}" /></param>
+    /// <param name="color">描画カラー <see cref="Color" /></param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DrawLeftString(Vec2i pos, ReadOnlySpan<char> text, Color color)
+    {
+        DrawString(pos, text, color, TextAlignment.Left);
+    }
+
+    /// <summary>
+    ///     右揃え・垂直中央揃えで文字列を描画します。
+    /// </summary>
+    /// <param name="pos">右端中央座標 <see cref="Vec2i" /></param>
+    /// <param name="text">描画文字列 <see cref="ReadOnlySpan{Char}" /></param>
+    /// <param name="color">描画カラー <see cref="Color" /></param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DrawRightString(Vec2i pos, ReadOnlySpan<char> text, Color color)
+    {
+        DrawString(pos, text, color, TextAlignment.Right);
     }
 
     /// <summary>

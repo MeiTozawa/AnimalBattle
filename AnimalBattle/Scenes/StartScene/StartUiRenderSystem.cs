@@ -52,9 +52,9 @@ public static class StartUiRenderSystem
             ref var uiState = ref uiStates[i];
 
             // 1. タイトルヘッダー描画
-            GameEngine.DrawString(layout.HeaderTitlePos, texts.HeaderTitle, colors.TextGold);
-            GameEngine.DrawString(layout.PlayerHeaderPos, texts.PlayerHeader, colors.TextWhite);
-            GameEngine.DrawString(layout.BossHeaderPos, texts.BossHeader, colors.TextWhite);
+            GameEngine.DrawLeftString(layout.HeaderTitlePos, texts.HeaderTitle, colors.TextGold);
+            GameEngine.DrawLeftString(layout.PlayerHeaderPos, texts.PlayerHeader, colors.TextWhite);
+            GameEngine.DrawLeftString(layout.BossHeaderPos, texts.BossHeader, colors.TextWhite);
 
             // 2. Cat カード描画
             DrawPlayerCard(
@@ -98,7 +98,7 @@ public static class StartUiRenderSystem
             DrawConfirmButton(uiState.IsConfirmHovered, confirmBtnBounds, cfg);
 
             // 7. 下部ヒントテキスト
-            GameEngine.DrawString(layout.HintTextPos, texts.HintText, colors.TextMuted);
+            GameEngine.DrawLeftString(layout.HintTextPos, texts.HintText, colors.TextMuted);
         }
     }
 
@@ -126,8 +126,8 @@ public static class StartUiRenderSystem
             GameEngine.DrawBox(p1 - Vec2i.One, p2 + Vec2i.One, borderColor, false);
         }
 
-        GameEngine.DrawString(p1 + layout.CardTitleOffset, cardText.Title, isSelected ? selectColor : colors.TextWhite);
-        GameEngine.DrawString(p1 + layout.CardTagOffset, cardText.Tag, colors.TextGold);
+        GameEngine.DrawLeftString(p1 + layout.CardTitleOffset, cardText.Title, isSelected ? selectColor : colors.TextWhite);
+        GameEngine.DrawLeftString(p1 + layout.CardTagOffset, cardText.Tag, colors.TextGold);
 
         // プレビュー自機スプライト描画
         if (previewEntity.IsAlive())
@@ -153,8 +153,8 @@ public static class StartUiRenderSystem
 
         var badgeText = isSelected ? texts.SelectedBadge : texts.UnselectedBadge;
         var badgeColor = isSelected ? selectColor : colors.TextMuted;
-        GameEngine.DrawString(new Vec2i(bounds.Left + layout.CardBadgeLeftOffset, bounds.Bottom - layout.CardBadgeBottomOffset), badgeText, badgeColor);
-        GameEngine.DrawString(new Vec2i(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset), cardText.Description, colors.TextMuted);
+        GameEngine.DrawLeftString(new Vec2i(bounds.Left + layout.CardBadgeLeftOffset, bounds.Bottom - layout.CardBadgeBottomOffset), badgeText, badgeColor);
+        GameEngine.DrawLeftString(new Vec2i(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset), cardText.Description, colors.TextMuted);
     }
 
     private static void DrawCardBox(
@@ -178,13 +178,13 @@ public static class StartUiRenderSystem
             GameEngine.DrawBox(p1 - Vec2i.One, p2 + Vec2i.One, borderColor, false);
         }
 
-        GameEngine.DrawString(p1 + layout.CardTitleOffset, cardText.Title, isSelected ? selectColor : colors.TextWhite);
-        GameEngine.DrawString(p1 + layout.CardTagOffset, cardText.Tag, colors.TextGold);
+        GameEngine.DrawLeftString(p1 + layout.CardTitleOffset, cardText.Title, isSelected ? selectColor : colors.TextWhite);
+        GameEngine.DrawLeftString(p1 + layout.CardTagOffset, cardText.Tag, colors.TextGold);
 
         var badgeText = isSelected ? texts.SelectedBadge : texts.UnselectedBadge;
         var badgeColor = isSelected ? selectColor : colors.TextMuted;
-        GameEngine.DrawString(new Vec2i(bounds.Left + layout.CardBadgeLeftOffset, bounds.Bottom - layout.CardBadgeBottomOffset), badgeText, badgeColor);
-        GameEngine.DrawString(new Vec2i(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset), cardText.Description, colors.TextMuted);
+        GameEngine.DrawLeftString(new Vec2i(bounds.Left + layout.CardBadgeLeftOffset, bounds.Bottom - layout.CardBadgeBottomOffset), badgeText, badgeColor);
+        GameEngine.DrawLeftString(new Vec2i(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset), cardText.Description, colors.TextMuted);
     }
 
     private static void DrawBoss1Card(
@@ -298,8 +298,8 @@ public static class StartUiRenderSystem
             GameEngine.DrawBox(p1 - Vec2i.One, p2 + Vec2i.One, borderColor, false);
         }
 
-        GameEngine.DrawString(
-            p1 + layout.ConfirmBtnTextOffset,
+        GameEngine.DrawCenterString(
+            new Vec2i(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2),
             texts.ConfirmButton,
             colors.TextWhite);
     }

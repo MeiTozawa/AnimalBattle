@@ -11,6 +11,7 @@ namespace ab {
     export using ab::RenderPacket;
     export using ab::RenderPacketType;
     export using ab::CompactCirclePacket;
+    export using ab::TextAlignment;
 
     /// @brief バックエンド非依存のレンダリングサービス抽象インターフェース
     export class IRenderService {
@@ -39,6 +40,9 @@ namespace ab {
         virtual void DrawCircle(Vec2i center, int radius, uint32_t color, bool fill_flag) = 0;
         virtual void DrawLine(Vec2i p1, Vec2i p2, uint32_t color, int thickness) = 0;
         virtual void DrawString(Vec2i pos, const wchar_t* text, uint32_t color) = 0;
+        virtual void DrawCenterString(int x, int y, const wchar_t* text, uint32_t color) = 0;
+        virtual void DrawLeftString(int x, int y, const wchar_t* text, uint32_t color) = 0;
+        virtual void DrawRightString(int x, int y, const wchar_t* text, uint32_t color) = 0;
         virtual void DrawGraph(Vec2i pos, int handle, bool trans_flag) = 0;
         virtual void DrawRotaGraph(Vec2i center, double ext_rate, double angle, int graph_handle, bool trans_flag) = 0;
         virtual void DrawRectRotaGraph(Vec2i center, Rect<int> src, Vec2f scale, double angle, int graph_handle, bool trans_flag, bool turn_flag) = 0;

@@ -154,7 +154,7 @@ public static class DebugGizmosRenderSystem
             var p1 = (Vec2i)(trans.Position - halfSize);
             var p2 = (Vec2i)(trans.Position + halfSize);
             GameEngine.DrawBox(p1, p2, dbgCfg.PlayerTerrainBoxColor, false);
-            GameEngine.DrawString(p1 + dbgCfg.PlayerInfoOffset, $"P({(int)trans.Position.X},{(int)trans.Position.Y}) [Grounded:{col.IsGrounded}]",
+            GameEngine.DrawCenterString(new Vec2i((int)trans.Position.X, p1.Y - 12), $"P({(int)trans.Position.X},{(int)trans.Position.Y}) [Grounded:{col.IsGrounded}]",
                 dbgCfg.PlayerTerrainBoxColor);
         }
     }

@@ -192,9 +192,8 @@ public static class BossTelegraphRenderSystem
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
 
         var bobbing = MathF.Sin(stateTimer * bossFx.ChanceMarkerBobbingSpeed) * bossFx.ChanceMarkerBobbingAmplitude;
-        var textWidth = bossFx.ChanceMarkerText.Length * bossFx.ChanceMarkerCharWidth;
-        var textPos = new Vec2i(bPos.X - textWidth / 2, (int)(bPos.Y - bossFx.ChanceMarkerOffsetY + bobbing));
-        GameEngine.DrawString(textPos, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
+        var textPos = new Vec2i(bPos.X, (int)(bPos.Y - bossFx.ChanceMarkerOffsetY + bobbing));
+        GameEngine.DrawCenterString(textPos, bossFx.ChanceMarkerText, bossFx.ChanceMarkerColor);
     }
 
     private static void DrawBossPhaseTransitionEffects(

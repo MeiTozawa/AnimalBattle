@@ -214,6 +214,23 @@ public struct DrawRectRotaGraphPacket {
 }
 
 /// <summary>
+///     文字列描画のアライメント基準。
+/// </summary>
+public enum TextAlignment : byte {
+    /// <summary>左上基準</summary>
+    TopLeft = 0,
+
+    /// <summary>左揃えおよび垂直中央揃え</summary>
+    Left = 1,
+
+    /// <summary>水平中央および垂直中央揃え</summary>
+    Center = 2,
+
+    /// <summary>右揃えおよび垂直中央揃え</summary>
+    Right = 3
+}
+
+/// <summary>
 ///     文字列描画コマンドデータであり、文字列の実体は一括テキストバッファを参照します。
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -229,6 +246,13 @@ public struct DrawStringPacket {
 
     /// <summary>描画対象文字列の文字数</summary>
     public int TextLength;
+
+    /// <summary>配置基準</summary>
+    public TextAlignment Alignment;
+
+    private byte _padding0;
+    private byte _padding1;
+    private byte _padding2;
 }
 
 /// <summary>

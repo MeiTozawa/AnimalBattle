@@ -99,6 +99,14 @@ struct DrawRectRotaGraphPacket {
     uint8_t padding[2];
 };
 
+/// @brief 文字列描画のアライメント基準
+enum class TextAlignment : uint8_t {
+    TopLeft = 0, ///< 左上基準
+    Left = 1,    ///< 左揃えおよび垂直中央揃え
+    Center = 2,  ///< 水平中央および垂直中央揃え
+    Right = 3    ///< 右揃えおよび垂直中央揃え
+};
+
 /// @brief 文字列描画コマンドデータ
 /// @note 文字列の実体データは共有テキストバッファを参照します
 struct DrawStringPacket {
@@ -106,6 +114,8 @@ struct DrawStringPacket {
     uint32_t color;
     int32_t text_offset;
     int32_t text_length;
+    uint8_t alignment;    ///< 配置基準
+    uint8_t padding[3];   ///< 4バイト境界アライメント用パディング
 };
 
 /// @brief 描画ブレンドモード設定コマンドデータ

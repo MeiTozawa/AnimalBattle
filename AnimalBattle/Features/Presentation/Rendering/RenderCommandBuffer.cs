@@ -245,7 +245,15 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     /// <summary>
     ///     文字列描画コマンドを追加します。
     /// </summary>
-    public void PushDrawString(Vec2i pos, ReadOnlySpan<char> text, uint color)
+    /// <param name="pos">描画基準座標</param>
+    /// <param name="text">描画文字列</param>
+    /// <param name="color">描画カラー</param>
+    /// <param name="alignment">配置基準。省略時は左上基準</param>
+    public void PushDrawString(
+        Vec2i pos,
+        ReadOnlySpan<char> text,
+        uint color,
+        TextAlignment alignment = TextAlignment.TopLeft)
     {
         EnsurePendingCircleBatchFlushed();
         EnsurePacketCapacity(1);
@@ -264,7 +272,8 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
                 Pos = pos,
                 Color = color,
                 TextOffset = offset,
-                TextLength = strLength
+                TextLength = strLength,
+                Alignment = alignment
             }
         };
     }

@@ -131,9 +131,21 @@ namespace ab {
                     if (text_buffer != nullptr && p.string_data.text_offset >= 0 &&
                         p.string_data.text_offset < text_length) {
                         const wchar_t* str = text_buffer + p.string_data.text_offset;
-                        DrawString(p.string_data.pos,
-                                   str,
-                                   p.string_data.color);
+                        switch (static_cast<TextAlignment>(p.string_data.alignment)) {
+                        case TextAlignment::Center:
+                            DrawCenterString(p.string_data.pos.x, p.string_data.pos.y, str, p.string_data.color);
+                            break;
+                        case TextAlignment::Left:
+                            DrawLeftString(p.string_data.pos.x, p.string_data.pos.y, str, p.string_data.color);
+                            break;
+                        case TextAlignment::Right:
+                            DrawRightString(p.string_data.pos.x, p.string_data.pos.y, str, p.string_data.color);
+                            break;
+                        case TextAlignment::TopLeft:
+                        default:
+                            DrawString(p.string_data.pos, str, p.string_data.color);
+                            break;
+                        }
                     }
                     break;
                 case RenderPacketType::SetDrawBlendMode:
@@ -200,6 +212,26 @@ namespace ab {
             if (!text) return;
             Vec2i p = ApplyCamera(pos);
             ::DrawString(p.x, p.y, text, color);
+        }
+        /// @brief 水平中央・垂直中央揃えで文字列を描画
+        void DrawCenterString(int x, int y, const wchar_t* text, uint32_t color) override {
+            if (!text) return;
+            const int drawX = x - ::GetDrawStringWidth(text, -1) / 2;
+            const int drawY = y - ::GetFontSize() / 2;
+            DrawString(Vec2i{drawX, drawY}, text, color);
+        }
+        /// @brief 左揃え・垂直中央揃えで文字列を描画
+        void DrawLeftString(int x, int y, const wchar_t* text, uint32_t color) override {
+            if (!text) return;
+            const int drawY = y - ::GetFontSize() / 2;
+            DrawString(Vec2i{x, drawY}, text, color);
+        }
+        /// @brief 右揃え・垂直中央揃えで文字列を描画
+        void DrawRightString(int x, int y, const wchar_t* text, uint32_t color) override {
+            if (!text) return;
+            const int drawX = x - ::GetDrawStringWidth(text, -1);
+            const int drawY = y - ::GetFontSize() / 2;
+            DrawString(Vec2i{drawX, drawY}, text, color);
         }
         void DrawGraph(Vec2i pos, int handle, bool trans_flag) override {
             Vec2i p = ApplyCamera(pos);
