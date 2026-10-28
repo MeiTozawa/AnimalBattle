@@ -57,6 +57,7 @@ public class GameManager : IDisposable {
         _ecsWorld.Import<CombatModule>();
         _ecsWorld.Import<PlayerModule>();
         _ecsWorld.Import<BossModule>();
+        _ecsWorld.Import<EnemyModule>();
         _ecsWorld.Import<RenderModule>(); // ネイティブ描画モジュール
         _ecsWorld.Import<StartSceneModule>();
         _ecsWorld.Import<BattleSceneModule>();
