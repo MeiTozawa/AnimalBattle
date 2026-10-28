@@ -38,6 +38,7 @@ public static class CommonPrefabs
         world.Component<MeleeWeaponComponent>().AutoOverride<MeleeWeaponComponent>();
 
         world.Component<Health>().AutoOverride<Health>();
+        world.Component<EnemyCombatProfile>().AutoOverride<EnemyCombatProfile>();
         world.Component<SpringScale>().AutoOverride<SpringScale>();
 
         // 投射物基底プレハブ
