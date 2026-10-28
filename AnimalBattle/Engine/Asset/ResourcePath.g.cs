@@ -174,6 +174,9 @@ public static class ResourcePath
         /// <summary>dummy.toml 設定ファイル名。</summary>
         public const string Dummy = "dummy.toml";
 
+        /// <summary>minions.toml 設定ファイル名。</summary>
+        public const string Minions = "minions.toml";
+
         /// <summary>render.toml 設定ファイル名。</summary>
         public const string Render = "render.toml";
 
@@ -224,6 +227,9 @@ public static class ResourcePath
 
         /// <summary>dummy.toml の相対パス。</summary>
         public const string DummyToml = @"Config\dummy.toml";
+
+        /// <summary>minions.toml の相対パス。</summary>
+        public const string MinionsToml = @"Config\minions.toml";
 
         /// <summary>render.toml の相対パス。</summary>
         public const string RenderToml = @"Config\render.toml";

@@ -1,0 +1,26 @@
+# ===================================================================
+# 雑魚敵（小怪）設定 (Minion Configuration)
+# 地面追撃怪および空中浮遊怪の初期ステータスと行動パラメータ
+# ===================================================================
+
+# --- 地面近接追撃怪 (Ground Minion) ---
+[GroundMinion]
+MaxHp = 25.0
+MoveSpeed = 110.0
+ContactDamage = 1.0
+CollisionSize = { x = 32.0, y = 32.0 }
+Scale = { x = 0.65, y = 0.65 }
+HitFlashDuration = 0.12
+
+# --- 空中浮遊弾幕怪 (Flying Minion) ---
+[FlyingMinion]
+MaxHp = 18.0
+HoverSpeed = 90.0
+HoverAmpY = 24.0
+HoverFreq = 2.2
+CollisionSize = { x = 28.0, y = 28.0 }
+Scale = { x = 0.55, y = 0.55 }
+HitFlashDuration = 0.12
+ContactDamage = 1.0
+SkillTag = "RingBurst"
+SkillCooldown = 5.0
