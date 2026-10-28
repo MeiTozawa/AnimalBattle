@@ -32,6 +32,7 @@ global using AnimalBattle.Player.Systems;
 global using AnimalBattle.Bosses;
 global using AnimalBattle.Bosses.Systems;
 global using AnimalBattle.Enemies;
+global using AnimalBattle.Enemies.Systems;
 global using AnimalBattle.Combat;
 global using AnimalBattle.Combat.Systems;
 global using AnimalBattle.Arena;

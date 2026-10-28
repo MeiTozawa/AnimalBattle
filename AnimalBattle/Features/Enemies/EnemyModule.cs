@@ -10,5 +10,8 @@ public readonly struct EnemyModule : IFlecsModule
         world.Module<EnemyModule>();
 
         MinionPrefabs.Register(world);
+
+        world.AddGroundMinionSystem()
+             .AddFlyingMinionSystem();
     }
 }
