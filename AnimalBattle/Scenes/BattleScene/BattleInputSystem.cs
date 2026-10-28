@@ -31,12 +31,10 @@ public static class BattleInputSystem
     private static bool _prevF2;
     private static bool _prevF3;
     private static bool _prevF4;
-
-
-
-
+    private static bool _prevF5;
 
     private static Phase _targetDebugPhase;
+
     /// <summary>
     ///     戦闘入力処理システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -73,6 +71,7 @@ public static class BattleInputSystem
 
         return world;
     }
+
     /// <summary>
     ///     戦闘シーンの入力受付パイプライン。
     /// </summary>
@@ -83,21 +82,21 @@ public static class BattleInputSystem
         if (flow.State != GameState.Battle) return;
 
         var ctx = w.Get<BattleInputSystemContext>();
-        // ESC キーでタイトルまたはキャラクター選択画面へ復帰
+
         // ESC キーでタイトルまたはキャラクター選択画面へ復帰
         if (InputService.IsPressed(InputAction.Cancel))
         {
             GameManager.Current.SwitchToStart();
             return;
         }
-        // R キーで戦闘リセット
+
         // R キーで戦闘リセット
         if (InputService.IsPressed(InputAction.Restart))
         {
             ResetCombat(w, ctx);
         }
 
-        // デバッグ入力：F1 トグル、F2〜F4 フェーズ切替の処理
+        // デバッグ入力：F1 トグル、F2〜F4 フェーズ切替、F5 空シーン切替の処理
         var renderCfg = w.Get<RenderConfig>();
         var dbgCfg = renderCfg.Debug;
         if (dbgCfg.DebugMode)
@@ -201,33 +200,19 @@ public static class BattleInputSystem
             .Remove<InvincibleBlinkEffect>();
 
         var weaponCfg = w.GetWeaponConfig(cfg.Weapon);
-
         if (weaponCfg is MeleeWeaponConfig meleeCfg)
-
         {
-
             player.Set(MeleeWeaponComponent.FromConfig(meleeCfg));
-
             var melee = player.Target<EquippedWeapon>();
-
             if (melee.IsAlive())
-
             {
-
                 melee.Disable();
-
                 melee.Set(new HitHistory());
-
             }
-
         }
-
         else if (weaponCfg is RangedWeaponConfig rangedCfg)
-
         {
-
             player.Set(RangedWeaponComponent.FromConfig(rangedCfg));
-
         }
 
         ref var sprite = ref player.GetMut<Sprite>();
@@ -235,7 +220,6 @@ public static class BattleInputSystem
         sprite.JitterOffset = Vec2f.Zero;
         sprite.Scale = Vec2f.One;
         sprite.SpringOffsetY = 0.0f;
-
     }
 
     private static void ProcessDebugInput(World world, DebugRenderConfig dbgCfg, Query<Health, BossCombatState, BossBrainComponent> bossQuery)
@@ -272,6 +256,16 @@ public static class BattleInputSystem
             GameManager.Current.SwitchToBattle(CharacterType.Bunny, flow.SelectedBoss);
             return;
         }
+
+        // F5 キー：手触り検証用の空シーン（BossType.Empty）へ即時切替
+        var isF5 = GameEngine.CheckHitKey((int)InputButton.KeyF5);
+        if (isF5 && !_prevF5)
+        {
+            GameManager.Current.SwitchToBattle(flow.SelectedPlayer, BossType.Empty);
+            _prevF5 = isF5;
+            return;
+        }
+        _prevF5 = isF5;
 
         // ゲームオーバー時はフェーズ切り替えを無効化します
         if (world.Has<GameOverTag>()) return;
