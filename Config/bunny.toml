@@ -63,6 +63,6 @@ HitJitterFrequency = 30.0
 SpringFrequency = 18.0
 SpringDampingRatio = 2
 JumpStretchScale = { x = 0.85, y = 1.20 }
-LandSquashScale = { x = 1.30, y = 0.75 }
+LandSquashScale = { x = 1.30, y = 0.55 }
 LandSquashVelocityThreshold = 150.0
 HitSquashScale = { x = 1.20, y = 0.80 }
