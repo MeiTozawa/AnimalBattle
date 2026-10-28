@@ -152,7 +152,14 @@ public static class HudRenderSystem {
 
         DrawControlHelp(hudCfg);
         DrawPlayerStatus(player, hudCfg);
-        DrawBossStatus(boss, hpCfg, modalCfg);
+        if (boss != null)
+        {
+            DrawBossStatus(boss, hpCfg, modalCfg);
+        }
+        else
+        {
+            DrawTrainingModeBanner();
+        }
         DrawGameOverModal(player, modalCfg);
     }
 
@@ -224,6 +231,15 @@ public static class HudRenderSystem {
     }
 
     /// <summary>
+    ///     トレーニングモード（ボス不在時）の簡易案内バナーを描画します。
+    /// </summary>
+    private static void DrawTrainingModeBanner()
+    {
+        GameEngine.DrawString(new Vec2i(460, 20), "[DEBUG TRAINING MODE - DUMMY TARGET]", ColorPalette.GoldLight);
+        GameEngine.DrawString(new Vec2i(460, 38), "1: Boss1 | 2: Boss2 | 3/4: Character | F5: Reload", ColorPalette.GrayLight);
+    }
+
+    /// <summary>
     ///     Boss の称号およびフェーズ表記を取得します：パターンマッチにより固定文字列を返し 0-GC で描画。
     /// </summary>
     private static string GetBossTitle(BossType bossType, int phase)
@@ -236,6 +252,7 @@ public static class HudRenderSystem {
             (BossType.Boss2, 1) => "BOSS: Boss2 [PHASE 1/3]",
             (BossType.Boss2, 2) => "BOSS: Boss2 [PHASE 2/3]",
             (BossType.Boss2, 3) => "BOSS: Boss2 [PHASE 3/3]",
+            (BossType.Empty, _) => "TRAINING DUMMY",
             _ => $"BOSS: {bossType} [PHASE {p}/3]"
         };
     }
