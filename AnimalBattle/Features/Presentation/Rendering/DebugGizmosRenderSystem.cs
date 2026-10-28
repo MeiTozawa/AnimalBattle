@@ -50,7 +50,9 @@ public static class DebugGizmosRenderSystem
             .With<PlayerTag>()
             .Build();
 
+        // 死亡済みユニットの Hitbox 描画をクエリ層で除外
         var hitboxQuery = world.QueryBuilder<Transform, Hitbox>()
+            .Without<DeadTag>()
             .Build();
 
         // 死亡済みユニットの Hurtbox 描画をクエリ層で除外

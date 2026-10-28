@@ -4,7 +4,7 @@ using AnimalBattle.Combat.Events;
 namespace AnimalBattle.Combat.Systems;
 
 /// <summary>
-///     全戦闘ユニット（プレイヤー、Boss、小怪、木桩）共通の被弾ダメージ裁定および無敵時間・撃退・死亡処理を統括する単一責任 ECS システム。
+///     全戦闘ユニット共通の被弾ダメージ裁定および無敵時間・撃退・死亡処理を統括する単一責任 ECS システム。
 ///     <see cref="DamageInbox" /> 内の被弾イベントを集約・消費し、データ駆動の <see cref="CombatProfile" /> に従って
 ///     易傷倍率、反撃弾幕、被弾無敵、撃退、撃破演出およびカメラ衝撃を統一的に処理します。
 /// </summary>
@@ -93,7 +93,7 @@ public static class DamageResolutionSystem
             ref var hp = ref hps[i];
             ref var tagState = ref tags[i];
 
-            // ゲームオーバー済み、無敵状態（GAS Invincible / Untargetable 保持時）、または死亡済みの場合はスキップ
+            // ゲームオーバー済み、無敵状態、または死亡済みの場合はスキップ
             if (isGameOver || tagState.HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable) || hp.Current <= 0.0f)
             {
                 continue;
@@ -107,7 +107,7 @@ public static class DamageResolutionSystem
             ref var sprite = ref sprites[i];
             ref var effectState = ref timedEffects[i];
 
-            // 易傷倍率の評価（敵対系ユニット）
+            // 敵対系ユニットの易傷倍率評価
             var isVulnerable = tagState.HasTag(GameplayTag.Vulnerable);
             var multiplier = (profile.Kind != CombatEntityKind.Player && isVulnerable) ? pCfg.VulnerableDamageMultiplier : 1.0f;
             var finalDamage = totalDamage * multiplier;
@@ -188,6 +188,7 @@ public static class DamageResolutionSystem
                         world.Add<GameOverTag>();
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
+                        entity.GetMut<Hitbox>().IsActive = false;
                         BulletSpawner.ClearAllBossBullets(world);
                         MeleeSpawner.ClearAllBossMelee(world);
                         EffectSpawner.SpawnVictoryExplosions(world, trans.Position);
@@ -198,6 +199,9 @@ public static class DamageResolutionSystem
                     case CombatEntityKind.Enemy:
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
+                        entity.GetMut<Hitbox>().IsActive = false;
+                        EffectSpawner.SpawnHitSparkEffect(world, trans.Position);
+                        entity.Destruct();
                         break;
 
                     case CombatEntityKind.Dummy:
@@ -230,7 +234,7 @@ public static class DamageResolutionSystem
                         {
                             BulletSpawner.SpawnCounterAttack(world, trans.Position, profile.Phase);
                         }
-                        break;
+                    break;
                 }
             }
         }

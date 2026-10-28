@@ -20,6 +20,7 @@ public static class CombatCollisionSystem
         world.System<Transform, Hitbox>("CombatCollisionSystem")
             .Without<HitHistory>()
             .Without<RecycleTag>()
+            .Without<DeadTag>()
             .Kind(Ecs.OnUpdate)
             .Iter(ExecuteSingleHit);
 
@@ -114,7 +115,7 @@ public static class CombatCollisionSystem
         var isHeavy = localHitbox.IsHeavy || (localHitbox.Damage >= physicsCfg.HeavyDamageThreshold);
         var targetKnockback = baseKnockback with { X = knockbackDir * baseKnockback.X };
 
-        // 被弾イベントを DamageInbox へ無ロック追記（受撃エンティティの Archetype 変更や遅延キューを全廃）
+        // 被弾イベントを DamageInbox へ無ロック追記。受撃エンティティの Archetype 変更や遅延キューを全廃
         var inbox = world.GetMut<DamageInbox>();
         inbox.Enqueue(new HitEvent
         {

@@ -17,6 +17,7 @@ public static class PersistentCollisionSystem
     {
         world.System<Transform, Hitbox, HitHistory>("PersistentCollisionSystem")
             .Without<RecycleTag>()
+            .Without<DeadTag>()
             .Kind(Ecs.OnUpdate)
             .Iter(ExecutePersistentHit);
 
