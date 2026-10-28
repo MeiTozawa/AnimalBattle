@@ -1,7 +1,7 @@
 namespace AnimalBattle.Bosses;
 
 /// <summary>
-///     Boss の Prefab プレハブ、被弾裁定および攻撃予告描画システムを一括管理する Flecs モジュール。
+///     Boss の Prefab プレハブおよび登録を一括管理する Flecs モジュール。
 /// </summary>
 public readonly struct BossModule : IFlecsModule
 {
@@ -10,7 +10,5 @@ public readonly struct BossModule : IFlecsModule
         world.Module<BossModule>();
 
         BossPrefabs.Register(world);
-
-        world.AddBossDamageResolutionSystem();
     }
 }

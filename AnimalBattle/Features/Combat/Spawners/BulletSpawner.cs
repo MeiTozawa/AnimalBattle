@@ -82,9 +82,9 @@ public static class BulletSpawner
     }
 
     /// <summary>
-    ///     Boss 被弾時に、現在の Phase に応じた数量の黑色弾幕を全方位ランダムに発射します。
+    ///     被弾時に、現在の Phase に応じた数量の反撃弾幕を全方位ランダムに発射します。
     /// </summary>
-    public static void SpawnBossCounterAttack(World world, Vec2f bossPos, Phase phase)
+    public static void SpawnCounterAttack(World world, Vec2f pos, Phase phase)
     {
         var cfg = world.Get<SpecialBulletConfig>();
         var bulletCount = phase switch {
@@ -101,7 +101,7 @@ public static class BulletSpawner
 
             SpawnBossSpecialBullet(
                 world,
-                bossPos,
+                pos,
                 vel,
                 cfg.CounterBulletRadius,
                 BulletType.Black,

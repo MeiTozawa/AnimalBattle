@@ -38,7 +38,7 @@ public static class CommonPrefabs
         world.Component<MeleeWeaponComponent>().AutoOverride<MeleeWeaponComponent>();
 
         world.Component<Health>().AutoOverride<Health>();
-        world.Component<EnemyCombatProfile>().AutoOverride<EnemyCombatProfile>();
+        world.Component<CombatProfile>().AutoOverride<CombatProfile>();
         world.Component<SpringScale>().AutoOverride<SpringScale>();
 
         // 投射物基底プレハブ
@@ -60,6 +60,8 @@ public static class CommonPrefabs
         BaseCharacter = world.Prefab(BaseCharacterName)
             .Set(new Transform(Vec2f.Zero))
             .Set(new Velocity(Vec2f.Zero))
+            .Set(new CollisionBox(Vec2f.One))
+            .Set(new SpringScale(Vec2f.One, 15f, 0.5f))
             .Set(new GameplayTagState())
             .Set(new TimedEffectsState());
     }
