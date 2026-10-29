@@ -40,43 +40,50 @@ public struct CombatProfile
     /// <summary>被弾後の無敵時間秒数（自機用）。</summary>
     public float InvincibleDuration;
 
+    /// <summary>被弾時のスカッシュ変形スケール。</summary>
+    public Vec2f HitSquashScale;
+
     /// <summary>プレイヤー用の戦闘プロファイルを生成します。</summary>
-    public static CombatProfile ForPlayer(float invDuration) => new()
+    public static CombatProfile ForPlayer(float invDuration, Vec2f hitSquashScale = default) => new()
     {
         Kind = CombatEntityKind.Player,
         CanBeKnockedBack = true,
         HasCounterAttack = false,
         Phase = Phase.Phase1,
-        InvincibleDuration = invDuration
+        InvincibleDuration = invDuration,
+        HitSquashScale = hitSquashScale
     };
 
     /// <summary>Boss用の戦闘プロファイルを生成します。</summary>
-    public static CombatProfile ForBoss(bool knockback) => new()
+    public static CombatProfile ForBoss(bool knockback, Vec2f hitSquashScale = default) => new()
     {
         Kind = CombatEntityKind.Boss,
         CanBeKnockedBack = knockback,
         HasCounterAttack = true,
         Phase = Phase.Phase1,
-        InvincibleDuration = 0f
+        InvincibleDuration = 0f,
+        HitSquashScale = hitSquashScale
     };
 
     /// <summary>一般敵・小怪用の戦闘プロファイルを生成します。</summary>
-    public static CombatProfile ForMinion() => new()
+    public static CombatProfile ForMinion(Vec2f hitSquashScale = default) => new()
     {
         Kind = CombatEntityKind.Enemy,
         CanBeKnockedBack = true,
         HasCounterAttack = false,
         Phase = Phase.Phase1,
-        InvincibleDuration = 0f
+        InvincibleDuration = 0f,
+        HitSquashScale = hitSquashScale
     };
 
     /// <summary>手触り検証用木桩の戦闘プロファイルを生成します。</summary>
-    public static CombatProfile ForDummy() => new()
+    public static CombatProfile ForDummy(Vec2f hitSquashScale = default) => new()
     {
         Kind = CombatEntityKind.Dummy,
         CanBeKnockedBack = true,
         HasCounterAttack = false,
         Phase = Phase.Phase1,
-        InvincibleDuration = 0f
+        InvincibleDuration = 0f,
+        HitSquashScale = hitSquashScale
     };
 }

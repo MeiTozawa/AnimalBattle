@@ -5,6 +5,11 @@ Spawn = { x = 640.0, y = 200.0 }
 Scale = { x = 0.6, y = 0.6 }
 HitFlashDuration = 0.05
 
+# 被弾スカッシュ変形およびスプリング設定
+HitSquashScale = { x = 1.08, y = 0.92 }
+SpringFrequency = 15.0
+SpringDampingRatio = 0.5
+
 # Boss Hurtbox (Collision check against player bullets)
 HurtboxShape = "Circle"
 HurtboxRadius = 60.0

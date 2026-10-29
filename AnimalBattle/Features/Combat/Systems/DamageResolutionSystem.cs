@@ -142,7 +142,8 @@ public static class DamageResolutionSystem
             }
 
             // 被弾スカッシュ変形の適用
-            spring.Current = pCfg.HitSquashScale;
+            var hitSquash = profile.HitSquashScale != Vec2f.Zero ? profile.HitSquashScale : pCfg.HitSquashScale;
+            spring.Current = hitSquash;
             spring.Velocity = Vec2f.Zero;
 
             // ロール固有の被弾リアクション

@@ -266,7 +266,11 @@ public static class PlayerConfigSync
 
         ref var flash = ref e.GetMut<HitFlashSettings>();
 
-        flash.Duration = newConfig.HitFlashDuration;
+        flash.Duration = newConfig.HitFlashDuration;
+
+        // 被弾変形設定の更新
+        ref var profile = ref e.GetMut<CombatProfile>();
+        profile.HitSquashScale = newConfig.HitSquashScale;
 
 
 

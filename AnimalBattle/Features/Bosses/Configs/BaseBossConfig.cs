@@ -55,7 +55,16 @@ public abstract class BaseBossConfig {
     public bool CanBeKnockedBack { get; set; } = true;
 
     /// <summary>Boss のノックバック外力減衰加速度ピクセル毎秒毎秒</summary>
-    public float KnockbackDeceleration { get; set; } = 1200.0f;
+    public float KnockbackDeceleration { get; set; }
+
+    /// <summary>Boss 受撃時のスカッシュ変形スケール（X: 横伸長, Y: 縦圧縮）</summary>
+    public Vec2f HitSquashScale { get; set; } 
+
+    /// <summary>Boss 受撃時スプリング変形の固有振動数（Hz）</summary>
+    public float SpringFrequency { get; set; }
+
+    /// <summary>Boss 受撃時スプリング変形の減衰比（0.0〜1.0）</summary>
+    public float SpringDampingRatio { get; set; }
 
     /// <summary>
     ///     設定に基づいた Boss 被弾判定 <see cref="CollisionShape" /> を取得します。
