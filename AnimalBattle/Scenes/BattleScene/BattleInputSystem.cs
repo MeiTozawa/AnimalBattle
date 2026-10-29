@@ -11,6 +11,7 @@ internal sealed class BattleInputSystemContext : IDisposable
     public required Query PlayerBulletsQuery { get; init; }
     public required Query VfxQuery { get; init; }
     public required Query PlayerEntitiesQuery { get; init; }
+    public required Query<GameplayTagState> PlayerTagStateQuery { get; init; }
     public required Query<Health, BossCombatState, BossBrainComponent> BossQuery { get; init; }
     public required Query<Transform, Sprite> PlayerQuery { get; init; }
 
@@ -19,6 +20,7 @@ internal sealed class BattleInputSystemContext : IDisposable
         PlayerBulletsQuery.Dispose();
         VfxQuery.Dispose();
         PlayerEntitiesQuery.Dispose();
+        PlayerTagStateQuery.Dispose();
         BossQuery.Dispose();
         PlayerQuery.Dispose();
     }
@@ -37,6 +39,7 @@ public static class BattleInputSystem
     private static bool _prevF5;
     private static bool _prevF6;
     private static bool _prevF7;
+    private static bool _prevF8;
 
     private static Phase _targetDebugPhase;
 
@@ -58,6 +61,9 @@ public static class BattleInputSystem
         var playerEntitiesQuery = world.QueryBuilder()
             .With<PlayerTag>()
             .Build();
+        var playerTagStateQuery = world.QueryBuilder<GameplayTagState>()
+            .With<PlayerTag>()
+            .Build();
         var bossQuery = world.QueryBuilder<Health, BossCombatState, BossBrainComponent>()
             .With<BossTag>()
             .Build();
@@ -71,6 +77,7 @@ public static class BattleInputSystem
             PlayerBulletsQuery = playerBulletsQuery,
             VfxQuery = vfxQuery,
             PlayerEntitiesQuery = playerEntitiesQuery,
+            PlayerTagStateQuery = playerTagStateQuery,
             BossQuery = bossQuery,
             PlayerQuery = playerQuery
         });
@@ -257,6 +264,14 @@ public static class BattleInputSystem
         }
         _prevF7 = isF7;
 
+        // F8 キー：プレイヤー無敵（無限生命）状態のトグル切り替え
+        var isF8 = GameEngine.CheckHitKey((int)InputButton.KeyF8);
+        if (isF8 && !_prevF8)
+        {
+            TogglePlayerInvincible(ctx);
+        }
+        _prevF8 = isF8;
+
         if (!dbgCfg.IsActive) return;
 
         // 1/2/3/4 キーによる Boss およびキャラクターの迅速切替：InputAction 抽象経由
@@ -340,5 +355,23 @@ public static class BattleInputSystem
 
         var spawnPos = MinionSpawnService.SelectBestSpawnPoint(world, type);
         MinionSpawner.SpawnMinion(world, root, type, spawnPos);
+    }
+
+    /// <summary>
+    ///     プレイヤーの無敵タグ（GameplayTag.Invincible）をトグル切り替えします。
+    /// </summary>
+    private static void TogglePlayerInvincible(BattleInputSystemContext ctx)
+    {
+        ctx.PlayerTagStateQuery.Each(static (ref GameplayTagState tagState) =>
+        {
+            if (tagState.HasTag(GameplayTag.Invincible))
+            {
+                tagState.RemoveActionTag(GameplayTag.Invincible);
+            }
+            else
+            {
+                tagState.AddActionTag(GameplayTag.Invincible);
+            }
+        });
     }
 }
