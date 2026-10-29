@@ -184,7 +184,7 @@ public static class MovementSystem {
                         sprite.GraphHandle,
                         sprite.SrcRect,
                         sprite.FlipX,
-                        ColorPalette.GhostTrailCyan,
+                        entity.CsWorld().Get<RenderConfig>().Player.GhostTrailColor,
                         pCfg.DashGhostTrailDuration);
                 }
             }

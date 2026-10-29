@@ -158,7 +158,7 @@ public static class HudRenderSystem {
         }
         else
         {
-            DrawTrainingModeBanner();
+            DrawTrainingModeBanner(hudCfg);
         }
         DrawGameOverModal(player, modalCfg);
     }
@@ -233,10 +233,10 @@ public static class HudRenderSystem {
     /// <summary>
     ///     トレーニングモード（ボス不在時）の簡易案内バナーを描画します。
     /// </summary>
-    private static void DrawTrainingModeBanner()
+    private static void DrawTrainingModeBanner(HudRenderConfig hudCfg)
     {
-        GameEngine.DrawLeftString(new Vec2i(460, 20), "[DEBUG TRAINING MODE - DUMMY TARGET]", ColorPalette.GoldLight);
-        GameEngine.DrawLeftString(new Vec2i(460, 38), "1: BossSnake | 2: BossLion | 3/4: Character | F5: Reload", ColorPalette.GrayLight);
+        GameEngine.DrawLeftString(new Vec2i(460, 20), "[DEBUG TRAINING MODE - DUMMY TARGET]", hudCfg.TrainingModeTitleColor);
+        GameEngine.DrawLeftString(new Vec2i(460, 38), "1: BossSnake | 2: BossLion | 3/4: Character | F5: Reload", hudCfg.TrainingModeGuideColor);
     }
 
     /// <summary>
@@ -296,7 +296,7 @@ public static class HudRenderSystem {
 
         if (isDead)
         {
-            badgeColor = ColorPalette.Gray;
+            badgeColor = hpCfg.StateDefeatedColor;
             destination.TryWrite($"[STATE: DEFEATED]", out charsWritten);
             return;
         }

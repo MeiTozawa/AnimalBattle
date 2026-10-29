@@ -179,7 +179,7 @@ public static class DebugGizmosRenderSystem
                 Faction.Friendly => dbgCfg.PlayerHurtboxColor,
                 Faction.Hostile => dbgCfg.BossHitboxColor,
                 Faction.Neutral => dbgCfg.NeutralHitboxColor,
-                _ => GetFallbackFactionColor(hurtbox.Faction, dbgCfg.BossHitboxColor)
+                _ => GetFallbackFactionColor(dbgCfg, hurtbox.Faction, dbgCfg.BossHitboxColor)
             };
 
             var worldCenter = trans.Position + hurtbox.Shape.Offset;
@@ -206,7 +206,7 @@ public static class DebugGizmosRenderSystem
                 Faction.Friendly => dbgCfg.PlayerBulletHitboxColor,
                 Faction.Hostile => dbgCfg.BossBulletHitboxColor,
                 Faction.Neutral => dbgCfg.NeutralHitboxColor,
-                _ => GetFallbackFactionColor(hitbox.Faction, dbgCfg.BossBulletHitboxColor)
+                _ => GetFallbackFactionColor(dbgCfg, hitbox.Faction, dbgCfg.BossBulletHitboxColor)
             };
 
             var worldCenter = trans.Position + hitbox.Shape.Offset;
@@ -265,12 +265,12 @@ public static class DebugGizmosRenderSystem
         }
     }
 
-    private static Color GetFallbackFactionColor(Faction faction, Color defaultColor)
+    private static Color GetFallbackFactionColor(DebugRenderConfig dbgCfg, Faction faction, Color defaultColor)
     {
         return faction switch
         {
-            Faction.Friendly => ColorPalette.Green,
-            Faction.Hostile => ColorPalette.Red,
+            Faction.Friendly => dbgCfg.FactionFriendlyColor,
+            Faction.Hostile => dbgCfg.FactionHostileColor,
             _ => AssertHelper.FailWithDefault($"[DebugRenderer 警告] 未知の Faction: {faction}", defaultColor)
         };
     }

@@ -10,7 +10,7 @@ public static class TelegraphRenderHelper {
     /// <summary>
     ///     設定未指定時に使用される安全なデフォルト演出設定。
     /// </summary>
-    private static readonly BossEffectsRenderConfig DefaultEffects = new();
+    public static BossEffectsRenderConfig DefaultEffects { get; set; } = new();
 
     /// <summary>
     ///     設定未指定時に使用される安全なデフォルトアリーナ設定。
@@ -70,7 +70,7 @@ public static class TelegraphRenderHelper {
         {
             var flashAlpha = (int)((clampedProgress - 0.75f) / 0.25f * 220.0f);
             GameEngine.SetDrawBlendMode(BlendMode.Add, flashAlpha);
-            GameEngine.DrawLine(startI, targetI, ColorPalette.White, thickness + 1);
+            GameEngine.DrawLine(startI, targetI, eff.ChargeFillColor, thickness + 1);
             GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
         }
     }
@@ -104,12 +104,12 @@ public static class TelegraphRenderHelper {
         if (facingRight)
         {
             var fillX2 = (int)(p1.X + (p2.X - p1.X) * clampedProgress);
-            GameEngine.DrawBox(p1, new Vec2i(fillX2, p2.Y), ColorPalette.White, true);
+            GameEngine.DrawBox(p1, new Vec2i(fillX2, p2.Y), eff.ChargeFillColor, true);
         }
         else
         {
             var fillX1 = (int)(p2.X - (p2.X - p1.X) * clampedProgress);
-            GameEngine.DrawBox(new Vec2i(fillX1, p1.Y), p2, ColorPalette.White, true);
+            GameEngine.DrawBox(new Vec2i(fillX1, p1.Y), p2, eff.ChargeFillColor, true);
         }
 
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
@@ -159,12 +159,12 @@ public static class TelegraphRenderHelper {
         if (facingRight)
         {
             var fillX2 = (int)(bPos.X + (p2.X - bPos.X) * clampedProgress);
-            GameEngine.DrawBox(new Vec2i((int)bPos.X, p1.Y), new Vec2i(fillX2, p2.Y), ColorPalette.White, true);
+            GameEngine.DrawBox(new Vec2i((int)bPos.X, p1.Y), new Vec2i(fillX2, p2.Y), eff.ChargeFillColor, true);
         }
         else
         {
             var fillX1 = (int)(bPos.X - (bPos.X - p1.X) * clampedProgress);
-            GameEngine.DrawBox(new Vec2i(fillX1, p1.Y), new Vec2i((int)bPos.X, p2.Y), ColorPalette.White, true);
+            GameEngine.DrawBox(new Vec2i(fillX1, p1.Y), new Vec2i((int)bPos.X, p2.Y), eff.ChargeFillColor, true);
         }
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
 
@@ -182,7 +182,7 @@ public static class TelegraphRenderHelper {
         // Boss 自身の突進チャージ脈動：加算ブレンド
         var pulseAlpha = (int)(80.0f + 140.0f * clampedProgress);
         GameEngine.SetDrawBlendMode(BlendMode.Add, pulseAlpha);
-        GameEngine.DrawBox(new Vec2i((int)bPos.X - 20, p1.Y), new Vec2i((int)bPos.X + 20, p2.Y), ColorPalette.White, true);
+        GameEngine.DrawBox(new Vec2i((int)bPos.X - 20, p1.Y), new Vec2i((int)bPos.X + 20, p2.Y), eff.ChargeFillColor, true);
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
     }
 
@@ -232,7 +232,7 @@ public static class TelegraphRenderHelper {
         GameEngine.DrawBox(
             new Vec2i(targetI.X - fillW, targetI.Y - fillH),
             new Vec2i(targetI.X + fillW, targetI.Y + fillH),
-            ColorPalette.White,
+            eff.ChargeFillColor,
             true);
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
 
@@ -335,7 +335,7 @@ public static class TelegraphRenderHelper {
 
         // 進行度に応じた水平充填
         var fillW = (int)(halfWidth * clampedProgress);
-        GameEngine.DrawBox(new Vec2i(targetI.X - fillW, p1.Y), new Vec2i(targetI.X + fillW, p2.Y), ColorPalette.White, true);
+        GameEngine.DrawBox(new Vec2i(targetI.X - fillW, p1.Y), new Vec2i(targetI.X + fillW, p2.Y), eff.ChargeFillColor, true);
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
 
         GameEngine.DrawBox(p1, p2, color, false);

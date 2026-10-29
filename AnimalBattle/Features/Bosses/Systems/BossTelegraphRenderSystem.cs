@@ -232,14 +232,14 @@ public static class BossTelegraphRenderSystem
 
         var shieldFillAlpha = (int)(bossFx.InvincibleFillBaseAlpha + bossFx.InvincibleFillPulseAlpha * pulse);
         GameEngine.SetDrawBlendMode(BlendMode.Add, shieldFillAlpha);
-        GameEngine.DrawCircle(bPos, currentShieldRadius, ColorPalette.Gold, true);
+        GameEngine.DrawCircle(bPos, currentShieldRadius, bossFx.InvincibleShieldFillColor, true);
 
         var shieldRingAlpha = (int)(bossFx.InvincibleRingBaseAlpha + bossFx.InvincibleRingPulseAlpha * pulse);
         GameEngine.SetDrawBlendMode(BlendMode.Add, shieldRingAlpha);
-        GameEngine.DrawCircle(bPos, currentShieldRadius, ColorPalette.GoldLight, false);
+        GameEngine.DrawCircle(bPos, currentShieldRadius, bossFx.InvincibleShieldRingColor, false);
         if (currentShieldRadius > 1)
         {
-            GameEngine.DrawCircle(bPos, currentShieldRadius - 1, ColorPalette.Gold, false);
+            GameEngine.DrawCircle(bPos, currentShieldRadius - 1, bossFx.InvincibleShieldRingColor, false);
         }
 
         var ripple1 = (stateTimer * bossFx.InvincibleRippleSpeed) % 1.0f;
@@ -248,7 +248,7 @@ public static class BossTelegraphRenderSystem
         if (ripple1Alpha > 0)
         {
             GameEngine.SetDrawBlendMode(BlendMode.Add, ripple1Alpha);
-            GameEngine.DrawCircle(bPos, ripple1Radius, ColorPalette.GoldLight, false);
+            GameEngine.DrawCircle(bPos, ripple1Radius, bossFx.InvincibleRippleColor, false);
         }
 
         var ripple2 = (stateTimer * bossFx.InvincibleRippleSpeed + 0.5f) % 1.0f;
@@ -257,7 +257,7 @@ public static class BossTelegraphRenderSystem
         if (ripple2Alpha > 0)
         {
             GameEngine.SetDrawBlendMode(BlendMode.Add, ripple2Alpha);
-            GameEngine.DrawCircle(bPos, ripple2Radius, ColorPalette.White, false);
+            GameEngine.DrawCircle(bPos, ripple2Radius, bossFx.InvincibleRippleCoreColor, false);
         }
 
         var orbitAngle = stateTimer * bossFx.InvincibleOrbitSpeed;
@@ -277,14 +277,14 @@ public static class BossTelegraphRenderSystem
         for (var i = 0; i < 4; i++)
         {
             var next = (i + 1) % 4;
-            GameEngine.DrawLine(nodes[i], nodes[next], ColorPalette.GoldLight, bossFx.InvinciblePrismThickness);
+            GameEngine.DrawLine(nodes[i], nodes[next], bossFx.InvinciblePrismColor, bossFx.InvinciblePrismThickness);
         }
 
         for (var i = 0; i < 4; i++)
         {
             GameEngine.SetDrawBlendMode(BlendMode.Add, bossFx.InvincibleNodeAlpha);
-            GameEngine.DrawCircle(nodes[i], bossFx.InvincibleNodeOuterRadius, ColorPalette.GoldLight, true);
-            GameEngine.DrawCircle(nodes[i], bossFx.InvincibleNodeInnerRadius, ColorPalette.White, true);
+            GameEngine.DrawCircle(nodes[i], bossFx.InvincibleNodeOuterRadius, bossFx.InvincibleNodeOuterColor, true);
+            GameEngine.DrawCircle(nodes[i], bossFx.InvincibleNodeInnerRadius, bossFx.InvincibleNodeInnerColor, true);
         }
 
         var crossAngle = stateTimer * bossFx.InvincibleCrossAngleSpeed;
@@ -297,7 +297,7 @@ public static class BossTelegraphRenderSystem
             var flarePos = new Vec2i(
                 (int)(bPos.X + MathF.Cos(theta) * flareLength),
                 (int)(bPos.Y + MathF.Sin(theta) * flareLength));
-            GameEngine.DrawLine(bPos, flarePos, ColorPalette.GoldLight, bossFx.InvincibleCrossThickness);
+            GameEngine.DrawLine(bPos, flarePos, bossFx.InvincibleCrossColor, bossFx.InvincibleCrossThickness);
         }
 
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);

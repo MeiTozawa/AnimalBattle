@@ -183,6 +183,123 @@ public sealed class BossEffectsRenderConfig {
 
     /// <summary>Boss 浮遊時の揺れ角速度</summary>
     public float BossHoverAngleSpeed { get; set; }
+
+    private Color _invincibleShieldFillColor;
+
+    /// <summary>無敵シールド内部塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("InvincibleShieldFillColor")]
+    public string InvincibleShieldFillColorHex
+    {
+        get => string.Empty;
+        set { _invincibleShieldFillColor = value.ToColor(); }
+    }
+
+    /// <summary>無敵シールド内部塗りつぶし色 <see cref="Color" /></summary>
+    public Color InvincibleShieldFillColor => _invincibleShieldFillColor;
+
+    private Color _invincibleShieldRingColor;
+
+    /// <summary>無敵シールド外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("InvincibleShieldRingColor")]
+    public string InvincibleShieldRingColorHex
+    {
+        get => string.Empty;
+        set { _invincibleShieldRingColor = value.ToColor(); }
+    }
+
+    /// <summary>無敵シールド外枠色 <see cref="Color" /></summary>
+    public Color InvincibleShieldRingColor => _invincibleShieldRingColor;
+
+    private Color _invincibleRippleColor;
+
+    /// <summary>無敵衝撃波拡散色 Hex 文字列</summary>
+    [ConfigurationKeyName("InvincibleRippleColor")]
+    public string InvincibleRippleColorHex
+    {
+        get => string.Empty;
+        set { _invincibleRippleColor = value.ToColor(); }
+    }
+
+    /// <summary>無敵衝撃波拡散色 <see cref="Color" /></summary>
+    public Color InvincibleRippleColor => _invincibleRippleColor;
+
+    private Color _invincibleRippleCoreColor;
+
+    /// <summary>無敵衝撃波コア色 Hex 文字列</summary>
+    [ConfigurationKeyName("InvincibleRippleCoreColor")]
+    public string InvincibleRippleCoreColorHex
+    {
+        get => string.Empty;
+        set { _invincibleRippleCoreColor = value.ToColor(); }
+    }
+
+    /// <summary>無敵衝撃波コア色 <see cref="Color" /></summary>
+    public Color InvincibleRippleCoreColor => _invincibleRippleCoreColor;
+
+    private Color _invinciblePrismColor;
+
+    /// <summary>無敵結界光線色 Hex 文字列</summary>
+    [ConfigurationKeyName("InvinciblePrismColor")]
+    public string InvinciblePrismColorHex
+    {
+        get => string.Empty;
+        set { _invinciblePrismColor = value.ToColor(); }
+    }
+
+    /// <summary>無敵結界光線色 <see cref="Color" /></summary>
+    public Color InvinciblePrismColor => _invinciblePrismColor;
+
+    private Color _invincibleNodeOuterColor;
+
+    /// <summary>無敵防護ノード外周色 Hex 文字列</summary>
+    [ConfigurationKeyName("InvincibleNodeOuterColor")]
+    public string InvincibleNodeOuterColorHex
+    {
+        get => string.Empty;
+        set { _invincibleNodeOuterColor = value.ToColor(); }
+    }
+
+    /// <summary>無敵防護ノード外周色 <see cref="Color" /></summary>
+    public Color InvincibleNodeOuterColor => _invincibleNodeOuterColor;
+
+    private Color _invincibleNodeInnerColor;
+
+    /// <summary>無敵防護ノード中心色 Hex 文字列</summary>
+    [ConfigurationKeyName("InvincibleNodeInnerColor")]
+    public string InvincibleNodeInnerColorHex
+    {
+        get => string.Empty;
+        set { _invincibleNodeInnerColor = value.ToColor(); }
+    }
+
+    /// <summary>無敵防護ノード中心色 <see cref="Color" /></summary>
+    public Color InvincibleNodeInnerColor => _invincibleNodeInnerColor;
+
+    private Color _invincibleCrossColor;
+
+    /// <summary>無敵十字星芒色 Hex 文字列</summary>
+    [ConfigurationKeyName("InvincibleCrossColor")]
+    public string InvincibleCrossColorHex
+    {
+        get => string.Empty;
+        set { _invincibleCrossColor = value.ToColor(); }
+    }
+
+    /// <summary>無敵十字星芒色 <see cref="Color" /></summary>
+    public Color InvincibleCrossColor => _invincibleCrossColor;
+
+    private Color _chargeFillColor;
+
+    /// <summary>予兆チャージ充填・閃光色 Hex 文字列</summary>
+    [ConfigurationKeyName("ChargeFillColor")]
+    public string ChargeFillColorHex
+    {
+        get => string.Empty;
+        set { _chargeFillColor = value.ToColor(); }
+    }
+
+    /// <summary>予兆チャージ充填・閃光色 <see cref="Color" /></summary>
+    public Color ChargeFillColor => _chargeFillColor;
 }
 
 /// <summary>
@@ -372,6 +489,136 @@ public sealed class BulletRenderConfig {
 
     /// <summary>パーティクルエフェクト外枠ピクセル拡張幅</summary>
     public int ParticleOutlinePadding { get; set; }
+
+    private Color _bulletNormalFillColor;
+
+    /// <summary>通常弾塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("BulletNormalFillColor")]
+    public string BulletNormalFillColorHex
+    {
+        get => string.Empty;
+        set { _bulletNormalFillColor = value.ToColor(); }
+    }
+
+    /// <summary>通常弾塗りつぶし色 <see cref="Color" /></summary>
+    public Color BulletNormalFillColor => _bulletNormalFillColor;
+
+    private Color _bulletNormalOutlineColor;
+
+    /// <summary>通常弾外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("BulletNormalOutlineColor")]
+    public string BulletNormalOutlineColorHex
+    {
+        get => string.Empty;
+        set { _bulletNormalOutlineColor = value.ToColor(); }
+    }
+
+    /// <summary>通常弾外枠色 <see cref="Color" /></summary>
+    public Color BulletNormalOutlineColor => _bulletNormalOutlineColor;
+
+    private Color _bulletMagentaFillColor;
+
+    /// <summary>品紅弾塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("BulletMagentaFillColor")]
+    public string BulletMagentaFillColorHex
+    {
+        get => string.Empty;
+        set { _bulletMagentaFillColor = value.ToColor(); }
+    }
+
+    /// <summary>品紅弾塗りつぶし色 <see cref="Color" /></summary>
+    public Color BulletMagentaFillColor => _bulletMagentaFillColor;
+
+    private Color _bulletMagentaOutlineColor;
+
+    /// <summary>品紅弾外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("BulletMagentaOutlineColor")]
+    public string BulletMagentaOutlineColorHex
+    {
+        get => string.Empty;
+        set { _bulletMagentaOutlineColor = value.ToColor(); }
+    }
+
+    /// <summary>品紅弾外枠色 <see cref="Color" /></summary>
+    public Color BulletMagentaOutlineColor => _bulletMagentaOutlineColor;
+
+    private Color _bulletYellowFillColor;
+
+    /// <summary>黄弾塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("BulletYellowFillColor")]
+    public string BulletYellowFillColorHex
+    {
+        get => string.Empty;
+        set { _bulletYellowFillColor = value.ToColor(); }
+    }
+
+    /// <summary>黄弾塗りつぶし色 <see cref="Color" /></summary>
+    public Color BulletYellowFillColor => _bulletYellowFillColor;
+
+    private Color _bulletYellowOutlineColor;
+
+    /// <summary>黄弾外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("BulletYellowOutlineColor")]
+    public string BulletYellowOutlineColorHex
+    {
+        get => string.Empty;
+        set { _bulletYellowOutlineColor = value.ToColor(); }
+    }
+
+    /// <summary>黄弾外枠色 <see cref="Color" /></summary>
+    public Color BulletYellowOutlineColor => _bulletYellowOutlineColor;
+
+    private Color _bulletCyanFillColor;
+
+    /// <summary>青弾塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("BulletCyanFillColor")]
+    public string BulletCyanFillColorHex
+    {
+        get => string.Empty;
+        set { _bulletCyanFillColor = value.ToColor(); }
+    }
+
+    /// <summary>青弾塗りつぶし色 <see cref="Color" /></summary>
+    public Color BulletCyanFillColor => _bulletCyanFillColor;
+
+    private Color _bulletCyanOutlineColor;
+
+    /// <summary>青弾外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("BulletCyanOutlineColor")]
+    public string BulletCyanOutlineColorHex
+    {
+        get => string.Empty;
+        set { _bulletCyanOutlineColor = value.ToColor(); }
+    }
+
+    /// <summary>青弾外枠色 <see cref="Color" /></summary>
+    public Color BulletCyanOutlineColor => _bulletCyanOutlineColor;
+
+    private Color _bulletBlackFillColor;
+
+    /// <summary>黒弾塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("BulletBlackFillColor")]
+    public string BulletBlackFillColorHex
+    {
+        get => string.Empty;
+        set { _bulletBlackFillColor = value.ToColor(); }
+    }
+
+    /// <summary>黒弾塗りつぶし色 <see cref="Color" /></summary>
+    public Color BulletBlackFillColor => _bulletBlackFillColor;
+
+    private Color _bulletBlackOutlineColor;
+
+    /// <summary>黒弾外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("BulletBlackOutlineColor")]
+    public string BulletBlackOutlineColorHex
+    {
+        get => string.Empty;
+        set { _bulletBlackOutlineColor = value.ToColor(); }
+    }
+
+    /// <summary>黒弾外枠色 <see cref="Color" /></summary>
+    public Color BulletBlackOutlineColor => _bulletBlackOutlineColor;
 }
 
 /// <summary>
@@ -553,6 +800,32 @@ public sealed class HudRenderConfig {
 
     /// <summary>プレイヤー HP 中判定閾値比率</summary>
     public float PlayerHpMidThreshold { get; set; }
+
+    private Color _trainingModeTitleColor;
+
+    /// <summary>トレーニングモード案内タイトル色 Hex 文字列</summary>
+    [ConfigurationKeyName("TrainingModeTitleColor")]
+    public string TrainingModeTitleColorHex
+    {
+        get => string.Empty;
+        set { _trainingModeTitleColor = value.ToColor(); }
+    }
+
+    /// <summary>トレーニングモード案内タイトル色 <see cref="Color" /></summary>
+    public Color TrainingModeTitleColor => _trainingModeTitleColor;
+
+    private Color _trainingModeGuideColor;
+
+    /// <summary>トレーニングモード案内テキスト色 Hex 文字列</summary>
+    [ConfigurationKeyName("TrainingModeGuideColor")]
+    public string TrainingModeGuideColorHex
+    {
+        get => string.Empty;
+        set { _trainingModeGuideColor = value.ToColor(); }
+    }
+
+    /// <summary>トレーニングモード案内テキスト色 <see cref="Color" /></summary>
+    public Color TrainingModeGuideColor => _trainingModeGuideColor;
 }
 
 /// <summary>
@@ -770,6 +1043,19 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>Phase 分割マーカー半幅 ピクセル単位</summary>
     public int PhaseSplitWidth { get; set; }
+
+    private Color _stateDefeatedColor;
+
+    /// <summary>撃破状態バッジ文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("StateDefeatedColor")]
+    public string StateDefeatedColorHex
+    {
+        get => string.Empty;
+        set { _stateDefeatedColor = value.ToColor(); }
+    }
+
+    /// <summary>撃破状態バッジ文字色 <see cref="Color" /></summary>
+    public Color StateDefeatedColor => _stateDefeatedColor;
 }
 
 /// <summary>
@@ -1140,6 +1426,32 @@ public sealed class DebugRenderConfig {
 
     /// <summary>ナビゲーションメッシュノード描画半径 ピクセル単位</summary>
     public int NavNodeRadius { get; set; }
+
+    private Color _factionFriendlyColor;
+
+    /// <summary>味方勢力 Gizmo 色 Hex 文字列</summary>
+    [ConfigurationKeyName("FactionFriendlyColor")]
+    public string FactionFriendlyColorHex
+    {
+        get => string.Empty;
+        set { _factionFriendlyColor = value.ToColor(); }
+    }
+
+    /// <summary>味方勢力 Gizmo 色 <see cref="Color" /></summary>
+    public Color FactionFriendlyColor => _factionFriendlyColor;
+
+    private Color _factionHostileColor;
+
+    /// <summary>敵勢力 Gizmo 色 Hex 文字列</summary>
+    [ConfigurationKeyName("FactionHostileColor")]
+    public string FactionHostileColorHex
+    {
+        get => string.Empty;
+        set { _factionHostileColor = value.ToColor(); }
+    }
+
+    /// <summary>敵勢力 Gizmo 色 <see cref="Color" /></summary>
+    public Color FactionHostileColor => _factionHostileColor;
 }
 
 /// <summary>
@@ -1259,6 +1571,19 @@ public sealed class ViewportRenderConfig {
 public sealed class PlayerRenderConfig {
     /// <summary>無敵時スプライト点滅周波数</summary>
     public float InvincibleBlinkFrequency { get; set; }
+
+    private Color _ghostTrailColor;
+
+    /// <summary>ダッシュ残像半透明色 Hex 文字列</summary>
+    [ConfigurationKeyName("GhostTrailColor")]
+    public string GhostTrailColorHex
+    {
+        get => string.Empty;
+        set { _ghostTrailColor = value.ToColor(); }
+    }
+
+    /// <summary>ダッシュ残像半透明色 <see cref="Color" /></summary>
+    public Color GhostTrailColor => _ghostTrailColor;
 }
 
 /// <summary>
@@ -1286,6 +1611,162 @@ public sealed class VisualEffectsRenderConfig {
     public float VictoryExplosionSpeedStep { get; set; }
     public float VictoryExplosionRadius { get; set; }
     public float VictoryExplosionDuration { get; set; }
+
+    private Color _jumpRingColor;
+
+    /// <summary>二段ジャンプ空気リング色 Hex 文字列</summary>
+    [ConfigurationKeyName("JumpRingColor")]
+    public string JumpRingColorHex
+    {
+        get => string.Empty;
+        set { _jumpRingColor = value.ToColor(); }
+    }
+
+    /// <summary>二段ジャンプ空気リング色 <see cref="Color" /></summary>
+    public Color JumpRingColor => _jumpRingColor;
+
+    private Color _muzzleFlashFillColor;
+
+    /// <summary>銃口閃光塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("MuzzleFlashFillColor")]
+    public string MuzzleFlashFillColorHex
+    {
+        get => string.Empty;
+        set { _muzzleFlashFillColor = value.ToColor(); }
+    }
+
+    /// <summary>銃口閃光塗りつぶし色 <see cref="Color" /></summary>
+    public Color MuzzleFlashFillColor => _muzzleFlashFillColor;
+
+    private Color _muzzleFlashOutlineColor;
+
+    /// <summary>銃口閃光外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("MuzzleFlashOutlineColor")]
+    public string MuzzleFlashOutlineColorHex
+    {
+        get => string.Empty;
+        set { _muzzleFlashOutlineColor = value.ToColor(); }
+    }
+
+    /// <summary>銃口閃光外枠色 <see cref="Color" /></summary>
+    public Color MuzzleFlashOutlineColor => _muzzleFlashOutlineColor;
+
+    private Color _hitSparkFillColor;
+
+    /// <summary>被弾火花塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("HitSparkFillColor")]
+    public string HitSparkFillColorHex
+    {
+        get => string.Empty;
+        set { _hitSparkFillColor = value.ToColor(); }
+    }
+
+    /// <summary>被弾火花塗りつぶし色 <see cref="Color" /></summary>
+    public Color HitSparkFillColor => _hitSparkFillColor;
+
+    private Color _hitSparkOutlineColor;
+
+    /// <summary>被弾火花外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("HitSparkOutlineColor")]
+    public string HitSparkOutlineColorHex
+    {
+        get => string.Empty;
+        set { _hitSparkOutlineColor = value.ToColor(); }
+    }
+
+    /// <summary>被弾火花外枠色 <see cref="Color" /></summary>
+    public Color HitSparkOutlineColor => _hitSparkOutlineColor;
+
+    private Color _impactSplatterFillColor;
+
+    /// <summary>着弾破片塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("ImpactSplatterFillColor")]
+    public string ImpactSplatterFillColorHex
+    {
+        get => string.Empty;
+        set { _impactSplatterFillColor = value.ToColor(); }
+    }
+
+    /// <summary>着弾破片塗りつぶし色 <see cref="Color" /></summary>
+    public Color ImpactSplatterFillColor => _impactSplatterFillColor;
+
+    private Color _impactSplatterOutlineColor;
+
+    /// <summary>着弾破片外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("ImpactSplatterOutlineColor")]
+    public string ImpactSplatterOutlineColorHex
+    {
+        get => string.Empty;
+        set { _impactSplatterOutlineColor = value.ToColor(); }
+    }
+
+    /// <summary>着弾破片外枠色 <see cref="Color" /></summary>
+    public Color ImpactSplatterOutlineColor => _impactSplatterOutlineColor;
+
+    private Color _playerDeathParticleFillColor;
+
+    /// <summary>自機死亡破片塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerDeathParticleFillColor")]
+    public string PlayerDeathParticleFillColorHex
+    {
+        get => string.Empty;
+        set { _playerDeathParticleFillColor = value.ToColor(); }
+    }
+
+    /// <summary>自機死亡破片塗りつぶし色 <see cref="Color" /></summary>
+    public Color PlayerDeathParticleFillColor => _playerDeathParticleFillColor;
+
+    private Color _playerDeathParticleOutlineColor;
+
+    /// <summary>自機死亡破片外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("PlayerDeathParticleOutlineColor")]
+    public string PlayerDeathParticleOutlineColorHex
+    {
+        get => string.Empty;
+        set { _playerDeathParticleOutlineColor = value.ToColor(); }
+    }
+
+    /// <summary>自機死亡破片外枠色 <see cref="Color" /></summary>
+    public Color PlayerDeathParticleOutlineColor => _playerDeathParticleOutlineColor;
+
+    private Color _victoryExplosionFillColor;
+
+    /// <summary>勝利祝賀爆発塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("VictoryExplosionFillColor")]
+    public string VictoryExplosionFillColorHex
+    {
+        get => string.Empty;
+        set { _victoryExplosionFillColor = value.ToColor(); }
+    }
+
+    /// <summary>勝利祝賀爆発塗りつぶし色 <see cref="Color" /></summary>
+    public Color VictoryExplosionFillColor => _victoryExplosionFillColor;
+
+    private Color _victoryExplosionOutlineColor;
+
+    /// <summary>勝利祝賀爆発外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("VictoryExplosionOutlineColor")]
+    public string VictoryExplosionOutlineColorHex
+    {
+        get => string.Empty;
+        set { _victoryExplosionOutlineColor = value.ToColor(); }
+    }
+
+    /// <summary>勝利祝賀爆発外枠色 <see cref="Color" /></summary>
+    public Color VictoryExplosionOutlineColor => _victoryExplosionOutlineColor;
+
+    private Color _shockwaveRingColor;
+
+    /// <summary>衝撃波リング色 Hex 文字列</summary>
+    [ConfigurationKeyName("ShockwaveRingColor")]
+    public string ShockwaveRingColorHex
+    {
+        get => string.Empty;
+        set { _shockwaveRingColor = value.ToColor(); }
+    }
+
+    /// <summary>衝撃波リング色 <see cref="Color" /></summary>
+    public Color ShockwaveRingColor => _shockwaveRingColor;
 }
 
 /// <summary>

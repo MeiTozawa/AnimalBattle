@@ -8,17 +8,25 @@ namespace AnimalBattle.Combat;
 public static class BulletPalette
 {
     /// <summary>
+    ///     現在アクティブな弾幕描画設定。
+    /// </summary>
+    public static BulletRenderConfig? CurrentConfig { get; set; }
+
+    /// <summary>
     ///     弾幕種別に応じた既定の塗りつぶしカラーを取得します。
     /// </summary>
     public static Color GetDefaultFillColor(BulletType type)
     {
+        var cfg = CurrentConfig;
+        if (cfg == null) return Color.Empty;
+
         return type switch {
-            BulletType.Normal => ColorPalette.Red,
-            BulletType.Magenta => ColorPalette.BulletMagentaFill,
-            BulletType.Yellow => ColorPalette.BulletYellowFill,
-            BulletType.Cyan => ColorPalette.BulletCyanFill,
-            BulletType.Black => ColorPalette.BulletBlackFill,
-            _ => AssertHelper.FailWithDefault($"[BulletPalette 警告] 未知の BulletType (Fill): {type}", ColorPalette.RedBright)
+            BulletType.Normal => cfg.BulletNormalFillColor,
+            BulletType.Magenta => cfg.BulletMagentaFillColor,
+            BulletType.Yellow => cfg.BulletYellowFillColor,
+            BulletType.Cyan => cfg.BulletCyanFillColor,
+            BulletType.Black => cfg.BulletBlackFillColor,
+            _ => AssertHelper.FailWithDefault($"[BulletPalette 警告] 未知の BulletType (Fill): {type}", cfg.BulletNormalFillColor)
         };
     }
 
@@ -27,13 +35,16 @@ public static class BulletPalette
     /// </summary>
     public static Color GetDefaultOutlineColor(BulletType type)
     {
+        var cfg = CurrentConfig;
+        if (cfg == null) return Color.Empty;
+
         return type switch {
-            BulletType.Normal => ColorPalette.White,
-            BulletType.Magenta => ColorPalette.BulletMagentaOutline,
-            BulletType.Yellow => ColorPalette.BulletYellowOutline,
-            BulletType.Cyan => ColorPalette.BulletCyanOutline,
-            BulletType.Black => ColorPalette.BulletBlackOutline,
-            _ => AssertHelper.FailWithDefault($"[BulletPalette 警告] 未知の BulletType (Outline): {type}", ColorPalette.White)
+            BulletType.Normal => cfg.BulletNormalOutlineColor,
+            BulletType.Magenta => cfg.BulletMagentaOutlineColor,
+            BulletType.Yellow => cfg.BulletYellowOutlineColor,
+            BulletType.Cyan => cfg.BulletCyanOutlineColor,
+            BulletType.Black => cfg.BulletBlackOutlineColor,
+            _ => AssertHelper.FailWithDefault($"[BulletPalette 警告] 未知の BulletType (Outline): {type}", cfg.BulletNormalOutlineColor)
         };
     }
 

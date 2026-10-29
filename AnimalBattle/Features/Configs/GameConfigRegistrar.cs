@@ -35,7 +35,11 @@ public static class GameConfigRegistrar
         registry.RegisterToml<BossLionPatternConfig>(ResourcePath.Config.BossLionPatterns, (root, cfg) => { root.Bind(cfg.Skills); cfg.PostProcess(); }, (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBossLionPattern(w, cfg));
         registry.RegisterToml<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Combat.Sync.CombatConfigSync.SyncSpecialBullets(w, cfg));
         registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Arena.Sync.ArenaConfigSync.SyncArena(w, cfg));
-        registry.RegisterToml<RenderConfig>(ResourcePath.Config.Render, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
+        registry.RegisterToml<RenderConfig>(ResourcePath.Config.Render, (root, cfg) => root.Bind(cfg), (w, cfg) => {
+            w.Set(cfg);
+            AnimalBattle.Combat.BulletPalette.CurrentConfig = cfg.Bullets;
+            AnimalBattle.Presentation.Rendering.TelegraphRenderHelper.DefaultEffects = cfg.BossEffects;
+        });
         registry.RegisterToml<CameraConfig>(ResourcePath.Config.Camera, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.CameraService.CurrentConfig = cfg; });
         registry.RegisterToml<TileSetConfig>(ResourcePath.Config.Sheet, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Arena.Sync.ArenaConfigSync.SyncTileSet(w, cfg));
         registry.RegisterToml<AudioConfig>(ResourcePath.Config.Audio, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.SoundService.CurrentConfig = cfg; });
@@ -54,6 +58,12 @@ public static class GameConfigRegistrar
         if (registry.Contains<AudioConfig>())
         {
             SoundService.CurrentConfig = registry.Get<AudioConfig>();
+        }
+        if (registry.Contains<RenderConfig>())
+        {
+            var rCfg = registry.Get<RenderConfig>();
+            AnimalBattle.Combat.BulletPalette.CurrentConfig = rCfg.Bullets;
+            AnimalBattle.Presentation.Rendering.TelegraphRenderHelper.DefaultEffects = rCfg.BossEffects;
         }
     }
 }

@@ -14,9 +14,10 @@ public static class EffectSpawner
     public static void SpawnJumpRingEffect(World world, Vec2f pos)
     {
         var pCfg = world.GetActivePlayerConfig();
+        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
         CombatPoolService.RentRingEffect()
            .Set(new Transform(pos))
-           .Set(new RingEffect(pCfg.JumpRingInitialRadius, pCfg.JumpRingMaxRadius, ColorPalette.White))
+           .Set(new RingEffect(pCfg.JumpRingInitialRadius, pCfg.JumpRingMaxRadius, vfxCfg.JumpRingColor))
            .Set(new FadeEffect(pCfg.JumpRingDuration));
     }
 
@@ -44,12 +45,13 @@ public static class EffectSpawner
     /// <summary>
     ///     射撃出膛時のマズルフラッシュ：銃口閃光エフェクトを生成します。
     /// </summary>
-    public static void SpawnMuzzleFlash(World world, Vec2f pos, float radius, float duration)
+    public static void SpawnMuzzleFlash(World world, Vec2f pos, float radius, float duration)
     {
+        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
         CombatPoolService.RentSparkEffect()
            .Set(new Transform(pos))
            .Set(new Velocity(Vec2f.Zero))
-           .Set(new Bullet(radius, ColorPalette.MuzzleFlashFill, ColorPalette.White))
+           .Set(new Bullet(radius, vfxCfg.MuzzleFlashFillColor, vfxCfg.MuzzleFlashOutlineColor))
            .Set(new FadeEffect(duration));
     }
 
@@ -67,7 +69,7 @@ public static class EffectSpawner
             CombatPoolService.RentSparkEffect()
                .Set(new Transform(pos))
                .Set(new Velocity(vel))
-               .Set(new Bullet(vfxCfg.HitSparkRadius, ColorPalette.SparkYellow, ColorPalette.White))
+               .Set(new Bullet(vfxCfg.HitSparkRadius, vfxCfg.HitSparkFillColor, vfxCfg.HitSparkOutlineColor))
                .Set(new FadeEffect(vfxCfg.HitSparkDuration));
         }
     }
@@ -78,6 +80,7 @@ public static class EffectSpawner
     public static void SpawnBulletImpactSplatter(World world, Vec2f pos, Vec2f hitDir)
     {
         var pCfg = world.GetActivePlayerConfig();
+        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
         var count = Random.Shared.Next(pCfg.ImpactSplatterMinCount, pCfg.ImpactSplatterMaxCount + 1);
         var baseAngle = MathF.Atan2(-hitDir.Y, -hitDir.X);
 
@@ -90,7 +93,7 @@ public static class EffectSpawner
             CombatPoolService.RentSparkEffect()
                .Set(new Transform(pos))
                .Set(new Velocity(vel))
-               .Set(new Bullet(pCfg.ImpactSplatterParticleRadius, ColorPalette.ImpactSplatterFill, ColorPalette.White))
+               .Set(new Bullet(pCfg.ImpactSplatterParticleRadius, vfxCfg.ImpactSplatterFillColor, vfxCfg.ImpactSplatterOutlineColor))
                .Set(new FadeEffect(pCfg.ImpactSplatterDuration));
         }
     }
@@ -109,7 +112,7 @@ public static class EffectSpawner
             CombatPoolService.RentSparkEffect()
                .Set(new Transform(pos))
                .Set(new Velocity(vel))
-               .Set(new Bullet(vfxCfg.PlayerDeathParticleRadius, ColorPalette.Red, ColorPalette.White))
+               .Set(new Bullet(vfxCfg.PlayerDeathParticleRadius, vfxCfg.PlayerDeathParticleFillColor, vfxCfg.PlayerDeathParticleOutlineColor))
                .Set(new FadeEffect(vfxCfg.PlayerDeathParticleDuration));
         }
     }
@@ -128,7 +131,7 @@ public static class EffectSpawner
             CombatPoolService.RentSparkEffect()
                .Set(new Transform(pos))
                .Set(new Velocity(vel))
-               .Set(new Bullet(vfxCfg.VictoryExplosionRadius, ColorPalette.Gold, ColorPalette.GoldLight))
+               .Set(new Bullet(vfxCfg.VictoryExplosionRadius, vfxCfg.VictoryExplosionFillColor, vfxCfg.VictoryExplosionOutlineColor))
                .Set(new FadeEffect(vfxCfg.VictoryExplosionDuration));
         }
     }
@@ -141,7 +144,7 @@ public static class EffectSpawner
         var vfxCfg = world.Get<RenderConfig>().VisualEffects;
         CombatPoolService.RentRingEffect()
            .Set(new Transform(pos))
-           .Set(new RingEffect(vfxCfg.ShockwaveInitialRadius, vfxCfg.ShockwaveMaxRadius, ColorPalette.Cyan))
+           .Set(new RingEffect(vfxCfg.ShockwaveInitialRadius, vfxCfg.ShockwaveMaxRadius, vfxCfg.ShockwaveRingColor))
            .Set(new FadeEffect(vfxCfg.ShockwaveDuration));
     }
 }
