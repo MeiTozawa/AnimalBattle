@@ -187,50 +187,53 @@ public sealed class HitboxEmitConfig
     public Color Color => _color;
 }
 
+/// <summary>
+/// 召喚効果パラメータ設定クラス。
+/// </summary>
 public sealed class SummonEmitConfig
 {
-    /// <summary>発生座標オフセット（px）</summary>
-    public Vec2f SpawnPosition { get; set; }
+    /// <summary>召喚する雑魚敵種別 (Ground または Flying)</summary>
+    public MinionType Type { get; set; } = MinionType.Ground;
 
-    /// <summary>与ダメージ</summary>
-    public Entity Character { get; set; }
-
-
+    /// <summary>場上での最大生存上限数</summary>
+    public int MaxAliveCount { get; set; } = 2;
 }
-
 
 /// <summary>
 /// タイムラインで実行される単一アクションステップ設定クラス。
 /// </summary>
 public sealed class SkillEffectConfig
 {
-    /// <summary>Active 段階開始からの発火時刻（秒）</summary>
+    /// <summary>Active 段階開始からの発火時刻 (秒)</summary>
     public float Time { get; set; }
 
-    /// <summary>発火契機種別（時間または着地）</summary>
+    /// <summary>発火契機種別 (時間または着地)</summary>
     public SkillTriggerKind Trigger { get; set; } = SkillTriggerKind.OnTime;
 
-    /// <summary>周期実行間隔（秒）。0 超で CastDuration まで繰り返し発火</summary>
+    /// <summary>周期実行間隔 (秒)。0 超で CastDuration まで繰り返し発火</summary>
     public float Interval { get; set; }
 
-    /// <summary>周期実行の最大回数（0 の場合は CastDuration 終了まで継続）</summary>
+    /// <summary>周期実行の最大回数 (0 の場合は CastDuration 終了まで継続)</summary>
     public int RepeatCount { get; set; }
 
     /// <summary>実行効果種別</summary>
     public SkillEffectKind Kind { get; set; } = SkillEffectKind.None;
 
-    /// <summary>弾幕発射パラメータ（Kind == Bullet 時）</summary>
+    /// <summary>弾幕発射パラメータ (Kind == Bullet 時)</summary>
     public BulletEmitConfig? Bullet { get; set; }
 
-    /// <summary>近接判定パラメータ（Kind == Hitbox 時）</summary>
+    /// <summary>近接判定パラメータ (Kind == Hitbox 時)</summary>
     public HitboxEmitConfig? Hitbox { get; set; }
 
-    /// <summary>瞬間移動速度（Kind == Velocity 時、px/s）</summary>
+    /// <summary>瞬間移動速度 (Kind == Velocity 時、px/s)</summary>
     public Vec2f Velocity { get; set; }
 
-    /// <summary>画面振動強度（Kind == ScreenShake 時）</summary>
+    /// <summary>画面振動強度 (Kind == ScreenShake 時)</summary>
     public float ShakeIntensity { get; set; }
 
-    /// <summary>画面振動持続時間（Kind == ScreenShake 時、秒）</summary>
+    /// <summary>画面振動持続時間 (Kind == ScreenShake 時、秒)</summary>
     public float ShakeDuration { get; set; }
+
+    /// <summary>召喚パラメータ (Kind == Summon 時)</summary>
+    public SummonEmitConfig? Summon { get; set; }
 }

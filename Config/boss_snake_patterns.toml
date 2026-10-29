@@ -160,3 +160,49 @@ Interval = 0.30
 RepeatCount = 2
 Kind = "Bullet"
 Bullet = { Pattern = "AimedSpread", Count = 1, Speed = 510.0, Radius = 6.5, BulletType = "Black", FillColor = "#111116", OutlineColor = "#FF1744" }
+
+# --- Phase 2 召喚スキル (1体召喚、上限2体) ---
+[SummonFlyersP2]
+SkillName = "Summon Airborne Minions"
+WindUpTime = 0.60
+CastDuration = 0.50
+RecoveryTime = 0.80
+DefaultCooldown = 15.0
+EffectiveRange = 1000.0
+
+[SummonFlyersP2.Telegraph]
+Kind = "RadialSpikes"
+Color = "#9B59B6"
+Count = 8
+Radius = 60.0
+
+[[SummonFlyersP2.Effects]]
+Time = 0.0
+Kind = "Summon"
+Summon = { Type = "Flying", MaxAliveCount = 2 }
+
+# --- Phase 3 召喚スキル (2体先后召喚、上限3体) ---
+[SummonFlyersP3]
+SkillName = "Summon Airborne Swarm"
+WindUpTime = 0.50
+CastDuration = 0.60
+RecoveryTime = 0.70
+DefaultCooldown = 12.0
+EffectiveRange = 1000.0
+
+[SummonFlyersP3.Telegraph]
+Kind = "RadialSpikes"
+Color = "#8E44AD"
+Count = 12
+Radius = 80.0
+
+[[SummonFlyersP3.Effects]]
+Time = 0.0
+Kind = "Summon"
+Summon = { Type = "Flying", MaxAliveCount = 3 }
+
+[[SummonFlyersP3.Effects]]
+Time = 0.25
+Kind = "Summon"
+Summon = { Type = "Flying", MaxAliveCount = 3 }
+

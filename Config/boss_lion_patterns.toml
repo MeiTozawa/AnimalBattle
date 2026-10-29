@@ -164,3 +164,63 @@ Time = 0.0
 Interval = 0.25
 Kind = "Bullet"
 Bullet = { Pattern = "Skyfall", Count = 1, Speed = 360.0, Radius = 9.0, MinX = 80.0, MaxX = 1200.0, BulletType = "Cyan", FillColor = "#00E5FF", OutlineColor = "#E0F7FA" }
+
+# --- Phase 2 召喚スキル (1体召喚、上限2体) ---
+[SummonProwlersP2]
+SkillName = "Beast Command Roar"
+WindUpTime = 0.55
+CastDuration = 0.45
+RecoveryTime = 0.75
+DefaultCooldown = 16.0
+EffectiveRange = 800.0
+ArmorTags = ["SuperArmor"]
+
+[SummonProwlersP2.Telegraph]
+Kind = "RadialSpikes"
+Color = "#E67E22"
+Count = 8
+Radius = 80.0
+
+[[SummonProwlersP2.Effects]]
+Time = 0.0
+Kind = "ScreenShake"
+ShakeIntensity = 4.0
+ShakeDuration = 0.2
+
+[[SummonProwlersP2.Effects]]
+Time = 0.1
+Kind = "Summon"
+Summon = { Type = "Ground", MaxAliveCount = 2 }
+
+# --- Phase 3 召喚スキル (2体先后召喚、上限3体) ---
+[SummonProwlersP3]
+SkillName = "Alpha Pride Call"
+WindUpTime = 0.45
+CastDuration = 0.60
+RecoveryTime = 0.65
+DefaultCooldown = 13.0
+EffectiveRange = 800.0
+ArmorTags = ["SuperArmor"]
+
+[SummonProwlersP3.Telegraph]
+Kind = "RadialSpikes"
+Color = "#D35400"
+Count = 12
+Radius = 100.0
+
+[[SummonProwlersP3.Effects]]
+Time = 0.0
+Kind = "ScreenShake"
+ShakeIntensity = 6.0
+ShakeDuration = 0.4
+
+[[SummonProwlersP3.Effects]]
+Time = 0.05
+Kind = "Summon"
+Summon = { Type = "Ground", MaxAliveCount = 3 }
+
+[[SummonProwlersP3.Effects]]
+Time = 0.30
+Kind = "Summon"
+Summon = { Type = "Ground", MaxAliveCount = 3 }
+

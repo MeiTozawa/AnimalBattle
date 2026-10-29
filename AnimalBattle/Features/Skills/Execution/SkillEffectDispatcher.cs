@@ -13,6 +13,7 @@ public static class SkillEffectDispatcher
         RegisterHandler(new HitboxEffectHandler());
         RegisterHandler(new VelocityEffectHandler());
         RegisterHandler(new ScreenShakeEffectHandler());
+        RegisterHandler(new SummonEffectHandler());
     }
 
     /// <summary>

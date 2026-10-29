@@ -109,7 +109,7 @@ JumpForce = 680.0
 TelegraphShakeIntensity = 10.0
 TransitionDuration = 1.5
 ChaseTimeout = 3.0
-Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "EarthquakeRoar"]
+Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "EarthquakeRoar", "SummonProwlersP2"]
 
 [[Phase2.Rules]]
 Skill = "DoubleCleave"
@@ -142,6 +142,13 @@ MinDistance = 400.0
 MaxDistance = 1200.0
 Weight = 60.0
 
+[[Phase2.Rules]]
+Skill = "SummonProwlersP2"
+Cooldown = 16.0
+MinDistance = 0.0
+MaxDistance = 800.0
+Weight = 75.0
+
 # Phase 3 状態機械設定
 [Phase3]
 HpThreshold = 0.334
@@ -152,7 +159,7 @@ JumpForce = 720.0
 TelegraphShakeIntensity = 14.0
 TransitionDuration = 2.0
 ChaseTimeout = 2.5
-Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash"]
+Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash", "SummonProwlersP3"]
 
 [[Phase3.Rules]]
 Skill = "FrenzyCharge"
@@ -184,6 +191,13 @@ MinDistance = 120.0
 MaxDistance = 700.0
 Weight = 85.0
 PreferAirborneBonus = 2.0
+
+[[Phase3.Rules]]
+Skill = "SummonProwlersP3"
+Cooldown = 13.0
+MinDistance = 0.0
+MaxDistance = 800.0
+Weight = 85.0
 
 # Phase 遷移能力設定
 [PhaseTransition]
