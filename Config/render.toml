@@ -142,12 +142,12 @@ TitleText = "=== BULLET BATTLE ==="
 
 LineSpacing = 18
 Text = [
-    { Text = "[A/D]: Move ", Color = "#CCCCCC" },
-    { Text = "[Space]: Jump & Air Double Jump", Color = "#CCCCCC" },
-    { Text = "[Left Click]: Aim & Shoot", Color = "#CCCCCC" },
-    { Text = "[Shift]: Dash", Color = "#CCCCCC" },
-    { Text = "[R]: Instant Restart", Color = "#FF8080" },
-    { Text = "[ESC]: Back to the Home", Color = "#FF8080" },
+    { Text = "[A/D]: 移動", Color = "#CCCCCC" },
+    { Text = "[Space]: 二段ジャンプ", Color = "#CCCCCC" },
+    { Text = "[Left Click]: エームと攻撃（長押しもできます）", Color = "#CCCCCC" },
+    { Text = "[Shift]: ダッシュ", Color = "#CCCCCC" },
+    { Text = "[R]: リトライ", Color = "#FF8080" },
+    { Text = "[ESC]: タイトル画面に戻る", Color = "#FF8080" },
 ]
 
 BossSwitchGuideText = "[1] BossSnake   [2] BossLion"
@@ -218,7 +218,7 @@ GameOverTitleColor = "#FF3333"
 GameOverTitleText = "=== GAME OVER ==="
 GameOverRetryPos = { x = 460, y = 360 }
 GameOverRetryColor = "#FFFFFF"
-GameOverRetryText = "Press  [ R ]  for Instant Retry!"
+GameOverRetryText = "[R] キーでリトライする！\n[ESC] キーでタイトル画面に戻る！"
 
 # 胜利通关弹窗
 VictoryPos1 = { x = 340, y = 250 }
@@ -231,7 +231,7 @@ VictoryTitleColor = "#FFD700"
 VictoryTitleText = "★ ★ ★ VICTORY! BOSS DEFEATED! ★ ★ ★"
 VictoryRetryPos = { x = 460, y = 350 }
 VictoryRetryColor = "#FFFFFF"
-VictoryRetryText = "Congratulations! Press [ R ] to Play Again!"
+VictoryRetryText = "[R] キーでリトライする！\n[ESC] キーでタイトル画面に戻る！"
 InnerBorderPadding = 2
 
 # タクティカルマウスの標準スター配置

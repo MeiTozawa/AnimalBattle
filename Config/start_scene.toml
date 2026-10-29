@@ -61,22 +61,22 @@ SelectedBadge = "[ 選択中 - SELECTED ]"
 UnselectedBadge = "[ クリックで選択 ]"
 
 [Texts.Cat]
-Title = "キャット (Cat)"
+Title = "キャット"
 Tag = "【 遠距離攻撃 】"
 Description = ""
 
 [Texts.Bunny]
-Title = "バニー (Bunny)"
+Title = "バニー"
 Tag = "【 近接攻撃 】"
 Description = ""
 
 [Texts.BossSnake]
-Title = "ボス スネーク (Boss Snake)"
+Title = "ボス スネーク"
 Tag = "【 飛行浮遊 & 全方位弾幕 】"
 Description = ""
 
 [Texts.BossLion]
-Title = "ボス ライオン (Boss Lion)"
+Title = "ボス ライオン"
 Tag = "【 突撃突進 & 衝撃波重撃 】"
 Description = ""
 
