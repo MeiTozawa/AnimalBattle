@@ -26,7 +26,7 @@ public sealed class BulletEffectHandler : ISkillEffectHandler
                 break;
 
             case BulletPatternKind.RadialRing:
-                EmitRadialRing(world, cfg, origin, ref angleOffset);
+                EmitRadialRing(world, cfg, origin, target, ref angleOffset);
                 PublishBulletFired(ctx.SkillTag);
                 break;
 
@@ -105,15 +105,22 @@ public sealed class BulletEffectHandler : ISkillEffectHandler
         }
     }
 
-    private static void EmitRadialRing(World world, BulletEmitConfig cfg, Vec2f origin, ref float angleOffset)
+    private static void EmitRadialRing(World world, BulletEmitConfig cfg, Vec2f origin, Vec2f target, ref float angleOffset)
     {
+        var diff = target != Vec2f.Zero ? target - origin : Vec2f.Zero;
+        var baseAngle = diff.LengthSquared() > 0.001f ? MathF.Atan2(diff.Y, diff.X) : 0.0f;
+
         var count = Math.Max(1, cfg.Count);
         var step = cfg.AngleStep > 0.0f ? cfg.AngleStep : MathF.PI * 2.0f / count;
         var bType = ParseBulletType(cfg.BulletType, BulletType.Magenta);
 
+        var startAngle = cfg.AngleStep > 0.0f
+            ? baseAngle - (count - 1) * step * 0.5f + angleOffset
+            : baseAngle + angleOffset;
+
         for (var i = 0; i < count; i++)
         {
-            var angle = angleOffset + i * step;
+            var angle = startAngle + i * step;
             var vel = new Vec2f(MathF.Cos(angle) * cfg.Speed, MathF.Sin(angle) * cfg.Speed);
 
             BulletSpawner.SpawnBossSpecialBullet(

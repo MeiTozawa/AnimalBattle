@@ -7,7 +7,6 @@ internal sealed class FlyingMinionContext : IDisposable
 {
     public required Query<Transform> PlayerQuery { get; init; }
     public required Query<Transform, Sprite, CollisionBox, FlyingMinionComponent> MinionQuery { get; init; }
-    public Vec2f? CachedPlayerPos;
 
     public void Dispose()
     {
@@ -81,16 +80,16 @@ public static class FlyingMinionSystem
         var minionCfg = world.Get<MinionConfig>();
         var fCfg = minionCfg.FlyingMinion;
 
-        // プレイヤー座標のキャッシュ取得
-        ctx.CachedPlayerPos = null;
-        ctx.PlayerQuery.Iter(static (Iter pIt, Field<Transform> pTrans) =>
+        // 生存プレイヤー座標一覧の収集（マルチプレイヤー対応）
+        var players = new List<Vec2f>(2);
+        ctx.PlayerQuery.Iter((Iter pIt, Field<Transform> pTrans) =>
         {
-            if (pIt.Any())
+            var pCount = pIt.Count();
+            for (var p = 0; p < pCount; p++)
             {
-                pIt.World().Get<FlyingMinionContext>().CachedPlayerPos = pTrans[0].Position;
+                players.Add(pTrans[p].Position);
             }
         });
-        var playerPos = ctx.CachedPlayerPos;
 
         for (var i = 0; i < count; i++)
         {
@@ -100,16 +99,29 @@ public static class FlyingMinionSystem
             ref var sprite = ref sprites[i];
             ref var minion = ref minions[i];
 
+            // 最寄りプレイヤーの選定
+            Vec2f? nearestPlayerPos = null;
+            var minPlayerDistSq = float.MaxValue;
+            for (var p = 0; p < players.Count; p++)
+            {
+                var distSq = (players[p] - trans.Position).LengthSquared();
+                if (distSq < minPlayerDistSq)
+                {
+                    minPlayerDistSq = distSq;
+                    nearestPlayerPos = players[p];
+                }
+            }
+
             minion.HoverTimer += dt;
 
             // 水平および垂直浮遊運動の計算
             var dirX = 0.0f;
             var targetY = trans.Position.Y;
-            if (playerPos.HasValue)
+            if (nearestPlayerPos.HasValue)
             {
-                var diffX = playerPos.Value.X - trans.Position.X;
+                var diffX = nearestPlayerPos.Value.X - trans.Position.X;
                 dirX = MathF.Sign(diffX);
-                targetY = playerPos.Value.Y - 120.0f;
+                targetY = nearestPlayerPos.Value.Y - 120.0f;
                 if (dirX != 0.0f)
                 {
                     sprite.FlipX = dirX < 0.0f;
@@ -140,11 +152,13 @@ public static class FlyingMinionSystem
             {
                 minion.Asc.Update(dt);
 
-                if (!minion.Asc.IsCasting && playerPos.HasValue)
+                if (!minion.Asc.IsCasting && nearestPlayerPos.HasValue)
                 {
-                    minion.TargetPos = playerPos.Value;
                     var facingDir = dirX != 0.0f ? dirX : (!sprite.FlipX ? 1.0f : -1.0f);
-                    minion.Asc.TryActivateAbility(fCfg.SkillTag, facingDir);
+                    if (minion.Asc.TryActivateAbility(fCfg.SkillTag, facingDir))
+                    {
+                        minion.TargetPos = nearestPlayerPos.Value;
+                    }
                 }
             }
         }
@@ -157,15 +171,15 @@ public static class FlyingMinionSystem
         if (flow.State != GameState.Battle) return;
 
         var ctx = world.Get<FlyingMinionContext>();
-        ctx.CachedPlayerPos = null;
-        ctx.PlayerQuery.Iter(static (Iter pIt, Field<Transform> pTrans) =>
+        var players = new List<Vec2f>(2);
+        ctx.PlayerQuery.Iter((Iter pIt, Field<Transform> pTrans) =>
         {
-            if (pIt.Any())
+            var pCount = pIt.Count();
+            for (var p = 0; p < pCount; p++)
             {
-                pIt.World().Get<FlyingMinionContext>().CachedPlayerPos = pTrans[0].Position;
+                players.Add(pTrans[p].Position);
             }
         });
-        var playerPos = ctx.CachedPlayerPos ?? Vec2f.Zero;
 
         ref readonly var renderCfg = ref world.Get<RenderConfig>();
         var bossFx = renderCfg.BossEffects;
@@ -186,7 +200,27 @@ public static class FlyingMinionSystem
                 ref readonly var s = ref sprites[i];
                 ref readonly var c = ref cols[i];
 
-                var finalTarget = m.TargetPos != Vec2f.Zero ? m.TargetPos : playerPos;
+                Vec2f finalTarget;
+                if (m.TargetPos != Vec2f.Zero)
+                {
+                    finalTarget = m.TargetPos;
+                }
+                else
+                {
+                    var nearest = Vec2f.Zero;
+                    var minDistSq = float.MaxValue;
+                    for (var p = 0; p < players.Count; p++)
+                    {
+                        var d = (players[p] - t.Position).LengthSquared();
+                        if (d < minDistSq)
+                        {
+                            minDistSq = d;
+                            nearest = players[p];
+                        }
+                    }
+                    finalTarget = nearest;
+                }
+
                 AbilityTelegraphContext tCtx = new(
                     t.Position,
                     finalTarget,

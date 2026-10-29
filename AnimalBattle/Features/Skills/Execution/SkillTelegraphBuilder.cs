@@ -19,9 +19,11 @@ public static class SkillTelegraphBuilder
 
             TelegraphKind.RadialSpikes => ctx =>
             {
+                var diff = ctx.TargetPos != Vec2f.Zero ? ctx.TargetPos - ctx.SourcePos : Vec2f.Zero;
+                var baseAngle = diff.LengthSquared() > 0.001f ? MathF.Atan2(diff.Y, diff.X) : 0.0f;
                 var spinAngle = cfg.SpinSpeed != 0.0f ? ctx.StateTimer * cfg.SpinSpeed : 0.0f;
                 TelegraphRenderHelper.DrawRadialThreatSpikes(
-                    ctx.SourcePos, Math.Max(1, cfg.Count), spinAngle, cfg.Radius > 0.0f ? cfg.Radius : 75.0f, ctx.Progress, cfg.Color, ctx.Effects);
+                    ctx.SourcePos, Math.Max(1, cfg.Count), baseAngle + spinAngle, cfg.Radius > 0.0f ? cfg.Radius : 75.0f, ctx.Progress, cfg.Color, ctx.Effects);
             },
 
             TelegraphKind.SkyfallColumns => ctx =>
