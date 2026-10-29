@@ -154,6 +154,12 @@ public static class FlyingMinionSystem
 
                 if (!minion.Asc.IsCasting && nearestPlayerPos.HasValue)
                 {
+                    if (!minion.Asc.TryGetAbility(fCfg.SkillTag, out _))
+                    {
+                        var patternCfg = world.Get<BossSnakePatternConfig>();
+                        MinionSpawner.AttachFlyingMinionAbility(world, it.Entity(i), minion.Asc, fCfg, patternCfg);
+                    }
+
                     var facingDir = dirX != 0.0f ? dirX : (!sprite.FlipX ? 1.0f : -1.0f);
                     if (minion.Asc.TryActivateAbility(fCfg.SkillTag, facingDir))
                     {

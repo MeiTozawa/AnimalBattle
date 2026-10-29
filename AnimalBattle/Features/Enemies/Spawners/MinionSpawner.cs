@@ -75,33 +75,7 @@ public static class MinionSpawner
             .Add<FlyingMinionTag>()
             .Set(new FlyingMinionComponent(asc));
 
-        if (!abilityResult.IsError)
-        {
-            var ability = abilityResult.Value;
-            var angleOffset = 0.0f;
-            asc.OnSkillCompleted += _ => angleOffset = 0.0f;
-            ability.ActionDispatcher = (step, dir) =>
-            {
-                if (step.Effect != null)
-                {
-                    var origin = entity.Get<Transform>().Position;
-                    var target = entity.Get<FlyingMinionComponent>().TargetPos;
-                    var ctx = new SkillExecutionContext
-                    {
-                        World = world,
-                        SkillTag = ability.AbilityTag,
-                        Origin = origin,
-                        TargetPos = target,
-                        ForwardDir = dir,
-                        CasterVelocity = Vec2f.Zero,
-                        BodyHeight = fCfg.CollisionSize.Y,
-                        SetVelocity = null
-                    };
-                    SkillEffectDispatcher.Execute(in ctx, step.Effect, ref angleOffset);
-                }
-            };
-            asc.GiveAbility(ability);
-        }
+        AttachFlyingMinionAbility(world, entity, asc, fCfg, patternCfg);
 
         asc.OnTagsChanged += tags =>
         {
@@ -109,6 +83,49 @@ public static class MinionSpawner
         };
 
         return entity;
+    }
+
+    /// <summary>
+    /// 空中浮遊弾幕怪エンティティへ最新技能を構築して注入します。
+    /// </summary>
+    /// <param name="world">対象の Flecs ワールド</param>
+    /// <param name="entity">対象の小怪エンティティ</param>
+    /// <param name="asc">アビリティシステムコンポーネント</param>
+    /// <param name="fCfg">飛行小怪設定</param>
+    /// <param name="patternCfg">技能設定ライブラリ</param>
+    public static void AttachFlyingMinionAbility(World world, Entity entity, AbilitySystemComponent asc, FlyingMinionConfig fCfg, BossSnakePatternConfig patternCfg)
+    {
+        var abilityResult = SkillBuilder.BuildAbility(fCfg.SkillTag, patternCfg, fCfg.SkillCooldown);
+        if (abilityResult.IsError)
+        {
+            Debug.Assert(false, $"FlyingMinion のスキル構築に失敗しました: {fCfg.SkillTag}");
+            return;
+        }
+
+        var ability = abilityResult.Value;
+        var angleOffset = 0.0f;
+        asc.OnSkillCompleted += _ => angleOffset = 0.0f;
+        ability.ActionDispatcher = (step, dir) =>
+        {
+            if (step.Effect != null)
+            {
+                var origin = entity.Get<Transform>().Position;
+                var target = entity.Get<FlyingMinionComponent>().TargetPos;
+                var ctx = new SkillExecutionContext
+                {
+                    World = world,
+                    SkillTag = ability.AbilityTag,
+                    Origin = origin,
+                    TargetPos = target,
+                    ForwardDir = dir,
+                    CasterVelocity = Vec2f.Zero,
+                    BodyHeight = fCfg.CollisionSize.Y,
+                    SetVelocity = null
+                };
+                SkillEffectDispatcher.Execute(in ctx, step.Effect, ref angleOffset);
+            }
+        };
+        asc.GiveAbility(ability);
     }
 
     /// <summary>

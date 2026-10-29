@@ -142,7 +142,7 @@ Bullet = { Pattern = "CrossWave", Count = 4, Speed = 312.0, Radius = 8.5, AngleS
 
 [FastSniper]
 SkillName = "Laser Fast Sniper"
-WindUpTime = 0.50
+WindUpTime = 0.30
 CastDuration = 0.60
 RecoveryTime = 1.30
 DefaultCooldown = 3.5

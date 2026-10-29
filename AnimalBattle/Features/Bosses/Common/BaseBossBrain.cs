@@ -16,7 +16,7 @@ public abstract class BaseBossBrain : IBossBrain
     protected readonly AbilitySystemComponent _asc = new();
     protected readonly StateMachine _stateMachine = new(StateCombat);
 
-    protected readonly World _world;
+    protected World _world;
     protected float _angleOffset;
     protected PhaseTransitionAbility _phaseTransitionAbility = null!;
 

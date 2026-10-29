@@ -2,7 +2,11 @@ namespace AnimalBattle.Characters.Boss;
 
 using System;
 using System.Diagnostics;
+using AnimalBattle.Ai.BossLion;
+using AnimalBattle.Ai.BossSnake;
 using AnimalBattle.Configs;
+using AnimalBattle.Enemies;
+using AnimalBattle.Enemies.Components;
 using Flecs.NET.Core;
 
 /// <summary>
@@ -55,6 +59,68 @@ public static class BossConfigSync
         query.Each(e =>
         {
             RehydrateBossEntity(e, newConfig);
+        });
+    }
+
+    /// <summary>
+    /// BossSnake 技能パターン設定の変更をワールド、Boss、および飛行小怪へ同期します。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド</param>
+    /// <param name="newConfig">更新後の BossSnakePatternConfig 設定</param>
+    public static void SyncBossSnakePattern(World world, BossSnakePatternConfig newConfig)
+    {
+        Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
+        Debug.Assert(newConfig != null, "BossSnakePatternConfig は null にできません。");
+
+        // 1. ワールド単例の更新
+        world.Set(newConfig);
+
+        // 2. 活体 BossSnake エンティティの技能再水和
+        using var bossQuery = world.QueryBuilder<BossBrainComponent>().With<BossSnakeTag>().Build();
+        bossQuery.Each((ref BossBrainComponent b) =>
+        {
+            if (b.Brain is BossSnakeBrain snakeBrain)
+            {
+                snakeBrain.ReloadSkills(newConfig);
+            }
+        });
+
+        // 3. 活体 FlyingMinion エンティティの技能再水和
+        if (world.Has<MinionConfig>())
+        {
+            var minionCfg = world.Get<MinionConfig>();
+            using var minionQuery = world.QueryBuilder<FlyingMinionComponent>().With<FlyingMinionTag>().Build();
+            minionQuery.Each((Entity e, ref FlyingMinionComponent m) =>
+            {
+                if (m.Asc != null)
+                {
+                    MinionSpawner.AttachFlyingMinionAbility(world, e, m.Asc, minionCfg.FlyingMinion, newConfig);
+                }
+            });
+        }
+    }
+
+    /// <summary>
+    /// BossLion 技能パターン設定の変更をワールドおよび Boss へ同期します。
+    /// </summary>
+    /// <param name="world">対象の Flecs.NET ワールド</param>
+    /// <param name="newConfig">更新後の BossLionPatternConfig 設定</param>
+    public static void SyncBossLionPattern(World world, BossLionPatternConfig newConfig)
+    {
+        Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
+        Debug.Assert(newConfig != null, "BossLionPatternConfig は null にできません。");
+
+        // 1. ワールド単例の更新
+        world.Set(newConfig);
+
+        // 2. 活体 BossLion エンティティの技能再水和
+        using var bossQuery = world.QueryBuilder<BossBrainComponent>().With<BossLionTag>().Build();
+        bossQuery.Each((ref BossBrainComponent b) =>
+        {
+            if (b.Brain is BossLionBrain lionBrain)
+            {
+                lionBrain.ReloadSkills(newConfig);
+            }
         });
     }
 

@@ -42,7 +42,7 @@ HitSquashScale = { x = 1.15, y = 0.85 }
 SpringFrequency = 30.0
 SpringDampingRatio = 0.25
 ContactDamage = 1.0
-SkillTag = "FastSniper"
+SkillTag = "Aimed3Shot"
 SkillCooldown = 5.0
 SpawnPos = { x = 160.0, y = -120.0 }
 MinPlayerDistance = 280.0

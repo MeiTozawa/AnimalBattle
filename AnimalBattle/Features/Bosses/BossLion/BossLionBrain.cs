@@ -114,6 +114,17 @@ public sealed class BossLionBrain : BaseBossBrain {
         InitializeBaseBrain(_configuration.PhaseTransition);
 
         var patternCfg = _world.Get<BossLionPatternConfig>();
+        ReloadSkills(patternCfg);
+
+        _asc.OnSkillCompleted += _ => OnAbilityCompleted();
+    }
+
+    /// <summary>
+    /// 指定された技能設定から BossLion の技能群を再構築・登録します。
+    /// </summary>
+    /// <param name="patternCfg">最新の技能設定</param>
+    public void ReloadSkills(BossLionPatternConfig patternCfg)
+    {
         var bossLionCfg = _world.Get<BossLionConfig>();
 
         var skillNames = new HashSet<string>(bossLionCfg.Phase1.Skills);
@@ -130,8 +141,6 @@ public sealed class BossLionBrain : BaseBossBrain {
                 RegisterSkill(new StringId(name), patternCfg);
             }
         }
-
-        _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
 
     private void RegisterSkill(StringId skill, BossLionPatternConfig config)

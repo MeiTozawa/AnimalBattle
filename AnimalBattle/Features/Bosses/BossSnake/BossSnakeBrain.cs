@@ -74,6 +74,17 @@ public sealed class BossSnakeBrain : BaseBossBrain {
         InitializeBaseBrain(_configuration.PhaseTransition);
 
         var patternCfg = _world.Get<BossSnakePatternConfig>();
+        ReloadSkills(patternCfg);
+
+        _asc.OnSkillCompleted += _ => OnAbilityCompleted();
+    }
+
+    /// <summary>
+    /// 指定された技能設定から BossSnake の技能群を再構築・登録します。
+    /// </summary>
+    /// <param name="patternCfg">最新の技能設定</param>
+    public void ReloadSkills(BossSnakePatternConfig patternCfg)
+    {
         var bossSnakeCfg = _world.Get<BossSnakeConfig>();
 
         var skillNames = new HashSet<string>(bossSnakeCfg.Phase1.Skills);
@@ -90,8 +101,6 @@ public sealed class BossSnakeBrain : BaseBossBrain {
                 RegisterSkill(new StringId(name), patternCfg);
             }
         }
-
-        _asc.OnSkillCompleted += _ => OnAbilityCompleted();
     }
 
     private void RegisterSkill(StringId skill, BossSnakePatternConfig config)

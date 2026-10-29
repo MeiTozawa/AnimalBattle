@@ -3,6 +3,7 @@ namespace AnimalBattle.Enemies.Sync;
 using System;
 using System.Diagnostics;
 using AnimalBattle.Configs;
+using AnimalBattle.Enemies;
 using AnimalBattle.Enemies.Components;
 using Flecs.NET.Core;
 
@@ -41,14 +42,20 @@ public static class MinionConfigSync
 
         // 活体空中浮遊弾幕怪エンティティの再水和
         var fCfg = newConfig.FlyingMinion;
-        using var flyingQuery = world.QueryBuilder()
+        var patternCfg = world.Has<BossSnakePatternConfig>() ? world.Get<BossSnakePatternConfig>() : null;
+        using var flyingQuery = world.QueryBuilder<FlyingMinionComponent>()
             .With<FlyingMinionTag>()
             .Without<DeadTag>()
             .Build();
 
-        flyingQuery.Each((Entity e) =>
+        flyingQuery.Each((Entity e, ref FlyingMinionComponent m) =>
         {
             RehydrateMinionEntity(e, fCfg.MaxHp, fCfg.Scale, fCfg.CollisionSize, fCfg.ContactDamage, fCfg.HitFlashDuration, fCfg.HitSquashScale, fCfg.SpringFrequency, fCfg.SpringDampingRatio);
+
+            if (m.Asc != null && patternCfg != null)
+            {
+                MinionSpawner.AttachFlyingMinionAbility(world, e, m.Asc, fCfg, patternCfg);
+            }
         });
     }
 
@@ -63,56 +70,40 @@ public static class MinionConfigSync
         float springFrequency,
         float springDampingRatio)
     {
-        if (e.Has<Health>())
-        {
-            ref var health = ref e.GetMut<Health>();
-            var ratio = health.Max > 0.0f ? health.Current / health.Max : 1.0f;
-            health.Max = maxHp;
-            health.Current = Math.Clamp(ratio * maxHp, 0.0f, maxHp);
-        }
+        // 生命値の比例更新
+        ref var health = ref e.GetMut<Health>();
+        var ratio = health.Max > 0.0f ? health.Current / health.Max : 1.0f;
+        health.Max = maxHp;
+        health.Current = Math.Clamp(ratio * maxHp, 0.0f, maxHp);
 
-        if (e.Has<Transform>())
-        {
-            ref var trans = ref e.GetMut<Transform>();
-            trans.Scale = scale;
-        }
+        // Transform スケール
+        ref var trans = ref e.GetMut<Transform>();
+        trans.Scale = scale;
 
-        if (e.Has<CollisionBox>())
-        {
-            ref var col = ref e.GetMut<CollisionBox>();
-            col.Size = collisionSize;
-        }
+        // CollisionBox サイズ
+        ref var col = ref e.GetMut<CollisionBox>();
+        col.Size = collisionSize;
 
-        if (e.Has<Hurtbox>())
-        {
-            ref var hurt = ref e.GetMut<Hurtbox>();
-            hurt.Shape = new CollisionShape.Box(collisionSize);
-        }
+        // Hurtbox 形状
+        ref var hurt = ref e.GetMut<Hurtbox>();
+        hurt.Shape = new CollisionShape.Box(collisionSize);
 
-        if (e.Has<Hitbox>())
-        {
-            ref var hit = ref e.GetMut<Hitbox>();
-            hit.Shape = new CollisionShape.Box(collisionSize);
-            hit.Damage = contactDamage;
-        }
+        // Hitbox 形状・ダメージ
+        ref var hit = ref e.GetMut<Hitbox>();
+        hit.Shape = new CollisionShape.Box(collisionSize);
+        hit.Damage = contactDamage;
 
-        if (e.Has<HitFlashSettings>())
-        {
-            ref var flash = ref e.GetMut<HitFlashSettings>();
-            flash.Duration = hitFlashDuration;
-        }
+        // HitFlash 設定
+        ref var flash = ref e.GetMut<HitFlashSettings>();
+        flash.Duration = hitFlashDuration;
 
-        if (e.Has<CombatProfile>())
-        {
-            ref var profile = ref e.GetMut<CombatProfile>();
-            profile.HitSquashScale = hitSquashScale;
-        }
+        // CombatProfile
+        ref var profile = ref e.GetMut<CombatProfile>();
+        profile.HitSquashScale = hitSquashScale;
 
-        if (e.Has<SpringScale>())
-        {
-            ref var spring = ref e.GetMut<SpringScale>();
-            spring.Frequency = springFrequency;
-            spring.DampingRatio = springDampingRatio;
-        }
+        // SpringScale 設定
+        ref var spring = ref e.GetMut<SpringScale>();
+        spring.Frequency = springFrequency;
+        spring.DampingRatio = springDampingRatio;
     }
 }
