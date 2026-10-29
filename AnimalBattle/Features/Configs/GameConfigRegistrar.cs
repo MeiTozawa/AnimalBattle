@@ -33,16 +33,16 @@ public static class GameConfigRegistrar
         registry.RegisterToml<BossLionConfig>(ResourcePath.Config.BossLion, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBossLion(w, cfg));
         registry.RegisterToml<BossSnakePatternConfig>(ResourcePath.Config.BossSnakePatterns, (root, cfg) => { root.Bind(cfg.Skills); cfg.PostProcess(); }, (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBossSnakePattern(w, cfg));
         registry.RegisterToml<BossLionPatternConfig>(ResourcePath.Config.BossLionPatterns, (root, cfg) => { root.Bind(cfg.Skills); cfg.PostProcess(); }, (w, cfg) => AnimalBattle.Characters.Boss.BossConfigSync.SyncBossLionPattern(w, cfg));
-        registry.RegisterToml<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets, (root, cfg) => root.Bind(cfg));
-        registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
+        registry.RegisterToml<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Combat.Sync.CombatConfigSync.SyncSpecialBullets(w, cfg));
+        registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Arena.Sync.ArenaConfigSync.SyncArena(w, cfg));
         registry.RegisterToml<RenderConfig>(ResourcePath.Config.Render, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
         registry.RegisterToml<CameraConfig>(ResourcePath.Config.Camera, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.CameraService.CurrentConfig = cfg; });
-        registry.RegisterToml<TileSetConfig>(ResourcePath.Config.Sheet, (root, cfg) => root.Bind(cfg));
+        registry.RegisterToml<TileSetConfig>(ResourcePath.Config.Sheet, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Arena.Sync.ArenaConfigSync.SyncTileSet(w, cfg));
         registry.RegisterToml<AudioConfig>(ResourcePath.Config.Audio, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.SoundService.CurrentConfig = cfg; });
-        registry.RegisterToml<CombatPrefabConfig>(ResourcePath.Config.CombatPrefab, (root, cfg) => root.Bind(cfg));
-        registry.RegisterToml<DummyConfig>(ResourcePath.Config.Dummy, (root, cfg) => root.Bind(cfg));
+        registry.RegisterToml<CombatPrefabConfig>(ResourcePath.Config.CombatPrefab, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Combat.Sync.CombatConfigSync.SyncCombatPrefabs(w, cfg));
+        registry.RegisterToml<DummyConfig>(ResourcePath.Config.Dummy, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Combat.Sync.DummyConfigSync.Sync(w, cfg));
         registry.RegisterToml<MinionConfig>(ResourcePath.Config.Minions, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Enemies.Sync.MinionConfigSync.Sync(w, cfg));
-        registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene, (root, cfg) => root.Bind(cfg));
+        registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Scenes.StartScene.StartSceneConfigSync.Sync(w, cfg));
 
         registry.InjectAllToWorld(world);
 
