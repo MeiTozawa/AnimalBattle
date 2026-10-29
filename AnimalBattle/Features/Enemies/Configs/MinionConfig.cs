@@ -66,6 +66,15 @@ public sealed class GroundMinionConfig
 
     /// <summary>候補生成座標リスト。</summary>
     public List<Vec2f> SpawnPoints { get; set; } = [];
+
+    /// <summary>被弾時のスカッシュ変形スケール（X: 横伸長, Y: 縦圧縮）。</summary>
+    public Vec2f HitSquashScale { get; set; }
+
+    /// <summary>被弾時スプリング変形の固有振動数（Hz）。</summary>
+    public float SpringFrequency { get; set; }
+
+    /// <summary>被弾時スプリング変形の減衰比（0.0〜1.0）。</summary>
+    public float SpringDampingRatio { get; set; }
 }
 
 /// <summary>
@@ -119,6 +128,15 @@ public sealed class FlyingMinionConfig
 
     /// <summary>候補生成座標リスト。</summary>
     public List<Vec2f> SpawnPoints { get; set; } = [];
+
+    /// <summary>被弾時のスカッシュ変形スケール（X: 横伸長, Y: 縦圧縮）。</summary>
+    public Vec2f HitSquashScale { get; set; } = new(1.15f, 0.85f);
+
+    /// <summary>被弾時スプリング変形の固有振動数（Hz）。</summary>
+    public float SpringFrequency { get; set; } = 15.0f;
+
+    /// <summary>被弾時スプリング変形の減衰比（0.0〜1.0）。</summary>
+    public float SpringDampingRatio { get; set; } = 0.5f;
 }
 
 /// <summary>

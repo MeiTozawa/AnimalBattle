@@ -11,6 +11,9 @@ ContactDamage = 1.0
 CollisionSize = { x = 75.0, y = 75.0 }
 Scale = { x = 0.5, y = 0.5 }
 HitFlashDuration = 0.12
+HitSquashScale = { x = 1.15, y = 0.85 }
+SpringFrequency = 30.0
+SpringDampingRatio = 0.25
 SpawnPos = { x = 300.0, y = -320.0 }
 JumpForce = 640.0
 JumpCooldown = 0.8
@@ -35,6 +38,9 @@ HoverFreq = 2.2
 CollisionSize = { x = 75.0, y = 75.0 }
 Scale = { x = 0.5, y = 0.5 }
 HitFlashDuration = 0.12
+HitSquashScale = { x = 1.15, y = 0.85 }
+SpringFrequency = 30.0
+SpringDampingRatio = 0.25
 ContactDamage = 1.0
 SkillTag = "FastSniper"
 SkillCooldown = 5.0

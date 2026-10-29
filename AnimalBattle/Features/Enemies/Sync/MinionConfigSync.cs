@@ -36,7 +36,7 @@ public static class MinionConfigSync
 
         groundQuery.Each((Entity e) =>
         {
-            RehydrateMinionEntity(e, gCfg.MaxHp, gCfg.Scale, gCfg.CollisionSize, gCfg.ContactDamage, gCfg.HitFlashDuration);
+            RehydrateMinionEntity(e, gCfg.MaxHp, gCfg.Scale, gCfg.CollisionSize, gCfg.ContactDamage, gCfg.HitFlashDuration, gCfg.HitSquashScale, gCfg.SpringFrequency, gCfg.SpringDampingRatio);
         });
 
         // 活体空中浮遊弾幕怪エンティティの再水和
@@ -48,7 +48,7 @@ public static class MinionConfigSync
 
         flyingQuery.Each((Entity e) =>
         {
-            RehydrateMinionEntity(e, fCfg.MaxHp, fCfg.Scale, fCfg.CollisionSize, fCfg.ContactDamage, fCfg.HitFlashDuration);
+            RehydrateMinionEntity(e, fCfg.MaxHp, fCfg.Scale, fCfg.CollisionSize, fCfg.ContactDamage, fCfg.HitFlashDuration, fCfg.HitSquashScale, fCfg.SpringFrequency, fCfg.SpringDampingRatio);
         });
     }
 
@@ -58,7 +58,10 @@ public static class MinionConfigSync
         Vec2f scale,
         Vec2f collisionSize,
         float contactDamage,
-        float hitFlashDuration)
+        float hitFlashDuration,
+        Vec2f hitSquashScale,
+        float springFrequency,
+        float springDampingRatio)
     {
         if (e.Has<Health>())
         {
@@ -97,6 +100,19 @@ public static class MinionConfigSync
         {
             ref var flash = ref e.GetMut<HitFlashSettings>();
             flash.Duration = hitFlashDuration;
+        }
+
+        if (e.Has<CombatProfile>())
+        {
+            ref var profile = ref e.GetMut<CombatProfile>();
+            profile.HitSquashScale = hitSquashScale;
+        }
+
+        if (e.Has<SpringScale>())
+        {
+            ref var spring = ref e.GetMut<SpringScale>();
+            spring.Frequency = springFrequency;
+            spring.DampingRatio = springDampingRatio;
         }
     }
 }
