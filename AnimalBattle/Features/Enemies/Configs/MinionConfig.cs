@@ -1,4 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
+using Microsoft.Extensions.Configuration;
 
 namespace AnimalBattle.Configs;
 
@@ -14,6 +16,9 @@ public sealed class MinionConfig
 
     /// <summary>空中浮遊弾幕怪の設定。</summary>
     public FlyingMinionConfig FlyingMinion { get; set; } = new();
+
+    /// <summary>雑魚敵HPバーの設定。</summary>
+    public MinionHpBarConfig HpBar { get; set; } = new();
 }
 
 /// <summary>
@@ -101,5 +106,95 @@ public sealed class FlyingMinionConfig
     {
         get => SpawnPos;
         set => SpawnPos = value;
+    }
+}
+
+/// <summary>
+///     雑魚敵頭上HPバーの設定パラメータ。
+/// </summary>
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+public sealed class MinionHpBarConfig
+{
+    /// <summary>外枠の幅。単位はピクセル。</summary>
+    public float Width { get; set; }
+
+    /// <summary>外枠の高さ。単位はピクセル。</summary>
+    public float Height { get; set; }
+
+    /// <summary>衝突判定上端からの垂直オフセット。単位はピクセル。</summary>
+    public float OffsetY { get; set; }
+
+    /// <summary>外枠の内側余白。単位はピクセル。</summary>
+    public int BorderPadding { get; set; }
+
+    /// <summary>低HP警告表示に切り替える残HP割合の閾値。0.0から1.0の範囲。</summary>
+    public float LowHpThreshold { get; set; }
+
+    private Color _bgColor;
+
+    /// <summary>背景色のHex文字列。</summary>
+    [ConfigurationKeyName("BgColor")]
+    public string BgColorHex
+    {
+        get => string.Empty;
+        set => _bgColor = value.ToColor();
+    }
+
+    /// <summary>背景色。</summary>
+    public Color BgColor
+    {
+        get => _bgColor;
+        set => _bgColor = value;
+    }
+
+    private Color _borderColor;
+
+    /// <summary>外枠色のHex文字列。</summary>
+    [ConfigurationKeyName("BorderColor")]
+    public string BorderColorHex
+    {
+        get => string.Empty;
+        set => _borderColor = value.ToColor();
+    }
+
+    /// <summary>外枠色。</summary>
+    public Color BorderColor
+    {
+        get => _borderColor;
+        set => _borderColor = value;
+    }
+
+    private Color _fillColor;
+
+    /// <summary>通常ゲージ色のHex文字列。</summary>
+    [ConfigurationKeyName("FillColor")]
+    public string FillColorHex
+    {
+        get => string.Empty;
+        set => _fillColor = value.ToColor();
+    }
+
+    /// <summary>通常ゲージ色。</summary>
+    public Color FillColor
+    {
+        get => _fillColor;
+        set => _fillColor = value;
+    }
+
+    private Color _lowHpColor;
+
+    /// <summary>低HP警告ゲージ色のHex文字列。</summary>
+    [ConfigurationKeyName("LowHpColor")]
+    public string LowHpColorHex
+    {
+        get => string.Empty;
+        set => _lowHpColor = value.ToColor();
+    }
+
+    /// <summary>低HP警告ゲージ色。</summary>
+    public Color LowHpColor
+    {
+        get => _lowHpColor;
+        set => _lowHpColor = value;
     }
 }

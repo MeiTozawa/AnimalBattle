@@ -5,11 +5,11 @@
 
 # --- 地面近接追撃怪 (Ground Minion) ---
 [GroundMinion]
-MaxHp = 25.0
+MaxHp = 15.0
 MoveSpeed = 110.0
 ContactDamage = 1.0
-CollisionSize = { x = 100.0, y = 100.0 }
-Scale = { x = 0.65, y = 0.65 }
+CollisionSize = { x = 75.0, y = 75.0 }
+Scale = { x = 0.5, y = 0.5 }
 HitFlashDuration = 0.12
 SpawnPos = { x = 300.0, y = -320.0 }
 JumpForce = 640.0
@@ -17,14 +17,27 @@ JumpCooldown = 0.8
 
 # --- 空中浮遊弾幕怪 (Flying Minion) ---
 [FlyingMinion]
-MaxHp = 18.0
+MaxHp = 10.0
 HoverSpeed = 90.0
 HoverAmpY = 24.0
 HoverFreq = 2.2
-CollisionSize = { x = 28.0, y = 28.0 }
-Scale = { x = 0.55, y = 0.55 }
+CollisionSize = { x = 75.0, y = 75.0 }
+Scale = { x = 0.5, y = 0.5 }
 HitFlashDuration = 0.12
 ContactDamage = 1.0
 SkillTag = "RingBurst"
 SkillCooldown = 5.0
 SpawnPos = { x = 160.0, y = -120.0 }
+
+# --- 雑魚敵HPバー設定 (Minion Health Bar) ---
+[HpBar]
+Width = 100.0
+Height = 6.0
+OffsetY = 12.0
+BorderPadding = 1
+LowHpThreshold = 0.3
+BgColor = "#1A1A1A"
+BorderColor = "#333333"
+FillColor = "#2ECC71"
+LowHpColor = "#E74C3C"
+
