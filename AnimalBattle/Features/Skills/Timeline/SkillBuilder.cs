@@ -16,6 +16,19 @@ public static class SkillBuilder
         var validation = config.Validate();
         if (validation.IsError) return validation.Errors;
 
+        var effectiveCastDuration = config.CastDuration;
+        foreach (var effect in config.Effects)
+        {
+            if (effect is { RepeatCount: > 0, Interval: > 0.0f })
+            {
+                var neededDuration = effect.Time + (effect.RepeatCount - 1) * effect.Interval + 0.05f;
+                if (neededDuration > effectiveCastDuration)
+                {
+                    effectiveCastDuration = neededDuration;
+                }
+            }
+        }
+
         var actions = new List<AttackActionStep>();
         var index = 0;
 
@@ -28,9 +41,17 @@ public static class SkillBuilder
             else if (effect.Interval > 0.0f)
             {
                 var count = 0;
-                for (var t = effect.Time; t < config.CastDuration; t += effect.Interval)
+                for (var t = effect.Time; ; t += effect.Interval)
                 {
-                    if (effect.RepeatCount > 0 && count >= effect.RepeatCount) break;
+                    if (effect.RepeatCount > 0)
+                    {
+                        if (count >= effect.RepeatCount) break;
+                    }
+                    else if (t >= effectiveCastDuration)
+                    {
+                        break;
+                    }
+
                     actions.Add(new AttackActionStep(index++, effect, t, isOnGrounded: false));
                     count++;
                 }
@@ -44,7 +65,7 @@ public static class SkillBuilder
         var definition = new AttackDefinition(
             skillId,
             config.WindUpTime,
-            config.CastDuration,
+            effectiveCastDuration,
             config.RecoveryTime,
             config.EffectiveRange,
             actions,

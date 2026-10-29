@@ -156,8 +156,8 @@ IsSniper = true
 
 [[FastSniper.Effects]]
 Time = 0.0
-Interval = 0.30
-RepeatCount = 2
+Interval = 0.20
+RepeatCount = 5
 Kind = "Bullet"
 Bullet = { Pattern = "AimedSpread", Count = 1, Speed = 510.0, Radius = 6.5, BulletType = "Black", FillColor = "#111116", OutlineColor = "#FF1744" }
 
