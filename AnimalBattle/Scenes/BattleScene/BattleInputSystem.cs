@@ -125,6 +125,7 @@ public static class BattleInputSystem
 
         BulletSpawner.ClearAllBossBulletsImmediate(world);
         MeleeSpawner.ClearAllBossMeleeImmediate(world);
+        MinionSpawner.ClearAllMinionsImmediate(world);
         ctx.PlayerBulletsQuery.Each(CombatPoolService.Recycle);
         ctx.VfxQuery.Each(CombatPoolService.Recycle);
         CameraService.Reset();

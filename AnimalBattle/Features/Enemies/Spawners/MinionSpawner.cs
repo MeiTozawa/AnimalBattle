@@ -145,4 +145,17 @@ public static class MinionSpawner
             _ => AssertHelper.FailWithDefault($"[MinionSpawner 警告] 未知の MinionType です: {type}", default(Entity))
         };
     }
+
+    /// <summary>
+    /// フィールド上に残存するすべての雑魚敵（MinionTag）エンティティを即座に破棄・解放します。
+    /// シーン破棄時や戦闘リセット（ResetCombat）時に呼び出されます。
+    /// </summary>
+    /// <param name="world">対象の Flecs ワールド</param>
+    public static void ClearAllMinionsImmediate(World world)
+    {
+        using var query = world.QueryBuilder()
+            .With<MinionTag>()
+            .Build();
+        query.Each((Entity e) => e.Destruct());
+    }
 }

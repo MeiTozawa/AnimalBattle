@@ -164,6 +164,7 @@ public static class BattleSceneSpawner
         // 2. 残存弾幕、近接判定および VFX の一括回収・プール返却
         BulletSpawner.ClearAllBossBulletsImmediate(world);
         MeleeSpawner.ClearAllBossMeleeImmediate(world);
+        MinionSpawner.ClearAllMinionsImmediate(world);
 
         using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
         {
