@@ -1,6 +1,6 @@
 # Cat Ranged Weapon Configuration
 Type = "RangedWeapon"
-Cooldown = 0.16
+Cooldown = 0.24
 BulletSpeed = 960.0
 BulletSpawnOffset = { x = 24.0, y = -4.0 }
 BulletHitboxShape = "Box"

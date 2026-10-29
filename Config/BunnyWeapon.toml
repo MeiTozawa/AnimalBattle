@@ -1,9 +1,9 @@
 # Bunny Melee Weapon Configuration
 Type = "MeleeWeapon"
-Damage = 3.0
-Cooldown = 0.3
+Damage = 3
+Cooldown = 0.36
 Range = 48.0
-Size = { x = 88.0, y = 64.0 }
+Size = { x = 100.0, y = 100.0 }
 Duration = 0.15
 LungeImpulse = 180.0
 StretchScale = { x = 1.15, y = 0.88 }
