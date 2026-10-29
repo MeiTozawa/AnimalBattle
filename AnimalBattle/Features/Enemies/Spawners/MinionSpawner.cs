@@ -79,19 +79,19 @@ public static class MinionSpawner
         {
             var ability = abilityResult.Value;
             var angleOffset = 0.0f;
+            asc.OnSkillCompleted += _ => angleOffset = 0.0f;
             ability.ActionDispatcher = (step, dir) =>
             {
                 if (step.Effect != null)
                 {
-                    var origin = entity.IsAlive() && entity.Has<Transform>()
-                        ? entity.Get<Transform>().Position
-                        : pos;
+                    var origin = entity.Get<Transform>().Position;
+                    var target = entity.Get<FlyingMinionComponent>().TargetPos;
                     var ctx = new SkillExecutionContext
                     {
                         World = world,
                         SkillTag = ability.AbilityTag,
                         Origin = origin,
-                        TargetPos = Vec2f.Zero,
+                        TargetPos = target,
                         ForwardDir = dir,
                         CasterVelocity = Vec2f.Zero,
                         BodyHeight = fCfg.CollisionSize.Y,
@@ -105,10 +105,7 @@ public static class MinionSpawner
 
         asc.OnTagsChanged += tags =>
         {
-            if (entity.IsAlive() && entity.Has<GameplayTagState>())
-            {
-                entity.GetMut<GameplayTagState>().ActionMask = tags;
-            }
+            entity.GetMut<GameplayTagState>().ActionMask = tags;
         };
 
         return entity;

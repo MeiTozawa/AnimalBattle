@@ -118,10 +118,7 @@ public static class BattleSceneSpawner
 
             brain.AbilitySystem.OnTagsChanged += tags =>
             {
-                if (bossEntity.IsAlive() && bossEntity.Has<GameplayTagState>())
-                {
-                    bossEntity.GetMut<GameplayTagState>().ActionMask = tags;
-                }
+                bossEntity.GetMut<GameplayTagState>().ActionMask = tags;
             };
             bossEntity.GetMut<GameplayTagState>().ActionMask = brain.AbilitySystem.Tags.RawTags;
 

@@ -142,7 +142,9 @@ public static class FlyingMinionSystem
 
                 if (!minion.Asc.IsCasting && playerPos.HasValue)
                 {
-                    minion.Asc.TryActivateAbility(fCfg.SkillTag);
+                    minion.TargetPos = playerPos.Value;
+                    var facingDir = dirX != 0.0f ? dirX : (!sprite.FlipX ? 1.0f : -1.0f);
+                    minion.Asc.TryActivateAbility(fCfg.SkillTag, facingDir);
                 }
             }
         }
@@ -184,9 +186,10 @@ public static class FlyingMinionSystem
                 ref readonly var s = ref sprites[i];
                 ref readonly var c = ref cols[i];
 
+                var finalTarget = m.TargetPos != Vec2f.Zero ? m.TargetPos : playerPos;
                 AbilityTelegraphContext tCtx = new(
                     t.Position,
-                    playerPos,
+                    finalTarget,
                     !s.FlipX,
                     m.Asc.Progress,
                     m.HoverTimer,

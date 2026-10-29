@@ -11,13 +11,18 @@ public struct FlyingMinionComponent
     /// <summary>アビリティ実行を管理するコンポーネント。</summary>
     public AbilitySystemComponent? Asc;
 
+    /// <summary>現在のアビリティ発動時にロックされた目標座標。</summary>
+    public Vec2f TargetPos;
+
     /// <summary>
     /// 空中浮遊弾幕怪コンポーネントを初期化します。
     /// </summary>
     /// <param name="asc">アビリティシステムコンポーネント</param>
-    public FlyingMinionComponent(AbilitySystemComponent? asc = null)
+    /// <param name="targetPos">初期目標座標</param>
+    public FlyingMinionComponent(AbilitySystemComponent? asc = null, Vec2f targetPos = default)
     {
         HoverTimer = 0f;
         Asc = asc;
+        TargetPos = targetPos;
     }
 }
