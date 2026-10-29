@@ -21,12 +21,6 @@ public static class MinionPrefabs
         var minionCfg = world.Get<MinionConfig>();
         Debug.Assert(minionCfg != null, "MinionConfig はワールドに登録されている必要があります。");
 
-        world.Component<GroundMinion>().AutoOverride<GroundMinion>();
-        world.Component<FlyingMinion>().AutoOverride<FlyingMinion>();
-        world.Component<HitFlashSettings>().AutoOverride<HitFlashSettings>();
-        world.Component<Hurtbox>().AutoOverride<Hurtbox>();
-        world.Component<Hitbox>().AutoOverride<Hitbox>();
-
         // 雑魚敵共通基底
         BaseMinion = world.Prefab(BaseMinionName)
             .IsA(CommonPrefabs.BaseCharacter)
@@ -38,7 +32,7 @@ public static class MinionPrefabs
         var gCfg = minionCfg.GroundMinion;
         GroundMinion = world.Prefab(GroundMinionName)
             .IsA(BaseMinion)
-            .Add<GroundMinion>()
+            .Add<GroundMinionTag>()
             .Set(new Health(gCfg.MaxHp))
             .Set(new HitFlashSettings(gCfg.HitFlashDuration))
             .Set(new Transform(Vec2f.Zero, gCfg.Scale))
@@ -50,7 +44,7 @@ public static class MinionPrefabs
         var fCfg = minionCfg.FlyingMinion;
         FlyingMinion = world.Prefab(FlyingMinionName)
             .IsA(BaseMinion)
-            .Add<FlyingMinion>()
+            .Add<FlyingMinionTag>()
             .Set(new Health(fCfg.MaxHp))
             .Set(new HitFlashSettings(fCfg.HitFlashDuration))
             .Set(new Transform(Vec2f.Zero, fCfg.Scale))

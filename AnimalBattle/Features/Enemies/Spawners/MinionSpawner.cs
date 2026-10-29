@@ -33,7 +33,8 @@ public static class MinionSpawner
             .Set(new Velocity(Vec2f.Zero))
             .Set(new CollisionBox(gCfg.CollisionSize))
             .Set(new Health(gCfg.MaxHp))
-            .Set(new GroundMinion());
+            .Add<GroundMinionTag>()
+            .Set(new GroundMinionComponent());
 
         return entity;
     }
@@ -71,7 +72,8 @@ public static class MinionSpawner
             .Set(new Velocity(Vec2f.Zero))
             .Set(new CollisionBox(fCfg.CollisionSize))
             .Set(new Health(fCfg.MaxHp))
-            .Set(new FlyingMinion(asc));
+            .Add<FlyingMinionTag>()
+            .Set(new FlyingMinionComponent(asc));
 
         if (!abilityResult.IsError)
         {

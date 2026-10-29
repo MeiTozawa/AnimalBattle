@@ -8,9 +8,12 @@
 MaxHp = 25.0
 MoveSpeed = 110.0
 ContactDamage = 1.0
-CollisionSize = { x = 32.0, y = 32.0 }
+CollisionSize = { x = 100.0, y = 100.0 }
 Scale = { x = 0.65, y = 0.65 }
 HitFlashDuration = 0.12
+SpawnPos = { x = 300.0, y = -320.0 }
+JumpForce = 640.0
+JumpCooldown = 0.8
 
 # --- 空中浮遊弾幕怪 (Flying Minion) ---
 [FlyingMinion]
@@ -24,3 +27,4 @@ HitFlashDuration = 0.12
 ContactDamage = 1.0
 SkillTag = "RingBurst"
 SkillCooldown = 5.0
+SpawnPos = { x = 160.0, y = -120.0 }

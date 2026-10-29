@@ -1,9 +1,9 @@
 namespace AnimalBattle.Enemies.Components;
 
 /// <summary>
-/// 空中浮遊弾幕怪を識別および状態管理するコンポーネント。
+/// 空中浮遊弾幕怪の浮遊時間およびアビリティ状態を管理するコンポーネント。
 /// </summary>
-public struct FlyingMinion
+public struct FlyingMinionComponent
 {
     /// <summary>正弦波浮遊用の経過タイマー。単位は秒。</summary>
     public float HoverTimer;
@@ -15,7 +15,7 @@ public struct FlyingMinion
     /// 空中浮遊弾幕怪コンポーネントを初期化します。
     /// </summary>
     /// <param name="asc">アビリティシステムコンポーネント</param>
-    public FlyingMinion(AbilitySystemComponent? asc = null)
+    public FlyingMinionComponent(AbilitySystemComponent? asc = null)
     {
         HoverTimer = 0f;
         Asc = asc;

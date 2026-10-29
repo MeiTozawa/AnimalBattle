@@ -6,7 +6,7 @@ namespace AnimalBattle.Enemies.Systems;
 internal sealed class FlyingMinionContext : IDisposable
 {
     public required Query<Transform> PlayerQuery { get; init; }
-    public required Query<Transform, Sprite, CollisionBox, FlyingMinion> MinionQuery { get; init; }
+    public required Query<Transform, Sprite, CollisionBox, FlyingMinionComponent> MinionQuery { get; init; }
     public Vec2f? CachedPlayerPos;
 
     public void Dispose()
@@ -32,7 +32,8 @@ public static class FlyingMinionSystem
             .Without<DeadTag>()
             .Build();
 
-        var minionQuery = world.QueryBuilder<Transform, Sprite, CollisionBox, FlyingMinion>()
+        var minionQuery = world.QueryBuilder<Transform, Sprite, CollisionBox, FlyingMinionComponent>()
+            .With<FlyingMinionTag>()
             .With<MinionTag>()
             .Without<DeadTag>()
             .Build();
@@ -44,7 +45,8 @@ public static class FlyingMinionSystem
         });
 
         // 運動更新およびアビリティ駆動
-        world.System<Transform, Velocity, CollisionBox, Sprite, FlyingMinion>("FlyingMinionSystem")
+        world.System<Transform, Velocity, CollisionBox, Sprite, FlyingMinionComponent>("FlyingMinionSystem")
+            .With<FlyingMinionTag>()
             .With<MinionTag>()
             .Without<DeadTag>()
             .Without<HitstopState>()
@@ -65,7 +67,7 @@ public static class FlyingMinionSystem
         Field<Velocity> velocities,
         Field<CollisionBox> collisionBoxes,
         Field<Sprite> sprites,
-        Field<FlyingMinion> minions)
+        Field<FlyingMinionComponent> minions)
     {
         var count = it.Count();
         if (count == 0) return;
@@ -167,7 +169,7 @@ public static class FlyingMinionSystem
         var bossFx = renderCfg.BossEffects;
         var arenaCfg = world.Get<ArenaConfig>();
 
-        ctx.MinionQuery.Iter((Iter mIt, Field<Transform> trans, Field<Sprite> sprites, Field<CollisionBox> cols, Field<FlyingMinion> minions) =>
+        ctx.MinionQuery.Iter((Iter mIt, Field<Transform> trans, Field<Sprite> sprites, Field<CollisionBox> cols, Field<FlyingMinionComponent> minions) =>
         {
             var count = mIt.Count();
             for (var i = 0; i < count; i++)

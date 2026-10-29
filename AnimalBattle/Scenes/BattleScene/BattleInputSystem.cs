@@ -11,6 +11,7 @@ internal sealed class BattleInputSystemContext : IDisposable
     public required Query VfxQuery { get; init; }
     public required Query PlayerEntitiesQuery { get; init; }
     public required Query<Health, BossCombatState, BossBrainComponent> BossQuery { get; init; }
+    public required Query<Transform, Sprite> PlayerQuery { get; init; }
 
     public void Dispose()
     {
@@ -18,6 +19,7 @@ internal sealed class BattleInputSystemContext : IDisposable
         VfxQuery.Dispose();
         PlayerEntitiesQuery.Dispose();
         BossQuery.Dispose();
+        PlayerQuery.Dispose();
     }
 }
 
@@ -58,13 +60,18 @@ public static class BattleInputSystem
         var bossQuery = world.QueryBuilder<Health, BossCombatState, BossBrainComponent>()
             .With<BossTag>()
             .Build();
+        var playerQuery = world.QueryBuilder<Transform, Sprite>()
+            .With<PlayerTag>()
+            .Without<DeadTag>()
+            .Build();
 
         world.Set(new BattleInputSystemContext
         {
             PlayerBulletsQuery = playerBulletsQuery,
             VfxQuery = vfxQuery,
             PlayerEntitiesQuery = playerEntitiesQuery,
-            BossQuery = bossQuery
+            BossQuery = bossQuery,
+            PlayerQuery = playerQuery
         });
 
         world.System("BattleInputSystem")
@@ -103,7 +110,7 @@ public static class BattleInputSystem
         var dbgCfg = renderCfg.Debug;
         if (dbgCfg.DebugMode)
         {
-            ProcessDebugInput(w, dbgCfg, ctx.BossQuery);
+            ProcessDebugInput(w, dbgCfg, ctx);
         }
 
         // ゲームオーバー時は自機の操作入力を停止：PlayerInputSystem 側でも同様に判定
@@ -224,7 +231,7 @@ public static class BattleInputSystem
         sprite.SpringOffsetY = 0.0f;
     }
 
-    private static void ProcessDebugInput(World world, DebugRenderConfig dbgCfg, Query<Health, BossCombatState, BossBrainComponent> bossQuery)
+    private static void ProcessDebugInput(World world, DebugRenderConfig dbgCfg, BattleInputSystemContext ctx)
     {
         var isF1 = GameEngine.CheckHitKey((int)InputButton.KeyF1) || GameEngine.CheckHitKey((int)InputButton.KeyH);
         if (isF1 && !_prevF1)
@@ -238,7 +245,7 @@ public static class BattleInputSystem
         var isF6 = GameEngine.CheckHitKey((int)InputButton.KeyF6);
         if (isF6 && !_prevF6)
         {
-            SpawnDebugMinion(world, isFlying: false);
+            SpawnDebugMinion(world, ctx, isFlying: false);
         }
         _prevF6 = isF6;
 
@@ -246,7 +253,7 @@ public static class BattleInputSystem
         var isF7 = GameEngine.CheckHitKey((int)InputButton.KeyF7);
         if (isF7 && !_prevF7)
         {
-            SpawnDebugMinion(world, isFlying: true);
+            SpawnDebugMinion(world, ctx, isFlying: true);
         }
         _prevF7 = isF7;
 
@@ -295,7 +302,7 @@ public static class BattleInputSystem
         if ((isF2 && !_prevF2) || (isF3 && !_prevF3) || (isF4 && !_prevF4))
         {
             _targetDebugPhase = (isF2 && !_prevF2) ? Phase.Phase1 : ((isF3 && !_prevF3) ? Phase.Phase2 : Phase.Phase3);
-            bossQuery.Each(ApplyDebugPhase);
+            ctx.BossQuery.Each(ApplyDebugPhase);
         }
 
         _prevF2 = isF2;
@@ -326,33 +333,35 @@ public static class BattleInputSystem
         state.Phase = _targetDebugPhase;
     }
 
-    private static void SpawnDebugMinion(World world, bool isFlying)
+    private static void SpawnDebugMinion(World world, BattleInputSystemContext ctx, bool isFlying)
     {
         var root = world.Lookup(BattleSceneSpawner.RootName);
         if (!root.IsAlive()) return;
 
-        var playerPos = new Vec2f(640.0f, 360.0f);
+        var playerPos = Vec2f.Zero;
         var facing = 1.0f;
+        var hasPlayer = false;
 
-        using var playerQuery = world.QueryBuilder<Transform, Sprite>()
-            .With<PlayerTag>()
-            .Without<DeadTag>()
-            .Build();
-
-        playerQuery.Each((ref Transform pt, ref Sprite ps) =>
+        ctx.PlayerQuery.Each((ref Transform pt, ref Sprite ps) =>
         {
             playerPos = pt.Position;
             facing = ps.FlipX ? -1.0f : 1.0f;
+            hasPlayer = true;
         });
 
+        if (!hasPlayer) return;
+
+        var minionCfg = world.Get<MinionConfig>();
         if (isFlying)
         {
-            var spawnPos = playerPos + new Vec2f(facing * 160.0f, -120.0f);
+            var offset = minionCfg.FlyingMinion.SpawnPos;
+            var spawnPos = playerPos + new Vec2f(facing * offset.X, offset.Y);
             MinionSpawner.SpawnFlyingMinion(world, root, spawnPos);
         }
         else
         {
-            var spawnPos = playerPos + new Vec2f(facing * 160.0f, 0.0f);
+            var offset = minionCfg.GroundMinion.SpawnPos;
+            var spawnPos = playerPos + new Vec2f(facing * offset.X, offset.Y);
             MinionSpawner.SpawnGroundMinion(world, root, spawnPos);
         }
     }

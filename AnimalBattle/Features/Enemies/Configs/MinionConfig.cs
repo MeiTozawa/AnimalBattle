@@ -23,22 +23,38 @@ public sealed class MinionConfig
 public sealed class GroundMinionConfig
 {
     /// <summary>最大体力。</summary>
-    public float MaxHp { get; set; } = 25.0f;
+    public float MaxHp { get; set; }
 
     /// <summary>移動速度。単位はピクセル毎秒。</summary>
-    public float MoveSpeed { get; set; } = 110.0f;
+    public float MoveSpeed { get; set; }
 
     /// <summary>プレイヤー接触時の与ダメージ。</summary>
-    public float ContactDamage { get; set; } = 1.0f;
+    public float ContactDamage { get; set; }
 
     /// <summary>足場衝突および被弾判定サイズ。</summary>
-    public Vec2f CollisionSize { get; set; } = new(32.0f, 32.0f);
+    public Vec2f CollisionSize { get; set; }
 
     /// <summary>スプライトの描画スケール。</summary>
-    public Vec2f Scale { get; set; } = new(0.65f, 0.65f);
+    public Vec2f Scale { get; set; }
 
     /// <summary>被弾時ホワイトフラッシュの持続秒数。</summary>
-    public float HitFlashDuration { get; set; } = 0.12f;
+    public float HitFlashDuration { get; set; }
+
+    /// <summary>生成基準オフセット座標。</summary>
+    public Vec2f SpawnPos { get; set; }
+
+    /// <summary>生成オフセット座標の別名。</summary>
+    public Vec2f SpawnOffset
+    {
+        get => SpawnPos;
+        set => SpawnPos = value;
+    }
+
+    /// <summary>跳躍初速度。単位はピクセル毎秒。</summary>
+    public float JumpForce { get; set; }
+
+    /// <summary>跳躍実行のクールダウン秒数。</summary>
+    public float JumpCooldown { get; set; }
 }
 
 /// <summary>
@@ -48,32 +64,42 @@ public sealed class GroundMinionConfig
 public sealed class FlyingMinionConfig
 {
     /// <summary>最大体力。</summary>
-    public float MaxHp { get; set; } = 18.0f;
+    public float MaxHp { get; set; }
 
     /// <summary>水平追跡移動速度。単位はピクセル毎秒。</summary>
-    public float HoverSpeed { get; set; } = 90.0f;
+    public float HoverSpeed { get; set; }
 
     /// <summary>垂直正弦波浮遊の振幅。単位はピクセル。</summary>
-    public float HoverAmpY { get; set; } = 24.0f;
+    public float HoverAmpY { get; set; }
 
     /// <summary>垂直正弦波浮遊の周波数。単位はラジアン毎秒。</summary>
-    public float HoverFreq { get; set; } = 2.2f;
+    public float HoverFreq { get; set; }
 
     /// <summary>足場衝突および被弾判定サイズ。</summary>
-    public Vec2f CollisionSize { get; set; } = new(28.0f, 28.0f);
+    public Vec2f CollisionSize { get; set; }
 
     /// <summary>スプライトの描画スケール。</summary>
-    public Vec2f Scale { get; set; } = new(0.55f, 0.55f);
+    public Vec2f Scale { get; set; }
 
     /// <summary>被弾時ホワイトフラッシュの持続秒数。</summary>
-    public float HitFlashDuration { get; set; } = 0.12f;
+    public float HitFlashDuration { get; set; }
 
     /// <summary>プレイヤー接触時の与ダメージ。</summary>
-    public float ContactDamage { get; set; } = 1.0f;
+    public float ContactDamage { get; set; }
 
     /// <summary>使用するスキル識別子。</summary>
-    public string SkillTag { get; set; } = "RingBurst";
+    public string SkillTag { get; set; } = string.Empty;
 
     /// <summary>スキル発動のクールダウン秒数。</summary>
-    public float SkillCooldown { get; set; } = 5.0f;
+    public float SkillCooldown { get; set; }
+
+    /// <summary>生成基準オフセット座標。</summary>
+    public Vec2f SpawnPos { get; set; }
+
+    /// <summary>生成オフセット座標の別名。</summary>
+    public Vec2f SpawnOffset
+    {
+        get => SpawnPos;
+        set => SpawnPos = value;
+    }
 }
