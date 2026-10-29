@@ -3,17 +3,17 @@ using AnimalBattle.Ai;
 namespace AnimalBattle.Bosses;
 
 /// <summary>
-///     Boss：Boss1 & Boss2の Prefab プレハブ登録およびインスタンス化。
+///     Boss：BossSnake & BossLionの Prefab プレハブ登録およびインスタンス化。
 /// </summary>
 public static class BossPrefabs
 {
     public const string BossBaseName = "BossBasePrefab";
-    public const string Boss1Name = "Boss1Prefab";
-    public const string Boss2Name = "Boss2Prefab";
+    public const string BossSnakeName = "BossSnakePrefab";
+    public const string BossLionName = "BossLionPrefab";
 
     public static Entity BossBase { get; private set; }
-    public static Entity Boss1 { get; private set; }
-    public static Entity Boss2 { get; private set; }
+    public static Entity BossSnake { get; private set; }
+    public static Entity BossLion { get; private set; }
 
     /// <summary>
     ///     Boss 共通基底および各 Boss の Prefab プレハブを登録します。
@@ -25,39 +25,39 @@ public static class BossPrefabs
             .IsA(CommonPrefabs.BaseCharacter)
             .Add<BossTag>()
             .Add<EnemyTag>()
-            .Set(new BossCombatState(BossType.Boss1));
+            .Set(new BossCombatState(BossType.BossSnake));
 
-        // --- Boss 1 ---
-        var b1Cfg = world.Get<Boss1Config>();
-        Debug.Assert(b1Cfg != null, "Boss1Config はワールドに登録されている必要があります。");
+        // --- BossSnake ---
+        var bSnakeCfg = world.Get<BossSnakeConfig>();
+        Debug.Assert(bSnakeCfg != null, "BossSnakeConfig はワールドに登録されている必要があります。");
 
-        Boss1 = world.Prefab(Boss1Name)
+        BossSnake = world.Prefab(BossSnakeName)
             .IsA(BossBase)
-            .Add<Boss1Tag>()
-            .Set(new BossCombatState(BossType.Boss1) { CanBeKnockedBack = b1Cfg.CanBeKnockedBack })
-            .Set(CombatProfile.ForBoss(b1Cfg.CanBeKnockedBack))
-            .Set(new Health(b1Cfg.MaxHp))
-            .Set(new HitFlashSettings(b1Cfg.HitFlashDuration))
-            .Set(new Transform(Vec2f.Zero, b1Cfg.Scale))
-            .Set(new CollisionBox(b1Cfg.CollisionSize))
-            .Set(new Hurtbox(b1Cfg.GetHurtboxShape(), Faction.Hostile))
-            .Set(new Hitbox(b1Cfg.GetHitboxShape(), b1Cfg.BodyContactDamage, Faction.Hostile, false));
+            .Add<BossSnakeTag>()
+            .Set(new BossCombatState(BossType.BossSnake) { CanBeKnockedBack = bSnakeCfg.CanBeKnockedBack })
+            .Set(CombatProfile.ForBoss(bSnakeCfg.CanBeKnockedBack))
+            .Set(new Health(bSnakeCfg.MaxHp))
+            .Set(new HitFlashSettings(bSnakeCfg.HitFlashDuration))
+            .Set(new Transform(Vec2f.Zero, bSnakeCfg.Scale))
+            .Set(new CollisionBox(bSnakeCfg.CollisionSize))
+            .Set(new Hurtbox(bSnakeCfg.GetHurtboxShape(), Faction.Hostile))
+            .Set(new Hitbox(bSnakeCfg.GetHitboxShape(), bSnakeCfg.BodyContactDamage, Faction.Hostile, false));
 
-        // --- Boss 2 ---
-        var b2Cfg = world.Get<Boss2Config>();
-        Debug.Assert(b2Cfg != null, "Boss2Config はワールドに登録されている必要があります。");
+        // --- BossLion ---
+        var bLionCfg = world.Get<BossLionConfig>();
+        Debug.Assert(bLionCfg != null, "BossLionConfig はワールドに登録されている必要があります。");
 
-        Boss2 = world.Prefab(Boss2Name)
+        BossLion = world.Prefab(BossLionName)
             .IsA(BossBase)
-            .Add<Boss2Tag>()
-            .Set(new BossCombatState(BossType.Boss2) { CanBeKnockedBack = b2Cfg.CanBeKnockedBack })
-            .Set(CombatProfile.ForBoss(b2Cfg.CanBeKnockedBack))
-            .Set(new Health(b2Cfg.MaxHp))
-            .Set(new HitFlashSettings(b2Cfg.HitFlashDuration))
-            .Set(new Transform(Vec2f.Zero, b2Cfg.Scale))
-            .Set(new CollisionBox(b2Cfg.CollisionSize))
-            .Set(new Hurtbox(b2Cfg.GetHurtboxShape(), Faction.Hostile))
-            .Set(new Hitbox(b2Cfg.GetHitboxShape(), b2Cfg.BodyContactDamage, Faction.Hostile, false));
+            .Add<BossLionTag>()
+            .Set(new BossCombatState(BossType.BossLion) { CanBeKnockedBack = bLionCfg.CanBeKnockedBack })
+            .Set(CombatProfile.ForBoss(bLionCfg.CanBeKnockedBack))
+            .Set(new Health(bLionCfg.MaxHp))
+            .Set(new HitFlashSettings(bLionCfg.HitFlashDuration))
+            .Set(new Transform(Vec2f.Zero, bLionCfg.Scale))
+            .Set(new CollisionBox(bLionCfg.CollisionSize))
+            .Set(new Hurtbox(bLionCfg.GetHurtboxShape(), Faction.Hostile))
+            .Set(new Hitbox(bLionCfg.GetHitboxShape(), bLionCfg.BodyContactDamage, Faction.Hostile, false));
     }
 
     /// <summary>
@@ -66,9 +66,9 @@ public static class BossPrefabs
     public static Entity GetPrefab(BossType type)
     {
         return type switch {
-            BossType.Boss1 => Boss1,
-            BossType.Boss2 => Boss2,
-            _ => AssertHelper.FailWithDefault("", Boss1)
+            BossType.BossSnake => BossSnake,
+            BossType.BossLion => BossLion,
+            _ => AssertHelper.FailWithDefault("", BossSnake)
         };
     }
 }

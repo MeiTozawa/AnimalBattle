@@ -1,5 +1,5 @@
-# Boss 1: Ancient Cat Overlord Base Attributes
-BossName = "Boss1"
+# Boss Snake Base Attributes
+BossName = "BossSnake"
 MaxHp = 60.0
 Spawn = { x = 640.0, y = 200.0 }
 Scale = { x = 0.6, y = 0.6 }

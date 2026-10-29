@@ -10,11 +10,11 @@ Size = { x = 240, y = 390 }
 Pos = { x = 360, y = 150 }
 Size = { x = 240, y = 390 }
 
-[Layout.Boss1Card]
+[Layout.BossSnakeCard]
 Pos = { x = 680, y = 150 }
 Size = { x = 240, y = 390 }
 
-[Layout.Boss2Card]
+[Layout.BossLionCard]
 Pos = { x = 940, y = 150 }
 Size = { x = 240, y = 390 }
 
@@ -70,33 +70,33 @@ Title = "バニー (Bunny)"
 Tag = "【 近接攻撃 】"
 Description = ""
 
-[Texts.Boss1]
-Title = "ボス 1 (Boss 1)"
+[Texts.BossSnake]
+Title = "ボス スネーク (Boss Snake)"
 Tag = "【 飛行浮遊 & 全方位弾幕 】"
 Description = ""
 
-[Texts.Boss2]
-Title = "ボス 2 (Boss 2)"
+[Texts.BossLion]
+Title = "ボス ライオン (Boss Lion)"
 Tag = "【 突撃突進 & 衝撃波重撃 】"
 Description = ""
 
 [Motion]
 StepFrequency = 14.0
 StepAmplitude = 4.0
-Boss1FlyFrequency = 5.0
-Boss1FlyAmplitude = 10.0
-Boss1FlyOffsetY = -35.0
-Boss1TiltFrequency = 2.5
-Boss1TiltAmplitude = 0.05
-Boss1Scale = 0.65
-Boss1FlyDecaySpeed = 2.0
-Boss2SlamCycleDuration = 1.1
-Boss2RiseDuration = 0.25
-Boss2RiseHeight = -45.0
-Boss2RiseScale = 0.95
-Boss2SlamDuration = 0.10
-Boss2SlamScale = 0.98
-Boss2ImpactDuration = 0.15
-Boss2ImpactShakeFreq = 4.0
-Boss2ImpactShakeAmplitude = 2.0
-Boss2BaseScale = 0.65
+BossSnakeFlyFrequency = 5.0
+BossSnakeFlyAmplitude = 10.0
+BossSnakeFlyOffsetY = -35.0
+BossSnakeTiltFrequency = 2.5
+BossSnakeTiltAmplitude = 0.05
+BossSnakeScale = 0.65
+BossSnakeFlyDecaySpeed = 2.0
+BossLionSlamCycleDuration = 1.1
+BossLionRiseDuration = 0.25
+BossLionRiseHeight = -45.0
+BossLionRiseScale = 0.95
+BossLionSlamDuration = 0.10
+BossLionSlamScale = 0.98
+BossLionImpactDuration = 0.15
+BossLionImpactShakeFreq = 4.0
+BossLionImpactShakeAmplitude = 2.0
+BossLionBaseScale = 0.65

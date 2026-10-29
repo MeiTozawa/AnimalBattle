@@ -68,7 +68,7 @@ public class GameManager : IDisposable {
         _ecsWorld.Set(new GameFlow {
             State = GameState.Start,
             SelectedPlayer = CharacterType.Cat,
-            SelectedBoss = BossType.Boss1
+            SelectedBoss = BossType.BossSnake
         });
     }
 

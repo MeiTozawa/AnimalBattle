@@ -54,7 +54,7 @@ public static class MinionSpawner
 
         var minionCfg = world.Get<MinionConfig>();
         var fCfg = minionCfg.FlyingMinion;
-        var patternCfg = world.Get<Boss1PatternConfig>();
+        var patternCfg = world.Get<BossSnakePatternConfig>();
 
         var asc = new AbilitySystemComponent();
         var abilityResult = SkillBuilder.BuildAbility(fCfg.SkillTag, patternCfg, fCfg.SkillCooldown);

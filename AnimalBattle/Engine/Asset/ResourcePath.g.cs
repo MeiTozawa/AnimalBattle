@@ -141,17 +141,17 @@ public static class ResourcePath
         /// <summary>audio.toml 設定ファイル名。</summary>
         public const string Audio = "audio.toml";
 
-        /// <summary>boss1.toml 設定ファイル名。</summary>
-        public const string Boss1 = "boss1.toml";
+        /// <summary>boss_lion.toml 設定ファイル名。</summary>
+        public const string BossLion = "boss_lion.toml";
 
-        /// <summary>boss1_patterns.toml 設定ファイル名。</summary>
-        public const string Boss1Patterns = "boss1_patterns.toml";
+        /// <summary>boss_lion_patterns.toml 設定ファイル名。</summary>
+        public const string BossLionPatterns = "boss_lion_patterns.toml";
 
-        /// <summary>boss2.toml 設定ファイル名。</summary>
-        public const string Boss2 = "boss2.toml";
+        /// <summary>boss_snake.toml 設定ファイル名。</summary>
+        public const string BossSnake = "boss_snake.toml";
 
-        /// <summary>boss2_patterns.toml 設定ファイル名。</summary>
-        public const string Boss2Patterns = "boss2_patterns.toml";
+        /// <summary>boss_snake_patterns.toml 設定ファイル名。</summary>
+        public const string BossSnakePatterns = "boss_snake_patterns.toml";
 
         /// <summary>bunny.toml 設定ファイル名。</summary>
         public const string Bunny = "bunny.toml";
@@ -195,17 +195,17 @@ public static class ResourcePath
         /// <summary>audio.toml の相対パス。</summary>
         public const string AudioToml = @"Config\audio.toml";
 
-        /// <summary>boss1.toml の相対パス。</summary>
-        public const string Boss1Toml = @"Config\boss1.toml";
+        /// <summary>boss_lion.toml の相対パス。</summary>
+        public const string BossLionToml = @"Config\boss_lion.toml";
 
-        /// <summary>boss1_patterns.toml の相対パス。</summary>
-        public const string Boss1PatternsToml = @"Config\boss1_patterns.toml";
+        /// <summary>boss_lion_patterns.toml の相対パス。</summary>
+        public const string BossLionPatternsToml = @"Config\boss_lion_patterns.toml";
 
-        /// <summary>boss2.toml の相対パス。</summary>
-        public const string Boss2Toml = @"Config\boss2.toml";
+        /// <summary>boss_snake.toml の相対パス。</summary>
+        public const string BossSnakeToml = @"Config\boss_snake.toml";
 
-        /// <summary>boss2_patterns.toml の相対パス。</summary>
-        public const string Boss2PatternsToml = @"Config\boss2_patterns.toml";
+        /// <summary>boss_snake_patterns.toml の相対パス。</summary>
+        public const string BossSnakePatternsToml = @"Config\boss_snake_patterns.toml";
 
         /// <summary>bunny.toml の相対パス。</summary>
         public const string BunnyToml = @"Config\bunny.toml";

@@ -1,5 +1,5 @@
 # Combat Arena Platforms & TileMap Configuration
-TargetBoss = "Boss1"
+TargetBoss = "BossSnake"
 BoundaryMinX = 25.0
 BoundaryMaxX = 1255.0
 BulletDespawnMinX = -80.0

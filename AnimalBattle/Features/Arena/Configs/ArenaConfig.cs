@@ -109,7 +109,7 @@ public sealed class TileMapConfig {
 ///     Config/arena.toml から読み込まれる戦闘アリーナ境界およびタイルマップ設定クラス。
 /// </summary>
 public sealed class ArenaConfig {
-    /// <summary>デフォルトで生成・交戦する対象 Boss 識別名："Boss1" または "Boss2"</summary>
+    /// <summary>デフォルトで生成・交戦する対象 Boss 識別名："BossSnake" または "BossLion"</summary>
     public string TargetBoss { get; set; } = string.Empty;
 
     /// <summary>タイルマップ配置設定</summary>

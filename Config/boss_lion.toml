@@ -1,5 +1,5 @@
-# Boss 2: Ground Crusher Golem Base Attributes
-BossName = "Boss2"
+# Boss Lion Base Attributes
+BossName = "BossLion"
 MaxHp = 120.0
 Spawn = { x = 900.0, y = 480.0 }
 Scale = { x = 0.65, y = 0.65 }

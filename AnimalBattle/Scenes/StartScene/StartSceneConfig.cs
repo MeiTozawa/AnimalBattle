@@ -36,8 +36,8 @@ public sealed class StartSceneTextsConfig {
 
     public StartSceneCardTextConfig Cat { get; set; } = new();
     public StartSceneCardTextConfig Bunny { get; set; } = new();
-    public StartSceneCardTextConfig Boss1 { get; set; } = new();
-    public StartSceneCardTextConfig Boss2 { get; set; } = new();
+    public StartSceneCardTextConfig BossSnake { get; set; } = new();
+    public StartSceneCardTextConfig BossLion { get; set; } = new();
 }
 
 /// <summary>
@@ -47,24 +47,24 @@ public sealed class StartSceneMotionConfig {
     public float StepFrequency { get; set; }
     public float StepAmplitude { get; set; }
 
-    public float Boss1FlyFrequency { get; set; }
-    public float Boss1FlyAmplitude { get; set; }
-    public float Boss1FlyOffsetY { get; set; }
-    public float Boss1TiltFrequency { get; set; }
-    public float Boss1TiltAmplitude { get; set; }
-    public double Boss1Scale { get; set; }
-    public float Boss1FlyDecaySpeed { get; set; }
+    public float BossSnakeFlyFrequency { get; set; }
+    public float BossSnakeFlyAmplitude { get; set; }
+    public float BossSnakeFlyOffsetY { get; set; }
+    public float BossSnakeTiltFrequency { get; set; }
+    public float BossSnakeTiltAmplitude { get; set; }
+    public double BossSnakeScale { get; set; }
+    public float BossSnakeFlyDecaySpeed { get; set; }
 
-    public float Boss2SlamCycleDuration { get; set; }
-    public float Boss2RiseDuration { get; set; }
-    public float Boss2RiseHeight { get; set; }
-    public double Boss2RiseScale { get; set; }
-    public float Boss2SlamDuration { get; set; }
-    public double Boss2SlamScale { get; set; }
-    public float Boss2ImpactDuration { get; set; }
-    public float Boss2ImpactShakeFreq { get; set; }
-    public float Boss2ImpactShakeAmplitude { get; set; }
-    public double Boss2BaseScale { get; set; }
+    public float BossLionSlamCycleDuration { get; set; }
+    public float BossLionRiseDuration { get; set; }
+    public float BossLionRiseHeight { get; set; }
+    public double BossLionRiseScale { get; set; }
+    public float BossLionSlamDuration { get; set; }
+    public double BossLionSlamScale { get; set; }
+    public float BossLionImpactDuration { get; set; }
+    public float BossLionImpactShakeFreq { get; set; }
+    public float BossLionImpactShakeAmplitude { get; set; }
+    public double BossLionBaseScale { get; set; }
 }
 
 /// <summary>
@@ -73,8 +73,8 @@ public sealed class StartSceneMotionConfig {
 public sealed class StartSceneLayoutConfig {
     public CardLayoutConfig CatCard { get; set; } = new();
     public CardLayoutConfig BunnyCard { get; set; } = new();
-    public CardLayoutConfig Boss1Card { get; set; } = new();
-    public CardLayoutConfig Boss2Card { get; set; } = new();
+    public CardLayoutConfig BossSnakeCard { get; set; } = new();
+    public CardLayoutConfig BossLionCard { get; set; } = new();
     public CardLayoutConfig ConfirmButton { get; set; } = new();
 
     public Vec2i HeaderTitlePos { get; set; }

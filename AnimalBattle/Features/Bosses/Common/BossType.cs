@@ -10,14 +10,14 @@ public enum BossType {
     Unknown = 0,
 
     /// <summary>
-    ///     Boss 1 を示します。
+    ///     BossSnake を示します。
     /// </summary>
-    Boss1 = 1,
+    BossSnake = 1,
 
     /// <summary>
-    ///     Boss 2 を示します。
+    ///     BossLion を示します。
     /// </summary>
-    Boss2 = 2,
+    BossLion = 2,
 
     /// <summary>
     ///     Boss不在の空シーン（トレーニングモード）を示します。

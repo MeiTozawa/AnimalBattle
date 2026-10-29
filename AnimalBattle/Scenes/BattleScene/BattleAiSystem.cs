@@ -1,6 +1,6 @@
 using AnimalBattle.Ai;
-using AnimalBattle.Ai.Boss1;
-using AnimalBattle.Ai.Boss2;
+using AnimalBattle.Ai.BossSnake;
+using AnimalBattle.Ai.BossLion;
 using AnimalBattle.Maps;
 
 namespace AnimalBattle.Scenes.Battle;
@@ -195,56 +195,56 @@ public static class BattleAiSystem
             ctx.HasBoss = true;
             ctx.CachedBossPos = trans.Position;
 
-            if (state.BossType == BossType.Boss1 && brain is Boss1Brain b1Brain)
+            if (state.BossType == BossType.BossSnake && brain is BossSnakeBrain bSnakeBrain)
             {
-                var b1Cfg = w.Get<Boss1Config>();
+                var bSnakeCfg = w.Get<BossSnakeConfig>();
                 var arenaCfg = w.Get<ArenaConfig>();
 
                 // 生存フラグおよびプレイヤーエンティティIDを動的に渡す
-                b1Brain.Update(dt, ctx.CachedPlayerPos, ctx.CachedPlayerEntityId, ctx.IsPlayerAlive, hp.Current, hp.Max);
+                bSnakeBrain.Update(dt, ctx.CachedPlayerPos, ctx.CachedPlayerEntityId, ctx.IsPlayerAlive, hp.Current, hp.Max);
 
                 // 外力ノックバック変位の適用および減衰処理
                 if (vel.Knockback != Vec2f.Zero)
                 {
-                    b1Brain.ApplyKnockback(vel.Knockback * dt);
-                    var decay = b1Cfg.KnockbackDeceleration > 0.0f ? b1Cfg.KnockbackDeceleration : 1200.0f;
+                    bSnakeBrain.ApplyKnockback(vel.Knockback * dt);
+                    var decay = bSnakeCfg.KnockbackDeceleration > 0.0f ? bSnakeCfg.KnockbackDeceleration : 1200.0f;
                     var kx = PhysicsService.MoveTowards(vel.Knockback.X, 0.0f, decay * dt);
                     var ky = PhysicsService.MoveTowards(vel.Knockback.Y, 0.0f, decay * dt);
                     vel.Knockback = new Vec2f(kx, ky);
                 }
 
-                var colSize = col.Size != Vec2f.Zero ? col.Size : b1Cfg.CollisionSize;
+                var colSize = col.Size != Vec2f.Zero ? col.Size : bSnakeCfg.CollisionSize;
                 var minX = arenaCfg.BoundaryMinX + colSize.X * 0.5f;
                 var maxX = arenaCfg.BoundaryMaxX - colSize.X * 0.5f;
                 var floorY = arenaCfg.FloorLimitY - colSize.Y * 0.5f;
-                var minY = b1Cfg.CeilingLimitY > 0.0f ? b1Cfg.CeilingLimitY : colSize.Y * 0.5f;
-                b1Brain.ClampPosition(minX, maxX, minY, floorY);
+                var minY = bSnakeCfg.CeilingLimitY > 0.0f ? bSnakeCfg.CeilingLimitY : colSize.Y * 0.5f;
+                bSnakeBrain.ClampPosition(minX, maxX, minY, floorY);
 
-                trans.Position = b1Brain.Position;
-                sprite.FlipX = !b1Brain.FacingRight;
+                trans.Position = bSnakeBrain.Position;
+                sprite.FlipX = !bSnakeBrain.FacingRight;
 
                 var fx = w.Get<RenderConfig>().BossEffects;
-                trans.Rotation = (float)(MathF.Sin(b1Brain.HoverTimer * fx.BossHoverAngleSpeed) * fx.BossHoverAngleAmp);
+                trans.Rotation = (float)(MathF.Sin(bSnakeBrain.HoverTimer * fx.BossHoverAngleSpeed) * fx.BossHoverAngleAmp);
             }
-            else if (state.BossType == BossType.Boss2 && brain is Boss2Brain b2Brain)
+            else if (state.BossType == BossType.BossLion && brain is BossLionBrain bLionBrain)
             {
                 var isGrounded = col.IsGrounded;
                 // 生存フラグを動的に渡す
-                b2Brain.Update(dt, ctx.CachedPlayerPos, ctx.CachedPlayerVel, ctx.IsPlayerAlive, isGrounded, hp.Current, hp.Max, trans.Position);
+                bLionBrain.Update(dt, ctx.CachedPlayerPos, ctx.CachedPlayerVel, ctx.IsPlayerAlive, isGrounded, hp.Current, hp.Max, trans.Position);
 
                 var currentLinear = vel.Value;
-                currentLinear = new Vec2f(b2Brain.Velocity.X, currentLinear.Y);
-                var isControlledAirborne = b2Brain.State == Boss2State.PlatformTraverse
-                    || (b2Brain.AbilitySystem.IsCasting && b2Brain.CurrentTimelineAttack?.Motion.Kind == SkillMotionKind.LeapSmash);
+                currentLinear = new Vec2f(bLionBrain.Velocity.X, currentLinear.Y);
+                var isControlledAirborne = bLionBrain.State == BossLionState.PlatformTraverse
+                    || (bLionBrain.AbilitySystem.IsCasting && bLionBrain.CurrentTimelineAttack?.Motion.Kind == SkillMotionKind.LeapSmash);
 
                 if (isControlledAirborne || isGrounded)
                 {
-                    currentLinear = new Vec2f(currentLinear.X, b2Brain.Velocity.Y);
+                    currentLinear = new Vec2f(currentLinear.X, bLionBrain.Velocity.Y);
                 }
                 vel.Value = currentLinear;
 
-                UpdateBoss2MovementAndCollision(e, b2Brain, ref trans, ref vel, ref col, dt, w, tileMap, isControlledAirborne, ctx.CandidateBossPlatforms);
-                sprite.FlipX = !b2Brain.FacingRight;
+                UpdateBossLionMovementAndCollision(e, bLionBrain, ref trans, ref vel, ref col, dt, w, tileMap, isControlledAirborne, ctx.CandidateBossPlatforms);
+                sprite.FlipX = !bLionBrain.FacingRight;
             }
 
             // BossCombatState の同期
@@ -256,9 +256,9 @@ public static class BattleAiSystem
         }
     }
 
-    private static void UpdateBoss2MovementAndCollision(
+    private static void UpdateBossLionMovementAndCollision(
         Entity entity,
-        Boss2Brain brain,
+        BossLionBrain brain,
         ref Transform trans,
         ref Velocity vel,
         ref CollisionBox col,
@@ -268,7 +268,7 @@ public static class BattleAiSystem
         bool isControlledAirborne,
         List<int> candidateBossPlatforms)
     {
-        var b2Cfg = world.Get<Boss2Config>();
+        var bLionCfg = world.Get<BossLionConfig>();
         var arenaCfg = world.Get<ArenaConfig>();
 
         var linear = vel.Value;
@@ -277,12 +277,12 @@ public static class BattleAiSystem
         if (!col.IsGrounded && !isControlledAirborne)
         {
             var curVy = linear.Y;
-            PhysicsService.ApplyGravity(ref curVy, b2Cfg.Gravity, b2Cfg.MaxFallSpeed, dt);
+            PhysicsService.ApplyGravity(ref curVy, bLionCfg.Gravity, bLionCfg.MaxFallSpeed, dt);
             linear = new Vec2f(linear.X, curVy);
             vel.Value = linear;
         }
 
-        var colSize = col.Size != Vec2f.Zero ? col.Size : b2Cfg.CollisionSize;
+        var colSize = col.Size != Vec2f.Zero ? col.Size : bLionCfg.CollisionSize;
 
         var minX = arenaCfg.BoundaryMinX + colSize.X * 0.5f;
         var maxX = arenaCfg.BoundaryMaxX - colSize.X * 0.5f;
@@ -290,7 +290,7 @@ public static class BattleAiSystem
         // 外力ノックバック速度の減衰処理
         if (vel.Knockback != Vec2f.Zero)
         {
-            var decay = b2Cfg.KnockbackDeceleration > 0.0f ? b2Cfg.KnockbackDeceleration : 1200.0f;
+            var decay = bLionCfg.KnockbackDeceleration > 0.0f ? bLionCfg.KnockbackDeceleration : 1200.0f;
             var kx = PhysicsService.MoveTowards(vel.Knockback.X, 0.0f, decay * dt);
             var ky = PhysicsService.MoveTowards(vel.Knockback.Y, 0.0f, decay * dt);
             vel.Knockback = new Vec2f(kx, ky);

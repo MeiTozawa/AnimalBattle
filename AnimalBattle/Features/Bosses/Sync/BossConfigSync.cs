@@ -11,14 +11,14 @@ using Flecs.NET.Core;
 public static class BossConfigSync
 {
     /// <summary>
-    /// Boss 1 設定の変更をワールド、Prefab、および活体エンティティへ反映します。
+    /// BossSnake 設定の変更をワールド、Prefab、および活体エンティティへ反映します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
-    /// <param name="newConfig">更新後の Boss 1 設定</param>
-    public static void SyncBoss1(World world, Boss1Config newConfig)
+    /// <param name="newConfig">更新後の BossSnake 設定</param>
+    public static void SyncBossSnake(World world, BossSnakeConfig newConfig)
     {
         Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
-        Debug.Assert(newConfig != null, "Boss1Config は null にできません。");
+        Debug.Assert(newConfig != null, "BossSnakeConfig は null にできません。");
 
         // 1. ワールド単例の更新
         world.Set(newConfig);
@@ -26,8 +26,8 @@ public static class BossConfigSync
         // 2. Prefab プレハブの再登録
         BossPrefabs.Register(world);
 
-        // 3. 活体 Boss1 エンティティの再水和
-        using var query = world.QueryBuilder().With<Boss1Tag>().Build();
+        // 3. 活体 BossSnake エンティティの再水和
+        using var query = world.QueryBuilder().With<BossSnakeTag>().Build();
         query.Each(e =>
         {
             RehydrateBossEntity(e, newConfig);
@@ -35,14 +35,14 @@ public static class BossConfigSync
     }
 
     /// <summary>
-    /// Boss 2 設定の変更をワールド、Prefab、および活体エンティティへ反映します。
+    /// BossLion 設定の変更をワールド、Prefab、および活体エンティティへ反映します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
-    /// <param name="newConfig">更新後の Boss 2 設定</param>
-    public static void SyncBoss2(World world, Boss2Config newConfig)
+    /// <param name="newConfig">更新後の BossLion 設定</param>
+    public static void SyncBossLion(World world, BossLionConfig newConfig)
     {
         Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
-        Debug.Assert(newConfig != null, "Boss2Config は null にできません。");
+        Debug.Assert(newConfig != null, "BossLionConfig は null にできません。");
 
         // 1. ワールド単例の更新
         world.Set(newConfig);
@@ -50,8 +50,8 @@ public static class BossConfigSync
         // 2. Prefab プレハブの再登録
         BossPrefabs.Register(world);
 
-        // 3. 活体 Boss2 エンティティの再水和
-        using var query = world.QueryBuilder().With<Boss2Tag>().Build();
+        // 3. 活体 BossLion エンティティの再水和
+        using var query = world.QueryBuilder().With<BossLionTag>().Build();
         query.Each(e =>
         {
             RehydrateBossEntity(e, newConfig);

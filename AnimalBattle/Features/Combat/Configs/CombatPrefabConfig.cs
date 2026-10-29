@@ -38,7 +38,7 @@ public sealed class CombatPrefabConfig
     /// <summary>自機近接斬撃判定のプレハブ設定。</summary>
     public PlayerSlashHitboxPrefabConfig PlayerSlashHitbox { get; set; }
 
-    /// <summary>Boss 2 近接斬撃判定のプレハブ設定。</summary>
+    /// <summary>BossLion 近接斬撃判定のプレハブ設定。</summary>
     public BossSlashHitboxPrefabConfig BossSlashHitbox { get; set; }
 
     /// <summary>点粒子スパーク演出のプレハブ設定。</summary>

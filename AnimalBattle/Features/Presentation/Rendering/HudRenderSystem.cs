@@ -1,7 +1,7 @@
 using System.Drawing;
 using AnimalBattle.Ai;
-using AnimalBattle.Ai.Boss1;
-using AnimalBattle.Ai.Boss2;
+using AnimalBattle.Ai.BossSnake;
+using AnimalBattle.Ai.BossLion;
 
 namespace AnimalBattle.Presentation.Rendering;
 
@@ -127,8 +127,8 @@ public static class HudRenderSystem {
         ref readonly var state = ref states[idx];
         var (p2, p3) = state.BossType switch
         {
-            BossType.Boss1 => (world.Get<Boss1Config>().Phase2.HpThreshold, world.Get<Boss1Config>().Phase3.HpThreshold),
-            BossType.Boss2 => (world.Get<Boss2Config>().Phase2.HpThreshold, world.Get<Boss2Config>().Phase3.HpThreshold),
+            BossType.BossSnake => (world.Get<BossSnakeConfig>().Phase2.HpThreshold, world.Get<BossSnakeConfig>().Phase3.HpThreshold),
+            BossType.BossLion => (world.Get<BossLionConfig>().Phase2.HpThreshold, world.Get<BossLionConfig>().Phase3.HpThreshold),
             _ => (0.7f, 0.3f)
         };
         ctx.CachedBoss = new HudRenderSystemContext.BossHudData(hps[idx], state, (p2, p3));
@@ -236,7 +236,7 @@ public static class HudRenderSystem {
     private static void DrawTrainingModeBanner()
     {
         GameEngine.DrawLeftString(new Vec2i(460, 20), "[DEBUG TRAINING MODE - DUMMY TARGET]", ColorPalette.GoldLight);
-        GameEngine.DrawLeftString(new Vec2i(460, 38), "1: Boss1 | 2: Boss2 | 3/4: Character | F5: Reload", ColorPalette.GrayLight);
+        GameEngine.DrawLeftString(new Vec2i(460, 38), "1: BossSnake | 2: BossLion | 3/4: Character | F5: Reload", ColorPalette.GrayLight);
     }
 
     /// <summary>
@@ -246,12 +246,12 @@ public static class HudRenderSystem {
     {
         var p = Math.Clamp(phase, 1, 3);
         return (bossType, p) switch {
-            (BossType.Boss1, 1) => "BOSS: Boss1 [PHASE 1/3]",
-            (BossType.Boss1, 2) => "BOSS: Boss1 [PHASE 2/3]",
-            (BossType.Boss1, 3) => "BOSS: Boss1 [PHASE 3/3]",
-            (BossType.Boss2, 1) => "BOSS: Boss2 [PHASE 1/3]",
-            (BossType.Boss2, 2) => "BOSS: Boss2 [PHASE 2/3]",
-            (BossType.Boss2, 3) => "BOSS: Boss2 [PHASE 3/3]",
+            (BossType.BossSnake, 1) => "BOSS: BossSnake [PHASE 1/3]",
+            (BossType.BossSnake, 2) => "BOSS: BossSnake [PHASE 2/3]",
+            (BossType.BossSnake, 3) => "BOSS: BossSnake [PHASE 3/3]",
+            (BossType.BossLion, 1) => "BOSS: BossLion [PHASE 1/3]",
+            (BossType.BossLion, 2) => "BOSS: BossLion [PHASE 2/3]",
+            (BossType.BossLion, 3) => "BOSS: BossLion [PHASE 3/3]",
             (BossType.Empty, _) => "TRAINING DUMMY",
             _ => $"BOSS: {bossType} [PHASE {p}/3]"
         };
@@ -334,32 +334,32 @@ public static class HudRenderSystem {
         badgeColor = hpCfg.StateDefaultColor;
         switch (brain)
         {
-            case Boss1Brain b1:
+            case BossSnakeBrain b1:
                 switch (b1.State)
                 {
-                    case Boss1State.Hover:
+                    case BossSnakeState.Hover:
                         destination.TryWrite($"[STATE: HOVERING (IDLE)]", out charsWritten);
                         return;
-                    case Boss1State.AttackSelection:
+                    case BossSnakeState.AttackSelection:
                         destination.TryWrite($"[STATE: ATTACK SELECTION]", out charsWritten);
                         return;
                     default:
                         destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
                         return;
                 }
-            case Boss2Brain b2:
+            case BossLionBrain b2:
                 switch (b2.State)
                 {
-                    case Boss2State.Idle:
+                    case BossLionState.Idle:
                         destination.TryWrite($"[STATE: IDLE / ALERT]", out charsWritten);
                         return;
-                    case Boss2State.PatrolChase:
+                    case BossLionState.PatrolChase:
                         destination.TryWrite($"[STATE: CHASE (NEXT: {abilityName})]", out charsWritten);
                         return;
-                    case Boss2State.MoveToTakeoff:
+                    case BossLionState.MoveToTakeoff:
                         destination.TryWrite($"[STATE: NAVIGATING TO TAKEOFF]", out charsWritten);
                         return;
-                    case Boss2State.PlatformTraverse:
+                    case BossLionState.PlatformTraverse:
                         destination.TryWrite($"[STATE: PLATFORM TRAVERSE (AIRBORNE)]", out charsWritten);
                         return;
                     default:

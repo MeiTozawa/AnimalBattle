@@ -41,8 +41,8 @@ public static class StartUiRenderSystem
 
         var catCardBounds = layout.CatCard.ToRectangle();
         var bunnyCardBounds = layout.BunnyCard.ToRectangle();
-        var boss1CardBounds = layout.Boss1Card.ToRectangle();
-        var boss2CardBounds = layout.Boss2Card.ToRectangle();
+        var bossSnakeCardBounds = layout.BossSnakeCard.ToRectangle();
+        var bossLionCardBounds = layout.BossLionCard.ToRectangle();
         var confirmBtnBounds = layout.ConfirmButton.ToRectangle();
 
         ref readonly var flow = ref w.Get<GameFlow>();
@@ -76,22 +76,22 @@ public static class StartUiRenderSystem
                 colors.PlayerSelectedColor,
                 cfg);
 
-            // 4. Boss 1 カード描画 飛行浮遊アニメーション
-            DrawBoss1Card(
-                boss1CardBounds,
-                texts.Boss1,
-                flow.SelectedBoss == BossType.Boss1,
-                uiState.Boss1FlyTimer,
-                uiState.Boss1TextureHandle,
+            // 4. BossSnake カード描画 飛行浮遊アニメーション
+            DrawBossSnakeCard(
+                bossSnakeCardBounds,
+                texts.BossSnake,
+                flow.SelectedBoss == BossType.BossSnake,
+                uiState.BossSnakeFlyTimer,
+                uiState.BossSnakeTextureHandle,
                 cfg);
 
-            // 5. Boss 2 カード描画 跳躍叩きつけアニメーション
-            DrawBoss2Card(
-                boss2CardBounds,
-                texts.Boss2,
-                flow.SelectedBoss == BossType.Boss2,
-                uiState.Boss2SlamTimer,
-                uiState.Boss2TextureHandle,
+            // 5. BossLion カード描画 跳躍叩きつけアニメーション
+            DrawBossLionCard(
+                bossLionCardBounds,
+                texts.BossLion,
+                flow.SelectedBoss == BossType.BossLion,
+                uiState.BossLionSlamTimer,
+                uiState.BossLionTextureHandle,
                 cfg);
 
             // 6. 確定ボタン描画
@@ -187,7 +187,7 @@ public static class StartUiRenderSystem
         GameEngine.DrawLeftString(new Vec2i(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset), cardText.Description, colors.TextMuted);
     }
 
-    private static void DrawBoss1Card(
+    private static void DrawBossSnakeCard(
         Rectangle bounds,
         StartSceneCardTextConfig cardText,
         bool isSelected,
@@ -203,10 +203,10 @@ public static class StartUiRenderSystem
             var layout = cfg.Layout;
 
             var flyOffsetY = flyTimer > 0f
-                ? MathF.Sin(flyTimer * motion.Boss1FlyFrequency) * motion.Boss1FlyAmplitude + motion.Boss1FlyOffsetY
+                ? MathF.Sin(flyTimer * motion.BossSnakeFlyFrequency) * motion.BossSnakeFlyAmplitude + motion.BossSnakeFlyOffsetY
                 : 0f;
             var tiltAngle = flyTimer > 0f
-                ? MathF.Sin(flyTimer * motion.Boss1TiltFrequency) * motion.Boss1TiltAmplitude
+                ? MathF.Sin(flyTimer * motion.BossSnakeTiltFrequency) * motion.BossSnakeTiltAmplitude
                 : 0f;
 
             var drawCenter = new Vec2i(bounds.Left + bounds.Width / 2, (int)(bounds.Top + layout.PreviewCenterOffsetY + flyOffsetY));
@@ -214,14 +214,14 @@ public static class StartUiRenderSystem
             // 192x192 のボス画像をカード枠に適合するスケールで独立描画
             GameEngine.DrawRotaGraph(
                 drawCenter,
-                motion.Boss1Scale,
+                motion.BossSnakeScale,
                 tiltAngle,
                 textureHandle,
                 true);
         }
     }
 
-    private static void DrawBoss2Card(
+    private static void DrawBossLionCard(
         Rectangle bounds,
         StartSceneCardTextConfig cardText,
         bool isSelected,
@@ -237,31 +237,31 @@ public static class StartUiRenderSystem
             var layout = cfg.Layout;
 
             var offsetY = 0f;
-            var baseScale = motion.Boss2BaseScale;
+            var baseScale = motion.BossLionBaseScale;
             var scale = new Vec2f((float)baseScale, (float)baseScale);
 
             if (slamTimer > 0f)
             {
-                var riseEnd = motion.Boss2RiseDuration;
-                var slamEnd = riseEnd + motion.Boss2SlamDuration;
-                var impactEnd = slamEnd + motion.Boss2ImpactDuration;
+                var riseEnd = motion.BossLionRiseDuration;
+                var slamEnd = riseEnd + motion.BossLionSlamDuration;
+                var impactEnd = slamEnd + motion.BossLionImpactDuration;
 
                 if (slamTimer <= riseEnd)
                 {
                     var t = slamTimer / riseEnd;
-                    offsetY = motion.Boss2RiseHeight * t;
-                    scale = new Vec2f((float)(baseScale * motion.Boss2RiseScale), (float)(baseScale * (2.0 - motion.Boss2RiseScale)));
+                    offsetY = motion.BossLionRiseHeight * t;
+                    scale = new Vec2f((float)(baseScale * motion.BossLionRiseScale), (float)(baseScale * (2.0 - motion.BossLionRiseScale)));
                 }
                 else if (slamTimer <= slamEnd)
                 {
-                    var t = (slamTimer - riseEnd) / motion.Boss2SlamDuration;
-                    offsetY = motion.Boss2RiseHeight * (1f - t);
-                    scale = new Vec2f((float)(baseScale * motion.Boss2SlamScale), (float)(baseScale * (2.0 - motion.Boss2SlamScale)));
+                    var t = (slamTimer - riseEnd) / motion.BossLionSlamDuration;
+                    offsetY = motion.BossLionRiseHeight * (1f - t);
+                    scale = new Vec2f((float)(baseScale * motion.BossLionSlamScale), (float)(baseScale * (2.0 - motion.BossLionSlamScale)));
                 }
                 else if (slamTimer <= impactEnd)
                 {
-                    var t = (slamTimer - slamEnd) / motion.Boss2ImpactDuration;
-                    offsetY = MathF.Sin(t * MathF.PI * motion.Boss2ImpactShakeFreq) * motion.Boss2ImpactShakeAmplitude;
+                    var t = (slamTimer - slamEnd) / motion.BossLionImpactDuration;
+                    offsetY = MathF.Sin(t * MathF.PI * motion.BossLionImpactShakeFreq) * motion.BossLionImpactShakeAmplitude;
                     scale = new Vec2f((float)(baseScale * (1.15 - 0.15 * t)), (float)(baseScale * (0.85 + 0.15 * t)));
                 }
             }

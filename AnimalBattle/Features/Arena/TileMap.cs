@@ -157,7 +157,7 @@ public sealed class TileMap(
             }
         }
 
-        var b2Cfg = world.Get<Boss2Config>();
+        var b2Cfg = world.Get<BossLionConfig>();
         var arenaCfg = world.Get<ArenaConfig>();
         NavGraph.Build(nodes, b2Cfg.JumpForce, b2Cfg.Gravity, b2Cfg.MoveSpeed, arenaCfg.NavigationGraph);
         Log.Info("TileMap", 

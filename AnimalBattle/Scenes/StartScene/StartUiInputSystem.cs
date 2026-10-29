@@ -39,8 +39,8 @@ public static class StartUiInputSystem
 
         var catCardBounds = layout.CatCard.ToRectangle();
         var bunnyCardBounds = layout.BunnyCard.ToRectangle();
-        var boss1CardBounds = layout.Boss1Card.ToRectangle();
-        var boss2CardBounds = layout.Boss2Card.ToRectangle();
+        var bossSnakeCardBounds = layout.BossSnakeCard.ToRectangle();
+        var bossLionCardBounds = layout.BossLionCard.ToRectangle();
         var confirmButtonBounds = layout.ConfirmButton.ToRectangle();
 
         ref var flow = ref w.GetMut<GameFlow>();
@@ -95,32 +95,32 @@ public static class StartUiInputSystem
                 flow.SelectedPlayer = CharacterType.Bunny;
             }
 
-            // --- 3. Boss 1 カード判定 飛行浮遊アニメーション ---
-            uiState.IsBoss1Hovered = boss1CardBounds.Contains(mousePos.X, mousePos.Y);
-            if (uiState.IsBoss1Hovered)
+            // --- 3. BossSnake カード判定 飛行浮遊アニメーション ---
+            uiState.IsBossSnakeHovered = bossSnakeCardBounds.Contains(mousePos.X, mousePos.Y);
+            if (uiState.IsBossSnakeHovered)
             {
-                uiState.Boss1FlyTimer += dt;
-                if (isClick) flow.SelectedBoss = BossType.Boss1;
+                uiState.BossSnakeFlyTimer += dt;
+                if (isClick) flow.SelectedBoss = BossType.BossSnake;
             }
             else
             {
-                uiState.Boss1FlyTimer = Math.Max(0f, uiState.Boss1FlyTimer - dt * motion.Boss1FlyDecaySpeed);
+                uiState.BossSnakeFlyTimer = Math.Max(0f, uiState.BossSnakeFlyTimer - dt * motion.BossSnakeFlyDecaySpeed);
             }
 
-            // --- 4. Boss 2 カード判定 跳躍重撃アニメーション ---
-            uiState.IsBoss2Hovered = boss2CardBounds.Contains(mousePos.X, mousePos.Y);
-            if (uiState.IsBoss2Hovered)
+            // --- 4. BossLion カード判定 跳躍重撃アニメーション ---
+            uiState.IsBossLionHovered = bossLionCardBounds.Contains(mousePos.X, mousePos.Y);
+            if (uiState.IsBossLionHovered)
             {
-                uiState.Boss2SlamTimer += dt;
-                if (uiState.Boss2SlamTimer > motion.Boss2SlamCycleDuration)
+                uiState.BossLionSlamTimer += dt;
+                if (uiState.BossLionSlamTimer > motion.BossLionSlamCycleDuration)
                 {
-                    uiState.Boss2SlamTimer -= motion.Boss2SlamCycleDuration;
+                    uiState.BossLionSlamTimer -= motion.BossLionSlamCycleDuration;
                 }
-                if (isClick) flow.SelectedBoss = BossType.Boss2;
+                if (isClick) flow.SelectedBoss = BossType.BossLion;
             }
             else
             {
-                uiState.Boss2SlamTimer = 0f;
+                uiState.BossLionSlamTimer = 0f;
             }
 
             // --- 5. 確定ボタン判定 ---

@@ -1,7 +1,7 @@
 using AnimalBattle.Logging;
 using AnimalBattle.Ai;
-using AnimalBattle.Ai.Boss1;
-using AnimalBattle.Ai.Boss2;
+using AnimalBattle.Ai.BossSnake;
+using AnimalBattle.Ai.BossLion;
 using AnimalBattle.Combat.Spawners;
 using AnimalBattle.Maps;
 
@@ -13,8 +13,8 @@ namespace AnimalBattle.Scenes.Battle;
 public static class BattleSceneSpawner
 {
     public const string RootName = "BattleSceneRoot";
-    public const string Boss1Name = "Boss1";
-    public const string Boss2Name = "Boss2";
+    public const string BossSnakeName = "BossSnake";
+    public const string BossLionName = "BossLion";
 
     /// <summary>
     ///     戦闘シーンのルートエンティティおよび自機・敵対ユニット・アリーナを生成してワールドへ配置します。
@@ -77,11 +77,11 @@ public static class BattleSceneSpawner
         }
         else
         {
-            var bossName = bossType == BossType.Boss2 ? Boss2Name : Boss1Name;
+            var bossName = bossType == BossType.BossLion ? BossLionName : BossSnakeName;
             var (texPath, _) = bossType switch {
-                BossType.Boss1 => (ResourcePath.Characters.Character031_3Png, "Boss 1"),
-                BossType.Boss2 => (ResourcePath.Characters.Character027_3Png, "Boss 2"),
-                _ => (ResourcePath.Characters.Character031_3Png, "Boss 1")
+                BossType.BossSnake => (ResourcePath.Characters.Character031_3Png, "BossSnake"),
+                BossType.BossLion => (ResourcePath.Characters.Character027_3Png, "BossLion"),
+                _ => (ResourcePath.Characters.Character031_3Png, "BossSnake")
             };
 
             var hasBossHandle = assets.TryGetTexture(texPath, out var bossHandle);
@@ -93,20 +93,20 @@ public static class BattleSceneSpawner
                 .IsA(BossPrefabs.GetPrefab(bossType));
 
             var (spawn, scale) = bossType switch {
-                BossType.Boss1 => (world.Get<Boss1Config>().Spawn, world.Get<Boss1Config>().Scale),
-                BossType.Boss2 => (world.Get<Boss2Config>().Spawn, world.Get<Boss2Config>().Scale),
+                BossType.BossSnake => (world.Get<BossSnakeConfig>().Spawn, world.Get<BossSnakeConfig>().Scale),
+                BossType.BossLion => (world.Get<BossLionConfig>().Spawn, world.Get<BossLionConfig>().Scale),
                 _ => (Vec2f.Zero, Vec2f.One)
             };
 
             IBossBrain brain = bossType switch {
-                BossType.Boss1 => new Boss1Brain(world, spawn),
-                BossType.Boss2 => new Boss2Brain(world, spawn, null, () => tileMap.NavGraph),
-                _ => new Boss1Brain(world, spawn)
+                BossType.BossSnake => new BossSnakeBrain(world, spawn),
+                BossType.BossLion => new BossLionBrain(world, spawn, null, () => tileMap.NavGraph),
+                _ => new BossSnakeBrain(world, spawn)
             };
 
             var canBeKnockedBack = bossType switch {
-                BossType.Boss1 => world.Get<Boss1Config>().CanBeKnockedBack,
-                BossType.Boss2 => world.Get<Boss2Config>().CanBeKnockedBack,
+                BossType.BossSnake => world.Get<BossSnakeConfig>().CanBeKnockedBack,
+                BossType.BossLion => world.Get<BossLionConfig>().CanBeKnockedBack,
                 _ => true
             };
 

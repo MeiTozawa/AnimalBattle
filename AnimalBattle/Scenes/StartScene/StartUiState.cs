@@ -8,11 +8,11 @@ public struct StartUiState {
     public Entity BunnyPreviewEntity;
     public float CatStepTimer;
     public float BunnyStepTimer;
-    public float Boss1FlyTimer;
-    public float Boss2SlamTimer;
-    public bool IsBoss1Hovered;
-    public bool IsBoss2Hovered;
+    public float BossSnakeFlyTimer;
+    public float BossLionSlamTimer;
+    public bool IsBossSnakeHovered;
+    public bool IsBossLionHovered;
     public bool IsConfirmHovered;
-    public int Boss1TextureHandle;
-    public int Boss2TextureHandle;
+    public int BossSnakeTextureHandle;
+    public int BossLionTextureHandle;
 }

@@ -144,8 +144,8 @@ public static class BattleInputSystem
         var w = boss.CsWorld();
         var bossType = state.BossType;
         var (spawn, maxHp) = bossType switch {
-            BossType.Boss1 => (w.Get<Boss1Config>().Spawn, w.Get<Boss1Config>().MaxHp),
-            BossType.Boss2 => (w.Get<Boss2Config>().Spawn, w.Get<Boss2Config>().MaxHp),
+            BossType.BossSnake => (w.Get<BossSnakeConfig>().Spawn, w.Get<BossSnakeConfig>().MaxHp),
+            BossType.BossLion => (w.Get<BossLionConfig>().Spawn, w.Get<BossLionConfig>().MaxHp),
             _ => (Vec2f.Zero, 1000f)
         };
         
@@ -261,14 +261,14 @@ public static class BattleInputSystem
 
         // 1/2/3/4 キーによる Boss およびキャラクターの迅速切替：InputAction 抽象経由
         ref readonly var flow = ref world.Get<GameFlow>();
-        if (InputService.IsPressed(InputAction.SelectBoss1))
+        if (InputService.IsPressed(InputAction.SelectBossSnake))
         {
-            GameManager.Current.SwitchToBattle(flow.SelectedPlayer, BossType.Boss1);
+            GameManager.Current.SwitchToBattle(flow.SelectedPlayer, BossType.BossSnake);
             return;
         }
-        if (InputService.IsPressed(InputAction.SelectBoss2))
+        if (InputService.IsPressed(InputAction.SelectBossLion))
         {
-            GameManager.Current.SwitchToBattle(flow.SelectedPlayer, BossType.Boss2);
+            GameManager.Current.SwitchToBattle(flow.SelectedPlayer, BossType.BossLion);
             return;
         }
         if (InputService.IsPressed(InputAction.SelectCharacter1))
@@ -317,8 +317,8 @@ public static class BattleInputSystem
 
         var w = boss.CsWorld();
         var (p2, p3) = state.BossType switch {
-            BossType.Boss1 => (w.Get<Boss1Config>().Phase2.HpThreshold, w.Get<Boss1Config>().Phase3.HpThreshold),
-            BossType.Boss2 => (w.Get<Boss2Config>().Phase2.HpThreshold, w.Get<Boss2Config>().Phase3.HpThreshold),
+            BossType.BossSnake => (w.Get<BossSnakeConfig>().Phase2.HpThreshold, w.Get<BossSnakeConfig>().Phase3.HpThreshold),
+            BossType.BossLion => (w.Get<BossLionConfig>().Phase2.HpThreshold, w.Get<BossLionConfig>().Phase3.HpThreshold),
             _ => (0.7f, 0.3f)
         };
         var ratio = _targetDebugPhase switch {

@@ -6,8 +6,8 @@ namespace AnimalBattle.Bosses.Components;
 ///     Boss の戦闘状態：フェーズ、発動中スキル、タイマー、向き等を一元管理するコンポーネント。
 ///     HUD、予兆描画、デバッグ等の外部システムはこのコンポーネントの値を参照します。
 /// </summary>
-public struct BossCombatState(BossType bossType = BossType.Boss1, Phase phase = Phase.Phase1) {
-    /// <summary>Boss の種別：Boss1 / Boss2。</summary>
+public struct BossCombatState(BossType bossType = BossType.BossSnake, Phase phase = Phase.Phase1) {
+    /// <summary>Boss の種別：BossSnake / BossLion。</summary>
     public BossType BossType = bossType;
 
     /// <summary>現在の Boss 進行フェーズ。</summary>
