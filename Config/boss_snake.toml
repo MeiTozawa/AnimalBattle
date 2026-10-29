@@ -69,7 +69,7 @@ Weight = 90.0
 
 # Phase 2 状態機械設定
 [Phase2]
-HpThreshold = 0.667
+HpThreshold = 0.7
 HoverDuration = 0.6
 PatrolDuration = 1.5
 HoverBaseY = 250.0
@@ -114,7 +114,7 @@ Weight = 80.0
 
 # Phase 3 状態機械設定
 [Phase3]
-HpThreshold = 0.334
+HpThreshold = 0.3
 HoverDuration = 0.4
 PatrolDuration = 1.0
 HoverBaseY = 280.0
