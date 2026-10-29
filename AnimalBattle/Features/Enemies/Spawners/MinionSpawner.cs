@@ -40,7 +40,7 @@ public static class MinionSpawner
     }
 
     /// <summary>
-    /// 空中浮遊弾幕怪をワールドに生成し、RingBurst 技能を注入します。
+    /// 空中浮遊弾幕怪をワールドに生成し、設定された遠隔技能を注入します。
     /// </summary>
     /// <param name="world">対象の Flecs ワールド</param>
     /// <param name="root">親ルートエンティティ</param>

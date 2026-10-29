@@ -36,7 +36,7 @@ CollisionSize = { x = 75.0, y = 75.0 }
 Scale = { x = 0.5, y = 0.5 }
 HitFlashDuration = 0.12
 ContactDamage = 1.0
-SkillTag = "RingBurst"
+SkillTag = "FastSniper"
 SkillCooldown = 5.0
 SpawnPos = { x = 160.0, y = -120.0 }
 MinPlayerDistance = 280.0

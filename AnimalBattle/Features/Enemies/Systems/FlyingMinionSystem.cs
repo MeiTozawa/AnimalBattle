@@ -17,7 +17,7 @@ internal sealed class FlyingMinionContext : IDisposable
 
 /// <summary>
 /// 空中浮遊弾幕怪の運動制御およびスキル駆動システム。
-/// 正弦波浮遊、プレイヤー緩慢追跡、および RingBurst 技能の発動・予兆描画を行います。
+/// 正弦波浮遊、プレイヤー緩慢追跡、および遠隔技能の発動・予兆描画を行います。
 /// </summary>
 public static class FlyingMinionSystem
 {
