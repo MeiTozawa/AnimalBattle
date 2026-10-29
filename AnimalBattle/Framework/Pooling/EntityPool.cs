@@ -126,14 +126,28 @@ public sealed class EntityPool : IDisposable {
         EnsureArrayCapacity(TotalAllocated + count);
         for (var i = 0; i < count; i++)
         {
-            var e = CreateBaseEntity();
             var slot = TotalAllocated++;
-            e.Set(new PoolLeaseState { PoolId = PoolId, IsRented = false, SlotIndex = slot });
+            var e = CreateAndInitializeEntity(slot, false);
             e.Disable();
-            _onInit?.Invoke(e);
             _managedRentalFlags[slot] = false;
             _pool[AvailableCount++] = e;
             _allAllocated[slot] = e;
+        }
+    }
+
+    private Entity CreateAndInitializeEntity(int slot, bool isRented)
+    {
+        _world.DeferSuspend();
+        try
+        {
+            var e = CreateBaseEntity();
+            e.Set(new PoolLeaseState { PoolId = PoolId, IsRented = isRented, SlotIndex = slot });
+            _onInit?.Invoke(e);
+            return e;
+        }
+        finally
+        {
+            _world.DeferResume();
         }
     }
 
@@ -245,9 +259,7 @@ public sealed class EntityPool : IDisposable {
                 var recycledEntity = _allAllocated[slot];
                 if (!recycledEntity.IsAlive())
                 {
-                    recycledEntity = CreateBaseEntity();
-                    recycledEntity.Set(new PoolLeaseState { PoolId = PoolId, IsRented = true, SlotIndex = slot });
-                    _onInit?.Invoke(recycledEntity);
+                    recycledEntity = CreateAndInitializeEntity(slot, true);
                     _allAllocated[slot] = recycledEntity;
                 }
                 else
@@ -266,9 +278,7 @@ public sealed class EntityPool : IDisposable {
             // デフォルトでアクティブな単一エンティティを原地生成して即座に貸出
             EnsureArrayCapacity(TotalAllocated + 1);
             var newSlot = TotalAllocated++;
-            var newEntity = CreateBaseEntity();
-            newEntity.Set(new PoolLeaseState { PoolId = PoolId, IsRented = true, SlotIndex = newSlot });
-            _onInit?.Invoke(newEntity);
+            var newEntity = CreateAndInitializeEntity(newSlot, true);
 
             _allAllocated[newSlot] = newEntity;
             _managedRentalFlags[newSlot] = true;

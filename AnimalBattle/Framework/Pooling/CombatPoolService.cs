@@ -41,7 +41,7 @@ public sealed class CombatPoolService : IDisposable
     public CombatPoolService(World world)
     {
         PlayerBullets     = RegisterPool(new EntityPool(world, CombatPrefabs.PlayerBullet, 64, ResetPlayerBulletEntity));
-        BossBullets       = RegisterPool(new EntityPool(world, CombatPrefabs.BossBulletBase, 256, ResetBossBulletEntity));
+        BossBullets       = RegisterPool(new EntityPool(world, CombatPrefabs.BossBulletBase, 512, ResetBossBulletEntity));
         SparkEffects      = RegisterPool(new EntityPool(world, VfxPrefabs.SparkVfx, 256, ResetEffectEntity));
         RingEffects       = RegisterPool(new EntityPool(world, VfxPrefabs.RingVfx, 64, ResetEffectEntity));
         AreaEffects       = RegisterPool(new EntityPool(world, VfxPrefabs.AreaVfx, 32, ResetEffectEntity));
@@ -138,11 +138,8 @@ public sealed class CombatPoolService : IDisposable
         e.Set(new Transform(Vec2f.Zero));
         e.Set(new Velocity(Vec2f.Zero));
 
-        if (e.Has<Hitbox>())
-        {
-            ref var hitbox = ref e.GetMut<Hitbox>();
-            hitbox.IsActive = true;
-        }
+        ref var hitbox = ref e.GetMut<Hitbox>();
+        hitbox.IsActive = true;
     }
 
     private static void ResetBossBulletEntity(Entity e)
@@ -176,21 +173,15 @@ public sealed class CombatPoolService : IDisposable
         hitbox.Faction = Faction.Hostile;
         hitbox.DestroyOnHit = true;
 
-        if (e.Has<BulletModifier>())
-        {
-            ref var mod = ref e.GetMut<BulletModifier>();
-            mod.Type = BulletType.Normal;
-            mod.ElapsedTimer = 0.0f;
-            mod.BaseRadius = 0.0f;
-            mod.BaseVel = Vec2f.Zero;
-        }
+        ref var mod = ref e.GetMut<BulletModifier>();
+        mod.Type = BulletType.Normal;
+        mod.ElapsedTimer = 0.0f;
+        mod.BaseRadius = 0.0f;
+        mod.BaseVel = Vec2f.Zero;
 
-        if (e.Has<OrbitSatellite>())
-        {
-            ref var sat = ref e.GetMut<OrbitSatellite>();
-            sat.OrbitDistance = 0.0f;
-            sat.InitialAngle = 0.0f;
-        }
+        ref var sat = ref e.GetMut<OrbitSatellite>();
+        sat.OrbitDistance = 0.0f;
+        sat.InitialAngle = 0.0f;
     }
 
     private static void ResetEffectEntity(Entity e)
@@ -203,18 +194,9 @@ public sealed class CombatPoolService : IDisposable
         e.Set(new Transform(Vec2f.Zero));
         e.Set(new Velocity(Vec2f.Zero));
 
-        if (e.Has<FadeEffect>())
-        {
-            ref var fade = ref e.GetMut<FadeEffect>();
-            fade.ElapsedTimer = 0.0f;
-            fade.CurrentAlpha = fade.StartAlpha;
-        }
-
-        if (e.Has<Hitbox>())
-        {
-            ref var hitbox = ref e.GetMut<Hitbox>();
-            hitbox.IsActive = false;
-        }
+        ref var fade = ref e.GetMut<FadeEffect>();
+        fade.ElapsedTimer = 0.0f;
+        fade.CurrentAlpha = fade.StartAlpha;
     }
 
     private static void ResetBossSlashHitboxEntity(Entity e)
@@ -227,20 +209,13 @@ public sealed class CombatPoolService : IDisposable
         e.Set(new Transform(Vec2f.Zero));
         e.Set(new Velocity(Vec2f.Zero));
 
-        if (e.Has<HitHistory>())
-        {
-            ref var hist = ref e.GetMut<HitHistory>();
-            hist.ResetHits();
-        }
-        if (e.Has<Hitbox>())
-        {
-            ref var hitbox = ref e.GetMut<Hitbox>();
-            hitbox.IsActive = true;
-        }
-        if (e.Has<HitboxLifetime>())
-        {
-            ref var lt = ref e.GetMut<HitboxLifetime>();
-            lt.ElapsedTimer = 0.0f;
-        }
+        ref var hist = ref e.GetMut<HitHistory>();
+        hist.ResetHits();
+
+        ref var hitbox = ref e.GetMut<Hitbox>();
+        hitbox.IsActive = true;
+
+        ref var lt = ref e.GetMut<HitboxLifetime>();
+        lt.ElapsedTimer = 0.0f;
     }
 }
