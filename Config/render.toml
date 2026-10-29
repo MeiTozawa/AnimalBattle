@@ -125,6 +125,7 @@ Text = [
     { Text = "[A/D]: Move ", Color = "#CCCCCC" },
     { Text = "[Space]: Jump & Air Double Jump", Color = "#CCCCCC" },
     { Text = "[Left Click]: Aim & Shoot", Color = "#CCCCCC" },
+    { Text = "[Shift]: Dash", Color = "#CCCCCC" },
     { Text = "[R]: Instant Restart", Color = "#FF8080" },
     { Text = "[ESC]: Back to the Home", Color = "#FF8080" },
 ]
