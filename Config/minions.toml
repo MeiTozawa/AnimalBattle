@@ -14,6 +14,17 @@ HitFlashDuration = 0.12
 SpawnPos = { x = 300.0, y = -320.0 }
 JumpForce = 640.0
 JumpCooldown = 0.8
+MinPlayerDistance = 250.0
+SpawnPoints = [
+  { x = 160.0, y = 490.0 },
+  { x = 380.0, y = 490.0 },
+  { x = 640.0, y = 490.0 },
+  { x = 900.0, y = 490.0 },
+  { x = 1120.0, y = 490.0 },
+  { x = 280.0, y = 350.0 },
+  { x = 640.0, y = 210.0 },
+  { x = 980.0, y = 350.0 }
+]
 
 # --- 空中浮遊弾幕怪 (Flying Minion) ---
 [FlyingMinion]
@@ -28,6 +39,16 @@ ContactDamage = 1.0
 SkillTag = "RingBurst"
 SkillCooldown = 5.0
 SpawnPos = { x = 160.0, y = -120.0 }
+MinPlayerDistance = 280.0
+SpawnPoints = [
+  { x = 180.0, y = 140.0 },
+  { x = 400.0, y = 180.0 },
+  { x = 640.0, y = 120.0 },
+  { x = 880.0, y = 180.0 },
+  { x = 1100.0, y = 140.0 },
+  { x = 280.0, y = 260.0 },
+  { x = 1000.0, y = 260.0 }
+]
 
 # --- 雑魚敵HPバー設定 (Minion Health Bar) ---
 [HpBar]

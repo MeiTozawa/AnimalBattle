@@ -1,4 +1,5 @@
 using AnimalBattle.Ai;
+using AnimalBattle.Enemies.Services;
 
 namespace AnimalBattle.Scenes.Battle;
 
@@ -135,8 +136,6 @@ public static class BattleInputSystem
         EventBus.Publish(new CombatResetEvent());
     }
 
-    private static void RecycleEntity(Entity e) => CombatPoolService.Recycle(e);
-
     internal static void ResetBossEntity(Entity boss, ref Health hp, ref BossCombatState state, ref BossBrainComponent brainComp)
     {
         if (!boss.IsAlive()) return;
@@ -245,7 +244,7 @@ public static class BattleInputSystem
         var isF6 = GameEngine.CheckHitKey((int)InputButton.KeyF6);
         if (isF6 && !_prevF6)
         {
-            SpawnDebugMinion(world, ctx, isFlying: false);
+            SpawnDebugMinion(world, MinionType.Ground);
         }
         _prevF6 = isF6;
 
@@ -253,7 +252,7 @@ public static class BattleInputSystem
         var isF7 = GameEngine.CheckHitKey((int)InputButton.KeyF7);
         if (isF7 && !_prevF7)
         {
-            SpawnDebugMinion(world, ctx, isFlying: true);
+            SpawnDebugMinion(world, MinionType.Flying);
         }
         _prevF7 = isF7;
 
@@ -333,36 +332,12 @@ public static class BattleInputSystem
         state.Phase = _targetDebugPhase;
     }
 
-    private static void SpawnDebugMinion(World world, BattleInputSystemContext ctx, bool isFlying)
+    private static void SpawnDebugMinion(World world, MinionType type)
     {
         var root = world.Lookup(BattleSceneSpawner.RootName);
         if (!root.IsAlive()) return;
 
-        var playerPos = Vec2f.Zero;
-        var facing = 1.0f;
-        var hasPlayer = false;
-
-        ctx.PlayerQuery.Each((ref Transform pt, ref Sprite ps) =>
-        {
-            playerPos = pt.Position;
-            facing = ps.FlipX ? -1.0f : 1.0f;
-            hasPlayer = true;
-        });
-
-        if (!hasPlayer) return;
-
-        var minionCfg = world.Get<MinionConfig>();
-        if (isFlying)
-        {
-            var offset = minionCfg.FlyingMinion.SpawnPos;
-            var spawnPos = playerPos + new Vec2f(facing * offset.X, offset.Y);
-            MinionSpawner.SpawnFlyingMinion(world, root, spawnPos);
-        }
-        else
-        {
-            var offset = minionCfg.GroundMinion.SpawnPos;
-            var spawnPos = playerPos + new Vec2f(facing * offset.X, offset.Y);
-            MinionSpawner.SpawnGroundMinion(world, root, spawnPos);
-        }
+        var spawnPos = MinionSpawnService.SelectBestSpawnPoint(world, type);
+        MinionSpawner.SpawnMinion(world, root, type, spawnPos);
     }
 }

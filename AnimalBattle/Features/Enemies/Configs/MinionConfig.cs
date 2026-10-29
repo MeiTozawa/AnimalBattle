@@ -60,6 +60,12 @@ public sealed class GroundMinionConfig
 
     /// <summary>跳躍実行のクールダウン秒数。</summary>
     public float JumpCooldown { get; set; }
+
+    /// <summary>プレイヤーからの最小安全距離。単位はピクセル。</summary>
+    public float MinPlayerDistance { get; set; }
+
+    /// <summary>候補生成座標リスト。</summary>
+    public List<Vec2f> SpawnPoints { get; set; } = [];
 }
 
 /// <summary>
@@ -107,6 +113,12 @@ public sealed class FlyingMinionConfig
         get => SpawnPos;
         set => SpawnPos = value;
     }
+
+    /// <summary>プレイヤーからの最小安全距離。単位はピクセル。</summary>
+    public float MinPlayerDistance { get; set; }
+
+    /// <summary>候補生成座標リスト。</summary>
+    public List<Vec2f> SpawnPoints { get; set; } = [];
 }
 
 /// <summary>

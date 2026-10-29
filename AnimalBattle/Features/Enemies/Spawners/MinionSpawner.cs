@@ -113,4 +113,22 @@ public static class MinionSpawner
 
         return entity;
     }
+
+    /// <summary>
+    /// 種別に応じた雑魚敵をワールドに生成します。
+    /// </summary>
+    /// <param name="world">対象の Flecs ワールド</param>
+    /// <param name="root">親ルートエンティティ</param>
+    /// <param name="type">雑魚敵種別</param>
+    /// <param name="pos">初期配置座標</param>
+    /// <returns>生成されたエンティティ</returns>
+    public static Entity SpawnMinion(World world, Entity root, MinionType type, Vec2f pos)
+    {
+        return type switch
+        {
+            MinionType.Ground => SpawnGroundMinion(world, root, pos),
+            MinionType.Flying => SpawnFlyingMinion(world, root, pos),
+            _ => AssertHelper.FailWithDefault($"[MinionSpawner 警告] 未知の MinionType です: {type}", default(Entity))
+        };
+    }
 }
