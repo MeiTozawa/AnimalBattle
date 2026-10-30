@@ -42,6 +42,14 @@ public static unsafe partial class InputService {
     }
 
     /// <summary>
+    ///     指定された物理ボタンがこのフレームで押下開始されたかを判定します。
+    /// </summary>
+    public static bool IsButtonPressed(InputButton button)
+    {
+        return NativeBindings.Input_IsButtonPressed((int)button);
+    }
+
+    /// <summary>
     ///     指定されたアクションが押下継続中であるかを判定します。
     /// </summary>
     /// <param name="action">判定対象のアクション</param>
@@ -217,6 +225,7 @@ public static unsafe partial class InputService {
         BindAction(InputContext.InGame, InputAction.SelectBossLion, InputButton.Key2);
         BindAction(InputContext.InGame, InputAction.SelectCharacter1, InputButton.Key3);
         BindAction(InputContext.InGame, InputAction.SelectCharacter2, InputButton.Key4);
+        BindAction(InputContext.InGame, InputAction.Interact, InputButton.KeyF, InputButton.Pad1);
         BindAction(InputContext.InGame, InputAction.ToggleMenu, InputButton.KeyEscape, InputButton.PadStart);
         BindAction(InputContext.InGame, InputAction.MouseClick, InputButton.MouseLeft);
 

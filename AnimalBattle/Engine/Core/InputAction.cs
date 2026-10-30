@@ -19,5 +19,6 @@ public enum InputAction {
     SelectBossSnake = 12,
     SelectBossLion = 13,
     SelectCharacter1 = 14,
-    SelectCharacter2 = 15
+    SelectCharacter2 = 15,
+    Interact = 16
 }
