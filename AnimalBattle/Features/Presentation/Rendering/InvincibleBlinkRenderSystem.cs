@@ -34,7 +34,7 @@ public static class InvincibleBlinkRenderSystem
     {
         var w = it.World();
         ref readonly var flow = ref w.Get<GameFlow>();
-        if (flow.State != GameState.Battle) return;
+        if (!flow.IsGameplay) return;
 
         var count = it.Count();
         if (count == 0) return;

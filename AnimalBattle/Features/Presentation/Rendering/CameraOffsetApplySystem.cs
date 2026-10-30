@@ -26,7 +26,7 @@ public static class CameraOffsetApplySystem
     public static void ExecuteCameraOffsetApply(Iter it)
     {
         var w = it.World();
-        if (w.Get<GameFlow>().State == GameState.Battle)
+        if (w.Get<GameFlow>().IsGameplay)
         {
             GameEngine.SetCameraOffset(CameraService.RenderOffset);
         }

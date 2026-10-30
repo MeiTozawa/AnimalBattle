@@ -34,7 +34,7 @@ public static class MinionHpBarRenderSystem
 
         var world = it.World();
         ref readonly var flow = ref world.Get<GameFlow>();
-        if (flow.State != GameState.Battle) return;
+        if (!flow.IsGameplay) return;
 
         var minionCfg = world.Get<MinionConfig>();
         var barCfg = minionCfg.HpBar;

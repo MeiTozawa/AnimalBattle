@@ -9,4 +9,9 @@ public struct GameFlow {
     public GameState State;
     public CharacterType SelectedPlayer;
     public BossType SelectedBoss;
+
+    /// <summary>
+    ///     戦闘またはチュートリアルのゲームプレイ中であるかを判定します。
+    /// </summary>
+    public readonly bool IsGameplay => State is GameState.Battle or GameState.Tutorial;
 }

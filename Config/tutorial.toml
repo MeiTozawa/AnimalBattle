@@ -1,0 +1,107 @@
+# ==============================================================================
+# チュートリアル設定ファイル (Tutorial Configuration)
+# ==============================================================================
+
+[Colors]
+Gold = "#FFD750"
+White = "#F0F5FF"
+Cyan = "#50D2FF"
+Red = "#FF6464"
+Muted = "#A0AABE"
+PanelBg = "#141824"
+PanelBorder = "#37465F"
+DoorBg = "#1A1E2C"
+TooltipBg = "#0F1E37"
+
+[Targets.Movement]
+Target1Pos = { x = 250.0, y = 520.0 }
+Target2Pos = { x = 850.0, y = 520.0 }
+Radius = 24.0
+
+[Targets.Jump]
+Pos = { x = 420.0, y = 400.0 }
+Radius = 28.0
+
+[Targets.DoubleJump]
+Pos = { x = 640.0, y = 250.0 }
+Radius = 28.0
+
+[Targets.Dash]
+Pos = { x = 1100.0, y = 200.0 }
+Radius = 34.0
+
+[Doors]
+Size = { x = 150, y = 200 }
+InteractionRadius = 75.0
+PreviewScale = { x = 0.55, y = 0.55 }
+PreviewBobFrequency = 4.5
+PreviewBobAmplitude = 6.0
+HighlightCircleRadius = 50
+TooltipOffsetY = -25
+TooltipSize = { x = 140, y = 28 }
+
+[Doors.Snake]
+Pos = { x = 420.0, y = 480.0 }
+BossType = "BossSnake"
+TexturePath = "Character\\031_3.png"
+Title = "【 BOSS: 蛇 】"
+Tag = "飛行 & 全方位弾幕"
+
+[Doors.Lion]
+Pos = { x = 860.0, y = 480.0 }
+BossType = "BossLion"
+TexturePath = "Character\\027_3.png"
+Title = "【 BOSS: 獅子 】"
+Tag = "突撃 & 衝撃波重撃"
+
+[Layout]
+GuidanceTitlePos = { x = 640, y = 70 }
+GuidanceSubPos = { x = 640, y = 102 }
+RetryPos = { x = 640, y = 360 }
+ControlBoardP1 = { x = 960, y = 25 }
+ControlBoardP2 = { x = 1255, y = 155 }
+
+[Timing]
+TargetCollectDelay = 0.4
+MinionDefeatDelay = 0.6
+RetryDuration = 1.2
+TargetFloatSpeed = 3.5
+TargetFloatAmplitude = 5.0
+ReachMargin = 32.0
+
+[Texts.Movement]
+Title = "【 A / D : 移動 】"
+Subtitle = "左右に配置されたコインに触れて回収してください"
+
+[Texts.Jump]
+Title = "【 SPACE : ジャンプ 】"
+Subtitle = "スペースキーで跳躍し、コインを回収してください"
+
+[Texts.DoubleJump]
+Title = "【 SPACE × 2 : 二段ジャンプ 】"
+Subtitle = "空中で再度スペースキーを押し、高所のコインを回収してください"
+
+[Texts.Dash]
+Title = "【 L-SHIFT : ダッシュ 】"
+Subtitle = "足場からジャンプし、空中でダッシュしてリングを通過してください"
+
+[Texts.FlyingMinion]
+Title = "★ 【 左クリック : 攻撃 】"
+Subtitle = "マウスで狙いを定め、空中を浮遊する小怪を撃破してください"
+
+[Texts.GroundMinion]
+Title = "★ 【 左クリック : 攻撃 】 / 【 L-SHIFT : 回避 】"
+Subtitle = "突進してくる小怪を攻撃して撃破してください"
+
+[Texts.BossSelect]
+Title = "【 ボス選択 】"
+Subtitle = "扉に近づき、[F] キーで挑戦するボスを選択してください"
+
+[Texts]
+RetryPrompt = "【 RETRY - リトライ 】"
+DoorInteractPrompt = "【 [F] 挑戦する 】"
+ControlBoardTitle = "【 基本操作ガイド 】"
+ControlBoardMove = "移動　　: A / D"
+ControlBoardJump = "ジャンプ: SPACE (空中で二段)"
+ControlBoardDash = "ダッシュ: L-SHIFT / 右クリック"
+ControlBoardAttack = "★ 攻撃 : 左クリック (照準射撃)"

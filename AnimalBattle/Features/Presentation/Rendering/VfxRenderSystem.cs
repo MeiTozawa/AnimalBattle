@@ -43,7 +43,7 @@ public static class VfxRenderSystem
     public static void DrawSpriteFadeEffects(Iter it, Field<Transform> trans, Field<Sprite> sprites, Field<FadeEffect> fades)
     {
         var w = it.World();
-        if (w.Get<GameFlow>().State != GameState.Battle) return;
+        if (!w.Get<GameFlow>().IsGameplay) return;
 
         var count = it.Count();
         if (count == 0) return;
@@ -80,7 +80,7 @@ public static class VfxRenderSystem
     public static void DrawRingEffects(Iter it, Field<Transform> trans, Field<RingEffect> rings, Field<FadeEffect> fades)
     {
         var w = it.World();
-        if (w.Get<GameFlow>().State != GameState.Battle) return;
+        if (!w.Get<GameFlow>().IsGameplay) return;
 
         var count = it.Count();
         if (count == 0) return;
@@ -110,7 +110,7 @@ public static class VfxRenderSystem
     public static void DrawParticleEffects(Iter it, Field<Transform> trans, Field<Bullet> bullets, Field<FadeEffect> fades)
     {
         var w = it.World();
-        if (w.Get<GameFlow>().State != GameState.Battle) return;
+        if (!w.Get<GameFlow>().IsGameplay) return;
 
         var count = it.Count();
         if (count == 0) return;

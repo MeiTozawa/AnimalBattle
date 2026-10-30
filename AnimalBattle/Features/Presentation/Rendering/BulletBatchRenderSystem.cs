@@ -115,7 +115,7 @@ public static class BulletBatchRenderSystem {
     private static void DrawPlayerBulletsBatch(Iter it, Field<Transform> trans, Field<Velocity> vel)
     {
         var w = it.World();
-        if (w.Get<GameFlow>().State != GameState.Battle) return;
+        if (!w.Get<GameFlow>().IsGameplay) return;
 
         var count = it.Count();
         if (count == 0) return;
@@ -152,7 +152,7 @@ public static class BulletBatchRenderSystem {
     private static void DrawBossBulletsBatch(Iter it, Field<Transform> trans, Field<Bullet> bullet, Field<BulletModifier> modifier)
     {
         var w = it.World();
-        if (w.Get<GameFlow>().State != GameState.Battle) return;
+        if (!w.Get<GameFlow>().IsGameplay) return;
 
         var count = it.Count();
         if (count == 0) return;

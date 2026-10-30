@@ -60,7 +60,7 @@ public static class TileMapRenderSystem
     public static void ExecuteTileMapRender(Iter it)
     {
         var w = it.World();
-        if (w.Get<GameFlow>().State != GameState.Battle) return;
+        if (!w.Get<GameFlow>().IsGameplay) return;
 
         var ctx = w.Get<TileMapRenderContext>();
         _cachedViewport = w.Get<RenderConfig>().Viewport;

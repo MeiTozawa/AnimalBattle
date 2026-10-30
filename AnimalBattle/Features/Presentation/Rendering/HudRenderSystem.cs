@@ -72,7 +72,7 @@ public static class HudRenderSystem {
     {
         var w = it.World();
         ref readonly var flow = ref w.Get<GameFlow>();
-        if (flow.State != GameState.Battle) return;
+        if (!flow.IsGameplay) return;
 
         var ctx = w.Get<HudRenderSystemContext>();
         ctx.CachedPlayer = null;
@@ -88,7 +88,7 @@ public static class HudRenderSystem {
 
         ref readonly var renderCfg = ref w.Get<RenderConfig>();
 
-        Render(player, boss, in renderCfg);
+        Render(player, boss, in renderCfg, flow.State == GameState.Tutorial);
     }
 
     /// <summary>
@@ -143,13 +143,19 @@ public static class HudRenderSystem {
     private static void Render(
         in HudRenderSystemContext.PlayerHudData? player,
         in HudRenderSystemContext.BossHudData? boss,
-        in RenderConfig renderCfg)
+        in RenderConfig renderCfg,
+        bool isTutorial = false)
     {
         Debug.Assert(GameEngine.CameraOffset == Vec2i.Zero, "[HudRenderSystem] HUDはスクリーン空間固定で描画される必要があり、CameraOffsetはゼロでなければなりません。");
         var hudCfg = renderCfg.Hud;
         var hpCfg = renderCfg.BossHpBar;
         var modalCfg = renderCfg.Modals;
 
+        if (isTutorial)
+        {
+            DrawPlayerStatus(player, hudCfg);
+            return;
+        }
         DrawControlHelp(hudCfg);
         DrawPlayerStatus(player, hudCfg);
         if (boss != null)

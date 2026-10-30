@@ -28,7 +28,7 @@ public static class AimReticleRenderSystem
     {
         var w = it.World();
         ref readonly var flow = ref w.Get<GameFlow>();
-        if (flow.State != GameState.Battle) return;
+        if (!flow.IsGameplay) return;
 
         ref readonly var state = ref w.Get<AimReticleState>();
         var mouseScreen = InputService.GetMousePosition();

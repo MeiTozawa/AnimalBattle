@@ -195,6 +195,9 @@ public static class ResourcePath
         /// <summary>start_scene.toml 設定ファイル名。</summary>
         public const string StartScene = "start_scene.toml";
 
+        /// <summary>tutorial.toml 設定ファイル名。</summary>
+        public const string Tutorial = "tutorial.toml";
+
         /// <summary>arena.toml の相対パス。</summary>
         public const string ArenaToml = @"Config\arena.toml";
 
@@ -248,6 +251,9 @@ public static class ResourcePath
 
         /// <summary>start_scene.toml の相対パス。</summary>
         public const string StartSceneToml = @"Config\start_scene.toml";
+
+        /// <summary>tutorial.toml の相対パス。</summary>
+        public const string TutorialToml = @"Config\tutorial.toml";
     }
 
     /// <summary>リソースルートディレクトリ名。</summary>

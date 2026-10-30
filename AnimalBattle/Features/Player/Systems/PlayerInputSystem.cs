@@ -35,7 +35,7 @@ public static class PlayerInputSystem
 
         var world = it.World();
         ref readonly var flow = ref world.Get<GameFlow>();
-        if (flow.State != GameState.Battle) return;
+        if (!flow.IsGameplay) return;
 
         // ゲームオーバー時（Victory / Defeat）：入力受付を停止し、意図を安全にゼロクリア
         if (world.Has<GameOverTag>())

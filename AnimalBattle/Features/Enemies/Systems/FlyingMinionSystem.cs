@@ -174,7 +174,7 @@ public static class FlyingMinionSystem
     {
         var world = it.World();
         ref readonly var flow = ref world.Get<GameFlow>();
-        if (flow.State != GameState.Battle) return;
+        if (!flow.IsGameplay) return;
 
         var ctx = world.Get<FlyingMinionContext>();
         var players = new List<Vec2f>(2);
