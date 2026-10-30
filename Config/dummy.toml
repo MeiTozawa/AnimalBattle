@@ -4,7 +4,7 @@
 # ===================================================================
 
 Spawn = { x = 640.0, y = 200.0 }
-CollisionSize = { x = 48.0, y = 64.0 }
+CollisionSize = { x = 80.0, y = 64.0 }
 Health = 99999.0
 HitFlashDuration = 0.12
 Gravity = 1200.0

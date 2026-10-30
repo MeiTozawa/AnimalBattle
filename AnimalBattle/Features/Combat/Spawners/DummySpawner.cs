@@ -18,7 +18,8 @@ public static class DummySpawner
     public static Entity Spawn(World world, Entity root)
     {
         var assets = world.Get<IAssetManager>();
-        var texPath = ResourcePath.Characters.Character031_3Png;
+        // トレーニング用木桩（Dummy）の専用テクスチャを取得
+        var texPath = ResourcePath.Characters.Character016_3Png;
         assets.TryGetTexture(texPath, out var dummyHandle);
 
         var cfg = world.Get<DummyConfig>();

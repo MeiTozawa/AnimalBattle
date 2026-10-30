@@ -21,6 +21,12 @@ public static class ResourcePath
         /// <summary>Characters リソースフォルダの相対パス。</summary>
         public const string Directory = @"Characters";
 
+        /// <summary>016_3.png のファイルパス。</summary>
+        public const string Character016Png = @"Characters\016_3.png";
+
+        /// <summary>016_3.png のファイルパス。</summary>
+        public const string Character016_3Png = @"Characters\016_3.png";
+
         /// <summary>027_3.png のファイルパス。</summary>
         public const string Character027Png = @"Characters\027_3.png";
 

@@ -61,6 +61,7 @@ public sealed class AssetManager : IAssetManager {
         ReadOnlySpan<string> commonTextures = [
             ResourcePath.Characters.Character031_3Png,
             ResourcePath.Characters.Character027_3Png,
+            ResourcePath.Characters.Character016_3Png,
             ResourcePath.Characters.SwordShieldEffectSpritesPng,
             ResourcePath.Platform.SheetPng
         ];

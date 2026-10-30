@@ -56,7 +56,7 @@ HeaderTitle = "ANIMAL BATTLE - キャラクター＆ボス選択"
 PlayerHeader = "【 プレイヤー選択 】"
 BossHeader = "【 ボス選択 】"
 HintText = "※ マウスホバーでアクション確認 / クリックで選択 / [ENTER] キーで戦闘開始"
-ConfirmButton = "【 戦 闘 開 始 】 [ENTER]"
+ConfirmButton = "【 戦 闘 開 始 】"
 SelectedBadge = "[ 選択中 - SELECTED ]"
 UnselectedBadge = "[ クリックで選択 ]"
 
