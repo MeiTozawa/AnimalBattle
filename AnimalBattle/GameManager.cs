@@ -101,6 +101,7 @@ public class GameManager : IDisposable {
     private void ExecuteSwitchToBattle(CharacterType playerType, BossType bossType)
     {
         StartSceneSpawner.Teardown(_ecsWorld);
+        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
 
         ref var flow = ref _ecsWorld.GetMut<GameFlow>();
         flow.State = GameState.Battle;
@@ -109,6 +110,36 @@ public class GameManager : IDisposable {
 
         InputService.ClearAndSetContext(InputContext.InGame);
         BattleSceneSpawner.Spawn(_ecsWorld, playerType, bossType);
+    }
+
+    /// <summary>
+    ///     チュートリアルシーンへ遷移します。
+    ///     システム実行中はECSステージの不整合を防ぐため、Progress終了後の同期ポイントへ処理を遅延させます。
+    /// </summary>
+    /// <param name="playerType">選択されたプレイヤーキャラクター</param>
+    /// <param name="initialPhase">初期フェーズ</param>
+    public void SwitchToTutorial(CharacterType playerType, AnimalBattle.Features.Tutorial.TutorialPhase initialPhase)
+    {
+        if (_isUpdating)
+        {
+            _pendingSceneTransition = () => ExecuteSwitchToTutorial(playerType, initialPhase);
+            return;
+        }
+
+        ExecuteSwitchToTutorial(playerType, initialPhase);
+    }
+
+    private void ExecuteSwitchToTutorial(CharacterType playerType, AnimalBattle.Features.Tutorial.TutorialPhase initialPhase)
+    {
+        StartSceneSpawner.Teardown(_ecsWorld);
+        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
+
+        ref var flow = ref _ecsWorld.GetMut<GameFlow>();
+        flow.State = GameState.Tutorial;
+        flow.SelectedPlayer = playerType;
+
+        InputService.ClearAndSetContext(InputContext.InGame);
+        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Spawn(_ecsWorld, playerType, initialPhase);
     }
 
     /// <summary>
@@ -171,6 +202,7 @@ public class GameManager : IDisposable {
         if (_isDisposed) return;
 
         StartSceneSpawner.Teardown(_ecsWorld);
+        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
         BattleSceneSpawner.Teardown(_ecsWorld);
         
         DisposeSystemContexts(_ecsWorld);

@@ -1,10 +1,11 @@
 using AnimalBattle.Ai;
+using AnimalBattle.Features.Tutorial;
 
 namespace AnimalBattle.Scenes.Start;
 
 /// <summary>
 ///     ゲーム開始・キャラクター選択画面の入力判定およびホバー・選択状態更新を司る ECS システム。
-///     GameState.Start 状態時にのみアクティブとなり、マウスホバー演出・キャラクター選択切り替え・戦闘開始を処理します。
+///     GameState.Start 状態時にのみアクティブとなり、プレイヤー選択・チュートリアル開始・スキップを処理します。
 /// </summary>
 public static class StartUiInputSystem
 {
@@ -35,19 +36,20 @@ public static class StartUiInputSystem
 
         ref readonly var cfg = ref w.Get<StartSceneConfig>();
         var layout = cfg.Layout;
-        var motion = cfg.Motion;
 
         var catCardBounds = layout.CatCard.ToRectangle();
         var bunnyCardBounds = layout.BunnyCard.ToRectangle();
-        var bossSnakeCardBounds = layout.BossSnakeCard.ToRectangle();
-        var bossLionCardBounds = layout.BossLionCard.ToRectangle();
-        var confirmButtonBounds = layout.ConfirmButton.ToRectangle();
+        var startTutorialBounds = layout.StartTutorialButton.Size.X > 0 
+            ? layout.StartTutorialButton.ToRectangle() 
+            : layout.ConfirmButton.ToRectangle();
+        var skipTutorialBounds = layout.SkipTutorialButton.ToRectangle();
 
         ref var flow = ref w.GetMut<GameFlow>();
         var dt = it.DeltaTime();
         var mousePos = InputService.GetMousePosition();
         var isClick = InputService.IsPressed(InputAction.MouseClick);
         var isConfirmKey = InputService.IsPressed(InputAction.Confirm);
+        var isCancelKey = InputService.IsPressed(InputAction.Cancel);
 
         for (var i = 0; i < count; i++)
         {
@@ -95,39 +97,24 @@ public static class StartUiInputSystem
                 flow.SelectedPlayer = CharacterType.Bunny;
             }
 
-            // --- 3. BossSnake カード判定 飛行浮遊アニメーション ---
-            uiState.IsBossSnakeHovered = bossSnakeCardBounds.Contains(mousePos.X, mousePos.Y);
-            if (uiState.IsBossSnakeHovered)
+            // --- 3. チュートリアル開始ボタン判定 ---
+            uiState.IsStartTutorialHovered = startTutorialBounds.Contains(mousePos.X, mousePos.Y);
+            uiState.IsConfirmHovered = uiState.IsStartTutorialHovered;
+
+            // --- 4. チュートリアルスキップボタン判定 ---
+            uiState.IsSkipTutorialHovered = skipTutorialBounds.Contains(mousePos.X, mousePos.Y);
+
+            // --- 5. 画面遷移判定 ---
+            if ((uiState.IsStartTutorialHovered && isClick) || isConfirmKey)
             {
-                uiState.BossSnakeFlyTimer += dt;
-                if (isClick) flow.SelectedBoss = BossType.BossSnake;
-            }
-            else
-            {
-                uiState.BossSnakeFlyTimer = Math.Max(0f, uiState.BossSnakeFlyTimer - dt * motion.BossSnakeFlyDecaySpeed);
+                GameManager.Current.SwitchToTutorial(flow.SelectedPlayer, TutorialPhase.Movement);
+                return;
             }
 
-            // --- 4. BossLion カード判定 跳躍重撃アニメーション ---
-            uiState.IsBossLionHovered = bossLionCardBounds.Contains(mousePos.X, mousePos.Y);
-            if (uiState.IsBossLionHovered)
+            if ((uiState.IsSkipTutorialHovered && isClick) || isCancelKey)
             {
-                uiState.BossLionSlamTimer += dt;
-                if (uiState.BossLionSlamTimer > motion.BossLionSlamCycleDuration)
-                {
-                    uiState.BossLionSlamTimer -= motion.BossLionSlamCycleDuration;
-                }
-                if (isClick) flow.SelectedBoss = BossType.BossLion;
-            }
-            else
-            {
-                uiState.BossLionSlamTimer = 0f;
-            }
-
-            // --- 5. 確定ボタン判定 ---
-            uiState.IsConfirmHovered = confirmButtonBounds.Contains(mousePos.X, mousePos.Y);
-            if ((uiState.IsConfirmHovered && isClick) || isConfirmKey)
-            {
-                GameManager.Current.SwitchToBattle(flow.SelectedPlayer, flow.SelectedBoss);
+                GameManager.Current.SwitchToTutorial(flow.SelectedPlayer, TutorialPhase.BossSelect);
+                return;
             }
         }
     }

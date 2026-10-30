@@ -4,8 +4,7 @@ using AnimalBattle.Ai;
 namespace AnimalBattle.Scenes.Start;
 
 /// <summary>
-///     ゲーム開始・キャラクター選択画面の UI 描画：タイトルヘッダー、自機・ボスカード演出、確定ボタンを統括する純粋 ECS 描画システム。
-///     GameState.Start 状態時にのみアクティブとなり、OnStore フェーズで画面へ UI を描画します。
+///     ゲーム開始・キャラクター選択画面の UI 描画：タイトルヘッダー、自機カード、およびチュートリアル分岐ボタンを統括する ECS 描画システム。
 /// </summary>
 public static class StartUiRenderSystem
 {
@@ -41,9 +40,10 @@ public static class StartUiRenderSystem
 
         var catCardBounds = layout.CatCard.ToRectangle();
         var bunnyCardBounds = layout.BunnyCard.ToRectangle();
-        var bossSnakeCardBounds = layout.BossSnakeCard.ToRectangle();
-        var bossLionCardBounds = layout.BossLionCard.ToRectangle();
-        var confirmBtnBounds = layout.ConfirmButton.ToRectangle();
+        var startTutorialBounds = layout.StartTutorialButton.Size.X > 0 
+            ? layout.StartTutorialButton.ToRectangle() 
+            : layout.ConfirmButton.ToRectangle();
+        var skipTutorialBounds = layout.SkipTutorialButton.ToRectangle();
 
         ref readonly var flow = ref w.Get<GameFlow>();
 
@@ -54,7 +54,6 @@ public static class StartUiRenderSystem
             // 1. タイトルヘッダー描画
             GameEngine.DrawLeftString(layout.HeaderTitlePos, texts.HeaderTitle, colors.TextGold);
             GameEngine.DrawLeftString(layout.PlayerHeaderPos, texts.PlayerHeader, colors.TextWhite);
-            GameEngine.DrawLeftString(layout.BossHeaderPos, texts.BossHeader, colors.TextWhite);
 
             // 2. Cat カード描画
             DrawPlayerCard(
@@ -76,28 +75,29 @@ public static class StartUiRenderSystem
                 colors.PlayerSelectedColor,
                 cfg);
 
-            // 4. BossSnake カード描画 飛行浮遊アニメーション
-            DrawBossSnakeCard(
-                bossSnakeCardBounds,
-                texts.BossSnake,
-                flow.SelectedBoss == BossType.BossSnake,
-                uiState.BossSnakeFlyTimer,
-                uiState.BossSnakeTextureHandle,
-                cfg);
+            // 4. 「チュートリアル開始」ボタン描画（推奨プライマリ色）
+            DrawActionButton(
+                uiState.IsStartTutorialHovered,
+                startTutorialBounds,
+                texts.StartTutorialButton,
+                colors.ConfirmBtnDefaultColor,
+                colors.ConfirmBtnHoverColor,
+                colors.ConfirmBtnBorderDefaultColor,
+                colors.ConfirmBtnBorderHoverColor,
+                colors.TextWhite);
 
-            // 5. BossLion カード描画 跳躍叩きつけアニメーション
-            DrawBossLionCard(
-                bossLionCardBounds,
-                texts.BossLion,
-                flow.SelectedBoss == BossType.BossLion,
-                uiState.BossLionSlamTimer,
-                uiState.BossLionTextureHandle,
-                cfg);
+            // 5. 「チュートリアルをスキップ」ボタン描画（セカンダリ色）
+            DrawActionButton(
+                uiState.IsSkipTutorialHovered,
+                skipTutorialBounds,
+                texts.SkipTutorialButton,
+                Color.FromArgb(50, 60, 80),
+                Color.FromArgb(70, 85, 115),
+                Color.FromArgb(90, 110, 140),
+                Color.FromArgb(130, 160, 200),
+                colors.TextMuted);
 
-            // 6. 確定ボタン描画
-            DrawConfirmButton(uiState.IsConfirmHovered, confirmBtnBounds, cfg);
-
-            // 7. 下部ヒントテキスト
+            // 6. 下部ヒントテキスト
             GameEngine.DrawLeftString(layout.HintTextPos, texts.HintText, colors.TextMuted);
         }
     }
@@ -157,135 +157,18 @@ public static class StartUiRenderSystem
         GameEngine.DrawLeftString(new Vec2i(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset), cardText.Description, colors.TextMuted);
     }
 
-    private static void DrawCardBox(
+    private static void DrawActionButton(
+        bool isHovered,
         Rectangle bounds,
-        StartSceneCardTextConfig cardText,
-        bool isSelected,
-        Color selectColor,
-        StartSceneConfig cfg)
+        string text,
+        Color defaultBg,
+        Color hoverBg,
+        Color defaultBorder,
+        Color hoverBorder,
+        Color textColor)
     {
-        var colors = cfg.Colors;
-        var layout = cfg.Layout;
-        var texts = cfg.Texts;
-
-        var p1 = new Vec2i(bounds.Left, bounds.Top);
-        var p2 = new Vec2i(bounds.Right, bounds.Bottom);
-        var borderColor = isSelected ? selectColor : colors.BorderDefaultColor;
-        GameEngine.DrawBox(p1, p2, colors.CardBgColor, true);
-        GameEngine.DrawBox(p1, p2, borderColor, false);
-        if (isSelected)
-        {
-            GameEngine.DrawBox(p1 - Vec2i.One, p2 + Vec2i.One, borderColor, false);
-        }
-
-        GameEngine.DrawLeftString(p1 + layout.CardTitleOffset, cardText.Title, isSelected ? selectColor : colors.TextWhite);
-        GameEngine.DrawLeftString(p1 + layout.CardTagOffset, cardText.Tag, colors.TextGold);
-
-        var badgeText = isSelected ? texts.SelectedBadge : texts.UnselectedBadge;
-        var badgeColor = isSelected ? selectColor : colors.TextMuted;
-        GameEngine.DrawLeftString(new Vec2i(bounds.Left + layout.CardBadgeLeftOffset, bounds.Bottom - layout.CardBadgeBottomOffset), badgeText, badgeColor);
-        GameEngine.DrawLeftString(new Vec2i(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset), cardText.Description, colors.TextMuted);
-    }
-
-    private static void DrawBossSnakeCard(
-        Rectangle bounds,
-        StartSceneCardTextConfig cardText,
-        bool isSelected,
-        float flyTimer,
-        int textureHandle,
-        StartSceneConfig cfg)
-    {
-        DrawCardBox(bounds, cardText, isSelected, cfg.Colors.BossSelectedColor, cfg);
-
-        if (textureHandle >= 0)
-        {
-            var motion = cfg.Motion;
-            var layout = cfg.Layout;
-
-            var flyOffsetY = flyTimer > 0f
-                ? MathF.Sin(flyTimer * motion.BossSnakeFlyFrequency) * motion.BossSnakeFlyAmplitude + motion.BossSnakeFlyOffsetY
-                : 0f;
-            var tiltAngle = flyTimer > 0f
-                ? MathF.Sin(flyTimer * motion.BossSnakeTiltFrequency) * motion.BossSnakeTiltAmplitude
-                : 0f;
-
-            var drawCenter = new Vec2i(bounds.Left + bounds.Width / 2, (int)(bounds.Top + layout.PreviewCenterOffsetY + flyOffsetY));
-
-            // 192x192 のボス画像をカード枠に適合するスケールで独立描画
-            GameEngine.DrawRotaGraph(
-                drawCenter,
-                motion.BossSnakeScale,
-                tiltAngle,
-                textureHandle,
-                true);
-        }
-    }
-
-    private static void DrawBossLionCard(
-        Rectangle bounds,
-        StartSceneCardTextConfig cardText,
-        bool isSelected,
-        float slamTimer,
-        int textureHandle,
-        StartSceneConfig cfg)
-    {
-        DrawCardBox(bounds, cardText, isSelected, cfg.Colors.BossSelectedColor, cfg);
-
-        if (textureHandle >= 0)
-        {
-            var motion = cfg.Motion;
-            var layout = cfg.Layout;
-
-            var offsetY = 0f;
-            var baseScale = motion.BossLionBaseScale;
-            var scale = new Vec2f((float)baseScale, (float)baseScale);
-
-            if (slamTimer > 0f)
-            {
-                var riseEnd = motion.BossLionRiseDuration;
-                var slamEnd = riseEnd + motion.BossLionSlamDuration;
-                var impactEnd = slamEnd + motion.BossLionImpactDuration;
-
-                if (slamTimer <= riseEnd)
-                {
-                    var t = slamTimer / riseEnd;
-                    offsetY = motion.BossLionRiseHeight * t;
-                    scale = new Vec2f((float)(baseScale * motion.BossLionRiseScale), (float)(baseScale * (2.0 - motion.BossLionRiseScale)));
-                }
-                else if (slamTimer <= slamEnd)
-                {
-                    var t = (slamTimer - riseEnd) / motion.BossLionSlamDuration;
-                    offsetY = motion.BossLionRiseHeight * (1f - t);
-                    scale = new Vec2f((float)(baseScale * motion.BossLionSlamScale), (float)(baseScale * (2.0 - motion.BossLionSlamScale)));
-                }
-                else if (slamTimer <= impactEnd)
-                {
-                    var t = (slamTimer - slamEnd) / motion.BossLionImpactDuration;
-                    offsetY = MathF.Sin(t * MathF.PI * motion.BossLionImpactShakeFreq) * motion.BossLionImpactShakeAmplitude;
-                    scale = new Vec2f((float)(baseScale * (1.15 - 0.15 * t)), (float)(baseScale * (0.85 + 0.15 * t)));
-                }
-            }
-
-            var drawCenter = new Vec2i(bounds.Left + bounds.Width / 2, (int)(bounds.Top + layout.PreviewCenterOffsetY + offsetY));
-
-            // 192x192 のボス画像をカード枠に適合するスケールで独立拡縮描画
-            GameEngine.DrawRotaGraph3(
-                drawCenter,
-                scale,
-                0.0,
-                textureHandle,
-                true);
-        }
-    }
-
-    private static void DrawConfirmButton(bool isHovered, Rectangle bounds, StartSceneConfig cfg)
-    {
-        var colors = cfg.Colors;
-        var layout = cfg.Layout;
-        var texts = cfg.Texts;
-
-        var btnColor = isHovered ? colors.ConfirmBtnHoverColor : colors.ConfirmBtnDefaultColor;
-        var borderColor = isHovered ? colors.ConfirmBtnBorderHoverColor : colors.ConfirmBtnBorderDefaultColor;
+        var btnColor = isHovered ? hoverBg : defaultBg;
+        var borderColor = isHovered ? hoverBorder : defaultBorder;
 
         var p1 = new Vec2i(bounds.Left, bounds.Top);
         var p2 = new Vec2i(bounds.Right, bounds.Bottom);
@@ -300,7 +183,7 @@ public static class StartUiRenderSystem
 
         GameEngine.DrawCenterString(
             new Vec2i(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2),
-            texts.ConfirmButton,
-            colors.TextWhite);
+            text,
+            textColor);
     }
 }

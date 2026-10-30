@@ -37,15 +37,10 @@ public static class StartSceneSpawner {
             .Set(new Sprite(bunnyHandle, false, true, new Rect(0, 0, 32, 32)))
             .Set(new Animation { CharacterType = CharacterType.Bunny, CurrentClip = "Idle", IsPlaying = true });
 
-        // 2. ボステクスチャハンドルの取得と UI 状態コンポーネントの設定
-        assets.TryGetTexture(ResourcePath.Characters.Character031_3Png, out var bossSnakeTextureHandle);
-        assets.TryGetTexture(ResourcePath.Characters.Character027_3Png, out var bossLionTextureHandle);
-
+        // 2. UI 状態コンポーネントの設定
         root.Set(new StartUiState {
             CatPreviewEntity = catPreview,
-            BunnyPreviewEntity = bunnyPreview,
-            BossSnakeTextureHandle = bossSnakeTextureHandle,
-            BossLionTextureHandle = bossLionTextureHandle
+            BunnyPreviewEntity = bunnyPreview
         });
     }
 

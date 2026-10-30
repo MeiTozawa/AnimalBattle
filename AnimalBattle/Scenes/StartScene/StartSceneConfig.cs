@@ -31,6 +31,8 @@ public sealed class StartSceneTextsConfig {
     public string BossHeader { get; set; } = string.Empty;
     public string HintText { get; set; } = string.Empty;
     public string ConfirmButton { get; set; } = string.Empty;
+    public string StartTutorialButton { get; set; } = string.Empty;
+    public string SkipTutorialButton { get; set; } = string.Empty;
     public string SelectedBadge { get; set; } = string.Empty;
     public string UnselectedBadge { get; set; } = string.Empty;
 
@@ -76,6 +78,8 @@ public sealed class StartSceneLayoutConfig {
     public CardLayoutConfig BossSnakeCard { get; set; } = new();
     public CardLayoutConfig BossLionCard { get; set; } = new();
     public CardLayoutConfig ConfirmButton { get; set; } = new();
+    public CardLayoutConfig StartTutorialButton { get; set; } = new();
+    public CardLayoutConfig SkipTutorialButton { get; set; } = new();
 
     public Vec2i HeaderTitlePos { get; set; }
     public Vec2i PlayerHeaderPos { get; set; }

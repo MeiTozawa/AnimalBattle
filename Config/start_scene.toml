@@ -1,40 +1,48 @@
 # ==============================================================================
-# StartScene (キャラクター＆ボス選択画面) 設定ファイル
+# StartScene (キャラクター選択＆チュートリアル分岐) 設定ファイル
 # ==============================================================================
 
 [Layout.CatCard]
-Pos = { x = 100, y = 150 }
-Size = { x = 240, y = 390 }
+Pos = { x = 320, y = 140 }
+Size = { x = 280, y = 390 }
 
 [Layout.BunnyCard]
-Pos = { x = 360, y = 150 }
-Size = { x = 240, y = 390 }
+Pos = { x = 680, y = 140 }
+Size = { x = 280, y = 390 }
 
 [Layout.BossSnakeCard]
-Pos = { x = 680, y = 150 }
-Size = { x = 240, y = 390 }
+Pos = { x = 0, y = 0 }
+Size = { x = 0, y = 0 }
 
 [Layout.BossLionCard]
-Pos = { x = 940, y = 150 }
-Size = { x = 240, y = 390 }
+Pos = { x = 0, y = 0 }
+Size = { x = 0, y = 0 }
 
 [Layout.ConfirmButton]
-Pos = { x = 490, y = 580 }
-Size = { x = 300, y = 60 }
+Pos = { x = 320, y = 560 }
+Size = { x = 280, y = 60 }
+
+[Layout.StartTutorialButton]
+Pos = { x = 320, y = 560 }
+Size = { x = 280, y = 60 }
+
+[Layout.SkipTutorialButton]
+Pos = { x = 680, y = 560 }
+Size = { x = 280, y = 60 }
 
 [Layout]
-HeaderTitlePos = { x = 430, y = 40 }
-PlayerHeaderPos = { x = 240, y = 105 }
-BossHeaderPos = { x = 820, y = 105 }
-HintTextPos = { x = 330, y = 665 }
-ConfirmBtnTextOffset = { x = 55, y = 20 }
+HeaderTitlePos = { x = 450, y = 40 }
+PlayerHeaderPos = { x = 440, y = 95 }
+BossHeaderPos = { x = 0, y = 0 }
+HintTextPos = { x = 340, y = 650 }
+ConfirmBtnTextOffset = { x = 35, y = 20 }
 CardTitleOffset = { x = 20, y = 20 }
 CardTagOffset = { x = 15, y = 55 }
 CardBadgeBottomOffset = 65
 CardBadgeLeftOffset = 30
 CardDescBottomOffset = 35
 CardDescLeftOffset = 10
-PreviewCenterOffsetY = 160
+PreviewCenterOffsetY = 180
 
 [Colors]
 BgColor = "#12141C"
@@ -52,22 +60,24 @@ TextMuted = "#A0AABE"
 TextGold = "#FFD750"
 
 [Texts]
-HeaderTitle = "ANIMAL BATTLE - キャラクター＆ボス選択"
-PlayerHeader = "【 プレイヤー選択 】"
-BossHeader = "【 ボス選択 】"
-HintText = "※ マウスホバーでアクション確認 / クリックで選択 / [ENTER] キーで戦闘開始"
-ConfirmButton = "【 戦 闘 開 始 】"
+HeaderTitle = "ANIMAL BATTLE - プレイヤー選択"
+PlayerHeader = "【 操作キャラクターを選択してください 】"
+BossHeader = ""
+HintText = "※ マウスで選択 / [ENTER] チュートリアル開始 / [ESC] スキップ"
+ConfirmButton = "【 チュートリアル開始 】"
+StartTutorialButton = "【 チュートリアル開始 】"
+SkipTutorialButton = "【 チュートリアルをスキップ 】"
 SelectedBadge = "[ 選択中 - SELECTED ]"
 UnselectedBadge = "[ クリックで選択 ]"
 
 [Texts.Cat]
 Title = "キャット"
-Tag = "【 遠距離攻撃 】"
+Tag = "【 遠距離攻撃 / 射撃 】"
 Description = ""
 
 [Texts.Bunny]
 Title = "バニー"
-Tag = "【 近接攻撃 】"
+Tag = "【 近接攻撃 / 斬撃 】"
 Description = ""
 
 [Texts.BossSnake]
