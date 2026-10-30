@@ -61,6 +61,7 @@ public class GameManager : IDisposable {
         _ecsWorld.Import<RenderModule>(); // ネイティブ描画モジュール
         _ecsWorld.Import<StartSceneModule>();
         _ecsWorld.Import<BattleSceneModule>();
+        _ecsWorld.Import<AnimalBattle.Features.Tutorial.TutorialModule>();
 
         CombatPoolService.Initialize(_ecsWorld);
 
