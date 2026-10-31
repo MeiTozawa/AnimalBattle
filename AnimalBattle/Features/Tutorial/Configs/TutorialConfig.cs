@@ -99,7 +99,6 @@ public sealed class TutorialDoorsConfig
     public int PedestalHeight { get; set; }
     public int PedestalExtraWidth { get; set; }
     public float InteractionRadius { get; set; }
-    public int HighlightCircleRadius { get; set; }
     public int TooltipOffsetY { get; set; }
     public Vec2i TooltipSize { get; set; }
 

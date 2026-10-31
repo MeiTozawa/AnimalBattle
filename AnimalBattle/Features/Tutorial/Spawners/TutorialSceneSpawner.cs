@@ -176,23 +176,6 @@ public static class TutorialSceneSpawner
     }
 
     /// <summary>
-    ///     ボス挑戦扉エンティティを生成します。
-    /// </summary>
-    public static Entity SpawnDoor(World world, Entity root, Vec2f pos, BossType bossType, float interactionRadius = 75f)
-    {
-        return world.Entity($"TutorialDoor_{bossType}")
-            .ChildOf(root)
-            .Set(new Transform(pos, Vec2f.One))
-            .Set(new TutorialDoor
-            {
-                TargetBoss = bossType,
-                InteractionRadius = interactionRadius,
-                IsPlayerInRange = false,
-                AnimTimer = 0f
-            });
-    }
-
-    /// <summary>
     ///     チュートリアル目標物、小怪、ボス扉、および残存弾幕をクリーンアップします。
     /// </summary>
     public static void ClearPhaseEntities(World world)

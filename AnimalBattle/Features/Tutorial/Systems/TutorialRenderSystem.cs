@@ -183,15 +183,6 @@ public static class TutorialRenderSystem
         GameEngine.DrawBox(base2P1, base2P2, dCfg.StoneBase, true);
         GameEngine.DrawBox(base2P1, base2P2, inRange ? itemCfg.RuneColorActive : dCfg.StoneHighlight, false);
 
-        // 足元起動魔法陣
-        if (inRange)
-        {
-            var magicCenter = new Vec2i(center.X, gateP2.Y + 8);
-            var pulseR = (int)(dCfg.HighlightCircleRadius + MathF.Sin(animTimer * 5f) * 3f);
-            GameEngine.DrawCircle(magicCenter, pulseR, itemCfg.AuraColor, false);
-            GameEngine.DrawCircle(magicCenter, Math.Max(2, (int)(pulseR * 0.65f)), itemCfg.AuraColor, false);
-        }
-
         // 2. 虚空門洞（Inner Void）
         var voidP1 = new Vec2i(gateP1.X + pillarW, gateP1.Y + lintelH);
         var voidP2 = new Vec2i(gateP2.X - pillarW, gateP2.Y - pedestalH);
@@ -293,20 +284,56 @@ public static class TutorialRenderSystem
         }
         else
         {
-            // 獅子神動態：重厚な威圧呼吸スケールパルス
-            var breath = (MathF.Sin(animTimer * itemCfg.MotionSpeed) + 0.3f * MathF.Sin(animTimer * itemCfg.MotionSpeed * 2f)) * itemCfg.MotionAmplitude;
-            var scale = new Vec2f(dCfg.PreviewScale.X * (1f + breath), dCfg.PreviewScale.Y * (1f - breath * 0.5f));
-            var previewPos = new Vec2i(center.X, center.Y + 16);
+            // 獅子神動態：重砸地面（Ground Slam）
+            // 周期：起跳跃起 -> 滞空蓄力 -> 极速重砸下落 -> 强力触地挤压形变 -> 姿态恢复
+            var t = (animTimer * itemCfg.MotionSpeed) % 1.0f;
+            float slamY;
+            float sx;
+            float sy;
+
+            if (t < 0.35f)
+            {
+                var p = t / 0.35f;
+                var h = MathF.Sin(p * (MathF.PI * 0.5f));
+                slamY = -h * itemCfg.MotionAmplitude;
+                sx = 1f - 0.12f * h;
+                sy = 1f + 0.16f * h;
+            }
+            else if (t < 0.48f)
+            {
+                slamY = -itemCfg.MotionAmplitude;
+                sx = 1.05f;
+                sy = 0.95f;
+            }
+            else if (t < 0.62f)
+            {
+                var p = (t - 0.48f) / 0.14f;
+                slamY = -(1f - p * p) * itemCfg.MotionAmplitude;
+                sx = 1f - 0.15f * p;
+                sy = 1f + 0.20f * p;
+            }
+            else if (t < 0.80f)
+            {
+                var p = (t - 0.62f) / 0.18f;
+                var squashAmount = (1f - p) * MathF.Cos(p * MathF.PI * 1.5f);
+                slamY = 0f;
+                sx = 1f + 0.28f * squashAmount;
+                sy = 1f - 0.28f * squashAmount;
+            }
+            else
+            {
+                slamY = 0f;
+                sx = 1f;
+                sy = 1f;
+            }
+
+            var baseScale = dCfg.PreviewScale;
+            var halfH = 192f * baseScale.Y * 0.5f;
+            var footCompY = (1f - sy) * halfH;
+            var previewPos = new Vec2i(center.X, (int)(center.Y + 16 + slamY + footCompY));
+            var scale = new Vec2f(baseScale.X * sx, baseScale.Y * sy);
 
             GameEngine.DrawRotaGraph3(previewPos, scale, 0.0, texHandle, true);
-
-            var groundCenter = new Vec2i(center.X, groundY + 4);
-            for (var k = 0; k < 2; k++)
-            {
-                var phase = (animTimer * 1.3f + k * 0.5f) % 1.0f;
-                var rippleR = (int)(20 + phase * (inRange ? 55f : 35f));
-                GameEngine.DrawCircle(groundCenter, rippleR, itemCfg.AuraColor, false);
-            }
         }
     }
 

@@ -19,11 +19,10 @@ PillarWidth = 24
 LintelHeight = 32
 PedestalHeight = 22
 PedestalExtraWidth = 32
-InteractionRadius = 80.0
+InteractionRadius = 160.0
 PreviewScale = { x = 0.55, y = 0.55 }
 PreviewBobFrequency = 4.5
 PreviewBobAmplitude = 6.0
-HighlightCircleRadius = 55
 TooltipOffsetY = -30
 TooltipSize = { x = 160, y = 30 }
 
@@ -57,9 +56,9 @@ RuneSymbols = "▲ ⚡ ◆ ⚡ ▲"
 RuneColorIdle = "#653518"
 RuneColorActive = "#FFA530"
 AuraColor = "#FF4520"
-AuraType = "ShockwaveRipple"
-MotionSpeed = 4.2
-MotionAmplitude = 0.06
+AuraType = "GroundSlam"
+MotionSpeed = 1.3
+MotionAmplitude = 32.0
 
 [Layout]
 GuidanceTitlePos = { x = 640, y = 70 }
