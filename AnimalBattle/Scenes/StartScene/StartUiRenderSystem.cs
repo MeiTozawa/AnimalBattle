@@ -40,10 +40,9 @@ public static class StartUiRenderSystem
 
         var catCardBounds = layout.CatCard.ToRectangle();
         var bunnyCardBounds = layout.BunnyCard.ToRectangle();
-        var startTutorialBounds = layout.StartTutorialButton.Size.X > 0 
-            ? layout.StartTutorialButton.ToRectangle() 
+        var startGameBounds = layout.StartGameButton.Size.X > 0 
+            ? layout.StartGameButton.ToRectangle() 
             : layout.ConfirmButton.ToRectangle();
-        var skipTutorialBounds = layout.SkipTutorialButton.ToRectangle();
 
         ref readonly var flow = ref w.Get<GameFlow>();
 
@@ -75,27 +74,25 @@ public static class StartUiRenderSystem
                 colors.PlayerSelectedColor,
                 cfg);
 
-            // 4. 「チュートリアル開始」ボタン描画（推奨プライマリ色）
+            // 4. チュートリアル有効化チェックボックス描画
+            DrawCheckbox(
+                uiState.IsCheckboxHovered,
+                uiState.IsTutorialEnabled,
+                layout.TutorialCheckbox,
+                texts.TutorialCheckbox,
+                colors);
+
+            // 5. 「ゲーム開始」ボタン描画
+            var buttonText = !string.IsNullOrEmpty(texts.StartGameButton) ? texts.StartGameButton : texts.ConfirmButton;
             DrawActionButton(
-                uiState.IsStartTutorialHovered,
-                startTutorialBounds,
-                texts.StartTutorialButton,
+                uiState.IsStartGameHovered,
+                startGameBounds,
+                buttonText,
                 colors.ConfirmBtnDefaultColor,
                 colors.ConfirmBtnHoverColor,
                 colors.ConfirmBtnBorderDefaultColor,
                 colors.ConfirmBtnBorderHoverColor,
                 colors.TextWhite);
-
-            // 5. 「チュートリアルをスキップ」ボタン描画（セカンダリ色）
-            DrawActionButton(
-                uiState.IsSkipTutorialHovered,
-                skipTutorialBounds,
-                texts.SkipTutorialButton,
-                Color.FromArgb(50, 60, 80),
-                Color.FromArgb(70, 85, 115),
-                Color.FromArgb(90, 110, 140),
-                Color.FromArgb(130, 160, 200),
-                colors.TextMuted);
 
             // 6. 下部ヒントテキスト
             GameEngine.DrawLeftString(layout.HintTextPos, texts.HintText, colors.TextMuted);
@@ -185,5 +182,41 @@ public static class StartUiRenderSystem
             new Vec2i(bounds.Left + bounds.Width / 2, bounds.Top + bounds.Height / 2),
             text,
             textColor);
+    }
+
+    private static void DrawCheckbox(
+        bool isHovered,
+        bool isChecked,
+        StartSceneCheckboxLayoutConfig config,
+        string text,
+        StartSceneColorsConfig colors)
+    {
+        var boxSize = config.BoxSize;
+        var boxP1 = new Vec2i(config.Pos.X, config.Pos.Y + (config.Size.Y - boxSize) / 2);
+        var boxP2 = new Vec2i(boxP1.X + boxSize, boxP1.Y + boxSize);
+
+        var bg = colors.CardBgColor;
+        var border = isHovered ? colors.ConfirmBtnBorderHoverColor : colors.BorderDefaultColor;
+        var textColor = isHovered ? colors.TextWhite : colors.TextMuted;
+
+        // 方形チェック枠の描画
+        GameEngine.DrawBox(boxP1, boxP2, bg, true);
+        GameEngine.DrawBox(boxP1, boxP2, border, false);
+
+        if (isHovered)
+        {
+            GameEngine.DrawBox(boxP1 - Vec2i.One, boxP2 + Vec2i.One, border, false);
+        }
+
+        // チェック状態の描画（内部コア塗りつぶし）
+        if (isChecked)
+        {
+            var innerMargin = 3;
+            GameEngine.DrawBox(boxP1 + new Vec2i(innerMargin, innerMargin), boxP2 - new Vec2i(innerMargin, innerMargin), colors.PlayerSelectedColor, true);
+        }
+
+        // ラベルテキスト描画（ボックス右側）
+        var textPos = new Vec2i(boxP2.X + 10, config.Pos.Y + 12);
+        GameEngine.DrawLeftString(textPos, text, textColor);
     }
 }

@@ -39,17 +39,17 @@ public static class StartUiInputSystem
 
         var catCardBounds = layout.CatCard.ToRectangle();
         var bunnyCardBounds = layout.BunnyCard.ToRectangle();
-        var startTutorialBounds = layout.StartTutorialButton.Size.X > 0 
-            ? layout.StartTutorialButton.ToRectangle() 
+        var startGameBounds = layout.StartGameButton.Size.X > 0 
+            ? layout.StartGameButton.ToRectangle() 
             : layout.ConfirmButton.ToRectangle();
-        var skipTutorialBounds = layout.SkipTutorialButton.ToRectangle();
+        var checkboxBounds = layout.TutorialCheckbox.ToRectangle();
 
         ref var flow = ref w.GetMut<GameFlow>();
         var dt = it.DeltaTime();
         var mousePos = InputService.GetMousePosition();
         var isClick = InputService.IsPressed(InputAction.MouseClick);
         var isConfirmKey = InputService.IsPressed(InputAction.Confirm);
-        var isCancelKey = InputService.IsPressed(InputAction.Cancel);
+        var isToggleKey = InputService.IsButtonPressed(InputButton.KeyT);
 
         for (var i = 0; i < count; i++)
         {
@@ -97,23 +97,22 @@ public static class StartUiInputSystem
                 flow.SelectedPlayer = CharacterType.Bunny;
             }
 
-            // --- 3. チュートリアル開始ボタン判定 ---
-            uiState.IsStartTutorialHovered = startTutorialBounds.Contains(mousePos.X, mousePos.Y);
-            uiState.IsConfirmHovered = uiState.IsStartTutorialHovered;
-
-            // --- 4. チュートリアルスキップボタン判定 ---
-            uiState.IsSkipTutorialHovered = skipTutorialBounds.Contains(mousePos.X, mousePos.Y);
-
-            // --- 5. 画面遷移判定 ---
-            if ((uiState.IsStartTutorialHovered && isClick) || isConfirmKey)
+            // --- 3. チュートリアル有効化チェックボックス判定 ---
+            uiState.IsCheckboxHovered = checkboxBounds.Contains(mousePos.X, mousePos.Y);
+            if ((uiState.IsCheckboxHovered && isClick) || isToggleKey)
             {
-                GameManager.Current.SwitchToTutorial(flow.SelectedPlayer, TutorialPhase.Movement);
-                return;
+                uiState.IsTutorialEnabled = !uiState.IsTutorialEnabled;
             }
 
-            if ((uiState.IsSkipTutorialHovered && isClick) || isCancelKey)
+            // --- 4. 「ゲーム開始」ボタン判定 ---
+            uiState.IsStartGameHovered = startGameBounds.Contains(mousePos.X, mousePos.Y);
+            uiState.IsConfirmHovered = uiState.IsStartGameHovered;
+
+            // --- 5. 画面遷移判定 ---
+            if ((uiState.IsStartGameHovered && isClick) || isConfirmKey)
             {
-                GameManager.Current.SwitchToTutorial(flow.SelectedPlayer, TutorialPhase.BossSelect);
+                var initialPhase = uiState.IsTutorialEnabled ? TutorialPhase.Movement : TutorialPhase.BossSelect;
+                GameManager.Current.SwitchToTutorial(flow.SelectedPlayer, initialPhase);
                 return;
             }
         }

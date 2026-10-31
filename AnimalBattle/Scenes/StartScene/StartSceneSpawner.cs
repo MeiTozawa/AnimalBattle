@@ -38,9 +38,11 @@ public static class StartSceneSpawner {
             .Set(new Animation { CharacterType = CharacterType.Bunny, CurrentClip = "Idle", IsPlaying = true });
 
         // 2. UI 状態コンポーネントの設定
+        var startSceneCfg = world.Get<StartSceneConfig>() ?? new StartSceneConfig();
         root.Set(new StartUiState {
             CatPreviewEntity = catPreview,
-            BunnyPreviewEntity = bunnyPreview
+            BunnyPreviewEntity = bunnyPreview,
+            IsTutorialEnabled = startSceneCfg.Options.DefaultEnableTutorial
         });
     }
 

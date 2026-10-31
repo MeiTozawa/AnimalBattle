@@ -14,6 +14,24 @@ public sealed class CardLayoutConfig {
 }
 
 /// <summary>
+///     チェックボックス矩形領域設定：位置・全体サイズ・チェック枠サイズ。
+/// </summary>
+public sealed class StartSceneCheckboxLayoutConfig {
+    public Vec2i Pos { get; set; }
+    public Vec2i Size { get; set; }
+    public int BoxSize { get; set; }
+
+    public Rectangle ToRectangle() => new(Pos.X, Pos.Y, Size.X, Size.Y);
+}
+
+/// <summary>
+///     StartScene の動作オプション設定クラス。
+/// </summary>
+public sealed class StartSceneOptionsConfig {
+    public bool DefaultEnableTutorial { get; set; }
+}
+
+/// <summary>
 ///     カード個別のテキスト設定：タイトル・特徴タグ・説明文。
 /// </summary>
 public sealed class StartSceneCardTextConfig {
@@ -33,6 +51,8 @@ public sealed class StartSceneTextsConfig {
     public string ConfirmButton { get; set; } = string.Empty;
     public string StartTutorialButton { get; set; } = string.Empty;
     public string SkipTutorialButton { get; set; } = string.Empty;
+    public string StartGameButton { get; set; } = string.Empty;
+    public string TutorialCheckbox { get; set; } = string.Empty;
     public string SelectedBadge { get; set; } = string.Empty;
     public string UnselectedBadge { get; set; } = string.Empty;
 
@@ -80,6 +100,8 @@ public sealed class StartSceneLayoutConfig {
     public CardLayoutConfig ConfirmButton { get; set; } = new();
     public CardLayoutConfig StartTutorialButton { get; set; } = new();
     public CardLayoutConfig SkipTutorialButton { get; set; } = new();
+    public CardLayoutConfig StartGameButton { get; set; } = new();
+    public StartSceneCheckboxLayoutConfig TutorialCheckbox { get; set; } = new();
 
     public Vec2i HeaderTitlePos { get; set; }
     public Vec2i PlayerHeaderPos { get; set; }
@@ -227,4 +249,5 @@ public sealed class StartSceneConfig {
     public StartSceneColorsConfig Colors { get; set; } = new();
     public StartSceneTextsConfig Texts { get; set; } = new();
     public StartSceneMotionConfig Motion { get; set; } = new();
+    public StartSceneOptionsConfig Options { get; set; } = new();
 }

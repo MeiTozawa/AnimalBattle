@@ -18,9 +18,18 @@ Size = { x = 0, y = 0 }
 Pos = { x = 0, y = 0 }
 Size = { x = 0, y = 0 }
 
+[Layout.StartGameButton]
+Pos = { x = 480, y = 575 }
+Size = { x = 320, y = 60 }
+
+[Layout.TutorialCheckbox]
+Pos = { x = 525, y = 540 }
+Size = { x = 230, y = 24 }
+BoxSize = 18
+
 [Layout.ConfirmButton]
-Pos = { x = 320, y = 560 }
-Size = { x = 280, y = 60 }
+Pos = { x = 480, y = 575 }
+Size = { x = 320, y = 60 }
 
 [Layout.StartTutorialButton]
 Pos = { x = 320, y = 560 }
@@ -59,12 +68,17 @@ TextWhite = "#F0F5FF"
 TextMuted = "#A0AABE"
 TextGold = "#FFD750"
 
+[Options]
+DefaultEnableTutorial = true
+
 [Texts]
 HeaderTitle = "ANIMAL BATTLE - プレイヤー選択"
 PlayerHeader = "【 操作キャラクターを選択してください 】"
 BossHeader = ""
-HintText = "※ マウスで選択 / [ENTER] チュートリアル開始 / [ESC] スキップ"
-ConfirmButton = "【 チュートリアル開始 】"
+HintText = "※ マウスで選択 / [ENTER] ゲーム開始 / [T] チュートリアル切替"
+ConfirmButton = "【 ゲーム開始 】"
+StartGameButton = "【 ゲーム開始 】"
+TutorialCheckbox = "チュートリアルを有効にする"
 StartTutorialButton = "【 チュートリアル開始 】"
 SkipTutorialButton = "【 チュートリアルをスキップ 】"
 SelectedBadge = "[ 選択中 - SELECTED ]"
