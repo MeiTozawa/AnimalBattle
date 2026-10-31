@@ -14,14 +14,30 @@ internal sealed class HudRenderSystemContext : IDisposable
         Health Health,
         CharacterType CharacterType,
         bool IsInvincible,
-        bool IsAlive);
+        bool IsAlive,
+        Vec2f Position);
 
     public readonly record struct BossHudData(
         Health Health,
         BossCombatState CombatState,
         (float Phase2Threshold, float Phase3Threshold) PhaseThresholds);
 
-    public required Query<Health, CharacterTypeComponent, GameplayTagState> PlayerQuery { get; init; }
+    public required Query<Health, CharacterTypeComponent, GameplayTagState, Transform> PlayerQuery { get; init; }
+
+    /// <summary>前フレームの自機 HP（被弾検知用）</summary>
+    public float LastPlayerHp = -1f;
+
+    /// <summary>被弾振動アニメーション残り時間（秒）</summary>
+    public float DamageShakeTimer;
+
+    /// <summary>被弾フラッシュアニメーション残り時間（秒）</summary>
+    public float DamageFlashTimer;
+
+    /// <summary>頭上インジケータ覚醒表示残り時間（秒）</summary>
+    public float OverheadWakeTimer;
+
+    /// <summary>瀕死時脈動アニメーションの経過時間（秒）</summary>
+    public float LowHpPulseTime;
     public required Query<Health, BossCombatState> BossQuery { get; init; }
     public PlayerHudData? CachedPlayer;
     public BossHudData? CachedBoss;
@@ -45,7 +61,7 @@ public static class HudRenderSystem {
     /// <returns>登録済みワールド</returns>
     public static World AddHudRenderSystem(this World world)
     {
-        var playerQuery = world.QueryBuilder<Health, CharacterTypeComponent, GameplayTagState>()
+        var playerQuery = world.QueryBuilder<Health, CharacterTypeComponent, GameplayTagState, Transform>()
             .With<PlayerTag>()
             .Build();
         var bossQuery = world.QueryBuilder<Health, BossCombatState>()
@@ -87,8 +103,11 @@ public static class HudRenderSystem {
         ctx.CachedBoss = null;
 
         ref readonly var renderCfg = ref w.Get<RenderConfig>();
+        var dt = it.DeltaTime();
+        if (dt <= 0.0f) dt = 1.0f / 60.0f;
+        UpdateAnimTimers(ctx, player, in renderCfg, dt);
 
-        Render(player, boss, in renderCfg, flow.State == GameState.Tutorial);
+        Render(ctx, player, boss, in renderCfg, flow.State == GameState.Tutorial);
     }
 
     /// <summary>
@@ -98,7 +117,8 @@ public static class HudRenderSystem {
         Iter it,
         Field<Health> hps,
         Field<CharacterTypeComponent> charTypes,
-        Field<GameplayTagState> tags)
+        Field<GameplayTagState> tags,
+        Field<Transform> transforms)
     {
         var count = it.Count();
         if (count == 0) return;
@@ -110,7 +130,8 @@ public static class HudRenderSystem {
             hp,
             charTypes[idx].Value,
             tags[idx].HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable),
-            hp.Current > 0.0f);
+            hp.Current > 0.0f,
+            transforms[idx].Position);
     }
 
     /// <summary>
@@ -137,10 +158,43 @@ public static class HudRenderSystem {
     /// <summary>
     ///     HUD および各種ステータス UI をスクリーン空間に描画します。
     /// </summary>
+    /// <param name="ctx">コンテクスト</param>
     /// <param name="player">現在アクティブな自機データ。</param>
-    /// <param name="boss">現在アクティブな Boss データ。</param>
     /// <param name="renderCfg">描画設定。</param>
+    /// <param name="dt">デルタタイム</param>
+    /// <summary>
+    ///     自機 HP 演出用タイマーおよび被弾トリガーを更新します。
+    /// </summary>
+    private static void UpdateAnimTimers(
+        HudRenderSystemContext ctx,
+        in HudRenderSystemContext.PlayerHudData? player,
+        in RenderConfig renderCfg,
+        float dt)
+    {
+        var badgeCfg = renderCfg.PlayerHpBadge;
+        if (ctx.DamageShakeTimer > 0.0f)
+            ctx.DamageShakeTimer = Math.Max(0.0f, ctx.DamageShakeTimer - dt);
+        if (ctx.DamageFlashTimer > 0.0f)
+            ctx.DamageFlashTimer = Math.Max(0.0f, ctx.DamageFlashTimer - dt);
+        if (ctx.OverheadWakeTimer > 0.0f)
+            ctx.OverheadWakeTimer = Math.Max(0.0f, ctx.OverheadWakeTimer - dt);
+
+        ctx.LowHpPulseTime += dt;
+
+        if (player == null) return;
+        var curHp = player.Value.Health.Current;
+        if (ctx.LastPlayerHp >= 0.0f && curHp < ctx.LastPlayerHp)
+        {
+            // 被弾検知：振動・点滅および頭上インジケータを覚醒
+            ctx.DamageShakeTimer = badgeCfg.ShakeDuration;
+            ctx.DamageFlashTimer = badgeCfg.FlashDuration;
+            ctx.OverheadWakeTimer = badgeCfg.OverheadFadeTime;
+        }
+        ctx.LastPlayerHp = curHp;
+    }
+
     private static void Render(
+        HudRenderSystemContext ctx,
         in HudRenderSystemContext.PlayerHudData? player,
         in HudRenderSystemContext.BossHudData? boss,
         in RenderConfig renderCfg,
@@ -151,13 +205,10 @@ public static class HudRenderSystem {
         var hpCfg = renderCfg.BossHpBar;
         var modalCfg = renderCfg.Modals;
 
-        if (isTutorial)
-        {
-            DrawPlayerStatus(player, hudCfg);
-            return;
-        }
-        DrawControlHelp(hudCfg);
-        DrawPlayerStatus(player, hudCfg);
+        DrawPlayerBadgeHud(player, in renderCfg, ctx);
+        DrawPlayerOverheadHp(player, in renderCfg, ctx);
+        if (isTutorial) return;
+
         if (boss != null)
         {
             DrawBossStatus(boss, hpCfg, modalCfg);
@@ -169,60 +220,161 @@ public static class HudRenderSystem {
         DrawGameOverModal(player, modalCfg);
     }
 
-    private static void DrawControlHelp(HudRenderConfig hudCfg)
-    {
-        GameEngine.DrawLeftString(hudCfg.TitlePos, hudCfg.TitleText, hudCfg.TitleColor);
-
-        var lineIndex = 1;
-        foreach (var item in hudCfg.Text)
-        {
-            var drawPos = new Vec2i(hudCfg.TitlePos.X, hudCfg.TitlePos.Y + hudCfg.LineSpacing * lineIndex);
-            GameEngine.DrawLeftString(drawPos, item.Text, item.Color);
-            lineIndex++;
-        }
-    }
-
-    private static void DrawPlayerStatus(in HudRenderSystemContext.PlayerHudData? player, HudRenderConfig hudCfg)
+    /// <summary>
+    ///     左上戦術 HUD：自機ステータスと肉球バッジ群を描画します。
+    /// </summary>
+    private static void DrawPlayerBadgeHud(
+        in HudRenderSystemContext.PlayerHudData? player,
+        in RenderConfig renderCfg,
+        HudRenderSystemContext ctx)
     {
         if (player == null) return;
         var p = player.Value;
+        var badgeCfg = renderCfg.PlayerHpBadge;
 
         var maxHp = (int)Math.Max(1.0f, p.Health.Max);
         var currentHp = Math.Clamp((int)p.Health.Current, 0, maxHp);
 
-        Span<char> symbolsBuf = stackalloc char[128];
-        var symLen = 0;
-        symbolsBuf[symLen++] = '[';
-        symbolsBuf[symLen++] = ' ';
-        for (var i = 0; i < maxHp && symLen + 3 < symbolsBuf.Length - 1; i++)
-        {
-            symbolsBuf[symLen++] = i < currentHp ? '●' : '○';
-            symbolsBuf[symLen++] = ' ';
-            symbolsBuf[symLen++] = ' ';
-        }
-        symbolsBuf[symLen++] = ']';
-        var symbols = symbolsBuf[..symLen];
+        var isBunny = p.CharacterType == CharacterType.Bunny;
+        var charColor = isBunny ? badgeCfg.BunnyFillColor : badgeCfg.CatFillColor;
+        var glowColor = isBunny ? badgeCfg.BunnyGlowColor : badgeCfg.CatGlowColor;
 
-        var hpRatio = (float)currentHp / maxHp;
-        var hpColor = hpRatio switch {
-            var r when r >= hudCfg.PlayerHpHighThreshold => hudCfg.PlayerHpHighColor,
-            var r when r >= hudCfg.PlayerHpMidThreshold => hudCfg.PlayerHpMidColor,
-            > 0.0f => hudCfg.PlayerHpLowColor,
-            _ => hudCfg.PlayerHpDeadColor
-        };
+        // 被弾フラッシュ判定（高周波点滅）
+        var isFlashing = ctx.DamageFlashTimer > 0.0f && ((int)(ctx.DamageFlashTimer * 30.0f) % 2 == 0);
+        var activeFillColor = isFlashing ? badgeCfg.DamagedFlashColor : charColor;
 
+        // キャラクター名ラベルと無敵ステータス表示
         var charName = EnumStringLut.Get(p.CharacterType);
-        Span<char> textBuf = stackalloc char[160];
+        Span<char> nameBuf = stackalloc char[96];
         int charsWritten;
         if (p.IsInvincible)
         {
-            textBuf.TryWrite($"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp}) [INVINCIBLE]", out charsWritten);
+            nameBuf.TryWrite($"[{charName}] HP: {currentHp}/{maxHp} [INVINCIBLE]", out charsWritten);
         }
         else
         {
-            textBuf.TryWrite($"PLAYER [{charName}] HP: {symbols} ({currentHp}/{maxHp})", out charsWritten);
+            nameBuf.TryWrite($"[{charName}] HP: {currentHp}/{maxHp}", out charsWritten);
         }
-        GameEngine.DrawLeftString(hudCfg.PlayerHpPos, textBuf[..charsWritten], hpColor);
+        var labelPos = new Vec2i(badgeCfg.Origin.X - (int)badgeCfg.BadgeRadius, badgeCfg.Origin.Y - (int)badgeCfg.BadgeRadius - 16);
+        GameEngine.DrawLeftString(labelPos, nameBuf[..charsWritten], p.IsInvincible ? Color.Gold : charColor);
+
+        // 被弾振動オフセットの算出
+        var shakeOffset = Vec2i.Zero;
+        if (ctx.DamageShakeTimer > 0.0f)
+        {
+            var sx = (int)MathF.Round(MathF.Sin(ctx.DamageShakeTimer * 60.0f) * badgeCfg.ShakeAmplitude);
+            var sy = (int)MathF.Round(MathF.Cos(ctx.DamageShakeTimer * 45.0f) * badgeCfg.ShakeAmplitude);
+            shakeOffset = new Vec2i(sx, sy);
+        }
+
+        // 各肉球バッジの描画
+        var isLowHp = currentHp == 1;
+        for (var i = 0; i < maxHp; i++)
+        {
+            var center = new Vec2i(
+                badgeCfg.Origin.X + (int)(i * badgeCfg.BadgeSpacing),
+                badgeCfg.Origin.Y);
+
+            var isFilled = i < currentHp;
+            var isDamagedSlot = i == currentHp; // 直前に破壊されたスロット
+
+            var badgeCenter = (isDamagedSlot && ctx.DamageShakeTimer > 0.0f) ? center + shakeOffset : center;
+            DrawPawBadge(badgeCenter, badgeCfg, activeFillColor, glowColor, isFilled, isLowHp && isFilled, ctx.LowHpPulseTime);
+        }
+    }
+
+    /// <summary>
+    ///     肉球バッジ単体をスクリーン空間へ幾何描画します。
+    /// </summary>
+    private static void DrawPawBadge(
+        Vec2i center,
+        PlayerHpBadgeRenderConfig badgeCfg,
+        Color fillColor,
+        Color glowColor,
+        bool isFilled,
+        bool isLowHpPulsing,
+        float pulseTime)
+    {
+        var radius = (int)badgeCfg.BadgeRadius;
+        var palmRadius = (int)badgeCfg.PalmRadius;
+        var toeRadius = (int)badgeCfg.ToeRadius;
+
+        if (isFilled && isLowHpPulsing)
+        {
+            // 瀕死時：わずかに肉球サイズを脈動変調
+            var pulse = (int)MathF.Round(MathF.Sin(pulseTime * badgeCfg.LowHpPulseSpeed) * 1.5f);
+            palmRadius = Math.Max(2, palmRadius + pulse);
+            toeRadius = Math.Max(1, toeRadius + pulse / 2);
+        }
+
+        // 外枠と底盤の描画
+        var bgFill = isFilled ? Color.FromArgb(140, 15, 20, 30) : badgeCfg.EmptyFillColor;
+        var borderCol = isFilled ? glowColor : badgeCfg.EmptyBorderColor;
+        GameEngine.DrawCircle(center, radius, bgFill, true);
+        GameEngine.DrawCircle(center, radius, borderCol, false);
+
+        // 肉球全体の基準中心（PawOffsetY による全体シフト）
+        var pawCenter = new Vec2i(center.X, center.Y + (int)badgeCfg.PawOffsetY);
+
+        // 掌球（主肉球）の描画
+        var palmCenter = new Vec2i(pawCenter.X, pawCenter.Y + (int)badgeCfg.PalmOffsetY);
+        var padCol = isFilled ? fillColor : badgeCfg.EmptyBorderColor;
+        GameEngine.DrawCircle(palmCenter, palmRadius, padCol, isFilled);
+
+        // 指球（爪先肉球群）の描画
+        var angles = badgeCfg.ToeAnglesDeg;
+        if (angles is { Count: > 0 })
+        {
+            for (var j = 0; j < angles.Count; j++)
+            {
+                var rad = angles[j] * (MathF.PI / 180.0f);
+                var tx = pawCenter.X + (int)MathF.Round(badgeCfg.ToeDistance * MathF.Sin(rad));
+                var ty = pawCenter.Y - (int)MathF.Round(badgeCfg.ToeDistance * MathF.Cos(rad));
+                GameEngine.DrawCircle(new Vec2i(tx, ty), toeRadius, padCol, isFilled);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     自機頭上に追従するマイクロ HP インジケータを描画します。
+    ///     被弾時のみ覚醒し、一定時間後に滑らかにフェードアウトします。
+    /// </summary>
+    private static void DrawPlayerOverheadHp(
+        in HudRenderSystemContext.PlayerHudData? player,
+        in RenderConfig renderCfg,
+        HudRenderSystemContext ctx)
+    {
+        if (player == null || !renderCfg.PlayerHpBadge.OverheadEnabled) return;
+        if (ctx.OverheadWakeTimer <= 0.0f) return;
+
+        var p = player.Value;
+        var badgeCfg = renderCfg.PlayerHpBadge;
+        var maxHp = (int)Math.Max(1.0f, p.Health.Max);
+        var currentHp = Math.Clamp((int)p.Health.Current, 0, maxHp);
+
+        // 自機スクリーン座標の算出
+        var headScreenPos = new Vec2i((int)p.Position.X, (int)(p.Position.Y + badgeCfg.OverheadOffsetY)) + CameraService.RenderOffset;
+
+        // フェードアウト不透明度の算出
+        var alphaRatio = Math.Clamp(ctx.OverheadWakeTimer / Math.Max(0.01f, badgeCfg.OverheadFadeTime), 0.0f, 1.0f);
+        var alpha = (byte)Math.Clamp((int)(badgeCfg.OverheadActiveAlpha * alphaRatio), 0, 255);
+        if (alpha == 0) return;
+
+        var isBunny = p.CharacterType == CharacterType.Bunny;
+        var baseColor = isBunny ? badgeCfg.BunnyFillColor : badgeCfg.CatFillColor;
+        var fillPipColor = Color.FromArgb(alpha, baseColor.R, baseColor.G, baseColor.B);
+        var emptyPipColor = Color.FromArgb(alpha / 3, badgeCfg.EmptyBorderColor.R, badgeCfg.EmptyBorderColor.G, badgeCfg.EmptyBorderColor.B);
+
+        var totalWidth = (maxHp - 1) * badgeCfg.OverheadPipSpacing;
+        var startX = headScreenPos.X - (int)(totalWidth * 0.5f);
+        var pipRadius = (int)badgeCfg.OverheadPipRadius;
+
+        for (var i = 0; i < maxHp; i++)
+        {
+            var pipCenter = new Vec2i(startX + (int)(i * badgeCfg.OverheadPipSpacing), headScreenPos.Y);
+            var isFilled = i < currentHp;
+            GameEngine.DrawCircle(pipCenter, pipRadius, isFilled ? fillPipColor : emptyPipColor, true);
+        }
     }
 
     private static void DrawBossStatus(in HudRenderSystemContext.BossHudData? boss, BossHpBarRenderConfig hpCfg, ModalRenderConfig modalCfg)
