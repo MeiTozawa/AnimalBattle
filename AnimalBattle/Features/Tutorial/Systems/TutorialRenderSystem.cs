@@ -7,36 +7,56 @@ using AnimalBattle.Scenes;
 namespace AnimalBattle.Features.Tutorial.Systems;
 
 /// <summary>
-///     チュートリアルのフェーズ別背景操作ガイド、目標物、全操作看板、およびボス扉の描画を統括する ECS 描画システム。
+///     チュートリアルの環境オブジェクト（目標物・神殿石門）およびUI（操作ガイド看板・プロンプト枠）の描画を統括する ECS 描画システム群。
 /// </summary>
 public static class TutorialRenderSystem
 {
     /// <summary>
-    ///     チュートリアル描画システムをワールドへ登録します。
+    ///     チュートリアル環境描画システム（ワールド空間・自機の背面レイヤー）を登録します。
     /// </summary>
-    public static World AddTutorialRenderSystem(this World world)
+    public static World AddTutorialEnvironmentRenderSystem(this World world)
     {
-        world.System("TutorialRenderSystem")
+        world.System("TutorialEnvironmentRenderSystem")
             .Kind(Ecs.OnStore)
-            .Iter(ExecuteTutorialRender);
+            .Iter(ExecuteTutorialEnvironmentRender);
 
         return world;
     }
 
     /// <summary>
-    ///     チュートリアル描画パイプライン。
+    ///     チュートリアルUI描画システム（スクリーン空間・最前面レイヤー）を登録します。
     /// </summary>
-    public static void ExecuteTutorialRender(Iter it)
+    public static World AddTutorialUiRenderSystem(this World world)
+    {
+        world.System("TutorialUiRenderSystem")
+            .Kind(Ecs.OnStore)
+            .Iter(ExecuteTutorialUiRender);
+
+        return world;
+    }
+
+    /// <summary>
+    ///     チュートリアル描画システム群（環境＆UI）を一括登録します。
+    /// </summary>
+    public static World AddTutorialRenderSystem(this World world)
+    {
+        return world.AddTutorialEnvironmentRenderSystem()
+                    .AddTutorialUiRenderSystem();
+    }
+
+    /// <summary>
+    ///     チュートリアル環境（目標物・神殿石門・Boss動態）の描画パイプライン（自機より背面に配置）。
+    /// </summary>
+    public static void ExecuteTutorialEnvironmentRender(Iter it)
     {
         var world = it.World();
         if (world.Get<GameFlow>().State != GameState.Tutorial) return;
 
-        ref readonly var state = ref world.Get<TutorialState>();
         var cfg = world.Get<TutorialConfig>() ?? new TutorialConfig();
         var colors = cfg.Colors;
         var assets = world.Get<IAssetManager>();
 
-        // 1. 目標物（コイン／リング）の描画
+        // 1. 目標物（コイン／リング）の描画（ワールド空間）
         using var targetQuery = world.QueryBuilder<TutorialTarget, Transform>().Build();
         targetQuery.Each((Entity _, ref TutorialTarget target, ref Transform tr) =>
         {
@@ -50,7 +70,7 @@ public static class TutorialRenderSystem
             GameEngine.DrawCenterString(center, "★", colors.White);
         });
 
-        // 2. ボス挑戦神殿石門（BossDoor）の描画
+        // 2. ボス挑戦神殿石門（BossDoor）の環境描画（基座・虚空・柱・Boss・符文：自機より背面）
         using var doorQuery = world.QueryBuilder<TutorialDoor, Transform>().Build();
         doorQuery.Each((Entity _, ref TutorialDoor door, ref Transform tr) =>
         {
@@ -58,29 +78,62 @@ public static class TutorialRenderSystem
             var isSnake = door.TargetBoss == BossType.BossSnake;
             var doorItem = isSnake ? cfg.Doors.Snake : cfg.Doors.Lion;
 
-            DrawShrineDoor(
+            DrawShrineDoorEnvironment(
                 doorCenter,
                 door.TargetBoss,
                 doorItem,
                 cfg.Doors,
                 door.IsPlayerInRange,
                 door.AnimTimer,
-                colors,
-                cfg.Texts.DoorInteractPrompt,
                 assets);
         });
+    }
 
-        // 3. 画面上部・中央のフェーズ別背景操作ガイド文字
+    /// <summary>
+    ///     チュートリアルUI（操作ガイド・神殿銘板・プロンプト・看板）の描画パイプライン（最前面）。
+    /// </summary>
+    public static void ExecuteTutorialUiRender(Iter it)
+    {
+        var world = it.World();
+        if (world.Get<GameFlow>().State != GameState.Tutorial) return;
+
+        ref readonly var state = ref world.Get<TutorialState>();
+        var cfg = world.Get<TutorialConfig>() ?? new TutorialConfig();
+        var colors = cfg.Colors;
+
+        // 1. ボス扉の神殿銘板および接近時 [F] 挑戦開始プロンプト枠（UI最前面）
+        using var doorQuery = world.QueryBuilder<TutorialDoor, Transform>().Build();
+        doorQuery.Each((Entity _, ref TutorialDoor door, ref Transform tr) =>
+        {
+            var doorCenter = new Vec2i((int)tr.Position.X, (int)tr.Position.Y);
+            var isSnake = door.TargetBoss == BossType.BossSnake;
+            var doorItem = isSnake ? cfg.Doors.Snake : cfg.Doors.Lion;
+
+            var halfH = cfg.Doors.Size.Y / 2;
+            var gateP1 = new Vec2i(doorCenter.X - cfg.Doors.Size.X / 2, doorCenter.Y - halfH);
+
+            DrawShrinePlaqueAndPrompt(
+                doorCenter,
+                gateP1,
+                cfg.Doors,
+                doorItem,
+                door.IsPlayerInRange,
+                door.AnimTimer,
+                cfg.Texts.DoorInteractPrompt,
+                colors);
+        });
+
+        // 2. 画面上部・中央のフェーズ別背景操作ガイド文字
         DrawPhaseGuidance(state, cfg);
 
-        // 4. 戦闘フェーズ（Combat）における全操作ガイド看板
+        // 3. 戦闘フェーズ（Combat）における全操作ガイド看板
         if ((uint)state.CurrentPhaseIndex < (uint)cfg.Phases.Length &&
             cfg.Phases[state.CurrentPhaseIndex].Type == TutorialPhaseType.Combat)
         {
             DrawControlGuidanceBoard(cfg);
         }
 
-        // 5. リトライ表示
+        // 4. リトライ表示
         if (state.IsRetrying)
         {
             GameEngine.DrawCenterString(cfg.Layout.RetryPos, cfg.Texts.RetryPrompt, colors.Red);
@@ -125,15 +178,13 @@ public static class TutorialRenderSystem
         GameEngine.DrawLeftString(new Vec2i(startX, y), texts.ControlBoardAttack, colors.Gold);
     }
 
-    private static void DrawShrineDoor(
+    private static void DrawShrineDoorEnvironment(
         Vec2i center,
         BossType bossType,
         TutorialDoorItemConfig doorItem,
         TutorialDoorsConfig doorsCfg,
         bool inRange,
         float animTimer,
-        TutorialColorsConfig colors,
-        string promptText,
         IAssetManager assets)
     {
         var halfW = doorsCfg.Size.X / 2;
@@ -146,17 +197,14 @@ public static class TutorialRenderSystem
         var pedestalH = doorsCfg.PedestalHeight;
         var pedestalExtraW = doorsCfg.PedestalExtraWidth;
 
-        // 1. 基座祭壇＆魔法陣、虚空門洞、双立石柱の幾何描画
+        // 1. 基座祭壇、虚空門洞、双立石柱の幾何描画
         DrawShrineArchitecture(center, gateP1, gateP2, pillarW, lintelH, pedestalH, pedestalExtraW, doorsCfg, doorItem, inRange, animTimer);
 
         // 2. 左右石柱への古代刻印符文描画
         DrawShrineRunes(gateP1, gateP2, pillarW, lintelH, pedestalH, doorItem, inRange, animTimer);
 
-        // 3. Boss 画像および固有光輪（蛇：法球旋回、獅子：地裂衝撃波）
+        // 3. Boss 画像および固有動態（蛇：法球旋回、獅子：重砸地面）
         DrawBossAuraAndMotion(center, bossType, gateP2.Y - pedestalH, doorsCfg, doorItem, inRange, animTimer, assets);
-
-        // 4. 神殿銘板および接近時 [F] 挑戦開始プロンプト枠
-        DrawShrinePlaqueAndPrompt(center, gateP1, doorsCfg, doorItem, inRange, animTimer, promptText, colors);
     }
 
     private static void DrawShrineArchitecture(

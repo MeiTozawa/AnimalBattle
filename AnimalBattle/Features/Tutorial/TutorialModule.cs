@@ -16,7 +16,6 @@ public readonly struct TutorialModule : IFlecsModule
         world.Module<TutorialModule>();
 
         world.AddTutorialFlowSystem()
-             .AddTutorialInteractionSystem()
-             .AddTutorialRenderSystem();
+             .AddTutorialInteractionSystem();
     }
 }
