@@ -1,6 +1,7 @@
 using AnimalBattle.Ai;
 using AnimalBattle.Combat.Spawners;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using AnimalBattle.Enemies;
 using AnimalBattle.Enemies.Services;
 using AnimalBattle.Features.Tutorial.Components;
@@ -71,9 +72,10 @@ public static class TutorialSceneSpawner
         tileMap.BuildPlatformColliders(world, root);
         root.Set(tileMap);
 
-        // 3. カメラと照準ステートのリセット
+        // 3. カメラと照準ステートのリセット、OS カーソルの非表示化
         world.Set(new AimReticleState());
         CameraService.Reset();
+        InputService.SetCursorVisible(false);
 
         // 4. 初期フェーズ番号の解決（負値の場合はボス扉フェーズを検索）
         var cfg = world.Get<TutorialConfig>() ?? new TutorialConfig();
@@ -207,5 +209,7 @@ public static class TutorialSceneSpawner
         {
             root.Destruct();
         }
+
+        InputService.SetCursorVisible(true);
     }
 }
