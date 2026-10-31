@@ -47,7 +47,7 @@ public static class GameConfigRegistrar
         registry.RegisterToml<DummyConfig>(ResourcePath.Config.Dummy, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Combat.Sync.DummyConfigSync.Sync(w, cfg));
         registry.RegisterToml<MinionConfig>(ResourcePath.Config.Minions, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Enemies.Sync.MinionConfigSync.Sync(w, cfg));
         registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Scenes.StartScene.StartSceneConfigSync.Sync(w, cfg));
-        registry.RegisterToml<AnimalBattle.Features.Tutorial.Configs.TutorialConfig>(ResourcePath.Config.Tutorial, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
+        registry.RegisterToml<AnimalBattle.Features.Tutorial.Configs.TutorialConfig>(ResourcePath.Config.Tutorial, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Features.Tutorial.Sync.TutorialConfigSync.Sync(w, cfg));
 
         registry.InjectAllToWorld(world);
 

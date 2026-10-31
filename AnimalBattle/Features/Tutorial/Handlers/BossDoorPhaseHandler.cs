@@ -19,15 +19,14 @@ public sealed class BossDoorPhaseHandler : ITutorialPhaseHandler
         ref var state = ref world.GetMut<TutorialState>();
         state.TargetsRemaining = 0;
 
-        var interactionRadius = globalConfig.Doors.InteractionRadius > 0f ? globalConfig.Doors.InteractionRadius : 75f;
+        var interactionRadius = globalConfig.Doors.InteractionRadius;
 
         for (var i = 0; i < config.Doors.Length; i++)
         {
             var item = config.Doors[i];
-            if (!Enum.TryParse<BossType>(item.BossType, ignoreCase: true, out var bossType))
-            {
-                bossType = BossType.BossSnake;
-            }
+            var parseSuccess = Enum.TryParse<BossType>(item.BossType, ignoreCase: true, out var bossType);
+            Debug.Assert(parseSuccess, $"不正な BossType です: {item.BossType}");
+            if (!parseSuccess) continue;
 
             world.Entity($"TutorialDoor_{bossType}_{i}")
                 .ChildOf(root)
