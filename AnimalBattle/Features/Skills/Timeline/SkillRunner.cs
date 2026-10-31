@@ -146,6 +146,8 @@ public sealed class SkillRunner {
         Action<AttackActionStep, float>? onTrigger)
     {
         var count = Math.Min(def.ActionCount, 64);
+        var groundedTriggered = false;
+
         for (var i = 0; i < count; i++)
         {
             var mask = 1UL << i;
@@ -161,11 +163,7 @@ public sealed class SkillRunner {
                 {
                     _triggeredMask |= mask;
                     onTrigger?.Invoke(step, _facingDirection);
-
-                    // 接地判定成功時は即座に Active を終了して Recovery へ
-                    CurrentPhase = SkillPhase.Recovery;
-                    PhaseElapsed = 0.0f;
-                    return;
+                    groundedTriggered = true;
                 }
 
                 continue;
@@ -177,6 +175,13 @@ public sealed class SkillRunner {
                 _triggeredMask |= mask;
                 onTrigger?.Invoke(step, _facingDirection);
             }
+        }
+
+        if (groundedTriggered)
+        {
+            // 接地判定成功時は即座に Active を終了して Recovery へ
+            CurrentPhase = SkillPhase.Recovery;
+            PhaseElapsed = 0.0f;
         }
     }
 }
