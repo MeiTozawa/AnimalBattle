@@ -143,7 +143,7 @@ Type = "BossDoor"
 Title = "【 ボス選択 】"
 Subtitle = "扉に近づき、[F] キーで挑戦するボスを選択してください"
 Doors = [
-    { Pos = { x = 420.0, y = 480.0 }, BossType = "BossSnake", TexturePath = "Characters\\031_3.png", Title = "【 蛇神ノ祭壇 】", Tag = "飛行浮遊 ＆ 全方位毒弾幕" },
-    { Pos = { x = 860.0, y = 480.0 }, BossType = "BossLion", TexturePath = "Characters\\027_3.png", Title = "【 獅子ノ闘技殿 】", Tag = "突撃重撃 ＆ 地裂衝撃波" }
+    { Pos = { x = 290.0, y = 300.0 }, BossType = "BossSnake", TexturePath = "Characters\\031_3.png", Title = "【 蛇神ノ祭壇 】", Tag = "飛行浮遊 ＆ 全方位毒弾幕" },
+    { Pos = { x = 990.0, y = 300.0 }, BossType = "BossLion", TexturePath = "Characters\\027_3.png", Title = "【 獅子ノ闘技殿 】", Tag = "突撃重撃 ＆ 地裂衝撃波" }
 ]
 
