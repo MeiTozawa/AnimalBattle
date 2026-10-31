@@ -2,6 +2,9 @@
 BossName = "BossSnake"
 MaxHp = 60.0
 Spawn = { x = 640.0, y = 200.0 }
+# 出現バッファ時間（秒、この間は攻撃・接触無効）および移動許可フラグ
+SpawnBufferDuration = 2.0
+SpawnBufferCanMove = false
 Scale = { x = 0.6, y = 0.6 }
 HitFlashDuration = 0.05
 

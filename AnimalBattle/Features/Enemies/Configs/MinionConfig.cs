@@ -75,6 +75,12 @@ public sealed class GroundMinionConfig
 
     /// <summary>被弾時スプリング変形の減衰比（0.0〜1.0）。</summary>
     public float SpringDampingRatio { get; set; }
+
+    /// <summary> 出現時バッファ持続秒数（&lt;=0 で無効）。 </summary>
+    public float SpawnBufferDuration { get; set; }
+
+    /// <summary>出現時バッファ中の移動許可フラグ。</summary>
+    public bool SpawnBufferCanMove { get; set; }
 }
 
 /// <summary>
@@ -137,6 +143,12 @@ public sealed class FlyingMinionConfig
 
     /// <summary>被弾時スプリング変形の減衰比（0.0〜1.0）。</summary>
     public float SpringDampingRatio { get; set; } = 0.5f;
+
+    /// <summary>出現時バッファ持続秒数（&lt;=0 で無効）。</summary>
+    public float SpawnBufferDuration { get; set; } = 1.2f;
+
+    /// <summary>出現時バッファ中の移動許可フラグ。</summary>
+    public bool SpawnBufferCanMove { get; set; } = true;
 }
 
 /// <summary>

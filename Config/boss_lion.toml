@@ -2,6 +2,9 @@
 BossName = "BossLion"
 MaxHp = 120.0
 Spawn = { x = 900.0, y = 480.0 }
+# 出現バッファ時間（秒、この間は攻撃・接触無効）および移動許可フラグ
+SpawnBufferDuration = 2.0
+SpawnBufferCanMove = false
 Scale = { x = 0.65, y = 0.65 }
 HitFlashDuration = 0.05
 

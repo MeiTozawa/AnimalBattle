@@ -57,7 +57,7 @@ public abstract class BaseBossConfig {
     /// <summary>Boss のノックバック外力減衰加速度ピクセル毎秒毎秒</summary>
     public float KnockbackDeceleration { get; set; }
 
-    /// <summary>Boss 受撃時のスカッシュ変形スケール（X: 横伸長, Y: 縦圧縮）</summary>
+    /// <summary>Boss 受撃時のスカッシュ変形スケール（X: 横伸长, Y: 縦圧縮）</summary>
     public Vec2f HitSquashScale { get; set; } 
 
     /// <summary>Boss 受撃時スプリング変形の固有振動数（Hz）</summary>
@@ -65,6 +65,12 @@ public abstract class BaseBossConfig {
 
     /// <summary>Boss 受撃時スプリング変形の減衰比（0.0〜1.0）</summary>
     public float SpringDampingRatio { get; set; }
+
+    /// <summary>出現時バッファ持続秒数（&lt;=0 で無効）</summary>
+    public float SpawnBufferDuration { get; set; } = 2.0f;
+
+    /// <summary>出現時バッファ中の移動許可フラグ</summary>
+    public bool SpawnBufferCanMove { get; set; }
 
     /// <summary>
     ///     設定に基づいた Boss 被弾判定 <see cref="CollisionShape" /> を取得します。

@@ -18,6 +18,9 @@ SpawnPos = { x = 300.0, y = -320.0 }
 JumpForce = 640.0
 JumpCooldown = 0.8
 MinPlayerDistance = 250.0
+# 出現バッファ時間（秒、この間は攻撃・接触無効）および移動許可フラグ
+SpawnBufferDuration = 1.0
+SpawnBufferCanMove = false
 SpawnPoints = [
   { x = 160.0, y = 490.0 },
   { x = 380.0, y = 490.0 },
@@ -46,6 +49,9 @@ SkillTag = "Aimed3Shot"
 SkillCooldown = 5.0
 SpawnPos = { x = 160.0, y = -120.0 }
 MinPlayerDistance = 280.0
+# 出現バッファ時間（秒、この間は攻撃・接触無効）および移動許可フラグ
+SpawnBufferDuration = 1.2
+SpawnBufferCanMove = true
 SpawnPoints = [
   { x = 180.0, y = 140.0 },
   { x = 400.0, y = 180.0 },

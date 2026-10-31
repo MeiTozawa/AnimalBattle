@@ -134,6 +134,20 @@ public static class BattleSceneSpawner
                 BulletSpawner.ClearAllBossBullets(world);
                 MeleeSpawner.ClearAllBossMelee(world);
             };
+
+            var (bufferDur, bufferCanMove) = bossType switch {
+                BossType.BossSnake => (world.Get<BossSnakeConfig>().SpawnBufferDuration, world.Get<BossSnakeConfig>().SpawnBufferCanMove),
+                BossType.BossLion => (world.Get<BossLionConfig>().SpawnBufferDuration, world.Get<BossLionConfig>().SpawnBufferCanMove),
+                _ => (0.0f, false)
+            };
+
+            // 出現バッファ設定の適用：バッファ期間中は接触ダメージを無効化
+            if (bufferDur > 0.0f)
+            {
+                bossEntity.Set(new SpawnBufferState(bufferDur, bufferCanMove));
+                ref var hitbox = ref bossEntity.GetMut<Hitbox>();
+                hitbox.IsActive = false;
+            }
         }
 
         world.Set(new AimReticleState());

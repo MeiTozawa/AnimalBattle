@@ -36,6 +36,14 @@ public static class MinionSpawner
             .Add<GroundMinionTag>()
             .Set(new GroundMinionComponent());
 
+        // 出現バッファ設定の適用：バッファ期間中は接触ダメージを無効化
+        if (gCfg.SpawnBufferDuration > 0.0f)
+        {
+            entity.Set(new SpawnBufferState(gCfg.SpawnBufferDuration, gCfg.SpawnBufferCanMove));
+            ref var hitbox = ref entity.GetMut<Hitbox>();
+            hitbox.IsActive = false;
+        }
+
         return entity;
     }
 
@@ -81,6 +89,14 @@ public static class MinionSpawner
         {
             entity.GetMut<GameplayTagState>().ActionMask = tags;
         };
+
+        // 出現バッファ設定の適用：バッファ期間中は接触ダメージを無効化
+        if (fCfg.SpawnBufferDuration > 0.0f)
+        {
+            entity.Set(new SpawnBufferState(fCfg.SpawnBufferDuration, fCfg.SpawnBufferCanMove));
+            ref var hitbox = ref entity.GetMut<Hitbox>();
+            hitbox.IsActive = false;
+        }
 
         return entity;
     }

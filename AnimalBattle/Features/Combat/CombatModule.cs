@@ -15,6 +15,7 @@ public readonly struct CombatModule : IFlecsModule
         CombatPrefabs.Register(world);
 
         world.AddTimedTagSystem()
+             .AddSpawnBufferUpdateSystem()         // 出現バッファ時間の減衰および解除判定
              .AddSpecialBulletSystem()            // 1. 特殊弾幕の変調：法線正弦波速度・判定拡縮を先行計算
              .AddBulletPhysicsSystem()             // 2. 最新の変調速度を用いて座標を更新し、画面外判定を実施
              .AddMeleeMovementSystem()             // 3. 移動を伴う近接攻撃判定の座標更新
