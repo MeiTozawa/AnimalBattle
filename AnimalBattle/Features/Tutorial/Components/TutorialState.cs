@@ -5,11 +5,8 @@ namespace AnimalBattle.Features.Tutorial.Components;
 /// </summary>
 public struct TutorialState
 {
-    /// <summary>現在のチュートリアルフェーズ。</summary>
-    public TutorialPhase CurrentPhase;
-
-    /// <summary>現在のフェーズに入ってからの経過時間（秒）。</summary>
-    public float PhaseTimer;
+    /// <summary>現在実行中のチュートリアルフェーズ番号（0オリジン）。</summary>
+    public int CurrentPhaseIndex;
 
     /// <summary>現在フェーズの残り目標数（コイン残数または生存小怪数）。</summary>
     public int TargetsRemaining;

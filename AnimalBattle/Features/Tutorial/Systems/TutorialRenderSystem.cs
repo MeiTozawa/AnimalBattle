@@ -114,8 +114,9 @@ public static class TutorialRenderSystem
         // 3. 画面上部・中央のフェーズ別背景操作ガイド文字
         DrawPhaseGuidance(state, cfg);
 
-        // 4. 戦闘フェーズ（Phase 5 飛行小怪、Phase 6 地上小怪）における全操作ガイド看板
-        if (state.CurrentPhase is TutorialPhase.FlyingMinion or TutorialPhase.GroundMinion)
+        // 4. 戦闘フェーズ（Combat）における全操作ガイド看板
+        if ((uint)state.CurrentPhaseIndex < (uint)cfg.Phases.Length &&
+            cfg.Phases[state.CurrentPhaseIndex].Type == TutorialPhaseType.Combat)
         {
             DrawControlGuidanceBoard(cfg);
         }
@@ -132,24 +133,12 @@ public static class TutorialRenderSystem
         var centerPos = cfg.Layout.GuidanceTitlePos;
         var subPos = cfg.Layout.GuidanceSubPos;
         var colors = cfg.Colors;
-        var texts = cfg.Texts;
 
-        var phaseText = state.CurrentPhase switch
+        if ((uint)state.CurrentPhaseIndex < (uint)cfg.Phases.Length)
         {
-            TutorialPhase.Movement => texts.Movement,
-            TutorialPhase.Jump => texts.Jump,
-            TutorialPhase.DoubleJump => texts.DoubleJump,
-            TutorialPhase.Dash => texts.Dash,
-            TutorialPhase.FlyingMinion => texts.FlyingMinion,
-            TutorialPhase.GroundMinion => texts.GroundMinion,
-            TutorialPhase.BossSelect => texts.BossSelect,
-            _ => null
-        };
-
-        if (phaseText != null)
-        {
-            GameEngine.DrawCenterString(centerPos, phaseText.Title, colors.Gold);
-            GameEngine.DrawCenterString(subPos, phaseText.Subtitle, colors.White);
+            var phaseCfg = cfg.Phases[state.CurrentPhaseIndex];
+            GameEngine.DrawCenterString(centerPos, phaseCfg.Title, colors.Gold);
+            GameEngine.DrawCenterString(subPos, phaseCfg.Subtitle, colors.White);
         }
     }
 

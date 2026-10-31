@@ -3,6 +3,7 @@ using AnimalBattle.Common.Components;
 using AnimalBattle.Enemies;
 using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;
+using AnimalBattle.Features.Tutorial.Handlers;
 using AnimalBattle.Features.Tutorial.Spawners;
 using AnimalBattle.Player.Components;
 using AnimalBattle.Scenes;
@@ -37,7 +38,6 @@ public static class TutorialFlowSystem
         ref var state = ref world.GetMut<TutorialState>();
         var cfg = world.Get<TutorialConfig>() ?? new TutorialConfig();
         var dt = it.DeltaTime();
-        state.PhaseTimer += dt;
 
         // 1. リトライ演出タイマーの更新
         if (state.IsRetrying)
@@ -74,46 +74,26 @@ public static class TutorialFlowSystem
         {
             state.IsRetrying = true;
             state.RetryTimer = cfg.Timing.RetryDuration;
-            // 当該フェーズの目標・小怪をクリーンアップして再生成
-            TutorialSceneSpawner.SetupPhase(world, state.CurrentPhase);
+            TutorialSceneSpawner.ResetCurrentPhase(world);
             return;
         }
 
-        // 3. ボス選択フェーズ（Phase 7）は扉のインタラクション待ちのためフロー側では自動移行しない
-        if (state.CurrentPhase == TutorialPhase.BossSelect) return;
+        // 3. 現在のフェーズの取得と安全性チェック
+        if ((uint)state.CurrentPhaseIndex >= (uint)cfg.Phases.Length) return;
+        var currentPhaseCfg = cfg.Phases[state.CurrentPhaseIndex];
 
-        // 4. 小怪フェーズ（Phase 5 飛行小怪、Phase 6 地上小怪）の撃破判定
-        if (state.CurrentPhase is TutorialPhase.FlyingMinion or TutorialPhase.GroundMinion)
-        {
-            var aliveMinions = 0;
-            using var minionQuery = world.QueryBuilder().With<MinionTag>().Build();
-            minionQuery.Each((Entity _) => aliveMinions++);
+        var handler = TutorialPhaseDispatcher.GetHandler(currentPhaseCfg.Type);
+        Debug.Assert(handler != null, $"未対応のチュートリアルフェーズ種別です: {currentPhaseCfg.Type}");
+        if (handler == null) return;
 
-            if (aliveMinions == 0 && !state.IsPhaseCompleted)
-            {
-                state.IsPhaseCompleted = true;
-                state.CompletionTimer = cfg.Timing.MinionDefeatDelay;
-            }
-        }
-        else
-        {
-            // 基礎動作フェーズ（Phase 1〜4）：全ターゲット回収判定
-            if (state.TargetsRemaining <= 0 && !state.IsPhaseCompleted)
-            {
-                state.IsPhaseCompleted = true;
-                state.CompletionTimer = cfg.Timing.TargetCollectDelay;
-            }
-        }
+        // 4. ハンドラーによる目標判定の更新
+        var isFinished = handler.UpdateAndCheckCompletion(world, ref state, currentPhaseCfg, cfg, dt);
 
         // 5. 目標達成時の次フェーズ移行
-        if (state.IsPhaseCompleted)
+        if (isFinished)
         {
-            state.CompletionTimer -= dt;
-            if (state.CompletionTimer <= 0f)
-            {
-                var nextPhase = (TutorialPhase)((int)state.CurrentPhase + 1);
-                TutorialSceneSpawner.SetupPhase(world, nextPhase);
-            }
+            var nextIndex = state.CurrentPhaseIndex + 1;
+            TutorialSceneSpawner.SetupPhase(world, nextIndex);
         }
     }
 }
