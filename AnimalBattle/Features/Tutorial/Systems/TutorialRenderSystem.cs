@@ -141,10 +141,10 @@ public static class TutorialRenderSystem
         var gateP1 = new Vec2i(center.X - halfW, center.Y - halfH);
         var gateP2 = new Vec2i(center.X + halfW, center.Y + halfH);
 
-        var pillarW = doorsCfg.PillarWidth > 0 ? doorsCfg.PillarWidth : 24;
-        var lintelH = doorsCfg.LintelHeight > 0 ? doorsCfg.LintelHeight : 32;
-        var pedestalH = doorsCfg.PedestalHeight > 0 ? doorsCfg.PedestalHeight : 22;
-        var pedestalExtraW = doorsCfg.PedestalExtraWidth > 0 ? doorsCfg.PedestalExtraWidth : 32;
+        var pillarW = doorsCfg.PillarWidth;
+        var lintelH = doorsCfg.LintelHeight;
+        var pedestalH = doorsCfg.PedestalHeight;
+        var pedestalExtraW = doorsCfg.PedestalExtraWidth;
 
         // 1. 基座祭壇＆魔法陣、虚空門洞、双立石柱の幾何描画
         DrawShrineArchitecture(center, gateP1, gateP2, pillarW, lintelH, pedestalH, pedestalExtraW, doorsCfg, doorItem, inRange, animTimer);
@@ -263,49 +263,49 @@ public static class TutorialRenderSystem
         IAssetManager assets)
     {
         var isSnake = bossType == BossType.BossSnake;
-        var speed = itemCfg.MotionSpeed > 0f ? itemCfg.MotionSpeed : (isSnake ? 3.2f : 4.2f);
-        var amp = itemCfg.MotionAmplitude > 0f ? itemCfg.MotionAmplitude : (isSnake ? 8.0f : 0.06f);
-        var baseScale = (dCfg.PreviewScale.X > 0f && dCfg.PreviewScale.Y > 0f)
-            ? dCfg.PreviewScale
-            : new Vec2f(0.55f, 0.55f);
+        var hasTex = assets.TryGetTexture(itemCfg.TexturePath, out var texHandle);
+        Debug.Assert(hasTex, $"Boss 扉テクスチャが見つかりません: {itemCfg.TexturePath}");
+        if (!hasTex) return;
 
-        // 1. 各 Boss の画像描画
-        var texHandle = -1;
-        if (!string.IsNullOrWhiteSpace(itemCfg.TexturePath) &&
-            (assets.TryGetTexture(itemCfg.TexturePath, out texHandle) || (texHandle = assets.LoadTexture(itemCfg.TexturePath)) >= 0))
+        if (isSnake)
         {
-            if (isSnake)
+            var bobY = MathF.Sin(animTimer * itemCfg.MotionSpeed) * itemCfg.MotionAmplitude;
+            var bobX = MathF.Cos(animTimer * itemCfg.MotionSpeed * 0.7f) * (itemCfg.MotionAmplitude * 0.35f);
+            var previewPos = new Vec2i((int)(center.X + bobX), (int)(center.Y + 12 + bobY));
+
+            GameEngine.DrawRotaGraph3(previewPos, dCfg.PreviewScale, 0.0, texHandle, true);
+
+            // 蛇神光輪：周囲を旋回する 3 顆の浮遊毒霊オーブ
+            for (var k = 0; k < 3; k++)
             {
-                var bobY = MathF.Sin(animTimer * speed) * amp;
-                var bobX = MathF.Cos(animTimer * speed * 0.7f) * (amp * 0.35f);
-                var previewPos = new Vec2i((int)(center.X + bobX), (int)(center.Y + 12 + bobY));
+                var theta = animTimer * 2.8f + k * (MathF.PI * 2f / 3f);
+                var orbX = (int)(previewPos.X + MathF.Cos(theta) * 46f);
+                var orbY = (int)(previewPos.Y + MathF.Sin(theta) * 18f);
+                var orbR = inRange ? 5 : 3;
+                var orbCol = inRange ? itemCfg.RuneColorActive : itemCfg.AuraColor;
 
-                GameEngine.DrawRotaGraph3(previewPos, baseScale, 0.0, texHandle, true);
-
-                // 蛇神光輪：周囲を旋回する 3 顆の浮遊毒霊オーブ
-                for (var k = 0; k < 3; k++)
+                GameEngine.DrawCircle(new Vec2i(orbX, orbY), orbR, orbCol, true);
+                if (inRange)
                 {
-                    var theta = animTimer * 2.8f + k * (MathF.PI * 2f / 3f);
-                    var orbX = (int)(previewPos.X + MathF.Cos(theta) * 46f);
-                    var orbY = (int)(previewPos.Y + MathF.Sin(theta) * 18f);
-                    var orbR = inRange ? 5 : 3;
-                    var orbCol = inRange ? itemCfg.RuneColorActive : itemCfg.AuraColor;
-
-                    GameEngine.DrawCircle(new Vec2i(orbX, orbY), orbR, orbCol, true);
-                    if (inRange)
-                    {
-                        GameEngine.DrawCircle(new Vec2i(orbX, orbY), orbR + 2, itemCfg.AuraColor, false);
-                    }
+                    GameEngine.DrawCircle(new Vec2i(orbX, orbY), orbR + 2, itemCfg.AuraColor, false);
                 }
             }
-            else
-            {
-                // 獅子神動態：重厚な威圧呼吸スケールパルス
-                var breath = (MathF.Sin(animTimer * speed) + 0.3f * MathF.Sin(animTimer * speed * 2f)) * amp;
-                var scale = new Vec2f(baseScale.X * (1f + breath), baseScale.Y * (1f - breath * 0.5f));
-                var previewPos = new Vec2i(center.X, center.Y + 16);
+        }
+        else
+        {
+            // 獅子神動態：重厚な威圧呼吸スケールパルス
+            var breath = (MathF.Sin(animTimer * itemCfg.MotionSpeed) + 0.3f * MathF.Sin(animTimer * itemCfg.MotionSpeed * 2f)) * itemCfg.MotionAmplitude;
+            var scale = new Vec2f(dCfg.PreviewScale.X * (1f + breath), dCfg.PreviewScale.Y * (1f - breath * 0.5f));
+            var previewPos = new Vec2i(center.X, center.Y + 16);
 
-                GameEngine.DrawRotaGraph3(previewPos, scale, 0.0, texHandle, true);
+            GameEngine.DrawRotaGraph3(previewPos, scale, 0.0, texHandle, true);
+
+            var groundCenter = new Vec2i(center.X, groundY + 4);
+            for (var k = 0; k < 2; k++)
+            {
+                var phase = (animTimer * 1.3f + k * 0.5f) % 1.0f;
+                var rippleR = (int)(20 + phase * (inRange ? 55f : 35f));
+                GameEngine.DrawCircle(groundCenter, rippleR, itemCfg.AuraColor, false);
             }
         }
     }
