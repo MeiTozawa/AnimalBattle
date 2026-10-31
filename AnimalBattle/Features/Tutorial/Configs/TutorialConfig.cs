@@ -220,6 +220,53 @@ public sealed class TutorialTextsConfig
 }
 
 /// <summary>
+///     チュートリアルフェーズの種別。
+/// </summary>
+public enum TutorialPhaseType
+{
+    /// <summary>目標物（コイン・星）収集</summary>
+    Collect,
+
+    /// <summary>小怪戦闘練習</summary>
+    Combat,
+
+    /// <summary>ボス挑戦扉（次シーン移行）</summary>
+    BossDoor
+}
+
+/// <summary>
+///     収集ターゲットアイテム設定。
+/// </summary>
+public sealed class TutorialTargetItemConfig
+{
+    public Vec2f Pos { get; set; }
+    public float Radius { get; set; }
+}
+
+/// <summary>
+///     小怪配置設定。
+/// </summary>
+public sealed class TutorialMinionItemConfig
+{
+    public string MinionType { get; set; } = string.Empty;
+    public Vec2f Pos { get; set; }
+}
+
+/// <summary>
+///     単一フェーズの汎用設定クラス。
+/// </summary>
+public sealed class TutorialPhaseConfig
+{
+    public TutorialPhaseType Type { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Subtitle { get; set; } = string.Empty;
+
+    public TutorialTargetItemConfig[] Targets { get; set; } = [];
+    public TutorialMinionItemConfig[] Minions { get; set; } = [];
+    public TutorialDoorItemConfig[] Doors { get; set; } = [];
+}
+
+/// <summary>
 ///     チュートリアル全体設定クラス。
 /// </summary>
 public sealed class TutorialConfig
@@ -230,4 +277,9 @@ public sealed class TutorialConfig
     public TutorialLayoutConfig Layout { get; set; } = new();
     public TutorialTimingConfig Timing { get; set; } = new();
     public TutorialTextsConfig Texts { get; set; } = new();
+
+    /// <summary>
+    ///     データ駆動フェーズシーケンス一覧。
+    /// </summary>
+    public TutorialPhaseConfig[] Phases { get; set; } = [];
 }
