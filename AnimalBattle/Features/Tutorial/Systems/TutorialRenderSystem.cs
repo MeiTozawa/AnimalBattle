@@ -85,6 +85,7 @@ public static class TutorialRenderSystem
                 cfg.Doors,
                 door.IsPlayerInRange,
                 door.AnimTimer,
+                colors,
                 assets);
         });
     }
@@ -185,6 +186,7 @@ public static class TutorialRenderSystem
         TutorialDoorsConfig doorsCfg,
         bool inRange,
         float animTimer,
+        TutorialColorsConfig colors,
         IAssetManager assets)
     {
         var halfW = doorsCfg.Size.X / 2;
@@ -203,8 +205,8 @@ public static class TutorialRenderSystem
         // 2. 左右石柱への古代刻印符文描画
         DrawShrineRunes(gateP1, gateP2, pillarW, lintelH, pedestalH, doorItem, inRange, animTimer);
 
-        // 3. Boss 画像および固有動態（蛇：法球旋回、獅子：重砸地面）
-        DrawBossAuraAndMotion(center, bossType, gateP2.Y - pedestalH, doorsCfg, doorItem, inRange, animTimer, assets);
+        // 3. Boss 画像および固有動態（蛇：法球旋回、獅子：重砸地面＆衝撃波）
+        DrawBossAuraAndMotion(center, bossType, gateP2.Y - pedestalH, doorsCfg, doorItem, inRange, animTimer, colors, assets);
     }
 
     private static void DrawShrineArchitecture(
@@ -299,6 +301,7 @@ public static class TutorialRenderSystem
         TutorialDoorItemConfig itemCfg,
         bool inRange,
         float animTimer,
+        TutorialColorsConfig colors,
         IAssetManager assets)
     {
         var isSnake = bossType == BossType.BossSnake;
@@ -332,56 +335,127 @@ public static class TutorialRenderSystem
         }
         else
         {
-            // 獅子神動態：重砸地面（Ground Slam）
-            // 周期：起跳跃起 -> 滞空蓄力 -> 极速重砸下落 -> 强力触地挤压形变 -> 姿态恢复
+            // 獅子神動態：重砸地面＆衝撃波（Ground Slam & Shockwave）
+            // 3.0秒周期：威圧待機 (0.0~0.60, 1.8s) -> 迅猛起跳 (0.60~0.74, 0.42s) -> 頂点蓄力 (0.74~0.80, 0.18s) -> 极速下砸 (0.80~0.85, 0.15s) -> 轟天重砸＆地裂衝撃波 (0.85~1.00, 0.45s)
             var t = (animTimer * itemCfg.MotionSpeed) % 1.0f;
             float slamY;
             float sx;
             float sy;
+            var shockProgress = -1f;
 
-            if (t < 0.35f)
+            if (t < 0.60f)
             {
-                var p = t / 0.35f;
+                // 1. 威圧伺機姿態：低周波の重厚な呼吸脈動
+                var breath = MathF.Sin(t * MathF.PI * 8f) * 0.02f;
+                slamY = 0f;
+                sx = 1f + breath;
+                sy = 1f - breath;
+            }
+            else if (t < 0.74f)
+            {
+                // 2. 猛獅起跳蓄力 (Ease-out 騰空)
+                var p = (t - 0.60f) / 0.14f;
                 var h = MathF.Sin(p * (MathF.PI * 0.5f));
                 slamY = -h * itemCfg.MotionAmplitude;
-                sx = 1f - 0.12f * h;
-                sy = 1f + 0.16f * h;
-            }
-            else if (t < 0.48f)
-            {
-                slamY = -itemCfg.MotionAmplitude;
-                sx = 1.05f;
-                sy = 0.95f;
-            }
-            else if (t < 0.62f)
-            {
-                var p = (t - 0.48f) / 0.14f;
-                slamY = -(1f - p * p) * itemCfg.MotionAmplitude;
-                sx = 1f - 0.15f * p;
-                sy = 1f + 0.20f * p;
+                sx = 1f - 0.15f * h;
+                sy = 1f + 0.22f * h;
             }
             else if (t < 0.80f)
             {
-                var p = (t - 0.62f) / 0.18f;
-                var squashAmount = (1f - p) * MathF.Cos(p * MathF.PI * 1.5f);
-                slamY = 0f;
-                sx = 1f + 0.28f * squashAmount;
-                sy = 1f - 0.28f * squashAmount;
+                // 3. 頂点凝滞（威圧定格）
+                slamY = -itemCfg.MotionAmplitude;
+                sx = 1.08f;
+                sy = 0.92f;
+            }
+            else if (t < 0.85f)
+            {
+                // 4. 流星重砸下落 (Ease-in 3次加速下墜)
+                var p = (t - 0.80f) / 0.05f;
+                slamY = -(1f - p * p * p) * itemCfg.MotionAmplitude;
+                sx = 1f - 0.18f * p;
+                sy = 1f + 0.30f * p;
             }
             else
             {
+                // 5. 触地重砸、強烈圧扁形変および減衰反発
+                var p = (t - 0.85f) / 0.15f;
+                var decay = 1f - p;
+                var squash = decay * MathF.Cos(p * MathF.PI * 2.5f);
                 slamY = 0f;
-                sx = 1f;
-                sy = 1f;
+                sx = 1f + 0.36f * squash;
+                sy = 1f - 0.36f * squash;
+                shockProgress = p;
             }
 
             var baseScale = dCfg.PreviewScale;
             var halfH = 192f * baseScale.Y * 0.5f;
             var footCompY = (1f - sy) * halfH;
-            var previewPos = new Vec2i(center.X, (int)(center.Y + 16 + slamY + footCompY));
+
+            // 着地瞬間の微幅な衝撃震動（最初の 0.12s）
+            var impactTremor = 0;
+            if (shockProgress is >= 0f and < 0.30f)
+            {
+                impactTremor = (int)(MathF.Sin(shockProgress * 65f) * (1f - shockProgress / 0.30f) * 3f);
+            }
+
+            var previewPos = new Vec2i(center.X, (int)(center.Y + 16 + slamY + footCompY + impactTremor));
             var scale = new Vec2f(baseScale.X * sx, baseScale.Y * sy);
 
             GameEngine.DrawRotaGraph3(previewPos, scale, 0.0, texHandle, true);
+
+            // 6. Ground Shockwave
+            if (shockProgress >= 0f)
+            {
+                var sp = shockProgress;
+                var alpha = (int)((1f - sp) * 255f);
+                if (alpha > 0)
+                {
+                    GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
+
+                    var groundCenter = new Vec2i(center.X, groundY - 20);
+                    var spread = (int)(sp * 72f);
+                    var waveCol = itemCfg.RuneColorActive;
+                    var coreCol = itemCfg.AuraColor;
+
+                    // A. 地表を左右へ高速走駆する横向激波刃
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X - 8, groundCenter.Y), new Vec2i(groundCenter.X - 8 - spread, groundCenter.Y), waveCol, 3);
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X + 8, groundCenter.Y), new Vec2i(groundCenter.X + 8 + spread, groundCenter.Y), waveCol, 3);
+
+                    // B. 激波前沿の地裂衝天尖刺
+                    var spikeH1 = (int)((1f - sp) * 15f);
+                    var spikeH2 = (int)((1f - sp) * 10f);
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X - 8 - spread, groundCenter.Y), new Vec2i(groundCenter.X - 12 - spread, groundCenter.Y - spikeH1), coreCol, 2);
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X + 8 + spread, groundCenter.Y), new Vec2i(groundCenter.X + 12 + spread, groundCenter.Y - spikeH1), coreCol, 2);
+
+                    var midSpread = (int)(spread * 0.5f);
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X - 8 - midSpread, groundCenter.Y), new Vec2i(groundCenter.X - 10 - midSpread, groundCenter.Y - spikeH2), coreCol, 2);
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X + 8 + midSpread, groundCenter.Y), new Vec2i(groundCenter.X + 10 + midSpread, groundCenter.Y - spikeH2), coreCol, 2);
+
+                    // C. 上空へ噴流拡散する半月形高圧激波弧
+                    var arcR = (int)(10 + sp * 58f);
+                    const int arcSegments = 6;
+                    var prevPt = new Vec2i(groundCenter.X - (int)(arcR * 1.15f), groundCenter.Y);
+                    for (var s = 1; s <= arcSegments; s++)
+                    {
+                        var theta = -MathF.PI + s * (MathF.PI / arcSegments);
+                        var currPt = new Vec2i(
+                            groundCenter.X + (int)(MathF.Cos(theta) * arcR * 1.15f),
+                            groundCenter.Y + (int)(MathF.Sin(theta) * arcR * 0.52f));
+                        GameEngine.DrawLine(prevPt, currPt, waveCol, 2);
+                        prevPt = currPt;
+                    }
+
+                    // D. 触地瞬間の高熱衝撃爆心フラッシュ
+                    if (sp < 0.22f)
+                    {
+                        var flashA = (int)((1f - sp / 0.22f) * 220f);
+                        GameEngine.SetDrawBlendMode(BlendMode.Add, flashA);
+                        GameEngine.DrawBox(new Vec2i(groundCenter.X - 18, groundCenter.Y - 5), new Vec2i(groundCenter.X + 18, groundCenter.Y + 5), colors.White, true);
+                    }
+
+                    GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+                }
+            }
         }
     }
 
