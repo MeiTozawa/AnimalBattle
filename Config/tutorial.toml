@@ -14,28 +14,52 @@ DoorBg = "#1A1E2C"
 TooltipBg = "#0F1E37"
 
 [Doors]
-Size = { x = 150, y = 200 }
-InteractionRadius = 75.0
+Size = { x = 160, y = 210 }
+PillarWidth = 24
+LintelHeight = 32
+PedestalHeight = 22
+PedestalExtraWidth = 32
+InteractionRadius = 80.0
 PreviewScale = { x = 0.55, y = 0.55 }
 PreviewBobFrequency = 4.5
 PreviewBobAmplitude = 6.0
-HighlightCircleRadius = 50
-TooltipOffsetY = -25
-TooltipSize = { x = 140, y = 28 }
+HighlightCircleRadius = 55
+TooltipOffsetY = -30
+TooltipSize = { x = 160, y = 30 }
+
+# 石材配色
+StoneBase = "#181B26"
+StoneHighlight = "#38445E"
+StoneShadow = "#0E1017"
+VoidBg = "#0A0C12"
 
 [Doors.Snake]
 Pos = { x = 420.0, y = 480.0 }
 BossType = "BossSnake"
-TexturePath = "Character\\031_3.png"
-Title = "【 BOSS: 蛇 】"
-Tag = "飛行 & 全方位弾幕"
+TexturePath = "Characters\\031_3.png"
+Title = "【 蛇神ノ祭壇 】"
+Tag = "飛行浮遊 ＆ 全方位毒弾幕"
+RuneSymbols = "✦ ∿ ◈ ∿ ✦"
+RuneColorIdle = "#205565"
+RuneColorActive = "#50F5D5"
+AuraColor = "#30E0B0"
+AuraType = "FloatOrbs"
+MotionSpeed = 3.2
+MotionAmplitude = 8.0
 
 [Doors.Lion]
 Pos = { x = 860.0, y = 480.0 }
 BossType = "BossLion"
-TexturePath = "Character\\027_3.png"
-Title = "【 BOSS: 獅子 】"
-Tag = "突撃 & 衝撃波重撃"
+TexturePath = "Characters\\027_3.png"
+Title = "【 獅子ノ闘技殿 】"
+Tag = "突撃重撃 ＆ 地裂衝撃波"
+RuneSymbols = "▲ ⚡ ◆ ⚡ ▲"
+RuneColorIdle = "#653518"
+RuneColorActive = "#FFA530"
+AuraColor = "#FF4520"
+AuraType = "ShockwaveRipple"
+MotionSpeed = 4.2
+MotionAmplitude = 0.06
 
 [Layout]
 GuidanceTitlePos = { x = 640, y = 70 }
@@ -54,7 +78,7 @@ ReachMargin = 32.0
 
 [Texts]
 RetryPrompt = "【 RETRY - リトライ 】"
-DoorInteractPrompt = "【 [F] 挑戦する 】"
+DoorInteractPrompt = "【 [F] 挑戦開始 】"
 ControlBoardTitle = "【 基本操作ガイド 】"
 ControlBoardMove = "移動　　: A / D"
 ControlBoardJump = "ジャンプ: SPACE (空中で二段)"
@@ -119,7 +143,7 @@ Type = "BossDoor"
 Title = "【 ボス選択 】"
 Subtitle = "扉に近づき、[F] キーで挑戦するボスを選択してください"
 Doors = [
-    { Pos = { x = 420.0, y = 480.0 }, BossType = "BossSnake", TexturePath = "Character\\031_3.png", Title = "【 BOSS: 蛇 】", Tag = "飛行 & 全方位弾幕" },
-    { Pos = { x = 860.0, y = 480.0 }, BossType = "BossLion", TexturePath = "Character\\027_3.png", Title = "【 BOSS: 獅子 】", Tag = "突撃 & 衝撃波重撃" }
+    { Pos = { x = 420.0, y = 480.0 }, BossType = "BossSnake", TexturePath = "Characters\\031_3.png", Title = "【 蛇神ノ祭壇 】", Tag = "飛行浮遊 ＆ 全方位毒弾幕" },
+    { Pos = { x = 860.0, y = 480.0 }, BossType = "BossLion", TexturePath = "Characters\\027_3.png", Title = "【 獅子ノ闘技殿 】", Tag = "突撃重撃 ＆ 地裂衝撃波" }
 ]
 

@@ -77,6 +77,17 @@ public static class TutorialSceneSpawner
 
         // 4. 初期フェーズ番号の解決（負値の場合はボス扉フェーズを検索）
         var cfg = world.Get<TutorialConfig>() ?? new TutorialConfig();
+        if (!string.IsNullOrWhiteSpace(cfg.Doors.Snake.TexturePath))
+        {
+            var hSnake = assets.LoadTexture(cfg.Doors.Snake.TexturePath);
+            Debug.Assert(hSnake >= 0, $"蛇ボス扉テクスチャのロードに失敗しました: {cfg.Doors.Snake.TexturePath}");
+        }
+        if (!string.IsNullOrWhiteSpace(cfg.Doors.Lion.TexturePath))
+        {
+            var hLion = assets.LoadTexture(cfg.Doors.Lion.TexturePath);
+            Debug.Assert(hLion >= 0, $"獅子ボス扉テクスチャのロードに失敗しました: {cfg.Doors.Lion.TexturePath}");
+        }
+
         if (initialPhaseIndex < 0)
         {
             initialPhaseIndex = 0;

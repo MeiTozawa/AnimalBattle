@@ -20,10 +20,16 @@ public sealed class BossDoorPhaseHandler : ITutorialPhaseHandler
         state.TargetsRemaining = 0;
 
         var interactionRadius = globalConfig.Doors.InteractionRadius;
+        var assets = world.Get<IAssetManager>();
 
         for (var i = 0; i < config.Doors.Length; i++)
         {
             var item = config.Doors[i];
+            if (!string.IsNullOrWhiteSpace(item.TexturePath))
+            {
+                assets.LoadTexture(item.TexturePath);
+            }
+
             var parseSuccess = Enum.TryParse<BossType>(item.BossType, ignoreCase: true, out var bossType);
             Debug.Assert(parseSuccess, $"不正な BossType です: {item.BossType}");
             if (!parseSuccess) continue;

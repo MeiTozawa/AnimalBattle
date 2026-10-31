@@ -66,6 +66,26 @@ public sealed class TutorialDoorItemConfig
     public string TexturePath { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Tag { get; set; } = string.Empty;
+    public string RuneSymbols { get; set; } = string.Empty;
+
+    private Color _runeColorIdle;
+    [ConfigurationKeyName("RuneColorIdle")]
+    public string RuneColorIdleHex { get => string.Empty; set => _runeColorIdle = value.ToColor(); }
+    public Color RuneColorIdle => _runeColorIdle;
+
+    private Color _runeColorActive;
+    [ConfigurationKeyName("RuneColorActive")]
+    public string RuneColorActiveHex { get => string.Empty; set => _runeColorActive = value.ToColor(); }
+    public Color RuneColorActive => _runeColorActive;
+
+    private Color _auraColor;
+    [ConfigurationKeyName("AuraColor")]
+    public string AuraColorHex { get => string.Empty; set => _auraColor = value.ToColor(); }
+    public Color AuraColor => _auraColor;
+
+    public string AuraType { get; set; } = string.Empty;
+    public float MotionSpeed { get; set; }
+    public float MotionAmplitude { get; set; }
 }
 
 /// <summary>
@@ -74,13 +94,38 @@ public sealed class TutorialDoorItemConfig
 public sealed class TutorialDoorsConfig
 {
     public Vec2i Size { get; set; }
+    public int PillarWidth { get; set; }
+    public int LintelHeight { get; set; }
+    public int PedestalHeight { get; set; }
+    public int PedestalExtraWidth { get; set; }
     public float InteractionRadius { get; set; }
-    public Vec2f PreviewScale { get; set; }
-    public float PreviewBobFrequency { get; set; }
-    public float PreviewBobAmplitude { get; set; }
     public int HighlightCircleRadius { get; set; }
     public int TooltipOffsetY { get; set; }
     public Vec2i TooltipSize { get; set; }
+
+    public Vec2f PreviewScale { get; set; }
+    public float PreviewBobFrequency { get; set; }
+    public float PreviewBobAmplitude { get; set; }
+
+    private Color _stoneBase;
+    [ConfigurationKeyName("StoneBase")]
+    public string StoneBaseHex { get => string.Empty; set => _stoneBase = value.ToColor(); }
+    public Color StoneBase => _stoneBase;
+
+    private Color _stoneHighlight;
+    [ConfigurationKeyName("StoneHighlight")]
+    public string StoneHighlightHex { get => string.Empty; set => _stoneHighlight = value.ToColor(); }
+    public Color StoneHighlight => _stoneHighlight;
+
+    private Color _stoneShadow;
+    [ConfigurationKeyName("StoneShadow")]
+    public string StoneShadowHex { get => string.Empty; set => _stoneShadow = value.ToColor(); }
+    public Color StoneShadow => _stoneShadow;
+
+    private Color _voidBg;
+    [ConfigurationKeyName("VoidBg")]
+    public string VoidBgHex { get => string.Empty; set => _voidBg = value.ToColor(); }
+    public Color VoidBg => _voidBg;
 
     public TutorialDoorItemConfig Snake { get; set; } = new();
     public TutorialDoorItemConfig Lion { get; set; } = new();

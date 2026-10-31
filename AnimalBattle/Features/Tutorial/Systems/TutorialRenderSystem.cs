@@ -50,65 +50,24 @@ public static class TutorialRenderSystem
             GameEngine.DrawCenterString(center, "★", colors.White);
         });
 
-        // 2. ボス挑戦扉（Phase 7）の描画
+        // 2. ボス挑戦神殿石門（BossDoor）の描画
         using var doorQuery = world.QueryBuilder<TutorialDoor, Transform>().Build();
         doorQuery.Each((Entity _, ref TutorialDoor door, ref Transform tr) =>
         {
             var doorCenter = new Vec2i((int)tr.Position.X, (int)tr.Position.Y);
-            var halfW = cfg.Doors.Size.X / 2;
-            var halfH = cfg.Doors.Size.Y / 2;
-
-            var p1 = new Vec2i(doorCenter.X - halfW, doorCenter.Y - halfH);
-            var p2 = new Vec2i(doorCenter.X + halfW, doorCenter.Y + halfH);
-
-            // 扉の外枠と背景
-            GameEngine.DrawBox(p1, p2, colors.DoorBg, true);
-            var borderColor = door.IsPlayerInRange ? colors.Cyan : colors.PanelBorder;
-            GameEngine.DrawBox(p1, p2, borderColor, false);
-
-            if (door.IsPlayerInRange)
-            {
-                GameEngine.DrawBox(p1 - Vec2i.One, p2 + Vec2i.One, colors.Cyan, false);
-                // 足元ハイライトサークル
-                GameEngine.DrawCircle(new Vec2i(doorCenter.X, p2.Y - 5), cfg.Doors.HighlightCircleRadius, colors.Cyan, false);
-            }
-
-            // ボス名プレートおよびタグ
             var isSnake = door.TargetBoss == BossType.BossSnake;
             var doorItem = isSnake ? cfg.Doors.Snake : cfg.Doors.Lion;
-            var tagColor = isSnake ? colors.Cyan : colors.Gold;
 
-            GameEngine.DrawCenterString(new Vec2i(doorCenter.X, p1.Y + 20), doorItem.Title, colors.White);
-            GameEngine.DrawCenterString(new Vec2i(doorCenter.X, p1.Y + 40), doorItem.Tag, tagColor);
-
-            // 扉中央の Boss プレビュー画像
-            var texPath = doorItem.TexturePath;
-            if (assets.TryGetTexture(texPath, out var texHandle))
-            {
-                var bobY = isSnake ? MathF.Sin(door.AnimTimer * cfg.Doors.PreviewBobFrequency) * cfg.Doors.PreviewBobAmplitude : 0f;
-                var previewPos = new Vec2i(doorCenter.X, (int)(doorCenter.Y + 15 + bobY));
-                GameEngine.DrawRotaGraph3(
-                    previewPos,
-                    cfg.Doors.PreviewScale,
-                    0.0,
-                    texHandle,
-                    true);
-            }
-
-            // 接近時の挑戦ツールチップ
-            if (door.IsPlayerInRange)
-            {
-                var promptPos = new Vec2i(doorCenter.X, p1.Y + cfg.Doors.TooltipOffsetY);
-                var pulse = (int)(MathF.Sin(door.AnimTimer * 6f) * 2f);
-                var halfTipW = cfg.Doors.TooltipSize.X / 2;
-                var halfTipH = cfg.Doors.TooltipSize.Y / 2;
-                var bubbleP1 = new Vec2i(promptPos.X - halfTipW, promptPos.Y - halfTipH + pulse);
-                var bubbleP2 = new Vec2i(promptPos.X + halfTipW, promptPos.Y + halfTipH + pulse);
-
-                GameEngine.DrawBox(bubbleP1, bubbleP2, colors.TooltipBg, true);
-                GameEngine.DrawBox(bubbleP1, bubbleP2, colors.Cyan, false);
-                GameEngine.DrawCenterString(promptPos + new Vec2i(0, pulse), cfg.Texts.DoorInteractPrompt, colors.Gold);
-            }
+            DrawShrineDoor(
+                doorCenter,
+                door.TargetBoss,
+                doorItem,
+                cfg.Doors,
+                door.IsPlayerInRange,
+                door.AnimTimer,
+                colors,
+                cfg.Texts.DoorInteractPrompt,
+                assets);
         });
 
         // 3. 画面上部・中央のフェーズ別背景操作ガイド文字
@@ -164,5 +123,222 @@ public static class TutorialRenderSystem
         GameEngine.DrawLeftString(new Vec2i(startX, y), texts.ControlBoardDash, colors.White);
         y += 24;
         GameEngine.DrawLeftString(new Vec2i(startX, y), texts.ControlBoardAttack, colors.Gold);
+    }
+
+    private static void DrawShrineDoor(
+        Vec2i center,
+        BossType bossType,
+        TutorialDoorItemConfig doorItem,
+        TutorialDoorsConfig doorsCfg,
+        bool inRange,
+        float animTimer,
+        TutorialColorsConfig colors,
+        string promptText,
+        IAssetManager assets)
+    {
+        var halfW = doorsCfg.Size.X / 2;
+        var halfH = doorsCfg.Size.Y / 2;
+        var gateP1 = new Vec2i(center.X - halfW, center.Y - halfH);
+        var gateP2 = new Vec2i(center.X + halfW, center.Y + halfH);
+
+        var pillarW = doorsCfg.PillarWidth > 0 ? doorsCfg.PillarWidth : 24;
+        var lintelH = doorsCfg.LintelHeight > 0 ? doorsCfg.LintelHeight : 32;
+        var pedestalH = doorsCfg.PedestalHeight > 0 ? doorsCfg.PedestalHeight : 22;
+        var pedestalExtraW = doorsCfg.PedestalExtraWidth > 0 ? doorsCfg.PedestalExtraWidth : 32;
+
+        // 1. 基座祭壇＆魔法陣、虚空門洞、双立石柱の幾何描画
+        DrawShrineArchitecture(center, gateP1, gateP2, pillarW, lintelH, pedestalH, pedestalExtraW, doorsCfg, doorItem, inRange, animTimer);
+
+        // 2. 左右石柱への古代刻印符文描画
+        DrawShrineRunes(gateP1, gateP2, pillarW, lintelH, pedestalH, doorItem, inRange, animTimer);
+
+        // 3. Boss 画像および固有光輪（蛇：法球旋回、獅子：地裂衝撃波）
+        DrawBossAuraAndMotion(center, bossType, gateP2.Y - pedestalH, doorsCfg, doorItem, inRange, animTimer, assets);
+
+        // 4. 神殿銘板および接近時 [F] 挑戦開始プロンプト枠
+        DrawShrinePlaqueAndPrompt(center, gateP1, doorsCfg, doorItem, inRange, animTimer, promptText, colors);
+    }
+
+    private static void DrawShrineArchitecture(
+        Vec2i center,
+        Vec2i gateP1,
+        Vec2i gateP2,
+        int pillarW,
+        int lintelH,
+        int pedestalH,
+        int pedestalExtraW,
+        TutorialDoorsConfig dCfg,
+        TutorialDoorItemConfig itemCfg,
+        bool inRange,
+        float animTimer)
+    {
+        // 1. 足元基座祭壇（二段石階）
+        var base1P1 = new Vec2i(gateP1.X - pedestalExtraW, gateP2.Y - pedestalH / 2);
+        var base1P2 = new Vec2i(gateP2.X + pedestalExtraW, gateP2.Y + pedestalH / 2);
+        GameEngine.DrawBox(base1P1, base1P2, dCfg.StoneShadow, true);
+        GameEngine.DrawBox(base1P1, base1P2, dCfg.StoneHighlight, false);
+
+        var base2P1 = new Vec2i(gateP1.X - pedestalExtraW / 2, gateP2.Y - pedestalH);
+        var base2P2 = new Vec2i(gateP2.X + pedestalExtraW / 2, gateP2.Y);
+        GameEngine.DrawBox(base2P1, base2P2, dCfg.StoneBase, true);
+        GameEngine.DrawBox(base2P1, base2P2, inRange ? itemCfg.RuneColorActive : dCfg.StoneHighlight, false);
+
+        // 足元起動魔法陣
+        if (inRange)
+        {
+            var magicCenter = new Vec2i(center.X, gateP2.Y + 8);
+            var pulseR = (int)(dCfg.HighlightCircleRadius + MathF.Sin(animTimer * 5f) * 3f);
+            GameEngine.DrawCircle(magicCenter, pulseR, itemCfg.AuraColor, false);
+            GameEngine.DrawCircle(magicCenter, Math.Max(2, (int)(pulseR * 0.65f)), itemCfg.AuraColor, false);
+        }
+
+        // 2. 虚空門洞（Inner Void）
+        var voidP1 = new Vec2i(gateP1.X + pillarW, gateP1.Y + lintelH);
+        var voidP2 = new Vec2i(gateP2.X - pillarW, gateP2.Y - pedestalH);
+        GameEngine.DrawBox(voidP1, voidP2, dCfg.VoidBg, true);
+
+        // 3. 立体双立石柱
+        var lp1 = new Vec2i(gateP1.X, gateP1.Y + lintelH);
+        var lp2 = new Vec2i(gateP1.X + pillarW, gateP2.Y - pedestalH);
+        GameEngine.DrawBox(lp1, lp2, dCfg.StoneBase, true);
+        GameEngine.DrawLine(lp1, new Vec2i(lp1.X, lp2.Y), dCfg.StoneHighlight);
+        GameEngine.DrawLine(new Vec2i(lp2.X, lp1.Y), lp2, dCfg.StoneShadow);
+
+        var rp1 = new Vec2i(gateP2.X - pillarW, gateP1.Y + lintelH);
+        var rp2 = new Vec2i(gateP2.X, gateP2.Y - pedestalH);
+        GameEngine.DrawBox(rp1, rp2, dCfg.StoneBase, true);
+        GameEngine.DrawLine(rp1, new Vec2i(rp1.X, rp2.Y), dCfg.StoneHighlight);
+        GameEngine.DrawLine(new Vec2i(rp2.X, rp1.Y), rp2, dCfg.StoneShadow);
+
+        // 4. 門楣頂梁（Lintel）
+        var lintelP1 = new Vec2i(gateP1.X - 6, gateP1.Y);
+        var lintelP2 = new Vec2i(gateP2.X + 6, gateP1.Y + lintelH);
+        GameEngine.DrawBox(lintelP1, lintelP2, dCfg.StoneBase, true);
+        GameEngine.DrawLine(lintelP1, new Vec2i(lintelP2.X, lintelP1.Y), dCfg.StoneHighlight);
+        GameEngine.DrawLine(new Vec2i(lintelP1.X, lintelP2.Y), lintelP2, dCfg.StoneShadow);
+        GameEngine.DrawBox(lintelP1, lintelP2, inRange ? itemCfg.RuneColorActive : dCfg.StoneHighlight, false);
+    }
+
+    private static void DrawShrineRunes(
+        Vec2i gateP1,
+        Vec2i gateP2,
+        int pillarW,
+        int lintelH,
+        int pedestalH,
+        TutorialDoorItemConfig itemCfg,
+        bool inRange,
+        float animTimer)
+    {
+        var runeColor = inRange ? itemCfg.RuneColorActive : itemCfg.RuneColorIdle;
+        var symbols = itemCfg.RuneSymbols.AsSpan();
+        if (symbols.IsEmpty) return;
+
+        var startY = gateP1.Y + lintelH + 18;
+        var bottomY = gateP2.Y - pedestalH - 18;
+        var spanY = Math.Max(20, bottomY - startY);
+        var step = spanY / 3;
+
+        var leftX = gateP1.X + pillarW / 2;
+        var rightX = gateP2.X - pillarW / 2;
+
+        for (var i = 0; i < 3; i++)
+        {
+            var y = startY + i * step;
+            var glyphIdx = (i * 2) % symbols.Length;
+            var runeChar = symbols.Slice(glyphIdx, 1);
+
+            GameEngine.DrawCenterString(new Vec2i(leftX, y), runeChar, runeColor);
+            GameEngine.DrawCenterString(new Vec2i(rightX, y), runeChar, runeColor);
+        }
+    }
+
+    private static void DrawBossAuraAndMotion(
+        Vec2i center,
+        BossType bossType,
+        int groundY,
+        TutorialDoorsConfig dCfg,
+        TutorialDoorItemConfig itemCfg,
+        bool inRange,
+        float animTimer,
+        IAssetManager assets)
+    {
+        var isSnake = bossType == BossType.BossSnake;
+        var speed = itemCfg.MotionSpeed > 0f ? itemCfg.MotionSpeed : (isSnake ? 3.2f : 4.2f);
+        var amp = itemCfg.MotionAmplitude > 0f ? itemCfg.MotionAmplitude : (isSnake ? 8.0f : 0.06f);
+        var baseScale = (dCfg.PreviewScale.X > 0f && dCfg.PreviewScale.Y > 0f)
+            ? dCfg.PreviewScale
+            : new Vec2f(0.55f, 0.55f);
+
+        // 1. 各 Boss の画像描画
+        var texHandle = -1;
+        if (!string.IsNullOrWhiteSpace(itemCfg.TexturePath) &&
+            (assets.TryGetTexture(itemCfg.TexturePath, out texHandle) || (texHandle = assets.LoadTexture(itemCfg.TexturePath)) >= 0))
+        {
+            if (isSnake)
+            {
+                var bobY = MathF.Sin(animTimer * speed) * amp;
+                var bobX = MathF.Cos(animTimer * speed * 0.7f) * (amp * 0.35f);
+                var previewPos = new Vec2i((int)(center.X + bobX), (int)(center.Y + 12 + bobY));
+
+                GameEngine.DrawRotaGraph3(previewPos, baseScale, 0.0, texHandle, true);
+
+                // 蛇神光輪：周囲を旋回する 3 顆の浮遊毒霊オーブ
+                for (var k = 0; k < 3; k++)
+                {
+                    var theta = animTimer * 2.8f + k * (MathF.PI * 2f / 3f);
+                    var orbX = (int)(previewPos.X + MathF.Cos(theta) * 46f);
+                    var orbY = (int)(previewPos.Y + MathF.Sin(theta) * 18f);
+                    var orbR = inRange ? 5 : 3;
+                    var orbCol = inRange ? itemCfg.RuneColorActive : itemCfg.AuraColor;
+
+                    GameEngine.DrawCircle(new Vec2i(orbX, orbY), orbR, orbCol, true);
+                    if (inRange)
+                    {
+                        GameEngine.DrawCircle(new Vec2i(orbX, orbY), orbR + 2, itemCfg.AuraColor, false);
+                    }
+                }
+            }
+            else
+            {
+                // 獅子神動態：重厚な威圧呼吸スケールパルス
+                var breath = (MathF.Sin(animTimer * speed) + 0.3f * MathF.Sin(animTimer * speed * 2f)) * amp;
+                var scale = new Vec2f(baseScale.X * (1f + breath), baseScale.Y * (1f - breath * 0.5f));
+                var previewPos = new Vec2i(center.X, center.Y + 16);
+
+                GameEngine.DrawRotaGraph3(previewPos, scale, 0.0, texHandle, true);
+            }
+        }
+    }
+
+    private static void DrawShrinePlaqueAndPrompt(
+        Vec2i center,
+        Vec2i gateP1,
+        TutorialDoorsConfig dCfg,
+        TutorialDoorItemConfig itemCfg,
+        bool inRange,
+        float animTimer,
+        string promptText,
+        TutorialColorsConfig colors)
+    {
+        // 門楣上の神殿銘板プレート
+        GameEngine.DrawCenterString(new Vec2i(center.X, gateP1.Y + 9), itemCfg.Title, colors.White);
+        GameEngine.DrawCenterString(new Vec2i(center.X, gateP1.Y + 23), itemCfg.Tag, itemCfg.RuneColorActive);
+
+        // 接近時の浮遊 [F] 挑戦開始プロンプト枠
+        if (inRange)
+        {
+            var promptPos = new Vec2i(center.X, gateP1.Y + dCfg.TooltipOffsetY);
+            var pulse = (int)(MathF.Sin(animTimer * 6f) * 2f);
+            var halfTipW = dCfg.TooltipSize.X / 2;
+            var halfTipH = dCfg.TooltipSize.Y / 2;
+            var bubbleP1 = new Vec2i(promptPos.X - halfTipW, promptPos.Y - halfTipH + pulse);
+            var bubbleP2 = new Vec2i(promptPos.X + halfTipW, promptPos.Y + halfTipH + pulse);
+
+            GameEngine.DrawBox(bubbleP1, bubbleP2, colors.TooltipBg, true);
+            GameEngine.DrawBox(bubbleP1, bubbleP2, itemCfg.RuneColorActive, false);
+            GameEngine.DrawBox(bubbleP1 - Vec2i.One, bubbleP2 + Vec2i.One, itemCfg.RuneColorActive, false);
+
+            GameEngine.DrawCenterString(promptPos + new Vec2i(0, pulse), promptText, colors.Gold);
+        }
     }
 }
