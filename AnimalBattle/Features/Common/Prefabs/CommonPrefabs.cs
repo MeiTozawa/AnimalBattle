@@ -38,6 +38,8 @@ public static class CommonPrefabs
         world.Component<MeleeWeaponComponent>().AutoOverride<MeleeWeaponComponent>();
 
         world.Component<Health>().AutoOverride<Health>();
+        world.Component<Hitbox>().AutoOverride<Hitbox>();
+        world.Component<Hurtbox>().AutoOverride<Hurtbox>();
         world.Component<CombatProfile>().AutoOverride<CombatProfile>();
         world.Component<SpringScale>().AutoOverride<SpringScale>();
 

@@ -4,7 +4,7 @@ namespace AnimalBattle.Combat.Systems;
 
 /// <summary>
 ///     出現バッファ状態のタイマー減衰および終了時の解除を管理する ECS システム。
-///     バッファ終了時に接触攻撃判定を再有効化し、状態コンポーネントを除去します。
+///     バッファ終了時に接触攻撃判定を再有効化し、阻害タグ群とバッファ状態を除去します。
 /// </summary>
 public static class SpawnBufferUpdateSystem
 {
@@ -39,7 +39,10 @@ public static class SpawnBufferUpdateSystem
                 if (buffer.RemainingTime <= 0.0f)
                 {
                     hitbox.IsActive = true;
-                    it.Entity(i).Remove<SpawnBufferState>();
+                    it.Entity(i)
+                        .Remove<SpawnBufferState>()
+                        .Remove<CannotAttackTag>()
+                        .Remove<CannotMoveTag>();
                 }
             }
         }

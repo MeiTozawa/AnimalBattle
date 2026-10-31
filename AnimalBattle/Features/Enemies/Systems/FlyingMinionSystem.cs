@@ -16,13 +16,14 @@ internal sealed class FlyingMinionContext : IDisposable
 }
 
 /// <summary>
-/// 空中浮遊弾幕怪の運動制御およびスキル駆動システム。
-/// 正弦波浮遊、プレイヤー緩慢追跡、および遠隔技能の発動・予兆描画を行います。
+/// 空中浮遊弾幕怪の運動制御、物理更新およびスキル駆動システム群。
+/// 移動・物理・スキル発動を独立パイプラインへ分離し、
+/// CannotMoveTag および CannotAttackTag によるアーキタイプ層での完全ゼロブランチ制御を実現します。
 /// </summary>
 public static class FlyingMinionSystem
 {
     /// <summary>
-    /// 空中浮遊弾幕怪システムを Flecs ワールドへ登録します。
+    /// 空中浮遊弾幕怪システム群を Flecs ワールドへ登録します。
     /// </summary>
     public static World AddFlyingMinionSystem(this World world)
     {
@@ -43,16 +44,36 @@ public static class FlyingMinionSystem
             MinionQuery = minionQuery
         });
 
-        // 運動更新およびアビリティ駆動
-        world.System<Transform, Velocity, CollisionBox, Sprite, FlyingMinionComponent>("FlyingMinionSystem")
+        // 1. 能動的浮遊移動システム：CannotMoveTag 保持体はアーキタイプ単位で自動スキップ
+        world.System<Transform, Velocity, Sprite, FlyingMinionComponent>("FlyingMinionMovementSystem")
+            .With<FlyingMinionTag>()
+            .With<MinionTag>()
+            .Without<DeadTag>()
+            .Without<HitstopState>()
+            .Without<CannotMoveTag>()
+            .Kind(Ecs.OnUpdate)
+            .Iter(ExecuteFlyingMinionMovement);
+
+        // 2. 受動的物理・境界制限システム：静止待機中も含め全浮遊怪のノックバック外力と位置拘束を更新
+        world.System<Transform, Velocity, CollisionBox>("FlyingMinionPhysicsSystem")
             .With<FlyingMinionTag>()
             .With<MinionTag>()
             .Without<DeadTag>()
             .Without<HitstopState>()
             .Kind(Ecs.OnUpdate)
-            .Iter(ExecuteFlyingMinion);
+            .Iter(ExecuteFlyingMinionPhysics);
 
-        // 予兆線描画
+        // 3. スキル駆動システム：CannotAttackTag 保持体はアーキタイプ単位で自動スキップ
+        world.System<Transform, Sprite, FlyingMinionComponent>("FlyingMinionAbilitySystem")
+            .With<FlyingMinionTag>()
+            .With<MinionTag>()
+            .Without<DeadTag>()
+            .Without<HitstopState>()
+            .Without<CannotAttackTag>()
+            .Kind(Ecs.OnUpdate)
+            .Iter(ExecuteFlyingMinionAbility);
+
+        // 4. 予兆線描画
         world.System("FlyingMinionTelegraphRenderSystem")
             .Kind(Ecs.OnStore)
             .Iter(ExecuteFlyingMinionTelegraph);
@@ -60,11 +81,10 @@ public static class FlyingMinionSystem
         return world;
     }
 
-    private static void ExecuteFlyingMinion(
+    private static void ExecuteFlyingMinionMovement(
         Iter it,
         Field<Transform> transforms,
         Field<Velocity> velocities,
-        Field<CollisionBox> collisionBoxes,
         Field<Sprite> sprites,
         Field<FlyingMinionComponent> minions)
     {
@@ -76,11 +96,10 @@ public static class FlyingMinionSystem
 
         var world = it.World();
         var ctx = world.Get<FlyingMinionContext>();
-        ref readonly var arenaCfg = ref world.Get<ArenaConfig>();
         var minionCfg = world.Get<MinionConfig>();
         var fCfg = minionCfg.FlyingMinion;
 
-        // 生存プレイヤー座標一覧の収集（マルチプレイヤー対応）
+        // 生存プレイヤー座標一覧の収集
         var players = new List<Vec2f>(2);
         ctx.PlayerQuery.Iter((Iter pIt, Field<Transform> pTrans) =>
         {
@@ -95,9 +114,10 @@ public static class FlyingMinionSystem
         {
             ref var trans = ref transforms[i];
             ref var vel = ref velocities[i];
-            ref var col = ref collisionBoxes[i];
             ref var sprite = ref sprites[i];
             ref var minion = ref minions[i];
+
+            minion.HoverTimer += dt;
 
             // 最寄りプレイヤーの選定
             Vec2f? nearestPlayerPos = null;
@@ -112,9 +132,6 @@ public static class FlyingMinionSystem
                 }
             }
 
-            minion.HoverTimer += dt;
-
-            // 水平および垂直浮遊運動の計算
             var dirX = 0.0f;
             var targetY = trans.Position.Y;
             if (nearestPlayerPos.HasValue)
@@ -130,6 +147,28 @@ public static class FlyingMinionSystem
 
             var vy = (targetY - trans.Position.Y) * 1.5f + MathF.Cos(minion.HoverTimer * fCfg.HoverFreq) * (fCfg.HoverAmpY * fCfg.HoverFreq);
             vel.Value = new Vec2f(dirX * fCfg.HoverSpeed, vy);
+        }
+    }
+
+    private static void ExecuteFlyingMinionPhysics(
+        Iter it,
+        Field<Transform> transforms,
+        Field<Velocity> velocities,
+        Field<CollisionBox> collisionBoxes)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var dt = it.DeltaTime();
+        if (dt <= 0.0f) return;
+
+        var world = it.World();
+        ref readonly var arenaCfg = ref world.Get<ArenaConfig>();
+
+        for (var i = 0; i < count; i++)
+        {
+            ref var trans = ref transforms[i];
+            ref var vel = ref velocities[i];
 
             // ノックバック外力の減衰
             if (vel.Knockback != Vec2f.Zero)
@@ -146,26 +185,75 @@ public static class FlyingMinionSystem
                 PhysicsService.Clamp(nextPos.X, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX),
                 Math.Clamp(nextPos.Y, 60.0f, arenaCfg.FloorLimitY));
             trans.Position = nextPos;
+        }
+    }
 
-            // アビリティ状態の更新および発動判定
-            if (minion.Asc != null)
+    private static void ExecuteFlyingMinionAbility(
+        Iter it,
+        Field<Transform> transforms,
+        Field<Sprite> sprites,
+        Field<FlyingMinionComponent> minions)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var dt = it.DeltaTime();
+        if (dt <= 0.0f) return;
+
+        var world = it.World();
+        var ctx = world.Get<FlyingMinionContext>();
+        var minionCfg = world.Get<MinionConfig>();
+        var fCfg = minionCfg.FlyingMinion;
+
+        // 生存プレイヤー座標一覧の収集
+        var players = new List<Vec2f>(2);
+        ctx.PlayerQuery.Iter((Iter pIt, Field<Transform> pTrans) =>
+        {
+            var pCount = pIt.Count();
+            for (var p = 0; p < pCount; p++)
             {
-                minion.Asc.Update(dt);
+                players.Add(pTrans[p].Position);
+            }
+        });
 
-                if (!minion.Asc.IsCasting && nearestPlayerPos.HasValue)
+        for (var i = 0; i < count; i++)
+        {
+            ref var minion = ref minions[i];
+            if (minion.Asc == null) continue;
+
+            minion.Asc.Update(dt);
+
+            if (minion.Asc.IsCasting || players.Count == 0) continue;
+
+            ref var trans = ref transforms[i];
+            ref var sprite = ref sprites[i];
+
+            // 最寄りプレイヤーの選定
+            Vec2f? nearestPlayerPos = null;
+            var minPlayerDistSq = float.MaxValue;
+            for (var p = 0; p < players.Count; p++)
+            {
+                var distSq = (players[p] - trans.Position).LengthSquared();
+                if (distSq < minPlayerDistSq)
                 {
-                    if (!minion.Asc.TryGetAbility(fCfg.SkillTag, out _))
-                    {
-                        var patternCfg = world.Get<BossSnakePatternConfig>();
-                        MinionSpawner.AttachFlyingMinionAbility(world, it.Entity(i), minion.Asc, fCfg, patternCfg);
-                    }
-
-                    var facingDir = dirX != 0.0f ? dirX : (!sprite.FlipX ? 1.0f : -1.0f);
-                    if (minion.Asc.TryActivateAbility(fCfg.SkillTag, facingDir))
-                    {
-                        minion.TargetPos = nearestPlayerPos.Value;
-                    }
+                    minPlayerDistSq = distSq;
+                    nearestPlayerPos = players[p];
                 }
+            }
+
+            if (!nearestPlayerPos.HasValue) continue;
+
+            if (!minion.Asc.TryGetAbility(fCfg.SkillTag, out _))
+            {
+                var patternCfg = world.Get<BossSnakePatternConfig>();
+                MinionSpawner.AttachFlyingMinionAbility(world, it.Entity(i), minion.Asc, fCfg, patternCfg);
+            }
+
+            var dirX = MathF.Sign(nearestPlayerPos.Value.X - trans.Position.X);
+            var facingDir = dirX != 0.0f ? dirX : (!sprite.FlipX ? 1.0f : -1.0f);
+            if (minion.Asc.TryActivateAbility(fCfg.SkillTag, facingDir))
+            {
+                minion.TargetPos = nearestPlayerPos.Value;
             }
         }
     }

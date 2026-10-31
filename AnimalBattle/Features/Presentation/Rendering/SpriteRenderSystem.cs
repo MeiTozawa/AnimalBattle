@@ -14,7 +14,7 @@ public static class SpriteRenderSystem
     /// <returns>登録済みワールド</returns>
     public static World AddSpriteRenderSystem(this World world)
     {
-        // 1. 通常スプライト描画パス：近接加算・残影・回収タグ・死亡エンティティ・無敵点滅中エンティティを除外
+        // 1. 通常スプライト描画パス：近接加算・残影・回収タグ・死亡エンティティ・無敵点滅中・出現バッファ中エンティティを除外
         world.System<Transform, Sprite>("SpriteRenderSystem")
             .Without<PlayerMeleeTag>()
             .Without<BossMeleeTag>()
@@ -22,6 +22,7 @@ public static class SpriteRenderSystem
             .Without<RecycleTag>()
             .Without<DeadTag>()
             .Without<InvincibleBlinkEffect>()
+            .Without<SpawnBufferState>()
             .Kind(Ecs.OnStore)
             .Iter(DrawStandardSprites);
 

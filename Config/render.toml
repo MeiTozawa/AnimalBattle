@@ -73,6 +73,12 @@ ChargeFillColor = "#FFFFFF"
 BossHoverAngleAmp = 0.08
 BossHoverAngleSpeed = 2.0
 
+# --- 出現バッファ半透明呼吸演出設定 (Spawn Buffer Breathing Effect) ---
+[SpawnBuffer]
+BaseAlpha = 150
+PulseAlpha = 75
+Frequency = 12.0
+
 [Player]
 InvincibleBlinkFrequency = 30.0
 GhostTrailColor = "#B450C8FF"

@@ -13,6 +13,8 @@ internal sealed class BattleAiSystemContext : IDisposable
     public required Query<TileMap> TileMapQuery { get; init; }
     public required Query<Transform, Velocity> PlayerQuery { get; init; }
     public required Query<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent> BossQuery { get; init; }
+    public required Query CanBossMoveQuery { get; init; }
+    public required Query CanBossAttackQuery { get; init; }
 
     public Vec2f CachedPlayerPos;
     public Vec2f CachedPlayerVel;
@@ -23,6 +25,8 @@ internal sealed class BattleAiSystemContext : IDisposable
     public float CachedDeltaTime;
     public Vec2f CachedBossPos;
     public bool HasBoss;
+    public bool CanBossMove;
+    public bool CanBossAttack;
     public TileMap? CachedTileMap;
     public readonly List<int> CandidateBossPlatforms = new(16);
 
@@ -31,6 +35,8 @@ internal sealed class BattleAiSystemContext : IDisposable
         TileMapQuery.Dispose();
         PlayerQuery.Dispose();
         BossQuery.Dispose();
+        CanBossMoveQuery.Dispose();
+        CanBossAttackQuery.Dispose();
     }
 }
 
@@ -61,11 +67,28 @@ public static class BattleAiSystem
             .Without<DeadTag>()
             .Build();
 
+        // 行動可能判定クエリ：CannotMoveTag および CannotAttackTag の有無をアーキタイプ層で高速判定
+        var canBossMoveQuery = world.QueryBuilder()
+            .With<BossTag>()
+            .Without<DeadTag>()
+            .Without<HitstopState>()
+            .Without<CannotMoveTag>()
+            .Build();
+
+        var canBossAttackQuery = world.QueryBuilder()
+            .With<BossTag>()
+            .Without<DeadTag>()
+            .Without<HitstopState>()
+            .Without<CannotAttackTag>()
+            .Build();
+
         world.Set(new BattleAiSystemContext
         {
             TileMapQuery = tileMapQuery,
             PlayerQuery = playerQuery,
-            BossQuery = bossQuery
+            BossQuery = bossQuery,
+            CanBossMoveQuery = canBossMoveQuery,
+            CanBossAttackQuery = canBossAttackQuery
         });
 
         world.System("BattleAiSystem")
@@ -97,6 +120,10 @@ public static class BattleAiSystem
         ctx.CachedDeltaTime = dt;
         ctx.CachedTileMap = null;
         ctx.TileMapQuery.Iter(ExtractTileMap);
+
+        // Boss の移動・攻撃許可状態をアーキタイプクエリから即時判定（Entity.Has 撲滅）
+        ctx.CanBossMove = ctx.CanBossMoveQuery.Count() > 0;
+        ctx.CanBossAttack = ctx.CanBossAttackQuery.Count() > 0;
 
         ctx.HasBoss = false;
         ctx.BossQuery.Iter(UpdateBossAi);
@@ -195,13 +222,16 @@ public static class BattleAiSystem
             ctx.HasBoss = true;
             ctx.CachedBossPos = trans.Position;
 
+            var bossCanMove = ctx.CanBossMove;
+            var effectivePlayerAlive = ctx.IsPlayerAlive && ctx.CanBossAttack;
+
             if (state.BossType == BossType.BossSnake && brain is BossSnakeBrain bSnakeBrain)
             {
                 var bSnakeCfg = w.Get<BossSnakeConfig>();
                 var arenaCfg = w.Get<ArenaConfig>();
 
                 // 生存フラグおよびプレイヤーエンティティIDを動的に渡す
-                bSnakeBrain.Update(dt, ctx.CachedPlayerPos, ctx.CachedPlayerEntityId, ctx.IsPlayerAlive, hp.Current, hp.Max);
+                bSnakeBrain.Update(dt, ctx.CachedPlayerPos, ctx.CachedPlayerEntityId, effectivePlayerAlive, hp.Current, hp.Max);
 
                 // 外力ノックバック変位の適用および減衰処理
                 if (vel.Knockback != Vec2f.Zero)
@@ -220,6 +250,12 @@ public static class BattleAiSystem
                 var minY = bSnakeCfg.CeilingLimitY > 0.0f ? bSnakeCfg.CeilingLimitY : colSize.Y * 0.5f;
                 bSnakeBrain.ClampPosition(minX, maxX, minY, floorY);
 
+                if (!bossCanMove)
+                {
+                    // 移動不許可時は初期スポーン位置を維持
+                    bSnakeBrain.ClampPosition(bSnakeCfg.Spawn.X, bSnakeCfg.Spawn.X, bSnakeCfg.Spawn.Y, bSnakeCfg.Spawn.Y);
+                }
+
                 trans.Position = bSnakeBrain.Position;
                 sprite.FlipX = !bSnakeBrain.FacingRight;
 
@@ -230,14 +266,15 @@ public static class BattleAiSystem
             {
                 var isGrounded = col.IsGrounded;
                 // 生存フラグを動的に渡す
-                bLionBrain.Update(dt, ctx.CachedPlayerPos, ctx.CachedPlayerVel, ctx.IsPlayerAlive, isGrounded, hp.Current, hp.Max, trans.Position);
+                bLionBrain.Update(dt, ctx.CachedPlayerPos, ctx.CachedPlayerVel, effectivePlayerAlive, isGrounded, hp.Current, hp.Max, trans.Position);
 
                 var currentLinear = vel.Value;
-                currentLinear = new Vec2f(bLionBrain.Velocity.X, currentLinear.Y);
+                var brainVx = bossCanMove ? bLionBrain.Velocity.X : 0.0f;
+                currentLinear = new Vec2f(brainVx, currentLinear.Y);
                 var isControlledAirborne = bLionBrain.State == BossLionState.PlatformTraverse
                     || (bLionBrain.AbilitySystem.IsCasting && bLionBrain.CurrentTimelineAttack?.Motion.Kind == SkillMotionKind.LeapSmash);
 
-                if (isControlledAirborne || isGrounded)
+                if (bossCanMove && (isControlledAirborne || isGrounded))
                 {
                     currentLinear = new Vec2f(currentLinear.X, bLionBrain.Velocity.Y);
                 }

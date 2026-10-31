@@ -17,7 +17,9 @@ public static class DamageResolutionSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddDamageResolutionSystem(this World world)
     {
+        // 出現バッファ中のエンティティはダメージ裁定対象から除外（無敵保証）
         world.System<Health, HitFlashSettings, Transform, Velocity, CollisionBox, SpringScale, Sprite, GameplayTagState, TimedEffectsState, CombatProfile>("DamageResolutionSystem")
+            .Without<SpawnBufferState>()
             .Kind(Ecs.OnValidate)
             .Iter(ExecuteDamageResolution);
 

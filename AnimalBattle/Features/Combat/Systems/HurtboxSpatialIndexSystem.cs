@@ -1,3 +1,4 @@
+using AnimalBattle.Combat.Components;
 using AnimalBattle.Combat.Spatial;
 
 namespace AnimalBattle.Combat.Systems;
@@ -59,7 +60,10 @@ public static class HurtboxSpatialIndexSystem
     {
         var config = world.Get<ArenaConfig>().SpatialHash;
         var index = new HurtboxSpatialIndex(config.CellSize, config.TableSize, config.InitialCapacity);
-        var query = world.QueryBuilder<Transform, Hurtbox, Health, GameplayTagState>().Build();
+        // 出現バッファ中（半透明・未実体化）のエンティティは空間ハッシュから除外（攻撃貫通・受撃無効）
+        var query = world.QueryBuilder<Transform, Hurtbox, Health, GameplayTagState>()
+            .Without<SpawnBufferState>()
+            .Build();
 
         world.Set(new HurtboxSpatialResource(index, query, config.CellSize, config.TableSize));
 

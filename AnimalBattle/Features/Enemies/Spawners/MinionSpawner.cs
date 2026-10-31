@@ -24,6 +24,9 @@ public static class MinionSpawner
         var minionCfg = world.Get<MinionConfig>();
         var gCfg = minionCfg.GroundMinion;
 
+        var isBuffer = gCfg.SpawnBufferDuration > 0.0f;
+        var hitbox = new Hitbox(new CollisionShape.Box(gCfg.CollisionSize), gCfg.ContactDamage, Faction.Hostile, destroyOnHit: false, isActive: !isBuffer);
+
         var name = $"GroundMinion_{Interlocked.Increment(ref _groundMinionCounter)}";
         var entity = world.Entity(name)
             .ChildOf(root)
@@ -33,15 +36,19 @@ public static class MinionSpawner
             .Set(new Velocity(Vec2f.Zero))
             .Set(new CollisionBox(gCfg.CollisionSize))
             .Set(new Health(gCfg.MaxHp))
+            .Set(hitbox)
             .Add<GroundMinionTag>()
             .Set(new GroundMinionComponent());
 
-        // 出現バッファ設定の適用：バッファ期間中は接触ダメージを無効化
-        if (gCfg.SpawnBufferDuration > 0.0f)
+        // 出現バッファ設定の適用：接触判定無効化および行動阻害タグの付与
+        if (isBuffer)
         {
             entity.Set(new SpawnBufferState(gCfg.SpawnBufferDuration, gCfg.SpawnBufferCanMove));
-            ref var hitbox = ref entity.GetMut<Hitbox>();
-            hitbox.IsActive = false;
+            entity.Add<CannotAttackTag>();
+            if (!gCfg.SpawnBufferCanMove)
+            {
+                entity.Add<CannotMoveTag>();
+            }
         }
 
         return entity;
@@ -71,6 +78,9 @@ public static class MinionSpawner
             Debug.Assert(false, $"FlyingMinion のスキル構築に失敗しました: {fCfg.SkillTag}");
         }
 
+        var isBuffer = fCfg.SpawnBufferDuration > 0.0f;
+        var hitbox = new Hitbox(new CollisionShape.Box(fCfg.CollisionSize), fCfg.ContactDamage, Faction.Hostile, destroyOnHit: false, isActive: !isBuffer);
+
         var name = $"FlyingMinion_{Interlocked.Increment(ref _flyingMinionCounter)}";
         var entity = world.Entity(name)
             .ChildOf(root)
@@ -80,6 +90,7 @@ public static class MinionSpawner
             .Set(new Velocity(Vec2f.Zero))
             .Set(new CollisionBox(fCfg.CollisionSize))
             .Set(new Health(fCfg.MaxHp))
+            .Set(hitbox)
             .Add<FlyingMinionTag>()
             .Set(new FlyingMinionComponent(asc));
 
@@ -90,12 +101,15 @@ public static class MinionSpawner
             entity.GetMut<GameplayTagState>().ActionMask = tags;
         };
 
-        // 出現バッファ設定の適用：バッファ期間中は接触ダメージを無効化
-        if (fCfg.SpawnBufferDuration > 0.0f)
+        // 出現バッファ設定の適用：接触判定無効化および行動阻害タグの付与
+        if (isBuffer)
         {
             entity.Set(new SpawnBufferState(fCfg.SpawnBufferDuration, fCfg.SpawnBufferCanMove));
-            ref var hitbox = ref entity.GetMut<Hitbox>();
-            hitbox.IsActive = false;
+            entity.Add<CannotAttackTag>();
+            if (!fCfg.SpawnBufferCanMove)
+            {
+                entity.Add<CannotMoveTag>();
+            }
         }
 
         return entity;

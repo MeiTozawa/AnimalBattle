@@ -141,12 +141,18 @@ public static class BattleSceneSpawner
                 _ => (0.0f, false)
             };
 
-            // 出現バッファ設定の適用：バッファ期間中は接触ダメージを無効化
+            // 出現バッファ設定の適用：接触判定無効化および行動阻害タグの付与
             if (bufferDur > 0.0f)
             {
                 bossEntity.Set(new SpawnBufferState(bufferDur, bufferCanMove));
-                ref var hitbox = ref bossEntity.GetMut<Hitbox>();
+                var hitbox = BossPrefabs.GetPrefab(bossType).Get<Hitbox>();
                 hitbox.IsActive = false;
+                bossEntity.Set(hitbox);
+                bossEntity.Add<CannotAttackTag>();
+                if (!bufferCanMove)
+                {
+                    bossEntity.Add<CannotMoveTag>();
+                }
             }
         }
 

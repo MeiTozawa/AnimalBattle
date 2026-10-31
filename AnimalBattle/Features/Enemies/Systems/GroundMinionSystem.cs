@@ -22,13 +22,14 @@ internal sealed class GroundMinionContext : IDisposable
 }
 
 /// <summary>
-/// 地面近接追撃怪の移動および A* 経路探索・物理処理システム。
-/// プラットフォームナビゲーショングラフを用いてプレイヤーを地上追跡し、重力、跳躍、ノックバック減衰、足場衝突を処理します。
+/// 地面近接追撃怪の AI 思考および物理移動システム群。
+/// 能動的移動（A* 追跡・跳躍）と受動的物理（重力・足場接地）をパイプライン分離し、
+/// CannotMoveTag によるアーキタイプ層での完全ゼロブランチ除外を実現します。
 /// </summary>
 public static class GroundMinionSystem
 {
     /// <summary>
-    /// 地面近接追撃怪システムを Flecs ワールドへ登録します。
+    /// 地面近接追撃怪システム群を Flecs ワールドへ登録します。
     /// </summary>
     public static World AddGroundMinionSystem(this World world)
     {
@@ -44,18 +45,29 @@ public static class GroundMinionSystem
             PlayerQuery = playerQuery
         });
 
-        world.System<Transform, Velocity, CollisionBox, Sprite, GroundMinionComponent>("GroundMinionSystem")
+        // 1. 能動的 AI 移動システム：CannotMoveTag 保持体はアーキタイプ単位で自動スキップ
+        world.System<Transform, Velocity, CollisionBox, Sprite, GroundMinionComponent>("GroundMinionMovementSystem")
+            .With<GroundMinionTag>()
+            .With<MinionTag>()
+            .Without<DeadTag>()
+            .Without<HitstopState>()
+            .Without<CannotMoveTag>()
+            .Kind(Ecs.OnUpdate)
+            .Iter(ExecuteGroundMinionMovement);
+
+        // 2. 受動的物理・足場衝突システム：移動禁止中（出現バッファ中等）の個体も重力落下と接地判定を保証
+        world.System<Transform, Velocity, CollisionBox, GroundMinionComponent>("GroundMinionPhysicsSystem")
             .With<GroundMinionTag>()
             .With<MinionTag>()
             .Without<DeadTag>()
             .Without<HitstopState>()
             .Kind(Ecs.OnUpdate)
-            .Iter(ExecuteGroundMinion);
+            .Iter(ExecuteGroundMinionPhysics);
 
         return world;
     }
 
-    private static void ExecuteGroundMinion(
+    private static void ExecuteGroundMinionMovement(
         Iter it,
         Field<Transform> transforms,
         Field<Velocity> velocities,
@@ -71,11 +83,10 @@ public static class GroundMinionSystem
 
         var world = it.World();
         var ctx = world.Get<GroundMinionContext>();
-        ref readonly var arenaCfg = ref world.Get<ArenaConfig>();
         var minionCfg = world.Get<MinionConfig>();
         var gCfg = minionCfg.GroundMinion;
 
-        // プレイヤー座標のキャッシュ取得
+        // プレイヤー座標キャッシュの収集
         ctx.CachedPlayerPos = null;
         ctx.PlayerQuery.Iter(static (Iter pIt, Field<Transform> pTrans) =>
         {
@@ -86,7 +97,7 @@ public static class GroundMinionSystem
         });
         var playerPos = ctx.CachedPlayerPos;
 
-        // タイルマップのキャッシュ取得
+        // タイルマップキャッシュの収集
         ctx.CachedTileMap = null;
         ctx.TileMapQuery.Iter(static (Iter tIt, Field<TileMap> maps) =>
         {
@@ -181,6 +192,43 @@ public static class GroundMinionSystem
                 minion.CachedPlan = null;
                 minion.ActiveLink = null;
             }
+        }
+    }
+
+    private static void ExecuteGroundMinionPhysics(
+        Iter it,
+        Field<Transform> transforms,
+        Field<Velocity> velocities,
+        Field<CollisionBox> collisionBoxes,
+        Field<GroundMinionComponent> minions)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var dt = it.DeltaTime();
+        if (dt <= 0.0f) return;
+
+        var world = it.World();
+        var ctx = world.Get<GroundMinionContext>();
+        ref readonly var arenaCfg = ref world.Get<ArenaConfig>();
+
+        // タイルマップキャッシュの取得
+        ctx.CachedTileMap = null;
+        ctx.TileMapQuery.Iter(static (Iter tIt, Field<TileMap> maps) =>
+        {
+            if (tIt.Any())
+            {
+                tIt.World().Get<GroundMinionContext>().CachedTileMap = maps[0];
+            }
+        });
+        var tileMap = ctx.CachedTileMap;
+
+        for (var i = 0; i < count; i++)
+        {
+            ref var trans = ref transforms[i];
+            ref var vel = ref velocities[i];
+            ref var col = ref collisionBoxes[i];
+            ref var minion = ref minions[i];
 
             // 空中にいる場合は重力を適用
             if (!col.IsGrounded)

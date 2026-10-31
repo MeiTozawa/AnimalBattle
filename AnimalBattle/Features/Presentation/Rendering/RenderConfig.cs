@@ -1798,6 +1798,9 @@ public sealed class SlashEffectRenderConfig {
 ///     Config/render.toml から読み込まれる全体の描画および UI 設定クラス。
 /// </summary>
 public sealed class RenderConfig {
+    /// <summary>出現バッファ半透明呼吸描画設定</summary>
+    public SpawnBufferRenderConfig SpawnBuffer { get; set; } = new();
+    
     /// <summary>ビューポートおよびカリング領域設定</summary>
     public ViewportRenderConfig Viewport { get; set; } = new();
 
@@ -1830,4 +1833,17 @@ public sealed class RenderConfig {
 
     /// <summary>近接斬撃エフェクトスプライト描画設定</summary>
     public SlashEffectRenderConfig SlashEffect { get; set; } = new();
+}
+/// <summary>
+///     出現バッファ時の半透明呼吸点滅描画設定クラス。
+/// </summary>
+public sealed class SpawnBufferRenderConfig {
+    /// <summary>呼吸点滅の基準アルファ値（0〜255）</summary>
+    public int BaseAlpha { get; set; } = 150;
+
+    /// <summary>呼吸点滅の振幅アルファ値</summary>
+    public int PulseAlpha { get; set; } = 75;
+
+    /// <summary>呼吸周波数（ラジアン毎秒）</summary>
+    public float Frequency { get; set; } = 12.0f;
 }
