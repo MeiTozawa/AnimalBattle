@@ -27,18 +27,7 @@ public:
 
     bool Play(int sound_handle, SoundPlayType play_type, bool top_position_flag) override {
         if (sound_handle < 0) return false;
-        int dx_play_type = DX_PLAYTYPE_BACK;
-        switch (play_type) {
-            case SoundPlayType::Normal:
-                dx_play_type = DX_PLAYTYPE_NORMAL;
-                break;
-            case SoundPlayType::Back:
-                dx_play_type = DX_PLAYTYPE_BACK;
-                break;
-            case SoundPlayType::Loop:
-                dx_play_type = DX_PLAYTYPE_LOOP;
-                break;
-        }
+        int dx_play_type = (play_type == SoundPlayType::Loop) ? DX_PLAYTYPE_LOOP : DX_PLAYTYPE_BACK;
         return ::PlaySoundMem(sound_handle, dx_play_type, top_position_flag ? TRUE : FALSE) == 0;
     }
 
@@ -56,11 +45,6 @@ public:
     bool Delete(int sound_handle) override {
         if (sound_handle < 0) return false;
         return ::DeleteSoundMem(sound_handle) == 0;
-    }
-
-    bool IsPlaying(int sound_handle) override {
-        if (sound_handle < 0) return false;
-        return ::CheckSoundMem(sound_handle) == 1;
     }
 };
 

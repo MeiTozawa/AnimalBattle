@@ -113,22 +113,11 @@ __declspec(dllexport) void Engine_SubmitRenderCommands(
     render_service->SubmitPackets(packets, packet_count, text_buffer, text_length, circles, circle_count);
 }
 
-__declspec(dllexport) void Engine_RequestExit() noexcept {
-    g_is_exit_requested = true;
-}
-
 __declspec(dllexport) bool Engine_IsExitRequested() noexcept {
     return g_is_exit_requested;
 }
 
 // --- InputService High-Level APIs ---
-
-__declspec(dllexport) void Input_Update() noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        input_service->Update();
-    }
-}
 
 __declspec(dllexport) void Input_Snapshot() noexcept {
     auto* input_service = ab::GetInputService();
@@ -153,50 +142,12 @@ __declspec(dllexport) bool Input_IsHolding(int action) noexcept {
     return false;
 }
 
-__declspec(dllexport) bool Input_IsReleased(int action) noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        return input_service->IsReleased(action);
-    }
-    return false;
-}
-
 __declspec(dllexport) bool Input_IsButtonPressed(int button) noexcept {
     auto* input_service = ab::GetInputService();
     if (input_service != nullptr) {
         return input_service->IsButtonPressed(static_cast<ab::InputButton>(button));
     }
     return false;
-}
-
-__declspec(dllexport) bool Input_IsButtonHolding(int button) noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        return input_service->IsButtonHolding(static_cast<ab::InputButton>(button));
-    }
-    return false;
-}
-
-__declspec(dllexport) bool Input_IsButtonReleased(int button) noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        return input_service->IsButtonReleased(static_cast<ab::InputButton>(button));
-    }
-    return false;
-}
-
-__declspec(dllexport) void Input_PushContext(int context) noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        input_service->PushContext(context);
-    }
-}
-
-__declspec(dllexport) void Input_PopContext() noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        input_service->PopContext();
-    }
 }
 
 __declspec(dllexport) void Input_ClearAndSetContext(int context) noexcept {
@@ -218,36 +169,6 @@ __declspec(dllexport) void Input_BindAction(int context, int action, const int* 
     }
 }
 
-__declspec(dllexport) void Input_AddActionButton(int context, int action, int button) noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        input_service->AddActionButton(context, action, static_cast<ab::InputButton>(button));
-    }
-}
-
-__declspec(dllexport) void Input_ClearActions(int context) noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        input_service->ClearActions(context);
-    }
-}
-
-__declspec(dllexport) int Input_GetCurrentContext() noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        return input_service->GetCurrentContext();
-    }
-    return ab::DEFAULT_CONTEXT;
-}
-
-__declspec(dllexport) int Input_GetActiveDevice() noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        return static_cast<int>(input_service->GetActiveDevice());
-    }
-    return static_cast<int>(ab::InputDevice::Keyboard);
-}
-
 __declspec(dllexport) void Input_GetMousePosition(ab::Vec2i* out_pos) noexcept {
     auto* input_service = ab::GetInputService();
     if (input_service != nullptr && out_pos != nullptr) {
@@ -255,38 +176,7 @@ __declspec(dllexport) void Input_GetMousePosition(ab::Vec2i* out_pos) noexcept {
     }
 }
 
-__declspec(dllexport) void Input_GetMouseDelta(ab::Vec2i* out_delta) noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr && out_delta != nullptr) {
-        *out_delta = input_service->GetMouseDelta();
-    }
-}
-
-__declspec(dllexport) int Input_GetMouseWheelDelta() noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        return input_service->GetMouseWheelDelta();
-    }
-    return 0;
-}
-
-__declspec(dllexport) bool Input_IsMouseOver(ab::Vec2i p1, ab::Vec2i p2) noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        return input_service->IsMouseOver(p1, p2);
-    }
-    return false;
-}
-
-// --- Raw Input APIs Legacy and Low-level ---
-
-__declspec(dllexport) bool Input_IsKeyHit(int key_code) noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        return input_service->CheckHitKey(key_code);
-    }
-    return false;
-}
+// --- Raw Input APIs Low-level ---
 
 __declspec(dllexport) bool Engine_CheckHitKey(int key_code) noexcept {
     auto* input_service = ab::GetInputService();
@@ -294,29 +184,6 @@ __declspec(dllexport) bool Engine_CheckHitKey(int key_code) noexcept {
         return input_service->CheckHitKey(key_code);
     }
     return false;
-}
-
-__declspec(dllexport) int Engine_GetJoypadInputState(int input_type) noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        return input_service->GetJoypadInputState(input_type);
-    }
-    return 0;
-}
-
-__declspec(dllexport) int Engine_GetJoypadNum() noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr) {
-        return input_service->GetJoypadNum();
-    }
-    return 0;
-}
-
-__declspec(dllexport) void Engine_GetMousePoint(ab::Vec2i* out_pos) noexcept {
-    auto* input_service = ab::GetInputService();
-    if (input_service != nullptr && out_pos != nullptr) {
-        input_service->GetMousePoint(out_pos);
-    }
 }
 
 // --- Graph / Texture APIs ---
@@ -375,12 +242,7 @@ __declspec(dllexport) int Sound_Load(const wchar_t* file_path) noexcept {
 __declspec(dllexport) bool Sound_Play(int sound_handle, int play_type, bool top_position_flag) noexcept {
     auto* sound_service = ab::GetSoundService();
     if (sound_service != nullptr && sound_handle >= 0) {
-        auto pt = ab::SoundPlayType::Back;
-        if (play_type == 0) {
-            pt = ab::SoundPlayType::Normal;
-        } else if (play_type == 2) {
-            pt = ab::SoundPlayType::Loop;
-        }
+        auto pt = (play_type == 2) ? ab::SoundPlayType::Loop : ab::SoundPlayType::Back;
         return sound_service->Play(sound_handle, pt, top_position_flag);
     }
     return false;
@@ -406,14 +268,6 @@ __declspec(dllexport) bool Sound_Delete(int sound_handle) noexcept {
     auto* sound_service = ab::GetSoundService();
     if (sound_service != nullptr && sound_handle >= 0) {
         return sound_service->Delete(sound_handle);
-    }
-    return false;
-}
-
-__declspec(dllexport) bool Sound_IsPlaying(int sound_handle) noexcept {
-    auto* sound_service = ab::GetSoundService();
-    if (sound_service != nullptr && sound_handle >= 0) {
-        return sound_service->IsPlaying(sound_handle);
     }
     return false;
 }

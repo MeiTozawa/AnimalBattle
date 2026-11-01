@@ -40,7 +40,7 @@ public static class SoundService
     /// <summary>
     ///     サウンドサービスが初期化済みかどうかを取得します。
     /// </summary>
-    public static bool IsInitialized => _isInitialized;
+    public static bool CheckInitialized() => _isInitialized;
 
     /// <summary>
     ///     全 15 種類の音声アセットを読み込み、イベントバスへのリスナー登録を行って初期化します。

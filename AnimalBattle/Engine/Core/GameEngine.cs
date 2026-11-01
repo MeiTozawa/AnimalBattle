@@ -13,12 +13,11 @@ public static class GameEngine {
     private static readonly RenderCommandBuffer _commandBuffer = new();
 
     /// <summary>
-    ///     ウィンドウサイズとモードを指定してネイティブエンジンを初期化します。
+    ///     ウィンドウサイズを指定してネイティブエンジンを初期化します。
     /// </summary>
     /// <param name="width">画面幅 ピクセル単位</param>
     /// <param name="height">画面高さ ピクセル単位</param>
-    /// <param name="windowMode">ウィンドウモードで起動するかどうか</param>
-    public static void Initialize(int width, int height, bool windowMode = true)
+    public static void Initialize(int width, int height)
     {
         var initSuccess = NativeBindings.Engine_Init(IntPtr.Zero, width, height);
         Debug.Assert(initSuccess, "Native エンジンの初期化に失敗しました。");
@@ -26,7 +25,7 @@ public static class GameEngine {
 
         InputService.RegisterDefaultActions();
         SoundService.Initialize();
-        Log.Info("GameEngine", $"エンジンの初期化が完了しました ({width}x{height}, ウィンドウモード: {windowMode})。");
+        Log.Info("GameEngine", $"エンジンの初期化が完了しました ({width}x{height})。");
     }
 
     /// <summary>
@@ -88,14 +87,6 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     アプリケーション終了要求を発行します。
-    /// </summary>
-    public static void RequestExit()
-    {
-        NativeBindings.Engine_RequestExit();
-    }
-
-    /// <summary>
     ///     アプリケーション終了が要求されているかを取得します。
     /// </summary>
     /// <returns>終了要求されている場合は true</returns>
@@ -115,40 +106,6 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     ジョイパッドの入力状態を取得します。
-    /// </summary>
-    /// <param name="padIndex">ジョイパッド番号 0から3の範囲</param>
-    /// <returns>ビットマスクによる入力状態</returns>
-    public static int GetJoypadInputState(int padIndex)
-    {
-        return NativeBindings.Engine_GetJoypadInputState(padIndex);
-    }
-
-    /// <summary>
-    ///     接続されているジョイパッドの総数を取得します。
-    /// </summary>
-    /// <returns>接続ジョイパッド数</returns>
-    public static int GetJoypadNum()
-    {
-        return NativeBindings.Engine_GetJoypadNum();
-    }
-
-    /// <summary>
-    ///     マウスカーソルの現在の画面座標を取得します。
-    /// </summary>
-    /// <returns>マウス座標 <see cref="Vec2i" /></returns>
-    public static Vec2i GetMousePoint()
-    {
-        var pos = Vec2i.Zero;
-        unsafe
-        {
-            NativeBindings.Engine_GetMousePoint(&pos);
-        }
-
-        return pos;
-    }
-
-    /// <summary>
     ///     指定画像ハンドルの幅と高さを取得します。
     ///     双スレッドレンダリング競態防止のため、AssetService のキャッシュから参照します。
     /// </summary>
@@ -163,34 +120,6 @@ public static class GameEngine {
     ///     カメラシェイク等によるグローバル描画オフセットピクセル単位。
     /// </summary>
     public static Vec2i CameraOffset { get; private set; }
-
-    /// <summary>
-    ///     カメラオフセットをスコープ安全に管理する RAII 構造体。
-    ///     スコープ終了時に自動的に元のオフセットへ復元します。
-    /// </summary>
-    public readonly ref struct CameraScope
-    {
-        private readonly Vec2i _previousOffset;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal CameraScope(Vec2i newOffset)
-        {
-            _previousOffset = CameraOffset;
-            CameraOffset = newOffset;
-        }
-    }
-
-    /// <summary>
-    ///     指定オフセットを適用した描画スコープを開始します。
-    ///     using 文と併用することで、例外発生時や描画完了時に確実にオフセットを復元します。
-    /// </summary>
-    /// <param name="offset">適用するカメラ描画オフセット <see cref="Vec2i" /></param>
-    /// <returns>スコープ破棄時に状態を復元する <see cref="CameraScope" /></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static CameraScope BeginCameraScope(Vec2i offset)
-    {
-        return new CameraScope(offset);
-    }
 
     /// <summary>
     ///     グローバルカメラ描画オフセットを設定します。
@@ -303,30 +232,6 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     指定画像ハンドルを画面上に描画します。
-    /// </summary>
-    /// <param name="pos">描画先座標 <see cref="Vec2i" /></param>
-    /// <param name="handle">画像ハンドル</param>
-    /// <param name="trans">透過を有効にするかどうか</param>
-    public static void DrawGraph(Vec2i pos, int handle, bool trans)
-    {
-        _commandBuffer.PushDrawGraph(pos + CameraOffset, handle, trans);
-    }
-
-    /// <summary>
-    ///     画像ハンドルを中心に回転・拡大縮小して描画します。
-    /// </summary>
-    /// <param name="center">描画中心座標 <see cref="Vec2i" /></param>
-    /// <param name="scale">拡大率</param>
-    /// <param name="angle">回転角度 ラジアン単位</param>
-    /// <param name="handle">画像ハンドル</param>
-    /// <param name="trans">透過描画を有効にするかどうか</param>
-    public static void DrawRotaGraph(Vec2i center, double scale, double angle, int handle, bool trans)
-    {
-        _commandBuffer.PushDrawRotaGraph(center + CameraOffset, (float)scale, (float)angle, handle, trans);
-    }
-
-    /// <summary>
     ///     スプライトシートから指定矩形を切り出し、回転・独立 X/Y 軸拡縮・左右反転を行って描画します。
     /// </summary>
     /// <param name="center">描画中心座標 <see cref="Vec2i" /></param>
@@ -375,22 +280,6 @@ public static class GameEngine {
     }
 
     /// <summary>
-    ///     スプライトシートから指定矩形を切り出し、回転・独立 X/Y 軸拡縮・左右反転を行って描画します DxLibのDrawRectRotaGraph3相当。
-    /// </summary>
-    public static void DrawRectRotaGraph3(
-        Vec2i center,
-        Vec2i srcPos,
-        Vec2i srcSize,
-        Vec2f scale,
-        double angle,
-        int handle,
-        bool trans,
-        bool turnX = false)
-    {
-        DrawRectRotaGraph(center, srcPos, srcSize, scale, angle, handle, trans, turnX);
-    }
-
-    /// <summary>
     ///     画像ハンドルを中心に独立 X/Y 軸拡縮・回転して描画します DxLibのDrawRotaGraph3相当。
     /// </summary>
     public static void DrawRotaGraph3(
@@ -403,21 +292,6 @@ public static class GameEngine {
     {
         var size = GetGraphSize(handle);
         DrawRectRotaGraph(center, Vec2i.Zero, size, scale, angle, handle, trans, turnX);
-    }
-
-    /// <summary>
-    ///     指定切り出しサイズを用いて画像ハンドルを中心に独立 X/Y 軸拡縮・回転して描画します。
-    /// </summary>
-    public static void DrawRotaGraph3(
-        Vec2i center,
-        Vec2i srcSize,
-        Vec2f scale,
-        double angle,
-        int handle,
-        bool trans,
-        bool turnX = false)
-    {
-        DrawRectRotaGraph(center, Vec2i.Zero, srcSize, scale, angle, handle, trans, turnX);
     }
 
     /// <summary>
@@ -453,11 +327,5 @@ public enum BlendMode {
     Alpha = 1,
 
     /// <summary>加算ブレンド：発光・閃白合成</summary>
-    Add = 2,
-
-    /// <summary>減算ブレンド</summary>
-    Sub = 3,
-
-    /// <summary>乗算ブレンド</summary>
-    Mul = 4
+    Add = 2
 }

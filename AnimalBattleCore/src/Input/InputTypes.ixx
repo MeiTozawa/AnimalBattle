@@ -16,13 +16,6 @@ namespace ab {
     /// @brief デフォルトのベースコンテキスト ID
     export constexpr ContextId DEFAULT_CONTEXT = 0;
 
-    /// @brief 最後に検出されたアクティブな入力デバイス種別
-    export enum class InputDevice {
-        Keyboard,  ///< キーボード
-        Mouse,     ///< マウス
-        Gamepad,   ///< ゲームパッド / コントローラー
-    };
-
     /// @brief キーボード、マウス、ゲームパッドを統一的に扱うボタン識別子
     export enum class InputButton : int {
         None = 0,

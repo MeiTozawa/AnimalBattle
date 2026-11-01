@@ -48,10 +48,6 @@ internal static unsafe partial class NativeBindings {
         CompactCirclePacket* circles,
         int circleCount);
 
-    [LibraryImport(_dllName, EntryPoint = "Engine_RequestExit")]
-    [SuppressGCTransition]
-    public static partial void Engine_RequestExit();
-
     [LibraryImport(_dllName, EntryPoint = "Engine_IsExitRequested")]
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
@@ -64,10 +60,6 @@ internal static unsafe partial class NativeBindings {
     #endregion
 
     #region InputService High-Level APIs
-
-    [LibraryImport(_dllName, EntryPoint = "Input_Update")]
-    [SuppressGCTransition]
-    public static partial void Input_Update();
 
     [LibraryImport(_dllName, EntryPoint = "Input_Snapshot")]
     [SuppressGCTransition]
@@ -83,33 +75,10 @@ internal static unsafe partial class NativeBindings {
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Input_IsHolding(int action);
 
-    [LibraryImport(_dllName, EntryPoint = "Input_IsReleased")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Input_IsReleased(int action);
-
     [LibraryImport(_dllName, EntryPoint = "Input_IsButtonPressed")]
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Input_IsButtonPressed(int button);
-
-    [LibraryImport(_dllName, EntryPoint = "Input_IsButtonHolding")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Input_IsButtonHolding(int button);
-
-    [LibraryImport(_dllName, EntryPoint = "Input_IsButtonReleased")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Input_IsButtonReleased(int button);
-
-    [LibraryImport(_dllName, EntryPoint = "Input_PushContext")]
-    [SuppressGCTransition]
-    public static partial void Input_PushContext(int context);
-
-    [LibraryImport(_dllName, EntryPoint = "Input_PopContext")]
-    [SuppressGCTransition]
-    public static partial void Input_PopContext();
 
     [LibraryImport(_dllName, EntryPoint = "Input_ClearAndSetContext")]
     [SuppressGCTransition]
@@ -119,59 +88,18 @@ internal static unsafe partial class NativeBindings {
     [SuppressGCTransition]
     public static partial void Input_BindAction(int context, int action, int* buttons, int buttonCount);
 
-    [LibraryImport(_dllName, EntryPoint = "Input_AddActionButton")]
-    [SuppressGCTransition]
-    public static partial void Input_AddActionButton(int context, int action, int button);
-
-    [LibraryImport(_dllName, EntryPoint = "Input_ClearActions")]
-    [SuppressGCTransition]
-    public static partial void Input_ClearActions(int context);
-
-    [LibraryImport(_dllName, EntryPoint = "Input_GetCurrentContext")]
-    [SuppressGCTransition]
-    public static partial int Input_GetCurrentContext();
-
-    [LibraryImport(_dllName, EntryPoint = "Input_GetActiveDevice")]
-    [SuppressGCTransition]
-    public static partial int Input_GetActiveDevice();
-
     [LibraryImport(_dllName, EntryPoint = "Input_GetMousePosition")]
     [SuppressGCTransition]
     public static partial void Input_GetMousePosition(Vec2i* outPos);
 
-    [LibraryImport(_dllName, EntryPoint = "Input_GetMouseDelta")]
-    [SuppressGCTransition]
-    public static partial void Input_GetMouseDelta(Vec2i* outDelta);
-
-    [LibraryImport(_dllName, EntryPoint = "Input_GetMouseWheelDelta")]
-    [SuppressGCTransition]
-    public static partial int Input_GetMouseWheelDelta();
-
-    [LibraryImport(_dllName, EntryPoint = "Input_IsMouseOver")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Input_IsMouseOver(Vec2i p1, Vec2i p2);
-
     #endregion
 
-    #region Input Legacy & Low-level APIs
+    #region Input Low-level APIs
 
     [LibraryImport(_dllName, EntryPoint = "Engine_CheckHitKey")]
     [SuppressGCTransition]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Engine_CheckHitKey(int keyCode);
-
-    [LibraryImport(_dllName, EntryPoint = "Engine_GetJoypadInputState")]
-    [SuppressGCTransition]
-    public static partial int Engine_GetJoypadInputState(int inputType);
-
-    [LibraryImport(_dllName, EntryPoint = "Engine_GetJoypadNum")]
-    [SuppressGCTransition]
-    public static partial int Engine_GetJoypadNum();
-
-    [LibraryImport(_dllName, EntryPoint = "Engine_GetMousePoint")]
-    [SuppressGCTransition]
-    public static partial void Engine_GetMousePoint(Vec2i* outPos);
 
     #endregion
 
@@ -210,10 +138,6 @@ internal static unsafe partial class NativeBindings {
     [LibraryImport(_dllName, EntryPoint = "Sound_Delete")]
     [return: MarshalAs(UnmanagedType.U1)]
     public static partial bool Sound_Delete(int soundHandle);
-
-    [LibraryImport(_dllName, EntryPoint = "Sound_IsPlaying")]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Sound_IsPlaying(int soundHandle);
 
     #endregion
 }

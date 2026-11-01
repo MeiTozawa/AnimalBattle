@@ -8,7 +8,6 @@ namespace ab {
 
 /// @brief サウンド再生の実行モード
 export enum class SoundPlayType : int {
-    Normal = 0,  // 同期再生 (DX_PLAYTYPE_NORMAL)
     Back = 1,    // 非同期バックグラウンド再生 (DX_PLAYTYPE_BACK)
     Loop = 2     // ループバックグラウンド再生 (DX_PLAYTYPE_LOOP)
 };
@@ -33,9 +32,6 @@ public:
 
     /// @brief サウンドメモリを破棄する
     virtual bool Delete(int sound_handle) = 0;
-
-    /// @brief サウンドが再生中かどうか判定する
-    virtual bool IsPlaying(int sound_handle) = 0;
 };
 
 }  // namespace ab

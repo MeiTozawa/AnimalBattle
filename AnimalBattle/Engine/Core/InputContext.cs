@@ -5,8 +5,5 @@ namespace AnimalBattle.Core;
 /// </summary>
 public enum InputContext {
     InGame = 0,
-    Menu = 1,
-    Cutscene = 2,
-    Pause = 3,
-    VolumeControl = 4
+    Menu = 1
 }
