@@ -11,9 +11,6 @@ public struct TutorialTarget
     /// <summary>既に回収されたかどうか。</summary>
     public bool IsCollected;
 
-    /// <summary>所属するフェーズ種別。</summary>
-    public TutorialPhase Phase;
-
     /// <summary>浮遊アニメーション用の位相オフセット。</summary>
     public float FloatPhase;
 }

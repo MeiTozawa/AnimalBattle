@@ -118,19 +118,19 @@ public class GameManager : IDisposable {
     ///     システム実行中はECSステージの不整合を防ぐため、Progress終了後の同期ポイントへ処理を遅延させます。
     /// </summary>
     /// <param name="playerType">選択されたプレイヤーキャラクター</param>
-    /// <param name="initialPhase">初期フェーズ</param>
-    public void SwitchToTutorial(CharacterType playerType, AnimalBattle.Features.Tutorial.TutorialPhase initialPhase)
+    /// <param name="initialPhaseIndex">初期フェーズ番号（負数の場合はボス扉フェーズを自動検索）</param>
+    public void SwitchToTutorial(CharacterType playerType, int initialPhaseIndex = 0)
     {
         if (_isUpdating)
         {
-            _pendingSceneTransition = () => ExecuteSwitchToTutorial(playerType, initialPhase);
+            _pendingSceneTransition = () => ExecuteSwitchToTutorial(playerType, initialPhaseIndex);
             return;
         }
 
-        ExecuteSwitchToTutorial(playerType, initialPhase);
+        ExecuteSwitchToTutorial(playerType, initialPhaseIndex);
     }
 
-    private void ExecuteSwitchToTutorial(CharacterType playerType, AnimalBattle.Features.Tutorial.TutorialPhase initialPhase)
+    private void ExecuteSwitchToTutorial(CharacterType playerType, int initialPhaseIndex = 0)
     {
         StartSceneSpawner.Teardown(_ecsWorld);
         AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
@@ -140,7 +140,7 @@ public class GameManager : IDisposable {
         flow.SelectedPlayer = playerType;
 
         InputService.ClearAndSetContext(InputContext.InGame);
-        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Spawn(_ecsWorld, playerType, initialPhase);
+        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Spawn(_ecsWorld, playerType, initialPhaseIndex);
     }
 
     /// <summary>

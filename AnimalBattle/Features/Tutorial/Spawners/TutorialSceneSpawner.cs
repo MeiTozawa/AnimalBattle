@@ -102,15 +102,6 @@ public static class TutorialSceneSpawner
     }
 
     /// <summary>
-    ///     チュートリアルフェーズ列挙値指定による初期生成オーバーロード。
-    /// </summary>
-    public static void Spawn(World world, CharacterType playerType, TutorialPhase initialPhase)
-    {
-        var phaseIndex = initialPhase == TutorialPhase.BossSelect ? -1 : (int)initialPhase;
-        Spawn(world, playerType, phaseIndex);
-    }
-
-    /// <summary>
     ///     指定されたフェーズ番号の目標（ターゲットコイン、小怪、またはボス扉）をワールドに配置します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
@@ -138,37 +129,12 @@ public static class TutorialSceneSpawner
     }
 
     /// <summary>
-    ///     指定されたフェーズ列挙値による目標配置オーバーロード。
-    /// </summary>
-    public static void SetupPhase(World world, TutorialPhase phase)
-    {
-        SetupPhase(world, (int)phase);
-    }
-
-    /// <summary>
     ///     現在のフェーズの目標・敵・扉をクリーンアップし再配置（リトライ）します。
     /// </summary>
     public static void ResetCurrentPhase(World world)
     {
         ref var state = ref world.GetMut<TutorialState>();
         SetupPhase(world, state.CurrentPhaseIndex);
-    }
-
-    /// <summary>
-    ///     チュートリアル目標物（コイン／リング）を生成します。
-    /// </summary>
-    public static Entity SpawnTarget(World world, Entity root, Vec2f pos, float radius, TutorialPhase phase)
-    {
-        return world.Entity($"TutorialTarget_{phase}_{pos.X}_{pos.Y}")
-            .ChildOf(root)
-            .Set(new Transform(pos, Vec2f.One))
-            .Set(new TutorialTarget
-            {
-                Radius = radius,
-                IsCollected = false,
-                Phase = phase,
-                FloatPhase = 0f
-            });
     }
 
     /// <summary>

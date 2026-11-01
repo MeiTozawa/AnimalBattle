@@ -111,8 +111,8 @@ public static class StartUiInputSystem
             // --- 5. 画面遷移判定 ---
             if ((uiState.IsStartGameHovered && isClick) || isConfirmKey)
             {
-                var initialPhase = uiState.IsTutorialEnabled ? TutorialPhase.Movement : TutorialPhase.BossSelect;
-                GameManager.Current.SwitchToTutorial(flow.SelectedPlayer, initialPhase);
+                var initialPhaseIndex = uiState.IsTutorialEnabled ? 0 : -1;
+                GameManager.Current.SwitchToTutorial(flow.SelectedPlayer, initialPhaseIndex);
                 return;
             }
         }
