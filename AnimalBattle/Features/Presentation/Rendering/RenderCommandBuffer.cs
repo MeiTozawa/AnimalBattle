@@ -177,42 +177,6 @@ public sealed unsafe class RenderCommandBuffer : IDisposable {
     }
 
     /// <summary>
-    ///     画像描画コマンドを追加します。
-    /// </summary>
-    public void PushDrawGraph(Vec2i pos, int handle, bool trans)
-    {
-        EnsurePendingCircleBatchFlushed();
-        EnsurePacketCapacity(1);
-        _packetBuffer[_currentPacketCount++] = new RenderPacket {
-            Type = RenderPacketType.DrawGraph,
-            Graph = new DrawGraphPacket {
-                Pos = pos,
-                Handle = handle,
-                Trans = trans ? (byte)1 : (byte)0
-            }
-        };
-    }
-
-    /// <summary>
-    ///     回転拡縮画像描画コマンドを追加します。
-    /// </summary>
-    public void PushDrawRotaGraph(Vec2i center, float scale, float angle, int handle, bool trans)
-    {
-        EnsurePendingCircleBatchFlushed();
-        EnsurePacketCapacity(1);
-        _packetBuffer[_currentPacketCount++] = new RenderPacket {
-            Type = RenderPacketType.DrawRotaGraph,
-            RotaGraph = new DrawRotaGraphPacket {
-                Center = center,
-                Scale = scale,
-                Angle = angle,
-                Handle = handle,
-                Trans = trans ? (byte)1 : (byte)0
-            }
-        };
-    }
-
-    /// <summary>
     ///     矩形切り出し回転拡縮画像描画コマンドを追加します。
     /// </summary>
     public void PushDrawRectRotaGraph(

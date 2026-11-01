@@ -8,12 +8,8 @@ namespace ab {
 
 /// @brief レンダリングコマンド種別を表す列挙型
 enum class RenderPacketType : uint16_t {
-    None = 0,
     DrawBox = 1,
-    DrawCircle = 2,
     DrawLine = 3,
-    DrawGraph = 4,
-    DrawRotaGraph = 5,
     DrawRectRotaGraph = 6,
     DrawString = 7,
     SetDrawBlendMode = 8,
@@ -39,15 +35,6 @@ struct DrawBoxPacket {
     uint8_t padding[3];
 };
 
-/// @brief 円描画コマンドデータ
-struct DrawCirclePacket {
-    Vec2i center;
-    int32_t radius;
-    uint32_t color;
-    uint8_t fill;
-    uint8_t padding[3];
-};
-
 /// @brief 弾幕バッチ描画専用の高密度円パケット構造体
 /// @note メモリ帯域圧迫を抑えL1キャッシュヒット率を高める目的で20バイトに切り詰めています
 struct CompactCirclePacket {
@@ -65,24 +52,6 @@ struct DrawLinePacket {
     Vec2i p2;
     uint32_t color;
     int32_t thickness;
-};
-
-/// @brief 単純画像描画コマンドデータ
-struct DrawGraphPacket {
-    Vec2i pos;
-    int32_t handle;
-    uint8_t trans;
-    uint8_t padding[3];
-};
-
-/// @brief 回転拡縮画像描画コマンドデータ
-struct DrawRotaGraphPacket {
-    Vec2i center;
-    float scale;
-    float angle;
-    int32_t handle;
-    uint8_t trans;
-    uint8_t padding[3];
 };
 
 /// @brief 矩形切り出し回転拡縮画像描画コマンドデータ
@@ -138,10 +107,7 @@ struct RenderPacket {
     uint16_t reserved;
     union {
         DrawBoxPacket box;
-        DrawCirclePacket circle;
         DrawLinePacket line;
-        DrawGraphPacket graph;
-        DrawRotaGraphPacket rota_graph;
         DrawRectRotaGraphPacket rect_rota_graph;
         DrawStringPacket string_data;
         SetBlendModePacket blend;

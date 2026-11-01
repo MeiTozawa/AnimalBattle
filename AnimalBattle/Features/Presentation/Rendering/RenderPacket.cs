@@ -6,23 +6,11 @@ namespace AnimalBattle.Presentation.Rendering;
 ///     レンダリングコマンド種別を表す列挙型。
 /// </summary>
 public enum RenderPacketType : ushort {
-    /// <summary>無効なコマンド</summary>
-    None = 0,
-
     /// <summary>矩形描画</summary>
     DrawBox = 1,
 
-    /// <summary>円描画</summary>
-    DrawCircle = 2,
-
     /// <summary>線分描画</summary>
     DrawLine = 3,
-
-    /// <summary>単純画像描画</summary>
-    DrawGraph = 4,
-
-    /// <summary>回転拡縮画像描画</summary>
-    DrawRotaGraph = 5,
 
     /// <summary>矩形切り出し回転拡縮画像描画</summary>
     DrawRectRotaGraph = 6,
@@ -52,28 +40,6 @@ public struct DrawBoxPacket {
     public Vec2i P2;
 
     /// <summary>32ビットARGB形式の矩形描画カラー</summary>
-    public uint Color;
-
-    /// <summary>塗りつぶし時は1、枠線のみ描画時はゼロを指定するフラグ</summary>
-    public byte Fill;
-
-    private byte _padding0;
-    private byte _padding1;
-    private byte _padding2;
-}
-
-/// <summary>
-///     円描画コマンドデータ。
-/// </summary>
-[StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct DrawCirclePacket {
-    /// <summary>円中心座標</summary>
-    public Vec2i Center;
-
-    /// <summary>円半径</summary>
-    public int Radius;
-
-    /// <summary>円描画カラー</summary>
     public uint Color;
 
     /// <summary>塗りつぶし時は1、枠線のみ描画時はゼロを指定するフラグ</summary>
@@ -134,50 +100,6 @@ public struct DrawLinePacket {
 
     /// <summary>線の太さ</summary>
     public int Thickness;
-}
-
-/// <summary>
-///     単純画像描画コマンドデータ。
-/// </summary>
-[StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct DrawGraphPacket {
-    /// <summary>画像描画先座標</summary>
-    public Vec2i Pos;
-
-    /// <summary>画像ハンドル</summary>
-    public int Handle;
-
-    /// <summary>透過フラグ</summary>
-    public byte Trans;
-
-    private byte _padding0;
-    private byte _padding1;
-    private byte _padding2;
-}
-
-/// <summary>
-///     回転拡縮画像描画コマンドデータ。
-/// </summary>
-[StructLayout(LayoutKind.Sequential, Pack = 4)]
-public struct DrawRotaGraphPacket {
-    /// <summary>回転描画中心座標</summary>
-    public Vec2i Center;
-
-    /// <summary>拡大率</summary>
-    public float Scale;
-
-    /// <summary>ラジアン単位の回転角度</summary>
-    public float Angle;
-
-    /// <summary>画像ハンドル</summary>
-    public int Handle;
-
-    /// <summary>透過フラグ</summary>
-    public byte Trans;
-
-    private byte _padding0;
-    private byte _padding1;
-    private byte _padding2;
 }
 
 /// <summary>
@@ -309,17 +231,8 @@ public struct RenderPacket {
     /// <summary>矩形描画コマンドデータ</summary>
     [FieldOffset(4)] public DrawBoxPacket Box;
 
-    /// <summary>円描画コマンドデータ</summary>
-    [FieldOffset(4)] public DrawCirclePacket Circle;
-
     /// <summary>線分描画コマンドデータ</summary>
     [FieldOffset(4)] public DrawLinePacket Line;
-
-    /// <summary>単純画像描画コマンドデータ</summary>
-    [FieldOffset(4)] public DrawGraphPacket Graph;
-
-    /// <summary>回転拡縮画像描画コマンドデータ</summary>
-    [FieldOffset(4)] public DrawRotaGraphPacket RotaGraph;
 
     /// <summary>矩形切り出し回転拡縮画像描画コマンドデータ</summary>
     [FieldOffset(4)] public DrawRectRotaGraphPacket RectRotaGraph;

@@ -55,29 +55,11 @@ namespace ab {
                             p.box.color,
                             p.box.fill != 0);
                     break;
-                case RenderPacketType::DrawCircle:
-                    DrawCircle(p.circle.center,
-                               p.circle.radius,
-                               p.circle.color,
-                               p.circle.fill != 0);
-                    break;
                 case RenderPacketType::DrawLine:
                     DrawLine(p.line.p1,
                              p.line.p2,
                              p.line.color,
                              p.line.thickness);
-                    break;
-                case RenderPacketType::DrawGraph:
-                    DrawGraph(p.graph.pos,
-                              p.graph.handle,
-                              p.graph.trans != 0);
-                    break;
-                case RenderPacketType::DrawRotaGraph:
-                    DrawRotaGraph(p.rota_graph.center,
-                                  static_cast<double>(p.rota_graph.scale),
-                                  static_cast<double>(p.rota_graph.angle),
-                                  p.rota_graph.handle,
-                                  p.rota_graph.trans != 0);
                     break;
                 case RenderPacketType::DrawRectRotaGraph:
                     DrawRectRotaGraph(p.rect_rota_graph.center,
@@ -171,12 +153,6 @@ namespace ab {
             const int drawX = x - ::GetDrawStringWidth(text, -1);
             const int drawY = y - ::GetFontSize() / 2;
             DrawString(Vec2i{drawX, drawY}, text, color);
-        }
-        void DrawGraph(Vec2i pos, int handle, bool trans_flag) override {
-            ::DrawGraph(pos.x, pos.y, handle, trans_flag ? TRUE : FALSE);
-        }
-        void DrawRotaGraph(Vec2i center, double ext_rate, double angle, int graph_handle, bool trans_flag) override {
-            ::DrawRotaGraph(center.x, center.y, ext_rate, angle, graph_handle, trans_flag ? TRUE : FALSE);
         }
         void DrawRectRotaGraph(Vec2i center, Rect<int> src, Vec2f scale, double angle, int graph_handle, bool trans_flag, bool turn_flag) override {
             int src_w = src.Width();

@@ -39,8 +39,6 @@ namespace ab {
         virtual void DrawCenterString(int x, int y, const wchar_t* text, uint32_t color) = 0;
         virtual void DrawLeftString(int x, int y, const wchar_t* text, uint32_t color) = 0;
         virtual void DrawRightString(int x, int y, const wchar_t* text, uint32_t color) = 0;
-        virtual void DrawGraph(Vec2i pos, int handle, bool trans_flag) = 0;
-        virtual void DrawRotaGraph(Vec2i center, double ext_rate, double angle, int graph_handle, bool trans_flag) = 0;
         virtual void DrawRectRotaGraph(Vec2i center, Rect<int> src, Vec2f scale, double angle, int graph_handle, bool trans_flag, bool turn_flag) = 0;
 
         // --- 状態設定 ---
