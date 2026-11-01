@@ -1,4 +1,3 @@
-using AnimalBattle.Combat.Components;
 
 namespace AnimalBattle.Player;
 
@@ -87,5 +86,66 @@ public static class PlayerPrefabs
             CharacterType.Bunny => BunnyPlayer,
             _ => AssertHelper.FailWithDefault("", CatPlayer)
         };
+    }
+
+    /// <summary>
+    ///     プレイヤーエンティティの状態（位置、体力、入力意図、能力、武器、タグ、スプライト表示）を初期状態へ安全に完全復帰させます。
+    ///     死亡時のクリーンアップ（DeadTag、HitstopState、HitFlashEffect、GameOverTag）と同期して呼び出されます。
+    /// </summary>
+    public static void ResetPlayerEntity(Entity player)
+    {
+        if (!player.IsAlive()) return;
+
+        var w = player.CsWorld();
+        var type = player.Has<CharacterTypeComponent>()
+            ? player.Get<CharacterTypeComponent>().Value
+            : CharacterType.Cat;
+        var cfg = w.GetPlayerConfig(type);
+
+        player.Set(new Transform(cfg.Spawn, cfg.Scale));
+        player.Set(new Velocity(Vec2f.Zero));
+        player.Set(new Health(cfg.MaxHp));
+        player.Set(new MovementIntent());
+        player.Set(new WeaponIntent());
+        player.Set(new DashState());
+        player.Set(JumpCapability.FromPlayerConfig(cfg));
+        player.Set(new GameplayTagState());
+        player.Set(new TimedEffectsState());
+        player.Set(new SpringScale(Vec2f.One, cfg.SpringFrequency, cfg.SpringDampingRatio));
+        player.Set(new Animation(type, "Idle"));
+
+        // 一時状態・エフェクト・死亡タグの一括安全削除：Flecs ネイティブ API による冪等操作
+        player.Remove<HitstopState>()
+            .Remove<SpriteJitter>()
+            .Remove<DeadTag>()
+            .Remove<HitFlashEffect>()
+            .Remove<InvincibleBlinkEffect>();
+
+        var weaponCfg = w.GetWeaponConfig(cfg.Weapon);
+        if (weaponCfg is MeleeWeaponConfig meleeCfg)
+        {
+            player.Set(MeleeWeaponComponent.FromConfig(meleeCfg));
+            var melee = player.Target<EquippedWeapon>();
+            if (melee.IsAlive())
+            {
+                melee.Disable();
+                melee.Set(new HitHistory());
+                if (melee.Has<Sprite>())
+                {
+                    ref var meleeSprite = ref melee.GetMut<Sprite>();
+                    meleeSprite.IsVisible = true;
+                }
+            }
+        }
+        else if (weaponCfg is RangedWeaponConfig rangedCfg)
+        {
+            player.Set(RangedWeaponComponent.FromConfig(rangedCfg));
+        }
+
+        ref var sprite = ref player.GetMut<Sprite>();
+        sprite.IsVisible = true;
+        sprite.JitterOffset = Vec2f.Zero;
+        sprite.Scale = Vec2f.One;
+        sprite.SpringOffsetY = 0.0f;
     }
 }

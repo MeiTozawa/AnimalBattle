@@ -1,9 +1,3 @@
-using AnimalBattle.Ai;
-using AnimalBattle.Combat.Spawners;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Enemies;
-using AnimalBattle.Enemies.Services;
 using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;
 using AnimalBattle.Features.Tutorial.Handlers;
@@ -196,6 +190,7 @@ public static class TutorialSceneSpawner
 
         // 雑魚敵およびプレイヤー弾幕の回収
         BulletSpawner.ClearAllBossBullets(world);
+        MeleeSpawner.ClearAllBossMelee(world);
     }
 
     /// <summary>
@@ -204,10 +199,21 @@ public static class TutorialSceneSpawner
     /// <param name="world">対象の Flecs.NET ワールド</param>
     public static void Teardown(World world)
     {
+        world.Remove<GameOverTag>();
+
         var root = world.Lookup(RootName);
         if (root.IsAlive())
         {
             root.Destruct();
+        }
+
+        BulletSpawner.ClearAllBossBulletsImmediate(world);
+        MeleeSpawner.ClearAllBossMeleeImmediate(world);
+        MinionSpawner.ClearAllMinionsImmediate(world);
+
+        using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
+        {
+            playerBullets.Each(CombatPoolService.Recycle);
         }
 
         InputService.SetCursorVisible(true);

@@ -1,12 +1,7 @@
-using AnimalBattle.Combat.Components;
-using AnimalBattle.Common.Components;
-using AnimalBattle.Enemies;
 using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;
 using AnimalBattle.Features.Tutorial.Handlers;
 using AnimalBattle.Features.Tutorial.Spawners;
-using AnimalBattle.Player.Components;
-using AnimalBattle.Scenes;
 
 namespace AnimalBattle.Features.Tutorial.Systems;
 
@@ -50,28 +45,33 @@ public static class TutorialFlowSystem
         }
 
         // 2. プレイヤーのHP監視および挫折防止リトライ処理
-        var flow = world.Get<GameFlow>();
-        var playerCfg = world.GetPlayerConfig(flow.SelectedPlayer);
-        using var playerQuery = world.QueryBuilder<Health, Transform, Velocity>()
+        using var playerQuery = world.QueryBuilder<Health>()
             .With<PlayerTag>()
             .Build();
 
         var playerDied = false;
-        playerQuery.Each((Entity _, ref Health hp, ref Transform tr, ref Velocity vel) =>
+        playerQuery.Each((Entity player, ref Health hp) =>
         {
-            if (hp.Current <= 0)
+            if (hp.Current <= 0 || player.Has<DeadTag>())
             {
-                // 即座に全回復し、初期リスポーン地点へ復帰
-                hp.Current = playerCfg.MaxHp;
-                tr.Position = playerCfg.Spawn;
-                vel.Value = Vec2f.Zero;
-                vel.Knockback = Vec2f.Zero;
+                PlayerPrefabs.ResetPlayerEntity(player);
                 playerDied = true;
             }
         });
 
         if (playerDied)
         {
+            world.Remove<GameOverTag>();
+            CameraService.Reset();
+
+            using var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build();
+            playerBullets.Each(CombatPoolService.Recycle);
+
+            using var vfxQuery = world.QueryBuilder().With<VfxTag>().Build();
+            vfxQuery.Each(CombatPoolService.Recycle);
+
+            EventBus.Publish(new CombatResetEvent());
+
             state.IsRetrying = true;
             state.RetryTimer = cfg.Timing.RetryDuration;
             TutorialSceneSpawner.ResetCurrentPhase(world);

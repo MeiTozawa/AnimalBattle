@@ -189,53 +189,7 @@ public static class BattleInputSystem
 
     internal static void ResetPlayerEntity(Entity player)
     {
-        if (!player.IsAlive()) return;
-
-        var w = player.CsWorld();
-        var type = player.Has<CharacterTypeComponent>()
-            ? player.Get<CharacterTypeComponent>().Value
-            : CharacterType.Cat;
-        var cfg = w.GetPlayerConfig(type);
-
-        player.Set(new Transform(cfg.Spawn, cfg.Scale));
-        player.Set(new Velocity(Vec2f.Zero));
-        player.Set(new Health(cfg.MaxHp));
-        player.Set(new MovementIntent());
-        player.Set(new WeaponIntent());
-        player.Set(new DashState());
-        player.Set(JumpCapability.FromPlayerConfig(cfg));
-        player.Set(new GameplayTagState());
-        player.Set(new TimedEffectsState());
-        player.Set(new SpringScale(Vec2f.One, cfg.SpringFrequency, cfg.SpringDampingRatio));
-
-        // 一時状態・エフェクト・死亡タグの一括安全削除：Flecs ネイティブ API による冪等操作
-        player.Remove<HitstopState>()
-            .Remove<SpriteJitter>()
-            .Remove<DeadTag>()
-            .Remove<HitFlashEffect>()
-            .Remove<InvincibleBlinkEffect>();
-
-        var weaponCfg = w.GetWeaponConfig(cfg.Weapon);
-        if (weaponCfg is MeleeWeaponConfig meleeCfg)
-        {
-            player.Set(MeleeWeaponComponent.FromConfig(meleeCfg));
-            var melee = player.Target<EquippedWeapon>();
-            if (melee.IsAlive())
-            {
-                melee.Disable();
-                melee.Set(new HitHistory());
-            }
-        }
-        else if (weaponCfg is RangedWeaponConfig rangedCfg)
-        {
-            player.Set(RangedWeaponComponent.FromConfig(rangedCfg));
-        }
-
-        ref var sprite = ref player.GetMut<Sprite>();
-        sprite.IsVisible = true;
-        sprite.JitterOffset = Vec2f.Zero;
-        sprite.Scale = Vec2f.One;
-        sprite.SpringOffsetY = 0.0f;
+        PlayerPrefabs.ResetPlayerEntity(player);
     }
 
     private static void ProcessDebugInput(World world, DebugRenderConfig dbgCfg, BattleInputSystemContext ctx)
