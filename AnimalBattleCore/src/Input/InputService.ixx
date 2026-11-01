@@ -42,7 +42,6 @@ namespace ab {
         virtual Vec2i GetMousePosition() const noexcept = 0;
         virtual Vec2i GetMouseDelta() const noexcept = 0;
         virtual int GetMouseWheelDelta() const noexcept = 0;
-        virtual bool IsMouseOver(const Rect<int>& rect) const noexcept = 0;
         virtual bool IsMouseOver(Vec2i p1, Vec2i p2) const noexcept = 0;
         virtual InputDevice GetActiveDevice() const noexcept = 0;
 

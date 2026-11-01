@@ -74,21 +74,17 @@ int GetPadButtonMask(InputButton button) noexcept {
     private:
         // ハードウェアサンプリング状態 (メインスレッドの Update が収集・累積)
         std::array<char, 256> raw_current_keys_{};
-        std::array<char, 256> raw_previous_keys_{};
         std::array<char, 256> latched_pressed_keys_{};
         std::array<char, 256> latched_released_keys_{};
 
         int raw_mouse_buttons_ = 0;
-        int raw_previous_mouse_buttons_ = 0;
         int latched_mouse_pressed_ = 0;
         int latched_mouse_released_ = 0;
         Vec2i raw_mouse_pos_{0, 0};
-        Vec2i raw_previous_mouse_pos_{0, 0};
         int raw_mouse_wheel_delta_ = 0;
         int latched_mouse_wheel_delta_ = 0;
 
         int raw_pad_state_ = 0;
-        int raw_previous_pad_state_ = 0;
         int latched_pad_pressed_ = 0;
         int latched_pad_released_ = 0;
 
@@ -159,7 +155,6 @@ int GetPadButtonMask(InputButton button) noexcept {
                 if (curr == 0 && prev != 0) {
                     latched_released_keys_[i] = 1;
                 }
-                raw_previous_keys_[i] = prev;
                 raw_current_keys_[i] = curr;
             }
 
@@ -167,9 +162,8 @@ int GetPadButtonMask(InputButton button) noexcept {
             int mouse_released = ~new_mouse & raw_mouse_buttons_;
             latched_mouse_pressed_ |= mouse_pressed;
             latched_mouse_released_ |= mouse_released;
-            raw_previous_mouse_buttons_ = raw_mouse_buttons_;
             raw_mouse_buttons_ = new_mouse;
-            raw_previous_mouse_pos_ = raw_mouse_pos_;
+            Vec2i prev_mouse_pos = raw_mouse_pos_;
             raw_mouse_pos_ = new_mouse_pos;
             latched_mouse_wheel_delta_ += wheel_vol;
 
@@ -177,14 +171,13 @@ int GetPadButtonMask(InputButton button) noexcept {
             int pad_released = ~new_pad & raw_pad_state_;
             latched_pad_pressed_ |= pad_pressed;
             latched_pad_released_ |= pad_released;
-            raw_previous_pad_state_ = raw_pad_state_;
             raw_pad_state_ = new_pad;
 
             if (new_pad != 0) {
                 active_device_ = InputDevice::Gamepad;
             } else if (new_mouse != 0 || wheel_vol != 0 ||
-                       new_mouse_pos.x != raw_previous_mouse_pos_.x ||
-                       new_mouse_pos.y != raw_previous_mouse_pos_.y) {
+                       new_mouse_pos.x != prev_mouse_pos.x ||
+                       new_mouse_pos.y != prev_mouse_pos.y) {
                 active_device_ = InputDevice::Mouse;
             } else {
                 for (int i = 0; i < 256; ++i) {
@@ -343,10 +336,6 @@ int GetPadButtonMask(InputButton button) noexcept {
 
         int GetMouseWheelDelta() const noexcept override {
             return frame_mouse_wheel_delta_;
-        }
-
-        bool IsMouseOver(const Rect<int>& rect) const noexcept override {
-            return rect.Contains(frame_mouse_pos_);
         }
 
         bool IsMouseOver(Vec2i p1, Vec2i p2) const noexcept override {

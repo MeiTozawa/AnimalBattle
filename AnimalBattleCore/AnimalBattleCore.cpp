@@ -82,7 +82,6 @@ __declspec(dllexport) void Engine_SetMouseDispFlag(bool visible) noexcept {
 __declspec(dllexport) bool Engine_BeginDraw() noexcept {
     auto* render_service = ab::GetRenderService();
     if (render_service != nullptr) {
-        render_service->ClearCommands();
         return render_service->ClearScreen();
     }
     return false;
@@ -91,7 +90,6 @@ __declspec(dllexport) bool Engine_BeginDraw() noexcept {
 __declspec(dllexport) bool Engine_EndDraw() noexcept {
     auto* render_service = ab::GetRenderService();
     if (render_service != nullptr) {
-        render_service->FlushCommands();
         return render_service->ScreenFlip();
     }
     return false;

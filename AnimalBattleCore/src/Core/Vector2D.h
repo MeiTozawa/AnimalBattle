@@ -21,38 +21,6 @@ struct Vector2D {
     constexpr Vector2D operator+(const Vector2D& other) const noexcept {
         return Vector2D{x + other.x, y + other.y};
     }
-
-    constexpr Vector2D operator-(const Vector2D& other) const noexcept {
-        return Vector2D{x - other.x, y - other.y};
-    }
-
-    constexpr Vector2D operator*(T scalar) const noexcept {
-        return Vector2D{x * scalar, y * scalar};
-    }
-
-    constexpr Vector2D operator/(T scalar) const noexcept {
-        return Vector2D{x / scalar, y / scalar};
-    }
-
-    constexpr T Dot(const Vector2D& other) const noexcept {
-        return x * other.x + y * other.y;
-    }
-
-    constexpr T LengthSquared() const noexcept {
-        return x * x + y * y;
-    }
-
-    float Length() const noexcept {
-        return std::sqrt(static_cast<float>(LengthSquared()));
-    }
-
-    Vector2D Normalized() const noexcept {
-        float len = Length();
-        if (len > 0.00001f) {
-            return *this / static_cast<T>(len);
-        }
-        return Vector2D{0, 0};
-    }
 };
 
 using Vec2f = Vector2D<float>;

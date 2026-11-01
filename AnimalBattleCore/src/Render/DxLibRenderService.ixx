@@ -1,7 +1,5 @@
 module;
 
-#include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include <DxLib.h>
 
@@ -13,58 +11,23 @@ export module DxLibRenderService;
 
 export import RenderService;
 
-extern "C" bool g_is_exit_requested;
-
 namespace ab {
-    /// @brief DxLib を使用してダイレクトバッチ描画・カメラ変換を提供する具象レンダリングサービス
+    /// @brief DxLib を使用してダイレクトバッチ描画を提供する具象レンダリングサービス
     export class DxLibRenderService : public IRenderService {
-    private:
-        Vec2i viewport_size_{0, 0};
-        bool camera_enabled_ = false;
-        Vec2f camera_pos_{640.0f, 360.0f};
-        float camera_scale_ = 1.0f;
-
-        [[nodiscard]] Vec2i ApplyCamera(Vec2i pos) const noexcept {
-            if (!camera_enabled_) return pos;
-            return Vec2i{
-                static_cast<int>((pos.x - camera_pos_.x) * camera_scale_ + viewport_size_.x / 2.0f),
-                static_cast<int>((pos.y - camera_pos_.y) * camera_scale_ + viewport_size_.y / 2.0f)
-            };
-        }
-
     public:
         DxLibRenderService() = default;
-        DxLibRenderService(int width, int height) : viewport_size_{width, height} {}
-        DxLibRenderService(Vec2i viewport_size) : viewport_size_{viewport_size} {}
 
         // --- 画面・フレーム制御 ---
         bool ClearScreen() override { return ::ClearDrawScreen() == 0; }
         bool ScreenFlip() override { return ::ScreenFlip() == 0; }
-        void ClearCommands() override {}
-        void FlushCommands() override {}
 
         // --- 高密度図元バッチ高速ディスパッチ ---
         void SubmitCompactCircles(const CompactCirclePacket* circles, int count) override {
             if (!circles || count <= 0) return;
 
-            if (camera_enabled_) {
-                const float scale = camera_scale_;
-                const float half_w = viewport_size_.x / 2.0f;
-                const float half_h = viewport_size_.y / 2.0f;
-                const Vec2f cpos = camera_pos_;
-
-                for (int i = 0; i < count; ++i) {
-                    const auto& c = circles[i];
-                    int px = static_cast<int>((c.center.x - cpos.x) * scale + half_w);
-                    int py = static_cast<int>((c.center.y - cpos.y) * scale + half_h);
-                    int r = static_cast<int>(c.radius * scale);
-                    ::DrawCircle(px, py, r, c.color, c.fill != 0 ? TRUE : FALSE);
-                }
-            } else {
-                for (int i = 0; i < count; ++i) {
-                    const auto& c = circles[i];
-                    ::DrawCircle(c.center.x, c.center.y, c.radius, c.color, c.fill != 0 ? TRUE : FALSE);
-                }
+            for (int i = 0; i < count; ++i) {
+                const auto& c = circles[i];
+                ::DrawCircle(c.center.x, c.center.y, c.radius, c.color, c.fill != 0 ? TRUE : FALSE);
             }
         }
 
@@ -169,13 +132,6 @@ namespace ab {
             if (handle >= 0) return ::DeleteGraph(handle) == 0;
             return false;
         }
-        Vec2i GetGraphSize(int handle) const override {
-            Vec2i size{0, 0};
-            if (handle >= 0) {
-                ::GetGraphSize(handle, &size.x, &size.y);
-            }
-            return size;
-        }
         void GetGraphSize(int handle, Vec2i* out_size) const override {
             if (handle >= 0 && out_size != nullptr) {
                 ::GetGraphSize(handle, &out_size->x, &out_size->y);
@@ -184,34 +140,17 @@ namespace ab {
 
         // --- 2D プリミティブ・テキスト描画 ---
         void DrawBox(Rect<int> r, uint32_t color, bool fill_flag) override {
-            Vec2i p1 = ApplyCamera(r.p1);
-            Vec2i p2 = ApplyCamera(r.p2);
-            ::DrawBox(p1.x, p1.y, p2.x, p2.y, color, fill_flag ? TRUE : FALSE);
-        }
-        void DrawBox(Vec2i p1, Vec2i p2, uint32_t color, bool fill_flag) override {
-            Vec2i dp1 = ApplyCamera(p1);
-            Vec2i dp2 = ApplyCamera(p2);
-            ::DrawBox(dp1.x, dp1.y, dp2.x, dp2.y, color, fill_flag ? TRUE : FALSE);
+            ::DrawBox(r.p1.x, r.p1.y, r.p2.x, r.p2.y, color, fill_flag ? TRUE : FALSE);
         }
         void DrawCircle(Vec2i center, int radius, uint32_t color, bool fill_flag) override {
-            Vec2i p = ApplyCamera(center);
-            int r = camera_enabled_ ? static_cast<int>(radius * camera_scale_) : radius;
-            ::DrawCircle(p.x, p.y, r, color, fill_flag ? TRUE : FALSE);
+            ::DrawCircle(center.x, center.y, radius, color, fill_flag ? TRUE : FALSE);
         }
         void DrawLine(Vec2i p1, Vec2i p2, uint32_t color, int thickness) override {
-            Vec2i dp1 = ApplyCamera(p1);
-            Vec2i dp2 = ApplyCamera(p2);
-            int th = thickness;
-            if (camera_enabled_) {
-                th = static_cast<int>(thickness * camera_scale_);
-                if (th < 1 && thickness > 0) th = 1;
-            }
-            ::DrawLine(dp1.x, dp1.y, dp2.x, dp2.y, color, th);
+            ::DrawLine(p1.x, p1.y, p2.x, p2.y, color, thickness);
         }
         void DrawString(Vec2i pos, const wchar_t* text, uint32_t color) override {
             if (!text) return;
-            Vec2i p = ApplyCamera(pos);
-            ::DrawString(p.x, p.y, text, color);
+            ::DrawString(pos.x, pos.y, text, color);
         }
         /// @brief 水平中央・垂直中央揃えで文字列を描画
         void DrawCenterString(int x, int y, const wchar_t* text, uint32_t color) override {
@@ -234,30 +173,21 @@ namespace ab {
             DrawString(Vec2i{drawX, drawY}, text, color);
         }
         void DrawGraph(Vec2i pos, int handle, bool trans_flag) override {
-            Vec2i p = ApplyCamera(pos);
-            ::DrawGraph(p.x, p.y, handle, trans_flag ? TRUE : FALSE);
+            ::DrawGraph(pos.x, pos.y, handle, trans_flag ? TRUE : FALSE);
         }
         void DrawRotaGraph(Vec2i center, double ext_rate, double angle, int graph_handle, bool trans_flag) override {
-            Vec2i p = ApplyCamera(center);
-            double scale = camera_enabled_ ? (ext_rate * camera_scale_) : ext_rate;
-            ::DrawRotaGraph(p.x, p.y, scale, angle, graph_handle, trans_flag ? TRUE : FALSE);
+            ::DrawRotaGraph(center.x, center.y, ext_rate, angle, graph_handle, trans_flag ? TRUE : FALSE);
         }
-        using IRenderService::DrawRectRotaGraph;
         void DrawRectRotaGraph(Vec2i center, Rect<int> src, Vec2f scale, double angle, int graph_handle, bool trans_flag, bool turn_flag) override {
-            Vec2i p = ApplyCamera(center);
-            double scale_x = camera_enabled_ ? (scale.x * camera_scale_) : scale.x;
-            double scale_y = camera_enabled_ ? (scale.y * camera_scale_) : scale.y;
             int src_w = src.Width();
             int src_h = src.Height();
-            ::DrawRectRotaGraph3(p.x, p.y, src.p1.x, src.p1.y, src_w, src_h,
+            ::DrawRectRotaGraph3(center.x, center.y, src.p1.x, src.p1.y, src_w, src_h,
                                  src_w * 0.5, src_h * 0.5,
-                                 scale_x, scale_y, angle, graph_handle,
+                                 scale.x, scale.y, angle, graph_handle,
                                  trans_flag ? TRUE : FALSE, turn_flag ? TRUE : FALSE);
         }
 
-        // --- カメラ・状態設定 ---
-        void SetCameraEnabled(bool enabled) override { camera_enabled_ = enabled; }
-        void SetCameraState(Vec2f pos, float scale) override { camera_pos_ = pos; camera_scale_ = scale; }
+        // --- 状態設定 ---
         void SetDrawBlendMode(BlendMode mode, int pal) override {
             int dx_mode;
             switch (mode) {
