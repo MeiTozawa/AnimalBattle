@@ -198,9 +198,10 @@ Minions = [
 [[Phases]]
 Type = "Combat"
 Title = "★ 【 左クリック : 攻撃 】 / 【 L-SHIFT : 回避 】"
-Subtitle = "マウスで狙いを定め、追撃するミニオンを撃破してください"
+Subtitle = "マウスで狙いを定め、二体のミニオンを撃破してください"
 Minions = [
-    { MinionType = "Ground" }
+    { MinionType = "Ground" },
+    { MinionType = "Flying" }
 ]
 
 [[Phases]]
