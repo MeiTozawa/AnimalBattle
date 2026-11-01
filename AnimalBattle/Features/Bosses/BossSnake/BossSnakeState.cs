@@ -4,14 +4,8 @@ namespace AnimalBattle.Ai.BossSnake;
 ///     BossSnake：Ancient Cat Overlordの固有の行動状態を表す純粋な列挙体です。
 /// </summary>
 public enum BossSnakeState : byte {
-    /// <summary>安全な未指定状態です。</summary>
-    None = 0,
-
     /// <summary>浮遊移動状態です。</summary>
     Hover = 1,
-
-    /// <summary>攻撃選択状態です。</summary>
-    AttackSelection = 2,
 
     /// <summary>攻撃予兆：前揺れ状態です：全技能共通。</summary>
     Telegraph = 3,

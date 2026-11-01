@@ -76,9 +76,6 @@ public sealed class BossLionBrain : BaseBossBrain {
     /// <inheritdoc />
     public override bool FacingRight => _facingRight;
 
-    /// <summary>BossLion の設定プロバイダを取得します。</summary>
-    public IBossLionConfiguration Configuration => _configuration;
-
     /// <summary>現在のマクロ・ミクロ統合状態を取得します。</summary>
     public BossLionState State {
         get {

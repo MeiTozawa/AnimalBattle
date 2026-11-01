@@ -4,8 +4,6 @@ namespace AnimalBattle.Maps.Navigation;
 ///     プラットフォーム間遷移ナビゲーションアクション種別。
 /// </summary>
 public enum NavActionType {
-    /// <summary>同一プラットフォーム内での水平歩行追従</summary>
-    Walk,
 
     /// <summary>他プラットフォームへの上方・斜め跳躍：放物線ジャンプ</summary>
     Jump,

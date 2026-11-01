@@ -505,9 +505,6 @@ public static class HudRenderSystem {
                     case BossSnakeState.Hover:
                         destination.TryWrite($"[STATE: HOVERING (IDLE)]", out charsWritten);
                         return;
-                    case BossSnakeState.AttackSelection:
-                        destination.TryWrite($"[STATE: ATTACK SELECTION]", out charsWritten);
-                        return;
                     default:
                         destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
                         return;
@@ -520,9 +517,6 @@ public static class HudRenderSystem {
                         return;
                     case BossLionState.PatrolChase:
                         destination.TryWrite($"[STATE: CHASE (NEXT: {abilityName})]", out charsWritten);
-                        return;
-                    case BossLionState.MoveToTakeoff:
-                        destination.TryWrite($"[STATE: NAVIGATING TO TAKEOFF]", out charsWritten);
                         return;
                     case BossLionState.PlatformTraverse:
                         destination.TryWrite($"[STATE: PLATFORM TRAVERSE (AIRBORNE)]", out charsWritten);

@@ -5,11 +5,6 @@ namespace AnimalBattle.Ai;
 /// </summary>
 public enum Phase {
     /// <summary>
-    ///     Phase が未指定であることを示します。
-    /// </summary>
-    Unknown = 0,
-
-    /// <summary>
     ///     第 1 Phase を示します。
     /// </summary>
     Phase1 = 1,

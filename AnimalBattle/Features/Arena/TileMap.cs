@@ -85,16 +85,6 @@ public sealed class TileMap(
         return grid[row, col];
     }
 
-    /// <summary>
-    ///     指定グリッド座標にタイル ID を設定します。
-    /// </summary>
-    /// <param name="col">ゼロ基準の列インデックス</param>
-    /// <param name="row">ゼロ基準の行インデックス</param>
-    /// <param name="tileId">設定するタイル ID</param>
-    public void SetTile(int col, int row, int tileId)
-    {
-        if (col >= 0 && col < Columns && row >= 0 && row < Rows) grid[row, col] = tileId;
-    }
 
     /// <summary>
     ///     指定されたカメラビューポートに基づいてカリングを行い、画面内タイルのみを描画します。
@@ -196,7 +186,7 @@ public sealed class TileMap(
         var clampedRight = MathF.Min(rightBoundX, arenaCfg.BoundaryMaxX);
 
         if (topSurfaceY <= arenaCfg.TileMap.MaxPlatformY && clampedRight > clampedLeft + arenaCfg.TileMap.MinPlatformWidth)
-            nodes.Add(new PlatformNode(nodeId++, clampedLeft, clampedRight, topSurfaceY, platformHeight));
+            nodes.Add(new PlatformNode(nodeId++, clampedLeft, clampedRight, topSurfaceY));
 
         var platformBox = new Box2D(new Vec2f(centerX, centerY), new Vec2f(platformWidth, platformHeight));
         SpatialHash.Insert(platformId++, platformBox);

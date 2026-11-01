@@ -11,8 +11,7 @@ namespace AnimalBattle.Maps.Navigation;
 /// <param name="leftX">左端 X 座標</param>
 /// <param name="rightX">右端 X 座標</param>
 /// <param name="topY">上面 Y 座標</param>
-/// <param name="height">プラットフォーム高さ</param>
-public sealed class PlatformNode(int id, float leftX, float rightX, float topY, float height) {
+public sealed class PlatformNode(int id, float leftX, float rightX, float topY) {
     /// <summary>プラットフォームの一意な識別番号 ゼロ基準</summary>
     public int Id { get; } = id;
 
@@ -24,9 +23,6 @@ public sealed class PlatformNode(int id, float leftX, float rightX, float topY, 
 
     /// <summary>プラットフォームの右端 X 座標</summary>
     public float RightX { get; } = rightX;
-
-    /// <summary>プラットフォームの厚み：高さ</summary>
-    public float Height { get; } = height;
 
     /// <summary>プラットフォームの中心 X 座標</summary>
     public float CenterX => (LeftX + RightX) * 0.5f;
@@ -43,21 +39,6 @@ public sealed class PlatformNode(int id, float leftX, float rightX, float topY, 
     public bool ContainsX(float x, float margin = 0.0f)
     {
         return x >= LeftX - margin && x <= RightX + margin;
-    }
-
-    /// <summary>
-    ///     指定された足元座標がこのプラットフォーム上に着地・立脚しているかを判定します。
-    /// </summary>
-    /// <param name="x">エンティティの中心 X 座標</param>
-    /// <param name="footY">エンティティの足元 Y 座標</param>
-    /// <param name="toleranceX">水平方向の許容誤差</param>
-    /// <param name="toleranceY">垂直方向の許容誤差</param>
-    /// <returns>プラットフォーム上に立脚している場合は true</returns>
-    public bool IsStandingOn(float x, float footY, float toleranceX = 20.0f, float toleranceY = 25.0f)
-    {
-        var inX = ContainsX(x, toleranceX);
-        var inY = MathF.Abs(footY - TopY) <= toleranceY;
-        return inX && inY;
     }
 
     /// <summary>

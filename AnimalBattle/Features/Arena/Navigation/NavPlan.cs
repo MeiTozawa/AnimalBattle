@@ -29,16 +29,9 @@ public enum NavStatus {
 /// </summary>
 public readonly record struct NavPlan(
     NavStatus Status,
-    float TargetX,
-    float TakeoffX,
-    float LandingX,
     float RequiredVx,
-    float RequiredVy,
-    PlatformNode? CurrentNode = null,
-    PlatformNode? TargetNode = null,
+    float RequiredVy = 0.0f,
     PlatformLink? NextLink = null) {
-    /// <summary>現在フレームで直ちにジャンプをトリガーすべきかどうか</summary>
-    public bool ShouldJump => Status == NavStatus.ExecuteJump;
 
     /// <summary>
     ///     同一プラットフォーム内での直接歩行追従プランを生成します。
@@ -47,21 +40,13 @@ public readonly record struct NavPlan(
         float currentX,
         float targetX,
         float moveSpeed,
-        PlatformNode? currentNode,
-        PlatformNode? targetNode,
+        PlatformNode? currentNode = null,
+        PlatformNode? targetNode = null,
         float moveThreshold = 15.0f)
     {
         var dx = targetX - currentX;
         var dir = MathF.Abs(dx) > moveThreshold ? MathF.Sign(dx) : 0.0f;
-        return new NavPlan(
-            NavStatus.DirectWalk,
-            targetX,
-            targetX,
-            targetX,
-            dir * moveSpeed,
-            0.0f,
-            currentNode,
-            targetNode);
+        return new NavPlan(NavStatus.DirectWalk, dir * moveSpeed);
     }
 
     /// <summary>
@@ -71,20 +56,12 @@ public readonly record struct NavPlan(
         float currentX,
         float targetX,
         float moveSpeed,
-        PlatformNode? currentNode,
-        PlatformNode? targetNode,
+        PlatformNode? currentNode = null,
+        PlatformNode? targetNode = null,
         float moveThreshold = 15.0f)
     {
         var dx = targetX - currentX;
         var dir = MathF.Abs(dx) > moveThreshold ? MathF.Sign(dx) : 0.0f;
-        return new NavPlan(
-            NavStatus.NoPath,
-            targetX,
-            targetX,
-            targetX,
-            dir * moveSpeed,
-            0.0f,
-            currentNode,
-            targetNode);
+        return new NavPlan(NavStatus.NoPath, dir * moveSpeed);
     }
 }

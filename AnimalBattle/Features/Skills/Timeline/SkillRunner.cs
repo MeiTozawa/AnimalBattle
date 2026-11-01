@@ -43,10 +43,6 @@ public sealed class SkillRunner {
         }
     }
 
-    /// <summary>現在有効なアーマータグを取得します。</summary>
-    public GameplayTag CurrentArmorTag =>
-        CurrentPhase == SkillPhase.Active && Definition is not null ? Definition.ArmorTag : GameplayTag.None;
-
     /// <summary>
     ///     指定した攻撃定義で技能実行を開始します。
     /// </summary>

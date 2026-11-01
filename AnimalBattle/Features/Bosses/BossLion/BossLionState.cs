@@ -4,17 +4,11 @@ namespace AnimalBattle.Ai.BossLion;
 ///     BossLion：Ground Crusherの固有の行動状態を表す純粋な列挙体です。
 /// </summary>
 public enum BossLionState : byte {
-    /// <summary>安全な未指定状態です。</summary>
-    None = 0,
-
     /// <summary>待機状態です。</summary>
     Idle = 1,
 
     /// <summary>足場追跡状態です。</summary>
     PatrolChase = 2,
-
-    /// <summary>跳躍開始位置への移動状態です。</summary>
-    MoveToTakeoff = 3,
 
     /// <summary>足場間機動：跳躍・落下・着地状態です。</summary>
     PlatformTraverse = 4,

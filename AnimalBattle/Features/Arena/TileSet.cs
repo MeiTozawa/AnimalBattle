@@ -9,9 +9,6 @@ namespace AnimalBattle.Maps;
 /// <param name="tileHeight">タイル単体の高さピクセル単位</param>
 /// <param name="columns">テクスチャシート横方向タイル列数</param>
 /// <param name="rows">テクスチャシート縦方向タイル行数</param>
-/// <param name="leftBlock">左端ブロックのタイル ID</param>
-/// <param name="middleBlock">中間ブロックのタイル ID</param>
-/// <param name="rightBlock">右端ブロックのタイル ID</param>
 /// <param name="collisionRect">プラットフォーム衝突領域矩形</param>
 public sealed class TileSet(
     int graphHandle,
@@ -19,9 +16,6 @@ public sealed class TileSet(
     int tileHeight,
     int columns,
     int rows,
-    int leftBlock,
-    int middleBlock,
-    int rightBlock,
     Rect collisionRect) {
     /// <summary>
     ///     <see cref="TileSetConfig" /> 設定データおよびテクスチャハンドルから <see cref="TileSet" /> の新しいインスタンスを初期化します。
@@ -35,9 +29,6 @@ public sealed class TileSet(
             config.TileHeight,
             config.Columns,
             config.Rows,
-            config.LeftBlock,
-            config.MiddleBlock,
-            config.RightBlock,
             new Rect(config.CollisionX1, config.CollisionY1, config.CollisionX2, config.CollisionY2))
     {
     }
@@ -57,29 +48,8 @@ public sealed class TileSet(
     /// <summary>テクスチャシート内の縦方向タイル行数</summary>
     public int Rows { get; } = rows;
 
-    /// <summary>左端ブロックのタイル ID 1基準</summary>
-    public int LeftBlock { get; } = leftBlock;
-
-    /// <summary>中間ブロックのタイル ID 1基準</summary>
-    public int MiddleBlock { get; } = middleBlock;
-
-    /// <summary>右端ブロックのタイル ID 1基準</summary>
-    public int RightBlock { get; } = rightBlock;
-
     /// <summary>プラットフォームタイルの衝突判定領域矩形</summary>
     public Rect CollisionRect { get; } = collisionRect;
-
-    private readonly Dictionary<int, TileCollisionType> _collisionTypes = new();
-
-    /// <summary>
-    ///     特定のタイル ID に対する衝突セマンティクス種別を登録します。
-    /// </summary>
-    /// <param name="tileId">1-based タイル ID</param>
-    /// <param name="type">衝突種別</param>
-    public void SetCollisionType(int tileId, TileCollisionType type)
-    {
-        if (tileId > 0) _collisionTypes[tileId] = type;
-    }
 
     /// <summary>
     ///     特定のタイル ID の衝突セマンティクス種別を取得します。
@@ -87,11 +57,8 @@ public sealed class TileSet(
     /// </summary>
     /// <param name="tileId">1-based タイル ID</param>
     /// <returns>衝突種別</returns>
-    public TileCollisionType GetCollisionType(int tileId)
-    {
-        if (tileId <= 0) return TileCollisionType.None;
-        return _collisionTypes.GetValueOrDefault(tileId, TileCollisionType.OneWayPlatform);
-    }
+    public TileCollisionType GetCollisionType(int tileId) =>
+        tileId <= 0 ? TileCollisionType.None : TileCollisionType.OneWayPlatform;
 
     /// <summary>
     ///     1-based のタイル ID からスプライトシート上の UV 切り出し矩形 <see cref="Rect" /> を取得します。

@@ -5,11 +5,6 @@ namespace AnimalBattle.Ai;
 /// </summary>
 public enum BossType {
     /// <summary>
-    ///     Boss 種別が未指定であることを示します。
-    /// </summary>
-    Unknown = 0,
-
-    /// <summary>
     ///     BossSnake を示します。
     /// </summary>
     BossSnake = 1,

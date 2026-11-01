@@ -24,14 +24,6 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     /// <summary>現在実行中の跳躍・下落リンク：空中滞空時のナビゲーション維持用</summary>
     private PlatformLink? _activeLink;
 
-    /// <summary>現在実行中の跳躍・下落リンクを取得します。</summary>
-    public PlatformLink? ActiveLink => _activeLink;
-
-    /// <summary>現在のアクティブリンクをリセットします。</summary>
-    public void ResetActiveLink()
-    {
-        _activeLink = null;
-    }
 
     /// <summary>すべての登録済みプラットフォームノード</summary>
     public IReadOnlyList<PlatformNode> Nodes => _nodes;
@@ -80,117 +72,6 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
             }
         }
     }
-
-    /// <summary>
-    ///     跳躍放物線軌道の障害物遮断サンプリングにおける標準分割数。
-    /// </summary>
-    public const int DefaultTrajectoryRaycastSampleSteps = 16;
-
-    /// <summary>
-    ///     障害物矩形群を考慮し、障害物と交差する跳躍・下落リンクを除外したナビゲーショングラフを構築します。
-    /// </summary>
-    /// <param name="nodes">プラットフォームノード一覧</param>
-    /// <param name="obstacles">障害物矩形一覧</param>
-    /// <param name="jumpForce">Boss の基準ジャンプ初速度</param>
-    /// <param name="gravity">ワールド重力加速度</param>
-    /// <param name="moveSpeed">地上巡航移動速度</param>
-    /// <param name="sampleSteps">放物線軌道の離散サンプリング分割数 ゼロ指定時は設定値を採用</param>
-    /// <param name="config">オプションのナビゲーショングラフ設定</param>
-    public void BuildWithObstacles(
-        IReadOnlyList<PlatformNode> nodes,
-        IReadOnlyList<Box2D> obstacles,
-        float jumpForce,
-        float gravity,
-        float moveSpeed,
-        int sampleSteps = 0,
-        NavigationGraphConfig? config = null)
-    {
-        if (config != null) Config = config;
-        var safeGravity = MathF.Max(1.0f, gravity);
-        var safeJumpForce = MathF.Max(0.0f, jumpForce);
-        Build(nodes, safeJumpForce, safeGravity, moveSpeed, config);
-
-        if (obstacles.Count == 0 || _links.Count == 0) return;
-
-        var steps = sampleSteps > 0 ? sampleSteps : Config.TrajectorySampleSteps;
-        steps = Math.Max(2, steps);
-        for (var i = _links.Count - 1; i >= 0; i--)
-        {
-            var link = _links[i];
-            if (IsTrajectoryBlocked(link, obstacles, safeGravity, steps))
-            {
-                _adjacency[link.FromNode.Id].Remove(link);
-                _links.RemoveAt(i);
-            }
-        }
-    }
-
-    private static bool IsTrajectoryBlocked(PlatformLink link, IReadOnlyList<Box2D> obstacles, float gravity, int sampleSteps)
-    {
-        var safeGravity = MathF.Max(1.0f, gravity);
-        const float velocityEpsilon = 0.001f;
-        const float flightTimeEpsilon = 0.001f;
-
-        float tFlight;
-        if (link.Action == NavActionType.Drop)
-        {
-            // 落下滞空時間は高度差と重力加速度による自由落下時間 t = sqrt
-            var dropHeight = link.ToNode.TopY - link.FromNode.TopY;
-            tFlight = dropHeight > 0.0f ? MathF.Sqrt(2.0f * dropHeight / safeGravity) : 0.0f;
-        }
-        else
-        {
-            // 上方・斜め跳躍：Jump：着地目標高度 TopY に到達する物理滞空時間を鉛直運動方程式から厳密算出
-            var deltaY = link.ToNode.TopY - link.FromNode.TopY;
-            var disc = link.RequiredJumpVy * link.RequiredJumpVy + 2.0f * safeGravity * deltaY;
-            if (disc >= 0.0f)
-            {
-                tFlight = (-link.RequiredJumpVy + MathF.Sqrt(disc)) / safeGravity;
-            }
-            else
-            {
-                var flightDist = link.LandingX - link.TakeoffX;
-                tFlight = MathF.Abs(link.RequiredJumpVx) > velocityEpsilon
-                    ? MathF.Abs(flightDist / link.RequiredJumpVx)
-                    : 1.0f;
-            }
-        }
-
-        if (tFlight <= flightTimeEpsilon) return false;
-
-        var dt = tFlight / sampleSteps;
-
-        for (var step = 1; step < sampleSteps; step++)
-        {
-            var t = step * dt;
-            float sampleX;
-            if (link.Action == NavActionType.Drop)
-            {
-                // 下落時：水平移動速度で足場端から外側へ踏み出し、LandingX を超えないようクランプ
-                sampleX = link.LandingX < link.TakeoffX
-                    ? MathF.Max(link.LandingX, link.TakeoffX + link.RequiredJumpVx * t)
-                    : MathF.Min(link.LandingX, link.TakeoffX + link.RequiredJumpVx * t);
-            }
-            else
-            {
-                sampleX = link.TakeoffX + link.RequiredJumpVx * t;
-            }
-
-            var sampleY = link.FromNode.TopY + (link.RequiredJumpVy * t + 0.5f * safeGravity * t * t);
-            Vec2f samplePoint = new(sampleX, sampleY);
-
-            for (var i = 0; i < obstacles.Count; i++)
-            {
-                if (PhysicsService.Intersects(samplePoint, obstacles[i]))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     /// <summary>
     ///     指定された足元座標 が位置するプラットフォームノードを検索します。
     /// </summary>
@@ -288,13 +169,8 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                 {
                     return new NavPlan(
                         NavStatus.InAir,
-                        currentActiveLink.LandingX,
-                        currentActiveLink.TakeoffX,
-                        currentActiveLink.LandingX,
                         currentActiveLink.RequiredJumpVx,
                         0.0f,
-                        currentActiveLink.FromNode,
-                        targetNodeInAir ?? currentActiveLink.ToNode,
                         currentActiveLink);
                 }
             }
@@ -308,13 +184,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
 
             return new NavPlan(
                 NavStatus.InAir,
-                targetX,
-                currentX,
-                targetX,
-                vxInAir,
-                0.0f,
-                fallbackNode,
-                targetNodeInAir);
+                vxInAir);
         }
 
         // 接地状態復帰時はアクティブリンクをリセット
@@ -346,26 +216,16 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                 _activeLink = firstLink;
                 return new NavPlan(
                     NavStatus.ExecuteJump,
-                    firstLink.LandingX,
-                    firstLink.TakeoffX,
-                    firstLink.LandingX,
                     firstLink.RequiredJumpVx,
                     firstLink.RequiredJumpVy,
-                    currentNode,
-                    targetNode,
                     firstLink);
             }
 
             float walkDir = MathF.Sign(firstLink.TakeoffX - currentX);
             return new NavPlan(
                 NavStatus.MoveToTakeoff,
-                firstLink.TakeoffX,
-                firstLink.TakeoffX,
-                firstLink.LandingX,
                 walkDir * moveSpeed,
                 0.0f,
-                currentNode,
-                targetNode,
                 firstLink);
         }
 
@@ -377,25 +237,15 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
             if (currentX > firstLink.TakeoffX + Config.DropTriggerDistance)
                 return new NavPlan(
                     NavStatus.MoveToTakeoff,
-                    firstLink.TakeoffX,
-                    firstLink.TakeoffX,
-                    firstLink.LandingX,
                     -moveSpeed,
                     0.0f,
-                    currentNode,
-                    targetNode,
                     firstLink);
 
             _activeLink = firstLink;
             return new NavPlan(
                 NavStatus.ExecuteDrop,
-                firstLink.LandingX,
-                firstLink.TakeoffX,
-                firstLink.LandingX,
                 -moveSpeed,
                 0.0f,
-                currentNode,
-                targetNode,
                 firstLink);
         }
 
@@ -404,25 +254,15 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         if (currentX < firstLink.TakeoffX - Config.DropTriggerDistance)
             return new NavPlan(
                 NavStatus.MoveToTakeoff,
-                firstLink.TakeoffX,
-                firstLink.TakeoffX,
-                firstLink.LandingX,
                 moveSpeed,
                 0.0f,
-                currentNode,
-                targetNode,
                 firstLink);
 
         _activeLink = firstLink;
         return new NavPlan(
             NavStatus.ExecuteDrop,
-            firstLink.LandingX,
-            firstLink.TakeoffX,
-            firstLink.LandingX,
             moveSpeed,
             0.0f,
-            currentNode,
-            targetNode,
             firstLink);
     }
 

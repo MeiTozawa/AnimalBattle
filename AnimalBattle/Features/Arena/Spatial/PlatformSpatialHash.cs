@@ -13,16 +13,6 @@ public sealed class PlatformSpatialHash(float cellSize = 256.0f)
     private readonly Stack<List<int>> _listPool = new();
     private readonly HashSet<int> _visitedQueryIds = [];
 
-    /// <summary>
-    ///     登録済みプラットフォーム総数を取得します。
-    /// </summary>
-    public int Count => _boxes.Count;
-
-    /// <summary>
-    ///     空間グリッドの1セルあたりのピクセルサイズを取得します。
-    /// </summary>
-    public float CellSize => _cellSize;
-
     // 負のグリッド座標による符号ビットの上位侵入を防ぐため、Y座標をuint型へキャストした後に合成します
     private static long GetKey(int cx, int cy) => ((long)cx << 32) | (uint)cy;
 

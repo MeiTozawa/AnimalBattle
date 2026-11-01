@@ -178,7 +178,6 @@ public static class DebugGizmosRenderSystem
             {
                 Faction.Friendly => dbgCfg.PlayerHurtboxColor,
                 Faction.Hostile => dbgCfg.BossHitboxColor,
-                Faction.Neutral => dbgCfg.NeutralHitboxColor,
                 _ => GetFallbackFactionColor(dbgCfg, hurtbox.Faction, dbgCfg.BossHitboxColor)
             };
 
@@ -205,7 +204,6 @@ public static class DebugGizmosRenderSystem
             {
                 Faction.Friendly => dbgCfg.PlayerBulletHitboxColor,
                 Faction.Hostile => dbgCfg.BossBulletHitboxColor,
-                Faction.Neutral => dbgCfg.NeutralHitboxColor,
                 _ => GetFallbackFactionColor(dbgCfg, hitbox.Faction, dbgCfg.BossBulletHitboxColor)
             };
 

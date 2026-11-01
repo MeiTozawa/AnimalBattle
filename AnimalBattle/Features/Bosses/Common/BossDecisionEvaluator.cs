@@ -35,35 +35,6 @@ public readonly struct AttackDecisionContext(
 ///     UE GAS 準拠：技能識別タグ StringId を評価し、RequiredTags および BlockedTags の自動判定と連動します。
 /// </summary>
 public static class BossDecisionEvaluator {
-    /// <summary>
-    ///     候補ルールの中で最もスコアが高い技能識別タグを選択します。
-    /// </summary>
-    public static StringId EvaluateBest(
-        IReadOnlyList<AttackDecisionRule> rules,
-        CooldownTracker cooldownTracker,
-        in AttackDecisionContext context,
-        AbilitySystemComponent? asc = null)
-    {
-        Debug.Assert(rules != null && cooldownTracker != null, "[BossDecisionEvaluator] rules または cooldownTracker が null です。");
-        if (rules == null || cooldownTracker == null) return StringId.Empty;
-
-        var bestSkill = StringId.Empty;
-        var bestScore = -1.0f;
-
-        for (var index = 0; index < rules.Count; index++)
-        {
-            var rule = rules[index];
-            if (!IsRuleEligible(rule, cooldownTracker, in context, asc, out var score)) continue;
-
-            if (score > bestScore)
-            {
-                bestScore = score;
-                bestSkill = rule.SkillTag;
-            }
-        }
-
-        return bestSkill;
-    }
 
     /// <summary>
     ///     候補ルールの中からスコアに応じた加重ランダム抽選で技能識別タグを選択します。
@@ -109,20 +80,6 @@ public static class BossDecisionEvaluator {
         }
 
         return candidateSkills[count - 1];
-    }
-
-    /// <summary>
-    ///     ASC 直接連携の加重ランダム抽選オーバーロードです。
-    /// </summary>
-    public static StringId EvaluateWeighted(
-        IReadOnlyList<AttackDecisionRule> rules,
-        AbilitySystemComponent asc,
-        in AttackDecisionContext context,
-        Random? random = null)
-    {
-        Debug.Assert(asc != null, "[BossDecisionEvaluator] asc が null です。");
-        if (asc == null) return StringId.Empty;
-        return EvaluateWeighted(rules, asc.Cooldowns, in context, random, asc);
     }
 
     private static bool IsRuleEligible(

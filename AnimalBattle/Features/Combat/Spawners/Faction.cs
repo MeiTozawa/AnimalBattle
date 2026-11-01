@@ -1,7 +1,7 @@
 namespace AnimalBattle.Combat;
 
 /// <summary>
-///     判定盒 の所属陣営：味方・敵・中立を識別する列挙型。
+///     判定盒 の所属陣営：味方・敵を識別する列挙型。
 ///     異なる陣営間でのみ戦闘ダメージ判定が発生します。
 /// </summary>
 public enum Faction {
@@ -9,8 +9,5 @@ public enum Faction {
     Friendly,
 
     /// <summary>Boss・敵性陣営</summary>
-    Hostile,
-
-    /// <summary>環境・中立陣営：誰に対してもダメージを与える／受ける</summary>
-    Neutral
+    Hostile
 }

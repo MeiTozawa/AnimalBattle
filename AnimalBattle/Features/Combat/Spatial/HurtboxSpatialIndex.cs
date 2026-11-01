@@ -47,11 +47,6 @@ public sealed class HurtboxSpatialIndex
     public int ItemCount => _itemCount;
 
     /// <summary>
-    ///     空間グリッドの1セルあたりのピクセルサイズを取得します。
-    /// </summary>
-    public float CellSize => _cellSize;
-
-    /// <summary>
     ///     空間ハッシュインデックスを初期化します。
     /// </summary>
     /// <param name="cellSize">正方形セルの幅および高さ</param>
