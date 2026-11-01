@@ -38,6 +38,7 @@ MaxHp = 10.0
 HoverSpeed = 90.0
 HoverAmpY = 24.0
 HoverFreq = 2.2
+HoverDeadZoneX = 8.0
 CollisionSize = { x = 75.0, y = 75.0 }
 Scale = { x = 0.5, y = 0.5 }
 HitFlashDuration = 0.12

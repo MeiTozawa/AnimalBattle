@@ -137,12 +137,21 @@ public static class FlyingMinionSystem
             if (nearestPlayerPos.HasValue)
             {
                 var diffX = nearestPlayerPos.Value.X - trans.Position.X;
-                dirX = MathF.Sign(diffX);
-                targetY = nearestPlayerPos.Value.Y - 120.0f;
-                if (dirX != 0.0f)
+                if (MathF.Abs(diffX) > fCfg.HoverDeadZoneX)
                 {
-                    sprite.FlipX = dirX < 0.0f;
+                    dirX = MathF.Sign(diffX);
+                    if (minion.Asc?.IsCasting != true)
+                    {
+                        sprite.FlipX = dirX < 0.0f;
+                    }
                 }
+
+                if (minion.Asc?.IsCasting == true)
+                {
+                    dirX = 0.0f;
+                }
+
+                targetY = nearestPlayerPos.Value.Y - 120.0f;
             }
 
             var vy = (targetY - trans.Position.Y) * 1.5f + MathF.Cos(minion.HoverTimer * fCfg.HoverFreq) * (fCfg.HoverAmpY * fCfg.HoverFreq);
@@ -249,8 +258,10 @@ public static class FlyingMinionSystem
                 MinionSpawner.AttachFlyingMinionAbility(world, it.Entity(i), minion.Asc, fCfg, patternCfg);
             }
 
-            var dirX = MathF.Sign(nearestPlayerPos.Value.X - trans.Position.X);
-            var facingDir = dirX != 0.0f ? dirX : (!sprite.FlipX ? 1.0f : -1.0f);
+            var diffX = nearestPlayerPos.Value.X - trans.Position.X;
+            var facingDir = MathF.Abs(diffX) > fCfg.HoverDeadZoneX
+                ? MathF.Sign(diffX)
+                : (!sprite.FlipX ? 1.0f : -1.0f);
             if (minion.Asc.TryActivateAbility(fCfg.SkillTag, facingDir))
             {
                 minion.TargetPos = nearestPlayerPos.Value;

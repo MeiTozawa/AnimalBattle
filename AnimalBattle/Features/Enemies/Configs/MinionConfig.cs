@@ -101,6 +101,9 @@ public sealed class FlyingMinionConfig
     /// <summary>垂直正弦波浮遊の周波数。単位はラジアン毎秒。</summary>
     public float HoverFreq { get; set; }
 
+    /// <summary>水平追跡の不感帯（反転チャタリング防止）。単位はピクセル。</summary>
+    public float HoverDeadZoneX { get; set; }
+
     /// <summary>足場衝突および被弾判定サイズ。</summary>
     public Vec2f CollisionSize { get; set; }
 
