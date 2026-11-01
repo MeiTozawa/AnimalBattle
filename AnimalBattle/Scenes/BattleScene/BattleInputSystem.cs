@@ -96,7 +96,7 @@ public static class BattleInputSystem
         // ESC キーでタイトルまたはキャラクター選択画面へ復帰
         if (InputService.IsPressed(InputAction.Cancel))
         {
-            GameManager.Current.SwitchToStart();
+            GameManager.Current.SwitchToStart(enableTutorialOverride: false);
             return;
         }
 

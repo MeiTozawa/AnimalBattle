@@ -134,25 +134,26 @@ public class GameManager : IDisposable {
     ///     キャラクター選択画面へ復帰します。
     ///     システム実行中はECSステージの不整合を防ぐため、Progress終了後の同期ポイントへ処理を遅延させます。
     /// </summary>
-    public void SwitchToStart()
+    /// <param name="enableTutorialOverride">チュートリアル有効化チェックボックスの明示的な初期値オーバーライド（nullの場合は設定値を使用）</param>
+    public void SwitchToStart(bool? enableTutorialOverride = null)
     {
         if (_isUpdating)
         {
-            _pendingSceneTransition = ExecuteSwitchToStart;
+            _pendingSceneTransition = () => ExecuteSwitchToStart(enableTutorialOverride);
             return;
         }
 
-        ExecuteSwitchToStart();
+        ExecuteSwitchToStart(enableTutorialOverride);
     }
 
-    private void ExecuteSwitchToStart()
+    private void ExecuteSwitchToStart(bool? enableTutorialOverride = null)
     {
         ref var flow = ref _ecsWorld.GetMut<GameFlow>();
         flow.State = GameState.Start;
 
         InputService.ClearAndSetContext(InputContext.Menu);
         BattleSceneSpawner.Teardown(_ecsWorld);
-        StartSceneSpawner.Spawn(_ecsWorld);
+        StartSceneSpawner.Spawn(_ecsWorld, enableTutorialOverride);
     }
 
     /// <summary>

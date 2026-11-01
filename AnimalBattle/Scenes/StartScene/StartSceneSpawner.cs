@@ -10,7 +10,8 @@ public static class StartSceneSpawner {
     ///     開始画面のルートエンティティおよびプレビュー自機をワールドへ装配します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
-    public static void Spawn(World world)
+    /// <param name="enableTutorialOverride">チュートリアル有効化チェックボックスの明示的な初期値オーバーライド（nullの場合は設定ファイル値を使用）</param>
+    public static void Spawn(World world, bool? enableTutorialOverride = null)
     {
         Teardown(world);
 
@@ -39,10 +40,11 @@ public static class StartSceneSpawner {
 
         // 2. UI 状態コンポーネントの設定
         var startSceneCfg = world.Get<StartSceneConfig>() ?? new StartSceneConfig();
+        var isTutorialEnabled = enableTutorialOverride ?? startSceneCfg.Options.DefaultEnableTutorial;
         root.Set(new StartUiState {
             CatPreviewEntity = catPreview,
             BunnyPreviewEntity = bunnyPreview,
-            IsTutorialEnabled = startSceneCfg.Options.DefaultEnableTutorial
+            IsTutorialEnabled = isTutorialEnabled
         });
     }
 
