@@ -25,13 +25,4 @@ public struct StartUiState
 
     /// <summary>「ゲーム開始」ボタンのホバー状態。</summary>
     public bool IsStartGameHovered;
-
-    /// <summary>「チュートリアル開始」ボタンのホバー状態。</summary>
-    public bool IsStartTutorialHovered;
-
-    /// <summary>「チュートリアルをスキップ」ボタンのホバー状態。</summary>
-    public bool IsSkipTutorialHovered;
-
-    /// <summary>互換用旧確定ボタンホバー状態。</summary>
-    public bool IsConfirmHovered;
 }

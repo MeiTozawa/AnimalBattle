@@ -280,7 +280,7 @@ public static class BattleAiSystem
                 }
                 vel.Value = currentLinear;
 
-                UpdateBossLionMovementAndCollision(e, bLionBrain, ref trans, ref vel, ref col, dt, w, tileMap, isControlledAirborne, ctx.CandidateBossPlatforms);
+                UpdateBossLionMovementAndCollision(bLionBrain, ref trans, ref vel, ref col, dt, w, tileMap, isControlledAirborne, ctx.CandidateBossPlatforms);
                 sprite.FlipX = !bLionBrain.FacingRight;
             }
 
@@ -294,7 +294,6 @@ public static class BattleAiSystem
     }
 
     private static void UpdateBossLionMovementAndCollision(
-        Entity entity,
         BossLionBrain brain,
         ref Transform trans,
         ref Velocity vel,

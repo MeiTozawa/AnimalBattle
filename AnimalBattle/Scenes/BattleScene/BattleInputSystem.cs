@@ -13,7 +13,6 @@ internal sealed class BattleInputSystemContext : IDisposable
     public required Query PlayerEntitiesQuery { get; init; }
     public required Query<GameplayTagState> PlayerTagStateQuery { get; init; }
     public required Query<Health, BossCombatState, BossBrainComponent> BossQuery { get; init; }
-    public required Query<Transform, Sprite> PlayerQuery { get; init; }
 
     public void Dispose()
     {
@@ -22,7 +21,6 @@ internal sealed class BattleInputSystemContext : IDisposable
         PlayerEntitiesQuery.Dispose();
         PlayerTagStateQuery.Dispose();
         BossQuery.Dispose();
-        PlayerQuery.Dispose();
     }
 }
 
@@ -67,10 +65,6 @@ public static class BattleInputSystem
         var bossQuery = world.QueryBuilder<Health, BossCombatState, BossBrainComponent>()
             .With<BossTag>()
             .Build();
-        var playerQuery = world.QueryBuilder<Transform, Sprite>()
-            .With<PlayerTag>()
-            .Without<DeadTag>()
-            .Build();
 
         world.Set(new BattleInputSystemContext
         {
@@ -79,7 +73,6 @@ public static class BattleInputSystem
             PlayerEntitiesQuery = playerEntitiesQuery,
             PlayerTagStateQuery = playerTagStateQuery,
             BossQuery = bossQuery,
-            PlayerQuery = playerQuery
         });
 
         world.System("BattleInputSystem")

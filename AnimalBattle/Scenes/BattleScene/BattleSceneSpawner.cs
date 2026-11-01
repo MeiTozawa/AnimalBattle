@@ -26,7 +26,7 @@ public static class BattleSceneSpawner
     {
         Teardown(world);
 
-        var root = world.Entity(RootName).Add<BattleSceneTag>();
+        var root = world.Entity(RootName);
         var assets = world.Get<IAssetManager>();
 
         // 1. 自機エンティティの生成
@@ -144,7 +144,7 @@ public static class BattleSceneSpawner
             // 出現バッファ設定の適用：接触判定無効化および行動阻害タグの付与
             if (bufferDur > 0.0f)
             {
-                bossEntity.Set(new SpawnBufferState(bufferDur, bufferCanMove));
+                bossEntity.Set(new SpawnBufferState(bufferDur));
                 var hitbox = BossPrefabs.GetPrefab(bossType).Get<Hitbox>();
                 hitbox.IsActive = false;
                 bossEntity.Set(hitbox);

@@ -18,20 +18,4 @@ public struct CollisionBox(Vec2f size, Vec2f offset = default) {
 
     /// <summary>接地フラグ</summary>
     public bool IsGrounded = false;
-
-    /// <summary>
-    ///     <see cref="CollisionBox" /> を統一幾何形状 <see cref="CollisionShape" /> へ変換します。
-    /// </summary>
-    public readonly CollisionShape ToCollisionShape()
-    {
-        return new CollisionShape.Box(Size, Offset);
-    }
-
-    /// <summary>
-    ///     <see cref="CollisionBox" /> から <see cref="CollisionShape" /> への暗黙変換を提供します。
-    /// </summary>
-    public static implicit operator CollisionShape(in CollisionBox box)
-    {
-        return box.ToCollisionShape();
-    }
 }

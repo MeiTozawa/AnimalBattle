@@ -6,6 +6,5 @@ namespace AnimalBattle.Scenes;
 public enum GameState {
     Start = 0,
     Battle = 1,
-    Paused = 2,
     Tutorial = 3
 }

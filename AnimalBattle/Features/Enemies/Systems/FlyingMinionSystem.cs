@@ -55,7 +55,7 @@ public static class FlyingMinionSystem
             .Iter(ExecuteFlyingMinionMovement);
 
         // 2. 受動的物理・境界制限システム：静止待機中も含め全浮遊怪のノックバック外力と位置拘束を更新
-        world.System<Transform, Velocity, CollisionBox>("FlyingMinionPhysicsSystem")
+        world.System<Transform, Velocity>("FlyingMinionPhysicsSystem")
             .With<FlyingMinionTag>()
             .With<MinionTag>()
             .Without<DeadTag>()
@@ -162,8 +162,7 @@ public static class FlyingMinionSystem
     private static void ExecuteFlyingMinionPhysics(
         Iter it,
         Field<Transform> transforms,
-        Field<Velocity> velocities,
-        Field<CollisionBox> collisionBoxes)
+        Field<Velocity> velocities)
     {
         var count = it.Count();
         if (count == 0) return;

@@ -44,12 +44,7 @@ public sealed class HurtboxSpatialResource : IDisposable
 /// </summary>
 public static class HurtboxSpatialIndexSystem
 {
-    /// <summary>
-    ///     指定されたワールドから受撃ボックス空間ハッシュインデックスを取得します。
-    /// </summary>
-    /// <param name="world">対象の Flecs.NET ワールド</param>
-    /// <returns>受撃ボックス空間ハッシュインデックス</returns>
-    public static HurtboxSpatialIndex GetSpatialIndex(World world) => world.Get<HurtboxSpatialResource>().Index;
+
 
     /// <summary>
     ///     空間ハッシュ登録システムを Flecs.NET ワールドへ登録します。

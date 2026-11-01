@@ -10,7 +10,4 @@ public struct HitboxLifetime(float duration)
 
     /// <summary>生成からの経過時間秒単位。</summary>
     public float ElapsedTimer = 0.0f;
-
-    /// <summary>持続時間が満了したか否かを取得します。</summary>
-    public readonly bool IsFinished => ElapsedTimer >= Duration;
 }

@@ -11,9 +11,6 @@ public sealed class DamageInbox
     public readonly HitEvent[] Buffer = new HitEvent[DefaultCapacity];
     private int _count;
 
-    /// <summary>本フレームで蓄積されたイベント総数。</summary>
-    public int Count => _count;
-
     /// <summary>
     ///     バッファへ被弾イベントを無ロックで追記します。
     /// </summary>

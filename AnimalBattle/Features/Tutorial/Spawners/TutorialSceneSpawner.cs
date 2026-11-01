@@ -23,7 +23,7 @@ public static class TutorialSceneSpawner
     {
         Teardown(world);
 
-        var root = world.Entity(RootName).Add<TutorialSceneTag>();
+        var root = world.Entity(RootName);
         var assets = world.Get<IAssetManager>();
 
         // 1. 自機エンティティの生成

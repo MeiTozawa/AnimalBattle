@@ -35,14 +35,6 @@ public static class TutorialRenderSystem
         return world;
     }
 
-    /// <summary>
-    ///     チュートリアル描画システム群（環境＆UI）を一括登録します。
-    /// </summary>
-    public static World AddTutorialRenderSystem(this World world)
-    {
-        return world.AddTutorialEnvironmentRenderSystem()
-                    .AddTutorialUiRenderSystem();
-    }
 
     /// <summary>
     ///     チュートリアル環境（目標物・神殿石門・Boss動態）の描画パイプライン（自機より背面に配置）。

@@ -43,7 +43,7 @@ public static class MinionSpawner
         // 出現バッファ設定の適用：接触判定無効化および行動阻害タグの付与
         if (isBuffer)
         {
-            entity.Set(new SpawnBufferState(gCfg.SpawnBufferDuration, gCfg.SpawnBufferCanMove));
+            entity.Set(new SpawnBufferState(gCfg.SpawnBufferDuration));
             entity.Add<CannotAttackTag>();
             if (!gCfg.SpawnBufferCanMove)
             {
@@ -104,7 +104,7 @@ public static class MinionSpawner
         // 出現バッファ設定の適用：接触判定無効化および行動阻害タグの付与
         if (isBuffer)
         {
-            entity.Set(new SpawnBufferState(fCfg.SpawnBufferDuration, fCfg.SpawnBufferCanMove));
+            entity.Set(new SpawnBufferState(fCfg.SpawnBufferDuration));
             entity.Add<CannotAttackTag>();
             if (!fCfg.SpawnBufferCanMove)
             {

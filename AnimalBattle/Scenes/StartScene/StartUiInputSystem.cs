@@ -106,7 +106,6 @@ public static class StartUiInputSystem
 
             // --- 4. 「ゲーム開始」ボタン判定 ---
             uiState.IsStartGameHovered = startGameBounds.Contains(mousePos.X, mousePos.Y);
-            uiState.IsConfirmHovered = uiState.IsStartGameHovered;
 
             // --- 5. 画面遷移判定 ---
             if ((uiState.IsStartGameHovered && isClick) || isConfirmKey)
