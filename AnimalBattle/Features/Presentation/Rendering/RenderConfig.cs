@@ -81,9 +81,6 @@ public sealed class BossEffectsRenderConfig {
     /// <summary>易傷マーカー浮動揺れ振幅 ピクセル単位</summary>
     public float ChanceMarkerBobbingAmplitude { get; set; }
 
-    /// <summary>易傷マーカー文字 1 文字あたりの推定幅 ピクセル単位</summary>
-    public int ChanceMarkerCharWidth { get; set; }
-
     /// <summary>無敵・フェーズ遷移シールドの基準半径 ピクセル単位</summary>
     public float InvincibleShieldRadius { get; set; }
 
@@ -622,56 +619,14 @@ public sealed class BulletRenderConfig {
 }
 
 /// <summary>
-///     左上 HUD 操作案内テキストの 1 行：テキストと色を表す設定クラス。
-/// </summary>
-public sealed class HudTextItem {
-    /// <summary>案内テキスト文字列</summary>
-    public string Text { get; set; } = string.Empty;
-
-    private Color _color;
-
-    /// <summary>文字色 Hex 文字列</summary>
-    [ConfigurationKeyName("Color")]
-    public string ColorHex
-    {
-        get => string.Empty;
-        set { _color = value.ToColor(); }
-    }
-
-    /// <summary>文字色 <see cref="Color" /></summary>
-    public Color Color => _color;
-}
-
-/// <summary>
 ///     左上 HUD 操作案内表示の設定クラス。
 /// </summary>
 public sealed class HudRenderConfig {
     /// <summary>タイトル表示座標</summary>
     public Vec2i TitlePos { get; set; }
 
-    private Color _titleColor;
-
-    /// <summary>タイトル文字色 Hex 文字列</summary>
-    [ConfigurationKeyName("TitleColor")]
-    public string TitleColorHex
-    {
-        get => string.Empty;
-        set { _titleColor = value.ToColor(); }
-    }
-
-    /// <summary>タイトル文字色 <see cref="Color" /></summary>
-    public Color TitleColor => _titleColor;
-
-    /// <summary>タイトル文字列</summary>
-    public string TitleText { get; set; } = string.Empty;
-
     /// <summary>行間隔ピクセル</summary>
     public int LineSpacing { get; set; }
-
-    /// <summary>
-    ///     操作案内テキスト項目のリスト。
-    /// </summary>
-    public List<HudTextItem> Text { get; set; } = [];
 
     /// <summary>Boss 切り替え操作案内テキスト</summary>
     public string BossSwitchGuideText { get; set; } = string.Empty;
@@ -739,67 +694,6 @@ public sealed class HudRenderConfig {
 
     /// <summary>プレイヤー HP 表示座標</summary>
     public Vec2i PlayerHpPos { get; set; }
-
-    /// <summary>プレイヤー HP 表示ラベル文字列</summary>
-    public string PlayerHpText { get; set; } = string.Empty;
-
-    private Color _playerHpHighColor;
-
-    /// <summary>プレイヤー HP 高：3以上文字色 Hex 文字列</summary>
-    [ConfigurationKeyName("PlayerHpHighColor")]
-    public string PlayerHpHighColorHex
-    {
-        get => string.Empty;
-        set { _playerHpHighColor = value.ToColor(); }
-    }
-
-    /// <summary>プレイヤー HP 高：3以上文字色 <see cref="Color" /></summary>
-    public Color PlayerHpHighColor => _playerHpHighColor;
-
-    private Color _playerHpMidColor;
-
-    /// <summary>プレイヤー HP 中：2文字色 Hex 文字列</summary>
-    [ConfigurationKeyName("PlayerHpMidColor")]
-    public string PlayerHpMidColorHex
-    {
-        get => string.Empty;
-        set { _playerHpMidColor = value.ToColor(); }
-    }
-
-    /// <summary>プレイヤー HP 中：2文字色 <see cref="Color" /></summary>
-    public Color PlayerHpMidColor => _playerHpMidColor;
-
-    private Color _playerHpLowColor;
-
-    /// <summary>プレイヤー HP 低：1文字色 Hex 文字列</summary>
-    [ConfigurationKeyName("PlayerHpLowColor")]
-    public string PlayerHpLowColorHex
-    {
-        get => string.Empty;
-        set { _playerHpLowColor = value.ToColor(); }
-    }
-
-    /// <summary>プレイヤー HP 低：1文字色 <see cref="Color" /></summary>
-    public Color PlayerHpLowColor => _playerHpLowColor;
-
-    private Color _playerHpDeadColor;
-
-    /// <summary>プレイヤー HP 死亡：0文字色 Hex 文字列</summary>
-    [ConfigurationKeyName("PlayerHpDeadColor")]
-    public string PlayerHpDeadColorHex
-    {
-        get => string.Empty;
-        set { _playerHpDeadColor = value.ToColor(); }
-    }
-
-    /// <summary>プレイヤー HP 死亡：0文字色 <see cref="Color" /></summary>
-    public Color PlayerHpDeadColor => _playerHpDeadColor;
-
-    /// <summary>プレイヤー HP 高判定閾値比率</summary>
-    public float PlayerHpHighThreshold { get; set; }
-
-    /// <summary>プレイヤー HP 中判定閾値比率</summary>
-    public float PlayerHpMidThreshold { get; set; }
 
     private Color _trainingModeTitleColor;
 
@@ -1081,9 +975,6 @@ public sealed class BossHpBarRenderConfig {
 
     /// <summary>Boss タイトル文字色 <see cref="Color" /></summary>
     public Color TitleColor => _titleColor;
-
-    /// <summary>HP 数値テキストの右端 X 軸オフセット BarPos2.Xから左方向へのオフセット</summary>
-    public int HpTextOffsetRight { get; set; }
 
     /// <summary>HP 数値テキストの Y 軸オフセット BarPos1.Yから上方向へのオフセット。未指定時はHeaderOffsetYを使用</summary>
     public int HpTextOffsetY { get; set; }
@@ -1520,9 +1411,6 @@ public sealed class DebugRenderConfig {
     /// <summary>中立陣営当たり判定色 <see cref="Color" /></summary>
     public Color NeutralHitboxColor => _neutralHitboxColor;
 
-    /// <summary>自機デバッグ情報テキスト表示オフセット ピクセル単位</summary>
-    public Vec2i PlayerInfoOffset { get; set; }
-
     /// <summary>点衝突形状描画半径 ピクセル単位</summary>
     public int PointShapeRadius { get; set; }
 
@@ -1919,8 +1807,6 @@ public sealed class SlashEffectRenderConfig {
     public float BossBaseReferenceSize { get; set; }
     public float PlayerBaseReferenceSize { get; set; }
     public float CenterBiasOffset { get; set; }
-    public float PlayerSlashAlpha { get; set; }
-
     private Color _playerSlashColor;
 
     /// <summary>自機近接斬撃エフェクト色 Hex 文字列</summary>

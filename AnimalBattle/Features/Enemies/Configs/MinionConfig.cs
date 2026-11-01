@@ -172,9 +172,6 @@ public sealed class MinionHpBarConfig
     /// <summary>外枠の内側余白。単位はピクセル。</summary>
     public int BorderPadding { get; set; }
 
-    /// <summary>低HP警告表示に切り替える残HP割合の閾値。0.0から1.0の範囲。</summary>
-    public float LowHpThreshold { get; set; }
-
     private Color _bgColor;
 
     /// <summary>背景色のHex文字列。</summary>

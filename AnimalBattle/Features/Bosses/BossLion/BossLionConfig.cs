@@ -39,9 +39,6 @@ public sealed class BossLionPhaseConfig {
 ///     Config/boss_lion.toml から読み込まれる BossLion の基本パラメータおよび各フェーズの FSM 設定クラス。
 /// </summary>
 public sealed class BossLionConfig : BaseBossConfig {
-    /// <summary>近接斬撃エフェクトの基準前方生成オフセット Vec2f型</summary>
-    public Vec2f SlashSpawnOffset { get; set; }
-
     /// <summary>基本地面移動速度</summary>
     public float MoveSpeed { get; set; }
 
@@ -68,9 +65,6 @@ public sealed class BossLionConfig : BaseBossConfig {
 
     /// <summary>跳躍離陸点判定距離ピクセル単位</summary>
     public float TakeoffDistance { get; set; }
-
-    /// <summary>離陸地点への移動タイムアウト時間秒単位</summary>
-    public float MoveToTakeoffTimeout { get; set; }
 
     /// <summary>離陸横速度閾値ピクセル毎秒単位</summary>
     public float TakeoffVelocityThreshold { get; set; }

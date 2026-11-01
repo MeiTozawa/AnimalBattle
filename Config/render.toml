@@ -29,7 +29,6 @@ VulnerableAuraPulseAlpha = 110
 VulnerableAuraScale = 1.04
 ChanceMarkerBobbingSpeed = 8.0
 ChanceMarkerBobbingAmplitude = 4.0
-ChanceMarkerCharWidth = 7
 
 # 無敵・フェーズ遷移シールド設定
 InvincibleShieldRadius = 54.0
@@ -143,8 +142,6 @@ BulletBlackOutlineColor = "#FF1744"
 
 [Hud]
 TitlePos = { x = 20, y = 16 }
-TitleColor = "#FFD700"
-TitleText = "=== BULLET BATTLE ==="
 
 LineSpacing = 18
 Text = [
@@ -170,13 +167,6 @@ DoubleJumpActiveColor = "#00E5FF"
 DoubleJumpInactiveColor = "#888888"
 
 PlayerHpPos = { x = 20, y = 188 }
-PlayerHpText = "PLAYER HP:  "
-PlayerHpHighColor = "#00FF88"
-PlayerHpMidColor = "#FFD700"
-PlayerHpLowColor = "#FF3333"
-PlayerHpDeadColor = "#888888"
-PlayerHpHighThreshold = 0.66
-PlayerHpMidThreshold = 0.33
 
 [PlayerHpBadge]
 Origin = { x = 44, y = 56 }
@@ -236,7 +226,6 @@ TitleColor = "#FFD700"
 
 StateBadgeOffset = { x = 0, y = 35 }
 
-HpTextOffsetRight = 100
 HpTextOffsetY = 22
 HpTextColor = "#FFFFFF"
 
@@ -309,7 +298,6 @@ BossBulletHitboxColor = "#FFD700"
 PlayerBulletHitboxColor = "#00FFFF"
 PlatformHitboxColor = "#88CCFF"
 NeutralHitboxColor = "#888888"
-PlayerInfoOffset = { x = -10, y = -16 }
 PointShapeRadius = 2
 NavNodeColor = "#00E5FF"
 NavEdgeDropColor = "#FFD700"
@@ -359,5 +347,4 @@ SpriteCellSize = 64
 BossBaseReferenceSize = 28.0
 PlayerBaseReferenceSize = 36.0
 CenterBiasOffset = -18.0
-PlayerSlashAlpha = 255.0
 PlayerSlashColor = "#FFF0C8"

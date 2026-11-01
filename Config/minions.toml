@@ -69,7 +69,6 @@ Width = 100.0
 Height = 6.0
 OffsetY = 12.0
 BorderPadding = 1
-LowHpThreshold = 0.3
 BgColor = "#1A1A1A"
 BorderColor = "#333333"
 FillColor = "#2ECC71"

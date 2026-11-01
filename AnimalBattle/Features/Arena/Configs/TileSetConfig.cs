@@ -37,9 +37,6 @@ public sealed class TileSetConfig {
     /// <summary>衝突判定 右下 Y 座標</summary>
     public int CollisionY2 { get; set; }
 
-    /// <summary>衝突判定領域の幅</summary>
-    public int CollisionWidth => CollisionX2 - CollisionX1;
-
     /// <summary>衝突判定領域の高さ</summary>
     public int CollisionHeight => CollisionY2 - CollisionY1;
 }

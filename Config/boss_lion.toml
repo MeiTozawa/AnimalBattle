@@ -1,5 +1,4 @@
 # Boss Lion Base Attributes
-BossName = "BossLion"
 MaxHp = 120.0
 Spawn = { x = 900.0, y = 480.0 }
 # 出現バッファ時間（秒、この間は攻撃・接触無効）および移動許可フラグ
@@ -27,9 +26,6 @@ BodyContactDamage = 1.0
 # Terrain Collision Box
 CollisionSize = { x = 70.0, y = 90.0 }
 
-# Melee Attack Spawn Point Offset
-SlashSpawnOffset = { x = 80.0, y = -10.0 }
-
 # 物理運動および外力制限設定
 CanBeKnockedBack = false
 KnockbackDeceleration = 1200.0
@@ -46,7 +42,6 @@ MaxFallSpeed = 850.0
 MaxAscentDuration = 0.80
 LandingRecoveryDuration = 0.10
 TakeoffDistance = 50.0
-MoveToTakeoffTimeout = 1.5
 TakeoffVelocityThreshold = 5.0
 MoveThreshold = 6.0
 JumpCooldownDuration = 1.0

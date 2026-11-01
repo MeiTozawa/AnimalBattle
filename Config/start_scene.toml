@@ -10,14 +10,6 @@ Size = { x = 280, y = 390 }
 Pos = { x = 680, y = 140 }
 Size = { x = 280, y = 390 }
 
-[Layout.BossSnakeCard]
-Pos = { x = 0, y = 0 }
-Size = { x = 0, y = 0 }
-
-[Layout.BossLionCard]
-Pos = { x = 0, y = 0 }
-Size = { x = 0, y = 0 }
-
 [Layout.StartGameButton]
 Pos = { x = 480, y = 575 }
 Size = { x = 320, y = 60 }
@@ -31,35 +23,20 @@ BoxSize = 18
 Pos = { x = 480, y = 575 }
 Size = { x = 320, y = 60 }
 
-[Layout.StartTutorialButton]
-Pos = { x = 320, y = 560 }
-Size = { x = 280, y = 60 }
-
-[Layout.SkipTutorialButton]
-Pos = { x = 680, y = 560 }
-Size = { x = 280, y = 60 }
-
 [Layout]
 HeaderTitlePos = { x = 450, y = 40 }
 PlayerHeaderPos = { x = 440, y = 95 }
-BossHeaderPos = { x = 0, y = 0 }
 HintTextPos = { x = 340, y = 650 }
-ConfirmBtnTextOffset = { x = 35, y = 20 }
 CardTitleOffset = { x = 20, y = 20 }
 CardTagOffset = { x = 15, y = 55 }
 CardBadgeBottomOffset = 65
 CardBadgeLeftOffset = 30
-CardDescBottomOffset = 35
-CardDescLeftOffset = 10
 PreviewCenterOffsetY = 180
 
 [Colors]
-BgColor = "#12141C"
 CardBgColor = "#1C202D"
-CardHoverBgColor = "#262C3E"
 BorderDefaultColor = "#464E64"
 PlayerSelectedColor = "#32C8F0"
-BossSelectedColor = "#F05050"
 ConfirmBtnDefaultColor = "#234B78"
 ConfirmBtnHoverColor = "#3282D2"
 ConfirmBtnBorderDefaultColor = "#3C78B4"
@@ -74,53 +51,21 @@ DefaultEnableTutorial = true
 [Texts]
 HeaderTitle = "ANIMAL BATTLE - プレイヤー選択"
 PlayerHeader = "【 操作キャラクターを選択してください 】"
-BossHeader = ""
 HintText = "※ マウスで選択 / [ENTER] ゲーム開始 / [T] チュートリアル切替"
 ConfirmButton = "【 ゲーム開始 】"
 StartGameButton = "【 ゲーム開始 】"
 TutorialCheckbox = "チュートリアルを有効にする"
-StartTutorialButton = "【 チュートリアル開始 】"
-SkipTutorialButton = "【 チュートリアルをスキップ 】"
 SelectedBadge = "[ 選択中 - SELECTED ]"
 UnselectedBadge = "[ クリックで選択 ]"
 
 [Texts.Cat]
 Title = "キャット"
 Tag = "【 遠距離攻撃 / 射撃 】"
-Description = ""
 
 [Texts.Bunny]
 Title = "バニー"
 Tag = "【 近接攻撃 / 斬撃 】"
-Description = ""
-
-[Texts.BossSnake]
-Title = "ボス スネーク"
-Tag = "【 飛行浮遊 & 全方位弾幕 】"
-Description = ""
-
-[Texts.BossLion]
-Title = "ボス ライオン"
-Tag = "【 突撃突進 & 衝撃波重撃 】"
-Description = ""
 
 [Motion]
 StepFrequency = 14.0
 StepAmplitude = 4.0
-BossSnakeFlyFrequency = 5.0
-BossSnakeFlyAmplitude = 10.0
-BossSnakeFlyOffsetY = -35.0
-BossSnakeTiltFrequency = 2.5
-BossSnakeTiltAmplitude = 0.05
-BossSnakeScale = 0.65
-BossSnakeFlyDecaySpeed = 2.0
-BossLionSlamCycleDuration = 1.1
-BossLionRiseDuration = 0.25
-BossLionRiseHeight = -45.0
-BossLionRiseScale = 0.95
-BossLionSlamDuration = 0.10
-BossLionSlamScale = 0.98
-BossLionImpactDuration = 0.15
-BossLionImpactShakeFreq = 4.0
-BossLionImpactShakeAmplitude = 2.0
-BossLionBaseScale = 0.65

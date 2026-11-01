@@ -21,8 +21,6 @@ PedestalHeight = 22
 PedestalExtraWidth = 32
 InteractionRadius = 160.0
 PreviewScale = { x = 0.55, y = 0.55 }
-PreviewBobFrequency = 4.5
-PreviewBobAmplitude = 6.0
 TooltipOffsetY = -30
 TooltipSize = { x = 160, y = 30 }
 
@@ -42,7 +40,6 @@ RuneSymbols = "✦ ∿ ◈ ∿ ✦"
 RuneColorIdle = "#205565"
 RuneColorActive = "#50F5D5"
 AuraColor = "#30E0B0"
-AuraType = "FloatOrbs"
 MotionSpeed = 3.2
 MotionAmplitude = 8.0
 
@@ -56,7 +53,6 @@ RuneSymbols = "▲ ⚡ ◆ ⚡ ▲"
 RuneColorIdle = "#653518"
 RuneColorActive = "#FFA530"
 AuraColor = "#FF4520"
-AuraType = "GroundSlam"
 MotionSpeed = 0.3333
 MotionAmplitude = 46.0
 

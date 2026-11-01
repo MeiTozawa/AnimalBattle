@@ -6,9 +6,6 @@ namespace AnimalBattle.Configs;
 ///     派生 Boss の基本幾何形状・物理パラメータ・当たり判定生成を一元管理する共通基底設定クラス。
 /// </summary>
 public abstract class BaseBossConfig {
-    /// <summary>Boss 表示名</summary>
-    public string BossName { get; set; }
-
     /// <summary>Boss の最大 HP</summary>
     public float MaxHp { get; set; }
 

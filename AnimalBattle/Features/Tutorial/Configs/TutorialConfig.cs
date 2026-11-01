@@ -83,7 +83,6 @@ public sealed class TutorialDoorItemConfig
     public string AuraColorHex { get => string.Empty; set => _auraColor = value.ToColor(); }
     public Color AuraColor => _auraColor;
 
-    public string AuraType { get; set; } = string.Empty;
     public float MotionSpeed { get; set; }
     public float MotionAmplitude { get; set; }
 }
@@ -103,8 +102,6 @@ public sealed class TutorialDoorsConfig
     public Vec2i TooltipSize { get; set; }
 
     public Vec2f PreviewScale { get; set; }
-    public float PreviewBobFrequency { get; set; }
-    public float PreviewBobAmplitude { get; set; }
 
     private Color _stoneBase;
     [ConfigurationKeyName("StoneBase")]

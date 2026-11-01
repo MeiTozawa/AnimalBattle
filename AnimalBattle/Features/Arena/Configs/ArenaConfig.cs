@@ -60,9 +60,6 @@ public sealed class NavigationGraphConfig {
     /// <summary>足場端からの段差下落時、下方足場への着地予測点を外側へオフセットする距離ピクセル単位</summary>
     public float DropLandingOffsetX { get; set; }
 
-    /// <summary>跳躍最高到達時間に対する滞空許容時間倍率</summary>
-    public float JumpWindowTimeMultiplier { get; set; }
-
     /// <summary>滞空水平移動速度の最小許容倍率：巡航速度比</summary>
     public float MinJumpVxRatio { get; set; }
 

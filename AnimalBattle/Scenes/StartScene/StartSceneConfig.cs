@@ -37,7 +37,6 @@ public sealed class StartSceneOptionsConfig {
 public sealed class StartSceneCardTextConfig {
     public string Title { get; set; } = string.Empty;
     public string Tag { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -46,11 +45,8 @@ public sealed class StartSceneCardTextConfig {
 public sealed class StartSceneTextsConfig {
     public string HeaderTitle { get; set; } = string.Empty;
     public string PlayerHeader { get; set; } = string.Empty;
-    public string BossHeader { get; set; } = string.Empty;
     public string HintText { get; set; } = string.Empty;
     public string ConfirmButton { get; set; } = string.Empty;
-    public string StartTutorialButton { get; set; } = string.Empty;
-    public string SkipTutorialButton { get; set; } = string.Empty;
     public string StartGameButton { get; set; } = string.Empty;
     public string TutorialCheckbox { get; set; } = string.Empty;
     public string SelectedBadge { get; set; } = string.Empty;
@@ -58,8 +54,6 @@ public sealed class StartSceneTextsConfig {
 
     public StartSceneCardTextConfig Cat { get; set; } = new();
     public StartSceneCardTextConfig Bunny { get; set; } = new();
-    public StartSceneCardTextConfig BossSnake { get; set; } = new();
-    public StartSceneCardTextConfig BossLion { get; set; } = new();
 }
 
 /// <summary>
@@ -68,25 +62,6 @@ public sealed class StartSceneTextsConfig {
 public sealed class StartSceneMotionConfig {
     public float StepFrequency { get; set; }
     public float StepAmplitude { get; set; }
-
-    public float BossSnakeFlyFrequency { get; set; }
-    public float BossSnakeFlyAmplitude { get; set; }
-    public float BossSnakeFlyOffsetY { get; set; }
-    public float BossSnakeTiltFrequency { get; set; }
-    public float BossSnakeTiltAmplitude { get; set; }
-    public double BossSnakeScale { get; set; }
-    public float BossSnakeFlyDecaySpeed { get; set; }
-
-    public float BossLionSlamCycleDuration { get; set; }
-    public float BossLionRiseDuration { get; set; }
-    public float BossLionRiseHeight { get; set; }
-    public double BossLionRiseScale { get; set; }
-    public float BossLionSlamDuration { get; set; }
-    public double BossLionSlamScale { get; set; }
-    public float BossLionImpactDuration { get; set; }
-    public float BossLionImpactShakeFreq { get; set; }
-    public float BossLionImpactShakeAmplitude { get; set; }
-    public double BossLionBaseScale { get; set; }
 }
 
 /// <summary>
@@ -95,27 +70,18 @@ public sealed class StartSceneMotionConfig {
 public sealed class StartSceneLayoutConfig {
     public CardLayoutConfig CatCard { get; set; } = new();
     public CardLayoutConfig BunnyCard { get; set; } = new();
-    public CardLayoutConfig BossSnakeCard { get; set; } = new();
-    public CardLayoutConfig BossLionCard { get; set; } = new();
     public CardLayoutConfig ConfirmButton { get; set; } = new();
-    public CardLayoutConfig StartTutorialButton { get; set; } = new();
-    public CardLayoutConfig SkipTutorialButton { get; set; } = new();
     public CardLayoutConfig StartGameButton { get; set; } = new();
     public StartSceneCheckboxLayoutConfig TutorialCheckbox { get; set; } = new();
 
     public Vec2i HeaderTitlePos { get; set; }
     public Vec2i PlayerHeaderPos { get; set; }
-    public Vec2i BossHeaderPos { get; set; }
     public Vec2i HintTextPos { get; set; }
-
-    public Vec2i ConfirmBtnTextOffset { get; set; }
 
     public Vec2i CardTitleOffset { get; set; }
     public Vec2i CardTagOffset { get; set; }
     public int CardBadgeBottomOffset { get; set; }
     public int CardBadgeLeftOffset { get; set; }
-    public int CardDescBottomOffset { get; set; }
-    public int CardDescLeftOffset { get; set; }
     public int PreviewCenterOffsetY { get; set; }
 }
 
@@ -123,15 +89,6 @@ public sealed class StartSceneLayoutConfig {
 ///     StartScene の配色パレット設定クラス。
 /// </summary>
 public sealed class StartSceneColorsConfig {
-    private Color _bgColor;
-    [ConfigurationKeyName("BgColor")]
-    public string BgColorHex
-    {
-        get => string.Empty;
-        set { _bgColor = value.ToColor(); }
-    }
-    public Color BgColor => _bgColor;
-
     private Color _cardBgColor;
     [ConfigurationKeyName("CardBgColor")]
     public string CardBgColorHex
@@ -140,15 +97,6 @@ public sealed class StartSceneColorsConfig {
         set { _cardBgColor = value.ToColor(); }
     }
     public Color CardBgColor => _cardBgColor;
-
-    private Color _cardHoverBgColor;
-    [ConfigurationKeyName("CardHoverBgColor")]
-    public string CardHoverBgColorHex
-    {
-        get => string.Empty;
-        set { _cardHoverBgColor = value.ToColor(); }
-    }
-    public Color CardHoverBgColor => _cardHoverBgColor;
 
     private Color _borderDefaultColor;
     [ConfigurationKeyName("BorderDefaultColor")]
@@ -167,15 +115,6 @@ public sealed class StartSceneColorsConfig {
         set { _playerSelectedColor = value.ToColor(); }
     }
     public Color PlayerSelectedColor => _playerSelectedColor;
-
-    private Color _bossSelectedColor;
-    [ConfigurationKeyName("BossSelectedColor")]
-    public string BossSelectedColorHex
-    {
-        get => string.Empty;
-        set { _bossSelectedColor = value.ToColor(); }
-    }
-    public Color BossSelectedColor => _bossSelectedColor;
 
     private Color _confirmBtnDefaultColor;
     [ConfigurationKeyName("ConfirmBtnDefaultColor")]

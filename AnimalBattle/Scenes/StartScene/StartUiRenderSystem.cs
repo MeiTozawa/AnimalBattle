@@ -151,7 +151,6 @@ public static class StartUiRenderSystem
         var badgeText = isSelected ? texts.SelectedBadge : texts.UnselectedBadge;
         var badgeColor = isSelected ? selectColor : colors.TextMuted;
         GameEngine.DrawLeftString(new Vec2i(bounds.Left + layout.CardBadgeLeftOffset, bounds.Bottom - layout.CardBadgeBottomOffset), badgeText, badgeColor);
-        GameEngine.DrawLeftString(new Vec2i(bounds.Left + layout.CardDescLeftOffset, bounds.Bottom - layout.CardDescBottomOffset), cardText.Description, colors.TextMuted);
     }
 
     private static void DrawActionButton(

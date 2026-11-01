@@ -3,7 +3,6 @@ Type = "RangedWeapon"
 Cooldown = 0.24
 BulletSpeed = 960.0
 BulletSpawnOffset = { x = 24.0, y = -4.0 }
-BulletHitboxShape = "Box"
 BulletSize = { x = 12.0, y = 8.0 }
 BulletDamage = 1.0
 

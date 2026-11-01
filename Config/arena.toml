@@ -30,7 +30,6 @@ PlatformEdgeMargin = 15.0
 OverlapTakeoffOffsetX = 25.0
 OverlapLandingOffsetX = 35.0
 DropLandingOffsetX = 35.0
-JumpWindowTimeMultiplier = 1.5
 MinJumpVxRatio = 0.8
 MaxJumpVxRatio = 1.5
 JumpCostBase = 40.0
