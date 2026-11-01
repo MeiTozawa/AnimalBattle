@@ -54,7 +54,7 @@ public sealed class AssetPathResolver(string? baseDirectory = null) : IAssetPath
 
     private static string? FindAssetFile(string rootDir, string relPath)
     {
-        var directResource = Path.Combine(rootDir, "Resource", relPath);
+        var directResource = Path.Combine(rootDir, ResourcePath.ResourceDirectory, relPath);
         if (File.Exists(directResource)) return Path.GetFullPath(directResource);
 
         var directCandidate = Path.Combine(rootDir, relPath);

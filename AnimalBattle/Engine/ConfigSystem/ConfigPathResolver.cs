@@ -1,10 +1,12 @@
+using AnimalBattle.Asset;
+
 namespace AnimalBattle.Configs;
 
 /// <summary>
 /// 実行時ディレクトリおよびリソースディレクトリから設定パスを探索する標準リゾルバー。
 /// </summary>
 public sealed class ConfigPathResolver(string? baseDirectory = null) : IConfigPathResolver {
-    private static readonly string[] _configSubDirs = ["Config", "Resource", ""];
+    private static readonly string[] _configSubDirs = [ResourcePath.ConfigDirectory, ResourcePath.ResourceDirectory, ""];
     private readonly string _baseDir = baseDirectory ?? AppDomain.CurrentDomain.BaseDirectory;
 
     /// <summary>

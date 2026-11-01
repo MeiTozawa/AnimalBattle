@@ -39,7 +39,6 @@ def _to_pascal(text: str) -> str:
 def _file_to_identifier(file_name: str) -> list[str]:
     """
     ファイル名から C# 定数名（PascalCase）のリストを生成する。
-    エイリアスが必要な場合は複数返す。
     """
     p = Path(file_name)
     stem = p.stem
@@ -55,15 +54,10 @@ def _file_to_identifier(file_name: str) -> list[str]:
             identifiers.append(f"{_to_pascal(rest)}{ext}")
         else:
             # 027_3 などの数字のみのパターン
-            identifiers.append(f"Character{num}{ext}")
             identifiers.append(f"Character{num}_{_to_pascal(rest)}{ext}")
     elif re.match(r"^\d", stem):
         # 先頭が数字
         identifiers.append(f"Character{_to_pascal(stem)}{ext}")
-        if "_" in stem:
-            # 027_3 -> Character027Png
-            base_num = stem.split("_")[0]
-            identifiers.append(f"Character{base_num}{ext}")
     else:
         name = _to_pascal(stem)
         identifiers.append(f"{name}{ext}")
@@ -129,8 +123,6 @@ def generate_code() -> str:
         lines.append(f"    /// </summary>")
         lines.append(f"    public static class {class_name}")
         lines.append(f"    {{")
-        lines.append(f'        /// <summary>{subdir_name} リソースフォルダの相対パス。</summary>')
-        lines.append(f'        public const string Directory = @"{subdir_name}";')
 
         files = _scan_directory(subdir_path)
         defined_keys: set[str] = set()
@@ -156,28 +148,14 @@ def generate_code() -> str:
     lines.append("    /// </summary>")
     lines.append("    public static class Config")
     lines.append("    {")
-    lines.append('        /// <summary>設定ファイルルートディレクトリ名。</summary>')
-    lines.append('        public const string Directory = @"Config";')
 
     config_files = _scan_directory(_CONFIG_ROOT)
-    # まずファイル名定数（Arena = "arena.toml" など）
     for file_path in config_files:
         stem_name = _to_pascal(file_path.stem)
         safe_name = html.escape(file_path.name)
         lines.append("")
         lines.append(f'        /// <summary>{safe_name} 設定ファイル名。</summary>')
         lines.append(f'        public const string {stem_name} = "{file_path.name}";')
-
-    # 次に相対パス定数（ArenaToml = @"Config\arena.toml" など）
-    for file_path in config_files:
-        rel_file_path = f"Config\\{file_path.name}"
-        stem_name = _to_pascal(file_path.stem)
-        ext = file_path.suffix.lstrip(".").capitalize()
-        const_name = f"{stem_name}{ext}"
-        safe_name = html.escape(file_path.name)
-        lines.append("")
-        lines.append(f'        /// <summary>{safe_name} の相対パス。</summary>')
-        lines.append(f'        public const string {const_name} = @"{rel_file_path}";')
 
     lines.append("    }")
     lines.append("")

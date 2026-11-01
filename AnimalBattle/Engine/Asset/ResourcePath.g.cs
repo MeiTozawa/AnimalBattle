@@ -18,23 +18,12 @@ public static class ResourcePath
     /// </summary>
     public static class Characters
     {
-        /// <summary>Characters リソースフォルダの相対パス。</summary>
-        public const string Directory = @"Characters";
-
-        /// <summary>016_3.png のファイルパス。</summary>
-        public const string Character016Png = @"Characters\016_3.png";
 
         /// <summary>016_3.png のファイルパス。</summary>
         public const string Character016_3Png = @"Characters\016_3.png";
 
         /// <summary>027_3.png のファイルパス。</summary>
-        public const string Character027Png = @"Characters\027_3.png";
-
-        /// <summary>027_3.png のファイルパス。</summary>
         public const string Character027_3Png = @"Characters\027_3.png";
-
-        /// <summary>031_3.png のファイルパス。</summary>
-        public const string Character031Png = @"Characters\031_3.png";
 
         /// <summary>031_3.png のファイルパス。</summary>
         public const string Character031_3Png = @"Characters\031_3.png";
@@ -72,8 +61,6 @@ public static class ResourcePath
     /// </summary>
     public static class Platform
     {
-        /// <summary>Platform リソースフォルダの相対パス。</summary>
-        public const string Directory = @"Platform";
 
         /// <summary>sheet.png のファイルパス。</summary>
         public const string SheetPng = @"Platform\sheet.png";
@@ -84,8 +71,6 @@ public static class ResourcePath
     /// </summary>
     public static class Sound
     {
-        /// <summary>Sound リソースフォルダの相対パス。</summary>
-        public const string Directory = @"Sound";
 
         /// <summary>bgm_battle.mp3 のファイルパス。</summary>
         public const string BgmBattleMp3 = @"Sound\bgm_battle.mp3";
@@ -138,8 +123,6 @@ public static class ResourcePath
     /// </summary>
     public static class Config
     {
-        /// <summary>設定ファイルルートディレクトリ名。</summary>
-        public const string Directory = @"Config";
 
         /// <summary>arena.toml 設定ファイル名。</summary>
         public const string Arena = "arena.toml";
@@ -197,63 +180,6 @@ public static class ResourcePath
 
         /// <summary>tutorial.toml 設定ファイル名。</summary>
         public const string Tutorial = "tutorial.toml";
-
-        /// <summary>arena.toml の相対パス。</summary>
-        public const string ArenaToml = @"Config\arena.toml";
-
-        /// <summary>audio.toml の相対パス。</summary>
-        public const string AudioToml = @"Config\audio.toml";
-
-        /// <summary>boss_lion.toml の相対パス。</summary>
-        public const string BossLionToml = @"Config\boss_lion.toml";
-
-        /// <summary>boss_lion_patterns.toml の相対パス。</summary>
-        public const string BossLionPatternsToml = @"Config\boss_lion_patterns.toml";
-
-        /// <summary>boss_snake.toml の相対パス。</summary>
-        public const string BossSnakeToml = @"Config\boss_snake.toml";
-
-        /// <summary>boss_snake_patterns.toml の相対パス。</summary>
-        public const string BossSnakePatternsToml = @"Config\boss_snake_patterns.toml";
-
-        /// <summary>bunny.toml の相対パス。</summary>
-        public const string BunnyToml = @"Config\bunny.toml";
-
-        /// <summary>BunnyWeapon.toml の相対パス。</summary>
-        public const string BunnyweaponToml = @"Config\BunnyWeapon.toml";
-
-        /// <summary>camera.toml の相対パス。</summary>
-        public const string CameraToml = @"Config\camera.toml";
-
-        /// <summary>cat.toml の相対パス。</summary>
-        public const string CatToml = @"Config\cat.toml";
-
-        /// <summary>CatWeapon.toml の相対パス。</summary>
-        public const string CatweaponToml = @"Config\CatWeapon.toml";
-
-        /// <summary>combat.prefab.toml の相対パス。</summary>
-        public const string CombatPrefabToml = @"Config\combat.prefab.toml";
-
-        /// <summary>dummy.toml の相対パス。</summary>
-        public const string DummyToml = @"Config\dummy.toml";
-
-        /// <summary>minions.toml の相対パス。</summary>
-        public const string MinionsToml = @"Config\minions.toml";
-
-        /// <summary>render.toml の相対パス。</summary>
-        public const string RenderToml = @"Config\render.toml";
-
-        /// <summary>sheet.toml の相対パス。</summary>
-        public const string SheetToml = @"Config\sheet.toml";
-
-        /// <summary>special_bullets.toml の相対パス。</summary>
-        public const string SpecialBulletsToml = @"Config\special_bullets.toml";
-
-        /// <summary>start_scene.toml の相対パス。</summary>
-        public const string StartSceneToml = @"Config\start_scene.toml";
-
-        /// <summary>tutorial.toml の相対パス。</summary>
-        public const string TutorialToml = @"Config\tutorial.toml";
     }
 
     /// <summary>リソースルートディレクトリ名。</summary>
