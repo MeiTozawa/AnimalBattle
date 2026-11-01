@@ -37,7 +37,6 @@ internal static class AnimationRegistry
         {
             [CharacterType.Cat] = new()
             {
-                DisplayName = "Cat",
                 CellWidth = 32,
                 CellHeight = 32,
                 Clips =
@@ -50,7 +49,6 @@ internal static class AnimationRegistry
             },
             [CharacterType.Bunny] = new()
             {
-                DisplayName = "Bunny",
                 CellWidth = 32,
                 CellHeight = 32,
                 Clips =

@@ -231,9 +231,6 @@ public sealed class SkillEffectConfig
     /// <summary>画面振動強度 (Kind == ScreenShake 時)</summary>
     public float ShakeIntensity { get; set; }
 
-    /// <summary>画面振動持続時間 (Kind == ScreenShake 時、秒)</summary>
-    public float ShakeDuration { get; set; }
-
     /// <summary>召喚パラメータ (Kind == Summon 時)</summary>
     public SummonEmitConfig? Summon { get; set; }
 }

@@ -46,7 +46,6 @@ public sealed class StartSceneTextsConfig {
     public string HeaderTitle { get; set; } = string.Empty;
     public string PlayerHeader { get; set; } = string.Empty;
     public string HintText { get; set; } = string.Empty;
-    public string ConfirmButton { get; set; } = string.Empty;
     public string StartGameButton { get; set; } = string.Empty;
     public string TutorialCheckbox { get; set; } = string.Empty;
     public string SelectedBadge { get; set; } = string.Empty;
@@ -70,7 +69,6 @@ public sealed class StartSceneMotionConfig {
 public sealed class StartSceneLayoutConfig {
     public CardLayoutConfig CatCard { get; set; } = new();
     public CardLayoutConfig BunnyCard { get; set; } = new();
-    public CardLayoutConfig ConfirmButton { get; set; } = new();
     public CardLayoutConfig StartGameButton { get; set; } = new();
     public StartSceneCheckboxLayoutConfig TutorialCheckbox { get; set; } = new();
 

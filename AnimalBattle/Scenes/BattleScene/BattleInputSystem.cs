@@ -191,7 +191,6 @@ public static class BattleInputSystem
         if (isF1 && !_prevF1)
         {
             dbgCfg.IsActive = !dbgCfg.IsActive;
-            dbgCfg.Enabled = dbgCfg.IsActive;
         }
         _prevF1 = isF1;
 

@@ -10,9 +10,6 @@ public sealed class BossSnakePhaseFsmConfig {
     /// <summary>攻撃前の巡航遊弋待機時間秒単位</summary>
     public float HoverDuration { get; set; }
 
-    /// <summary>このフェーズでの巡回移動時間秒単位</summary>
-    public float PatrolDuration { get; set; }
-
     /// <summary>浮遊基準 Y 座標</summary>
     public float HoverBaseY { get; set; }
 
@@ -27,15 +24,6 @@ public sealed class BossSnakePhaseFsmConfig {
 
     /// <summary>プレイヤー X 座標への接近追従重み0.0から1.0の範囲</summary>
     public float PlayerPursuitWeight { get; set; }
-
-    /// <summary>突進予兆時の機体振動振幅ピクセル単位</summary>
-    public float TelegraphShakeIntensity { get; set; }
-
-    /// <summary>突進着地硬直後の高空帰還速度</summary>
-    public float RecoverFlybackSpeed { get; set; }
-
-    /// <summary>着地硬直から帰還を開始する時間比率0.0から1.0の範囲</summary>
-    public float RecoverDelayRatio { get; set; }
 
     /// <summary>フェーズ突入時の無敵・清屏演出時間秒単位</summary>
     public float TransitionDuration { get; set; }
@@ -54,9 +42,6 @@ public sealed class BossSnakePhaseFsmConfig {
 ///     Config/boss_snake.toml から読み込まれる BossSnake の基本パラメータおよび各フェーズの FSM 設定クラス。
 /// </summary>
 public sealed class BossSnakeConfig : BaseBossConfig {
-    /// <summary>浮遊移動の上限天井 Y 座標</summary>
-    public float CeilingLimitY { get; set; }
-
     /// <summary>Phase 1 状態機設定</summary>
     public BossSnakePhaseFsmConfig Phase1 { get; set; } = new();
 

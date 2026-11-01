@@ -40,9 +40,7 @@ public static class StartUiRenderSystem
 
         var catCardBounds = layout.CatCard.ToRectangle();
         var bunnyCardBounds = layout.BunnyCard.ToRectangle();
-        var startGameBounds = layout.StartGameButton.Size.X > 0 
-            ? layout.StartGameButton.ToRectangle() 
-            : layout.ConfirmButton.ToRectangle();
+        var startGameBounds = layout.StartGameButton.ToRectangle();
 
         ref readonly var flow = ref w.Get<GameFlow>();
 
@@ -83,7 +81,7 @@ public static class StartUiRenderSystem
                 colors);
 
             // 5. 「ゲーム開始」ボタン描画
-            var buttonText = !string.IsNullOrEmpty(texts.StartGameButton) ? texts.StartGameButton : texts.ConfirmButton;
+            var buttonText = texts.StartGameButton;
             DrawActionButton(
                 uiState.IsStartGameHovered,
                 startGameBounds,

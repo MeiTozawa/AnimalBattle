@@ -7,22 +7,8 @@ namespace AnimalBattle.Skills;
 /// </summary>
 public sealed class SkillConfig : IConfigLifecycle
 {
-    private string _skillName = string.Empty;
-    private StringId _skillId = StringId.Empty;
-
     /// <summary>技能表示名</summary>
-    public string SkillName
-    {
-        get => _skillName;
-        set
-        {
-            _skillName = value;
-            _skillId = string.IsNullOrWhiteSpace(value) ? StringId.Empty : new StringId(value);
-        }
-    }
-
-    /// <summary>キャッシュ済み技能識別子</summary>
-    public StringId SkillId => _skillId;
+    public string SkillName { get; set; } = string.Empty;
 
     /// <summary>前隙予兆時間（秒）</summary>
     public float WindUpTime { get; set; }

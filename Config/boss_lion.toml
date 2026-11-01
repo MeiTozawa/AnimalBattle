@@ -34,15 +34,12 @@ KnockbackDeceleration = 1200.0
 MoveSpeed = 160.0
 JumpForce = 640.0
 Gravity = 980.0
-PatrolRadius = 250.0
 ChaseTimeout = 3.0
 
 # 足場移動・跳躍物理パラメータ
 MaxFallSpeed = 850.0
 MaxAscentDuration = 0.80
 LandingRecoveryDuration = 0.10
-TakeoffDistance = 50.0
-TakeoffVelocityThreshold = 5.0
 MoveThreshold = 6.0
 JumpCooldownDuration = 1.0
 
@@ -50,24 +47,16 @@ JumpCooldownDuration = 1.0
 SamePlatformToleranceY = 60.0
 AirborneVelocityThreshold = 15.0
 AirborneHeightThreshold = 50.0
-MeleeTriggerRange = { x = 175.0, y = 75.0 }
 
 # カイト（遠距離逃走）対策パラメータ
-AntiKitingRangedDistance = 450.0
-AntiKitingMidDistance = 120.0
-AntiKitingEnforceMultiplier = 1.5
 AntiKitingMeleeSkill = "GroundStomp"
 AntiKitingRangedSkill = "LeapSmash"
 
 # Phase 1 状態機械設定
 [Phase1]
-HpThreshold = 1.0
 IdleDuration = 0.8
-PatrolDuration = 2.0
 MoveSpeed = 160.0
 JumpForce = 640.0
-TelegraphShakeIntensity = 6.0
-TransitionDuration = 1.5
 ChaseTimeout = 3.0
 Skills = ["HeavySlash", "GroundStomp", "LeapSmash", "EarthquakeRoar"]
 
@@ -106,10 +95,8 @@ Weight = 50.0
 [Phase2]
 HpThreshold = 0.75
 IdleDuration = 0.5
-PatrolDuration = 1.5
 MoveSpeed = 220.0
 JumpForce = 680.0
-TelegraphShakeIntensity = 10.0
 TransitionDuration = 1.5
 ChaseTimeout = 3.0
 Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "EarthquakeRoar", "SummonProwlersP2"]
@@ -156,10 +143,8 @@ Weight = 75.0
 [Phase3]
 HpThreshold = 0.45
 IdleDuration = 0.3
-PatrolDuration = 1.0
 MoveSpeed = 280.0
 JumpForce = 720.0
-TelegraphShakeIntensity = 14.0
 TransitionDuration = 2.0
 ChaseTimeout = 2.5
 Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash", "SummonProwlersP3"]

@@ -10,7 +10,6 @@ HeavyDamageThreshold = 2.0
 
 # --- 自機通常弾原型 ---
 [PlayerBullet]
-Shape = "Box"
 Size = { x = 12.0, y = 8.0 }
 Damage = 1.0
 Knockback = { x = 180.0, y = -90.0 }
@@ -64,4 +63,3 @@ DefaultDuration = 0.4
 
 [AreaVfx]
 DefaultDuration = 0.8
-Damage = 1.0

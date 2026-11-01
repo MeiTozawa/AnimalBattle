@@ -16,7 +16,6 @@ InitialCapacity = 64
 
 # 2D プラットフォーム跳躍・下落ナビゲーションおよび A* 探索設定
 [NavigationGraph]
-TrajectorySampleSteps = 16
 BossNodeToleranceY = 35.0
 BossNodeMarginX = 55.0
 TargetToleranceY = 45.0

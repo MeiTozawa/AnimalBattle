@@ -247,7 +247,7 @@ public static class BattleAiSystem
                 var minX = arenaCfg.BoundaryMinX + colSize.X * 0.5f;
                 var maxX = arenaCfg.BoundaryMaxX - colSize.X * 0.5f;
                 var floorY = arenaCfg.FloorLimitY - colSize.Y * 0.5f;
-                var minY = bSnakeCfg.CeilingLimitY > 0.0f ? bSnakeCfg.CeilingLimitY : colSize.Y * 0.5f;
+                var minY = colSize.Y * 0.5f;
                 bSnakeBrain.ClampPosition(minX, maxX, minY, floorY);
 
                 if (!bossCanMove)

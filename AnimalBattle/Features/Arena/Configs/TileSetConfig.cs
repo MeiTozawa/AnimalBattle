@@ -16,15 +16,6 @@ public sealed class TileSetConfig {
     /// <summary>テクスチャシート内の縦方向タイル行数</summary>
     public int Rows { get; set; }
 
-    /// <summary>左端ブロックのタイル ID 1基準</summary>
-    public int LeftBlock { get; set; }
-
-    /// <summary>中間ブロックのタイル ID 1基準</summary>
-    public int MiddleBlock { get; set; }
-
-    /// <summary>右端ブロックのタイル ID 1基準</summary>
-    public int RightBlock { get; set; }
-
     /// <summary>衝突判定 左上 X 座標</summary>
     public int CollisionX1 { get; set; }
 
@@ -36,7 +27,4 @@ public sealed class TileSetConfig {
 
     /// <summary>衝突判定 右下 Y 座標</summary>
     public int CollisionY2 { get; set; }
-
-    /// <summary>衝突判定領域の高さ</summary>
-    public int CollisionHeight => CollisionY2 - CollisionY1;
 }

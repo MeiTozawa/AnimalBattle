@@ -10,13 +10,10 @@ public readonly struct BossLionPhaseSettings(
     float jumpForce,
     float gravity,
     float maxFallSpeed,
-    float patrolRadius,
     float transitionDuration,
-    IReadOnlyList<StringId> attackOrder,
     IReadOnlyList<AttackDecisionRule> rules,
     float maxAscentDuration,
     float landingRecoveryDuration,
-    float takeoffDistance,
     float chaseTimeout) {
     /// <summary>攻撃開始までの待機時間です。</summary>
     public float IdleDuration { get; } = idleDuration;
@@ -33,14 +30,8 @@ public readonly struct BossLionPhaseSettings(
     /// <summary>最大落下速度です。</summary>
     public float MaxFallSpeed { get; } = maxFallSpeed;
 
-    /// <summary>巡回範囲半径です。</summary>
-    public float PatrolRadius { get; } = patrolRadius;
-
     /// <summary>Phase 遷移演出時間です。</summary>
     public float TransitionDuration { get; } = transitionDuration;
-
-    /// <summary>この Phase で実行可能な攻撃順序です。</summary>
-    public IReadOnlyList<StringId> AttackOrder { get; } = attackOrder ?? [];
 
     /// <summary>この Phase で評価される攻撃意思決定ルールです。</summary>
     public IReadOnlyList<AttackDecisionRule> Rules { get; } = rules ?? [];
@@ -51,9 +42,6 @@ public readonly struct BossLionPhaseSettings(
     /// <summary>着地後の硬直待機時間秒単位です。</summary>
     public float LandingRecoveryDuration { get; } = landingRecoveryDuration;
 
-    /// <summary>足場間跳躍への移行を開始する水平距離閾値：pxです。</summary>
-    public float TakeoffDistance { get; } = takeoffDistance;
-
     /// <summary>プレイヤー追跡時に遠隔技へ移行するまでのタイムアウト時間秒単位です。</summary>
     public float ChaseTimeout { get; } = chaseTimeout;
 }
@@ -62,24 +50,16 @@ public readonly struct BossLionPhaseSettings(
 public readonly struct BossLionCombatSettings(
     float collisionHeight,
     float jumpCooldownDuration,
-    float takeoffVelocityThreshold,
     float moveThreshold,
     float samePlatformToleranceY,
     float airborneVelocityThreshold,
     float airborneHeightThreshold,
-    Vec2f meleeTriggerRange,
-    float antiKitingRangedDistance,
-    float antiKitingMidDistance,
-    float antiKitingEnforceMultiplier,
     float playerCollisionHeight) {
     /// <summary>衝突判定の高さ：pxです。</summary>
     public float CollisionHeight { get; } = collisionHeight;
 
     /// <summary>跳躍後の再跳躍冷却時間秒単位です。</summary>
     public float JumpCooldownDuration { get; } = jumpCooldownDuration;
-
-    /// <summary>離陸速度閾値：px/sです。</summary>
-    public float TakeoffVelocityThreshold { get; } = takeoffVelocityThreshold;
 
     /// <summary>水平移動判定の閾値：pxです。</summary>
     public float MoveThreshold { get; } = moveThreshold;
@@ -92,18 +72,6 @@ public readonly struct BossLionCombatSettings(
 
     /// <summary>プレイヤー滞空判定の高度差閾値：pxです。</summary>
     public float AirborneHeightThreshold { get; } = airborneHeightThreshold;
-
-    /// <summary>近接技トリガーの判定範囲 Vec2f型 です。</summary>
-    public Vec2f MeleeTriggerRange { get; } = meleeTriggerRange;
-
-    /// <summary>反風等遠距離技の発動距離：pxです。</summary>
-    public float AntiKitingRangedDistance { get; } = antiKitingRangedDistance;
-
-    /// <summary>反風等中距離技の発動距離：pxです。</summary>
-    public float AntiKitingMidDistance { get; } = antiKitingMidDistance;
-
-    /// <summary>反風等強制発動タイムアウト倍率です。</summary>
-    public float AntiKitingEnforceMultiplier { get; } = antiKitingEnforceMultiplier;
 
     /// <summary>プレイヤーの判定高さ：pxです。</summary>
     public float PlayerCollisionHeight { get; } = playerCollisionHeight;
@@ -176,34 +144,15 @@ public sealed class BossLionDefaultConfiguration : IBossLionConfiguration {
         _cachedCombatSettings = new BossLionCombatSettings(
             toml.CollisionSize.Y,
             toml.JumpCooldownDuration,
-            toml.TakeoffVelocityThreshold,
             toml.MoveThreshold,
             toml.SamePlatformToleranceY,
             toml.AirborneVelocityThreshold,
             toml.AirborneHeightThreshold,
-            toml.MeleeTriggerRange,
-            toml.AntiKitingRangedDistance,
-            toml.AntiKitingMidDistance,
-            toml.AntiKitingEnforceMultiplier,
             playerHeight);
     }
 
     private static BossLionPhaseSettings CreatePhaseSettings(BossLionConfig toml, BossLionPhaseConfig phaseCfg)
     {
-        StringId[] skills;
-        if (phaseCfg.Skills is { Count: > 0 })
-        {
-            skills = new StringId[phaseCfg.Skills.Count];
-            for (var i = 0; i < phaseCfg.Skills.Count; i++)
-            {
-                skills[i] = new StringId(phaseCfg.Skills[i]);
-            }
-        }
-        else
-        {
-            skills = [];
-        }
-
         var jumpForce = phaseCfg.JumpForce > 0 ? phaseCfg.JumpForce : toml.JumpForce;
         var chaseTimeout = phaseCfg.ChaseTimeout > 0 ? phaseCfg.ChaseTimeout : toml.ChaseTimeout;
         var rules = ConvertRules(phaseCfg.Rules);
@@ -214,13 +163,10 @@ public sealed class BossLionDefaultConfiguration : IBossLionConfiguration {
             jumpForce,
             toml.Gravity,
             toml.MaxFallSpeed,
-            toml.PatrolRadius,
             phaseCfg.TransitionDuration,
-            skills,
             rules,
             toml.MaxAscentDuration,
             toml.LandingRecoveryDuration,
-            toml.TakeoffDistance,
             chaseTimeout);
     }
 

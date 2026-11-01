@@ -7,9 +7,6 @@ namespace AnimalBattle.Presentation.Animation;
 public sealed class AnimationConfig {
     private Dictionary<StringId, AnimationClipConfig>? _clipLookup;
 
-    /// <summary>キャラクター/エフェクトの表示名</summary>
-    public string DisplayName { get; set; } = string.Empty;
-
     /// <summary>デフォルトのセル幅ピクセル単位</summary>
     public int CellWidth { get; set; }
 

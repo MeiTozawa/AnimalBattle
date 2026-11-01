@@ -1279,9 +1279,6 @@ public sealed class DebugRenderConfig {
     /// </summary>
     public bool IsActive { get; set; }
 
-    /// <summary>起動時にデバッグ描画を有効にするか</summary>
-    public bool Enabled { get; set; }
-
     private Color _playerTerrainBoxColor;
 
     /// <summary>プレイヤー地形衝突ボックス枠色 Hex 文字列</summary>

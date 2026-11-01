@@ -30,10 +30,6 @@ public sealed class TutorialColorsConfig
     public string RedHex { get => string.Empty; set => _red = value.ToColor(); }
     public Color Red => _red;
 
-    private Color _muted;
-    [ConfigurationKeyName("Muted")]
-    public string MutedHex { get => string.Empty; set => _muted = value.ToColor(); }
-    public Color Muted => _muted;
 
     private Color _panelBg;
     [ConfigurationKeyName("PanelBg")]
@@ -45,10 +41,6 @@ public sealed class TutorialColorsConfig
     public string PanelBorderHex { get => string.Empty; set => _panelBorder = value.ToColor(); }
     public Color PanelBorder => _panelBorder;
 
-    private Color _doorBg;
-    [ConfigurationKeyName("DoorBg")]
-    public string DoorBgHex { get => string.Empty; set => _doorBg = value.ToColor(); }
-    public Color DoorBg => _doorBg;
 
     private Color _tooltipBg;
     [ConfigurationKeyName("TooltipBg")]

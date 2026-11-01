@@ -48,13 +48,6 @@ public sealed class GroundMinionConfig
     /// <summary>生成基準オフセット座標。</summary>
     public Vec2f SpawnPos { get; set; }
 
-    /// <summary>生成オフセット座標の別名。</summary>
-    public Vec2f SpawnOffset
-    {
-        get => SpawnPos;
-        set => SpawnPos = value;
-    }
-
     /// <summary>跳躍初速度。単位はピクセル毎秒。</summary>
     public float JumpForce { get; set; }
 
@@ -124,13 +117,6 @@ public sealed class FlyingMinionConfig
 
     /// <summary>生成基準オフセット座標。</summary>
     public Vec2f SpawnPos { get; set; }
-
-    /// <summary>生成オフセット座標の別名。</summary>
-    public Vec2f SpawnOffset
-    {
-        get => SpawnPos;
-        set => SpawnPos = value;
-    }
 
     /// <summary>プレイヤーからの最小安全距離。単位はピクセル。</summary>
     public float MinPlayerDistance { get; set; }

@@ -18,8 +18,6 @@ public sealed class SpatialHashConfig {
 ///     プラットフォームナビゲーショングラフおよび A* 探索設定クラス。
 /// </summary>
 public sealed class NavigationGraphConfig {
-    /// <summary>放物線跳躍軌道の障害物遮断レイキャストサンプリング分割数</summary>
-    public int TrajectorySampleSteps { get; set; }
 
     /// <summary>Boss 足元プラットフォーム判定の垂直許容誤差ピクセル単位</summary>
     public float BossNodeToleranceY { get; set; }

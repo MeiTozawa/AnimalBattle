@@ -9,9 +9,6 @@ public readonly struct BossSnakePhaseSettings(
     Vec2f hoverAmp,
     float playerPursuitWeight,
     float hoverLerpSpeed,
-    float telegraphShakeIntensity,
-    float recoverFlybackSpeed,
-    float recoverDelayRatio,
     float transitionDuration,
     float transitionFloatSpeed,
     IReadOnlyList<StringId> attackOrder) {
@@ -32,15 +29,6 @@ public readonly struct BossSnakePhaseSettings(
 
     /// <summary>座標追従の平滑補間速度です。</summary>
     public float HoverLerpSpeed { get; } = hoverLerpSpeed;
-
-    /// <summary>突進予兆の振動量です。</summary>
-    public float TelegraphShakeIntensity { get; } = telegraphShakeIntensity;
-
-    /// <summary>攻撃後の帰還速度です。</summary>
-    public float RecoverFlybackSpeed { get; } = recoverFlybackSpeed;
-
-    /// <summary>帰還開始の Recovery 比率です。</summary>
-    public float RecoverDelayRatio { get; } = recoverDelayRatio;
 
     /// <summary>Phase 遷移時間です。</summary>
     public float TransitionDuration { get; } = transitionDuration;
@@ -133,9 +121,6 @@ public sealed class BossSnakeDefaultConfiguration : IBossSnakeConfiguration {
             tomlPhase.HoverAmp,
             tomlPhase.PlayerPursuitWeight,
             tomlPhase.HoverLerpSpeed,
-            tomlPhase.TelegraphShakeIntensity,
-            tomlPhase.RecoverFlybackSpeed,
-            tomlPhase.RecoverDelayRatio,
             tomlPhase.TransitionDuration,
             tomlPhase.TransitionFloatSpeed,
             order);

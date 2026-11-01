@@ -67,7 +67,6 @@ public sealed class CombatPhysicsConfig
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 public sealed class PlayerBulletPrefabConfig
 {
-    public string Shape { get; set; }
     public Vec2f Size { get; set; }
     public float Damage { get; set; }
     public Vec2f Knockback { get; set; }
@@ -142,7 +141,6 @@ public sealed class RingVfxPrefabConfig
 public sealed class AreaVfxPrefabConfig
 {
     public float DefaultDuration { get; set; }
-    public float Damage { get; set; }
 }
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]

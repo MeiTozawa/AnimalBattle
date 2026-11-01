@@ -19,10 +19,6 @@ Pos = { x = 525, y = 540 }
 Size = { x = 230, y = 24 }
 BoxSize = 18
 
-[Layout.ConfirmButton]
-Pos = { x = 480, y = 575 }
-Size = { x = 320, y = 60 }
-
 [Layout]
 HeaderTitlePos = { x = 450, y = 40 }
 PlayerHeaderPos = { x = 440, y = 95 }
@@ -52,7 +48,6 @@ DefaultEnableTutorial = true
 HeaderTitle = "ANIMAL BATTLE - プレイヤー選択"
 PlayerHeader = "【 操作キャラクターを選択してください 】"
 HintText = "※ マウスで選択 / [ENTER] ゲーム開始 / [T] チュートリアル切替"
-ConfirmButton = "【 ゲーム開始 】"
 StartGameButton = "【 ゲーム開始 】"
 TutorialCheckbox = "チュートリアルを有効にする"
 SelectedBadge = "[ 選択中 - SELECTED ]"

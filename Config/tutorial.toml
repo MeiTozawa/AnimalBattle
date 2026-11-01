@@ -7,10 +7,8 @@ Gold = "#FFD750"
 White = "#F0F5FF"
 Cyan = "#50D2FF"
 Red = "#FF6464"
-Muted = "#A0AABE"
 PanelBg = "#141824"
 PanelBorder = "#37465F"
-DoorBg = "#1A1E2C"
 TooltipBg = "#0F1E37"
 
 [Doors]

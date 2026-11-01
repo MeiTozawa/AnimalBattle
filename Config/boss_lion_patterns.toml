@@ -28,7 +28,6 @@ Hitbox = { DirectionMode = "Forward", Size = { x = 100.0, y = 75.0 }, Offset = {
 Time = 0.05
 Kind = "ScreenShake"
 ShakeIntensity = 5.0
-ShakeDuration = 0.2
 
 [GroundStomp]
 SkillName = "Ground Stomp Shockwave"
@@ -52,7 +51,6 @@ Bullet = { Pattern = "GroundShockwave", Speed = 420.0, Radius = 80.0, Damage = 1
 Time = 0.0
 Kind = "ScreenShake"
 ShakeIntensity = 7.0
-ShakeDuration = 0.25
 
 [LeapSmash]
 SkillName = "Titan Leap Smash"
@@ -185,7 +183,6 @@ Radius = 80.0
 Time = 0.0
 Kind = "ScreenShake"
 ShakeIntensity = 4.0
-ShakeDuration = 0.2
 
 [[SummonProwlersP2.Effects]]
 Time = 0.1
@@ -212,7 +209,6 @@ Radius = 100.0
 Time = 0.0
 Kind = "ScreenShake"
 ShakeIntensity = 6.0
-ShakeDuration = 0.4
 
 [[SummonProwlersP3.Effects]]
 Time = 0.05

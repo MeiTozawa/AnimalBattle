@@ -27,25 +27,17 @@ BodyContactDamage = 1.0
 CollisionSize = { x = 120.0, y = 120.0 }
 
 # 物理運動および外力制限設定
-CeilingLimitY = 50.0
 CanBeKnockedBack = true
 KnockbackDeceleration = 1200.0
 
 # Phase 1 状態機械設定
 [Phase1]
-HpThreshold = 1.0
 HoverDuration = 0.8
-PatrolDuration = 2.0
 HoverBaseY = 220.0
 HoverSpeed = { x = 1.6, y = 1.8 }
 HoverAmp = { x = 240.0, y = 60.0 }
 HoverLerpSpeed = 3.5
 PlayerPursuitWeight = 0.12
-TelegraphShakeIntensity = 8.0
-RecoverFlybackSpeed = 4.0
-RecoverDelayRatio = 0.5
-TransitionDuration = 1.5
-TransitionFloatSpeed = 3.0
 Skills = ["Aimed3Shot", "DiveRam", "RingBurst"]
 
 [[Phase1.Rules]]
@@ -73,15 +65,11 @@ Weight = 90.0
 [Phase2]
 HpThreshold = 0.7
 HoverDuration = 0.6
-PatrolDuration = 1.5
 HoverBaseY = 250.0
 HoverSpeed = { x = 2.0, y = 2.4 }
 HoverAmp = { x = 350.0, y = 90.0 }
 HoverLerpSpeed = 4.0
 PlayerPursuitWeight = 0.15
-TelegraphShakeIntensity = 10.0
-RecoverFlybackSpeed = 4.5
-RecoverDelayRatio = 0.45
 TransitionDuration = 1.5
 TransitionFloatSpeed = 3.5
 Skills = ["DoubleSpiral", "DiveRam", "RainDrop", "SummonFlyersP2"]
@@ -118,15 +106,11 @@ Weight = 80.0
 [Phase3]
 HpThreshold = 0.3
 HoverDuration = 0.4
-PatrolDuration = 1.0
 HoverBaseY = 280.0
 HoverSpeed = { x = 2.6, y = 3.0 }
 HoverAmp = { x = 420.0, y = 120.0 }
 HoverLerpSpeed = 4.5
 PlayerPursuitWeight = 0.20
-TelegraphShakeIntensity = 12.0
-RecoverFlybackSpeed = 5.0
-RecoverDelayRatio = 0.40
 TransitionDuration = 1.5
 TransitionFloatSpeed = 4.0
 Skills = ["CrossChaos", "DiveRam", "FastSniper", "SummonFlyersP3"]

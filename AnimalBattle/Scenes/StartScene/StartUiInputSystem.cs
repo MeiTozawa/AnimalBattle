@@ -39,9 +39,7 @@ public static class StartUiInputSystem
 
         var catCardBounds = layout.CatCard.ToRectangle();
         var bunnyCardBounds = layout.BunnyCard.ToRectangle();
-        var startGameBounds = layout.StartGameButton.Size.X > 0 
-            ? layout.StartGameButton.ToRectangle() 
-            : layout.ConfirmButton.ToRectangle();
+        var startGameBounds = layout.StartGameButton.ToRectangle();
         var checkboxBounds = layout.TutorialCheckbox.ToRectangle();
 
         ref var flow = ref w.GetMut<GameFlow>();

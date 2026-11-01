@@ -10,17 +10,11 @@ public sealed class BossLionPhaseConfig {
     /// <summary>攻撃前の待機巡航時間秒単位</summary>
     public float IdleDuration { get; set; }
 
-    /// <summary>このフェーズでの巡回移動時間秒単位</summary>
-    public float PatrolDuration { get; set; }
-
     /// <summary>このフェーズでの地面移動速度</summary>
     public float MoveSpeed { get; set; }
 
     /// <summary>このフェーズでの跳躍初速</summary>
     public float JumpForce { get; set; }
-
-    /// <summary>蓄力予兆時の機体振動振幅ピクセル単位</summary>
-    public float TelegraphShakeIntensity { get; set; }
 
     /// <summary>フェーズ突入時の無敵・吼叫演出時間秒単位</summary>
     public float TransitionDuration { get; set; }
@@ -48,9 +42,6 @@ public sealed class BossLionConfig : BaseBossConfig {
     /// <summary>重力加速度</summary>
     public float Gravity { get; set; }
 
-    /// <summary>巡回パトロール半径</summary>
-    public float PatrolRadius { get; set; }
-
     /// <summary>プレイヤー追跡時に遠隔技へ移行するまでの基本タイムアウト時間秒単位</summary>
     public float ChaseTimeout { get; set; }
 
@@ -62,12 +53,6 @@ public sealed class BossLionConfig : BaseBossConfig {
 
     /// <summary>着地硬直時間秒単位</summary>
     public float LandingRecoveryDuration { get; set; }
-
-    /// <summary>跳躍離陸点判定距離ピクセル単位</summary>
-    public float TakeoffDistance { get; set; }
-
-    /// <summary>離陸横速度閾値ピクセル毎秒単位</summary>
-    public float TakeoffVelocityThreshold { get; set; }
 
     /// <summary>移動判定の最小位置差分閾値ピクセル単位</summary>
     public float MoveThreshold { get; set; }
@@ -83,18 +68,6 @@ public sealed class BossLionConfig : BaseBossConfig {
 
     /// <summary>プレイヤー空中判定の相対高度差閾値ピクセル単位</summary>
     public float AirborneHeightThreshold { get; set; }
-
-    /// <summary>近接攻撃発動判定範囲 Vec2f型</summary>
-    public Vec2f MeleeTriggerRange { get; set; }
-
-    /// <summary>カイト対策で遠距離技：吼叫を優先する直線距離閾値ピクセル単位</summary>
-    public float AntiKitingRangedDistance { get; set; }
-
-    /// <summary>カイト対策で中距離技：泰山圧頂を優先する直線距離閾値ピクセル単位</summary>
-    public float AntiKitingMidDistance { get; set; }
-
-    /// <summary>カイト対策で強制技発動を行う追跡タイムアウト倍率</summary>
-    public float AntiKitingEnforceMultiplier { get; set; }
 
     /// <summary>カイト対策近接技能識別名</summary>
     public string AntiKitingMeleeSkill { get; set; } = string.Empty;
