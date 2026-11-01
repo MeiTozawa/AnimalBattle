@@ -7,6 +7,17 @@ namespace AnimalBattle.Player.Systems;
 /// </summary>
 public static class PlayerInputSystem
 {
+    private static bool _wasGameplay;
+    private static bool _attackHoldingSuppressed;
+
+    /// <summary>
+    ///     シーン遷移時やリセット時に内部入力抑止フラグを安全に初期化します。
+    /// </summary>
+    public static void Reset()
+    {
+        _wasGameplay = false;
+        _attackHoldingSuppressed = false;
+    }
     /// <summary>
     ///     プレイヤー入力システムを Flecs.NET ワールドへ登録します。
     /// </summary>
@@ -35,7 +46,26 @@ public static class PlayerInputSystem
 
         var world = it.World();
         ref readonly var flow = ref world.Get<GameFlow>();
-        if (!flow.IsGameplay) return;
+        if (!flow.IsGameplay)
+        {
+            _wasGameplay = false;
+            _attackHoldingSuppressed = false;
+            return;
+        }
+
+        // ゲームプレイ入場初回判定：入場時に既に攻撃ボタンが押されていた場合、一度離すまで長押し攻撃を抑止
+        if (!_wasGameplay)
+        {
+            _wasGameplay = true;
+            if (InputService.IsHolding(InputAction.Attack))
+            {
+                _attackHoldingSuppressed = true;
+            }
+        }
+        else if (_attackHoldingSuppressed && !InputService.IsHolding(InputAction.Attack))
+        {
+            _attackHoldingSuppressed = false;
+        }
 
         // ゲームオーバー時（Victory / Defeat）：入力受付を停止し、意図を安全にゼロクリア
         if (world.Has<GameOverTag>())
@@ -63,7 +93,8 @@ public static class PlayerInputSystem
         // 跳躍・射撃・回避キーの状態取得
         var jumpPressed = InputService.IsPressed(InputAction.Jump);
         var jumpHolding = InputService.IsHolding(InputAction.Jump);
-        var shootPressed = InputService.IsPressed(InputAction.Attack) || InputService.IsHolding(InputAction.Attack);
+        var isAttackHolding = InputService.IsHolding(InputAction.Attack) && !_attackHoldingSuppressed;
+        var shootPressed = InputService.IsPressed(InputAction.Attack) || isAttackHolding;
         var dashPressed = InputService.IsPressed(InputAction.Skill);
 
         // マウス画面座標からカメラ逆オフセットでワールド座標を逆算

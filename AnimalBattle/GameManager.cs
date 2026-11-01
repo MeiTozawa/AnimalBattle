@@ -97,6 +97,7 @@ public class GameManager : IDisposable {
         flow.SelectedBoss = bossType;
 
         InputService.ClearAndSetContext(InputContext.InGame);
+        PlayerInputSystem.Reset();
         BattleSceneSpawner.Spawn(_ecsWorld, playerType, bossType);
     }
 
@@ -127,7 +128,8 @@ public class GameManager : IDisposable {
         flow.SelectedPlayer = playerType;
 
         InputService.ClearAndSetContext(InputContext.InGame);
-        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Spawn(_ecsWorld, playerType, initialPhaseIndex);
+        PlayerInputSystem.Reset();
+        Features.Tutorial.Spawners.TutorialSceneSpawner.Spawn(_ecsWorld, playerType, initialPhaseIndex);
     }
 
     /// <summary>
@@ -152,6 +154,7 @@ public class GameManager : IDisposable {
         flow.State = GameState.Start;
 
         InputService.ClearAndSetContext(InputContext.Menu);
+        PlayerInputSystem.Reset();
         BattleSceneSpawner.Teardown(_ecsWorld);
         StartSceneSpawner.Spawn(_ecsWorld, enableTutorialOverride);
     }

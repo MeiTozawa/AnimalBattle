@@ -25,4 +25,7 @@ public struct StartUiState
 
     /// <summary>「ゲーム開始」ボタンのホバー状態。</summary>
     public bool IsStartGameHovered;
+
+    /// <summary>「ゲーム開始」ボタンのマウス押下（押し下げ）状態。</summary>
+    public bool IsStartGamePressed;
 }

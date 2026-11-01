@@ -46,6 +46,7 @@ public static class StartUiInputSystem
         var dt = it.DeltaTime();
         var mousePos = InputService.GetMousePosition();
         var isClick = InputService.IsPressed(InputAction.MouseClick);
+        var isHolding = InputService.IsHolding(InputAction.MouseClick);
         var isConfirmKey = InputService.IsPressed(InputAction.Confirm);
         var isToggleKey = InputService.IsButtonPressed(InputButton.KeyT);
 
@@ -105,8 +106,24 @@ public static class StartUiInputSystem
             // --- 4. 「ゲーム開始」ボタン判定 ---
             uiState.IsStartGameHovered = startGameBounds.Contains(mousePos.X, mousePos.Y);
 
+            // マウス左ボタン押下で押下状態を記録し、ボタン上で離した瞬間（マウスアップ）に決定
+            if (uiState.IsStartGameHovered && isClick)
+            {
+                uiState.IsStartGamePressed = true;
+            }
+
+            var isStartTriggered = false;
+            if (uiState.IsStartGamePressed && !isHolding)
+            {
+                uiState.IsStartGamePressed = false;
+                if (uiState.IsStartGameHovered)
+                {
+                    isStartTriggered = true;
+                }
+            }
+
             // --- 5. 画面遷移判定 ---
-            if ((uiState.IsStartGameHovered && isClick) || isConfirmKey)
+            if (isStartTriggered || isConfirmKey)
             {
                 var initialPhaseIndex = uiState.IsTutorialEnabled ? 0 : -1;
                 GameManager.Current.SwitchToTutorial(flow.SelectedPlayer, initialPhaseIndex);

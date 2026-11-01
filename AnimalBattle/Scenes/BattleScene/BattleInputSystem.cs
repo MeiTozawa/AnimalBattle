@@ -133,6 +133,7 @@ public static class BattleInputSystem
 
         ctx.BossQuery.Each(ResetBossEntity);
         ctx.PlayerEntitiesQuery.Each(ResetPlayerEntity);
+        PlayerInputSystem.Reset();
 
         EventBus.Publish(new CombatResetEvent());
     }
