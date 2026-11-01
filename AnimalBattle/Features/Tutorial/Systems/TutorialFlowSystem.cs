@@ -31,7 +31,7 @@ public static class TutorialFlowSystem
         if (world.Get<GameFlow>().State != GameState.Tutorial) return;
 
         ref var state = ref world.GetMut<TutorialState>();
-        var cfg = world.Get<TutorialConfig>() ?? new TutorialConfig();
+        var cfg = world.Get<TutorialConfig>();
         var dt = it.DeltaTime();
 
         // 1. リトライ演出タイマーの更新

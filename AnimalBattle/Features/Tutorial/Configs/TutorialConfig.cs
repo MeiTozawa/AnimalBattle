@@ -88,6 +88,84 @@ public sealed class TutorialDoorItemConfig
 }
 
 /// <summary>
+///     蛇神（BossSnake）扉プレビュー動態および毒霊オーブ描画設定。
+/// </summary>
+public sealed class TutorialSnakeMotionConfig
+{
+    public int PreviewOffsetY { get; set; }
+    public float BobSpeedMultiplierX { get; set; }
+    public float BobAmplitudeMultiplierX { get; set; }
+    public int OrbCount { get; set; }
+    public float OrbSpeed { get; set; }
+    public Vec2f OrbRadius { get; set; }
+    public int OrbIdleRadius { get; set; }
+    public int OrbActiveRadius { get; set; }
+    public int OrbGlowDelta { get; set; }
+}
+
+/// <summary>
+///     獅子神（BossLion）扉プレビュー動態、重砸着地および地裂衝撃波描画設定。
+/// </summary>
+public sealed class TutorialLionMotionConfig
+{
+    public int PreviewOffsetY { get; set; }
+    public float TextureHeight { get; set; }
+
+    // モーションタイムラインフェーズ境界
+    public float IdlePhaseEnd { get; set; }
+    public float JumpPhaseEnd { get; set; }
+    public float PeakPhaseEnd { get; set; }
+    public float FallPhaseEnd { get; set; }
+
+    // 変形・呼吸・跳躍パラメータ
+    public float BreathFrequency { get; set; }
+    public float BreathAmplitude { get; set; }
+    public float JumpStretchX { get; set; }
+    public float JumpStretchY { get; set; }
+    public float PeakScaleX { get; set; }
+    public float PeakScaleY { get; set; }
+    public float FallStretchX { get; set; }
+    public float FallStretchY { get; set; }
+    public float SquashOscillation { get; set; }
+    public float SquashAmplitude { get; set; }
+
+    // 着地震動
+    public float TremorDuration { get; set; }
+    public float TremorFrequency { get; set; }
+    public float TremorAmplitude { get; set; }
+
+    // 地裂衝撃波エフェクト
+    public int GroundOffsetY { get; set; }
+    public float MaxSpread { get; set; }
+    public int WaveOriginOffset { get; set; }
+    public int WaveThickness { get; set; }
+    public float Spike1Height { get; set; }
+    public float Spike2Height { get; set; }
+    public int Spike1Offset { get; set; }
+    public int Spike2Offset { get; set; }
+    public int SpikeThickness { get; set; }
+    public float ArcBaseRadius { get; set; }
+    public float ArcSpread { get; set; }
+    public int ArcSegments { get; set; }
+    public Vec2f ArcScale { get; set; }
+    public int ArcThickness { get; set; }
+    public float FlashThreshold { get; set; }
+    public float FlashMaxAlpha { get; set; }
+    public Vec2i FlashHalfSize { get; set; }
+    public float MaxShockwaveAlpha { get; set; }
+}
+
+/// <summary>
+///     目標物（コイン／リング）描画設定。
+/// </summary>
+public sealed class TutorialTargetRenderConfig
+{
+    public float InnerRadiusRatio { get; set; }
+    public int MinInnerRadius { get; set; }
+    public string Symbol { get; set; } = string.Empty;
+}
+
+/// <summary>
 ///     ボス挑戦扉システム全体設定。
 /// </summary>
 public sealed class TutorialDoorsConfig
@@ -97,9 +175,19 @@ public sealed class TutorialDoorsConfig
     public int LintelHeight { get; set; }
     public int PedestalHeight { get; set; }
     public int PedestalExtraWidth { get; set; }
+    public int LintelExtraWidth { get; set; }
     public float InteractionRadius { get; set; }
     public int TooltipOffsetY { get; set; }
     public Vec2i TooltipSize { get; set; }
+
+    public int RuneMarginY { get; set; }
+    public int RuneMinSpanY { get; set; }
+    public int RuneCount { get; set; }
+    public int RuneGlyphStep { get; set; }
+    public int PlaqueTitleOffsetY { get; set; }
+    public int PlaqueTagOffsetY { get; set; }
+    public float TooltipPulseSpeed { get; set; }
+    public float TooltipPulseAmplitude { get; set; }
 
     public Vec2f PreviewScale { get; set; }
 
@@ -125,6 +213,8 @@ public sealed class TutorialDoorsConfig
 
     public TutorialDoorItemConfig Snake { get; set; } = new();
     public TutorialDoorItemConfig Lion { get; set; } = new();
+    public TutorialSnakeMotionConfig SnakeMotion { get; set; } = new();
+    public TutorialLionMotionConfig LionMotion { get; set; } = new();
 }
 
 /// <summary>
@@ -137,6 +227,10 @@ public sealed class TutorialLayoutConfig
     public Vec2i RetryPos { get; set; }
     public Vec2i ControlBoardP1 { get; set; }
     public Vec2i ControlBoardP2 { get; set; }
+    public Vec2i ControlBoardPadding { get; set; }
+    public int ControlBoardTitleSpacing { get; set; }
+    public int ControlBoardLineSpacing { get; set; }
+    public int ControlBoardAttackSpacing { get; set; }
 }
 
 /// <summary>
@@ -223,6 +317,7 @@ public sealed class TutorialConfig : IConfigLifecycle
     public TutorialLayoutConfig Layout { get; set; } = new();
     public TutorialTimingConfig Timing { get; set; } = new();
     public TutorialTextsConfig Texts { get; set; } = new();
+    public TutorialTargetRenderConfig TargetRender { get; set; } = new();
 
     /// <summary>
     ///     データ駆動フェーズシーケンス一覧。

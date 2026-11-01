@@ -45,7 +45,7 @@ public static class TutorialInteractionSystem
         if (!hasPlayer) return;
 
         var dt = it.DeltaTime();
-        var cfg = world.Get<TutorialConfig>() ?? new TutorialConfig();
+        var cfg = world.Get<TutorialConfig>();
         var isFKey = InputService.IsPressed(InputAction.Interact) || InputService.IsButtonPressed(InputButton.KeyF);
 
         // 1. ターゲットコイン／リングの回収判定

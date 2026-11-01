@@ -65,9 +65,10 @@ public static class TutorialRenderSystem
             var r = (int)target.Radius;
 
             // 外枠発光リングと内側コア
+            var targetCfg = cfg.TargetRender;
             GameEngine.DrawCircle(center, r, colors.Gold, false);
-            GameEngine.DrawCircle(center, Math.Max(2, (int)(r * 0.5f)), colors.Gold, true);
-            GameEngine.DrawCenterString(center, "★", colors.White);
+            GameEngine.DrawCircle(center, Math.Max(targetCfg.MinInnerRadius, (int)(r * targetCfg.InnerRadiusRatio)), colors.Gold, true);
+            GameEngine.DrawCenterString(center, targetCfg.Symbol, colors.White);
         });
 
         // 2. ボス挑戦神殿石門（BossDoor）の環境描画（基座・虚空・柱・Boss・符文：自機より背面）
@@ -161,21 +162,22 @@ public static class TutorialRenderSystem
         var p2 = cfg.Layout.ControlBoardP2;
         var colors = cfg.Colors;
         var texts = cfg.Texts;
+        var layout = cfg.Layout;
 
         GameEngine.DrawBox(p1, p2, colors.PanelBg, true);
         GameEngine.DrawBox(p1, p2, colors.PanelBorder, false);
 
-        var startX = p1.X + 15;
-        var y = p1.Y + 15;
+        var startX = p1.X + layout.ControlBoardPadding.X;
+        var y = p1.Y + layout.ControlBoardPadding.Y;
 
         GameEngine.DrawLeftString(new Vec2i(startX, y), texts.ControlBoardTitle, colors.Cyan);
-        y += 24;
+        y += layout.ControlBoardTitleSpacing;
         GameEngine.DrawLeftString(new Vec2i(startX, y), texts.ControlBoardMove, colors.White);
-        y += 22;
+        y += layout.ControlBoardLineSpacing;
         GameEngine.DrawLeftString(new Vec2i(startX, y), texts.ControlBoardJump, colors.White);
-        y += 22;
+        y += layout.ControlBoardLineSpacing;
         GameEngine.DrawLeftString(new Vec2i(startX, y), texts.ControlBoardDash, colors.White);
-        y += 24;
+        y += layout.ControlBoardAttackSpacing;
         GameEngine.DrawLeftString(new Vec2i(startX, y), texts.ControlBoardAttack, colors.Gold);
     }
 
@@ -203,7 +205,7 @@ public static class TutorialRenderSystem
         DrawShrineArchitecture(center, gateP1, gateP2, pillarW, lintelH, pedestalH, pedestalExtraW, doorsCfg, doorItem, inRange, animTimer);
 
         // 2. 左右石柱への古代刻印符文描画
-        DrawShrineRunes(gateP1, gateP2, pillarW, lintelH, pedestalH, doorItem, inRange, animTimer);
+        DrawShrineRunes(gateP1, gateP2, pillarW, lintelH, pedestalH, doorsCfg, doorItem, inRange, animTimer);
 
         // 3. Boss 画像および固有動態（蛇：法球旋回、獅子：重砸地面＆衝撃波）
         DrawBossAuraAndMotion(center, bossType, gateP2.Y - pedestalH, doorsCfg, doorItem, inRange, animTimer, colors, assets);
@@ -252,8 +254,8 @@ public static class TutorialRenderSystem
         GameEngine.DrawLine(new Vec2i(rp2.X, rp1.Y), rp2, dCfg.StoneShadow);
 
         // 4. 門楣頂梁（Lintel）
-        var lintelP1 = new Vec2i(gateP1.X - 6, gateP1.Y);
-        var lintelP2 = new Vec2i(gateP2.X + 6, gateP1.Y + lintelH);
+        var lintelP1 = new Vec2i(gateP1.X - dCfg.LintelExtraWidth, gateP1.Y);
+        var lintelP2 = new Vec2i(gateP2.X + dCfg.LintelExtraWidth, gateP1.Y + lintelH);
         GameEngine.DrawBox(lintelP1, lintelP2, dCfg.StoneBase, true);
         GameEngine.DrawLine(lintelP1, new Vec2i(lintelP2.X, lintelP1.Y), dCfg.StoneHighlight);
         GameEngine.DrawLine(new Vec2i(lintelP1.X, lintelP2.Y), lintelP2, dCfg.StoneShadow);
@@ -266,6 +268,7 @@ public static class TutorialRenderSystem
         int pillarW,
         int lintelH,
         int pedestalH,
+        TutorialDoorsConfig dCfg,
         TutorialDoorItemConfig itemCfg,
         bool inRange,
         float animTimer)
@@ -274,18 +277,18 @@ public static class TutorialRenderSystem
         var symbols = itemCfg.RuneSymbols.AsSpan();
         if (symbols.IsEmpty) return;
 
-        var startY = gateP1.Y + lintelH + 18;
-        var bottomY = gateP2.Y - pedestalH - 18;
-        var spanY = Math.Max(20, bottomY - startY);
-        var step = spanY / 3;
+        var startY = gateP1.Y + lintelH + dCfg.RuneMarginY;
+        var bottomY = gateP2.Y - pedestalH - dCfg.RuneMarginY;
+        var spanY = Math.Max(dCfg.RuneMinSpanY, bottomY - startY);
+        var step = spanY / dCfg.RuneCount;
 
         var leftX = gateP1.X + pillarW / 2;
         var rightX = gateP2.X - pillarW / 2;
 
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < dCfg.RuneCount; i++)
         {
             var y = startY + i * step;
-            var glyphIdx = (i * 2) % symbols.Length;
+            var glyphIdx = (i * dCfg.RuneGlyphStep) % symbols.Length;
             var runeChar = symbols.Slice(glyphIdx, 1);
 
             GameEngine.DrawCenterString(new Vec2i(leftX, y), runeChar, runeColor);
@@ -311,94 +314,98 @@ public static class TutorialRenderSystem
 
         if (isSnake)
         {
+            var snakeCfg = dCfg.SnakeMotion;
             var bobY = MathF.Sin(animTimer * itemCfg.MotionSpeed) * itemCfg.MotionAmplitude;
-            var bobX = MathF.Cos(animTimer * itemCfg.MotionSpeed * 0.7f) * (itemCfg.MotionAmplitude * 0.35f);
-            var previewPos = new Vec2i((int)(center.X + bobX), (int)(center.Y + 12 + bobY));
+            var bobX = MathF.Cos(animTimer * itemCfg.MotionSpeed * snakeCfg.BobSpeedMultiplierX) * (itemCfg.MotionAmplitude * snakeCfg.BobAmplitudeMultiplierX);
+            var previewPos = new Vec2i((int)(center.X + bobX), (int)(center.Y + snakeCfg.PreviewOffsetY + bobY));
 
             GameEngine.DrawRotaGraph3(previewPos, dCfg.PreviewScale, 0.0, texHandle, true);
 
-            // 蛇神光輪：周囲を旋回する 3 顆の浮遊毒霊オーブ
-            for (var k = 0; k < 3; k++)
+            // 蛇神光輪：周囲を旋回する浮遊毒霊オーブ
+            for (var k = 0; k < snakeCfg.OrbCount; k++)
             {
-                var theta = animTimer * 2.8f + k * (MathF.PI * 2f / 3f);
-                var orbX = (int)(previewPos.X + MathF.Cos(theta) * 46f);
-                var orbY = (int)(previewPos.Y + MathF.Sin(theta) * 18f);
-                var orbR = inRange ? 5 : 3;
+                var theta = animTimer * snakeCfg.OrbSpeed + k * (MathF.PI * 2f / snakeCfg.OrbCount);
+                var orbX = (int)(previewPos.X + MathF.Cos(theta) * snakeCfg.OrbRadius.X);
+                var orbY = (int)(previewPos.Y + MathF.Sin(theta) * snakeCfg.OrbRadius.Y);
+                var orbR = inRange ? snakeCfg.OrbActiveRadius : snakeCfg.OrbIdleRadius;
                 var orbCol = inRange ? itemCfg.RuneColorActive : itemCfg.AuraColor;
 
                 GameEngine.DrawCircle(new Vec2i(orbX, orbY), orbR, orbCol, true);
                 if (inRange)
                 {
-                    GameEngine.DrawCircle(new Vec2i(orbX, orbY), orbR + 2, itemCfg.AuraColor, false);
+                    GameEngine.DrawCircle(new Vec2i(orbX, orbY), orbR + snakeCfg.OrbGlowDelta, itemCfg.AuraColor, false);
                 }
             }
         }
         else
         {
             // 獅子神動態：重砸地面＆衝撃波（Ground Slam & Shockwave）
-            // 3.0秒周期：威圧待機 (0.0~0.60, 1.8s) -> 迅猛起跳 (0.60~0.74, 0.42s) -> 頂点蓄力 (0.74~0.80, 0.18s) -> 极速下砸 (0.80~0.85, 0.15s) -> 轟天重砸＆地裂衝撃波 (0.85~1.00, 0.45s)
+            var lionCfg = dCfg.LionMotion;
             var t = (animTimer * itemCfg.MotionSpeed) % 1.0f;
             float slamY;
             float sx;
             float sy;
             var shockProgress = -1f;
 
-            if (t < 0.60f)
+            if (t < lionCfg.IdlePhaseEnd)
             {
                 // 1. 威圧伺機姿態：低周波の重厚な呼吸脈動
-                var breath = MathF.Sin(t * MathF.PI * 8f) * 0.02f;
+                var breath = MathF.Sin(t * MathF.PI * lionCfg.BreathFrequency) * lionCfg.BreathAmplitude;
                 slamY = 0f;
                 sx = 1f + breath;
                 sy = 1f - breath;
             }
-            else if (t < 0.74f)
+            else if (t < lionCfg.JumpPhaseEnd)
             {
                 // 2. 猛獅起跳蓄力 (Ease-out 騰空)
-                var p = (t - 0.60f) / 0.14f;
+                var duration = lionCfg.JumpPhaseEnd - lionCfg.IdlePhaseEnd;
+                var p = (t - lionCfg.IdlePhaseEnd) / duration;
                 var h = MathF.Sin(p * (MathF.PI * 0.5f));
                 slamY = -h * itemCfg.MotionAmplitude;
-                sx = 1f - 0.15f * h;
-                sy = 1f + 0.22f * h;
+                sx = 1f - lionCfg.JumpStretchX * h;
+                sy = 1f + lionCfg.JumpStretchY * h;
             }
-            else if (t < 0.80f)
+            else if (t < lionCfg.PeakPhaseEnd)
             {
                 // 3. 頂点凝滞（威圧定格）
                 slamY = -itemCfg.MotionAmplitude;
-                sx = 1.08f;
-                sy = 0.92f;
+                sx = lionCfg.PeakScaleX;
+                sy = lionCfg.PeakScaleY;
             }
-            else if (t < 0.85f)
+            else if (t < lionCfg.FallPhaseEnd)
             {
                 // 4. 流星重砸下落 (Ease-in 3次加速下墜)
-                var p = (t - 0.80f) / 0.05f;
+                var duration = lionCfg.FallPhaseEnd - lionCfg.PeakPhaseEnd;
+                var p = (t - lionCfg.PeakPhaseEnd) / duration;
                 slamY = -(1f - p * p * p) * itemCfg.MotionAmplitude;
-                sx = 1f - 0.18f * p;
-                sy = 1f + 0.30f * p;
+                sx = 1f - lionCfg.FallStretchX * p;
+                sy = 1f + lionCfg.FallStretchY * p;
             }
             else
             {
                 // 5. 触地重砸、強烈圧扁形変および減衰反発
-                var p = (t - 0.85f) / 0.15f;
+                var duration = 1.0f - lionCfg.FallPhaseEnd;
+                var p = (t - lionCfg.FallPhaseEnd) / duration;
                 var decay = 1f - p;
-                var squash = decay * MathF.Cos(p * MathF.PI * 2.5f);
+                var squash = decay * MathF.Cos(p * MathF.PI * lionCfg.SquashOscillation);
                 slamY = 0f;
-                sx = 1f + 0.36f * squash;
-                sy = 1f - 0.36f * squash;
+                sx = 1f + lionCfg.SquashAmplitude * squash;
+                sy = 1f - lionCfg.SquashAmplitude * squash;
                 shockProgress = p;
             }
 
             var baseScale = dCfg.PreviewScale;
-            var halfH = 192f * baseScale.Y * 0.5f;
+            var halfH = lionCfg.TextureHeight * baseScale.Y * 0.5f;
             var footCompY = (1f - sy) * halfH;
 
-            // 着地瞬間の微幅な衝撃震動（最初の 0.12s）
+            // 着地瞬間の微幅な衝撃震動
             var impactTremor = 0;
-            if (shockProgress is >= 0f and < 0.30f)
+            if (shockProgress is >= 0f && shockProgress < lionCfg.TremorDuration)
             {
-                impactTremor = (int)(MathF.Sin(shockProgress * 65f) * (1f - shockProgress / 0.30f) * 3f);
+                impactTremor = (int)(MathF.Sin(shockProgress * lionCfg.TremorFrequency) * (1f - shockProgress / lionCfg.TremorDuration) * lionCfg.TremorAmplitude);
             }
 
-            var previewPos = new Vec2i(center.X, (int)(center.Y + 16 + slamY + footCompY + impactTremor));
+            var previewPos = new Vec2i(center.X, (int)(center.Y + lionCfg.PreviewOffsetY + slamY + footCompY + impactTremor));
             var scale = new Vec2f(baseScale.X * sx, baseScale.Y * sy);
 
             GameEngine.DrawRotaGraph3(previewPos, scale, 0.0, texHandle, true);
@@ -407,50 +414,56 @@ public static class TutorialRenderSystem
             if (shockProgress >= 0f)
             {
                 var sp = shockProgress;
-                var alpha = (int)((1f - sp) * 255f);
+                var alpha = (int)((1f - sp) * lionCfg.MaxShockwaveAlpha);
                 if (alpha > 0)
                 {
                     GameEngine.SetDrawBlendMode(BlendMode.Add, alpha);
 
-                    var groundCenter = new Vec2i(center.X, groundY - 20);
-                    var spread = (int)(sp * 72f);
+                    var groundCenter = new Vec2i(center.X, groundY - lionCfg.GroundOffsetY);
+                    var spread = (int)(sp * lionCfg.MaxSpread);
                     var waveCol = itemCfg.RuneColorActive;
                     var coreCol = itemCfg.AuraColor;
 
                     // A. 地表を左右へ高速走駆する横向激波刃
-                    GameEngine.DrawLine(new Vec2i(groundCenter.X - 8, groundCenter.Y), new Vec2i(groundCenter.X - 8 - spread, groundCenter.Y), waveCol, 3);
-                    GameEngine.DrawLine(new Vec2i(groundCenter.X + 8, groundCenter.Y), new Vec2i(groundCenter.X + 8 + spread, groundCenter.Y), waveCol, 3);
+                    var originOffset = lionCfg.WaveOriginOffset;
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X - originOffset, groundCenter.Y), new Vec2i(groundCenter.X - originOffset - spread, groundCenter.Y), waveCol, lionCfg.WaveThickness);
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X + originOffset, groundCenter.Y), new Vec2i(groundCenter.X + originOffset + spread, groundCenter.Y), waveCol, lionCfg.WaveThickness);
 
                     // B. 激波前沿の地裂衝天尖刺
-                    var spikeH1 = (int)((1f - sp) * 15f);
-                    var spikeH2 = (int)((1f - sp) * 10f);
-                    GameEngine.DrawLine(new Vec2i(groundCenter.X - 8 - spread, groundCenter.Y), new Vec2i(groundCenter.X - 12 - spread, groundCenter.Y - spikeH1), coreCol, 2);
-                    GameEngine.DrawLine(new Vec2i(groundCenter.X + 8 + spread, groundCenter.Y), new Vec2i(groundCenter.X + 12 + spread, groundCenter.Y - spikeH1), coreCol, 2);
+                    var spikeH1 = (int)((1f - sp) * lionCfg.Spike1Height);
+                    var spikeH2 = (int)((1f - sp) * lionCfg.Spike2Height);
+                    var s1Offset = originOffset + lionCfg.Spike1Offset;
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X - originOffset - spread, groundCenter.Y), new Vec2i(groundCenter.X - s1Offset - spread, groundCenter.Y - spikeH1), coreCol, lionCfg.SpikeThickness);
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X + originOffset + spread, groundCenter.Y), new Vec2i(groundCenter.X + s1Offset + spread, groundCenter.Y - spikeH1), coreCol, lionCfg.SpikeThickness);
 
                     var midSpread = (int)(spread * 0.5f);
-                    GameEngine.DrawLine(new Vec2i(groundCenter.X - 8 - midSpread, groundCenter.Y), new Vec2i(groundCenter.X - 10 - midSpread, groundCenter.Y - spikeH2), coreCol, 2);
-                    GameEngine.DrawLine(new Vec2i(groundCenter.X + 8 + midSpread, groundCenter.Y), new Vec2i(groundCenter.X + 10 + midSpread, groundCenter.Y - spikeH2), coreCol, 2);
+                    var s2Offset = originOffset + lionCfg.Spike2Offset;
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X - originOffset - midSpread, groundCenter.Y), new Vec2i(groundCenter.X - s2Offset - midSpread, groundCenter.Y - spikeH2), coreCol, lionCfg.SpikeThickness);
+                    GameEngine.DrawLine(new Vec2i(groundCenter.X + originOffset + midSpread, groundCenter.Y), new Vec2i(groundCenter.X + s2Offset + midSpread, groundCenter.Y - spikeH2), coreCol, lionCfg.SpikeThickness);
 
                     // C. 上空へ噴流拡散する半月形高圧激波弧
-                    var arcR = (int)(10 + sp * 58f);
-                    const int arcSegments = 6;
-                    var prevPt = new Vec2i(groundCenter.X - (int)(arcR * 1.15f), groundCenter.Y);
-                    for (var s = 1; s <= arcSegments; s++)
+                    var arcR = (int)(lionCfg.ArcBaseRadius + sp * lionCfg.ArcSpread);
+                    var prevPt = new Vec2i(groundCenter.X - (int)(arcR * lionCfg.ArcScale.X), groundCenter.Y);
+                    for (var s = 1; s <= lionCfg.ArcSegments; s++)
                     {
-                        var theta = -MathF.PI + s * (MathF.PI / arcSegments);
+                        var theta = -MathF.PI + s * (MathF.PI / lionCfg.ArcSegments);
                         var currPt = new Vec2i(
-                            groundCenter.X + (int)(MathF.Cos(theta) * arcR * 1.15f),
-                            groundCenter.Y + (int)(MathF.Sin(theta) * arcR * 0.52f));
-                        GameEngine.DrawLine(prevPt, currPt, waveCol, 2);
+                            groundCenter.X + (int)(MathF.Cos(theta) * arcR * lionCfg.ArcScale.X),
+                            groundCenter.Y + (int)(MathF.Sin(theta) * arcR * lionCfg.ArcScale.Y));
+                        GameEngine.DrawLine(prevPt, currPt, waveCol, lionCfg.ArcThickness);
                         prevPt = currPt;
                     }
 
                     // D. 触地瞬間の高熱衝撃爆心フラッシュ
-                    if (sp < 0.22f)
+                    if (sp < lionCfg.FlashThreshold)
                     {
-                        var flashA = (int)((1f - sp / 0.22f) * 220f);
+                        var flashA = (int)((1f - sp / lionCfg.FlashThreshold) * lionCfg.FlashMaxAlpha);
                         GameEngine.SetDrawBlendMode(BlendMode.Add, flashA);
-                        GameEngine.DrawBox(new Vec2i(groundCenter.X - 18, groundCenter.Y - 5), new Vec2i(groundCenter.X + 18, groundCenter.Y + 5), colors.White, true);
+                        GameEngine.DrawBox(
+                            new Vec2i(groundCenter.X - lionCfg.FlashHalfSize.X, groundCenter.Y - lionCfg.FlashHalfSize.Y),
+                            new Vec2i(groundCenter.X + lionCfg.FlashHalfSize.X, groundCenter.Y + lionCfg.FlashHalfSize.Y),
+                            colors.White,
+                            true);
                     }
 
                     GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
@@ -470,14 +483,14 @@ public static class TutorialRenderSystem
         TutorialColorsConfig colors)
     {
         // 門楣上の神殿銘板プレート
-        GameEngine.DrawCenterString(new Vec2i(center.X, gateP1.Y + 9), itemCfg.Title, colors.White);
-        GameEngine.DrawCenterString(new Vec2i(center.X, gateP1.Y + 23), itemCfg.Tag, itemCfg.RuneColorActive);
+        GameEngine.DrawCenterString(new Vec2i(center.X, gateP1.Y + dCfg.PlaqueTitleOffsetY), itemCfg.Title, colors.White);
+        GameEngine.DrawCenterString(new Vec2i(center.X, gateP1.Y + dCfg.PlaqueTagOffsetY), itemCfg.Tag, itemCfg.RuneColorActive);
 
         // 接近時の浮遊 [F] 挑戦開始プロンプト枠
         if (inRange)
         {
             var promptPos = new Vec2i(center.X, gateP1.Y + dCfg.TooltipOffsetY);
-            var pulse = (int)(MathF.Sin(animTimer * 6f) * 2f);
+            var pulse = (int)(MathF.Sin(animTimer * dCfg.TooltipPulseSpeed) * dCfg.TooltipPulseAmplitude);
             var halfTipW = dCfg.TooltipSize.X / 2;
             var halfTipH = dCfg.TooltipSize.Y / 2;
             var bubbleP1 = new Vec2i(promptPos.X - halfTipW, promptPos.Y - halfTipH + pulse);
