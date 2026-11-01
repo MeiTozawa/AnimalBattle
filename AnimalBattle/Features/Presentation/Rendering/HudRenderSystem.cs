@@ -183,7 +183,12 @@ public static class HudRenderSystem {
 
         if (player == null) return;
         var curHp = player.Value.Health.Current;
-        if (ctx.LastPlayerHp >= 0.0f && curHp < ctx.LastPlayerHp)
+        if (curHp <= 0.0f)
+        {
+            // 死亡時：頭上インジケータ表示タイマーを即座にリセット
+            ctx.OverheadWakeTimer = 0.0f;
+        }
+        else if (ctx.LastPlayerHp >= 0.0f && curHp < ctx.LastPlayerHp)
         {
             // 被弾検知：振動・点滅および頭上インジケータを覚醒
             ctx.DamageShakeTimer = badgeCfg.ShakeDuration;
@@ -345,12 +350,14 @@ public static class HudRenderSystem {
         HudRenderSystemContext ctx)
     {
         if (player == null || !renderCfg.PlayerHpBadge.OverheadEnabled) return;
+        if (!player.Value.IsAlive || player.Value.Health.Current <= 0.0f) return;
         if (ctx.OverheadWakeTimer <= 0.0f) return;
 
         var p = player.Value;
         var badgeCfg = renderCfg.PlayerHpBadge;
         var maxHp = (int)Math.Max(1.0f, p.Health.Max);
         var currentHp = Math.Clamp((int)p.Health.Current, 0, maxHp);
+        if (currentHp <= 0) return;
 
         // 自機スクリーン座標の算出
         var headScreenPos = new Vec2i((int)p.Position.X, (int)(p.Position.Y + badgeCfg.OverheadOffsetY)) + CameraService.RenderOffset;
