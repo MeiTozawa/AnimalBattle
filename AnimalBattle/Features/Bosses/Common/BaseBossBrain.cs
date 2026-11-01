@@ -200,6 +200,7 @@ public abstract class BaseBossBrain : IBossBrain
     protected void StartPhaseTransition(Phase newPhase, float duration = 0.0f)
     {
         Phase = newPhase;
+        _stateTimer = 0.0f;
         _asc.InterruptCurrentAbility();
         _phaseTransitionAbility.Configure(duration);
         _asc.TryActivateAbility(_phaseTransitionAbility.AbilityTag);

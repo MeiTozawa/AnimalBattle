@@ -269,6 +269,7 @@ public sealed class BossLionBrain : BaseBossBrain {
 
         if (_asc.HasTag(GameplayTag.Phasing))
         {
+            _stateTimer += dt;
             _currentVelocity = Vec2f.Zero;
             return;
         }
