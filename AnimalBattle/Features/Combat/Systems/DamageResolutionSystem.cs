@@ -157,7 +157,7 @@ public static class DamageResolutionSystem
                     var blinkFreq = world.Get<RenderConfig>().Player.InvincibleBlinkFrequency;
                     entity.Set(new InvincibleBlinkEffect(profile.InvincibleDuration, blinkFreq));
                 }
-                EventBus.Publish(new PlayerHealthChangedEvent(prevHp, hp.Current, hp.Max));
+                EventBus.Publish(new PlayerHealthChangedEvent(prevHp, hp.Current));
             }
             else if (isVulnerable)
             {
@@ -221,7 +221,7 @@ public static class DamageResolutionSystem
                         var trauma = isHeavy ? cameraCfg.PlayerHeavyHitTrauma : cameraCfg.PlayerHitTrauma;
                         CameraService.AddTrauma(trauma);
                         CameraService.AddDirectionalImpulse(targetKnockback, cameraCfg.DirectionalImpulseRatio);
-                        EventBus.Publish(new PlayerDamagedEvent(totalDamage, hp.Current, isHeavy));
+                        EventBus.Publish(new PlayerDamagedEvent());
                         break;
 
                     case CombatEntityKind.Boss:
@@ -230,7 +230,7 @@ public static class DamageResolutionSystem
                             CameraService.AddTrauma(cameraCfg.BossVulnerableHitTrauma);
                         }
 
-                        EventBus.Publish(new BossDamagedEvent(finalDamage, hp.Current, isVulnerable));
+                        EventBus.Publish(new BossDamagedEvent(isVulnerable));
 
                         // 被弾反撃弾幕の生成
                         if (profile.HasCounterAttack)

@@ -19,19 +19,6 @@ public class GameManager : IDisposable {
     /// </summary>
     public static GameManager Current { get; private set; } = null!;
 
-    /// <summary>ゲーム全体で共有するECSワールドであり、Dispose呼び出し時まで破棄されません。</summary>
-    public World EcsWorld => _ecsWorld;
-
-    /// <summary>
-    ///     設定レジストリインスタンスを取得します。
-    /// </summary>
-    public IConfigRegistry Configs => _configRegistry;
-
-    /// <summary>
-    ///     アセットマネージャーインスタンスを取得します。
-    /// </summary>
-    public IAssetManager Assets => _assetManager;
-
     /// <summary>
     ///     <see cref="GameManager" /> の新しいインスタンスを初期化し、全 ECS パイプラインを登録します。
     /// </summary>

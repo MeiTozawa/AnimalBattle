@@ -46,21 +46,6 @@ public sealed class ConfigRegistry : IConfigRegistry
     }
 
     /// <inheritdoc />
-    public ConfigHolder<T> RegisterInstance<T>(T instance) where T : class
-    {
-        Debug.Assert(instance != null, "登録対象の設定インスタンスは null にできません。");
-        var type = typeof(T);
-        if (_holders.TryGetValue(type, out var existing))
-        {
-            return (ConfigHolder<T>)existing;
-        }
-
-        var holder = new ConfigHolder<T>(instance);
-        _holders[type] = holder;
-        return holder;
-    }
-
-    /// <inheritdoc />
     public ConfigHolder<T> GetHolder<T>() where T : class
     {
         if (_holders.TryGetValue(typeof(T), out var holder))

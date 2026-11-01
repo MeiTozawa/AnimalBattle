@@ -19,8 +19,6 @@ public interface IConfigRegistry : IDisposable
     /// <summary>
     /// 事前構築された設定インスタンスをそのまま登録します。
     /// </summary>
-    ConfigHolder<T> RegisterInstance<T>(T instance) where T : class;
-
     /// <summary>
     /// 型に対応する設定ホルダーを取得します。
     /// </summary>

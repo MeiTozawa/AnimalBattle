@@ -7,8 +7,6 @@ using AnimalBattle.Core;
 /// </summary>
 public interface IAssetManager : IDisposable
 {
-    /// <summary>キャラクタースプライトがロード済みかどうかを取得します。</summary>
-    bool HasCharacterSprite { get; }
 
     /// <summary>スプライトシート画像ロードおよび初期化を実行します。</summary>
     void Initialize();
@@ -22,8 +20,6 @@ public interface IAssetManager : IDisposable
     /// <summary>キャッシュ済みのテクスチャハンドルの取得を試行します。</summary>
     bool TryGetTexture(string relativePath, out int handle);
 
-    /// <summary>キャッシュ済みのテクスチャ画像サイズの取得を試行します。</summary>
-    bool TryGetGraphSize(int handle, out Vec2i size);
 
     /// <summary>キャッシュ済みのテクスチャ画像サイズを取得します。</summary>
     Vec2i GetGraphSize(int handle);

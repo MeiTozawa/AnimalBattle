@@ -138,12 +138,6 @@ public sealed class AssetManager : IAssetManager {
     }
 
     /// <inheritdoc />
-    public bool TryGetGraphSize(int handle, out Vec2i size)
-    {
-        return _graphSizes.TryGetValue(handle, out size);
-    }
-
-    /// <inheritdoc />
     public Vec2i GetGraphSize(int handle)
     {
         if (_graphSizes.TryGetValue(handle, out var size))

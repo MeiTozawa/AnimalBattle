@@ -21,39 +21,9 @@ public static class CameraService
     public static AnimalBattle.Configs.CameraConfig CurrentConfig { get; set; } = new();
 
     /// <summary>
-    ///     0.0fから1.0fの範囲に収まる現在のTrauma値。
-    /// </summary>
-    public static float Trauma => _trauma;
-
-    /// <summary>
-    ///     ピクセル単位のカメラ平滑パンX軸オフセット。
-    /// </summary>
-    public static float PanOffsetX => _currentPanX;
-
-    /// <summary>
-    ///     ピクセル単位のカメラ平滑パンY軸オフセット。
-    /// </summary>
-    public static float PanOffsetY => _currentPanY;
-
-    /// <summary>
-    ///     ピクセル単位の画面シェイクX軸オフセット。
-    /// </summary>
-    public static float ShakeOffsetX => _shakeOffsetX;
-
-    /// <summary>
-    ///     ピクセル単位の画面シェイクY軸オフセット。
-    /// </summary>
-    public static float ShakeOffsetY => _shakeOffsetY;
-
-    /// <summary>
     ///     ピクセル単位の最終合成カメラ描画オフセット。
     /// </summary>
     public static Vec2i RenderOffset { get; private set; }
-
-    /// <summary>
-    ///     RenderOffsetへの参照を返却するカメラ描画オフセットエイリアス。
-    /// </summary>
-    public static Vec2i Offset => RenderOffset;
 
     /// <summary>
     ///     Traumaを加算して最大1.0fへクランプします。
@@ -74,16 +44,6 @@ public static class CameraService
         var cfg = CurrentConfig;
         _impulseX = Math.Clamp(_impulseX + dir.X * power, -cfg.MaxOffset.X, cfg.MaxOffset.X);
         _impulseY = Math.Clamp(_impulseY + dir.Y * power, -cfg.MaxOffset.Y, cfg.MaxOffset.Y);
-    }
-
-    /// <summary>
-    ///     単体更新またはテスト用のデフォルト更新処理。
-    /// </summary>
-    /// <param name="deltaTime">前フレームからの経過秒数</param>
-    public static void Update(float deltaTime)
-    {
-        var cfg = CurrentConfig;
-        Update(deltaTime, cfg.ArenaCenter, Vec2f.Zero, cfg.ArenaCenter, cfg);
     }
 
     /// <summary>

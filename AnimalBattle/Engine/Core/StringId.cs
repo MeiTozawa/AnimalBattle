@@ -75,24 +75,8 @@ public readonly record struct StringId : IEquatable<StringId>, IComparable<Strin
         }
     }
 
-    /// <summary>デバッグ用に識別子の文字代表を最大容量制限付きプールへ登録します。</summary>
-    public static void RegisterForDebug(string source)
-    {
-        if (string.IsNullOrEmpty(source)) return;
-        var hash = ComputeHash(source.AsSpan());
-        RegisterToPool(hash, source);
-    }
 #endif
 
-    /// <summary>
-    /// FNV-1a 32-bit アルゴリズムに基づき、大文字小文字を区別しないハッシュ値を算出します。
-    /// </summary>
-    /// <param name="text">計算対象の文字列</param>
-    /// <returns>32-bit ハッシュ値</returns>
-    public static uint ComputeHash(string? text)
-    {
-        return ComputeHash(text.AsSpan());
-    }
 
     /// <summary>
     /// 大文字小文字を区別せずにゼロアロケーションでハッシュ値を算出します。

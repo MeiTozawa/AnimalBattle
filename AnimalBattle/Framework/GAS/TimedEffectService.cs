@@ -68,23 +68,6 @@ public static class TimedEffectService
         RecalculateTagMask(ref effects, ref tagState);
     }
 
-    /// <summary>
-    ///     指定されたタグの最大残り時間を秒単位で取得します。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float GetTagRemainingTime(in TimedEffectsState effects, GameplayTag tag)
-    {
-        var maxRemaining = 0.0f;
-        for (var i = 0; i < TimedEffectsState.MaxSlots; i++)
-        {
-            ref readonly var slot = ref effects.GetSlot(i);
-            if (slot.IsActive && (slot.GrantedTags & tag) != GameplayTag.None)
-            {
-                maxRemaining = MathF.Max(maxRemaining, slot.Remaining);
-            }
-        }
-        return maxRemaining;
-    }
 
     /// <summary>
     ///     ActionMaskを保持したまま全アクティブスロットから時限タグマスクを再計算します。

@@ -146,38 +146,7 @@ public static unsafe class PhysicsService {
         return isGrounded;
     }
 
-    /// <summary>
-    ///     統一幾何形状を用いたすり抜け床着地判定を行います。
-    /// </summary>
-    public static bool CheckPlatformGround(
-        float prevY,
-        float nextY,
-        in Transform playerTrans,
-        CollisionShape playerShape,
-        in Transform platformTrans,
-        CollisionShape platformShape,
-        out float adjustedPosY,
-        out float adjustedVy)
-    {
-        var pSize = playerShape.Type == CollisionShapeType.Box ? playerShape.Size : new Vec2f(playerShape.Radius * 2.0f, playerShape.Radius * 2.0f);
-        var platSize = platformShape.Type == CollisionShapeType.Box ? platformShape.Size : new Vec2f(platformShape.Radius * 2.0f, platformShape.Radius * 2.0f);
-
-        Box2D playerBox = new(new Vec2f(playerTrans.Position.X + playerShape.Offset.X, nextY + playerShape.Offset.Y), pSize);
-        Box2D platformBox = new(platformTrans.Position + platformShape.Offset, platSize);
-
-        return CheckPlatformGround(prevY, nextY, playerBox, platformBox, out adjustedPosY, out adjustedVy);
-    }
-
     // --- 運動積分およびベクトル数学 ---
-
-    /// <summary>
-    ///     速度ベクトルを位置座標へ積分加算します。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vec2f IntegrateVelocity(Vec2f position, Vec2f velocity, float deltaTime = 1.0f)
-    {
-        return position + velocity * deltaTime;
-    }
 
     /// <summary>
     ///     垂直速度へ重力を加算し、最大落下速度でクランプします。
@@ -190,48 +159,12 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
-    ///     2 点間のユークリッド距離を計算します。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float CalculateDistance(Vec2f a, Vec2f b)
-    {
-        return (a - b).Length();
-    }
-
-    /// <summary>
-    ///     2 点間のラジアン角度を計算します。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float CalculateAngle(Vec2f from, Vec2f to)
-    {
-        return MathF.Atan2(to.Y - from.Y, to.X - from.X);
-    }
-
-    /// <summary>
-    ///     角度と移動速度から速度ベクトルを算出します。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vec2f DirectionToVector(float angleRad, float speed)
-    {
-        return new Vec2f(MathF.Cos(angleRad) * speed, MathF.Sin(angleRad) * speed);
-    }
-
-    /// <summary>
     ///     値を指定した最小値・最大値の範囲内にクランプします。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Clamp(float value, float minVal, float maxVal)
     {
         return Math.Clamp(value, minVal, maxVal);
-    }
-
-    /// <summary>
-    ///     2値間を線形補間します。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float Lerp(float a, float b, float t)
-    {
-        return a + (b - a) * t;
     }
 
     /// <summary>
@@ -267,22 +200,6 @@ public static unsafe class PhysicsService {
 
         var nextX = currentPos.X + (targetX - currentPos.X) * lerpFactor;
         var nextY = currentPos.Y + (targetY - currentPos.Y) * lerpFactor;
-        return new Vec2f(nextX, nextY);
-    }
-
-    /// <summary>
-    ///     目標アンカーへの指数平滑補間によるボスの初期位置復帰軌道をインライン計算します。
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vec2f CalculateBossReturnPosition(
-        Vec2f currentPos,
-        Vec2f targetBasePos,
-        float returnSpeed,
-        float deltaTime)
-    {
-        var factor = 1.0f - MathF.Exp(-returnSpeed * deltaTime);
-        var nextX = currentPos.X + (targetBasePos.X - currentPos.X) * factor;
-        var nextY = currentPos.Y + (targetBasePos.Y - currentPos.Y) * factor;
         return new Vec2f(nextX, nextY);
     }
 }

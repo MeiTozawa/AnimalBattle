@@ -11,14 +11,8 @@ using Flecs.NET.Core;
 public sealed class ConfigHolder<T> : IConfigHolder where T : class
 {
     private volatile T _current;
-    private int _version;
-
     /// <inheritdoc />
-    public Type ConfigType => typeof(T);
-
     /// <inheritdoc />
-    public object BoxedValue => Value;
-
     /// <inheritdoc />
     public void InjectToWorld(World world)
     {
@@ -43,11 +37,7 @@ public sealed class ConfigHolder<T> : IConfigHolder where T : class
     public T Value => _current;
 
     /// <summary>リロード成功ごとにインクリメントされる設定バージョン番号です。</summary>
-    public uint Version => (uint)Volatile.Read(ref _version);
-
     /// <summary>設定変更通知イベント。</summary>
-    public event Action<T>? OnChanged;
-
     /// <summary>
     /// 設定インスタンスを検証し、妥当であればアトミックに更新します。
     /// </summary>
@@ -68,16 +58,10 @@ public sealed class ConfigHolder<T> : IConfigHolder where T : class
         }
 
         // 検証完了後に参照をアトミックに差し替え
-        _current = newConfig;
-        Interlocked.Increment(ref _version);
-
-        OnChanged?.Invoke(_current);
-        return Result.Success;
+        _current = newConfig;        return Result.Success;
     }
 
     /// <inheritdoc />
     public void Dispose()
-    {
-        OnChanged = null;
-    }
+    {    }
 }

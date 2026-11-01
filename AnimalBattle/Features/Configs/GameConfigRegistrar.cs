@@ -1,8 +1,6 @@
 namespace AnimalBattle.Configs;
 
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
 
@@ -19,8 +17,6 @@ public static class GameConfigRegistrar
         Debug.Assert(registry != null, "IConfigRegistry は null にできません。");
         Debug.Assert(world != null, "World は null にできません。");
 
-        // Debug / Release 共通：Color 型コンバータ登録
-        TypeDescriptor.AddAttributes(typeof(Color), new TypeConverterAttribute(typeof(FlexibleColorConverter)));
 
         // TOML 設定ファイルからの自動バインド登録：.NET Configuration Binding Generator 駆動
         registry.RegisterToml<CatConfig>(ResourcePath.Config.Cat, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCat(w, cfg));

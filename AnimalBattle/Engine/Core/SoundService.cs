@@ -113,7 +113,6 @@ public static class SoundService
         EventBus.Subscribe<CombatResetEvent>(OnCombatReset);
         EventBus.Subscribe<BossBulletFiredEvent>(OnBossBulletFired);
         EventBus.Subscribe<BossDiveImpactEvent>(OnBossDiveImpact);
-        EventBus.Subscribe<BossWarningEvent>(OnBossWarning);
         EventBus.Subscribe<BossDamagedEvent>(OnBossDamaged);
         EventBus.Subscribe<BossDiedEvent>(OnBossDied);
     }
@@ -134,7 +133,6 @@ public static class SoundService
         EventBus.Unsubscribe<CombatResetEvent>(OnCombatReset);
         EventBus.Unsubscribe<BossBulletFiredEvent>(OnBossBulletFired);
         EventBus.Unsubscribe<BossDiveImpactEvent>(OnBossDiveImpact);
-        EventBus.Unsubscribe<BossWarningEvent>(OnBossWarning);
         EventBus.Unsubscribe<BossDamagedEvent>(OnBossDamaged);
         EventBus.Unsubscribe<BossDiedEvent>(OnBossDied);
     }
@@ -165,7 +163,6 @@ public static class SoundService
 
     private static void OnBossBulletFired(BossBulletFiredEvent e) => PlaySfx(SfxType.BossBulletShoot);
     private static void OnBossDiveImpact(BossDiveImpactEvent e) => PlaySfx(SfxType.BossDiveImpact);
-    private static void OnBossWarning(BossWarningEvent e) => PlaySfx(SfxType.BossWarning);
 
     private static void OnBossDamaged(BossDamagedEvent e)
     {

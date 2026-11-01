@@ -3,9 +3,8 @@ namespace AnimalBattle.Framework.Fsm;
 /// <summary>
 ///     ゼロGC・アトミック遷移を提供するフラット有限状態マシン：FSM。
 /// </summary>
-public class StateMachine : IState {
+public class StateMachine {
     private readonly List<IState> _states = [];
-    private readonly List<(Func<bool> Condition, IState TargetState)> _globalTransitions = [];
     private IState? _currentState;
 
     /// <summary>状態マシン識別子を取得します。</summary>
@@ -30,9 +29,6 @@ public class StateMachine : IState {
         _currentState ??= state;
     }
 
-    /// <summary>互換性のための状態追加メソッド：AddState へ委譲。</summary>
-    public void AddSubState(IState state) => AddState(state);
-
     /// <summary>初期状態を明示的に設定します。</summary>
     public void SetInitialState(IState state)
     {
@@ -52,31 +48,9 @@ public class StateMachine : IState {
         _currentState.Enter();
     }
 
-    /// <inheritdoc />
-    public void Enter()
-    {
-        _currentState?.Enter();
-    }
-
-    /// <inheritdoc />
+    /// <summary>毎フレームの状態論理を更新します。</summary>
     public void Update(float dt)
     {
-        for (var i = 0; i < _globalTransitions.Count; i++)
-        {
-            var (condition, target) = _globalTransitions[i];
-            if (condition() && _currentState != target)
-            {
-                ChangeState(target);
-                return;
-            }
-        }
-
         _currentState?.Update(dt);
-    }
-
-    /// <inheritdoc />
-    public void Exit()
-    {
-        _currentState?.Exit();
     }
 }

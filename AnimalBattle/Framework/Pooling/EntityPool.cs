@@ -1,32 +1,17 @@
 namespace AnimalBattle.Framework.Pooling;
 
 /// <summary>
-///     エンティティオブジェクトプールの運用テレメトリおよび健全性メトリクス。
-/// </summary>
-public sealed class EntityPoolMetrics {
-    /// <summary>過去最大の同時貸出使用量であるピーク値です。</summary>
-    public int PeakUsage { get; internal set; }
-
-    /// <summary>プールの動的拡張が発生した回数。</summary>
-    public int ExpansionCount { get; internal set; }
-
-    /// <summary>最大容量上限に達して貸出要求が拒否された回数。</summary>
-    public int OverflowCount { get; internal set; }
-
-    /// <summary>現在アクティブに貸出中のエンティティ数。</summary>
-    public int ActiveRentals { get; internal set; }
-}
-
-/// <summary>
 ///     弾幕やパーティクルなどの短命オブジェクト向けの高性能エンティティプールです。
 ///     プレハブ定義と連携してテーブル構造を固定化し、ゼロアロケーションでの安全な貸出と返却を提供します。
 /// </summary>
 public sealed class EntityPool : IDisposable {
     private static ulong _nextPoolId = 1;
     private Entity _prefab;
-    private readonly Action<Entity>? _onInit;
     private readonly Action<Entity>? _onReset;
     private World _world;
+    private readonly int _maxCapacity;
+    private int _availableCount;
+    private int _totalAllocated;
     private Entity[] _allAllocated;
     private bool[] _managedRentalFlags;
     private int[] _activePrev;
@@ -50,24 +35,12 @@ public sealed class EntityPool : IDisposable {
         int initialCapacity = 64,
         Action<Entity>? onReset = null,
         int maxCapacity = 2048)
-        : this(world, initialCapacity, null, onReset, maxCapacity, prefab)
-    {
-    }
-
-    private EntityPool(
-        World world,
-        int initialCapacity,
-        Action<Entity>? onInit,
-        Action<Entity>? onReset,
-        int maxCapacity,
-        Entity prefab)
     {
         _world = world;
         _prefab = prefab;
-        _onInit = onInit;
         _onReset = onReset;
         initialCapacity = Math.Max(1, initialCapacity);
-        MaxCapacity = Math.Max(initialCapacity, maxCapacity);
+        _maxCapacity = Math.Max(initialCapacity, maxCapacity);
 
         _pool = new Entity[initialCapacity];
         _allAllocated = new Entity[initialCapacity];
@@ -78,26 +51,14 @@ public sealed class EntityPool : IDisposable {
         Array.Fill(_activeNext, -1);
         _activeHead = -1;
         _activeTail = -1;
-        AvailableCount = 0;
-        TotalAllocated = 0;
+        _availableCount = 0;
+        _totalAllocated = 0;
 
         Prewarm(initialCapacity);
     }
 
     /// <summary>プール固有の識別子を取得します。</summary>
     public ulong PoolId { get; } = Interlocked.Increment(ref _nextPoolId);
-
-    /// <summary>プールの運用メトリクス統計を取得します。</summary>
-    public EntityPoolMetrics Metrics { get; } = new();
-
-    /// <summary>プールの最大許容エンティティ容量を取得します。</summary>
-    public int MaxCapacity { get; }
-
-    /// <summary>プール内の現在利用可能なエンティティ総数を取得します。</summary>
-    public int AvailableCount { get; private set; }
-
-    /// <summary>現在確保済みの貸出中および待機中を含むエンティティ総数を取得します。</summary>
-    public int TotalAllocated { get; private set; }
 
     /// <summary>
     ///     プール内の全エンティティを破棄し、リソースを解放します。
@@ -106,12 +67,12 @@ public sealed class EntityPool : IDisposable {
     {
         if (!_isDisposed)
         {
-            for (var i = 0; i < TotalAllocated; i++)
+            for (var i = 0; i < _totalAllocated; i++)
                 if (_allAllocated[i].IsAlive())
                     _allAllocated[i].Destruct();
 
-            AvailableCount = 0;
-            TotalAllocated = 0;
+            _availableCount = 0;
+            _totalAllocated = 0;
             _activeHead = -1;
             _activeTail = -1;
             _isDisposed = true;
@@ -123,14 +84,14 @@ public sealed class EntityPool : IDisposable {
     /// </summary>
     private void Prewarm(int count)
     {
-        EnsureArrayCapacity(TotalAllocated + count);
+        EnsureArrayCapacity(_totalAllocated + count);
         for (var i = 0; i < count; i++)
         {
-            var slot = TotalAllocated++;
+            var slot = _totalAllocated++;
             var e = CreateAndInitializeEntity(slot, false);
             e.Disable();
             _managedRentalFlags[slot] = false;
-            _pool[AvailableCount++] = e;
+            _pool[_availableCount++] = e;
             _allAllocated[slot] = e;
         }
     }
@@ -142,7 +103,6 @@ public sealed class EntityPool : IDisposable {
         {
             var e = CreateBaseEntity();
             e.Set(new PoolLeaseState { PoolId = PoolId, IsRented = isRented, SlotIndex = slot });
-            _onInit?.Invoke(e);
             return e;
         }
         finally
@@ -226,14 +186,12 @@ public sealed class EntityPool : IDisposable {
         Debug.Assert(!_isDisposed, "[EntityPool] 破棄済みのプールからエンティティを借出することはできません。");
         if (_isDisposed) return default;
 
-        if (AvailableCount == 0)
+        if (_availableCount == 0)
         {
-            if (TotalAllocated >= MaxCapacity)
+            if (_totalAllocated >= _maxCapacity)
             {
                 // 最大容量上限に到達：OOM 防止とゲーム継続稼働のため、
                 // FIFO方式に基づき最も古く貸出されたアクティブエンティティを強制回収して再利用します
-                Metrics.OverflowCount++;
-
                 // 安全 FIFO 抢占：跳过已经挂上 RecycleTag 待回收的实体，防止帧末被 CombatRecycleSystem 误杀
                 var slot = _activeHead;
                 var curr = _activeHead;
@@ -248,7 +206,7 @@ public sealed class EntityPool : IDisposable {
                     curr = _activeNext[curr];
                 }
 
-                if (slot < 0 || slot >= TotalAllocated)
+                if (slot < 0 || slot >= _totalAllocated)
                 {
                     slot = 0;
                 }
@@ -276,32 +234,25 @@ public sealed class EntityPool : IDisposable {
 
             // 実行時動的拡張：無効化と再有効化の反転処理を廃止し、
             // デフォルトでアクティブな単一エンティティを原地生成して即座に貸出
-            EnsureArrayCapacity(TotalAllocated + 1);
-            var newSlot = TotalAllocated++;
+            EnsureArrayCapacity(_totalAllocated + 1);
+            var newSlot = _totalAllocated++;
             var newEntity = CreateAndInitializeEntity(newSlot, true);
 
             _allAllocated[newSlot] = newEntity;
             _managedRentalFlags[newSlot] = true;
             AddToActiveTail(newSlot);
 
-            Metrics.ActiveRentals++;
-            if (Metrics.ActiveRentals > Metrics.PeakUsage) Metrics.PeakUsage = Metrics.ActiveRentals;
-            Metrics.ExpansionCount++;
-
             _onReset?.Invoke(newEntity);
             newEntity.Enable();
             return newEntity;
         }
 
-        var e = _pool[--AvailableCount];
+        var e = _pool[--_availableCount];
         ref var leaseState = ref e.GetMut<PoolLeaseState>();
         leaseState.IsRented = true;
         var rentSlot = leaseState.SlotIndex;
         _managedRentalFlags[rentSlot] = true;
         AddToActiveTail(rentSlot);
-
-        Metrics.ActiveRentals++;
-        if (Metrics.ActiveRentals > Metrics.PeakUsage) Metrics.PeakUsage = Metrics.ActiveRentals;
 
         _onReset?.Invoke(e);
         e.Enable();
@@ -347,10 +298,9 @@ public sealed class EntityPool : IDisposable {
         }
 
         state.IsRented = false;
-        Metrics.ActiveRentals = Math.Max(0, Metrics.ActiveRentals - 1);
 
         entity.Disable();
-        EnsureArrayCapacity(AvailableCount + 1);
-        _pool[AvailableCount++] = entity;
+        EnsureArrayCapacity(_availableCount + 1);
+        _pool[_availableCount++] = entity;
     }
 }

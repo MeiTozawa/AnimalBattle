@@ -57,15 +57,4 @@ public static class EmbeddedConfigProvider
 
         return null;
     }
-
-    /// <summary>
-    /// 指定された相対パスまたはファイル名に対応する埋め込みリソースが存在するかどうかを判定します。
-    /// </summary>
-    /// <param name="relativePath">ファイル名または相対パス</param>
-    /// <returns>存在する場合は true、それ以外は false。</returns>
-    public static bool Exists(string relativePath)
-    {
-        using var stream = OpenStream(relativePath);
-        return stream != null;
-    }
 }

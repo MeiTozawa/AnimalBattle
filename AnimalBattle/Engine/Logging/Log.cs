@@ -23,8 +23,6 @@ public static class Log
 
     private static ILogger For(string category) => Loggers.GetOrAdd(category, Factory.CreateLogger);
 
-    public static void Debug(string category, string message) => For(category).LogDebug("{Message}", message);
-
     public static void Info(string category, string message) => For(category).LogInformation("{Message}", message);
 
     public static void Warn(string category, string message) => For(category).LogWarning("{Message}", message);

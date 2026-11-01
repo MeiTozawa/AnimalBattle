@@ -64,7 +64,7 @@ public sealed class BulletEffectHandler : ISkillEffectHandler
     {
         if (!skillId.IsEmpty)
         {
-            EventBus.Publish(new BossBulletFiredEvent(skillId));
+            EventBus.Publish(new BossBulletFiredEvent());
         }
     }
 
@@ -213,7 +213,7 @@ public sealed class BulletEffectHandler : ISkillEffectHandler
     private static void EmitImpactRing(World world, BulletEmitConfig cfg, Vec2f origin)
     {
         var impactPos = new Vec2f(origin.X, origin.Y + cfg.OffsetY);
-        EventBus.Publish(new BossDiveImpactEvent(impactPos));
+        EventBus.Publish(new BossDiveImpactEvent());
 
         var count = Math.Max(1, cfg.Count);
         var step = MathF.PI * 2.0f / count;

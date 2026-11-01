@@ -125,13 +125,6 @@ public static class EventBus
         }
     }
 
-    /// <summary>
-    ///     指定したイベント型に登録された全ハンドラーを消去します。
-    /// </summary>
-    public static void Clear<T>() where T : struct
-    {
-        EventBus<T>.Clear();
-    }
 
     /// <summary>
     ///     イベントを発行します。

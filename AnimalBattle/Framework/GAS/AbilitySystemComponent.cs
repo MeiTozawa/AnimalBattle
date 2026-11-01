@@ -112,8 +112,6 @@ public sealed class AbilitySystemComponent {
     /// <summary>指定タグをすべて保持しているか判定します。</summary>
     public bool HasTag(GameplayTag tag) => (_activeTagsMask & tag) == tag;
 
-    /// <summary>指定タグのいずれかを保持しているか判定します。</summary>
-    public bool HasAnyTag(GameplayTag tag) => (_activeTagsMask & tag) != GameplayTag.None;
 
 
 

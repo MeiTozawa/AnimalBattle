@@ -157,7 +157,7 @@ public static class MovementSystem {
             spring.Current = pCfg.DashStretchScale;
             spring.Velocity = Vec2f.Zero;
 
-            EventBus.Publish(new PlayerDashedEvent(dash.DirectionX));
+            EventBus.Publish(new PlayerDashedEvent());
         }
 
         var isDashing = dash.IsDashing;
@@ -384,7 +384,7 @@ public static class MovementSystem {
         // 接地瞬間時の押し潰し演出：落下速度が設定閾値以上の場合のみ適用
         if (!wasGrounded && isGrounded && vel.Value.Y >= jump.LandSquashVelocityThreshold)
         {
-            EventBus.Publish(new PlayerLandedEvent(vel.Value.Y));
+            EventBus.Publish(new PlayerLandedEvent());
             spring.Current = pCfg.LandSquashScale;
             spring.Velocity = Vec2f.Zero;
             spring.SkipNextUpdate = true;

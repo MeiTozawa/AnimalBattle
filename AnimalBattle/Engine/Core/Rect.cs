@@ -42,34 +42,12 @@ public struct Rect(int left, int top, int right, int bottom) {
     /// <summary>
     ///     左端 X 座標のエイリアスプロパティ。
     /// </summary>
-    public int X1 {
-        readonly get => Left;
-        set => Left = value;
-    }
+    public readonly int X1 => Left;
 
     /// <summary>
     ///     上端 Y 座標のエイリアスプロパティ。
     /// </summary>
-    public int Y1 {
-        readonly get => Top;
-        set => Top = value;
-    }
-
-    /// <summary>
-    ///     右端 X 座標のエイリアスプロパティ。
-    /// </summary>
-    public int X2 {
-        readonly get => Right;
-        set => Right = value;
-    }
-
-    /// <summary>
-    ///     下端 Y 座標のエイリアスプロパティ。
-    /// </summary>
-    public int Y2 {
-        readonly get => Bottom;
-        set => Bottom = value;
-    }
+    public readonly int Y1 => Top;
 
     /// <summary>
     ///     矩形の幅 右端座標から左端座標を減算した値 を取得します。
@@ -80,15 +58,6 @@ public struct Rect(int left, int top, int right, int bottom) {
     ///     矩形の高さ 下端座標から上端座標を減算した値 を取得します。
     /// </summary>
     public readonly int Height => Bottom - Top;
-
-    /// <summary>
-    ///     指定された座標 指定座標 が矩形領域内に含まれるか判定します。
-    /// </summary>
-    public readonly bool Contains(int x, int y)
-    {
-        return x >= Left && x <= Right &&
-            y >= Top && y <= Bottom;
-    }
 
     /// <summary>
     ///     左上座標および幅・高さを指定して <see cref="Rect" /> を生成します。
