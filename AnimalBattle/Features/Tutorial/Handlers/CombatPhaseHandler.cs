@@ -15,27 +15,20 @@ public sealed class CombatPhaseHandler : ITutorialPhaseHandler
     public void Setup(World world, Entity root, TutorialPhaseConfig config, TutorialConfig globalConfig)
     {
         Debug.Assert(config != null, "フェーズ設定が null です。");
-        if (config == null) return;
 
         ref var state = ref world.GetMut<TutorialState>();
         state.TargetsRemaining = config.Minions.Length;
 
         foreach (var item in config.Minions)
         {
-            if (item.MinionType.Equals("Flying", StringComparison.OrdinalIgnoreCase))
-            {
-                var pos = item.Pos != Vec2f.Zero ? item.Pos : MinionSpawnService.SelectBestSpawnPoint(world, MinionType.Flying);
-                MinionSpawner.SpawnFlyingMinion(world, root, pos);
-            }
-            else if (item.MinionType.Equals("Ground", StringComparison.OrdinalIgnoreCase))
-            {
-                var pos = item.Pos != Vec2f.Zero ? item.Pos : MinionSpawnService.SelectBestSpawnPoint(world, MinionType.Ground);
-                MinionSpawner.SpawnGroundMinion(world, root, pos);
-            }
-            else
-            {
-                Debug.Assert(false, $"未知の小怪種別です: {item.MinionType}");
-            }
+            var type = item.MinionType.Equals("Flying", StringComparison.OrdinalIgnoreCase)
+                ? MinionType.Flying
+                : item.MinionType.Equals("Ground", StringComparison.OrdinalIgnoreCase)
+                    ? MinionType.Ground
+                    : AssertHelper.FailWithDefault($"未知の小怪種別です: {item.MinionType}", MinionType.Ground);
+
+            var pos = MinionSpawnService.SelectBestSpawnPoint(world, type);
+            MinionSpawner.SpawnMinion(world, root, type, pos);
         }
     }
 

@@ -146,9 +146,9 @@ RetryPrompt = "【 RETRY - リトライ 】"
 DoorInteractPrompt = "【 [F] 挑戦開始 】"
 ControlBoardTitle = "【 基本操作ガイド 】"
 ControlBoardMove = "移動　　: A / D"
-ControlBoardJump = "ジャンプ: SPACE (空中で二段)"
+ControlBoardJump = "二段ジャンプ: SPACE "
 ControlBoardDash = "ダッシュ: L-SHIFT / 右クリック"
-ControlBoardAttack = "★ 攻撃 : 左クリック (照準射撃)"
+ControlBoardAttack = "★ 攻撃 : 左クリック (長押し可能)"
 
 # ==============================================================================
 # チュートリアル進行フェーズシーケンス (Phases)
@@ -189,18 +189,18 @@ Targets = [
 
 [[Phases]]
 Type = "Combat"
-Title = "★ 【 左クリック : 攻撃 】"
-Subtitle = "マウスで狙いを定め、空中を浮遊する小怪を撃破してください"
+Title = "★ 【 左クリック : 攻撃 】 / 【 L-SHIFT : 回避 】"
+Subtitle = "マウスで狙いを定め、空中を浮遊するミニオンを撃破してください"
 Minions = [
-    { MinionType = "Flying", Pos = { x = 640.0, y = 300.0 } }
+    { MinionType = "Flying" }
 ]
 
 [[Phases]]
 Type = "Combat"
 Title = "★ 【 左クリック : 攻撃 】 / 【 L-SHIFT : 回避 】"
-Subtitle = "突進してくる小怪を攻撃して撃破してください"
+Subtitle = "マウスで狙いを定め、追撃するミニオンを撃破してください"
 Minions = [
-    { MinionType = "Ground", Pos = { x = 850.0, y = 520.0 } }
+    { MinionType = "Ground" }
 ]
 
 [[Phases]]

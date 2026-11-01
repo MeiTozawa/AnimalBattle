@@ -290,7 +290,6 @@ public sealed class TutorialTargetItemConfig
 public sealed class TutorialMinionItemConfig
 {
     public string MinionType { get; set; } = string.Empty;
-    public Vec2f Pos { get; set; }
 }
 
 /// <summary>
