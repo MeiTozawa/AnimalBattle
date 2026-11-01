@@ -19,7 +19,7 @@ HurtboxRadius = 7.0
 HurtboxOffset = { x = 0.0, y = 16.0 }
 
 Scale = { x = 2.0, y = 2.0 }
-Spawn = { x = 320.0, y = 500.0 }
+Spawn = { x = 640.0, y = 500.0 }
 Weapon = "CatWeapon"
 
 
