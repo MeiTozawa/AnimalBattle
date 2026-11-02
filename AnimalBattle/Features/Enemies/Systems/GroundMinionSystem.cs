@@ -159,6 +159,7 @@ public static class GroundMinionSystem
                     minion.JumpCooldown = gCfg.JumpCooldown;
                     minion.ActiveLink = jumpPlan.NextLink;
                     minion.CachedPlan = null;
+                    minion.CachedPlan = null;
                 }
                 else
                 {

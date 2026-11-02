@@ -34,6 +34,7 @@ public sealed class BossLionBrain : BaseBossBrain {
     private float _repathCooldown;
     private Vec2f _lastRepathPlayerPos;
     private NavPlan? _cachedNavPlan;
+    private PlatformLink? _activeNavLink;
 
     private Vec2f _currentVelocity;
     private Vec2f _leapStartPosition;
@@ -360,6 +361,7 @@ public sealed class BossLionBrain : BaseBossBrain {
         {
             // 同一足場上の場合は A* グラフ探索を短絡し、直接水平移動
             _cachedNavPlan = null;
+        _activeNavLink = null;
         }
         else
         {
@@ -372,7 +374,8 @@ public sealed class BossLionBrain : BaseBossBrain {
                 {
                     var bossFootY = _currentPosition.Y + _configuration.CombatSettings.CollisionHeight / 2.0f;
                     var playerFootY = playerPos.Y + _configuration.CombatSettings.PlayerCollisionHeight / 2.0f;
-                    _cachedNavPlan = navGraph.FindPath(_currentPosition.X, bossFootY, playerPos.X, playerFootY, isGrounded, phaseCfg.MoveSpeed);
+                    _cachedNavPlan = navGraph.FindPath(_currentPosition.X, bossFootY, playerPos.X, playerFootY, isGrounded, phaseCfg.MoveSpeed, _activeNavLink);
+                    if (_cachedNavPlan.HasValue && _cachedNavPlan.Value.NextLink != null) _activeNavLink = _cachedNavPlan.Value.NextLink;
                     _lastRepathPlayerPos = playerPos;
                     _repathCooldown = 0.25f; // 250ms (毎秒 4 回以下に制限)
                 }

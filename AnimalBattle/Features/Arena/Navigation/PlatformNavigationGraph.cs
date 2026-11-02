@@ -21,8 +21,6 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     private readonly List<PlatformNode> _nodes = new();
     private readonly List<PlatformLink> _reusablePath = new();
 
-    /// <summary>現在実行中の跳躍・下落リンク：空中滞空時のナビゲーション維持用</summary>
-    private PlatformLink? _activeLink;
 
 
     /// <summary>すべての登録済みプラットフォームノード</summary>
@@ -50,7 +48,6 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         _nodes.Clear();
         _links.Clear();
         _adjacency.Clear();
-        _activeLink = null;
 
         var safeGravity = MathF.Max(1.0f, gravity);
         var safeJumpForce = MathF.Max(0.0f, jumpForce);
@@ -150,7 +147,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         float moveSpeed,
         PlatformLink? activeLink = null)
     {
-        var currentActiveLink = activeLink ?? _activeLink;
+        var currentActiveLink = activeLink;
 
         // 1. 空中滞空中の場合：着地目標地点に向かって水平推力を維持：接地判定・ノード特定を先行させない
         if (!isGrounded)
@@ -163,8 +160,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                 var lowestY = MathF.Max(currentActiveLink.FromNode.TopY, currentActiveLink.ToNode.TopY);
                 if (currentFootY > lowestY + Config.EnemyNodeToleranceY)
                 {
-                    _activeLink = null;
-                }
+                            }
                 else
                 {
                     return new NavPlan(
@@ -188,7 +184,6 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         }
 
         // 接地状態復帰時はアクティブリンクをリセット
-        _activeLink = null;
 
         var currentNode = FindNodeAt(currentX, currentFootY, Config.EnemyNodeToleranceY, Config.EnemyNodeMarginX);
         var targetNode = FindNodeAt(targetX, targetFootY, Config.TargetToleranceY, Config.TargetMarginX);
@@ -213,7 +208,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
             var distToTakeoff = MathF.Abs(currentX - firstLink.TakeoffX);
             if (distToTakeoff <= Config.TakeoffTriggerDistance)
             {
-                _activeLink = firstLink;
+                currentActiveLink = firstLink;
                 return new NavPlan(
                     NavStatus.ExecuteJump,
                     firstLink.RequiredJumpVx,
@@ -241,7 +236,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                     0.0f,
                     firstLink);
 
-            _activeLink = firstLink;
+            currentActiveLink = firstLink;
             return new NavPlan(
                 NavStatus.ExecuteDrop,
                 -moveSpeed,
@@ -258,7 +253,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
                 0.0f,
                 firstLink);
 
-        _activeLink = firstLink;
+        currentActiveLink = firstLink;
         return new NavPlan(
             NavStatus.ExecuteDrop,
             moveSpeed,
