@@ -24,7 +24,10 @@ public readonly record struct PlayerDiedEvent;
 /// <summary>自機の体力が変化したイベント：残血警報等のリアクティブ判定用</summary>
 public readonly record struct PlayerHealthChangedEvent(float PreviousHealth, float CurrentHealth);
 
-/// <summary>Boss が弾幕波次を発射したイベント</summary>
+/// <summary>エネミーが弾幕波次を発射したイベント</summary>
+public readonly record struct EnemyBulletFiredEvent;
+
+/// <summary>Boss が弾幕波次を発射したイベント（互換用エイリアス）</summary>
 public readonly record struct BossBulletFiredEvent;
 
 /// <summary>Boss が急降下衝撃波を発生させたイベント</summary>

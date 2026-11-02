@@ -15,7 +15,7 @@ public enum SfxType
     PlayerHit,
     PlayerDeath,
     PlayerLowHealth,
-    BossBulletShoot,
+    EnemyBulletShoot,
     BossHit,
     BossHitVulnerable,
     BossDiveImpact,
@@ -68,7 +68,7 @@ public static class SoundService
             (SfxType.PlayerHit, ResourcePath.Sound.PlayerHitMp3),
             (SfxType.PlayerDeath, ResourcePath.Sound.PlayerDeathMp3),
             (SfxType.PlayerLowHealth, ResourcePath.Sound.PlayerLowHealthMp3),
-            (SfxType.BossBulletShoot, ResourcePath.Sound.BossBulletShootMp3),
+            (SfxType.EnemyBulletShoot, ResourcePath.Sound.BossBulletShootMp3),
             (SfxType.BossHit, ResourcePath.Sound.BulletHitBossMp3),
             (SfxType.BossHitVulnerable, ResourcePath.Sound.BulletHitVulnerableMp3),
             (SfxType.BossDiveImpact, ResourcePath.Sound.BossDiveImpactMp3),
@@ -111,6 +111,7 @@ public static class SoundService
         EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
         EventBus.Subscribe<PlayerHealthChangedEvent>(OnPlayerHealthChanged);
         EventBus.Subscribe<CombatResetEvent>(OnCombatReset);
+        EventBus.Subscribe<EnemyBulletFiredEvent>(OnEnemyBulletFired);
         EventBus.Subscribe<BossBulletFiredEvent>(OnBossBulletFired);
         EventBus.Subscribe<BossDiveImpactEvent>(OnBossDiveImpact);
         EventBus.Subscribe<BossDamagedEvent>(OnBossDamaged);
@@ -131,6 +132,7 @@ public static class SoundService
         EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
         EventBus.Unsubscribe<PlayerHealthChangedEvent>(OnPlayerHealthChanged);
         EventBus.Unsubscribe<CombatResetEvent>(OnCombatReset);
+        EventBus.Unsubscribe<EnemyBulletFiredEvent>(OnEnemyBulletFired);
         EventBus.Unsubscribe<BossBulletFiredEvent>(OnBossBulletFired);
         EventBus.Unsubscribe<BossDiveImpactEvent>(OnBossDiveImpact);
         EventBus.Unsubscribe<BossDamagedEvent>(OnBossDamaged);
@@ -161,7 +163,8 @@ public static class SoundService
         ResetBgm();
     }
 
-    private static void OnBossBulletFired(BossBulletFiredEvent e) => PlaySfx(SfxType.BossBulletShoot);
+    private static void OnEnemyBulletFired(EnemyBulletFiredEvent e) => PlaySfx(SfxType.EnemyBulletShoot);
+    private static void OnBossBulletFired(BossBulletFiredEvent e) => PlaySfx(SfxType.EnemyBulletShoot);
     private static void OnBossDiveImpact(BossDiveImpactEvent e) => PlaySfx(SfxType.BossDiveImpact);
 
     private static void OnBossDamaged(BossDamagedEvent e)

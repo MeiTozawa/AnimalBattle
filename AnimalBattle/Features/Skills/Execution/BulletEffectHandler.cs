@@ -64,7 +64,7 @@ public sealed class BulletEffectHandler : ISkillEffectHandler
     {
         if (!skillId.IsEmpty)
         {
-            EventBus.Publish(new BossBulletFiredEvent());
+            EventBus.Publish(new EnemyBulletFiredEvent());
         }
     }
 
