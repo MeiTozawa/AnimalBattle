@@ -102,6 +102,7 @@ public sealed class SkillRunner {
                 {
                     CurrentPhase = SkillPhase.Active;
                     PhaseElapsed -= def.TelegraphDuration;
+                    ProcessActiveActions(def, isGrounded, onTrigger);
                 }
 
             break;

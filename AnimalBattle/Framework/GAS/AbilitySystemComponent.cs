@@ -189,7 +189,6 @@ public sealed class AbilitySystemComponent {
             RemoveTag(ability.ActivationOwnedTags);
         }
 
-        AddTag(GameplayTag.Interrupted);
         ability.CancelAbility(this);
         CurrentAbility = null;
     }
