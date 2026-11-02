@@ -28,7 +28,7 @@ public static class VfxRenderSystem
             .Iter(DrawRingEffects);
 
         // 3. 破片パーティクルエフェクト
-        world.System<Transform, Bullet, FadeEffect>("ParticleEffectRenderSystem")
+        world.System<Transform, VfxParticle, FadeEffect>("ParticleEffectRenderSystem")
             .With<VfxTag>()
             .Without<RecycleTag>()
             .Kind(Ecs.OnStore)
@@ -107,7 +107,7 @@ public static class VfxRenderSystem
     /// <summary>
     ///     破片パーティクル描画パイプライン：名前付き静的メソッド。
     /// </summary>
-    public static void DrawParticleEffects(Iter it, Field<Transform> trans, Field<Bullet> bullets, Field<FadeEffect> fades)
+    public static void DrawParticleEffects(Iter it, Field<Transform> trans, Field<VfxParticle> bullets, Field<FadeEffect> fades)
     {
         var w = it.World();
         if (!w.Get<GameFlow>().IsGameplay) return;

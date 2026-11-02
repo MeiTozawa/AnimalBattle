@@ -27,7 +27,7 @@ public static class VfxPrefabs
         SparkVfx = world.Prefab(SparkVfxName)
             .IsA(CommonPrefabs.BaseVfx)
             .Set(new Velocity(Vec2f.Zero))
-            .Set(new Bullet(sparkCfg.DefaultRadius, Color.Empty, Color.Empty))
+            .Set(new VfxParticle(sparkCfg.DefaultRadius, Color.Empty, Color.Empty))
             .Set(new FadeEffect(sparkCfg.DefaultDuration));
 
         // --- 2. リング拡散演出 ---

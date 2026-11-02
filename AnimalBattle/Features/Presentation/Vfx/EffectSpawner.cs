@@ -51,7 +51,7 @@ public static class EffectSpawner
         CombatPoolService.RentSparkEffect()
            .Set(new Transform(pos))
            .Set(new Velocity(Vec2f.Zero))
-           .Set(new Bullet(radius, vfxCfg.MuzzleFlashFillColor, vfxCfg.MuzzleFlashOutlineColor))
+           .Set(new VfxParticle(radius, vfxCfg.MuzzleFlashFillColor, vfxCfg.MuzzleFlashOutlineColor))
            .Set(new FadeEffect(duration));
     }
 
@@ -69,7 +69,7 @@ public static class EffectSpawner
             CombatPoolService.RentSparkEffect()
                .Set(new Transform(pos))
                .Set(new Velocity(vel))
-               .Set(new Bullet(vfxCfg.HitSparkRadius, vfxCfg.HitSparkFillColor, vfxCfg.HitSparkOutlineColor))
+               .Set(new VfxParticle(vfxCfg.HitSparkRadius, vfxCfg.HitSparkFillColor, vfxCfg.HitSparkOutlineColor))
                .Set(new FadeEffect(vfxCfg.HitSparkDuration));
         }
     }
@@ -93,7 +93,7 @@ public static class EffectSpawner
             CombatPoolService.RentSparkEffect()
                .Set(new Transform(pos))
                .Set(new Velocity(vel))
-               .Set(new Bullet(pCfg.ImpactSplatterParticleRadius, vfxCfg.ImpactSplatterFillColor, vfxCfg.ImpactSplatterOutlineColor))
+               .Set(new VfxParticle(pCfg.ImpactSplatterParticleRadius, vfxCfg.ImpactSplatterFillColor, vfxCfg.ImpactSplatterOutlineColor))
                .Set(new FadeEffect(pCfg.ImpactSplatterDuration));
         }
     }
@@ -112,7 +112,7 @@ public static class EffectSpawner
             CombatPoolService.RentSparkEffect()
                .Set(new Transform(pos))
                .Set(new Velocity(vel))
-               .Set(new Bullet(vfxCfg.PlayerDeathParticleRadius, vfxCfg.PlayerDeathParticleFillColor, vfxCfg.PlayerDeathParticleOutlineColor))
+               .Set(new VfxParticle(vfxCfg.PlayerDeathParticleRadius, vfxCfg.PlayerDeathParticleFillColor, vfxCfg.PlayerDeathParticleOutlineColor))
                .Set(new FadeEffect(vfxCfg.PlayerDeathParticleDuration));
         }
     }
@@ -131,7 +131,7 @@ public static class EffectSpawner
             CombatPoolService.RentSparkEffect()
                .Set(new Transform(pos))
                .Set(new Velocity(vel))
-               .Set(new Bullet(vfxCfg.VictoryExplosionRadius, vfxCfg.VictoryExplosionFillColor, vfxCfg.VictoryExplosionOutlineColor))
+               .Set(new VfxParticle(vfxCfg.VictoryExplosionRadius, vfxCfg.VictoryExplosionFillColor, vfxCfg.VictoryExplosionOutlineColor))
                .Set(new FadeEffect(vfxCfg.VictoryExplosionDuration));
         }
     }

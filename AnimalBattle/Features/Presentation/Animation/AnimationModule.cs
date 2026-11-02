@@ -13,8 +13,6 @@ public readonly struct AnimationModule : IFlecsModule
     {
         world.Module<AnimationModule>();
 
-        world.AddSpringScaleSystem()
-             .AddSpriteAnimationSystem()
-             .AddPlayerAnimationStateSystem();
+        world.AddSpriteAnimationSystem();
     }
 }
