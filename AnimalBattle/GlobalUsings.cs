@@ -10,7 +10,6 @@ global using AnimalBattle.Asset;
 
 // Framework
 global using AnimalBattle.Events;
-global using AnimalBattle.Framework.Fsm;
 global using AnimalBattle.Framework.Pooling;
 global using AnimalBattle.Abilities;
 global using AnimalBattle.Skills;

@@ -9,10 +9,12 @@ namespace AnimalBattle.Ai.BossLion;
 ///     フラット FSM および AbilitySystemComponentを通じて足場移動、近接攻撃、気絶、状態遷移を一元管理します。
 /// </summary>
 public sealed class BossLionBrain : BaseBossBrain {
-    private static readonly StringId StateIdle = "Idle";
-    private static readonly StringId StatePatrolChase = "PatrolChase";
-    private static readonly StringId StatePlatformTraverse = "PlatformTraverse";
-    private static readonly StringId StateAbility = "Ability";
+    public enum BrainSubState : byte {
+        Idle,
+        PatrolChase,
+        PlatformTraverse,
+        Ability
+    }
 
     private enum TraverseStage : byte {
         Ascent,
@@ -22,11 +24,7 @@ public sealed class BossLionBrain : BaseBossBrain {
 
     private readonly IBossLionConfiguration _configuration;
     private readonly Func<PlatformNavigationGraph?>? _navGraphProvider;
-
-    private State _idleState = null!;
-    private State _patrolChaseState = null!;
-    private State _platformTraverseState = null!;
-    private State _abilityState = null!;
+    private BrainSubState _subState = BrainSubState.Idle;
 
     private TraverseStage _traverseStage = TraverseStage.Ascent;
     private float _traverseTimer;
@@ -60,7 +58,6 @@ public sealed class BossLionBrain : BaseBossBrain {
         Phase = Phase.Phase1;
 
         InitializeAbilities();
-        InitializeStateMachine();
         Reset(spawn);
     }
 
@@ -84,7 +81,7 @@ public sealed class BossLionBrain : BaseBossBrain {
             if (_asc.HasTag(GameplayTag.Phasing)) return BossLionState.PhaseTransition;
             if (_asc.HasTag(GameplayTag.Stunned)) return BossLionState.Stunned;
 
-            if (_stateMachine.CurrentState == _abilityState && _asc.IsCasting)
+            if (_subState == BrainSubState.Ability && _asc.IsCasting)
             {
                 return CurrentSkillPhase switch {
                     SkillPhase.Telegraph => BossLionState.Telegraph,
@@ -94,11 +91,12 @@ public sealed class BossLionBrain : BaseBossBrain {
                 };
             }
 
-            if (_stateMachine.CurrentState == _idleState) return BossLionState.Idle;
-            if (_stateMachine.CurrentState == _patrolChaseState) return BossLionState.PatrolChase;
-            if (_stateMachine.CurrentState == _platformTraverseState) return BossLionState.PlatformTraverse;
-
-            return BossLionState.Idle;
+            return _subState switch {
+                BrainSubState.Idle => BossLionState.Idle,
+                BrainSubState.PatrolChase => BossLionState.PatrolChase,
+                BrainSubState.PlatformTraverse => BossLionState.PlatformTraverse,
+                _ => BossLionState.Idle
+            };
         }
     }
 
@@ -174,29 +172,15 @@ public sealed class BossLionBrain : BaseBossBrain {
         }
     }
 
-    private void InitializeStateMachine()
+    private void TransitionTo(BrainSubState nextState)
     {
-        _idleState = new State(StateIdle, onEnter: () => {
-            _stateTimer = 0.0f;
+        if (_subState == nextState) return;
+        _subState = nextState;
+        _stateTimer = 0.0f;
+        if (nextState is BrainSubState.Idle or BrainSubState.Ability)
+        {
             _currentVelocity = Vec2f.Zero;
-        });
-
-        _patrolChaseState = new State(StatePatrolChase, onEnter: () => {
-            _stateTimer = 0.0f;
-        });
-
-        _platformTraverseState = new State(StatePlatformTraverse);
-
-        _abilityState = new State(StateAbility, onEnter: () => {
-            _stateTimer = 0.0f;
-            _currentVelocity = Vec2f.Zero;
-        });
-
-        _stateMachine.AddState(_idleState);
-        _stateMachine.AddState(_patrolChaseState);
-        _stateMachine.AddState(_platformTraverseState);
-        _stateMachine.AddState(_abilityState);
-        _stateMachine.SetInitialState(_idleState);
+        }
     }
 
     /// <inheritdoc />
@@ -210,9 +194,7 @@ public sealed class BossLionBrain : BaseBossBrain {
     /// <inheritdoc />
     protected override void OnPhaseTransitionCompleted()
     {
-        _stateTimer = 0.0f;
-        _currentVelocity = Vec2f.Zero;
-        _stateMachine.ChangeState(_idleState);
+        TransitionTo(BrainSubState.Idle);
     }
 
     /// <inheritdoc />
@@ -242,7 +224,7 @@ public sealed class BossLionBrain : BaseBossBrain {
         _asc.InterruptCurrentAbility();
         _asc.ClearTags();
         SyncPhaseAbilitiesCooldown(_configuration.GetPhase(Phase));
-        _stateMachine.ChangeState(_idleState);
+        _subState = BrainSubState.Idle;
     }
 
     /// <summary>
@@ -284,23 +266,20 @@ public sealed class BossLionBrain : BaseBossBrain {
             return;
         }
 
-        _stateMachine.Update(dt);
-
-        if (_stateMachine.CurrentState == _idleState)
+        switch (_subState)
         {
-            UpdateIdle(dt, playerPosition, isPlayerAlive, isGrounded);
-        }
-        else if (_stateMachine.CurrentState == _patrolChaseState)
-        {
-            UpdatePatrolChase(dt, playerPosition, playerVelocity, isPlayerAlive, isGrounded);
-        }
-        else if (_stateMachine.CurrentState == _platformTraverseState)
-        {
-            UpdatePlatformTraverse(dt, isGrounded);
-        }
-        else if (_stateMachine.CurrentState == _abilityState)
-        {
-            UpdateAbility(dt, isGrounded, playerPosition);
+            case BrainSubState.Idle:
+                UpdateIdle(dt, playerPosition, isPlayerAlive, isGrounded);
+                break;
+            case BrainSubState.PatrolChase:
+                UpdatePatrolChase(dt, playerPosition, playerVelocity, isPlayerAlive, isGrounded);
+                break;
+            case BrainSubState.PlatformTraverse:
+                UpdatePlatformTraverse(dt, isGrounded);
+                break;
+            case BrainSubState.Ability:
+                UpdateAbility(dt, isGrounded, playerPosition);
+                break;
         }
     }
 
@@ -327,8 +306,7 @@ public sealed class BossLionBrain : BaseBossBrain {
         var phaseCfg = _configuration.GetPhase(Phase);
         if (_stateTimer >= phaseCfg.IdleDuration && isPlayerAlive && isGrounded)
         {
-            _stateMachine.ChangeState(_patrolChaseState);
-            _stateTimer = 0.0f;
+            TransitionTo(BrainSubState.PatrolChase);
         }
     }
 
@@ -341,7 +319,7 @@ public sealed class BossLionBrain : BaseBossBrain {
     {
         if (!isGrounded)
         {
-            _stateMachine.ChangeState(_platformTraverseState);
+            TransitionTo(BrainSubState.PlatformTraverse);
             _traverseStage = TraverseStage.Descent;
             _traverseTimer = 0.0f;
             return;
@@ -392,7 +370,7 @@ public sealed class BossLionBrain : BaseBossBrain {
             _currentVelocity = new Vec2f(jumpVx, jumpVy);
             _jumpCooldown = _configuration.CombatSettings.JumpCooldownDuration;
             _cachedNavPlan = null; // 跳躍実行によりプラン消費
-            _stateMachine.ChangeState(_platformTraverseState);
+            TransitionTo(BrainSubState.PlatformTraverse);
             _traverseStage = TraverseStage.Ascent;
             _traverseTimer = 0.0f;
             return;
@@ -445,7 +423,7 @@ public sealed class BossLionBrain : BaseBossBrain {
                     LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
                 }
                 _currentVelocity = Vec2f.Zero;
-                _stateMachine.ChangeState(_abilityState);
+                TransitionTo(BrainSubState.Ability);
                 return;
             }
         }
@@ -462,7 +440,7 @@ public sealed class BossLionBrain : BaseBossBrain {
                     LockLeapSmashTarget(_targetPosition.X, _targetPosition.Y);
                 }
                 _currentVelocity = Vec2f.Zero;
-                _stateMachine.ChangeState(_abilityState);
+                TransitionTo(BrainSubState.Ability);
             }
         }
     }
@@ -502,8 +480,7 @@ public sealed class BossLionBrain : BaseBossBrain {
                 _currentVelocity = Vec2f.Zero;
                 if (_traverseTimer >= phaseCfg.LandingRecoveryDuration)
                 {
-                    _stateMachine.ChangeState(_patrolChaseState);
-                    _stateTimer = 0.0f;
+                    TransitionTo(BrainSubState.PatrolChase);
                 }
             break;
         }
@@ -572,10 +549,8 @@ public sealed class BossLionBrain : BaseBossBrain {
 
     private void OnAbilityCompleted()
     {
-        _stateTimer = 0.0f;
-        _currentVelocity = Vec2f.Zero;
         _targetLandingSurfaceY = 0.0f;
-        _stateMachine.ChangeState(_idleState);
+        TransitionTo(BrainSubState.Idle);
     }
 
     private void LockLeapSmashTarget(float playerX, float playerCenterY)

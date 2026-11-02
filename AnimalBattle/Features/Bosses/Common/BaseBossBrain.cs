@@ -11,10 +11,8 @@ namespace AnimalBattle.Ai;
 /// </summary>
 public abstract class BaseBossBrain : IBossBrain
 {
-    protected static readonly StringId StateCombat = "Combat";
 
     protected readonly AbilitySystemComponent _asc = new();
-    protected readonly StateMachine _stateMachine = new(StateCombat);
 
     protected World _world;
     protected float _angleOffset;

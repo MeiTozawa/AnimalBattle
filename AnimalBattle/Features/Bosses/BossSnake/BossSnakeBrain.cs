@@ -8,13 +8,13 @@ namespace AnimalBattle.Ai.BossSnake;
 ///     フラット FSM および AbilitySystemComponentを通じてタイムライン・判定・状態遷移を一元管理します。
 /// </summary>
 public sealed class BossSnakeBrain : BaseBossBrain {
-    private static readonly StringId StateHover = "Hover";
-    private static readonly StringId StateAbility = "Ability";
+    public enum BrainSubState : byte {
+        Hover,
+        Ability
+    }
 
     private readonly IBossSnakeConfiguration _configuration;
-
-    private State _hoverState = null!;
-    private State _abilityState = null!;
+    private BrainSubState _subState = BrainSubState.Hover;
 
     private float _hoverTimer;
     private int _attackIndex;
@@ -36,7 +36,6 @@ public sealed class BossSnakeBrain : BaseBossBrain {
         Phase = Phase.Phase1;
 
         InitializeAbilities();
-        InitializeStateMachine();
         Reset(spawn);
     }
 
@@ -52,7 +51,7 @@ public sealed class BossSnakeBrain : BaseBossBrain {
             if (_isDead) return BossSnakeState.Dead;
             if (_asc.HasTag(GameplayTag.Phasing)) return BossSnakeState.PhaseTransition;
 
-            if (_stateMachine.CurrentState == _abilityState && _asc.IsCasting)
+            if (_subState == BrainSubState.Ability && _asc.IsCasting)
             {
                 return CurrentSkillPhase switch {
                     SkillPhase.Telegraph => BossSnakeState.Telegraph,
@@ -125,14 +124,11 @@ public sealed class BossSnakeBrain : BaseBossBrain {
         _asc.GiveAbility(ability);
     }
 
-    private void InitializeStateMachine()
+    private void TransitionTo(BrainSubState nextState)
     {
-        _hoverState = new State(StateHover, onEnter: () => _stateTimer = 0.0f);
-        _abilityState = new State(StateAbility);
-
-        _stateMachine.AddState(_hoverState);
-        _stateMachine.AddState(_abilityState);
-        _stateMachine.SetInitialState(_hoverState);
+        if (_subState == nextState) return;
+        _subState = nextState;
+        _stateTimer = 0.0f;
     }
 
     /// <summary>
@@ -152,7 +148,7 @@ public sealed class BossSnakeBrain : BaseBossBrain {
 
         _asc.InterruptCurrentAbility();
         _asc.ClearTags();
-        _stateMachine.ChangeState(_hoverState);
+        _subState = BrainSubState.Hover;
     }
 
     /// <summary>
@@ -178,15 +174,14 @@ public sealed class BossSnakeBrain : BaseBossBrain {
             return;
         }
 
-        _stateMachine.Update(dt);
-
-        if (_stateMachine.CurrentState == _hoverState)
+        switch (_subState)
         {
-            UpdateHoverMotion(dt, playerPosition, isPlayerAlive);
-        }
-        else if (_stateMachine.CurrentState == _abilityState)
-        {
-            UpdateAbilityMotion(dt, playerPosition);
+            case BrainSubState.Hover:
+                UpdateHoverMotion(dt, playerPosition, isPlayerAlive);
+                break;
+            case BrainSubState.Ability:
+                UpdateAbilityMotion(dt, playerPosition);
+                break;
         }
     }
 
@@ -213,8 +208,7 @@ public sealed class BossSnakeBrain : BaseBossBrain {
     /// <inheritdoc />
     protected override void OnPhaseTransitionCompleted()
     {
-        _stateTimer = 0.0f;
-        _stateMachine.ChangeState(_hoverState);
+        TransitionTo(BrainSubState.Hover);
     }
 
     private void UpdateHoverMotion(float dt, Vec2f playerPos, bool isPlayerAlive)
@@ -257,7 +251,7 @@ public sealed class BossSnakeBrain : BaseBossBrain {
             {
                 _startPosition = _currentPosition;
                 _targetPosition = playerPos;
-                _stateMachine.ChangeState(_abilityState);
+                TransitionTo(BrainSubState.Ability);
                 return;
             }
         }
@@ -273,7 +267,7 @@ public sealed class BossSnakeBrain : BaseBossBrain {
             {
                 _startPosition = _currentPosition;
                 _targetPosition = playerPos;
-                _stateMachine.ChangeState(_abilityState);
+                TransitionTo(BrainSubState.Ability);
                 return;
             }
         }
@@ -337,7 +331,6 @@ public sealed class BossSnakeBrain : BaseBossBrain {
 
     private void OnAbilityCompleted()
     {
-        _stateTimer = 0.0f;
-        _stateMachine.ChangeState(_hoverState);
+        TransitionTo(BrainSubState.Hover);
     }
 }
