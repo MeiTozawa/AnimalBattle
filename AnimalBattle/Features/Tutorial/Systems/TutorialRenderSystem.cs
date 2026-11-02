@@ -77,6 +77,7 @@ public static class TutorialRenderSystem
                 door.IsPlayerInRange,
                 door.AnimTimer,
                 colors,
+                cfg.Texts.DoorInteractPrompt,
                 assets);
         });
     }
@@ -157,6 +158,7 @@ public static class TutorialRenderSystem
         bool inRange,
         float animTimer,
         TutorialColorsConfig colors,
+        string promptText,
         IAssetManager assets)
     {
         var halfW = doorsCfg.Size.X / 2;
@@ -177,6 +179,9 @@ public static class TutorialRenderSystem
 
         // 3. Boss 画像および固有動態（蛇：法球旋回、獅子：重砸地面＆衝撃波）
         DrawBossAuraAndMotion(center, bossType, gateP2.Y - pedestalH, doorsCfg, doorItem, inRange, animTimer, colors, assets);
+    
+        // 4. 神殿銘板および接近時 [F] 挑戦開始プロンプト枠（ワールド座標系）
+        DrawShrinePlaqueAndPrompt(center, gateP1, doorsCfg, doorItem, inRange, animTimer, promptText, colors);
     }
 
     private static void DrawShrineArchitecture(Vec2i gateP1,

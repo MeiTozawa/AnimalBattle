@@ -18,8 +18,6 @@ public readonly struct TutorialModule : IFlecsModule
         world.Set(new TutorialSystemContext(world));
 
         world.AddTutorialFlowSystem()
-             .AddTutorialInteractionSystem()
-             .AddTutorialEnvironmentRenderSystem()
-             .AddTutorialUiRenderSystem();
+             .AddTutorialInteractionSystem();
     }
 }
