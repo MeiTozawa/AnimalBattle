@@ -38,10 +38,23 @@ public sealed class AssetManager : IAssetManager {
     /// <inheritdoc />
     public void Shutdown()
     {
-        foreach (var handle in _characterSpriteHandles.Values) AssetService.DeleteGraph(handle);
+        var released = new HashSet<int>();
+        foreach (var handle in _characterSpriteHandles.Values)
+        {
+            if (handle >= 0 && released.Add(handle))
+            {
+                AssetService.DeleteGraph(handle);
+            }
+        }
         _characterSpriteHandles.Clear();
 
-        foreach (var handle in _textureHandles.Values) AssetService.DeleteGraph(handle);
+        foreach (var handle in _textureHandles.Values)
+        {
+            if (handle >= 0 && released.Add(handle))
+            {
+                AssetService.DeleteGraph(handle);
+            }
+        }
         _textureHandles.Clear();
         _characterConfigs.Clear();
         _graphSizes.Clear();
@@ -79,18 +92,12 @@ public sealed class AssetManager : IAssetManager {
     {
         if (!AnimationRegistry.CharacterSprites.TryGetValue(charType, out var relPath)) return;
 
-        var fullPath = ResolveAssetPath(relPath);
-        var handle = AssetService.LoadGraph(fullPath);
-        Debug.Assert(handle >= 0, $"[AssetManager 警告] キャラクタースプライトのロードに失敗しました ({charType}): {fullPath}");
+        var handle = LoadTexture(relPath);
+        Debug.Assert(handle >= 0, $"[AssetManager 警告] キャラクタースプライトのロードに失敗しました ({charType}): {relPath}");
 
         _characterSpriteHandles[charType] = handle;
-        _textureHandles[relPath] = handle;
-        if (handle >= 0)
-        {
-            _graphSizes[handle] = AssetService.GetGraphSize(handle);
-        }
         Log.Info("AssetManager", 
-            $"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {fullPath} (Handle: {handle})");
+            $"[C# アニメーション] キャラクタースプライトを正常にロードしました ({charType}): {relPath} (Handle: {handle})");
     }
 
     private void LoadCharacterClips(CharacterType charType, AnimationConfig config)

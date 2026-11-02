@@ -106,7 +106,6 @@ public static class ColorExtensions {
         if (!string.IsNullOrWhiteSpace(colorString))
         {
             Log.Warn("ColorExtensions", $"カラー文字列の解析に失敗しました: '{colorString}'。デフォルト色を使用します。");
-            Debug.Fail($"[ColorExtensions 警告] カラー文字列の解析に失敗しました: '{colorString}'。デフォルト色を使用します。");
         }
 
         return fallback;

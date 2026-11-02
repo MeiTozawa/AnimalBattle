@@ -33,6 +33,7 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
     private FileSystemWatcher? _fileWatcher;
     private CancellationTokenSource? _debounceCts;
     private int _isReloading;
+    private int _pendingReload;
 #endif
 
     /// <summary>
@@ -189,8 +190,12 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
 
     private void TriggerDebouncedReload(IConfigurationRoot configRoot, string resolvedPath)
     {
-        // 内部リロード実行中の再帰的トリガーを防止
-        if (Volatile.Read(ref _isReloading) != 0) return;
+        // 内部リロード実行中の再帰的トリガーを防止しつつ、実行中であれば後続リロードを予約
+        if (Volatile.Read(ref _isReloading) != 0)
+        {
+            Volatile.Write(ref _pendingReload, 1);
+            return;
+        }
 
         CancellationTokenSource cts;
         lock (_lock)
@@ -286,6 +291,11 @@ public sealed class TomlHotReloadLoader<T> : IConfigLoader<T>
                         _onReloaded?.Invoke(world, reloaded);
                     }
                 });
+
+                if (Interlocked.Exchange(ref _pendingReload, 0) == 1)
+                {
+                    TriggerDebouncedReload(configRoot, resolvedPath);
+                }
 
                 return;
             }
