@@ -70,6 +70,7 @@ public static class TutorialSceneSpawner
         world.Set(new AimReticleState());
         CameraService.Reset();
         InputService.SetCursorVisible(false);
+        SoundService.PlayBgm();
 
         // 4. 初期フェーズ番号の解決（負値の場合はボス扉フェーズを検索）
         var cfg = world.Get<TutorialConfig>();
@@ -197,6 +198,7 @@ public static class TutorialSceneSpawner
             melees.Each(e => e.Destruct());
         }
 
+        SoundService.StopBgm();
         InputService.SetCursorVisible(true);
     }
 }
