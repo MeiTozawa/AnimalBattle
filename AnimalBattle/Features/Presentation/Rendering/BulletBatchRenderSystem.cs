@@ -68,7 +68,7 @@ public static class BulletBatchRenderSystem {
             .Iter(DrawPlayerBulletsBatch);
 
         world.System<Transform, Bullet, BulletModifier>("BossBulletRenderSystem")
-            .With<BossBulletTag>()
+            .With<EnemyBulletTag>()
             .Without<RecycleTag>()
             .Kind(Ecs.OnStore)
             .Iter(DrawBossBulletsBatch);

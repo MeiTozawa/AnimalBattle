@@ -6,14 +6,14 @@ namespace AnimalBattle.Combat.Systems;
 public static class BulletPhysicsSystem {
     /// <summary>
     ///     弾物理システムを Flecs.NET ワールドへ登録します。
-    ///     自機弾（PlayerBulletTag）および通常 Boss 弾（BossBulletTag、周回衛星弾 OrbitOf を除く）の直線等速移動を統一管理します。
+    ///     自機弾（PlayerBulletTag）および通常エネミー弾（EnemyBulletTag、周回衛星弾 OrbitOf を除く）の直線等速移動を統一管理します。
     /// </summary>
     public static World AddBulletPhysicsSystem(this World world)
     {
         world.System<Transform, Velocity>("BulletMovementSystem")
            .With<PlayerBulletTag>()
            .Or()
-           .With<BossBulletTag>()
+           .With<EnemyBulletTag>()
            .Without<OrbitOf>(Ecs.Wildcard)
            .Without<RecycleTag>()
            .Kind(Ecs.OnUpdate)

@@ -274,7 +274,7 @@ public sealed class BulletEffectHandler : ISkillEffectHandler
             var angle = -MathF.PI * (cfg.AngleStartRatio + cfg.AngleSpanRatio * progress);
             var vel = new Vec2f(MathF.Cos(angle) * cfg.Speed, MathF.Sin(angle) * cfg.Speed);
 
-            BulletSpawner.SpawnBossBullet(
+            BulletSpawner.SpawnEnemyBullet(
                 world,
                 new Vec2f(origin.X, groundY - cfg.OffsetY),
                 vel,

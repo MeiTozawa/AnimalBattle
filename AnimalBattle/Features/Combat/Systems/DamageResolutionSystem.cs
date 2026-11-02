@@ -191,8 +191,8 @@ public static class DamageResolutionSystem
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
                         entity.GetMut<Hitbox>().IsActive = false;
-                        BulletSpawner.ClearAllBossBullets(world);
-                        MeleeSpawner.ClearAllBossMelee(world);
+                        BulletSpawner.ClearAllEnemyBullets(world);
+                        MeleeSpawner.ClearAllEnemyMelee(world);
                         EffectSpawner.SpawnVictoryExplosions(world, trans.Position);
                         CameraService.AddTrauma(cameraCfg.VictoryExplosionTrauma);
                         EventBus.Publish(new BossDiedEvent());

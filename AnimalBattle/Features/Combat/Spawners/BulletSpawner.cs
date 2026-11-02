@@ -10,18 +10,27 @@ namespace AnimalBattle.Combat;
 public static class BulletSpawner
 {
     /// <summary>
-    ///     指定座標に Boss 通常弾幕エンティティを生成します。
+    ///     指定座標にエネミー通常弾幕エンティティを生成します。
+    /// </summary>
+    public static void SpawnEnemyBullet(World world, Vec2f pos, Vec2f vel, float radius, Color fillColor,
+        Color outlineColor, bool isIndestructible = false)
+    {
+        SpawnEnemySpecialBullet(world, pos, vel, radius, BulletType.Normal, fillColor, outlineColor, isIndestructible);
+    }
+
+    /// <summary>
+    ///     指定座標に Boss 通常弾幕エンティティを生成します（互換用エイリアス）。
     /// </summary>
     public static void SpawnBossBullet(World world, Vec2f pos, Vec2f vel, float radius, Color fillColor,
         Color outlineColor, bool isIndestructible = false)
     {
-        SpawnBossSpecialBullet(world, pos, vel, radius, BulletType.Normal, fillColor, outlineColor, isIndestructible);
+        SpawnEnemyBullet(world, pos, vel, radius, fillColor, outlineColor, isIndestructible);
     }
 
     /// <summary>
-    ///     指定座標に特殊挙動：品紅・黄・青・黒を持つ Boss 弾幕エンティティを生成します。
+    ///     指定座標に特殊挙動：品紅・黄・青・黒を持つエネミー弾幕エンティティを生成します。
     /// </summary>
-    public static void SpawnBossSpecialBullet(
+    public static void SpawnEnemySpecialBullet(
         World world,
         Vec2f pos,
         Vec2f vel,
@@ -47,8 +56,8 @@ public static class BulletSpawner
             _ => combatCfg.BossNormalBullet.Damage
         };
 
-        // 統合された BossBullets プールから借出
-        var entity = CombatPoolService.RentBossBullet();
+        // 統合された EnemyBullets プールから借出
+        var entity = CombatPoolService.RentEnemyBullet();
         entity
             .Set(new Transform(pos))
             .Set(new Velocity(vel))
@@ -69,7 +78,7 @@ public static class BulletSpawner
                 IsIndestructible = isIndestructible
             };
             var satDamage = satCfg.Damage;
-            var satEntity = CombatPoolService.RentBossBullet();
+            var satEntity = CombatPoolService.RentEnemyBullet();
             satEntity
                 .Add<OrbitOf>(entity)
                 .Set(new Transform(new Vec2f(pos.X + orbitDist, pos.Y)))
@@ -79,6 +88,22 @@ public static class BulletSpawner
                 .Set(new OrbitSatellite(orbitDist, 0.0f))
                 .Set(new Hitbox(new CollisionShape.Circle(satRadius), satDamage, Faction.Hostile));
         }
+    }
+
+    /// <summary>
+    ///     指定座標に特殊挙動を持つ Boss 弾幕エンティティを生成します（互換用エイリアス）。
+    /// </summary>
+    public static void SpawnBossSpecialBullet(
+        World world,
+        Vec2f pos,
+        Vec2f vel,
+        float radius,
+        BulletType type,
+        Color? fillColor = null,
+        Color? outlineColor = null,
+        bool isIndestructible = false)
+    {
+        SpawnEnemySpecialBullet(world, pos, vel, radius, type, fillColor, outlineColor, isIndestructible);
     }
 
     /// <summary>
@@ -99,7 +124,7 @@ public static class BulletSpawner
             var angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
             var vel = new Vec2f(MathF.Cos(angle) * cfg.CounterBulletSpeed, MathF.Sin(angle) * cfg.CounterBulletSpeed);
 
-            SpawnBossSpecialBullet(
+            SpawnEnemySpecialBullet(
                 world,
                 pos,
                 vel,
@@ -128,7 +153,7 @@ public static class BulletSpawner
         };
 
         var vel = new Vec2f(vx, 0.0f);
-        var entity = CombatPoolService.RentBossBullet();
+        var entity = CombatPoolService.RentEnemyBullet();
         entity
             .Set(new Transform(pos))
             .Set(new Velocity(vel))
@@ -139,30 +164,36 @@ public static class BulletSpawner
     }
 
     /// <summary>
-    ///     フィールド上に存在するすべての Boss 弾幕を一括消去します。
+    ///     フィールド上に存在するすべてのエネミー弾幕を一括消去します。
     ///     シミュレーション実行中のタイムライン競合および二重返却を防止するため、
     ///     即時返却ではなく <see cref="RecycleTag" /> を付与し、
     ///     フレーム末尾の <see cref="CombatRecycleSystem" /> へ回収を一元委譲します。
     /// </summary>
-    public static void ClearAllBossBullets(World world)
+    public static void ClearAllEnemyBullets(World world)
     {
         using var query = world.QueryBuilder()
-           .With<BossBulletTag>()
+           .With<EnemyBulletTag>()
            .Without<RecycleTag>()
            .Build();
         query.Each(e => e.Add<RecycleTag>());
     }
 
+    /// <summary>Boss 弾幕一括消去（互換用エイリアス）。</summary>
+    public static void ClearAllBossBullets(World world) => ClearAllEnemyBullets(world);
+
     /// <summary>
-    ///     フィールド上に存在するすべての Boss 弾幕を即座にプールへ回収・返却します。
+    ///     フィールド上に存在するすべてのエネミー弾幕を即座にプールへ回収・返却します。
     ///     シーン破棄時：Teardownや戦闘リセット：ResetCombatなど、
     ///     シミュレーションループ外または確定的な同期リセット点で即時プール返却を実行します。
     /// </summary>
-    public static void ClearAllBossBulletsImmediate(World world)
+    public static void ClearAllEnemyBulletsImmediate(World world)
     {
         using var query = world.QueryBuilder()
-           .With<BossBulletTag>()
+           .With<EnemyBulletTag>()
            .Build();
         query.Each(CombatPoolService.Recycle);
     }
+
+    /// <summary>Boss 弾幕即時回収（互換用エイリアス）。</summary>
+    public static void ClearAllBossBulletsImmediate(World world) => ClearAllEnemyBulletsImmediate(world);
 }

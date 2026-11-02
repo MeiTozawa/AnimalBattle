@@ -131,8 +131,8 @@ public static class BattleSceneSpawner
 
             brain.OnClearBullets += () =>
             {
-                BulletSpawner.ClearAllBossBullets(world);
-                MeleeSpawner.ClearAllBossMelee(world);
+                BulletSpawner.ClearAllEnemyBullets(world);
+                MeleeSpawner.ClearAllEnemyMelee(world);
             };
 
             var (bufferDur, bufferCanMove) = bossType switch {
@@ -182,8 +182,8 @@ public static class BattleSceneSpawner
         GameEngine.SetCameraOffset(Vec2i.Zero);
 
         // 2. 残存弾幕、近接判定および VFX の一括回収・プール返却
-        BulletSpawner.ClearAllBossBulletsImmediate(world);
-        MeleeSpawner.ClearAllBossMeleeImmediate(world);
+        BulletSpawner.ClearAllEnemyBulletsImmediate(world);
+        MeleeSpawner.ClearAllEnemyMeleeImmediate(world);
         MinionSpawner.ClearAllMinionsImmediate(world);
 
         using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())

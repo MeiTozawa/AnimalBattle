@@ -56,7 +56,7 @@ public static class CombatConfigSync
 
         // 4. 活体 BossLion 近接斬撃判定（BossSlashHitbox）の再水和
         var bossSlashCfg = newConfig.BossSlashHitbox;
-        using var bossMeleeQuery = world.QueryBuilder<Hitbox, HitboxLifetime>().With<BossMeleeTag>().Build();
+        using var bossMeleeQuery = world.QueryBuilder<Hitbox, HitboxLifetime>().With<EnemyMeleeTag>().Build();
         bossMeleeQuery.Each((ref hit, ref lifetime) =>
         {
             hit.Damage = bossSlashCfg.Damage;

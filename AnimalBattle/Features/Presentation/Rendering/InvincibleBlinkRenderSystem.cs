@@ -13,7 +13,7 @@ public static class InvincibleBlinkRenderSystem
     {
         world.System<Transform, Sprite, InvincibleBlinkEffect>("InvincibleBlinkRenderSystem")
             .Without<PlayerMeleeTag>()
-            .Without<BossMeleeTag>()
+            .Without<EnemyMeleeTag>()
             .Without<FadeEffect>()
             .Without<RecycleTag>()
             .Without<DeadTag>()

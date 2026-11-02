@@ -14,7 +14,7 @@ public static class OrbitSatelliteMovementSystem
     public static World AddOrbitSatelliteMovementSystem(this World world)
     {
         world.System<Transform, Velocity, OrbitSatellite, BulletModifier>("OrbitSatelliteMovementSystem")
-           .With<BossBulletTag>()
+           .With<EnemyBulletTag>()
            .With<OrbitOf>(Ecs.Wildcard)
            .Without<RecycleTag>()
            .Kind(Ecs.OnUpdate)

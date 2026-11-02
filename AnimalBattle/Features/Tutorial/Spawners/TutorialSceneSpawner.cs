@@ -155,8 +155,8 @@ public static class TutorialSceneSpawner
         enemyQuery.Each(e => e.Destruct());
 
         // 雑魚敵およびプレイヤー弾幕の回収
-        BulletSpawner.ClearAllBossBullets(world);
-        MeleeSpawner.ClearAllBossMelee(world);
+        BulletSpawner.ClearAllEnemyBullets(world);
+        MeleeSpawner.ClearAllEnemyMelee(world);
     }
 
     /// <summary>
@@ -173,8 +173,8 @@ public static class TutorialSceneSpawner
             root.Destruct();
         }
 
-        BulletSpawner.ClearAllBossBulletsImmediate(world);
-        MeleeSpawner.ClearAllBossMeleeImmediate(world);
+        BulletSpawner.ClearAllEnemyBulletsImmediate(world);
+        MeleeSpawner.ClearAllEnemyMeleeImmediate(world);
         MinionSpawner.ClearAllMinionsImmediate(world);
 
         using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())

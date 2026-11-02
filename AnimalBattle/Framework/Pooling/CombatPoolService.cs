@@ -19,8 +19,11 @@ public sealed class CombatPoolService : IDisposable
     /// <summary>自機通常弾用エンティティプールを取得します。</summary>
     public EntityPool PlayerBullets { get; }
 
-    /// <summary>Boss 通常弾幕用エンティティプールを取得します。</summary>
-    public EntityPool BossBullets { get; }
+    /// <summary>エネミー通常弾幕用エンティティプールを取得します。</summary>
+    public EntityPool EnemyBullets { get; }
+
+    /// <summary>Boss 通常弾幕用エンティティプール（互換用エイリアス）。</summary>
+    public EntityPool BossBullets => EnemyBullets;
 
     /// <summary>点粒子スパーク用エンティティプールを取得します。</summary>
     public EntityPool SparkEffects { get; }
@@ -41,7 +44,7 @@ public sealed class CombatPoolService : IDisposable
     public CombatPoolService(World world)
     {
         PlayerBullets     = RegisterPool(new EntityPool(world, CombatPrefabs.PlayerBullet, 64, ResetPlayerBulletEntity));
-        BossBullets       = RegisterPool(new EntityPool(world, CombatPrefabs.BossBulletBase, 512, ResetBossBulletEntity));
+        EnemyBullets      = RegisterPool(new EntityPool(world, CombatPrefabs.EnemyBulletBase, 512, ResetEnemyBulletEntity));
         SparkEffects      = RegisterPool(new EntityPool(world, VfxPrefabs.SparkVfx, 256, ResetEffectEntity));
         RingEffects       = RegisterPool(new EntityPool(world, VfxPrefabs.RingVfx, 64, ResetEffectEntity));
         AreaEffects       = RegisterPool(new EntityPool(world, VfxPrefabs.AreaVfx, 32, ResetEffectEntity));
@@ -70,9 +73,13 @@ public sealed class CombatPoolService : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Entity RentPlayerBullet() => Current.PlayerBullets.Rent();
 
-    /// <summary>Boss 通常弾幕エンティティをプールから借出します。</summary>
+    /// <summary>エネミー通常弾幕エンティティをプールから借出します。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Entity RentBossBullet() => Current.BossBullets.Rent();
+    public static Entity RentEnemyBullet() => Current.EnemyBullets.Rent();
+
+    /// <summary>Boss 通常弾幕エンティティをプールから借出します（互換用エイリアス）。</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Entity RentBossBullet() => RentEnemyBullet();
 
     /// <summary>スパーク演出用エンティティをプールから借出します。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -142,7 +149,7 @@ public sealed class CombatPoolService : IDisposable
         hitbox.IsActive = true;
     }
 
-    private static void ResetBossBulletEntity(Entity e)
+    private static void ResetEnemyBulletEntity(Entity e)
     {
         e.Remove<RecycleTag>();
         e.Remove<HitFlashEffect>();

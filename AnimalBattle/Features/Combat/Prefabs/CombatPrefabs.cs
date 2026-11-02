@@ -9,12 +9,12 @@ namespace AnimalBattle.Combat;
 public static class CombatPrefabs
 {
     public const string PlayerBulletName = "PlayerBulletPrefab";
-    public const string BossBulletBaseName = "BossBulletBasePrefab";
+    public const string EnemyBulletBaseName = "EnemyBulletBasePrefab";
     public const string PlayerSlashHitboxName = "PlayerSlashHitboxPrefab";
     public const string BossSlashHitboxName = "BossSlashHitboxPrefab";
 
     public static Entity PlayerBullet { get; private set; }
-    public static Entity BossBulletBase { get; private set; }
+    public static Entity EnemyBulletBase { get; private set; }
     public static Entity PlayerSlashHitbox { get; private set; }
     public static Entity BossSlashHitbox { get; private set; }
 
@@ -46,9 +46,9 @@ public static class CombatPrefabs
         var bossNormalCfg = cfg.BossNormalBullet;
         var (normalFill, normalOutline) = BulletPalette.ResolveBulletColors(BulletType.Normal);
 
-        BossBulletBase = world.Prefab(BossBulletBaseName)
+        EnemyBulletBase = world.Prefab(EnemyBulletBaseName)
             .IsA(CommonPrefabs.BaseProjectile) 
-            .Add<BossBulletTag>() 
+            .Add<EnemyBulletTag>() 
             .Set(new Bullet(bossNormalCfg.Radius, normalFill, normalOutline)) 
             .Set(new Hitbox(new CollisionShape.Circle(bossNormalCfg.Radius), bossNormalCfg.Damage, Faction.Hostile)) 
             .Set(new BulletModifier(BulletType.Normal, bossNormalCfg.Radius, Vec2f.Zero)) 
@@ -65,7 +65,7 @@ public static class CombatPrefabs
         var bossSlashCfg = cfg.BossSlashHitbox;
         BossSlashHitbox = world.Prefab(BossSlashHitboxName)
             .IsA(CommonPrefabs.BaseMeleeHitbox)
-            .Add<BossMeleeTag>()
+            .Add<EnemyMeleeTag>()
             .Set(new Velocity(Vec2f.Zero))
             .Set(new Hitbox(new CollisionShape.Box(Vec2f.Zero), bossSlashCfg.Damage, Faction.Hostile, false, knockback: bossSlashCfg.Knockback, isHeavy: bossSlashCfg.IsHeavy))
             .Set(new Sprite(-1))

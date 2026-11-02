@@ -123,8 +123,8 @@ public static class BattleInputSystem
         // ゲームオーバー状態の解除：Remove は冪等のため事前の Has チェック不要
         world.Remove<GameOverTag>();
 
-        BulletSpawner.ClearAllBossBulletsImmediate(world);
-        MeleeSpawner.ClearAllBossMeleeImmediate(world);
+        BulletSpawner.ClearAllEnemyBulletsImmediate(world);
+        MeleeSpawner.ClearAllEnemyMeleeImmediate(world);
         MinionSpawner.ClearAllMinionsImmediate(world);
         ctx.PlayerBulletsQuery.Each(CombatPoolService.Recycle);
         ctx.VfxQuery.Each(CombatPoolService.Recycle);
@@ -290,8 +290,8 @@ public static class BattleInputSystem
             _ => 1.0f
         };
         hp.Current = Math.Clamp((float)Math.Round(hp.Max * ratio), 1.0f, hp.Max);
-        BulletSpawner.ClearAllBossBullets(w);
-        MeleeSpawner.ClearAllBossMelee(w);
+        BulletSpawner.ClearAllEnemyBullets(w);
+        MeleeSpawner.ClearAllEnemyMelee(w);
         state.Phase = _targetDebugPhase;
     }
 

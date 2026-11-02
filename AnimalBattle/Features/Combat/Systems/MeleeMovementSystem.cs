@@ -13,7 +13,7 @@ public static class MeleeMovementSystem
     public static World AddMeleeMovementSystem(this World world)
     {
         world.System<Transform, Velocity>("MeleeMovementSystem")
-            .With<BossMeleeTag>()
+            .With<EnemyMeleeTag>()
             .Without<RecycleTag>()
             .Kind(Ecs.OnUpdate)
             .Iter(UpdateMeleeMovement);

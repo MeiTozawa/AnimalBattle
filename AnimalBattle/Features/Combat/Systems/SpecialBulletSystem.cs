@@ -12,7 +12,7 @@ public static class SpecialBulletSystem {
     public static World AddSpecialBulletSystem(this World world)
     {
         world.System<Velocity, BulletModifier, Bullet, Hitbox>("SpecialBulletSystem")
-           .With<BossBulletTag>()
+           .With<EnemyBulletTag>()
            .Without<OrbitOf>(Ecs.Wildcard) // 子衛星弾：OrbitSatelliteMovementSystem 側で制御を除外
            .Without<RecycleTag>()           // 回収済みエンティティを除外
            .Kind(Ecs.OnUpdate)

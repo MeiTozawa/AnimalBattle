@@ -17,7 +17,7 @@ public static class SpriteRenderSystem
         // 1. 通常スプライト描画パス：近接加算・残影・回収タグ・死亡エンティティ・無敵点滅中・出現バッファ中エンティティを除外
         world.System<Transform, Sprite>("SpriteRenderSystem")
             .Without<PlayerMeleeTag>()
-            .Without<BossMeleeTag>()
+            .Without<EnemyMeleeTag>()
             .Without<FadeEffect>()
             .Without<RecycleTag>()
             .Without<DeadTag>()
@@ -30,7 +30,7 @@ public static class SpriteRenderSystem
         world.System<Transform, Sprite>("MeleeSpriteRenderSystem")
             .With<PlayerMeleeTag>()
             .Or()
-            .With<BossMeleeTag>()
+            .With<EnemyMeleeTag>()
             .Without<RecycleTag>()
             .Without<DeadTag>()
             .Kind(Ecs.OnStore)
