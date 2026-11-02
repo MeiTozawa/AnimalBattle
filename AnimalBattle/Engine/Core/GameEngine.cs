@@ -327,5 +327,11 @@ public enum BlendMode {
     Alpha = 1,
 
     /// <summary>加算ブレンド：発光・閃白合成</summary>
-    Add = 2
+    Add = 2,
+
+    /// <summary>減算ブレンド</summary>
+    Sub = 3,
+
+    /// <summary>乗算ブレンド</summary>
+    Mul = 4
 }
