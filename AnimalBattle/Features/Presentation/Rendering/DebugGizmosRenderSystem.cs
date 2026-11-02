@@ -203,8 +203,8 @@ public static class DebugGizmosRenderSystem
             var hitColor = hitbox.Faction switch
             {
                 Faction.Friendly => dbgCfg.PlayerBulletHitboxColor,
-                Faction.Hostile => dbgCfg.BossBulletHitboxColor,
-                _ => GetFallbackFactionColor(dbgCfg, hitbox.Faction, dbgCfg.BossBulletHitboxColor)
+                Faction.Hostile => dbgCfg.EnemyBulletHitboxColor,
+                _ => GetFallbackFactionColor(dbgCfg, hitbox.Faction, dbgCfg.EnemyBulletHitboxColor)
             };
 
             var worldCenter = trans.Position + hitbox.Shape.Offset;
