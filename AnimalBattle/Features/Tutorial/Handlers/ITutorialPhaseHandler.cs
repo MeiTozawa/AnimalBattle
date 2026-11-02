@@ -27,11 +27,4 @@ public interface ITutorialPhaseHandler
     /// <param name="dt">デルタタイム（秒）</param>
     /// <returns>目標達成し次フェーズへ移行可能な場合 true</returns>
     bool UpdateAndCheckCompletion(World world, ref TutorialState state, TutorialPhaseConfig config, TutorialConfig globalConfig, float dt);
-
-    /// <summary>
-    ///     フェーズ退場時またはリトライ時の片付け処理。
-    /// </summary>
-    /// <param name="world">対象の Flecs.NET ワールド</param>
-    /// <param name="root">チュートリアルシーンのルートエンティティ</param>
-    void Teardown(World world, Entity root);
 }

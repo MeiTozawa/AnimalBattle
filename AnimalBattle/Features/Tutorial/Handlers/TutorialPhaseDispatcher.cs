@@ -19,7 +19,7 @@ public static class TutorialPhaseDispatcher
     /// </summary>
     /// <param name="type">フェーズ種別</param>
     /// <returns>対応するハンドラー、存在しない場合は null</returns>
-    public static ITutorialPhaseHandler? GetHandler(TutorialPhaseType type)
+    public static ITutorialPhaseHandler GetHandler(TutorialPhaseType type)
     {
         var index = (int)type;
         if ((uint)index < (uint)Handlers.Length)

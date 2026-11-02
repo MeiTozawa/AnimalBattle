@@ -47,11 +47,4 @@ public sealed class BossDoorPhaseHandler : ITutorialPhaseHandler
         // ボス挑戦扉はプレイヤーの F キー押下インタラクションにより遷移するため、フロー側では自動完了しない
         return false;
     }
-
-    /// <inheritdoc />
-    public void Teardown(World world, Entity root)
-    {
-        using var doorQuery = world.Query<TutorialDoor>();
-        doorQuery.Each((Entity e, ref TutorialDoor _) => e.Destruct());
-    }
 }

@@ -58,13 +58,4 @@ public sealed class CombatPhaseHandler : ITutorialPhaseHandler
 
         return false;
     }
-
-    /// <inheritdoc />
-    public void Teardown(World world, Entity root)
-    {
-        using var enemyQuery = world.QueryBuilder().With<EnemyTag>().Build();
-        enemyQuery.Each(e => e.Destruct());
-
-        BulletSpawner.ClearAllBossBullets(world);
-    }
 }

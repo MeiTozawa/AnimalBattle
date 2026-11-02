@@ -53,11 +53,4 @@ public sealed class CollectPhaseHandler : ITutorialPhaseHandler
 
         return false;
     }
-
-    /// <inheritdoc />
-    public void Teardown(World world, Entity root)
-    {
-        using var targetQuery = world.Query<TutorialTarget>();
-        targetQuery.Each((Entity e, ref TutorialTarget _) => e.Destruct());
-    }
 }

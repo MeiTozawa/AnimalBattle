@@ -72,7 +72,7 @@ public static class TutorialSceneSpawner
         InputService.SetCursorVisible(false);
 
         // 4. 初期フェーズ番号の解決（負値の場合はボス扉フェーズを検索）
-        var cfg = world.Get<TutorialConfig>() ?? new TutorialConfig();
+        var cfg = world.Get<TutorialConfig>();
         if (initialPhaseIndex < 0)
         {
             initialPhaseIndex = 0;
@@ -113,7 +113,7 @@ public static class TutorialSceneSpawner
 
         ClearPhaseEntities(world);
 
-        var cfg = world.Get<TutorialConfig>() ?? new TutorialConfig();
+        var cfg = world.Get<TutorialConfig>();
 
         ref var state = ref world.GetMut<TutorialState>();
         state.CurrentPhaseIndex = phaseIndex;
@@ -124,7 +124,7 @@ public static class TutorialSceneSpawner
         {
             var phaseCfg = cfg.Phases[phaseIndex];
             var handler = TutorialPhaseDispatcher.GetHandler(phaseCfg.Type);
-            handler?.Setup(world, root, phaseCfg, cfg);
+            handler.Setup(world, root, phaseCfg, cfg);
         }
     }
 
