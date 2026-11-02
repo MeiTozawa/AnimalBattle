@@ -1,4 +1,6 @@
 using AnimalBattle.Ai;
+using AnimalBattle.Features.Tutorial;
+using AnimalBattle.Features.Tutorial.Systems;
 
 namespace AnimalBattle;
 
@@ -48,7 +50,7 @@ public class GameManager : IDisposable {
         _ecsWorld.Import<RenderModule>(); // ネイティブ描画モジュール
         _ecsWorld.Import<StartSceneModule>();
         _ecsWorld.Import<BattleSceneModule>();
-        _ecsWorld.Import<AnimalBattle.Features.Tutorial.TutorialModule>();
+        _ecsWorld.Import<TutorialModule>();
 
         CombatPoolService.Initialize(_ecsWorld);
 
@@ -226,6 +228,7 @@ public class GameManager : IDisposable {
         world.Get<TileMapRenderContext>().Dispose();
         world.Get<BossTelegraphRenderContext>().Dispose();
         world.Get<FlyingMinionContext>().Dispose();
+        world.Get<TutorialSystemContext>().Dispose();
         world.Get<AimReticleUpdateContext>().Dispose();
     }
 }

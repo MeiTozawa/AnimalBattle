@@ -46,9 +46,10 @@ public static class TutorialRenderSystem
         var colors = cfg.Colors;
         var assets = world.Get<IAssetManager>();
 
+        var ctx = world.Get<TutorialSystemContext>();
+
         // 1. 目標物（コイン／リング）の描画（ワールド空間）
-        using var targetQuery = world.QueryBuilder<TutorialTarget, Transform>().Build();
-        targetQuery.Each((_, ref target, ref tr) =>
+        ctx.TargetQuery.Each((_, ref target, ref tr) =>
         {
             var bob = (int)(MathF.Sin(target.FloatPhase) * cfg.Timing.TargetFloatAmplitude);
             var center = new Vec2i((int)tr.Position.X, (int)tr.Position.Y + bob);
@@ -62,8 +63,7 @@ public static class TutorialRenderSystem
         });
 
         // 2. ボス挑戦神殿石門（BossDoor）の環境描画（基座・虚空・柱・Boss・符文：自機より背面）
-        using var doorQuery = world.QueryBuilder<TutorialDoor, Transform>().Build();
-        doorQuery.Each((_, ref door, ref tr) =>
+        ctx.DoorQuery.Each((_, ref door, ref tr) =>
         {
             var doorCenter = new Vec2i((int)tr.Position.X, (int)tr.Position.Y);
             var isSnake = door.TargetBoss == BossType.BossSnake;

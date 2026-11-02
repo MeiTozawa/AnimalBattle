@@ -1,3 +1,4 @@
+using AnimalBattle.Features.Tutorial.Systems;
 using AnimalBattle.Enemies.Services;
 using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;
@@ -33,9 +34,8 @@ public sealed class CombatPhaseHandler : ITutorialPhaseHandler
     /// <inheritdoc />
     public bool UpdateAndCheckCompletion(World world, ref TutorialState state, TutorialPhaseConfig config, TutorialConfig globalConfig, float dt)
     {
-        var aliveMinions = 0;
-        using var minionQuery = world.QueryBuilder().With<MinionTag>().Build();
-        minionQuery.Each(_ => aliveMinions++);
+        var ctx = world.Get<TutorialSystemContext>();
+        var aliveMinions = ctx.MinionQuery.Count();
 
         state.TargetsRemaining = aliveMinions;
 

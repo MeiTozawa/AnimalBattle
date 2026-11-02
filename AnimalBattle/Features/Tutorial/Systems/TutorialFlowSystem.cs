@@ -44,26 +44,38 @@ public static class TutorialFlowSystem
             }
         }
 
-        // 2. プレイヤーのHP監視および挫折防止リトライ処理
-        using var playerQuery = world.QueryBuilder<Health, Transform, Velocity>()
-            .With<PlayerTag>()
-            .Build();
+        var ctx = world.Get<TutorialSystemContext>();
 
+        // 2. プレイヤーのHP監視および挫折防止リトライ処理
         var playerDied = false;
         var hasPlayer = false;
         var playerPos = Vec2f.Zero;
         var playerVel = Vec2f.Zero;
-        playerQuery.Each((Entity player, ref Health hp, ref Transform trans, ref Velocity vel) =>
+
+        ctx.PlayerHealthQuery.Iter(static (Iter pIt, Field<Health> hps, Field<Transform> trans, Field<Velocity> vels) =>
         {
-            hasPlayer = true;
-            playerPos = trans.Position;
-            playerVel = vel.Value;
-            if (hp.Current <= 0 || player.Has<DeadTag>())
+            var pCount = pIt.Count();
+            if (pCount == 0) return;
+
+            var pCtx = pIt.World().Get<TutorialSystemContext>();
+            pCtx.HasPlayer = true;
+            pCtx.CachedPlayerPos = trans[0].Position;
+            pCtx.CachedPlayerVel = vels[0].Value;
+
+            for (var i = 0; i < pCount; i++)
             {
-                PlayerPrefabs.ResetPlayerEntity(player);
-                playerDied = true;
+                var pEntity = pIt.Entity(i);
+                if (hps[i].Current <= 0 || pEntity.Has<DeadTag>())
+                {
+                    PlayerPrefabs.ResetPlayerEntity(pEntity);
+                    pIt.World().GetMut<TutorialState>().IsRetrying = true;
+                }
             }
         });
+
+        hasPlayer = ctx.HasPlayer;
+        playerPos = ctx.CachedPlayerPos;
+        playerVel = ctx.CachedPlayerVel;
 
         // チュートリアル中もカメラの振動減衰およびプレイヤー追従を更新
         if (hasPlayer)

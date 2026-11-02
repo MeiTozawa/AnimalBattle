@@ -28,27 +28,16 @@ public static class TutorialInteractionSystem
         var world = it.World();
         if (world.Get<GameFlow>().State != GameState.Tutorial) return;
 
-        // 自機の現在位置を取得
-        var hasPlayer = false;
-        var playerPos = Vec2f.Zero;
-        using var playerQuery = world.QueryBuilder<Transform>()
-            .With<PlayerTag>()
-            .Build();
-        playerQuery.Each((_, ref tr) =>
-        {
-            playerPos = tr.Position;
-            hasPlayer = true;
-        });
+        var ctx = world.Get<TutorialSystemContext>();
+        if (!ctx.HasPlayer) return;
 
-        if (!hasPlayer) return;
-
+        var playerPos = ctx.CachedPlayerPos;
         var dt = it.DeltaTime();
         var cfg = world.Get<TutorialConfig>();
         var isFKey = InputService.IsPressed(InputAction.Interact) || InputService.IsButtonPressed(InputButton.KeyF);
 
         // 1. ターゲットコイン／リングの回収判定
-        using var targetQuery = world.QueryBuilder<TutorialTarget, Transform>().Build();
-        targetQuery.Each((e, ref target, ref tr) =>
+        ctx.TargetQuery.Each((e, ref target, ref tr) =>
         {
             if (target.IsCollected) return;
 
@@ -67,8 +56,7 @@ public static class TutorialInteractionSystem
         });
 
         // 2. ボス挑戦扉の接近判定および F キー入場処理
-        using var doorQuery = world.QueryBuilder<TutorialDoor, Transform>().Build();
-        doorQuery.Each((_, ref door, ref tr) =>
+        ctx.DoorQuery.Each((_, ref door, ref tr) =>
         {
             door.AnimTimer += dt;
             var diff = playerPos - tr.Position;
