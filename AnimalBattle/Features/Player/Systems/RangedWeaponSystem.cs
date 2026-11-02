@@ -17,6 +17,7 @@ public static class RangedWeaponSystem
         world.System<Transform, Velocity, WeaponIntent, RangedWeaponComponent, SpringScale, CollisionBox>("RangedWeaponSystem")
             .Kind(Ecs.OnUpdate)
             .Without<DeadTag>()
+            .Without<HitstopState>()
             .Iter(ExecuteRangedWeaponSystem);
 
         return world;

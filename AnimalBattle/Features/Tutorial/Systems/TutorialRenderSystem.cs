@@ -93,29 +93,7 @@ public static class TutorialRenderSystem
         var cfg = world.Get<TutorialConfig>();
         var colors = cfg.Colors;
 
-        // 1. ボス扉の神殿銘板および接近時 [F] 挑戦開始プロンプト枠（UI最前面）
-        using var doorQuery = world.QueryBuilder<TutorialDoor, Transform>().Build();
-        doorQuery.Each((_, ref door, ref tr) =>
-        {
-            var doorCenter = new Vec2i((int)tr.Position.X, (int)tr.Position.Y);
-            var isSnake = door.TargetBoss == BossType.BossSnake;
-            var doorItem = isSnake ? cfg.Doors.Snake : cfg.Doors.Lion;
-
-            var halfH = cfg.Doors.Size.Y / 2;
-            var gateP1 = new Vec2i(doorCenter.X - cfg.Doors.Size.X / 2, doorCenter.Y - halfH);
-
-            DrawShrinePlaqueAndPrompt(
-                doorCenter,
-                gateP1,
-                cfg.Doors,
-                doorItem,
-                door.IsPlayerInRange,
-                door.AnimTimer,
-                cfg.Texts.DoorInteractPrompt,
-                colors);
-        });
-
-        // 2. 画面上部・中央のフェーズ別背景操作ガイド文字
+        // 画面上部・中央のフェーズ別背景操作ガイド文字
         DrawPhaseGuidance(state, cfg);
 
         // 3. 戦闘フェーズ（Combat）における全操作ガイド看板

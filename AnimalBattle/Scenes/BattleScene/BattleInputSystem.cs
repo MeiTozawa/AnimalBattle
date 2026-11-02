@@ -170,12 +170,17 @@ public static class BattleInputSystem
         boss.Set(new GameplayTagState(brainComp.Brain.AbilitySystem.Tags.RawTags));
         boss.Set(new TimedEffectsState());
 
-        // 一時状態・エフェクト・死亡タグの一括安全削除：Flecs ネイティブ API による冪等操作
+        boss.GetMut<Hitbox>().IsActive = true;
+
+        // 一時状態・エフェクト・死亡タグ・スポーンバッファの一括安全削除：Flecs ネイティブ API による冪等操作
         boss.Remove<HitstopState>()
             .Remove<SpriteJitter>()
             .Remove<DeadTag>()
             .Remove<HitFlashEffect>()
-            .Remove<InvincibleBlinkEffect>();
+            .Remove<InvincibleBlinkEffect>()
+            .Remove<SpawnBufferState>()
+            .Remove<CannotMoveTag>()
+            .Remove<CannotAttackTag>();
         
         ref var sprite = ref boss.GetMut<Sprite>();
         sprite.IsVisible = true;

@@ -157,6 +157,11 @@ public static class TutorialSceneSpawner
         // 雑魚敵およびプレイヤー弾幕の回収
         BulletSpawner.ClearAllEnemyBullets(world);
         MeleeSpawner.ClearAllEnemyMelee(world);
+
+        using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
+        {
+            playerBullets.Each(CombatPoolService.Recycle);
+        }
     }
 
     /// <summary>
@@ -180,6 +185,16 @@ public static class TutorialSceneSpawner
         using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
         {
             playerBullets.Each(CombatPoolService.Recycle);
+        }
+
+        using (var vfx = world.QueryBuilder().With<VfxTag>().Build())
+        {
+            vfx.Each(CombatPoolService.Recycle);
+        }
+
+        using (var melees = world.QueryBuilder().With<PlayerMeleeTag>().Build())
+        {
+            melees.Each(e => e.Destruct());
         }
 
         InputService.SetCursorVisible(true);

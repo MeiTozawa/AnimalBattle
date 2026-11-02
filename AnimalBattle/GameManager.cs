@@ -121,6 +121,7 @@ public class GameManager : IDisposable {
     private void ExecuteSwitchToTutorial(CharacterType playerType, int initialPhaseIndex = 0)
     {
         StartSceneSpawner.Teardown(_ecsWorld);
+        BattleSceneSpawner.Teardown(_ecsWorld);
         AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
 
         ref var flow = ref _ecsWorld.GetMut<GameFlow>();
@@ -156,6 +157,8 @@ public class GameManager : IDisposable {
         InputService.ClearAndSetContext(InputContext.Menu);
         PlayerInputSystem.Reset();
         BattleSceneSpawner.Teardown(_ecsWorld);
+        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
+        StartSceneSpawner.Teardown(_ecsWorld);
         StartSceneSpawner.Spawn(_ecsWorld, enableTutorialOverride);
     }
 

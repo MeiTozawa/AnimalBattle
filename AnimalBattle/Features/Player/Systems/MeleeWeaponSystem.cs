@@ -18,6 +18,7 @@ public static class MeleeWeaponSystem
             .With<EquippedWeapon>(Ecs.Wildcard)
             .Kind(Ecs.OnUpdate)
             .Without<DeadTag>()
+            .Without<HitstopState>()
             .Iter(ExecuteMeleeWeaponSystem);
 
         return world;
