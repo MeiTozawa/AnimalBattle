@@ -12,7 +12,7 @@ internal sealed class BattleAiSystemContext : IDisposable
 {
     public required Query<TileMap> TileMapQuery { get; init; }
     public required Query<Transform, Velocity> PlayerQuery { get; init; }
-    public required Query<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent> BossQuery { get; init; }
+    public required Query<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent, CombatProfile> BossQuery { get; init; }
     public required Query CanBossMoveQuery { get; init; }
     public required Query CanBossAttackQuery { get; init; }
 
@@ -61,7 +61,7 @@ public static class BattleAiSystem
             .Build();
 
         // Boss 更新用クエリ：HitstopState 中の凍結および DeadTag 除外を徹底
-        var bossQuery = world.QueryBuilder<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent>()
+        var bossQuery = world.QueryBuilder<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent, CombatProfile>()
             .With<BossTag>()
             .Without<HitstopState>()
             .Without<DeadTag>()
@@ -186,7 +186,8 @@ public static class BattleAiSystem
         Field<Health> hps,
         Field<Sprite> sprites,
         Field<BossCombatState> states,
-        Field<BossBrainComponent> brainComps)
+        Field<BossBrainComponent> brainComps,
+        Field<CombatProfile> profiles)
     {
         var count = it.Count();
         if (count == 0) return;
@@ -206,6 +207,7 @@ public static class BattleAiSystem
             ref var sprite = ref sprites[i];
             ref var state = ref states[i];
             ref var brainComp = ref brainComps[i];
+            ref var profile = ref profiles[i];
 
             var brain = brainComp.Brain;
 
@@ -276,6 +278,7 @@ public static class BattleAiSystem
 
             // BossCombatState の同期
             state.Phase = brain.Phase;
+            profile.Phase = brain.Phase;
             state.CurrentSkillTag = brain.CurrentSkillTag;
             state.StateTimer = brain.StateTimer;
             state.TargetPosition = brain.TargetPosition;

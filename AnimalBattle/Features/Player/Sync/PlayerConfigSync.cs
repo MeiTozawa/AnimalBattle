@@ -537,6 +537,7 @@ public static class PlayerConfigSync
         // 被弾変形設定の更新
         ref var profile = ref e.GetMut<CombatProfile>();
         profile.HitSquashScale = newConfig.HitSquashScale;
+        profile.InvincibleDuration = newConfig.InvincibleDuration;
 
 
 

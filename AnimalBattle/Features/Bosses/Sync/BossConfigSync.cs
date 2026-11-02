@@ -152,16 +152,14 @@ public static class BossConfigSync
         ref var flash = ref e.GetMut<HitFlashSettings>();
         flash.Duration = newConfig.HitFlashDuration;
 
-        // ノックバック可否設定の同期
-        ref var combat = ref e.GetMut<BossCombatState>();
-        combat.CanBeKnockedBack = newConfig.CanBeKnockedBack;
+        ref var profile = ref e.GetMut<CombatProfile>();
+        profile.CanBeKnockedBack = newConfig.CanBeKnockedBack;
 
         // スプリング拡縮および被弾変形設定の同期
         ref var spring = ref e.GetMut<SpringScale>();
         spring.Frequency = newConfig.SpringFrequency;
         spring.DampingRatio = newConfig.SpringDampingRatio;
 
-        ref var profile = ref e.GetMut<CombatProfile>();
         profile.HitSquashScale = newConfig.HitSquashScale;
     }
 }
