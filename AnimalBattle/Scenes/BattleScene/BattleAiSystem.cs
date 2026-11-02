@@ -129,16 +129,15 @@ public static class BattleAiSystem
         ctx.BossQuery.Iter(UpdateBossAi);
         ctx.CachedTileMap = null;
 
-        // カメラ追従および振動の更新：Boss が Hitstop 中や死亡後であっても振動減衰・構図追従を滞りなく継続
-        if (ctx.HasBoss)
-        {
-            CameraService.Update(
-                dt,
-                ctx.CachedPlayerPos,
-                ctx.CachedPlayerVel,
-                ctx.CachedBossPos,
-                camCfg);
-        }
+        // ボスが Hitstop 中・死亡演出中・または訓練場等で BossQuery から除外されている場合でも、
+        // 直近の BossPos または PlayerPos を使用してカメラ追従・振動減衰（Trauma decay）を継続する
+        var targetBossPos = ctx.HasBoss ? ctx.CachedBossPos : ctx.CachedPlayerPos;
+        CameraService.Update(
+            dt,
+            ctx.CachedPlayerPos,
+            ctx.CachedPlayerVel,
+            targetBossPos,
+            camCfg);
     }
 
     /// <summary>

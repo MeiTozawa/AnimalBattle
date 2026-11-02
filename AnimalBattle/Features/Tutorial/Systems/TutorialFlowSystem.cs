@@ -45,19 +45,32 @@ public static class TutorialFlowSystem
         }
 
         // 2. プレイヤーのHP監視および挫折防止リトライ処理
-        using var playerQuery = world.QueryBuilder<Health>()
+        using var playerQuery = world.QueryBuilder<Health, Transform, Velocity>()
             .With<PlayerTag>()
             .Build();
 
         var playerDied = false;
-        playerQuery.Each((player, ref hp) =>
+        var hasPlayer = false;
+        var playerPos = Vec2f.Zero;
+        var playerVel = Vec2f.Zero;
+        playerQuery.Each((Entity player, ref Health hp, ref Transform trans, ref Velocity vel) =>
         {
+            hasPlayer = true;
+            playerPos = trans.Position;
+            playerVel = vel.Value;
             if (hp.Current <= 0 || player.Has<DeadTag>())
             {
                 PlayerPrefabs.ResetPlayerEntity(player);
                 playerDied = true;
             }
         });
+
+        // チュートリアル中もカメラの振動減衰およびプレイヤー追従を更新
+        if (hasPlayer)
+        {
+            var camCfg = world.Has<CameraConfig>() ? world.Get<CameraConfig>() : null;
+            CameraService.Update(dt, playerPos, playerVel, playerPos, camCfg);
+        }
 
         if (playerDied)
         {
