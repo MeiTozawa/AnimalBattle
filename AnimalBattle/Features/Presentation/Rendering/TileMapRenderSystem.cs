@@ -1,4 +1,3 @@
-using AnimalBattle.Components;
 using AnimalBattle.Maps;
 
 namespace AnimalBattle.Presentation.Rendering;

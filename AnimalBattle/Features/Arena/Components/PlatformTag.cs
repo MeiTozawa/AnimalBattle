@@ -1,4 +1,4 @@
-namespace AnimalBattle.Components;
+namespace AnimalBattle.Arena.Components;
 
 /// <summary>
 ///     地形・プラットフォームエンティティを識別するためのタグ構造体。

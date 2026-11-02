@@ -1,11 +1,11 @@
-namespace AnimalBattle.Characters.Boss;
+namespace AnimalBattle.Bosses.Sync;
 
 using System;
 using System.Diagnostics;
-using AnimalBattle.Ai.BossLion;
-using AnimalBattle.Ai.BossSnake;
-using AnimalBattle.Configs;
-using AnimalBattle.Enemies;
+using Ai.BossLion;
+using Ai.BossSnake;
+using Configs;
+using Enemies;
 using AnimalBattle.Enemies.Components;
 using Flecs.NET.Core;
 

@@ -1,4 +1,4 @@
-namespace AnimalBattle.Components;
+namespace AnimalBattle.Combat.Components;
 
 /// <summary>
 ///     攻撃判定実体：近接斬撃等の持続時間および経過時間を管理する純粋データコンポーネント。

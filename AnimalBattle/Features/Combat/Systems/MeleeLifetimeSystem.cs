@@ -1,4 +1,3 @@
-using AnimalBattle.Components;
 
 namespace AnimalBattle.Combat.Systems;
 

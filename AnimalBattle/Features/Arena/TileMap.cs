@@ -1,5 +1,4 @@
 using AnimalBattle.Logging;
-using AnimalBattle.Components;
 using AnimalBattle.Maps.Navigation;
 using AnimalBattle.Maps.Spatial;
 

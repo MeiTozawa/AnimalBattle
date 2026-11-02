@@ -2,7 +2,6 @@ namespace AnimalBattle.Arena.Sync;
 
 using System.Diagnostics;
 using AnimalBattle.Asset;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using AnimalBattle.Maps;
 using AnimalBattle.Scenes.Battle;

@@ -35,6 +35,7 @@ global using AnimalBattle.Enemies.Systems;
 global using AnimalBattle.Combat;
 global using AnimalBattle.Combat.Systems;
 global using AnimalBattle.Arena;
+global using AnimalBattle.Arena.Components;
 global using AnimalBattle.Presentation.Rendering;
 global using AnimalBattle.Presentation.Animation;
 global using AnimalBattle.Presentation.Vfx;

@@ -1,4 +1,4 @@
-namespace AnimalBattle.Scenes.StartScene;
+namespace AnimalBattle.Scenes.Start;
 
 using System.Diagnostics;
 using Flecs.NET.Core;

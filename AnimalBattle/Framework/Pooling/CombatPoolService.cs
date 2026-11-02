@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using AnimalBattle.Components;
 
 namespace AnimalBattle.Framework.Pooling;
 
