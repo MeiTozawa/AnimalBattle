@@ -15,7 +15,6 @@ namespace ab {
 
 class IRenderService;
 class IInputService;
-class IPhysicsService;
 
 /// @brief アクティブなレンダリングサービスを設定します
 /// @param service 登録対象のレンダリングサービス
@@ -33,13 +32,7 @@ ANIMALBATTLE_CORE_API void SetInputService(IInputService* service) noexcept;
 /// @return 登録済みの入力サービスへのポインタ
 ANIMALBATTLE_CORE_API IInputService* GetInputService() noexcept;
 
-/// @brief アクティブな物理サービスを設定します
-/// @param service 登録対象の物理サービス
-ANIMALBATTLE_CORE_API void SetPhysicsService(IPhysicsService* service) noexcept;
 
-/// @brief 現在アクティブな物理サービスを取得します
-/// @return 登録済みの物理サービスへのポインタ
-ANIMALBATTLE_CORE_API IPhysicsService* GetPhysicsService() noexcept;
 
 class ISoundService;
 

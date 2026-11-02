@@ -121,8 +121,9 @@ public static unsafe class PhysicsService {
     // --- 地形・足場判定 ---
 
     /// <summary>
-    ///     すり抜け床との着地判定および補正Y座標の計算を行います。
+    ///     すり抜け床との着地判定および補正Y座標の計算を行います（純粋算術インライン）。
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool CheckPlatformGround(
         float prevY,
         float nextY,
@@ -131,19 +132,28 @@ public static unsafe class PhysicsService {
         out float adjustedPosY,
         out float adjustedVy)
     {
-        var groundY = nextY;
-        var vy = 0.0f;
-        var isGrounded = NativeBindings.Physics_CheckPlatformGround(
-            prevY,
-            nextY,
-            playerBox,
-            platformBox,
-            &groundY,
-            &vy);
+        var platLeft = platformBox.Left;
+        var platRight = platformBox.Right;
+        var platTop = platformBox.Top;
 
-        adjustedPosY = groundY;
-        adjustedVy = vy;
-        return isGrounded;
+        var pLeft = playerBox.Left;
+        var pRight = playerBox.Right;
+        var pBottomPrev = prevY + playerBox.Size.Y * 0.5f;
+        var pBottomNext = nextY + playerBox.Size.Y * 0.5f;
+
+        if (pRight > platLeft && pLeft < platRight)
+        {
+            if (pBottomPrev <= platTop + 4.0f && pBottomNext >= platTop)
+            {
+                adjustedPosY = platTop - playerBox.Size.Y * 0.5f;
+                adjustedVy = 0.0f;
+                return true;
+            }
+        }
+
+        adjustedPosY = nextY;
+        adjustedVy = 0.0f;
+        return false;
     }
 
     // --- 運動積分およびベクトル数学 ---

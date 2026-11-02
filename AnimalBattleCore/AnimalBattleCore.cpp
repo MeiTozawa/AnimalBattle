@@ -7,8 +7,6 @@
 
 import RenderService;
 import InputService;
-import PhysicsService;
-import DefaultPhysicsService;
 import SoundService;
 
 namespace ab {
@@ -16,9 +14,7 @@ namespace ab {
 namespace {
 IRenderService* g_render_service = nullptr;
 IInputService* g_input_service = nullptr;
-IPhysicsService* g_physics_service = nullptr;
 ISoundService* g_sound_service = nullptr;
-DefaultPhysicsService g_fallback_physics{};
 }
 
 void SetRenderService(IRenderService* service) noexcept {
@@ -37,13 +33,7 @@ IInputService* GetInputService() noexcept {
     return g_input_service;
 }
 
-void SetPhysicsService(IPhysicsService* service) noexcept {
-    g_physics_service = service;
-}
 
-IPhysicsService* GetPhysicsService() noexcept {
-    return g_physics_service != nullptr ? g_physics_service : &g_fallback_physics;
-}
 
 void SetSoundService(ISoundService* service) noexcept {
     g_sound_service = service;
@@ -211,23 +201,7 @@ __declspec(dllexport) void Engine_GetGraphSize(int handle, ab::Vec2i* out_size) 
     }
 }
 
-// --- Physics & Mathematics APIs ---
 
-__declspec(dllexport) bool Physics_CheckPlatformGround(float prev_y, float next_y, ab::Box2D player_box, ab::Box2D platform_box,
-                                                       float* out_ground_y, float* out_vy) noexcept {
-    auto* physics_service = ab::GetPhysicsService();
-    if (physics_service != nullptr) {
-        auto result = physics_service->CheckPlatformGround(prev_y, next_y, player_box, platform_box);
-        if (out_ground_y != nullptr) {
-            *out_ground_y = result.ground_y;
-        }
-        if (out_vy != nullptr) {
-            *out_vy = result.adjusted_vy;
-        }
-        return result.is_grounded;
-    }
-    return false;
-}
 
 // --- サウンド再生 API ---
 

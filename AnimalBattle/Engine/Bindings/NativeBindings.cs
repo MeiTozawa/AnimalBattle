@@ -8,15 +8,7 @@ namespace AnimalBattle.Bindings;
 internal static unsafe partial class NativeBindings {
     private const string _dllName = "AnimalBattleCore.dll";
 
-    #region Physics & Mathematics
 
-    [LibraryImport(_dllName, EntryPoint = "Physics_CheckPlatformGround")]
-    [SuppressGCTransition]
-    [return: MarshalAs(UnmanagedType.U1)]
-    public static partial bool Physics_CheckPlatformGround(float prevY, float nextY, Box2D playerBox, Box2D platformBox,
-        float* outGroundY, float* outVy);
-
-    #endregion
 
     #region Engine Control
 

@@ -11,7 +11,6 @@
 
 import DxLibRenderService;
 import DxLibInputService;
-import DefaultPhysicsService;
 import DxLibSoundService;
 
 namespace ab {
@@ -19,7 +18,6 @@ namespace {
 
 std::unique_ptr<DxLibRenderService> g_render_service = nullptr;
 std::unique_ptr<DxLibInputService> g_input_service = nullptr;
-std::unique_ptr<DefaultPhysicsService> g_physics_service = nullptr;
 std::unique_ptr<DxLibSoundService> g_sound_service = nullptr;
 HWND g_hwnd = nullptr;
 
@@ -30,7 +28,6 @@ bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept {
         g_hwnd = static_cast<HWND>(hwnd);
         g_render_service = std::make_unique<DxLibRenderService>();
         g_input_service = std::make_unique<DxLibInputService>();
-        g_physics_service = std::make_unique<DefaultPhysicsService>();
         g_sound_service = std::make_unique<DxLibSoundService>();
 
         if (g_hwnd != nullptr) {
@@ -51,7 +48,6 @@ bool SetupDxLibBackend(void* hwnd, int width, int height) noexcept {
         // 各種具象サービスインスタンスのポインタをグローバルコンテキストへ登録します
         SetRenderService(g_render_service.get());
         SetInputService(g_input_service.get());
-        SetPhysicsService(g_physics_service.get());
         SetSoundService(g_sound_service.get());
         return true;
     } catch (const std::exception&) {
@@ -67,11 +63,9 @@ void ShutdownDxLibBackend() noexcept {
     try {
         SetRenderService(nullptr);
         SetInputService(nullptr);
-        SetPhysicsService(nullptr);
         SetSoundService(nullptr);
 
         g_sound_service.reset();
-        g_physics_service.reset();
         g_input_service.reset();
         g_render_service.reset();
         ::SetMouseDispFlag(TRUE);
