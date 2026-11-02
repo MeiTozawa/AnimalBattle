@@ -23,7 +23,8 @@ public sealed class BossLionBrain : BaseBossBrain {
     }
 
     private readonly IBossLionConfiguration _configuration;
-    private readonly Func<PlatformNavigationGraph?>? _navGraphProvider;
+    private readonly PlatformNavigationGraph _navGraph = new();
+    public PlatformNavigationGraph NavGraph => _navGraph;
     private BrainSubState _subState = BrainSubState.Idle;
 
     private TraverseStage _traverseStage = TraverseStage.Ascent;
@@ -48,14 +49,20 @@ public sealed class BossLionBrain : BaseBossBrain {
         World world,
         Vec2f spawn,
         IBossLionConfiguration? configuration = null,
-        Func<PlatformNavigationGraph?>? navGraphProvider = null) : base(world)
+        IReadOnlyList<PlatformNode>? platformNodes = null) : base(world)
     {
         Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
         _configuration = configuration ?? new BossLionDefaultConfiguration(world);
-        _navGraphProvider = navGraphProvider;
         _currentPosition = spawn;
         _targetPosition = spawn;
         Phase = Phase.Phase1;
+
+        if (platformNodes != null && platformNodes.Count > 0 && world.Has<ArenaConfig>())
+        {
+            var arenaCfg = world.Get<ArenaConfig>();
+            var p1 = _configuration.GetPhase(Phase.Phase1);
+            _navGraph.Build(platformNodes, p1.JumpForce, p1.Gravity, p1.MoveSpeed, arenaCfg.NavigationGraph);
+        }
 
         InitializeAbilities();
         Reset(spawn);
@@ -347,7 +354,7 @@ public sealed class BossLionBrain : BaseBossBrain {
             // 探索クールダウンが終了しているか、プレイヤーが 64px 以上大きく移動した場合のみ A* 経路を再探索
             if (_cachedNavPlan == null || _repathCooldown <= 0.0f || playerMovedDistSq > 64.0f * 64.0f)
             {
-                var navGraph = _navGraphProvider?.Invoke();
+                var navGraph = _navGraph;
                 if (navGraph is not null && navGraph.Nodes.Count > 0)
                 {
                     var bossFootY = _currentPosition.Y + _configuration.CombatSettings.CollisionHeight / 2.0f;
@@ -562,7 +569,7 @@ public sealed class BossLionBrain : BaseBossBrain {
 
         _targetLandingSurfaceY = SkillMotionDriver.CalculateTargetLandingSurfaceY(
             _world,
-            _navGraphProvider?.Invoke(),
+            _navGraph,
             playerX,
             playerFootY);
         _targetPosition = new Vec2f(playerX, _targetLandingSurfaceY - playerCollisionHeight * 0.5f);

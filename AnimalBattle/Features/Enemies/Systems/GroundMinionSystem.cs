@@ -13,6 +13,8 @@ internal sealed class GroundMinionContext : IDisposable
     public TileMap? CachedTileMap;
     public Vec2f? CachedPlayerPos;
     public readonly List<int> CandidatePlatforms = new(16);
+    public readonly PlatformNavigationGraph NavGraph = new();
+    public bool NavGraphInitialized;
 
     public void Dispose()
     {
@@ -128,13 +130,19 @@ public static class GroundMinionSystem
                 var minionFootY = trans.Position.Y + col.Size.Y * 0.5f;
                 var playerFootY = pPos.Y + 32.0f;
 
-                var navGraph = tileMap?.NavGraph;
-                if (navGraph is not null && navGraph.Nodes.Count > 0)
+                if (!ctx.NavGraphInitialized && tileMap != null && tileMap.Nodes.Count > 0)
+                {
+                    var arenaCfg = world.Get<ArenaConfig>();
+                    ctx.NavGraph.Build(tileMap.Nodes, gCfg.JumpForce, 1200.0f, gCfg.MoveSpeed, arenaCfg.NavigationGraph);
+                    ctx.NavGraphInitialized = true;
+                }
+
+                if (ctx.NavGraph.Nodes.Count > 0)
                 {
                     var playerMovedDistSq = (pPos - minion.LastPlayerPos).LengthSquared();
                     if (minion.CachedPlan == null || minion.RepathCooldown <= 0.0f || playerMovedDistSq > 64.0f * 64.0f)
                     {
-                        minion.CachedPlan = navGraph.FindPath(
+                        minion.CachedPlan = ctx.NavGraph.FindPath(
                             trans.Position.X,
                             minionFootY,
                             pPos.X,

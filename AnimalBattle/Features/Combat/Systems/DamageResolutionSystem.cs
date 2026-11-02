@@ -50,7 +50,8 @@ public static class DamageResolutionSystem
         if (events.IsEmpty) return;
 
         ref readonly var cameraCfg = ref world.Get<CameraConfig>();
-        var pCfg = world.GetActivePlayerConfig();
+        var combatCfg = world.Get<CombatPrefabConfig>();
+        var physicsCfg = combatCfg.Physics;
         var isGameOver = world.Has<GameOverTag>();
 
         for (var i = 0; i < count; i++)
@@ -110,7 +111,7 @@ public static class DamageResolutionSystem
 
             // 敵対系ユニットの易傷倍率評価
             var isVulnerable = tagState.HasTag(GameplayTag.Vulnerable);
-            var multiplier = (profile.Kind != CombatEntityKind.Player && isVulnerable) ? pCfg.VulnerableDamageMultiplier : 1.0f;
+            var multiplier = (profile.Kind != CombatEntityKind.Player && isVulnerable) ? physicsCfg.VulnerableDamageMultiplier : 1.0f;
             var finalDamage = totalDamage * multiplier;
 
             var prevHp = hp.Current;
@@ -124,12 +125,12 @@ public static class DamageResolutionSystem
             if (!hasSuperArmor || isVulnerable || profile.Kind == CombatEntityKind.Player)
             {
                 var heavy = (profile.Kind != CombatEntityKind.Player && isVulnerable) || isHeavy;
-                var hitstopDuration = heavy ? pCfg.HitstopHeavyDuration : pCfg.HitstopLightDuration;
+                var hitstopDuration = heavy ? physicsCfg.HitstopHeavyDuration : physicsCfg.HitstopLightDuration;
                 if (hitstopDuration > 0.0f)
                 {
                     entity.Set(new HitstopState(hitstopDuration));
-                    var jitterAmp = heavy ? pCfg.HitJitterHeavyAmplitude : pCfg.HitJitterLightAmplitude;
-                    entity.Set(new SpriteJitter(new Vec2f(jitterAmp, 0.0f), pCfg.HitJitterFrequency));
+                    var jitterAmp = heavy ? physicsCfg.HitJitterHeavyAmplitude : physicsCfg.HitJitterLightAmplitude;
+                    entity.Set(new SpriteJitter(new Vec2f(jitterAmp, 0.0f), physicsCfg.HitJitterFrequency));
                 }
 
                 if (profile.CanBeKnockedBack)
@@ -143,7 +144,7 @@ public static class DamageResolutionSystem
             }
 
             // 被弾スカッシュ変形の適用
-            var hitSquash = profile.HitSquashScale != Vec2f.Zero ? profile.HitSquashScale : pCfg.HitSquashScale;
+            var hitSquash = profile.HitSquashScale != Vec2f.Zero ? profile.HitSquashScale : physicsCfg.DefaultHitSquashScale;
             spring.Current = hitSquash;
             spring.Velocity = Vec2f.Zero;
 

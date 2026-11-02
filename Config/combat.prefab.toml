@@ -7,6 +7,13 @@
 [Physics]
 DefaultKnockback = { x = 180.0, y = -90.0 }
 HeavyDamageThreshold = 2.0
+HitstopLightDuration = 0.05
+HitstopHeavyDuration = 0.12
+HitJitterLightAmplitude = 2.0
+HitJitterHeavyAmplitude = 4.0
+HitJitterFrequency = 30.0
+VulnerableDamageMultiplier = 1.5
+DefaultHitSquashScale = { x = 1.2, y = 0.8 }
 
 # --- 自機通常弾原型 ---
 [PlayerBullet]

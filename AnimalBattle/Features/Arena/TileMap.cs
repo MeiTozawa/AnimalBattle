@@ -37,7 +37,7 @@ public sealed class TileMap(
     public Vec2f Origin { get; } = origin;
 
     /// <summary>プラットフォーム間跳躍ナビゲーショングラフ</summary>
-    public PlatformNavigationGraph NavGraph { get; } = new();
+    public IReadOnlyList<PlatformNode> Nodes { get; private set; } = [];
 
     /// <summary>プラットフォーム足場用の 2D 空間ハッシュグリッド。</summary>
     public PlatformSpatialHash SpatialHash { get; } = new(cellSize: 256.0f);
@@ -108,6 +108,8 @@ public sealed class TileMap(
         SpatialHash.Clear();
         if (Columns <= 0 || Rows <= 0 || TileSet.TileWidth <= 0 || TileSet.TileHeight <= 0) return;
 
+        var arenaCfg = world.Get<ArenaConfig>();
+
         var scaleX = (float)RenderTileSize.X / TileSet.TileWidth;
         var scaleY = (float)RenderTileSize.Y / TileSet.TileHeight;
 
@@ -142,20 +144,19 @@ public sealed class TileMap(
                 }
 
                 var tileCount = c - startCol;
-                RegisterPlatformNodeAndEntity(world, nodes, ref nodeId, ref platformId, r, startCol, tileCount, colOffsetX, colOffsetY,
+                RegisterPlatformNodeAndEntity(world, arenaCfg, nodes, ref nodeId, ref platformId, r, startCol, tileCount, colOffsetX, colOffsetY,
                     colWidth, colHeight, parent);
             }
         }
 
-        var b2Cfg = world.Get<BossLionConfig>();
-        var arenaCfg = world.Get<ArenaConfig>();
-        NavGraph.Build(nodes, b2Cfg.JumpForce, b2Cfg.Gravity, b2Cfg.MoveSpeed, arenaCfg.NavigationGraph);
-        Log.Info("TileMap", 
-            $"[TileMap ナビゲーション] プラットフォームナビゲーショングラフを正常に構築しました: {NavGraph.Nodes.Count} ノード, {NavGraph.Links.Count} リンク (跳躍/落下遷移)");
+        Nodes = nodes;
+        Log.Info("TileMap",
+            $"[TileMap] プラットフォームノードを正常に抽出しました: {Nodes.Count} ノード");
     }
 
     private void RegisterPlatformNodeAndEntity(
         World world,
+        ArenaConfig arenaCfg,
         List<PlatformNode> nodes,
         ref int nodeId,
         ref int platformId,
@@ -181,7 +182,6 @@ public sealed class TileMap(
         var rightBoundX = leftBoundX + platformWidth;
         var topSurfaceY = topY + colOffsetY;
 
-        var arenaCfg = world.Get<ArenaConfig>();
         var clampedLeft = MathF.Max(leftBoundX, arenaCfg.BoundaryMinX);
         var clampedRight = MathF.Min(rightBoundX, arenaCfg.BoundaryMaxX);
 

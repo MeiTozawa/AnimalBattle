@@ -62,6 +62,27 @@ public sealed class CombatPhysicsConfig
 
     /// <summary>重撃判定（強制ヒットストップ／カメラインパルス誘発）ダメージ閾値。</summary>
     public float HeavyDamageThreshold { get; set; }
+
+    /// <summary>通常ヒットストップ持続時間秒単位。</summary>
+    public float HitstopLightDuration { get; set; }
+
+    /// <summary>強攻撃・弱点ヒットストップ持続時間秒単位。</summary>
+    public float HitstopHeavyDuration { get; set; }
+
+    /// <summary>通常ヒット時のスプライト振動振幅ピクセル単位。</summary>
+    public float HitJitterLightAmplitude { get; set; }
+
+    /// <summary>強攻撃・弱点ヒット時のスプライト振動振幅ピクセル単位。</summary>
+    public float HitJitterHeavyAmplitude { get; set; }
+
+    /// <summary>ヒット時スプライト局所振動周波数：Hz。</summary>
+    public float HitJitterFrequency { get; set; }
+
+    /// <summary>易傷：Vulnerable 状態の対象に対する与ダメージ倍率。</summary>
+    public float VulnerableDamageMultiplier { get; set; }
+
+    /// <summary>被弾時スカッシュ拡縮倍率デフォルト値。</summary>
+    public Vec2f DefaultHitSquashScale { get; set; }
 }
 
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]

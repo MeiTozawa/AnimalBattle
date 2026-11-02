@@ -15,6 +15,7 @@ internal sealed class DebugGizmosRenderContext : IDisposable
     public required Query<Transform, Hitbox> HitboxQuery { get; init; }
     public required Query<Transform, Hurtbox> HurtboxQuery { get; init; }
     public required Query<TileMap> TileMapQuery { get; init; }
+    public required Query<BossBrainComponent> BossQuery { get; init; }
     public TileMap? CachedTileMap;
     public DebugRenderConfig? CachedDbgCfg;
 
@@ -25,6 +26,7 @@ internal sealed class DebugGizmosRenderContext : IDisposable
         HitboxQuery.Dispose();
         HurtboxQuery.Dispose();
         TileMapQuery.Dispose();
+        BossQuery.Dispose();
     }
 }
 
@@ -61,6 +63,7 @@ public static class DebugGizmosRenderSystem
             .Build();
 
         var tileMapQuery = world.QueryBuilder<TileMap>().Build();
+        var bossQuery = world.QueryBuilder<BossBrainComponent>().Build();
 
         world.Set(new DebugGizmosRenderContext
         {
@@ -68,7 +71,8 @@ public static class DebugGizmosRenderSystem
             PlayerQuery = playerQuery,
             HitboxQuery = hitboxQuery,
             HurtboxQuery = hurtboxQuery,
-            TileMapQuery = tileMapQuery
+            TileMapQuery = tileMapQuery,
+            BossQuery = bossQuery
         });
 
         world.System("DebugGizmosRenderSystem")
@@ -104,7 +108,7 @@ public static class DebugGizmosRenderSystem
         ctx.PlayerQuery.Iter(DrawPlayerCollisionBoxes);
         ctx.HurtboxQuery.Iter(DrawHurtboxes);
         ctx.HitboxQuery.Iter(DrawHitboxes);
-        DrawPlatformNavGraph(tileMap, dbgCfg);
+        DrawBossNavGraph(ctx, dbgCfg);
 
         ctx.CachedDbgCfg = null;
     }
@@ -239,28 +243,37 @@ public static class DebugGizmosRenderSystem
         }
     }
 
-    private static void DrawPlatformNavGraph(TileMap? tileMap, DebugRenderConfig dbgCfg)
+    private static void DrawBossNavGraph(DebugGizmosRenderContext ctx, DebugRenderConfig dbgCfg)
     {
-        if (tileMap == null || tileMap.NavGraph.Nodes.Count == 0) return;
-
-        var graph = tileMap.NavGraph;
-        var nodeColor = dbgCfg.NavNodeColor;
-        var edgeDropColor = dbgCfg.NavEdgeDropColor;
-        var edgeJumpColor = dbgCfg.NavEdgeJumpColor;
-
-        foreach (var node in graph.Nodes)
+        ctx.BossQuery.Iter((Iter it, Field<BossBrainComponent> brains) =>
         {
-            var center = new Vec2i((int)node.CenterX, (int)node.TopY);
-            GameEngine.DrawCircle(center, dbgCfg.NavNodeRadius, nodeColor, true);
-        }
+            for (var i = 0; i < it.Count(); i++)
+            {
+                if (brains[i].Brain is AnimalBattle.Ai.BossLion.BossLionBrain lionBrain)
+                {
+                    var graph = lionBrain.NavGraph;
+                    if (graph.Nodes.Count == 0) continue;
 
-        foreach (var link in graph.Links)
-        {
-            var p1 = new Vec2i((int)link.TakeoffX, (int)link.FromNode.TopY);
-            var p2 = new Vec2i((int)link.LandingX, (int)link.ToNode.TopY);
-            var edgeColor = link.Action == NavActionType.Drop ? edgeDropColor : edgeJumpColor;
-            GameEngine.DrawLine(p1, p2, edgeColor);
-        }
+                    var nodeColor = dbgCfg.NavNodeColor;
+                    var edgeDropColor = dbgCfg.NavEdgeDropColor;
+                    var edgeJumpColor = dbgCfg.NavEdgeJumpColor;
+
+                    foreach (var node in graph.Nodes)
+                    {
+                        var center = new Vec2i((int)node.CenterX, (int)node.TopY);
+                        GameEngine.DrawCircle(center, dbgCfg.NavNodeRadius, nodeColor, true);
+                    }
+
+                    foreach (var link in graph.Links)
+                    {
+                        var p1 = new Vec2i((int)link.TakeoffX, (int)link.FromNode.TopY);
+                        var p2 = new Vec2i((int)link.LandingX, (int)link.ToNode.TopY);
+                        var edgeColor = link.Action == NavActionType.Drop ? edgeDropColor : edgeJumpColor;
+                        GameEngine.DrawLine(p1, p2, edgeColor);
+                    }
+                }
+            }
+        });
     }
 
     private static Color GetFallbackFactionColor(DebugRenderConfig dbgCfg, Faction faction, Color defaultColor)

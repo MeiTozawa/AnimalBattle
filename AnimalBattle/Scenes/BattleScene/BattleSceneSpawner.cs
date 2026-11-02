@@ -100,7 +100,7 @@ public static class BattleSceneSpawner
 
             IBossBrain brain = bossType switch {
                 BossType.BossSnake => new BossSnakeBrain(world, spawn),
-                BossType.BossLion => new BossLionBrain(world, spawn, null, () => tileMap.NavGraph),
+                BossType.BossLion => new BossLionBrain(world, spawn, null, tileMap.Nodes),
                 _ => new BossSnakeBrain(world, spawn)
             };
 
