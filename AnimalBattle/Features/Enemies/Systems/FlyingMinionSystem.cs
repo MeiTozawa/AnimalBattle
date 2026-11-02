@@ -8,6 +8,9 @@ internal sealed class FlyingMinionContext : IDisposable
     public required Query<Transform> PlayerQuery { get; init; }
     public required Query<Transform, Sprite, CollisionBox, FlyingMinionComponent> MinionQuery { get; init; }
 
+    public Vec2f CachedPlayerPos;
+    public bool HasPlayer;
+
     public void Dispose()
     {
         PlayerQuery.Dispose();
@@ -81,6 +84,21 @@ public static class FlyingMinionSystem
         return world;
     }
 
+    private static void RefreshPlayerPosition(FlyingMinionContext ctx)
+    {
+        ctx.HasPlayer = false;
+        ctx.PlayerQuery.Iter(static (Iter pIt, Field<Transform> pTrans) =>
+        {
+            var pCount = pIt.Count();
+            if (pCount > 0)
+            {
+                var fCtx = pIt.World().Get<FlyingMinionContext>();
+                fCtx.CachedPlayerPos = pTrans[0].Position;
+                fCtx.HasPlayer = true;
+            }
+        });
+    }
+
     private static void ExecuteFlyingMinionMovement(
         Iter it,
         Field<Transform> transforms,
@@ -99,16 +117,9 @@ public static class FlyingMinionSystem
         var minionCfg = world.Get<MinionConfig>();
         var fCfg = minionCfg.FlyingMinion;
 
-        // 生存プレイヤー座標一覧の収集
-        var players = new List<Vec2f>(2);
-        ctx.PlayerQuery.Iter((Iter pIt, Field<Transform> pTrans) =>
-        {
-            var pCount = pIt.Count();
-            for (var p = 0; p < pCount; p++)
-            {
-                players.Add(pTrans[p].Position);
-            }
-        });
+        RefreshPlayerPosition(ctx);
+        var hasPlayer = ctx.HasPlayer;
+        var playerPos = ctx.CachedPlayerPos;
 
         for (var i = 0; i < count; i++)
         {
@@ -119,18 +130,7 @@ public static class FlyingMinionSystem
 
             minion.HoverTimer += dt;
 
-            // 最寄りプレイヤーの選定
-            Vec2f? nearestPlayerPos = null;
-            var minPlayerDistSq = float.MaxValue;
-            for (var p = 0; p < players.Count; p++)
-            {
-                var distSq = (players[p] - trans.Position).LengthSquared();
-                if (distSq < minPlayerDistSq)
-                {
-                    minPlayerDistSq = distSq;
-                    nearestPlayerPos = players[p];
-                }
-            }
+            Vec2f? nearestPlayerPos = hasPlayer ? playerPos : null;
 
             var dirX = 0.0f;
             var targetY = trans.Position.Y;
@@ -213,16 +213,9 @@ public static class FlyingMinionSystem
         var minionCfg = world.Get<MinionConfig>();
         var fCfg = minionCfg.FlyingMinion;
 
-        // 生存プレイヤー座標一覧の収集
-        var players = new List<Vec2f>(2);
-        ctx.PlayerQuery.Iter((Iter pIt, Field<Transform> pTrans) =>
-        {
-            var pCount = pIt.Count();
-            for (var p = 0; p < pCount; p++)
-            {
-                players.Add(pTrans[p].Position);
-            }
-        });
+        RefreshPlayerPosition(ctx);
+        var hasPlayer = ctx.HasPlayer;
+        var playerPos = ctx.CachedPlayerPos;
 
         for (var i = 0; i < count; i++)
         {
@@ -231,23 +224,12 @@ public static class FlyingMinionSystem
 
             minion.Asc.Update(dt);
 
-            if (minion.Asc.IsCasting || players.Count == 0) continue;
+            if (minion.Asc.IsCasting || !hasPlayer) continue;
 
             ref var trans = ref transforms[i];
             ref var sprite = ref sprites[i];
 
-            // 最寄りプレイヤーの選定
-            Vec2f? nearestPlayerPos = null;
-            var minPlayerDistSq = float.MaxValue;
-            for (var p = 0; p < players.Count; p++)
-            {
-                var distSq = (players[p] - trans.Position).LengthSquared();
-                if (distSq < minPlayerDistSq)
-                {
-                    minPlayerDistSq = distSq;
-                    nearestPlayerPos = players[p];
-                }
-            }
+            Vec2f? nearestPlayerPos = playerPos;
 
             if (!nearestPlayerPos.HasValue) continue;
 

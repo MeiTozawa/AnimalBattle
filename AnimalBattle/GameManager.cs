@@ -225,6 +225,7 @@ public class GameManager : IDisposable {
         world.Get<DebugGizmosRenderContext>().Dispose();
         world.Get<TileMapRenderContext>().Dispose();
         world.Get<BossTelegraphRenderContext>().Dispose();
+        world.Get<FlyingMinionContext>().Dispose();
         world.Get<AimReticleUpdateContext>().Dispose();
     }
 }
