@@ -47,10 +47,8 @@ public static class TutorialFlowSystem
         var ctx = world.Get<TutorialSystemContext>();
 
         // 2. プレイヤーのHP監視および挫折防止リトライ処理
-        var playerDied = false;
-        var hasPlayer = false;
-        var playerPos = Vec2f.Zero;
-        var playerVel = Vec2f.Zero;
+        ctx.HasPlayer = false;
+        ctx.PlayerDied = false;
 
         ctx.PlayerHealthQuery.Iter(static (Iter pIt, Field<Health> hps, Field<Transform> trans, Field<Velocity> vels) =>
         {
@@ -68,14 +66,16 @@ public static class TutorialFlowSystem
                 if (hps[i].Current <= 0 || pEntity.Has<DeadTag>())
                 {
                     PlayerPrefabs.ResetPlayerEntity(pEntity);
-                    pIt.World().GetMut<TutorialState>().IsRetrying = true;
+                    pCtx.PlayerDied = true;
                 }
             }
         });
 
-        hasPlayer = ctx.HasPlayer;
-        playerPos = ctx.CachedPlayerPos;
-        playerVel = ctx.CachedPlayerVel;
+        var playerDied = ctx.PlayerDied;
+
+        var hasPlayer = ctx.HasPlayer;
+        var playerPos = ctx.CachedPlayerPos;
+        var playerVel = ctx.CachedPlayerVel;
 
         // チュートリアル中もカメラの振動減衰およびプレイヤー追従を更新
         if (hasPlayer)
