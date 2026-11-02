@@ -1,3 +1,4 @@
+using AnimalBattle.Abilities.Attack;
 namespace AnimalBattle.Ai.BossSnake;
 
 /// <summary>BossSnake の移動に必要な Phase 設定の不変 snapshot です。</summary>
@@ -11,7 +12,8 @@ public readonly struct BossSnakePhaseSettings(
     float hoverLerpSpeed,
     float transitionDuration,
     float transitionFloatSpeed,
-    IReadOnlyList<StringId> attackOrder) {
+    IReadOnlyList<StringId> attackOrder,
+    IReadOnlyList<AttackDecisionRule>? rules = null) {
     /// <summary>Hover の継続時間です。</summary>
     public float HoverDuration { get; } = hoverDuration;
 
@@ -39,6 +41,9 @@ public readonly struct BossSnakePhaseSettings(
     /// <summary>この Phase の技能順です。</summary>
     public IReadOnlyList<StringId> AttackOrder { get; } =
         attackOrder ?? AssertHelper.FailWithDefault("[BossSnakePhaseSettings 警告] attackOrder が null です。空配列にフォールバックします。", Array.Empty<StringId>());
+
+    /// <summary>この Phase の評価ルール一覧です。</summary>
+    public IReadOnlyList<AttackDecisionRule> Rules { get; } = rules ?? [];
 }
 
 /// <summary>BossSnake State_Module が読む設定の注入境界です。</summary>
@@ -114,6 +119,15 @@ public sealed class BossSnakeDefaultConfiguration : IBossSnakeConfiguration {
             order = [];
         }
 
+        var rulesList = new List<AttackDecisionRule>();
+        if (tomlPhase.Rules is { Count: > 0 })
+        {
+            foreach (var r in tomlPhase.Rules)
+            {
+                rulesList.Add(AttackDecisionRule.FromConfig(r));
+            }
+        }
+
         return new BossSnakePhaseSettings(
             tomlPhase.HoverDuration,
             tomlPhase.HoverBaseY,
@@ -123,7 +137,8 @@ public sealed class BossSnakeDefaultConfiguration : IBossSnakeConfiguration {
             tomlPhase.HoverLerpSpeed,
             tomlPhase.TransitionDuration,
             tomlPhase.TransitionFloatSpeed,
-            order);
+            order,
+            rulesList);
     }
 
     /// <inheritdoc />

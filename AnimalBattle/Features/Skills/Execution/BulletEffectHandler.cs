@@ -111,12 +111,9 @@ public sealed class BulletEffectHandler : ISkillEffectHandler
         var baseAngle = diff.LengthSquared() > 0.001f ? MathF.Atan2(diff.Y, diff.X) : 0.0f;
 
         var count = Math.Max(1, cfg.Count);
-        var step = cfg.AngleStep > 0.0f ? cfg.AngleStep : MathF.PI * 2.0f / count;
+        var step = MathF.PI * 2.0f / count;
         var bType = ParseBulletType(cfg.BulletType, BulletType.Magenta);
-
-        var startAngle = cfg.AngleStep > 0.0f
-            ? baseAngle - (count - 1) * step * 0.5f + angleOffset
-            : baseAngle + angleOffset;
+        var startAngle = baseAngle + angleOffset;
 
         for (var i = 0; i < count; i++)
         {
@@ -134,7 +131,7 @@ public sealed class BulletEffectHandler : ISkillEffectHandler
                 cfg.IsIndestructible);
         }
 
-        angleOffset += 0.15f;
+        angleOffset += cfg.AngleStep > 0.0f ? cfg.AngleStep : 0.15f;
     }
 
     private static void EmitDoubleSpiral(World world, BulletEmitConfig cfg, Vec2f origin, ref float angleOffset)

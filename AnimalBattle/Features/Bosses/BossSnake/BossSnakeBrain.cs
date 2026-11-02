@@ -146,7 +146,7 @@ public sealed class BossSnakeBrain : BaseBossBrain {
         BaseX = pos.X;
         _stateTimer = 0.0f;
         _hoverTimer = 0.0f;
-        _attackIndex = 0;
+        _attackIndex = -1;
         _isDead = false;
         Phase = Phase.Phase1;
 
@@ -246,8 +246,24 @@ public sealed class BossSnakeBrain : BaseBossBrain {
     private void CastNextAbility(Vec2f playerPos)
     {
         var phaseCfg = _configuration.GetPhase(Phase);
-        var attempts = phaseCfg.AttackOrder.Count;
 
+        // 1. ルールに基づく重み付き抽選を最優先評価
+        if (phaseCfg.Rules.Count > 0)
+        {
+            var dist = (playerPos - _currentPosition).Length();
+            var ctx = new AttackDecisionContext(dist, false, true, false);
+            var chosenSkill = BossDecisionEvaluator.EvaluateWeighted(phaseCfg.Rules, _asc.Cooldowns, in ctx, asc: _asc);
+            if (!chosenSkill.IsEmpty && _asc.TryActivateAbility(chosenSkill))
+            {
+                _startPosition = _currentPosition;
+                _targetPosition = playerPos;
+                _stateMachine.ChangeState(_abilityState);
+                return;
+            }
+        }
+
+        // 2. ルールで未選出または全クールダウン中の場合、AttackOrder ラウンドロビンへフォールバック
+        var attempts = phaseCfg.AttackOrder.Count;
         for (var i = 0; i < attempts; i++)
         {
             _attackIndex = (_attackIndex + 1) % phaseCfg.AttackOrder.Count;
