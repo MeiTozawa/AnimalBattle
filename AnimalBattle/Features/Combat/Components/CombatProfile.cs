@@ -11,7 +11,7 @@ public enum CombatEntityKind : byte
     Player = 0,
 
     /// <summary>一般敵・小怪（Minion）。</summary>
-    Enemy = 1,
+    Minion = 1,
 
     /// <summary>ステージBoss。</summary>
     Boss = 2,
@@ -68,7 +68,7 @@ public struct CombatProfile
     /// <summary>一般敵・小怪用の戦闘プロファイルを生成します。</summary>
     public static CombatProfile ForMinion(Vec2f hitSquashScale = default) => new()
     {
-        Kind = CombatEntityKind.Enemy,
+        Kind = CombatEntityKind.Minion,
         CanBeKnockedBack = true,
         HasCounterAttack = false,
         Phase = Phase.Phase1,

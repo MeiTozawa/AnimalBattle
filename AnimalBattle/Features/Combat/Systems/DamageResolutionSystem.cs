@@ -198,7 +198,7 @@ public static class DamageResolutionSystem
                         EventBus.Publish(new BossDiedEvent());
                         break;
 
-                    case CombatEntityKind.Enemy:
+                    case CombatEntityKind.Minion:
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
                         entity.GetMut<Hitbox>().IsActive = false;
