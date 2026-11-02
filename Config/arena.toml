@@ -16,8 +16,8 @@ InitialCapacity = 64
 
 # 2D プラットフォーム跳躍・下落ナビゲーションおよび A* 探索設定
 [NavigationGraph]
-BossNodeToleranceY = 35.0
-BossNodeMarginX = 55.0
+EnemyNodeToleranceY = 35.0
+EnemyNodeMarginX = 55.0
 TargetToleranceY = 45.0
 TargetMarginX = 35.0
 TakeoffTriggerDistance = 22.0

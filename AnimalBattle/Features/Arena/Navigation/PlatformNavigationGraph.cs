@@ -82,8 +82,8 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     /// <returns>該当するプラットフォーム、存在しない場合は null</returns>
     public PlatformNode? FindNodeAt(float x, float footY, float? toleranceY = null, float? marginX = null)
     {
-        var tolY = toleranceY ?? Config.BossNodeToleranceY;
-        var marX = marginX ?? Config.BossNodeMarginX;
+        var tolY = toleranceY ?? Config.EnemyNodeToleranceY;
+        var marX = marginX ?? Config.EnemyNodeMarginX;
         PlatformNode? bestNode = null;
         var bestDistY = float.MaxValue;
 
@@ -110,7 +110,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
     /// <returns>直下のプラットフォーム、存在しない場合は null</returns>
     public PlatformNode? FindPlatformBelow(float x, float footY, float? marginX = null)
     {
-        var marX = marginX ?? Config.BossNodeMarginX;
+        var marX = marginX ?? Config.EnemyNodeMarginX;
         PlatformNode? bestNode = null;
         var bestDistY = float.MaxValue;
 
@@ -119,7 +119,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
             if (node.ContainsX(x, marX))
             {
                 var dy = node.TopY - footY;
-                if (dy >= -Config.BossNodeToleranceY && dy < bestDistY)
+                if (dy >= -Config.EnemyNodeToleranceY && dy < bestDistY)
                 {
                     bestDistY = dy;
                     bestNode = node;
@@ -161,7 +161,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
             {
                 // 起点・終点プラットフォームのいずれよりも下方に転落した場合はリンク破棄
                 var lowestY = MathF.Max(currentActiveLink.FromNode.TopY, currentActiveLink.ToNode.TopY);
-                if (currentFootY > lowestY + Config.BossNodeToleranceY)
+                if (currentFootY > lowestY + Config.EnemyNodeToleranceY)
                 {
                     _activeLink = null;
                 }
@@ -190,7 +190,7 @@ public sealed class PlatformNavigationGraph(NavigationGraphConfig? config = null
         // 接地状態復帰時はアクティブリンクをリセット
         _activeLink = null;
 
-        var currentNode = FindNodeAt(currentX, currentFootY, Config.BossNodeToleranceY, Config.BossNodeMarginX);
+        var currentNode = FindNodeAt(currentX, currentFootY, Config.EnemyNodeToleranceY, Config.EnemyNodeMarginX);
         var targetNode = FindNodeAt(targetX, targetFootY, Config.TargetToleranceY, Config.TargetMarginX);
 
         // 2. 同一プラットフォーム上にいる場合は直接歩行追従
