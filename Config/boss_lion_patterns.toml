@@ -5,7 +5,7 @@ SkillName = "Heavy Cleave Slash"
 WindUpTime = 0.45
 CastDuration = 0.35
 RecoveryTime = 0.50
-DefaultCooldown = 2.0
+DefaultCooldown = 5.0
 EffectiveRange = 100.0
 ArmorTags = ["SuperArmor"]
 
@@ -34,7 +34,7 @@ SkillName = "Ground Stomp Shockwave"
 WindUpTime = 0.50
 CastDuration = 0.40
 RecoveryTime = 0.50
-DefaultCooldown = 5.0
+DefaultCooldown = 7.0
 EffectiveRange = 420.0
 ArmorTags = ["SuperArmor"]
 
@@ -57,7 +57,7 @@ SkillName = "Titan Leap Smash"
 WindUpTime = 0.40
 CastDuration = 1.60
 RecoveryTime = 0.80
-DefaultCooldown = 6.0
+DefaultCooldown = 14.0
 EffectiveRange = 680.0
 ArmorTags = ["Invincible"]
 RecoveryTags = ["Vulnerable"]
@@ -90,7 +90,7 @@ SkillName = "Twin Cleave Fury"
 WindUpTime = 0.35
 CastDuration = 0.70
 RecoveryTime = 0.55
-DefaultCooldown = 3.0
+DefaultCooldown = 4.0
 EffectiveRange = 250.0
 ArmorTags = ["SuperArmor"]
 
@@ -121,9 +121,9 @@ Hitbox = { DirectionMode = "Forward", Size = { x = 105.0, y = 80.0 }, Offset = {
 
 [FrenzyCharge]
 SkillName = "Frenzy Rampage Charge"
-WindUpTime = 0.55
-CastDuration = 1.30
-RecoveryTime = 1.20
+WindUpTime = 0.50
+CastDuration = 0.7
+RecoveryTime = 1.0
 DefaultCooldown = 7.0
 EffectiveRange = 620.0
 ArmorTags = ["SuperArmor"]
@@ -142,7 +142,7 @@ Velocity = { x = 620.0, y = 0.0 }
 [EarthquakeRoar]
 SkillName = "Cataclysm Earthquake Roar"
 WindUpTime = 0.60
-CastDuration = 1.80
+CastDuration = 0.80
 RecoveryTime = 0.60
 DefaultCooldown = 10.0
 EffectiveRange = 1200.0

@@ -54,11 +54,11 @@ AntiKitingRangedSkill = "LeapSmash"
 
 # Phase 1 状態機械設定
 [Phase1]
-IdleDuration = 0.8
+IdleDuration = 0.3
 MoveSpeed = 160.0
 JumpForce = 640.0
 ChaseTimeout = 3.0
-Skills = ["HeavySlash", "GroundStomp", "LeapSmash", "EarthquakeRoar"]
+Skills = ["HeavySlash", "GroundStomp", "LeapSmash"]
 
 [[Phase1.Rules]]
 Skill = "HeavySlash"
@@ -94,7 +94,7 @@ Weight = 50.0
 # Phase 2 状態機械設定
 [Phase2]
 HpThreshold = 0.75
-IdleDuration = 0.5
+IdleDuration = 0.2
 MoveSpeed = 220.0
 JumpForce = 680.0
 TransitionDuration = 1.5
@@ -142,7 +142,7 @@ Weight = 75.0
 # Phase 3 状態機械設定
 [Phase3]
 HpThreshold = 0.45
-IdleDuration = 0.3
+IdleDuration = 0.1
 MoveSpeed = 280.0
 JumpForce = 720.0
 TransitionDuration = 2.0
