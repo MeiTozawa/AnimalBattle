@@ -159,10 +159,8 @@ public static class TutorialSceneSpawner
         BulletSpawner.ClearAllEnemyBullets(world);
         MeleeSpawner.ClearAllEnemyMelee(world);
 
-        using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
-        {
-            playerBullets.Each(CombatPoolService.Recycle);
-        }
+        using var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build();
+        playerBullets.Each(CombatPoolService.Recycle);
     }
 
     /// <summary>
