@@ -122,13 +122,6 @@ public static class BattleSceneSpawner
             };
             bossEntity.GetMut<GameplayTagState>().ActionMask = brain.AbilitySystem.Tags.RawTags;
 
-            brain.OnScreenShake += (intensity, duration) =>
-            {
-                var camCfg = world.Get<CameraConfig>();
-                var trauma = intensity > 1.0f ? intensity * camCfg.AbilityShakeTraumaScale : intensity;
-                CameraService.AddTrauma(trauma);
-            };
-
             brain.OnClearBullets += () =>
             {
                 BulletSpawner.ClearAllEnemyBullets(world);

@@ -32,8 +32,6 @@ public interface IBossBrain
     /// <summary>全弾幕消去イベント。</summary>
     event Action? OnClearBullets;
 
-    /// <summary>画面振動要求イベント。</summary>
-    event Action<float, float>? OnScreenShake;
 
     /// <summary>死亡処理を実行します。</summary>
     void Kill();

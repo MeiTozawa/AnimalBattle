@@ -77,9 +77,6 @@ public abstract class BaseBossBrain : IBossBrain
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;
 
-    /// <summary>画面振動要求イベント。</summary>
-    public event Action<float, float>? OnScreenShake;
-
     /// <summary>
     ///     タイムラインアクションステップを実行・処理します。
     /// </summary>
@@ -99,20 +96,6 @@ public abstract class BaseBossBrain : IBossBrain
                 SetVelocity = _applyVelocityDelegate
             };
             SkillEffectDispatcher.Execute(in ctx, step.Effect, ref _angleOffset);
-            return;
-        }
-
-        switch (step.Kind)
-        {
-            case AttackActionKind.Movement:
-            case AttackActionKind.VelocityDive:
-            case AttackActionKind.EasingMovement:
-                ApplyMovementAction(step.Param0 * dir, step.Param1);
-                break;
-
-            case AttackActionKind.ScreenShake:
-                OnScreenShake?.Invoke(step.Param0, step.Param1);
-                break;
         }
     }
 

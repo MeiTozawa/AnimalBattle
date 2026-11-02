@@ -153,7 +153,7 @@ public sealed class SkillRunner {
             if (!def.TryGetAction(i, out var step)) continue;
 
             // 接地イベント駆動判定
-            if (step.Kind == AttackActionKind.OnGroundedHitbox)
+            if (step.IsOnGrounded)
             {
                 var minTime = MathF.Max(step.TriggerTime, 0.05f);
                 if (_hasLeftGround && isGrounded && PhaseElapsed >= minTime)
