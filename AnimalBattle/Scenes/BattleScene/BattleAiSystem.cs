@@ -209,15 +209,6 @@ public static class BattleAiSystem
 
             var brain = brainComp.Brain;
 
-            // 死亡判定：クエリで Without<DeadTag> が保証されているため Has ガードは不要
-            if (hp.Current <= 0.0f)
-            {
-                if (!brain.IsDead) brain.Kill();
-                e.Add<DeadTag>();
-                sprite.IsVisible = false;
-                continue;
-            }
-
             ctx.HasBoss = true;
             ctx.CachedBossPos = trans.Position;
 

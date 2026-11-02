@@ -76,7 +76,13 @@ public sealed class BossSnakeBrain : BaseBossBrain {
         var patternCfg = _world.Get<BossSnakePatternConfig>();
         ReloadSkills(patternCfg);
 
-        _asc.OnSkillCompleted += _ => OnAbilityCompleted();
+        _asc.OnSkillCompleted += tag =>
+        {
+            if (tag != _phaseTransitionAbility.AbilityTag)
+            {
+                OnAbilityCompleted();
+            }
+        };
     }
 
     /// <summary>

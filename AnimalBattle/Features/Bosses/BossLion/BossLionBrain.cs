@@ -113,7 +113,13 @@ public sealed class BossLionBrain : BaseBossBrain {
         var patternCfg = _world.Get<BossLionPatternConfig>();
         ReloadSkills(patternCfg);
 
-        _asc.OnSkillCompleted += _ => OnAbilityCompleted();
+        _asc.OnSkillCompleted += tag =>
+        {
+            if (tag != _phaseTransitionAbility.AbilityTag)
+            {
+                OnAbilityCompleted();
+            }
+        };
     }
 
     /// <summary>

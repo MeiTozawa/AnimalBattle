@@ -191,8 +191,19 @@ public static class DamageResolutionSystem
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
                         entity.GetMut<Hitbox>().IsActive = false;
+
+                        if (entity.Has<BossBrainComponent>())
+                        {
+                            var brain = entity.GetMut<BossBrainComponent>().Brain;
+                            if (!brain.IsDead)
+                            {
+                                brain.Kill();
+                            }
+                        }
+
                         BulletSpawner.ClearAllEnemyBullets(world);
                         MeleeSpawner.ClearAllEnemyMelee(world);
+                        MinionSpawner.ClearAllMinionsImmediate(world);
                         EffectSpawner.SpawnVictoryExplosions(world, trans.Position);
                         CameraService.AddTrauma(cameraCfg.VictoryExplosionTrauma);
                         EventBus.Publish(new BossDiedEvent());
