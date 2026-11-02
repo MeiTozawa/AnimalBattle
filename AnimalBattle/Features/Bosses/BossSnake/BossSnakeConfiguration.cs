@@ -90,6 +90,15 @@ public sealed class BossSnakeDefaultConfiguration : IBossSnakeConfiguration {
 
     private static BossSnakePhaseSettings CreatePhaseSettings(BossSnakePhaseFsmConfig tomlPhase)
     {
+        var rulesList = new List<AttackDecisionRule>();
+        if (tomlPhase.Rules is { Count: > 0 })
+        {
+            foreach (var r in tomlPhase.Rules)
+            {
+                rulesList.Add(AttackDecisionRule.FromConfig(r));
+            }
+        }
+
         StringId[] order;
         if (tomlPhase.Skills is { Count: > 0 })
         {
@@ -114,18 +123,21 @@ public sealed class BossSnakeDefaultConfiguration : IBossSnakeConfiguration {
                 Array.Copy(temp, order, validCount);
             }
         }
+        else if (rulesList.Count > 0)
+        {
+            var uniqueSkills = new List<StringId>();
+            foreach (var r in rulesList)
+            {
+                if (!uniqueSkills.Contains(r.SkillTag))
+                {
+                    uniqueSkills.Add(r.SkillTag);
+                }
+            }
+            order = uniqueSkills.ToArray();
+        }
         else
         {
             order = [];
-        }
-
-        var rulesList = new List<AttackDecisionRule>();
-        if (tomlPhase.Rules is { Count: > 0 })
-        {
-            foreach (var r in tomlPhase.Rules)
-            {
-                rulesList.Add(AttackDecisionRule.FromConfig(r));
-            }
         }
 
         return new BossSnakePhaseSettings(
@@ -159,7 +171,15 @@ public sealed class BossSnakeDefaultConfiguration : IBossSnakeConfiguration {
     /// <inheritdoc />
     public float GetSkillDefaultCooldown(StringId skill)
     {
-        var toml = _world.Get<BossSnakePatternConfig>();
-        return toml.TryGetSkill(skill, out var skillConfig) ? skillConfig.DefaultCooldown : 0.0f;
+        var toml = _world.Get<BossSnakeConfig>();
+        foreach (var rule in toml.Phase1.Rules)
+            if (skill == rule.Skill && rule.Cooldown > 0) return rule.Cooldown;
+        foreach (var rule in toml.Phase2.Rules)
+            if (skill == rule.Skill && rule.Cooldown > 0) return rule.Cooldown;
+        foreach (var rule in toml.Phase3.Rules)
+            if (skill == rule.Skill && rule.Cooldown > 0) return rule.Cooldown;
+
+        var pattern = _world.Get<BossSnakePatternConfig>();
+        return pattern.TryGetSkill(skill, out var skillConfig) ? skillConfig.DefaultCooldown : 0.0f;
     }
 }

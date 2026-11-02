@@ -205,6 +205,23 @@ public sealed class BossSnakeBrain : BaseBossBrain {
         };
     }
 
+    private void SyncPhaseAbilitiesCooldown(BossSnakePhaseSettings phaseCfg)
+    {
+        foreach (var rule in phaseCfg.Rules)
+        {
+            if (rule.Cooldown > 0.0f && _asc.TryGetAbility(rule.SkillTag, out var ability) && ability is not null)
+            {
+                ability.Cooldown = rule.Cooldown;
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    protected override void OnPhaseTransitionEntered(Phase newPhase)
+    {
+        SyncPhaseAbilitiesCooldown(_configuration.GetPhase(newPhase));
+    }
+
     /// <inheritdoc />
     protected override void OnPhaseTransitionCompleted()
     {
@@ -231,7 +248,7 @@ public sealed class BossSnakeBrain : BaseBossBrain {
             phaseCfg.HoverLerpSpeed,
             dt);
 
-        if (_stateTimer >= phaseCfg.HoverDuration && isPlayerAlive && phaseCfg.AttackOrder.Count > 0)
+        if (_stateTimer >= phaseCfg.HoverDuration && isPlayerAlive && (phaseCfg.Rules.Count > 0 || phaseCfg.AttackOrder.Count > 0))
         {
             CastNextAbility(playerPos);
         }

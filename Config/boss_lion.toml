@@ -58,7 +58,6 @@ IdleDuration = 0.3
 MoveSpeed = 160.0
 JumpForce = 640.0
 ChaseTimeout = 3.0
-Skills = ["HeavySlash", "GroundStomp", "LeapSmash"]
 
 [[Phase1.Rules]]
 Skill = "HeavySlash"
@@ -84,13 +83,6 @@ MaxDistance = 600.0
 Weight = 80.0
 PreferAirborneBonus = 1.5
 
-[[Phase1.Rules]]
-Skill = "EarthquakeRoar"
-Cooldown = 10.0
-MinDistance = 400.0
-MaxDistance = 1200.0
-Weight = 50.0
-
 # Phase 2 状態機械設定
 [Phase2]
 HpThreshold = 0.75
@@ -99,7 +91,6 @@ MoveSpeed = 220.0
 JumpForce = 680.0
 TransitionDuration = 1.5
 ChaseTimeout = 3.0
-Skills = ["DoubleCleave", "GroundStomp", "LeapSmash", "EarthquakeRoar", "SummonProwlersP2"]
 
 [[Phase2.Rules]]
 Skill = "DoubleCleave"
@@ -147,7 +138,6 @@ MoveSpeed = 280.0
 JumpForce = 720.0
 TransitionDuration = 2.0
 ChaseTimeout = 2.5
-Skills = ["FrenzyCharge", "EarthquakeRoar", "DoubleCleave", "LeapSmash", "SummonProwlersP3"]
 
 [[Phase3.Rules]]
 Skill = "FrenzyCharge"

@@ -5,7 +5,6 @@ SkillName = "Heavy Cleave Slash"
 WindUpTime = 0.45
 CastDuration = 0.35
 RecoveryTime = 0.50
-DefaultCooldown = 5.0
 EffectiveRange = 100.0
 ArmorTags = ["SuperArmor"]
 
@@ -34,7 +33,6 @@ SkillName = "Ground Stomp Shockwave"
 WindUpTime = 0.50
 CastDuration = 0.40
 RecoveryTime = 0.50
-DefaultCooldown = 7.0
 EffectiveRange = 420.0
 ArmorTags = ["SuperArmor"]
 
@@ -57,7 +55,6 @@ SkillName = "Titan Leap Smash"
 WindUpTime = 0.40
 CastDuration = 1.60
 RecoveryTime = 0.80
-DefaultCooldown = 14.0
 EffectiveRange = 680.0
 ArmorTags = ["Invincible"]
 RecoveryTags = ["Vulnerable"]
@@ -90,7 +87,6 @@ SkillName = "Twin Cleave Fury"
 WindUpTime = 0.35
 CastDuration = 0.70
 RecoveryTime = 0.55
-DefaultCooldown = 4.0
 EffectiveRange = 250.0
 ArmorTags = ["SuperArmor"]
 
@@ -124,7 +120,6 @@ SkillName = "Frenzy Rampage Charge"
 WindUpTime = 0.50
 CastDuration = 0.7
 RecoveryTime = 1.0
-DefaultCooldown = 7.0
 EffectiveRange = 620.0
 ArmorTags = ["SuperArmor"]
 RecoveryTags = ["Stunned", "Vulnerable"]
@@ -144,7 +139,6 @@ SkillName = "Cataclysm Earthquake Roar"
 WindUpTime = 0.60
 CastDuration = 0.80
 RecoveryTime = 0.60
-DefaultCooldown = 10.0
 EffectiveRange = 1200.0
 ArmorTags = ["SuperArmor"]
 
@@ -159,7 +153,7 @@ WarningText = "▼ ROCK ▼"
 
 [[EarthquakeRoar.Effects]]
 Time = 0.0
-Interval = 0.25
+Interval = 0.05
 Kind = "Bullet"
 Bullet = { Pattern = "Skyfall", Count = 1, Speed = 360.0, Radius = 9.0, MinX = 80.0, MaxX = 1200.0, BulletType = "Cyan", FillColor = "#00E5FF", OutlineColor = "#E0F7FA" }
 
@@ -169,7 +163,6 @@ SkillName = "Beast Command Roar"
 WindUpTime = 0.55
 CastDuration = 0.45
 RecoveryTime = 0.75
-DefaultCooldown = 16.0
 EffectiveRange = 800.0
 ArmorTags = ["SuperArmor"]
 
@@ -195,7 +188,6 @@ SkillName = "Alpha Pride Call"
 WindUpTime = 0.45
 CastDuration = 0.60
 RecoveryTime = 0.65
-DefaultCooldown = 13.0
 EffectiveRange = 800.0
 ArmorTags = ["SuperArmor"]
 

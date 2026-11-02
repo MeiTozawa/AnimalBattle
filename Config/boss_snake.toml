@@ -38,7 +38,6 @@ HoverSpeed = { x = 1.6, y = 1.8 }
 HoverAmp = { x = 240.0, y = 60.0 }
 HoverLerpSpeed = 3.5
 PlayerPursuitWeight = 0.12
-Skills = ["Aimed3Shot", "DiveRam", "RingBurst"]
 
 [[Phase1.Rules]]
 Skill = "Aimed3Shot"
@@ -72,7 +71,6 @@ HoverLerpSpeed = 4.0
 PlayerPursuitWeight = 0.15
 TransitionDuration = 1.5
 TransitionFloatSpeed = 3.5
-Skills = ["DoubleSpiral", "DiveRam", "RainDrop", "SummonFlyersP2"]
 
 [[Phase2.Rules]]
 Skill = "DoubleSpiral"
@@ -113,7 +111,6 @@ HoverLerpSpeed = 4.5
 PlayerPursuitWeight = 0.20
 TransitionDuration = 1.5
 TransitionFloatSpeed = 4.0
-Skills = ["CrossChaos", "DiveRam", "FastSniper", "SummonFlyersP3"]
 
 [[Phase3.Rules]]
 Skill = "CrossChaos"

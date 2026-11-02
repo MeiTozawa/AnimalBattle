@@ -142,6 +142,8 @@ public sealed class BossLionBrain : BaseBossBrain {
         foreach (var rule in bossLionCfg.Phase1.Rules) skillNames.Add(rule.Skill);
         foreach (var rule in bossLionCfg.Phase2.Rules) skillNames.Add(rule.Skill);
         foreach (var rule in bossLionCfg.Phase3.Rules) skillNames.Add(rule.Skill);
+        if (!string.IsNullOrWhiteSpace(bossLionCfg.AntiKitingMeleeSkill)) skillNames.Add(bossLionCfg.AntiKitingMeleeSkill);
+        if (!string.IsNullOrWhiteSpace(bossLionCfg.AntiKitingRangedSkill)) skillNames.Add(bossLionCfg.AntiKitingRangedSkill);
 
         foreach (var name in skillNames)
         {
