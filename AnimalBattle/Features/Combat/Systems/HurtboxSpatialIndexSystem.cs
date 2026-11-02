@@ -1,4 +1,3 @@
-using AnimalBattle.Combat.Components;
 using AnimalBattle.Combat.Spatial;
 
 namespace AnimalBattle.Combat.Systems;

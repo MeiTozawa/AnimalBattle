@@ -1,5 +1,4 @@
 using System.Drawing;
-using AnimalBattle.Configs;
 using ErrorOr;
 using Microsoft.Extensions.Configuration;
 

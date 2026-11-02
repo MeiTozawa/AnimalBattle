@@ -144,15 +144,15 @@ public static class TutorialSceneSpawner
     {
         // ターゲットコインの破棄
         using var targetQuery = world.Query<TutorialTarget>();
-        targetQuery.Each((Entity e, ref TutorialTarget _) => e.Destruct());
+        targetQuery.Each((e, ref _) => e.Destruct());
 
         // 扉エンティティの破棄
         using var doorQuery = world.Query<TutorialDoor>();
-        doorQuery.Each((Entity e, ref TutorialDoor _) => e.Destruct());
+        doorQuery.Each((e, ref _) => e.Destruct());
 
         // 雑魚敵エンティティの破棄
         using var enemyQuery = world.QueryBuilder().With<EnemyTag>().Build();
-        enemyQuery.Each((Entity e) => e.Destruct());
+        enemyQuery.Each(e => e.Destruct());
 
         // 雑魚敵およびプレイヤー弾幕の回収
         BulletSpawner.ClearAllBossBullets(world);

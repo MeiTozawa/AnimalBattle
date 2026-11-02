@@ -1,5 +1,3 @@
-using AnimalBattle.Combat.Spawners;
-using AnimalBattle.Enemies;
 using AnimalBattle.Enemies.Services;
 using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;

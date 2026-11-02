@@ -1,8 +1,6 @@
 namespace AnimalBattle.Scenes.StartScene;
 
 using System.Diagnostics;
-using AnimalBattle.Components;
-using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
 /// <summary>
@@ -25,7 +23,7 @@ public static class StartSceneConfigSync
 
         // 2. 開始画面アクティブ時、プレビューエンティティの座標を再計算
         using var query = world.QueryBuilder<StartUiState>().With<StartSceneTag>().Build();
-        query.Each((ref StartUiState uiState) =>
+        query.Each((ref uiState) =>
         {
             var layout = newConfig.Layout;
             var catBounds = layout.CatCard.ToRectangle();

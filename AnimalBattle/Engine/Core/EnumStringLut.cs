@@ -1,5 +1,3 @@
-using AnimalBattle.Presentation.Animation;
-
 namespace AnimalBattle.Core;
 
 /// <summary>

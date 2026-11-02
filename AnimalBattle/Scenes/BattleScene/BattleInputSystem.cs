@@ -309,7 +309,7 @@ public static class BattleInputSystem
     /// </summary>
     private static void TogglePlayerInvincible(BattleInputSystemContext ctx)
     {
-        ctx.PlayerTagStateQuery.Each(static (ref GameplayTagState tagState) =>
+        ctx.PlayerTagStateQuery.Each(static (ref tagState) =>
         {
             if (tagState.HasTag(GameplayTag.Invincible))
             {

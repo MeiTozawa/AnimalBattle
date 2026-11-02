@@ -47,12 +47,12 @@ public sealed class SummonEffectHandler : ISkillEffectHandler
         if (type == MinionType.Flying)
         {
             using var query = world.QueryBuilder().With<FlyingMinionTag>().Without<DeadTag>().Build();
-            query.Each((Entity _) => count++);
+            query.Each(_ => count++);
         }
         else
         {
             using var query = world.QueryBuilder().With<GroundMinionTag>().Without<DeadTag>().Build();
-            query.Each((Entity _) => count++);
+            query.Each(_ => count++);
         }
 
         return count;

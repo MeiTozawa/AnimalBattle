@@ -1,6 +1,5 @@
 namespace AnimalBattle.Enemies.Services;
 
-using System;
 using System.Collections.Generic;
 using Flecs.NET.Core;
 
@@ -31,7 +30,7 @@ public static class MinionSpawnService
         // 生存中の全プレイヤー位置を収集（将来のマルチプレイ対応）
         var playerPositions = new List<Vec2f>();
         using var playerQuery = world.QueryBuilder<Transform>().With<PlayerTag>().Without<DeadTag>().Build();
-        playerQuery.Each((ref Transform pt) =>
+        playerQuery.Each((ref pt) =>
         {
             playerPositions.Add(pt.Position);
         });
@@ -46,7 +45,7 @@ public static class MinionSpawnService
         // 既存の生存小怪位置を収集
         var minionPositions = new List<Vec2f>();
         using var minionQuery = world.QueryBuilder<Transform>().With<MinionTag>().Without<DeadTag>().Build();
-        minionQuery.Each((ref Transform mt) =>
+        minionQuery.Each((ref mt) =>
         {
             minionPositions.Add(mt.Position);
         });

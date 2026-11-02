@@ -1,4 +1,3 @@
-using AnimalBattle.Common.Components;
 using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;
 

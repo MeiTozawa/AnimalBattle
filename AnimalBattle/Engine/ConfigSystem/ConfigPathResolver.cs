@@ -1,5 +1,3 @@
-using AnimalBattle.Asset;
-
 namespace AnimalBattle.Configs;
 
 /// <summary>

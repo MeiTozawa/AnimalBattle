@@ -59,7 +59,7 @@ public static class ArenaConfigSync
     {
         // 既存の足場コライダーエンティティを安全に破棄
         using var platformQuery = world.QueryBuilder().With<PlatformTag>().Build();
-        platformQuery.Each((Entity e) => e.Destruct());
+        platformQuery.Each(e => e.Destruct());
 
         var arenaCfg = world.Get<ArenaConfig>();
         var tileSetCfg = world.Get<TileSetConfig>();

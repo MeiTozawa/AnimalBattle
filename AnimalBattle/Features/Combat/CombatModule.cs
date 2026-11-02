@@ -1,5 +1,4 @@
 using AnimalBattle.Combat.Events;
-using AnimalBattle.Combat.Systems;
 
 namespace AnimalBattle.Combat;
 

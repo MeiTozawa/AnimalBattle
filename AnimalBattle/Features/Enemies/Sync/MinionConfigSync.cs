@@ -35,7 +35,7 @@ public static class MinionConfigSync
             .Without<DeadTag>()
             .Build();
 
-        groundQuery.Each((Entity e) =>
+        groundQuery.Each(e =>
         {
             RehydrateMinionEntity(e, gCfg.MaxHp, gCfg.Scale, gCfg.CollisionSize, gCfg.ContactDamage, gCfg.HitFlashDuration, gCfg.HitSquashScale, gCfg.SpringFrequency, gCfg.SpringDampingRatio);
         });
@@ -48,7 +48,7 @@ public static class MinionConfigSync
             .Without<DeadTag>()
             .Build();
 
-        flyingQuery.Each((Entity e, ref FlyingMinionComponent m) =>
+        flyingQuery.Each((e, ref m) =>
         {
             RehydrateMinionEntity(e, fCfg.MaxHp, fCfg.Scale, fCfg.CollisionSize, fCfg.ContactDamage, fCfg.HitFlashDuration, fCfg.HitSquashScale, fCfg.SpringFrequency, fCfg.SpringDampingRatio);
 

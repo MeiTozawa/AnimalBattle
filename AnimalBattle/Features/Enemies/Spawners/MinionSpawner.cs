@@ -186,6 +186,6 @@ public static class MinionSpawner
         using var query = world.QueryBuilder()
             .With<MinionTag>()
             .Build();
-        query.Each((Entity e) => e.Destruct());
+        query.Each(e => e.Destruct());
     }
 }

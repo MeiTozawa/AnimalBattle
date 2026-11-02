@@ -1,5 +1,3 @@
-using AnimalBattle.Combat.Components;
-
 namespace AnimalBattle.Combat.Spawners;
 
 /// <summary>

@@ -1,8 +1,6 @@
-using System.Drawing;
 using AnimalBattle.Ai;
 using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;
-using AnimalBattle.Scenes;
 
 namespace AnimalBattle.Features.Tutorial.Systems;
 
@@ -44,13 +42,13 @@ public static class TutorialRenderSystem
         var world = it.World();
         if (world.Get<GameFlow>().State != GameState.Tutorial) return;
 
-        var cfg = world.Get<TutorialConfig>() ?? new TutorialConfig();
+        var cfg = world.Get<TutorialConfig>();
         var colors = cfg.Colors;
         var assets = world.Get<IAssetManager>();
 
         // 1. 目標物（コイン／リング）の描画（ワールド空間）
         using var targetQuery = world.QueryBuilder<TutorialTarget, Transform>().Build();
-        targetQuery.Each((Entity _, ref TutorialTarget target, ref Transform tr) =>
+        targetQuery.Each((_, ref target, ref tr) =>
         {
             var bob = (int)(MathF.Sin(target.FloatPhase) * cfg.Timing.TargetFloatAmplitude);
             var center = new Vec2i((int)tr.Position.X, (int)tr.Position.Y + bob);
@@ -65,7 +63,7 @@ public static class TutorialRenderSystem
 
         // 2. ボス挑戦神殿石門（BossDoor）の環境描画（基座・虚空・柱・Boss・符文：自機より背面）
         using var doorQuery = world.QueryBuilder<TutorialDoor, Transform>().Build();
-        doorQuery.Each((Entity _, ref TutorialDoor door, ref Transform tr) =>
+        doorQuery.Each((_, ref door, ref tr) =>
         {
             var doorCenter = new Vec2i((int)tr.Position.X, (int)tr.Position.Y);
             var isSnake = door.TargetBoss == BossType.BossSnake;
@@ -92,12 +90,12 @@ public static class TutorialRenderSystem
         if (world.Get<GameFlow>().State != GameState.Tutorial) return;
 
         ref readonly var state = ref world.Get<TutorialState>();
-        var cfg = world.Get<TutorialConfig>() ?? new TutorialConfig();
+        var cfg = world.Get<TutorialConfig>();
         var colors = cfg.Colors;
 
         // 1. ボス扉の神殿銘板および接近時 [F] 挑戦開始プロンプト枠（UI最前面）
         using var doorQuery = world.QueryBuilder<TutorialDoor, Transform>().Build();
-        doorQuery.Each((Entity _, ref TutorialDoor door, ref Transform tr) =>
+        doorQuery.Each((_, ref door, ref tr) =>
         {
             var doorCenter = new Vec2i((int)tr.Position.X, (int)tr.Position.Y);
             var isSnake = door.TargetBoss == BossType.BossSnake;
@@ -194,18 +192,16 @@ public static class TutorialRenderSystem
         var pedestalExtraW = doorsCfg.PedestalExtraWidth;
 
         // 1. 基座祭壇、虚空門洞、双立石柱の幾何描画
-        DrawShrineArchitecture(center, gateP1, gateP2, pillarW, lintelH, pedestalH, pedestalExtraW, doorsCfg, doorItem, inRange, animTimer);
+        DrawShrineArchitecture(gateP1, gateP2, pillarW, lintelH, pedestalH, pedestalExtraW, doorsCfg, doorItem, inRange);
 
         // 2. 左右石柱への古代刻印符文描画
-        DrawShrineRunes(gateP1, gateP2, pillarW, lintelH, pedestalH, doorsCfg, doorItem, inRange, animTimer);
+        DrawShrineRunes(gateP1, gateP2, pillarW, lintelH, pedestalH, doorsCfg, doorItem, inRange);
 
         // 3. Boss 画像および固有動態（蛇：法球旋回、獅子：重砸地面＆衝撃波）
         DrawBossAuraAndMotion(center, bossType, gateP2.Y - pedestalH, doorsCfg, doorItem, inRange, animTimer, colors, assets);
     }
 
-    private static void DrawShrineArchitecture(
-        Vec2i center,
-        Vec2i gateP1,
+    private static void DrawShrineArchitecture(Vec2i gateP1,
         Vec2i gateP2,
         int pillarW,
         int lintelH,
@@ -213,8 +209,7 @@ public static class TutorialRenderSystem
         int pedestalExtraW,
         TutorialDoorsConfig dCfg,
         TutorialDoorItemConfig itemCfg,
-        bool inRange,
-        float animTimer)
+        bool inRange)
     {
         // 1. 足元基座祭壇（二段石階）
         var base1P1 = new Vec2i(gateP1.X - pedestalExtraW, gateP2.Y - pedestalH / 2);
@@ -262,8 +257,7 @@ public static class TutorialRenderSystem
         int pedestalH,
         TutorialDoorsConfig dCfg,
         TutorialDoorItemConfig itemCfg,
-        bool inRange,
-        float animTimer)
+        bool inRange)
     {
         var runeColor = inRange ? itemCfg.RuneColorActive : itemCfg.RuneColorIdle;
         var symbols = itemCfg.RuneSymbols.AsSpan();

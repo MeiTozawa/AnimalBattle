@@ -1,5 +1,4 @@
 using System.Drawing;
-using AnimalBattle.Ai;
 
 namespace AnimalBattle.Scenes.Start;
 

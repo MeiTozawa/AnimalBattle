@@ -102,7 +102,7 @@ public static class PlayerConfigSync
 
 
 
-        q.Each((Entity e) => {
+        q.Each(e => {
 
             ref var weapon = ref e.GetMut<RangedWeaponComponent>();
 
@@ -168,7 +168,7 @@ public static class PlayerConfigSync
 
 
 
-        q.Each((Entity e) => {
+        q.Each(e => {
 
             ref var weapon = ref e.GetMut<MeleeWeaponComponent>();
 
@@ -250,7 +250,7 @@ public static class PlayerConfigSync
 
 
 
-        query.Each((Entity e) =>
+        query.Each(e =>
 
 
 
@@ -358,7 +358,7 @@ public static class PlayerConfigSync
 
 
 
-        query.Each((Entity e) =>
+        query.Each(e =>
 
 
 

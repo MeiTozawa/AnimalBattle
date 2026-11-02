@@ -46,7 +46,7 @@ public static class CombatConfigSync
         // 3. 活体自機近接斬撃判定（PlayerSlashHitbox）の再水和
         var slashCfg = newConfig.PlayerSlashHitbox;
         using var meleeQuery = world.QueryBuilder<Hitbox>().With<PlayerMeleeTag>().Build();
-        meleeQuery.Each((ref Hitbox hit) =>
+        meleeQuery.Each((ref hit) =>
         {
             hit.Shape = new CollisionShape.Box(slashCfg.Size);
             hit.Damage = slashCfg.Damage;
@@ -57,7 +57,7 @@ public static class CombatConfigSync
         // 4. 活体 BossLion 近接斬撃判定（BossSlashHitbox）の再水和
         var bossSlashCfg = newConfig.BossSlashHitbox;
         using var bossMeleeQuery = world.QueryBuilder<Hitbox, HitboxLifetime>().With<BossMeleeTag>().Build();
-        bossMeleeQuery.Each((ref Hitbox hit, ref HitboxLifetime lifetime) =>
+        bossMeleeQuery.Each((ref hit, ref lifetime) =>
         {
             hit.Damage = bossSlashCfg.Damage;
             hit.Knockback = bossSlashCfg.Knockback;

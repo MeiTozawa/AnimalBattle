@@ -1,7 +1,5 @@
 using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;
-using AnimalBattle.Player.Components;
-using AnimalBattle.Scenes;
 
 namespace AnimalBattle.Features.Tutorial.Systems;
 
@@ -36,7 +34,7 @@ public static class TutorialInteractionSystem
         using var playerQuery = world.QueryBuilder<Transform>()
             .With<PlayerTag>()
             .Build();
-        playerQuery.Each((Entity _, ref Transform tr) =>
+        playerQuery.Each((_, ref tr) =>
         {
             playerPos = tr.Position;
             hasPlayer = true;
@@ -50,7 +48,7 @@ public static class TutorialInteractionSystem
 
         // 1. ターゲットコイン／リングの回収判定
         using var targetQuery = world.QueryBuilder<TutorialTarget, Transform>().Build();
-        targetQuery.Each((Entity e, ref TutorialTarget target, ref Transform tr) =>
+        targetQuery.Each((e, ref target, ref tr) =>
         {
             if (target.IsCollected) return;
 
@@ -70,7 +68,7 @@ public static class TutorialInteractionSystem
 
         // 2. ボス挑戦扉の接近判定および F キー入場処理
         using var doorQuery = world.QueryBuilder<TutorialDoor, Transform>().Build();
-        doorQuery.Each((Entity _, ref TutorialDoor door, ref Transform tr) =>
+        doorQuery.Each((_, ref door, ref tr) =>
         {
             door.AnimTimer += dt;
             var diff = playerPos - tr.Position;

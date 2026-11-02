@@ -2,9 +2,7 @@ namespace AnimalBattle.Combat.Sync;
 
 using System;
 using System.Diagnostics;
-using AnimalBattle.Combat;
 using AnimalBattle.Combat.Components;
-using AnimalBattle.Components;
 using AnimalBattle.Configs;
 using Flecs.NET.Core;
 
@@ -31,7 +29,7 @@ public static class DummyConfigSync
             .With<DummyTag>()
             .Build();
 
-        query.Each((ref Health health, ref CollisionBox col, ref Hurtbox hurt, ref HitFlashSettings flash) =>
+        query.Each((ref health, ref col, ref hurt, ref flash) =>
         {
             var ratio = health.Max > 0.0f ? health.Current / health.Max : 1.0f;
             health.Max = newConfig.Health;

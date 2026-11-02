@@ -1,6 +1,3 @@
-using AnimalBattle.Ai;
-using AnimalBattle.Features.Tutorial;
-
 namespace AnimalBattle.Scenes.Start;
 
 /// <summary>

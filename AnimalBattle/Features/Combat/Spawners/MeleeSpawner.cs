@@ -104,7 +104,7 @@ public static class MeleeSpawner
             .With<BossMeleeTag>()
             .Without<RecycleTag>()
             .Build();
-        query.Each(static (Entity e) => e.Add<RecycleTag>());
+        query.Each(static e => e.Add<RecycleTag>());
     }
 
     /// <summary>

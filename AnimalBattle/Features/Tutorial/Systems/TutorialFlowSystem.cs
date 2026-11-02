@@ -50,7 +50,7 @@ public static class TutorialFlowSystem
             .Build();
 
         var playerDied = false;
-        playerQuery.Each((Entity player, ref Health hp) =>
+        playerQuery.Each((player, ref hp) =>
         {
             if (hp.Current <= 0 || player.Has<DeadTag>())
             {

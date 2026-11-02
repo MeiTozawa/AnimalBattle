@@ -77,7 +77,7 @@ public static class BossConfigSync
 
         // 2. 活体 BossSnake エンティティの技能再水和
         using var bossQuery = world.QueryBuilder<BossBrainComponent>().With<BossSnakeTag>().Build();
-        bossQuery.Each((ref BossBrainComponent b) =>
+        bossQuery.Each((ref b) =>
         {
             if (b.Brain is BossSnakeBrain snakeBrain)
             {
@@ -90,7 +90,7 @@ public static class BossConfigSync
         {
             var minionCfg = world.Get<MinionConfig>();
             using var minionQuery = world.QueryBuilder<FlyingMinionComponent>().With<FlyingMinionTag>().Build();
-            minionQuery.Each((Entity e, ref FlyingMinionComponent m) =>
+            minionQuery.Each((e, ref m) =>
             {
                 if (m.Asc != null)
                 {
@@ -115,7 +115,7 @@ public static class BossConfigSync
 
         // 2. 活体 BossLion エンティティの技能再水和
         using var bossQuery = world.QueryBuilder<BossBrainComponent>().With<BossLionTag>().Build();
-        bossQuery.Each((ref BossBrainComponent b) =>
+        bossQuery.Each((ref b) =>
         {
             if (b.Brain is BossLionBrain lionBrain)
             {

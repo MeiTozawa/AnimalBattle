@@ -2,7 +2,6 @@ using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;
 using AnimalBattle.Features.Tutorial.Spawners;
 using AnimalBattle.Logging;
-using AnimalBattle.Scenes;
 
 namespace AnimalBattle.Features.Tutorial.Sync;
 
