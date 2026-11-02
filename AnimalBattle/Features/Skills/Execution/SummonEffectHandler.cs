@@ -43,18 +43,15 @@ public sealed class SummonEffectHandler : ISkillEffectHandler
 
     private static int CountAliveMinions(World world, MinionType type)
     {
-        var count = 0;
         if (type == MinionType.Flying)
         {
             using var query = world.QueryBuilder().With<FlyingMinionTag>().Without<DeadTag>().Build();
-            query.Each(_ => count++);
+            return query.Count();
         }
         else
         {
             using var query = world.QueryBuilder().With<GroundMinionTag>().Without<DeadTag>().Build();
-            query.Each(_ => count++);
+            return query.Count();
         }
-
-        return count;
     }
 }

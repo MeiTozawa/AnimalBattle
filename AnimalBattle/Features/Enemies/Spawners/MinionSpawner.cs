@@ -72,11 +72,6 @@ public static class MinionSpawner
         var patternCfg = world.Get<BossSnakePatternConfig>();
 
         var asc = new AbilitySystemComponent();
-        var abilityResult = SkillBuilder.BuildAbility(fCfg.SkillTag, patternCfg, fCfg.SkillCooldown);
-        if (abilityResult.IsError)
-        {
-            Debug.Assert(false, $"FlyingMinion のスキル構築に失敗しました: {fCfg.SkillTag}");
-        }
 
         var isBuffer = fCfg.SpawnBufferDuration > 0.0f;
         var hitbox = new Hitbox(new CollisionShape.Box(fCfg.CollisionSize), fCfg.ContactDamage, Faction.Hostile, destroyOnHit: false, isActive: !isBuffer);
@@ -134,6 +129,7 @@ public static class MinionSpawner
 
         var ability = abilityResult.Value;
         var angleOffset = 0.0f;
+        asc.ClearSkillCompletedHandlers();
         asc.OnSkillCompleted += _ => angleOffset = 0.0f;
         ability.ActionDispatcher = (step, dir) =>
         {

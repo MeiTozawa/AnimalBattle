@@ -19,11 +19,13 @@ public abstract class BaseBossBrain : IBossBrain
     protected World _world;
     protected float _angleOffset;
     protected PhaseTransitionAbility _phaseTransitionAbility = null!;
+    private readonly Action<Vec2f> _applyVelocityDelegate;
 
     /// <summary>共通ブレイン基盤を初期化します。</summary>
     protected BaseBossBrain(World world)
     {
         _world = world;
+        _applyVelocityDelegate = ApplyVelocityAction;
     }
 
     /// <summary>現在の施術者移動速度を取得します。</summary>
@@ -96,7 +98,7 @@ public abstract class BaseBossBrain : IBossBrain
                 ForwardDir = dir,
                 CasterVelocity = Velocity,
                 BodyHeight = BodyHeight,
-                SetVelocity = ApplyVelocityAction
+                SetVelocity = _applyVelocityDelegate
             };
             SkillEffectDispatcher.Execute(in ctx, step.Effect, ref _angleOffset);
             return;

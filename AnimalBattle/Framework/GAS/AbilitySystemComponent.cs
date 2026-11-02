@@ -39,6 +39,7 @@ public sealed class AbilitySystemComponent {
 
     /// <summary>技能完了通知イベント。</summary>
     public event Action<StringId>? OnSkillCompleted;
+    public void ClearSkillCompletedHandlers() => OnSkillCompleted = null;
 
     /// <summary>能力を登録します。</summary>
     public void GiveAbility(GameplayAbility ability)

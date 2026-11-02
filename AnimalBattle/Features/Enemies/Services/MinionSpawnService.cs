@@ -9,6 +9,15 @@ using Flecs.NET.Core;
 /// </summary>
 public static class MinionSpawnService
 {
+    [ThreadStatic]
+    private static List<Vec2f>? s_cachedPlayerPositions;
+
+    [ThreadStatic]
+    private static List<Vec2f>? s_cachedMinionPositions;
+
+    [ThreadStatic]
+    private static List<Vec2f>? s_cachedSafeCandidates;
+
     /// <summary>
     ///     指定された雑魚敵種別の最適な生成座標を選定します。
     /// </summary>
@@ -27,8 +36,10 @@ public static class MinionSpawnService
                 (minionCfg.GroundMinion.SpawnPoints, minionCfg.GroundMinion.MinPlayerDistance, minionCfg.GroundMinion.SpawnPos))
         };
 
-        // 生存中の全プレイヤー位置を収集（将来のマルチプレイ対応）
-        var playerPositions = new List<Vec2f>();
+        s_cachedPlayerPositions ??= new List<Vec2f>(4);
+        s_cachedPlayerPositions.Clear();
+        var playerPositions = s_cachedPlayerPositions;
+
         using var playerQuery = world.QueryBuilder<Transform>().With<PlayerTag>().Without<DeadTag>().Build();
         playerQuery.Each((ref pt) =>
         {
@@ -42,8 +53,10 @@ public static class MinionSpawnService
             return playerPositions.Count > 0 ? anchor + fallbackOffset : fallbackOffset;
         }
 
-        // 既存の生存小怪位置を収集
-        var minionPositions = new List<Vec2f>();
+        s_cachedMinionPositions ??= new List<Vec2f>(16);
+        s_cachedMinionPositions.Clear();
+        var minionPositions = s_cachedMinionPositions;
+
         using var minionQuery = world.QueryBuilder<Transform>().With<MinionTag>().Without<DeadTag>().Build();
         minionQuery.Each((ref mt) =>
         {
@@ -52,7 +65,9 @@ public static class MinionSpawnService
 
         // 1. 全プレイヤーとの距離判定（各候補点に対し、最も近いプレイヤーとの距離を計算）
         var minPlayerDistSq = minPlayerDist * minPlayerDist;
-        var safeCandidates = new List<Vec2f>();
+        s_cachedSafeCandidates ??= new List<Vec2f>(spawnPoints.Count);
+        s_cachedSafeCandidates.Clear();
+        var safeCandidates = s_cachedSafeCandidates;
         var bestFallbackPoint = spawnPoints[0];
         var maxNearestPlayerDistSq = -1.0f;
 
