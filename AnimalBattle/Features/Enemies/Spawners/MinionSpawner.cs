@@ -179,9 +179,18 @@ public static class MinionSpawner
     /// <param name="world">対象の Flecs ワールド</param>
     public static void ClearAllMinionsImmediate(World world)
     {
-        using var query = world.QueryBuilder()
-            .With<MinionTag>()
-            .Build();
-        query.Each(e => e.Destruct());
+        var isDeferred = world.IsDeferred();
+        if (isDeferred) world.DeferSuspend();
+        try
+        {
+            using var query = world.QueryBuilder()
+                .With<MinionTag>()
+                .Build();
+            query.Each(e => e.Destruct());
+        }
+        finally
+        {
+            if (isDeferred) world.DeferResume();
+        }
     }
 }

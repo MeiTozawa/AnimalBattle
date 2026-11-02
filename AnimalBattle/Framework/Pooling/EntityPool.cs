@@ -42,11 +42,11 @@ public sealed class EntityPool : IDisposable {
         initialCapacity = Math.Max(1, initialCapacity);
         _maxCapacity = Math.Max(initialCapacity, maxCapacity);
 
-        _pool = new Entity[initialCapacity];
-        _allAllocated = new Entity[initialCapacity];
-        _managedRentalFlags = new bool[initialCapacity];
-        _activePrev = new int[initialCapacity];
-        _activeNext = new int[initialCapacity];
+        _pool = new Entity[_maxCapacity];
+        _allAllocated = new Entity[_maxCapacity];
+        _managedRentalFlags = new bool[_maxCapacity];
+        _activePrev = new int[_maxCapacity];
+        _activeNext = new int[_maxCapacity];
         Array.Fill(_activePrev, -1);
         Array.Fill(_activeNext, -1);
         _activeHead = -1;

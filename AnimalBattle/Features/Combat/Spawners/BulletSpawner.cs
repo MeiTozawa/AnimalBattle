@@ -188,10 +188,19 @@ public static class BulletSpawner
     /// </summary>
     public static void ClearAllEnemyBulletsImmediate(World world)
     {
-        using var query = world.QueryBuilder()
-           .With<EnemyBulletTag>()
-           .Build();
-        query.Each(CombatPoolService.Recycle);
+        var isDeferred = world.IsDeferred();
+        if (isDeferred) world.DeferSuspend();
+        try
+        {
+            using var query = world.QueryBuilder()
+               .With<EnemyBulletTag>()
+               .Build();
+            query.Each(CombatPoolService.Recycle);
+        }
+        finally
+        {
+            if (isDeferred) world.DeferResume();
+        }
     }
 
     /// <summary>Boss 弾幕即時回収（互換用エイリアス）。</summary>
