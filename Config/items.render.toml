@@ -1,0 +1,13 @@
+# ==============================================================================
+# Items & Health Pack Render Configuration
+# ==============================================================================
+
+[HealthPackRender]
+AuraColor = "#782ECC71"
+CoreColor = "#E627AE60"
+OutlineColor = "#FFFFFF"
+CrossColor = "#FFFFFF"
+OuterRadius = 16.0
+InnerRadius = 11.0
+CrossArmLength = 5
+CrossArmThickness = 2

@@ -178,6 +178,9 @@ public static class ResourcePath
         /// <summary>dummy.toml 設定ファイル名。</summary>
         public const string Dummy = "dummy.toml";
 
+        /// <summary>items.render.toml 設定ファイル名。</summary>
+        public const string ItemsRender = "items.render.toml";
+
         /// <summary>items.toml 設定ファイル名。</summary>
         public const string Items = "items.toml";
 

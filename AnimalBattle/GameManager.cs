@@ -1,4 +1,5 @@
 using AnimalBattle.Ai;
+using AnimalBattle.Features.Items;
 using AnimalBattle.Features.Tutorial;
 using AnimalBattle.Features.Tutorial.Systems;
 
@@ -47,6 +48,7 @@ public class GameManager : IDisposable {
         _ecsWorld.Import<PlayerModule>();
         _ecsWorld.Import<BossModule>();
         _ecsWorld.Import<EnemyModule>();
+        _ecsWorld.Import<ItemModule>();
         _ecsWorld.Import<RenderModule>(); // ネイティブ描画モジュール
         _ecsWorld.Import<StartSceneModule>();
         _ecsWorld.Import<BattleSceneModule>();

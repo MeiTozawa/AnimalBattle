@@ -85,10 +85,16 @@ public static class GameConfigRegistrar
         registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Scenes.Start.StartSceneConfigSync.Sync(w, cfg));
         registry.RegisterToml<TutorialConfig>(ResourcePath.Config.Tutorial, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Features.Tutorial.Sync.TutorialConfigSync.Sync(w, cfg));
         registry.RegisterToml<ItemConfig>(ResourcePath.Config.Items, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
+        registry.RegisterToml<ItemRenderConfig>(ResourcePath.Config.ItemsRender, (root, cfg) => root.Bind(cfg), (w, cfg) => {
+            w.Set(cfg);
+            w.Set(cfg.HealthPackRender);
+        });
 
         registry.InjectAllToWorld(world);
 
         // 各描画領域のサブコンポーネントを Flecs World に単一インスタンスとして登録
+        var itemRenderCfg = registry.Get<ItemRenderConfig>();
+        world.Set(itemRenderCfg.HealthPackRender);
         var bCfg = registry.Get<BossRenderConfig>();
         world.Set(bCfg.BossEffects);
         world.Set(bCfg.BossHpBar);

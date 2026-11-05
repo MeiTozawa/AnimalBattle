@@ -1,9 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace AnimalBattle.Features.Items.Configs;
 
+using System.Diagnostics.CodeAnalysis;
+
 /// <summary>
-///     Config/items.toml から読み込まれるアイテムシステム全般の設定クラス。
+///     Config/items.toml から読み込まれるアイテムゲームプレイ全般の設定クラス。
 /// </summary>
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
 public sealed class ItemConfig

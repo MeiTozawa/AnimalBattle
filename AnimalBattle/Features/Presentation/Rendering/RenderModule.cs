@@ -1,3 +1,4 @@
+using AnimalBattle.Features.Items.Systems;
 using AnimalBattle.Features.Tutorial.Systems;
 
 namespace AnimalBattle.Presentation.Rendering;
@@ -21,9 +22,10 @@ public readonly struct RenderModule : IFlecsModule {
         // 1. ワールド空間描画前のカメラオフセット適用
         world.AddCameraOffsetApplySystem();
 
-        // 2. ワールド空間描画：タイルマップ、チュートリアル環境（目標物・神殿石門）、通常スプライト、雑魚敵HPバー、無敵点滅、出現バッファ半透明、弾幕、予兆、VFX、デバッグ枠
+        // 2. ワールド空間描画：タイルマップ、チュートリアル環境（目標物・神殿石門）、アイテム、通常スプライト、雑魚敵HPバー、無敵点滅、出現バッファ半透明、弾幕、予兆、VFX、デバッグ枠
         world.AddTileMapRenderSystem()
              .AddTutorialEnvironmentRenderSystem()
+             .AddItemRenderSystem()
              .AddSpriteRenderSystem()
              .AddMinionHpBarRenderSystem()
              .AddInvincibleBlinkRenderSystem()
