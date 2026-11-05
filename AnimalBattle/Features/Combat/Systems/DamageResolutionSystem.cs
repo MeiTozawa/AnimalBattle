@@ -1,6 +1,24 @@
 using AnimalBattle.Combat.Events;
+using AnimalBattle.Features.Items.Components;
+using AnimalBattle.Features.Items.Configs;
+using AnimalBattle.Features.Items.Spawners;
+using AnimalBattle.Player.Components;
 
 namespace AnimalBattle.Combat.Systems;
+
+/// <summary>
+///     ダメージ裁定システムで使用する事前コンパイル済みクエリおよびコンテキストリソース。
+/// </summary>
+internal sealed class DamageResolutionContext : IDisposable
+{
+    /// <summary>生存中の自機プレイヤー生命値抽出クエリ。</summary>
+    public required Query<Health> PlayerQuery { get; init; }
+
+    public void Dispose()
+    {
+        PlayerQuery.Dispose();
+    }
+}
 
 /// <summary>
 ///     全戦闘ユニット共通の被弾ダメージ裁定および無敵時間・撃退・死亡処理を統括する単一責任 ECS システム。
@@ -16,6 +34,16 @@ public static class DamageResolutionSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddDamageResolutionSystem(this World world)
     {
+        var playerQuery = world.QueryBuilder<Health>()
+            .With<PlayerTag>()
+            .Without<DeadTag>()
+            .Build();
+
+        world.Set(new DamageResolutionContext
+        {
+            PlayerQuery = playerQuery
+        });
+
         // 出現バッファ中のエンティティはダメージ裁定対象から除外（無敵保証）
         world.System<Health, HitFlashSettings, Transform, Velocity, CollisionBox, SpringScale, Sprite, GameplayTagState, TimedEffectsState, CombatProfile>("DamageResolutionSystem")
             .Without<SpawnBufferState>()
@@ -253,9 +281,54 @@ public static class DamageResolutionSystem
                         {
                             BulletSpawner.SpawnCounterAttack(world, trans.Position, profile.Phase);
                         }
+
+                        // ドロップ判定（逆境救急メカニズム）
+                        TryDropHealthPack(world, trans.Position, hp, finalDamage);
                     break;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    ///     Boss 被弾時に逆境救急アルゴリズムに基づき血包アイテムの放出判定を実行します。
+    /// </summary>
+    private static void TryDropHealthPack(World world, Vec2f bossPos, in Health bossHp, float finalDamage)
+    {
+        if (!world.Has<ItemConfig>() || !world.Has<ItemDirectorState>()) return;
+
+        var itemCfg = world.Get<ItemConfig>();
+        var cfg = itemCfg.HealthPack;
+        ref var director = ref world.GetMut<ItemDirectorState>();
+
+        if (director.ActiveHealthPackCount >= cfg.MaxActiveCount || director.IcdRemaining > 0f) return;
+
+        var ctx = world.Get<DamageResolutionContext>();
+        Health playerHp = default;
+        var hasPlayer = false;
+
+        ctx.PlayerQuery.Each((ref Health h) =>
+        {
+            playerHp = h;
+            hasPlayer = true;
+        });
+
+        if (!hasPlayer) return;
+
+        // プレイヤーが満血の場合はドロップしない（リソース温存）
+        if (playerHp.Current >= playerHp.Max) return;
+
+        var playerRatio = playerHp.Max > 0f ? Math.Clamp(playerHp.Current / playerHp.Max, 0f, 1f) : 1f;
+        var bossRatio = bossHp.Max > 0f ? Math.Clamp(bossHp.Current / bossHp.Max, 0f, 1f) : 1f;
+
+        var baseRate = cfg.BaseDropRate 
+                     + (1.0f - playerRatio) * cfg.PlayerWeight 
+                     + (1.0f - bossRatio) * cfg.BossWeight;
+        var finalRate = Math.Clamp(baseRate * (1.0f + finalDamage * cfg.DamageScale), 0.0f, cfg.MaxDropRate);
+
+        if (Random.Shared.NextSingle() < finalRate)
+        {
+            ItemSpawner.SpawnHealthPack(world, bossPos, cfg);
         }
     }
 }
