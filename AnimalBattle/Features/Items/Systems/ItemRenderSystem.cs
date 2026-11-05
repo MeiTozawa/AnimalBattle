@@ -16,7 +16,8 @@ public static class ItemRenderSystem
     /// </summary>
     public static World AddItemRenderSystem(this World world)
     {
-        world.System<Transform, ItemDropPhysics, ItemLifetime, HealthPackTag>("ItemRenderSystem")
+        world.System<Transform, ItemDropPhysics, ItemLifetime>("ItemRenderSystem")
+            .With<HealthPackTag>()
             .Kind(Ecs.OnStore)
             .Iter(Execute);
 
@@ -27,8 +28,7 @@ public static class ItemRenderSystem
         Iter it,
         Field<Transform> transforms,
         Field<ItemDropPhysics> physics,
-        Field<ItemLifetime> lifetimes,
-        Field<HealthPackTag> _)
+        Field<ItemLifetime> lifetimes)
     {
         var count = it.Count();
         if (count == 0) return;
@@ -53,8 +53,9 @@ public static class ItemRenderSystem
 
             // 浮遊アニメーションに連動した呼吸パルス半径
             var pulseScale = 1.0f + 0.08f * MathF.Sin(phys.FloatTimer * 4.0f);
-            var outerRadius = (int)(cfg.OuterRadius * pulseScale);
-            var innerRadius = (int)(cfg.InnerRadius * pulseScale);
+            var baseScale = cfg.Scale * pulseScale;
+            var outerRadius = (int)(cfg.OuterRadius * baseScale);
+            var innerRadius = (int)(cfg.InnerRadius * baseScale);
 
             // 1. 外周オーラリングの描画
             GameEngine.DrawCircle(center, outerRadius, cfg.AuraColor, false);
@@ -66,8 +67,8 @@ public static class ItemRenderSystem
             GameEngine.DrawCircle(center, innerRadius, cfg.OutlineColor, false);
 
             // 4. 中央クロス記号の描画
-            var armLength = cfg.CrossArmLength;
-            var armThick = cfg.CrossArmThickness;
+            var armLength = (int)MathF.Round(cfg.CrossArmLength * cfg.Scale);
+            var armThick = (int)MathF.Round(cfg.CrossArmThickness * cfg.Scale);
 
             // 水平バー
             GameEngine.DrawBox(

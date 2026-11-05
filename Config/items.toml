@@ -4,9 +4,9 @@
 
 [HealthPack]
 # 出現・存在制約
-MaxActiveCount = 1
+MaxActiveCount = 2
 IcdDuration = 5.0
-Lifetime = 12.0
+Lifetime = 15.0
 BlinkThreshold = 3.0
 PickupRadius = 32.0
 HealAmount = 1.0
@@ -14,7 +14,7 @@ HealAmount = 1.0
 # ピンチ救済ドロップ確率パラメータ
 BaseDropRate = 0.00
 PlayerWeight = 0.20
-BossWeight = 0.05
+BossWeight = 0.20
 DamageScale = 0.05
 MaxDropRate = 0.60
 

@@ -43,14 +43,15 @@ public static class ItemPickupSystem
             PlayerQuery = playerQuery
         });
 
-        world.System<Transform, ItemPickup, HealthPackTag>("ItemPickupSystem")
+        world.System<Transform, ItemPickup>("ItemPickupSystem")
+            .With<HealthPackTag>()
             .Kind(Ecs.OnUpdate)
             .Iter(Execute);
 
         return world;
     }
 
-    private static void Execute(Iter it, Field<Transform> transforms, Field<ItemPickup> pickups, Field<HealthPackTag> _)
+    private static void Execute(Iter it, Field<Transform> transforms, Field<ItemPickup> pickups)
     {
         var count = it.Count();
         if (count == 0) return;

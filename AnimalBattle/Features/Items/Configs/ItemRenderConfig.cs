@@ -73,6 +73,9 @@ public sealed class HealthPackRenderConfig
     /// <summary>中央クロス記号の色 <see cref="Color" />。</summary>
     public Color CrossColor => _crossColor;
 
+    /// <summary>全体描画スケール倍率。</summary>
+    public float Scale { get; set; }
+
     /// <summary>外周オーラの基準半径（px）。</summary>
     public float OuterRadius { get; set; }
 
