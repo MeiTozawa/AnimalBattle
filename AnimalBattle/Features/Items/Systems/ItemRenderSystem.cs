@@ -7,7 +7,7 @@ using AnimalBattle.Features.Items.Configs;
 using Flecs.NET.Core;
 
 /// <summary>
-///     ドロップアイテム（血包）を DxLib 幾何プリミティブによって描画するシステム。
+///     ドロップアイテム（回復アイテム）を DxLib 幾何プリミティブによって描画するシステム。
 /// </summary>
 public static class ItemRenderSystem
 {
@@ -56,16 +56,16 @@ public static class ItemRenderSystem
             var outerRadius = (int)(cfg.OuterRadius * pulseScale);
             var innerRadius = (int)(cfg.InnerRadius * pulseScale);
 
-            // 1. 外周オーラ輝きリング
+            // 1. 外周オーラリングの描画
             GameEngine.DrawCircle(center, outerRadius, cfg.AuraColor, false);
 
-            // 2. 内部コア発光球
+            // 2. 中心発光コアの描画
             GameEngine.DrawCircle(center, innerRadius, cfg.CoreColor, true);
 
-            // 3. コア境界輪郭線
+            // 3. コア輪郭線の描画
             GameEngine.DrawCircle(center, innerRadius, cfg.OutlineColor, false);
 
-            // 4. 中央救急十字アイコン
+            // 4. 中央クロス記号の描画
             var armLength = cfg.CrossArmLength;
             var armThick = cfg.CrossArmThickness;
 

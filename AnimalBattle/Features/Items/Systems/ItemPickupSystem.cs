@@ -75,7 +75,7 @@ public static class ItemPickupSystem
 
         if (targetPlayer == null) return;
 
-        // プレイヤーが満血の場合は回収を行わない（温存）
+        // プレイヤーのHPが最大値の場合は取得を行わない（温存）
         if (playerHp.Current >= playerHp.Max) return;
 
         for (var i = 0; i < count; i++)

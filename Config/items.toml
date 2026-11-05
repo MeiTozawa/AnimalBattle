@@ -11,7 +11,7 @@ BlinkThreshold = 3.0
 PickupRadius = 32.0
 HealAmount = 1.0
 
-# 逆境救急ドロップ確率パラメータ
+# ピンチ救済ドロップ確率パラメータ
 BaseDropRate = 0.00
 PlayerWeight = 0.20
 BossWeight = 0.05

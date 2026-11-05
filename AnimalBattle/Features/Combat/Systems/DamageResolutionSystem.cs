@@ -248,13 +248,13 @@ public static class DamageResolutionSystem
                         sprite.IsVisible = false;
                         entity.GetMut<Hitbox>().IsActive = false;
                         EffectSpawner.SpawnHitSparkEffect(world, trans.Position);
-                        // 小怪撃破時の血包ドロップ判定
+                        // 雑魚敵撃破時の回復アイテムドロップ判定
                         TryDropHealthPack(world, trans.Position, hp, finalDamage);
                         entity.Destruct();
                         break;
 
                     case CombatEntityKind.Dummy:
-                        // 木桩：HPを即時満タンにリセットして継続テスト可能を維持
+                        // トレーニングダミー：HPを即座に全回復して継続検証を維持
                         hp.Current = hp.Max;
                         break;
                 }
@@ -284,13 +284,13 @@ public static class DamageResolutionSystem
                             BulletSpawner.SpawnCounterAttack(world, trans.Position, profile.Phase);
                         }
 
-                        // ドロップ判定（逆境救急メカニズム）
+                        // ボス被弾時の回復アイテムドロップ判定（ピンチ救済）
                         TryDropHealthPack(world, trans.Position, hp, finalDamage);
                         break;
 
                     case CombatEntityKind.Minion:
                     case CombatEntityKind.Dummy:
-                        // 小怪および木桩被弾時の血包ドロップ判定
+                        // 雑魚敵およびダミー被弾時の回復アイテムドロップ判定
                         TryDropHealthPack(world, trans.Position, hp, finalDamage);
                         break;
                 }
@@ -299,7 +299,7 @@ public static class DamageResolutionSystem
     }
 
     /// <summary>
-    ///     敵ユニット（Boss・小怪・木桩）被弾または撃破時に逆境救急アルゴリズムに基づき血包アイテムの放出判定を実行します。
+    ///     敵ユニット（ボス・雑魚敵・ダミー）の被弾または撃破時に、ピンチ救済アルゴリズムに基づいて回復アイテムのドロップ判定を実行します。
     /// </summary>
     private static void TryDropHealthPack(World world, Vec2f enemyPos, in Health targetHp, float finalDamage)
     {
@@ -323,7 +323,7 @@ public static class DamageResolutionSystem
 
         if (!hasPlayer) return;
 
-        // プレイヤーが満血の場合はドロップしない（リソース温存）
+        // プレイヤーのHPが最大値の場合はドロップしない（リソース温存）
         if (playerHp.Current >= playerHp.Max) return;
 
         var playerRatio = playerHp.Max > 0f ? Math.Clamp(playerHp.Current / playerHp.Max, 0f, 1f) : 1f;
