@@ -102,12 +102,15 @@ public static class HudRenderSystem {
         ctx.CachedPlayer = null;
         ctx.CachedBoss = null;
 
-        ref readonly var renderCfg = ref w.Get<RenderConfig>();
+        var badgeCfg = w.Get<PlayerHpBadgeRenderConfig>();
+        var hudCfg = w.Get<HudRenderConfig>();
+        var hpCfg = w.Get<BossHpBarRenderConfig>();
+        var modalCfg = w.Get<ModalRenderConfig>();
         var dt = it.DeltaTime();
         if (dt <= 0.0f) dt = 1.0f / 60.0f;
-        UpdateAnimTimers(ctx, player, in renderCfg, dt);
+        UpdateAnimTimers(ctx, player, badgeCfg, dt);
 
-        Render(ctx, player, boss, in renderCfg, flow.State == GameState.Tutorial);
+        Render(ctx, player, boss, hudCfg, hpCfg, modalCfg, badgeCfg, flow.State == GameState.Tutorial);
     }
 
     /// <summary>
@@ -168,10 +171,9 @@ public static class HudRenderSystem {
     private static void UpdateAnimTimers(
         HudRenderSystemContext ctx,
         in HudRenderSystemContext.PlayerHudData? player,
-        in RenderConfig renderCfg,
+        PlayerHpBadgeRenderConfig badgeCfg,
         float dt)
     {
-        var badgeCfg = renderCfg.PlayerHpBadge;
         if (ctx.DamageShakeTimer > 0.0f)
             ctx.DamageShakeTimer = Math.Max(0.0f, ctx.DamageShakeTimer - dt);
         if (ctx.DamageFlashTimer > 0.0f)
@@ -202,16 +204,16 @@ public static class HudRenderSystem {
         HudRenderSystemContext ctx,
         in HudRenderSystemContext.PlayerHudData? player,
         in HudRenderSystemContext.BossHudData? boss,
-        in RenderConfig renderCfg,
+        HudRenderConfig hudCfg,
+        BossHpBarRenderConfig hpCfg,
+        ModalRenderConfig modalCfg,
+        PlayerHpBadgeRenderConfig badgeCfg,
         bool isTutorial = false)
     {
         Debug.Assert(GameEngine.CameraOffset == Vec2i.Zero, "[HudRenderSystem] HUDはスクリーン空間固定で描画される必要があり、CameraOffsetはゼロでなければなりません。");
-        var hudCfg = renderCfg.Hud;
-        var hpCfg = renderCfg.BossHpBar;
-        var modalCfg = renderCfg.Modals;
 
-        DrawPlayerBadgeHud(player, in renderCfg, ctx);
-        DrawPlayerOverheadHp(player, in renderCfg, ctx);
+        DrawPlayerBadgeHud(player, badgeCfg, ctx);
+        DrawPlayerOverheadHp(player, badgeCfg, ctx);
         if (isTutorial) return;
 
         if (boss != null)
@@ -230,12 +232,11 @@ public static class HudRenderSystem {
     /// </summary>
     private static void DrawPlayerBadgeHud(
         in HudRenderSystemContext.PlayerHudData? player,
-        in RenderConfig renderCfg,
+        PlayerHpBadgeRenderConfig badgeCfg,
         HudRenderSystemContext ctx)
     {
         if (player == null) return;
         var p = player.Value;
-        var badgeCfg = renderCfg.PlayerHpBadge;
 
         var maxHp = (int)Math.Max(1.0f, p.Health.Max);
         var currentHp = Math.Clamp((int)p.Health.Current, 0, maxHp);
@@ -346,15 +347,14 @@ public static class HudRenderSystem {
     /// </summary>
     private static void DrawPlayerOverheadHp(
         in HudRenderSystemContext.PlayerHudData? player,
-        in RenderConfig renderCfg,
+        PlayerHpBadgeRenderConfig badgeCfg,
         HudRenderSystemContext ctx)
     {
-        if (player == null || !renderCfg.PlayerHpBadge.OverheadEnabled) return;
+        if (player == null || !badgeCfg.OverheadEnabled) return;
         if (!player.Value.IsAlive || player.Value.Health.Current <= 0.0f) return;
         if (ctx.OverheadWakeTimer <= 0.0f) return;
 
         var p = player.Value;
-        var badgeCfg = renderCfg.PlayerHpBadge;
         var maxHp = (int)Math.Max(1.0f, p.Health.Max);
         var currentHp = Math.Clamp((int)p.Health.Current, 0, maxHp);
         if (currentHp <= 0) return;

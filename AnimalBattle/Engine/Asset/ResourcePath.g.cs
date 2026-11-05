@@ -130,6 +130,9 @@ public static class ResourcePath
         /// <summary>audio.toml 設定ファイル名。</summary>
         public const string Audio = "audio.toml";
 
+        /// <summary>boss.render.toml 設定ファイル名。</summary>
+        public const string BossRender = "boss.render.toml";
+
         /// <summary>boss_lion.toml 設定ファイル名。</summary>
         public const string BossLion = "boss_lion.toml";
 
@@ -160,14 +163,20 @@ public static class ResourcePath
         /// <summary>combat.prefab.toml 設定ファイル名。</summary>
         public const string CombatPrefab = "combat.prefab.toml";
 
+        /// <summary>combat.render.toml 設定ファイル名。</summary>
+        public const string CombatRender = "combat.render.toml";
+
+        /// <summary>debug.render.toml 設定ファイル名。</summary>
+        public const string DebugRender = "debug.render.toml";
+
         /// <summary>dummy.toml 設定ファイル名。</summary>
         public const string Dummy = "dummy.toml";
 
         /// <summary>minions.toml 設定ファイル名。</summary>
         public const string Minions = "minions.toml";
 
-        /// <summary>render.toml 設定ファイル名。</summary>
-        public const string Render = "render.toml";
+        /// <summary>player.render.toml 設定ファイル名。</summary>
+        public const string PlayerRender = "player.render.toml";
 
         /// <summary>sheet.toml 設定ファイル名。</summary>
         public const string Sheet = "sheet.toml";
@@ -178,8 +187,17 @@ public static class ResourcePath
         /// <summary>start_scene.toml 設定ファイル名。</summary>
         public const string StartScene = "start_scene.toml";
 
+        /// <summary>tutorial.render.toml 設定ファイル名。</summary>
+        public const string TutorialRender = "tutorial.render.toml";
+
         /// <summary>tutorial.toml 設定ファイル名。</summary>
         public const string Tutorial = "tutorial.toml";
+
+        /// <summary>ui.render.toml 設定ファイル名。</summary>
+        public const string UiRender = "ui.render.toml";
+
+        /// <summary>vfx.render.toml 設定ファイル名。</summary>
+        public const string VfxRender = "vfx.render.toml";
     }
 
     /// <summary>リソースルートディレクトリ名。</summary>

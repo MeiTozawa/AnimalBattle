@@ -14,7 +14,7 @@ public static class EffectSpawner
     public static void SpawnJumpRingEffect(World world, Vec2f pos)
     {
         var pCfg = world.GetActivePlayerConfig();
-        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
+        var vfxCfg = world.Get<VisualEffectsRenderConfig>();
         CombatPoolService.RentRingEffect()
            .Set(new Transform(pos))
            .Set(new RingEffect(pCfg.JumpRingInitialRadius, pCfg.JumpRingMaxRadius, vfxCfg.JumpRingColor))
@@ -47,7 +47,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnMuzzleFlash(World world, Vec2f pos, float radius, float duration)
     {
-        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
+        var vfxCfg = world.Get<VisualEffectsRenderConfig>();
         CombatPoolService.RentSparkEffect()
            .Set(new Transform(pos))
            .Set(new Velocity(Vec2f.Zero))
@@ -60,7 +60,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnHitSparkEffect(World world, Vec2f pos)
     {
-        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
+        var vfxCfg = world.Get<VisualEffectsRenderConfig>();
         for (var i = 0; i < vfxCfg.HitSparkCount; i++)
         {
             var angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
@@ -80,7 +80,7 @@ public static class EffectSpawner
     public static void SpawnBulletImpactSplatter(World world, Vec2f pos, Vec2f hitDir)
     {
         var pCfg = world.GetActivePlayerConfig();
-        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
+        var vfxCfg = world.Get<VisualEffectsRenderConfig>();
         var count = Random.Shared.Next(pCfg.ImpactSplatterMinCount, pCfg.ImpactSplatterMaxCount + 1);
         var baseAngle = MathF.Atan2(-hitDir.Y, -hitDir.X);
 
@@ -103,7 +103,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnPlayerDeathParticles(World world, Vec2f pos)
     {
-        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
+        var vfxCfg = world.Get<VisualEffectsRenderConfig>();
         for (var i = 0; i < vfxCfg.PlayerDeathParticleCount; i++)
         {
             var angle = i / (float)vfxCfg.PlayerDeathParticleCount * MathF.PI * 2.0f;
@@ -122,7 +122,7 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnVictoryExplosions(World world, Vec2f pos)
     {
-        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
+        var vfxCfg = world.Get<VisualEffectsRenderConfig>();
         for (var i = 0; i < vfxCfg.VictoryExplosionCount; i++)
         {
             var angle = i / (float)vfxCfg.VictoryExplosionCount * MathF.PI * 2.0f;
@@ -141,10 +141,34 @@ public static class EffectSpawner
     /// </summary>
     public static void SpawnShockwave(World world, Vec2f pos)
     {
-        var vfxCfg = world.Get<RenderConfig>().VisualEffects;
+        var vfxCfg = world.Get<VisualEffectsRenderConfig>();
         CombatPoolService.RentRingEffect()
            .Set(new Transform(pos))
            .Set(new RingEffect(vfxCfg.ShockwaveInitialRadius, vfxCfg.ShockwaveMaxRadius, vfxCfg.ShockwaveRingColor))
            .Set(new FadeEffect(vfxCfg.ShockwaveDuration));
+    }
+    /// <summary>
+    ///     スーパーアーマー（覇体）中のボスが被弾した際の装甲偏向・反震火花エフェクトを生成します。
+    /// </summary>
+    public static void SpawnSuperArmorDeflectEffect(World world, Vec2f pos)
+    {
+        // 1. 小型防御衝撃リング
+        CombatPoolService.RentRingEffect()
+           .Set(new Transform(pos))
+           .Set(new RingEffect(8.0f, 32.0f, System.Drawing.Color.FromArgb(255, 255, 140, 40)))
+           .Set(new FadeEffect(0.18f));
+
+        // 2. 偏向スパーク火花
+        for (var i = 0; i < 4; i++)
+        {
+            var angle = Random.Shared.NextSingle() * MathF.PI * 2.0f;
+            var speed = 100.0f + Random.Shared.NextSingle() * 100.0f;
+            var vel = new Vec2f(MathF.Cos(angle) * speed, MathF.Sin(angle) * speed);
+            CombatPoolService.RentSparkEffect()
+               .Set(new Transform(pos))
+               .Set(new Velocity(vel))
+               .Set(new VfxParticle(3.5f, System.Drawing.Color.FromArgb(255, 255, 210, 80), System.Drawing.Color.FromArgb(255, 255, 80, 30)))
+               .Set(new FadeEffect(0.22f));
+        }
     }
 }

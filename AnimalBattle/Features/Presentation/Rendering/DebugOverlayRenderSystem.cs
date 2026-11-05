@@ -67,8 +67,7 @@ public static class DebugOverlayRenderSystem
         var w = it.World();
         if (w.Get<GameFlow>().State != GameState.Battle) return;
 
-        var renderCfg = w.Get<RenderConfig>();
-        var dbgCfg = renderCfg.Debug;
+        var dbgCfg = w.Get<DebugRenderConfig>();
         if (!dbgCfg.DebugMode || !dbgCfg.IsActive) return;
 
         _cachedRemainingJumps = null;
@@ -83,18 +82,15 @@ public static class DebugOverlayRenderSystem
         _cachedRemainingJumps = null;
         _cachedBoss = null;
 
-        DrawDebugOverlayHud(remainingJumps, boss, in renderCfg);
+        DrawDebugOverlayHud(remainingJumps, boss, w.Get<HudRenderConfig>(), w.Get<BossHpBarRenderConfig>(), dbgCfg);
     }
 
     private static void FindPlayer(ref JumpCapability jump) => _cachedRemainingJumps = jump.RemainingJumps;
     private static void FindBoss(ref BossCombatState state, ref BossBrainComponent brainComp) => _cachedBoss = new BossDebugData(state, brainComp.Brain);
 
-    private static void DrawDebugOverlayHud(int? remainingJumps, in BossDebugData? boss, in RenderConfig renderCfg)
+    private static void DrawDebugOverlayHud(int? remainingJumps, in BossDebugData? boss, HudRenderConfig hudCfg, BossHpBarRenderConfig hpCfg, DebugRenderConfig dbgCfg)
     {
         Debug.Assert(GameEngine.CameraOffset == Vec2i.Zero, "[DebugOverlayRenderSystem] デバッグオーバーレイはスクリーン空間固定で描画される必要があります。");
-        var hudCfg = renderCfg.Hud;
-        var hpCfg = renderCfg.BossHpBar;
-        var dbgCfg = renderCfg.Debug;
 
         // 右上デバッグアクティブ表示：画面固定
         if (!string.IsNullOrEmpty(dbgCfg.IndicatorText))

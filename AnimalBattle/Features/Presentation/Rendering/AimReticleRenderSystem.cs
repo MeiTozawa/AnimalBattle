@@ -32,7 +32,7 @@ public static class AimReticleRenderSystem
 
         ref readonly var state = ref w.Get<AimReticleState>();
         var mouseScreen = InputService.GetMousePosition();
-        RenderReticle(mouseScreen, state.Expansion, w.Get<RenderConfig>().AimReticle);
+        RenderReticle(mouseScreen, state.Expansion, w.Get<AimReticleRenderConfig>());
     }
 
     private static void RenderReticle(Vec2i center, float expansion, AimReticleRenderConfig cfg)

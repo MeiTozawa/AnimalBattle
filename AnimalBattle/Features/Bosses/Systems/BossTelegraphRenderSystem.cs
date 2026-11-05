@@ -85,8 +85,7 @@ public static class BossTelegraphRenderSystem
 
         var playerPos = ctx.CachedPlayerPos;
 
-        ref readonly var renderCfg = ref w.Get<RenderConfig>();
-        var bossFx = renderCfg.BossEffects;
+        var bossFx = w.Get<BossEffectsRenderConfig>();
         ref readonly var arenaCfg = ref w.Get<ArenaConfig>();
 
         var bPos = (b.Transform.Position + b.Sprite.JitterOffset).ToVec2i();
@@ -115,6 +114,14 @@ public static class BossTelegraphRenderSystem
             DrawBossPhaseTransitionEffects(
                 bPos, b.Sprite.SrcRect, b.Transform.Scale, rotation,
                 b.Sprite.GraphHandle, flipX, b.CombatState.StateTimer, bossFx);
+        }
+
+        // 4. 覇体：SuperArmor状態の剛体オーラと防護アーマー演出
+        if (b.Tags.HasTag(GameplayTag.SuperArmor) && !b.Tags.HasTag(GameplayTag.Vulnerable) && !b.Tags.HasTag(GameplayTag.Phasing))
+        {
+            DrawBossSuperArmorEffects(
+                bPos, b.Sprite.SrcRect, b.Transform.Scale, rotation,
+                b.Sprite.GraphHandle, flipX, b.CombatState.StateTimer, b.CollisionBox, bossFx);
         }
     }
 
@@ -301,5 +308,101 @@ public static class BossTelegraphRenderSystem
         }
 
         GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+    }
+    private static void DrawBossSuperArmorEffects(
+        Vec2i bPos,
+        in Rect srcRect,
+        Vec2f scale,
+        double angle,
+        int graphHandle,
+        bool flipX,
+        float stateTimer,
+        in CollisionBox col,
+        BossEffectsRenderConfig bossFx)
+    {
+        var pulse = 0.5f + 0.5f * MathF.Sin(stateTimer * bossFx.SuperArmorPulseSpeed);
+        var baseAlpha = bossFx.SuperArmorAuraBaseAlpha;
+        var pulseAlpha = bossFx.SuperArmorAuraPulseAlpha;
+        var auraAlpha = (int)(baseAlpha + pulseAlpha * pulse);
+
+        // 1. 外層：真紅・猛炎の覇体オーラ (Crimson/Red flame aura)
+        var auraColor = bossFx.SuperArmorAuraColor;
+        var ar = auraColor is { R: 0, G: 0, B: 0 } ? 255 : auraColor.R;
+        var ag = auraColor is { R: 0, G: 0, B: 0 } ? 50 : auraColor.G;
+        var ab = auraColor is { R: 0, G: 0, B: 0 } ? 30 : auraColor.B;
+        GameEngine.SetDrawBright(ar, ag, ab);
+        GameEngine.SetDrawBlendMode(BlendMode.Add, auraAlpha);
+        GameEngine.DrawRectRotaGraph(
+            bPos,
+            new Vec2i(srcRect.X1, srcRect.Y1),
+            new Vec2i(srcRect.Width, srcRect.Height),
+            scale * bossFx.SuperArmorAuraScale,
+            angle,
+            graphHandle,
+            true,
+            flipX);
+
+        // 2. 内層：アンバー／オレンジのコア光輪 (Amber/Orange core glow)
+        var coreColor = bossFx.SuperArmorCoreColor;
+        var cr = coreColor is { R: 0, G: 0, B: 0 } ? 255 : coreColor.R;
+        var cg = coreColor is { R: 0, G: 0, B: 0 } ? 160 : coreColor.G;
+        var cb = coreColor is { R: 0, G: 0, B: 0 } ? 20 : coreColor.B;
+        var coreAlpha = (int)(auraAlpha * 0.75f);
+        GameEngine.SetDrawBright(cr, cg, cb);
+        GameEngine.SetDrawBlendMode(BlendMode.Add, coreAlpha);
+        GameEngine.DrawRectRotaGraph(
+            bPos,
+            new Vec2i(srcRect.X1, srcRect.Y1),
+            new Vec2i(srcRect.Width, srcRect.Height),
+            scale * bossFx.SuperArmorCoreScale,
+            angle,
+            graphHandle,
+            true,
+            flipX);
+        GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+        GameEngine.SetDrawBright(255, 255, 255);
+
+        // 3. 護体装甲ブラケット（左右防御括弧・アンバー装甲フレーム）
+        var bracketColor = bossFx.SuperArmorBracketColor;
+        var br = bracketColor is { R: 0, G: 0, B: 0 } ? 255 : bracketColor.R;
+        var bg = bracketColor is { R: 0, G: 0, B: 0 } ? 120 : bracketColor.G;
+        var bb = bracketColor is { R: 0, G: 0, B: 0 } ? 40 : bracketColor.B;
+        var bCol = System.Drawing.Color.FromArgb(255, br, bg, bb);
+
+        var colHalfW = (col.Size.X > 0 ? col.Size.X * 0.5f : srcRect.Width * scale.X * 0.5f) + 12.0f;
+        var colHalfH = (col.Size.Y > 0 ? col.Size.Y * 0.5f : srcRect.Height * scale.Y * 0.5f) + 8.0f;
+        var bracketLen = MathF.Min(colHalfH * 0.35f, 16.0f);
+        var bracketThickness = bossFx.SuperArmorBracketThickness > 0 ? bossFx.SuperArmorBracketThickness : 2;
+        var bracketAlpha = (int)(130 + 90 * pulse);
+
+        GameEngine.SetDrawBlendMode(BlendMode.Add, bracketAlpha);
+        // 左ブラケット '['
+        var leftX = (int)(bPos.X - colHalfW);
+        var topY = (int)(bPos.Y - colHalfH);
+        var botY = (int)(bPos.Y + colHalfH);
+        GameEngine.DrawLine(new Vec2i(leftX, topY), new Vec2i(leftX, botY), bCol, bracketThickness);
+        GameEngine.DrawLine(new Vec2i(leftX, topY), new Vec2i((int)(leftX + bracketLen), topY), bCol, bracketThickness);
+        GameEngine.DrawLine(new Vec2i(leftX, botY), new Vec2i((int)(leftX + bracketLen), botY), bCol, bracketThickness);
+
+        // 右ブラケット ']'
+        var rightX = (int)(bPos.X + colHalfW);
+        GameEngine.DrawLine(new Vec2i(rightX, topY), new Vec2i(rightX, botY), bCol, bracketThickness);
+        GameEngine.DrawLine(new Vec2i(rightX, topY), new Vec2i((int)(rightX - bracketLen), topY), bCol, bracketThickness);
+        GameEngine.DrawLine(new Vec2i(rightX, botY), new Vec2i((int)(rightX - bracketLen), botY), bCol, bracketThickness);
+
+        GameEngine.SetDrawBlendMode(BlendMode.NoBlend, 0);
+
+        // 4. 頭上マーカーテキスト
+        if (!string.IsNullOrEmpty(bossFx.SuperArmorMarkerText))
+        {
+            var bobbing = MathF.Sin(stateTimer * bossFx.SuperArmorMarkerBobbingSpeed) * bossFx.SuperArmorMarkerBobbingAmplitude;
+            var markerColor = bossFx.SuperArmorMarkerColor;
+            var mr = markerColor is { R: 0, G: 0, B: 0 } ? 255 : markerColor.R;
+            var mg = markerColor is { R: 0, G: 0, B: 0 } ? 69 : markerColor.G;
+            var mb = markerColor is { R: 0, G: 0, B: 0 } ? 0 : markerColor.B;
+            var mCol = System.Drawing.Color.FromArgb(255, mr, mg, mb);
+            var textPos = new Vec2i(bPos.X, (int)(bPos.Y - bossFx.SuperArmorMarkerOffsetY + bobbing));
+            GameEngine.DrawCenterString(textPos, bossFx.SuperArmorMarkerText, mCol);
+        }
     }
 }

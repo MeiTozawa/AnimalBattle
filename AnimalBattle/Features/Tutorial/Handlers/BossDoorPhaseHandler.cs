@@ -18,7 +18,7 @@ public sealed class BossDoorPhaseHandler : ITutorialPhaseHandler
         ref var state = ref world.GetMut<TutorialState>();
         state.TargetsRemaining = 0;
 
-        var interactionRadius = globalConfig.Doors.InteractionRadius;
+        var interactionRadius = world.Get<TutorialRenderConfig>().Doors.InteractionRadius;
 
         for (var i = 0; i < config.Doors.Length; i++)
         {

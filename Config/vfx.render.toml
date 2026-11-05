@@ -1,0 +1,38 @@
+# ==============================================================================
+# 視覚エフェクト・パーティクル共通描画設定 (Visual Effects Render Configuration)
+# ==============================================================================
+
+[VisualEffects]
+HitSparkCount = 3
+HitSparkMinSpeed = 60.0
+HitSparkSpeedRange = 120.0
+HitSparkRadius = 3.5
+HitSparkDuration = 0.12
+
+PlayerDeathParticleCount = 16
+PlayerDeathParticleBaseSpeed = 4.0
+PlayerDeathParticleSpeedStep = 2.0
+PlayerDeathParticleRadius = 5.0
+PlayerDeathParticleDuration = 0.60
+
+ShockwaveInitialRadius = 20.0
+ShockwaveMaxRadius = 150.0
+ShockwaveDuration = 0.40
+
+VictoryExplosionCount = 32
+VictoryExplosionBaseSpeed = 3.0
+VictoryExplosionSpeedStep = 2.5
+VictoryExplosionRadius = 6.0
+VictoryExplosionDuration = 0.90
+JumpRingColor = "#FFFFFF"
+MuzzleFlashFillColor = "#DCEBFF"
+MuzzleFlashOutlineColor = "#FFFFFF"
+HitSparkFillColor = "#FFFF55"
+HitSparkOutlineColor = "#FFFFFF"
+ImpactSplatterFillColor = "#FFE664"
+ImpactSplatterOutlineColor = "#FFFFFF"
+PlayerDeathParticleFillColor = "#FF3333"
+PlayerDeathParticleOutlineColor = "#FFFFFF"
+VictoryExplosionFillColor = "#FFD700"
+VictoryExplosionOutlineColor = "#FFF275"
+ShockwaveRingColor = "#00E5FF"

@@ -43,7 +43,8 @@ public static class TutorialRenderSystem
         if (world.Get<GameFlow>().State != GameState.Tutorial) return;
 
         var cfg = world.Get<TutorialConfig>();
-        var colors = cfg.Colors;
+        var rCfg = world.Get<TutorialRenderConfig>();
+        var colors = rCfg.Colors;
         var assets = world.Get<IAssetManager>();
 
         var ctx = world.Get<TutorialSystemContext>();
@@ -56,7 +57,7 @@ public static class TutorialRenderSystem
             var r = (int)target.Radius;
 
             // 外枠発光リングと内側コア
-            var targetCfg = cfg.TargetRender;
+            var targetCfg = rCfg.TargetRender;
             GameEngine.DrawCircle(center, r, colors.Gold, false);
             GameEngine.DrawCircle(center, Math.Max(targetCfg.MinInnerRadius, (int)(r * targetCfg.InnerRadiusRatio)), colors.Gold, true);
             GameEngine.DrawCenterString(center, targetCfg.Symbol, colors.White);
@@ -67,13 +68,13 @@ public static class TutorialRenderSystem
         {
             var doorCenter = new Vec2i((int)tr.Position.X, (int)tr.Position.Y);
             var isSnake = door.TargetBoss == BossType.BossSnake;
-            var doorItem = isSnake ? cfg.Doors.Snake : cfg.Doors.Lion;
+            var doorItem = isSnake ? rCfg.Doors.Snake : rCfg.Doors.Lion;
 
             DrawShrineDoorEnvironment(
                 doorCenter,
                 door.TargetBoss,
                 doorItem,
-                cfg.Doors,
+                rCfg.Doors,
                 door.IsPlayerInRange,
                 door.AnimTimer,
                 colors,
@@ -92,30 +93,31 @@ public static class TutorialRenderSystem
 
         ref readonly var state = ref world.Get<TutorialState>();
         var cfg = world.Get<TutorialConfig>();
-        var colors = cfg.Colors;
+        var rCfg = world.Get<TutorialRenderConfig>();
+        var colors = rCfg.Colors;
 
         // 画面上部・中央のフェーズ別背景操作ガイド文字
-        DrawPhaseGuidance(state, cfg);
+        DrawPhaseGuidance(state, cfg, rCfg);
 
         // 3. 戦闘フェーズ（Combat）における全操作ガイド看板
         if ((uint)state.CurrentPhaseIndex < (uint)cfg.Phases.Length &&
             cfg.Phases[state.CurrentPhaseIndex].Type == TutorialPhaseType.Combat)
         {
-            DrawControlGuidanceBoard(cfg);
+            DrawControlGuidanceBoard(cfg, rCfg);
         }
 
         // 4. リトライ表示
         if (state.IsRetrying)
         {
-            GameEngine.DrawCenterString(cfg.Layout.RetryPos, cfg.Texts.RetryPrompt, colors.Red);
+            GameEngine.DrawCenterString(rCfg.Layout.RetryPos, cfg.Texts.RetryPrompt, colors.Red);
         }
     }
 
-    private static void DrawPhaseGuidance(in TutorialState state, TutorialConfig cfg)
+    private static void DrawPhaseGuidance(in TutorialState state, TutorialConfig cfg, TutorialRenderConfig rCfg)
     {
-        var centerPos = cfg.Layout.GuidanceTitlePos;
-        var subPos = cfg.Layout.GuidanceSubPos;
-        var colors = cfg.Colors;
+        var centerPos = rCfg.Layout.GuidanceTitlePos;
+        var subPos = rCfg.Layout.GuidanceSubPos;
+        var colors = rCfg.Colors;
 
         if ((uint)state.CurrentPhaseIndex < (uint)cfg.Phases.Length)
         {
@@ -125,13 +127,13 @@ public static class TutorialRenderSystem
         }
     }
 
-    private static void DrawControlGuidanceBoard(TutorialConfig cfg)
+    private static void DrawControlGuidanceBoard(TutorialConfig cfg, TutorialRenderConfig rCfg)
     {
-        var p1 = cfg.Layout.ControlBoardP1;
-        var p2 = cfg.Layout.ControlBoardP2;
-        var colors = cfg.Colors;
+        var p1 = rCfg.Layout.ControlBoardP1;
+        var p2 = rCfg.Layout.ControlBoardP2;
+        var colors = rCfg.Colors;
         var texts = cfg.Texts;
-        var layout = cfg.Layout;
+        var layout = rCfg.Layout;
 
         GameEngine.DrawBox(p1, p2, colors.PanelBg, true);
         GameEngine.DrawBox(p1, p2, colors.PanelBorder, false);

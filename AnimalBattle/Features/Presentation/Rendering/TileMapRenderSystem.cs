@@ -62,7 +62,7 @@ public static class TileMapRenderSystem
         if (!w.Get<GameFlow>().IsGameplay) return;
 
         var ctx = w.Get<TileMapRenderContext>();
-        _cachedViewport = w.Get<RenderConfig>().Viewport;
+        _cachedViewport = w.Get<ViewportRenderConfig>();
         _renderedTileMap = false;
         ctx.TileMapQuery.Each(DrawTileMap);
 

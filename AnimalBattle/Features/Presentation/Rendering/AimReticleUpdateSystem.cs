@@ -5,7 +5,7 @@ namespace AnimalBattle.Presentation.Rendering;
 /// </summary>
 internal sealed class AimReticleUpdateContext : IDisposable
 {
-    private readonly World _world;
+    private World _world;
     public IDisposable? Subscription { get; private set; }
 
     public AimReticleUpdateContext(World world)
@@ -16,7 +16,7 @@ internal sealed class AimReticleUpdateContext : IDisposable
 
     private void OnPlayerShotFired(PlayerShotFiredEvent _)
     {
-        var cfg = _world.Get<RenderConfig>().AimReticle;
+        var cfg = _world.Get<AimReticleRenderConfig>();
         ref var state = ref _world.GetMut<AimReticleState>();
         state.Expansion = cfg.RecoilExpansion;
         state.ExpansionVelocity = 0.0f;
@@ -65,7 +65,7 @@ public static class AimReticleUpdateSystem
         if (!w.Has<AimReticleState>()) return;
 
         ref var state = ref w.GetMut<AimReticleState>();
-        UpdateSpring(ref state, dt, w.Get<RenderConfig>().AimReticle);
+        UpdateSpring(ref state, dt, w.Get<AimReticleRenderConfig>());
     }
 
     private static void UpdateSpring(ref AimReticleState state, float deltaTime, AimReticleRenderConfig cfg)

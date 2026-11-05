@@ -251,7 +251,7 @@ public static class BattleAiSystem
                 trans.Position = bSnakeBrain.Position;
                 sprite.FlipX = !bSnakeBrain.FacingRight;
 
-                var fx = w.Get<RenderConfig>().BossEffects;
+                var fx = w.Get<BossEffectsRenderConfig>();
                 trans.Rotation = (float)(MathF.Sin(bSnakeBrain.HoverTimer * fx.BossHoverAngleSpeed) * fx.BossHoverAngleAmp);
             }
             else if (state.BossType == BossType.BossLion && brain is BossLionBrain bLionBrain)

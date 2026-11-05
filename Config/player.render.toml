@@ -1,0 +1,51 @@
+# ==============================================================================
+# 自機プレイヤー描画・HP・斬撃設定 (Player Render Configuration)
+# ==============================================================================
+
+[Player]
+InvincibleBlinkFrequency = 30.0
+GhostTrailColor = "#B450C8FF"
+
+[PlayerHpBadge]
+Origin = { x = 44, y = 56 }
+BadgeSpacing = 62.0
+BadgeRadius = 25.0
+
+# 肉球幾何パラメータ（猫本来の4指構成・掌球と指球の離隔最適化）
+PawOffsetY = 2
+PalmRadius = 9.5
+PalmOffsetY = 2
+ToeRadius = 4.0
+ToeDistance = 13
+ToeAnglesDeg = [-60.0, -20, 20, 60.0]
+
+# 配色設定 (Hex)
+CatFillColor = "#00F0FF"
+CatGlowColor = "#00A0CC"
+BunnyFillColor = "#FFAA00"
+BunnyGlowColor = "#CC7700"
+EmptyBorderColor = "#555A68"
+EmptyFillColor = "#161922"
+DamagedFlashColor = "#FF3344"
+
+# 被弾演出パラメータ
+ShakeDuration = 0.35
+ShakeAmplitude = 4.0
+FlashDuration = 0.25
+LowHpPulseSpeed = 8.0
+
+# 自機頭上追従インジケータ
+OverheadEnabled = true
+OverheadOffsetY = -42.0
+OverheadPipRadius = 4.0
+OverheadPipSpacing = 11.0
+OverheadFadeTime = 2.0
+OverheadActiveAlpha = 220
+
+[SlashEffect]
+SpriteColIndex = 5
+SpriteCellSize = 64
+BossBaseReferenceSize = 28.0
+PlayerBaseReferenceSize = 36.0
+CenterBiasOffset = -18.0
+PlayerSlashColor = "#FFF0C8"

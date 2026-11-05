@@ -1,0 +1,29 @@
+# ==============================================================================
+# デバッグ描画設定 (Debug Gizmos & Hitbox Render Configuration)
+# ==============================================================================
+
+[Debug]
+DebugMode = true
+IsActive = false
+Enabled = false
+IndicatorPos = { x = 950, y = 16 }
+IndicatorText = "[DEBUG MODE ACTIVE - F1 to toggle]"
+IndicatorColor = "#FFD700"
+PhaseSwitchGuideText = "[F2] Phase 1   [F3] Phase 2   [F4] Phase 3   [F8] Invincible"
+PhaseSwitchGuideColor = "#FFD700"
+GuideOffsetY = 24
+PlayerTerrainBoxColor = "#00FF88"
+PlayerHurtboxColor = "#FF0033"
+BossHitboxColor = "#FF1744"
+BossBulletHitboxColor = "#FFD700"
+EnemyBulletHitboxColor = "#FFD700"
+PlayerBulletHitboxColor = "#00FFFF"
+PlatformHitboxColor = "#88CCFF"
+NeutralHitboxColor = "#888888"
+PointShapeRadius = 2
+NavNodeColor = "#00E5FF"
+NavEdgeDropColor = "#FFD700"
+NavEdgeJumpColor = "#00FF88"
+NavNodeRadius = 4
+FactionFriendlyColor = "#00FF88"
+FactionHostileColor = "#FF3333"

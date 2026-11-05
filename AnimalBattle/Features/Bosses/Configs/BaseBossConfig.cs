@@ -49,7 +49,7 @@ public abstract class BaseBossConfig {
     public float BodyContactDamage { get; set; }
 
     /// <summary>Boss がノックバック外力を受けるかどうかの設定値</summary>
-    public bool CanBeKnockedBack { get; set; } = true;
+    public bool CanBeKnockedBack { get; set; }
 
     /// <summary>Boss のノックバック外力減衰加速度ピクセル毎秒毎秒</summary>
     public float KnockbackDeceleration { get; set; }
@@ -64,7 +64,7 @@ public abstract class BaseBossConfig {
     public float SpringDampingRatio { get; set; }
 
     /// <summary>出現時バッファ持続秒数（&lt;=0 で無効）</summary>
-    public float SpawnBufferDuration { get; set; } = 2.0f;
+    public float SpawnBufferDuration { get; set; }
 
     /// <summary>出現時バッファ中の移動許可フラグ</summary>
     public bool SpawnBufferCanMove { get; set; }

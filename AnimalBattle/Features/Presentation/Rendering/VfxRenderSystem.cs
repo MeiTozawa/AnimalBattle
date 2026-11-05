@@ -115,7 +115,7 @@ public static class VfxRenderSystem
         var count = it.Count();
         if (count == 0) return;
 
-        var bulletCfg = w.Get<RenderConfig>().Bullets;
+        var bulletCfg = w.Get<BulletRenderConfig>();
 
         for (var i = 0; i < count; i++)
         {

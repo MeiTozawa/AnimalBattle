@@ -36,7 +36,7 @@ public static class SpawnBufferRenderSystem
         var count = it.Count();
         if (count == 0) return;
 
-        var spawnBufferCfg = w.Get<RenderConfig>().SpawnBuffer;
+        var spawnBufferCfg = w.Get<SpawnBufferRenderConfig>();
         var baseAlpha = spawnBufferCfg.BaseAlpha;
         var pulseAlpha = spawnBufferCfg.PulseAlpha;
         var frequency = spawnBufferCfg.Frequency;

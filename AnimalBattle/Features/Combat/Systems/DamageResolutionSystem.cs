@@ -154,7 +154,7 @@ public static class DamageResolutionSystem
                 if (profile.InvincibleDuration > 0.0f)
                 {
                     TimedEffectService.ApplyEffect(ref effectState, ref tagState, GameplayTag.Untargetable, profile.InvincibleDuration, entity.Id);
-                    var blinkFreq = world.Get<RenderConfig>().Player.InvincibleBlinkFrequency;
+                    var blinkFreq = world.Get<PlayerVisualRenderConfig>().InvincibleBlinkFrequency;
                     entity.Set(new InvincibleBlinkEffect(profile.InvincibleDuration, blinkFreq));
                 }
                 EventBus.Publish(new PlayerHealthChangedEvent(prevHp, hp.Current));
@@ -164,6 +164,11 @@ public static class DamageResolutionSystem
                 // 敵対ユニット易傷クリティカル火花
                 EffectSpawner.SpawnHitSparkEffect(world, trans.Position - new Vec2f(8.0f, 8.0f));
                 EffectSpawner.SpawnHitSparkEffect(world, trans.Position + new Vec2f(8.0f, 8.0f));
+            }
+            else if (hasSuperArmor && profile.Kind == CombatEntityKind.Boss)
+            {
+                // スーパーアーマー（覇体）被弾時の装甲火花・偏向エフェクト
+                EffectSpawner.SpawnSuperArmorDeflectEffect(world, trans.Position);
             }
 
             // 死亡または生存時の挙動分岐

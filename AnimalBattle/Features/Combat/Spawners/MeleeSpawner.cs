@@ -29,7 +29,7 @@ public static class MeleeSpawner
 
         Debug.Assert(hasTexture, $"近接斬撃エフェクトテクスチャがロードされていません: {ResourcePath.Characters.SwordShieldEffectSpritesPng}");
 
-        var slashCfg = world.Get<RenderConfig>().SlashEffect;
+        var slashCfg = world.Get<SlashEffectRenderConfig>();
 
         var colIndex = slashCfg.SpriteColIndex;
 
@@ -77,7 +77,7 @@ public static class MeleeSpawner
 
         Debug.Assert(hasTexture, $"近接斬撃エフェクトテクスチャがロードされていません: {ResourcePath.Characters.SwordShieldEffectSpritesPng}");
 
-        var slashCfg = meleeEntity.CsWorld().Get<RenderConfig>().SlashEffect;
+        var slashCfg = meleeEntity.CsWorld().Get<SlashEffectRenderConfig>();
 
         var colIndex = slashCfg.SpriteColIndex;
 

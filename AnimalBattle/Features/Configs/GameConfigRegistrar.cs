@@ -1,6 +1,7 @@
 namespace AnimalBattle.Configs;
 
 using System.Diagnostics;
+using AnimalBattle.Features.Tutorial.Configs;
 using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
 
@@ -31,10 +32,48 @@ public static class GameConfigRegistrar
         registry.RegisterToml<BossLionPatternConfig>(ResourcePath.Config.BossLionPatterns, (root, cfg) => { root.Bind(cfg.Skills); cfg.PostProcess(); }, (w, cfg) => AnimalBattle.Bosses.Sync.BossConfigSync.SyncBossLionPattern(w, cfg));
         registry.RegisterToml<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Combat.Sync.CombatConfigSync.SyncSpecialBullets(w, cfg));
         registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Arena.Sync.ArenaConfigSync.SyncArena(w, cfg));
-        registry.RegisterToml<RenderConfig>(ResourcePath.Config.Render, (root, cfg) => root.Bind(cfg), (w, cfg) => {
+        registry.RegisterToml<BossRenderConfig>(ResourcePath.Config.BossRender, (root, cfg) => root.Bind(cfg), (w, cfg) => {
             w.Set(cfg);
+            w.Set(cfg.BossEffects);
+            w.Set(cfg.BossHpBar);
+            TelegraphRenderHelper.DefaultEffects = cfg.BossEffects;
+        });
+        registry.RegisterToml<PlayerRenderConfig>(ResourcePath.Config.PlayerRender, (root, cfg) => root.Bind(cfg), (w, cfg) => {
+            w.Set(cfg);
+            w.Set(cfg.Player);
+            w.Set(cfg.PlayerHpBadge);
+            w.Set(cfg.SlashEffect);
+        });
+        registry.RegisterToml<CombatRenderConfig>(ResourcePath.Config.CombatRender, (root, cfg) => root.Bind(cfg), (w, cfg) => {
+            w.Set(cfg);
+            w.Set(cfg.Bullets);
+            w.Set(cfg.SpawnBuffer);
             AnimalBattle.Combat.BulletPalette.CurrentConfig = cfg.Bullets;
-            AnimalBattle.Presentation.Rendering.TelegraphRenderHelper.DefaultEffects = cfg.BossEffects;
+        });
+        registry.RegisterToml<VfxRenderConfig>(ResourcePath.Config.VfxRender, (root, cfg) => root.Bind(cfg), (w, cfg) => {
+            w.Set(cfg);
+            w.Set(cfg.VisualEffects);
+        });
+        registry.RegisterToml<UiRenderConfig>(ResourcePath.Config.UiRender, (root, cfg) => root.Bind(cfg), (w, cfg) => {
+            w.Set(cfg);
+            w.Set(cfg.Viewport);
+            w.Set(cfg.Hud);
+            w.Set(cfg.AimReticle);
+            w.Set(cfg.Modals);
+        });
+        registry.RegisterToml<DebugRenderConfig>(ResourcePath.Config.DebugRender, (root, cfg) => {
+            var sec = root.GetSection("Debug");
+            if (sec.Exists()) sec.Bind(cfg);
+            else root.Bind(cfg);
+        }, (w, cfg) => {
+            w.Set(cfg);
+        });
+        registry.RegisterToml<TutorialRenderConfig>(ResourcePath.Config.TutorialRender, (root, cfg) => root.Bind(cfg), (w, cfg) => {
+            w.Set(cfg);
+            w.Set(cfg.Colors);
+            w.Set(cfg.Doors);
+            w.Set(cfg.Layout);
+            w.Set(cfg.TargetRender);
         });
         registry.RegisterToml<CameraConfig>(ResourcePath.Config.Camera, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.CameraService.CurrentConfig = cfg; });
         registry.RegisterToml<TileSetConfig>(ResourcePath.Config.Sheet, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Arena.Sync.ArenaConfigSync.SyncTileSet(w, cfg));
@@ -43,24 +82,43 @@ public static class GameConfigRegistrar
         registry.RegisterToml<DummyConfig>(ResourcePath.Config.Dummy, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Combat.Sync.DummyConfigSync.Sync(w, cfg));
         registry.RegisterToml<MinionConfig>(ResourcePath.Config.Minions, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Enemies.Sync.MinionConfigSync.Sync(w, cfg));
         registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Scenes.Start.StartSceneConfigSync.Sync(w, cfg));
-        registry.RegisterToml<AnimalBattle.Features.Tutorial.Configs.TutorialConfig>(ResourcePath.Config.Tutorial, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Features.Tutorial.Sync.TutorialConfigSync.Sync(w, cfg));
+        registry.RegisterToml<TutorialConfig>(ResourcePath.Config.Tutorial, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Features.Tutorial.Sync.TutorialConfigSync.Sync(w, cfg));
 
         registry.InjectAllToWorld(world);
 
+        // 各描画領域のサブコンポーネントを Flecs World に単一インスタンスとして登録
+        var bCfg = registry.Get<BossRenderConfig>();
+        world.Set(bCfg.BossEffects);
+        world.Set(bCfg.BossHpBar);
+        TelegraphRenderHelper.DefaultEffects = bCfg.BossEffects;
+
+        var pCfg = registry.Get<PlayerRenderConfig>();
+        world.Set(pCfg.Player);
+        world.Set(pCfg.PlayerHpBadge);
+        world.Set(pCfg.SlashEffect);
+
+        var cCfg = registry.Get<CombatRenderConfig>();
+        world.Set(cCfg.Bullets);
+        world.Set(cCfg.SpawnBuffer);
+        AnimalBattle.Combat.BulletPalette.CurrentConfig = cCfg.Bullets;
+
+        var vCfg = registry.Get<VfxRenderConfig>();
+        world.Set(vCfg.VisualEffects);
+
+        var uCfg = registry.Get<UiRenderConfig>();
+        world.Set(uCfg.Viewport);
+        world.Set(uCfg.Hud);
+        world.Set(uCfg.AimReticle);
+        world.Set(uCfg.Modals);
+
+        var tCfg = registry.Get<TutorialRenderConfig>();
+        world.Set(tCfg.Colors);
+        world.Set(tCfg.Doors);
+        world.Set(tCfg.Layout);
+        world.Set(tCfg.TargetRender);
+
         // 静的サービスへの現在値反映
-        if (registry.Contains<CameraConfig>())
-        {
-            CameraService.CurrentConfig = registry.Get<CameraConfig>();
-        }
-        if (registry.Contains<AudioConfig>())
-        {
-            SoundService.CurrentConfig = registry.Get<AudioConfig>();
-        }
-        if (registry.Contains<RenderConfig>())
-        {
-            var rCfg = registry.Get<RenderConfig>();
-            AnimalBattle.Combat.BulletPalette.CurrentConfig = rCfg.Bullets;
-            AnimalBattle.Presentation.Rendering.TelegraphRenderHelper.DefaultEffects = rCfg.BossEffects;
-        }
+        CameraService.CurrentConfig = registry.Get<CameraConfig>();
+        SoundService.CurrentConfig = registry.Get<AudioConfig>();
     }
 }

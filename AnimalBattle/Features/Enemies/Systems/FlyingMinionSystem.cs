@@ -267,8 +267,7 @@ public static class FlyingMinionSystem
             }
         });
 
-        ref readonly var renderCfg = ref world.Get<RenderConfig>();
-        var bossFx = renderCfg.BossEffects;
+        var bossFx = world.Get<BossEffectsRenderConfig>();
         var arenaCfg = world.Get<ArenaConfig>();
 
         ctx.MinionQuery.Iter((Iter mIt, Field<Transform> trans, Field<Sprite> sprites, Field<CollisionBox> cols, Field<FlyingMinionComponent> minions) =>

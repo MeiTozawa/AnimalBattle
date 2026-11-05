@@ -1,0 +1,71 @@
+# ==============================================================================
+# 戦闘・弾幕・出現バッファ描画設定 (Combat Render Configuration)
+# ==============================================================================
+
+# 出現バッファ半透明呼吸演出設定 (Spawn Buffer Breathing Effect)
+[SpawnBuffer]
+BaseAlpha = 150
+PulseAlpha = 75
+Frequency = 12.0
+
+[Bullets]
+PlayerBulletOuterRadius = 6.0
+PlayerBulletOuterColor = "#00FFFF"
+PlayerBulletInnerRadius = 3.0
+PlayerBulletInnerColor = "#FFFFFF"
+PlayerBulletTrailHalfSize = { x = 7, y = 2 }
+PlayerBulletTrailColor = "#80FFFF"
+
+# プレイヤー弾 3 段階トレイル減衰パラメータ
+PlayerBulletTrailAlpha1 = 180
+PlayerBulletTrailAlpha2 = 110
+PlayerBulletTrailAlpha3 = 45
+PlayerBulletTrailRadiusRatio1 = 0.75
+PlayerBulletTrailRadiusRatio2 = 0.50
+PlayerBulletTrailRadiusRatio3 = 0.28
+PlayerBulletTrailOffsetRatio1 = 0.45
+PlayerBulletTrailOffsetRatio2 = 0.85
+PlayerBulletTrailOffsetRatio3 = 1.30
+
+EnemyBulletCoreRadiusRatio = 0.45
+EnemyBulletCoreMinRadius = 2
+EnemyBulletCoreColor = "#FFFFFF"
+EnemyBulletOutlinePadding = 2
+BossBulletCoreRadiusRatio = 0.45
+BossBulletCoreMinRadius = 2
+BossBulletCoreColor = "#FFFFFF"
+BossBulletOutlinePadding = 2
+ViewportCullingMargin = { x = 50, y = 50 }
+
+# 特殊弾幕演出パラメータ
+SpecialMagentaAuraBaseRatio = 1.35
+SpecialMagentaAuraPulseRatio = 0.15
+SpecialMagentaPulseSpeed = 6.0
+SpecialMagentaAuraAlpha = 65
+
+SpecialCyanRingPadding = 2
+SpecialCyanRingColor = "#3200F0FF"
+
+SpecialBlackAuraBaseRatio = 1.4
+SpecialBlackAuraPulseRatio = 0.2
+SpecialBlackPulseSpeed = 6.0
+SpecialBlackAuraColor = "#5ADC1450"
+SpecialBlackSatelliteOrbitRatio = 1.55
+SpecialBlackSatelliteOrbitSpeed = 6.0
+SpecialBlackSatelliteRadiusRatio = 0.55
+SpecialBlackSatelliteMinRadius = 3
+SpecialBlackCoreInnerMinRadius = 2
+SpecialBlackCoreInnerDivisor = 2
+SpecialBlackCoreInnerColor = "#FFB4C8"
+
+ParticleOutlinePadding = 1
+BulletNormalFillColor = "#FF3333"
+BulletNormalOutlineColor = "#FFFFFF"
+BulletMagentaFillColor = "#FF1493"
+BulletMagentaOutlineColor = "#FF80AB"
+BulletYellowFillColor = "#FFD700"
+BulletYellowOutlineColor = "#FFF275"
+BulletCyanFillColor = "#00E5FF"
+BulletCyanOutlineColor = "#E0F7FA"
+BulletBlackFillColor = "#111116"
+BulletBlackOutlineColor = "#FF1744"

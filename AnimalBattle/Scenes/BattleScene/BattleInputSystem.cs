@@ -107,8 +107,7 @@ public static class BattleInputSystem
         }
 
         // デバッグ入力：F1 トグル、F2〜F4 フェーズ切替、F5 空シーン切替の処理
-        var renderCfg = w.Get<RenderConfig>();
-        var dbgCfg = renderCfg.Debug;
+        var dbgCfg = w.Get<DebugRenderConfig>();
         if (dbgCfg.DebugMode)
         {
             ProcessDebugInput(w, dbgCfg, ctx);

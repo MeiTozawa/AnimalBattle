@@ -89,8 +89,7 @@ public static class DebugGizmosRenderSystem
         var w = it.World();
         if (w.Get<GameFlow>().State != GameState.Battle) return;
 
-        var renderCfg = w.Get<RenderConfig>();
-        var dbgCfg = renderCfg.Debug;
+        var dbgCfg = w.Get<DebugRenderConfig>();
 
         // DebugMode が無効または非アクティブな場合は空間ギズモ描画をスキップ
         if (!dbgCfg.DebugMode || !dbgCfg.IsActive) return;

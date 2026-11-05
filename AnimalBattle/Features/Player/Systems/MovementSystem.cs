@@ -150,7 +150,7 @@ public static class MovementSystem {
 
             // ダッシュ不可命中フレーム付与：弾幕・敵接触をすり抜け、点滅演出を注入
             TimedEffectService.ApplyEffect(ref timedEffects, ref tagState, GameplayTag.Untargetable, pCfg.DashInvincibleDuration, entity.Id);
-            var blinkFreq = entity.CsWorld().Get<RenderConfig>().Player.InvincibleBlinkFrequency;
+            var blinkFreq = entity.CsWorld().Get<PlayerVisualRenderConfig>().InvincibleBlinkFrequency;
             entity.Set(new InvincibleBlinkEffect(pCfg.DashInvincibleDuration, blinkFreq));
 
             // スカッシュ＆ストレッチ突進変形演出
@@ -184,7 +184,7 @@ public static class MovementSystem {
                         sprite.GraphHandle,
                         sprite.SrcRect,
                         sprite.FlipX,
-                        entity.CsWorld().Get<RenderConfig>().Player.GhostTrailColor,
+                        entity.CsWorld().Get<PlayerVisualRenderConfig>().GhostTrailColor,
                         pCfg.DashGhostTrailDuration);
                 }
             }
