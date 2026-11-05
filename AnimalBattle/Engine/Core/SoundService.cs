@@ -20,7 +20,11 @@ public enum SfxType
     BossHitVulnerable,
     BossDiveImpact,
     BossWarning,
-    BossDeath
+    BossDeath,
+    /// <summary>アイテムドロップ効果音。</summary>
+    ItemDrop,
+    /// <summary>回復アイテム取得効果音。</summary>
+    ItemHeal
 }
 
 /// <summary>
@@ -73,7 +77,9 @@ public static class SoundService
             (SfxType.BossHitVulnerable, ResourcePath.Sound.BulletHitVulnerableMp3),
             (SfxType.BossDiveImpact, ResourcePath.Sound.BossDiveImpactMp3),
             (SfxType.BossWarning, ResourcePath.Sound.BossWarningMp3),
-            (SfxType.BossDeath, ResourcePath.Sound.BossDeathMp3)
+            (SfxType.BossDeath, ResourcePath.Sound.BossDeathMp3),
+            (SfxType.ItemDrop, ResourcePath.Sound.ItemDropMp3),
+            (SfxType.ItemHeal, ResourcePath.Sound.HealthRecoveryMp3)
         ];
 
         foreach (var (type, relPath) in sfxDefinitions)
