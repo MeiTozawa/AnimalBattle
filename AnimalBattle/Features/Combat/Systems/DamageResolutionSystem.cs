@@ -248,6 +248,8 @@ public static class DamageResolutionSystem
                         sprite.IsVisible = false;
                         entity.GetMut<Hitbox>().IsActive = false;
                         EffectSpawner.SpawnHitSparkEffect(world, trans.Position);
+                        // 小怪撃破時の血包ドロップ判定
+                        TryDropHealthPack(world, trans.Position, hp, finalDamage);
                         entity.Destruct();
                         break;
 
@@ -284,16 +286,22 @@ public static class DamageResolutionSystem
 
                         // ドロップ判定（逆境救急メカニズム）
                         TryDropHealthPack(world, trans.Position, hp, finalDamage);
-                    break;
+                        break;
+
+                    case CombatEntityKind.Minion:
+                    case CombatEntityKind.Dummy:
+                        // 小怪および木桩被弾時の血包ドロップ判定
+                        TryDropHealthPack(world, trans.Position, hp, finalDamage);
+                        break;
                 }
             }
         }
     }
 
     /// <summary>
-    ///     Boss 被弾時に逆境救急アルゴリズムに基づき血包アイテムの放出判定を実行します。
+    ///     敵ユニット（Boss・小怪・木桩）被弾または撃破時に逆境救急アルゴリズムに基づき血包アイテムの放出判定を実行します。
     /// </summary>
-    private static void TryDropHealthPack(World world, Vec2f bossPos, in Health bossHp, float finalDamage)
+    private static void TryDropHealthPack(World world, Vec2f enemyPos, in Health targetHp, float finalDamage)
     {
         if (!world.Has<ItemConfig>() || !world.Has<ItemDirectorState>()) return;
 
@@ -319,16 +327,16 @@ public static class DamageResolutionSystem
         if (playerHp.Current >= playerHp.Max) return;
 
         var playerRatio = playerHp.Max > 0f ? Math.Clamp(playerHp.Current / playerHp.Max, 0f, 1f) : 1f;
-        var bossRatio = bossHp.Max > 0f ? Math.Clamp(bossHp.Current / bossHp.Max, 0f, 1f) : 1f;
+        var targetRatio = targetHp.Max > 0f ? Math.Clamp(targetHp.Current / targetHp.Max, 0f, 1f) : 1f;
 
         var baseRate = cfg.BaseDropRate 
                      + (1.0f - playerRatio) * cfg.PlayerWeight 
-                     + (1.0f - bossRatio) * cfg.BossWeight;
+                     + (1.0f - targetRatio) * cfg.BossWeight;
         var finalRate = Math.Clamp(baseRate * (1.0f + finalDamage * cfg.DamageScale), 0.0f, cfg.MaxDropRate);
 
         if (Random.Shared.NextSingle() < finalRate)
         {
-            ItemSpawner.SpawnHealthPack(world, bossPos, cfg);
+            ItemSpawner.SpawnHealthPack(world, enemyPos, cfg);
         }
     }
 }
