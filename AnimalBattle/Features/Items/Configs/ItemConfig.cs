@@ -68,4 +68,7 @@ public sealed class HealthPackConfig
 
     /// <summary>接地後上下浮遊の振幅（px）。</summary>
     public float FloatAmplitude { get; set; }
+
+    /// <summary>地形および足場との衝突判定サイズ（px）。</summary>
+    public Vec2f CollisionSize { get; set; }
 }

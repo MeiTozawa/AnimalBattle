@@ -75,7 +75,7 @@ public static class ItemPhysicsSystem
         var tileMap = ctx.CachedTileMap;
         ctx.CachedTileMap = null;
 
-        var itemSize = new Vec2f(16.0f, 16.0f);
+        var itemSize = cfg.CollisionSize;
 
         for (var i = 0; i < count; i++)
         {

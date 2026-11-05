@@ -8,13 +8,13 @@ MaxActiveCount = 1
 IcdDuration = 5.0
 Lifetime = 12.0
 BlinkThreshold = 3.0
-PickupRadius = 24.0
+PickupRadius = 32.0
 HealAmount = 1.0
 
 # 逆境救急ドロップ確率パラメータ
-BaseDropRate = 0.01
+BaseDropRate = 0.00
 PlayerWeight = 0.20
-BossWeight = 0.10
+BossWeight = 0.05
 DamageScale = 0.05
 MaxDropRate = 0.60
 
@@ -25,3 +25,6 @@ PopVelocityY = -220.0
 Gravity = 980.0
 FloatSpeed = 4.0
 FloatAmplitude = 4.0
+
+# 地形衝突判定
+CollisionSize = { x = 16.0, y = 64.0 }
