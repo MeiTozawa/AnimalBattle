@@ -3,6 +3,7 @@ using AnimalBattle.Ai;
 using AnimalBattle.Ai.BossSnake;
 using AnimalBattle.Ai.BossLion;
 using AnimalBattle.Combat.Spawners;
+using AnimalBattle.Features.Items.Spawners;
 using AnimalBattle.Maps;
 
 namespace AnimalBattle.Scenes.Battle;
@@ -178,6 +179,7 @@ public static class BattleSceneSpawner
         BulletSpawner.ClearAllEnemyBulletsImmediate(world);
         MeleeSpawner.ClearAllEnemyMeleeImmediate(world);
         MinionSpawner.ClearAllMinionsImmediate(world);
+        ItemSpawner.ResetItems(world);
 
         using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
         {
