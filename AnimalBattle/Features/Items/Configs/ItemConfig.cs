@@ -1,0 +1,71 @@
+using System.Diagnostics.CodeAnalysis;
+
+namespace AnimalBattle.Features.Items.Configs;
+
+/// <summary>
+///     Config/items.toml から読み込まれるアイテムシステム全般の設定クラス。
+/// </summary>
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+public sealed class ItemConfig
+{
+    /// <summary>血包（Health Pack）の設定データ。</summary>
+    public HealthPackConfig HealthPack { get; set; } = null!;
+}
+
+/// <summary>
+///     血包（Health Pack）のドロップ・寿命・物理設定データ。
+/// </summary>
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
+public sealed class HealthPackConfig
+{
+    /// <summary>フィールド上の最大同時存在数。</summary>
+    public int MaxActiveCount { get; set; }
+
+    /// <summary>ドロップ判定の内部クールダウン秒数（ICD）。</summary>
+    public float IcdDuration { get; set; }
+
+    /// <summary>ドロップ後の自然消滅時間（秒）。</summary>
+    public float Lifetime { get; set; }
+
+    /// <summary>警告点滅を開始する残り秒数閾値。</summary>
+    public float BlinkThreshold { get; set; }
+
+    /// <summary>プレイヤー接触回収の判定半径（px）。</summary>
+    public float PickupRadius { get; set; }
+
+    /// <summary>拾得時に回復する HP 量。</summary>
+    public float HealAmount { get; set; }
+
+    /// <summary>基礎ドロップ率。</summary>
+    public float BaseDropRate { get; set; }
+
+    /// <summary>プレイヤー残 HP 補正重み。</summary>
+    public float PlayerWeight { get; set; }
+
+    /// <summary>Boss 残 HP 補正重み。</summary>
+    public float BossWeight { get; set; }
+
+    /// <summary>与ダメージ量に応じたドロップ率乗算スケール。</summary>
+    public float DamageScale { get; set; }
+
+    /// <summary>ドロップ率の絶対上限。</summary>
+    public float MaxDropRate { get; set; }
+
+    /// <summary>放出時水平初速の最小値（px/s）。</summary>
+    public float PopVelocityXMin { get; set; }
+
+    /// <summary>放出時水平初速の最大値（px/s）。</summary>
+    public float PopVelocityXMax { get; set; }
+
+    /// <summary>放出時垂直上向き初速（px/s、上向き負値）。</summary>
+    public float PopVelocityY { get; set; }
+
+    /// <summary>落下重力加速度（px/s²）。</summary>
+    public float Gravity { get; set; }
+
+    /// <summary>接地後上下浮遊の角速度。</summary>
+    public float FloatSpeed { get; set; }
+
+    /// <summary>接地後上下浮遊の振幅（px）。</summary>
+    public float FloatAmplitude { get; set; }
+}

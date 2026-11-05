@@ -1,0 +1,27 @@
+# ==============================================================================
+# Items & Health Pack Configuration
+# ==============================================================================
+
+[HealthPack]
+# 出現・存在制約
+MaxActiveCount = 1
+IcdDuration = 5.0
+Lifetime = 12.0
+BlinkThreshold = 3.0
+PickupRadius = 24.0
+HealAmount = 1.0
+
+# 逆境救急ドロップ確率パラメータ
+BaseDropRate = 0.01
+PlayerWeight = 0.20
+BossWeight = 0.10
+DamageScale = 0.05
+MaxDropRate = 0.60
+
+# 放出物理および浮遊アニメーション
+PopVelocityXMin = -80.0
+PopVelocityXMax = 80.0
+PopVelocityY = -220.0
+Gravity = 980.0
+FloatSpeed = 4.0
+FloatAmplitude = 4.0

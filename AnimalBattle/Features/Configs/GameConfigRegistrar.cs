@@ -1,6 +1,7 @@
 namespace AnimalBattle.Configs;
 
 using System.Diagnostics;
+using AnimalBattle.Features.Items.Configs;
 using AnimalBattle.Features.Tutorial.Configs;
 using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
@@ -83,6 +84,7 @@ public static class GameConfigRegistrar
         registry.RegisterToml<MinionConfig>(ResourcePath.Config.Minions, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Enemies.Sync.MinionConfigSync.Sync(w, cfg));
         registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Scenes.Start.StartSceneConfigSync.Sync(w, cfg));
         registry.RegisterToml<TutorialConfig>(ResourcePath.Config.Tutorial, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Features.Tutorial.Sync.TutorialConfigSync.Sync(w, cfg));
+        registry.RegisterToml<ItemConfig>(ResourcePath.Config.Items, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
 
         registry.InjectAllToWorld(world);
 
