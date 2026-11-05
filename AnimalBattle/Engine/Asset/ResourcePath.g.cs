@@ -93,6 +93,12 @@ public static class ResourcePath
         /// <summary>bullet_hit_vulnerable.mp3 のファイルパス。</summary>
         public const string BulletHitVulnerableMp3 = @"Sound\bullet_hit_vulnerable.mp3";
 
+        /// <summary>health_recovery.mp3 のファイルパス。</summary>
+        public const string HealthRecoveryMp3 = @"Sound\health_recovery.mp3";
+
+        /// <summary>item_drop.mp3 のファイルパス。</summary>
+        public const string ItemDropMp3 = @"Sound\item_drop.mp3";
+
         /// <summary>player_dash.mp3 のファイルパス。</summary>
         public const string PlayerDashMp3 = @"Sound\player_dash.mp3";
 
