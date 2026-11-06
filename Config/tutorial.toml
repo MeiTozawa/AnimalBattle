@@ -72,6 +72,24 @@ Actions = [
 Condition = { Type = "CollectTargets" }
 
 [[Phases]]
+Title = "【 被弾と体力回復 】"
+Subtitle = "被弾時はフィールドに出現する回復パックでHPを回復できます"
+
+[[Phases.Steps]]
+Subtitle = "被弾を受けました！体力の減少を確認してください"
+Actions = [
+    { Type = "DamagePlayer", Amount = 1.0 }
+]
+Condition = { Type = "Timer", Duration = 1.0 }
+
+[[Phases.Steps]]
+Subtitle = "出現した回復パックに触れて、HPを回復してください"
+Actions = [
+    { Type = "SpawnHealthPack", Pos = { x = 640.0, y = 520.0 } }
+]
+Condition = { Type = "CollectHealthPacks" }
+
+[[Phases]]
 Title = "★ 【 左クリック : 攻撃 】 / 【 L-SHIFT : 回避 】"
 Subtitle = "マウスで狙いを定め、空中を浮遊するミニオンを撃破してください"
 

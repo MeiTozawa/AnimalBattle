@@ -1,7 +1,6 @@
 namespace AnimalBattle.Features.Items.Systems;
 
 using System;
-using AnimalBattle.Combat.Components;
 using AnimalBattle.Common.Components;
 using Core;
 using Events;
@@ -64,7 +63,7 @@ public static class ItemPickupSystem
         Vec2f playerPos = Vec2f.Zero;
         Health playerHp = default;
 
-        ctx.PlayerQuery.Each((Entity e, ref Transform tr, ref Health hp) =>
+        ctx.PlayerQuery.Each((e, ref tr, ref hp) =>
         {
             if (hp.Current > 0.0f)
             {

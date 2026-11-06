@@ -158,7 +158,7 @@ public sealed class CombatPoolService : IDisposable
         // 自らを親とする衛星弾の軌道関係を解除
         using (var satQuery = e.CsWorld().QueryBuilder<OrbitSatellite>().With<OrbitOf>(e).Build())
         {
-            satQuery.Each((Entity satEntity, ref OrbitSatellite _) =>
+            satQuery.Each((satEntity, ref _) =>
             {
                 satEntity.Remove<OrbitOf>(e);
                 satEntity.Add<RecycleTag>();

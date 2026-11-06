@@ -1,6 +1,5 @@
 using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;
-using AnimalBattle.Features.Tutorial.Factories;
 using AnimalBattle.Logging;
 using AnimalBattle.Maps;
 
@@ -184,6 +183,9 @@ public static class TutorialSceneSpawner
         // 雑魚敵エンティティの破棄
         using var enemyQuery = world.QueryBuilder().With<EnemyTag>().Build();
         enemyQuery.Each(e => e.Destruct());
+
+        // 回復アイテムエンティティの回収・初期化
+        Items.Spawners.ItemSpawner.ResetItems(world);
 
         // 雑魚敵およびプレイヤー弾幕の回収
         BulletSpawner.ClearAllEnemyBullets(world);

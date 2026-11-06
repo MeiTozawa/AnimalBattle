@@ -73,6 +73,7 @@ public sealed class TutorialActionConfig
     public string Type { get; set; } = string.Empty;
     public Vec2f Pos { get; set; }
     public float Radius { get; set; }
+    public float Amount { get; set; }
     public string MinionType { get; set; } = string.Empty;
     public string BossType { get; set; } = string.Empty;
     public string TexturePath { get; set; } = string.Empty;

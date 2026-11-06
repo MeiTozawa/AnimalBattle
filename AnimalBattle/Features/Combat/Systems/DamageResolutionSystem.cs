@@ -2,7 +2,6 @@ using AnimalBattle.Combat.Events;
 using AnimalBattle.Features.Items.Components;
 using AnimalBattle.Features.Items.Configs;
 using AnimalBattle.Features.Items.Spawners;
-using AnimalBattle.Player.Components;
 
 namespace AnimalBattle.Combat.Systems;
 
@@ -315,7 +314,7 @@ public static class DamageResolutionSystem
         Health playerHp = default;
         var hasPlayer = false;
 
-        ctx.PlayerQuery.Each((ref Health h) =>
+        ctx.PlayerQuery.Each((ref h) =>
         {
             playerHp = h;
             hasPlayer = true;

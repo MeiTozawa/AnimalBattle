@@ -12,6 +12,7 @@ public sealed class TutorialSystemContext : IDisposable
     public Query<TutorialTarget, Transform> TargetQuery { get; }
     public Query<TutorialDoor, Transform> DoorQuery { get; }
     public Query MinionQuery { get; }
+    public Query HealthPackQuery { get; }
 
     public Vec2f CachedPlayerPos;
     public Vec2f CachedPlayerVel;
@@ -27,6 +28,7 @@ public sealed class TutorialSystemContext : IDisposable
         TargetQuery = world.QueryBuilder<TutorialTarget, Transform>().Build();
         DoorQuery = world.QueryBuilder<TutorialDoor, Transform>().Build();
         MinionQuery = world.QueryBuilder().With<MinionTag>().Without<DeadTag>().Build();
+        HealthPackQuery = world.QueryBuilder().With<AnimalBattle.Features.Items.Components.HealthPackTag>().Build();
     }
 
     public void Dispose()
@@ -35,5 +37,6 @@ public sealed class TutorialSystemContext : IDisposable
         TargetQuery.Dispose();
         DoorQuery.Dispose();
         MinionQuery.Dispose();
+        HealthPackQuery.Dispose();
     }
 }

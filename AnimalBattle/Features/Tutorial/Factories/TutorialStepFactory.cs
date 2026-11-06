@@ -1,5 +1,4 @@
 using AnimalBattle.Ai;
-using AnimalBattle.Enemies.Services;
 using AnimalBattle.Features.Tutorial.Actions;
 using AnimalBattle.Features.Tutorial.Conditions;
 using AnimalBattle.Features.Tutorial.Configs;
@@ -24,6 +23,8 @@ public static class TutorialStepFactory
             "spawntarget" => new SpawnTargetAction(config.Pos, config.Radius),
             "spawnminion" => CreateSpawnMinionAction(config.MinionType),
             "spawndoor" => CreateSpawnDoorAction(config.Pos, config.BossType),
+            "damageplayer" => new DamagePlayerAction(config.Amount > 0f ? config.Amount : 30f),
+            "spawnhealthpack" => new SpawnHealthPackAction(config.Pos),
             _ => AssertHelper.FailWithDefault<ITutorialAction>($"未知のチュートリアルアクション種別です: {config.Type}", null!)
         };
     }
@@ -39,6 +40,7 @@ public static class TutorialStepFactory
         return config.Type.ToLowerInvariant() switch
         {
             "collecttargets" => new CollectTargetsCondition(),
+            "collecthealthpacks" => new CollectHealthPacksCondition(),
             "defeatminions" => new DefeatMinionsCondition(),
             "interactdoor" => new InteractDoorCondition(),
             "timer" => new TimerCondition(config.Duration),
