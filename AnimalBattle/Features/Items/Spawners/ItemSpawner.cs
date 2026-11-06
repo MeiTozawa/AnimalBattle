@@ -2,9 +2,11 @@ namespace AnimalBattle.Features.Items.Spawners;
 
 using System;
 using System.Diagnostics;
+using AnimalBattle.Player.Components;
 using Core;
 using Components;
 using Configs;
+using Systems;
 using Flecs.NET.Core;
 
 /// <summary>
@@ -23,8 +25,43 @@ public static class ItemSpawner
     {
         Debug.Assert(cfg != null, "HealthPackConfig が null です。");
 
-        // ドロップ時の水平ランダム速度および上向き初速度を計算
-        var vx = Random.Shared.NextSingle() * (cfg.PopVelocityXMax - cfg.PopVelocityXMin) + cfg.PopVelocityXMin;
+        // プレイヤーの位置を取得し、プレイヤーが存在する方向へ優先して放出（敵の足下敷きや障害物重複を防止）
+        var targetDir = 0.0f;
+        if (world.Has<ItemPickupContext>())
+        {
+            var pCtx = world.Get<ItemPickupContext>();
+            pCtx.PlayerQuery.Each((ref Transform tr, ref Health hp) =>
+            {
+                if (hp.Current > 0.0f)
+                {
+                    targetDir = tr.Position.X < spawnPos.X ? -1.0f : 1.0f;
+                }
+            });
+        }
+        else
+        {
+            using var playerQuery = world.QueryBuilder<Transform>().With<PlayerTag>().Without<DeadTag>().Build();
+            playerQuery.Each((ref Transform tr) =>
+            {
+                targetDir = tr.Position.X < spawnPos.X ? -1.0f : 1.0f;
+            });
+        }
+
+        if (targetDir == 0.0f)
+        {
+            targetDir = Random.Shared.Next(2) == 0 ? -1.0f : 1.0f;
+        }
+
+        // 水平初速度の大きさを計算（真下への落下を排除し、敵から確実に離れた位置へ放物射出）
+        var minSpeed = MathF.Abs(cfg.PopVelocityXMin);
+        var maxSpeed = MathF.Abs(cfg.PopVelocityXMax);
+        if (minSpeed > maxSpeed)
+        {
+            (minSpeed, maxSpeed) = (maxSpeed, minSpeed);
+        }
+
+        var speedX = Random.Shared.NextSingle() * (maxSpeed - minSpeed) + minSpeed;
+        var vx = targetDir * speedX;
         var vy = cfg.PopVelocityY;
 
         ref var director = ref world.GetMut<ItemDirectorState>();
