@@ -2,7 +2,7 @@ namespace AnimalBattle.Player;
 
 using System;
 using System.Diagnostics;
-using AnimalBattle.Configs;
+using Configs;
 using Flecs.NET.Core;
 
 /// <summary>

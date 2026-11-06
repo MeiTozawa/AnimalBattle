@@ -18,7 +18,7 @@ public static class CameraService
     /// <summary>
     ///     現在アクティブなカメラ設定。
     /// </summary>
-    public static AnimalBattle.Configs.CameraConfig CurrentConfig { get; set; } = new();
+    public static CameraConfig CurrentConfig { get; set; } = new();
 
     /// <summary>
     ///     ピクセル単位の最終合成カメラ描画オフセット。
@@ -59,7 +59,7 @@ public static class CameraService
         Vec2f playerPos,
         Vec2f playerVel,
         Vec2f bossPos,
-        AnimalBattle.Configs.CameraConfig? config = null)
+        CameraConfig? config = null)
     {
         if (config != null)
         {

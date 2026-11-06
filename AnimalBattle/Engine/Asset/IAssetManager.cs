@@ -1,6 +1,6 @@
 namespace AnimalBattle.Asset;
 
-using AnimalBattle.Core;
+using Core;
 
 /// <summary>
 /// キャラクタースプライトや各種テクスチャのロード・保持・解放を統括するアセットサービス。

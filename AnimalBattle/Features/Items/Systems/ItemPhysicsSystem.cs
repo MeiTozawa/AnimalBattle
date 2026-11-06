@@ -2,10 +2,10 @@ namespace AnimalBattle.Features.Items.Systems;
 
 using System;
 using System.Collections.Generic;
-using AnimalBattle.Core;
-using AnimalBattle.Features.Items.Components;
-using AnimalBattle.Features.Items.Configs;
-using AnimalBattle.Maps;
+using Core;
+using Components;
+using Configs;
+using Maps;
 using Flecs.NET.Core;
 
 /// <summary>

@@ -2,8 +2,8 @@ namespace AnimalBattle.Combat.Sync;
 
 using System;
 using System.Diagnostics;
-using AnimalBattle.Combat.Components;
-using AnimalBattle.Configs;
+using Components;
+using Configs;
 using Flecs.NET.Core;
 
 /// <summary>

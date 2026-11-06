@@ -1,9 +1,9 @@
 namespace AnimalBattle.Features.Items.Systems;
 
 using System;
-using AnimalBattle.Core;
-using AnimalBattle.Features.Items.Components;
-using AnimalBattle.Features.Items.Configs;
+using Core;
+using Components;
+using Configs;
 using Flecs.NET.Core;
 
 /// <summary>

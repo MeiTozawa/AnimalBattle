@@ -247,7 +247,7 @@ public static class DebugGizmosRenderSystem
         {
             for (var i = 0; i < it.Count(); i++)
             {
-                if (brains[i].Brain is AnimalBattle.Ai.BossLion.BossLionBrain lionBrain)
+                if (brains[i].Brain is Ai.BossLion.BossLionBrain lionBrain)
                 {
                     var graph = lionBrain.NavGraph;
                     if (graph.Nodes.Count == 0) continue;

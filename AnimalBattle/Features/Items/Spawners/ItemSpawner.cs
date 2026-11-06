@@ -2,9 +2,9 @@ namespace AnimalBattle.Features.Items.Spawners;
 
 using System;
 using System.Diagnostics;
-using AnimalBattle.Core;
-using AnimalBattle.Features.Items.Components;
-using AnimalBattle.Features.Items.Configs;
+using Core;
+using Components;
+using Configs;
 using Flecs.NET.Core;
 
 /// <summary>

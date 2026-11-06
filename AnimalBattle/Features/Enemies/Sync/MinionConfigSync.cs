@@ -2,9 +2,9 @@ namespace AnimalBattle.Enemies.Sync;
 
 using System;
 using System.Diagnostics;
-using AnimalBattle.Configs;
-using AnimalBattle.Enemies;
-using AnimalBattle.Enemies.Components;
+using Configs;
+using Enemies;
+using Components;
 using Flecs.NET.Core;
 
 /// <summary>

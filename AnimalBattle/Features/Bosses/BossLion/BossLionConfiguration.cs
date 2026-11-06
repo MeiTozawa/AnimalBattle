@@ -100,7 +100,7 @@ public interface IBossLionConfiguration {
 
 /// <summary>ワールドから設定を取得する BossLion 設定プロバイダです。</summary>
 public sealed class BossLionDefaultConfiguration : IBossLionConfiguration {
-    private readonly Flecs.NET.Core.World _world;
+    private readonly World _world;
 
     private BossLionConfig? _cachedConfig;
     private float _cachedPlayerHeight = -1f;
@@ -112,7 +112,7 @@ public sealed class BossLionDefaultConfiguration : IBossLionConfiguration {
     private StringId _antiKitingMeleeSkillTag;
     private StringId _antiKitingRangedSkillTag;
 
-    public BossLionDefaultConfiguration(Flecs.NET.Core.World world)
+    public BossLionDefaultConfiguration(World world)
     {
         Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
         _world = world;

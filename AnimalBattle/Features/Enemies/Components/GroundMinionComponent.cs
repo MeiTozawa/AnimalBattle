@@ -1,6 +1,6 @@
 namespace AnimalBattle.Enemies.Components;
 
-using AnimalBattle.Maps.Navigation;
+using Maps.Navigation;
 
 /// <summary>
 /// 地面近接追撃怪のナビゲーションプランおよび跳躍状態を管理するコンポーネント。

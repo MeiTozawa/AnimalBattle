@@ -70,7 +70,7 @@ public sealed class BossSnakeDefaultConfiguration : IBossSnakeConfiguration {
 
     public BossSnakeDefaultConfiguration(World world)
     {
-        System.Diagnostics.Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
+        Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
         _world = world;
         EnsureCached(); // 初期化時にキャッシュ構築
     }

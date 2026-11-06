@@ -3,9 +3,9 @@ namespace AnimalBattle.Features.Items.Systems;
 using System;
 using AnimalBattle.Combat.Components;
 using AnimalBattle.Common.Components;
-using AnimalBattle.Core;
-using AnimalBattle.Events;
-using AnimalBattle.Features.Items.Components;
+using Core;
+using Events;
+using Components;
 using AnimalBattle.Player.Components;
 using Flecs.NET.Core;
 

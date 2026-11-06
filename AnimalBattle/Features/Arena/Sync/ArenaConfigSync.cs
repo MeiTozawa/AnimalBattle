@@ -1,10 +1,10 @@
 namespace AnimalBattle.Arena.Sync;
 
 using System.Diagnostics;
-using AnimalBattle.Asset;
-using AnimalBattle.Configs;
-using AnimalBattle.Maps;
-using AnimalBattle.Scenes.Battle;
+using Asset;
+using Configs;
+using Maps;
+using Scenes.Battle;
 using Flecs.NET.Core;
 
 /// <summary>

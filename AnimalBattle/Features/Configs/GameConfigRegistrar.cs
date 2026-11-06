@@ -21,18 +21,18 @@ public static class GameConfigRegistrar
 
 
         // TOML 設定ファイルからの自動バインド登録：.NET Configuration Binding Generator 駆動
-        registry.RegisterToml<CatConfig>(ResourcePath.Config.Cat, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCat(w, cfg));
-        registry.RegisterToml<BunnyConfig>(ResourcePath.Config.Bunny, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncBunny(w, cfg));
+        registry.RegisterToml<CatConfig>(ResourcePath.Config.Cat, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncCat(w, cfg));
+        registry.RegisterToml<BunnyConfig>(ResourcePath.Config.Bunny, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncBunny(w, cfg));
 
-        registry.RegisterToml<CatWeaponConfig>(ResourcePath.Config.Catweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncCatWeapon(w, cfg));
+        registry.RegisterToml<CatWeaponConfig>(ResourcePath.Config.Catweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncCatWeapon(w, cfg));
 
-        registry.RegisterToml<BunnyWeaponConfig>(ResourcePath.Config.Bunnyweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Player.PlayerConfigSync.SyncBunnyWeapon(w, cfg));
-        registry.RegisterToml<BossSnakeConfig>(ResourcePath.Config.BossSnake, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Bosses.Sync.BossConfigSync.SyncBossSnake(w, cfg));
-        registry.RegisterToml<BossLionConfig>(ResourcePath.Config.BossLion, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Bosses.Sync.BossConfigSync.SyncBossLion(w, cfg));
-        registry.RegisterToml<BossSnakePatternConfig>(ResourcePath.Config.BossSnakePatterns, (root, cfg) => { root.Bind(cfg.Skills); cfg.PostProcess(); }, (w, cfg) => AnimalBattle.Bosses.Sync.BossConfigSync.SyncBossSnakePattern(w, cfg));
-        registry.RegisterToml<BossLionPatternConfig>(ResourcePath.Config.BossLionPatterns, (root, cfg) => { root.Bind(cfg.Skills); cfg.PostProcess(); }, (w, cfg) => AnimalBattle.Bosses.Sync.BossConfigSync.SyncBossLionPattern(w, cfg));
-        registry.RegisterToml<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Combat.Sync.CombatConfigSync.SyncSpecialBullets(w, cfg));
-        registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Arena.Sync.ArenaConfigSync.SyncArena(w, cfg));
+        registry.RegisterToml<BunnyWeaponConfig>(ResourcePath.Config.Bunnyweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncBunnyWeapon(w, cfg));
+        registry.RegisterToml<BossSnakeConfig>(ResourcePath.Config.BossSnake, (root, cfg) => root.Bind(cfg), (w, cfg) => Bosses.Sync.BossConfigSync.SyncBossSnake(w, cfg));
+        registry.RegisterToml<BossLionConfig>(ResourcePath.Config.BossLion, (root, cfg) => root.Bind(cfg), (w, cfg) => Bosses.Sync.BossConfigSync.SyncBossLion(w, cfg));
+        registry.RegisterToml<BossSnakePatternConfig>(ResourcePath.Config.BossSnakePatterns, (root, cfg) => { root.Bind(cfg.Skills); cfg.PostProcess(); }, (w, cfg) => Bosses.Sync.BossConfigSync.SyncBossSnakePattern(w, cfg));
+        registry.RegisterToml<BossLionPatternConfig>(ResourcePath.Config.BossLionPatterns, (root, cfg) => { root.Bind(cfg.Skills); cfg.PostProcess(); }, (w, cfg) => Bosses.Sync.BossConfigSync.SyncBossLionPattern(w, cfg));
+        registry.RegisterToml<SpecialBulletConfig>(ResourcePath.Config.SpecialBullets, (root, cfg) => root.Bind(cfg), (w, cfg) => Combat.Sync.CombatConfigSync.SyncSpecialBullets(w, cfg));
+        registry.RegisterToml<ArenaConfig>(ResourcePath.Config.Arena, (root, cfg) => root.Bind(cfg), (w, cfg) => Arena.Sync.ArenaConfigSync.SyncArena(w, cfg));
         registry.RegisterToml<BossRenderConfig>(ResourcePath.Config.BossRender, (root, cfg) => root.Bind(cfg), (w, cfg) => {
             w.Set(cfg);
             w.Set(cfg.BossEffects);
@@ -49,7 +49,7 @@ public static class GameConfigRegistrar
             w.Set(cfg);
             w.Set(cfg.Bullets);
             w.Set(cfg.SpawnBuffer);
-            AnimalBattle.Combat.BulletPalette.CurrentConfig = cfg.Bullets;
+            BulletPalette.CurrentConfig = cfg.Bullets;
         });
         registry.RegisterToml<VfxRenderConfig>(ResourcePath.Config.VfxRender, (root, cfg) => root.Bind(cfg), (w, cfg) => {
             w.Set(cfg);
@@ -76,14 +76,14 @@ public static class GameConfigRegistrar
             w.Set(cfg.Layout);
             w.Set(cfg.TargetRender);
         });
-        registry.RegisterToml<CameraConfig>(ResourcePath.Config.Camera, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.CameraService.CurrentConfig = cfg; });
-        registry.RegisterToml<TileSetConfig>(ResourcePath.Config.Sheet, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Arena.Sync.ArenaConfigSync.SyncTileSet(w, cfg));
-        registry.RegisterToml<AudioConfig>(ResourcePath.Config.Audio, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); AnimalBattle.Core.SoundService.CurrentConfig = cfg; });
-        registry.RegisterToml<CombatPrefabConfig>(ResourcePath.Config.CombatPrefab, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Combat.Sync.CombatConfigSync.SyncCombatPrefabs(w, cfg));
-        registry.RegisterToml<DummyConfig>(ResourcePath.Config.Dummy, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Combat.Sync.DummyConfigSync.Sync(w, cfg));
-        registry.RegisterToml<MinionConfig>(ResourcePath.Config.Minions, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Enemies.Sync.MinionConfigSync.Sync(w, cfg));
-        registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Scenes.Start.StartSceneConfigSync.Sync(w, cfg));
-        registry.RegisterToml<TutorialConfig>(ResourcePath.Config.Tutorial, (root, cfg) => root.Bind(cfg), (w, cfg) => AnimalBattle.Features.Tutorial.Sync.TutorialConfigSync.Sync(w, cfg));
+        registry.RegisterToml<CameraConfig>(ResourcePath.Config.Camera, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); CameraService.CurrentConfig = cfg; });
+        registry.RegisterToml<TileSetConfig>(ResourcePath.Config.Sheet, (root, cfg) => root.Bind(cfg), (w, cfg) => Arena.Sync.ArenaConfigSync.SyncTileSet(w, cfg));
+        registry.RegisterToml<AudioConfig>(ResourcePath.Config.Audio, (root, cfg) => root.Bind(cfg), (w, cfg) => { w.Set(cfg); SoundService.CurrentConfig = cfg; });
+        registry.RegisterToml<CombatPrefabConfig>(ResourcePath.Config.CombatPrefab, (root, cfg) => root.Bind(cfg), (w, cfg) => Combat.Sync.CombatConfigSync.SyncCombatPrefabs(w, cfg));
+        registry.RegisterToml<DummyConfig>(ResourcePath.Config.Dummy, (root, cfg) => root.Bind(cfg), (w, cfg) => Combat.Sync.DummyConfigSync.Sync(w, cfg));
+        registry.RegisterToml<MinionConfig>(ResourcePath.Config.Minions, (root, cfg) => root.Bind(cfg), (w, cfg) => Enemies.Sync.MinionConfigSync.Sync(w, cfg));
+        registry.RegisterToml<StartSceneConfig>(ResourcePath.Config.StartScene, (root, cfg) => root.Bind(cfg), (w, cfg) => StartSceneConfigSync.Sync(w, cfg));
+        registry.RegisterToml<TutorialConfig>(ResourcePath.Config.Tutorial, (root, cfg) => root.Bind(cfg), (w, cfg) => Features.Tutorial.Sync.TutorialConfigSync.Sync(w, cfg));
         registry.RegisterToml<ItemConfig>(ResourcePath.Config.Items, (root, cfg) => root.Bind(cfg), (w, cfg) => w.Set(cfg));
         registry.RegisterToml<ItemRenderConfig>(ResourcePath.Config.ItemsRender, (root, cfg) => root.Bind(cfg), (w, cfg) => {
             w.Set(cfg);
@@ -108,7 +108,7 @@ public static class GameConfigRegistrar
         var cCfg = registry.Get<CombatRenderConfig>();
         world.Set(cCfg.Bullets);
         world.Set(cCfg.SpawnBuffer);
-        AnimalBattle.Combat.BulletPalette.CurrentConfig = cCfg.Bullets;
+        BulletPalette.CurrentConfig = cCfg.Bullets;
 
         var vCfg = registry.Get<VfxRenderConfig>();
         world.Set(vCfg.VisualEffects);

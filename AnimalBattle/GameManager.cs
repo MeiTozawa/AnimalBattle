@@ -93,7 +93,7 @@ public class GameManager : IDisposable {
     private void ExecuteSwitchToBattle(CharacterType playerType, BossType bossType)
     {
         StartSceneSpawner.Teardown(_ecsWorld);
-        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
+        Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
 
         ref var flow = ref _ecsWorld.GetMut<GameFlow>();
         flow.State = GameState.Battle;
@@ -126,7 +126,7 @@ public class GameManager : IDisposable {
     {
         StartSceneSpawner.Teardown(_ecsWorld);
         BattleSceneSpawner.Teardown(_ecsWorld);
-        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
+        Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
 
         ref var flow = ref _ecsWorld.GetMut<GameFlow>();
         flow.State = GameState.Tutorial;
@@ -161,7 +161,7 @@ public class GameManager : IDisposable {
         InputService.ClearAndSetContext(InputContext.Menu);
         PlayerInputSystem.Reset();
         BattleSceneSpawner.Teardown(_ecsWorld);
-        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
+        Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
         StartSceneSpawner.Teardown(_ecsWorld);
         StartSceneSpawner.Spawn(_ecsWorld, enableTutorialOverride);
     }
@@ -201,7 +201,7 @@ public class GameManager : IDisposable {
         if (_isDisposed) return;
 
         StartSceneSpawner.Teardown(_ecsWorld);
-        AnimalBattle.Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
+        Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
         BattleSceneSpawner.Teardown(_ecsWorld);
         
         DisposeSystemContexts(_ecsWorld);

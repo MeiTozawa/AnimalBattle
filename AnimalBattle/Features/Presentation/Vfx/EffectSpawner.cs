@@ -155,7 +155,7 @@ public static class EffectSpawner
         // 1. 小型防御衝撃リング
         CombatPoolService.RentRingEffect()
            .Set(new Transform(pos))
-           .Set(new RingEffect(8.0f, 32.0f, System.Drawing.Color.FromArgb(255, 255, 140, 40)))
+           .Set(new RingEffect(8.0f, 32.0f, Color.FromArgb(255, 255, 140, 40)))
            .Set(new FadeEffect(0.18f));
 
         // 2. 偏向スパーク火花
@@ -167,7 +167,7 @@ public static class EffectSpawner
             CombatPoolService.RentSparkEffect()
                .Set(new Transform(pos))
                .Set(new Velocity(vel))
-               .Set(new VfxParticle(3.5f, System.Drawing.Color.FromArgb(255, 255, 210, 80), System.Drawing.Color.FromArgb(255, 255, 80, 30)))
+               .Set(new VfxParticle(3.5f, Color.FromArgb(255, 255, 210, 80), Color.FromArgb(255, 255, 80, 30)))
                .Set(new FadeEffect(0.22f));
         }
     }

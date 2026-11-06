@@ -1,8 +1,8 @@
 namespace AnimalBattle.Skills;
 
-using AnimalBattle.Enemies;
-using AnimalBattle.Enemies.Services;
-using AnimalBattle.Scenes.Battle;
+using Enemies;
+using Enemies.Services;
+using Scenes.Battle;
 
 /// <summary>
 /// 雑魚敵をワールドに動的召喚する技能エフェクトハンドラー。

@@ -2,7 +2,7 @@ namespace AnimalBattle.Features.Items.Configs;
 
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using AnimalBattle.Core;
+using Core;
 using Microsoft.Extensions.Configuration;
 
 /// <summary>
