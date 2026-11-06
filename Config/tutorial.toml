@@ -20,64 +20,85 @@ ControlBoardDash = "ダッシュ: L-SHIFT / 右クリック"
 ControlBoardAttack = "★ 攻撃 : 左クリック (長押し可能)"
 
 # ==============================================================================
-# チュートリアル進行フェーズシーケンス (Phases)
+# チュートリアル進行フェーズシーケンス (Phases & Steps)
 # ==============================================================================
 
 [[Phases]]
-Type = "Collect"
 Title = "【 A / D : 移動 】"
-Subtitle = "左右に配置されたコインに触れて回収してください"
-Targets = [
-    { Pos = { x = 250.0, y = 520.0 }, Radius = 24.0 },
-    { Pos = { x = 850.0, y = 520.0 }, Radius = 24.0 }
+Subtitle = "左右に順に出現するコインに触れて回収してください"
+
+[[Phases.Steps]]
+Subtitle = "左側のコインに触れて回収してください"
+Actions = [
+    { Type = "SpawnTarget", Pos = { x = 250.0, y = 520.0 }, Radius = 24.0 }
 ]
+Condition = { Type = "CollectTargets" }
+
+[[Phases.Steps]]
+Subtitle = "右側のコインに触れて回収してください"
+Actions = [
+    { Type = "SpawnTarget", Pos = { x = 850.0, y = 520.0 }, Radius = 24.0 }
+]
+Condition = { Type = "CollectTargets" }
 
 [[Phases]]
-Type = "Collect"
 Title = "【 SPACE : ジャンプ 】"
 Subtitle = "スペースキーで跳躍し、コインを回収してください"
-Targets = [
-    { Pos = { x = 420.0, y = 400.0 }, Radius = 28.0 }
+
+[[Phases.Steps]]
+Actions = [
+    { Type = "SpawnTarget", Pos = { x = 420.0, y = 400.0 }, Radius = 28.0 }
 ]
+Condition = { Type = "CollectTargets" }
 
 [[Phases]]
-Type = "Collect"
 Title = "【 SPACE × 2 : 二段ジャンプ 】"
 Subtitle = "空中で再度スペースキーを押し、高所のコインを回収してください"
-Targets = [
-    { Pos = { x = 640.0, y = 250.0 }, Radius = 28.0 }
+
+[[Phases.Steps]]
+Actions = [
+    { Type = "SpawnTarget", Pos = { x = 640.0, y = 250.0 }, Radius = 28.0 }
 ]
+Condition = { Type = "CollectTargets" }
 
 [[Phases]]
-Type = "Collect"
 Title = "【 L-SHIFT : ダッシュ 】"
 Subtitle = "足場からジャンプし、空中でダッシュしてリングを通過してください"
-Targets = [
-    { Pos = { x = 1100.0, y = 200.0 }, Radius = 34.0 }
+
+[[Phases.Steps]]
+Actions = [
+    { Type = "SpawnTarget", Pos = { x = 1100.0, y = 200.0 }, Radius = 34.0 }
 ]
+Condition = { Type = "CollectTargets" }
 
 [[Phases]]
-Type = "Combat"
 Title = "★ 【 左クリック : 攻撃 】 / 【 L-SHIFT : 回避 】"
 Subtitle = "マウスで狙いを定め、空中を浮遊するミニオンを撃破してください"
-Minions = [
-    { MinionType = "Flying" }
+
+[[Phases.Steps]]
+Actions = [
+    { Type = "SpawnMinion", MinionType = "Flying" }
 ]
+Condition = { Type = "DefeatMinions" }
 
 [[Phases]]
-Type = "Combat"
 Title = "★ 【 左クリック : 攻撃 】 / 【 L-SHIFT : 回避 】"
 Subtitle = "マウスで狙いを定め、二体のミニオンを撃破してください"
-Minions = [
-    { MinionType = "Ground" },
-    { MinionType = "Flying" }
+
+[[Phases.Steps]]
+Actions = [
+    { Type = "SpawnMinion", MinionType = "Ground" },
+    { Type = "SpawnMinion", MinionType = "Flying" }
 ]
+Condition = { Type = "DefeatMinions" }
 
 [[Phases]]
-Type = "BossDoor"
 Title = "【 ボス選択 】"
 Subtitle = "扉に近づき、[F] キーで挑戦するボスを選択してください"
-Doors = [
-    { Pos = { x = 290.0, y = 300.0 }, BossType = "BossSnake", TexturePath = "Characters\\031_3.png", Title = "【 蛇神ノ祭壇 】", Tag = "飛行浮遊 ＆ 全方位毒弾幕" },
-    { Pos = { x = 990.0, y = 300.0 }, BossType = "BossLion", TexturePath = "Characters\\027_3.png", Title = "【 獅子ノ闘技殿 】", Tag = "突撃重撃 ＆ 地裂衝撃波" }
+
+[[Phases.Steps]]
+Actions = [
+    { Type = "SpawnDoor", Pos = { x = 290.0, y = 300.0 }, BossType = "BossSnake", TexturePath = "Characters\\031_3.png", Title = "【 蛇神ノ祭壇 】", Tag = "飛行浮遊 ＆ 全方位毒弾幕" },
+    { Type = "SpawnDoor", Pos = { x = 990.0, y = 300.0 }, BossType = "BossLion", TexturePath = "Characters\\027_3.png", Title = "【 獅子ノ闘技殿 】", Tag = "突撃重撃 ＆ 地裂衝撃波" }
 ]
+Condition = { Type = "InteractDoor" }

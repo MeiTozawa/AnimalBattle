@@ -1,4 +1,7 @@
 using System.Drawing;
+using AnimalBattle.Features.Tutorial.Actions;
+using AnimalBattle.Features.Tutorial.Conditions;
+using AnimalBattle.Features.Tutorial.Factories;
 using ErrorOr;
 using Microsoft.Extensions.Configuration;
 
@@ -63,49 +66,68 @@ public sealed class TutorialTextsConfig
 }
 
 /// <summary>
-///     チュートリアルフェーズの種別。
+///     ステップ開始時に実行されるアクション設定。
 /// </summary>
-public enum TutorialPhaseType
+public sealed class TutorialActionConfig
 {
-    /// <summary>目標物（コイン・星）収集</summary>
-    Collect,
-
-    /// <summary>ミニオン戦闘練習</summary>
-    Combat,
-
-    /// <summary>ボス挑戦扉（次シーン移行）</summary>
-    BossDoor
-}
-
-/// <summary>
-///     収集ターゲットアイテム設定。
-/// </summary>
-public sealed class TutorialTargetItemConfig
-{
+    public string Type { get; set; } = string.Empty;
     public Vec2f Pos { get; set; }
     public float Radius { get; set; }
-}
-
-/// <summary>
-///     ミニオン配置設定。
-/// </summary>
-public sealed class TutorialMinionItemConfig
-{
     public string MinionType { get; set; } = string.Empty;
+    public string BossType { get; set; } = string.Empty;
+    public string TexturePath { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Tag { get; set; } = string.Empty;
 }
 
 /// <summary>
-///     単一フェーズの汎用設定クラス。
+///     ステップ達成条件設定。
+/// </summary>
+public sealed class TutorialConditionConfig
+{
+    public string Type { get; set; } = string.Empty;
+    public float Duration { get; set; }
+}
+
+/// <summary>
+///     チュートリアル内の単一ステップ設定。
+/// </summary>
+public sealed class TutorialStepConfig
+{
+    public string Subtitle { get; set; } = string.Empty;
+    public TutorialActionConfig[] Actions { get; set; } = [];
+    public TutorialConditionConfig Condition { get; set; } = new();
+
+    private ITutorialAction[] _runtimeActions = [];
+    private ITutorialCondition? _runtimeCondition;
+
+    /// <summary>ホットパス実行用に事前生成されたアクション一覧を取得します（ゼロアロケーション）。</summary>
+    public ITutorialAction[] GetRuntimeActions() => _runtimeActions;
+
+    /// <summary>ホットパス実行用に事前生成された条件判定インスタンスを取得します（ゼロアロケーション）。</summary>
+    public ITutorialCondition GetRuntimeCondition() => _runtimeCondition!;
+
+    internal void InitializeRuntime(ITutorialAction[] actions, ITutorialCondition condition)
+    {
+        _runtimeActions = actions;
+        _runtimeCondition = condition;
+    }
+}
+
+/// <summary>
+///     チュートリアルフェーズ設定。複数のステップを内包する。
 /// </summary>
 public sealed class TutorialPhaseConfig
 {
-    public TutorialPhaseType Type { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Subtitle { get; set; } = string.Empty;
+    public TutorialStepConfig[] Steps { get; set; } = [];
 
-    public TutorialTargetItemConfig[] Targets { get; set; } = [];
-    public TutorialMinionItemConfig[] Minions { get; set; } = [];
-    public TutorialDoorItemConfig[] Doors { get; set; } = [];
+    /// <summary>小怪を含む戦闘フェーズかどうか判定します。</summary>
+    public bool HasMinions => Array.Exists(Steps, s => Array.Exists(s.Actions, a => a.Type.Equals("SpawnMinion", StringComparison.OrdinalIgnoreCase)));
+
+    /// <summary>ボス扉を含むフェーズかどうか判定します。</summary>
+    public bool HasBossDoor => Array.Exists(Steps, s => Array.Exists(s.Actions, a => a.Type.Equals("SpawnDoor", StringComparison.OrdinalIgnoreCase)));
 }
 
 /// <summary>
@@ -124,9 +146,54 @@ public sealed class TutorialConfig : IConfigLifecycle
     /// <inheritdoc />
     public ErrorOr<Success> Validate()
     {
+        if (Phases == null || Phases.Length == 0)
+        {
+            return Error.Validation("TutorialConfig.Phases", "Phases が設定されていません。");
+        }
+
+        for (var i = 0; i < Phases.Length; i++)
+        {
+            var phase = Phases[i];
+            if (phase.Steps == null || phase.Steps.Length == 0)
+            {
+                return Error.Validation("TutorialConfig.Steps", $"フェーズ[{i}] ({phase.Title}) にステップが設定されていません。");
+            }
+
+            for (var j = 0; j < phase.Steps.Length; j++)
+            {
+                var step = phase.Steps[j];
+                if (step.Actions == null || step.Actions.Length == 0)
+                {
+                    return Error.Validation("TutorialConfig.Actions", $"フェーズ[{i}] ステップ[{j}] にアクションが設定されていません。");
+                }
+
+                if (string.IsNullOrWhiteSpace(step.Condition?.Type))
+                {
+                    return Error.Validation("TutorialConfig.Condition", $"フェーズ[{i}] ステップ[{j}] の条件 Type が空です。");
+                }
+            }
+        }
+
         return Result.Success;
     }
 
     /// <inheritdoc />
-    public void PostProcess() { }
+    public void PostProcess()
+    {
+        for (var i = 0; i < Phases.Length; i++)
+        {
+            var phase = Phases[i];
+            for (var j = 0; j < phase.Steps.Length; j++)
+            {
+                var step = phase.Steps[j];
+                var runtimeActions = new ITutorialAction[step.Actions.Length];
+                for (var a = 0; a < step.Actions.Length; a++)
+                {
+                    runtimeActions[a] = TutorialStepFactory.CreateAction(step.Actions[a]);
+                }
+                var runtimeCondition = TutorialStepFactory.CreateCondition(step.Condition);
+                step.InitializeRuntime(runtimeActions, runtimeCondition);
+            }
+        }
+    }
 }

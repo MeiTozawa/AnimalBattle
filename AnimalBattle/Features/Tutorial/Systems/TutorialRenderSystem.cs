@@ -99,9 +99,9 @@ public static class TutorialRenderSystem
         // 画面上部・中央のフェーズ別背景操作ガイド文字
         DrawPhaseGuidance(state, cfg, rCfg);
 
-        // 3. 戦闘フェーズ（Combat）における全操作ガイド看板
+        // 3. 戦闘フェーズにおける全操作ガイド看板
         if ((uint)state.CurrentPhaseIndex < (uint)cfg.Phases.Length &&
-            cfg.Phases[state.CurrentPhaseIndex].Type == TutorialPhaseType.Combat)
+            cfg.Phases[state.CurrentPhaseIndex].HasMinions)
         {
             DrawControlGuidanceBoard(cfg, rCfg);
         }
@@ -123,7 +123,13 @@ public static class TutorialRenderSystem
         {
             var phaseCfg = cfg.Phases[state.CurrentPhaseIndex];
             GameEngine.DrawCenterString(centerPos, phaseCfg.Title, colors.Gold);
-            GameEngine.DrawCenterString(subPos, phaseCfg.Subtitle, colors.White);
+
+            var subtitle = (uint)state.CurrentStepIndex < (uint)phaseCfg.Steps.Length &&
+                           !string.IsNullOrWhiteSpace(phaseCfg.Steps[state.CurrentStepIndex].Subtitle)
+                ? phaseCfg.Steps[state.CurrentStepIndex].Subtitle
+                : phaseCfg.Subtitle;
+
+            GameEngine.DrawCenterString(subPos, subtitle, colors.White);
         }
     }
 

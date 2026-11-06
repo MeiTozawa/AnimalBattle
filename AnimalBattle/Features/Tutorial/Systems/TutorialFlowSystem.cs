@@ -1,12 +1,11 @@
 using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;
-using AnimalBattle.Features.Tutorial.Handlers;
 using AnimalBattle.Features.Tutorial.Spawners;
 
 namespace AnimalBattle.Features.Tutorial.Systems;
 
 /// <summary>
-///     チュートリアル各フェーズの目標達成判定、段階移行、およびプレイヤーの満血リトライ保護を司る ECS システム。
+///     チュートリアル各ステップの目標達成判定、段階移行、およびプレイヤーの満血リトライ保護を司る ECS システム。
 /// </summary>
 public static class TutorialFlowSystem
 {
@@ -103,22 +102,39 @@ public static class TutorialFlowSystem
             return;
         }
 
-        // 3. 現在のフェーズの取得と安全性チェック
+        // 3. 現在のフェーズおよびステップの取得と境界チェック
         if ((uint)state.CurrentPhaseIndex >= (uint)cfg.Phases.Length) return;
         var currentPhaseCfg = cfg.Phases[state.CurrentPhaseIndex];
 
-        var handler = TutorialPhaseDispatcher.GetHandler(currentPhaseCfg.Type);
-        Debug.Assert(handler != null, $"未対応のチュートリアルフェーズ種別です: {currentPhaseCfg.Type}");
-        if (handler == null) return;
+        if ((uint)state.CurrentStepIndex >= (uint)currentPhaseCfg.Steps.Length) return;
+        var currentStepCfg = currentPhaseCfg.Steps[state.CurrentStepIndex];
 
-        // 4. ハンドラーによる目標判定の更新
-        var isFinished = handler.UpdateAndCheckCompletion(world, ref state, currentPhaseCfg, cfg, dt);
+        state.StepTimer += dt;
 
-        // 5. 目標達成時の次フェーズ移行
-        if (isFinished)
+        // 4. ステップ達成条件のゼロアロケーション評価
+        var condition = currentStepCfg.GetRuntimeCondition();
+        Debug.Assert(condition != null, $"ステップ条件が初期化されていません: Phase={state.CurrentPhaseIndex}, Step={state.CurrentStepIndex}");
+        if (condition == null) return;
+
+        var isStepFinished = condition.IsSatisfied(world, ref state, dt);
+
+        // 5. 条件達成時のステップ遷移またはフェーズ完了移行
+        if (isStepFinished)
         {
-            var nextIndex = state.CurrentPhaseIndex + 1;
-            TutorialSceneSpawner.SetupPhase(world, nextIndex);
+            var nextStepIndex = state.CurrentStepIndex + 1;
+            if (nextStepIndex < currentPhaseCfg.Steps.Length)
+            {
+                var root = world.Lookup(TutorialSceneSpawner.RootName);
+                if (root.IsAlive())
+                {
+                    TutorialSceneSpawner.EnterStep(world, root, state.CurrentPhaseIndex, nextStepIndex);
+                }
+            }
+            else
+            {
+                var nextPhaseIndex = state.CurrentPhaseIndex + 1;
+                TutorialSceneSpawner.SetupPhase(world, nextPhaseIndex);
+            }
         }
     }
 }

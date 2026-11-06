@@ -1,6 +1,6 @@
 using AnimalBattle.Features.Tutorial.Components;
 using AnimalBattle.Features.Tutorial.Configs;
-using AnimalBattle.Features.Tutorial.Handlers;
+using AnimalBattle.Features.Tutorial.Factories;
 using AnimalBattle.Logging;
 using AnimalBattle.Maps;
 
@@ -79,7 +79,7 @@ public static class TutorialSceneSpawner
             initialPhaseIndex = 0;
             for (var i = 0; i < cfg.Phases.Length; i++)
             {
-                if (cfg.Phases[i].Type == TutorialPhaseType.BossDoor)
+                if (cfg.Phases[i].HasBossDoor)
                 {
                     initialPhaseIndex = i;
                     break;
@@ -91,7 +91,10 @@ public static class TutorialSceneSpawner
         world.Set(new TutorialState
         {
             CurrentPhaseIndex = initialPhaseIndex,
+            CurrentStepIndex = 0,
             TargetsRemaining = 0,
+            StepTimer = 0f,
+            StepCompletionTimer = 0f,
             IsPhaseCompleted = false,
             CompletionTimer = 0f,
             IsRetrying = false,
@@ -103,7 +106,7 @@ public static class TutorialSceneSpawner
     }
 
     /// <summary>
-    ///     指定されたフェーズ番号の目標（ターゲットコイン、小怪、またはボス扉）をワールドに配置します。
+    ///     指定されたフェーズ番号の目標を初期化し、Step 0 を実行します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="phaseIndex">設定するフェーズ番号</param>
@@ -118,14 +121,41 @@ public static class TutorialSceneSpawner
 
         ref var state = ref world.GetMut<TutorialState>();
         state.CurrentPhaseIndex = phaseIndex;
+        state.CurrentStepIndex = 0;
+        state.StepTimer = 0f;
+        state.StepCompletionTimer = 0f;
         state.IsPhaseCompleted = false;
         state.CompletionTimer = 0f;
+        state.TargetsRemaining = 0;
 
         if ((uint)phaseIndex < (uint)cfg.Phases.Length)
         {
-            var phaseCfg = cfg.Phases[phaseIndex];
-            var handler = TutorialPhaseDispatcher.GetHandler(phaseCfg.Type);
-            handler.Setup(world, root, phaseCfg, cfg);
+            EnterStep(world, root, phaseIndex, 0);
+        }
+    }
+
+    /// <summary>
+    ///     指定されたステップを実行します（Actions の実行と状態設定）。
+    /// </summary>
+    public static void EnterStep(World world, Entity root, int phaseIndex, int stepIndex)
+    {
+        var cfg = world.Get<TutorialConfig>();
+        if ((uint)phaseIndex >= (uint)cfg.Phases.Length) return;
+
+        var phase = cfg.Phases[phaseIndex];
+        if ((uint)stepIndex >= (uint)phase.Steps.Length) return;
+
+        ref var state = ref world.GetMut<TutorialState>();
+        state.CurrentStepIndex = stepIndex;
+        state.StepTimer = 0f;
+        state.StepCompletionTimer = 0f;
+        state.TargetsRemaining = 0;
+
+        var stepCfg = phase.Steps[stepIndex];
+        var actions = stepCfg.GetRuntimeActions();
+        for (var i = 0; i < actions.Length; i++)
+        {
+            actions[i].Execute(world, root);
         }
     }
 
