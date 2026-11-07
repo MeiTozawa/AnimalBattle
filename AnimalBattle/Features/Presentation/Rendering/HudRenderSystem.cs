@@ -12,6 +12,7 @@ internal sealed class HudRenderSystemContext : IDisposable
 {
     public readonly record struct PlayerHudData(
         Health Health,
+        EnergyGauge Energy,
         CharacterType CharacterType,
         bool IsInvincible,
         bool IsAlive,
@@ -22,7 +23,7 @@ internal sealed class HudRenderSystemContext : IDisposable
         BossCombatState CombatState,
         (float Phase2Threshold, float Phase3Threshold) PhaseThresholds);
 
-    public required Query<Health, CharacterTypeComponent, GameplayTagState, Transform> PlayerQuery { get; init; }
+    public required Query<Health, EnergyGauge, CharacterTypeComponent, GameplayTagState, Transform> PlayerQuery { get; init; }
 
     /// <summary>前フレームの自機 HP（被弾検知用）</summary>
     public float LastPlayerHp = -1f;
@@ -61,7 +62,7 @@ public static class HudRenderSystem {
     /// <returns>登録済みワールド</returns>
     public static World AddHudRenderSystem(this World world)
     {
-        var playerQuery = world.QueryBuilder<Health, CharacterTypeComponent, GameplayTagState, Transform>()
+        var playerQuery = world.QueryBuilder<Health, EnergyGauge, CharacterTypeComponent, GameplayTagState, Transform>()
             .With<PlayerTag>()
             .Build();
         var bossQuery = world.QueryBuilder<Health, BossCombatState>()
@@ -119,6 +120,7 @@ public static class HudRenderSystem {
     private static void CollectPlayer(
         Iter it,
         Field<Health> hps,
+        Field<EnergyGauge> gauges,
         Field<CharacterTypeComponent> charTypes,
         Field<GameplayTagState> tags,
         Field<Transform> transforms)
@@ -129,8 +131,10 @@ public static class HudRenderSystem {
         var ctx = it.World().Get<HudRenderSystemContext>();
         var idx = count - 1;
         ref readonly var hp = ref hps[idx];
+        ref readonly var gauge = ref gauges[idx];
         ctx.CachedPlayer = new HudRenderSystemContext.PlayerHudData(
             hp,
+            gauge,
             charTypes[idx].Value,
             tags[idx].HasAnyTag(GameplayTag.Invincible | GameplayTag.Untargetable),
             hp.Current > 0.0f,
@@ -287,6 +291,84 @@ public static class HudRenderSystem {
             var badgeCenter = (isDamagedSlot && ctx.DamageShakeTimer > 0.0f) ? center + shakeOffset : center;
             DrawPawBadge(badgeCenter, badgeCfg, activeFillColor, glowColor, isFilled, isLowHp && isFilled, ctx.LowHpPulseTime);
         }
+
+        // エネルギーゲージ（3格スロット）と発動ガイドの描画
+        DrawPlayerEnergyGauge(p, badgeCfg, isBunny, ctx.LowHpPulseTime);
+    }
+
+    /// <summary>
+    ///     左上戦術 HUD：自機の特殊能力エネルギーゲージ（3格スロット）を描画します。
+    /// </summary>
+    private static void DrawPlayerEnergyGauge(
+        in HudRenderSystemContext.PlayerHudData p,
+        PlayerHpBadgeRenderConfig badgeCfg,
+        bool isBunny,
+        float pulseTime)
+    {
+        var segCapacity = MathF.Max(1.0f, p.Energy.SegmentCapacity);
+        var maxSegments = Math.Max(1, (int)MathF.Round(p.Energy.MaxEnergy / segCapacity));
+        var currentEnergy = Math.Clamp(p.Energy.CurrentEnergy, 0.0f, p.Energy.MaxEnergy);
+        var readySegments = p.Energy.ReadySegments;
+
+        const int slotWidth = 36;
+        const int slotHeight = 7;
+        const int slotGap = 4;
+
+        var startX = badgeCfg.Origin.X - (int)badgeCfg.BadgeRadius;
+        var startY = badgeCfg.Origin.Y + (int)badgeCfg.BadgeRadius + 14;
+
+        var fillColor = isBunny ? badgeCfg.BunnyFillColor : badgeCfg.CatFillColor;
+        var glowBorderColor = isBunny ? badgeCfg.BunnyGlowColor : badgeCfg.CatGlowColor;
+        var emptyBgColor = badgeCfg.EmptyFillColor;
+        var emptyBorderColor = badgeCfg.EmptyBorderColor;
+
+        for (var s = 0; s < maxSegments; s++)
+        {
+            var p1 = new Vec2i(startX + s * (slotWidth + slotGap), startY);
+            var p2 = new Vec2i(p1.X + slotWidth, p1.Y + slotHeight);
+
+            // スロット背景
+            GameEngine.DrawBox(p1, p2, emptyBgColor, true);
+            GameEngine.DrawBox(p1, p2, emptyBorderColor, false);
+
+            var slotStart = s * segCapacity;
+            var slotCurrent = Math.Clamp(currentEnergy - slotStart, 0.0f, segCapacity);
+            var ratio = slotCurrent / segCapacity;
+
+            if (ratio > 0.0f)
+            {
+                var fillW = Math.Clamp((int)MathF.Round(slotWidth * ratio), 1, slotWidth);
+                var fillP2 = new Vec2i(p1.X + fillW, p2.Y);
+
+                GameEngine.DrawBox(p1, fillP2, fillColor, true);
+
+                // 満タン時の発光枠線演出
+                if (ratio >= 1.0f)
+                {
+                    GameEngine.DrawBox(p1, p2, glowBorderColor, false);
+                }
+            }
+        }
+
+        // 3格全満タン時の全体パルス微光枠
+        if (readySegments >= maxSegments)
+        {
+            var pulse = (MathF.Sin(pulseTime * 8.0f) + 1.0f) * 0.5f;
+            var alpha = (int)(120 + pulse * 135);
+            var pulseColor = Color.FromArgb(alpha, glowBorderColor.R, glowBorderColor.G, glowBorderColor.B);
+            var totalW = maxSegments * slotWidth + (maxSegments - 1) * slotGap;
+            var fullP1 = new Vec2i(startX - 1, startY - 1);
+            var fullP2 = new Vec2i(startX + totalW + 1, startY + slotHeight + 1);
+            GameEngine.DrawBox(fullP1, fullP2, pulseColor, false);
+        }
+
+        // 右クリック操作ガイド
+        var promptX = startX + maxSegments * (slotWidth + slotGap) + 4;
+        var promptY = startY - 2;
+        var canCast = p.Energy.CanUseAbility;
+        var textColor = canCast ? glowBorderColor : emptyBorderColor;
+
+        GameEngine.DrawLeftString(new Vec2i(promptX, promptY), "[右クリック]", textColor);
     }
 
     /// <summary>
