@@ -1,4 +1,7 @@
 using System.Drawing;
+using AnimalBattle.Combat.Components;
+using AnimalBattle.Combat.Events;
+using AnimalBattle.Combat.Spawners;
 using AnimalBattle.Configs;
 using AnimalBattle.Framework.Pooling;
 using AnimalBattle.Player.Components;
@@ -8,8 +11,23 @@ using AnimalBattle.Presentation.Vfx.Components;
 namespace AnimalBattle.Player.Systems;
 
 /// <summary>
+///     全画面斬撃シーケンスシステムが共有する事前ビルド済み ECS クエリ。
+///     毎フレームの QueryBuilder 破棄およびヒープ割り当てを完全に排除します。
+/// </summary>
+public sealed class ScreenCleaveSequenceContext : IDisposable
+{
+    /// <summary>全画面斬撃の継続ダメージ対象となる全生存敵対ユニットクエリ</summary>
+    public required Query<Transform, Health, Hurtbox, CombatProfile> EnemyTargetQuery { get; init; }
+
+    public void Dispose()
+    {
+        EnemyTargetQuery.Dispose();
+    }
+}
+
+/// <summary>
 ///     Bunny の特殊能力発動時、全画面にランダムな位置・方向・タイミングで無数の斬撃エフェクトを
-///     段階的に展開するシーケンス実行 ECS システム。
+///     段階的に展開し、敵対ユニットへ持続的にダメージを配分するシーケンス実行 ECS システム。
 /// </summary>
 public static class ScreenCleaveSequenceSystem
 {
@@ -18,6 +36,16 @@ public static class ScreenCleaveSequenceSystem
     /// </summary>
     public static World AddScreenCleaveSequenceSystem(this World world)
     {
+        var targetQuery = world.QueryBuilder<Transform, Health, Hurtbox, CombatProfile>()
+            .Without<PlayerTag>()
+            .Without<DeadTag>()
+            .Build();
+
+        world.Set(new ScreenCleaveSequenceContext
+        {
+            EnemyTargetQuery = targetQuery
+        });
+
         world.System<ScreenCleaveSequence>("ScreenCleaveSequenceSystem")
             .Without<RecycleTag>()
             .Kind(Ecs.OnUpdate)
@@ -33,6 +61,7 @@ public static class ScreenCleaveSequenceSystem
 
         var dt = it.DeltaTime();
         var world = it.World();
+        var ctx = world.Get<ScreenCleaveSequenceContext>();
         var arenaCfg = world.Get<ArenaConfig>();
 
         var minX = arenaCfg.BoundaryMinX + 40.0f;
@@ -58,7 +87,23 @@ public static class ScreenCleaveSequenceSystem
                 seq.NextSpawnTimer += MathF.Max(0.0001f, baseInterval + jitter);
             }
 
-            // 総持続時間満了：未生成分があればすべて放出し、シーケンスエンティティを回収
+            // 継続ダメージの段階的適用（SpecialCleaveDamage に達するまで均等分配）
+            if (seq.TotalDamage > 0.0f && seq.DealtDamage < seq.TotalDamage)
+            {
+                var expectedTicks = MathF.Max(1.0f, MathF.Round(seq.TotalDuration / MathF.Max(0.001f, seq.TickInterval)));
+                var nominalTickDamage = seq.TotalDamage / expectedTicks;
+
+                while (seq.DealtDamage < seq.TotalDamage && seq.ElapsedTimer >= seq.NextDamageTimer)
+                {
+                    var remainingDamage = seq.TotalDamage - seq.DealtDamage;
+                    var damageThisTick = MathF.Min(nominalTickDamage, remainingDamage);
+                    ApplyCleaveDamage(world, ctx, damageThisTick);
+                    seq.DealtDamage += damageThisTick;
+                    seq.NextDamageTimer += MathF.Max(0.001f, seq.TickInterval);
+                }
+            }
+
+            // 総持続時間満了：未生成分があればすべて放出し、未適用ダメージを精算して回収
             if (seq.ElapsedTimer >= seq.TotalDuration)
             {
                 while (seq.SpawnedCount < seq.TargetCount)
@@ -67,8 +112,45 @@ public static class ScreenCleaveSequenceSystem
                     seq.SpawnedCount++;
                 }
 
+                if (seq.TotalDamage > 0.0f && seq.DealtDamage < seq.TotalDamage)
+                {
+                    var remainingDamage = seq.TotalDamage - seq.DealtDamage;
+                    ApplyCleaveDamage(world, ctx, remainingDamage);
+                    seq.DealtDamage += remainingDamage;
+                }
+
                 entity.Add<RecycleTag>();
             }
+        }
+    }
+
+    private static void ApplyCleaveDamage(World world, ScreenCleaveSequenceContext ctx, float damage)
+    {
+        if (damage <= 0.0f) return;
+
+        var inbox = world.Get<DamageInbox>();
+        var hasHitAny = false;
+
+        ctx.EnemyTargetQuery.Each((Entity enemyEntity, ref Transform vicTrans, ref Health hp, ref Hurtbox hurtbox, ref CombatProfile profile) =>
+        {
+            if (profile.Kind == CombatEntityKind.Player || hp.Current <= 0.0f) return;
+
+            inbox.Enqueue(new HitEvent
+            {
+                Victim = enemyEntity,
+                Damage = damage,
+                SourceFaction = Faction.Friendly,
+                Knockback = Vec2f.Zero,
+                IsHeavy = false
+            });
+
+            EffectSpawner.SpawnHitSparkEffect(world, vicTrans.Position + hurtbox.Shape.Offset);
+            hasHitAny = true;
+        });
+
+        if (hasHitAny)
+        {
+            SoundService.PlaySfx(SfxType.BossHit);
         }
     }
 

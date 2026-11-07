@@ -232,5 +232,7 @@ public class GameManager : IDisposable {
         world.Get<FlyingMinionContext>().Dispose();
         world.Get<TutorialSystemContext>().Dispose();
         world.Get<AimReticleUpdateContext>().Dispose();
+        world.Get<ScreenCleaveSequenceContext>().Dispose();
+        world.Get<PlayerSpecialAbilityContext>().Dispose();
     }
 }

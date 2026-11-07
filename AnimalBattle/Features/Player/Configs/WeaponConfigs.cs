@@ -103,8 +103,11 @@ public sealed class BunnyWeaponConfig : MeleeWeaponConfig
     /// <summary>特殊能力発動後の連続誤爆防止クールダウン（秒）</summary>
     public float SpecialAbilityCooldown { get; set; }
 
-    /// <summary>全画面斬撃による全敵対ユニットへの確定ダメージ</summary>
+    /// <summary>全画面斬撃による全敵対ユニットへの期待総確定ダメージ</summary>
     public float SpecialCleaveDamage { get; set; }
+
+    /// <summary>全画面斬撃の継続ダメージ発生間隔（秒）</summary>
+    public float SpecialCleaveTickInterval { get; set; }
 
     /// <summary>全画面斬撃発動時の自機無敵時間（秒）</summary>
     public float SpecialCleaveInvincibleDuration { get; set; }

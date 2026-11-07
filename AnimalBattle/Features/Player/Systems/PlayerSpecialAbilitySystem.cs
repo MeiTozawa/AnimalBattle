@@ -5,15 +5,13 @@ namespace AnimalBattle.Player.Systems;
 /// <summary>
 ///     特殊能力システムで使用する事前コンパイル済みクエリおよびコンテキストリソース。
 /// </summary>
-internal sealed class PlayerSpecialAbilityContext : IDisposable
+public sealed class PlayerSpecialAbilityContext : IDisposable
 {
     public required Query<Transform, Hitbox, Bullet> EnemyBulletQuery { get; init; }
-    public required Query<Health, Hurtbox, CombatProfile> EnemyTargetQuery { get; init; }
 
     public void Dispose()
     {
         EnemyBulletQuery.Dispose();
-        EnemyTargetQuery.Dispose();
     }
 }
 
@@ -34,15 +32,9 @@ public static class PlayerSpecialAbilitySystem
             .Without<RecycleTag>()
             .Build();
 
-        var targetQuery = world.QueryBuilder<Health, Hurtbox, CombatProfile>()
-            .Without<PlayerTag>()
-            .Without<DeadTag>()
-            .Build();
-
         world.Set(new PlayerSpecialAbilityContext
         {
-            EnemyBulletQuery = bulletQuery,
-            EnemyTargetQuery = targetQuery
+            EnemyBulletQuery = bulletQuery
         });
 
         world.System<Transform, Velocity, SpecialAbilityIntent, EnergyGauge, CharacterTypeComponent, TimedEffectsState, GameplayTagState>("PlayerSpecialAbilitySystem")
@@ -153,25 +145,12 @@ public static class PlayerSpecialAbilitySystem
                 SlashColor = bunnyWeaponCfg.SpecialCleaveSlashColor,
                 GraphHandle = hasTexture ? slashHandle : -1,
                 CellSize = slashCfg.SpriteCellSize,
-                ColIndex = slashCfg.SpriteColIndex
+                ColIndex = slashCfg.SpriteColIndex,
+                TotalDamage = bunnyWeaponCfg.SpecialCleaveDamage,
+                TickInterval = bunnyWeaponCfg.SpecialCleaveTickInterval,
+                NextDamageTimer = 0.0f,
+                DealtDamage = 0.0f
             });
-
-        // 全生存敵対ユニットへの確定ダメージ付与
-        var inbox = world.Get<DamageInbox>();
-        var cleaveDamage = bunnyWeaponCfg.SpecialCleaveDamage;
-        ctx.EnemyTargetQuery.Each((enemyEntity, ref _, ref _, ref profile) =>
-        {
-            if (profile.Kind == CombatEntityKind.Player) return;
-
-            inbox.Enqueue(new HitEvent
-            {
-                Victim = enemyEntity,
-                Damage = cleaveDamage,
-                SourceFaction = Faction.Friendly,
-                Knockback = Vec2f.Zero,
-                IsHeavy = true
-            });
-        });
 
         // 自機の無敵付与と演出効果
         TimedEffectService.ApplyEffect(ref effects, ref tags, GameplayTag.Untargetable, bunnyWeaponCfg.SpecialCleaveInvincibleDuration, playerEntity.Id);

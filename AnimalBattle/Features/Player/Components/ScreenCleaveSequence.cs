@@ -45,4 +45,16 @@ public struct ScreenCleaveSequence
 
     /// <summary>斬撃スプライトの列インデックス</summary>
     public int ColIndex;
+
+    /// <summary>全画面斬撃による期待総ダメージ量</summary>
+    public float TotalDamage;
+
+    /// <summary>継続ダメージの発生ティック間隔（秒）</summary>
+    public float TickInterval;
+
+    /// <summary>次回継続ダメージ発生予定時刻（秒）</summary>
+    public float NextDamageTimer;
+
+    /// <summary>これまでに敵対ユニットへ与えた累積ダメージ量</summary>
+    public float DealtDamage;
 }
