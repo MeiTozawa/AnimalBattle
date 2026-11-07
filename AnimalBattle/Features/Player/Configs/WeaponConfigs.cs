@@ -1,3 +1,6 @@
+using System.Drawing;
+using Microsoft.Extensions.Configuration;
+
 namespace AnimalBattle.Configs;
 
 /// <summary>
@@ -49,6 +52,31 @@ public sealed class CatWeaponConfig : RangedWeaponConfig
 
     /// <summary>巨型エネルギー弾の最大生存時間（秒）</summary>
     public float SpecialOrbLifetime { get; set; }
+
+    private Color _specialOrbFillColor;
+    private Color _specialOrbOutlineColor;
+
+    /// <summary>巨型エネルギー弾の塗りつぶし色 Hex 文字列</summary>
+    [ConfigurationKeyName("SpecialOrbFillColor")]
+    public string SpecialOrbFillColorHex
+    {
+        get => string.Empty;
+        set => _specialOrbFillColor = value.ToColor();
+    }
+
+    /// <summary>巨型エネルギー弾の塗りつぶし色</summary>
+    public Color SpecialOrbFillColor => _specialOrbFillColor;
+
+    /// <summary>巨型エネルギー弾の外枠色 Hex 文字列</summary>
+    [ConfigurationKeyName("SpecialOrbOutlineColor")]
+    public string SpecialOrbOutlineColorHex
+    {
+        get => string.Empty;
+        set => _specialOrbOutlineColor = value.ToColor();
+    }
+
+    /// <summary>巨型エネルギー弾の外枠色</summary>
+    public Color SpecialOrbOutlineColor => _specialOrbOutlineColor;
 }
 
 /// <summary>

@@ -12,10 +12,11 @@ public readonly struct PlayerModule : IFlecsModule
         PlayerPrefabs.Register(world);
 
         world.AddPlayerInputSystem()               // 1. 入力意図取得
-             .AddRangedWeaponSystem()              // 2. 遠距離射撃武器機構
-             .AddMeleeWeaponSystem()               // 3. 近接判定展開武器機構
-             .AddMovementSystem()                  // 4. 統合物理積分・足場衝突判定・境界 Clamp
-             .AddSpringScaleSystem()               // 5. スプリング拡縮変形積分
-             .AddPlayerAnimationStateSystem();     // 6. 自機状態機アニメーション遷移
+             .AddPlayerSpecialAbilitySystem()      // 2. 特殊能力発動制御
+             .AddRangedWeaponSystem()              // 3. 遠距離射撃武器機構
+             .AddMeleeWeaponSystem()               // 4. 近接判定展開武器機構
+             .AddMovementSystem()                  // 5. 統合物理積分・足場衝突判定・境界 Clamp
+             .AddSpringScaleSystem()               // 6. スプリング拡縮変形積分
+             .AddPlayerAnimationStateSystem();     // 7. 自機状態機アニメーション遷移
     }
 }
