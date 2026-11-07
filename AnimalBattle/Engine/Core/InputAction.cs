@@ -10,7 +10,6 @@ public enum InputAction {
     Right = 3,
     Jump = 4,
     Attack = 5,
-    Skill = 6,
     Confirm = 7,
     Cancel = 8,
     ToggleMenu = 9,
@@ -20,5 +19,7 @@ public enum InputAction {
     SelectBossLion = 13,
     SelectCharacter1 = 14,
     SelectCharacter2 = 15,
-    Interact = 16
+    Interact = 16,
+    SpecialAbility = 17,
+    Dash = 18
 }

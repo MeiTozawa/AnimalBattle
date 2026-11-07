@@ -97,8 +97,9 @@ public static unsafe partial class InputService {
             InputButton.PadRight);
         BindAction(InputContext.InGame, InputAction.Jump, InputButton.KeySpace, InputButton.KeyZ, InputButton.Pad1);
         BindAction(InputContext.InGame, InputAction.Attack, InputButton.MouseLeft, InputButton.Pad2);
-        BindAction(InputContext.InGame, InputAction.Skill, InputButton.KeyK, InputButton.KeyC, InputButton.Pad3,
-            InputButton.MouseRight, InputButton.KeyLShift, InputButton.KeyRShift);
+        BindAction(InputContext.InGame, InputAction.Dash, InputButton.KeyK, InputButton.KeyC, InputButton.Pad3,
+            InputButton.KeyLShift, InputButton.KeyRShift);
+        BindAction(InputContext.InGame, InputAction.SpecialAbility, InputButton.MouseRight);
         BindAction(InputContext.InGame, InputAction.Restart, InputButton.KeyR);
         BindAction(InputContext.InGame, InputAction.SelectBossSnake, InputButton.Key1);
         BindAction(InputContext.InGame, InputAction.SelectBossLion, InputButton.Key2);

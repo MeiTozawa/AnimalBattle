@@ -25,7 +25,7 @@ public static class PlayerInputSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddPlayerInputSystem(this World world)
     {
-        world.System<MovementIntent, WeaponIntent, Transform, CollisionBox>("PlayerInputSystem")
+        world.System<MovementIntent, WeaponIntent, SpecialAbilityIntent, Transform, CollisionBox>("PlayerInputSystem")
             .With<PlayerTag>()
             .Without<DeadTag>()
             .Kind(Ecs.PreUpdate)
@@ -38,6 +38,7 @@ public static class PlayerInputSystem
         Iter it,
         Field<MovementIntent> moveIntents,
         Field<WeaponIntent> weaponIntents,
+        Field<SpecialAbilityIntent> specialIntents,
         Field<Transform> transforms,
         Field<CollisionBox> collisionBoxes)
     {
@@ -74,6 +75,7 @@ public static class PlayerInputSystem
             {
                 moveIntents[i].Reset();
                 weaponIntents[i].Reset();
+                specialIntents[i].Reset();
             }
             return;
         }
@@ -95,7 +97,8 @@ public static class PlayerInputSystem
         var jumpHolding = InputService.IsHolding(InputAction.Jump);
         var isAttackHolding = InputService.IsHolding(InputAction.Attack) && !_attackHoldingSuppressed;
         var shootPressed = InputService.IsPressed(InputAction.Attack) || isAttackHolding;
-        var dashPressed = InputService.IsPressed(InputAction.Skill);
+        var dashPressed = InputService.IsPressed(InputAction.Dash);
+        var specialPressed = InputService.IsPressed(InputAction.SpecialAbility);
 
         // マウス画面座標からカメラ逆オフセットでワールド座標を逆算
         var mouseScreen = InputService.GetMousePosition();
@@ -137,6 +140,10 @@ public static class PlayerInputSystem
 
             weaponIntent.ShootTriggered = shootPressed;
             weaponIntent.AimDirection = aimDir;
+
+            ref var specialIntent = ref specialIntents[i];
+            specialIntent.Triggered = specialPressed;
+            specialIntent.AimDirection = aimDir;
         }
     }
 }
