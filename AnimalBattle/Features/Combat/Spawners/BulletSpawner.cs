@@ -107,17 +107,31 @@ public static class BulletSpawner
     }
 
     /// <summary>
-    ///     被弾時に、現在の Phase に応じた数量の反撃弾幕を全方位ランダムに発射します。
+    ///     被弾時に、現在の Phase に応じた確率および数量の反撃弾幕を全方位ランダムに発射します。
     /// </summary>
     public static void SpawnCounterAttack(World world, Vec2f pos, Phase phase)
     {
         var cfg = world.Get<SpecialBulletConfig>();
+        var chance = phase switch {
+            Phase.Phase1 => cfg.CounterBulletChancePhase1,
+            Phase.Phase2 => cfg.CounterBulletChancePhase2,
+            Phase.Phase3 => cfg.CounterBulletChancePhase3,
+            _ => AssertHelper.FailWithDefault($"[BulletSpawner 警告] 未知のフェーズ: {phase}", cfg.CounterBulletChancePhase1)
+        };
+
+        if (chance <= 0.0f || (chance < 1.0f && Random.Shared.NextSingle() >= chance))
+        {
+            return;
+        }
+
         var bulletCount = phase switch {
             Phase.Phase1 => cfg.CounterBulletCountPhase1,
             Phase.Phase2 => cfg.CounterBulletCountPhase2,
             Phase.Phase3 => cfg.CounterBulletCountPhase3,
             _ => AssertHelper.FailWithDefault($"[BulletSpawner 警告] 未知のフェーズ: {phase}", cfg.CounterBulletCountPhase1)
         };
+
+        if (bulletCount <= 0) return;
 
         for (var i = 0; i < bulletCount; i++)
         {

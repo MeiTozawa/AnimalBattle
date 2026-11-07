@@ -35,6 +35,15 @@ public sealed class SpecialBulletConfig
     /// <summary>Phase 3 時の反撃黒弾発射数</summary>
     public int CounterBulletCountPhase3 { get; set; }
 
+    /// <summary>Phase 1 時の反撃黒弾発動確率（0.0f ～ 1.0f）</summary>
+    public float CounterBulletChancePhase1 { get; set; }
+
+    /// <summary>Phase 2 時の反撃黒弾発動確率（0.0f ～ 1.0f）</summary>
+    public float CounterBulletChancePhase2 { get; set; }
+
+    /// <summary>Phase 3 時の反撃黒弾発動確率（0.0f ～ 1.0f）</summary>
+    public float CounterBulletChancePhase3 { get; set; }
+
     /// <summary>Boss 被弾反撃黒弾が近接攻撃で破壊不能かどうかのフラグ</summary>
     public bool CounterBulletIsIndestructible { get; set; }
 }
