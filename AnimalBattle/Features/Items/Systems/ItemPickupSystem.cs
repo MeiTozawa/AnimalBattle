@@ -98,8 +98,8 @@ public static class ItemPickupSystem
                 // HUD 更新イベント通知
                 EventBus.Publish(new PlayerHealthChangedEvent(prevHp, hpMut.Current));
 
-                // 回復効果音再生
-                SoundService.PlaySfx(SfxType.ItemHeal);
+                // 回復アイテム取得イベント通知
+                EventBus.Publish(new ItemCollectedEvent(targetPlayer.Value, pickup.HealAmount));
 
                 // ディレクター状態の更新とエンティティ消滅
                 ref var director = ref world.GetMut<ItemDirectorState>();

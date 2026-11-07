@@ -150,7 +150,7 @@ public static class ScreenCleaveSequenceSystem
 
         if (hasHitAny)
         {
-            SoundService.PlaySfx(SfxType.BossHit);
+            EventBus.Publish(new CombatHitLandedEvent());
         }
     }
 

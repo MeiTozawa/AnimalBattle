@@ -68,8 +68,8 @@ public static class ItemSpawner
         director.ActiveHealthPackCount++;
         director.IcdRemaining = cfg.IcdDuration;
 
-        // ドロップ効果音を再生
-        SoundService.PlaySfx(SfxType.ItemDrop);
+        // ドロップイベントを発行
+        EventBus.Publish(new ItemSpawnedEvent(spawnPos));
 
         return world.Entity()
             .Add<ItemTag>()

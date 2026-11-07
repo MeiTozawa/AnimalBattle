@@ -158,11 +158,7 @@ public static class PlayerSpecialAbilitySystem
         playerEntity.Set(new InvincibleBlinkEffect(bunnyWeaponCfg.SpecialCleaveInvincibleDuration, blinkFreq));
 
         CameraService.AddTrauma(bunnyWeaponCfg.SpecialCleaveTrauma);
-        SoundService.PlaySfx(SfxType.BossDiveImpact);
-        if (bulletCount > 0)
-        {
-            SoundService.PlaySfx(SfxType.BossHit);
-        }
+        EventBus.Publish(new ScreenCleaveExecutedEvent(bulletCount));
     }
 
     /// <summary>
@@ -199,7 +195,7 @@ public static class PlayerSpecialAbilitySystem
             })
             .Set(new HitboxLifetime(catWeaponCfg.SpecialOrbLifetime));
 
-        SoundService.PlaySfx(SfxType.PlayerShoot);
+        EventBus.Publish(new PlayerShotFiredEvent(spawnPos, dir));
         CameraService.AddTrauma(0.2f);
     }
 }

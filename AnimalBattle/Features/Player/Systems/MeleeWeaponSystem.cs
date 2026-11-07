@@ -131,7 +131,7 @@ public static class MeleeWeaponSystem
             spring.Current = weapon.StretchScale;
             spring.Velocity = Vec2f.Zero;
 
-            SoundService.PlaySfx(SfxType.PlayerDash);
+            EventBus.Publish(new PlayerMeleeSwungEvent(spawnPos, dir));
 
             weapon.Timer = weapon.Cooldown;
             intent.ShootTriggered = false;

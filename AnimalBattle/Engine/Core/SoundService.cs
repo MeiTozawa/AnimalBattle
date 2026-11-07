@@ -42,11 +42,6 @@ public static class SoundService
     public static AudioConfig CurrentConfig { get; set; } = new();
 
     /// <summary>
-    ///     サウンドサービスが初期化済みかどうかを取得します。
-    /// </summary>
-    public static bool CheckInitialized() => _isInitialized;
-
-    /// <summary>
     ///     全 15 種類の音声アセットを読み込み、イベントバスへのリスナー登録を行って初期化します。
     ///     Debug ビルド時は Debug.Assert によりすべてのファイル存在および正常ロードを厳格に保証します。
     /// </summary>
@@ -122,6 +117,13 @@ public static class SoundService
         EventBus.Subscribe<BossDiveImpactEvent>(OnBossDiveImpact);
         EventBus.Subscribe<BossDamagedEvent>(OnBossDamaged);
         EventBus.Subscribe<BossDiedEvent>(OnBossDied);
+        EventBus.Subscribe<PlayerMeleeSwungEvent>(OnPlayerMeleeSwung);
+        EventBus.Subscribe<ItemSpawnedEvent>(OnItemSpawned);
+        EventBus.Subscribe<ItemCollectedEvent>(OnItemCollected);
+        EventBus.Subscribe<BulletCancelledEvent>(OnBulletCancelled);
+        EventBus.Subscribe<ScreenCleaveExecutedEvent>(OnScreenCleaveExecuted);
+        EventBus.Subscribe<CombatHitLandedEvent>(OnCombatHitLanded);
+        EventBus.Subscribe<PlaySfxRequestEvent>(OnPlaySfxRequested);
     }
 
     /// <summary>
@@ -143,6 +145,13 @@ public static class SoundService
         EventBus.Unsubscribe<BossDiveImpactEvent>(OnBossDiveImpact);
         EventBus.Unsubscribe<BossDamagedEvent>(OnBossDamaged);
         EventBus.Unsubscribe<BossDiedEvent>(OnBossDied);
+        EventBus.Unsubscribe<PlayerMeleeSwungEvent>(OnPlayerMeleeSwung);
+        EventBus.Unsubscribe<ItemSpawnedEvent>(OnItemSpawned);
+        EventBus.Unsubscribe<ItemCollectedEvent>(OnItemCollected);
+        EventBus.Unsubscribe<BulletCancelledEvent>(OnBulletCancelled);
+        EventBus.Unsubscribe<ScreenCleaveExecutedEvent>(OnScreenCleaveExecuted);
+        EventBus.Unsubscribe<CombatHitLandedEvent>(OnCombatHitLanded);
+        EventBus.Unsubscribe<PlaySfxRequestEvent>(OnPlaySfxRequested);
     }
 
     // --- イベントハンドラー ---
@@ -179,13 +188,28 @@ public static class SoundService
     }
 
     private static void OnBossDied(BossDiedEvent e) => PlaySfx(SfxType.BossDeath);
+    private static void OnPlayerMeleeSwung(PlayerMeleeSwungEvent e) => PlaySfx(SfxType.PlayerDash);
+    private static void OnItemSpawned(ItemSpawnedEvent e) => PlaySfx(SfxType.ItemDrop);
+    private static void OnItemCollected(ItemCollectedEvent e) => PlaySfx(SfxType.ItemHeal);
+    private static void OnBulletCancelled(BulletCancelledEvent e) => PlaySfx(SfxType.BossHit);
+    private static void OnCombatHitLanded(CombatHitLandedEvent e) => PlaySfx(SfxType.BossHit);
+    private static void OnPlaySfxRequested(PlaySfxRequestEvent e) => PlaySfx(e.Type, e.VolumeScale);
+
+    private static void OnScreenCleaveExecuted(ScreenCleaveExecutedEvent e)
+    {
+        PlaySfx(SfxType.BossDiveImpact);
+        if (e.ClearedBullets > 0)
+        {
+            PlaySfx(SfxType.BossHit);
+        }
+    }
 
     /// <summary>
     ///     指定した効果音 (SFX) を再生します。
     /// </summary>
     /// <param name="type">効果音種別</param>
     /// <param name="volumeScale">相対音量スケール (0.0 ～ 1.0)</param>
-    public static void PlaySfx(SfxType type, float volumeScale = 1.0f)
+    private static void PlaySfx(SfxType type, float volumeScale = 1.0f)
     {
         if (!SfxHandles.TryGetValue(type, out var handle) || handle < 0) return;
 

@@ -97,7 +97,7 @@ public static class ContinuousDamageSystem
 
             if (hasHitAny)
             {
-                SoundService.PlaySfx(SfxType.BossHit);
+                EventBus.Publish(new CombatHitLandedEvent());
             }
         }
     }

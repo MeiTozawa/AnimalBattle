@@ -15,7 +15,7 @@ public sealed class DamagePlayerAction(float damage) : ITutorialAction {
             hp.Current = MathF.Max(1.0f, hp.Current - damage);
 
             EventBus.Publish(new PlayerHealthChangedEvent(prevHp, hp.Current));
-            SoundService.PlaySfx(SfxType.PlayerHit);
+            EventBus.Publish(new PlayerDamagedEvent());
         });
     }
 }

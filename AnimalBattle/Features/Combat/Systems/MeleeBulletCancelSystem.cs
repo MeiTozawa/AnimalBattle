@@ -17,7 +17,7 @@ internal sealed class MeleeBulletCancelContext : IDisposable
     public required Query<Transform, Hitbox, Bullet> BulletQuery { get; init; }
     public readonly MeleeTarget[] Melees = new MeleeTarget[8];
     public int MeleeCount;
-    public bool SfxPlayedThisFrame;
+    public bool BulletCancelledThisFrame;
 
     public void Dispose()
     {
@@ -74,7 +74,7 @@ public static class MeleeBulletCancelSystem
         ctx.MeleeQuery.Iter(CollectMelees);
         if (ctx.MeleeCount == 0) return;
 
-        ctx.SfxPlayedThisFrame = false;
+        ctx.BulletCancelledThisFrame = false;
         ctx.BulletQuery.Iter(ProcessBullets);
     }
 
@@ -139,10 +139,10 @@ public static class MeleeBulletCancelSystem
                     bEntity.Add<RecycleTag>();
                     EffectSpawner.SpawnHitSparkEffect(world, bt.Position);
 
-                    if (!ctx.SfxPlayedThisFrame)
+                    if (!ctx.BulletCancelledThisFrame)
                     {
-                        SoundService.PlaySfx(SfxType.BossHit);
-                        ctx.SfxPlayedThisFrame = true;
+                        EventBus.Publish(new BulletCancelledEvent(bt.Position));
+                        ctx.BulletCancelledThisFrame = true;
                     }
                     break;
                 }
