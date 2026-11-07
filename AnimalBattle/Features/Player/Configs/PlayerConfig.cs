@@ -178,6 +178,18 @@ public class PlayerConfig : IConfigLifecycle {
     /// <summary>被弾衝撃時スカッシュ拡大率</summary>
     public Vec2f HitSquashScale { get; set; }
 
+    /// <summary>エネルギーゲージ最大スロット数</summary>
+    public float EnergyMaxSegments { get; set; }
+
+    /// <summary>エネルギーゲージ1スロットあたりの必要容量</summary>
+    public float EnergySegmentCapacity { get; set; }
+
+    /// <summary>与ダメージ1点あたりに獲得するエネルギー量</summary>
+    public float EnergyPerDamageDealt { get; set; }
+
+    /// <summary>被ダメージ1点あたりに獲得するエネルギー量</summary>
+    public float EnergyPerDamageTaken { get; set; }
+
     /// <inheritdoc />
     public virtual ErrorOr<Success> Validate()
     {

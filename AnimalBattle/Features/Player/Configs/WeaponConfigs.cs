@@ -32,6 +32,23 @@ public class RangedWeaponConfig : IWeaponConfig
 /// </summary>
 public sealed class CatWeaponConfig : RangedWeaponConfig
 {
+    /// <summary>特殊能力発動後の連続誤爆防止クールダウン（秒）</summary>
+    public float SpecialAbilityCooldown { get; set; }
+
+    /// <summary>巨型エネルギー弾の1秒あたりの期待接触ダメージ</summary>
+    public float SpecialOrbDamagePerSecond { get; set; }
+
+    /// <summary>巨型エネルギー弾の接触ダメージティック間隔（秒）</summary>
+    public float SpecialOrbTickInterval { get; set; }
+
+    /// <summary>巨型エネルギー弾の初速（px/s）</summary>
+    public float SpecialOrbSpeed { get; set; }
+
+    /// <summary>巨型エネルギー弾の接触判定半径（px）</summary>
+    public float SpecialOrbRadius { get; set; }
+
+    /// <summary>巨型エネルギー弾の最大生存時間（秒）</summary>
+    public float SpecialOrbLifetime { get; set; }
 }
 
 /// <summary>
@@ -55,4 +72,15 @@ public class MeleeWeaponConfig : IWeaponConfig
 /// </summary>
 public sealed class BunnyWeaponConfig : MeleeWeaponConfig
 {
+    /// <summary>特殊能力発動後の連続誤爆防止クールダウン（秒）</summary>
+    public float SpecialAbilityCooldown { get; set; }
+
+    /// <summary>全画面斬撃による全敵対ユニットへの確定ダメージ</summary>
+    public float SpecialCleaveDamage { get; set; }
+
+    /// <summary>全画面斬撃発動時の自機無敵時間（秒）</summary>
+    public float SpecialCleaveInvincibleDuration { get; set; }
+
+    /// <summary>全画面斬撃時のカメラ衝撃トラウマ値</summary>
+    public float SpecialCleaveTrauma { get; set; }
 }

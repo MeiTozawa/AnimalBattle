@@ -11,3 +11,11 @@ ShootRecoilImpulse = 120.0
 ShootRecoilStretch = { x = 0.88, y = 1.12 }
 MuzzleFlashDuration = 0.04
 MuzzleFlashRadius = 6.0
+
+# --- 特殊能力：巨型能量弾 (Special Ability: Giant Energy Orb) ---
+SpecialAbilityCooldown = 0.3
+SpecialOrbDamagePerSecond = 50.0
+SpecialOrbTickInterval = 0.1
+SpecialOrbSpeed = 160.0
+SpecialOrbRadius = 40.0
+SpecialOrbLifetime = 4.5

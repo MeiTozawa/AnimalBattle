@@ -75,3 +75,9 @@ JumpStretchScale = { x = 0.85, y = 1.20 }
 LandSquashScale = { x = 1.30, y = 0.75 }
 LandSquashVelocityThreshold = 150.0
 HitSquashScale = { x = 1.20, y = 0.80 }
+
+# --- エネルギーゲージ設定 ---
+EnergyMaxSegments = 2.0
+EnergySegmentCapacity = 120.0
+EnergyPerDamageDealt = 1.0
+EnergyPerDamageTaken = 15.0
