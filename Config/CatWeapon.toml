@@ -14,10 +14,10 @@ MuzzleFlashRadius = 6.0
 
 # --- 特殊能力：巨型能量弾 (Special Ability: Giant Energy Orb) ---
 SpecialAbilityCooldown = 0.3
-SpecialOrbDamagePerSecond = 50.0
+SpecialOrbDamagePerSecond = 20.0
 SpecialOrbTickInterval = 0.1
-SpecialOrbSpeed = 160.0
-SpecialOrbRadius = 40.0
+SpecialOrbSpeed = 240.0
+SpecialOrbRadius = 80.0
 SpecialOrbLifetime = 4.5
 SpecialOrbFillColor = "#F0FFAA28"
 SpecialOrbOutlineColor = "#FFFFDC64"

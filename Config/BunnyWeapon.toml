@@ -10,6 +10,6 @@ StretchScale = { x = 1.15, y = 0.88 }
 
 # --- 特殊能力：全画面斬撃 (Special Ability: Screen Cleave) ---
 SpecialAbilityCooldown = 0.3
-SpecialCleaveDamage = 15.0
+SpecialCleaveDamage = 20.0
 SpecialCleaveInvincibleDuration = 0.4
 SpecialCleaveTrauma = 0.6
