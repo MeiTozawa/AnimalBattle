@@ -23,6 +23,7 @@ public readonly struct CombatModule : IFlecsModule
              .AddHurtboxSpatialIndexSystem()       // 6. 食らい判定空間ハッシュ構築
              .AddCombatCollisionSystem()           // 7. 単発弾幕の衝突判定
              .AddPersistentCollisionSystem()       // 8. 持続判定
+             .AddContinuousDamageSystem()          // 8.5 接触継続跳字判定
              .AddMeleeLifetimeSystem()             // 9. 近接攻撃判定の持続時間減衰と回収タグ付与
              .AddDummyPhysicsSystem()              // 10. 手触り検証用木桩の物理移動・足場衝突判定
              .AddDamageResolutionSystem()          // 11. 全戦闘ユニット共通の被弾ダメージ裁定・撃退・死亡処理
