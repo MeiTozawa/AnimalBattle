@@ -12,6 +12,7 @@ internal sealed class BattleAiSystemContext : IDisposable
 {
     public required Query<TileMap> TileMapQuery { get; init; }
     public required Query<Transform, Velocity> PlayerQuery { get; init; }
+    public required Query AlivePlayerQuery { get; init; }
     public required Query<Transform, Velocity, CollisionBox, Health, Sprite, BossCombatState, BossBrainComponent, CombatProfile> BossQuery { get; init; }
     public required Query CanBossMoveQuery { get; init; }
     public required Query CanBossAttackQuery { get; init; }
@@ -34,6 +35,7 @@ internal sealed class BattleAiSystemContext : IDisposable
     {
         TileMapQuery.Dispose();
         PlayerQuery.Dispose();
+        AlivePlayerQuery.Dispose();
         BossQuery.Dispose();
         CanBossMoveQuery.Dispose();
         CanBossAttackQuery.Dispose();
@@ -58,6 +60,12 @@ public static class BattleAiSystem
         // プレイヤーエンティティの追跡用クエリ
         var playerQuery = world.QueryBuilder<Transform, Velocity>()
             .With<PlayerTag>()
+            .Build();
+
+        // 生存プレイヤー判定用クエリ：DeadTag 除外をアーキタイプ層で高速判定（Entity.Has 撲滅）
+        var alivePlayerQuery = world.QueryBuilder()
+            .With<PlayerTag>()
+            .Without<DeadTag>()
             .Build();
 
         // Boss 更新用クエリ：HitstopState 中の凍結および DeadTag 除外を徹底
@@ -86,6 +94,7 @@ public static class BattleAiSystem
         {
             TileMapQuery = tileMapQuery,
             PlayerQuery = playerQuery,
+            AlivePlayerQuery = alivePlayerQuery,
             BossQuery = bossQuery,
             CanBossMoveQuery = canBossMoveQuery,
             CanBossAttackQuery = canBossAttackQuery
@@ -107,10 +116,10 @@ public static class BattleAiSystem
         var ctx = w.Get<BattleAiSystemContext>();
 
         // プレイヤーの生存・座標状態を更新
-        ctx.IsPlayerAlive = false;
         ctx.FoundPlayerThisFrame = false;
-
         ctx.PlayerQuery.Iter(CollectPlayerState);
+        var gameOver = w.Has<GameOverTag>();
+        ctx.IsPlayerAlive = ctx.AlivePlayerQuery.Count() > 0 && !gameOver;
 
         if (!ctx.FoundPlayerThisFrame && !ctx.HasPlayerEverSpawned) return;
 
@@ -150,7 +159,6 @@ public static class BattleAiSystem
 
         var w = it.World();
         var ctx = w.Get<BattleAiSystemContext>();
-        var gameOver = w.Has<GameOverTag>();
 
         for (var i = 0; i < count; i++)
         {
@@ -160,8 +168,6 @@ public static class BattleAiSystem
             ctx.CachedPlayerPos = transforms[i].Position;
             ctx.CachedPlayerVel = velocities[i].Value;
             ctx.CachedPlayerEntityId = pe.Id;
-            // プレイヤーが DeadTag を保持しておらず、ワールドがゲームオーバー状態でなければ生存と判定
-            ctx.IsPlayerAlive = !pe.Has<DeadTag>() && !gameOver;
         }
     }
 

@@ -61,14 +61,22 @@ public static class TutorialFlowSystem
 
             for (var i = 0; i < pCount; i++)
             {
-                var pEntity = pIt.Entity(i);
-                if (hps[i].Current <= 0 || pEntity.Has<DeadTag>())
+                if (hps[i].Current <= 0)
                 {
-                    PlayerPrefabs.ResetPlayerEntity(pEntity);
+                    PlayerPrefabs.ResetPlayerEntity(pIt.Entity(i));
                     pCtx.PlayerDied = true;
                 }
             }
         });
+
+        if (ctx.DeadPlayerQuery.Count() > 0)
+        {
+            ctx.DeadPlayerQuery.Each(static (Entity pEntity) =>
+            {
+                PlayerPrefabs.ResetPlayerEntity(pEntity);
+            });
+            ctx.PlayerDied = true;
+        }
 
         var playerDied = ctx.PlayerDied;
 

@@ -9,6 +9,7 @@ namespace AnimalBattle.Features.Tutorial.Systems;
 public sealed class TutorialSystemContext : IDisposable
 {
     public Query<Health, Transform, Velocity> PlayerHealthQuery { get; }
+    public Query DeadPlayerQuery { get; }
     public Query<TutorialTarget, Transform> TargetQuery { get; }
     public Query<TutorialDoor, Transform> DoorQuery { get; }
     public Query MinionQuery { get; }
@@ -25,6 +26,11 @@ public sealed class TutorialSystemContext : IDisposable
             .With<PlayerTag>()
             .Build();
 
+        DeadPlayerQuery = world.QueryBuilder()
+            .With<PlayerTag>()
+            .With<DeadTag>()
+            .Build();
+
         TargetQuery = world.QueryBuilder<TutorialTarget, Transform>().Build();
         DoorQuery = world.QueryBuilder<TutorialDoor, Transform>().Build();
         MinionQuery = world.QueryBuilder().With<MinionTag>().Without<DeadTag>().Build();
@@ -34,6 +40,7 @@ public sealed class TutorialSystemContext : IDisposable
     public void Dispose()
     {
         PlayerHealthQuery.Dispose();
+        DeadPlayerQuery.Dispose();
         TargetQuery.Dispose();
         DoorQuery.Dispose();
         MinionQuery.Dispose();

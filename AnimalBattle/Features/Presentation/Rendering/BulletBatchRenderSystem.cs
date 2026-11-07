@@ -65,9 +65,16 @@ public static class BulletBatchRenderSystem
     {
         world.System<Transform, Velocity>("PlayerBulletRenderSystem")
             .With<PlayerBulletTag>()
+            .Without<Bullet>()
             .Without<RecycleTag>()
             .Kind(Ecs.OnStore)
             .Iter(DrawPlayerBulletsBatch);
+
+        world.System<Transform, Bullet>("SpecialPlayerBulletRenderSystem")
+            .With<PlayerBulletTag>()
+            .Without<RecycleTag>()
+            .Kind(Ecs.OnStore)
+            .Iter(DrawSpecialPlayerBulletsBatch);
 
         world.System<Transform, Bullet, BulletModifier>("EnemyBulletRenderSystem")
             .With<EnemyBulletTag>()
@@ -130,20 +137,6 @@ public static class BulletBatchRenderSystem
             var p = trans[i].Position.ToVec2i();
             if (p.X < _clipMinX || p.X > _clipMaxX || p.Y < _clipMinY || p.Y > _clipMaxY) continue;
 
-            var entity = it.Entity(i);
-            if (entity.Has<Bullet>())
-            {
-                ref readonly var b = ref entity.Get<Bullet>();
-                var radius = (int)b.Radius;
-                var outlineRadius = radius + _bOutlinePadding;
-                var coreRadius = Math.Max(_bCoreMinRadius, (int)(radius * _bCoreRadiusRatio));
-
-                PushBatchCircle(p, outlineRadius, b.OutlineColor.ToUint(), true);
-                PushBatchCircle(p, radius, b.FillColor.ToUint(), true);
-                PushBatchCircle(p, coreRadius, _bCoreColor.ToUint(), true);
-                continue;
-            }
-
             var v = vel[i].Value;
             var speedSq = v.LengthSquared();
             if (speedSq > 1.0f)
@@ -157,6 +150,38 @@ public static class BulletBatchRenderSystem
 
             PushBatchCircle(p, _pOuterRadius, _pOuterColor.ToUint(), true);
             PushBatchCircle(p, _pInnerRadius, _pInnerColor.ToUint(), true);
+        }
+
+        if (_circleBatchCount > 0)
+        {
+            GameEngine.DrawCirclesBatch(_circleBatchBuffer.AsSpan(0, _circleBatchCount));
+        }
+    }
+
+    private static void DrawSpecialPlayerBulletsBatch(Iter it, Field<Transform> trans, Field<Bullet> bullets)
+    {
+        var w = it.World();
+        if (!w.Get<GameFlow>().IsGameplay) return;
+
+        var count = it.Count();
+        if (count == 0) return;
+
+        UpdateContext(w.Get<BulletRenderConfig>(), w.Get<ArenaConfig>());
+        _circleBatchCount = 0;
+
+        for (var i = 0; i < count; ++i)
+        {
+            var p = trans[i].Position.ToVec2i();
+            if (p.X < _clipMinX || p.X > _clipMaxX || p.Y < _clipMinY || p.Y > _clipMaxY) continue;
+
+            ref readonly var b = ref bullets[i];
+            var radius = (int)b.Radius;
+            var outlineRadius = radius + _bOutlinePadding;
+            var coreRadius = Math.Max(_bCoreMinRadius, (int)(radius * _bCoreRadiusRatio));
+
+            PushBatchCircle(p, outlineRadius, b.OutlineColor.ToUint(), true);
+            PushBatchCircle(p, radius, b.FillColor.ToUint(), true);
+            PushBatchCircle(p, coreRadius, _bCoreColor.ToUint(), true);
         }
 
         if (_circleBatchCount > 0)

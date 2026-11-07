@@ -13,9 +13,17 @@ internal sealed class DamageResolutionContext : IDisposable
     /// <summary>生存中の自機プレイヤー情報抽出クエリ。</summary>
     public required Query<Health, EnergyGauge, CharacterTypeComponent> PlayerQuery { get; init; }
 
+    /// <summary>自機近接判定エンティティの制御クエリ。</summary>
+    public required Query PlayerMeleeQuery { get; init; }
+
+    /// <summary>Boss 制御コンポーネント抽出クエリ。</summary>
+    public required Query<BossBrainComponent> BossBrainQuery { get; init; }
+
     public void Dispose()
     {
         PlayerQuery.Dispose();
+        PlayerMeleeQuery.Dispose();
+        BossBrainQuery.Dispose();
     }
 }
 
@@ -38,9 +46,19 @@ public static class DamageResolutionSystem
             .Without<DeadTag>()
             .Build();
 
+        var playerMeleeQuery = world.QueryBuilder()
+            .With<PlayerMeleeTag>()
+            .Build();
+
+        var bossBrainQuery = world.QueryBuilder<BossBrainComponent>()
+            .With<BossTag>()
+            .Build();
+
         world.Set(new DamageResolutionContext
         {
-            PlayerQuery = playerQuery
+            PlayerQuery = playerQuery,
+            PlayerMeleeQuery = playerMeleeQuery,
+            BossBrainQuery = bossBrainQuery
         });
 
         // 出現バッファ中のエンティティはダメージ裁定対象から除外（無敵保証）
@@ -196,10 +214,11 @@ public static class DamageResolutionSystem
             // ロール固有の被弾リアクション
             if (profile.Kind == CombatEntityKind.Player)
             {
-                ref var gauge = ref entity.GetMut<EnergyGauge>();
-                var pType = entity.Has<CharacterTypeComponent>() ? entity.Get<CharacterTypeComponent>().Value : CharacterType.Cat;
-                var pCfg = world.GetPlayerConfig(pType);
-                gauge.CurrentEnergy = Math.Clamp(gauge.CurrentEnergy + finalDamage * pCfg.EnergyPerDamageTaken, 0.0f, gauge.MaxEnergy);
+                ctx.PlayerQuery.Each((ref _, ref pGauge, ref pChar) =>
+                {
+                    var pCfg = world.GetPlayerConfig(pChar.Value);
+                    pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + finalDamage * pCfg.EnergyPerDamageTaken, 0.0f, pGauge.MaxEnergy);
+                });
 
                 if (profile.InvincibleDuration > 0.0f)
                 {
@@ -230,18 +249,7 @@ public static class DamageResolutionSystem
                         world.Add<GameOverTag>();
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
-                        if (entity.Has<EquippedWeapon>())
-                        {
-                            var melee = entity.Target<EquippedWeapon>();
-                            if (melee.IsAlive())
-                            {
-                                melee.Disable();
-                                if (melee.Has<Sprite>())
-                                {
-                                    melee.GetMut<Sprite>().IsVisible = false;
-                                }
-                            }
-                        }
+                        ctx.PlayerMeleeQuery.Each(static (Entity e) => e.Disable());
 
                         EffectSpawner.SpawnPlayerDeathParticles(world, trans.Position);
                         CameraService.AddTrauma(cameraCfg.PlayerHeavyHitTrauma);
@@ -252,16 +260,14 @@ public static class DamageResolutionSystem
                         world.Add<GameOverTag>();
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
-                        entity.GetMut<Hitbox>().IsActive = false;
 
-                        if (entity.Has<BossBrainComponent>())
+                        ctx.BossBrainQuery.Each(static (ref BossBrainComponent b) =>
                         {
-                            var brain = entity.GetMut<BossBrainComponent>().Brain;
-                            if (!brain.IsDead)
+                            if (!b.Brain.IsDead)
                             {
-                                brain.Kill();
+                                b.Brain.Kill();
                             }
-                        }
+                        });
 
                         BulletSpawner.ClearAllEnemyBullets(world);
                         MeleeSpawner.ClearAllEnemyMelee(world);
@@ -274,7 +280,6 @@ public static class DamageResolutionSystem
                     case CombatEntityKind.Minion:
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
-                        entity.GetMut<Hitbox>().IsActive = false;
                         EffectSpawner.SpawnHitSparkEffect(world, trans.Position);
                         // 雑魚敵撃破時の回復アイテムドロップ判定
                         TryDropHealthPack(world, trans.Position, hp, finalDamage);

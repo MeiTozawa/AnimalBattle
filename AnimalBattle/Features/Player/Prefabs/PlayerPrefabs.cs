@@ -110,9 +110,7 @@ public static class PlayerPrefabs
         if (!player.IsAlive()) return;
 
         var w = player.CsWorld();
-        var type = player.Has<CharacterTypeComponent>()
-            ? player.Get<CharacterTypeComponent>().Value
-            : CharacterType.Cat;
+        var type = player.Get<CharacterTypeComponent>().Value;
         var cfg = w.GetPlayerConfig(type);
 
         player.Set(new Transform(cfg.Spawn, cfg.Scale));
@@ -151,11 +149,8 @@ public static class PlayerPrefabs
             {
                 melee.Disable();
                 melee.Set(new HitHistory());
-                if (melee.Has<Sprite>())
-                {
-                    ref var meleeSprite = ref melee.GetMut<Sprite>();
-                    meleeSprite.IsVisible = true;
-                }
+                ref var meleeSprite = ref melee.GetMut<Sprite>();
+                meleeSprite.IsVisible = true;
             }
         }
         else if (weaponCfg is RangedWeaponConfig rangedCfg)

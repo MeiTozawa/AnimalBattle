@@ -47,21 +47,10 @@ public static class OrbitSatelliteMovementSystem
         {
             var e = it.Entity(i);
             var parent = e.Target<OrbitOf>();
-            if (!parent.IsAlive() || !parent.Enabled() || parent.Has<RecycleTag>())
+            if (!parent.IsAlive() || !parent.Enabled())
             {
                 e.Add<RecycleTag>();
                 continue;
-            }
-
-            // プール所属エンティティの場合の貸出フラグ確認：二重探索を回避
-            if (parent.Has<PoolLeaseState>())
-            {
-                ref readonly var lease = ref parent.Get<PoolLeaseState>();
-                if (!lease.IsRented)
-                {
-                    e.Add<RecycleTag>();
-                    continue;
-                }
             }
 
             ref var sat = ref satellites[i];

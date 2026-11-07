@@ -13,6 +13,8 @@ internal sealed class BattleInputSystemContext : IDisposable
     public required Query PlayerEntitiesQuery { get; init; }
     public required Query<GameplayTagState> PlayerTagStateQuery { get; init; }
     public required Query<Health, BossCombatState, BossBrainComponent> BossQuery { get; init; }
+    public required Query<Health, BossCombatState, BossBrainComponent> ActiveBossQuery { get; init; }
+    public required Query<EnergyGauge> PlayerEnergyQuery { get; init; }
 
     public void Dispose()
     {
@@ -21,6 +23,8 @@ internal sealed class BattleInputSystemContext : IDisposable
         PlayerEntitiesQuery.Dispose();
         PlayerTagStateQuery.Dispose();
         BossQuery.Dispose();
+        ActiveBossQuery.Dispose();
+        PlayerEnergyQuery.Dispose();
     }
 }
 
@@ -66,6 +70,14 @@ public static class BattleInputSystem
         var bossQuery = world.QueryBuilder<Health, BossCombatState, BossBrainComponent>()
             .With<BossTag>()
             .Build();
+        var activeBossQuery = world.QueryBuilder<Health, BossCombatState, BossBrainComponent>()
+            .With<BossTag>()
+            .Without<DeadTag>()
+            .Build();
+        var playerEnergyQuery = world.QueryBuilder<EnergyGauge>()
+            .With<PlayerTag>()
+            .Without<DeadTag>()
+            .Build();
 
         world.Set(new BattleInputSystemContext
         {
@@ -74,6 +86,8 @@ public static class BattleInputSystem
             PlayerEntitiesQuery = playerEntitiesQuery,
             PlayerTagStateQuery = playerTagStateQuery,
             BossQuery = bossQuery,
+            ActiveBossQuery = activeBossQuery,
+            PlayerEnergyQuery = playerEnergyQuery,
         });
 
         world.System("BattleInputSystem")
@@ -278,7 +292,7 @@ public static class BattleInputSystem
         if ((isF2 && !_prevF2) || (isF3 && !_prevF3) || (isF4 && !_prevF4))
         {
             _targetDebugPhase = (isF2 && !_prevF2) ? Phase.Phase1 : ((isF3 && !_prevF3) ? Phase.Phase2 : Phase.Phase3);
-            ctx.BossQuery.Each(ApplyDebugPhase);
+            ctx.ActiveBossQuery.Each(ApplyDebugPhase);
         }
 
         _prevF2 = isF2;
@@ -288,7 +302,7 @@ public static class BattleInputSystem
 
     private static void ApplyDebugPhase(Entity boss, ref Health hp, ref BossCombatState state, ref BossBrainComponent brainComp)
     {
-        if (!boss.IsAlive() || boss.Has<DeadTag>() || hp.Current <= 0.0f) return;
+        if (!boss.IsAlive() || hp.Current <= 0.0f) return;
         brainComp.Brain.DebugSetPhase(_targetDebugPhase);
 
         var w = boss.CsWorld();
@@ -342,10 +356,8 @@ public static class BattleInputSystem
     /// </summary>
     private static void AddDebugEnergy(BattleInputSystemContext ctx)
     {
-        ctx.PlayerEntitiesQuery.Each(static player =>
+        ctx.PlayerEnergyQuery.Each(static (ref EnergyGauge gauge) =>
         {
-            if (!player.IsAlive() || !player.Has<EnergyGauge>()) return;
-            ref var gauge = ref player.GetMut<EnergyGauge>();
             gauge.CurrentEnergy = MathF.Min(gauge.MaxEnergy, gauge.CurrentEnergy + gauge.SegmentCapacity);
         });
     }
