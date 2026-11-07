@@ -8,9 +8,6 @@ using Core;
 public interface IAssetManager : IDisposable
 {
 
-    /// <summary>スプライトシート画像ロードおよび初期化を実行します。</summary>
-    void Initialize();
-
     /// <summary>ロード済みの全テクスチャ・スプライトを破棄し、状態をリセットします。</summary>
     void Shutdown();
 

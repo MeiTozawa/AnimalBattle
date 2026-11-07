@@ -17,7 +17,6 @@ internal static class Program {
             GameEngine.Initialize(width, height);
 
             using GameManager gameManager = new();
-            gameManager.Initialize();
 
             RunGameLoop(gameManager);
         }

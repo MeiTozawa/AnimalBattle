@@ -20,6 +20,7 @@ public sealed class AssetManager : IAssetManager {
     public AssetManager()
     {
         _pathResolver = AssetPathResolver.Instance;
+        LoadInitialAssets();
     }
 
     /// <inheritdoc />
@@ -61,7 +62,7 @@ public sealed class AssetManager : IAssetManager {
     }
 
     /// <inheritdoc />
-    public void Initialize()
+    private void LoadInitialAssets()
     {
         var allLoaded = true;
         foreach (var (charType, config) in AnimationRegistry.CharacterConfigs)

@@ -42,6 +42,8 @@ public sealed class CombatPoolService : IDisposable
     /// <param name="world">エンティティが所属する Flecs.NET ワールド。</param>
     public CombatPoolService(World world)
     {
+        _current = this;
+
         PlayerBullets     = RegisterPool(new EntityPool(world, CombatPrefabs.PlayerBullet, 64, ResetPlayerBulletEntity));
         EnemyBullets      = RegisterPool(new EntityPool(world, CombatPrefabs.EnemyBulletBase, 512, ResetEnemyBulletEntity));
         SparkEffects      = RegisterPool(new EntityPool(world, VfxPrefabs.SparkVfx, 256, ResetEffectEntity));
@@ -56,18 +58,6 @@ public sealed class CombatPoolService : IDisposable
         return pool;
     }
 
-    /// <summary>
-    ///     戦闘エンティティプールサービスを初期化し、現在のアクティブインスタンスとして登録します。
-    /// </summary>
-    /// <param name="world">対象の Flecs.NET ワールド。</param>
-    /// <returns>初期化されたサービスインスタンス。</returns>
-    public static CombatPoolService Initialize(World world)
-    {
-        _current?.Dispose();
-        _current = new CombatPoolService(world);
-        return _current;
-    }
-
     /// <summary>自機通常弾エンティティをプールから借出します。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Entity RentPlayerBullet() => Current.PlayerBullets.Rent();
@@ -75,10 +65,6 @@ public sealed class CombatPoolService : IDisposable
     /// <summary>エネミー通常弾幕エンティティをプールから借出します。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Entity RentEnemyBullet() => Current.EnemyBullets.Rent();
-
-    /// <summary>Boss 通常弾幕エンティティをプールから借出します（互換用エイリアス）。</summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Entity RentBossBullet() => RentEnemyBullet();
 
     /// <summary>スパーク演出用エンティティをプールから借出します。</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
