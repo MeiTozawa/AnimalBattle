@@ -10,8 +10,8 @@ namespace AnimalBattle.Combat.Systems;
 /// </summary>
 internal sealed class DamageResolutionContext : IDisposable
 {
-    /// <summary>生存中の自機プレイヤー生命値抽出クエリ。</summary>
-    public required Query<Health> PlayerQuery { get; init; }
+    /// <summary>生存中の自機プレイヤー情報抽出クエリ。</summary>
+    public required Query<Health, EnergyGauge, CharacterTypeComponent> PlayerQuery { get; init; }
 
     public void Dispose()
     {
@@ -33,7 +33,7 @@ public static class DamageResolutionSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddDamageResolutionSystem(this World world)
     {
-        var playerQuery = world.QueryBuilder<Health>()
+        var playerQuery = world.QueryBuilder<Health, EnergyGauge, CharacterTypeComponent>()
             .With<PlayerTag>()
             .Without<DeadTag>()
             .Build();
@@ -80,6 +80,7 @@ public static class DamageResolutionSystem
         var combatCfg = world.Get<CombatPrefabConfig>();
         var physicsCfg = combatCfg.Physics;
         var isGameOver = world.Has<GameOverTag>();
+        var ctx = world.Get<DamageResolutionContext>();
 
         for (var i = 0; i < count; i++)
         {
@@ -88,13 +89,14 @@ public static class DamageResolutionSystem
 
             // 被弾イベントを集約
             var totalDamage = 0.0f;
+            var playerDamageDealt = 0.0f;
             var targetKnockback = Vec2f.Zero;
             var isHeavy = false;
             var hasHit = false;
 
-            for (var j = 0; j < events.Length; j++)
+            foreach (var t in events)
             {
-                ref readonly var evt = ref events[j];
+                ref readonly var evt = ref t;
                 if (evt.Victim != entity) continue;
 
                 hasHit = true;
@@ -107,6 +109,11 @@ public static class DamageResolutionSystem
                 else
                 {
                     totalDamage += evt.Damage;
+                }
+
+                if (evt.SourceFaction == Faction.Friendly)
+                {
+                    playerDamageDealt += evt.Damage;
                 }
 
                 isHeavy |= evt.IsHeavy;
@@ -140,6 +147,17 @@ public static class DamageResolutionSystem
             var isVulnerable = tagState.HasTag(GameplayTag.Vulnerable);
             var multiplier = (profile.Kind != CombatEntityKind.Player && isVulnerable) ? physicsCfg.VulnerableDamageMultiplier : 1.0f;
             var finalDamage = totalDamage * multiplier;
+
+            // プレイヤーが敵に与えたダメージに応じて自機エネルギーゲージを加算
+            var finalPlayerDamage = playerDamageDealt * multiplier;
+            if (profile.Kind != CombatEntityKind.Player && finalPlayerDamage > 0.0f)
+            {
+                ctx.PlayerQuery.Each((ref _, ref pGauge, ref pChar) =>
+                {
+                    var pCfg = world.GetPlayerConfig(pChar.Value);
+                    pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + finalPlayerDamage * pCfg.EnergyPerDamageDealt, 0.0f, pGauge.MaxEnergy);
+                });
+            }
 
             var prevHp = hp.Current;
             hp.Current = MathF.Max(0.0f, hp.Current - finalDamage);
@@ -178,6 +196,11 @@ public static class DamageResolutionSystem
             // ロール固有の被弾リアクション
             if (profile.Kind == CombatEntityKind.Player)
             {
+                ref var gauge = ref entity.GetMut<EnergyGauge>();
+                var pType = entity.Has<CharacterTypeComponent>() ? entity.Get<CharacterTypeComponent>().Value : CharacterType.Cat;
+                var pCfg = world.GetPlayerConfig(pType);
+                gauge.CurrentEnergy = Math.Clamp(gauge.CurrentEnergy + finalDamage * pCfg.EnergyPerDamageTaken, 0.0f, gauge.MaxEnergy);
+
                 if (profile.InvincibleDuration > 0.0f)
                 {
                     TimedEffectService.ApplyEffect(ref effectState, ref tagState, GameplayTag.Untargetable, profile.InvincibleDuration, entity.Id);
@@ -314,7 +337,7 @@ public static class DamageResolutionSystem
         Health playerHp = default;
         var hasPlayer = false;
 
-        ctx.PlayerQuery.Each((ref h) =>
+        ctx.PlayerQuery.Each((ref h, ref _, ref _) =>
         {
             playerHp = h;
             hasPlayer = true;

@@ -30,7 +30,7 @@ public static class ItemSpawner
         if (world.Has<ItemPickupContext>())
         {
             var pCtx = world.Get<ItemPickupContext>();
-            pCtx.PlayerQuery.Each((ref Transform tr, ref Health hp) =>
+            pCtx.PlayerQuery.Each((ref tr, ref hp) =>
             {
                 if (hp.Current > 0.0f)
                 {
@@ -41,7 +41,7 @@ public static class ItemSpawner
         else
         {
             using var playerQuery = world.QueryBuilder<Transform>().With<PlayerTag>().Without<DeadTag>().Build();
-            playerQuery.Each((ref Transform tr) =>
+            playerQuery.Each((ref tr) =>
             {
                 targetDir = tr.Position.X < spawnPos.X ? -1.0f : 1.0f;
             });
