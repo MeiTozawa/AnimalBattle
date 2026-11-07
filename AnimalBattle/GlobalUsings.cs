@@ -39,6 +39,7 @@ global using AnimalBattle.Arena.Components;
 global using AnimalBattle.Presentation.Rendering;
 global using AnimalBattle.Presentation.Animation;
 global using AnimalBattle.Presentation.Vfx;
+global using AnimalBattle.Presentation.Audio;
 global using AnimalBattle.Configs;
 
 // Scenes

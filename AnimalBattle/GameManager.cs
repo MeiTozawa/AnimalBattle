@@ -13,6 +13,7 @@ public class GameManager : IDisposable {
     private World _ecsWorld;
     private readonly IConfigRegistry _configRegistry;
     private readonly IAssetManager _assetManager;
+    private readonly AudioFeedback _audioFeedback;
     private bool _isDisposed;
     private bool _isUpdating;
     private Action? _pendingSceneTransition;
@@ -36,6 +37,8 @@ public class GameManager : IDisposable {
         _assetManager = new AssetManager();
         _assetManager.Initialize();
         _ecsWorld.Set<IAssetManager>(_assetManager);
+
+        _audioFeedback = new AudioFeedback();
 
 
         // 共有パイプラインモジュールおよびプレハブテンプレートの決定論的登録
@@ -209,6 +212,7 @@ public class GameManager : IDisposable {
         _configRegistry.Dispose();
         _ecsWorld.Dispose();
 
+        _audioFeedback.Dispose();
         _assetManager.Dispose();
         EventBus.ClearAll();
 

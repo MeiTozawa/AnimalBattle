@@ -28,9 +28,9 @@ public enum SfxType
 }
 
 /// <summary>
-///     ゲーム内ドメインイベントを購読し、DxLib ネイティブサウンドパイプラインを通じて
-///     BGM、効果音 (SFX)、および低体力警報を統括制御する音響サービス。
-///     ゲームプレイシステムから完全に疎結合化されています。
+///     DxLib ネイティブサウンドパイプラインを通じて
+///     BGM、効果音 (SFX) のロード、再生、停止、音量設定を統括する低レベル音響サービス・ユーティリティ。
+///     ドメインイベントへの反応・解釈は表現層（<c>AudioFeedbackSystem</c> 等）に委譲されています。
 /// </summary>
 public static class SoundService
 {
@@ -42,7 +42,12 @@ public static class SoundService
     public static AudioConfig CurrentConfig { get; set; } = new();
 
     /// <summary>
-    ///     全 15 種類の音声アセットを読み込み、イベントバスへのリスナー登録を行って初期化します。
+    ///     サウンドサービスが初期化済みかどうかを取得します。
+    /// </summary>
+    public static bool CheckInitialized() => _isInitialized;
+
+    /// <summary>
+    ///     全 15 種類の音声アセットを読み込み、サウンドエンジンを初期化します。
     ///     Debug ビルド時は Debug.Assert によりすべてのファイル存在および正常ロードを厳格に保証します。
     /// </summary>
     public static void Initialize()
@@ -90,118 +95,8 @@ public static class SoundService
             SfxHandles[type] = handle;
         }
 
-        RegisterEventHandlers();
         _isInitialized = true;
-        Log.Info("SoundService", $"[SoundService] サウンドエンジン初期化完了: BGM 1 件、SFX {SfxHandles.Count} 件をロードし、EventBus へ購読しました。");
-    }
-
-    /// <summary>
-    ///     EventBus の各ドメインイベントを購読します。
-    ///     多重登録を防止するため、既存の登録がある場合は事前に解除します。
-    /// </summary>
-    public static void RegisterEventHandlers()
-    {
-        UnregisterEventHandlers();
-
-        EventBus.Subscribe<PlayerJumpedEvent>(OnPlayerJumped);
-        EventBus.Subscribe<PlayerDoubleJumpedEvent>(OnPlayerDoubleJumped);
-        EventBus.Subscribe<PlayerLandedEvent>(OnPlayerLanded);
-        EventBus.Subscribe<PlayerShotFiredEvent>(OnPlayerShotFired);
-        EventBus.Subscribe<PlayerDashedEvent>(OnPlayerDashed);
-        EventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
-        EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
-        EventBus.Subscribe<PlayerHealthChangedEvent>(OnPlayerHealthChanged);
-        EventBus.Subscribe<CombatResetEvent>(OnCombatReset);
-        EventBus.Subscribe<EnemyBulletFiredEvent>(OnEnemyBulletFired);
-        EventBus.Subscribe<BossBulletFiredEvent>(OnBossBulletFired);
-        EventBus.Subscribe<BossDiveImpactEvent>(OnBossDiveImpact);
-        EventBus.Subscribe<BossDamagedEvent>(OnBossDamaged);
-        EventBus.Subscribe<BossDiedEvent>(OnBossDied);
-        EventBus.Subscribe<PlayerMeleeSwungEvent>(OnPlayerMeleeSwung);
-        EventBus.Subscribe<ItemSpawnedEvent>(OnItemSpawned);
-        EventBus.Subscribe<ItemCollectedEvent>(OnItemCollected);
-        EventBus.Subscribe<BulletCancelledEvent>(OnBulletCancelled);
-        EventBus.Subscribe<ScreenCleaveExecutedEvent>(OnScreenCleaveExecuted);
-        EventBus.Subscribe<CombatHitLandedEvent>(OnCombatHitLanded);
-        EventBus.Subscribe<PlaySfxRequestEvent>(OnPlaySfxRequested);
-    }
-
-    /// <summary>
-    ///     EventBus の全ドメインイベントの購読を解除します。
-    /// </summary>
-    public static void UnregisterEventHandlers()
-    {
-        EventBus.Unsubscribe<PlayerJumpedEvent>(OnPlayerJumped);
-        EventBus.Unsubscribe<PlayerDoubleJumpedEvent>(OnPlayerDoubleJumped);
-        EventBus.Unsubscribe<PlayerLandedEvent>(OnPlayerLanded);
-        EventBus.Unsubscribe<PlayerShotFiredEvent>(OnPlayerShotFired);
-        EventBus.Unsubscribe<PlayerDashedEvent>(OnPlayerDashed);
-        EventBus.Unsubscribe<PlayerDamagedEvent>(OnPlayerDamaged);
-        EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
-        EventBus.Unsubscribe<PlayerHealthChangedEvent>(OnPlayerHealthChanged);
-        EventBus.Unsubscribe<CombatResetEvent>(OnCombatReset);
-        EventBus.Unsubscribe<EnemyBulletFiredEvent>(OnEnemyBulletFired);
-        EventBus.Unsubscribe<BossBulletFiredEvent>(OnBossBulletFired);
-        EventBus.Unsubscribe<BossDiveImpactEvent>(OnBossDiveImpact);
-        EventBus.Unsubscribe<BossDamagedEvent>(OnBossDamaged);
-        EventBus.Unsubscribe<BossDiedEvent>(OnBossDied);
-        EventBus.Unsubscribe<PlayerMeleeSwungEvent>(OnPlayerMeleeSwung);
-        EventBus.Unsubscribe<ItemSpawnedEvent>(OnItemSpawned);
-        EventBus.Unsubscribe<ItemCollectedEvent>(OnItemCollected);
-        EventBus.Unsubscribe<BulletCancelledEvent>(OnBulletCancelled);
-        EventBus.Unsubscribe<ScreenCleaveExecutedEvent>(OnScreenCleaveExecuted);
-        EventBus.Unsubscribe<CombatHitLandedEvent>(OnCombatHitLanded);
-        EventBus.Unsubscribe<PlaySfxRequestEvent>(OnPlaySfxRequested);
-    }
-
-    // --- イベントハンドラー ---
-
-    private static void OnPlayerJumped(PlayerJumpedEvent e) => PlaySfx(SfxType.PlayerJump);
-    private static void OnPlayerDoubleJumped(PlayerDoubleJumpedEvent e) => PlaySfx(SfxType.PlayerDoubleJump);
-    private static void OnPlayerLanded(PlayerLandedEvent e) => PlaySfx(SfxType.PlayerLand);
-    private static void OnPlayerShotFired(PlayerShotFiredEvent e) => PlaySfx(SfxType.PlayerShoot);
-    private static void OnPlayerDashed(PlayerDashedEvent e) => PlaySfx(SfxType.PlayerDash);
-    private static void OnPlayerDamaged(PlayerDamagedEvent e) => PlaySfx(SfxType.PlayerHit);
-
-    private static void OnPlayerDied(PlayerDiedEvent e) => PlaySfx(SfxType.PlayerDeath);
-
-    private static void OnPlayerHealthChanged(PlayerHealthChangedEvent e)
-    {
-        if (e.PreviousHealth > 1.0f && Math.Abs(e.CurrentHealth - 1.0f) < 0.0001f)
-        {
-            PlaySfx(SfxType.PlayerLowHealth);
-        }
-    }
-
-    private static void OnCombatReset(CombatResetEvent e)
-    {
-        ResetBgm();
-    }
-
-    private static void OnEnemyBulletFired(EnemyBulletFiredEvent e) => PlaySfx(SfxType.EnemyBulletShoot);
-    private static void OnBossBulletFired(BossBulletFiredEvent e) => PlaySfx(SfxType.EnemyBulletShoot);
-    private static void OnBossDiveImpact(BossDiveImpactEvent e) => PlaySfx(SfxType.BossDiveImpact);
-
-    private static void OnBossDamaged(BossDamagedEvent e)
-    {
-        PlaySfx(e.IsVulnerable ? SfxType.BossHitVulnerable : SfxType.BossHit);
-    }
-
-    private static void OnBossDied(BossDiedEvent e) => PlaySfx(SfxType.BossDeath);
-    private static void OnPlayerMeleeSwung(PlayerMeleeSwungEvent e) => PlaySfx(SfxType.PlayerDash);
-    private static void OnItemSpawned(ItemSpawnedEvent e) => PlaySfx(SfxType.ItemDrop);
-    private static void OnItemCollected(ItemCollectedEvent e) => PlaySfx(SfxType.ItemHeal);
-    private static void OnBulletCancelled(BulletCancelledEvent e) => PlaySfx(SfxType.BossHit);
-    private static void OnCombatHitLanded(CombatHitLandedEvent e) => PlaySfx(SfxType.BossHit);
-    private static void OnPlaySfxRequested(PlaySfxRequestEvent e) => PlaySfx(e.Type, e.VolumeScale);
-
-    private static void OnScreenCleaveExecuted(ScreenCleaveExecutedEvent e)
-    {
-        PlaySfx(SfxType.BossDiveImpact);
-        if (e.ClearedBullets > 0)
-        {
-            PlaySfx(SfxType.BossHit);
-        }
+        Log.Info("SoundService", $"[SoundService] サウンドエンジン初期化完了: BGM 1 件、SFX {SfxHandles.Count} 件をロードしました。");
     }
 
     /// <summary>
@@ -209,7 +104,7 @@ public static class SoundService
     /// </summary>
     /// <param name="type">効果音種別</param>
     /// <param name="volumeScale">相対音量スケール (0.0 ～ 1.0)</param>
-    private static void PlaySfx(SfxType type, float volumeScale = 1.0f)
+    public static void PlaySfx(SfxType type, float volumeScale = 1.0f)
     {
         if (!SfxHandles.TryGetValue(type, out var handle) || handle < 0) return;
 
@@ -261,8 +156,6 @@ public static class SoundService
     public static void Shutdown()
     {
         if (!_isInitialized) return;
-
-        UnregisterEventHandlers();
 
         if (_bgmHandle >= 0)
         {
