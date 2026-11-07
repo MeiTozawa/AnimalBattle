@@ -38,6 +38,7 @@ public static class BattleInputSystem
     private static bool _prevF6;
     private static bool _prevF7;
     private static bool _prevF8;
+    private static bool _prevF9;
 
     private static Phase _targetDebugPhase;
 
@@ -224,6 +225,14 @@ public static class BattleInputSystem
         }
         _prevF8 = isF8;
 
+        // F9 キー：プレイヤー特殊能力エネルギーを1格（1スロット）増加
+        var isF9 = GameEngine.CheckHitKey((int)InputButton.KeyF9);
+        if (isF9 && !_prevF9)
+        {
+            AddDebugEnergy(ctx);
+        }
+        _prevF9 = isF9;
+
         if (!dbgCfg.IsActive) return;
 
         // 1/2/3/4 キーによる Boss およびキャラクターの迅速切替：InputAction 抽象経由
@@ -325,6 +334,19 @@ public static class BattleInputSystem
             {
                 tagState.AddActionTag(GameplayTag.Invincible);
             }
+        });
+    }
+
+    /// <summary>
+    ///     プレイヤーの特殊能力エネルギーを1格（1スロット）増加させます。
+    /// </summary>
+    private static void AddDebugEnergy(BattleInputSystemContext ctx)
+    {
+        ctx.PlayerEntitiesQuery.Each(static player =>
+        {
+            if (!player.IsAlive() || !player.Has<EnergyGauge>()) return;
+            ref var gauge = ref player.GetMut<EnergyGauge>();
+            gauge.CurrentEnergy = MathF.Min(gauge.MaxEnergy, gauge.CurrentEnergy + gauge.SegmentCapacity);
         });
     }
 }
