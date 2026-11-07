@@ -31,6 +31,8 @@ public static class CommonPrefabs
         world.Component<TimedEffectsState>().AutoOverride<TimedEffectsState>();
         world.Component<MovementIntent>().AutoOverride<MovementIntent>();
         world.Component<WeaponIntent>().AutoOverride<WeaponIntent>();
+        world.Component<SpecialAbilityIntent>().AutoOverride<SpecialAbilityIntent>();
+        world.Component<EnergyGauge>().AutoOverride<EnergyGauge>();
         world.Component<DashState>().AutoOverride<DashState>();
         world.Component<JumpCapability>().AutoOverride<JumpCapability>();
         world.Component<RangedWeaponComponent>().AutoOverride<RangedWeaponComponent>();
@@ -42,6 +44,7 @@ public static class CommonPrefabs
         world.Component<Hurtbox>().AutoOverride<Hurtbox>();
         world.Component<CombatProfile>().AutoOverride<CombatProfile>();
         world.Component<SpringScale>().AutoOverride<SpringScale>();
+        world.Component<ContinuousDamageDealer>().AutoOverride<ContinuousDamageDealer>();
 
         // 投射物基底プレハブ
         BaseProjectile = world.Prefab(BaseProjectileName)

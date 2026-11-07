@@ -25,6 +25,7 @@ public static class PlayerPrefabs
             .Add<PlayerTag>()
             .Set(new MovementIntent())
             .Set(new WeaponIntent())
+            .Set(new SpecialAbilityIntent())
             .Set(new DashState());
 
         // --- Cat プレイヤー ---
@@ -40,7 +41,14 @@ public static class PlayerPrefabs
             .Set(new Hurtbox(catCfg.GetHurtboxShape(), Faction.Friendly))
             .Set(new Transform(Vec2f.Zero, catCfg.Scale))
             .Set(new SpringScale(Vec2f.One, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
-            .Set(JumpCapability.FromPlayerConfig(catCfg));
+            .Set(JumpCapability.FromPlayerConfig(catCfg))
+            .Set(new EnergyGauge
+            {
+                CurrentEnergy = 0.0f,
+                MaxEnergy = catCfg.EnergyMaxSegments * catCfg.EnergySegmentCapacity,
+                SegmentCapacity = catCfg.EnergySegmentCapacity,
+                CooldownTimer = 0.0f
+            });
         AttachConfiguredWeapon(CatPlayer, world, catCfg.Weapon);
 
 
@@ -57,7 +65,14 @@ public static class PlayerPrefabs
             .Set(new Hurtbox(bunnyCfg.GetHurtboxShape(), Faction.Friendly))
             .Set(new Transform(Vec2f.Zero, bunnyCfg.Scale))
             .Set(new SpringScale(Vec2f.One, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
-            .Set(JumpCapability.FromPlayerConfig(bunnyCfg));
+            .Set(JumpCapability.FromPlayerConfig(bunnyCfg))
+            .Set(new EnergyGauge
+            {
+                CurrentEnergy = 0.0f,
+                MaxEnergy = bunnyCfg.EnergyMaxSegments * bunnyCfg.EnergySegmentCapacity,
+                SegmentCapacity = bunnyCfg.EnergySegmentCapacity,
+                CooldownTimer = 0.0f
+            });
         AttachConfiguredWeapon(BunnyPlayer, world, bunnyCfg.Weapon);
     }
 
@@ -105,6 +120,14 @@ public static class PlayerPrefabs
         player.Set(new Health(cfg.MaxHp));
         player.Set(new MovementIntent());
         player.Set(new WeaponIntent());
+        player.Set(new SpecialAbilityIntent());
+        player.Set(new EnergyGauge
+        {
+            CurrentEnergy = 0.0f,
+            MaxEnergy = cfg.EnergyMaxSegments * cfg.EnergySegmentCapacity,
+            SegmentCapacity = cfg.EnergySegmentCapacity,
+            CooldownTimer = 0.0f
+        });
         player.Set(new DashState());
         player.Set(JumpCapability.FromPlayerConfig(cfg));
         player.Set(new GameplayTagState());
