@@ -46,18 +46,16 @@ public static class ScreenCleaveSequenceSystem
             ref var seq = ref sequences[i];
             seq.ElapsedTimer += dt;
 
-            // 異なるタイミングで斬撃エフェクトを順次生成
+            var baseInterval = seq.TotalDuration / Math.Max(1, seq.TargetCount);
+
+            // 異なるタイミングで斬撃エフェクトを順次生成（フレームあたり複数生成を正しく許容）
             while (seq.SpawnedCount < seq.TargetCount && seq.ElapsedTimer >= seq.NextSpawnTimer)
             {
                 SpawnSingleBladeVfx(in seq, minX, maxX, minY, maxY);
                 seq.SpawnedCount++;
 
-                var remainingCount = seq.TargetCount - seq.SpawnedCount;
-                if (remainingCount <= 0) break;
-
-                var remainingTime = MathF.Max(0.001f, seq.TotalDuration - seq.ElapsedTimer);
-                var avgInterval = remainingTime / remainingCount;
-                seq.NextSpawnTimer = seq.ElapsedTimer + avgInterval * (0.35f + Random.Shared.NextSingle() * 0.9f);
+                var jitter = (Random.Shared.NextSingle() - 0.5f) * 0.4f * baseInterval;
+                seq.NextSpawnTimer += MathF.Max(0.0001f, baseInterval + jitter);
             }
 
             // 総持続時間満了：未生成分があればすべて放出し、シーケンスエンティティを回収
