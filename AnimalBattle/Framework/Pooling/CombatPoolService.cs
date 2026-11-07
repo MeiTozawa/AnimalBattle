@@ -46,7 +46,7 @@ public sealed class CombatPoolService : IDisposable
         EnemyBullets      = RegisterPool(new EntityPool(world, CombatPrefabs.EnemyBulletBase, 512, ResetEnemyBulletEntity));
         SparkEffects      = RegisterPool(new EntityPool(world, VfxPrefabs.SparkVfx, 256, ResetEffectEntity));
         RingEffects       = RegisterPool(new EntityPool(world, VfxPrefabs.RingVfx, 64, ResetEffectEntity));
-        AreaEffects       = RegisterPool(new EntityPool(world, VfxPrefabs.AreaVfx, 32, ResetEffectEntity));
+        AreaEffects       = RegisterPool(new EntityPool(world, VfxPrefabs.AreaVfx, 256, ResetEffectEntity));
         BossSlashHitboxes = RegisterPool(new EntityPool(world, CombatPrefabs.BossSlashHitbox, 16, ResetBossSlashHitboxEntity));
     }
 

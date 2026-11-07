@@ -1,4 +1,3 @@
-using System.Drawing;
 using AnimalBattle.Combat.Events;
 
 namespace AnimalBattle.Player.Systems;
@@ -132,6 +131,30 @@ public static class PlayerSpecialAbilitySystem
             EffectSpawner.SpawnHitSparkEffect(world, bt.Position);
             bulletCount++;
         });
+
+        // 全画面連続斬撃エフェクトシーケンスの起動
+        var assets = world.Get<IAssetManager>();
+        var hasTexture = assets.TryGetTexture(ResourcePath.Characters.SwordShieldEffectSpritesPng, out var slashHandle);
+        var slashCfg = world.Get<SlashEffectRenderConfig>();
+
+        world.Entity()
+            .Add<VfxTag>()
+            .Set(new ScreenCleaveSequence
+            {
+                ElapsedTimer = 0.0f,
+                TotalDuration = bunnyWeaponCfg.SpecialCleaveDuration,
+                NextSpawnTimer = 0.0f,
+                SpawnedCount = 0,
+                TargetCount = bunnyWeaponCfg.SpecialCleaveSlashCount,
+                SlashLifetime = bunnyWeaponCfg.SpecialCleaveSlashLifetime,
+                ScaleMin = bunnyWeaponCfg.SpecialCleaveSlashScaleMin,
+                ScaleMax = bunnyWeaponCfg.SpecialCleaveSlashScaleMax,
+                SlashSpeed = bunnyWeaponCfg.SpecialCleaveSlashSpeed,
+                SlashColor = bunnyWeaponCfg.SpecialCleaveSlashColor,
+                GraphHandle = hasTexture ? slashHandle : -1,
+                CellSize = slashCfg.SpriteCellSize,
+                ColIndex = slashCfg.SpriteColIndex
+            });
 
         // 全生存敵対ユニットへの確定ダメージ付与
         var inbox = world.Get<DamageInbox>();

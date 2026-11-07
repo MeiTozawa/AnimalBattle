@@ -111,4 +111,35 @@ public sealed class BunnyWeaponConfig : MeleeWeaponConfig
 
     /// <summary>全画面斬撃時のカメラ衝撃トラウマ値</summary>
     public float SpecialCleaveTrauma { get; set; }
+
+    /// <summary>全画面斬撃エフェクトの発生総数</summary>
+    public int SpecialCleaveSlashCount { get; set; }
+
+    /// <summary>全画面斬撃シーケンスの総演出時間（秒）</summary>
+    public float SpecialCleaveDuration { get; set; }
+
+    /// <summary>単一斬撃エフェクトの生存時間（秒）</summary>
+    public float SpecialCleaveSlashLifetime { get; set; }
+
+    /// <summary>斬撃エフェクト最小スケール</summary>
+    public float SpecialCleaveSlashScaleMin { get; set; }
+
+    /// <summary>斬撃エフェクト最大スケール</summary>
+    public float SpecialCleaveSlashScaleMax { get; set; }
+
+    /// <summary>斬撃エフェクトの推進速度（px/s）</summary>
+    public float SpecialCleaveSlashSpeed { get; set; }
+
+    private Color _specialCleaveSlashColor;
+
+    /// <summary>斬撃エフェクトの表示色 Hex 文字列</summary>
+    [ConfigurationKeyName("SpecialCleaveSlashColor")]
+    public string SpecialCleaveSlashColorHex
+    {
+        get => string.Empty;
+        set => _specialCleaveSlashColor = value.ToColor();
+    }
+
+    /// <summary>斬撃エフェクトの表示色</summary>
+    public Color SpecialCleaveSlashColor => _specialCleaveSlashColor;
 }

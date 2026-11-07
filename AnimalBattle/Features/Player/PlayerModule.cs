@@ -13,7 +13,8 @@ public readonly struct PlayerModule : IFlecsModule
 
         world.AddPlayerInputSystem()               // 1. 入力意図取得
              .AddPlayerSpecialAbilitySystem()      // 2. 特殊能力発動制御
-             .AddRangedWeaponSystem()              // 3. 遠距離射撃武器機構
+             .AddScreenCleaveSequenceSystem()      // 3. 全画面斬撃エフェクトシーケンス
+             .AddRangedWeaponSystem()              // 4. 遠距離射撃武器機構
              .AddMeleeWeaponSystem()               // 4. 近接判定展開武器機構
              .AddMovementSystem()                  // 5. 統合物理積分・足場衝突判定・境界 Clamp
              .AddSpringScaleSystem()               // 6. スプリング拡縮変形積分
