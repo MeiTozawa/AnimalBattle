@@ -130,6 +130,7 @@ public static class ScreenCleaveSequenceSystem
 
         var inbox = world.Get<DamageInbox>();
         var hasHitAny = false;
+        var lastHitPos = Vec2f.Zero;
 
         ctx.EnemyTargetQuery.Each((Entity enemyEntity, ref Transform vicTrans, ref Health hp, ref Hurtbox hurtbox, ref CombatProfile profile) =>
         {
@@ -144,13 +145,13 @@ public static class ScreenCleaveSequenceSystem
                 IsHeavy = false
             });
 
-            EffectSpawner.SpawnHitSparkEffect(world, vicTrans.Position + hurtbox.Shape.Offset);
+            lastHitPos = vicTrans.Position + hurtbox.Shape.Offset;
             hasHitAny = true;
         });
 
         if (hasHitAny)
         {
-            EventBus.Publish(new CombatHitLandedEvent());
+            EventBus.Publish(new CombatHitLandedEvent(lastHitPos));
         }
     }
 

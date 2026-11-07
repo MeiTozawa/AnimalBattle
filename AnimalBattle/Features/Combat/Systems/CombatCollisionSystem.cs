@@ -126,12 +126,9 @@ public static class CombatCollisionSystem
             IsHeavy = isHeavy
         });
 
-        EffectSpawner.SpawnHitSparkEffect(world, vicTrans.Position + hurtbox.Shape.Offset);
-
-        if (localHitbox.Faction == Faction.Friendly)
-        {
-            EffectSpawner.SpawnBulletImpactSplatter(world, atkTrans.Position, new Vec2f(knockbackDir, 0.0f));
-        }
+        var hitPos = vicTrans.Position + hurtbox.Shape.Offset;
+        var splatterDir = localHitbox.Faction == Faction.Friendly ? new Vec2f(knockbackDir, 0.0f) : Vec2f.Zero;
+        EventBus.Publish(new CombatHitLandedEvent(hitPos, splatterDir, isHeavy));
 
         if (localHitbox.DestroyOnHit) shouldDestroyAttacker = true;
     }

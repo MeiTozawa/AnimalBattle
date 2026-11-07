@@ -13,6 +13,7 @@ public readonly struct EffectModule : IFlecsModule {
         world.AddEffectMovementSystem()
              .AddFadeEffectSystem()
              .AddHitFlashEffectSystem()
-             .AddInvincibleBlinkEffectSystem();
+             .AddInvincibleBlinkEffectSystem()
+             .AddGhostTrailSystem();
     }
 }

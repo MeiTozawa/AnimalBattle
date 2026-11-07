@@ -94,9 +94,6 @@ public static class RangedWeaponSystem
                 .Set(new Velocity(bulletVel))
                 .Set(new Hitbox(new CollisionShape.Box(weapon.BulletSize), weapon.BulletDamage));
 
-            // 銃口閃光：Muzzle Flashエフェクト生成
-            EffectSpawner.SpawnMuzzleFlash(world, spawnPos, weapon.MuzzleFlashRadius, weapon.MuzzleFlashDuration);
-
             // 自機射撃反動：外力物理インパルスとして付与
             var recoilSpeed = weapon.RecoilImpulse;
             var recoilDir = -dir;
@@ -107,7 +104,7 @@ public static class RangedWeaponSystem
             spring.Current = weapon.RecoilStretch;
             spring.Velocity = Vec2f.Zero;
 
-            EventBus.Publish(new PlayerShotFiredEvent(spawnPos, dir));
+            EventBus.Publish(new PlayerShotFiredEvent(spawnPos, dir, weapon.MuzzleFlashRadius, weapon.MuzzleFlashDuration));
 
             weapon.Timer = weapon.Cooldown;
             intent.ShootTriggered = false;

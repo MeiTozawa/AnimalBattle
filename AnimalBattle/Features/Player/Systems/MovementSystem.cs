@@ -168,26 +168,6 @@ public static class MovementSystem {
             // ダッシュ中速度維持：水平高速突進・重力無効化
             vel.Value = new Vec2f(dash.DirectionX * pCfg.DashSpeed, 0.0f);
             vel.Knockback = Vec2f.Zero;
-
-            // 残像：Ghost Trail生成
-            dash.GhostTrailTimer += dt;
-            if (dash.GhostTrailTimer >= pCfg.DashGhostTrailInterval)
-            {
-                dash.GhostTrailTimer = 0.0f;
-                if (effectWorld.HasValue)
-                {
-                    EffectSpawner.SpawnGhostTrail(
-                        effectWorld.Value,
-                        trans.Position,
-                        trans.Scale,
-                        trans.Rotation,
-                        sprite.GraphHandle,
-                        sprite.SrcRect,
-                        sprite.FlipX,
-                        entity.CsWorld().Get<PlayerVisualRenderConfig>().GhostTrailColor,
-                        pCfg.DashGhostTrailDuration);
-                }
-            }
         }
         else
         {
@@ -271,9 +251,8 @@ public static class MovementSystem {
                     jump.RemainingJumps--;
                     jump.JumpBufferTimer = 0.0f;
                     didJump = true;
-                    if (effectWorld.HasValue)
-                        EffectSpawner.SpawnJumpRingEffect(effectWorld.Value, new Vec2f(trans.Position.X, trans.Position.Y + col.Size.Y / 2.0f));
-                    EventBus.Publish(new PlayerDoubleJumpedEvent());
+                    var ringPos = new Vec2f(trans.Position.X, trans.Position.Y + col.Size.Y / 2.0f);
+                    EventBus.Publish(new PlayerDoubleJumpedEvent(ringPos));
                 }
 
                 if (didJump)

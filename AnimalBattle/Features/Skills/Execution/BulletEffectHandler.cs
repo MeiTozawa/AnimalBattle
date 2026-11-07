@@ -236,7 +236,7 @@ public sealed class BulletEffectHandler : ISkillEffectHandler
     private static void EmitGroundShockwaves(World world, BulletEmitConfig cfg, Vec2f origin, float bodyHeight)
     {
         var groundY = origin.Y + bodyHeight / 2.0f - cfg.GroundOffsetY;
-        EffectSpawner.SpawnShockwave(world, new Vec2f(origin.X, groundY));
+        EventBus.Publish(new BossDiveImpactEvent(new Vec2f(origin.X, groundY)));
 
         BulletSpawner.SpawnGroundShockwave(
             world,
@@ -262,7 +262,7 @@ public sealed class BulletEffectHandler : ISkillEffectHandler
     private static void EmitShrapnelFan(World world, BulletEmitConfig cfg, Vec2f origin, float bodyHeight)
     {
         var groundY = origin.Y + bodyHeight / 2.0f;
-        EffectSpawner.SpawnShockwave(world, new Vec2f(origin.X, groundY));
+        EventBus.Publish(new BossDiveImpactEvent(new Vec2f(origin.X, groundY)));
 
         var count = Math.Max(2, cfg.Count);
         for (var k = 0; k < count; k++)

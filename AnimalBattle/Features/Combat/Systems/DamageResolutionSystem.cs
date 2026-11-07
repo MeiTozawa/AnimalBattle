@@ -231,13 +231,12 @@ public static class DamageResolutionSystem
             else if (isVulnerable)
             {
                 // 敵対ユニット易傷クリティカル火花
-                EffectSpawner.SpawnHitSparkEffect(world, trans.Position - new Vec2f(8.0f, 8.0f));
-                EffectSpawner.SpawnHitSparkEffect(world, trans.Position + new Vec2f(8.0f, 8.0f));
+                EventBus.Publish(new CombatHitLandedEvent(trans.Position, IsHeavy: true));
             }
             else if (hasSuperArmor && profile.Kind == CombatEntityKind.Boss)
             {
                 // スーパーアーマー（覇体）被弾時の装甲火花・偏向エフェクト
-                EffectSpawner.SpawnSuperArmorDeflectEffect(world, trans.Position);
+                EventBus.Publish(new SuperArmorDeflectedEvent(trans.Position));
             }
 
             // 死亡または生存時の挙動分岐
@@ -251,9 +250,8 @@ public static class DamageResolutionSystem
                         sprite.IsVisible = false;
                         ctx.PlayerMeleeQuery.Each(static (Entity e) => e.Disable());
 
-                        EffectSpawner.SpawnPlayerDeathParticles(world, trans.Position);
                         CameraService.AddTrauma(cameraCfg.PlayerHeavyHitTrauma);
-                        EventBus.Publish(new PlayerDiedEvent());
+                        EventBus.Publish(new PlayerDiedEvent(trans.Position));
                         break;
 
                     case CombatEntityKind.Boss:
@@ -272,15 +270,14 @@ public static class DamageResolutionSystem
                         BulletSpawner.ClearAllEnemyBullets(world);
                         MeleeSpawner.ClearAllEnemyMelee(world);
                         MinionSpawner.ClearAllMinionsImmediate(world);
-                        EffectSpawner.SpawnVictoryExplosions(world, trans.Position);
                         CameraService.AddTrauma(cameraCfg.VictoryExplosionTrauma);
-                        EventBus.Publish(new BossDiedEvent());
+                        EventBus.Publish(new BossDiedEvent(trans.Position));
                         break;
 
                     case CombatEntityKind.Minion:
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
-                        EffectSpawner.SpawnHitSparkEffect(world, trans.Position);
+                        EventBus.Publish(new CombatHitLandedEvent(trans.Position));
                         // 雑魚敵撃破時の回復アイテムドロップ判定
                         TryDropHealthPack(world, trans.Position, hp, finalDamage);
                         entity.Destruct();

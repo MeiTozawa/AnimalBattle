@@ -67,6 +67,7 @@ public static class ContinuousDamageSystem
                 aCenterX, aCenterY, aHalfW, aHalfH, hitbox.Faction, candidateIndices);
 
             var hasHitAny = false;
+            var lastHitPos = Vec2f.Zero;
             for (var c = 0; c < matchCount; c++)
             {
                 ref readonly var target = ref spatialIndex.GetItem(candidateIndices[c]);
@@ -90,14 +91,14 @@ public static class ContinuousDamageSystem
                         IsHeavy = false
                     });
 
-                    EffectSpawner.SpawnHitSparkEffect(world, vicTrans.Position + hurtbox.Shape.Offset);
+                    lastHitPos = vicTrans.Position + hurtbox.Shape.Offset;
                     hasHitAny = true;
                 }
             }
 
             if (hasHitAny)
             {
-                EventBus.Publish(new CombatHitLandedEvent());
+                EventBus.Publish(new CombatHitLandedEvent(lastHitPos));
             }
         }
     }

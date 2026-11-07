@@ -15,6 +15,7 @@ public class GameManager : IDisposable {
     private readonly IAssetManager _assetManager;
     private readonly AudioFeedback _audioFeedback;
     private readonly CombatPoolService _combatPoolService;
+    private readonly VfxFeedback _vfxFeedback;
     private bool _isDisposed;
     private bool _isUpdating;
     private Action? _pendingSceneTransition;
@@ -36,7 +37,7 @@ public class GameManager : IDisposable {
         GameConfigRegistrar.RegisterAll(_configRegistry, _ecsWorld);
 
         _assetManager = new AssetManager();
-        _ecsWorld.Set<IAssetManager>(_assetManager);
+        _ecsWorld.Set(_assetManager);
 
         _audioFeedback = new AudioFeedback();
 
@@ -58,6 +59,7 @@ public class GameManager : IDisposable {
         _ecsWorld.Import<TutorialModule>();
 
         _combatPoolService = new CombatPoolService(_ecsWorld);
+        _vfxFeedback = new VfxFeedback(_ecsWorld);
 
         // 初期 GameFlow 状態の設定
         _ecsWorld.Set(new GameFlow {
@@ -203,6 +205,7 @@ public class GameManager : IDisposable {
         BattleSceneSpawner.Teardown(_ecsWorld);
         
         DisposeSystemContexts(_ecsWorld);
+        _vfxFeedback.Dispose();
         _combatPoolService.Dispose();
         _configRegistry.Dispose();
         _ecsWorld.Dispose();

@@ -4,13 +4,13 @@ namespace AnimalBattle.Events;
 public readonly record struct PlayerJumpedEvent;
 
 /// <summary>自機が空中二段ジャンプしたイベント</summary>
-public readonly record struct PlayerDoubleJumpedEvent;
+public readonly record struct PlayerDoubleJumpedEvent(Vec2f Position = default);
 
 /// <summary>自機が一定速度以上で着地したイベント</summary>
 public readonly record struct PlayerLandedEvent;
 
 /// <summary>自機が射撃を行ったイベント</summary>
-public readonly record struct PlayerShotFiredEvent(Vec2f SpawnPos, Vec2f Direction);
+public readonly record struct PlayerShotFiredEvent(Vec2f SpawnPos, Vec2f Direction, float MuzzleFlashRadius = 6.0f, float MuzzleFlashDuration = 0.05f);
 
 /// <summary>自機が近接攻撃（突進・斬撃）を繰り出したイベント</summary>
 public readonly record struct PlayerMeleeSwungEvent(Vec2f Position, Vec2f Direction);
@@ -22,7 +22,7 @@ public readonly record struct PlayerDashedEvent;
 public readonly record struct PlayerDamagedEvent;
 
 /// <summary>自機が死亡したイベント</summary>
-public readonly record struct PlayerDiedEvent;
+public readonly record struct PlayerDiedEvent(Vec2f Position = default);
 
 /// <summary>自機の体力が変化したイベント：残血警報等のリアクティブ判定用</summary>
 public readonly record struct PlayerHealthChangedEvent(float PreviousHealth, float CurrentHealth);
@@ -34,13 +34,13 @@ public readonly record struct EnemyBulletFiredEvent;
 public readonly record struct BossBulletFiredEvent;
 
 /// <summary>Boss が急降下衝撃波を発生させたイベント</summary>
-public readonly record struct BossDiveImpactEvent;
+public readonly record struct BossDiveImpactEvent(Vec2f Position = default);
 
 /// <summary>Boss が被弾ダメージを受けたイベント</summary>
 public readonly record struct BossDamagedEvent(bool IsVulnerable);
 
 /// <summary>Boss が撃破死亡したイベント</summary>
-public readonly record struct BossDiedEvent;
+public readonly record struct BossDiedEvent(Vec2f Position = default);
 
 /// <summary>戦闘がリセットまたは開始されたイベント</summary>
 public readonly record struct CombatResetEvent;
@@ -58,7 +58,10 @@ public readonly record struct BulletCancelledEvent(Vec2f Position);
 public readonly record struct ScreenCleaveExecutedEvent(int ClearedBullets);
 
 /// <summary>攻撃・持続判定が対象に命中したイベント</summary>
-public readonly record struct CombatHitLandedEvent(bool IsHeavy = false);
+public readonly record struct CombatHitLandedEvent(Vec2f Position = default, Vec2f HitDirection = default, bool IsHeavy = false);
+
+/// <summary>覇体免傷・弾刀エフェクトが発生したイベント</summary>
+public readonly record struct SuperArmorDeflectedEvent(Vec2f Position);
 
 /// <summary>汎用効果音再生リクエストイベント（スクリプト・演出・UI用の疎結合リクエスト）</summary>
 public readonly record struct PlaySfxRequestEvent(SfxType Type, float VolumeScale = 1.0f);

@@ -120,7 +120,7 @@ public static class PlayerSpecialAbilitySystem
             if (b.IsIndestructible) return;
 
             bulletEntity.Add<RecycleTag>();
-            EffectSpawner.SpawnHitSparkEffect(world, bt.Position);
+            EventBus.Publish(new BulletCancelledEvent(bt.Position));
             bulletCount++;
         });
 
