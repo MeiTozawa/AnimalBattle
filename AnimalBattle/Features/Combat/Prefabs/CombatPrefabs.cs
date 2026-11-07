@@ -58,6 +58,7 @@ public static class CombatPrefabs
         PlayerSlashHitbox = world.Prefab(PlayerSlashHitboxName)
             .IsA(CommonPrefabs.BaseMeleeHitbox)
             .Add<PlayerMeleeTag>()
+            .Set(new Sprite(-1))
             .Set(new Hitbox(new CollisionShape.Box(slashCfg.Size), slashCfg.Damage, Faction.Friendly, destroyOnHit: false, knockback: slashCfg.Knockback, isHeavy: slashCfg.IsHeavy));
 
         // --- 4. BossLion 近接斬撃攻撃判定実体 ---

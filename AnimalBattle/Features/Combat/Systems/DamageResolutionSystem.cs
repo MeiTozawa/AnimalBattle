@@ -230,11 +230,17 @@ public static class DamageResolutionSystem
                         world.Add<GameOverTag>();
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
-                        var melee = entity.Target<EquippedWeapon>();
-                        if (melee.IsAlive())
+                        if (entity.Has<EquippedWeapon>())
                         {
-                            melee.Disable();
-                            melee.GetMut<Sprite>().IsVisible = false;
+                            var melee = entity.Target<EquippedWeapon>();
+                            if (melee.IsAlive())
+                            {
+                                melee.Disable();
+                                if (melee.Has<Sprite>())
+                                {
+                                    melee.GetMut<Sprite>().IsVisible = false;
+                                }
+                            }
                         }
 
                         EffectSpawner.SpawnPlayerDeathParticles(world, trans.Position);
