@@ -57,6 +57,9 @@ public readonly record struct BulletCancelledEvent(Vec2f Position);
 /// <summary>全画面斬撃等の特殊能力による連続判定が発動・実行されたイベント</summary>
 public readonly record struct ScreenCleaveExecutedEvent(int ClearedBullets);
 
+/// <summary>自機が特殊能力（必殺技）を発動したイベント</summary>
+public readonly record struct SpecialAbilityExecutedEvent(CharacterType CharacterType);
+
 /// <summary>攻撃・持続判定が対象に命中したイベント</summary>
 public readonly record struct CombatHitLandedEvent(Vec2f Position = default, Vec2f HitDirection = default, bool IsHeavy = false);
 

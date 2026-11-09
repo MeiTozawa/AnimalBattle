@@ -1,5 +1,3 @@
-using AnimalBattle.Combat.Events;
-
 namespace AnimalBattle.Player.Systems;
 
 /// <summary>
@@ -87,6 +85,8 @@ public static class PlayerSpecialAbilitySystem
             // 2. 1スロット分のエネルギーを消費
             gauge.CurrentEnergy = MathF.Max(0.0f, gauge.CurrentEnergy - gauge.SegmentCapacity);
 
+            EventBus.Publish(new SpecialAbilityExecutedEvent(charType.Value));
+
             // 3. キャラクター種別ごとの特殊能力実行
             if (charType.Value == CharacterType.Bunny)
             {
@@ -131,6 +131,7 @@ public static class PlayerSpecialAbilitySystem
 
         world.Entity()
             .Add<VfxTag>()
+            .Add<PlayerSpecialAbilityTag>()
             .Set(new ScreenCleaveSequence
             {
                 ElapsedTimer = 0.0f,
@@ -183,6 +184,7 @@ public static class PlayerSpecialAbilitySystem
         world.Entity()
             .IsA(CommonPrefabs.BaseProjectile)
             .Add<PlayerBulletTag>()
+            .Add<PlayerSpecialAbilityTag>()
             .Set(new Transform(spawnPos))
             .Set(new Velocity(orbVel))
             .Set(new Hitbox(new CollisionShape.Circle(radius), 0.0f, destroyOnHit: false))
