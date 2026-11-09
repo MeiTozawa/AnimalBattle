@@ -27,19 +27,16 @@ public static class TutorialConfigSync
         // 2. チュートリアル実行中の場合、現在フェーズのエンティティ（目標物／小怪／扉）を最新設定で即座に再生成
         if (world.Has<GameFlow>() && world.Get<GameFlow>().State == GameState.Tutorial)
         {
-            if (world.Has<TutorialState>())
+            ref var state = ref world.GetMut<TutorialState>();
+
+            // フェーズ配列数が削減された場合の安全クランプ
+            if (newConfig.Phases.Length > 0 && state.CurrentPhaseIndex >= newConfig.Phases.Length)
             {
-                ref var state = ref world.GetMut<TutorialState>();
-
-                // フェーズ配列数が削減された場合の安全クランプ
-                if (newConfig.Phases.Length > 0 && state.CurrentPhaseIndex >= newConfig.Phases.Length)
-                {
-                    state.CurrentPhaseIndex = Math.Max(0, newConfig.Phases.Length - 1);
-                }
-
-                TutorialSceneSpawner.ResetCurrentPhase(world);
-                Log.Info("TutorialConfigSync", $"[チュートリアル設定] tutorial.toml のホットリロードを適用しました (PhaseIndex: {state.CurrentPhaseIndex})");
+                state.CurrentPhaseIndex = Math.Max(0, newConfig.Phases.Length - 1);
             }
+
+            TutorialSceneSpawner.ResetCurrentPhase(world);
+            Log.Info("TutorialConfigSync", $"[チュートリアル設定] tutorial.toml のホットリロードを適用しました (PhaseIndex: {state.CurrentPhaseIndex})");
         }
     }
 }

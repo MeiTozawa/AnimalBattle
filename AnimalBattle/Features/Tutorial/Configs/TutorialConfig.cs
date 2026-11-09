@@ -80,6 +80,7 @@ public sealed class TutorialActionConfig
     public string TexturePath { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Tag { get; set; } = string.Empty;
+    public int Segments { get; set; }
 }
 
 /// <summary>
@@ -97,6 +98,8 @@ public sealed class TutorialConditionConfig
 public sealed class TutorialStepConfig
 {
     public string Subtitle { get; set; } = string.Empty;
+    public string SubtitleCat { get; set; } = string.Empty;
+    public string SubtitleBunny { get; set; } = string.Empty;
     public TutorialActionConfig[] Actions { get; set; } = [];
     public TutorialConditionConfig Condition { get; set; } = new();
 

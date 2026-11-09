@@ -25,6 +25,7 @@ public static class TutorialStepFactory
             "spawndoor" => CreateSpawnDoorAction(config.Pos, config.BossType),
             "damageplayer" => new DamagePlayerAction(config.Amount > 0f ? config.Amount : 30f),
             "spawnhealthpack" => new SpawnHealthPackAction(config.Pos),
+            "chargeenergy" => new ChargeEnergyAction(config.Segments > 0 ? config.Segments : 1),
             _ => AssertHelper.FailWithDefault<ITutorialAction>($"未知のチュートリアルアクション種別です: {config.Type}", null!)
         };
     }
@@ -44,6 +45,7 @@ public static class TutorialStepFactory
             "defeatminions" => new DefeatMinionsCondition(),
             "interactdoor" => new InteractDoorCondition(),
             "timer" => new TimerCondition(config.Duration),
+            "usespecialability" => new UseSpecialAbilityCondition(config.Duration > 0f ? config.Duration : 0.8f),
             _ => AssertHelper.FailWithDefault<ITutorialCondition>($"未知のチュートリアル条件種別です: {config.Type}", null!)
         };
     }

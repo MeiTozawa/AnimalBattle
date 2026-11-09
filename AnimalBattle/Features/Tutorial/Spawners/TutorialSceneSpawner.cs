@@ -97,7 +97,8 @@ public static class TutorialSceneSpawner
             IsPhaseCompleted = false,
             CompletionTimer = 0f,
             IsRetrying = false,
-            RetryTimer = 0f
+            RetryTimer = 0f,
+            HasUsedSpecialAbility = false
         });
 
         // 6. 初期フェーズ目標の生成
@@ -126,6 +127,7 @@ public static class TutorialSceneSpawner
         state.IsPhaseCompleted = false;
         state.CompletionTimer = 0f;
         state.TargetsRemaining = 0;
+        state.HasUsedSpecialAbility = false;
 
         if ((uint)phaseIndex < (uint)cfg.Phases.Length)
         {
@@ -149,6 +151,7 @@ public static class TutorialSceneSpawner
         state.StepTimer = 0f;
         state.StepCompletionTimer = 0f;
         state.TargetsRemaining = 0;
+        state.HasUsedSpecialAbility = false;
 
         var stepCfg = phase.Steps[stepIndex];
         var actions = stepCfg.GetRuntimeActions();

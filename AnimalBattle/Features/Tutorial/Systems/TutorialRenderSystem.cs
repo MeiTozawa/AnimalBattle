@@ -97,7 +97,7 @@ public static class TutorialRenderSystem
         var colors = rCfg.Colors;
 
         // 画面上部・中央のフェーズ別背景操作ガイド文字
-        DrawPhaseGuidance(state, cfg, rCfg);
+        DrawPhaseGuidance(world, state, cfg, rCfg);
 
         // 3. 戦闘フェーズにおける全操作ガイド看板
         if ((uint)state.CurrentPhaseIndex < (uint)cfg.Phases.Length &&
@@ -113,7 +113,7 @@ public static class TutorialRenderSystem
         }
     }
 
-    private static void DrawPhaseGuidance(in TutorialState state, TutorialConfig cfg, TutorialRenderConfig rCfg)
+    private static void DrawPhaseGuidance(World world, in TutorialState state, TutorialConfig cfg, TutorialRenderConfig rCfg)
     {
         var centerPos = rCfg.Layout.GuidanceTitlePos;
         var subPos = rCfg.Layout.GuidanceSubPos;
@@ -124,12 +124,37 @@ public static class TutorialRenderSystem
             var phaseCfg = cfg.Phases[state.CurrentPhaseIndex];
             GameEngine.DrawCenterString(centerPos, phaseCfg.Title, colors.Gold);
 
-            var subtitle = (uint)state.CurrentStepIndex < (uint)phaseCfg.Steps.Length &&
-                           !string.IsNullOrWhiteSpace(phaseCfg.Steps[state.CurrentStepIndex].Subtitle)
-                ? phaseCfg.Steps[state.CurrentStepIndex].Subtitle
-                : phaseCfg.Subtitle;
+            var subtitle = string.Empty;
+            if ((uint)state.CurrentStepIndex < (uint)phaseCfg.Steps.Length)
+            {
+                var step = phaseCfg.Steps[state.CurrentStepIndex];
+                var playerType = world.Get<GameFlow>().SelectedPlayer;
+                var charSubtitle = playerType switch
+                {
+                    CharacterType.Cat => step.SubtitleCat,
+                    CharacterType.Bunny => step.SubtitleBunny,
+                    _ => string.Empty
+                };
 
-            GameEngine.DrawCenterString(subPos, subtitle, colors.White);
+                if (!string.IsNullOrWhiteSpace(charSubtitle))
+                {
+                    subtitle = charSubtitle;
+                }
+                else if (!string.IsNullOrWhiteSpace(step.Subtitle))
+                {
+                    subtitle = step.Subtitle;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(subtitle))
+            {
+                subtitle = phaseCfg.Subtitle;
+            }
+
+            if (!string.IsNullOrWhiteSpace(subtitle))
+            {
+                GameEngine.DrawCenterString(subPos, subtitle, colors.White);
+            }
         }
     }
 

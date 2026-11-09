@@ -31,4 +31,7 @@ public struct TutorialState
 
     /// <summary>リトライ演出タイマー（秒）。</summary>
     public float RetryTimer;
+
+    /// <summary>現在ステップ内で特殊能力が発動されたかどうか。</summary>
+    public bool HasUsedSpecialAbility;
 }
