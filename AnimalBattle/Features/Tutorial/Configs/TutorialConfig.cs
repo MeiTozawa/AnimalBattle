@@ -75,6 +75,7 @@ public sealed class TutorialActionConfig
     public float Radius { get; set; }
     public float Amount { get; set; }
     public string MinionType { get; set; } = string.Empty;
+    public int Count { get; set; }
     public string BossType { get; set; } = string.Empty;
     public string TexturePath { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;

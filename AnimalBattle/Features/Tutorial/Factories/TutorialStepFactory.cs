@@ -21,7 +21,7 @@ public static class TutorialStepFactory
         return config.Type.ToLowerInvariant() switch
         {
             "spawntarget" => new SpawnTargetAction(config.Pos, config.Radius),
-            "spawnminion" => CreateSpawnMinionAction(config.MinionType),
+            "spawnminion" => CreateSpawnMinionAction(config.MinionType, config.Count),
             "spawndoor" => CreateSpawnDoorAction(config.Pos, config.BossType),
             "damageplayer" => new DamagePlayerAction(config.Amount > 0f ? config.Amount : 30f),
             "spawnhealthpack" => new SpawnHealthPackAction(config.Pos),
@@ -48,7 +48,7 @@ public static class TutorialStepFactory
         };
     }
 
-    private static ITutorialAction CreateSpawnMinionAction(string minionTypeStr)
+    private static ITutorialAction CreateSpawnMinionAction(string minionTypeStr, int count)
     {
         var type = minionTypeStr.Equals("Flying", StringComparison.OrdinalIgnoreCase)
             ? MinionType.Flying
@@ -56,7 +56,7 @@ public static class TutorialStepFactory
                 ? MinionType.Ground
                 : AssertHelper.FailWithDefault($"未知のミニオン種別です: {minionTypeStr}", MinionType.Ground);
 
-        return new SpawnMinionAction(type);
+        return new SpawnMinionAction(type, count > 0 ? count : 1);
     }
 
     private static ITutorialAction CreateSpawnDoorAction(Vec2f pos, string bossTypeStr)
