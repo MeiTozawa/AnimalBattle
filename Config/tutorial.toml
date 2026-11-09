@@ -16,7 +16,7 @@ DoorInteractPrompt = "【 [F] 挑戦開始 】"
 ControlBoardTitle = "【 基本操作ガイド 】"
 ControlBoardMove = "移動　　: A / D"
 ControlBoardJump = "二段ジャンプ: SPACE "
-ControlBoardDash = "ダッシュ: L-SHIFT / 右クリック"
+ControlBoardDash = "ダッシュ: L-SHIFT"
 ControlBoardAttack = "★ 攻撃 : 左クリック (長押し可能)"
 
 # ==============================================================================
@@ -107,6 +107,26 @@ Subtitle = "マウスで狙いを定め、二体のミニオンを撃破して�
 Actions = [
     { Type = "SpawnMinion", MinionType = "Ground" },
     { Type = "SpawnMinion", MinionType = "Flying" }
+]
+Condition = { Type = "DefeatMinions" }
+
+[[Phases]]
+Title = "★ 【 右クリック : 特殊能力 】"
+
+[[Phases.Steps]]
+SubtitleCat = "右クリックで低速貫通の【 巨型エネルギー弾 】を発射してください"
+SubtitleBunny = "右クリックで全画面を切り刻む【 連続斬撃 】を発動してください"
+Actions = [
+    { Type = "ChargeEnergy", Segments = 1 }
+]
+Condition = { Type = "UseSpecialAbility", Duration = 0.8 }
+
+[[Phases.Steps]]
+SubtitleCat = "巨型エネルギー弾の多段接触で、4体の浮遊ミニオンを一掃してください"
+SubtitleBunny = "全画面斬撃の弾幕消去と確定ダメージで、4体の浮遊ミニオンを一掃してください"
+Actions = [
+    { Type = "ChargeEnergy", Segments = 1 },
+    { Type = "SpawnMinion", MinionType = "Flying", Count = 4 }
 ]
 Condition = { Type = "DefeatMinions" }
 
