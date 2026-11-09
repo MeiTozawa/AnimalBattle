@@ -19,5 +19,5 @@ SpecialOrbTickInterval = 0.1
 SpecialOrbSpeed = 240.0
 SpecialOrbRadius = 80.0
 SpecialOrbLifetime = 4.5
-SpecialOrbFillColor = "#F0FFAA28"
-SpecialOrbOutlineColor = "#FFFFDC64"
+SpecialOrbFillColor = "#F000FFFF"
+SpecialOrbOutlineColor = "#80FFFF"
