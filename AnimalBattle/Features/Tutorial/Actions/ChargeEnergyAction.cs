@@ -13,8 +13,14 @@ public sealed class ChargeEnergyAction(int segments) : ITutorialAction
         using var query = world.QueryBuilder<EnergyGauge>().With<PlayerTag>().Without<DeadTag>().Build();
         query.Each((ref EnergyGauge gauge) =>
         {
+            var oldReady = gauge.ReadySegments;
             var targetEnergy = gauge.SegmentCapacity * _segments;
             gauge.CurrentEnergy = MathF.Max(gauge.CurrentEnergy, targetEnergy);
+            var newReady = gauge.ReadySegments;
+            if (newReady > oldReady)
+            {
+                EventBus.Publish(new EnergySegmentChargedEvent(newReady));
+            }
         });
     }
 }

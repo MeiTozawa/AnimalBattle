@@ -173,7 +173,13 @@ public static class DamageResolutionSystem
                 ctx.PlayerQuery.Each((ref _, ref pGauge, ref pChar) =>
                 {
                     var pCfg = world.GetPlayerConfig(pChar.Value);
+                    var oldReady = pGauge.ReadySegments;
                     pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + finalPlayerDamage * pCfg.EnergyPerDamageDealt, 0.0f, pGauge.MaxEnergy);
+                    var newReady = pGauge.ReadySegments;
+                    if (newReady > oldReady)
+                    {
+                        EventBus.Publish(new EnergySegmentChargedEvent(newReady));
+                    }
                 });
             }
 
@@ -217,7 +223,13 @@ public static class DamageResolutionSystem
                 ctx.PlayerQuery.Each((ref _, ref pGauge, ref pChar) =>
                 {
                     var pCfg = world.GetPlayerConfig(pChar.Value);
+                    var oldReady = pGauge.ReadySegments;
                     pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + finalDamage * pCfg.EnergyPerDamageTaken, 0.0f, pGauge.MaxEnergy);
+                    var newReady = pGauge.ReadySegments;
+                    if (newReady > oldReady)
+                    {
+                        EventBus.Publish(new EnergySegmentChargedEvent(newReady));
+                    }
                 });
 
                 if (profile.InvincibleDuration > 0.0f)

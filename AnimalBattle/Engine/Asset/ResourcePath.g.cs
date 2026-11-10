@@ -96,6 +96,9 @@ public static class ResourcePath
         /// <summary>cat_special_skill.mp3 のファイルパス。</summary>
         public const string CatSpecialSkillMp3 = @"Sound\cat_special_skill.mp3";
 
+        /// <summary>charging_complete.mp3 のファイルパス。</summary>
+        public const string ChargingCompleteMp3 = @"Sound\charging_complete.mp3";
+
         /// <summary>health_recovery.mp3 のファイルパス。</summary>
         public const string HealthRecoveryMp3 = @"Sound\health_recovery.mp3";
 

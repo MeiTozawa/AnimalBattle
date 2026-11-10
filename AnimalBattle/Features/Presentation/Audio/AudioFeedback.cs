@@ -56,6 +56,7 @@ public sealed class AudioFeedback : IDisposable
         EventBus.Subscribe<ScreenCleaveExecutedEvent>(OnScreenCleaveExecuted);
         EventBus.Subscribe<CombatHitLandedEvent>(OnCombatHitLanded);
         EventBus.Subscribe<SpecialAbilityExecutedEvent>(OnSpecialAbilityExecuted);
+        EventBus.Subscribe<EnergySegmentChargedEvent>(OnEnergySegmentCharged);
         EventBus.Subscribe<PlaySfxRequestEvent>(OnPlaySfxRequested);
     }
 
@@ -82,6 +83,7 @@ public sealed class AudioFeedback : IDisposable
         EventBus.Unsubscribe<ScreenCleaveExecutedEvent>(OnScreenCleaveExecuted);
         EventBus.Unsubscribe<CombatHitLandedEvent>(OnCombatHitLanded);
         EventBus.Unsubscribe<SpecialAbilityExecutedEvent>(OnSpecialAbilityExecuted);
+        EventBus.Unsubscribe<EnergySegmentChargedEvent>(OnEnergySegmentCharged);
         EventBus.Unsubscribe<PlaySfxRequestEvent>(OnPlaySfxRequested);
     }
 
@@ -121,6 +123,7 @@ public sealed class AudioFeedback : IDisposable
             SoundService.PlaySfx(SfxType.CatSpecialSkill);
         }
     }
+    private static void OnEnergySegmentCharged(EnergySegmentChargedEvent e) => SoundService.PlaySfx(SfxType.EnergySegmentCharged);
     private static void OnPlaySfxRequested(PlaySfxRequestEvent e) => SoundService.PlaySfx(e.Type, e.VolumeScale);
 
     private static void OnScreenCleaveExecuted(ScreenCleaveExecutedEvent e)

@@ -26,7 +26,9 @@ public enum SfxType
     /// <summary>回復アイテム取得効果音。</summary>
     ItemHeal,
     /// <summary>Cat 特殊能力（巨型エネルギー弾）発射効果音。</summary>
-    CatSpecialSkill
+    CatSpecialSkill,
+    /// <summary>特殊能力エネルギーゲージの1スロット充能完了効果音。</summary>
+    EnergySegmentCharged
 }
 
 /// <summary>
@@ -82,7 +84,8 @@ public static class SoundService
             (SfxType.BossDeath, ResourcePath.Sound.BossDeathMp3),
             (SfxType.ItemDrop, ResourcePath.Sound.ItemDropMp3),
             (SfxType.ItemHeal, ResourcePath.Sound.HealthRecoveryMp3),
-            (SfxType.CatSpecialSkill, ResourcePath.Sound.CatSpecialSkillMp3)
+            (SfxType.CatSpecialSkill, ResourcePath.Sound.CatSpecialSkillMp3),
+            (SfxType.EnergySegmentCharged, ResourcePath.Sound.ChargingCompleteMp3)
         ];
 
         foreach (var (type, relPath) in sfxDefinitions)
