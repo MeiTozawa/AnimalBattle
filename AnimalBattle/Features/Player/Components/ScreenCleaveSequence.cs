@@ -57,4 +57,10 @@ public struct ScreenCleaveSequence
 
     /// <summary>これまでに敵対ユニットへ与えた累積ダメージ量</summary>
     public float DealtDamage;
+
+    /// <summary>次回斬撃音効発生予定時刻（秒）</summary>
+    public float NextSfxTimer;
+
+    /// <summary>斬撃音効発生間隔（秒）</summary>
+    public float SfxInterval;
 }

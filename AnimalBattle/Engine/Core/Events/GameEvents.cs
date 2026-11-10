@@ -57,6 +57,9 @@ public readonly record struct BulletCancelledEvent(Vec2f Position);
 /// <summary>全画面斬撃等の特殊能力による連続判定が発動・実行されたイベント</summary>
 public readonly record struct ScreenCleaveExecutedEvent(int ClearedBullets);
 
+/// <summary>Bunny 全画面連続斬撃の各斬撃波が発生したイベント</summary>
+public readonly record struct ScreenCleaveSlashSwungEvent();
+
 /// <summary>自機が特殊能力（必殺技）を発動したイベント</summary>
 public readonly record struct SpecialAbilityExecutedEvent(CharacterType CharacterType);
 

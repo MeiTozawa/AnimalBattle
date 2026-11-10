@@ -87,6 +87,16 @@ public static class ScreenCleaveSequenceSystem
                 seq.NextSpawnTimer += MathF.Max(0.0001f, baseInterval + jitter);
             }
 
+            // 斬撃音効の高頻度周期的再生（全画面を切り刻む連続破風音）
+            if (seq.SfxInterval > 0.0f)
+            {
+                while (seq.ElapsedTimer < seq.TotalDuration && seq.ElapsedTimer >= seq.NextSfxTimer)
+                {
+                    EventBus.Publish(new ScreenCleaveSlashSwungEvent());
+                    seq.NextSfxTimer += MathF.Max(0.001f, seq.SfxInterval);
+                }
+            }
+
             // 継続ダメージの段階的適用（SpecialCleaveDamage に達するまで均等分配）
             if (seq.TotalDamage > 0.0f && seq.DealtDamage < seq.TotalDamage)
             {

@@ -150,7 +150,9 @@ public static class PlayerSpecialAbilitySystem
                 TotalDamage = bunnyWeaponCfg.SpecialCleaveDamage,
                 TickInterval = bunnyWeaponCfg.SpecialCleaveTickInterval,
                 NextDamageTimer = 0.0f,
-                DealtDamage = 0.0f
+                DealtDamage = 0.0f,
+                NextSfxTimer = 0.0f,
+                SfxInterval = bunnyWeaponCfg.SpecialCleaveTickInterval
             });
 
         // 自機の無敵付与と演出効果
