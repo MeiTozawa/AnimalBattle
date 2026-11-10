@@ -292,12 +292,12 @@ public static class HudRenderSystem {
             DrawPawBadge(badgeCenter, badgeCfg, activeFillColor, glowColor, isFilled, isLowHp && isFilled, ctx.LowHpPulseTime);
         }
 
-        // エネルギーゲージ（3格スロット）と発動ガイドの描画
+        // エネルギーゲージ（3スロット）と発動ガイドの描画
         DrawPlayerEnergyGauge(p, badgeCfg, isBunny, ctx.LowHpPulseTime);
     }
 
     /// <summary>
-    ///     左上戦術 HUD：自機の特殊能力エネルギーゲージ（3格スロット）を描画します。
+    ///     左上戦術 HUD：自機の特殊能力エネルギーゲージ（3スロット）を描画します。
     /// </summary>
     private static void DrawPlayerEnergyGauge(
         in HudRenderSystemContext.PlayerHudData p,
@@ -350,7 +350,7 @@ public static class HudRenderSystem {
             }
         }
 
-        // 3格全満タン時の全体パルス微光枠
+        // 全スロット満タン時の全体パルス微光枠
         if (readySegments >= maxSegments)
         {
             var pulse = (MathF.Sin(pulseTime * 8.0f) + 1.0f) * 0.5f;

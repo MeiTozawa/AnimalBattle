@@ -239,7 +239,7 @@ public static class BattleInputSystem
         }
         _prevF8 = isF8;
 
-        // F9 キー：プレイヤー特殊能力エネルギーを1格（1スロット）増加
+        // F9 キー：プレイヤー特殊能力エネルギーを1スロット増加
         var isF9 = GameEngine.CheckHitKey((int)InputButton.KeyF9);
         if (isF9 && !_prevF9)
         {
@@ -352,7 +352,7 @@ public static class BattleInputSystem
     }
 
     /// <summary>
-    ///     プレイヤーの特殊能力エネルギーを1格（1スロット）増加させます。
+    ///     プレイヤーの特殊能力エネルギーを1スロット増加させます。
     /// </summary>
     private static void AddDebugEnergy(BattleInputSystemContext ctx)
     {

@@ -1,7 +1,7 @@
 namespace AnimalBattle.Features.Tutorial.Actions;
 
 /// <summary>
-///     チュートリアル中にプレイヤーのエネルギーゲージを所定の格数分充能するアクション。
+///     チュートリアル中にプレイヤーのエネルギーゲージを所定スロット分チャージするアクション。
 /// </summary>
 public sealed class ChargeEnergyAction(int segments) : ITutorialAction
 {

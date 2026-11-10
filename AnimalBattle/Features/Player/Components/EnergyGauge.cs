@@ -12,7 +12,7 @@ public struct EnergyGauge
     /// <summary>最大保持可能エネルギー総量</summary>
     public float MaxEnergy;
 
-    /// <summary>1スロット（1格）発動に必要なエネルギー容量</summary>
+    /// <summary>1スロット発動に必要なエネルギー容量</summary>
     public float SegmentCapacity;
 
     /// <summary>連続発動時の誤爆防止・内部インターバルタイマー（秒）</summary>

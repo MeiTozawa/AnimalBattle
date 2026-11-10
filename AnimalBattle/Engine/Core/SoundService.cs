@@ -25,7 +25,7 @@ public enum SfxType
     ItemDrop,
     /// <summary>回復アイテム取得効果音。</summary>
     ItemHeal,
-    /// <summary>Cat 特殊能力（巨型エネルギー弾）発射効果音。</summary>
+    /// <summary>Cat 特殊能力（巨大エネルギー弾）発射効果音。</summary>
     CatSpecialSkill,
     /// <summary>特殊能力エネルギーゲージの1スロット充能完了効果音。</summary>
     EnergySegmentCharged

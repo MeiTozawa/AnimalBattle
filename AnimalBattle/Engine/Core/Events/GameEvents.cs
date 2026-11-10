@@ -63,7 +63,7 @@ public readonly record struct ScreenCleaveSlashSwungEvent();
 /// <summary>自機が特殊能力（必殺技）を発動したイベント</summary>
 public readonly record struct SpecialAbilityExecutedEvent(CharacterType CharacterType);
 
-/// <summary>自機の特殊能力エネルギーゲージの蓄積スロット（格）が新たに満たされたイベント</summary>
+/// <summary>自機の特殊能力エネルギーゲージの蓄積スロットが新たに満たされたイベント</summary>
 public readonly record struct EnergySegmentChargedEvent(int NewReadySegments);
 
 /// <summary>攻撃・持続判定が対象に命中したイベント</summary>

@@ -18,7 +18,7 @@ ControlBoardMove = "移動　　: A / D"
 ControlBoardJump = "二段ジャンプ: SPACE "
 ControlBoardDash = "ダッシュ: L-SHIFT"
 ControlBoardAttack = "★ 攻撃 : 左クリック (長押し可能)"
-ControlBoardSpecial = "★ 特殊能力: 右クリック"
+ControlBoardSpecial = "★ 特殊能力: 右クリック (ゲージ1本消費)"
 
 # ==============================================================================
 # チュートリアル進行フェーズシーケンス (Phases & Steps)
@@ -112,18 +112,18 @@ Actions = [
 Condition = { Type = "DefeatMinions" }
 
 [[Phases]]
-Title = "★ 【 右クリック : 特殊能力 (左上ゲージ1格消費) 】"
+Title = "★ 【 右クリック : 特殊能力 (ゲージ1本消費) 】"
 
 [[Phases.Steps]]
-SubtitleCat = "攻撃命中や被弾で左上ゲージ蓄積！ 1格消費して【 巨型エネルギー弾 】を発射してください"
-SubtitleBunny = "攻撃命中や被弾で左上ゲージ蓄積！ 1格消費して【 全画面連続斬撃 】を発動してください"
+SubtitleCat = "攻撃命中や被弾でゲージ蓄積！ ゲージ1本消費して【 巨大エネルギー弾 】を発射してください"
+SubtitleBunny = "攻撃命中や被弾でゲージ蓄積！ ゲージ1本消費して【 全画面連続斬撃 】を発動してください"
 Actions = [
     { Type = "ChargeEnergy", Segments = 1 }
 ]
 Condition = { Type = "UseSpecialAbility", Duration = 0.8 }
 
 [[Phases.Steps]]
-SubtitleCat = "命中させると素早く再蓄積！ 巨型エネルギー弾で4体の浮遊ミニオンを一掃してください"
+SubtitleCat = "命中させると素早く再蓄積！ 巨大エネルギー弾で4体の浮遊ミニオンを一掃してください"
 SubtitleBunny = "命中させると素早く再蓄積！ 全画面連続斬撃で4体の浮遊ミニオンを一掃してください"
 Actions = [
     { Type = "ChargeEnergy", Segments = 1 },
