@@ -55,6 +55,7 @@ public sealed class AudioFeedback : IDisposable
         EventBus.Subscribe<BulletCancelledEvent>(OnBulletCancelled);
         EventBus.Subscribe<ScreenCleaveExecutedEvent>(OnScreenCleaveExecuted);
         EventBus.Subscribe<CombatHitLandedEvent>(OnCombatHitLanded);
+        EventBus.Subscribe<SpecialAbilityExecutedEvent>(OnSpecialAbilityExecuted);
         EventBus.Subscribe<PlaySfxRequestEvent>(OnPlaySfxRequested);
     }
 
@@ -80,6 +81,7 @@ public sealed class AudioFeedback : IDisposable
         EventBus.Unsubscribe<BulletCancelledEvent>(OnBulletCancelled);
         EventBus.Unsubscribe<ScreenCleaveExecutedEvent>(OnScreenCleaveExecuted);
         EventBus.Unsubscribe<CombatHitLandedEvent>(OnCombatHitLanded);
+        EventBus.Unsubscribe<SpecialAbilityExecutedEvent>(OnSpecialAbilityExecuted);
         EventBus.Unsubscribe<PlaySfxRequestEvent>(OnPlaySfxRequested);
     }
 
@@ -112,6 +114,13 @@ public sealed class AudioFeedback : IDisposable
     private static void OnItemCollected(ItemCollectedEvent e) => SoundService.PlaySfx(SfxType.ItemHeal);
     private static void OnBulletCancelled(BulletCancelledEvent e) => SoundService.PlaySfx(SfxType.BossHit);
     private static void OnCombatHitLanded(CombatHitLandedEvent e) => SoundService.PlaySfx(SfxType.BossHit);
+    private static void OnSpecialAbilityExecuted(SpecialAbilityExecutedEvent e)
+    {
+        if (e.CharacterType == CharacterType.Cat)
+        {
+            SoundService.PlaySfx(SfxType.CatSpecialSkill);
+        }
+    }
     private static void OnPlaySfxRequested(PlaySfxRequestEvent e) => SoundService.PlaySfx(e.Type, e.VolumeScale);
 
     private static void OnScreenCleaveExecuted(ScreenCleaveExecutedEvent e)

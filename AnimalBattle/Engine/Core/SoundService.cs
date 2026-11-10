@@ -24,7 +24,9 @@ public enum SfxType
     /// <summary>アイテムドロップ効果音。</summary>
     ItemDrop,
     /// <summary>回復アイテム取得効果音。</summary>
-    ItemHeal
+    ItemHeal,
+    /// <summary>Cat 特殊能力（巨型エネルギー弾）発射効果音。</summary>
+    CatSpecialSkill
 }
 
 /// <summary>
@@ -79,7 +81,8 @@ public static class SoundService
             (SfxType.BossWarning, ResourcePath.Sound.BossWarningMp3),
             (SfxType.BossDeath, ResourcePath.Sound.BossDeathMp3),
             (SfxType.ItemDrop, ResourcePath.Sound.ItemDropMp3),
-            (SfxType.ItemHeal, ResourcePath.Sound.HealthRecoveryMp3)
+            (SfxType.ItemHeal, ResourcePath.Sound.HealthRecoveryMp3),
+            (SfxType.CatSpecialSkill, ResourcePath.Sound.CatSpecialSkillMp3)
         ];
 
         foreach (var (type, relPath) in sfxDefinitions)
