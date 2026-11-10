@@ -119,8 +119,8 @@ MaxShockwaveAlpha = 255.0
 GuidanceTitlePos = { x = 640, y = 70 }
 GuidanceSubPos = { x = 640, y = 102 }
 RetryPos = { x = 640, y = 360 }
-ControlBoardP1 = { x = 960, y = 25 }
-ControlBoardP2 = { x = 1255, y = 155 }
+ControlBoardP1 = { x = 940, y = 25 }
+ControlBoardP2 = { x = 1255, y = 180 }
 ControlBoardPadding = { x = 15, y = 15 }
 ControlBoardTitleSpacing = 24
 ControlBoardLineSpacing = 22

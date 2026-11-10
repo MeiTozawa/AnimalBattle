@@ -63,6 +63,7 @@ public sealed class TutorialTextsConfig
     public string ControlBoardJump { get; set; } = string.Empty;
     public string ControlBoardDash { get; set; } = string.Empty;
     public string ControlBoardAttack { get; set; } = string.Empty;
+    public string ControlBoardSpecial { get; set; } = string.Empty;
 }
 
 /// <summary>

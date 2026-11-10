@@ -181,6 +181,8 @@ public static class TutorialRenderSystem
         GameEngine.DrawLeftString(new Vec2i(startX, y), texts.ControlBoardDash, colors.White);
         y += layout.ControlBoardAttackSpacing;
         GameEngine.DrawLeftString(new Vec2i(startX, y), texts.ControlBoardAttack, colors.Gold);
+        y += layout.ControlBoardLineSpacing;
+        GameEngine.DrawLeftString(new Vec2i(startX, y), texts.ControlBoardSpecial, colors.Gold);
     }
 
     private static void DrawShrineDoorEnvironment(
