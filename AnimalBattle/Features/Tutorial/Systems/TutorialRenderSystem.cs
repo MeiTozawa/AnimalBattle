@@ -99,11 +99,15 @@ public static class TutorialRenderSystem
         // 画面上部・中央のフェーズ別背景操作ガイド文字
         DrawPhaseGuidance(world, state, cfg, rCfg);
 
-        // 3. 戦闘フェーズにおける全操作ガイド看板
-        if ((uint)state.CurrentPhaseIndex < (uint)cfg.Phases.Length &&
-            cfg.Phases[state.CurrentPhaseIndex].HasMinions)
+        // 3. 戦闘ステップにおける全操作ガイド看板
+        if ((uint)state.CurrentPhaseIndex < (uint)cfg.Phases.Length)
         {
-            DrawControlGuidanceBoard(cfg, rCfg);
+            var phaseCfg = cfg.Phases[state.CurrentPhaseIndex];
+            if ((uint)state.CurrentStepIndex < (uint)phaseCfg.Steps.Length &&
+                phaseCfg.Steps[state.CurrentStepIndex].HasMinions)
+            {
+                DrawControlGuidanceBoard(cfg, rCfg);
+            }
         }
 
         // 4. リトライ表示

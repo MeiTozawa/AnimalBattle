@@ -104,6 +104,10 @@ public sealed class TutorialStepConfig
     public TutorialActionConfig[] Actions { get; set; } = [];
     public TutorialConditionConfig Condition { get; set; } = new();
 
+    /// <summary>小怪を含む戦闘ステップかどうか判定します。</summary>
+    public bool HasMinions => Array.Exists(Actions, a => a.Type.Equals("SpawnMinion", StringComparison.OrdinalIgnoreCase)) ||
+                              Condition.Type.Equals("DefeatMinions", StringComparison.OrdinalIgnoreCase);
+
     private ITutorialAction[] _runtimeActions = [];
     private ITutorialCondition? _runtimeCondition;
 
@@ -130,7 +134,7 @@ public sealed class TutorialPhaseConfig
     public TutorialStepConfig[] Steps { get; set; } = [];
 
     /// <summary>小怪を含む戦闘フェーズかどうか判定します。</summary>
-    public bool HasMinions => Array.Exists(Steps, s => Array.Exists(s.Actions, a => a.Type.Equals("SpawnMinion", StringComparison.OrdinalIgnoreCase)));
+    public bool HasMinions => Array.Exists(Steps, s => s.HasMinions);
 
     /// <summary>ボス扉を含むフェーズかどうか判定します。</summary>
     public bool HasBossDoor => Array.Exists(Steps, s => Array.Exists(s.Actions, a => a.Type.Equals("SpawnDoor", StringComparison.OrdinalIgnoreCase)));
