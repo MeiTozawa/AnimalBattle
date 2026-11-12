@@ -32,6 +32,7 @@ public readonly struct RenderModule : IFlecsModule {
              .AddSpawnBufferRenderSystem()
              .AddBulletBatchRenderSystem()
              .AddBossTelegraphRenderSystem()
+             .AddFlyingMinionTelegraphRenderSystem()
              .AddVfxRenderSystem()
              .AddDebugGizmosRenderSystem();
 

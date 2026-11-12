@@ -76,15 +76,10 @@ public static class FlyingMinionSystem
             .Kind(Ecs.OnUpdate)
             .Iter(ExecuteFlyingMinionAbility);
 
-        // 4. 予兆線描画
-        world.System("FlyingMinionTelegraphRenderSystem")
-            .Kind(Ecs.OnStore)
-            .Iter(ExecuteFlyingMinionTelegraph);
-
         return world;
     }
 
-    private static void RefreshPlayerPosition(FlyingMinionContext ctx)
+    internal static void RefreshPlayerPosition(FlyingMinionContext ctx)
     {
         ctx.HasPlayer = false;
         ctx.PlayerQuery.Iter(static (Iter pIt, Field<Transform> pTrans) =>
@@ -248,76 +243,5 @@ public static class FlyingMinionSystem
                 minion.TargetPos = nearestPlayerPos.Value;
             }
         }
-    }
-
-    private static void ExecuteFlyingMinionTelegraph(Iter it)
-    {
-        var world = it.World();
-        ref readonly var flow = ref world.Get<GameFlow>();
-        if (!flow.IsGameplay) return;
-
-        var ctx = world.Get<FlyingMinionContext>();
-        var players = new List<Vec2f>(2);
-        ctx.PlayerQuery.Iter((Iter pIt, Field<Transform> pTrans) =>
-        {
-            var pCount = pIt.Count();
-            for (var p = 0; p < pCount; p++)
-            {
-                players.Add(pTrans[p].Position);
-            }
-        });
-
-        var bossFx = world.Get<BossEffectsRenderConfig>();
-        var arenaCfg = world.Get<ArenaConfig>();
-
-        ctx.MinionQuery.Iter((Iter mIt, Field<Transform> trans, Field<Sprite> sprites, Field<CollisionBox> cols, Field<FlyingMinionComponent> minions) =>
-        {
-            var count = mIt.Count();
-            for (var i = 0; i < count; i++)
-            {
-                ref readonly var m = ref minions[i];
-                if (m.Asc == null || !m.Asc.HasTag(GameplayTag.Telegraph)) continue;
-
-                var currentAbility = m.Asc.CurrentAbility;
-                if (currentAbility == null) continue;
-
-                ref readonly var t = ref trans[i];
-                ref readonly var s = ref sprites[i];
-                ref readonly var c = ref cols[i];
-
-                Vec2f finalTarget;
-                if (m.TargetPos != Vec2f.Zero)
-                {
-                    finalTarget = m.TargetPos;
-                }
-                else
-                {
-                    var nearest = Vec2f.Zero;
-                    var minDistSq = float.MaxValue;
-                    for (var p = 0; p < players.Count; p++)
-                    {
-                        var d = (players[p] - t.Position).LengthSquared();
-                        if (d < minDistSq)
-                        {
-                            minDistSq = d;
-                            nearest = players[p];
-                        }
-                    }
-                    finalTarget = nearest;
-                }
-
-                AbilityTelegraphContext tCtx = new(
-                    t.Position,
-                    finalTarget,
-                    !s.FlipX,
-                    m.Asc.Progress,
-                    m.HoverTimer,
-                    c.Size.Y,
-                    bossFx,
-                    arenaCfg);
-
-                currentAbility.DrawTelegraph(in tCtx);
-            }
-        });
     }
 }
