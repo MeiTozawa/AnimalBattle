@@ -33,17 +33,19 @@ public class GameManager : IDisposable {
         _ecsWorld = World.Create();
         Current = this;
 
-        _configRegistry = new ConfigRegistry();
-        GameConfigRegistrar.RegisterAll(_configRegistry, _ecsWorld);
-
         _assetManager = new AssetManager();
         _ecsWorld.Set(_assetManager);
 
         _audioFeedback = new AudioFeedback();
 
-
-        // 共有パイプラインモジュールおよびプレハブテンプレートの決定論的登録
+        // 1. 全領域共有の基底 Prefab および AutoOverride 登録
         _ecsWorld.Import<CommonModule>();
+
+        // 2. 設定ファイルの登録・ロードおよび設定依存 Prefab (Player/Weapon/SpecialAbility) の構築
+        _configRegistry = new ConfigRegistry();
+        GameConfigRegistrar.RegisterAll(_configRegistry, _ecsWorld);
+
+        // 3. 各ドメインモジュールの登録（CombatPrefabConfig 等の設定依存 Prefab を含む）
         _ecsWorld.Import<EffectModule>();
         _ecsWorld.Import<CombatFeedbackModule>();
         _ecsWorld.Import<AnimationModule>();
