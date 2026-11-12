@@ -155,14 +155,9 @@ public sealed class CombatPoolService : IDisposable
         e.Set(new Velocity(Vec2f.Zero));
 
         var world = e.CsWorld();
-        var defaultRadius = 0.0f;
-        var defaultDamage = 0.0f;
-        if (world.Has<CombatPrefabConfig>())
-        {
-            var cfg = world.Get<CombatPrefabConfig>().BossNormalBullet;
-            defaultRadius = cfg.Radius;
-            defaultDamage = cfg.Damage;
-        }
+        var cfg = world.Get<CombatPrefabConfig>().BossNormalBullet;
+        var defaultRadius = cfg.Radius;
+        var defaultDamage = cfg.Damage;
 
         ref var bullet = ref e.GetMut<Bullet>();
         bullet.Radius = defaultRadius;
