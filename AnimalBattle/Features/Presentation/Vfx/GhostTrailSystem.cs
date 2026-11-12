@@ -1,4 +1,3 @@
-using System.Drawing;
 using AnimalBattle.Configs;
 using AnimalBattle.Framework.Pooling;
 using AnimalBattle.Player.Components;
@@ -19,7 +18,7 @@ public static class GhostTrailSystem
     /// </summary>
     public static World AddGhostTrailSystem(this World world)
     {
-        world.System<Transform, Sprite, DashState>("GhostTrailSystem")
+        world.System<Transform, Sprite, DashCapability, DashState>("GhostTrailSystem")
             .Without<RecycleTag>()
             .Without<DeadTag>()
             .Kind(Ecs.OnUpdate)
@@ -32,6 +31,7 @@ public static class GhostTrailSystem
         Iter it,
         Field<Transform> transforms,
         Field<Sprite> sprites,
+        Field<DashCapability> dashCaps,
         Field<DashState> dashStates)
     {
         var count = it.Count();
@@ -39,11 +39,7 @@ public static class GhostTrailSystem
 
         var dt = it.DeltaTime();
         var world = it.World();
-        var pCfg = world.GetActivePlayerConfig();
         var vfxColor = world.Get<PlayerVisualRenderConfig>().GhostTrailColor;
-        var interval = pCfg.DashGhostTrailInterval;
-        var duration = pCfg.DashGhostTrailDuration;
-        var alpha = pCfg.DashGhostTrailAlpha;
 
         for (var i = 0; i < count; i++)
         {
@@ -54,8 +50,9 @@ public static class GhostTrailSystem
                 continue;
             }
 
+            ref readonly var cap = ref dashCaps[i];
             dash.GhostTrailTimer += dt;
-            if (dash.GhostTrailTimer >= interval)
+            if (dash.GhostTrailTimer >= cap.GhostTrailInterval)
             {
                 dash.GhostTrailTimer = 0.0f;
 
@@ -65,7 +62,7 @@ public static class GhostTrailSystem
                 CombatPoolService.RentAreaEffect()
                     .Set(new Transform(trans.Position, trans.Scale, trans.Rotation))
                     .Set(new Sprite(sprite.GraphHandle, sprite.FlipX, true, sprite.SrcRect, vfxColor))
-                    .Set(new FadeEffect(duration, alpha, 0.0f));
+                    .Set(new FadeEffect(cap.GhostTrailDuration, cap.GhostTrailAlpha, 0.0f));
             }
         }
     }
