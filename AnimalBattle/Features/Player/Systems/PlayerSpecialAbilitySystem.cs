@@ -5,8 +5,10 @@ namespace AnimalBattle.Player.Systems;
 /// </summary>
 public sealed class PlayerSpecialAbilityContext : IDisposable
 {
+    /// <summary>敵弾幕消去判定用の敵弾クエリ</summary>
     public required Query<Transform, Hitbox, Bullet> EnemyBulletQuery { get; init; }
 
+    /// <summary>リソースを解放します。</summary>
     public void Dispose()
     {
         EnemyBulletQuery.Dispose();
@@ -14,9 +16,9 @@ public sealed class PlayerSpecialAbilityContext : IDisposable
 }
 
 /// <summary>
-///     自機の特殊能力（必殺技）発動制御・クールダウン・固有挙動を実行する ECS システム。
+///     自機の特殊能力（必殺技）発動制御・クールダウン・固有挙動を実行する ECS システム群。
 ///     マウス右クリック等による <see cref="SpecialAbilityIntent"/> を検知し、
-///     <see cref="EnergyGauge"/> を消費して Bunny の全画面斬撃または Cat の巨型エネルギー弾を展開します。
+///     <see cref="EnergyGauge"/> を消費して各能力コンポーネント（<see cref="GiantOrbCapability"/> / <see cref="ScreenCleaveCapability"/>）に基づく必殺技を展開します。
 /// </summary>
 public static class PlayerSpecialAbilitySystem
 {
@@ -35,84 +37,126 @@ public static class PlayerSpecialAbilitySystem
             EnemyBulletQuery = bulletQuery
         });
 
-        world.System<Transform, Velocity, SpecialAbilityIntent, EnergyGauge, CharacterTypeComponent, TimedEffectsState, GameplayTagState>("PlayerSpecialAbilitySystem")
+        // 1. 誤爆防止インターバルタイマーの減衰システム
+        world.System<EnergyGauge>("PlayerSpecialAbilityCooldownSystem")
             .With<PlayerTag>()
             .Without<DeadTag>()
             .Kind(Ecs.OnUpdate)
-            .Iter(ExecuteSpecialAbility);
+            .Iter(UpdateCooldown);
+
+        // 2. 巨型エネルギー弾特殊能力発動システム
+        world.System<Transform, Velocity, SpecialAbilityIntent, EnergyGauge, GiantOrbCapability>("GiantOrbSpecialAbilitySystem")
+            .With<PlayerTag>()
+            .Without<DeadTag>()
+            .Kind(Ecs.OnUpdate)
+            .Iter(ExecuteGiantOrbSystem);
+
+        // 3. 全画面斬撃特殊能力発動システム
+        world.System<SpecialAbilityIntent, EnergyGauge, ScreenCleaveCapability, TimedEffectsState, GameplayTagState>("ScreenCleaveSpecialAbilitySystem")
+            .With<PlayerTag>()
+            .Without<DeadTag>()
+            .Kind(Ecs.OnUpdate)
+            .Iter(ExecuteScreenCleaveSystem);
 
         return world;
     }
 
-    private static void ExecuteSpecialAbility(
-        Iter it,
-        Field<Transform> transforms,
-        Field<Velocity> velocities,
-        Field<SpecialAbilityIntent> intents,
-        Field<EnergyGauge> gauges,
-        Field<CharacterTypeComponent> characterTypes,
-        Field<TimedEffectsState> timedEffects,
-        Field<GameplayTagState> tagStates)
+    private static void UpdateCooldown(Iter it, Field<EnergyGauge> gauges)
     {
         var count = it.Count();
         if (count == 0) return;
 
         var dt = it.DeltaTime();
-        var world = it.World();
-        var ctx = world.Get<PlayerSpecialAbilityContext>();
-
         for (var i = 0; i < count; i++)
         {
-            var entity = it.Entity(i);
-            ref readonly var trans = ref transforms[i];
-            ref var intent = ref intents[i];
             ref var gauge = ref gauges[i];
-            ref readonly var charType = ref characterTypes[i];
-            ref var effects = ref timedEffects[i];
-            ref var tags = ref tagStates[i];
-
-            // 1. 誤爆防止インターバルタイマーの減衰
             if (gauge.CooldownTimer > 0.0f)
             {
                 gauge.CooldownTimer = MathF.Max(0.0f, gauge.CooldownTimer - dt);
             }
+        }
+    }
+
+    private static void ExecuteGiantOrbSystem(
+        Iter it,
+        Field<Transform> transforms,
+        Field<Velocity> velocities,
+        Field<SpecialAbilityIntent> intents,
+        Field<EnergyGauge> gauges,
+        Field<GiantOrbCapability> capabilities)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var currentWorld = it.World();
+        for (var i = 0; i < count; i++)
+        {
+            ref var intent = ref intents[i];
+            ref var gauge = ref gauges[i];
 
             var triggered = intent.Triggered;
             intent.Triggered = false;
 
             if (!triggered || !gauge.CanUseAbility) continue;
 
-            // 2. 1スロット分のエネルギーを消費
+            ref readonly var orb = ref capabilities[i];
             gauge.CurrentEnergy = MathF.Max(0.0f, gauge.CurrentEnergy - gauge.SegmentCapacity);
+            gauge.CooldownTimer = orb.Cooldown;
 
-            EventBus.Publish(new SpecialAbilityExecutedEvent(charType.Value));
+            ref readonly var trans = ref transforms[i];
+            ExecuteGiantOrb(currentWorld, in trans, in intent, in orb);
+            EventBus.Publish(new SpecialAbilityExecutedEvent("GiantOrb"));
+        }
+    }
 
-            // 3. キャラクター種別ごとの特殊能力実行
-            if (charType.Value == CharacterType.Bunny)
-            {
-                ExecuteBunnyCleave(world, entity, ctx, ref gauge, ref effects, ref tags);
-            }
-            else if (charType.Value == CharacterType.Cat)
-            {
-                ExecuteCatGiantOrb(world, in trans, in intent, ref gauge);
-            }
+    private static void ExecuteScreenCleaveSystem(
+        Iter it,
+        Field<SpecialAbilityIntent> intents,
+        Field<EnergyGauge> gauges,
+        Field<ScreenCleaveCapability> capabilities,
+        Field<TimedEffectsState> timedEffects,
+        Field<GameplayTagState> tagStates)
+    {
+        var count = it.Count();
+        if (count == 0) return;
+
+        var currentWorld = it.World();
+        var ctx = currentWorld.Get<PlayerSpecialAbilityContext>();
+
+        for (var i = 0; i < count; i++)
+        {
+            ref var intent = ref intents[i];
+            ref var gauge = ref gauges[i];
+
+            var triggered = intent.Triggered;
+            intent.Triggered = false;
+
+            if (!triggered || !gauge.CanUseAbility) continue;
+
+            ref readonly var cleave = ref capabilities[i];
+            gauge.CurrentEnergy = MathF.Max(0.0f, gauge.CurrentEnergy - gauge.SegmentCapacity);
+            gauge.CooldownTimer = cleave.Cooldown;
+
+            var playerEntity = it.Entity(i);
+            ref var effects = ref timedEffects[i];
+            ref var tags = ref tagStates[i];
+
+            ExecuteScreenCleave(currentWorld, playerEntity, ctx, in cleave, ref effects, ref tags);
+            EventBus.Publish(new SpecialAbilityExecutedEvent("ScreenCleave"));
         }
     }
 
     /// <summary>
-    ///     Bunny の特殊能力：全画面斬撃（弾幕消去・全敵確定ダメージ・無敵付与・画面振動）。
+    ///     全画面斬撃特殊能力（敵弾消去・連続斬撃シーケンス生成・自機無敵化）を実行します。
     /// </summary>
-    private static void ExecuteBunnyCleave(
+    private static void ExecuteScreenCleave(
         World world,
         Entity playerEntity,
         PlayerSpecialAbilityContext ctx,
-        ref EnergyGauge gauge,
+        in ScreenCleaveCapability cleave,
         ref TimedEffectsState effects,
         ref GameplayTagState tags)
     {
-        var bunnyWeaponCfg = world.Get<BunnyWeaponConfig>();
-        gauge.CooldownTimer = bunnyWeaponCfg.SpecialAbilityCooldown;
-
         // 全画面敵弾幕の相殺消去
         var bulletCount = 0;
         ctx.EnemyBulletQuery.Each((bulletEntity, ref bt, ref _, ref b) =>
@@ -135,53 +179,50 @@ public static class PlayerSpecialAbilitySystem
             .Set(new ScreenCleaveSequence
             {
                 ElapsedTimer = 0.0f,
-                TotalDuration = bunnyWeaponCfg.SpecialCleaveDuration,
+                TotalDuration = cleave.TotalDuration,
                 NextSpawnTimer = 0.0f,
                 SpawnedCount = 0,
-                TargetCount = bunnyWeaponCfg.SpecialCleaveSlashCount,
-                SlashLifetime = bunnyWeaponCfg.SpecialCleaveSlashLifetime,
-                ScaleMin = bunnyWeaponCfg.SpecialCleaveSlashScaleMin,
-                ScaleMax = bunnyWeaponCfg.SpecialCleaveSlashScaleMax,
-                SlashSpeed = bunnyWeaponCfg.SpecialCleaveSlashSpeed,
-                SlashColor = bunnyWeaponCfg.SpecialCleaveSlashColor,
+                TargetCount = cleave.SlashCount,
+                SlashLifetime = cleave.SlashLifetime,
+                ScaleMin = cleave.ScaleMin,
+                ScaleMax = cleave.ScaleMax,
+                SlashSpeed = cleave.SlashSpeed,
+                SlashColor = cleave.SlashColor,
                 GraphHandle = hasTexture ? slashHandle : -1,
                 CellSize = slashCfg.SpriteCellSize,
                 ColIndex = slashCfg.SpriteColIndex,
-                TotalDamage = bunnyWeaponCfg.SpecialCleaveDamage,
-                TickInterval = bunnyWeaponCfg.SpecialCleaveTickInterval,
+                TotalDamage = cleave.TotalDamage,
+                TickInterval = cleave.TickInterval,
                 NextDamageTimer = 0.0f,
                 DealtDamage = 0.0f,
                 NextSfxTimer = 0.0f,
-                SfxInterval = bunnyWeaponCfg.SpecialCleaveTickInterval
+                SfxInterval = cleave.TickInterval
             });
 
         // 自機の無敵付与と演出効果
-        TimedEffectService.ApplyEffect(ref effects, ref tags, GameplayTag.Untargetable, bunnyWeaponCfg.SpecialCleaveInvincibleDuration, playerEntity.Id);
+        TimedEffectService.ApplyEffect(ref effects, ref tags, GameplayTag.Untargetable, cleave.InvincibleDuration, playerEntity.Id);
         var blinkFreq = world.Get<PlayerVisualRenderConfig>().InvincibleBlinkFrequency;
-        playerEntity.Set(new InvincibleBlinkEffect(bunnyWeaponCfg.SpecialCleaveInvincibleDuration, blinkFreq));
+        playerEntity.Set(new InvincibleBlinkEffect(cleave.InvincibleDuration, blinkFreq));
 
-        CameraService.AddTrauma(bunnyWeaponCfg.SpecialCleaveTrauma);
+        CameraService.AddTrauma(cleave.CameraTrauma);
         EventBus.Publish(new ScreenCleaveExecutedEvent(bulletCount));
     }
 
     /// <summary>
-    ///     Cat の特殊能力：巨型エネルギー弾（低速貫通・接触継続跳字ダメージ）。
+    ///     巨型エネルギー弾特殊能力（低速貫通・接触継続判定生成）を実行します。
     /// </summary>
-    private static void ExecuteCatGiantOrb(
+    private static void ExecuteGiantOrb(
         World world,
         in Transform trans,
         in SpecialAbilityIntent intent,
-        ref EnergyGauge gauge)
+        in GiantOrbCapability orb)
     {
-        var catWeaponCfg = world.Get<CatWeaponConfig>();
-        gauge.CooldownTimer = catWeaponCfg.SpecialAbilityCooldown;
-
         var dir = intent.AimDirection;
         dir = dir.LengthSquared() < 0.0001f ? new Vec2f(1.0f, 0.0f) : dir.Normalized();
 
         var spawnPos = trans.Position + dir * 32.0f;
-        var orbVel = dir * catWeaponCfg.SpecialOrbSpeed;
-        var radius = catWeaponCfg.SpecialOrbRadius;
+        var orbVel = dir * orb.Speed;
+        var radius = orb.Radius;
 
         world.Entity()
             .IsA(CommonPrefabs.BaseProjectile)
@@ -190,14 +231,14 @@ public static class PlayerSpecialAbilitySystem
             .Set(new Transform(spawnPos))
             .Set(new Velocity(orbVel))
             .Set(new Hitbox(new CollisionShape.Circle(radius), 0.0f, destroyOnHit: false))
-            .Set(new Bullet(radius, catWeaponCfg.SpecialOrbFillColor, catWeaponCfg.SpecialOrbOutlineColor))
+            .Set(new Bullet(radius, orb.FillColor, orb.OutlineColor))
             .Set(new ContinuousDamageDealer
             {
-                DamagePerSecond = catWeaponCfg.SpecialOrbDamagePerSecond,
-                TickInterval = catWeaponCfg.SpecialOrbTickInterval,
+                DamagePerSecond = orb.DamagePerSecond,
+                TickInterval = orb.TickInterval,
                 NextTickTimer = 0.0f
             })
-            .Set(new HitboxLifetime(catWeaponCfg.SpecialOrbLifetime));
+            .Set(new HitboxLifetime(orb.Lifetime));
 
         EventBus.Publish(new PlayerShotFiredEvent(spawnPos, dir));
         CameraService.AddTrauma(0.2f);

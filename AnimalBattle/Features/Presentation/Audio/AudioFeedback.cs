@@ -120,7 +120,7 @@ public sealed class AudioFeedback : IDisposable
     private static void OnCombatHitLanded(CombatHitLandedEvent e) => SoundService.PlaySfx(SfxType.BossHit);
     private static void OnSpecialAbilityExecuted(SpecialAbilityExecutedEvent e)
     {
-        if (e.CharacterType == CharacterType.Cat)
+        if (e.AbilityName == "GiantOrb")
         {
             SoundService.PlaySfx(SfxType.CatSpecialSkill);
         }

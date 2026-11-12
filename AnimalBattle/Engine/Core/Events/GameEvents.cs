@@ -61,7 +61,7 @@ public readonly record struct ScreenCleaveExecutedEvent(int ClearedBullets);
 public readonly record struct ScreenCleaveSlashSwungEvent();
 
 /// <summary>自機が特殊能力（必殺技）を発動したイベント</summary>
-public readonly record struct SpecialAbilityExecutedEvent(CharacterType CharacterType);
+public readonly record struct SpecialAbilityExecutedEvent(string AbilityName);
 
 /// <summary>自機の特殊能力エネルギーゲージの蓄積スロットが新たに満たされたイベント</summary>
 public readonly record struct EnergySegmentChargedEvent(int NewReadySegments);

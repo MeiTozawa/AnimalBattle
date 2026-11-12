@@ -1,6 +1,3 @@
-using System.Drawing;
-using Microsoft.Extensions.Configuration;
-
 namespace AnimalBattle.Configs;
 
 /// <summary>
@@ -9,6 +6,7 @@ namespace AnimalBattle.Configs;
 /// </summary>
 public interface IWeaponConfig
 {
+    /// <summary>武器種別識別子</summary>
     string Type { get; }
 }
 
@@ -17,15 +15,34 @@ public interface IWeaponConfig
 /// </summary>
 public class RangedWeaponConfig : IWeaponConfig
 {
+    /// <summary>武器種別識別子</summary>
     public string Type { get; set; } = string.Empty;
+
+    /// <summary>射撃クールダウン（秒）</summary>
     public float Cooldown { get; set; }
+
+    /// <summary>弾丸初速：px/s</summary>
     public float BulletSpeed { get; set; }
+
+    /// <summary>弾丸発射位置オフセット</summary>
     public Vec2f BulletSpawnOffset { get; set; }
+
+    /// <summary>弾丸判定サイズ</summary>
     public Vec2f BulletSize { get; set; }
+
+    /// <summary>弾丸単発ダメージ</summary>
     public float BulletDamage { get; set; }
+
+    /// <summary>射撃時後退力積インパルス</summary>
     public float ShootRecoilImpulse { get; set; }
+
+    /// <summary>射撃時変形ストレッチ率</summary>
     public Vec2f ShootRecoilStretch { get; set; }
+
+    /// <summary>銃口発光エフェクト持続時間（秒）</summary>
     public float MuzzleFlashDuration { get; set; }
+
+    /// <summary>銃口発光エフェクト半径</summary>
     public float MuzzleFlashRadius { get; set; }
 
     /// <summary>弾丸命中撃砕破片の最小飛散個数</summary>
@@ -53,48 +70,6 @@ public class RangedWeaponConfig : IWeaponConfig
 /// </summary>
 public sealed class CatWeaponConfig : RangedWeaponConfig
 {
-    /// <summary>特殊能力発動後の連続誤爆防止クールダウン（秒）</summary>
-    public float SpecialAbilityCooldown { get; set; }
-
-    /// <summary>巨型エネルギー弾の1秒あたりの期待接触ダメージ</summary>
-    public float SpecialOrbDamagePerSecond { get; set; }
-
-    /// <summary>巨型エネルギー弾の接触ダメージティック間隔（秒）</summary>
-    public float SpecialOrbTickInterval { get; set; }
-
-    /// <summary>巨型エネルギー弾の初速（px/s）</summary>
-    public float SpecialOrbSpeed { get; set; }
-
-    /// <summary>巨型エネルギー弾の接触判定半径（px）</summary>
-    public float SpecialOrbRadius { get; set; }
-
-    /// <summary>巨型エネルギー弾の最大生存時間（秒）</summary>
-    public float SpecialOrbLifetime { get; set; }
-
-    private Color _specialOrbFillColor;
-    private Color _specialOrbOutlineColor;
-
-    /// <summary>巨型エネルギー弾の塗りつぶし色 Hex 文字列</summary>
-    [ConfigurationKeyName("SpecialOrbFillColor")]
-    public string SpecialOrbFillColorHex
-    {
-        get => string.Empty;
-        set => _specialOrbFillColor = value.ToColor();
-    }
-
-    /// <summary>巨型エネルギー弾の塗りつぶし色</summary>
-    public Color SpecialOrbFillColor => _specialOrbFillColor;
-
-    /// <summary>巨型エネルギー弾の外枠色 Hex 文字列</summary>
-    [ConfigurationKeyName("SpecialOrbOutlineColor")]
-    public string SpecialOrbOutlineColorHex
-    {
-        get => string.Empty;
-        set => _specialOrbOutlineColor = value.ToColor();
-    }
-
-    /// <summary>巨型エネルギー弾の外枠色</summary>
-    public Color SpecialOrbOutlineColor => _specialOrbOutlineColor;
 }
 
 /// <summary>
@@ -102,13 +77,28 @@ public sealed class CatWeaponConfig : RangedWeaponConfig
 /// </summary>
 public class MeleeWeaponConfig : IWeaponConfig
 {
+    /// <summary>武器種別識別子</summary>
     public string Type { get; set; } = string.Empty;
+
+    /// <summary>攻撃判定単発ダメージ</summary>
     public float Damage { get; set; }
+
+    /// <summary>近接攻撃クールダウン（秒）</summary>
     public float Cooldown { get; set; }
+
+    /// <summary>攻撃射程距離</summary>
     public float Range { get; set; }
+
+    /// <summary>攻撃判定矩形サイズ</summary>
     public Vec2f Size { get; set; }
+
+    /// <summary>攻撃判定持続時間（秒）</summary>
     public float Duration { get; set; }
+
+    /// <summary>踏み込み推進力積インパルス</summary>
     public float LungeImpulse { get; set; }
+
+    /// <summary>攻撃時変形ストレッチ率</summary>
     public Vec2f StretchScale { get; set; }
 }
 
@@ -118,49 +108,4 @@ public class MeleeWeaponConfig : IWeaponConfig
 /// </summary>
 public sealed class BunnyWeaponConfig : MeleeWeaponConfig
 {
-    /// <summary>特殊能力発動後の連続誤爆防止クールダウン（秒）</summary>
-    public float SpecialAbilityCooldown { get; set; }
-
-    /// <summary>全画面斬撃による全敵対ユニットへの期待総確定ダメージ</summary>
-    public float SpecialCleaveDamage { get; set; }
-
-    /// <summary>全画面斬撃の継続ダメージ発生間隔（秒）</summary>
-    public float SpecialCleaveTickInterval { get; set; }
-
-    /// <summary>全画面斬撃発動時の自機無敵時間（秒）</summary>
-    public float SpecialCleaveInvincibleDuration { get; set; }
-
-    /// <summary>全画面斬撃時のカメラ衝撃トラウマ値</summary>
-    public float SpecialCleaveTrauma { get; set; }
-
-    /// <summary>全画面斬撃エフェクトの発生総数</summary>
-    public int SpecialCleaveSlashCount { get; set; }
-
-    /// <summary>全画面斬撃シーケンスの総演出時間（秒）</summary>
-    public float SpecialCleaveDuration { get; set; }
-
-    /// <summary>単一斬撃エフェクトの生存時間（秒）</summary>
-    public float SpecialCleaveSlashLifetime { get; set; }
-
-    /// <summary>斬撃エフェクト最小スケール</summary>
-    public float SpecialCleaveSlashScaleMin { get; set; }
-
-    /// <summary>斬撃エフェクト最大スケール</summary>
-    public float SpecialCleaveSlashScaleMax { get; set; }
-
-    /// <summary>斬撃エフェクトの推進速度（px/s）</summary>
-    public float SpecialCleaveSlashSpeed { get; set; }
-
-    private Color _specialCleaveSlashColor;
-
-    /// <summary>斬撃エフェクトの表示色 Hex 文字列</summary>
-    [ConfigurationKeyName("SpecialCleaveSlashColor")]
-    public string SpecialCleaveSlashColorHex
-    {
-        get => string.Empty;
-        set => _specialCleaveSlashColor = value.ToColor();
-    }
-
-    /// <summary>斬撃エフェクトの表示色</summary>
-    public Color SpecialCleaveSlashColor => _specialCleaveSlashColor;
 }
