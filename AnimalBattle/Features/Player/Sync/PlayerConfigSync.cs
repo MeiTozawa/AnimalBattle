@@ -56,15 +56,10 @@ public static class PlayerConfigSync
     {
         world.Set(newConfig);
 
-        if (PlayerPrefabs.CatPlayer.IsAlive())
+        if (SpecialAbilityPrefabs.GiantOrb.IsAlive())
         {
-            newConfig.AttachTo(PlayerPrefabs.CatPlayer);
+            SpecialAbilityPrefabs.GiantOrb.Set(GiantOrbCapability.FromConfig(newConfig));
         }
-
-        using var q = world.QueryBuilder().With<PlayerTag>().With<GiantOrbCapability>().Build();
-        q.Each(e => {
-            newConfig.AttachTo(e);
-        });
     }
 
     /// <summary>
@@ -74,15 +69,10 @@ public static class PlayerConfigSync
     {
         world.Set(newConfig);
 
-        if (PlayerPrefabs.BunnyPlayer.IsAlive())
+        if (SpecialAbilityPrefabs.ScreenCleave.IsAlive())
         {
-            newConfig.AttachTo(PlayerPrefabs.BunnyPlayer);
+            SpecialAbilityPrefabs.ScreenCleave.Set(ScreenCleaveCapability.FromConfig(newConfig));
         }
-
-        using var q = world.QueryBuilder().With<PlayerTag>().With<ScreenCleaveCapability>().Build();
-        q.Each(e => {
-            newConfig.AttachTo(e);
-        });
     }
 
     /// <summary>
@@ -203,8 +193,7 @@ public static class PlayerConfigSync
         // 特殊能力設定の更新
         if (!string.IsNullOrEmpty(newConfig.SpecialAbility))
         {
-            var abilityCfg = world.GetSpecialAbilityConfig(newConfig.SpecialAbility);
-            abilityCfg.AttachTo(e);
+            SpecialAbilityPrefabs.Attach(e, newConfig.SpecialAbility);
         }
     }
 }
