@@ -95,18 +95,27 @@ public static class ItemSpawner
     }
 
     /// <summary>
-    ///     バトル開始・終了時に既存のアイテムエンティティを全消去し、ディレクター状態を初期化します。
+    ///     バトル開始・終了および戦闘リセット時に既存のアイテムエンティティを全消去し、ディレクター状態を初期化します。
     /// </summary>
     /// <param name="world">対象の Flecs ワールドインスタンス</param>
     public static void ResetItems(World world)
     {
-        world.Set(new ItemDirectorState
+        var isDeferred = world.IsDeferred();
+        if (isDeferred) world.DeferSuspend();
+        try
         {
-            IcdRemaining = 0.0f,
-            ActiveHealthPackCount = 0
-        });
+            world.Set(new ItemDirectorState
+            {
+                IcdRemaining = 0.0f,
+                ActiveHealthPackCount = 0
+            });
 
-        using var query = world.QueryBuilder().With<ItemTag>().Build();
-        query.Each(e => e.Destruct());
+            using var query = world.QueryBuilder().With<ItemTag>().Build();
+            query.Each(static e => e.Destruct());
+        }
+        finally
+        {
+            if (isDeferred) world.DeferResume();
+        }
     }
 }

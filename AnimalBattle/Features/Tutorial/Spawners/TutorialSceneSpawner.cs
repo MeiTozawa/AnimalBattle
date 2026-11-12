@@ -192,6 +192,7 @@ public static class TutorialSceneSpawner
         BulletSpawner.ClearAllEnemyBulletsImmediate(world);
         MeleeSpawner.ClearAllEnemyMeleeImmediate(world);
         MinionSpawner.ClearAllMinionsImmediate(world);
+        Items.Spawners.ItemSpawner.ResetItems(world);
 
         using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
         {

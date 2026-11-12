@@ -1,5 +1,6 @@
 using AnimalBattle.Ai;
 using AnimalBattle.Enemies.Services;
+using AnimalBattle.Features.Items.Spawners;
 
 namespace AnimalBattle.Scenes.Battle;
 
@@ -140,7 +141,16 @@ public static class BattleInputSystem
         BulletSpawner.ClearAllEnemyBulletsImmediate(world);
         MeleeSpawner.ClearAllEnemyMeleeImmediate(world);
         MinionSpawner.ClearAllMinionsImmediate(world);
+        ItemSpawner.ResetItems(world);
         ctx.PlayerBulletsQuery.Each(CombatPoolService.Recycle);
+        using (var playerMelee = world.QueryBuilder().With<PlayerMeleeTag>().Build())
+        {
+            playerMelee.Each(static e =>
+            {
+                e.Disable();
+                e.Destruct();
+            });
+        }
         ctx.VfxQuery.Each(CombatPoolService.Recycle);
         CameraService.Reset();
         world.Set(new AimReticleState());
