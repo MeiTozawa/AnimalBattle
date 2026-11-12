@@ -98,6 +98,17 @@ public static class PlayerPrefabs
         }
 
         AttachConfiguredWeapon(prefab, world, cfg.Weapon);
+        AttachConfiguredSpecialAbility(prefab, world, cfg.SpecialAbility);
+    }
+
+    /// <summary>
+    ///     指定された特殊能力設定を Prefab にアタッチします。
+    /// </summary>
+    private static void AttachConfiguredSpecialAbility(Entity prefab, World world, string abilityName)
+    {
+        if (string.IsNullOrEmpty(abilityName)) return;
+        var abilityCfg = world.GetSpecialAbilityConfig(abilityName);
+        abilityCfg.AttachTo(prefab);
     }
 
     /// <summary>

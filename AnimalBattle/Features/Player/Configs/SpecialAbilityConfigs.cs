@@ -11,6 +11,9 @@ public interface ISpecialAbilityConfig
 {
     /// <summary>特殊能力発動後の連続誤爆防止クールダウン（秒）</summary>
     float Cooldown { get; }
+
+    /// <summary>対象エンティティへ対応する能力コンポーネントをアタッチします。</summary>
+    void AttachTo(Entity entity);
 }
 
 /// <summary>
@@ -61,6 +64,12 @@ public sealed class GiantOrbAbilityConfig : ISpecialAbilityConfig
 
     /// <summary>巨型エネルギー弾の外枠色</summary>
     public Color OutlineColor => _outlineColor;
+
+    /// <inheritdoc />
+    public void AttachTo(Entity entity)
+    {
+        entity.Set(GiantOrbCapability.FromConfig(this));
+    }
 }
 
 /// <summary>
@@ -114,4 +123,10 @@ public sealed class ScreenCleaveAbilityConfig : ISpecialAbilityConfig
 
     /// <summary>斬撃エフェクトの表示色</summary>
     public Color SlashColor => _slashColor;
+
+    /// <inheritdoc />
+    public void AttachTo(Entity entity)
+    {
+        entity.Set(ScreenCleaveCapability.FromConfig(this));
+    }
 }

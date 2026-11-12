@@ -50,19 +50,39 @@ public static class PlayerConfigSync
     }
 
     /// <summary>
-    ///     Cat特殊能力設定（巨型エネルギー弾）の変更をワールドへ反映します。
+    ///     Cat特殊能力設定（巨型エネルギー弾）の変更をプレハブおよび生存エンティティへ反映します。
     /// </summary>
     public static void SyncGiantOrb(World world, GiantOrbAbilityConfig newConfig)
     {
         world.Set(newConfig);
+
+        if (PlayerPrefabs.CatPlayer.IsAlive())
+        {
+            newConfig.AttachTo(PlayerPrefabs.CatPlayer);
+        }
+
+        using var q = world.QueryBuilder().With<PlayerTag>().With<GiantOrbCapability>().Build();
+        q.Each(e => {
+            newConfig.AttachTo(e);
+        });
     }
 
     /// <summary>
-    ///     Bunny特殊能力設定（全画面斬撃）の変更をワールドへ反映します。
+    ///     Bunny特殊能力設定（全画面斬撃）の変更をプレハブおよび生存エンティティへ反映します。
     /// </summary>
     public static void SyncScreenCleave(World world, ScreenCleaveAbilityConfig newConfig)
     {
         world.Set(newConfig);
+
+        if (PlayerPrefabs.BunnyPlayer.IsAlive())
+        {
+            newConfig.AttachTo(PlayerPrefabs.BunnyPlayer);
+        }
+
+        using var q = world.QueryBuilder().With<PlayerTag>().With<ScreenCleaveCapability>().Build();
+        q.Each(e => {
+            newConfig.AttachTo(e);
+        });
     }
 
     /// <summary>
@@ -86,7 +106,7 @@ public static class PlayerConfigSync
         using var query = world.QueryBuilder().With<PlayerTag>().Build();
         query.Each(e =>
         {
-            RehydratePlayerEntity(e, newConfig);
+            RehydratePlayerEntity(world, e, newConfig);
         });
     }
 
@@ -111,11 +131,11 @@ public static class PlayerConfigSync
         using var query = world.QueryBuilder().With<PlayerTag>().Build();
         query.Each(e =>
         {
-            RehydratePlayerEntity(e, newConfig);
+            RehydratePlayerEntity(world, e, newConfig);
         });
     }
 
-    private static void RehydratePlayerEntity(Entity e, PlayerConfig newConfig)
+    private static void RehydratePlayerEntity(World world, Entity e, PlayerConfig newConfig)
     {
         // HP の比例更新：現在の割合を維持したまま最大値を更新
         ref var health = ref e.GetMut<Health>();
@@ -179,5 +199,12 @@ public static class PlayerConfigSync
         ref var profile = ref e.GetMut<CombatProfile>();
         profile.HitSquashScale = newConfig.HitSquashScale;
         profile.InvincibleDuration = newConfig.InvincibleDuration;
+
+        // 特殊能力設定の更新
+        if (!string.IsNullOrEmpty(newConfig.SpecialAbility))
+        {
+            var abilityCfg = world.GetSpecialAbilityConfig(newConfig.SpecialAbility);
+            abilityCfg.AttachTo(e);
+        }
     }
 }
