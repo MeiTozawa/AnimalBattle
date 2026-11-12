@@ -49,6 +49,9 @@ public class PlayerConfig : IConfigLifecycle {
     /// <summary>装備武器設定名（例: "CatWeapon", "BunnyWeapon"）</summary>
     public string Weapon { get; set; } = string.Empty;
 
+    /// <summary>プレイヤー特殊能力設定名（例: "GiantOrb", "ScreenCleave"）</summary>
+    public string SpecialAbility { get; set; } = string.Empty;
+
     /// <summary>スプリング固有振動数：Hz</summary>
     public float SpringFrequency { get; set; }
 

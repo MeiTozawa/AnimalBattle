@@ -50,6 +50,22 @@ public static class PlayerConfigSync
     }
 
     /// <summary>
+    ///     Cat特殊能力設定（巨型エネルギー弾）の変更をワールドへ反映します。
+    /// </summary>
+    public static void SyncGiantOrb(World world, GiantOrbAbilityConfig newConfig)
+    {
+        world.Set(newConfig);
+    }
+
+    /// <summary>
+    ///     Bunny特殊能力設定（全画面斬撃）の変更をワールドへ反映します。
+    /// </summary>
+    public static void SyncScreenCleave(World world, ScreenCleaveAbilityConfig newConfig)
+    {
+        world.Set(newConfig);
+    }
+
+    /// <summary>
     ///     Cat設定の変更をプレハブおよび生存エンティティへ反映します。
     /// </summary>
     public static void SyncCat(World world, PlayerConfig newConfig)
