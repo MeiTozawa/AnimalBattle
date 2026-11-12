@@ -59,7 +59,7 @@ public static class HurtboxSpatialIndexSystem
             .Without<SpawnBufferState>()
             .Build();
 
-        world.Set(new HurtboxSpatialResource(index, query, config.CellSize, config.TableSize));
+        world.SetDisposable(new HurtboxSpatialResource(index, query, config.CellSize, config.TableSize));
 
         world.System("HurtboxSpatialIndexSystem")
             .Kind(Ecs.OnUpdate)

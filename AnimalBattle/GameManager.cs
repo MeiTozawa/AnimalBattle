@@ -37,6 +37,7 @@ public class GameManager : IDisposable {
         _ecsWorld.Set(_assetManager);
 
         _audioFeedback = new AudioFeedback();
+        _ecsWorld.Set(new WorldDisposableRegistry());
 
         // 1. 全領域共有の基底 Prefab および AutoOverride 登録
         _ecsWorld.Import<CommonModule>();
@@ -206,7 +207,7 @@ public class GameManager : IDisposable {
         Features.Tutorial.Spawners.TutorialSceneSpawner.Teardown(_ecsWorld);
         BattleSceneSpawner.Teardown(_ecsWorld);
         
-        DisposeSystemContexts(_ecsWorld);
+        _ecsWorld.DisposeAllRegisteredContexts();
         _vfxFeedback.Dispose();
         _combatPoolService.Dispose();
         _configRegistry.Dispose();
@@ -219,24 +220,5 @@ public class GameManager : IDisposable {
         if (Current == this) Current = null!;
         _isDisposed = true;
         GC.SuppressFinalize(this);
-    }
-
-    private static void DisposeSystemContexts(World world)
-    {
-        world.Get<BattleInputSystemContext>().Dispose();
-        world.Get<BattleAiSystemContext>().Dispose();
-        world.Get<MovementSystemContext>().Dispose();
-        world.Get<MeleeBulletCancelContext>().Dispose();
-        world.Get<HurtboxSpatialResource>().Dispose();
-        world.Get<HudRenderSystemContext>().Dispose();
-        world.Get<DebugOverlayRenderContext>().Dispose();
-        world.Get<DebugGizmosRenderContext>().Dispose();
-        world.Get<TileMapRenderContext>().Dispose();
-        world.Get<BossTelegraphRenderContext>().Dispose();
-        world.Get<FlyingMinionContext>().Dispose();
-        world.Get<TutorialSystemContext>().Dispose();
-        world.Get<AimReticleUpdateContext>().Dispose();
-        world.Get<ScreenCleaveSequenceContext>().Dispose();
-        world.Get<PlayerSpecialAbilityContext>().Dispose();
     }
 }

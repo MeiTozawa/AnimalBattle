@@ -43,7 +43,7 @@ public static class AimReticleUpdateSystem
     public static World AddAimReticleUpdateSystem(this World world)
     {
         world.Set(new AimReticleState());
-        world.Set(new AimReticleUpdateContext(world));
+        world.SetDisposable(new AimReticleUpdateContext(world));
 
         // レティクル拡縮スプリング物理更新
         world.System("AimReticleUpdateSystem")

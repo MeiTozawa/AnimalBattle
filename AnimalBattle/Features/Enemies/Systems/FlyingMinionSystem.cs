@@ -41,7 +41,7 @@ public static class FlyingMinionSystem
             .Without<DeadTag>()
             .Build();
 
-        world.Set(new FlyingMinionContext
+        world.SetDisposable(new FlyingMinionContext
         {
             PlayerQuery = playerQuery,
             MinionQuery = minionQuery

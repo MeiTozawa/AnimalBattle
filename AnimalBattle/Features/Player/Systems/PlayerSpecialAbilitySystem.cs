@@ -32,7 +32,7 @@ public static class PlayerSpecialAbilitySystem
             .Without<RecycleTag>()
             .Build();
 
-        world.Set(new PlayerSpecialAbilityContext
+        world.SetDisposable(new PlayerSpecialAbilityContext
         {
             EnemyBulletQuery = bulletQuery
         });

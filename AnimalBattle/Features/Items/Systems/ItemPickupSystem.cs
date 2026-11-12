@@ -37,7 +37,7 @@ public static class ItemPickupSystem
             .Without<DeadTag>()
             .Build();
 
-        world.Set(new ItemPickupContext
+        world.SetDisposable(new ItemPickupContext
         {
             PlayerQuery = playerQuery
         });

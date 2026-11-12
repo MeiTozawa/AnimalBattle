@@ -37,7 +37,7 @@ public static class MovementSystem
     public static World AddMovementSystem(this World world)
     {
         var tileMapQuery = world.QueryBuilder<TileMap>().Build();
-        world.Set(new MovementSystemContext
+        world.SetDisposable(new MovementSystemContext
         {
             TileMapQuery = tileMapQuery
         });

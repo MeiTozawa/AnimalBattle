@@ -80,7 +80,7 @@ public static class BattleInputSystem
             .Without<DeadTag>()
             .Build();
 
-        world.Set(new BattleInputSystemContext
+        world.SetDisposable(new BattleInputSystemContext
         {
             PlayerBulletsQuery = playerBulletsQuery,
             VfxQuery = vfxQuery,

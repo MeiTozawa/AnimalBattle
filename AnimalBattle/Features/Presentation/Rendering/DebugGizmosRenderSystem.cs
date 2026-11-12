@@ -64,7 +64,7 @@ public static class DebugGizmosRenderSystem
         var tileMapQuery = world.QueryBuilder<TileMap>().Build();
         var bossQuery = world.QueryBuilder<BossBrainComponent>().Build();
 
-        world.Set(new DebugGizmosRenderContext
+        world.SetDisposable(new DebugGizmosRenderContext
         {
             PlatformQuery = platformQuery,
             PlayerQuery = playerQuery,

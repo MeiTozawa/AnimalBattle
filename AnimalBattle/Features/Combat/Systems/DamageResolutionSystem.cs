@@ -54,7 +54,7 @@ public static class DamageResolutionSystem
             .With<BossTag>()
             .Build();
 
-        world.Set(new DamageResolutionContext
+        world.SetDisposable(new DamageResolutionContext
         {
             PlayerQuery = playerQuery,
             PlayerMeleeQuery = playerMeleeQuery,

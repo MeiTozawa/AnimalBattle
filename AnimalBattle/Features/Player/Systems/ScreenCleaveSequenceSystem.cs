@@ -41,7 +41,7 @@ public static class ScreenCleaveSequenceSystem
             .Without<DeadTag>()
             .Build();
 
-        world.Set(new ScreenCleaveSequenceContext
+        world.SetDisposable(new ScreenCleaveSequenceContext
         {
             EnemyTargetQuery = targetQuery
         });

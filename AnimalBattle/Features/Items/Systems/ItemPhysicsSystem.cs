@@ -34,7 +34,7 @@ public static class ItemPhysicsSystem
     public static World AddItemPhysicsSystem(this World world)
     {
         var tileMapQuery = world.QueryBuilder<TileMap>().Build();
-        world.Set(new ItemPhysicsContext
+        world.SetDisposable(new ItemPhysicsContext
         {
             TileMapQuery = tileMapQuery
         });

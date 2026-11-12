@@ -40,7 +40,7 @@ public static class TileMapRenderSystem
 
         var tileMapQuery = world.QueryBuilder<TileMap>().Build();
 
-        world.Set(new TileMapRenderContext
+        world.SetDisposable(new TileMapRenderContext
         {
             PlatformQuery = platformQuery,
             TileMapQuery = tileMapQuery

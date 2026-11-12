@@ -46,7 +46,7 @@ public static class DebugOverlayRenderSystem
             .Without<DeadTag>()
             .Build();
 
-        world.Set(new DebugOverlayRenderContext
+        world.SetDisposable(new DebugOverlayRenderContext
         {
             PlayerQuery = playerQuery,
             BossQuery = bossQuery

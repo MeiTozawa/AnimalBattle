@@ -69,7 +69,7 @@ public static class HudRenderSystem {
             .With<BossTag>()
             .Build();
 
-        world.Set(new HudRenderSystemContext
+        world.SetDisposable(new HudRenderSystemContext
         {
             PlayerQuery = playerQuery,
             BossQuery = bossQuery

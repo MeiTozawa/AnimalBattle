@@ -47,7 +47,7 @@ public static class BossTelegraphRenderSystem
             .Without<DeadTag>()
             .Build();
 
-        world.Set(new BossTelegraphRenderContext
+        world.SetDisposable(new BossTelegraphRenderContext
         {
             PlayerQuery = playerQuery,
             BossQuery = bossQuery

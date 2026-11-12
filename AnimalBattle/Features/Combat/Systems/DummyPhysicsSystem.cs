@@ -31,7 +31,7 @@ public static class DummyPhysicsSystem
     public static World AddDummyPhysicsSystem(this World world)
     {
         var tileMapQuery = world.QueryBuilder<TileMap>().Build();
-        world.Set(new DummyPhysicsContext
+        world.SetDisposable(new DummyPhysicsContext
         {
             TileMapQuery = tileMapQuery
         });

@@ -90,7 +90,7 @@ public static class BattleAiSystem
             .Without<CannotAttackTag>()
             .Build();
 
-        world.Set(new BattleAiSystemContext
+        world.SetDisposable(new BattleAiSystemContext
         {
             TileMapQuery = tileMapQuery,
             PlayerQuery = playerQuery,

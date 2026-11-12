@@ -41,7 +41,7 @@ public static class GroundMinionSystem
             .Without<DeadTag>()
             .Build();
 
-        world.Set(new GroundMinionContext
+        world.SetDisposable(new GroundMinionContext
         {
             TileMapQuery = tileMapQuery,
             PlayerQuery = playerQuery

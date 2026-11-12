@@ -51,7 +51,7 @@ public static class MeleeBulletCancelSystem
             .Without<RecycleTag>()
             .Build();
 
-        world.Set(new MeleeBulletCancelContext
+        world.SetDisposable(new MeleeBulletCancelContext
         {
             MeleeQuery = meleeQuery,
             BulletQuery = bulletQuery
