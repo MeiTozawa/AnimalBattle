@@ -69,6 +69,12 @@ public abstract class BaseBossConfig {
     /// <summary>出現時バッファ中の移動許可フラグ</summary>
     public bool SpawnBufferCanMove { get; set; }
 
+    /// <summary>Phase 2 移行 HP 割合閾値を取得します。</summary>
+    public virtual float Phase2HpThreshold => 0.7f;
+
+    /// <summary>Phase 3 移行 HP 割合閾値を取得します。</summary>
+    public virtual float Phase3HpThreshold => 0.3f;
+
     /// <summary>
     ///     設定に基づいた Boss 被弾判定 <see cref="CollisionShape" /> を取得します。
     /// </summary>

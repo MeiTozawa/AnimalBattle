@@ -153,12 +153,9 @@ public static class HudRenderSystem {
         var ctx = world.Get<HudRenderSystemContext>();
         var idx = count - 1;
         ref readonly var state = ref states[idx];
-        var (p2, p3) = state.BossType switch
-        {
-            BossType.BossSnake => (world.Get<BossSnakeConfig>().Phase2.HpThreshold, world.Get<BossSnakeConfig>().Phase3.HpThreshold),
-            BossType.BossLion => (world.Get<BossLionConfig>().Phase2.HpThreshold, world.Get<BossLionConfig>().Phase3.HpThreshold),
-            _ => (0.7f, 0.3f)
-        };
+        var cfg = BossPrefabs.GetConfig(world, state.BossType);
+        var p2 = cfg.Phase2HpThreshold;
+        var p3 = cfg.Phase3HpThreshold;
         ctx.CachedBoss = new HudRenderSystemContext.BossHudData(hps[idx], state, (p2, p3));
     }
 
@@ -585,37 +582,13 @@ public static class HudRenderSystem {
         }
 
         badgeColor = hpCfg.StateDefaultColor;
-        switch (brain)
+        if (brain != null)
         {
-            case BossSnakeBrain b1:
-                switch (b1.State)
-                {
-                    case BossSnakeState.Hover:
-                        destination.TryWrite($"[STATE: HOVERING (IDLE)]", out charsWritten);
-                        return;
-                    default:
-                        destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
-                        return;
-                }
-            case BossLionBrain b2:
-                switch (b2.State)
-                {
-                    case BossLionState.Idle:
-                        destination.TryWrite($"[STATE: IDLE / ALERT]", out charsWritten);
-                        return;
-                    case BossLionState.PatrolChase:
-                        destination.TryWrite($"[STATE: CHASE (NEXT: {abilityName})]", out charsWritten);
-                        return;
-                    case BossLionState.PlatformTraverse:
-                        destination.TryWrite($"[STATE: PLATFORM TRAVERSE (AIRBORNE)]", out charsWritten);
-                        return;
-                    default:
-                        destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
-                        return;
-                }
-            default:
-                destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
-                return;
+            brain.WriteSubStateDescription(destination, out charsWritten, abilityName);
+        }
+        else
+        {
+            destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
         }
     }
 

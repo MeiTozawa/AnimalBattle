@@ -1,7 +1,5 @@
 using AnimalBattle.Logging;
 using AnimalBattle.Ai;
-using AnimalBattle.Ai.BossSnake;
-using AnimalBattle.Ai.BossLion;
 using AnimalBattle.Combat.Spawners;
 using AnimalBattle.Features.Items.Spawners;
 using AnimalBattle.Maps;
@@ -55,12 +53,9 @@ public static class BattleSceneSpawner
         }
         else
         {
-            var bossName = bossType == BossType.BossLion ? BossLionName : BossSnakeName;
-            var (texPath, _) = bossType switch {
-                BossType.BossSnake => (ResourcePath.Characters.Character031_3Png, "BossSnake"),
-                BossType.BossLion => (ResourcePath.Characters.Character027_3Png, "BossLion"),
-                _ => (ResourcePath.Characters.Character031_3Png, "BossSnake")
-            };
+            var cfg = BossPrefabs.GetConfig(world, bossType);
+            var bossName = BossPrefabs.GetEntityName(bossType);
+            var texPath = BossPrefabs.GetTexturePath(bossType);
 
             var hasBossHandle = assets.TryGetTexture(texPath, out var bossHandle);
             Debug.Assert(hasBossHandle, $"Boss テクスチャが見つかりません: {texPath}");
@@ -70,28 +65,12 @@ public static class BattleSceneSpawner
                 .ChildOf(root)
                 .IsA(BossPrefabs.GetPrefab(bossType));
 
-            var (spawn, scale) = bossType switch {
-                BossType.BossSnake => (world.Get<BossSnakeConfig>().Spawn, world.Get<BossSnakeConfig>().Scale),
-                BossType.BossLion => (world.Get<BossLionConfig>().Spawn, world.Get<BossLionConfig>().Scale),
-                _ => (Vec2f.Zero, Vec2f.One)
-            };
-
-            IBossBrain brain = bossType switch {
-                BossType.BossSnake => new BossSnakeBrain(world, spawn),
-                BossType.BossLion => new BossLionBrain(world, spawn, null, tileMap.Nodes),
-                _ => new BossSnakeBrain(world, spawn)
-            };
-
-            var canBeKnockedBack = bossType switch {
-                BossType.BossSnake => world.Get<BossSnakeConfig>().CanBeKnockedBack,
-                BossType.BossLion => world.Get<BossLionConfig>().CanBeKnockedBack,
-                _ => true
-            };
+            var brain = BossPrefabs.CreateBrain(world, bossType, cfg.Spawn, tileMap.Nodes);
 
             bossEntity
-                .Set(new Transform(spawn, scale))
+                .Set(new Transform(cfg.Spawn, cfg.Scale))
                 .Set(new Sprite(bossHandle, false, true, new Rect(0, 0, 192, 192)))
-                .Set(new BossCombatState(bossType, Phase.Phase1) )
+                .Set(new BossCombatState(bossType, Phase.Phase1))
                 .Set(new BossBrainComponent(brain));
 
             brain.AbilitySystem.OnTagsChanged += tags =>
@@ -106,21 +85,15 @@ public static class BattleSceneSpawner
                 MeleeSpawner.ClearAllEnemyMelee(world);
             };
 
-            var (bufferDur, bufferCanMove) = bossType switch {
-                BossType.BossSnake => (world.Get<BossSnakeConfig>().SpawnBufferDuration, world.Get<BossSnakeConfig>().SpawnBufferCanMove),
-                BossType.BossLion => (world.Get<BossLionConfig>().SpawnBufferDuration, world.Get<BossLionConfig>().SpawnBufferCanMove),
-                _ => (0.0f, false)
-            };
-
             // 出現バッファ設定の適用：接触判定無効化および行動阻害タグの付与
-            if (bufferDur > 0.0f)
+            if (cfg.SpawnBufferDuration > 0.0f)
             {
-                bossEntity.Set(new SpawnBufferState(bufferDur));
+                bossEntity.Set(new SpawnBufferState(cfg.SpawnBufferDuration));
                 var hitbox = BossPrefabs.GetPrefab(bossType).Get<Hitbox>();
                 hitbox.IsActive = false;
                 bossEntity.Set(hitbox);
                 bossEntity.Add<CannotAttackTag>();
-                if (!bufferCanMove)
+                if (!cfg.SpawnBufferCanMove)
                 {
                     bossEntity.Add<CannotMoveTag>();
                 }

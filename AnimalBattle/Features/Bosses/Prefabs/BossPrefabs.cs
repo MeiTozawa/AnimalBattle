@@ -73,4 +73,53 @@ public static class BossPrefabs
             _ => AssertHelper.FailWithDefault("", BossSnake)
         };
     }
+
+    /// <summary>
+    ///     指定された BossType に対応する <see cref="BaseBossConfig"/> をワールドから取得します。
+    /// </summary>
+    public static BaseBossConfig GetConfig(World world, BossType type)
+    {
+        return type switch
+        {
+            BossType.BossSnake => world.Get<BossSnakeConfig>(),
+            BossType.BossLion => world.Get<BossLionConfig>(),
+            _ => world.Get<BossSnakeConfig>()
+        };
+    }
+
+    /// <summary>
+    ///     指定された BossType のシーン内エンティティ名を取得します。
+    /// </summary>
+    public static string GetEntityName(BossType type)
+    {
+        return type switch
+        {
+            BossType.BossLion => "BossLion",
+            _ => "BossSnake"
+        };
+    }
+
+    /// <summary>
+    ///     指定された BossType のスプライトシートテクスチャパスを取得します。
+    /// </summary>
+    public static string GetTexturePath(BossType type)
+    {
+        return type switch
+        {
+            BossType.BossLion => ResourcePath.Characters.Character027_3Png,
+            _ => ResourcePath.Characters.Character031_3Png
+        };
+    }
+
+    /// <summary>
+    ///     指定された BossType に対応する <see cref="IBossBrain"/> インスタンスを生成します。
+    /// </summary>
+    public static IBossBrain CreateBrain(World world, BossType type, Vec2f spawn, IReadOnlyList<AnimalBattle.Maps.Navigation.PlatformNode>? platformNodes = null)
+    {
+        return type switch
+        {
+            BossType.BossLion => new AnimalBattle.Ai.BossLion.BossLionBrain(world, spawn, null, platformNodes),
+            _ => new AnimalBattle.Ai.BossSnake.BossSnakeBrain(world, spawn)
+        };
+    }
 }

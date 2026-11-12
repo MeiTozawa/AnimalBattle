@@ -151,12 +151,9 @@ public static class BattleDebugInputSystem
         var targetPhase = w.Get<BattleDebugInputContext>().TargetDebugPhase;
         brainComp.Brain.DebugSetPhase(targetPhase);
 
-        var (p2, p3) = state.BossType switch
-        {
-            BossType.BossSnake => (w.Get<BossSnakeConfig>().Phase2.HpThreshold, w.Get<BossSnakeConfig>().Phase3.HpThreshold),
-            BossType.BossLion => (w.Get<BossLionConfig>().Phase2.HpThreshold, w.Get<BossLionConfig>().Phase3.HpThreshold),
-            _ => (0.7f, 0.3f)
-        };
+        var cfg = BossPrefabs.GetConfig(w, state.BossType);
+        var p2 = cfg.Phase2HpThreshold;
+        var p3 = cfg.Phase3HpThreshold;
         var ratio = targetPhase switch
         {
             Phase.Phase1 => 1.0f,

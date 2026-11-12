@@ -25,6 +25,9 @@ public sealed class BossLionBrain : BaseBossBrain {
     private readonly IBossLionConfiguration _configuration;
     private readonly PlatformNavigationGraph _navGraph = new();
     public PlatformNavigationGraph NavGraph => _navGraph;
+
+    /// <inheritdoc />
+    public override PlatformNavigationGraph? NavigationGraph => _navGraph;
     private BrainSubState _subState = BrainSubState.Idle;
 
     private TraverseStage _traverseStage = TraverseStage.Ascent;
@@ -104,6 +107,26 @@ public sealed class BossLionBrain : BaseBossBrain {
                 BrainSubState.PlatformTraverse => BossLionState.PlatformTraverse,
                 _ => BossLionState.Idle
             };
+        }
+    }
+
+    /// <inheritdoc />
+    public override void WriteSubStateDescription(Span<char> destination, out int charsWritten, string nextAbilityName)
+    {
+        switch (State)
+        {
+            case BossLionState.Idle:
+                destination.TryWrite($"[STATE: IDLE / ALERT]", out charsWritten);
+                break;
+            case BossLionState.PatrolChase:
+                destination.TryWrite($"[STATE: CHASE (NEXT: {nextAbilityName})]", out charsWritten);
+                break;
+            case BossLionState.PlatformTraverse:
+                destination.TryWrite($"[STATE: PLATFORM TRAVERSE (AIRBORNE)]", out charsWritten);
+                break;
+            default:
+                destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
+                break;
         }
     }
 

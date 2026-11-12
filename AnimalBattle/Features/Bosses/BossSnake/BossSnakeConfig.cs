@@ -51,6 +51,12 @@ public sealed class BossSnakeConfig : BaseBossConfig {
     /// <summary>Phase 3 状態機設定</summary>
     public BossSnakePhaseFsmConfig Phase3 { get; set; } = new();
 
+    /// <inheritdoc />
+    public override float Phase2HpThreshold => Phase2.HpThreshold;
+
+    /// <inheritdoc />
+    public override float Phase3HpThreshold => Phase3.HpThreshold;
+
     /// <summary>Phase 遷移：フェーズ移行能力設定</summary>
     public PhaseTransitionAbilityConfig PhaseTransition { get; set; } = new();
 }

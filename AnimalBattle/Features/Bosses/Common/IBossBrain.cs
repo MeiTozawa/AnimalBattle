@@ -1,3 +1,5 @@
+using AnimalBattle.Maps.Navigation;
+
 namespace AnimalBattle.Ai;
 
 /// <summary>
@@ -28,6 +30,12 @@ public interface IBossBrain
 
     /// <summary>死亡状態かどうかを取得します。</summary>
     bool IsDead { get; }
+
+    /// <summary>Boss の足場巡回用ナビゲーショングラフを取得します（非対応 Boss の場合は null）。</summary>
+    PlatformNavigationGraph? NavigationGraph => null;
+
+    /// <summary>サブステート（待機・追跡・跳躍移動等）の文字列表現を書き込みます。</summary>
+    void WriteSubStateDescription(Span<char> destination, out int charsWritten, string nextAbilityName);
 
     /// <summary>全弾幕消去イベント。</summary>
     event Action? OnClearBullets;

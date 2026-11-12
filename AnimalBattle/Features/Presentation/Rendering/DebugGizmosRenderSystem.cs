@@ -247,28 +247,25 @@ public static class DebugGizmosRenderSystem
         {
             for (var i = 0; i < it.Count(); i++)
             {
-                if (brains[i].Brain is Ai.BossLion.BossLionBrain lionBrain)
+                var graph = brains[i].Brain.NavigationGraph;
+                if (graph == null || graph.Nodes.Count == 0) continue;
+
+                var nodeColor = dbgCfg.NavNodeColor;
+                var edgeDropColor = dbgCfg.NavEdgeDropColor;
+                var edgeJumpColor = dbgCfg.NavEdgeJumpColor;
+
+                foreach (var node in graph.Nodes)
                 {
-                    var graph = lionBrain.NavGraph;
-                    if (graph.Nodes.Count == 0) continue;
+                    var center = new Vec2i((int)node.CenterX, (int)node.TopY);
+                    GameEngine.DrawCircle(center, dbgCfg.NavNodeRadius, nodeColor, true);
+                }
 
-                    var nodeColor = dbgCfg.NavNodeColor;
-                    var edgeDropColor = dbgCfg.NavEdgeDropColor;
-                    var edgeJumpColor = dbgCfg.NavEdgeJumpColor;
-
-                    foreach (var node in graph.Nodes)
-                    {
-                        var center = new Vec2i((int)node.CenterX, (int)node.TopY);
-                        GameEngine.DrawCircle(center, dbgCfg.NavNodeRadius, nodeColor, true);
-                    }
-
-                    foreach (var link in graph.Links)
-                    {
-                        var p1 = new Vec2i((int)link.TakeoffX, (int)link.FromNode.TopY);
-                        var p2 = new Vec2i((int)link.LandingX, (int)link.ToNode.TopY);
-                        var edgeColor = link.Action == NavActionType.Drop ? edgeDropColor : edgeJumpColor;
-                        GameEngine.DrawLine(p1, p2, edgeColor);
-                    }
+                foreach (var link in graph.Links)
+                {
+                    var p1 = new Vec2i((int)link.TakeoffX, (int)link.FromNode.TopY);
+                    var p2 = new Vec2i((int)link.LandingX, (int)link.ToNode.TopY);
+                    var edgeColor = link.Action == NavActionType.Drop ? edgeDropColor : edgeJumpColor;
+                    GameEngine.DrawLine(p1, p2, edgeColor);
                 }
             }
         });

@@ -100,12 +100,9 @@ public static class BattleInputSystem
         if (!boss.IsAlive()) return;
 
         var w = boss.CsWorld();
-        var bossType = state.BossType;
-        var (spawn, maxHp) = bossType switch {
-            BossType.BossSnake => (w.Get<BossSnakeConfig>().Spawn, w.Get<BossSnakeConfig>().MaxHp),
-            BossType.BossLion => (w.Get<BossLionConfig>().Spawn, w.Get<BossLionConfig>().MaxHp),
-            _ => (Vec2f.Zero, 1000f)
-        };
+        var cfg = BossPrefabs.GetConfig(w, state.BossType);
+        var spawn = cfg.Spawn;
+        var maxHp = cfg.MaxHp;
         
         ref var trans = ref boss.GetMut<Transform>();
         trans.Position = spawn;

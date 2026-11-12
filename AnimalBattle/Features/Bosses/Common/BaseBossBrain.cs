@@ -1,5 +1,6 @@
 using AnimalBattle.Abilities.Attack;
 using AnimalBattle.Abilities.Skills;
+using AnimalBattle.Maps.Navigation;
 
 namespace AnimalBattle.Ai;
 
@@ -73,6 +74,15 @@ public abstract class BaseBossBrain : IBossBrain
 
     /// <summary>Boss が右向きであるかを取得します：派生クラスでオーバーライド可能。</summary>
     public virtual bool FacingRight => true;
+
+    /// <inheritdoc />
+    public virtual PlatformNavigationGraph? NavigationGraph => null;
+
+    /// <inheritdoc />
+    public virtual void WriteSubStateDescription(Span<char> destination, out int charsWritten, string nextAbilityName)
+    {
+        destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
+    }
 
     /// <summary>全弾幕消去イベント。</summary>
     public event Action? OnClearBullets;

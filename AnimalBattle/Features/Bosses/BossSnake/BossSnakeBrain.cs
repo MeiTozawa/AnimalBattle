@@ -68,6 +68,20 @@ public sealed class BossSnakeBrain : BaseBossBrain {
     /// <summary>浮遊アニメーション用の累積タイマーを取得します。</summary>
     public float HoverTimer => _hoverTimer;
 
+    /// <inheritdoc />
+    public override void WriteSubStateDescription(Span<char> destination, out int charsWritten, string nextAbilityName)
+    {
+        switch (State)
+        {
+            case BossSnakeState.Hover:
+                destination.TryWrite($"[STATE: HOVERING (IDLE)]", out charsWritten);
+                break;
+            default:
+                destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
+                break;
+        }
+    }
+
     private void InitializeAbilities()
     {
         InitializeBaseBrain(_configuration.PhaseTransition);
