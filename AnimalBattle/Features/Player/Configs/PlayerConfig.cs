@@ -49,24 +49,6 @@ public class PlayerConfig : IConfigLifecycle {
     /// <summary>装備武器設定名（例: "CatWeapon", "BunnyWeapon"）</summary>
     public string Weapon { get; set; } = string.Empty;
 
-    /// <summary>弾丸命中撃砕破片の最小飛散個数</summary>
-    public int ImpactSplatterMinCount { get; set; }
-
-    /// <summary>弾丸命中撃砕破片の最大飛散個数</summary>
-    public int ImpactSplatterMaxCount { get; set; }
-
-    /// <summary>弾丸命中撃砕破片の最小初速：px/s</summary>
-    public float ImpactSplatterMinSpeed { get; set; }
-
-    /// <summary>弾丸命中撃砕破片の最大初速：px/s</summary>
-    public float ImpactSplatterMaxSpeed { get; set; }
-
-    /// <summary>弾丸命中撃砕破片粒子の半径ピクセル単位</summary>
-    public float ImpactSplatterParticleRadius { get; set; }
-
-    /// <summary>弾丸命中撃砕破片のフェード持続時間秒単位</summary>
-    public float ImpactSplatterDuration { get; set; }
-
     /// <summary>スプリング固有振動数：Hz</summary>
     public float SpringFrequency { get; set; }
 

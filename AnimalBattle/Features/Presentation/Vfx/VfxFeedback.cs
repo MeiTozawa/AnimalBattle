@@ -201,21 +201,24 @@ public sealed class VfxFeedback : IDisposable
     private void SpawnBulletImpactSplatter(Vec2f pos, Vec2f hitDir)
     {
         var pCfg = _world.GetActivePlayerConfig();
+        var weaponCfg = _world.GetWeaponConfig(pCfg.Weapon);
+        if (weaponCfg is not RangedWeaponConfig rangedCfg) return;
+
         var vfxCfg = _world.Get<VisualEffectsRenderConfig>();
-        var count = Random.Shared.Next(pCfg.ImpactSplatterMinCount, pCfg.ImpactSplatterMaxCount + 1);
+        var count = Random.Shared.Next(rangedCfg.ImpactSplatterMinCount, rangedCfg.ImpactSplatterMaxCount + 1);
         var baseAngle = MathF.Atan2(-hitDir.Y, -hitDir.X);
 
         for (var i = 0; i < count; i++)
         {
             var spreadAngle = baseAngle + (Random.Shared.NextSingle() - 0.5f) * MathF.PI * 0.8f;
-            var speed = pCfg.ImpactSplatterMinSpeed + Random.Shared.NextSingle() * (pCfg.ImpactSplatterMaxSpeed - pCfg.ImpactSplatterMinSpeed);
+            var speed = rangedCfg.ImpactSplatterMinSpeed + Random.Shared.NextSingle() * (rangedCfg.ImpactSplatterMaxSpeed - rangedCfg.ImpactSplatterMinSpeed);
             var vel = new Vec2f(MathF.Cos(spreadAngle) * speed, MathF.Sin(spreadAngle) * speed);
 
             CombatPoolService.RentSparkEffect()
                .Set(new Transform(pos))
                .Set(new Velocity(vel))
-               .Set(new VfxParticle(pCfg.ImpactSplatterParticleRadius, vfxCfg.ImpactSplatterFillColor, vfxCfg.ImpactSplatterOutlineColor))
-               .Set(new FadeEffect(pCfg.ImpactSplatterDuration));
+               .Set(new VfxParticle(rangedCfg.ImpactSplatterParticleRadius, vfxCfg.ImpactSplatterFillColor, vfxCfg.ImpactSplatterOutlineColor))
+               .Set(new FadeEffect(rangedCfg.ImpactSplatterDuration));
         }
     }
 }

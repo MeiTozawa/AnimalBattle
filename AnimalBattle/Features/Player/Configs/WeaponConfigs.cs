@@ -27,6 +27,24 @@ public class RangedWeaponConfig : IWeaponConfig
     public Vec2f ShootRecoilStretch { get; set; }
     public float MuzzleFlashDuration { get; set; }
     public float MuzzleFlashRadius { get; set; }
+
+    /// <summary>弾丸命中撃砕破片の最小飛散個数</summary>
+    public int ImpactSplatterMinCount { get; set; }
+
+    /// <summary>弾丸命中撃砕破片の最大飛散個数</summary>
+    public int ImpactSplatterMaxCount { get; set; }
+
+    /// <summary>弾丸命中撃砕破片の最小初速：px/s</summary>
+    public float ImpactSplatterMinSpeed { get; set; }
+
+    /// <summary>弾丸命中撃砕破片の最大初速：px/s</summary>
+    public float ImpactSplatterMaxSpeed { get; set; }
+
+    /// <summary>弾丸命中撃砕破片粒子の半径ピクセル単位</summary>
+    public float ImpactSplatterParticleRadius { get; set; }
+
+    /// <summary>弾丸命中撃砕破片のフェード持続時間秒単位</summary>
+    public float ImpactSplatterDuration { get; set; }
 }
 
 /// <summary>

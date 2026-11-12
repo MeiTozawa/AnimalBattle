@@ -15,14 +15,6 @@ Scale = { x = 2.0, y = 2.0 }
 Spawn = { x = 640.0, y = 500.0 }
 Weapon = "CatWeapon"
 
-# --- 命中撃砕破片 (Impact Splatter) 設定 ---
-ImpactSplatterMinCount = 4
-ImpactSplatterMaxCount = 6
-ImpactSplatterMinSpeed = 80.0
-ImpactSplatterMaxSpeed = 220.0
-ImpactSplatterParticleRadius = 2.5
-ImpactSplatterDuration = 0.15
-
 # --- スカッシュ＆ストレッチ（二階減衰振動スプリング）設定 ---
 SpringFrequency = 18.0
 SpringDampingRatio = 2
