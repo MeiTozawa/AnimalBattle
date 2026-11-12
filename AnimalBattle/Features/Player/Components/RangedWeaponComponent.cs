@@ -1,5 +1,7 @@
 namespace AnimalBattle.Player.Components;
 
+using AnimalBattle.Configs;
+
 /// <summary>
 ///     遠距離投射武器機構コンポーネント。
 ///     キャラクター固有の命名を廃止し、射撃・弾幕生成・反動物理の機構を一般化します。
@@ -36,6 +38,24 @@ public struct RangedWeaponComponent
     /// <summary>銃口閃光：マズルフラッシュ初期半径ピクセル単位。</summary>
     public float MuzzleFlashRadius;
 
+    /// <summary>弾丸命中撃砕破片の最小飛散個数</summary>
+    public int ImpactSplatterMinCount;
+
+    /// <summary>弾丸命中撃砕破片の最大飛散個数</summary>
+    public int ImpactSplatterMaxCount;
+
+    /// <summary>弾丸命中撃砕破片の最小初速：px/s</summary>
+    public float ImpactSplatterMinSpeed;
+
+    /// <summary>弾丸命中撃砕破片の最大初速：px/s</summary>
+    public float ImpactSplatterMaxSpeed;
+
+    /// <summary>弾丸命中撃砕破片粒子の半径ピクセル単位</summary>
+    public float ImpactSplatterParticleRadius;
+
+    /// <summary>弾丸命中撃砕破片のフェード持続時間秒単位</summary>
+    public float ImpactSplatterDuration;
+
     public static RangedWeaponComponent FromConfig(RangedWeaponConfig cfg)
         => FromConfig(cfg, 0.0f);
 
@@ -52,7 +72,13 @@ public struct RangedWeaponComponent
             BulletSize = cfg.BulletSize,
             RecoilStretch = cfg.ShootRecoilStretch,
             MuzzleFlashDuration = cfg.MuzzleFlashDuration,
-            MuzzleFlashRadius = cfg.MuzzleFlashRadius
+            MuzzleFlashRadius = cfg.MuzzleFlashRadius,
+            ImpactSplatterMinCount = cfg.ImpactSplatterMinCount,
+            ImpactSplatterMaxCount = cfg.ImpactSplatterMaxCount,
+            ImpactSplatterMinSpeed = cfg.ImpactSplatterMinSpeed,
+            ImpactSplatterMaxSpeed = cfg.ImpactSplatterMaxSpeed,
+            ImpactSplatterParticleRadius = cfg.ImpactSplatterParticleRadius,
+            ImpactSplatterDuration = cfg.ImpactSplatterDuration
         };
     }
 }

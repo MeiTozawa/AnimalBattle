@@ -170,11 +170,10 @@ public static class DamageResolutionSystem
             var finalPlayerDamage = playerDamageDealt * multiplier;
             if (profile.Kind != CombatEntityKind.Player && finalPlayerDamage > 0.0f)
             {
-                ctx.PlayerQuery.Each((ref _, ref pGauge, ref pChar) =>
+                ctx.PlayerQuery.Each((ref _, ref pGauge, ref _) =>
                 {
-                    var pCfg = world.GetPlayerConfig(pChar.Value);
                     var oldReady = pGauge.ReadySegments;
-                    pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + finalPlayerDamage * pCfg.EnergyPerDamageDealt, 0.0f, pGauge.MaxEnergy);
+                    pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + finalPlayerDamage * pGauge.EnergyPerDamageDealt, 0.0f, pGauge.MaxEnergy);
                     var newReady = pGauge.ReadySegments;
                     if (newReady > oldReady)
                     {
@@ -220,11 +219,10 @@ public static class DamageResolutionSystem
             // ロール固有の被弾リアクション
             if (profile.Kind == CombatEntityKind.Player)
             {
-                ctx.PlayerQuery.Each((ref _, ref pGauge, ref pChar) =>
+                ctx.PlayerQuery.Each((ref _, ref pGauge, ref _) =>
                 {
-                    var pCfg = world.GetPlayerConfig(pChar.Value);
                     var oldReady = pGauge.ReadySegments;
-                    pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + finalDamage * pCfg.EnergyPerDamageTaken, 0.0f, pGauge.MaxEnergy);
+                    pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + finalDamage * pGauge.EnergyPerDamageTaken, 0.0f, pGauge.MaxEnergy);
                     var newReady = pGauge.ReadySegments;
                     if (newReady > oldReady)
                     {

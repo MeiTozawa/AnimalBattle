@@ -1,5 +1,7 @@
 namespace AnimalBattle.Player.Components;
 
+using System;
+
 /// <summary>
 ///     自機の特殊能力（必殺技）発動用エネルギーゲージコンポーネント。
 ///     被ダメージ・与ダメージによって蓄積され、スロット単位で消費されます。
@@ -17,6 +19,12 @@ public struct EnergyGauge
 
     /// <summary>連続発動時の誤爆防止・内部インターバルタイマー（秒）</summary>
     public float CooldownTimer;
+
+    /// <summary>与ダメージ1点あたりに獲得するエネルギー量</summary>
+    public float EnergyPerDamageDealt;
+
+    /// <summary>被ダメージ1点あたりに獲得するエネルギー量</summary>
+    public float EnergyPerDamageTaken;
 
     /// <summary>現在使用可能なスロット数を取得します</summary>
     public readonly int ReadySegments => (int)(CurrentEnergy / MathF.Max(1.0f, SegmentCapacity));

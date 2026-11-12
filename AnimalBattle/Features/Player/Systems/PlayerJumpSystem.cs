@@ -89,7 +89,7 @@ public static class PlayerJumpSystem
                     jump.JumpBufferTimer = 0.0f;
                     didJump = true;
                     var ringPos = new Vec2f(trans.Position.X, trans.Position.Y + col.Size.Y / 2.0f);
-                    EventBus.Publish(new PlayerDoubleJumpedEvent(ringPos));
+                    EventBus.Publish(new PlayerDoubleJumpedEvent(ringPos, jump.JumpRingInitialRadius, jump.JumpRingMaxRadius, jump.JumpRingDuration));
                 }
 
                 if (didJump)

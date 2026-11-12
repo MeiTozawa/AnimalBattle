@@ -4,7 +4,7 @@ namespace AnimalBattle.Events;
 public readonly record struct PlayerJumpedEvent;
 
 /// <summary>自機が空中二段ジャンプしたイベント</summary>
-public readonly record struct PlayerDoubleJumpedEvent(Vec2f Position = default);
+public readonly record struct PlayerDoubleJumpedEvent(Vec2f Position = default, float InitialRadius = 8.0f, float MaxRadius = 32.0f, float Duration = 0.18f);
 
 /// <summary>自機が一定速度以上で着地したイベント</summary>
 public readonly record struct PlayerLandedEvent;

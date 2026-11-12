@@ -51,6 +51,15 @@ public struct JumpCapability
     /// <summary>着地時スカッシュ演出を発火させる最小落下速度閾値：px/s</summary>
     public float LandSquashVelocityThreshold;
 
+    /// <summary>二段ジャンプ展開リングエフェクトの初期半径ピクセル単位</summary>
+    public float JumpRingInitialRadius;
+
+    /// <summary>二段ジャンプ展開リングエフェクトの最大拡大半径ピクセル単位</summary>
+    public float JumpRingMaxRadius;
+
+    /// <summary>二段ジャンプ展開リングエフェクトの展開持続時間秒単位</summary>
+    public float JumpRingDuration;
+
     /// <summary>
     ///     設定オブジェクトから跳躍能力コンポーネントを構築します。
     /// </summary>
@@ -74,7 +83,10 @@ public struct JumpCapability
             ApexFloatGravityMultiplier = cfg.ApexFloatGravityMultiplier,
             JumpStretchScale = cfg.JumpStretchScale,
             LandSquashScale = cfg.LandSquashScale,
-            LandSquashVelocityThreshold = cfg.LandSquashVelocityThreshold
+            LandSquashVelocityThreshold = cfg.LandSquashVelocityThreshold,
+            JumpRingInitialRadius = cfg.JumpRingInitialRadius,
+            JumpRingMaxRadius = cfg.JumpRingMaxRadius,
+            JumpRingDuration = cfg.JumpRingDuration
         };
     }
 }

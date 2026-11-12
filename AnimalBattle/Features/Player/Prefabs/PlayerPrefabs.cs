@@ -53,7 +53,9 @@ public static class PlayerPrefabs
                 CurrentEnergy = 0.0f,
                 MaxEnergy = catCfg.EnergyMaxSegments * catCfg.EnergySegmentCapacity,
                 SegmentCapacity = catCfg.EnergySegmentCapacity,
-                CooldownTimer = 0.0f
+                CooldownTimer = 0.0f,
+                EnergyPerDamageDealt = catCfg.EnergyPerDamageDealt,
+                EnergyPerDamageTaken = catCfg.EnergyPerDamageTaken
             });
         if (catCfg.Dash != null)
         {
@@ -81,7 +83,9 @@ public static class PlayerPrefabs
                 CurrentEnergy = 0.0f,
                 MaxEnergy = bunnyCfg.EnergyMaxSegments * bunnyCfg.EnergySegmentCapacity,
                 SegmentCapacity = bunnyCfg.EnergySegmentCapacity,
-                CooldownTimer = 0.0f
+                CooldownTimer = 0.0f,
+                EnergyPerDamageDealt = bunnyCfg.EnergyPerDamageDealt,
+                EnergyPerDamageTaken = bunnyCfg.EnergyPerDamageTaken
             });
         if (bunnyCfg.Dash != null)
         {
@@ -138,7 +142,9 @@ public static class PlayerPrefabs
             CurrentEnergy = 0.0f,
             MaxEnergy = cfg.EnergyMaxSegments * cfg.EnergySegmentCapacity,
             SegmentCapacity = cfg.EnergySegmentCapacity,
-            CooldownTimer = 0.0f
+            CooldownTimer = 0.0f,
+            EnergyPerDamageDealt = cfg.EnergyPerDamageDealt,
+            EnergyPerDamageTaken = cfg.EnergyPerDamageTaken
         });
         player.Set(LocomotionCapability.FromConfig(cfg.Movement));
         player.Set(JumpCapability.FromConfig(cfg.Jump));

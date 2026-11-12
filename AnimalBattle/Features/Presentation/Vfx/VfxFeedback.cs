@@ -1,8 +1,11 @@
 using System.Drawing;
 using AnimalBattle.Configs;
+using AnimalBattle.Core;
 using AnimalBattle.Events;
 using AnimalBattle.Framework.Pooling;
 using AnimalBattle.Logging;
+using AnimalBattle.Player;
+using AnimalBattle.Player.Components;
 using AnimalBattle.Presentation.Vfx.Components;
 
 namespace AnimalBattle.Presentation.Vfx;
@@ -71,12 +74,11 @@ public sealed class VfxFeedback : IDisposable
     {
         if (_isDisposed || _world == default) return;
 
-        var pCfg = _world.GetActivePlayerConfig();
         var vfxCfg = _world.Get<VisualEffectsRenderConfig>();
         CombatPoolService.RentRingEffect()
            .Set(new Transform(e.Position))
-           .Set(new RingEffect(pCfg.Jump.JumpRingInitialRadius, pCfg.Jump.JumpRingMaxRadius, vfxCfg.JumpRingColor))
-           .Set(new FadeEffect(pCfg.Jump.JumpRingDuration));
+           .Set(new RingEffect(e.InitialRadius, e.MaxRadius, vfxCfg.JumpRingColor))
+           .Set(new FadeEffect(e.Duration));
     }
 
     private void OnPlayerShotFired(PlayerShotFiredEvent e)
@@ -200,10 +202,11 @@ public sealed class VfxFeedback : IDisposable
 
     private void SpawnBulletImpactSplatter(Vec2f pos, Vec2f hitDir)
     {
-        var pCfg = _world.GetActivePlayerConfig();
-        var weaponCfg = _world.GetWeaponConfig(pCfg.Weapon);
-        if (weaponCfg is not RangedWeaponConfig rangedCfg) return;
+        ref readonly var flow = ref _world.Get<GameFlow>();
+        var prefab = PlayerPrefabs.GetPrefab(flow.SelectedPlayer);
+        if (!prefab.Has<RangedWeaponComponent>()) return;
 
+        ref readonly var rangedCfg = ref prefab.Get<RangedWeaponComponent>();
         var vfxCfg = _world.Get<VisualEffectsRenderConfig>();
         var count = Random.Shared.Next(rangedCfg.ImpactSplatterMinCount, rangedCfg.ImpactSplatterMaxCount + 1);
         var baseAngle = MathF.Atan2(-hitDir.Y, -hitDir.X);
