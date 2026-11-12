@@ -4,7 +4,7 @@ namespace AnimalBattle.Configs;
 
 /// <summary>
 ///     Config/player.toml から読み込まれるプレイヤー動作・物理・判定パラメータの設定クラス。
-///     形状種別、寸法、および局所オフセットを完全管理します。
+///     運動、跳躍、突進はサブ設定として集約・管理されます。
 /// </summary>
 public class PlayerConfig : IConfigLifecycle {
     /// <summary>プレイヤーの最大 HP</summary>
@@ -16,28 +16,16 @@ public class PlayerConfig : IConfigLifecycle {
     /// <summary>被弾時ホワイトフラッシュ持続時間秒単位</summary>
     public float HitFlashDuration { get; set; }
 
-    /// <summary>プレイヤーの左右移動速度：ピクセル/秒基準</summary>
-    public float MoveSpeed { get; set; }
+    /// <summary>移動・運動キネマティクス設定</summary>
+    public PlayerLocomotionConfig Movement { get; set; } = new();
 
-    /// <summary>移動・歩行アニメーション切り替え判定の速度閾値ピクセル毎秒単位</summary>
-    public float WalkAnimVelocityThreshold { get; set; }
+    /// <summary>跳躍性能および跳躍演出設定</summary>
+    public PlayerJumpConfig Jump { get; set; } = new();
 
-    /// <summary>地上初段ジャンプの初速度：上向き負値</summary>
-    public float FirstJumpVelocity { get; set; }
+    /// <summary>突進回避（ダッシュ）および残像設定</summary>
+    public PlayerDashConfig Dash { get; set; } = new();
 
-    /// <summary>空中二段ジャンプの初速度：上向き負値</summary>
-    public float SecondJumpVelocity { get; set; }
-
-    /// <summary>下向き重力加速度</summary>
-    public float Gravity { get; set; }
-
-    /// <summary>最大落下終端速度</summary>
-    public float MaxFallSpeed { get; set; }
-
-    /// <summary>最大跳躍可能回数：空中二段ジャンプ</summary>
-    public int MaxJumps { get; set; }
-
-    /// <summary>プレイヤー被弾判定 の幾何形状種別："Circle" または "Box"</summary>
+    /// <summary>プレイヤー被弾判定の幾何形状種別："Circle" または "Box"</summary>
     public string HurtboxShape { get; set; } = string.Empty;
 
     /// <summary>プレイヤー被弾判定円半径：HurtboxShape == "Circle" 時に使用</summary>
@@ -79,83 +67,11 @@ public class PlayerConfig : IConfigLifecycle {
     /// <summary>弾丸命中撃砕破片のフェード持続時間秒単位</summary>
     public float ImpactSplatterDuration { get; set; }
 
-    /// <summary>先行入力猶予時間秒単位</summary>
-    public float JumpBufferDuration { get; set; }
-
-    /// <summary>コヨーテタイム猶予時間秒単位</summary>
-    public float CoyoteTimeDuration { get; set; }
-
-    /// <summary>ジャンプ中断時の上昇速度減衰率</summary>
-    public float JumpCutDamping { get; set; }
-
-    /// <summary>頂点滞空判定の速度閾値：px/s</summary>
-    public float ApexFloatVelocityThreshold { get; set; }
-
-    /// <summary>頂点滞空時の重力倍率</summary>
-    public float ApexFloatGravityMultiplier { get; set; }
-
-    /// <summary>ダッシュ突進速度：px/s</summary>
-    public float DashSpeed { get; set; }
-
-    /// <summary>ダッシュ持続時間秒単位</summary>
-    public float DashDuration { get; set; }
-
-    /// <summary>ダッシュ再使用クールダウン時間秒単位</summary>
-    public float DashCooldown { get; set; }
-
-    /// <summary>ダッシュによる無敵時間秒単位</summary>
-    public float DashInvincibleDuration { get; set; }
-
-    /// <summary>ダッシュ開始時のストレッチ変形倍率</summary>
-    public Vec2f DashStretchScale { get; set; }
-
-    /// <summary>ダッシュ中の残像生成間隔秒単位</summary>
-    public float DashGhostTrailInterval { get; set; }
-
-    /// <summary>ダッシュ残像のフェード持続時間秒単位</summary>
-    public float DashGhostTrailDuration { get; set; }
-
-    /// <summary>ダッシュ残像の初期アルファ値 0から255の範囲</summary>
-    public float DashGhostTrailAlpha { get; set; }
-
-    /// <summary>二段ジャンプ空気リングエフェクトの初期半径 ピクセル単位</summary>
-    public float JumpRingInitialRadius { get; set; }
-
-    /// <summary>二段ジャンプ空気リングエフェクトの最大拡散半径 ピクセル単位</summary>
-    public float JumpRingMaxRadius { get; set; }
-
-    /// <summary>二段ジャンプ空気リングエフェクトのフェード持続時間秒単位</summary>
-    public float JumpRingDuration { get; set; }
-
-    /// <summary>地面初速加速度：px/s²</summary>
-    public float GroundAcceleration { get; set; }
-
-    /// <summary>地面自然減速加速度：px/s²</summary>
-    public float GroundDeceleration { get; set; }
-
-    /// <summary>地面反転制動加速度：px/s²</summary>
-    public float TurnaroundDeceleration { get; set; }
-
-    /// <summary>空中移動加速度：px/s²</summary>
-    public float AirAcceleration { get; set; }
-
-    /// <summary>空中自然減速加速度：px/s²</summary>
-    public float AirDeceleration { get; set; }
-
     /// <summary>スプリング固有振動数：Hz</summary>
     public float SpringFrequency { get; set; }
 
     /// <summary>スプリング減衰比</summary>
     public float SpringDampingRatio { get; set; }
-
-    /// <summary>跳躍開始時ストレッチ拡大率</summary>
-    public Vec2f JumpStretchScale { get; set; }
-
-    /// <summary>着地時スカッシュ拡大率</summary>
-    public Vec2f LandSquashScale { get; set; }
-
-    /// <summary>着地時スカッシュ演出を発火させる最小下落速度閾値：px/s</summary>
-    public float LandSquashVelocityThreshold { get; set; }
 
     /// <summary>被弾衝撃時スカッシュ拡大率</summary>
     public Vec2f HitSquashScale { get; set; }
@@ -178,7 +94,7 @@ public class PlayerConfig : IConfigLifecycle {
         if (MaxHp <= 0)
             return Error.Validation("PlayerConfig.InvalidMaxHp", "プレイヤー最大 HP は 1 以上である必要があります。");
 
-        if (MoveSpeed < 0.0f)
+        if (Movement.MoveSpeed < 0.0f)
             return Error.Validation("PlayerConfig.InvalidMoveSpeed", "プレイヤー移動速度は 0 以上である必要があります。");
 
         if (HurtboxShape == "Circle" && HurtboxRadius <= 0.0f)

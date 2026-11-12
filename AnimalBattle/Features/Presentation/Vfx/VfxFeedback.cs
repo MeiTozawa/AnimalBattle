@@ -75,8 +75,8 @@ public sealed class VfxFeedback : IDisposable
         var vfxCfg = _world.Get<VisualEffectsRenderConfig>();
         CombatPoolService.RentRingEffect()
            .Set(new Transform(e.Position))
-           .Set(new RingEffect(pCfg.JumpRingInitialRadius, pCfg.JumpRingMaxRadius, vfxCfg.JumpRingColor))
-           .Set(new FadeEffect(pCfg.JumpRingDuration));
+           .Set(new RingEffect(pCfg.Jump.JumpRingInitialRadius, pCfg.Jump.JumpRingMaxRadius, vfxCfg.JumpRingColor))
+           .Set(new FadeEffect(pCfg.Jump.JumpRingDuration));
     }
 
     private void OnPlayerShotFired(PlayerShotFiredEvent e)
