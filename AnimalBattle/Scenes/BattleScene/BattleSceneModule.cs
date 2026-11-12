@@ -13,6 +13,7 @@ public readonly struct BattleSceneModule : IFlecsModule {
         world.Module<BattleSceneModule>();
 
         world.AddBattleInputSystem()
+             .AddBattleDebugInputSystem()
              .AddBattleAiSystem();
     }
 }
