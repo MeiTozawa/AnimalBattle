@@ -167,12 +167,10 @@ public static class TutorialSceneSpawner
         // 回復アイテムエンティティの回収・初期化
         Items.Spawners.ItemSpawner.ResetItems(world);
 
-        // 雑魚敵およびプレイヤー弾幕の回収
+        // 雑魚敵およびプレイヤー弾幕・VFXの回収
         BulletSpawner.ClearAllEnemyBullets(world);
         MeleeSpawner.ClearAllEnemyMelee(world);
-
-        using var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build();
-        playerBullets.Each(CombatPoolService.Recycle);
+        CombatCleanupService.RecyclePlayerProjectilesAndVfx(world);
     }
 
     /// <summary>
@@ -189,25 +187,7 @@ public static class TutorialSceneSpawner
             root.Destruct();
         }
 
-        BulletSpawner.ClearAllEnemyBulletsImmediate(world);
-        MeleeSpawner.ClearAllEnemyMeleeImmediate(world);
-        MinionSpawner.ClearAllMinionsImmediate(world);
-        Items.Spawners.ItemSpawner.ResetItems(world);
-
-        using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
-        {
-            playerBullets.Each(CombatPoolService.Recycle);
-        }
-
-        using (var vfx = world.QueryBuilder().With<VfxTag>().Build())
-        {
-            vfx.Each(CombatPoolService.Recycle);
-        }
-
-        using (var melees = world.QueryBuilder().With<PlayerMeleeTag>().Build())
-        {
-            melees.Each(e => e.Destruct());
-        }
+        CombatCleanupService.ClearAllCombatEntitiesForTeardown(world);
 
         SoundService.StopBgm();
         InputService.SetCursorVisible(true);

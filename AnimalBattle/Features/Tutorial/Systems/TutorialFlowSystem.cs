@@ -96,11 +96,7 @@ public static class TutorialFlowSystem
             world.Remove<GameOverTag>();
             CameraService.Reset();
 
-            using var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build();
-            playerBullets.Each(CombatPoolService.Recycle);
-
-            using var vfxQuery = world.QueryBuilder().With<VfxTag>().Build();
-            vfxQuery.Each(CombatPoolService.Recycle);
+            CombatCleanupService.RecyclePlayerProjectilesAndVfx(world);
 
             EventBus.Publish(new CombatResetEvent());
 

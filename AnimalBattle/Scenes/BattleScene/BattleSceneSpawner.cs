@@ -152,30 +152,8 @@ public static class BattleSceneSpawner
         CameraService.Reset();
         GameEngine.SetCameraOffset(Vec2i.Zero);
 
-        // 2. 残存弾幕、近接判定および VFX の一括回収・プール返却
-        BulletSpawner.ClearAllEnemyBulletsImmediate(world);
-        MeleeSpawner.ClearAllEnemyMeleeImmediate(world);
-        MinionSpawner.ClearAllMinionsImmediate(world);
-        ItemSpawner.ResetItems(world);
-
-        using (var playerBullets = world.QueryBuilder().With<PlayerBulletTag>().Build())
-        {
-            playerBullets.Each(CombatPoolService.Recycle);
-        }
-
-        using (var playerMelee = world.QueryBuilder().With<PlayerMeleeTag>().Build())
-        {
-            playerMelee.Each(e =>
-            {
-                e.Disable();
-                e.Destruct();
-            });
-        }
-
-        using (var vfx = world.QueryBuilder().With<VfxTag>().Build())
-        {
-            vfx.Each(CombatPoolService.Recycle);
-        }
+        // 2. 残存弾幕、近接判定、雑魚敵、アイテムおよび VFX の一括回収・プール返却
+        CombatCleanupService.ClearAllCombatEntitiesForTeardown(world);
 
         // 3. 戦闘シーンルート配下の全エンティティ：自機、Boss/木桩、足場、タイルマップ等を一括破棄
         var root = world.Lookup(RootName);

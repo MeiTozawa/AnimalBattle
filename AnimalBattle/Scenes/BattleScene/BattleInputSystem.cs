@@ -138,20 +138,7 @@ public static class BattleInputSystem
         // ゲームオーバー状態の解除：Remove は冪等のため事前の Has チェック不要
         world.Remove<GameOverTag>();
 
-        BulletSpawner.ClearAllEnemyBulletsImmediate(world);
-        MeleeSpawner.ClearAllEnemyMeleeImmediate(world);
-        MinionSpawner.ClearAllMinionsImmediate(world);
-        ItemSpawner.ResetItems(world);
-        ctx.PlayerBulletsQuery.Each(CombatPoolService.Recycle);
-        using (var playerMelee = world.QueryBuilder().With<PlayerMeleeTag>().Build())
-        {
-            playerMelee.Each(static e =>
-            {
-                e.Disable();
-                e.Destruct();
-            });
-        }
-        ctx.VfxQuery.Each(CombatPoolService.Recycle);
+        CombatCleanupService.ClearTransientCombatEntitiesForReset(world);
         CameraService.Reset();
         world.Set(new AimReticleState());
 
