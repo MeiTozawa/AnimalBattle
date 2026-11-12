@@ -1,3 +1,4 @@
+using System.Drawing;
 using AnimalBattle.Ai;
 
 namespace AnimalBattle.Presentation.Rendering;
@@ -147,7 +148,7 @@ public static class DebugOverlayRenderSystem
         {
             var b = boss.Value;
             Span<char> stateBuf = stackalloc char[96];
-            HudRenderSystem.FormatBossStateInfo(stateBuf, out var stateLen, b.State, b.Brain, hpCfg, out var stateBadgeColor);
+            FormatBossStateInfo(stateBuf, out var stateLen, b.State, b.Brain, hpCfg, out var stateBadgeColor);
             var stateSpan = stateBuf[..stateLen];
 
             Span<char> badgeBuf = stackalloc char[160];
@@ -174,6 +175,72 @@ public static class DebugOverlayRenderSystem
                 ? hpCfg.StateBadgeOffset 
                 : new Vec2i(0, -hpCfg.HeaderOffsetY));
             GameEngine.DrawLeftString(badgePos, badgeBuf[..badgeLen], stateBadgeColor);
+        }
+    }
+
+    private static void FormatBossStateInfo(
+        Span<char> destination,
+        out int charsWritten,
+        BossCombatState combatState,
+        IBossBrain? brain,
+        BossHpBarRenderConfig hpCfg,
+        out Color badgeColor)
+    {
+        var currentAbility = brain?.AbilitySystem.CurrentAbility;
+        var abilityName = currentAbility?.DisplayName;
+        if (string.IsNullOrEmpty(abilityName))
+        {
+            abilityName = !combatState.CurrentSkillTag.IsEmpty ? combatState.CurrentSkillTag.ToString() : "None";
+        }
+
+        var tags = brain?.AbilitySystem.Tags ?? default;
+        var isDead = brain?.IsDead ?? false;
+
+        if (isDead)
+        {
+            badgeColor = hpCfg.StateDefeatedColor;
+            destination.TryWrite($"[STATE: DEFEATED]", out charsWritten);
+            return;
+        }
+        if (tags.HasTag(GameplayTag.Phasing))
+        {
+            badgeColor = hpCfg.StatePhaseTransitionColor;
+            destination.TryWrite($"[STATE: PHASE TRANSITION (INVINCIBLE)]", out charsWritten);
+            return;
+        }
+        if (tags.HasTag(GameplayTag.Recovery))
+        {
+            badgeColor = hpCfg.StateRecoveringColor;
+            destination.TryWrite($"[STATE: RECOVERING]", out charsWritten);
+            return;
+        }
+        if (tags.HasTag(GameplayTag.Stunned))
+        {
+            badgeColor = hpCfg.StateStunnedColor;
+            destination.TryWrite($"[STATE: STUNNED (VULNERABLE)]", out charsWritten);
+            return;
+        }
+        if (tags.HasTag(GameplayTag.Telegraph))
+        {
+            badgeColor = hpCfg.StateTelegraphingColor;
+            destination.TryWrite($"[STATE: TELEGRAPHING (WIND-UP: {abilityName})]", out charsWritten);
+            return;
+        }
+        if (tags.HasTag(GameplayTag.Active))
+        {
+            badgeColor = hpCfg.StateCastingColor;
+            destination.TryWrite($"[STATE: EXECUTING ({abilityName})]", out charsWritten);
+            return;
+        }
+
+        badgeColor = hpCfg.StateDefaultColor;
+        if (brain != null)
+        {
+            brain.WriteSubStateDescription(destination, out charsWritten, abilityName);
+        }
+        else
+        {
+            destination.TryWrite($"[STATE: UNKNOWN]", out charsWritten);
         }
     }
 }

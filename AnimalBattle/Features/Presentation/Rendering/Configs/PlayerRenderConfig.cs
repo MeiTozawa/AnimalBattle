@@ -116,6 +116,22 @@ public sealed class PlayerHpBadgeRenderConfig
     /// <summary>兎自機の外枠・発光色 <see cref="Color" /></summary>
     public Color BunnyGlowColor => _bunnyGlowColor;
 
+    /// <summary>指定されたキャラクター種別に応じた肉球塗りつぶし色を取得します。</summary>
+    public Color GetCharacterFillColor(CharacterType characterType) => characterType switch
+    {
+        CharacterType.Bunny => _bunnyFillColor,
+        CharacterType.Cat => _catFillColor,
+        _ => _catFillColor
+    };
+
+    /// <summary>指定されたキャラクター種別に応じた外枠・発光色を取得します。</summary>
+    public Color GetCharacterGlowColor(CharacterType characterType) => characterType switch
+    {
+        CharacterType.Bunny => _bunnyGlowColor,
+        CharacterType.Cat => _catGlowColor,
+        _ => _catGlowColor
+    };
+
     private Color _emptyBorderColor;
     /// <summary>破損・空スロット枠色 Hex 文字列</summary>
     [ConfigurationKeyName("EmptyBorderColor")]
