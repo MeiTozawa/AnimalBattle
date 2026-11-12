@@ -189,6 +189,105 @@ public static unsafe class PhysicsService {
     }
 
     /// <summary>
+    ///     外力ノックバック速度ベクトルを指定された減衰加速度でゼロへ向かって減衰させます。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vec2f DecayKnockback(Vec2f knockback, float deceleration, float dt)
+    {
+        if (knockback == Vec2f.Zero) return Vec2f.Zero;
+        if (deceleration <= 0.0f) return Vec2f.Zero;
+
+        var maxDelta = deceleration * dt;
+        var kx = MoveTowards(knockback.X, 0.0f, maxDelta);
+        var ky = MoveTowards(knockback.Y, 0.0f, maxDelta);
+        return new Vec2f(kx, ky);
+    }
+
+    /// <summary>
+    ///     移動前後のY座標とエンティティ矩形から、タイルマップの片道足場群およびアリーナ床面との着地スイープ判定を一括解決します。
+    /// </summary>
+    /// <param name="currentY">移動前の中心Y座標</param>
+    /// <param name="nextPos">水平クランプ済みの移動目標中心座標</param>
+    /// <param name="entitySize">エンティティの衝突ボックスサイズ</param>
+    /// <param name="currentVy">現在の垂直速度</param>
+    /// <param name="tileMap">判定対象のタイルマップ（null可）</param>
+    /// <param name="arenaCfg">アリーナ境界設定（null可）</param>
+    /// <param name="candidatePlatforms">空間ハッシュ検索結果の一時格納バッファ（呼び出し側で再利用）</param>
+    /// <param name="adjustedPosY">着地補正後の中心Y座標</param>
+    /// <param name="adjustedVy">着地補正後の垂直速度</param>
+    /// <param name="ignorePlatforms">足場との判定をスキップし床面のみ判定する場合は true</param>
+    /// <param name="minPlatformTopY">有効とする足場上面Y座標の最小値（LeapSmash 貫通制御用）</param>
+    /// <returns>足場またはアリーナ床面に接地している場合は true</returns>
+    public static bool ResolvePlatformAndFloorCollision(
+        float currentY,
+        Vec2f nextPos,
+        Vec2f entitySize,
+        float currentVy,
+        AnimalBattle.Maps.TileMap? tileMap,
+        ArenaConfig? arenaCfg,
+        List<int> candidatePlatforms,
+        out float adjustedPosY,
+        out float adjustedVy,
+        bool ignorePlatforms = false,
+        float minPlatformTopY = float.MinValue)
+    {
+        var hitPlatform = false;
+        var platformGroundY = float.MaxValue;
+        var platformVy = 0.0f;
+
+        if (!ignorePlatforms && tileMap != null)
+        {
+            Box2D entityBox = new(nextPos, entitySize);
+            var sweepTop = MathF.Min(currentY, nextPos.Y) - entitySize.Y * 0.5f;
+            var sweepBottom = MathF.Max(currentY, nextPos.Y) + entitySize.Y * 0.5f;
+            Box2D sweepQueryBox = new(
+                new Vec2f(nextPos.X, (sweepTop + sweepBottom) * 0.5f),
+                new Vec2f(entitySize.X, sweepBottom - sweepTop));
+
+            candidatePlatforms.Clear();
+            tileMap.SpatialHash.Query(sweepQueryBox, candidatePlatforms);
+
+            for (var i = 0; i < candidatePlatforms.Count; i++)
+            {
+                if (tileMap.SpatialHash.TryGetBox(candidatePlatforms[i], out var platformBox))
+                {
+                    if (platformBox.Top < minPlatformTopY)
+                    {
+                        continue;
+                    }
+
+                    if (CheckPlatformGround(currentY, nextPos.Y, entityBox, platformBox, out var groundY, out var vy))
+                    {
+                        if (!hitPlatform || groundY < platformGroundY)
+                        {
+                            hitPlatform = true;
+                            platformGroundY = groundY;
+                            platformVy = vy;
+                        }
+                    }
+                }
+            }
+        }
+
+        var isGrounded = hitPlatform;
+        adjustedPosY = hitPlatform ? platformGroundY : nextPos.Y;
+        adjustedVy = hitPlatform ? platformVy : currentVy;
+
+        if (arenaCfg != null)
+        {
+            var floorLimitY = arenaCfg.FloorLimitY - entitySize.Y * 0.5f;
+            if (adjustedPosY >= floorLimitY)
+            {
+                isGrounded = true;
+                adjustedPosY = floorLimitY;
+                adjustedVy = 0.0f;
+            }
+        }
+
+        return isGrounded;
+    }
+
+    /// <summary>
     ///     正弦波と余弦波にプレイヤー追従加重を合成したボスのホバリング調和軌道をインライン計算します。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

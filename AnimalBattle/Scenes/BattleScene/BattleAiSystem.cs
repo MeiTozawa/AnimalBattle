@@ -319,82 +319,35 @@ public static class BattleAiSystem
 
         var colSize = col.Size != Vec2f.Zero ? col.Size : bLionCfg.CollisionSize;
 
-        var minX = arenaCfg.BoundaryMinX + colSize.X * 0.5f;
-        var maxX = arenaCfg.BoundaryMaxX - colSize.X * 0.5f;
-
         // 外力ノックバック速度の減衰処理
-        if (vel.Knockback != Vec2f.Zero)
-        {
-            var decay = bLionCfg.KnockbackDeceleration > 0.0f ? bLionCfg.KnockbackDeceleration : 1200.0f;
-            var kx = PhysicsService.MoveTowards(vel.Knockback.X, 0.0f, decay * dt);
-            var ky = PhysicsService.MoveTowards(vel.Knockback.Y, 0.0f, decay * dt);
-            vel.Knockback = new Vec2f(kx, ky);
-        }
+        var decay = bLionCfg.KnockbackDeceleration > 0.0f ? bLionCfg.KnockbackDeceleration : 1200.0f;
+        vel.Knockback = PhysicsService.DecayKnockback(vel.Knockback, decay, dt);
 
         var totalLinear = linear + vel.Knockback;
+        var minX = arenaCfg.BoundaryMinX + colSize.X * 0.5f;
+        var maxX = arenaCfg.BoundaryMaxX - colSize.X * 0.5f;
         var nextX = Math.Clamp(trans.Position.X + totalLinear.X * dt, minX, maxX);
         var nextY = trans.Position.Y + totalLinear.Y * dt;
         var nextPos = new Vec2f(nextX, nextY);
 
-        var currentY = trans.Position.Y;
-        Box2D bossBox = new(nextPos, colSize);
-
-        var hitPlatform = false;
-        var platformGroundY = float.MaxValue;
-        var platformVy = 0.0f;
-
         // 制御空中移動時かつ上昇・滞空：vel.Linear.Y <= 0の間は足場着地判定をスキップ
         var ignorePlatforms = isControlledAirborne && linear.Y <= 0.0f;
-        if (!ignorePlatforms && tileMap != null)
-        {
-            var isLeapSmash = brain.CurrentTimelineAttack?.Motion.Kind == SkillMotionKind.LeapSmash;
-            var targetLandingSurfaceY = brain.TargetLandingSurfaceY;
+        var isLeapSmash = brain.CurrentTimelineAttack?.Motion.Kind == SkillMotionKind.LeapSmash;
+        var targetLandingSurfaceY = brain.TargetLandingSurfaceY;
+        var minPlatformTopY = (isLeapSmash && targetLandingSurfaceY > 0.0f) ? targetLandingSurfaceY - 5.0f : float.MinValue;
 
-            var sweepTop = MathF.Min(currentY, nextY) - colSize.Y * 0.5f;
-            var sweepBottom = MathF.Max(currentY, nextY) + colSize.Y * 0.5f;
-            var sweepCenter = new Vec2f(nextX, (sweepTop + sweepBottom) * 0.5f);
-            var sweepSize = new Vec2f(colSize.X, sweepBottom - sweepTop);
-            Box2D sweepQueryBox = new(sweepCenter, sweepSize);
-
-            candidateBossPlatforms.Clear();
-            tileMap.SpatialHash.Query(sweepQueryBox, candidateBossPlatforms);
-
-            for (var p = 0; p < candidateBossPlatforms.Count; p++)
-            {
-                if (tileMap.SpatialHash.TryGetBox(candidateBossPlatforms[p], out var platformBox))
-                {
-                    var platTopY = platformBox.Top;
-
-                    // ヒップドロップ：LeapSmash急降下中：目標着地サーフェス：足場上面または床より上層の足場は貫通：スキップ
-                    if (isLeapSmash && targetLandingSurfaceY > 0.0f && platTopY < targetLandingSurfaceY - 5.0f)
-                    {
-                        continue;
-                    }
-
-                    if (PhysicsService.CheckPlatformGround(currentY, nextY, bossBox, platformBox, out var groundY, out var pVy))
-                    {
-                        if (!hitPlatform || groundY < platformGroundY)
-                        {
-                            hitPlatform = true;
-                            platformGroundY = groundY;
-                            platformVy = pVy;
-                        }
-                    }
-                }
-            }
-        }
-
-        var isGrounded = hitPlatform;
-        var adjustedPosY = hitPlatform ? platformGroundY : nextY;
-        var adjustedVy = hitPlatform ? platformVy : linear.Y;
-
-        var floorLimitY = arenaCfg.FloorLimitY - colSize.Y * 0.5f;
-        if (adjustedPosY >= floorLimitY)
-        {
-            isGrounded = true;
-            adjustedPosY = floorLimitY;
-            adjustedVy = 0.0f;
-        }
+        var isGrounded = PhysicsService.ResolvePlatformAndFloorCollision(
+            trans.Position.Y,
+            nextPos,
+            colSize,
+            linear.Y,
+            tileMap,
+            arenaCfg,
+            candidateBossPlatforms,
+            out var adjustedPosY,
+            out var adjustedVy,
+            ignorePlatforms,
+            minPlatformTopY);
 
         if (isGrounded && vel.Knockback.Y > 0.0f)
         {

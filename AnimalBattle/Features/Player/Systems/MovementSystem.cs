@@ -110,20 +110,8 @@ public static class MovementSystem
         var wasGrounded = col.IsGrounded;
 
         // 外力ノックバック速度の減衰処理
-        if (vel.Knockback != Vec2f.Zero)
-        {
-            var decay = col.IsGrounded ? loco.GroundDeceleration : loco.AirDeceleration;
-            if (decay > 0.0f)
-            {
-                var kx = PhysicsService.MoveTowards(vel.Knockback.X, 0.0f, decay * dt);
-                var ky = PhysicsService.MoveTowards(vel.Knockback.Y, 0.0f, decay * dt);
-                vel.Knockback = new Vec2f(kx, ky);
-            }
-            else
-            {
-                vel.Knockback = Vec2f.Zero;
-            }
-        }
+        var decay = col.IsGrounded ? loco.GroundDeceleration : loco.AirDeceleration;
+        vel.Knockback = PhysicsService.DecayKnockback(vel.Knockback, decay, dt);
 
         // 次フレーム目標座標の算出：自主移動速度と外力ノックバックの合算
         var totalVel = vel.Value + vel.Knockback;
@@ -134,62 +122,17 @@ public static class MovementSystem
             nextPos = nextPos with { X = PhysicsService.Clamp(nextPos.X, arenaCfg.BoundaryMinX, arenaCfg.BoundaryMaxX) };
         }
 
-        var currentY = trans.Position.Y;
-        Box2D entityBox = new(nextPos, col.Size);
-
-        // 足場プラットフォームとの片道衝突判定
-        var hitPlatform = false;
-        var platformGroundY = float.MaxValue;
-        var platformVy = 0.0f;
-
-        if (tileMap != null)
-        {
-            var sweepTop = MathF.Min(currentY, nextPos.Y) - col.Size.Y * 0.5f;
-            var sweepBottom = MathF.Max(currentY, nextPos.Y) + col.Size.Y * 0.5f;
-            var sweepCenter = new Vec2f(nextPos.X, (sweepTop + sweepBottom) * 0.5f);
-            var sweepSize = new Vec2f(col.Size.X, sweepBottom - sweepTop);
-            Box2D sweepQueryBox = new(sweepCenter, sweepSize);
-
-            candidatePlatforms.Clear();
-            tileMap.SpatialHash.Query(sweepQueryBox, candidatePlatforms);
-
-            foreach (var t in candidatePlatforms)
-            {
-                if (tileMap.SpatialHash.TryGetBox(t, out var platformBox))
-                {
-                    if (PhysicsService.CheckPlatformGround(
-                        currentY,
-                        nextPos.Y,
-                        entityBox,
-                        platformBox,
-                        out var groundY,
-                        out var vy))
-                    {
-                        if (!hitPlatform || groundY < platformGroundY)
-                        {
-                            hitPlatform = true;
-                            platformGroundY = groundY;
-                            platformVy = vy;
-                        }
-                    }
-                }
-            }
-        }
-
-        var isGrounded = hitPlatform;
-        var adjustedPosY = hitPlatform ? platformGroundY : nextPos.Y;
-        var adjustedVy = hitPlatform ? platformVy : vel.Value.Y;
-
-        if (arenaCfg != null)
-        {
-            var floorLimitY = arenaCfg.FloorLimitY - col.Size.Y / 2.0f;
-            if (adjustedPosY >= floorLimitY)
-            {
-                isGrounded = true;
-                adjustedPosY = floorLimitY;
-                adjustedVy = 0.0f;
-            }
-        }
+        // 足場およびアリーナ床面との片道衝突判定
+        var isGrounded = PhysicsService.ResolvePlatformAndFloorCollision(
+            trans.Position.Y,
+            nextPos,
+            col.Size,
+            vel.Value.Y,
+            tileMap,
+            arenaCfg,
+            candidatePlatforms,
+            out var adjustedPosY,
+            out var adjustedVy);
 
         // 接地瞬間時の押し潰し演出：落下速度が設定閾値以上の場合のみ適用
         if (!wasGrounded && isGrounded)
