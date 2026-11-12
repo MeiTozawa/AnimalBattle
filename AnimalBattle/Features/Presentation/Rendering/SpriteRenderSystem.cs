@@ -1,7 +1,9 @@
+using AnimalBattle.Scenes.Start;
+
 namespace AnimalBattle.Presentation.Rendering;
 
 /// <summary>
-///     自機・ボス・キャラクター選択プレビューおよび近接攻撃等の汎用 Sprite 描画を行う ECS システム群。
+///     自機・ボス・および近接攻撃等の汎用 Sprite 描画を行う ECS システム群。
 ///     被弾点滅、近接攻撃加算合成、およびスプライト基本描画を独立した専用クエリ・パスに分離し、
 ///     ホットループ内での entity.Has 分岐を完全に排除した純粋データ駆動型レンダラーです。
 /// </summary>
@@ -14,7 +16,7 @@ public static class SpriteRenderSystem
     /// <returns>登録済みワールド</returns>
     public static World AddSpriteRenderSystem(this World world)
     {
-        // 1. 通常スプライト描画パス：近接加算・残影・回収タグ・死亡エンティティ・無敵点滅中・出現バッファ中エンティティを除外
+        // 1. 通常スプライト描画パス：近接加算・残影・回収タグ・死亡エンティティ・無敵点滅中・出現バッファ中・開始画面エンティティを除外
         world.System<Transform, Sprite>("SpriteRenderSystem")
             .Without<PlayerMeleeTag>()
             .Without<EnemyMeleeTag>()
@@ -23,6 +25,7 @@ public static class SpriteRenderSystem
             .Without<DeadTag>()
             .Without<InvincibleBlinkEffect>()
             .Without<SpawnBufferState>()
+            .Without<StartSceneTag>()
             .Kind(Ecs.OnStore)
             .Iter(DrawStandardSprites);
 
@@ -33,6 +36,7 @@ public static class SpriteRenderSystem
             .With<EnemyMeleeTag>()
             .Without<RecycleTag>()
             .Without<DeadTag>()
+            .Without<StartSceneTag>()
             .Kind(Ecs.OnStore)
             .Iter(DrawMeleeSprites);
 
@@ -40,6 +44,7 @@ public static class SpriteRenderSystem
         world.System<Transform, Sprite, HitFlashEffect>("HitFlashRenderSystem")
             .Without<RecycleTag>()
             .Without<DeadTag>()
+            .Without<StartSceneTag>()
             .Kind(Ecs.OnStore)
             .Iter(DrawHitFlashSprites);
 
