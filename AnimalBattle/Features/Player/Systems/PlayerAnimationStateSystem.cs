@@ -10,6 +10,7 @@ public static class PlayerAnimationStateSystem
     private static readonly StringId ClipJump = "Jump";
     private static readonly StringId ClipFall = "Fall";
     private static readonly StringId ClipAttack = "Attack";
+    private const float WalkAnimVelocityThreshold = 0.1f;
 
     /// <summary>
     ///     自機アニメーション状態選択システムを Flecs.NET ワールドへ登録します。
@@ -38,10 +39,6 @@ public static class PlayerAnimationStateSystem
         var count = it.Count();
         if (count == 0) return;
 
-        var w = it.World();
-        var pCfg = w.GetActivePlayerConfig();
-        var threshold = pCfg.WalkAnimVelocityThreshold;
-
         for (var i = 0; i < count; i++)
         {
             ref readonly var hp = ref healths[i];
@@ -59,7 +56,7 @@ public static class PlayerAnimationStateSystem
             }
             else
             {
-                anim.Play(MathF.Abs(vel.Value.X) > threshold ? ClipRun : ClipIdle);
+                anim.Play(MathF.Abs(vel.Value.X) > WalkAnimVelocityThreshold ? ClipRun : ClipIdle);
             }
         }
     }
