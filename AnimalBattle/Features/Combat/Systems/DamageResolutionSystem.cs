@@ -1,7 +1,4 @@
 using AnimalBattle.Combat.Events;
-using AnimalBattle.Features.Items.Components;
-using AnimalBattle.Features.Items.Configs;
-using AnimalBattle.Features.Items.Spawners;
 
 namespace AnimalBattle.Combat.Systems;
 
@@ -10,9 +7,6 @@ namespace AnimalBattle.Combat.Systems;
 /// </summary>
 internal sealed class DamageResolutionContext : IDisposable
 {
-    /// <summary>生存中の自機プレイヤー情報抽出クエリ。</summary>
-    public required Query<Health, EnergyGauge, CharacterTypeComponent> PlayerQuery { get; init; }
-
     /// <summary>自機近接判定エンティティの制御クエリ。</summary>
     public required Query PlayerMeleeQuery { get; init; }
 
@@ -21,7 +15,6 @@ internal sealed class DamageResolutionContext : IDisposable
 
     public void Dispose()
     {
-        PlayerQuery.Dispose();
         PlayerMeleeQuery.Dispose();
         BossBrainQuery.Dispose();
     }
@@ -41,11 +34,6 @@ public static class DamageResolutionSystem
     /// <returns>メソッドチェーン用の <see cref="World" /></returns>
     public static World AddDamageResolutionSystem(this World world)
     {
-        var playerQuery = world.QueryBuilder<Health, EnergyGauge, CharacterTypeComponent>()
-            .With<PlayerTag>()
-            .Without<DeadTag>()
-            .Build();
-
         var playerMeleeQuery = world.QueryBuilder()
             .With<PlayerMeleeTag>()
             .Build();
@@ -56,7 +44,6 @@ public static class DamageResolutionSystem
 
         world.SetDisposable(new DamageResolutionContext
         {
-            PlayerQuery = playerQuery,
             PlayerMeleeQuery = playerMeleeQuery,
             BossBrainQuery = bossBrainQuery
         });
@@ -94,7 +81,6 @@ public static class DamageResolutionSystem
         var events = inbox.AsSpan();
         if (events.IsEmpty) return;
 
-        ref readonly var cameraCfg = ref world.Get<CameraConfig>();
         var combatCfg = world.Get<CombatPrefabConfig>();
         var physicsCfg = combatCfg.Physics;
         var isGameOver = world.Has<GameOverTag>();
@@ -166,20 +152,11 @@ public static class DamageResolutionSystem
             var multiplier = (profile.Kind != CombatEntityKind.Player && isVulnerable) ? physicsCfg.VulnerableDamageMultiplier : 1.0f;
             var finalDamage = totalDamage * multiplier;
 
-            // プレイヤーが敵に与えたダメージに応じて自機エネルギーゲージを加算
+            // プレイヤーが敵に与えたダメージに応じて自機エネルギーゲージを加算（イベント通知）
             var finalPlayerDamage = playerDamageDealt * multiplier;
             if (profile.Kind != CombatEntityKind.Player && finalPlayerDamage > 0.0f)
             {
-                ctx.PlayerQuery.Each((ref _, ref pGauge, ref _) =>
-                {
-                    var oldReady = pGauge.ReadySegments;
-                    pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + finalPlayerDamage * pGauge.EnergyPerDamageDealt, 0.0f, pGauge.MaxEnergy);
-                    var newReady = pGauge.ReadySegments;
-                    if (newReady > oldReady)
-                    {
-                        EventBus.Publish(new EnergySegmentChargedEvent(newReady));
-                    }
-                });
+                EventBus.Publish(new PlayerDealtDamageEvent(finalPlayerDamage));
             }
 
             var prevHp = hp.Current;
@@ -219,17 +196,6 @@ public static class DamageResolutionSystem
             // ロール固有の被弾リアクション
             if (profile.Kind == CombatEntityKind.Player)
             {
-                ctx.PlayerQuery.Each((ref _, ref pGauge, ref _) =>
-                {
-                    var oldReady = pGauge.ReadySegments;
-                    pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + finalDamage * pGauge.EnergyPerDamageTaken, 0.0f, pGauge.MaxEnergy);
-                    var newReady = pGauge.ReadySegments;
-                    if (newReady > oldReady)
-                    {
-                        EventBus.Publish(new EnergySegmentChargedEvent(newReady));
-                    }
-                });
-
                 if (profile.InvincibleDuration > 0.0f)
                 {
                     TimedEffectService.ApplyEffect(ref effectState, ref tagState, GameplayTag.Untargetable, profile.InvincibleDuration, entity.Id);
@@ -260,7 +226,6 @@ public static class DamageResolutionSystem
                         sprite.IsVisible = false;
                         ctx.PlayerMeleeQuery.Each(static (Entity e) => e.Disable());
 
-                        CameraService.AddTrauma(cameraCfg.PlayerHeavyHitTrauma);
                         EventBus.Publish(new PlayerDiedEvent(trans.Position));
                         break;
 
@@ -280,7 +245,6 @@ public static class DamageResolutionSystem
                         BulletSpawner.ClearAllEnemyBullets(world);
                         MeleeSpawner.ClearAllEnemyMelee(world);
                         MinionSpawner.ClearAllMinionsImmediate(world);
-                        CameraService.AddTrauma(cameraCfg.VictoryExplosionTrauma);
                         EventBus.Publish(new BossDiedEvent(trans.Position));
                         break;
 
@@ -288,8 +252,8 @@ public static class DamageResolutionSystem
                         entity.Add<DeadTag>();
                         sprite.IsVisible = false;
                         EventBus.Publish(new CombatHitLandedEvent(trans.Position));
-                        // 雑魚敵撃破時の回復アイテムドロップ判定
-                        TryDropHealthPack(world, trans.Position, hp, finalDamage);
+                        // 雑魚敵撃破時の回復アイテムドロップ判定（イベント通知）
+                        EventBus.Publish(new EnemyDamagedEvent(trans.Position, hp.Current, hp.Max, finalDamage));
                         entity.Destruct();
                         break;
 
@@ -304,18 +268,10 @@ public static class DamageResolutionSystem
                 switch (profile.Kind)
                 {
                     case CombatEntityKind.Player:
-                        var trauma = isHeavy ? cameraCfg.PlayerHeavyHitTrauma : cameraCfg.PlayerHitTrauma;
-                        CameraService.AddTrauma(trauma);
-                        CameraService.AddDirectionalImpulse(targetKnockback, cameraCfg.DirectionalImpulseRatio);
-                        EventBus.Publish(new PlayerDamagedEvent());
+                        EventBus.Publish(new PlayerDamagedEvent(finalDamage, targetKnockback, isHeavy));
                         break;
 
                     case CombatEntityKind.Boss:
-                        if (isVulnerable)
-                        {
-                            CameraService.AddTrauma(cameraCfg.BossVulnerableHitTrauma);
-                        }
-
                         EventBus.Publish(new BossDamagedEvent(isVulnerable));
 
                         // 被弾反撃弾幕の生成
@@ -324,59 +280,17 @@ public static class DamageResolutionSystem
                             BulletSpawner.SpawnCounterAttack(world, trans.Position, profile.Phase);
                         }
 
-                        // ボス被弾時の回復アイテムドロップ判定（ピンチ救済）
-                        TryDropHealthPack(world, trans.Position, hp, finalDamage);
+                        // ボス被弾時の回復アイテムドロップ判定（イベント通知）
+                        EventBus.Publish(new EnemyDamagedEvent(trans.Position, hp.Current, hp.Max, finalDamage));
                         break;
 
                     case CombatEntityKind.Minion:
                     case CombatEntityKind.Dummy:
-                        // 雑魚敵およびダミー被弾時の回復アイテムドロップ判定
-                        TryDropHealthPack(world, trans.Position, hp, finalDamage);
+                        // 雑魚敵およびダミー被弾時の回復アイテムドロップ判定（イベント通知）
+                        EventBus.Publish(new EnemyDamagedEvent(trans.Position, hp.Current, hp.Max, finalDamage));
                         break;
                 }
             }
-        }
-    }
-
-    /// <summary>
-    ///     敵ユニット（ボス・雑魚敵・ダミー）の被弾または撃破時に、ピンチ救済アルゴリズムに基づいて回復アイテムのドロップ判定を実行します。
-    /// </summary>
-    private static void TryDropHealthPack(World world, Vec2f enemyPos, in Health targetHp, float finalDamage)
-    {
-        if (!world.Has<ItemConfig>() || !world.Has<ItemDirectorState>()) return;
-
-        var itemCfg = world.Get<ItemConfig>();
-        var cfg = itemCfg.HealthPack;
-        ref var director = ref world.GetMut<ItemDirectorState>();
-
-        if (director.ActiveHealthPackCount >= cfg.MaxActiveCount || director.IcdRemaining > 0f) return;
-
-        var ctx = world.Get<DamageResolutionContext>();
-        Health playerHp = default;
-        var hasPlayer = false;
-
-        ctx.PlayerQuery.Each((ref h, ref _, ref _) =>
-        {
-            playerHp = h;
-            hasPlayer = true;
-        });
-
-        if (!hasPlayer) return;
-
-        // プレイヤーのHPが最大値の場合はドロップしない（リソース温存）
-        if (playerHp.Current >= playerHp.Max) return;
-
-        var playerRatio = playerHp.Max > 0f ? Math.Clamp(playerHp.Current / playerHp.Max, 0f, 1f) : 1f;
-        var targetRatio = targetHp.Max > 0f ? Math.Clamp(targetHp.Current / targetHp.Max, 0f, 1f) : 1f;
-
-        var baseRate = cfg.BaseDropRate 
-                     + (1.0f - playerRatio) * cfg.PlayerWeight 
-                     + (1.0f - targetRatio) * cfg.BossWeight;
-        var finalRate = Math.Clamp(baseRate * (1.0f + finalDamage * cfg.DamageScale), 0.0f, cfg.MaxDropRate);
-
-        if (Random.Shared.NextSingle() < finalRate)
-        {
-            ItemSpawner.SpawnHealthPack(world, enemyPos, cfg);
         }
     }
 }

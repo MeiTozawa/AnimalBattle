@@ -5,13 +5,62 @@ namespace AnimalBattle.Player.Systems;
 /// </summary>
 public sealed class PlayerSpecialAbilityContext : IDisposable
 {
+    private IDisposable? _damageDealtSub;
+    private IDisposable? _damagedSub;
+
     /// <summary>敵弾幕消去判定用の敵弾クエリ</summary>
     public required Query<Transform, Hitbox, Bullet> EnemyBulletQuery { get; init; }
+
+    /// <summary>エネルギー加算対象の自機エネルギーゲージクエリ</summary>
+    public required Query<EnergyGauge> PlayerEnergyQuery { get; init; }
+
+    public void InitializeEvents()
+    {
+        _damageDealtSub = EventBus.Subscribe<PlayerDealtDamageEvent>(OnPlayerDealtDamage);
+        _damagedSub = EventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
+    }
+
+    private void OnPlayerDealtDamage(PlayerDealtDamageEvent evt)
+    {
+        if (evt.FinalDamage <= 0.0f) return;
+
+        PlayerEnergyQuery.Each((ref EnergyGauge pGauge) =>
+        {
+            var oldReady = pGauge.ReadySegments;
+            pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + evt.FinalDamage * pGauge.EnergyPerDamageDealt, 0.0f, pGauge.MaxEnergy);
+            var newReady = pGauge.ReadySegments;
+            if (newReady > oldReady)
+            {
+                EventBus.Publish(new EnergySegmentChargedEvent(newReady));
+            }
+        });
+    }
+
+    private void OnPlayerDamaged(PlayerDamagedEvent evt)
+    {
+        if (evt.Damage <= 0.0f) return;
+
+        PlayerEnergyQuery.Each((ref EnergyGauge pGauge) =>
+        {
+            var oldReady = pGauge.ReadySegments;
+            pGauge.CurrentEnergy = Math.Clamp(pGauge.CurrentEnergy + evt.Damage * pGauge.EnergyPerDamageTaken, 0.0f, pGauge.MaxEnergy);
+            var newReady = pGauge.ReadySegments;
+            if (newReady > oldReady)
+            {
+                EventBus.Publish(new EnergySegmentChargedEvent(newReady));
+            }
+        });
+    }
 
     /// <summary>リソースを解放します。</summary>
     public void Dispose()
     {
+        _damageDealtSub?.Dispose();
+        _damagedSub?.Dispose();
+        _damageDealtSub = null;
+        _damagedSub = null;
         EnemyBulletQuery.Dispose();
+        PlayerEnergyQuery.Dispose();
     }
 }
 
@@ -32,10 +81,18 @@ public static class PlayerSpecialAbilitySystem
             .Without<RecycleTag>()
             .Build();
 
-        world.SetDisposable(new PlayerSpecialAbilityContext
+        var playerEnergyQuery = world.QueryBuilder<EnergyGauge>()
+            .With<PlayerTag>()
+            .Without<DeadTag>()
+            .Build();
+
+        var ctx = new PlayerSpecialAbilityContext
         {
-            EnemyBulletQuery = bulletQuery
-        });
+            EnemyBulletQuery = bulletQuery,
+            PlayerEnergyQuery = playerEnergyQuery
+        };
+        ctx.InitializeEvents();
+        world.SetDisposable(ctx);
 
         // 1. 誤爆防止インターバルタイマーの減衰システム
         world.System<EnergyGauge>("PlayerSpecialAbilityCooldownSystem")

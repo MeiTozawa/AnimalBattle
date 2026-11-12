@@ -47,6 +47,8 @@ public sealed class VfxFeedback : IDisposable
         EventBus.Subscribe<BossDiedEvent>(OnBossDied);
         EventBus.Subscribe<BossDiveImpactEvent>(OnBossDiveImpact);
         EventBus.Subscribe<SuperArmorDeflectedEvent>(OnSuperArmorDeflected);
+        EventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
+        EventBus.Subscribe<BossDamagedEvent>(OnBossDamaged);
     }
 
     private void UnregisterEventHandlers()
@@ -59,6 +61,8 @@ public sealed class VfxFeedback : IDisposable
         EventBus.Unsubscribe<BossDiedEvent>(OnBossDied);
         EventBus.Unsubscribe<BossDiveImpactEvent>(OnBossDiveImpact);
         EventBus.Unsubscribe<SuperArmorDeflectedEvent>(OnSuperArmorDeflected);
+        EventBus.Unsubscribe<PlayerDamagedEvent>(OnPlayerDamaged);
+        EventBus.Unsubscribe<BossDamagedEvent>(OnBossDamaged);
     }
 
     // --- イベントハンドラー ---
@@ -108,6 +112,9 @@ public sealed class VfxFeedback : IDisposable
     {
         if (_isDisposed || _world == default) return;
 
+        var camCfg = _world.Get<CameraConfig>();
+        CameraService.AddTrauma(camCfg.PlayerHeavyHitTrauma);
+
         var vfxCfg = _world.Get<VisualEffectsRenderConfig>();
         for (var i = 0; i < vfxCfg.PlayerDeathParticleCount; i++)
         {
@@ -125,6 +132,9 @@ public sealed class VfxFeedback : IDisposable
     private void OnBossDied(BossDiedEvent e)
     {
         if (_isDisposed || _world == default) return;
+
+        var camCfg = _world.Get<CameraConfig>();
+        CameraService.AddTrauma(camCfg.VictoryExplosionTrauma);
 
         var vfxCfg = _world.Get<VisualEffectsRenderConfig>();
         for (var i = 0; i < vfxCfg.VictoryExplosionCount; i++)
@@ -149,6 +159,27 @@ public sealed class VfxFeedback : IDisposable
            .Set(new Transform(e.Position))
            .Set(new RingEffect(vfxCfg.ShockwaveInitialRadius, vfxCfg.ShockwaveMaxRadius, vfxCfg.ShockwaveRingColor))
            .Set(new FadeEffect(vfxCfg.ShockwaveDuration));
+    }
+
+    private void OnPlayerDamaged(PlayerDamagedEvent e)
+    {
+        if (_isDisposed || _world == default) return;
+
+        var cameraCfg = _world.Get<CameraConfig>();
+        var trauma = e.IsHeavy ? cameraCfg.PlayerHeavyHitTrauma : cameraCfg.PlayerHitTrauma;
+        CameraService.AddTrauma(trauma);
+        CameraService.AddDirectionalImpulse(e.Knockback, cameraCfg.DirectionalImpulseRatio);
+    }
+
+    private void OnBossDamaged(BossDamagedEvent e)
+    {
+        if (_isDisposed || _world == default) return;
+
+        if (e.IsVulnerable)
+        {
+            var cameraCfg = _world.Get<CameraConfig>();
+            CameraService.AddTrauma(cameraCfg.BossVulnerableHitTrauma);
+        }
     }
 
     private void OnSuperArmorDeflected(SuperArmorDeflectedEvent e)

@@ -19,7 +19,20 @@ public readonly record struct PlayerMeleeSwungEvent(Vec2f Position, Vec2f Direct
 public readonly record struct PlayerDashedEvent;
 
 /// <summary>自機が被弾ダメージを受けたイベント</summary>
-public readonly record struct PlayerDamagedEvent;
+public readonly record struct PlayerDamagedEvent(
+    float Damage = 0.0f,
+    Vec2f Knockback = default,
+    bool IsHeavy = false);
+
+/// <summary>自機が敵対ユニットにダメージを与えたイベント</summary>
+public readonly record struct PlayerDealtDamageEvent(float FinalDamage);
+
+/// <summary>敵対ユニット（Boss・雑魚敵・ダミー）が被弾または撃破されたイベント（ピンチ救済ドロップ判定用）</summary>
+public readonly record struct EnemyDamagedEvent(
+    Vec2f Position,
+    float CurrentHp,
+    float MaxHp,
+    float FinalDamage);
 
 /// <summary>自機が死亡したイベント</summary>
 public readonly record struct PlayerDiedEvent(Vec2f Position = default);
