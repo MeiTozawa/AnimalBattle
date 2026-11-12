@@ -19,13 +19,3 @@ ImpactSplatterMinSpeed = 80.0
 ImpactSplatterMaxSpeed = 220.0
 ImpactSplatterParticleRadius = 2.5
 ImpactSplatterDuration = 0.15
-
-# --- 特殊能力：巨大エネルギー弾 (Special Ability: Giant Energy Orb) ---
-SpecialAbilityCooldown = 0.3
-SpecialOrbDamagePerSecond = 20.0
-SpecialOrbTickInterval = 0.1
-SpecialOrbSpeed = 240.0
-SpecialOrbRadius = 80.0
-SpecialOrbLifetime = 4.5
-SpecialOrbFillColor = "#F000FFFF"
-SpecialOrbOutlineColor = "#80FFFF"

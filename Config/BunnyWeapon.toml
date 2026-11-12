@@ -7,17 +7,3 @@ Size = { x = 100.0, y = 100.0 }
 Duration = 0.15
 LungeImpulse = 180.0
 StretchScale = { x = 1.15, y = 0.88 }
-
-# --- 特殊能力：全画面斬撃 (Special Ability: Screen Cleave) ---
-SpecialAbilityCooldown = 0.3
-SpecialCleaveDamage = 20.0
-SpecialCleaveTickInterval = 0.08
-SpecialCleaveInvincibleDuration = 0.4
-SpecialCleaveTrauma = 0.6
-SpecialCleaveSlashCount = 160
-SpecialCleaveDuration = 0.8
-SpecialCleaveSlashLifetime = 0.22
-SpecialCleaveSlashScaleMin = 1.6
-SpecialCleaveSlashScaleMax = 2.8
-SpecialCleaveSlashSpeed = 240.0
-SpecialCleaveSlashColor = "#FFF090"

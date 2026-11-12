@@ -1,0 +1,13 @@
+# Bunny 全画面斬撃特殊能力設定
+Cooldown = 0.3
+TotalDamage = 20.0
+TickInterval = 0.08
+InvincibleDuration = 0.4
+CameraTrauma = 0.6
+SlashCount = 160
+TotalDuration = 0.8
+SlashLifetime = 0.22
+SlashScaleMin = 1.6
+SlashScaleMax = 2.8
+SlashSpeed = 240.0
+SlashColor = "#FFF090"

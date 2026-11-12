@@ -1,0 +1,9 @@
+# Cat 巨型エネルギー弾特殊能力設定
+Cooldown = 0.3
+DamagePerSecond = 20.0
+TickInterval = 0.1
+Speed = 240.0
+Radius = 80.0
+Lifetime = 4.5
+FillColor = "#F000FFFF"
+OutlineColor = "#80FFFF"

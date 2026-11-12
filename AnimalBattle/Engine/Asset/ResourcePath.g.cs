@@ -184,6 +184,9 @@ public static class ResourcePath
         /// <summary>dummy.toml 設定ファイル名。</summary>
         public const string Dummy = "dummy.toml";
 
+        /// <summary>GiantOrb.toml 設定ファイル名。</summary>
+        public const string Giantorb = "GiantOrb.toml";
+
         /// <summary>items.render.toml 設定ファイル名。</summary>
         public const string ItemsRender = "items.render.toml";
 
@@ -195,6 +198,9 @@ public static class ResourcePath
 
         /// <summary>player.render.toml 設定ファイル名。</summary>
         public const string PlayerRender = "player.render.toml";
+
+        /// <summary>ScreenCleave.toml 設定ファイル名。</summary>
+        public const string Screencleave = "ScreenCleave.toml";
 
         /// <summary>sheet.toml 設定ファイル名。</summary>
         public const string Sheet = "sheet.toml";

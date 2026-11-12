@@ -14,6 +14,7 @@ HurtboxOffset = { x = 0.0, y = 12.0 }
 Scale = { x = 1.8, y = 1.8 }
 Spawn = { x = 640.0, y = 500.0 }
 Weapon = "BunnyWeapon"
+SpecialAbility = "ScreenCleave"
 
 # --- スカッシュ＆ストレッチ（二階減衰振動スプリング）設定 ---
 SpringFrequency = 18.0
