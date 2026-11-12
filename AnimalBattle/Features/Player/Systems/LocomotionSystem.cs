@@ -1,6 +1,7 @@
 namespace AnimalBattle.Player.Systems;
 
 using System;
+using AnimalBattle.Core;
 using AnimalBattle.Player.Components;
 
 /// <summary>
@@ -13,10 +14,11 @@ public static class LocomotionSystem
     /// </summary>
     public static World AddLocomotionSystem(this World world)
     {
-        world.System<Velocity, CollisionBox, MovementIntent, LocomotionCapability, JumpCapability, DashState>("LocomotionSystem")
+        world.System<Velocity, CollisionBox, MovementIntent, LocomotionCapability, JumpCapability>("LocomotionSystem")
             .Kind(Ecs.OnUpdate)
             .Without<DeadTag>()
             .Without<HitstopState>()
+            .Without<DashingTag>()
             .Iter(ExecuteLocomotion);
 
         return world;
@@ -28,8 +30,7 @@ public static class LocomotionSystem
         Field<CollisionBox> collisionBoxes,
         Field<MovementIntent> intents,
         Field<LocomotionCapability> locos,
-        Field<JumpCapability> jumps,
-        Field<DashState> dashStates)
+        Field<JumpCapability> jumps)
     {
         var count = it.Count();
         if (count == 0) return;
@@ -38,9 +39,6 @@ public static class LocomotionSystem
 
         for (var i = 0; i < count; i++)
         {
-            ref readonly var dash = ref dashStates[i];
-            if (dash.IsDashing) continue; // ダッシュ中は通常の加減速および重力更新をスキップ
-
             ref var vel = ref velocities[i];
             ref readonly var col = ref collisionBoxes[i];
             ref readonly var intent = ref intents[i];
@@ -102,6 +100,7 @@ public static class LocomotionSystem
             }
 
             PhysicsService.ApplyGravity(ref currentVy, effectiveGravity, loco.MaxFallSpeed, dt);
+
             vel.Value = new Vec2f(currentVx, currentVy);
         }
     }

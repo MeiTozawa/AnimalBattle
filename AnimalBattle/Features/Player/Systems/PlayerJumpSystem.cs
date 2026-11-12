@@ -14,10 +14,11 @@ public static class PlayerJumpSystem
     /// </summary>
     public static World AddPlayerJumpSystem(this World world)
     {
-        world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability, DashState, SpringScale>("PlayerJumpSystem")
+        world.System<Transform, Velocity, CollisionBox, MovementIntent, JumpCapability, SpringScale>("PlayerJumpSystem")
             .Kind(Ecs.OnUpdate)
             .Without<DeadTag>()
             .Without<HitstopState>()
+            .Without<DashingTag>()
             .Iter(ExecutePlayerJump);
 
         return world;
@@ -30,7 +31,6 @@ public static class PlayerJumpSystem
         Field<CollisionBox> collisionBoxes,
         Field<MovementIntent> intents,
         Field<JumpCapability> jumps,
-        Field<DashState> dashStates,
         Field<SpringScale> springs)
     {
         var count = it.Count();
@@ -40,9 +40,6 @@ public static class PlayerJumpSystem
 
         for (var i = 0; i < count; i++)
         {
-            ref readonly var dash = ref dashStates[i];
-            if (dash.IsDashing) continue; // ダッシュ中はジャンプ不可
-
             ref readonly var trans = ref transforms[i];
             ref var vel = ref velocities[i];
             ref var col = ref collisionBoxes[i];

@@ -73,6 +73,7 @@ public static class PlayerDashSystem
                 dash.Timer = cap.Duration;
                 dash.Cooldown = cap.Cooldown;
                 dash.GhostTrailTimer = 0.0f;
+                entity.Add<DashingTag>();
 
                 // 突進方向決定：入力優先、未入力時は向いている方向
                 if (MathF.Abs(intent.MoveX) > 0.01f)
@@ -102,6 +103,11 @@ public static class PlayerDashSystem
                 dash.Timer = MathF.Max(0.0f, dash.Timer - dt);
                 vel.Value = new Vec2f(dash.DirectionX * cap.Speed, 0.0f);
                 vel.Knockback = Vec2f.Zero;
+
+                if (!dash.IsDashing)
+                {
+                    entity.Remove<DashingTag>();
+                }
             }
         }
     }
