@@ -1,17 +1,21 @@
-using AnimalBattle.Logging;
 namespace AnimalBattle.Configs;
 
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using AnimalBattle.Logging;
 using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
 
 /// <summary>
-/// <see cref="IConfigRegistry"/> の標準実装。
-/// 各機能ドメインが自身のコンフィグを登録し、型安全に取得・管理するための汎用コンテナ。
+///     <see cref="IConfigRegistry"/> の標準実装。
+///     各機能ドメインが自身のコンフィグを登録し、型安全に取得・管理するための汎用コンテナ。
 /// </summary>
 public sealed class ConfigRegistry : IConfigRegistry
 {
-    private readonly Dictionary<Type, IConfigHolder> _holders = new();
+    private readonly Dictionary<string, IConfigHolder> _holdersByPath = new();
+    private readonly Dictionary<Type, IConfigHolder> _typeHolders = new();
+    private readonly List<IConfigHolder> _injectableHolders = new();
     private readonly List<IDisposable> _loaders = new();
     private bool _isDisposed;
 
@@ -19,10 +23,10 @@ public sealed class ConfigRegistry : IConfigRegistry
     public ConfigHolder<T> RegisterToml<T>(
         string relativePath,
         Action<IConfiguration, T> binder,
-        Action<World, T>? onReloaded = null) where T : class, new()
+        Action<World, T>? onReloaded = null,
+        bool injectToWorld = true) where T : class, new()
     {
-        var type = typeof(T);
-        if (_holders.TryGetValue(type, out var existing))
+        if (_holdersByPath.TryGetValue(relativePath, out var existing))
         {
             return (ConfigHolder<T>)existing;
         }
@@ -40,15 +44,22 @@ public sealed class ConfigRegistry : IConfigRegistry
             Debug.Fail($"設定の読み込みに失敗しました ({relativePath}): {initial.FirstError.Description}");
         }
 
-        _holders[type] = holder;
+        _holdersByPath[relativePath] = holder;
         _loaders.Add(loader);
+
+        if (injectToWorld)
+        {
+            _typeHolders[typeof(T)] = holder;
+            _injectableHolders.Add(holder);
+        }
+
         return holder;
     }
 
     /// <inheritdoc />
     public ConfigHolder<T> GetHolder<T>() where T : class
     {
-        if (_holders.TryGetValue(typeof(T), out var holder))
+        if (_typeHolders.TryGetValue(typeof(T), out var holder))
         {
             return (ConfigHolder<T>)holder;
         }
@@ -60,13 +71,13 @@ public sealed class ConfigRegistry : IConfigRegistry
     public T Get<T>() where T : class => GetHolder<T>().Value;
 
     /// <inheritdoc />
-    public bool Contains<T>() where T : class => _holders.ContainsKey(typeof(T));
+    public bool Contains<T>() where T : class => _typeHolders.ContainsKey(typeof(T));
 
     /// <inheritdoc />
     public void InjectAllToWorld(World world)
     {
         Debug.Assert(world != null, "有効な Flecs ワールドが必要です。");
-        foreach (var holder in _holders.Values)
+        foreach (var holder in _injectableHolders)
         {
             holder.InjectToWorld(world);
         }
@@ -84,10 +95,12 @@ public sealed class ConfigRegistry : IConfigRegistry
         }
         _loaders.Clear();
 
-        foreach (var holder in _holders.Values)
+        foreach (var holder in _holdersByPath.Values)
         {
             holder.Dispose();
         }
-        _holders.Clear();
+        _holdersByPath.Clear();
+        _typeHolders.Clear();
+        _injectableHolders.Clear();
     }
 }
