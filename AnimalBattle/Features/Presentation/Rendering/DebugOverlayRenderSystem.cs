@@ -122,7 +122,7 @@ public static class DebugOverlayRenderSystem
             }
         }
 
-        // デバッグ操作案内：Boss切替、キャラ切替、フェーズ切替：画面固定
+        // デバッグ操作案内：Boss切替、キャラ切替、フェーズ切替、怪生成・デバッグ機能：画面固定
         var guideY = hudCfg.PlayerHpPos.Y + dbgCfg.GuideOffsetY;
         var lineIndex = 0;
         if (!string.IsNullOrEmpty(hudCfg.BossSwitchGuideText))
@@ -136,6 +136,10 @@ public static class DebugOverlayRenderSystem
         if (!string.IsNullOrEmpty(dbgCfg.PhaseSwitchGuideText))
         {
             GameEngine.DrawLeftString(new Vec2i(hudCfg.TitlePos.X, guideY + hudCfg.LineSpacing * lineIndex++), dbgCfg.PhaseSwitchGuideText, dbgCfg.PhaseSwitchGuideColor);
+        }
+        if (!string.IsNullOrEmpty(dbgCfg.SpawnGuideText))
+        {
+            GameEngine.DrawLeftString(new Vec2i(hudCfg.TitlePos.X, guideY + hudCfg.LineSpacing * lineIndex++), dbgCfg.SpawnGuideText, dbgCfg.SpawnGuideColor);
         }
 
         // Boss ステートマシン詳細バッジとスキルタイマー：Boss HP バー上部・画面固定

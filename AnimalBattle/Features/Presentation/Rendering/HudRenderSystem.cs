@@ -482,8 +482,14 @@ public static class HudRenderSystem {
     /// </summary>
     private static void DrawTrainingModeBanner(HudRenderConfig hudCfg)
     {
-        GameEngine.DrawLeftString(new Vec2i(460, 20), "[DEBUG TRAINING MODE - DUMMY TARGET]", hudCfg.TrainingModeTitleColor);
-        GameEngine.DrawLeftString(new Vec2i(460, 38), "1: BossSnake | 2: BossLion | 3/4: Character | F5: Reload", hudCfg.TrainingModeGuideColor);
+        if (!string.IsNullOrEmpty(hudCfg.TrainingModeTitleText))
+        {
+            GameEngine.DrawLeftString(hudCfg.TrainingModeTitlePos, hudCfg.TrainingModeTitleText, hudCfg.TrainingModeTitleColor);
+        }
+        if (!string.IsNullOrEmpty(hudCfg.TrainingModeGuideText))
+        {
+            GameEngine.DrawLeftString(hudCfg.TrainingModeGuidePos, hudCfg.TrainingModeGuideText, hudCfg.TrainingModeGuideColor);
+        }
     }
 
     /// <summary>

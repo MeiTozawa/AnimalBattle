@@ -121,7 +121,7 @@ public static class BattleInputSystem
             ResetCombat(w, ctx);
         }
 
-        // デバッグ入力：F1 トグル、F2〜F4 フェーズ切替、F5 空シーン切替の処理
+        // デバッグ入力：F1 トグル、F2〜F4 フェーズ切替、F5 空シーン切替、F6〜F7 雑魚召喚、F8 無敵、F9 エネルギー付与の処理
         var dbgCfg = w.Get<DebugRenderConfig>();
         if (dbgCfg.DebugMode)
         {

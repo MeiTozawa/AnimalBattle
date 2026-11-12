@@ -140,6 +140,22 @@ public sealed class DebugRenderConfig
     /// <summary>デバッグフェーズ切替操作案内文字色 <see cref="Color" /></summary>
     public Color PhaseSwitchGuideColor => _phaseSwitchGuideColor;
 
+    /// <summary>デバッグ怪生成・機能操作案内テキスト</summary>
+    public string SpawnGuideText { get; set; } = string.Empty;
+
+    private Color _spawnGuideColor;
+
+    /// <summary>デバッグ怪生成・機能操作案内文字色 Hex 文字列</summary>
+    [ConfigurationKeyName("SpawnGuideColor")]
+    public string SpawnGuideColorHex
+    {
+        get => string.Empty;
+        set { _spawnGuideColor = value.ToColor(); }
+    }
+
+    /// <summary>デバッグ怪生成・機能操作案内文字色 <see cref="Color" /></summary>
+    public Color SpawnGuideColor => _spawnGuideColor.A != 0 ? _spawnGuideColor : _phaseSwitchGuideColor;
+
     /// <summary>デバッグ操作案内表示 Y オフセット ピクセル単位</summary>
     public int GuideOffsetY { get; set; }
 

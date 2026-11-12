@@ -26,7 +26,11 @@ BossSwitchGuideColor = "#FFF275"
 
 CharacterSwitchGuideText = "[3] Cat (Ranged)   [4] Bunny (Melee)"
 CharacterSwitchGuideColor = "#80FFA0"
+TrainingModeTitlePos = { x = 460, y = 20 }
+TrainingModeTitleText = "[DEBUG TRAINING MODE - DUMMY TARGET]"
 TrainingModeTitleColor = "#FFF275"
+TrainingModeGuidePos = { x = 460, y = 38 }
+TrainingModeGuideText = ""
 TrainingModeGuideColor = "#CCCCCC"
 
 DoubleJumpPos = { x = 20, y = 168 }

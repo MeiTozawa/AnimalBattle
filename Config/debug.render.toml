@@ -9,8 +9,10 @@ Enabled = false
 IndicatorPos = { x = 950, y = 16 }
 IndicatorText = "[DEBUG MODE ACTIVE - F1 to toggle]"
 IndicatorColor = "#FFD700"
-PhaseSwitchGuideText = "[F2] Phase 1   [F3] Phase 2   [F4] Phase 3   [F8] Invincible   [F9] +1 Energy"
+PhaseSwitchGuideText = "[F2] Phase 1   [F3] Phase 2   [F4] Phase 3   [F5] Empty Arena"
 PhaseSwitchGuideColor = "#FFD700"
+SpawnGuideText = "[F6] Ground Minion   [F7] Flying Minion   [F8] Invincible   [F9] +1 Energy"
+SpawnGuideColor = "#FFD700"
 GuideOffsetY = 24
 PlayerTerrainBoxColor = "#00FF88"
 PlayerHurtboxColor = "#FF0033"

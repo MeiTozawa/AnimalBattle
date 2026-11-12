@@ -137,6 +137,12 @@ public sealed class HudRenderConfig
     /// <summary>プレイヤー HP 表示座標</summary>
     public Vec2i PlayerHpPos { get; set; }
 
+    /// <summary>トレーニングモード案内タイトル表示座標</summary>
+    public Vec2i TrainingModeTitlePos { get; set; } = new(460, 20);
+
+    /// <summary>トレーニングモード案内タイトルテキスト</summary>
+    public string TrainingModeTitleText { get; set; } = string.Empty;
+
     private Color _trainingModeTitleColor;
 
     /// <summary>トレーニングモード案内タイトル色 Hex 文字列</summary>
@@ -149,6 +155,12 @@ public sealed class HudRenderConfig
 
     /// <summary>トレーニングモード案内タイトル色 <see cref="Color" /></summary>
     public Color TrainingModeTitleColor => _trainingModeTitleColor;
+
+    /// <summary>トレーニングモード案内ガイド表示座標</summary>
+    public Vec2i TrainingModeGuidePos { get; set; } = new(460, 38);
+
+    /// <summary>トレーニングモード案内ガイドテキスト</summary>
+    public string TrainingModeGuideText { get; set; } = string.Empty;
 
     private Color _trainingModeGuideColor;
 
