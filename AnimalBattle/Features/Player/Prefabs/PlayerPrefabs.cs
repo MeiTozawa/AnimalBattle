@@ -16,6 +16,8 @@ public static class PlayerPrefabs
 
     private static bool _catHasDash;
     private static bool _bunnyHasDash;
+    private static string _catWeapon = string.Empty;
+    private static string _bunnyWeapon = string.Empty;
 
     /// <summary>
     ///     プレイヤー共通基底および各キャラクターの Prefab プレハブを設定から登録・構築します。
@@ -52,6 +54,7 @@ public static class PlayerPrefabs
     public static void ConfigureCat(PlayerConfig cfg, World world)
     {
         _catHasDash = cfg.Dash != null;
+        _catWeapon = cfg.Weapon;
         ConfigurePlayerPrefab(CatPlayer, cfg, world);
     }
 
@@ -61,6 +64,7 @@ public static class PlayerPrefabs
     public static void ConfigureBunny(PlayerConfig cfg, World world)
     {
         _bunnyHasDash = cfg.Dash != null;
+        _bunnyWeapon = cfg.Weapon;
         ConfigurePlayerPrefab(BunnyPlayer, cfg, world);
     }
 
@@ -97,24 +101,8 @@ public static class PlayerPrefabs
             prefab.Remove<DashCapability>().Remove<DashState>();
         }
 
-        AttachConfiguredWeapon(prefab, world, cfg.Weapon);
+        WeaponPrefabs.Attach(prefab, cfg.Weapon);
         SpecialAbilityPrefabs.Attach(prefab, cfg.SpecialAbility);
-    }
-
-    /// <summary>
-    ///     指定された武器設定を Prefab にアタッチします。
-    /// </summary>
-    private static void AttachConfiguredWeapon(Entity prefab, World world, string weaponName)
-    {
-        var weaponCfg = world.GetWeaponConfig(weaponName);
-        if (weaponCfg is RangedWeaponConfig rangedCfg)
-        {
-            prefab.Set(RangedWeaponComponent.FromConfig(rangedCfg));
-        }
-        else if (weaponCfg is MeleeWeaponConfig meleeCfg)
-        {
-            prefab.Set(MeleeWeaponComponent.FromConfig(meleeCfg));
-        }
     }
 
     /// <summary>
@@ -145,14 +133,8 @@ public static class PlayerPrefabs
             .Set(new Sprite(playerHandle, false, true, new Rect(0, 0, 32, 32)))
             .Set(new CharacterTypeComponent(playerType));
 
-        if (playerType == CharacterType.Bunny)
-        {
-            var melee = world.Entity("PlayerSlashHitbox")
-                .ChildOf(playerEntity)
-                .IsA(CombatPrefabs.PlayerSlashHitbox);
-            melee.Disable();
-            playerEntity.Add<EquippedWeapon>(melee);
-        }
+        var weaponName = playerType == CharacterType.Cat ? _catWeapon : _bunnyWeapon;
+        WeaponPrefabs.SetupInstance(world, playerEntity, weaponName);
 
         return playerEntity;
     }

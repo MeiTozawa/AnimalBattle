@@ -65,14 +65,6 @@ public class RangedWeaponConfig : IWeaponConfig
 }
 
 /// <summary>
-///     Cat 固有遠距離武器設定。
-///     CatWeapon.toml からバインドされ、ワールド単例として管理されます。
-/// </summary>
-public sealed class CatWeaponConfig : RangedWeaponConfig
-{
-}
-
-/// <summary>
 ///     近接判定展開武器の物理および数値設定基底クラス。
 /// </summary>
 public class MeleeWeaponConfig : IWeaponConfig
@@ -100,12 +92,4 @@ public class MeleeWeaponConfig : IWeaponConfig
 
     /// <summary>攻撃時変形ストレッチ率</summary>
     public Vec2f StretchScale { get; set; }
-}
-
-/// <summary>
-///     Bunny 固有近接武器設定。
-///     BunnyWeapon.toml からバインドされ、ワールド単例として管理されます。
-/// </summary>
-public sealed class BunnyWeaponConfig : MeleeWeaponConfig
-{
 }

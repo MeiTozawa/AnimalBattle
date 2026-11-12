@@ -6,47 +6,29 @@ namespace AnimalBattle.Player;
 public static class PlayerConfigSync
 {
     /// <summary>
-    ///     Cat遠距離武器設定の変更をプレハブおよび生存エンティティへ反映します。
+    ///     Cat遠距離武器設定の変更をプレハブへ反映します。
     /// </summary>
-    public static void SyncCatWeapon(World world, CatWeaponConfig newConfig)
+    public static void SyncCatWeapon(World world, RangedWeaponConfig newConfig)
     {
         world.Set(newConfig);
 
-        if (PlayerPrefabs.CatPlayer.IsAlive())
+        if (WeaponPrefabs.CatWeapon.IsAlive())
         {
-            PlayerPrefabs.CatPlayer.Set(RangedWeaponComponent.FromConfig(newConfig));
+            WeaponPrefabs.CatWeapon.Set(RangedWeaponComponent.FromConfig(newConfig));
         }
-
-        ref readonly var flow = ref world.Get<GameFlow>();
-        if (flow.SelectedPlayer != CharacterType.Cat) return;
-
-        using var q = world.QueryBuilder().With<PlayerTag>().With<RangedWeaponComponent>().Build();
-        q.Each(e => {
-            ref var weapon = ref e.GetMut<RangedWeaponComponent>();
-            weapon = RangedWeaponComponent.FromConfig(newConfig, weapon.Timer);
-        });
     }
 
     /// <summary>
-    ///     Bunny近接武器設定の変更をプレハブおよび生存エンティティへ反映します。
+    ///     Bunny近接武器設定の変更をプレハブへ反映します。
     /// </summary>
-    public static void SyncBunnyWeapon(World world, BunnyWeaponConfig newConfig)
+    public static void SyncBunnyWeapon(World world, MeleeWeaponConfig newConfig)
     {
         world.Set(newConfig);
 
-        if (PlayerPrefabs.BunnyPlayer.IsAlive())
+        if (WeaponPrefabs.BunnyWeapon.IsAlive())
         {
-            PlayerPrefabs.BunnyPlayer.Set(MeleeWeaponComponent.FromConfig(newConfig));
+            WeaponPrefabs.BunnyWeapon.Set(MeleeWeaponComponent.FromConfig(newConfig));
         }
-
-        ref readonly var flow = ref world.Get<GameFlow>();
-        if (flow.SelectedPlayer != CharacterType.Bunny) return;
-
-        using var q = world.QueryBuilder().With<PlayerTag>().With<MeleeWeaponComponent>().Build();
-        q.Each(e => {
-            ref var weapon = ref e.GetMut<MeleeWeaponComponent>();
-            weapon = MeleeWeaponComponent.FromConfig(newConfig, weapon.Timer);
-        });
     }
 
     /// <summary>
@@ -189,6 +171,12 @@ public static class PlayerConfigSync
         ref var profile = ref e.GetMut<CombatProfile>();
         profile.HitSquashScale = newConfig.HitSquashScale;
         profile.InvincibleDuration = newConfig.InvincibleDuration;
+
+        // 武器設定の更新
+        if (!string.IsNullOrEmpty(newConfig.Weapon))
+        {
+            WeaponPrefabs.Attach(e, newConfig.Weapon);
+        }
 
         // 特殊能力設定の更新
         if (!string.IsNullOrEmpty(newConfig.SpecialAbility))

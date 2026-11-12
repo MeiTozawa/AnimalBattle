@@ -25,11 +25,12 @@ public static class GameConfigRegistrar
         var orbHolder = registry.RegisterToml<GiantOrbAbilityConfig>(ResourcePath.Config.Giantorb, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncGiantOrb(w, cfg));
         var cleaveHolder = registry.RegisterToml<ScreenCleaveAbilityConfig>(ResourcePath.Config.Screencleave, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncScreenCleave(w, cfg));
 
-        SpecialAbilityPrefabs.Register(world, orbHolder.Value, cleaveHolder.Value);
-        PlayerPrefabs.Register(world, catHolder.Value, bunnyHolder.Value);
+        var catWeaponHolder = registry.RegisterToml<RangedWeaponConfig>(ResourcePath.Config.Catweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncCatWeapon(w, cfg));
+        var bunnyWeaponHolder = registry.RegisterToml<MeleeWeaponConfig>(ResourcePath.Config.Bunnyweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncBunnyWeapon(w, cfg));
 
-        registry.RegisterToml<CatWeaponConfig>(ResourcePath.Config.Catweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncCatWeapon(w, cfg));
-        registry.RegisterToml<BunnyWeaponConfig>(ResourcePath.Config.Bunnyweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncBunnyWeapon(w, cfg));
+        SpecialAbilityPrefabs.Register(world, orbHolder.Value, cleaveHolder.Value);
+        WeaponPrefabs.Register(world, catWeaponHolder.Value, bunnyWeaponHolder.Value);
+        PlayerPrefabs.Register(world, catHolder.Value, bunnyHolder.Value);
         registry.RegisterToml<BossSnakeConfig>(ResourcePath.Config.BossSnake, (root, cfg) => root.Bind(cfg), (w, cfg) => Bosses.Sync.BossConfigSync.SyncBossSnake(w, cfg));
         registry.RegisterToml<BossLionConfig>(ResourcePath.Config.BossLion, (root, cfg) => root.Bind(cfg), (w, cfg) => Bosses.Sync.BossConfigSync.SyncBossLion(w, cfg));
         registry.RegisterToml<BossSnakePatternConfig>(ResourcePath.Config.BossSnakePatterns, (root, cfg) => { root.Bind(cfg.Skills); cfg.PostProcess(); }, (w, cfg) => Bosses.Sync.BossConfigSync.SyncBossSnakePattern(w, cfg));
