@@ -1,15 +1,13 @@
 namespace AnimalBattle.Player;
 
 /// <summary>
-///     自機の Prefab 登録および入力・武器・移動システムを一括登録する Flecs モジュール。
+///     自機の入力・武器・移動システムを一括登録する Flecs モジュール。
 /// </summary>
 public readonly struct PlayerModule : IFlecsModule
 {
     public void InitModule(World world)
     {
         world.Module<PlayerModule>();
-
-        PlayerPrefabs.Register(world);
 
         world.AddPlayerInputSystem()               // 1. 入力意図取得
              .AddPlayerSpecialAbilitySystem()      // 2. 特殊能力発動制御

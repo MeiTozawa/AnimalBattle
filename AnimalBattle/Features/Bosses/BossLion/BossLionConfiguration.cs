@@ -123,8 +123,8 @@ public sealed class BossLionDefaultConfiguration : IBossLionConfiguration {
     private void EnsureCached()
     {
         var toml = _world.Get<BossLionConfig>();
-        var playerConfig = _world.GetActivePlayerConfig();
-        var playerHeight = playerConfig?.CollisionSize.Y ?? 0.0f;
+        ref readonly var flow = ref _world.Get<GameFlow>();
+        var playerHeight = PlayerPrefabs.GetPrefab(flow.SelectedPlayer).Get<CollisionBox>().Size.Y;
 
         if (ReferenceEquals(_cachedConfig, toml) && MathF.Abs(_cachedPlayerHeight - playerHeight) < 0.001f)
         {

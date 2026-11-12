@@ -79,8 +79,7 @@ public static class BossTelegraphRenderSystem
         var b = boss.Value;
         if (!b.Sprite.IsVisible || b.Sprite.GraphHandle < 0) return;
 
-        var playerCfg = w.GetActivePlayerConfig();
-        ctx.CachedPlayerPos = playerCfg.Spawn;
+        ctx.CachedPlayerPos = Vec2f.Zero;
         ctx.PlayerQuery.Iter(CollectPlayer);
 
         var playerPos = ctx.CachedPlayerPos;

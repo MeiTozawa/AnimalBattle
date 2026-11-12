@@ -1,14 +1,8 @@
 namespace AnimalBattle.Player;
 
-using System.Diagnostics;
-using AnimalBattle.Configs;
-using AnimalBattle.Player.Components;
-using AnimalBattle.Presentation.Animation.Components;
-using AnimalBattle.Presentation.Rendering.Components;
-using AnimalBattle.Presentation.Vfx.Components;
-
 /// <summary>
 ///     プレイヤー自機：Cat & Bunnyの Prefab プレハブ登録およびインスタンス化。
+///     設定ファイルから生成されたコンポーネント群を保持し、純粋な ECS プレハブとして機能します。
 /// </summary>
 public static class PlayerPrefabs
 {
@@ -20,11 +14,21 @@ public static class PlayerPrefabs
     public static Entity CatPlayer { get; private set; }
     public static Entity BunnyPlayer { get; private set; }
 
+    private static bool _catHasDash;
+    private static bool _bunnyHasDash;
+
     /// <summary>
-    ///     プレイヤー共通基底および各キャラクターの Prefab プレハブを登録します。
+    ///     プレイヤー共通基底および各キャラクターの Prefab プレハブを設定から登録・構築します。
     /// </summary>
-    public static void Register(World world)
+    /// <param name="world">対象の Flecs.NET ワールド。</param>
+    /// <param name="catCfg">Cat のプレイヤー設定。</param>
+    /// <param name="bunnyCfg">Bunny のプレイヤー設定。</param>
+    public static void Register(World world, PlayerConfig catCfg, PlayerConfig bunnyCfg)
     {
+        Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
+        Debug.Assert(catCfg != null, "Cat の設定は null にできません。");
+        Debug.Assert(bunnyCfg != null, "Bunny の設定は null にできません。");
+
         // プレイヤー共通基底
         PlayerBase = world.Prefab(PlayerBaseName)
             .IsA(CommonPrefabs.BaseCharacter)
@@ -34,68 +38,70 @@ public static class PlayerPrefabs
             .Set(new SpecialAbilityIntent());
 
         // --- Cat プレイヤー ---
-        var catCfg = world.Get<CatConfig>();
-        Debug.Assert(catCfg != null, "CatConfig はワールドに登録されている必要があります。");
-
-        CatPlayer = world.Prefab(CatPlayerName)
-            .IsA(PlayerBase)
-            .Set(new Health(catCfg.MaxHp))
-            .Set(CombatProfile.ForPlayer(catCfg.InvincibleDuration, catCfg.HitSquashScale))
-            .Set(new HitFlashSettings(catCfg.HitFlashDuration))
-            .Set(new CollisionBox(catCfg.CollisionSize))
-            .Set(new Hurtbox(catCfg.GetHurtboxShape(), Faction.Friendly))
-            .Set(new Transform(Vec2f.Zero, catCfg.Scale))
-            .Set(new SpringScale(Vec2f.One, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
-            .Set(LocomotionCapability.FromConfig(catCfg.Movement))
-            .Set(JumpCapability.FromConfig(catCfg.Jump))
-            .Set(new EnergyGauge
-            {
-                CurrentEnergy = 0.0f,
-                MaxEnergy = catCfg.EnergyMaxSegments * catCfg.EnergySegmentCapacity,
-                SegmentCapacity = catCfg.EnergySegmentCapacity,
-                CooldownTimer = 0.0f,
-                EnergyPerDamageDealt = catCfg.EnergyPerDamageDealt,
-                EnergyPerDamageTaken = catCfg.EnergyPerDamageTaken
-            });
-        if (catCfg.Dash != null)
-        {
-            CatPlayer.Set(DashCapability.FromConfig(catCfg.Dash)).Set(new DashState());
-        }
-        AttachConfiguredWeapon(CatPlayer, world, catCfg.Weapon);
+        CatPlayer = world.Prefab(CatPlayerName).IsA(PlayerBase);
+        ConfigureCat(catCfg, world);
 
         // --- Bunny プレイヤー ---
-        var bunnyCfg = world.Get<BunnyConfig>();
-        Debug.Assert(bunnyCfg != null, "BunnyConfig はワールドに登録されている必要があります。");
-
-        BunnyPlayer = world.Prefab(BunnyPlayerName)
-            .IsA(PlayerBase)
-            .Set(new Health(bunnyCfg.MaxHp))
-            .Set(CombatProfile.ForPlayer(bunnyCfg.InvincibleDuration, bunnyCfg.HitSquashScale))
-            .Set(new HitFlashSettings(bunnyCfg.HitFlashDuration))
-            .Set(new CollisionBox(bunnyCfg.CollisionSize))
-            .Set(new Hurtbox(bunnyCfg.GetHurtboxShape(), Faction.Friendly))
-            .Set(new Transform(Vec2f.Zero, bunnyCfg.Scale))
-            .Set(new SpringScale(Vec2f.One, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
-            .Set(LocomotionCapability.FromConfig(bunnyCfg.Movement))
-            .Set(JumpCapability.FromConfig(bunnyCfg.Jump))
-            .Set(new EnergyGauge
-            {
-                CurrentEnergy = 0.0f,
-                MaxEnergy = bunnyCfg.EnergyMaxSegments * bunnyCfg.EnergySegmentCapacity,
-                SegmentCapacity = bunnyCfg.EnergySegmentCapacity,
-                CooldownTimer = 0.0f,
-                EnergyPerDamageDealt = bunnyCfg.EnergyPerDamageDealt,
-                EnergyPerDamageTaken = bunnyCfg.EnergyPerDamageTaken
-            });
-        if (bunnyCfg.Dash != null)
-        {
-            BunnyPlayer.Set(DashCapability.FromConfig(bunnyCfg.Dash)).Set(new DashState());
-        }
-        AttachConfiguredWeapon(BunnyPlayer, world, bunnyCfg.Weapon);
+        BunnyPlayer = world.Prefab(BunnyPlayerName).IsA(PlayerBase);
+        ConfigureBunny(bunnyCfg, world);
     }
 
     /// <summary>
-    ///     指定された CharacterType の Prefab プレハブを取得します。
+    ///     Cat プレハブに設定パラメータを適用・更新します。
+    /// </summary>
+    public static void ConfigureCat(PlayerConfig cfg, World world)
+    {
+        _catHasDash = cfg.Dash != null;
+        ConfigurePlayerPrefab(CatPlayer, cfg, world);
+    }
+
+    /// <summary>
+    ///     Bunny プレハブに設定パラメータを適用・更新します。
+    /// </summary>
+    public static void ConfigureBunny(PlayerConfig cfg, World world)
+    {
+        _bunnyHasDash = cfg.Dash != null;
+        ConfigurePlayerPrefab(BunnyPlayer, cfg, world);
+    }
+
+    /// <summary>
+    ///     指定されたプレイヤー Prefab に設定パラメータをコンポーネントとして適用・更新します。
+    /// </summary>
+    private static void ConfigurePlayerPrefab(Entity prefab, PlayerConfig cfg, World world)
+    {
+        prefab.Set(new Health(cfg.MaxHp))
+            .Set(CombatProfile.ForPlayer(cfg.InvincibleDuration, cfg.HitSquashScale))
+            .Set(new HitFlashSettings(cfg.HitFlashDuration))
+            .Set(new CollisionBox(cfg.CollisionSize))
+            .Set(new Hurtbox(cfg.GetHurtboxShape(), Faction.Friendly))
+            .Set(new Transform(cfg.Spawn, cfg.Scale))
+            .Set(new SpringScale(Vec2f.One, cfg.SpringFrequency, cfg.SpringDampingRatio))
+            .Set(LocomotionCapability.FromConfig(cfg.Movement))
+            .Set(JumpCapability.FromConfig(cfg.Jump))
+            .Set(new EnergyGauge
+            {
+                CurrentEnergy = 0.0f,
+                MaxEnergy = cfg.EnergyMaxSegments * cfg.EnergySegmentCapacity,
+                SegmentCapacity = cfg.EnergySegmentCapacity,
+                CooldownTimer = 0.0f,
+                EnergyPerDamageDealt = cfg.EnergyPerDamageDealt,
+                EnergyPerDamageTaken = cfg.EnergyPerDamageTaken
+            });
+
+        if (cfg.Dash != null)
+        {
+            prefab.Set(DashCapability.FromConfig(cfg.Dash)).Set(new DashState());
+        }
+        else
+        {
+            prefab.Remove<DashCapability>().Remove<DashState>();
+        }
+
+        AttachConfiguredWeapon(prefab, world, cfg.Weapon);
+    }
+
+    /// <summary>
+    ///     指定された武器設定を Prefab にアタッチします。
     /// </summary>
     private static void AttachConfiguredWeapon(Entity prefab, World world, string weaponName)
     {
@@ -110,6 +116,9 @@ public static class PlayerPrefabs
         }
     }
 
+    /// <summary>
+    ///     指定された CharacterType の Prefab プレハブを取得します。
+    /// </summary>
     public static Entity GetPrefab(CharacterType type)
     {
         return type switch {
@@ -120,78 +129,116 @@ public static class PlayerPrefabs
     }
 
     /// <summary>
-    ///     プレイヤーエンティティの状態（位置、体力、入力意図、能力、武器、タグ、スプライト表示）を初期状態へ安全に完全復帰させます。
-    ///     死亡時のクリーンアップ（DeadTag、HitstopState、HitFlashEffect、GameOverTag）と同期して呼び出されます。
+    ///     指定されたプレイヤー種別のインスタンスエンティティを生成・初期化し、対応する武器装備をセットアップします。
+    /// </summary>
+    public static Entity SpawnPlayer(World world, CharacterType playerType, Entity root, string name, int playerHandle)
+    {
+        var prefab = GetPrefab(playerType);
+        ref readonly var initialTrans = ref prefab.Get<Transform>();
+        var playerEntity = world.Entity(name)
+            .ChildOf(root)
+            .IsA(prefab)
+            .Set(new Transform(initialTrans.Position, initialTrans.Scale))
+            .Set(new Velocity(Vec2f.Zero))
+            .Set(new Animation(playerType, "Idle"))
+            .Set(new Sprite(playerHandle, false, true, new Rect(0, 0, 32, 32)))
+            .Set(new CharacterTypeComponent(playerType));
+
+        if (playerType == CharacterType.Bunny)
+        {
+            var melee = world.Entity("PlayerSlashHitbox")
+                .ChildOf(playerEntity)
+                .IsA(CombatPrefabs.PlayerSlashHitbox);
+            melee.Disable();
+            playerEntity.Add<EquippedWeapon>(melee);
+        }
+
+        return playerEntity;
+    }
+
+    /// <summary>
+    ///     プレイヤーエンティティの状態（位置、体力、入力意図、能力、武器、タグ、スプライト表示）を Prefab から初期状態へ安全に完全復帰させます。
     /// </summary>
     public static void ResetPlayerEntity(Entity player)
     {
         if (!player.IsAlive()) return;
 
-        var w = player.CsWorld();
         var type = player.Get<CharacterTypeComponent>().Value;
-        var cfg = w.GetPlayerConfig(type);
+        switch (type)
+        {
+            case CharacterType.Cat:
+                ResetCat(player);
+                break;
+            case CharacterType.Bunny:
+                ResetBunny(player);
+                break;
+        }
+    }
 
-        player.Set(new Transform(cfg.Spawn, cfg.Scale));
+    private static void ResetCommon(Entity player, Entity prefab, CharacterType type)
+    {
+        ref readonly var initialTrans = ref prefab.Get<Transform>();
+        player.Set(new Transform(initialTrans.Position, initialTrans.Scale));
         player.Set(new Velocity(Vec2f.Zero));
-        player.Set(new Health(cfg.MaxHp));
+        player.Set(new Health(prefab.Get<Health>().Max));
         player.Set(new MovementIntent());
         player.Set(new WeaponIntent());
         player.Set(new SpecialAbilityIntent());
-        player.Set(new EnergyGauge
-        {
-            CurrentEnergy = 0.0f,
-            MaxEnergy = cfg.EnergyMaxSegments * cfg.EnergySegmentCapacity,
-            SegmentCapacity = cfg.EnergySegmentCapacity,
-            CooldownTimer = 0.0f,
-            EnergyPerDamageDealt = cfg.EnergyPerDamageDealt,
-            EnergyPerDamageTaken = cfg.EnergyPerDamageTaken
-        });
-        player.Set(LocomotionCapability.FromConfig(cfg.Movement));
-        player.Set(JumpCapability.FromConfig(cfg.Jump));
-        if (cfg.Dash != null)
-        {
-            player.Set(DashCapability.FromConfig(cfg.Dash)).Set(new DashState());
-        }
-        else
-        {
-            player.Remove<DashCapability>().Remove<DashState>();
-        }
-        player.Remove<DashingTag>();
-
+        player.Set(prefab.Get<EnergyGauge>());
+        player.Set(prefab.Get<LocomotionCapability>());
+        player.Set(prefab.Get<JumpCapability>());
         player.Set(new GameplayTagState());
         player.Set(new TimedEffectsState());
-        player.Set(new SpringScale(Vec2f.One, cfg.SpringFrequency, cfg.SpringDampingRatio));
+        player.Set(prefab.Get<SpringScale>());
         player.Set(new Animation(type, "Idle"));
 
-        // 一時状態・エフェクト・死亡タグの一括安全削除：Flecs ネイティブ API による冪等操作
         player.Remove<HitstopState>()
             .Remove<SpriteJitter>()
             .Remove<DeadTag>()
             .Remove<HitFlashEffect>()
-            .Remove<InvincibleBlinkEffect>();
-
-        var weaponCfg = w.GetWeaponConfig(cfg.Weapon);
-        if (weaponCfg is MeleeWeaponConfig meleeCfg)
-        {
-            player.Set(MeleeWeaponComponent.FromConfig(meleeCfg));
-            var melee = player.Target<EquippedWeapon>();
-            if (melee.IsAlive())
-            {
-                melee.Disable();
-                melee.Set(new HitHistory());
-                ref var meleeSprite = ref melee.GetMut<Sprite>();
-                meleeSprite.IsVisible = true;
-            }
-        }
-        else if (weaponCfg is RangedWeaponConfig rangedCfg)
-        {
-            player.Set(RangedWeaponComponent.FromConfig(rangedCfg));
-        }
+            .Remove<InvincibleBlinkEffect>()
+            .Remove<DashingTag>();
 
         ref var sprite = ref player.GetMut<Sprite>();
         sprite.IsVisible = true;
         sprite.JitterOffset = Vec2f.Zero;
         sprite.Scale = Vec2f.One;
         sprite.SpringOffsetY = 0.0f;
+    }
+
+    private static void ResetCat(Entity player)
+    {
+        ResetCommon(player, CatPlayer, CharacterType.Cat);
+        if (_catHasDash)
+        {
+            player.Set(CatPlayer.Get<DashCapability>()).Set(new DashState());
+        }
+        else
+        {
+            player.Remove<DashCapability>().Remove<DashState>();
+        }
+        player.Set(CatPlayer.Get<RangedWeaponComponent>());
+    }
+
+    private static void ResetBunny(Entity player)
+    {
+        ResetCommon(player, BunnyPlayer, CharacterType.Bunny);
+        if (_bunnyHasDash)
+        {
+            player.Set(BunnyPlayer.Get<DashCapability>()).Set(new DashState());
+        }
+        else
+        {
+            player.Remove<DashCapability>().Remove<DashState>();
+        }
+        player.Set(BunnyPlayer.Get<MeleeWeaponComponent>());
+        var melee = player.Target<EquippedWeapon>();
+        if (melee.IsAlive())
+        {
+            melee.Disable();
+            melee.Set(new HitHistory());
+            ref var meleeSprite = ref melee.GetMut<Sprite>();
+            meleeSprite.IsVisible = true;
+        }
     }
 }

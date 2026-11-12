@@ -1,12 +1,5 @@
 using System.Drawing;
-using AnimalBattle.Configs;
-using AnimalBattle.Core;
-using AnimalBattle.Events;
-using AnimalBattle.Framework.Pooling;
 using AnimalBattle.Logging;
-using AnimalBattle.Player;
-using AnimalBattle.Player.Components;
-using AnimalBattle.Presentation.Vfx.Components;
 
 namespace AnimalBattle.Presentation.Vfx;
 
@@ -202,26 +195,25 @@ public sealed class VfxFeedback : IDisposable
 
     private void SpawnBulletImpactSplatter(Vec2f pos, Vec2f hitDir)
     {
-        ref readonly var flow = ref _world.Get<GameFlow>();
-        var prefab = PlayerPrefabs.GetPrefab(flow.SelectedPlayer);
-        if (!prefab.Has<RangedWeaponComponent>()) return;
-
-        ref readonly var rangedCfg = ref prefab.Get<RangedWeaponComponent>();
-        var vfxCfg = _world.Get<VisualEffectsRenderConfig>();
-        var count = Random.Shared.Next(rangedCfg.ImpactSplatterMinCount, rangedCfg.ImpactSplatterMaxCount + 1);
-        var baseAngle = MathF.Atan2(-hitDir.Y, -hitDir.X);
-
-        for (var i = 0; i < count; i++)
+        using var q = _world.QueryBuilder<RangedWeaponComponent>().With<PlayerTag>().Build();
+        q.Each((ref RangedWeaponComponent rangedCfg) =>
         {
-            var spreadAngle = baseAngle + (Random.Shared.NextSingle() - 0.5f) * MathF.PI * 0.8f;
-            var speed = rangedCfg.ImpactSplatterMinSpeed + Random.Shared.NextSingle() * (rangedCfg.ImpactSplatterMaxSpeed - rangedCfg.ImpactSplatterMinSpeed);
-            var vel = new Vec2f(MathF.Cos(spreadAngle) * speed, MathF.Sin(spreadAngle) * speed);
+            var vfxCfg = _world.Get<VisualEffectsRenderConfig>();
+            var count = Random.Shared.Next(rangedCfg.ImpactSplatterMinCount, rangedCfg.ImpactSplatterMaxCount + 1);
+            var baseAngle = MathF.Atan2(-hitDir.Y, -hitDir.X);
 
-            CombatPoolService.RentSparkEffect()
-               .Set(new Transform(pos))
-               .Set(new Velocity(vel))
-               .Set(new VfxParticle(rangedCfg.ImpactSplatterParticleRadius, vfxCfg.ImpactSplatterFillColor, vfxCfg.ImpactSplatterOutlineColor))
-               .Set(new FadeEffect(rangedCfg.ImpactSplatterDuration));
-        }
+            for (var i = 0; i < count; i++)
+            {
+                var spreadAngle = baseAngle + (Random.Shared.NextSingle() - 0.5f) * MathF.PI * 0.8f;
+                var speed = rangedCfg.ImpactSplatterMinSpeed + Random.Shared.NextSingle() * (rangedCfg.ImpactSplatterMaxSpeed - rangedCfg.ImpactSplatterMinSpeed);
+                var vel = new Vec2f(MathF.Cos(spreadAngle) * speed, MathF.Sin(spreadAngle) * speed);
+
+                CombatPoolService.RentSparkEffect()
+                   .Set(new Transform(pos))
+                   .Set(new Velocity(vel))
+                   .Set(new VfxParticle(rangedCfg.ImpactSplatterParticleRadius, vfxCfg.ImpactSplatterFillColor, vfxCfg.ImpactSplatterOutlineColor))
+                   .Set(new FadeEffect(rangedCfg.ImpactSplatterDuration));
+            }
+        });
     }
 }

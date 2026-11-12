@@ -1,9 +1,7 @@
 namespace AnimalBattle.Configs;
 
-using System.Diagnostics;
 using AnimalBattle.Features.Items.Configs;
 using AnimalBattle.Features.Tutorial.Configs;
-using Flecs.NET.Core;
 using Microsoft.Extensions.Configuration;
 
 /// <summary>
@@ -21,8 +19,10 @@ public static class GameConfigRegistrar
 
 
         // TOML 設定ファイルからの自動バインド登録：.NET Configuration Binding Generator 駆動
-        registry.RegisterToml<CatConfig>(ResourcePath.Config.Cat, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncCat(w, cfg));
-        registry.RegisterToml<BunnyConfig>(ResourcePath.Config.Bunny, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncBunny(w, cfg));
+        var catHolder = registry.RegisterToml<PlayerConfig>(ResourcePath.Config.Cat, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncCat(w, cfg), injectToWorld: false);
+        var bunnyHolder = registry.RegisterToml<PlayerConfig>(ResourcePath.Config.Bunny, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncBunny(w, cfg), injectToWorld: false);
+
+        PlayerPrefabs.Register(world, catHolder.Value, bunnyHolder.Value);
 
         registry.RegisterToml<CatWeaponConfig>(ResourcePath.Config.Catweapon, (root, cfg) => root.Bind(cfg), (w, cfg) => PlayerConfigSync.SyncCatWeapon(w, cfg));
 

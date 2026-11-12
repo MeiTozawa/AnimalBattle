@@ -30,35 +30,7 @@ public static class TutorialSceneSpawner
         Debug.Assert(hasPlayerHandle, "プレイヤーの初期スプライトハンドルが見つかりません。");
         if (!hasPlayerHandle) Log.Error("TutorialSceneSpawner", $"プレイヤーの初期スプライトハンドルが見つかりません: {playerType}");
 
-        var playerCfg = world.GetPlayerConfig(playerType);
-        var playerEntity = world.Entity("TutorialPlayer")
-            .ChildOf(root)
-            .IsA(PlayerPrefabs.GetPrefab(playerType))
-            .Set(new Transform(playerCfg.Spawn, playerCfg.Scale))
-            .Set(new Velocity(Vec2f.Zero))
-            .Set(new Health(playerCfg.MaxHp))
-            .Set(new MovementIntent())
-            .Set(new WeaponIntent())
-            .Set(LocomotionCapability.FromConfig(playerCfg.Movement))
-            .Set(JumpCapability.FromConfig(playerCfg.Jump))
-            .Set(new Animation(playerType, "Idle"))
-            .Set(new Sprite(playerHandle, false, true, new Rect(0, 0, 32, 32)))
-            .Set(new CharacterTypeComponent(playerType));
-
-        if (playerCfg.Dash != null)
-        {
-            playerEntity.Set(DashCapability.FromConfig(playerCfg.Dash)).Set(new DashState());
-        }
-
-        var weaponCfg = world.GetWeaponConfig(playerCfg.Weapon);
-        if (weaponCfg is MeleeWeaponConfig)
-        {
-            var melee = world.Entity("PlayerSlashHitbox")
-                .ChildOf(playerEntity)
-                .IsA(CombatPrefabs.PlayerSlashHitbox);
-            melee.Disable();
-            playerEntity.Add<EquippedWeapon>(melee);
-        }
+        var playerEntity = PlayerPrefabs.SpawnPlayer(world, playerType, root, "TutorialPlayer", playerHandle);
 
         // 2. 地形・訓練場アリーナの生成
         var arenaCfg = world.Get<ArenaConfig>();
