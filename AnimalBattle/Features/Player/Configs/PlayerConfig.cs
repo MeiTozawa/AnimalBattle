@@ -79,9 +79,6 @@ public class PlayerConfig : IConfigLifecycle {
     /// <summary>弾丸命中撃砕破片のフェード持続時間秒単位</summary>
     public float ImpactSplatterDuration { get; set; }
 
-    /// <summary>隙あり：Vulnerable / 易傷状態の Boss に対する与ダメージ倍率</summary>
-    public float VulnerableDamageMultiplier { get; set; }
-
     /// <summary>先行入力猶予時間秒単位</summary>
     public float JumpBufferDuration { get; set; }
 
@@ -144,21 +141,6 @@ public class PlayerConfig : IConfigLifecycle {
 
     /// <summary>空中自然減速加速度：px/s²</summary>
     public float AirDeceleration { get; set; }
-
-    /// <summary>通常ヒットストップ時間秒単位</summary>
-    public float HitstopLightDuration { get; set; }
-
-    /// <summary>強攻撃・弱点ヒットストップ時間秒単位</summary>
-    public float HitstopHeavyDuration { get; set; }
-
-    /// <summary>通常ヒット時のスプライト振動振幅ピクセル単位</summary>
-    public float HitJitterLightAmplitude { get; set; }
-
-    /// <summary>强攻撃・弱点ヒット時のスプライト振動振幅ピクセル単位</summary>
-    public float HitJitterHeavyAmplitude { get; set; }
-
-    /// <summary>ヒット時スプライト局所振動周波数：Hz</summary>
-    public float HitJitterFrequency { get; set; }
 
     /// <summary>スプリング固有振動数：Hz</summary>
     public float SpringFrequency { get; set; }
