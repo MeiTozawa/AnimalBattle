@@ -124,7 +124,6 @@ public static class BattleAiSystem
         if (!ctx.FoundPlayerThisFrame && !ctx.HasPlayerEverSpawned) return;
 
         var dt = it.DeltaTime();
-        var camCfg = w.Get<CameraConfig>();
 
         ctx.CachedDeltaTime = dt;
         ctx.CachedTileMap = null;
@@ -137,16 +136,6 @@ public static class BattleAiSystem
         ctx.HasBoss = false;
         ctx.BossQuery.Iter(UpdateBossAi);
         ctx.CachedTileMap = null;
-
-        // ボスが Hitstop 中・死亡演出中・または訓練場等で BossQuery から除外されている場合でも、
-        // 直近の BossPos または PlayerPos を使用してカメラ追従・振動減衰（Trauma decay）を継続する
-        var targetBossPos = ctx.HasBoss ? ctx.CachedBossPos : ctx.CachedPlayerPos;
-        CameraService.Update(
-            dt,
-            ctx.CachedPlayerPos,
-            ctx.CachedPlayerVel,
-            targetBossPos,
-            camCfg);
     }
 
     /// <summary>

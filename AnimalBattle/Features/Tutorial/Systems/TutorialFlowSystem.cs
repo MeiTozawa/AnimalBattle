@@ -80,17 +80,6 @@ public static class TutorialFlowSystem
 
         var playerDied = ctx.PlayerDied;
 
-        var hasPlayer = ctx.HasPlayer;
-        var playerPos = ctx.CachedPlayerPos;
-        var playerVel = ctx.CachedPlayerVel;
-
-        // チュートリアル中もカメラの振動減衰およびプレイヤー追従を更新
-        if (hasPlayer)
-        {
-            var camCfg = world.Has<CameraConfig>() ? world.Get<CameraConfig>() : null;
-            CameraService.Update(dt, playerPos, playerVel, playerPos, camCfg);
-        }
-
         if (playerDied)
         {
             world.Remove<GameOverTag>();

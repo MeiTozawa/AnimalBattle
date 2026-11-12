@@ -14,6 +14,7 @@ public readonly struct CombatFeedbackModule : IFlecsModule
         world.Module<CombatFeedbackModule>();
 
         world.AddHitstopSystem()
-             .AddSpriteJitterSystem();
+             .AddSpriteJitterSystem()
+             .AddCameraFollowSystem();
     }
 }
