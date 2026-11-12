@@ -6,12 +6,12 @@ using Configs;
 using Flecs.NET.Core;
 
 /// <summary>
-/// プレイヤー設定変更時に、Flecs.NET ワールドの単例、Prefab、および活体エンティティを無損同期・再水和する同期機構。
+///     プレイヤー設定変更時に、Flecs.NET ワールドのシングルトン、Prefab、およびアクティブエンティティをホットリロード・同期する機構。
 /// </summary>
 public static class PlayerConfigSync
 {
     /// <summary>
-    /// Cat遠距離武器設定の変更をワールド、プレハブ、および生存エンティティへ反映します。
+    ///     Cat遠距離武器設定の変更をワールド、プレハブ、および生存エンティティへ反映します。
     /// </summary>
     public static void SyncCatWeapon(World world, CatWeaponConfig newConfig)
     {
@@ -32,7 +32,7 @@ public static class PlayerConfigSync
     }
 
     /// <summary>
-    /// Bunny近接武器設定の変更をワールド、プレハブ、および生存エンティティへ反映します。
+    ///     Bunny近接武器設定の変更をワールド、プレハブ、および生存エンティティへ反映します。
     /// </summary>
     public static void SyncBunnyWeapon(World world, BunnyWeaponConfig newConfig)
     {
@@ -58,16 +58,13 @@ public static class PlayerConfigSync
 
         Debug.Assert(newConfig != null, "CatConfig は null にできません。");
 
-        // 1. ワールド単例の更新
-
+        // 1. ワールドシングルトンの更新
         world.Set(newConfig);
 
         // 2. Prefab プレハブの再登録
-
         PlayerPrefabs.Register(world);
 
-        // 3. 活体エンティティの無損再水和
-
+        // 3. アクティブエンティティの同期
         ref readonly var flow = ref world.Get<GameFlow>();
 
         if (flow.SelectedPlayer != CharacterType.Cat) return;
@@ -81,27 +78,23 @@ public static class PlayerConfigSync
     }
 
     /// <summary>
-    /// Bunny設定の変更をワールド、プレハブ、および生存エンティティへ反映します。
+    ///     Bunny設定の変更をワールド、プレハブ、および生存エンティティへ反映します。
     /// </summary>
     /// <param name="world">対象の Flecs.NET ワールド</param>
     /// <param name="newConfig">更新後の Bunny 設定</param>
-
     public static void SyncBunny(World world, BunnyConfig newConfig)
     {
         Debug.Assert(world != default, "有効な Flecs ワールドが必要です。");
 
         Debug.Assert(newConfig != null, "BunnyConfig は null にできません。");
 
-        // 1. ワールド単例の更新
-
+        // 1. ワールドシングルトンの更新
         world.Set(newConfig);
 
         // 2. Prefab プレハブの再登録
-
         PlayerPrefabs.Register(world);
 
-        // 3. 活体エンティティの無損再水和
-
+        // 3. アクティブエンティティの同期
         ref readonly var flow = ref world.Get<GameFlow>();
 
         if (flow.SelectedPlayer != CharacterType.Bunny) return;
@@ -116,8 +109,7 @@ public static class PlayerConfigSync
 
     private static void RehydratePlayerEntity(Entity e, PlayerConfig newConfig)
     {
-        // 生命値の比例更新：現在割合を維持したまま MaxHP を更新
-
+        // HP の比例更新：現在の割合を維持したまま最大値を更新
         ref var health = ref e.GetMut<Health>();
 
         var ratio = health.Max > 0.0f ? health.Current / health.Max : 1.0f;
@@ -129,7 +121,6 @@ public static class PlayerConfigSync
         health.Current = Math.Clamp(ratio * newMax, 0.0f, newMax);
 
         // スケール更新
-
         ref var trans = ref e.GetMut<Transform>();
 
         trans.Scale = newConfig.Scale;
@@ -147,11 +138,19 @@ public static class PlayerConfigSync
         jump = updatedJump;
 
         // 突進能力の更新
-        ref var dash = ref e.GetMut<DashCapability>();
-        dash = DashCapability.FromConfig(newConfig.Dash);
+        if (newConfig.Dash != null)
+        {
+            e.Set(DashCapability.FromConfig(newConfig.Dash));
+            e.Set(new DashState());
+        }
+        else
+        {
+            e.Remove<DashCapability>()
+             .Remove<DashState>()
+             .Remove<DashingTag>();
+        }
 
         // 衝突判定・被弾判定の更新
-
         ref var col = ref e.GetMut<CollisionBox>();
 
         col.Size = newConfig.CollisionSize;
@@ -161,7 +160,6 @@ public static class PlayerConfigSync
         hurt.Shape = newConfig.GetHurtboxShape();
 
         // スプリング拡縮設定の更新
-
         ref var spring = ref e.GetMut<SpringScale>();
 
         spring.Frequency = newConfig.SpringFrequency;
@@ -169,7 +167,6 @@ public static class PlayerConfigSync
         spring.DampingRatio = newConfig.SpringDampingRatio;
 
         // 無敵時間および被弾フラッシュの更新
-
         ref var flash = ref e.GetMut<HitFlashSettings>();
 
         flash.Duration = newConfig.HitFlashDuration;

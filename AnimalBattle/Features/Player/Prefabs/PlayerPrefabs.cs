@@ -1,5 +1,11 @@
-
 namespace AnimalBattle.Player;
+
+using System.Diagnostics;
+using AnimalBattle.Configs;
+using AnimalBattle.Player.Components;
+using AnimalBattle.Presentation.Animation.Components;
+using AnimalBattle.Presentation.Rendering.Components;
+using AnimalBattle.Presentation.Vfx.Components;
 
 /// <summary>
 ///     プレイヤー自機：Cat & Bunnyの Prefab プレハブ登録およびインスタンス化。
@@ -25,8 +31,7 @@ public static class PlayerPrefabs
             .Add<PlayerTag>()
             .Set(new MovementIntent())
             .Set(new WeaponIntent())
-            .Set(new SpecialAbilityIntent())
-            .Set(new DashState());
+            .Set(new SpecialAbilityIntent());
 
         // --- Cat プレイヤー ---
         var catCfg = world.Get<CatConfig>();
@@ -43,7 +48,6 @@ public static class PlayerPrefabs
             .Set(new SpringScale(Vec2f.One, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
             .Set(LocomotionCapability.FromConfig(catCfg.Movement))
             .Set(JumpCapability.FromConfig(catCfg.Jump))
-            .Set(DashCapability.FromConfig(catCfg.Dash))
             .Set(new EnergyGauge
             {
                 CurrentEnergy = 0.0f,
@@ -51,8 +55,11 @@ public static class PlayerPrefabs
                 SegmentCapacity = catCfg.EnergySegmentCapacity,
                 CooldownTimer = 0.0f
             });
+        if (catCfg.Dash != null)
+        {
+            CatPlayer.Set(DashCapability.FromConfig(catCfg.Dash)).Set(new DashState());
+        }
         AttachConfiguredWeapon(CatPlayer, world, catCfg.Weapon);
-
 
         // --- Bunny プレイヤー ---
         var bunnyCfg = world.Get<BunnyConfig>();
@@ -69,7 +76,6 @@ public static class PlayerPrefabs
             .Set(new SpringScale(Vec2f.One, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
             .Set(LocomotionCapability.FromConfig(bunnyCfg.Movement))
             .Set(JumpCapability.FromConfig(bunnyCfg.Jump))
-            .Set(DashCapability.FromConfig(bunnyCfg.Dash))
             .Set(new EnergyGauge
             {
                 CurrentEnergy = 0.0f,
@@ -77,6 +83,10 @@ public static class PlayerPrefabs
                 SegmentCapacity = bunnyCfg.EnergySegmentCapacity,
                 CooldownTimer = 0.0f
             });
+        if (bunnyCfg.Dash != null)
+        {
+            BunnyPlayer.Set(DashCapability.FromConfig(bunnyCfg.Dash)).Set(new DashState());
+        }
         AttachConfiguredWeapon(BunnyPlayer, world, bunnyCfg.Weapon);
     }
 
@@ -130,10 +140,18 @@ public static class PlayerPrefabs
             SegmentCapacity = cfg.EnergySegmentCapacity,
             CooldownTimer = 0.0f
         });
-        player.Set(new DashState());
         player.Set(LocomotionCapability.FromConfig(cfg.Movement));
         player.Set(JumpCapability.FromConfig(cfg.Jump));
-        player.Set(DashCapability.FromConfig(cfg.Dash));
+        if (cfg.Dash != null)
+        {
+            player.Set(DashCapability.FromConfig(cfg.Dash)).Set(new DashState());
+        }
+        else
+        {
+            player.Remove<DashCapability>().Remove<DashState>();
+        }
+        player.Remove<DashingTag>();
+
         player.Set(new GameplayTagState());
         player.Set(new TimedEffectsState());
         player.Set(new SpringScale(Vec2f.One, cfg.SpringFrequency, cfg.SpringDampingRatio));

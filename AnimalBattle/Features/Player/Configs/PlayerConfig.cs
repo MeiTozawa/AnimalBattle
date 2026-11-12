@@ -22,8 +22,8 @@ public class PlayerConfig : IConfigLifecycle {
     /// <summary>跳躍性能および跳躍演出設定</summary>
     public PlayerJumpConfig Jump { get; set; } = new();
 
-    /// <summary>突進回避（ダッシュ）および残像設定</summary>
-    public PlayerDashConfig Dash { get; set; } = new();
+    /// <summary>突進回避（ダッシュ）および残像設定（ダッシュ機能を持たない場合は null）</summary>
+    public PlayerDashConfig? Dash { get; set; }
 
     /// <summary>プレイヤー被弾判定の幾何形状種別："Circle" または "Box"</summary>
     public string HurtboxShape { get; set; } = string.Empty;
