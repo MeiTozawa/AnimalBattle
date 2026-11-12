@@ -1,84 +1,66 @@
 namespace AnimalBattle.Player.Components;
 
+using System.Diagnostics;
+using AnimalBattle.Configs;
+
 /// <summary>
-///     キャラクターの跳躍性能および運動学パラメータ定義。
-///     MovementSystem による重力・跳躍計算に使用されます。
+///     キャラクターの跳躍性能および跳躍演出パラメータ定義。
+///     先行入力・コヨーテタイムおよび残りジャンプ回数の実行時状態を管理します。
 /// </summary>
 public struct JumpCapability
 {
-    /// <summary>水平移動基本速度：px/s。</summary>
-    public float MoveSpeed;
-
-    /// <summary>重力加速度：px/s²。</summary>
-    public float Gravity;
-
-    /// <summary>最大落下終端速度：px/s。</summary>
-    public float MaxFallSpeed;
-
-    /// <summary>一段目初速度：上向きは負値、px/s。</summary>
+    /// <summary>一段目地上ジャンプ初速度：上向きは負値、px/s</summary>
     public float FirstJumpVelocity;
 
-    /// <summary>空中二段目初速度：上向きは負値、px/s。</summary>
+    /// <summary>空中二段ジャンプ初速度：上向きは負値、px/s</summary>
     public float SecondJumpVelocity;
 
-    /// <summary>最大跳躍可能回数。</summary>
+    /// <summary>最大跳躍可能回数</summary>
     public int MaxJumps;
 
-    /// <summary>現在の残り跳躍可能回数。</summary>
+    /// <summary>現在の残り跳躍可能回数</summary>
     public int RemainingJumps;
 
-    /// <summary>先行入力猶予時間秒単位。</summary>
+    /// <summary>先行入力猶予時間秒単位</summary>
     public float JumpBufferDuration;
 
-    /// <summary>現在の先行入力タイマー秒単位。</summary>
+    /// <summary>現在の先行入力タイマー秒単位</summary>
     public float JumpBufferTimer;
 
-    /// <summary>コヨーテタイム猶予時間秒単位。</summary>
+    /// <summary>コヨーテタイム猶予時間秒単位</summary>
     public float CoyoteTimeDuration;
 
-    /// <summary>現在のコヨーテタイムタイマー秒単位。</summary>
+    /// <summary>現在のコヨーテタイムタイマー秒単位</summary>
     public float CoyoteTimer;
 
-    /// <summary>ジャンプ中断時の上昇速度減衰率。</summary>
+    /// <summary>ジャンプ中断（ボタン解放）時の上昇減衰率</summary>
     public float JumpCutDamping;
 
-    /// <summary>頂点滞空判定の速度閾値：px/s。</summary>
+    /// <summary>頂点滞空判定の速度閾値：px/s</summary>
     public float ApexFloatVelocityThreshold;
 
-    /// <summary>頂点滞空時の重力倍率。</summary>
+    /// <summary>頂点滞空時の重力倍率</summary>
     public float ApexFloatGravityMultiplier;
 
-    /// <summary>地面初速加速度：px/s²。</summary>
-    public float GroundAcceleration;
+    /// <summary>跳躍開始時ストレッチ拡縮率</summary>
+    public Vec2f JumpStretchScale;
 
-    /// <summary>地面自然減速加速度：px/s²。</summary>
-    public float GroundDeceleration;
+    /// <summary>着地時スカッシュ拡縮率</summary>
+    public Vec2f LandSquashScale;
 
-    /// <summary>地面反転制動加速度：px/s²。</summary>
-    public float TurnaroundDeceleration;
-
-    /// <summary>空中移動加速度：px/s²。</summary>
-    public float AirAcceleration;
-
-    /// <summary>空中自然減速加速度：px/s²。</summary>
-    public float AirDeceleration;
-
-    /// <summary>着地時スカッシュ演出を発火させる最小下落速度閾値：px/s。</summary>
+    /// <summary>着地時スカッシュ演出を発火させる最小落下速度閾値：px/s</summary>
     public float LandSquashVelocityThreshold;
 
     /// <summary>
-    ///     プレイヤー設定：PlayerConfigから跳躍能力コンポーネントを構築します。
+    ///     設定オブジェクトから跳躍能力コンポーネントを構築します。
     /// </summary>
-    /// <param name="cfg">プレイヤー設定。</param>
-    /// <returns>構築された JumpCapability インスタンス。</returns>
-    public static JumpCapability FromPlayerConfig(PlayerConfig cfg)
+    /// <param name="cfg">跳躍設定</param>
+    /// <returns>構築された JumpCapability インスタンス</returns>
+    public static JumpCapability FromConfig(PlayerJumpConfig cfg)
     {
-        Debug.Assert(cfg != null, "PlayerConfig は null であってはなりません。");
+        Debug.Assert(cfg != null, "PlayerJumpConfig は null であってはなりません。");
         return new JumpCapability
         {
-            MoveSpeed = cfg.MoveSpeed,
-            Gravity = cfg.Gravity,
-            MaxFallSpeed = cfg.MaxFallSpeed,
             FirstJumpVelocity = cfg.FirstJumpVelocity,
             SecondJumpVelocity = cfg.SecondJumpVelocity,
             MaxJumps = cfg.MaxJumps,
@@ -90,11 +72,8 @@ public struct JumpCapability
             JumpCutDamping = cfg.JumpCutDamping,
             ApexFloatVelocityThreshold = cfg.ApexFloatVelocityThreshold,
             ApexFloatGravityMultiplier = cfg.ApexFloatGravityMultiplier,
-            GroundAcceleration = cfg.GroundAcceleration,
-            GroundDeceleration = cfg.GroundDeceleration,
-            TurnaroundDeceleration = cfg.TurnaroundDeceleration,
-            AirAcceleration = cfg.AirAcceleration,
-            AirDeceleration = cfg.AirDeceleration,
+            JumpStretchScale = cfg.JumpStretchScale,
+            LandSquashScale = cfg.LandSquashScale,
             LandSquashVelocityThreshold = cfg.LandSquashVelocityThreshold
         };
     }

@@ -40,7 +40,9 @@ public static class TutorialSceneSpawner
             .Set(new MovementIntent())
             .Set(new WeaponIntent())
             .Set(new DashState())
-            .Set(JumpCapability.FromPlayerConfig(playerCfg))
+            .Set(LocomotionCapability.FromConfig(playerCfg.Movement))
+            .Set(JumpCapability.FromConfig(playerCfg.Jump))
+            .Set(DashCapability.FromConfig(playerCfg.Dash))
             .Set(new Animation(playerType, "Idle"))
             .Set(new Sprite(playerHandle, false, true, new Rect(0, 0, 32, 32)))
             .Set(new CharacterTypeComponent(playerType));

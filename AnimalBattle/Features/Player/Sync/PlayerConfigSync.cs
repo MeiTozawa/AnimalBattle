@@ -134,19 +134,21 @@ public static class PlayerConfigSync
 
         trans.Scale = newConfig.Scale;
 
+        // 移動キネマティクス能力の更新
+        ref var loco = ref e.GetMut<LocomotionCapability>();
+        loco = LocomotionCapability.FromConfig(newConfig.Movement);
+
         // 跳躍能力の更新：現在の跳躍状態を保持しつつ上限・物理パラメータを同期
-
         ref var jump = ref e.GetMut<JumpCapability>();
-
-        var updatedJump = JumpCapability.FromPlayerConfig(newConfig);
-
+        var updatedJump = JumpCapability.FromConfig(newConfig.Jump);
         updatedJump.RemainingJumps = Math.Min(jump.RemainingJumps, updatedJump.MaxJumps);
-
         updatedJump.CoyoteTimer = jump.CoyoteTimer;
-
         updatedJump.JumpBufferTimer = jump.JumpBufferTimer;
-
         jump = updatedJump;
+
+        // 突進能力の更新
+        ref var dash = ref e.GetMut<DashCapability>();
+        dash = DashCapability.FromConfig(newConfig.Dash);
 
         // 衝突判定・被弾判定の更新
 

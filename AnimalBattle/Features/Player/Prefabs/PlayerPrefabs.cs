@@ -41,7 +41,9 @@ public static class PlayerPrefabs
             .Set(new Hurtbox(catCfg.GetHurtboxShape(), Faction.Friendly))
             .Set(new Transform(Vec2f.Zero, catCfg.Scale))
             .Set(new SpringScale(Vec2f.One, catCfg.SpringFrequency, catCfg.SpringDampingRatio))
-            .Set(JumpCapability.FromPlayerConfig(catCfg))
+            .Set(LocomotionCapability.FromConfig(catCfg.Movement))
+            .Set(JumpCapability.FromConfig(catCfg.Jump))
+            .Set(DashCapability.FromConfig(catCfg.Dash))
             .Set(new EnergyGauge
             {
                 CurrentEnergy = 0.0f,
@@ -65,7 +67,9 @@ public static class PlayerPrefabs
             .Set(new Hurtbox(bunnyCfg.GetHurtboxShape(), Faction.Friendly))
             .Set(new Transform(Vec2f.Zero, bunnyCfg.Scale))
             .Set(new SpringScale(Vec2f.One, bunnyCfg.SpringFrequency, bunnyCfg.SpringDampingRatio))
-            .Set(JumpCapability.FromPlayerConfig(bunnyCfg))
+            .Set(LocomotionCapability.FromConfig(bunnyCfg.Movement))
+            .Set(JumpCapability.FromConfig(bunnyCfg.Jump))
+            .Set(DashCapability.FromConfig(bunnyCfg.Dash))
             .Set(new EnergyGauge
             {
                 CurrentEnergy = 0.0f,
@@ -127,7 +131,9 @@ public static class PlayerPrefabs
             CooldownTimer = 0.0f
         });
         player.Set(new DashState());
-        player.Set(JumpCapability.FromPlayerConfig(cfg));
+        player.Set(LocomotionCapability.FromConfig(cfg.Movement));
+        player.Set(JumpCapability.FromConfig(cfg.Jump));
+        player.Set(DashCapability.FromConfig(cfg.Dash));
         player.Set(new GameplayTagState());
         player.Set(new TimedEffectsState());
         player.Set(new SpringScale(Vec2f.One, cfg.SpringFrequency, cfg.SpringDampingRatio));
