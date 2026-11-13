@@ -14,6 +14,7 @@ public sealed class TutorialSystemContext : IDisposable
     private IDisposable? _specialAbilitySub;
 
     public Query<Health, Transform, Velocity> PlayerHealthQuery { get; }
+    public Query<EnergyGauge> PlayerEnergyQuery { get; }
     public Query DeadPlayerQuery { get; }
     public Query<TutorialTarget, Transform> TargetQuery { get; }
     public Query<TutorialDoor, Transform> DoorQuery { get; }
@@ -25,6 +26,7 @@ public sealed class TutorialSystemContext : IDisposable
     public Vec2f CachedPlayerVel;
     public bool HasPlayer;
     public bool PlayerDied;
+    public Entity DeadPlayerEntity;
 
     public TutorialSystemContext(World world)
     {
@@ -33,6 +35,11 @@ public sealed class TutorialSystemContext : IDisposable
 
         PlayerHealthQuery = world.QueryBuilder<Health, Transform, Velocity>()
             .With<PlayerTag>()
+            .Build();
+
+        PlayerEnergyQuery = world.QueryBuilder<EnergyGauge>()
+            .With<PlayerTag>()
+            .Without<DeadTag>()
             .Build();
 
         DeadPlayerQuery = world.QueryBuilder()
@@ -63,6 +70,7 @@ public sealed class TutorialSystemContext : IDisposable
         _specialAbilitySub?.Dispose();
         _specialAbilitySub = null;
         PlayerHealthQuery.Dispose();
+        PlayerEnergyQuery.Dispose();
         DeadPlayerQuery.Dispose();
         TargetQuery.Dispose();
         DoorQuery.Dispose();

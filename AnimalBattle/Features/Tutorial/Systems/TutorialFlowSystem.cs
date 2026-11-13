@@ -48,6 +48,7 @@ public static class TutorialFlowSystem
         // 2. プレイヤーのHP監視および挫折防止リトライ処理
         ctx.HasPlayer = false;
         ctx.PlayerDied = false;
+        ctx.DeadPlayerEntity = default;
 
         ctx.PlayerHealthQuery.Iter(static (Iter pIt, Field<Health> hps, Field<Transform> trans, Field<Velocity> vels) =>
         {
@@ -61,19 +62,21 @@ public static class TutorialFlowSystem
 
             for (var i = 0; i < pCount; i++)
             {
-                if (hps[i].Current <= 0)
+                var pEntity = pIt.Entity(i);
+                if (hps[i].Current <= 0 || pEntity.Has<DeadTag>())
                 {
-                    PlayerPrefabs.ResetPlayerEntity(pIt.Entity(i));
+                    pCtx.DeadPlayerEntity = pEntity;
                     pCtx.PlayerDied = true;
                 }
             }
         });
 
-        if (ctx.DeadPlayerQuery.Count() > 0)
+        if (!ctx.PlayerDied && ctx.DeadPlayerQuery.Count() > 0)
         {
-            ctx.DeadPlayerQuery.Each(static (Entity pEntity) =>
+            ctx.DeadPlayerQuery.Iter(static (Iter dIt) =>
             {
-                PlayerPrefabs.ResetPlayerEntity(pEntity);
+                if (!dIt.Any()) return;
+                dIt.World().Get<TutorialSystemContext>().DeadPlayerEntity = dIt.Entity(0);
             });
             ctx.PlayerDied = true;
         }
@@ -82,16 +85,33 @@ public static class TutorialFlowSystem
 
         if (playerDied)
         {
-            world.Remove<GameOverTag>();
-            CameraService.Reset();
+            // クエリ反復外かつ DeferSuspend 中にプレイヤーを即時リセットし、
+            // 後続の ResetCurrentPhase（ChargeEnergyAction 等）が DeadTag 残存や遅延 Set に上書きされないようにする
+            var isDeferred = world.IsDeferred();
+            if (isDeferred) world.DeferSuspend();
+            try
+            {
+                if (ctx.DeadPlayerEntity.IsAlive())
+                {
+                    PlayerPrefabs.ResetPlayerEntity(ctx.DeadPlayerEntity);
+                }
 
-            CombatCleanupService.RecyclePlayerProjectilesAndVfx(world);
+                world.Remove<GameOverTag>();
+                CameraService.Reset();
 
-            EventBus.Publish(new CombatResetEvent());
+                CombatCleanupService.RecyclePlayerProjectilesAndVfx(world);
 
-            state.IsRetrying = true;
-            state.RetryTimer = cfg.Timing.RetryDuration;
-            TutorialSceneSpawner.ResetCurrentPhase(world);
+                EventBus.Publish(new CombatResetEvent());
+
+                state.IsRetrying = true;
+                state.RetryTimer = cfg.Timing.RetryDuration;
+                TutorialSceneSpawner.ResetCurrentPhase(world);
+            }
+            finally
+            {
+                if (isDeferred) world.DeferResume();
+            }
+
             return;
         }
 

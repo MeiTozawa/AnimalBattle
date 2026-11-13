@@ -13,7 +13,7 @@ public readonly struct PlayerModule : IFlecsModule
              .AddPlayerSpecialAbilitySystem()      // 2. 特殊能力発動制御
              .AddScreenCleaveSequenceSystem()      // 3. 全画面斬撃エフェクトシーケンス
              .AddRangedWeaponSystem()              // 4. 遠距離射撃武器機構
-             .AddMeleeWeaponSystem()               // 4. 近接判定展開武器機構
+             .AddMeleeWeaponSystem()               // 4.1. 近接判定展開武器機構
              .AddPlayerDashSystem()                // 5. 突進（ダッシュ）制御
              .AddPlayerJumpSystem()                // 6. 跳躍（ジャンプ）制御
              .AddLocomotionSystem()                // 7. 水平加減速および重力制御

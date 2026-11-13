@@ -1,3 +1,5 @@
+using AnimalBattle.Features.Tutorial.Systems;
+
 namespace AnimalBattle.Features.Tutorial.Actions;
 
 /// <summary>
@@ -10,17 +12,27 @@ public sealed class ChargeEnergyAction(int segments) : ITutorialAction
     /// <inheritdoc />
     public void Execute(World world, Entity root)
     {
-        using var query = world.QueryBuilder<EnergyGauge>().With<PlayerTag>().Without<DeadTag>().Build();
-        query.Each((ref EnergyGauge gauge) =>
+        var player = root.IsAlive() ? root.Lookup("TutorialPlayer") : default;
+        if (player.IsAlive() && player.Has<EnergyGauge>() && !player.Has<DeadTag>())
         {
-            var oldReady = gauge.ReadySegments;
-            var targetEnergy = gauge.SegmentCapacity * _segments;
-            gauge.CurrentEnergy = MathF.Max(gauge.CurrentEnergy, targetEnergy);
-            var newReady = gauge.ReadySegments;
-            if (newReady > oldReady)
-            {
-                EventBus.Publish(new EnergySegmentChargedEvent(newReady));
-            }
-        });
+            ref var gauge = ref player.GetMut<EnergyGauge>();
+            ChargeGauge(ref gauge);
+            return;
+        }
+
+        var query = world.Get<TutorialSystemContext>().PlayerEnergyQuery;
+        query.Each((ref EnergyGauge gauge) => ChargeGauge(ref gauge));
+    }
+
+    private void ChargeGauge(ref EnergyGauge gauge)
+    {
+        var oldReady = gauge.ReadySegments;
+        var targetEnergy = gauge.SegmentCapacity * _segments;
+        gauge.CurrentEnergy = MathF.Max(gauge.CurrentEnergy, targetEnergy);
+        var newReady = gauge.ReadySegments;
+        if (newReady > oldReady)
+        {
+            EventBus.Publish(new EnergySegmentChargedEvent(newReady));
+        }
     }
 }
